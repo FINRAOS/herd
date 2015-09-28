@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<!-- saved from url=(0039)http://finraos.github.io/Herd/ -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Herd Open Source Landing Page">
+    <meta name="author" content="Herd Contributors">
+    <meta name="description" content="Font Awesome, the iconic font and CSS framework">
+    <link rel="shortcut icon" href="http://finraos.github.io/docs-assets/ico/favicon.png">
+
+    <title>Herd Data Management</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="http://finraos.github.io/DataGenerator/dist/css/bootstrap.css" rel="stylesheet">
+    <link href="http://finraos.github.io/DataGenerator/dist/css/bootstrap-responsive.css" rel="stylesheet">
+    <link rel="stylesheet" href="http://finraos.github.io/DataGenerator/css/font-awesome.min.css">
+	<link href="./herd_files/CLIP_embed.css" rel="stylesheet" type="text/css">
+
+    <!-- Just for debugging purposes. Don't actually copy this line! -->
+    <!--[if lt IE 9]><script src="../../docs-assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+    <![endif]-->
+	
+	
+   <script type="text/javascript" async="" src="./herd_files/ga.js"></script><script async="" src="./herd_files/analytics.js"></script><script>
+	  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+	  ga('create', 'UA-47319751-1', 'finraos.github.io');
+	  ga('send', 'pageview');
+  </script>
+  
+  <!-- ENABLE EVENTS -->
+  <script type="text/javascript">
+
+	  var _gaq = _gaq || [];
+	  _gaq.push(['_setAccount', 'UA-47319751-1']);
+	  _gaq.push(['_trackPageview']);
+
+	  (function() {
+		var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+		ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+		var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+	  })();
+
+  </script>
+	
+  <style id="holderjs-style" type="text/css"></style></head>
+
+  <body>
+  
+
+    <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+        </div>
+		   <div class="navbar-collapse collapse">
+			  <ul class="nav navbar-nav">
+				<!--<li><a href="#" onClick="_gaq.push(['_trackEvent', 'Click', 'Menu-Home']);">Home</a></li>-->
+				<li><a href="http://finraos.github.io/Dewey/#examples" onclick="_gaq.push([&#39;_trackEvent&#39;, &#39;Click&#39;, &#39;Menu-Examples&#39;]);">Examples</a></li>
+				<li><a href="https://groups.google.com/forum/#!forum/dewey" target="_blank" onclick="_gaq.push([&#39;_trackEvent&#39;, &#39;Click&#39;, &#39;Menu-Google Group&#39;]);">Google Group</a></li>
+				<li><a href="http://finraos.github.io/Dewey/#get_involved" onclick="_gaq.push([&#39;_trackEvent&#39;, &#39;Click&#39;, &#39;Menu-Get Involved&#39;]);">Get Involved</a></li>
+				<li><a href="http://finraos.github.io/Dewey/#previous_releases" onclick="_gaq.push([&#39;_trackEvent&#39;, &#39;Click&#39;, &#39;Menu-Previous Releases&#39;]);">Previous Releases</a></li>
+				<li><a href="http://finraos.github.io/Dewey/#about" onclick="_gaq.push([&#39;_trackEvent&#39;, &#39;Click&#39;, &#39;Menu-About&#39;]);">About</a></li>
+				<li class="dropdown" style="z-index:9999;">
+				  <a href="http://finraos.github.io/Dewey/#" class="dropdown-toggle" data-toggle="dropdown" style="z-index:9999;" onclick="_gaq.push([&#39;_trackEvent&#39;, &#39;Click&#39;, &#39;Menu-Documentation&#39;]);">Documentation<b class="caret"></b></a>
+				  <ul class="dropdown-menu" style="z-index:9999;">
+						<li><a href="https://github.com/FINRAOS/Dewey/tree/master/docs" style="z-index:9999;" target="_blank">Usage Docs</a></li>
+						<li><a href="http://finraos.github.io/Dewey/apis/v1.0/index.html" style="z-index:9999;" target="_blank">API Docs</a></li>
+				  </ul>
+				</li>
+				
+			  </ul>
+            </div>
+        <div class="navbar-collapse collapse">
+        </div><!--/.navbar-collapse -->
+      </div>
+    </div>
+	
+
+
+	
+	
+    <!-- Main jumbotron for a primary marketing message or call to action -->
+    <div class="container" style="background-color:#EEEEF4;">
+      <div class="row"><br><br>
+        <div class="col-md-8" style="padding-left: 40px;">
+		<p><br><img src="herd_files/herd_circle_a_small.png" vspace="20"><font color="grey" size="10"></font><font size="5"><br>
+		The Herd <b>unified data catalog</b> helps separate compute from storage in the cloud. Herd <b>job orchestration</b> manages your ETL and analytics processes while tracking all data in the catalog.
+<br>
+              </font></p>
+        </div>
+
+        <div class="col-md-2" style="z-index:1;position:relative;" align="right">
+		<br><br><br>
+            <p><a class="btn btn-success btn-primary btn-lg" role="button" style="input {background-color:#FF0000;}" href="https://github.com/FINRAOS/Herd/releases/tag/000" target="_new" onclick="_gaq.push([&#39;_trackEvent&#39;, &#39;Visit&#39;, &#39;Herd LANDING to Release V2.1&#39;]);">Initial Release (Version 000)</a></p>
+            <p><a class="btn btn-primary btn-lg" role="button" style="input {background-color:#FF0000;}" href="https://github.com/FINRAOS/Herd" target="_new" onclick="_gaq.push([&#39;_trackEvent&#39;, &#39;Visit&#39;, &#39;Herd LANDING to GITHUB&#39;]);">Get Involved on GitHub</a></p>
+        </div>
+          <!--<div class="col-md-4" style="z-index:1;position:relative;" align="right">
+              <br/>
+              <img src="imgs/dg_v20.png"/>
+
+               <div style="display:block;position:relative;top:0px;z-index:1;">
+               <iframe style="z-index:1;position:relative;" class="tscplayer_inline" name="tsc_player" src="vid/CLIP_player.html" scrolling="no" frameborder="0"  webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+               </div>
+
+          </div>-->
+	   
+	   
+      </div>
+    </div>
+
+    <br>
+	
+ <div class="container marketing">  
+		
+      <!-- Three columns of text below the carousel -->
+      <div class="row container ">
+          <div class="col-sm-3">
+              <img class="img-square" style="display: block; margin-left: auto; margin-right: auto;" src="./herd_files/catalog.png" alt="Meta-data Catalog" height="33%" width="33%">
+              <h3 style="text-align: center;">Unified Data Catalog</h2>
+              <p><font color="grey">A centralized, auditable catalog of your data.</font></p>
+          </div><!-- /.col-lg-4 -->
+          <div class="col-sm-3">
+              <img class="img-circle" style="display: block; margin-left: auto; margin-right: auto;" src="./herd_files/lineage.png" alt="Decreased Manual Effort" height="33%" width="33%">
+              <h3 style="text-align: center;">Track Lineage & Usage</h2>
+              <p><font color="grey">Capture data ancestry for regulatory, forensic, and analytical purposes</font></p>
+          </div><!-- /.col-lg-4 -->
+        <div class="col-sm-3">
+          <img class="img-circle" style="display: block; margin-left: auto; margin-right: auto;" src="./herd_files/cluster.png" alt="Increased Coverage" height="33%" width="33%">
+          <h3 style="text-align: center;">Manage Clusters</h2>
+          <p><font color="grey">Create and launch clusters; load data into clusters from catalog entries</font></p>
+        </div><!-- /.col-lg-4 -->
+        <div class="col-sm-3">
+          <img class="img-circle" style="display: block; margin-left: auto; margin-right: auto;" src="./herd_files/job_orch.png" alt="Increased Coverage" height="33%" width="33%">
+          <h3 style="text-align: center;">Orchestrate Jobs</h2>
+          <p><font color="grey">Orchestrate clusters and catalog services to automate processing jobs</font></p>
+        </div><!-- /.col-lg-4 -->
+      </div><!-- /.row -->
+
+
+
+	<div class="row">
+		<a style="padding-top: 40px; margin-top: -40px;" name="examples">&nbsp;</a>
+		<div class="alert alert-info"><b><font size="5">Getting Started</font></b></div>
+        <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://github.com/FINRAOS/Herd#quick-start" target="_new"><b><img src="./herd_files/link.png"> What is Herd?</b></a></p>
+        <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://github.com/FINRAOS/Herd#quick-start" target="_new"><b><img src="./herd_files/link.png"> Installation and Setup</b></a></p>
+        <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://github.com/FINRAOS/Herd#quick-start" target="_new"><b><img src="./herd_files/link.png"> Quick Start to Registering Data</b></a></p>
+
+      </div>
+
+	  
+ 	<div class="row">
+		<a style="padding-top: 40px; margin-top: -40px;" name="get_involved">&nbsp;</a>
+		<div class="alert alert-info"><b><font size="5">Get Involved</font></b></div>
+
+
+		<h3>&nbsp;&nbsp;&nbsp;<u>Contribute</u></h3>
+		<ol>
+		<li><p>We encourage everyone who has an idea to <a href="https://help.github.com/articles/fork-a-repo" target="_new">fork</a> the code, experiment and share their experiences with us through our <a href="https://groups.google.com/forum/#!forum/Herd">Google Group</a>.</p></li>
+		<li><p>If you believe that you have a worthwhile contribution, please open an <a href="https://github.com/FINRAOS/Herd/issues" target="_new">issue</a> on GitHub and explain your idea.</p></li>
+		<li><p>Once you have written your code, please make sure to sign off your work when you commit it. 
+		
+			</p><pre>git commit <b>-s</b> -m 'YOUR COMMIT DESCRIPTION'<br><br>git commit <b>--signoff</b> -m 'YOUR COMMIT DESCRIPTION'</pre>
+			When you signoff, you are agreeing to the following:
+
+			<pre><b><u>Developer's Certificate of Origin (adapted from the linux kernel)</u></b>
+By making a contribution to this project, I certify that:<br>
+(a). The contribution was created in whole or in part by me and I have the right to submit it under the open source license indicated in the file; or<br>
+(b). The contribution is based upon previous work that, to the best of my knowledge, is covered under an appropriate open source license and I have the right under that license to submit that work with modifications, whether created in whole or in part by me, under the same open source license (unless I am permitted to submit under a different license), as indicated in the file; or<br>
+(c). The contribution was provided directly to me by some other person who certified (a), (b) or (c) and I have not modified it.<br>
+(d). I understand and agree that this project and the contribution are public and that a record of the contribution (including all personal information I submit with it, including my sign-off) is maintained indefinitely and may be redistributed consistent with this project or the open source license(s) involved.
+			</pre>
+
+			<p></p>
+		</li>
+		
+		<li><p>Once you have completed the commit, you can make a <a href="http://help.github.com/send-pull-requests/" target="_new">pull request</a> referencing the initial issue created for the work.</p></li>
+		
+		
+		</ol>
+
+		
+		
+		
+		
+		<h3>&nbsp;&nbsp;&nbsp;<u>Report Bugs</u></h3>
+
+		<ol>
+			<p>
+				When you encounter bugs, please try to find out if the issue has already been reported by searching <a href="https://github.com/FINRAOS/Herd/issues" target="_new">here</a>. Once you identify that your issue is new, create a new ticket. Please make sure you provide a clear description of the issue along with a testable scenario.
+			</p>
+			<p>
+				If you want to get involved in fixing bugs, first read the steps outlined above under "Contribute". Then, you can assign yourself to the bug as the owner and start developing your code. Once you complete build and test of your code, please make a pull request for review. Once the review is complete, your code fix will be merged into master branch within the Herd repository.
+			</p>
+	   </ol>
+
+			
+	  <h3>&nbsp;&nbsp;&nbsp;<u>Communicate</u></h3>
+	  
+	  <ol>
+      <p>If you want to get involved, you can start by contributing to the <a href="https://github.com/FINRAOS/Dewy" target="_new">GitHub</a> project or reach out to <a href="mailto:opensource@finra.org?Subject=Inquiry%20on%20Herd%20project" target="_top">opensource@finra.org</a>. </p>
+      <p>If you have any questions or discussion topics, please post them on <a href="https://groups.google.com/forum/#!forum/Herd" target="_new">Google Groups</a>.</p>
+		
+		
+		</ol>
+		
+		<br>
+		<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://help.github.com/" target="_new"><b>GitHub Help</b></a></p>
+				
+		
+		</div>
+		
+		
+
+		
+		
+		<div class="row ">
+		<a style="padding-top: 40px; margin-top: -40px;" name="previous_releases">&nbsp;</a>
+		<div class="alert alert-info"><b><font size="5">Previous Releases</font></b></div>
+		
+		
+		<p><a class="btn btn-success btn-primary" role="button" style="input {background-color:#FF0000;}" href="https://github.com/FINRAOS/Herd/releases/tag/000" target="_new" onclick="_gaq.push([&#39;_trackEvent&#39;, &#39;Visit&#39;, &#39;Herd LANDING to Release000&#39;]);">Release Version 0.9</a></p>
+
+
+
+		
+		
+
+		<p><a class="btn btn-primary" role="button" href="http://finraos.github.io" onclick="_gaq.push([&#39;_trackEvent&#39;, &#39;Download&#39;, &#39;Download-Release V000&#39;]);">Download WAR Release v000</a><font color="red"><b>&nbsp;&nbsp;(This release is DEPRECATED!)</b></font></p>
+		</div>
+	   <br>
+
+		<div class="row">
+		<a style="padding-top: 40px; margin-top: -40px;" name="about">&nbsp;</a>
+		<div class="alert alert-info"><b><font size="5">About</font></b></div>
+		
+		
+
+		<div class="row container">
+			<ol class="container">
+			<table width="99%" class="container">
+			
+			<tbody><tr><td class="alert" colspan="4"><font size="5"><b>Team</b></font></td></tr>
+                <tr><td class="alert" width="10%"><img src="./herd_files/chaom_LThumb.jpg" height="96" width="80"></td><td class="alert" width="40%"><b>Michael Chao</b><br><a href="https://www.linkedin.com/pub/michael-chao/24/791/42" target="_new">Linkedin</a></td>
+                    <td class="alert" width="10%"><img src="./herd_files/ebersole_LThumb.jpg" height="96" width="80"></td><td class="alert" width="40%"><b>Shane Ebersole</b><br><a href="https://www.linkedin.com/pub/shane-ebersole/2/360/76" target="_new">Linkedin</a></td></tr>
+
+                <tr><td class="alert" width="10%"><img src="./herd_files/feldea_LThumb.jpg" height="96" width="80"></td><td class="alert" width="40%"><b>Arthur Felde</b><br>Man of Mystery</td>
+                    <td class="alert" width="10%"><img src="./herd_files/frank_LThumb.jpg" height="96" width="80"></td><td class="alert" width="40%"><b>Thomas Frank</b><br><a href="https://www.linkedin.com/pub/thomas-frank/80/940/a1b" target="_new">Linkedin</a></td></tr>
+
+                <tr><td class="alert" width="10%"><img src="./herd_files/griesbat_LThumb.jpg" height="96" width="96"></td><td class="alert" width="40%"><b>Tim Griesbach</b><br><a href="https://www.linkedin.com/in/timgriesbach" target="_new">Linkedin</a></td>
+                    <td class="alert" width="10%"><img src="./herd_files/hux_LThumb.jpg" height="96" width="80"></td><td class="alert" width="40%"><b>Patricia Hu</b><br><a href="https://www.linkedin.com/pub/patricia-hu/13/448/b48" target="_new">Linkedin</a></td></tr>
+
+                <tr><td class="alert" width="10%"><img src="./herd_files/pacha_LThumb.jpg" height="96" width="96"></td><td class="alert" width="40%"><b>Andrew Pach</b><br><a href="https://www.linkedin.com/in/foxsmart" target="_new">Linkedin</a></td>
+                    <td class="alert" width="10%"><img src="./herd_files/seoj_LThumb.jpg" height="96" width="80"></td><td class="alert" width="40%"><b>Max Seo</b><br><a href="https://www.linkedin.com/pub/max-seo/98/184/a1b" target="_new">Linkedin</a></td></tr>
+
+            <tr><td class="alert" width="10%"><img src="./herd_files/wang_LThumb.jpg" height="96" width="80"></td><td class="alert" width="40%"><b>Wayne Wang</b><br><a href="http://www.linkedin.com/in/needWayneProfileLink" target="_new">Linkedin</a></td>
+                <td class="alert" width="10%"><img src="./herd_files/Weisz_LThumb.jpg" height="96" width="80"></td><td class="alert" width="40%"><b>Nate Weisz</b><br><a href="https://www.linkedin.com/in/nateweisz" target="_new">Linkedin</a></td></tr>
+
+
+
+            <tr><td class="alert" colspan="4"><hr></td></tr>
+			<tr><td class="alert" colspan="4"><font size="5"><b>Sponsor</b></font></td></tr>
+			<tr><td class="alert">
+			 <img src="./herd_files/FINRA.jpg" alt="Increased Coverage">&nbsp;
+			</td>
+			<td class="container" colspan="3">
+			  <p><font color="grey">The FINRA developer community is actively supporting the Herd project. FINRA has graciously allocated time for their internal development resources to enhance Herd –and encourages participation in the open source community.</font></p>
+			  <p><a href="http://www.finra.org/" target="_new">http://www.finra.org</a></p>
+			  <p><font color="grey">Want to join FINRA? Visit finra.org/</font><a href="http://www.finra.org/AboutFINRA/Careers/" target="_new">careers</a><br><br><br><br><br></p>
+			</td></tr>	
+			</tbody></table>	
+			</ol>
+		</div>			
+      </div><!-- /.row -->
+
+
+	
+</div> <!-- /container -->
+
+    <div class="navbar navbar-inverse navbar-fixed container">
+      <div class="container">
+        <div class="navbar-header"><br>
+        <font color="grey" class="navbar avbar-toggle">© Copyright 2015 Herd Contributors.</font>
+		<br><br>
+        </div>
+      </div>
+    </div>
+	
+	
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="./herd_files/jquery-2.0.3.min.js"></script>
+    <script src="./herd_files/bootstrap.min.js"></script>
+    <script src="./herd_files/holder.js"></script>
+  
+
+
+
+
+
+</body></html>
