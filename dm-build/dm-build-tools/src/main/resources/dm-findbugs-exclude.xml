@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<!--
+  Copyright 2015 herd contributors
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<FindBugsFilter>
+
+   <!--
+   Find bugs exclusion filter file.
+
+   Specific bugs can be filtered out entirely or by package/class/method.
+   However, it is recommended to use the "@SuppressFBWarnings" annotation to excluded specific code in-line.
+   This annotation takes a list of bugs to exclude and a justification as to why the bug is being excluded.
+
+   A list of bugs and their descriptions can be found here: http://findbugs.sourceforge.net/bugDescriptions.html
+   Examples of how exclusions can be set in this file can be found here: http://findbugs.sourceforge.net/manual/filter.html
+   -->
+
+   <!-- Exclude the "expose internal representation" bugs since it is reasonable to expose them. -->
+   <!-- Exclude the "convert case locale" bugs since the default locale is used which is sufficient. -->
+   <Match>
+      <Bug pattern="EI_EXPOSE_REP, EI_EXPOSE_REP2, DM_CONVERT_CASE"/>
+   </Match>
+
+   <!-- Exclude the unwritten field rule for Activiti tasks since Activiti automatically initializes the "Expression" fields. -->
+   <Match>
+      <Package name="~org.finra.dm.service.activiti.task.*"/>
+      <Bug pattern="UWF_UNWRITTEN_FIELD, UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD"/>
+   </Match>
+
+   <!-- Exclude the XSD auto-generated XML classes. -->
+   <Match>
+      <Package name="~org.finra.dm.model.api.xml.*"/>
+   </Match>
+
+   <!-- Exclude the Hibernate auto-generated entity metadata classes. -->
+   <Match>
+      <Class name="~org.finra.dm.model.jpa.*_"/>
+   </Match>
+
+</FindBugsFilter>

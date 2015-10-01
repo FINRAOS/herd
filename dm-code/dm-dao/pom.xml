@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Copyright 2015 herd contributors
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+   <modelVersion>4.0.0</modelVersion>
+
+   <parent>
+      <groupId>org.finra.dm</groupId>
+      <artifactId>dm-code</artifactId>
+      <version>1.0.0</version>
+   </parent>
+
+   <name>DM DAO</name>
+
+   <!-- groupId and version are inherited from the parent and can be overridden here if needed. -->
+   <artifactId>dm-dao</artifactId>
+
+   <dependencies>
+
+      <dependency>
+         <groupId>${project.groupId}</groupId>
+         <artifactId>dm-model-api</artifactId>
+         <type>test-jar</type>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>${project.groupId}</groupId>
+         <artifactId>dm-model</artifactId>
+         <type>test-jar</type>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>${project.groupId}</groupId>
+         <artifactId>dm-core</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>${project.groupId}</groupId>
+         <artifactId>dm-core</artifactId>
+         <type>test-jar</type>
+         <scope>test</scope>
+      </dependency>
+
+      <dependency>
+         <groupId>com.amazonaws</groupId>
+         <artifactId>aws-java-sdk-core</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>com.amazonaws</groupId>
+         <artifactId>aws-java-sdk-ec2</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>com.amazonaws</groupId>
+         <artifactId>aws-java-sdk-emr</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>com.amazonaws</groupId>
+         <artifactId>aws-java-sdk-s3</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>com.amazonaws</groupId>
+         <artifactId>aws-java-sdk-sts</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>com.amazonaws</groupId>
+         <artifactId>aws-java-sdk-config</artifactId>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>commons-configuration</groupId>
+         <artifactId>commons-configuration</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.hibernate</groupId>
+         <artifactId>hibernate-entitymanager</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.hibernate</groupId>
+         <artifactId>hibernate-ehcache</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.springframework</groupId>
+         <artifactId>spring-core</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.springframework</groupId>
+         <artifactId>spring-jdbc</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.springframework</groupId>
+         <artifactId>spring-orm</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.springframework</groupId>
+         <artifactId>spring-jms</artifactId>
+      </dependency>
+
+      <!--
+       These dependencies don't typically go in a dao tier, but are needed for the AwsExceptionRetryAdvice and DmErrorInformationExceptionHandler in service tier 
+       which needs access to various types of exceptions, not to mention HTTP status codes and their descriptions.
+       -->
+      <dependency>
+         <groupId>org.springframework</groupId>
+         <artifactId>spring-web</artifactId>
+      </dependency>
+
+      <dependency>
+         <groupId>org.springframework</groupId>
+         <artifactId>spring-test</artifactId>
+         <version>${spring.version}</version>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.apache.commons</groupId>
+         <artifactId>commons-dbcp2</artifactId>
+         <version>${commons-dbcp2.version}</version>
+         <scope>test</scope>
+      </dependency>
+
+      <!-- Amazon SQS Java Messaging Library -->
+      <dependency>
+         <groupId>com.amazonaws</groupId>
+         <artifactId>aws-java-sdk-sqs</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>com.amazonaws</groupId>
+         <artifactId>amazon-sqs-java-messaging-lib</artifactId>
+      </dependency>
+
+      <dependency>
+         <groupId>org.apache.oozie</groupId>
+         <artifactId>oozie-client</artifactId>
+      </dependency>
+   </dependencies>
+
+</project>

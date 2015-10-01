@@ -1,0 +1,173 @@
+<?xml version="1.0"?>
+<!--
+  Copyright 2015 herd contributors
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<!DOCTYPE module PUBLIC
+   "-//Puppy Crawl//DTD Check Configuration 1.3//EN"
+   "http://www.puppycrawl.com/dtds/configuration_1_3.dtd">
+
+<module name="Checker">
+   <!-- Handle files with UTF-8 character set. -->
+   <property name="charset" value="UTF-8"/>
+
+   <!-- Severity level of error will generate error output when issues are encountered. -->
+   <property name="severity" value="error"/>
+
+   <!-- Ensure no tab characters exist in the source code (i.e. only spaces). -->
+   <module name="FileTabCharacter">
+      <!-- When errors are encountered, each line that contains a tab character will be displayed. -->
+      <property name="eachLine" value="true"/>
+   </module>
+
+   <!-- Ensure that the Apache license header is present in most files. -->
+   <module name="RegexpHeader">
+      <property name="headerFile" value="${checkstyle.header.file}"/>
+   </module>
+
+   <module name="TreeWalker">
+      <!-- Check Java source code. -->
+      <property name="fileExtensions" value="java"/>
+
+      <!-- Ensure that the filename matches the class name. -->
+      <module name="OuterTypeFilename"/>
+
+      <module name="AvoidEscapedUnicodeCharacters">
+         <!-- Allow escaping for non-printable(control) characters. -->
+         <property name="allowEscapesForControlCharacters" value="true"/>
+
+         <!-- Allow escaping if trail comment is present. -->
+         <property name="allowByTailComment" value="true"/>
+
+         <!-- Allow non-printable escapes. -->
+         <property name="allowNonPrintableEscapes" value="true"/>
+      </module>
+
+      <module name="LineLength">
+         <!-- Allow a maximum line length of no more than 160 characters. -->
+         <property name="max" value="160"/>
+
+         <!-- Configure pipe delimited patterns to ignore: import statements, @see statements, and URL's. -->
+         <property name="ignorePattern" value="^import.*|^.*@see.*|a href|href|http://|https://|ftp://"/>
+      </module>
+
+      <!-- Ensure there are no import statements that use the "*" wildcard notation (i.e. each import should be defined explicitly on its own line. -->
+      <module name="AvoidStarImport"/>
+
+      <!-- Checks that each top-level class, interface or enum resides in a source file of its own. -->
+      <module name="OneTopLevelClass">
+         <!-- Only apply to classes (i.e. not interfaces or enums. -->
+         <property name="tokens" value="CLASS_DEF"/>
+      </module>
+
+      <!-- Ensure braces are required around all code blocks. -->
+      <module name="NeedBraces"/>
+
+      <!-- Left curly braces are required on their own line, as opposed to end of line (i.e. eol). -->
+      <module name="LeftCurly">
+         <property name="option" value="nl"/>
+      </module>
+
+      <!-- Right curly braces must be alone on the line, as opposed to on the same line as code (i.e. same). -->
+      <module name="RightCurly">
+         <property name="option" value="alone"/>
+         <!-- Apply to all types of tokens. -->
+         <property name="tokens"
+                   value=" LITERAL_TRY, LITERAL_CATCH, LITERAL_FINALLY, LITERAL_IF, LITERAL_ELSE, CLASS_DEF, METHOD_DEF, CTOR_DEF, LITERAL_FOR, LITERAL_WHILE, LITERAL_DO, STATIC_INIT, INSTANCE_INIT"/>
+      </module>
+
+      <!-- Ensures that there is only one statement per line. -->
+      <module name="OneStatementPerLine"/>
+
+      <!-- Apply a regex pattern for package names. -->
+      <module name="PackageName">
+         <property name="format" value="^[a-z]+(\.[a-z][a-z0-9]*)*$"/>
+         <message key="name.invalidPattern" value="Package name ''{0}'' must match pattern ''{1}''."/>
+      </module>
+
+      <!-- Apply a regex pattern for type names. -->
+      <module name="TypeName">
+         <property name="format" value="^[A-Z][a-zA-Z0-9]*$"/>
+         <message key="name.invalidPattern" value="Type name ''{0}'' must match pattern ''{1}''."/>
+      </module>
+
+      <!-- Apply a regex pattern for member names. -->
+      <module name="MemberName">
+         <property name="format" value="^[a-z][a-z0-9][a-zA-Z0-9]*$"/>
+         <message key="name.invalidPattern" value="Member name ''{0}'' must match pattern ''{1}''."/>
+      </module>
+
+      <!-- Apply a regex pattern for method names. -->
+      <module name="MethodName">
+         <property name="format" value="^[a-z][a-z0-9][a-zA-Z0-9_]*$"/>
+         <message key="name.invalidPattern" value="Method name ''{0}'' must match pattern ''{1}''."/>
+      </module>
+
+      <!-- Apply a regex pattern for parameter names. -->
+      <module name="ParameterName">
+         <property name="format" value="^[a-z][a-z0-9][a-zA-Z0-9]*$"/>
+         <message key="name.invalidPattern" value="Parameter name ''{0}'' must match pattern ''{1}''."/>
+      </module>
+
+      <!-- Apply a regex pattern for local variable names. -->
+      <module name="LocalVariableName">
+         <property name="tokens" value="VARIABLE_DEF"/>
+         <property name="format" value="^[a-z][a-z0-9][a-zA-Z0-9]*$"/>
+         <!-- Allow single characters in for loops which is common. -->
+         <property name="allowOneCharVarInForLoop" value="true"/>
+         <message key="name.invalidPattern" value="Local variable name ''{0}'' must match pattern ''{1}''."/>
+      </module>
+
+      <!-- Apply a regex pattern for class type names. -->
+      <module name="ClassTypeParameterName">
+         <property name="format" value="(^[A-Z][0-9]?)$|([A-Z][a-zA-Z0-9]*[T]$)"/>
+         <message key="name.invalidPattern" value="Class type name ''{0}'' must match pattern ''{1}''."/>
+      </module>
+
+      <!-- Apply a regex pattern for member type names. -->
+      <module name="MethodTypeParameterName">
+         <property name="format" value="(^[A-Z][0-9]?)$|([A-Z][a-zA-Z0-9]*[T]$)"/>
+         <message key="name.invalidPattern" value="Method type name ''{0}'' must match pattern ''{1}''."/>
+      </module>
+
+      <!-- Uses the default ordering of Javadoc tags for all tokens (i.e. CLASS_DEF, INTERFACE_DEF, ENUM_DEF, METHOD_DEF, CTOR_DEF, VARIABLE_DEF). -->
+      <!-- Order is @author, @version, @param, @return, @throws, @exception, @see, @since, @serial, @serialField, @serialData, @deprecated -->
+      <module name="AtclauseOrder"/>
+
+      <!-- Ensure Javadoc is required. -->
+      <module name="JavadocMethod">
+         <!-- It is required for package and higher level scoping (i.e. not required for private scope. -->
+         <property name="scope" value="package"/>
+
+         <!-- Exclude Javadoc requirements for 1 line code bodies. -->
+         <property name="minLineCount" value="2"/>
+
+         <!-- @Override methods are excluded since the interface should have the documentation. -->
+         <property name="allowedAnnotations" value="Override"/>
+
+         <!-- Validate that the throws tags are present. -->
+         <property name="validateThrows" value="true"/>
+
+         <!-- Exclude Javadoc requirements for accessor method (i.e. simple getters and setters). -->
+         <property name="allowMissingPropertyJavadoc" value="true"/>
+      </module>
+
+      <!-- Ensure no AWS keys exist in Java files. -->
+      <module name="Regexp">
+         <property name="format" value="AKIA"/>
+         <property name="illegalPattern" value="true"/>
+      </module>
+
+   </module>
+</module>

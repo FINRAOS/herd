@@ -1,0 +1,35 @@
+<!--WIDE: using 'justOne' helper to display body using full table width-->
+{{#if isBody}}
+    {{#if justOne}}
+        <td colspan='5'>
+    {{else}}
+        <td class='code required'><label for='{{valueId}}'>{{name}}</label>:<br /><br />
+            <strong><span class="markdown">{{{description}}}</span></strong></td>
+        <td colspan='4'>
+    {{/if}}
+		{{#if isFile}}
+			<input type="file" name='{{name}}' id='{{valueId}}'/>
+		{{else}}
+            <textarea class='body-textarea required' placeholder='(required)' name='{{name}}' id='{{valueId}}' style="border: none; width: 100%; height: 100%; -webkit-box-sizing: border-box; -moz-box-sizing: border-box; box-sizing: border-box; overflow: hidden;">{{#if default}}{{default}}{{/if}}</textarea>
+        <br />
+        <div class="parameter-content-type" />
+        {{/if}}
+        <span class="model-signature"></span>
+    </td>
+
+{{else}}
+    <td class='code required'><label for='{{valueId}}'>{{name}}</label></td>
+    <td>
+		{{#if isFile}}
+			<input class='parameter' class='required' type='file' name='{{name}}' id='{{valueId}}'/>
+		{{else}}
+			{{#renderTextParam this}}
+			{{/renderTextParam}}
+		{{/if}}
+</td>
+<td>
+	<strong><span class="markdown">{{{description}}}</span></strong>
+</td>
+<td>{{{paramType}}}</td>
+<td><span class="model-signature"></span></td>
+{{/if}}

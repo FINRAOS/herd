@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  Copyright 2015 herd contributors
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<emrClusterDefinition>
+   <!--
+      There is a wiki page that talks about each of the following parameters.
+      TODO: Point to GitHub https://.../confluence/display/DataManagement/EMR+Cluster+Definition
+      Go through this wiki page for the description.
+      The actual values could be anything that is supported by AWS for each of the parametes.
+   -->
+   <sshKeyPairName>test_sshKeyPairName</sshKeyPairName>
+   <subnetId>SUBNET_1</subnetId>
+   <logBucket>s3://test-bucket-managed/logs/emrLogs/</logBucket>
+   <keepAlive>true</keepAlive>
+   <visibleToAll>true</visibleToAll>
+   <terminationProtection>true</terminationProtection>
+   <encryptionEnabled>true</encryptionEnabled>
+   <installOozie>true</installOozie>
+   <amiVersion>3.2.1</amiVersion>
+   <hadoopVersion>2.4.0</hadoopVersion>
+   <pigVersion>latest</pigVersion>
+   <hiveVersion>latest</hiveVersion>
+   <ec2NodeIamProfileName>test_ec2NodeIamProfileName</ec2NodeIamProfileName>
+   <customBootstrapActionAll>
+      <scriptDefinition>
+         <scriptName>Application Specific All Bootstrap Script</scriptName>
+         <scriptLocation>${S3_MANAGED_RESOURCE_LOCATION}/app-a/test/test_script.sh</scriptLocation>
+         <scriptArguments>
+            <argument>testArg1</argument>
+            <argument>testArg2</argument>
+            <argument>testArg3</argument>
+         </scriptArguments>
+      </scriptDefinition>
+   </customBootstrapActionAll>
+   <customBootstrapActionMaster>
+      <scriptDefinition>
+         <scriptName>Application Specific Master Bootstrap Script</scriptName>
+         <scriptLocation>${S3_MANAGED_RESOURCE_LOCATION}/app-a/test/test_script.sh</scriptLocation>
+         <scriptArguments>
+            <argument>testArg1</argument>
+            <argument>testArg2</argument>
+            <argument>testArg3</argument>
+         </scriptArguments>
+      </scriptDefinition>
+   </customBootstrapActionMaster>
+   <instanceDefinitions>
+      <masterInstances>
+         <instanceCount>1</instanceCount>
+         <instanceType>INSTANCE_TYPE_1</instanceType>
+         <instanceSpotPrice>2.3</instanceSpotPrice>
+      </masterInstances>
+      <coreInstances>
+         <instanceCount>2</instanceCount>
+         <instanceType>INSTANCE_TYPE_1</instanceType>
+         <instanceSpotPrice>2.3</instanceSpotPrice>
+      </coreInstances>
+   </instanceDefinitions>
+   <nodeTags>
+      <nodeTag>
+         <tagName>Name</tagName>
+         <tagValue>test_Name</tagValue>
+      </nodeTag>
+      <nodeTag>
+         <tagName>SDLC</tagName>
+         <tagValue>Development</tagValue>
+      </nodeTag>
+      <nodeTag>
+         <tagName>AGS</tagName>
+         <tagValue>test_AGS</tagValue>
+      </nodeTag>
+      <nodeTag>
+         <tagName>Purpose</tagName>
+         <tagValue>execPOC</tagValue>
+      </nodeTag>
+      <nodeTag>
+         <tagName>Cost Center</tagName>
+         <tagValue>test_Cost_Center</tagValue>
+      </nodeTag>
+      <nodeTag>
+         <tagName>Owner</tagName>
+         <tagValue>test_Owner</tagValue>
+      </nodeTag>
+   </nodeTags>
+   <daemonConfigurations>
+      <daemonParam>
+         <name>--namenode-heap-size</name>
+         <value>2048</value>
+      </daemonParam>
+      <daemonParam>
+         <name>--namenode-opts</name>
+         <value>-XX:GCTimeRatio=19</value>
+      </daemonParam>
+   </daemonConfigurations>
+   <hadoopConfigurations>
+      <configurationFiles>
+         <configurationFile>
+            <fileNameShortcut>-M</fileNameShortcut>
+            <configFileLocation>${S3_MANAGED_RESOURCE_LOCATION}/app-a/test/mapred-site.xml</configFileLocation>
+         </configurationFile>
+         <configurationFile>
+            <fileNameShortcut>-C</fileNameShortcut>
+            <configFileLocation>${S3_MANAGED_RESOURCE_LOCATION}/app-a/test/core-site.xml</configFileLocation>
+         </configurationFile>
+      </configurationFiles>
+      <keyValuePairConfigurations>
+         <keyValuePairConfiguration>
+            <keyValueShortcut>-c</keyValueShortcut>
+            <attribKey>mapred.tasktracker.map.tasks.maximum</attribKey>
+            <attribVal>2</attribVal>
+         </keyValuePairConfiguration>
+         <keyValuePairConfiguration>
+            <keyValueShortcut>-m</keyValueShortcut>
+            <attribKey>mapred.userlog.retain.hours</attribKey>
+            <attribVal>3</attribVal>
+         </keyValuePairConfiguration>
+      </keyValuePairConfigurations>
+   </hadoopConfigurations>
+   <hadoopJarSteps>
+      <hadoopJarStep>
+         <stepName>Shell_step</stepName>
+         <jarLocation>s3://elasticmapreduce/libs/script-runner/script-runner.jar</jarLocation>
+         <scriptArguments>
+            <argument>s3://test-bucket-managed/app-a/test/test_script.sh</argument>
+            <argument>argument1</argument>
+            <argument>argument2</argument>
+         </scriptArguments>
+      </hadoopJarStep>
+   </hadoopJarSteps>
+</emrClusterDefinition>

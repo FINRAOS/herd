@@ -1,0 +1,35 @@
+<!--
+  Copyright 2015 herd contributors
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<div>
+   <div class="top-content">
+      <h1>DM Object Status</h1>
+      <div class="error-wrapper">
+         <p ng-if="vm.errorMessage" class="error">
+            <img src="/dm-app/images/ic_error_red_48dp.png" />
+            <span>{{vm.errorMessage}}</span>
+         </p>
+      </div>
+      <dm-object-status-filter filter="vm.filter" do-filter="vm.doFilter()" />
+   </div>
+   <div class="main-content">
+      <table class="status-table">
+         <thead dm-object-status-header partition-values="vm.partitionValues" calendar-back="vm.calendarBack()" calendar-forward="vm.calendarForward()"
+            expected-partition-values="vm.expectedPartitionValues"></thead>
+         <tbody dm-object-status-body partition-values="vm.partitionValues" business-object-formats="vm.businessObjectFormats"
+            business-object-data-availabilities="vm.businessObjectDataAvailabilities" expected-partition-values="vm.expectedPartitionValues"></tbody>
+      </table>
+   </div>
+</div>
