@@ -80,7 +80,7 @@ definitions:
           <buildOs>Linux 2.6.18-308.24.1.el5 amd64</buildOs>
           <buildUser>sfcm</buildUser>
           <buildDate>20140520_184841</buildDate>
-          <buildNumber>1.0.0-SNAPSHOT</buildNumber>
+          <buildNumber>0.1.0</buildNumber>
         </buildInfo>
     properties:
       buildDate:
