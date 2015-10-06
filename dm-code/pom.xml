@@ -43,11 +43,6 @@
          <artifactId>log4j</artifactId>
       </dependency>
       <dependency>
-         <groupId>com.oracle</groupId>
-         <artifactId>ojdbc6</artifactId>
-         <scope>test</scope>
-      </dependency>
-      <dependency>
          <groupId>org.postgresql</groupId>
          <artifactId>postgresql</artifactId>
          <scope>test</scope>

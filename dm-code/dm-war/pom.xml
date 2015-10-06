@@ -115,10 +115,6 @@
          <groupId>com.google.gwt</groupId>
          <artifactId>gwt-servlet</artifactId>
       </dependency>
-      <dependency>
-         <groupId>org.vaadin.addons</groupId>
-         <artifactId>dcharts-widget</artifactId>
-      </dependency>
    </dependencies>
 
    <build>
