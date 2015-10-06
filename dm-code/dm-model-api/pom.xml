@@ -21,7 +21,7 @@
    <parent>
       <groupId>org.finra.dm</groupId>
       <artifactId>dm-code</artifactId>
-      <version>1.0.0</version>
+      <version>0.1.0</version>
    </parent>
 
    <name>DM Model API</name>

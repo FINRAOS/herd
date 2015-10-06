@@ -1,0 +1,6 @@
+jdk:
+  - oraclejdk8
+install:
+  - npm install -g bower
+script:
+  - mvn clean install -q 2> /dev/null
