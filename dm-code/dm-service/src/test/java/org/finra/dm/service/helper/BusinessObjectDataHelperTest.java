@@ -25,9 +25,9 @@ import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.Test;
 
-import org.finra.dm.model.jpa.BusinessObjectFormatEntity;
 import org.finra.dm.model.api.xml.BusinessObjectDataKey;
 import org.finra.dm.model.api.xml.SchemaColumn;
+import org.finra.dm.model.jpa.BusinessObjectFormatEntity;
 import org.finra.dm.service.AbstractServiceTest;
 
 public class BusinessObjectDataHelperTest extends AbstractServiceTest
@@ -124,7 +124,8 @@ public class BusinessObjectDataHelperTest extends AbstractServiceTest
     {
         BusinessObjectFormatEntity businessObjectFormatEntity =
             createBusinessObjectFormatEntity(namespace, businessObjectDefinitionName, businessObjectFormatUsage, fileType, businessObjectFormatVersion, null,
-                true, businessObjectFormatPartitionKey, null, null, null, null, schemaColumns, partitionColumns);
+                LATEST_VERSION_FLAG_SET, businessObjectFormatPartitionKey, NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES, null, null, null, schemaColumns,
+                partitionColumns);
         BusinessObjectDataKey businessObjectDataKey =
             new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, fileType, businessObjectFormatVersion, partitionValue,
                 subPartitionValues, businessObjectDataVersion);

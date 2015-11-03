@@ -34,11 +34,6 @@ import org.junit.Test;
 
 import org.finra.dm.core.Command;
 import org.finra.dm.model.ObjectNotFoundException;
-import org.finra.dm.model.jpa.BusinessObjectDataEntity;
-import org.finra.dm.model.jpa.BusinessObjectFormatEntity;
-import org.finra.dm.model.jpa.FileTypeEntity;
-import org.finra.dm.model.jpa.StorageEntity;
-import org.finra.dm.model.jpa.StorageUnitEntity;
 import org.finra.dm.model.api.xml.AttributeDefinition;
 import org.finra.dm.model.api.xml.BusinessObjectDataDdlOutputFormatEnum;
 import org.finra.dm.model.api.xml.BusinessObjectFormat;
@@ -51,6 +46,11 @@ import org.finra.dm.model.api.xml.BusinessObjectFormatKeys;
 import org.finra.dm.model.api.xml.BusinessObjectFormatUpdateRequest;
 import org.finra.dm.model.api.xml.Schema;
 import org.finra.dm.model.api.xml.SchemaColumn;
+import org.finra.dm.model.jpa.BusinessObjectDataEntity;
+import org.finra.dm.model.jpa.BusinessObjectFormatEntity;
+import org.finra.dm.model.jpa.FileTypeEntity;
+import org.finra.dm.model.jpa.StorageEntity;
+import org.finra.dm.model.jpa.StorageUnitEntity;
 import org.finra.dm.service.helper.Hive13DdlGenerator;
 
 /**
@@ -339,9 +339,9 @@ public class BusinessObjectFormatRestControllerTest extends AbstractRestTest
     public void testCreateBusinessObjectFormatCreateSecondVersionNoPartitioningColumns()
     {
         // Create and persist an initial version of a business object format with schema without any partitioning columns.
-        createBusinessObjectFormatEntity(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION, true,
-            PARTITION_KEY, PARTITION_KEY_GROUP, SCHEMA_DELIMITER_PIPE, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N,
-            getTestSchemaColumns(RANDOM_SUFFIX), null);
+        createBusinessObjectFormatEntity(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION,
+            LATEST_VERSION_FLAG_SET, PARTITION_KEY, PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
+            SCHEMA_NULL_VALUE_BACKSLASH_N, getTestSchemaColumns(RANDOM_SUFFIX), null);
 
         // Create a second version of the business object format without partitioning columns.
         Schema testSchema = getTestSchema();
@@ -1067,9 +1067,9 @@ public class BusinessObjectFormatRestControllerTest extends AbstractRestTest
 
         // Create an initial version of a business object format with format description and schema information.
         BusinessObjectFormatEntity originalBusinessObjectFormatEntity =
-            createBusinessObjectFormatEntity(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION, true,
-                PARTITION_KEY, PARTITION_KEY_GROUP, SCHEMA_DELIMITER_COMMA, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N,
-                getTestSchemaColumns(), getTestPartitionColumns());
+            createBusinessObjectFormatEntity(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION,
+                LATEST_VERSION_FLAG_SET, PARTITION_KEY, PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_COMMA, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
+                SCHEMA_NULL_VALUE_BACKSLASH_N, getTestSchemaColumns(), getTestPartitionColumns());
 
         // Create a new partition key group for the update request.
         createPartitionKeyGroupEntity(PARTITION_KEY_GROUP_2);
@@ -1147,9 +1147,9 @@ public class BusinessObjectFormatRestControllerTest extends AbstractRestTest
 
         // Create and persist a valid business object format without description and with schema without any partitioning columns.
         BusinessObjectFormatEntity originalBusinessObjectFormatEntity =
-            createBusinessObjectFormatEntity(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION, true,
-                PARTITION_KEY, PARTITION_KEY_GROUP, SCHEMA_DELIMITER_COMMA, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N,
-                getTestSchemaColumns(), null);
+            createBusinessObjectFormatEntity(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION,
+                LATEST_VERSION_FLAG_SET, PARTITION_KEY, PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_COMMA, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
+                SCHEMA_NULL_VALUE_BACKSLASH_N, getTestSchemaColumns(), null);
 
         // Create a new partition key group for the update request.
         createPartitionKeyGroupEntity(PARTITION_KEY_GROUP_2);
@@ -2815,8 +2815,8 @@ public class BusinessObjectFormatRestControllerTest extends AbstractRestTest
             String partitionKey = partitionColumns.get(0).getName();
             BusinessObjectFormatEntity businessObjectFormatEntity =
                 createBusinessObjectFormatEntity(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, businessObjectFormatFileType, FORMAT_VERSION, FORMAT_DESCRIPTION,
-                    true, partitionKey, null, SCHEMA_DELIMITER_PIPE, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, getTestSchemaColumns(),
-                    partitionColumns);
+                    LATEST_VERSION_FLAG_SET, partitionKey, NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
+                    SCHEMA_NULL_VALUE_BACKSLASH_N, getTestSchemaColumns(), partitionColumns);
 
             for (String partitionValue : UNSORTED_PARTITION_VALUES)
             {

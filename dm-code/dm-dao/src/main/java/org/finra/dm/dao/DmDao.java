@@ -17,6 +17,20 @@ package org.finra.dm.dao;
 
 import java.util.List;
 
+import org.finra.dm.model.api.xml.BusinessObjectDataKey;
+import org.finra.dm.model.api.xml.BusinessObjectDataNotificationRegistrationKey;
+import org.finra.dm.model.api.xml.BusinessObjectDefinitionKey;
+import org.finra.dm.model.api.xml.BusinessObjectFormatKey;
+import org.finra.dm.model.api.xml.CustomDdlKey;
+import org.finra.dm.model.api.xml.EmrClusterDefinitionKey;
+import org.finra.dm.model.api.xml.ExpectedPartitionValueKey;
+import org.finra.dm.model.api.xml.FileTypeKey;
+import org.finra.dm.model.api.xml.NamespaceKey;
+import org.finra.dm.model.api.xml.PartitionKeyGroupKey;
+import org.finra.dm.model.api.xml.PartitionValueRange;
+import org.finra.dm.model.api.xml.StorageBusinessObjectDefinitionDailyUploadStats;
+import org.finra.dm.model.api.xml.StorageDailyUploadStats;
+import org.finra.dm.model.api.xml.StorageKey;
 import org.finra.dm.model.dto.DateRangeDto;
 import org.finra.dm.model.dto.StorageAlternateKeyDto;
 import org.finra.dm.model.jpa.BusinessObjectDataEntity;
@@ -40,20 +54,6 @@ import org.finra.dm.model.jpa.StorageEntity;
 import org.finra.dm.model.jpa.StorageFileEntity;
 import org.finra.dm.model.jpa.StoragePlatformEntity;
 import org.finra.dm.model.jpa.StorageUnitEntity;
-import org.finra.dm.model.api.xml.BusinessObjectDataKey;
-import org.finra.dm.model.api.xml.BusinessObjectDataNotificationRegistrationKey;
-import org.finra.dm.model.api.xml.BusinessObjectDefinitionKey;
-import org.finra.dm.model.api.xml.BusinessObjectFormatKey;
-import org.finra.dm.model.api.xml.CustomDdlKey;
-import org.finra.dm.model.api.xml.EmrClusterDefinitionKey;
-import org.finra.dm.model.api.xml.ExpectedPartitionValueKey;
-import org.finra.dm.model.api.xml.FileTypeKey;
-import org.finra.dm.model.api.xml.NamespaceKey;
-import org.finra.dm.model.api.xml.PartitionKeyGroupKey;
-import org.finra.dm.model.api.xml.PartitionValueRange;
-import org.finra.dm.model.api.xml.StorageBusinessObjectDefinitionDailyUploadStats;
-import org.finra.dm.model.api.xml.StorageDailyUploadStats;
-import org.finra.dm.model.api.xml.StorageKey;
 
 /**
  * The data management DAO.
@@ -333,14 +333,14 @@ public interface DmDao extends BaseJpaDao
      * available format version for each partition value will be used.
      * @param businessObjectDataVersion the business object data version. If a business object data version isn't specified, the latest data version for each
      * partition value will be used.
-     * @param storageName the name of the storage where the business object data storage unit is located (case-insensitive)
+     * @param storageNames the list of storage names (case-insensitive)
      * @param upperBoundPartitionValue the optional inclusive upper bound for the maximum available partition value
      * @param lowerBoundPartitionValue the optional inclusive lower bound for the maximum available partition value
      *
      * @return the maximum available partition value
      */
     public String getBusinessObjectDataMaxPartitionValue(int partitionColumnPosition, BusinessObjectFormatKey businessObjectFormatKey,
-        Integer businessObjectDataVersion, String storageName, String upperBoundPartitionValue, String lowerBoundPartitionValue);
+        Integer businessObjectDataVersion, List<String> storageNames, String upperBoundPartitionValue, String lowerBoundPartitionValue);
 
     /**
      * Retrieves a minimum available partition value per specified parameters.
@@ -350,12 +350,12 @@ public interface DmDao extends BaseJpaDao
      * available format version for each partition value will be used.
      * @param businessObjectDataVersion the business object data version. If a business object data version isn't specified, the latest data version for each
      * partition value will be used.
-     * @param storageName the name of the storage where the business object data storage unit is located (case-insensitive)
+     * @param storageNames the list of storage names (case-insensitive)
      *
      * @return the maximum available partition value
      */
     public String getBusinessObjectDataMinPartitionValue(int partitionColumnPosition, BusinessObjectFormatKey businessObjectFormatKey,
-        Integer businessObjectDataVersion, String storageName);
+        Integer businessObjectDataVersion, List<String> storageNames);
 
     /**
      * Returns a number of business object data instances registered with this business object format.
@@ -471,6 +471,26 @@ public interface DmDao extends BaseJpaDao
     public List<StorageUnitEntity> getStorageUnitsByStorageAndBusinessObjectData(StorageEntity storageEntity,
         List<BusinessObjectDataEntity> businessObjectDataEntities);
 
+    /**
+     * Retrieves a list of storage unit entities per specified parameters.
+     *
+     * @param businessObjectFormatKey the business object format key (case-insensitive). If a business object format version isn't specified, the latest
+     * available format version for each partition value will be used.
+     * @param partitionFilters the list of partition filter to be used to select business object data instances. Each partition filter contains a list of
+     * primary and sub-partition values in the right order up to the maximum partition levels allowed by business object data registration - with partition
+     * values for the relative partitions not to be used for selection passed as nulls.
+     * @param businessObjectDataVersion the business object data version. If a business object data version isn't specified, the latest data version based on
+     * the specified business object data status is returned.
+     * @param businessObjectDataStatus the business object data status. This parameter is ignored when the business object data version is specified. When
+     * business object data version and business object data status both are not specified, the latest data version for each set of partition values will be
+     * used regardless of the status.
+     * @param storageNames the list of storage names where the business object data storage units should be looked for (case-insensitive)
+     *
+     * @return the list of storage unit entities sorted by partition values and storage names
+     */
+    public List<StorageUnitEntity> getStorageUnitsByPartitionFiltersAndStorages(BusinessObjectFormatKey businessObjectFormatKey,
+        List<List<String>> partitionFilters, Integer businessObjectDataVersion, String businessObjectDataStatus, List<String> storageNames);
+
     // StorageFile
 
     /**
@@ -501,18 +521,16 @@ public interface DmDao extends BaseJpaDao
      *
      * @return the list of storage file entities sorted by file path
      */
-    public List<StorageFileEntity> getStorageFileEntities(String storageName, String filePathPrefix);
+    public List<StorageFileEntity> getStorageFilesByStorageAndFilePathPrefix(String storageName, String filePathPrefix);
 
     /**
-     * Retrieves a sorted list of storage files that belong to the specified storage for the specified business object data.
+     * Retrieves a sorted list of storage files that belong to the specified list of storage units.
      *
-     * @param storageEntity the storage entity
-     * @param businessObjectDataEntities the list of business object data entities
+     * @param storageUnitEntities the list of storage unit entities
      *
      * @return the list of storage file entities sorted by file path
      */
-    public List<StorageFileEntity> getStorageFilesByStorageAndBusinessObjectData(StorageEntity storageEntity,
-        List<BusinessObjectDataEntity> businessObjectDataEntities);
+    public List<StorageFileEntity> getStorageFilesByStorageUnits(List<StorageUnitEntity> storageUnitEntities);
 
     // StorageUploadStatistics
 

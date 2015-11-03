@@ -15,9 +15,13 @@
 */
 package org.finra.dm.core.helper;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
+import org.junit.Assert;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import org.finra.dm.core.AbstractCoreTest;
 import org.finra.dm.core.Command;
@@ -28,9 +32,10 @@ import org.finra.dm.core.Command;
 public class DmThreadHelperTest extends AbstractCoreTest
 {
     @Autowired
-    DmThreadHelper dmThreadHelper;
+    private DmThreadHelper dmThreadHelper;
+
     /*
-     * This test is to get the clover coverage for sleep() method on DmHelper 
+     * This test is to get the clover coverage for sleep() method on DmHelper
      */
     @Test
     public void testSleep() throws Exception
@@ -38,7 +43,7 @@ public class DmThreadHelperTest extends AbstractCoreTest
         // Sleep for 1 second
         dmThreadHelper.sleep(1 * 1000L);
 
-        // Passing null should result in Exception that is eaten and logged 
+        // Passing null should result in Exception that is eaten and logged
 
         executeWithoutLogging(DmThreadHelper.class, new Command()
         {
@@ -48,5 +53,46 @@ public class DmThreadHelperTest extends AbstractCoreTest
                 (new DmThreadHelper()).sleep(null);
             }
         });
+    }
+
+    /**
+     * Asserts that calling executeAsync actually runs the given runnable and runs it asynchronously.
+     * We test it by having a "token" queue which is a blocking queue.
+     * The async task will push a token into the queue while the thread which scheduled the task will wait for a token to be available in the queue.
+     * The main thread will be blocked, and the lock only released when a asynchronous thread pushes a token into the queue.
+     */
+    @Test
+    public void testExecuteAsync() throws Exception
+    {
+        // The "token" queue
+        final BlockingQueue<String> queue = new LinkedBlockingQueue<>(1);
+
+        // Schedule an asynchronous task
+        dmThreadHelper.executeAsync(new Runnable()
+        {
+            public void run()
+            {
+                try
+                {
+                    Thread.sleep(500);
+                    queue.offer("testToken");
+                }
+                catch (InterruptedException e)
+                {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+
+        /*
+         * Poll the queue, which blocks this thread.
+         * For safety, a short timeout of 1 second is added, so in case of deadlock or other threading nightmares, this test doesn't block the rest of test
+         * execution.
+         * The token will be null if the timeout is reached, otherwise
+         */
+        String token = queue.poll(1000, TimeUnit.MILLISECONDS);
+
+        Assert.assertNotNull("Expected the async task to have put a token in the queue, but none was found after a timeout. Ensure that the async task "
+            + "actually ran and pushed a token into queue.", token);
     }
 }

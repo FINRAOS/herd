@@ -32,16 +32,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import org.finra.dm.core.DmFileUtils;
+import org.finra.dm.core.helper.ConfigurationHelper;
 import org.finra.dm.core.helper.DmThreadHelper;
+import org.finra.dm.model.api.xml.S3KeyPrefixInformation;
+import org.finra.dm.model.api.xml.Storage;
+import org.finra.dm.model.api.xml.StorageFile;
+import org.finra.dm.model.dto.ConfigurationValue;
 import org.finra.dm.model.dto.DmRegServerAccessParamsDto;
 import org.finra.dm.model.dto.ManifestFile;
 import org.finra.dm.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.dm.model.dto.UploaderInputManifestDto;
-import org.finra.dm.model.jpa.StorageAttributeEntity;
 import org.finra.dm.model.jpa.StorageEntity;
-import org.finra.dm.model.api.xml.S3KeyPrefixInformation;
-import org.finra.dm.model.api.xml.Storage;
-import org.finra.dm.model.api.xml.StorageFile;
 import org.finra.dm.tools.common.databridge.DataBridgeController;
 
 /**
@@ -60,6 +61,9 @@ public class UploaderController extends DataBridgeController
 
     @Autowired
     private DmThreadHelper dmThreadHelper;
+
+    @Autowired
+    protected ConfigurationHelper configurationHelper;
 
     /**
      * Executes the uploader workflow.
@@ -112,7 +116,8 @@ public class UploaderController extends DataBridgeController
             Storage s3ManagedStorage = uploaderWebClient.getStorage(StorageEntity.MANAGED_STORAGE);
 
             // Get S3 managed bucket name.  Please note that since this value is required we pass a "true" flag.
-            String s3BucketName = dmHelper.getStorageAttributeValueByName(StorageAttributeEntity.ATTRIBUTE_BUCKET_NAME, s3ManagedStorage, true);
+            String s3BucketName = dmHelper
+                .getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), s3ManagedStorage, true);
 
             // Special handling for the maxThreads command line option.
             params.setMaxThreads(adjustIntegerValue(params.getMaxThreads(), MIN_THREADS, MAX_THREADS));

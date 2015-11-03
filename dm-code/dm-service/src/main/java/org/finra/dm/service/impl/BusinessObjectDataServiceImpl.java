@@ -19,7 +19,10 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
@@ -30,19 +33,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
+import org.finra.dm.core.helper.ConfigurationHelper;
 import org.finra.dm.dao.DmDao;
 import org.finra.dm.dao.config.DaoSpringModuleConfig;
 import org.finra.dm.model.AlreadyExistsException;
-import org.finra.dm.model.dto.S3FileTransferRequestParamsDto;
-import org.finra.dm.model.jpa.BusinessObjectDataEntity;
-import org.finra.dm.model.jpa.BusinessObjectDataStatusEntity;
-import org.finra.dm.model.jpa.BusinessObjectFormatEntity;
-import org.finra.dm.model.jpa.CustomDdlEntity;
-import org.finra.dm.model.jpa.StorageAttributeEntity;
-import org.finra.dm.model.jpa.StorageEntity;
-import org.finra.dm.model.jpa.StorageFileEntity;
-import org.finra.dm.model.jpa.StoragePlatformEntity;
-import org.finra.dm.model.jpa.StorageUnitEntity;
 import org.finra.dm.model.api.xml.BusinessObjectData;
 import org.finra.dm.model.api.xml.BusinessObjectDataAvailability;
 import org.finra.dm.model.api.xml.BusinessObjectDataAvailabilityCollectionRequest;
@@ -69,6 +63,16 @@ import org.finra.dm.model.api.xml.LatestBeforePartitionValue;
 import org.finra.dm.model.api.xml.PartitionValueFilter;
 import org.finra.dm.model.api.xml.PartitionValueRange;
 import org.finra.dm.model.api.xml.S3KeyPrefixInformation;
+import org.finra.dm.model.dto.ConfigurationValue;
+import org.finra.dm.model.dto.S3FileTransferRequestParamsDto;
+import org.finra.dm.model.jpa.BusinessObjectDataEntity;
+import org.finra.dm.model.jpa.BusinessObjectDataStatusEntity;
+import org.finra.dm.model.jpa.BusinessObjectFormatEntity;
+import org.finra.dm.model.jpa.CustomDdlEntity;
+import org.finra.dm.model.jpa.StorageEntity;
+import org.finra.dm.model.jpa.StorageFileEntity;
+import org.finra.dm.model.jpa.StoragePlatformEntity;
+import org.finra.dm.model.jpa.StorageUnitEntity;
 import org.finra.dm.service.BusinessObjectDataService;
 import org.finra.dm.service.S3Service;
 import org.finra.dm.service.helper.BusinessObjectDataHelper;
@@ -111,6 +115,9 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
 
     @Autowired
     private BusinessObjectDataInvalidateUnregisteredHelper businessObjectDataInvalidateUnregisteredHelper;
+
+    @Autowired
+    protected ConfigurationHelper configurationHelper;
 
     /**
      * Gets the S3 key prefix. This method starts a new transaction.
@@ -348,25 +355,27 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
                     LOGGER.info(String.format("Deleting data files from \"%s\" storage for business object data {%s}...", storageEntity.getName(),
                         dmDaoHelper.businessObjectDataEntityAltKeyToString(businessObjectDataEntity)));
 
-                    // Determine if this is the S3 managed storage.
-                    Boolean s3ManagedStorage = storageEntity.isS3ManagedStorage();
+                    // Get the S3 validation flags.
+                    boolean validatePathPrefix = dmDaoHelper
+                        .getBooleanStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_PATH_PREFIX),
+                            storageEntity, false, true);
 
-                    // If this storage is an S3 managed storage, delete all keys found under the S3 key prefix.
-                    if (s3ManagedStorage)
+                    // If this storage conforms to the path prefix validation, then delete all keys found under the S3 key prefix.
+                    if (validatePathPrefix)
                     {
                         // Build the S3 key prefix as per S3 Naming Convention Wiki page.
                         String s3KeyPrefix =
                             businessObjectDataHelper.buildS3KeyPrefix(businessObjectDataEntity.getBusinessObjectFormat(), businessObjectDataKey);
 
-                        // Get S3 managed bucket access parameters, such as bucket name, AWS access key ID, AWS secret access key, etc...
-                        S3FileTransferRequestParamsDto params = dmDaoHelper.getS3ManagedBucketAccessParams();
+                        // Get S3 bucket access parameters, such as bucket name, AWS access key ID, AWS secret access key, etc...
+                        S3FileTransferRequestParamsDto params = dmDaoHelper.getS3BucketAccessParams(storageEntity);
                         // Since the S3 key prefix represents a directory, we add a trailing '/' character to it.
                         params.setS3KeyPrefix(s3KeyPrefix + "/");
                         // Delete a list of all keys/objects from S3 managed bucket matching the expected S3 key prefix.
                         // Please note that when deleting S3 files, we also delete all 0 byte objects that represent S3 directories.
                         s3Service.deleteDirectory(params);
                     }
-                    // For a non-managed S3 storage, delete the files explicitly or if only directory is registered delete all files/subfolders found under it.
+                    // For a non S3 prefixed paths, delete the files explicitly or if only directory is registered, delete all files/subfolders found under it.
                     else
                     {
                         // Get S3 bucket access parameters, such as bucket name, AWS access key ID, AWS secret access key, etc...
@@ -510,20 +519,32 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         // Make sure that specified business object format exists.
         BusinessObjectFormatEntity businessObjectFormatEntity = dmDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey);
 
-        // Validate that specified storage exists.
-        dmDaoHelper.getStorageEntity(request.getStorageName());
+        // Validate that specified storages exist.
+        List<String> storageNames = new ArrayList<>();
+        if (StringUtils.isNotBlank(request.getStorageName()))
+        {
+            storageNames.add(request.getStorageName());
+        }
+        if (!CollectionUtils.isEmpty(request.getStorageNames()))
+        {
+            storageNames.addAll(request.getStorageNames());
+        }
+        for (String storageName : storageNames)
+        {
+            dmDaoHelper.getStorageEntity(storageName);
+        }
 
         // Build partition filters based on the specified partition value filters.
         List<List<String>> partitionFilters = businessObjectDataHelper
             .buildPartitionFilters(request.getPartitionValueFilters(), request.getPartitionValueFilter(), businessObjectFormatKey,
-                request.getBusinessObjectDataVersion(), request.getStorageName(), businessObjectFormatEntity);
+                request.getBusinessObjectDataVersion(), storageNames, businessObjectFormatEntity);
 
-        // Retrieve a list of business object data entities for the specified partition values
+        // Retrieve a list of storage unit entities for the specified partition values
         // The entities will be sorted by partition value that is identified by partition column position.
         // If a business object data version isn't specified, the latest VALID business object data version is returned.
-        List<BusinessObjectDataEntity> availableBusinessObjectDataEntities = dmDao
-            .getBusinessObjectDataEntities(businessObjectFormatKey, partitionFilters, request.getBusinessObjectDataVersion(),
-                BusinessObjectDataStatusEntity.VALID, request.getStorageName());
+        List<StorageUnitEntity> availableStorageUnitEntities = dmDao
+            .getStorageUnitsByPartitionFiltersAndStorages(businessObjectFormatKey, partitionFilters, request.getBusinessObjectDataVersion(),
+                BusinessObjectDataStatusEntity.VALID, storageNames);
 
         // Create business object data availability object instance and initialise it with request field values.
         BusinessObjectDataAvailability businessObjectDataAvailability = createBusinessObjectDataAvailability(request);
@@ -532,12 +553,16 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         // Please note that each request partition filter might result in multiple available business object data entities.
         List<List<String>> matchedAvailablePartitionFilters = new ArrayList<>();
         List<BusinessObjectDataStatus> availableStatuses = new ArrayList<>();
-        businessObjectDataAvailability.setAvailableStatuses(availableStatuses);
-        for (BusinessObjectDataEntity businessObjectDataEntity : availableBusinessObjectDataEntities)
+        for (StorageUnitEntity storageUnitEntity : availableStorageUnitEntities)
         {
-            matchedAvailablePartitionFilters.add(dmDaoHelper.getPartitionFilter(businessObjectDataEntity, partitionFilters.get(0)));
-            availableStatuses.add(createBusinessObjectDataStatus(businessObjectDataEntity));
+            matchedAvailablePartitionFilters.add(dmDaoHelper.getPartitionFilter(storageUnitEntity.getBusinessObjectData(), partitionFilters.get(0)));
+            availableStatuses.add(createBusinessObjectDataStatus(storageUnitEntity.getBusinessObjectData()));
         }
+
+        // Remove possible duplicates that we can get since the same business object data instance can be registered in multiple storages.
+        List<BusinessObjectDataStatus> uniqueAvailableStatuses = new ArrayList<>();
+        businessObjectDataAvailability.setAvailableStatuses(uniqueAvailableStatuses);
+        uniqueAvailableStatuses.addAll(new LinkedHashSet<>(availableStatuses));
 
         // Get a list of unmatched partition filters.
         List<List<String>> unmatchedPartitionFilters = new ArrayList<>(partitionFilters);
@@ -551,17 +576,17 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         // data per list of unmatched filters.  That is needed to populate not-available statuses with legitimate reasons.
         if (request.getBusinessObjectDataVersion() == null)
         {
-            List<BusinessObjectDataEntity> notAvailableBusinessObjectDataEntities = dmDao
-                .getBusinessObjectDataEntities(businessObjectFormatKey, unmatchedPartitionFilters, request.getBusinessObjectDataVersion(), null,
-                    request.getStorageName());
+            List<StorageUnitEntity> notAvailableStorageUnitEntities = dmDao
+                .getStorageUnitsByPartitionFiltersAndStorages(businessObjectFormatKey, unmatchedPartitionFilters, request.getBusinessObjectDataVersion(), null,
+                    storageNames);
 
             // Build a list of matched not-available partition filters and populate the not-available statuses list.
             // Please note that each request partition filter might result in multiple available business object data entities.
             List<List<String>> matchedNotAvailablePartitionFilters = new ArrayList<>();
-            for (BusinessObjectDataEntity businessObjectDataEntity : notAvailableBusinessObjectDataEntities)
+            for (StorageUnitEntity storageUnitEntity : notAvailableStorageUnitEntities)
             {
-                matchedNotAvailablePartitionFilters.add(dmDaoHelper.getPartitionFilter(businessObjectDataEntity, partitionFilters.get(0)));
-                notAvailableStatuses.add(createBusinessObjectDataStatus(businessObjectDataEntity));
+                matchedNotAvailablePartitionFilters.add(dmDaoHelper.getPartitionFilter(storageUnitEntity.getBusinessObjectData(), partitionFilters.get(0)));
+                notAvailableStatuses.add(createBusinessObjectDataStatus(storageUnitEntity.getBusinessObjectData()));
             }
 
             // Update the list of unmatched partition filters.
@@ -688,20 +713,42 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
             customDdlEntity = dmDaoHelper.getCustomDdlEntity(customDdlKey);
         }
 
-        // Get the storage entity and validate that it exists.
-        StorageEntity storageEntity = dmDaoHelper.getStorageEntity(request.getStorageName());
+        // Validate that specified storages exist and of a proper storage platform type.
+        List<String> storageNames = new ArrayList<>();
+        if (StringUtils.isNotBlank(request.getStorageName()))
+        {
+            storageNames.add(request.getStorageName());
+        }
+        if (!CollectionUtils.isEmpty(request.getStorageNames()))
+        {
+            storageNames.addAll(request.getStorageNames());
+        }
+        List<StorageEntity> storageEntities = new ArrayList<>();
+        for (String storageName : storageNames)
+        {
+            StorageEntity storageEntity = dmDaoHelper.getStorageEntity(storageName);
 
-        // Only S3 storage platform is currently supported.
-        Assert.isTrue(storageEntity.getStoragePlatform().getName().equals(StoragePlatformEntity.S3),
-            String.format("Cannot generate DDL for \"%s\" storage platform.", storageEntity.getStoragePlatform().getName()));
+            // Only S3 storage platform is currently supported.
+            Assert.isTrue(storageEntity.getStoragePlatform().getName().equals(StoragePlatformEntity.S3),
+                String.format("Cannot generate DDL for \"%s\" storage platform.", storageEntity.getStoragePlatform().getName()));
 
-        // Get S3 bucket name.  Please note that since this value is required we pass a "true" flag.
-        String s3BucketName = dmDaoHelper.getStorageAttributeValueByName(StorageAttributeEntity.ATTRIBUTE_BUCKET_NAME, storageEntity, true);
+            storageEntities.add(storageEntity);
+        }
+
+        // Validate that all storages have S3 bucket name configured.
+        Map<StorageEntity, String> s3BucketNames = new HashMap<>();
+        for (StorageEntity storageEntity : storageEntities)
+        {
+            // Please note that since S3 bucket name attribute value is required we pass a "true" flag.
+            String s3BucketName = dmDaoHelper
+                .getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), storageEntity, true);
+            s3BucketNames.put(storageEntity, s3BucketName);
+        }
 
         // Create and initialize a business object data DDL object instance.
         BusinessObjectDataDdl businessObjectDataDdl = createBusinessObjectDataDdl(request);
         businessObjectDataDdl.setDdl(ddlGeneratorFactory.getDdlGenerator(request.getOutputFormat())
-            .generateCreateTableDdl(request, businessObjectFormatEntity, customDdlEntity, storageEntity, s3BucketName));
+            .generateCreateTableDdl(request, businessObjectFormatEntity, customDdlEntity, storageNames, storageEntities, s3BucketNames));
 
         return businessObjectDataDdl;
     }
@@ -859,8 +906,29 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         // Validate the partition value filters. Allow partition value tokens to be specified.
         validatePartitionValueFilters(request.getPartitionValueFilters(), request.getPartitionValueFilter(), true);
 
-        Assert.hasText(request.getStorageName(), "A storage name must be specified.");
-        request.setStorageName(request.getStorageName().trim());
+        // Make sure that request does not contain both a list of storage names and a standalone storage name.
+        Assert.isTrue(request.getStorageNames() == null || request.getStorageName() == null,
+            "A list of storage names and a standalone storage name cannot be both specified.");
+
+        // Make sure that at least one storage name element is specified.
+        Assert.isTrue(!CollectionUtils.isEmpty(request.getStorageNames()) || request.getStorageName() != null, "At least one storage name must be specified.");
+
+        // Trim the standalone storage name, if specified.
+        if (request.getStorageName() != null)
+        {
+            Assert.hasText(request.getStorageName(), "A storage name must be specified.");
+            request.setStorageName(request.getStorageName().trim());
+        }
+
+        // Validate and trim the list of storage names.
+        if (!CollectionUtils.isEmpty(request.getStorageNames()))
+        {
+            for (int i = 0; i < request.getStorageNames().size(); i++)
+            {
+                Assert.hasText(request.getStorageNames().get(i), "A storage name must be specified.");
+                request.getStorageNames().set(i, request.getStorageNames().get(i).trim());
+            }
+        }
     }
 
     /**
@@ -912,8 +980,29 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         // Validate the partition value filters. Do not allow partition value tokens to be specified.
         validatePartitionValueFilters(request.getPartitionValueFilters(), request.getPartitionValueFilter(), false);
 
-        Assert.hasText(request.getStorageName(), "A storage name must be specified.");
-        request.setStorageName(request.getStorageName().trim());
+        // Make sure that request does not contain both a list of storage names and a standalone storage name.
+        Assert.isTrue(request.getStorageNames() == null || request.getStorageName() == null,
+            "A list of storage names and a standalone storage name cannot be both specified.");
+
+        // Make sure that at least one storage name element is specified.
+        Assert.isTrue(!CollectionUtils.isEmpty(request.getStorageNames()) || request.getStorageName() != null, "At least one storage name must be specified.");
+
+        // Trim the standalone storage name, if specified.
+        if (request.getStorageName() != null)
+        {
+            Assert.hasText(request.getStorageName(), "A storage name must be specified.");
+            request.setStorageName(request.getStorageName().trim());
+        }
+
+        // Validate and trim the list of storage names.
+        if (!CollectionUtils.isEmpty(request.getStorageNames()))
+        {
+            for (int i = 0; i < request.getStorageNames().size(); i++)
+            {
+                Assert.hasText(request.getStorageNames().get(i), "A storage name must be specified.");
+                request.getStorageNames().set(i, request.getStorageNames().get(i).trim());
+            }
+        }
 
         Assert.notNull(request.getOutputFormat(), "An output format must be specified.");
 
@@ -1071,6 +1160,8 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         businessObjectDataAvailability.setPartitionValueFilter(request.getPartitionValueFilter());
 
         businessObjectDataAvailability.setBusinessObjectDataVersion(request.getBusinessObjectDataVersion());
+
+        businessObjectDataAvailability.setStorageNames(request.getStorageNames());
         businessObjectDataAvailability.setStorageName(request.getStorageName());
 
         return businessObjectDataAvailability;
@@ -1164,7 +1255,10 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         businessObjectDataDdl.setPartitionValueFilter(request.getPartitionValueFilter());
 
         businessObjectDataDdl.setBusinessObjectDataVersion(request.getBusinessObjectDataVersion());
+
+        businessObjectDataDdl.setStorageNames(request.getStorageNames());
         businessObjectDataDdl.setStorageName(request.getStorageName());
+
         businessObjectDataDdl.setOutputFormat(request.getOutputFormat());
         businessObjectDataDdl.setTableName(request.getTableName());
         businessObjectDataDdl.setCustomDdlName(request.getCustomDdlName());

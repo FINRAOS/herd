@@ -80,6 +80,10 @@ public class BusinessObjectFormatEntity extends AuditableEntity
     @Column(name = "desc_tx")
     private String description;
 
+    @OneToMany(mappedBy = "businessObjectFormat", orphanRemoval = true, cascade = {CascadeType.ALL})
+    @OrderBy("name")
+    private Collection<BusinessObjectFormatAttributeEntity> attributes;
+
     @Column(name = "prtn_key_tx")
     private String partitionKey;
 
@@ -167,6 +171,16 @@ public class BusinessObjectFormatEntity extends AuditableEntity
     public String getDescription()
     {
         return description;
+    }
+
+    public Collection<BusinessObjectFormatAttributeEntity> getAttributes()
+    {
+        return attributes;
+    }
+
+    public void setAttributes(Collection<BusinessObjectFormatAttributeEntity> attributes)
+    {
+        this.attributes = attributes;
     }
 
     public void setDescription(String description)

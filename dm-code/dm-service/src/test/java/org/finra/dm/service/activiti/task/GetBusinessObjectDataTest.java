@@ -30,6 +30,9 @@ import org.activiti.bpmn.model.FieldExtension;
 import org.activiti.engine.history.HistoricProcessInstance;
 import org.junit.Test;
 
+import org.finra.dm.model.api.xml.BusinessObjectData;
+import org.finra.dm.model.api.xml.Job;
+import org.finra.dm.model.api.xml.Parameter;
 import org.finra.dm.model.jpa.BusinessObjectDataEntity;
 import org.finra.dm.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.dm.model.jpa.BusinessObjectDefinitionEntity;
@@ -41,10 +44,7 @@ import org.finra.dm.model.jpa.StorageEntity;
 import org.finra.dm.model.jpa.StorageFileEntity;
 import org.finra.dm.model.jpa.StoragePlatformEntity;
 import org.finra.dm.model.jpa.StorageUnitEntity;
-import org.finra.dm.model.api.xml.BusinessObjectData;
-import org.finra.dm.model.api.xml.Job;
-import org.finra.dm.model.api.xml.Parameter;
-import org.finra.dm.service.activiti.ActivitiHelper;
+import org.finra.dm.service.activiti.ActivitiRuntimeHelper;
 
 /**
  * <p> Test suite for Get Business Object Data Activiti wrapper. </p>
@@ -106,8 +106,8 @@ public class GetBusinessObjectDataTest extends DmActivitiServiceTaskTest
                 null);
 
         // Validate status
-        String serviceTaskStatus = (String) variables.get(getServiceTaskVariableName(ActivitiHelper.VARIABLE_STATUS));
-        assertEquals(ActivitiHelper.TASK_STATUS_SUCCESS, serviceTaskStatus);
+        String serviceTaskStatus = (String) variables.get(getServiceTaskVariableName(ActivitiRuntimeHelper.VARIABLE_STATUS));
+        assertEquals(ActivitiRuntimeHelper.TASK_STATUS_SUCCESS, serviceTaskStatus);
 
         // Validate JSON response
         String jsonResponse = (String) variables.get(getServiceTaskVariableName(VARIABLE_JSON_RESPONSE));
@@ -161,8 +161,8 @@ public class GetBusinessObjectDataTest extends DmActivitiServiceTaskTest
                 null);
 
         // Validate status
-        String serviceTaskStatus = (String) variables.get(getServiceTaskVariableName(ActivitiHelper.VARIABLE_STATUS));
-        assertEquals(ActivitiHelper.TASK_STATUS_SUCCESS, serviceTaskStatus);
+        String serviceTaskStatus = (String) variables.get(getServiceTaskVariableName(ActivitiRuntimeHelper.VARIABLE_STATUS));
+        assertEquals(ActivitiRuntimeHelper.TASK_STATUS_SUCCESS, serviceTaskStatus);
 
         // Validate JSON response
         String jsonResponse = (String) variables.get(getServiceTaskVariableName(VARIABLE_JSON_RESPONSE));
@@ -217,8 +217,8 @@ public class GetBusinessObjectDataTest extends DmActivitiServiceTaskTest
                 null);
 
         // Validate status
-        String serviceTaskStatus = (String) variables.get(getServiceTaskVariableName(ActivitiHelper.VARIABLE_STATUS));
-        assertEquals(ActivitiHelper.TASK_STATUS_SUCCESS, serviceTaskStatus);
+        String serviceTaskStatus = (String) variables.get(getServiceTaskVariableName(ActivitiRuntimeHelper.VARIABLE_STATUS));
+        assertEquals(ActivitiRuntimeHelper.TASK_STATUS_SUCCESS, serviceTaskStatus);
 
         // Validate JSON response
         String jsonResponse = (String) variables.get(getServiceTaskVariableName(VARIABLE_JSON_RESPONSE));
@@ -270,8 +270,8 @@ public class GetBusinessObjectDataTest extends DmActivitiServiceTaskTest
                 businessObjectFormatVersion.toString(), businessObjectDataVersion.toString());
 
         // Validate status
-        String serviceTaskStatus = (String) variables.get(getServiceTaskVariableName(ActivitiHelper.VARIABLE_STATUS));
-        assertEquals(ActivitiHelper.TASK_STATUS_SUCCESS, serviceTaskStatus);
+        String serviceTaskStatus = (String) variables.get(getServiceTaskVariableName(ActivitiRuntimeHelper.VARIABLE_STATUS));
+        assertEquals(ActivitiRuntimeHelper.TASK_STATUS_SUCCESS, serviceTaskStatus);
 
         // Validate JSON response
         String jsonResponse = (String) variables.get(getServiceTaskVariableName(VARIABLE_JSON_RESPONSE));
@@ -318,8 +318,8 @@ public class GetBusinessObjectDataTest extends DmActivitiServiceTaskTest
                 businessObjectFormatVersion.toString(), "INVALID");
 
         // Validate status
-        String serviceTaskStatus = (String) variables.get(getServiceTaskVariableName(ActivitiHelper.VARIABLE_STATUS));
-        assertEquals(ActivitiHelper.TASK_STATUS_ERROR, serviceTaskStatus);
+        String serviceTaskStatus = (String) variables.get(getServiceTaskVariableName(ActivitiRuntimeHelper.VARIABLE_STATUS));
+        assertEquals(ActivitiRuntimeHelper.TASK_STATUS_ERROR, serviceTaskStatus);
     }
 
     @Test
@@ -345,8 +345,8 @@ public class GetBusinessObjectDataTest extends DmActivitiServiceTaskTest
                 businessObjectDataVersion.toString());
 
         // Validate status
-        String serviceTaskStatus = (String) variables.get(getServiceTaskVariableName(ActivitiHelper.VARIABLE_STATUS));
-        assertEquals(ActivitiHelper.TASK_STATUS_ERROR, serviceTaskStatus);
+        String serviceTaskStatus = (String) variables.get(getServiceTaskVariableName(ActivitiRuntimeHelper.VARIABLE_STATUS));
+        assertEquals(ActivitiRuntimeHelper.TASK_STATUS_ERROR, serviceTaskStatus);
     }
 
     @Test
@@ -371,8 +371,8 @@ public class GetBusinessObjectDataTest extends DmActivitiServiceTaskTest
             executeJob(namespace, businessObjectDefinitionName, businessObjectFormatUsage, fileTypeCode, partitionKey, partitionValues[0], null, null, null);
 
         // Validate status
-        String serviceTaskStatus = (String) variables.get(getServiceTaskVariableName(ActivitiHelper.VARIABLE_STATUS));
-        assertEquals(ActivitiHelper.TASK_STATUS_SUCCESS, serviceTaskStatus);
+        String serviceTaskStatus = (String) variables.get(getServiceTaskVariableName(ActivitiRuntimeHelper.VARIABLE_STATUS));
+        assertEquals(ActivitiRuntimeHelper.TASK_STATUS_SUCCESS, serviceTaskStatus);
 
         // Validate JSON response
         String jsonResponse = (String) variables.get(getServiceTaskVariableName(VARIABLE_JSON_RESPONSE));
@@ -418,8 +418,8 @@ public class GetBusinessObjectDataTest extends DmActivitiServiceTaskTest
             executeJob(namespace, businessObjectDefinitionName, businessObjectFormatUsage, fileTypeCode, partitionKey, partitionValues[0], null, null, null);
 
         // Validate status
-        String serviceTaskStatus = (String) variables.get(getServiceTaskVariableName(ActivitiHelper.VARIABLE_STATUS));
-        assertEquals(ActivitiHelper.TASK_STATUS_ERROR, serviceTaskStatus);
+        String serviceTaskStatus = (String) variables.get(getServiceTaskVariableName(ActivitiRuntimeHelper.VARIABLE_STATUS));
+        assertEquals(ActivitiRuntimeHelper.TASK_STATUS_ERROR, serviceTaskStatus);
     }
 
     @Test
@@ -444,8 +444,8 @@ public class GetBusinessObjectDataTest extends DmActivitiServiceTaskTest
             executeJob(namespace, businessObjectDefinitionName, businessObjectFormatUsage, fileTypeCode, null, partitionValues[0], null, null, null);
 
         // Validate status
-        String serviceTaskStatus = (String) variables.get(getServiceTaskVariableName(ActivitiHelper.VARIABLE_STATUS));
-        assertEquals(ActivitiHelper.TASK_STATUS_SUCCESS, serviceTaskStatus);
+        String serviceTaskStatus = (String) variables.get(getServiceTaskVariableName(ActivitiRuntimeHelper.VARIABLE_STATUS));
+        assertEquals(ActivitiRuntimeHelper.TASK_STATUS_SUCCESS, serviceTaskStatus);
     }
 
     @Test
@@ -470,8 +470,8 @@ public class GetBusinessObjectDataTest extends DmActivitiServiceTaskTest
             executeJob(namespace, businessObjectDefinitionName, businessObjectFormatUsage, null, partitionKey, partitionValues[0], null, null, null);
 
         // Validate status
-        String serviceTaskStatus = (String) variables.get(getServiceTaskVariableName(ActivitiHelper.VARIABLE_STATUS));
-        assertEquals(ActivitiHelper.TASK_STATUS_ERROR, serviceTaskStatus);
+        String serviceTaskStatus = (String) variables.get(getServiceTaskVariableName(ActivitiRuntimeHelper.VARIABLE_STATUS));
+        assertEquals(ActivitiRuntimeHelper.TASK_STATUS_ERROR, serviceTaskStatus);
     }
 
     @Test
@@ -496,8 +496,8 @@ public class GetBusinessObjectDataTest extends DmActivitiServiceTaskTest
             executeJob(namespace, businessObjectDefinitionName, null, fileTypeCode, partitionKey, partitionValues[0], null, null, null);
 
         // Validate status
-        String serviceTaskStatus = (String) variables.get(getServiceTaskVariableName(ActivitiHelper.VARIABLE_STATUS));
-        assertEquals(ActivitiHelper.TASK_STATUS_ERROR, serviceTaskStatus);
+        String serviceTaskStatus = (String) variables.get(getServiceTaskVariableName(ActivitiRuntimeHelper.VARIABLE_STATUS));
+        assertEquals(ActivitiRuntimeHelper.TASK_STATUS_ERROR, serviceTaskStatus);
     }
 
     @Test
@@ -522,8 +522,8 @@ public class GetBusinessObjectDataTest extends DmActivitiServiceTaskTest
             executeJob(namespace, null, businessObjectFormatUsage, fileTypeCode, partitionKey, partitionValues[0], null, null, null);
 
         // Validate status
-        String serviceTaskStatus = (String) variables.get(getServiceTaskVariableName(ActivitiHelper.VARIABLE_STATUS));
-        assertEquals(ActivitiHelper.TASK_STATUS_ERROR, serviceTaskStatus);
+        String serviceTaskStatus = (String) variables.get(getServiceTaskVariableName(ActivitiRuntimeHelper.VARIABLE_STATUS));
+        assertEquals(ActivitiRuntimeHelper.TASK_STATUS_ERROR, serviceTaskStatus);
     }
 
     @Test
@@ -548,8 +548,8 @@ public class GetBusinessObjectDataTest extends DmActivitiServiceTaskTest
             executeJob(namespace, businessObjectDefinitionName, businessObjectFormatUsage, fileTypeCode, partitionKey, "INVALID", null, null, null);
 
         // Validate status
-        String serviceTaskStatus = (String) variables.get(getServiceTaskVariableName(ActivitiHelper.VARIABLE_STATUS));
-        assertEquals(ActivitiHelper.TASK_STATUS_ERROR, serviceTaskStatus);
+        String serviceTaskStatus = (String) variables.get(getServiceTaskVariableName(ActivitiRuntimeHelper.VARIABLE_STATUS));
+        assertEquals(ActivitiRuntimeHelper.TASK_STATUS_ERROR, serviceTaskStatus);
     }
 
     /**

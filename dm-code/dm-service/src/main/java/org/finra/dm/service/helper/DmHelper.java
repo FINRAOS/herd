@@ -123,27 +123,6 @@ public class DmHelper
     }
 
     /**
-     * Gets the S3 managed bucket name configuration parameter value. If it is not configured, throws a runtime exception, which will resultin an internal
-     * server error.
-     *
-     * @return the S3 managed bucket name configuration parameter value.
-     * @throws IllegalStateException if the S3 managed bucket name is not configured.
-     */
-    public String getS3ManagedBucketName() throws IllegalStateException
-    {
-        // TODO: Lookup the S3_MANAGED storage and get the bucket name from there and remove the entry in the configuration table.
-        // Get the S3 managed bucket name. If it is not configured, throw a runtime exception which will result in an internal server error.
-        String s3BucketName = configurationHelper.getProperty(ConfigurationValue.S3_MANAGED_BUCKET_NAME);
-        if (StringUtils.isBlank(s3BucketName))
-        {
-            throw new IllegalStateException(String.format("No S3 managed bucket name found. Ensure the \"%s\" configuration entry is configured.",
-                ConfigurationValue.S3_MANAGED_BUCKET_NAME.getKey()));
-        }
-
-        return s3BucketName;
-    }
-
-    /**
      * Gets an HTTP proxy host value.
      *
      * @param environmentHttpProxyHost the environment specific HTTP proxy host value

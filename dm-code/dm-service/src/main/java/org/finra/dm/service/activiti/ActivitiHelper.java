@@ -31,16 +31,12 @@ import org.springframework.stereotype.Component;
 
 /**
  * A helper bean that provides useful methods for Activiti classes (e.g. interceptors, Java delegates, etc.).
+ * 
+ * If you want to find common functionality related to Activiti Runtime, then use ActivitiRuntimeHelper.
  */
 @Component
 public class ActivitiHelper
 {
-    public static final String VARIABLE_STATUS = "taskStatus";
-    public static final String VARIABLE_ERROR_MESSAGE = "taskErrorMessage";
-    public static final String TASK_STATUS_SUCCESS = "SUCCESS";
-    public static final String TASK_STATUS_ERROR = "ERROR";
-    public static final String TASK_VARIABLE_MARKER = "_";
-
     /**
      * Gets process identifying information from the current execution as a String.
      *
@@ -51,27 +47,6 @@ public class ActivitiHelper
     public String getProcessIdentifyingInformation(DelegateExecution execution)
     {
         return "[Process Definition " + execution.getProcessDefinitionId() + ", Process Instance " + execution.getProcessInstanceId() + "]";
-    }
-
-    /**
-     * Sets the task success status in a workflow variable.
-     *
-     * @param execution the workflow execution.
-     */
-    public void setTaskSuccessInWorkflow(DelegateExecution execution)
-    {
-        setTaskWorkflowVariable(execution, VARIABLE_STATUS, TASK_STATUS_SUCCESS);
-    }
-
-    /**
-     * Sets the task error status and message in workflow variables.
-     *
-     * @param execution the workflow execution.
-     */
-    public void setTaskErrorInWorkflow(DelegateExecution execution, String errorMessage)
-    {
-        setTaskWorkflowVariable(execution, VARIABLE_STATUS, TASK_STATUS_ERROR);
-        setTaskWorkflowVariable(execution, VARIABLE_ERROR_MESSAGE, errorMessage);
     }
 
     /**
@@ -201,31 +176,6 @@ public class ActivitiHelper
         }
 
         return variableBoolean;
-    }
-
-    /**
-     * Builds a workflow variable name based on the template.
-     *
-     * @param execution the workflow execution
-     * @param variableName the variable name
-     *
-     * @return the workflow variable name
-     */
-    public String buildTaskWorkflowVariableName(DelegateExecution execution, String variableName)
-    {
-        return execution.getCurrentActivityId() + TASK_VARIABLE_MARKER + variableName;
-    }
-
-    /**
-     * Sets a workflow variable name based on the template.
-     *
-     * @param execution the workflow execution
-     * @param variableName the variable name
-     * @param variableValue the variable value
-     */
-    public void setTaskWorkflowVariable(DelegateExecution execution, String variableName, Object variableValue)
-    {
-        execution.setVariable(buildTaskWorkflowVariableName(execution, variableName), variableValue);
     }
 
     /**

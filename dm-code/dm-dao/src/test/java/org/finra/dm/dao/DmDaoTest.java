@@ -38,6 +38,19 @@ import org.springframework.cache.CacheManager;
 
 import org.finra.dm.dao.config.DaoSpringModuleConfig;
 import org.finra.dm.dao.impl.DmDaoImpl;
+import org.finra.dm.model.api.xml.BusinessObjectDataKey;
+import org.finra.dm.model.api.xml.BusinessObjectDataNotificationRegistrationKey;
+import org.finra.dm.model.api.xml.BusinessObjectDefinitionKey;
+import org.finra.dm.model.api.xml.BusinessObjectFormatKey;
+import org.finra.dm.model.api.xml.CustomDdlKey;
+import org.finra.dm.model.api.xml.EmrClusterDefinitionKey;
+import org.finra.dm.model.api.xml.ExpectedPartitionValueKey;
+import org.finra.dm.model.api.xml.FileTypeKey;
+import org.finra.dm.model.api.xml.NamespaceKey;
+import org.finra.dm.model.api.xml.PartitionKeyGroupKey;
+import org.finra.dm.model.api.xml.PartitionValueRange;
+import org.finra.dm.model.api.xml.SchemaColumn;
+import org.finra.dm.model.api.xml.StorageKey;
 import org.finra.dm.model.jpa.BusinessObjectDataEntity;
 import org.finra.dm.model.jpa.BusinessObjectDataNotificationRegistrationEntity;
 import org.finra.dm.model.jpa.BusinessObjectDataStatusEntity;
@@ -59,19 +72,6 @@ import org.finra.dm.model.jpa.SecurityRoleFunctionEntity;
 import org.finra.dm.model.jpa.StorageEntity;
 import org.finra.dm.model.jpa.StorageFileEntity;
 import org.finra.dm.model.jpa.StorageUnitEntity;
-import org.finra.dm.model.api.xml.BusinessObjectDataKey;
-import org.finra.dm.model.api.xml.BusinessObjectDataNotificationRegistrationKey;
-import org.finra.dm.model.api.xml.BusinessObjectDefinitionKey;
-import org.finra.dm.model.api.xml.BusinessObjectFormatKey;
-import org.finra.dm.model.api.xml.CustomDdlKey;
-import org.finra.dm.model.api.xml.EmrClusterDefinitionKey;
-import org.finra.dm.model.api.xml.ExpectedPartitionValueKey;
-import org.finra.dm.model.api.xml.FileTypeKey;
-import org.finra.dm.model.api.xml.NamespaceKey;
-import org.finra.dm.model.api.xml.PartitionKeyGroupKey;
-import org.finra.dm.model.api.xml.PartitionValueRange;
-import org.finra.dm.model.api.xml.SchemaColumn;
-import org.finra.dm.model.api.xml.StorageKey;
 
 /**
  * This class tests various functionality within the DAO class.
@@ -885,18 +885,19 @@ public class DmDaoTest extends AbstractDaoTest
             new BusinessObjectFormatKey(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION);
 
         // Get the maximum available partition value.
-        assertEquals(GREATEST_PARTITION_VALUE, dmDao
+        assertEquals(STORAGE_1_GREATEST_PARTITION_VALUE, dmDao
             .getBusinessObjectDataMaxPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, businessObjectFormatKey, DATA_VERSION,
-                STORAGE_NAME, null, null));
+                Arrays.asList(STORAGE_NAME), null, null));
 
         // Get the minimum available partition value.
-        assertEquals(LEAST_PARTITION_VALUE, dmDao
+        assertEquals(STORAGE_1_LEAST_PARTITION_VALUE, dmDao
             .getBusinessObjectDataMinPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, businessObjectFormatKey, DATA_VERSION,
-                STORAGE_NAME));
+                Arrays.asList(STORAGE_NAME)));
 
         // Get the maximum available partition value by not passing any of the optional parameters.
-        assertEquals(GREATEST_PARTITION_VALUE, dmDao.getBusinessObjectDataMaxPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
-            new BusinessObjectFormatKey(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null), null, STORAGE_NAME, null, null));
+        assertEquals(STORAGE_1_GREATEST_PARTITION_VALUE, dmDao.getBusinessObjectDataMaxPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+            new BusinessObjectFormatKey(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null), null, Arrays.asList(STORAGE_NAME), null,
+            null));
     }
 
     @Test
@@ -908,19 +909,25 @@ public class DmDaoTest extends AbstractDaoTest
 
         // Test retrieving the maximum available partition value using an upper bound partition value.
         assertNull(dmDao.getBusinessObjectDataMaxPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
-            new BusinessObjectFormatKey(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null), null, STORAGE_NAME, PARTITION_VALUE, null));
+            new BusinessObjectFormatKey(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null), null, Arrays.asList(STORAGE_NAME),
+            PARTITION_VALUE, null));
         assertEquals(PARTITION_VALUE_2, dmDao.getBusinessObjectDataMaxPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
-            new BusinessObjectFormatKey(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null), null, STORAGE_NAME, PARTITION_VALUE_2, null));
+            new BusinessObjectFormatKey(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null), null, Arrays.asList(STORAGE_NAME),
+            PARTITION_VALUE_2, null));
         assertEquals(PARTITION_VALUE_2, dmDao.getBusinessObjectDataMaxPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
-            new BusinessObjectFormatKey(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null), null, STORAGE_NAME, PARTITION_VALUE_3, null));
+            new BusinessObjectFormatKey(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null), null, Arrays.asList(STORAGE_NAME),
+            PARTITION_VALUE_3, null));
 
         // Test retrieving the maximum available partition value using a lower bound partition value.
         assertEquals(PARTITION_VALUE_2, dmDao.getBusinessObjectDataMaxPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
-            new BusinessObjectFormatKey(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null), null, STORAGE_NAME, null, PARTITION_VALUE));
+            new BusinessObjectFormatKey(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null), null, Arrays.asList(STORAGE_NAME), null,
+            PARTITION_VALUE));
         assertEquals(PARTITION_VALUE_2, dmDao.getBusinessObjectDataMaxPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
-            new BusinessObjectFormatKey(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null), null, STORAGE_NAME, null, PARTITION_VALUE_2));
+            new BusinessObjectFormatKey(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null), null, Arrays.asList(STORAGE_NAME), null,
+            PARTITION_VALUE_2));
         assertNull(dmDao.getBusinessObjectDataMaxPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
-            new BusinessObjectFormatKey(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null), null, STORAGE_NAME, null, PARTITION_VALUE_3));
+            new BusinessObjectFormatKey(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null), null, Arrays.asList(STORAGE_NAME), null,
+            PARTITION_VALUE_3));
     }
 
     /**
@@ -947,12 +954,13 @@ public class DmDaoTest extends AbstractDaoTest
 
         // Get the maximum available partition value in the test storage without specifying business object data version.
         assertEquals(PARTITION_VALUE, dmDao
-            .getBusinessObjectDataMaxPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, businessObjectFormatKey, null, STORAGE_NAME, null,
-                null));
+            .getBusinessObjectDataMaxPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, businessObjectFormatKey, null,
+                Arrays.asList(STORAGE_NAME), null, null));
 
         // Get the minimum available partition value in the test storage without specifying business object data version.
         assertEquals(PARTITION_VALUE, dmDao
-            .getBusinessObjectDataMinPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, businessObjectFormatKey, null, STORAGE_NAME));
+            .getBusinessObjectDataMinPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, businessObjectFormatKey, null,
+                Arrays.asList(STORAGE_NAME)));
     }
 
     @Test
@@ -1038,10 +1046,10 @@ public class DmDaoTest extends AbstractDaoTest
 
         // Validate the results.
         assertNotNull(resultBusinessObjectDataEntities1);
-        assertEquals(PARTITION_VALUES_AVAILABLE.size(), resultBusinessObjectDataEntities1.size());
-        for (int i = 0; i < PARTITION_VALUES_AVAILABLE.size(); i++)
+        assertEquals(STORAGE_1_AVAILABLE_PARTITION_VALUES.size(), resultBusinessObjectDataEntities1.size());
+        for (int i = 0; i < STORAGE_1_AVAILABLE_PARTITION_VALUES.size(); i++)
         {
-            assertEquals(PARTITION_VALUES_AVAILABLE.get(i), resultBusinessObjectDataEntities1.get(i).getPartitionValue());
+            assertEquals(STORAGE_1_AVAILABLE_PARTITION_VALUES.get(i), resultBusinessObjectDataEntities1.get(i).getPartitionValue());
         }
 
         // Retrieve the available business object data without specifying a business object format version, which is an optional parameter.
@@ -1301,6 +1309,74 @@ public class DmDaoTest extends AbstractDaoTest
         assertEquals(TEST_S3_KEY_PREFIX, resultStorageUnitEntities.get(0).getDirectoryPath());
     }
 
+    @Test
+    public void testGetStorageUnitsByPartitionFiltersAndStorages()
+    {
+        // Create database entities required for testing.
+        List<StorageUnitEntity> expectedMultiStorageAvailableStorageUnits =
+            createDatabaseEntitiesForBusinessObjectDataAvailabilityTesting(null, new ArrayList<SchemaColumn>(), new ArrayList<SchemaColumn>(),
+                BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, SUBPARTITION_VALUES, STORAGE_NAMES);
+
+        // Build a list of partition values, large enough to cause executing the select queries in chunks.
+        List<String> partitionValues = new ArrayList<>();
+        for (int i = 0; i < DmDaoImpl.MAX_PARTITION_FILTERS_PER_REQUEST; i++)
+        {
+            partitionValues.add(String.format("%s-%s", PARTITION_VALUE, i));
+        }
+        partitionValues.addAll(UNSORTED_PARTITION_VALUES);
+
+        // Build a list of partition filters to select the "available" business object data.
+        // We add a second level partition value to partition filters here just for conditional coverage.
+        List<List<String>> partitionFilters = new ArrayList<>();
+        for (String partitionValue : partitionValues)
+        {
+            partitionFilters.add(Arrays.asList(partitionValue, SUBPARTITION_VALUES.get(0), null, null, null));
+        }
+
+        // Retrieve the available business object data per specified parameters.
+        List<StorageUnitEntity> resultStorageUnitEntities1 = dmDao.getStorageUnitsByPartitionFiltersAndStorages(
+            new BusinessObjectFormatKey(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION), partitionFilters, DATA_VERSION, null,
+            STORAGE_NAMES);
+
+        // Validate the results.
+        assertNotNull(resultStorageUnitEntities1);
+        assertEquals(expectedMultiStorageAvailableStorageUnits, resultStorageUnitEntities1);
+
+        // Retrieve the available business object data without specifying a business object format version, which is an optional parameter.
+        List<StorageUnitEntity> resultStorageUnitEntities2 = dmDao
+            .getStorageUnitsByPartitionFiltersAndStorages(new BusinessObjectFormatKey(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null),
+                partitionFilters, DATA_VERSION, null, STORAGE_NAMES);
+
+        // Validate the results.
+        assertEquals(resultStorageUnitEntities1, resultStorageUnitEntities2);
+
+        // Retrieve the available business object data without specifying both business object format version and business object data version.
+        List<StorageUnitEntity> resultStorageUnitEntities3 = dmDao
+            .getStorageUnitsByPartitionFiltersAndStorages(new BusinessObjectFormatKey(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null),
+                partitionFilters, null, null, STORAGE_NAMES);
+
+        // Validate the results.
+        assertEquals(resultStorageUnitEntities1, resultStorageUnitEntities3);
+
+        // Retrieve the business object data with VALID business object data status without
+        // specifying both business object format version and business object data version.
+        List<StorageUnitEntity> resultStorageUnitEntities4 = dmDao
+            .getStorageUnitsByPartitionFiltersAndStorages(new BusinessObjectFormatKey(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null),
+                partitionFilters, null, BusinessObjectDataStatusEntity.VALID, STORAGE_NAMES);
+
+        // Validate the results.
+        assertEquals(resultStorageUnitEntities1, resultStorageUnitEntities4);
+
+        // Retrieve the available business object data with wrong business object data status and without
+        // specifying both business object format version and business object data version.
+        List<StorageUnitEntity> resultStorageUnitEntities5 = dmDao
+            .getStorageUnitsByPartitionFiltersAndStorages(new BusinessObjectFormatKey(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null),
+                partitionFilters, null, BDATA_STATUS, STORAGE_NAMES);
+
+        // Validate the results.
+        assertTrue(resultStorageUnitEntities5.isEmpty());
+    }
+
     // StorageFile
 
     @Test
@@ -1390,7 +1466,7 @@ public class DmDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void testGetStorageFileEntities()
+    public void testGetStorageFilesByStorageAndFilePathPrefix()
     {
         // Create relative database entities.
         createDatabaseEntitiesForStorageFilesTesting();
@@ -1400,23 +1476,25 @@ public class DmDaoTest extends AbstractDaoTest
         // Validate that we can retrieve each file.
         for (String file : LOCAL_FILES)
         {
-            storageFileEntities = dmDao.getStorageFileEntities(StorageEntity.MANAGED_STORAGE, file);
+            storageFileEntities = dmDao.getStorageFilesByStorageAndFilePathPrefix(StorageEntity.MANAGED_STORAGE, file);
             assertEquals(1, storageFileEntities.size());
             assertEquals(file, storageFileEntities.get(0).getPath());
         }
 
         // Validate that we can retrieve a file using upper and lower storage name.
-        assertEquals(LOCAL_FILES.get(0), dmDao.getStorageFileEntities(StorageEntity.MANAGED_STORAGE.toUpperCase(), LOCAL_FILES.get(0)).get(0).getPath());
-        assertEquals(LOCAL_FILES.get(0), dmDao.getStorageFileEntities(StorageEntity.MANAGED_STORAGE.toLowerCase(), LOCAL_FILES.get(0)).get(0).getPath());
+        assertEquals(LOCAL_FILES.get(0),
+            dmDao.getStorageFilesByStorageAndFilePathPrefix(StorageEntity.MANAGED_STORAGE.toUpperCase(), LOCAL_FILES.get(0)).get(0).getPath());
+        assertEquals(LOCAL_FILES.get(0),
+            dmDao.getStorageFilesByStorageAndFilePathPrefix(StorageEntity.MANAGED_STORAGE.toLowerCase(), LOCAL_FILES.get(0)).get(0).getPath());
 
         // Try to get file entities by specifying non-existing storage.
-        assertEquals(0, dmDao.getStorageFileEntities("I_DO_NOT_EXIST", LOCAL_FILES.get(0)).size());
+        assertEquals(0, dmDao.getStorageFilesByStorageAndFilePathPrefix("I_DO_NOT_EXIST", LOCAL_FILES.get(0)).size());
 
         // Try to get file entities by specifying non-existing file path prefix.
-        assertEquals(0, dmDao.getStorageFileEntities(StorageEntity.MANAGED_STORAGE, "I_DO_NOT_EXIST").size());
+        assertEquals(0, dmDao.getStorageFilesByStorageAndFilePathPrefix(StorageEntity.MANAGED_STORAGE, "I_DO_NOT_EXIST").size());
 
         // Validate that we can retrieve the last 3 files in the expected order from the LOCAL_FILES list that match "folder" file path prefix.
-        storageFileEntities = dmDao.getStorageFileEntities(StorageEntity.MANAGED_STORAGE, "folder");
+        storageFileEntities = dmDao.getStorageFilesByStorageAndFilePathPrefix(StorageEntity.MANAGED_STORAGE, "folder");
         List<String> expectedFiles = Arrays.asList(LOCAL_FILES.get(5), LOCAL_FILES.get(4), LOCAL_FILES.get(3));
         assertEquals(expectedFiles.size(), storageFileEntities.size());
         for (int i = 0; i < expectedFiles.size(); i++)
@@ -1426,7 +1504,7 @@ public class DmDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void testGetStorageFilesByStorageAndBusinessObjectData()
+    public void testGetStorageFilesByStorageUnits()
     {
         // Create database entities required for testing.
 
@@ -1446,8 +1524,7 @@ public class DmDaoTest extends AbstractDaoTest
         }
 
         // Retrieve storage file entities by storage and business object data.
-        List<StorageFileEntity> resultStorageFileEntities =
-            dmDao.getStorageFilesByStorageAndBusinessObjectData(storageEntity, Arrays.asList(businessObjectDataEntity));
+        List<StorageFileEntity> resultStorageFileEntities = dmDao.getStorageFilesByStorageUnits(Arrays.asList(storageUnitEntity));
 
         // Validate the results.
         assertNotNull(resultStorageFileEntities);

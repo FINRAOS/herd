@@ -35,14 +35,14 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import org.finra.dm.model.ObjectNotFoundException;
+import org.finra.dm.model.api.xml.BusinessObjectData;
+import org.finra.dm.model.api.xml.BusinessObjectDataKey;
+import org.finra.dm.model.dto.ConfigurationValue;
 import org.finra.dm.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.dm.model.jpa.BusinessObjectDataEntity;
-import org.finra.dm.model.jpa.StorageAttributeEntity;
 import org.finra.dm.model.jpa.StorageEntity;
 import org.finra.dm.model.jpa.StoragePlatformEntity;
 import org.finra.dm.model.jpa.StorageUnitEntity;
-import org.finra.dm.model.api.xml.BusinessObjectData;
-import org.finra.dm.model.api.xml.BusinessObjectDataKey;
 
 /**
  * This class tests deleteBusinessObjectData functionality within the business object data REST controller.
@@ -885,7 +885,8 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
             storageEntity = createStorageEntity(storageName, storagePlatform);
 
             // Populate S3 specific access attributes for this storage.
-            createStorageAttributeEntity(storageEntity, StorageAttributeEntity.ATTRIBUTE_BUCKET_NAME, getS3ManagedBucketName());
+            createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME),
+                getS3ManagedBucketName());
 
             dmDao.saveAndRefresh(storageEntity);
         }

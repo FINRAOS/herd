@@ -57,6 +57,7 @@ public class GenerateBusinessObjectFormatDdl extends BaseJavaDelegate
     private Expression customDdlName;
     private Expression includeDropTableStatement;
     private Expression includeIfNotExistsOption;
+    private Expression replaceColumns;
 
     @Autowired
     private BusinessObjectFormatService businessObjectFormatService;
@@ -80,6 +81,7 @@ public class GenerateBusinessObjectFormatDdl extends BaseJavaDelegate
             activitiHelper.getExpressionVariableAsBoolean(this.includeDropTableStatement, execution, "includeDropTableStatement", false, false);
         Boolean includeIfNotExistsOption = 
                 activitiHelper.getExpressionVariableAsBoolean(this.includeIfNotExistsOption, execution, "includeIfNotExistsOption", false, false);
+        Boolean replaceColumns = activitiHelper.getExpressionVariableAsBoolean(this.replaceColumns, execution, "replaceColumns", false, false);
 
         BusinessObjectFormatDdlRequest businessObjectFormatDdlRequest = new BusinessObjectFormatDdlRequest();
         businessObjectFormatDdlRequest.setNamespace(namespace);
@@ -92,6 +94,7 @@ public class GenerateBusinessObjectFormatDdl extends BaseJavaDelegate
         businessObjectFormatDdlRequest.setCustomDdlName(customDdlName);
         businessObjectFormatDdlRequest.setIncludeDropTableStatement(includeDropTableStatement);
         businessObjectFormatDdlRequest.setIncludeIfNotExistsOption(includeIfNotExistsOption);
+        businessObjectFormatDdlRequest.setReplaceColumns(replaceColumns);
 
         BusinessObjectFormatDdl businessObjectFormatDdl =
             businessObjectFormatService.generateBusinessObjectFormatDdl(businessObjectFormatDdlRequest);

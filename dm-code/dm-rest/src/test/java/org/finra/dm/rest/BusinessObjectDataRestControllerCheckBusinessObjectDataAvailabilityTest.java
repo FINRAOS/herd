@@ -20,11 +20,11 @@ import java.util.List;
 
 import org.junit.Test;
 
-import org.finra.dm.model.jpa.BusinessObjectDataEntity;
-import org.finra.dm.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.dm.model.api.xml.BusinessObjectDataAvailability;
 import org.finra.dm.model.api.xml.BusinessObjectDataAvailabilityRequest;
 import org.finra.dm.model.api.xml.BusinessObjectDataStatus;
+import org.finra.dm.model.jpa.BusinessObjectDataEntity;
+import org.finra.dm.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.dm.service.impl.BusinessObjectDataServiceImpl;
 
 /**
@@ -42,11 +42,11 @@ public class BusinessObjectDataRestControllerCheckBusinessObjectDataAvailability
 
         // Validate the results.
         List<BusinessObjectDataStatus> expectedAvailableStatuses =
-            getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, PARTITION_VALUES_AVAILABLE,
+            getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, STORAGE_1_AVAILABLE_PARTITION_VALUES,
                 NO_SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID, false);
         List<BusinessObjectDataStatus> expectedNotAvailableStatuses =
-            getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, PARTITION_VALUES_NOT_AVAILABLE, null,
-                DATA_VERSION, BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED, false);
+            getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                STORAGE_1_NOT_AVAILABLE_PARTITION_VALUES, null, DATA_VERSION, BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED, false);
         validateBusinessObjectDataAvailability(request, expectedAvailableStatuses, expectedNotAvailableStatuses, resultAvailability);
     }
 
@@ -62,11 +62,11 @@ public class BusinessObjectDataRestControllerCheckBusinessObjectDataAvailability
 
         // Validate the results.
         List<BusinessObjectDataStatus> expectedAvailableStatuses =
-            getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, PARTITION_VALUES_AVAILABLE,
+            getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, STORAGE_1_AVAILABLE_PARTITION_VALUES,
                 NO_SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID, false);
         List<BusinessObjectDataStatus> expectedNotAvailableStatuses =
-            getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, PARTITION_VALUES_NOT_AVAILABLE, null,
-                DATA_VERSION, BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED, true);
+            getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                STORAGE_1_NOT_AVAILABLE_PARTITION_VALUES, null, DATA_VERSION, BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED, true);
         validateBusinessObjectDataAvailability(request, expectedAvailableStatuses, expectedNotAvailableStatuses, resultAvailability);
     }
 
@@ -88,10 +88,10 @@ public class BusinessObjectDataRestControllerCheckBusinessObjectDataAvailability
 
         // Validate the results.
         expectedAvailableStatuses =
-            getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, PROCESS_DATE_PARTITION_VALUES_AVAILABLE,
+            getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, PROCESS_DATE_AVAILABLE_PARTITION_VALUES,
                 NO_SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID, false);
         expectedNotAvailableStatuses = getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
-            PROCESS_DATE_PARTITION_VALUES_NOT_AVAILABLE, null, DATA_VERSION, BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED, false);
+            PROCESS_DATE_NOT_AVAILABLE_PARTITION_VALUES, null, DATA_VERSION, BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED, false);
         validateBusinessObjectDataAvailability(request, expectedAvailableStatuses, expectedNotAvailableStatuses, resultAvailability);
 
         // Execute the check business object data availability request when start partition value is equal to the end partition value.

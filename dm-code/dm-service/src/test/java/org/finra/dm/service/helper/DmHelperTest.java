@@ -113,34 +113,6 @@ public class DmHelperTest extends AbstractServiceTest
     }
 
     @Test
-    public void testGetS3ManagedBucketName()
-    {
-        assertTrue(dmHelper.getS3ManagedBucketName().length() > 0);
-    }
-
-    @Test
-    public void testGetS3ManagedBucketMissingValue() throws Exception
-    {
-        // Remove the database properties source from the environment, so the S3 managed bucket name won't be in the configuration.
-        removeReloadablePropertySourceFromEnvironment();
-
-        try
-        {
-            dmHelper.getS3ManagedBucketName();
-            fail("Should throw a RuntimeException.");
-        }
-        catch (RuntimeException e)
-        {
-            assertTrue(e.getMessage().startsWith("No S3 managed bucket name found."));
-        }
-        finally
-        {
-            // Re-add in the property source we previously removed above.
-            restorePropertySourceInEnvironment();
-        }
-    }
-
-    @Test
     public void testGetHttpProxyHost()
     {
         for (String testHttpProxyHost : Arrays.asList(null, "", BLANK_TEXT, "Test-Hostname"))

@@ -41,13 +41,6 @@ import org.springframework.util.CollectionUtils;
 import org.finra.dm.core.Command;
 import org.finra.dm.model.AlreadyExistsException;
 import org.finra.dm.model.ObjectNotFoundException;
-import org.finra.dm.model.dto.S3FileTransferRequestParamsDto;
-import org.finra.dm.model.jpa.BusinessObjectDataEntity;
-import org.finra.dm.model.jpa.BusinessObjectFormatEntity;
-import org.finra.dm.model.jpa.StorageAttributeEntity;
-import org.finra.dm.model.jpa.StorageEntity;
-import org.finra.dm.model.jpa.StoragePlatformEntity;
-import org.finra.dm.model.jpa.StorageUnitEntity;
 import org.finra.dm.model.api.xml.Attribute;
 import org.finra.dm.model.api.xml.BusinessObjectData;
 import org.finra.dm.model.api.xml.BusinessObjectDataCreateRequest;
@@ -57,6 +50,13 @@ import org.finra.dm.model.api.xml.StorageDirectory;
 import org.finra.dm.model.api.xml.StorageFile;
 import org.finra.dm.model.api.xml.StorageUnit;
 import org.finra.dm.model.api.xml.StorageUnitCreateRequest;
+import org.finra.dm.model.dto.ConfigurationValue;
+import org.finra.dm.model.dto.S3FileTransferRequestParamsDto;
+import org.finra.dm.model.jpa.BusinessObjectDataEntity;
+import org.finra.dm.model.jpa.BusinessObjectFormatEntity;
+import org.finra.dm.model.jpa.StorageEntity;
+import org.finra.dm.model.jpa.StoragePlatformEntity;
+import org.finra.dm.model.jpa.StorageUnitEntity;
 
 /**
  * This class tests the createBusinessObjectData functionality within the business object data REST controller.
@@ -556,6 +556,149 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
                 String.format("Storage file path \"%s/%s\" does not match the storage directory path \"%s\".", wrongS3KeyPrefix, LOCAL_FILE, testS3KeyPrefix),
                 e.getMessage());
         }
+    }
+
+    @Test
+    public void testCreateBusinessObjectDataValidateFileExistenceNoValidatePrefix() throws Exception
+    {
+        // Create an S3 storage entity.
+        StorageEntity storageEntity = createStorageEntity(STORAGE_NAME, StoragePlatformEntity.S3);
+
+        // Add a bucket name attribute to the storage.
+        createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), S3_BUCKET_NAME);
+        createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_FILE_EXISTENCE),
+            Boolean.TRUE.toString());
+
+        dmDao.saveAndRefresh(storageEntity);
+
+        // Create relative database entities.
+        createBusinessObjectFormatEntity(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION, true,
+            PARTITION_KEY);
+        createBusinessObjectDataStatusEntity(BDATA_STATUS);
+
+        // Build a list of storage files.
+        List<StorageFile> storageFiles = getTestStorageFiles(testS3KeyPrefix, LOCAL_FILES);
+
+        // Create and upload to S3 managed storage a set of test files.
+        prepareTestS3Files(S3_BUCKET_NAME, testS3KeyPrefix, LOCAL_FILES, new ArrayList<String>());
+
+        // Build a new business object data create request.
+        BusinessObjectDataCreateRequest request =
+            createBusinessObjectDataCreateRequest(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
+                PARTITION_VALUE, BDATA_STATUS, STORAGE_NAME, testS3KeyPrefix, storageFiles);
+
+        // Try to create a business object data instance. It should go through without any errors.
+        businessObjectDataService.createBusinessObjectData(request);
+    }
+
+    @Test
+    public void testCreateBusinessObjectDataValidateFileExistenceNoValidatePrefixDirectoryInvalid() throws Exception
+    {
+        // Create an S3 storage entity.
+        StorageEntity storageEntity = createStorageEntity(STORAGE_NAME, StoragePlatformEntity.S3);
+
+        // Add a bucket name attribute to the storage.
+        createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), S3_BUCKET_NAME);
+        createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_FILE_EXISTENCE),
+            Boolean.TRUE.toString());
+
+        dmDao.saveAndRefresh(storageEntity);
+
+        // Create relative database entities.
+        createBusinessObjectFormatEntity(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION, true,
+            PARTITION_KEY);
+        createBusinessObjectDataStatusEntity(BDATA_STATUS);
+
+        // Build a list of storage files.
+        List<StorageFile> storageFiles = getTestStorageFiles(testS3KeyPrefix, LOCAL_FILES);
+
+        // Create and upload to S3 managed storage a set of test files.
+        prepareTestS3Files(S3_BUCKET_NAME, testS3KeyPrefix, LOCAL_FILES, new ArrayList<String>());
+
+        // Build a new business object data create request.
+        BusinessObjectDataCreateRequest request =
+            createBusinessObjectDataCreateRequest(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
+                PARTITION_VALUE, BDATA_STATUS, STORAGE_NAME, "INVALID_DIRECTORY_PATH", storageFiles);
+
+        try
+        {
+            // Try to create a business object data instance.
+            businessObjectDataService.createBusinessObjectData(request);
+            fail("Should throw an IllegalArgumentException when a directory path doesn't match the S3 uploaded files.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertTrue(e.getMessage().contains(String.format("does not match the storage directory path \"%s\"", "INVALID_DIRECTORY_PATH")));
+        }
+    }
+
+    @Test
+    public void testCreateBusinessObjectDataInvalidValidationBooleanValue()
+    {
+        // Create an S3 storage entity.
+        StorageEntity storageEntity = createStorageEntity(STORAGE_NAME, StoragePlatformEntity.S3);
+
+        // Add a bucket name attribute to the storage.
+        createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), S3_BUCKET_NAME);
+        createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_FILE_EXISTENCE),
+            INVALID_BOOLEAN_VALUE);
+
+        dmDao.saveAndRefresh(storageEntity);
+
+        // Create relative database entities.
+        createBusinessObjectFormatEntity(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION, true,
+            PARTITION_KEY);
+        createBusinessObjectDataStatusEntity(BDATA_STATUS);
+
+        // Build a list of storage files.
+        List<StorageFile> storageFiles = getTestStorageFiles(testS3KeyPrefix, SORTED_LOCAL_FILES);
+
+        // Build a new business object data create request.
+        BusinessObjectDataCreateRequest request =
+            createBusinessObjectDataCreateRequest(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
+                PARTITION_VALUE, BDATA_STATUS, STORAGE_NAME, testS3KeyPrefix, storageFiles);
+
+        try
+        {
+            // Try to create a business object data instance.
+            businessObjectDataService.createBusinessObjectData(request);
+            fail("Should throw an IllegalStateException when a validation boolean value is invalid.");
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals(String.format("Attribute \"%s\" for \"%s\" storage has an invalid boolean value: " + "\"%s\".",
+                ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_FILE_EXISTENCE.getDefaultValue(), STORAGE_NAME, INVALID_BOOLEAN_VALUE), e.getMessage());
+        }
+    }
+
+    @Test
+    public void testCreateBusinessObjectDataValidateFlagIgnoredForNonS3Storage() throws Exception
+    {
+        // Create an S3 storage entity.
+        StorageEntity storageEntity = createStorageEntity(STORAGE_NAME, "NON_S3_STORAGE");
+
+        // Add a bucket name attribute to the storage.
+        createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), S3_BUCKET_NAME);
+        createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_FILE_EXISTENCE),
+            Boolean.TRUE.toString());
+
+        dmDao.saveAndRefresh(storageEntity);
+
+        // Create relative database entities.
+        createBusinessObjectFormatEntity(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION, true,
+            PARTITION_KEY);
+        createBusinessObjectDataStatusEntity(BDATA_STATUS);
+
+        // Build a list of storage files.
+        List<StorageFile> storageFiles = getTestStorageFiles(testS3KeyPrefix, LOCAL_FILES);
+
+        // Build a new business object data create request.
+        BusinessObjectDataCreateRequest request =
+            createBusinessObjectDataCreateRequest(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
+                PARTITION_VALUE, BDATA_STATUS, STORAGE_NAME, testS3KeyPrefix, storageFiles);
+
+        // Try to create a business object data instance. This should succeed since the bucket is not of type "S3", even though there are no files in S3.
+        businessObjectDataService.createBusinessObjectData(request);
     }
 
     @Test
@@ -1091,8 +1234,10 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
         assertEquals(
             new BusinessObjectData(resultBusinessObjectData.getId(), NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION,
                 PARTITION_KEY, PARTITION_VALUE, NO_SUBPARTITION_VALUES, INITIAL_DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS, Arrays.asList(
-                new StorageUnit(new Storage(StorageEntity.MANAGED_STORAGE, StoragePlatformEntity.S3,
-                    Arrays.asList(new Attribute(StorageAttributeEntity.ATTRIBUTE_BUCKET_NAME, getS3ManagedBucketName()))),
+                new StorageUnit(new Storage(StorageEntity.MANAGED_STORAGE, StoragePlatformEntity.S3, Arrays
+                    .asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), getS3ManagedBucketName()),
+                        new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_FILE_EXISTENCE), Boolean.TRUE.toString()),
+                        new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_PATH_PREFIX), Boolean.TRUE.toString()))),
                     new StorageDirectory(testS3KeyPrefix), getTestStorageFiles(testS3KeyPrefix, SORTED_LOCAL_FILES, false))), NO_ATTRIBUTES,
                 NO_BUSINESS_OBJECT_DATA_PARENTS, NO_BUSINESS_OBJECT_DATA_CHILDREN), resultBusinessObjectData);
     }
@@ -1146,8 +1291,9 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
         // Create a business object data status entity.
         createBusinessObjectDataStatusEntity(BDATA_STATUS);
 
-        // Create a non-S3 storage entity with a "bucket.name" attribute.
-        createStorageEntity(STORAGE_NAME, STORAGE_PLATFORM_CODE, StorageAttributeEntity.ATTRIBUTE_BUCKET_NAME, S3_BUCKET_NAME);
+        // Create a non-S3 storage entity with a  bucket name attribute.
+        createStorageEntity(STORAGE_NAME, STORAGE_PLATFORM_CODE, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME),
+            S3_BUCKET_NAME);
 
         // Try to create an initial version of the business object data when storage platform is not supported for discovery of storage files.
         try
@@ -1204,9 +1350,10 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
         // Create and upload to S3 managed storage a set of test files.
         prepareTestS3Files(testS3KeyPrefix, LOCAL_FILES);
 
-        // Create an S3 storage entity with a "bucket.name" attribute with a value matching to the test S3 managed storage (required for unit test clean up).
+        // Create an S3 storage entity with a bucket name attribute with a value matching to the test S3 managed storage (required for unit test clean up).
         String testBucketName = getS3ManagedBucketName();
-        createStorageEntity(STORAGE_NAME, StoragePlatformEntity.S3, StorageAttributeEntity.ATTRIBUTE_BUCKET_NAME, testBucketName);
+        createStorageEntity(STORAGE_NAME, StoragePlatformEntity.S3, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME),
+            testBucketName);
 
         // Build a new business object data create request with enabled discovery of storage files and with storage directory ending with a slash.
         String testStorageDirectoryPath = testS3KeyPrefix + "/";
@@ -1224,8 +1371,8 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
             new BusinessObjectData(resultBusinessObjectData.getId(), NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION,
                 PARTITION_KEY, PARTITION_VALUE, NO_SUBPARTITION_VALUES, INITIAL_DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS, Arrays.asList(
                 new StorageUnit(new Storage(STORAGE_NAME, StoragePlatformEntity.S3,
-                    Arrays.asList(new Attribute(StorageAttributeEntity.ATTRIBUTE_BUCKET_NAME, testBucketName))), new StorageDirectory(testStorageDirectoryPath),
-                    getTestStorageFiles(testS3KeyPrefix, SORTED_LOCAL_FILES, false))), NO_ATTRIBUTES, NO_BUSINESS_OBJECT_DATA_PARENTS,
-                NO_BUSINESS_OBJECT_DATA_CHILDREN), resultBusinessObjectData);
+                    Arrays.asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), testBucketName))),
+                    new StorageDirectory(testStorageDirectoryPath), getTestStorageFiles(testS3KeyPrefix, SORTED_LOCAL_FILES, false))), NO_ATTRIBUTES,
+                NO_BUSINESS_OBJECT_DATA_PARENTS, NO_BUSINESS_OBJECT_DATA_CHILDREN), resultBusinessObjectData);
     }
 }

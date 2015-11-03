@@ -24,17 +24,17 @@ import java.sql.Timestamp;
 import java.util.List;
 
 import com.amazonaws.AmazonServiceException;
-
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
+
 import org.finra.dm.dao.impl.MockS3OperationsImpl;
+import org.finra.dm.model.api.xml.BusinessObjectDataKey;
+import org.finra.dm.model.dto.ConfigurationValue;
 import org.finra.dm.model.jpa.BusinessObjectDataEntity;
 import org.finra.dm.model.jpa.BusinessObjectDataStatusEntity;
-import org.finra.dm.model.jpa.StorageAttributeEntity;
 import org.finra.dm.model.jpa.StorageEntity;
 import org.finra.dm.model.jpa.StorageUnitEntity;
-import org.finra.dm.model.api.xml.BusinessObjectDataKey;
 
 /**
  * This class tests functionality within the FileUploadCleanupService.
@@ -42,13 +42,13 @@ import org.finra.dm.model.api.xml.BusinessObjectDataKey;
 public class FileUploadCleanupServiceTest extends AbstractServiceTest
 {
     private String s3BucketName;
-    
+
     @Before
     public void before()
     {
         s3BucketName = getS3ManagedBucketName();
     }
-    
+
     @Test
     public void testDeleteBusinessObjectData() throws Exception
     {
@@ -169,7 +169,7 @@ public class FileUploadCleanupServiceTest extends AbstractServiceTest
         // If specified, populate bucket name attribute for this storage.
         if (StringUtils.isNotBlank(bucketName))
         {
-            createStorageAttributeEntity(storageEntity, StorageAttributeEntity.ATTRIBUTE_BUCKET_NAME, bucketName);
+            createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), bucketName);
             dmDao.saveAndRefresh(storageEntity);
         }
         return storageEntity;

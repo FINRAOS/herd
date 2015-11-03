@@ -25,7 +25,7 @@ import org.junit.Test;
 
 import org.finra.dm.model.api.xml.Parameter;
 import org.finra.dm.model.api.xml.SchemaColumn;
-import org.finra.dm.service.activiti.ActivitiHelper;
+import org.finra.dm.service.activiti.ActivitiRuntimeHelper;
 
 /**
  * Test suite for Get S3 Key Prefix Activiti wrapper.
@@ -46,8 +46,9 @@ public class GetS3KeyPrefixTest extends DmActivitiServiceTaskTest
         String partitionKey = partitionColumns.get(0).getName();
 
         // Create a business object format entity.
-        createBusinessObjectFormatEntity(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION, true,
-            partitionKey, null, SCHEMA_DELIMITER_PIPE, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, columns, partitionColumns);
+        createBusinessObjectFormatEntity(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+            LATEST_VERSION_FLAG_SET, partitionKey, NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
+            SCHEMA_NULL_VALUE_BACKSLASH_N, columns, partitionColumns);
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
 
@@ -104,7 +105,7 @@ public class GetS3KeyPrefixTest extends DmActivitiServiceTaskTest
         parameters.add(buildParameter("createNewVersion", "false"));
 
         Map<String, Object> variableValuesToValidate = new HashMap<>();
-        variableValuesToValidate.put(ActivitiHelper.VARIABLE_ERROR_MESSAGE, "A business object definition name must be specified.");
+        variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "A business object definition name must be specified.");
 
         testActivitiServiceTaskFailure(GetS3KeyPrefix.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
     }
@@ -116,7 +117,7 @@ public class GetS3KeyPrefixTest extends DmActivitiServiceTaskTest
     public void testGetS3KeyPrefixMissingBusinessObjectFormatVersion() throws Exception
     {
         Map<String, Object> variableValuesToValidate = new HashMap<>();
-        variableValuesToValidate.put(ActivitiHelper.VARIABLE_ERROR_MESSAGE, "\"businessObjectFormatVersion\" must be specified.");
+        variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"businessObjectFormatVersion\" must be specified.");
 
         // Validate that activiti task fails when we do not pass a business object format version value.
         testActivitiServiceTaskFailure(GetS3KeyPrefix.class.getCanonicalName(), new ArrayList<FieldExtension>(), new ArrayList<Parameter>(),
@@ -178,7 +179,7 @@ public class GetS3KeyPrefixTest extends DmActivitiServiceTaskTest
         parameters.add(buildParameter("businessObjectFormatVersion", "NOT_AN_INTEGER"));
 
         Map<String, Object> variableValuesToValidate = new HashMap<>();
-        variableValuesToValidate.put(ActivitiHelper.VARIABLE_ERROR_MESSAGE, "\"businessObjectFormatVersion\" must be a valid integer value.");
+        variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"businessObjectFormatVersion\" must be a valid integer value.");
 
         testActivitiServiceTaskFailure(GetS3KeyPrefix.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
     }
@@ -198,7 +199,7 @@ public class GetS3KeyPrefixTest extends DmActivitiServiceTaskTest
         parameters.add(buildParameter("businessObjectDataVersion", "NOT_AN_INTEGER"));
 
         Map<String, Object> variableValuesToValidate = new HashMap<>();
-        variableValuesToValidate.put(ActivitiHelper.VARIABLE_ERROR_MESSAGE, "\"businessObjectDataVersion\" must be a valid integer value.");
+        variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"businessObjectDataVersion\" must be a valid integer value.");
 
         testActivitiServiceTaskFailure(GetS3KeyPrefix.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
     }
@@ -220,7 +221,7 @@ public class GetS3KeyPrefixTest extends DmActivitiServiceTaskTest
         parameters.add(buildParameter("createNewVersion", "NOT_A_BOOLEAN"));
 
         Map<String, Object> variableValuesToValidate = new HashMap<>();
-        variableValuesToValidate.put(ActivitiHelper.VARIABLE_ERROR_MESSAGE, "\"createNewVersion\" must be a valid boolean value of \"true\" or \"false\".");
+        variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"createNewVersion\" must be a valid boolean value of \"true\" or \"false\".");
 
         testActivitiServiceTaskFailure(GetS3KeyPrefix.class.getCanonicalName(), fieldExtensionList, parameters, null);
     }

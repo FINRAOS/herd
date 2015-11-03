@@ -34,7 +34,7 @@ import org.finra.dm.dao.impl.MockEmrOperationsImpl;
 import org.finra.dm.model.api.xml.Job;
 import org.finra.dm.model.api.xml.Parameter;
 import org.finra.dm.service.AbstractServiceTest;
-import org.finra.dm.service.activiti.ActivitiHelper;
+import org.finra.dm.service.activiti.ActivitiRuntimeHelper;
 
 /**
  * Tests the CheckEmrCluster Activiti task wrapper.
@@ -62,16 +62,16 @@ public class CheckEmrClusterTest extends AbstractServiceTest
             activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(job.getId()).includeProcessVariables().singleResult();
         Map<String, Object> variables = hisInstance.getProcessVariables();
 
-        String hiveStepId = (String) variables.get("addHiveStepServiceTask" + ActivitiHelper.TASK_VARIABLE_MARKER + "emrStepId");
-        String emrStepId = (String) variables.get("checkClusterServiceTask" + ActivitiHelper.TASK_VARIABLE_MARKER + "step_id");
+        String hiveStepId = (String) variables.get("addHiveStepServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + "emrStepId");
+        String emrStepId = (String) variables.get("checkClusterServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + "step_id");
         assertEquals(hiveStepId, emrStepId);
-        String emrStepJarLocation = (String) variables.get("checkClusterServiceTask" + ActivitiHelper.TASK_VARIABLE_MARKER + "step_jarLocation");
+        String emrStepJarLocation = (String) variables.get("checkClusterServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + "step_jarLocation");
         assertNull(emrStepJarLocation);
 
-        String shellStepId = (String) variables.get("addShellStepServiceTask" + ActivitiHelper.TASK_VARIABLE_MARKER + "emrStepId");
-        String activeStepId = (String) variables.get("checkClusterServiceTask" + ActivitiHelper.TASK_VARIABLE_MARKER + "activeStep_id");
+        String shellStepId = (String) variables.get("addShellStepServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + "emrStepId");
+        String activeStepId = (String) variables.get("checkClusterServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + "activeStep_id");
         assertEquals(shellStepId, activeStepId);
-        String activeStepJarLocation = (String) variables.get("checkClusterServiceTask" + ActivitiHelper.TASK_VARIABLE_MARKER + "activeStep_jarLocation");
+        String activeStepJarLocation = (String) variables.get("checkClusterServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + "activeStep_jarLocation");
         assertNull(activeStepJarLocation);
     }
 
@@ -96,16 +96,16 @@ public class CheckEmrClusterTest extends AbstractServiceTest
             activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(job.getId()).includeProcessVariables().singleResult();
         Map<String, Object> variables = hisInstance.getProcessVariables();
 
-        String hiveStepId = (String) variables.get("addHiveStepServiceTask" + ActivitiHelper.TASK_VARIABLE_MARKER + "emrStepId");
-        String emrStepId = (String) variables.get("checkClusterServiceTask" + ActivitiHelper.TASK_VARIABLE_MARKER + "step_id");
+        String hiveStepId = (String) variables.get("addHiveStepServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + "emrStepId");
+        String emrStepId = (String) variables.get("checkClusterServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + "step_id");
         assertEquals(hiveStepId, emrStepId);
-        String emrStepJarLocation = (String) variables.get("checkClusterServiceTask" + ActivitiHelper.TASK_VARIABLE_MARKER + "step_jarLocation");
+        String emrStepJarLocation = (String) variables.get("checkClusterServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + "step_jarLocation");
         assertNotNull(emrStepJarLocation);
 
-        String shellStepId = (String) variables.get("addShellStepServiceTask" + ActivitiHelper.TASK_VARIABLE_MARKER + "emrStepId");
-        String activeStepId = (String) variables.get("checkClusterServiceTask" + ActivitiHelper.TASK_VARIABLE_MARKER + "activeStep_id");
+        String shellStepId = (String) variables.get("addShellStepServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + "emrStepId");
+        String activeStepId = (String) variables.get("checkClusterServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + "activeStep_id");
         assertEquals(shellStepId, activeStepId);
-        String activeStepJarLocation = (String) variables.get("checkClusterServiceTask" + ActivitiHelper.TASK_VARIABLE_MARKER + "activeStep_jarLocation");
+        String activeStepJarLocation = (String) variables.get("checkClusterServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + "activeStep_jarLocation");
         assertNotNull(activeStepJarLocation);
     }
 
@@ -127,10 +127,10 @@ public class CheckEmrClusterTest extends AbstractServiceTest
             activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(job.getId()).includeProcessVariables().singleResult();
         Map<String, Object> variables = hisInstance.getProcessVariables();
 
-        String hiveStepId = (String) variables.get("addHiveStepServiceTask" + ActivitiHelper.TASK_VARIABLE_MARKER + "emrStepId");
-        String emrStepId = (String) variables.get("checkClusterServiceTask" + ActivitiHelper.TASK_VARIABLE_MARKER + "step_id");
+        String hiveStepId = (String) variables.get("addHiveStepServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + "emrStepId");
+        String emrStepId = (String) variables.get("checkClusterServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + "step_id");
         assertEquals(hiveStepId, emrStepId);
-        String emrStepJarLocation = (String) variables.get("checkClusterServiceTask" + ActivitiHelper.TASK_VARIABLE_MARKER + "step_jarLocation");
+        String emrStepJarLocation = (String) variables.get("checkClusterServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + "step_jarLocation");
         assertNull(emrStepJarLocation);
     }
 

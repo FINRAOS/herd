@@ -25,7 +25,7 @@ import org.junit.Test;
 
 import org.finra.dm.model.api.xml.BusinessObjectDataStorageFilesCreateRequest;
 import org.finra.dm.model.api.xml.Parameter;
-import org.finra.dm.service.activiti.ActivitiHelper;
+import org.finra.dm.service.activiti.ActivitiRuntimeHelper;
 
 /**
  * Tests the AddBusinessObjectDataStorageFiles Activiti task wrapper.
@@ -89,7 +89,7 @@ public class AddBusinessObjectDataStorageFilesTest extends DmActivitiServiceTask
         parameters.add(buildParameter("businessObjectDataStorageFilesCreateRequest", "some_request"));
 
         Map<String, Object> variableValuesToValidate = new HashMap<>();
-        variableValuesToValidate.put(ActivitiHelper.VARIABLE_ERROR_MESSAGE, "\"ContentType\" must be a valid value of either \"xml\" or \"json\".");
+        variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"ContentType\" must be a valid value of either \"xml\" or \"json\".");
 
         testActivitiServiceTaskFailure(AddBusinessObjectDataStorageFiles.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
     }
@@ -108,7 +108,7 @@ public class AddBusinessObjectDataStorageFilesTest extends DmActivitiServiceTask
         parameters.add(buildParameter("businessObjectDataStorageFilesCreateRequest", ""));
 
         Map<String, Object> variableValuesToValidate = new HashMap<>();
-        variableValuesToValidate.put(ActivitiHelper.VARIABLE_ERROR_MESSAGE, "\"BusinessObjectDataCreateRequest\" must be specified.");
+        variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"BusinessObjectDataCreateRequest\" must be specified.");
 
         testActivitiServiceTaskFailure(AddBusinessObjectDataStorageFiles.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
     }
@@ -127,7 +127,7 @@ public class AddBusinessObjectDataStorageFilesTest extends DmActivitiServiceTask
         parameters.add(buildParameter("businessObjectDataStorageFilesCreateRequest", "wrong_xml_request"));
 
         Map<String, Object> variableValuesToValidate = new HashMap<>();
-        variableValuesToValidate.put(ActivitiHelper.VARIABLE_ERROR_MESSAGE, "\"BusinessObjectDataStorageFilesCreateRequest\" must be valid xml string.");
+        variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"BusinessObjectDataStorageFilesCreateRequest\" must be valid xml string.");
 
         testActivitiServiceTaskFailure(AddBusinessObjectDataStorageFiles.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
     }
@@ -146,7 +146,7 @@ public class AddBusinessObjectDataStorageFilesTest extends DmActivitiServiceTask
         parameters.add(buildParameter("businessObjectDataStorageFilesCreateRequest", "wrong_json_request"));
 
         Map<String, Object> variableValuesToValidate = new HashMap<>();
-        variableValuesToValidate.put(ActivitiHelper.VARIABLE_ERROR_MESSAGE, "\"BusinessObjectDataStorageFilesCreateRequest\" must be valid json string.");
+        variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"BusinessObjectDataStorageFilesCreateRequest\" must be valid json string.");
 
         testActivitiServiceTaskFailure(AddBusinessObjectDataStorageFiles.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
     }

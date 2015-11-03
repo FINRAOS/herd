@@ -310,6 +310,7 @@
          <xs:element name="businessObjectFormatFileType" type="xs:string"/>
          <xs:element name="partitionKey" type="xs:string"/>
          <xs:element name="description" type="xs:string" minOccurs="0"/>
+         <xs:element name="attributes" type="attributes" minOccurs="0"/>
          <xs:element name="attributeDefinitions" type="attributeDefinitions" minOccurs="0"/>
          <xs:element name="schema" type="schema" minOccurs="0"/>
       </xs:all>
@@ -319,6 +320,7 @@
    <xs:complexType name="businessObjectFormatUpdateRequest">
       <xs:all>
          <xs:element name="description" type="xs:string" minOccurs="0"/>
+         <xs:element name="attributes" type="attributes" minOccurs="0"/>
          <xs:element name="schema" type="schema" minOccurs="0"/>
       </xs:all>
    </xs:complexType>
@@ -335,6 +337,7 @@
          <xs:element name="latestVersion" type="xs:boolean"/>
          <xs:element name="partitionKey" type="xs:string"/>
          <xs:element name="description" type="xs:string" minOccurs="0"/>
+         <xs:element name="attributes" type="attributes" minOccurs="0"/>
          <xs:element name="attributeDefinitions" type="attributeDefinitions" minOccurs="0"/>
          <xs:element name="schema" type="schema" minOccurs="0"/>
       </xs:all>
@@ -478,6 +481,7 @@
          <xs:element name="customDdlName" type="xs:string" minOccurs="0"/>
          <xs:element name="includeDropTableStatement" type="xs:boolean" minOccurs="0"/>
          <xs:element name="includeIfNotExistsOption" type="xs:boolean" minOccurs="0"/>
+         <xs:element name="replaceColumns" type="xs:boolean" minOccurs="0"/>
       </xs:all>
    </xs:complexType>
 
@@ -785,7 +789,8 @@
          <xs:element name="partitionValueFilters" type="partitionValueFilters" minOccurs="0"/>
          <xs:element name="partitionValueFilter" type="partitionValueFilter" minOccurs="0"/>
          <xs:element name="businessObjectDataVersion" type="xs:int" minOccurs="0"/>
-         <xs:element name="storageName" type="xs:string"/>
+         <xs:element name="storageNames" type="storageNames" minOccurs="0"/>
+         <xs:element name="storageName" type="xs:string" minOccurs="0"/>
       </xs:all>
    </xs:complexType>
 
@@ -830,6 +835,12 @@
       </xs:all>
    </xs:complexType>
 
+   <xs:complexType name="storageNames">
+      <xs:sequence>
+         <xs:element name="storageName" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
    <xs:element name="businessObjectDataAvailability" type="businessObjectDataAvailability"/>
    <xs:complexType name="businessObjectDataAvailability">
       <xs:all>
@@ -841,7 +852,8 @@
          <xs:element name="partitionValueFilters" type="partitionValueFilters" minOccurs="0"/>
          <xs:element name="partitionValueFilter" type="partitionValueFilter" minOccurs="0"/>
          <xs:element name="businessObjectDataVersion" type="xs:int" minOccurs="0"/>
-         <xs:element name="storageName" type="xs:string"/>
+         <xs:element name="storageNames" type="storageNames" minOccurs="0"/>
+         <xs:element name="storageName" type="xs:string" minOccurs="0"/>
          <xs:element name="availableStatuses" type="businessObjectDataStatuses" minOccurs="0"/>
          <xs:element name="notAvailableStatuses" type="businessObjectDataStatuses" minOccurs="0"/>
       </xs:all>
@@ -906,12 +918,14 @@
          <xs:element name="partitionValueFilters" type="partitionValueFilters" minOccurs="0"/>
          <xs:element name="partitionValueFilter" type="partitionValueFilter" minOccurs="0"/>
          <xs:element name="businessObjectDataVersion" type="xs:int" minOccurs="0"/>
-         <xs:element name="storageName" type="xs:string"/>
+         <xs:element name="storageNames" type="storageNames" minOccurs="0"/>
+         <xs:element name="storageName" type="xs:string" minOccurs="0"/>
          <xs:element ref="outputFormat"/>
          <xs:element name="tableName" type="xs:string"/>
          <xs:element name="customDdlName" type="xs:string" minOccurs="0"/>
          <xs:element name="includeDropTableStatement" type="xs:boolean" minOccurs="0"/>
          <xs:element name="includeIfNotExistsOption" type="xs:boolean" minOccurs="0"/>
+         <xs:element name="includeDropPartitions" type="xs:boolean" minOccurs="0"/>
          <xs:element name="allowMissingData" type="xs:boolean" minOccurs="0"/>
       </xs:all>
    </xs:complexType>
@@ -927,7 +941,8 @@
          <xs:element name="partitionValueFilters" type="partitionValueFilters" minOccurs="0"/>
          <xs:element name="partitionValueFilter" type="partitionValueFilter" minOccurs="0"/>
          <xs:element name="businessObjectDataVersion" type="xs:int" minOccurs="0"/>
-         <xs:element name="storageName" type="xs:string"/>
+         <xs:element name="storageNames" type="storageNames" minOccurs="0"/>
+         <xs:element name="storageName" type="xs:string" minOccurs="0"/>
          <xs:element ref="outputFormat"/>
          <xs:element name="tableName" type="xs:string"/>
          <xs:element name="customDdlName" type="xs:string" minOccurs="0"/>

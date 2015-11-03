@@ -26,18 +26,22 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
+import org.finra.dm.core.helper.ConfigurationHelper;
 import org.finra.dm.dao.DmDao;
 import org.finra.dm.dao.config.DaoSpringModuleConfig;
 import org.finra.dm.model.AlreadyExistsException;
 import org.finra.dm.model.ObjectNotFoundException;
-import org.finra.dm.model.dto.S3FileTransferRequestParamsDto;
-import org.finra.dm.model.jpa.BusinessObjectDataEntity;
-import org.finra.dm.model.jpa.StorageFileEntity;
-import org.finra.dm.model.jpa.StorageUnitEntity;
 import org.finra.dm.model.api.xml.BusinessObjectDataKey;
 import org.finra.dm.model.api.xml.BusinessObjectDataStorageFilesCreateRequest;
 import org.finra.dm.model.api.xml.BusinessObjectDataStorageFilesCreateResponse;
 import org.finra.dm.model.api.xml.StorageFile;
+import org.finra.dm.model.dto.ConfigurationValue;
+import org.finra.dm.model.dto.S3FileTransferRequestParamsDto;
+import org.finra.dm.model.jpa.BusinessObjectDataEntity;
+import org.finra.dm.model.jpa.StorageEntity;
+import org.finra.dm.model.jpa.StorageFileEntity;
+import org.finra.dm.model.jpa.StoragePlatformEntity;
+import org.finra.dm.model.jpa.StorageUnitEntity;
 import org.finra.dm.service.BusinessObjectDataStorageFileService;
 import org.finra.dm.service.S3Service;
 import org.finra.dm.service.helper.BusinessObjectDataHelper;
@@ -69,6 +73,9 @@ public class BusinessObjectDataStorageFileServiceImpl implements BusinessObjectD
 
     @Autowired
     private StorageFileHelper storageFileHelper;
+
+    @Autowired
+    protected ConfigurationHelper configurationHelper;
 
     /*
      * TODO The validation logic is repeated from
@@ -146,39 +153,64 @@ public class BusinessObjectDataStorageFileServiceImpl implements BusinessObjectD
             }
         }
 
-        // if S3_MANAGED
-        if (storageUnitEntity.getStorage().isS3ManagedStorage())
+        StorageEntity storageEntity = storageUnitEntity.getStorage();
+
+        boolean isS3StoragePlatform = storageEntity.getStoragePlatform().getName().equals(StoragePlatformEntity.S3);
+
+        // Get the S3 validation flags.
+        boolean validatePathPrefix = dmDaoHelper
+            .getBooleanStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_PATH_PREFIX), storageEntity,
+                false, true);
+        boolean validateFileExistence = dmDaoHelper
+            .getBooleanStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_FILE_EXISTENCE), storageEntity,
+                false, true);
+
+        if ((validatePathPrefix || validateFileExistence) && isS3StoragePlatform)
         {
+            // Perform expected path and file existence validation.
+
             // validate S3 prefix for each file
             String expectedS3KeyPrefix = businessObjectDataHelper
                 .buildS3KeyPrefix(businessObjectDataEntity.getBusinessObjectFormat(), dmDaoHelper.getBusinessObjectDataKey(businessObjectDataEntity));
-            expectedS3KeyPrefix += '/';
 
-            for (StorageFile storageFile : businessObjectDataStorageFilesCreateRequest.getStorageFiles())
+            // Add a trailing backslash if it doesn't already exist.
+            if (!expectedS3KeyPrefix.endsWith("/"))
             {
-                Assert.isTrue(storageFile.getFilePath().startsWith(expectedS3KeyPrefix), String
-                    .format("Specified storage file path \"%s\" does not match the expected S3 key prefix \"%s\".", storageFile.getFilePath(),
-                        expectedS3KeyPrefix));
+                expectedS3KeyPrefix += "/";
             }
 
-            // validate each file against S3
-            S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = dmDaoHelper.getS3ManagedBucketAccessParams();
-            s3FileTransferRequestParamsDto.setS3KeyPrefix(expectedS3KeyPrefix);
-            List<String> actualS3Keys = storageFileHelper.getFilePaths(s3Service.listDirectory(s3FileTransferRequestParamsDto, true));
-
-            for (StorageFile requestStorageFile : businessObjectDataStorageFilesCreateRequest.getStorageFiles())
+            if (validatePathPrefix)
             {
-                if (!actualS3Keys.contains(requestStorageFile.getFilePath()))
+                for (StorageFile storageFile : businessObjectDataStorageFilesCreateRequest.getStorageFiles())
                 {
-                    throw new ObjectNotFoundException(String
-                        .format("File not found at s3://%s/%s location.", s3FileTransferRequestParamsDto.getS3BucketName(), requestStorageFile.getFilePath()));
+                    Assert.isTrue(storageFile.getFilePath().startsWith(expectedS3KeyPrefix), String
+                        .format("Specified storage file path \"%s\" does not match the expected S3 key prefix \"%s\".", storageFile.getFilePath(),
+                            expectedS3KeyPrefix));
+                }
+            }
+
+            if (validateFileExistence)
+            {
+                // Get the validate file parameters.
+                S3FileTransferRequestParamsDto params =
+                    businessObjectDataHelper.getFileValidationParams(storageEntity, expectedS3KeyPrefix, storageUnitEntity, validatePathPrefix);
+
+                // When listing S3 files, we ignore 0 byte objects that represent S3 directories.
+                List<String> actualS3Keys = storageFileHelper.getFilePaths(s3Service.listDirectory(params, true));
+
+                for (StorageFile requestStorageFile : businessObjectDataStorageFilesCreateRequest.getStorageFiles())
+                {
+                    if (!actualS3Keys.contains(requestStorageFile.getFilePath()))
+                    {
+                        throw new ObjectNotFoundException(
+                            String.format("File not found at s3://%s/%s location.", params.getS3BucketName(), requestStorageFile.getFilePath()));
+                    }
                 }
             }
         }
-        // if non S3_MANAGED and if storage has directory
         else if (storageUnitEntity.getDirectoryPath() != null)
         {
-            // validate prefix against data's storage unit's directory
+            // If a directory exists, then validate that all files are contained within that directory.
             for (StorageFile storageFile : businessObjectDataStorageFilesCreateRequest.getStorageFiles())
             {
                 Assert.isTrue(storageFile.getFilePath().startsWith(storageUnitEntity.getDirectoryPath()), String
@@ -186,9 +218,7 @@ public class BusinessObjectDataStorageFileServiceImpl implements BusinessObjectD
                         storageUnitEntity.getDirectoryPath()));
             }
         }
-        /*
-         * If non S3_MANAGED and storage has no directory specified, no storage validations occur.
-         */
+        // If the validation flags don't exist and no directory is specified, then no storage validations occur.
 
         // Add new files to existing storage
         for (StorageFile storageFile : businessObjectDataStorageFilesCreateRequest.getStorageFiles())
@@ -201,7 +231,7 @@ public class BusinessObjectDataStorageFileServiceImpl implements BusinessObjectD
             dmDao.saveAndRefresh(storageFileEntity);
         }
 
-        // construct and return response
+        // Construct and return response
         BusinessObjectDataStorageFilesCreateResponse businessObjectDataStorageFilesCreateResponse = new BusinessObjectDataStorageFilesCreateResponse();
         businessObjectDataStorageFilesCreateResponse
             .setNamespace(businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectDefinition().getNamespace().getCode());
@@ -215,8 +245,8 @@ public class BusinessObjectDataStorageFileServiceImpl implements BusinessObjectD
         businessObjectDataStorageFilesCreateResponse.setPartitionValue(businessObjectDataEntity.getPartitionValue());
         businessObjectDataStorageFilesCreateResponse.setSubPartitionValues(dmHelper.getSubPartitionValues(businessObjectDataEntity));
         businessObjectDataStorageFilesCreateResponse.setBusinessObjectDataVersion(businessObjectDataEntity.getVersion());
-        businessObjectDataStorageFilesCreateResponse.setStorageName(storageUnitEntity.getStorage().getName());
-        // for the files, just echo back the requested files
+        businessObjectDataStorageFilesCreateResponse.setStorageName(storageEntity.getName());
+        // For the files, just echo back the requested files
         businessObjectDataStorageFilesCreateResponse.setStorageFiles(businessObjectDataStorageFilesCreateRequest.getStorageFiles());
 
         return businessObjectDataStorageFilesCreateResponse;

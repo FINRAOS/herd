@@ -20,7 +20,7 @@
    <parent>
       <groupId>org.finra.dm</groupId>
       <artifactId>dm-docs</artifactId>
-      <version>0.1.0</version>
+      <version>0.2.0</version>
    </parent>
    <name>DM Docs Swagger</name>
    <artifactId>dm-docs-swagger</artifactId>

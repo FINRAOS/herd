@@ -19,10 +19,10 @@ import java.util.Arrays;
 
 import org.junit.Test;
 
-import org.finra.dm.model.jpa.BusinessObjectDataEntity;
-import org.finra.dm.model.jpa.FileTypeEntity;
 import org.finra.dm.model.api.xml.BusinessObjectDataDdl;
 import org.finra.dm.model.api.xml.BusinessObjectDataDdlRequest;
+import org.finra.dm.model.jpa.BusinessObjectDataEntity;
+import org.finra.dm.model.jpa.FileTypeEntity;
 import org.finra.dm.service.helper.Hive13DdlGenerator;
 
 /**
@@ -91,8 +91,8 @@ public class BusinessObjectDataRestControllerGenerateBusinessObjectDataDdlTest e
 
         // Validate the results.
         expectedDdl = getExpectedDdl(PARTITION_COLUMNS.length, FIRST_COLUMN_NAME, FIRST_COLUMN_DATA_TYPE, ROW_FORMAT, Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT,
-            FileTypeEntity.TXT_FILE_TYPE, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, PROCESS_DATE_PARTITION_VALUES, SUBPARTITION_VALUES, false,
-            true, true);
+            FileTypeEntity.TXT_FILE_TYPE, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, PROCESS_DATE_AVAILABLE_PARTITION_VALUES,
+            SUBPARTITION_VALUES, false, true, true);
         validateBusinessObjectDataDdl(request, expectedDdl, resultDdl);
 
         // Retrieve business object data ddl when start partition value is equal to the end partition value.

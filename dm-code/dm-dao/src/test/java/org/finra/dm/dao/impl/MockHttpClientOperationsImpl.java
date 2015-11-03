@@ -42,18 +42,19 @@ import org.apache.http.message.BasicStatusLine;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import org.finra.dm.core.helper.ConfigurationHelper;
 import org.finra.dm.dao.HttpClientOperations;
 import org.finra.dm.dao.helper.XmlHelper;
-import org.finra.dm.model.jpa.BusinessObjectDataStatusEntity;
-import org.finra.dm.model.jpa.StorageAttributeEntity;
-import org.finra.dm.model.jpa.StorageEntity;
-import org.finra.dm.model.jpa.StoragePlatformEntity;
 import org.finra.dm.model.api.xml.Attribute;
 import org.finra.dm.model.api.xml.BusinessObjectData;
 import org.finra.dm.model.api.xml.S3KeyPrefixInformation;
 import org.finra.dm.model.api.xml.Storage;
 import org.finra.dm.model.api.xml.StorageFile;
 import org.finra.dm.model.api.xml.StorageUnit;
+import org.finra.dm.model.dto.ConfigurationValue;
+import org.finra.dm.model.jpa.BusinessObjectDataStatusEntity;
+import org.finra.dm.model.jpa.StorageEntity;
+import org.finra.dm.model.jpa.StoragePlatformEntity;
 
 /**
  * Mock implementation of HTTP client operations.
@@ -67,6 +68,9 @@ public class MockHttpClientOperationsImpl implements HttpClientOperations
 
     @Autowired
     private XmlHelper xmlHelper;
+
+    @Autowired
+    protected ConfigurationHelper configurationHelper;
 
     @Override
     public CloseableHttpResponse execute(CloseableHttpClient httpClient, HttpUriRequest request) throws IOException, JAXBException
@@ -268,7 +272,7 @@ public class MockHttpClientOperationsImpl implements HttpClientOperations
         storage.setStoragePlatformName(StoragePlatformEntity.S3);
 
         List<Attribute> attributes = new ArrayList<>();
-        Attribute attribute = new Attribute(StorageAttributeEntity.ATTRIBUTE_BUCKET_NAME, "testBucket");
+        Attribute attribute = new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), "testBucket");
         attributes.add(attribute);
         storage.setAttributes(attributes);
 

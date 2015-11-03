@@ -40,11 +40,6 @@ public class StorageAttributeEntity extends AuditableEntity
      */
     public static final String TABLE_NAME = "strge_atrbt";
 
-    /**
-     * The attribute name for the S3 bucket name.
-     */
-    public static final String ATTRIBUTE_BUCKET_NAME = "bucket.name";
-
     @Id
     @Column(name = TABLE_NAME + "_id")
     @GeneratedValue(generator = TABLE_NAME + "_seq")

@@ -27,10 +27,11 @@ import org.activiti.bpmn.model.BpmnModel;
 import org.activiti.bpmn.model.FieldExtension;
 import org.activiti.bpmn.model.ServiceTask;
 import org.activiti.engine.history.HistoricProcessInstance;
+
 import org.finra.dm.model.api.xml.Job;
 import org.finra.dm.model.api.xml.Parameter;
 import org.finra.dm.service.AbstractServiceTest;
-import org.finra.dm.service.activiti.ActivitiHelper;
+import org.finra.dm.service.activiti.ActivitiRuntimeHelper;
 
 /**
  * Base class to tests the Activiti tasks for services.
@@ -84,8 +85,8 @@ public abstract class DmActivitiServiceTaskTest extends AbstractServiceTest
             activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(job.getId()).includeProcessVariables().singleResult();
         Map<String, Object> variables = hisInstance.getProcessVariables();
 
-        String serviceTaskStatus = (String) variables.get(getServiceTaskVariableName(ActivitiHelper.VARIABLE_STATUS));
-        assertEquals(ActivitiHelper.TASK_STATUS_SUCCESS, serviceTaskStatus);
+        String serviceTaskStatus = (String) variables.get(getServiceTaskVariableName(ActivitiRuntimeHelper.VARIABLE_STATUS));
+        assertEquals(ActivitiRuntimeHelper.TASK_STATUS_SUCCESS, serviceTaskStatus);
 
         if (variableValuesToValidate != null)
         {
@@ -128,8 +129,8 @@ public abstract class DmActivitiServiceTaskTest extends AbstractServiceTest
             activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(job.getId()).includeProcessVariables().singleResult();
         Map<String, Object> variables = hisInstance.getProcessVariables();
 
-        String serviceTaskStatus = (String) variables.get(getServiceTaskVariableName(ActivitiHelper.VARIABLE_STATUS));
-        assertEquals(ActivitiHelper.TASK_STATUS_ERROR, serviceTaskStatus);
+        String serviceTaskStatus = (String) variables.get(getServiceTaskVariableName(ActivitiRuntimeHelper.VARIABLE_STATUS));
+        assertEquals(ActivitiRuntimeHelper.TASK_STATUS_ERROR, serviceTaskStatus);
 
         if (variableValuesToValidate != null)
         {
@@ -157,6 +158,6 @@ public abstract class DmActivitiServiceTaskTest extends AbstractServiceTest
 
     protected String getServiceTaskVariableName(String variableName)
     {
-        return serviceTaskId + ActivitiHelper.TASK_VARIABLE_MARKER + variableName;
+        return serviceTaskId + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + variableName;
     }
 }

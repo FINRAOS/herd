@@ -25,14 +25,16 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import org.finra.dm.model.jpa.BusinessObjectDataAttributeDefinitionEntity;
-import org.finra.dm.model.jpa.BusinessObjectFormatEntity;
-import org.finra.dm.model.jpa.SchemaColumnEntity;
+import org.finra.dm.model.api.xml.Attribute;
 import org.finra.dm.model.api.xml.AttributeDefinition;
 import org.finra.dm.model.api.xml.BusinessObjectFormat;
 import org.finra.dm.model.api.xml.BusinessObjectFormatKey;
 import org.finra.dm.model.api.xml.Schema;
 import org.finra.dm.model.api.xml.SchemaColumn;
+import org.finra.dm.model.jpa.BusinessObjectDataAttributeDefinitionEntity;
+import org.finra.dm.model.jpa.BusinessObjectFormatAttributeEntity;
+import org.finra.dm.model.jpa.BusinessObjectFormatEntity;
+import org.finra.dm.model.jpa.SchemaColumnEntity;
 
 /**
  * A helper class for BusinessObjectFormatService related data management code.
@@ -42,6 +44,39 @@ public class BusinessObjectFormatHelper
 {
     @Autowired
     private DmDaoHelper dmDaoHelper;
+
+    /**
+     * Returns a string representation of the business object format key.
+     *
+     * @param businessObjectFormatKey the business object format key
+     *
+     * @return the string representation of the business object format key
+     */
+    public String businessObjectFormatKeyToString(BusinessObjectFormatKey businessObjectFormatKey)
+    {
+        return businessObjectFormatKeyToString(businessObjectFormatKey.getNamespace(), businessObjectFormatKey.getBusinessObjectDefinitionName(),
+            businessObjectFormatKey.getBusinessObjectFormatUsage(), businessObjectFormatKey.getBusinessObjectFormatFileType(),
+            businessObjectFormatKey.getBusinessObjectFormatVersion());
+    }
+
+    /**
+     * Returns a string representation of the business object format key.
+     *
+     * @param namespace the namespace
+     * @param businessObjectDefinitionName the business object definition name
+     * @param businessObjectFormatUsage the business object format usage
+     * @param businessObjectFormatFileType the business object format file type
+     * @param businessObjectFormatVersion the business object formation version
+     *
+     * @return the string representation of the business object format key
+     */
+    public String businessObjectFormatKeyToString(String namespace, String businessObjectDefinitionName, String businessObjectFormatUsage,
+        String businessObjectFormatFileType, Integer businessObjectFormatVersion)
+    {
+        return String.format("namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", " +
+            "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d", namespace, businessObjectDefinitionName, businessObjectFormatUsage,
+            businessObjectFormatFileType, businessObjectFormatVersion);
+    }
 
     /**
      * Populates a business object format key with a legacy namespace if namespace if not there.
@@ -76,6 +111,17 @@ public class BusinessObjectFormatHelper
         businessObjectFormat.setLatestVersion(businessObjectFormatEntity.getLatestVersion());
         businessObjectFormat.setPartitionKey(businessObjectFormatEntity.getPartitionKey());
         businessObjectFormat.setDescription(businessObjectFormatEntity.getDescription());
+
+        // Add in the attributes.
+        List<Attribute> attributes = new ArrayList<>();
+        businessObjectFormat.setAttributes(attributes);
+        for (BusinessObjectFormatAttributeEntity attributeEntity : businessObjectFormatEntity.getAttributes())
+        {
+            Attribute attribute = new Attribute();
+            attributes.add(attribute);
+            attribute.setName(attributeEntity.getName());
+            attribute.setValue(attributeEntity.getValue());
+        }
 
         // Add in the attribute definitions.
         List<AttributeDefinition> attributeDefinitions = new ArrayList<>();

@@ -23,6 +23,7 @@ import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.propertyeditors.CustomBooleanEditor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
@@ -32,6 +33,14 @@ import org.finra.dm.dao.DmDao;
 import org.finra.dm.dao.helper.DmStringHelper;
 import org.finra.dm.model.MethodNotAllowedException;
 import org.finra.dm.model.ObjectNotFoundException;
+import org.finra.dm.model.api.xml.BusinessObjectDataAttributeKey;
+import org.finra.dm.model.api.xml.BusinessObjectDataKey;
+import org.finra.dm.model.api.xml.BusinessObjectDataNotificationRegistrationKey;
+import org.finra.dm.model.api.xml.BusinessObjectDefinitionKey;
+import org.finra.dm.model.api.xml.BusinessObjectFormatKey;
+import org.finra.dm.model.api.xml.CustomDdlKey;
+import org.finra.dm.model.api.xml.EmrClusterDefinitionKey;
+import org.finra.dm.model.api.xml.PartitionKeyGroupKey;
 import org.finra.dm.model.dto.ConfigurationValue;
 import org.finra.dm.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.dm.model.dto.StorageAlternateKeyDto;
@@ -56,14 +65,6 @@ import org.finra.dm.model.jpa.StorageAttributeEntity;
 import org.finra.dm.model.jpa.StorageEntity;
 import org.finra.dm.model.jpa.StorageFileEntity;
 import org.finra.dm.model.jpa.StorageUnitEntity;
-import org.finra.dm.model.api.xml.BusinessObjectDataAttributeKey;
-import org.finra.dm.model.api.xml.BusinessObjectDataKey;
-import org.finra.dm.model.api.xml.BusinessObjectDataNotificationRegistrationKey;
-import org.finra.dm.model.api.xml.BusinessObjectDefinitionKey;
-import org.finra.dm.model.api.xml.BusinessObjectFormatKey;
-import org.finra.dm.model.api.xml.CustomDdlKey;
-import org.finra.dm.model.api.xml.EmrClusterDefinitionKey;
-import org.finra.dm.model.api.xml.PartitionKeyGroupKey;
 
 /**
  * A helper class for DmDao related data management code.
@@ -655,36 +656,113 @@ public class DmDaoHelper
     }
 
     /**
-     * Gets attribute value by name from the storage entity.
+     * Gets attribute value by name from the storage entity while specifying whether the attribute is required and whether the attribute value is required.
      *
      * @param attributeName the attribute name (case insensitive)
      * @param storageEntity the storage entity
-     * @param required specifies whether the attribute value is mandatory
+     * @param attributeRequired specifies whether the attribute is mandatory (i.e. whether it has a value or not).
+     * @param attributeValueRequiredIfExists specifies whether the attribute value is mandatory (i.e. the attribute must exist and its value must also contain a
+     * value).
      *
-     * @return the attribute value from the attribute with the attribute name, or {@code null} if the attribute is not mandatory and this storage contains no
-     *         attribute with this attribute name
-     * @throws IllegalArgumentException if the attribute is mandatory and this storage contains no attribute with this attribute name
+     * @return the attribute value from the attribute with the attribute name.
+     * @throws IllegalStateException if the attribute is mandatory and this storage contains no attribute with this attribute name or the value is blank.This
+     * will produce a 500 HTTP status code error. If storage attributes are able to be updated by a REST invocation in the future, we might want to consider
+     * making this a 400 instead since the user has the ability to fix the issue on their own.
      */
-    public String getStorageAttributeValueByName(String attributeName, StorageEntity storageEntity, Boolean required) throws IllegalArgumentException
+    public String getStorageAttributeValueByName(String attributeName, StorageEntity storageEntity, boolean attributeRequired,
+        boolean attributeValueRequiredIfExists) throws IllegalStateException
     {
+        boolean attributeExists = false;
         String attributeValue = null;
 
         for (StorageAttributeEntity attributeEntity : storageEntity.getAttributes())
         {
             if (attributeEntity.getName().equalsIgnoreCase(attributeName))
             {
+                attributeExists = true;
                 attributeValue = attributeEntity.getValue();
                 break;
             }
         }
 
-        if (required && StringUtils.isBlank(attributeValue))
+        // If the attribute must exist and doesn't, throw an exception.
+        if (attributeRequired && !attributeExists)
         {
-            throw new IllegalArgumentException(
-                String.format("Attribute \"%s\" for \"%s\" storage must be configured.", attributeName, storageEntity.getName()));
+            throw new IllegalStateException(String.format("Attribute \"%s\" for \"%s\" storage must be configured.", attributeName, storageEntity.getName()));
+        }
+
+        // If the attribute is configured, but has a blank value, throw an exception.
+        if (attributeExists && attributeValueRequiredIfExists && StringUtils.isBlank(attributeValue))
+        {
+            throw new IllegalStateException(
+                String.format("Attribute \"%s\" for \"%s\" storage must have a value that is not blank.", attributeName, storageEntity.getName()));
         }
 
         return attributeValue;
+    }
+
+    /**
+     * Gets attribute value by name from the storage entity while specifying whether the attribute value is required (i.e. it must exist and must have a value
+     * configured). This is a convenience method when a value must be returned (i.e. the attribute must be configured and have a value present) or is totally
+     * optional (i.e. the attribute can not exist or it can exist and have a blank value).
+     *
+     * @param attributeName the attribute name (case insensitive)
+     * @param storageEntity the storage entity
+     * @param attributeValueRequired specifies whether the attribute value is mandatory.
+     *
+     * @return the attribute value from the attribute with the attribute name.
+     * @throws IllegalArgumentException if the attribute is mandatory and this storage contains no attribute with this attribute name
+     */
+    public String getStorageAttributeValueByName(String attributeName, StorageEntity storageEntity, boolean attributeValueRequired)
+        throws IllegalArgumentException
+    {
+        return getStorageAttributeValueByName(attributeName, storageEntity, attributeValueRequired, attributeValueRequired);
+    }
+
+    /**
+     * Gets attribute value by name from the storage entity and returns it as a boolean. Most types of boolean strings are supported (e.g. true/false, on/off,
+     * yes/no, etc.).
+     *
+     * @param attributeName the attribute name (case insensitive)
+     * @param storageEntity the storage entity
+     * @param attributeRequired specifies whether the attribute is mandatory (i.e. whether it has a value or not).
+     * @param attributeValueRequiredIfExists specifies whether the attribute value is mandatory (i.e. the attribute must exist and its value must also contain a
+     * value).
+     *
+     * @return the attribute value from the attribute with the attribute name as a boolean. If no value is configured and the attribute isn't required, then
+     *         false is returned.
+     * @throws IllegalStateException if an invalid storage attribute boolean value was configured.
+     */
+    public boolean getBooleanStorageAttributeValueByName(String attributeName, StorageEntity storageEntity, boolean attributeRequired,
+        boolean attributeValueRequiredIfExists) throws IllegalStateException
+    {
+        // Get the boolean string value.
+        // The required flag is being passed so an exception will be thrown if it is required and isn't present.
+        String booleanStringValue = getStorageAttributeValueByName(attributeName, storageEntity, attributeRequired, attributeValueRequiredIfExists);
+
+        // If it isn't required, then treat a blank value as "false".
+        if (StringUtils.isBlank(booleanStringValue))
+        {
+            return false;
+        }
+
+        // Use custom boolean editor without allowed empty strings to convert the value of the argument to a boolean value.
+        CustomBooleanEditor customBooleanEditor = new CustomBooleanEditor(attributeRequired);
+        try
+        {
+            customBooleanEditor.setAsText(booleanStringValue);
+        }
+        catch (IllegalArgumentException e)
+        {
+            // This will produce a 500 HTTP status code error. If storage attributes are able to be updated by a REST invocation in the future,
+            // we might want to consider making this a 400 instead since the user has the ability to fix the issue on their own.
+            throw new IllegalStateException(String
+                .format("Attribute \"%s\" for \"%s\" storage has an invalid boolean value: \"%s\".", attributeName, storageEntity.getName(),
+                    booleanStringValue), e);
+        }
+
+        // Return the boolean value.
+        return (Boolean) customBooleanEditor.getValue();
     }
 
     /**
@@ -838,19 +916,6 @@ public class DmDaoHelper
     }
 
     /**
-     * Returns a new instance of S3FileTransferRequestParamsDto populated with all parameters, required to access S3 Managed bucket.
-     *
-     * @return the S3FileTransferRequestParamsDto instance that can be used to access the S3 Managed bucket.
-     */
-    public S3FileTransferRequestParamsDto getS3ManagedBucketAccessParams()
-    {
-        // Get S3 managed bucket specific configuration settings.
-        String s3BucketName = dmHelper.getS3ManagedBucketName();
-
-        return getS3BucketAccessParams(s3BucketName);
-    }
-
-    /**
      * Returns a new instance of S3FileTransferRequestParamsDto populated with all parameters, required to access an S3 bucket.
      *
      * @param storageEntity the storage entity that contains attributes to access an S3 bucket
@@ -861,7 +926,8 @@ public class DmDaoHelper
     {
         // Get S3 bucket specific configuration settings.
         // Please note that since those values are required we pass a "true" flag.
-        String s3BucketName = getStorageAttributeValueByName(StorageAttributeEntity.ATTRIBUTE_BUCKET_NAME, storageEntity, true);
+        String s3BucketName =
+            getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), storageEntity, true);
 
         return getS3BucketAccessParams(s3BucketName);
     }

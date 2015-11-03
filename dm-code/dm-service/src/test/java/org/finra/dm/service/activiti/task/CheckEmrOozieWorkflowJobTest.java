@@ -15,10 +15,9 @@
 */
 package org.finra.dm.service.activiti.task;
 
-import static org.junit.Assert.assertNull;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,7 +32,7 @@ import org.finra.dm.model.api.xml.Job;
 import org.finra.dm.model.api.xml.OozieWorkflowJob;
 import org.finra.dm.model.api.xml.Parameter;
 import org.finra.dm.service.AbstractServiceTest;
-import org.finra.dm.service.activiti.ActivitiHelper;
+import org.finra.dm.service.activiti.ActivitiRuntimeHelper;
 
 /**
  * Tests the CheckEmrOozieWorkflowJob class.
@@ -59,10 +58,10 @@ public class CheckEmrOozieWorkflowJobTest extends AbstractServiceTest
         HistoricProcessInstance hisInstance =
                 activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(job.getId()).includeProcessVariables().singleResult();
         Map<String, Object> variables = hisInstance.getProcessVariables();
-        String oozieJobTaskStatus = (String) variables.get("checkOozieWorkflowTask" + ActivitiHelper.TASK_VARIABLE_MARKER + ActivitiHelper.VARIABLE_STATUS);
-        String jsonResponse = (String) variables.get("checkOozieWorkflowTask" + ActivitiHelper.TASK_VARIABLE_MARKER + BaseJavaDelegate.VARIABLE_JSON_RESPONSE);
+        String oozieJobTaskStatus = (String) variables.get("checkOozieWorkflowTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + ActivitiRuntimeHelper.VARIABLE_STATUS);
+        String jsonResponse = (String) variables.get("checkOozieWorkflowTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + BaseJavaDelegate.VARIABLE_JSON_RESPONSE);
 
-        assertEquals(oozieJobTaskStatus, ActivitiHelper.TASK_STATUS_SUCCESS);
+        assertEquals(oozieJobTaskStatus, ActivitiRuntimeHelper.TASK_STATUS_SUCCESS);
         assertNotNull(jsonResponse);
         
         OozieWorkflowJob oozieWorkflowJob = jsonHelper.unmarshallJsonToObject(OozieWorkflowJob.class, jsonResponse);
@@ -95,10 +94,10 @@ public class CheckEmrOozieWorkflowJobTest extends AbstractServiceTest
         HistoricProcessInstance hisInstance =
                 activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(job.getId()).includeProcessVariables().singleResult();
         Map<String, Object> variables = hisInstance.getProcessVariables();
-        String oozieJobTaskStatus = (String) variables.get("checkOozieWorkflowTask" + ActivitiHelper.TASK_VARIABLE_MARKER + ActivitiHelper.VARIABLE_STATUS);
-        String jsonResponse = (String) variables.get("checkOozieWorkflowTask" + ActivitiHelper.TASK_VARIABLE_MARKER + BaseJavaDelegate.VARIABLE_JSON_RESPONSE);
+        String oozieJobTaskStatus = (String) variables.get("checkOozieWorkflowTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + ActivitiRuntimeHelper.VARIABLE_STATUS);
+        String jsonResponse = (String) variables.get("checkOozieWorkflowTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + BaseJavaDelegate.VARIABLE_JSON_RESPONSE);
 
-        assertEquals(oozieJobTaskStatus, ActivitiHelper.TASK_STATUS_SUCCESS);
+        assertEquals(oozieJobTaskStatus, ActivitiRuntimeHelper.TASK_STATUS_SUCCESS);
         assertNotNull(jsonResponse);
         
         OozieWorkflowJob oozieWorkflowJob = jsonHelper.unmarshallJsonToObject(OozieWorkflowJob.class, jsonResponse);

@@ -24,7 +24,7 @@ import org.activiti.bpmn.model.FieldExtension;
 import org.junit.Test;
 
 import org.finra.dm.model.api.xml.Parameter;
-import org.finra.dm.service.activiti.ActivitiHelper;
+import org.finra.dm.service.activiti.ActivitiRuntimeHelper;
 
 /**
  * Test suite for Get Business Object Definition Activiti wrapper.
@@ -82,7 +82,7 @@ public class GetBusinessObjectDefinitionTest extends DmActivitiServiceTaskTest
 
         // Try to get a business object definition instance when object definition name is not specified.
         Map<String, Object> variableValuesToValidate = new HashMap<>();
-        variableValuesToValidate.put(ActivitiHelper.VARIABLE_ERROR_MESSAGE, "A business object definition name must be specified.");
+        variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "A business object definition name must be specified.");
         testActivitiServiceTaskFailure(GetBusinessObjectDefinition.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
     }
 
@@ -102,7 +102,7 @@ public class GetBusinessObjectDefinitionTest extends DmActivitiServiceTaskTest
 
         // Try to get a non-existing business object definition.
         Map<String, Object> variableValuesToValidate = new HashMap<>();
-        variableValuesToValidate.put(ActivitiHelper.VARIABLE_ERROR_MESSAGE,
+        variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE,
             String.format("Business object definition with name \"%s\" doesn't exist for namespace \"%s\".", BOD_NAME, NAMESPACE_CD));
         testActivitiServiceTaskFailure(GetBusinessObjectDefinition.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
     }

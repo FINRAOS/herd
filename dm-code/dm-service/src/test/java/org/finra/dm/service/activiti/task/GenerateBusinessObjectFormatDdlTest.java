@@ -23,10 +23,10 @@ import java.util.Map;
 import org.activiti.bpmn.model.FieldExtension;
 import org.junit.Test;
 
-import org.finra.dm.model.jpa.FileTypeEntity;
 import org.finra.dm.model.api.xml.BusinessObjectDataDdlOutputFormatEnum;
 import org.finra.dm.model.api.xml.Parameter;
-import org.finra.dm.service.activiti.ActivitiHelper;
+import org.finra.dm.model.jpa.FileTypeEntity;
+import org.finra.dm.service.activiti.ActivitiRuntimeHelper;
 
 public class GenerateBusinessObjectFormatDdlTest extends DmActivitiServiceTaskTest
 {
@@ -82,7 +82,7 @@ public class GenerateBusinessObjectFormatDdlTest extends DmActivitiServiceTaskTe
         parameters.add(buildParameter("businessObjectFormatVersion", "invalid_integer"));
 
         Map<String, Object> variableValuesToValidate = new HashMap<>();
-        variableValuesToValidate.put(ActivitiHelper.VARIABLE_ERROR_MESSAGE, "\"businessObjectFormatVersion\" must be a valid integer value.");
+        variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"businessObjectFormatVersion\" must be a valid integer value.");
 
         testActivitiServiceTaskFailure(GenerateBusinessObjectFormatDdl.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
     }
@@ -101,7 +101,7 @@ public class GenerateBusinessObjectFormatDdlTest extends DmActivitiServiceTaskTe
 
         Map<String, Object> variableValuesToValidate = new HashMap<>();
         variableValuesToValidate
-            .put(ActivitiHelper.VARIABLE_ERROR_MESSAGE, "\"includeDropTableStatement\" must be a valid boolean value of \"true\" or \"false\".");
+            .put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"includeDropTableStatement\" must be a valid boolean value of \"true\" or \"false\".");
 
         testActivitiServiceTaskFailure(GenerateBusinessObjectFormatDdl.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
     }
@@ -120,7 +120,7 @@ public class GenerateBusinessObjectFormatDdlTest extends DmActivitiServiceTaskTe
 
         Map<String, Object> variableValuesToValidate = new HashMap<>();
         variableValuesToValidate
-            .put(ActivitiHelper.VARIABLE_ERROR_MESSAGE, "\"includeIfNotExistsOption\" must be a valid boolean value of \"true\" or \"false\".");
+            .put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"includeIfNotExistsOption\" must be a valid boolean value of \"true\" or \"false\".");
 
         testActivitiServiceTaskFailure(GenerateBusinessObjectFormatDdl.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
     }
@@ -139,7 +139,7 @@ public class GenerateBusinessObjectFormatDdlTest extends DmActivitiServiceTaskTe
 
         Map<String, Object> variableValuesToValidate = new HashMap<>();
         variableValuesToValidate
-            .put(ActivitiHelper.VARIABLE_ERROR_MESSAGE, "No enum constant org.finra.dm.model.api.xml.BusinessObjectDataDdlOutputFormatEnum.INVALID_OUTPUT_FORMAT");
+            .put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "No enum constant org.finra.dm.model.api.xml.BusinessObjectDataDdlOutputFormatEnum.INVALID_OUTPUT_FORMAT");
 
         testActivitiServiceTaskFailure(GenerateBusinessObjectFormatDdl.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
     }
