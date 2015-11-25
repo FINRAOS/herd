@@ -30,10 +30,10 @@ import org.activiti.engine.history.HistoricProcessInstance;
 import org.apache.log4j.Logger;
 import org.junit.Test;
 
-import org.finra.dm.model.dto.AwsParamsDto;
 import org.finra.dm.model.api.xml.EmrClusterDefinition;
 import org.finra.dm.model.api.xml.Job;
 import org.finra.dm.model.api.xml.Parameter;
+import org.finra.dm.model.dto.AwsParamsDto;
 import org.finra.dm.service.AbstractServiceTest;
 import org.finra.dm.service.EmrServiceTest;
 

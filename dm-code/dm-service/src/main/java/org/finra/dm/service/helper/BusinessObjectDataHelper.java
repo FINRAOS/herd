@@ -126,11 +126,9 @@ public class BusinessObjectDataHelper
 
     /**
      * Returns the S3 object key prefix based on the given format and data. This S3 key prefix is the standard S3 object key prefix that should be used for any
-     * herd-managed S3 buckets.
-     * If the {@link ConfigurationValue#S3_KEY_PREFIX_TEMPLATE} is not configured, the default format will be used.
-     * 
-     * The default format is
-     * ~namespace~/~dataProviderName~/~businessObjectFormatUsage~/~businessObjectFormatFileType~/~businessObjectDefinitionName~
+     * herd-managed S3 buckets. If the {@link ConfigurationValue#S3_KEY_PREFIX_TEMPLATE} is not configured, the default format will be used.
+     * <p/>
+     * The default format is ~namespace~/~dataProviderName~/~businessObjectFormatUsage~/~businessObjectFormatFileType~/~businessObjectDefinitionName~
      * /frmt-v~businessObjectFormatVersion~/data-v~businessObjectDataVersion~/~businessObjectFormatPartitionKey~=~businessObjectDataPartitionValue~
      *
      * @param businessObjectFormatEntity the business object format entity
@@ -314,13 +312,13 @@ public class BusinessObjectDataHelper
      * @param partitionColumnPosition the partition column position (one-based numbering)
      * @param businessObjectFormatKey the business object format key
      * @param businessObjectDataVersion the business object data version
-     * @param storageName the storage name
+     * @param storageNames the list of storage names
      * @param businessObjectFormatEntity the business object format entity
      *
      * @return the unique and sorted partition value list
      */
     public List<String> getPartitionValues(PartitionValueFilter partitionValueFilter, String partitionKey, int partitionColumnPosition,
-        BusinessObjectFormatKey businessObjectFormatKey, Integer businessObjectDataVersion, String storageName,
+        BusinessObjectFormatKey businessObjectFormatKey, Integer businessObjectDataVersion, List<String> storageNames,
         BusinessObjectFormatEntity businessObjectFormatEntity)
     {
         List<String> partitionValues = new ArrayList<>();
@@ -335,7 +333,7 @@ public class BusinessObjectDataHelper
             // A "partition value list" filter option is specified.
             partitionValues =
                 processPartitionValueListFilterOption(partitionValueFilter.getPartitionValues(), partitionKey, partitionColumnPosition, businessObjectFormatKey,
-                    businessObjectDataVersion, storageName);
+                    businessObjectDataVersion, storageNames);
         }
         else if (partitionValueFilter.getLatestBeforePartitionValue() != null)
         {
@@ -343,7 +341,7 @@ public class BusinessObjectDataHelper
 
             // Retrieve the maximum partition value before (inclusive) the specified partition value.
             String maxPartitionValue = dmDao
-                .getBusinessObjectDataMaxPartitionValue(partitionColumnPosition, businessObjectFormatKey, businessObjectDataVersion, storageName,
+                .getBusinessObjectDataMaxPartitionValue(partitionColumnPosition, businessObjectFormatKey, businessObjectDataVersion, storageNames,
                     partitionValueFilter.getLatestBeforePartitionValue().getPartitionValue(), null);
             if (maxPartitionValue != null)
             {
@@ -353,7 +351,7 @@ public class BusinessObjectDataHelper
             {
                 throw new ObjectNotFoundException(
                     getLatestPartitionValueNotFoundErrorMessage("before", partitionValueFilter.getLatestBeforePartitionValue().getPartitionValue(),
-                        partitionKey, businessObjectFormatKey, businessObjectDataVersion, storageName));
+                        partitionKey, businessObjectFormatKey, businessObjectDataVersion, storageNames));
             }
         }
         else
@@ -362,7 +360,7 @@ public class BusinessObjectDataHelper
 
             // Retrieve the maximum partition value before (inclusive) the specified partition value.
             String maxPartitionValue = dmDao
-                .getBusinessObjectDataMaxPartitionValue(partitionColumnPosition, businessObjectFormatKey, businessObjectDataVersion, storageName, null,
+                .getBusinessObjectDataMaxPartitionValue(partitionColumnPosition, businessObjectFormatKey, businessObjectDataVersion, storageNames, null,
                     partitionValueFilter.getLatestAfterPartitionValue().getPartitionValue());
             if (maxPartitionValue != null)
             {
@@ -372,7 +370,7 @@ public class BusinessObjectDataHelper
             {
                 throw new ObjectNotFoundException(
                     getLatestPartitionValueNotFoundErrorMessage("after", partitionValueFilter.getLatestAfterPartitionValue().getPartitionValue(), partitionKey,
-                        businessObjectFormatKey, businessObjectDataVersion, storageName));
+                        businessObjectFormatKey, businessObjectDataVersion, storageNames));
             }
         }
 
@@ -438,12 +436,12 @@ public class BusinessObjectDataHelper
      * @param partitionColumnPosition the partition column position (one-based numbering)
      * @param businessObjectFormatKey the business object format key
      * @param businessObjectDataVersion the business object data version
-     * @param storageName the storage name
+     * @param storageNames the list of storage names
      *
      * @return the unique and sorted partition value list
      */
     private List<String> processPartitionValueListFilterOption(List<String> partitionValues, String partitionKey, int partitionColumnPosition,
-        BusinessObjectFormatKey businessObjectFormatKey, Integer businessObjectDataVersion, String storageName)
+        BusinessObjectFormatKey businessObjectFormatKey, Integer businessObjectDataVersion, List<String> storageNames)
     {
         List<String> resultPartitionValues = new ArrayList<>();
 
@@ -458,11 +456,11 @@ public class BusinessObjectDataHelper
         if (uniqueAndSortedPartitionValues.contains(BusinessObjectDataService.MAX_PARTITION_VALUE_TOKEN))
         {
             String maxPartitionValue = dmDao
-                .getBusinessObjectDataMaxPartitionValue(partitionColumnPosition, businessObjectFormatKey, businessObjectDataVersion, storageName, null, null);
+                .getBusinessObjectDataMaxPartitionValue(partitionColumnPosition, businessObjectFormatKey, businessObjectDataVersion, storageNames, null, null);
             if (maxPartitionValue == null)
             {
                 throw new ObjectNotFoundException(
-                    getPartitionValueNotFoundErrorMessage("maximum", partitionKey, businessObjectFormatKey, businessObjectDataVersion, storageName));
+                    getPartitionValueNotFoundErrorMessage("maximum", partitionKey, businessObjectFormatKey, businessObjectDataVersion, storageNames));
             }
             uniqueAndSortedPartitionValues.remove(BusinessObjectDataService.MAX_PARTITION_VALUE_TOKEN);
             uniqueAndSortedPartitionValues.add(maxPartitionValue);
@@ -473,11 +471,11 @@ public class BusinessObjectDataHelper
         if (uniqueAndSortedPartitionValues.contains(BusinessObjectDataService.MIN_PARTITION_VALUE_TOKEN))
         {
             String minPartitionValue =
-                dmDao.getBusinessObjectDataMinPartitionValue(partitionColumnPosition, businessObjectFormatKey, businessObjectDataVersion, storageName);
+                dmDao.getBusinessObjectDataMinPartitionValue(partitionColumnPosition, businessObjectFormatKey, businessObjectDataVersion, storageNames);
             if (minPartitionValue == null)
             {
                 throw new ObjectNotFoundException(
-                    getPartitionValueNotFoundErrorMessage("minimum", partitionKey, businessObjectFormatKey, businessObjectDataVersion, storageName));
+                    getPartitionValueNotFoundErrorMessage("minimum", partitionKey, businessObjectFormatKey, businessObjectDataVersion, storageNames));
             }
             uniqueAndSortedPartitionValues.remove(BusinessObjectDataService.MIN_PARTITION_VALUE_TOKEN);
             uniqueAndSortedPartitionValues.add(minPartitionValue);
@@ -929,13 +927,13 @@ public class BusinessObjectDataHelper
      * @param standalonePartitionValueFilter the standalone partition value filter
      * @param businessObjectFormatKey the business object format key
      * @param businessObjectDataVersion the business object data version
-     * @param storageName the storage name
+     * @param storageNames the list of storage names
      * @param businessObjectFormatEntity the business object format entity
      *
      * @return the list of partition filters
      */
     public List<List<String>> buildPartitionFilters(List<PartitionValueFilter> partitionValueFilters, PartitionValueFilter standalonePartitionValueFilter,
-        BusinessObjectFormatKey businessObjectFormatKey, Integer businessObjectDataVersion, String storageName,
+        BusinessObjectFormatKey businessObjectFormatKey, Integer businessObjectDataVersion, List<String> storageNames,
         BusinessObjectFormatEntity businessObjectFormatEntity)
     {
         // Build a list of partition value filters to process based on the specified partition value filters.
@@ -962,8 +960,8 @@ public class BusinessObjectDataHelper
 
             // Get unique and sorted list of partition values to check the availability for.
             List<String> uniqueAndSortedPartitionValues =
-                getPartitionValues(partitionValueFilter, partitionKey, partitionColumnPosition, businessObjectFormatKey, businessObjectDataVersion, storageName,
-                    businessObjectFormatEntity);
+                getPartitionValues(partitionValueFilter, partitionKey, partitionColumnPosition, businessObjectFormatKey, businessObjectDataVersion,
+                    storageNames, businessObjectFormatEntity);
 
             // Add this partition value filter to the map.
             List<String> previousPartitionValues = partitionValues.put(partitionColumnPosition - 1, uniqueAndSortedPartitionValues);
@@ -1012,27 +1010,27 @@ public class BusinessObjectDataHelper
     }
 
     private String getPartitionValueNotFoundErrorMessage(String partitionValueType, String partitionKey, BusinessObjectFormatKey businessObjectFormatKey,
-        Integer businessObjectDataVersion, String storageName)
+        Integer businessObjectDataVersion, List<String> storageNames)
     {
         return String.format("Failed to find %s partition value for partition key = \"%s\" due to " +
-            "no available business object data in \"%s\" storage that is registered using that partition. " +
+            "no available business object data in \"%s\" storage(s) that is registered using that partition. " +
             "Business object data {namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", " +
             "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d, businessObjectDataVersion: %d}", partitionValueType, partitionKey,
-            storageName, businessObjectFormatKey.getNamespace(), businessObjectFormatKey.getBusinessObjectDefinitionName(),
+            StringUtils.join(storageNames, ","), businessObjectFormatKey.getNamespace(), businessObjectFormatKey.getBusinessObjectDefinitionName(),
             businessObjectFormatKey.getBusinessObjectFormatUsage(), businessObjectFormatKey.getBusinessObjectFormatFileType(),
             businessObjectFormatKey.getBusinessObjectFormatVersion(), businessObjectDataVersion);
     }
 
     private String getLatestPartitionValueNotFoundErrorMessage(String boundType, String boundPartitionValue, String partitionKey,
-        BusinessObjectFormatKey businessObjectFormatKey, Integer businessObjectDataVersion, String storageName)
+        BusinessObjectFormatKey businessObjectFormatKey, Integer businessObjectDataVersion, List<String> storageNames)
     {
         return String.format("Failed to find partition value which is the latest %s partition value = \"%s\" for partition key = \"%s\" due to " +
             "no available business object data in \"%s\" storage that satisfies the search criteria. " +
             "Business object data {namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", " +
             "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d, businessObjectDataVersion: %d}", boundType, boundPartitionValue,
-            partitionKey, storageName, businessObjectFormatKey.getNamespace(), businessObjectFormatKey.getBusinessObjectDefinitionName(),
-            businessObjectFormatKey.getBusinessObjectFormatUsage(), businessObjectFormatKey.getBusinessObjectFormatFileType(),
-            businessObjectFormatKey.getBusinessObjectFormatVersion(), businessObjectDataVersion);
+            partitionKey, StringUtils.join(storageNames, ","), businessObjectFormatKey.getNamespace(),
+            businessObjectFormatKey.getBusinessObjectDefinitionName(), businessObjectFormatKey.getBusinessObjectFormatUsage(),
+            businessObjectFormatKey.getBusinessObjectFormatFileType(), businessObjectFormatKey.getBusinessObjectFormatVersion(), businessObjectDataVersion);
     }
 
     /**
@@ -1267,12 +1265,21 @@ public class BusinessObjectDataHelper
             // Get the storage entity per request and verify that it exists.
             StorageEntity storageEntity = dmDaoHelper.getStorageEntity(storageUnit.getStorageName());
 
-            // If this storage is an S3 managed storage, get the expected S3 key prefix.
-            Boolean s3ManagedStorage = storageEntity.isS3ManagedStorage();
+            // Set up flags which are used to make flow logic easier.
+            boolean isS3StoragePlatform = storageEntity.getStoragePlatform().getName().equals(StoragePlatformEntity.S3);
+            boolean isStorageDirectorySpecified = storageUnit.getStorageDirectory() != null;
+            boolean validatePathPrefix = dmDaoHelper
+                .getBooleanStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_PATH_PREFIX),
+                    storageEntity, false, true);
+            boolean validateFileExistence = dmDaoHelper
+                .getBooleanStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_FILE_EXISTENCE),
+                    storageEntity, false, true);
+
+            // If the storage has any validation configured, get the expected S3 key prefix.
             String expectedS3KeyPrefix = null;
-            if (s3ManagedStorage)
+            if ((validatePathPrefix || validateFileExistence) && isS3StoragePlatform)
             {
-                // Build the expected S3 key prefix as per S3 Naming Convention Wiki page.
+                // Build the expected S3 key prefix as per S3 naming convention.
                 expectedS3KeyPrefix = buildS3KeyPrefix(businessObjectFormatEntity, dmDaoHelper.getBusinessObjectDataKey(businessObjectDataEntity));
             }
 
@@ -1284,17 +1291,19 @@ public class BusinessObjectDataHelper
 
             // Process storage directory path if it is specified.
             String directoryPath = null;
-            if (storageUnit.getStorageDirectory() != null)
+            if (isStorageDirectorySpecified)
             {
+                // Get the specified directory path.
                 directoryPath = storageUnit.getStorageDirectory().getDirectoryPath();
-                // If this storage is an S3 managed storage, validate the directory path value.
-                if (s3ManagedStorage)
+
+                // If the validate path prefix flag is configured for this storage, validate the directory path value.
+                if (validatePathPrefix && isS3StoragePlatform)
                 {
                     // Ensure the directory path adheres to the S3 naming convention.
                     Assert.isTrue(directoryPath.equals(expectedS3KeyPrefix),
                         String.format("Specified directory path \"%s\" does not match the expected S3 key prefix \"%s\".", directoryPath, expectedS3KeyPrefix));
 
-                    // Ensure that the directory path is not already registered with another business object data instance in this S3 managed storage.
+                    // Ensure that the directory path is not already registered with another business object data instance.
                     StorageUnitEntity alreadyRegisteredStorageUnitEntity =
                         dmDao.getStorageUnitByStorageNameAndDirectoryPath(storageEntity.getName(), directoryPath);
                     if (alreadyRegisteredStorageUnitEntity != null)
@@ -1305,6 +1314,8 @@ public class BusinessObjectDataHelper
                                 dmDaoHelper.businessObjectDataEntityAltKeyToString(alreadyRegisteredStorageUnitEntity.getBusinessObjectData())));
                     }
                 }
+
+                // Store the directory.
                 storageUnitEntity.setDirectoryPath(directoryPath);
             }
 
@@ -1313,8 +1324,8 @@ public class BusinessObjectDataHelper
                 BooleanUtils.isTrue(storageUnit.isDiscoverStorageFiles()) ? discoverStorageFiles(storageEntity, directoryPath) : storageUnit.getStorageFiles();
 
             // Create the storage file entities.
-            createStorageFileEntitiesFromStorageFiles(storageFiles, storageEntity, BooleanUtils.isTrue(storageUnit.isDiscoverStorageFiles()), s3ManagedStorage,
-                expectedS3KeyPrefix, storageUnitEntity, directoryPath);
+            createStorageFileEntitiesFromStorageFiles(storageFiles, storageEntity, BooleanUtils.isTrue(storageUnit.isDiscoverStorageFiles()),
+                expectedS3KeyPrefix, storageUnitEntity, directoryPath, validatePathPrefix, validateFileExistence, isS3StoragePlatform);
         }
 
         return storageUnitEntities;
@@ -1344,7 +1355,8 @@ public class BusinessObjectDataHelper
     }
 
     private List<StorageFileEntity> createStorageFileEntitiesFromStorageFiles(List<StorageFile> storageFiles, StorageEntity storageEntity,
-        boolean storageFilesDiscovered, Boolean s3ManagedStorage, String expectedS3KeyPrefix, StorageUnitEntity storageUnitEntity, String directoryPath)
+        boolean storageFilesDiscovered, String expectedS3KeyPrefix, StorageUnitEntity storageUnitEntity, String directoryPath, boolean validatePathPrefix,
+        boolean validateFileExistence, boolean isS3StoragePlatform)
     {
         List<StorageFileEntity> storageFileEntities = null;
 
@@ -1354,23 +1366,21 @@ public class BusinessObjectDataHelper
             storageFileEntities = new ArrayList<>();
             storageUnitEntity.setStorageFiles(storageFileEntities);
 
-            // If this storage is an S3 managed storage and storage files were not discovered, prepare for S3 file validation.
+            // If the validate file existence flag is configured for this storage and storage files were not discovered, prepare for S3 file validation.
             S3FileTransferRequestParamsDto params = null;
             List<String> actualKeys = null;
-            if (s3ManagedStorage && !storageFilesDiscovered)
+            if (validateFileExistence && isS3StoragePlatform && !storageFilesDiscovered)
             {
-                // Get S3 managed bucket access parameters, such as bucket name, AWS access key ID, AWS secret access key, etc...
-                params = dmDaoHelper.getS3ManagedBucketAccessParams();
-                // Retrieve a list of all keys/objects from S3 managed bucket matching the expected S3 key prefix.
-                // Since S3 key prefix represents the directory, we add a trailing '/' character to it.
-                params.setS3KeyPrefix(expectedS3KeyPrefix + "/");
+                // Get the validate file parameters.
+                params = getFileValidationParams(storageEntity, expectedS3KeyPrefix, storageUnitEntity, validatePathPrefix);
+
                 // When listing S3 files, we ignore 0 byte objects that represent S3 directories.
                 actualKeys = storageFileHelper.getFilePaths(s3Service.listDirectory(params, true));
             }
 
-            // For S3 managed storage, ensure that there are no storage files already registered in this
+            // If the validate path prefix flag is configured, ensure that there are no storage files already registered in this
             // storage by some other business object data that start with the expected S3 key prefix.
-            if (s3ManagedStorage)
+            if (validatePathPrefix && isS3StoragePlatform)
             {
                 // Since the S3 key prefix represents a directory, we add a trailing '/' character to it.
                 String expectedS3KeyPrefixWithTrailingSlash = expectedS3KeyPrefix + "/";
@@ -1395,19 +1405,14 @@ public class BusinessObjectDataHelper
                 // Skip storage file validation if storage files were discovered.
                 if (!storageFilesDiscovered)
                 {
-                    if (s3ManagedStorage)
+                    // Validate that the storage file path matches the key prefix if the validate path prefix flag is configured for this storage.
+                    // Otherwise, if a directory path is specified, ensure it is consistent with the file path.
+                    if (validatePathPrefix && isS3StoragePlatform)
                     {
                         // Ensure the S3 file key prefix adheres to the S3 naming convention.
                         Assert.isTrue(storageFileEntity.getPath().startsWith(expectedS3KeyPrefix), String
                             .format("Specified storage file path \"%s\" does not match the expected S3 key prefix \"%s\".", storageFileEntity.getPath(),
                                 expectedS3KeyPrefix));
-
-                        // Ensure the file exists in S3.
-                        if (!actualKeys.contains(storageFileEntity.getPath()))
-                        {
-                            throw new ObjectNotFoundException(
-                                String.format("File not found at s3://%s/%s location.", params.getS3BucketName(), storageFileEntity.getPath()));
-                        }
                     }
                     else if (directoryPath != null)
                     {
@@ -1415,11 +1420,68 @@ public class BusinessObjectDataHelper
                         Assert.isTrue(storageFileEntity.getPath().startsWith(directoryPath), String
                             .format("Storage file path \"%s\" does not match the storage directory path \"%s\".", storageFileEntity.getPath(), directoryPath));
                     }
+
+                    // Ensure the file exists in S3 if the validate file existence flag is configured for this storage.
+                    if (validateFileExistence && isS3StoragePlatform && !actualKeys.contains(storageFileEntity.getPath()))
+                    {
+                        throw new ObjectNotFoundException(
+                            String.format("File not found at s3://%s/%s location.", params.getS3BucketName(), storageFileEntity.getPath()));
+                    }
                 }
             }
         }
 
         return storageFileEntities;
+    }
+
+    /**
+     * Gets the file validation parameters that can be used for getting a list of files by the S3 service. The returned DTO will contain the expected S3 key
+     * prefix when the "validate path prefix" flag is set or it will contain the directory of the storage entity if not.
+     *
+     * @param storageEntity the storage entity.
+     * @param expectedS3KeyPrefix the expected key prefix.
+     * @param storageUnitEntity the storage unit entity.
+     * @param validatePathPrefix the validate path prefix flag.
+     *
+     * @return the parameters.
+     * @throws IllegalArgumentException if the "validate path prefix" flag is not present and no directory is configured on the storage entity.
+     */
+    public S3FileTransferRequestParamsDto getFileValidationParams(StorageEntity storageEntity, String expectedS3KeyPrefix, StorageUnitEntity storageUnitEntity,
+        boolean validatePathPrefix) throws IllegalArgumentException
+    {
+        // Use the expected S3 key prefix by default (which is set when the validatePathPrefix flag is set).
+        String actualFileS3KeyPrefix = expectedS3KeyPrefix;
+
+        // In the case where the validate path prefix flag isn't set, we will either use the specified directory if it exists or it's an error
+        // since we have no way of knowing how to validate the files. It isn't reasonable to get a list of all files from S3 individually one by
+        // one since this would cause performance problems if a large number of files are present. Getting all files within a single key
+        // prefix is reasonable on the other hand since we can list all files at once starting at the key prefix.
+        if (!validatePathPrefix)
+        {
+            if (storageUnitEntity.getDirectoryPath() != null)
+            {
+                actualFileS3KeyPrefix = storageUnitEntity.getDirectoryPath();
+            }
+            else
+            {
+                throw new IllegalArgumentException("Unable to validate file existence because storage \"" + storageEntity.getName() +
+                    "\" does not validate path prefix and storage unit doesn't have a directory configured.");
+            }
+        }
+
+        // Add a trailing backslash if it doesn't already exist.
+        // TODO: Consider placing this logic into a helper method since it is being done in multiple places.
+        if (!actualFileS3KeyPrefix.endsWith("/"))
+        {
+            actualFileS3KeyPrefix += "/";
+        }
+
+        // Get S3 bucket access parameters and set the actual key prefix.
+        S3FileTransferRequestParamsDto params = dmDaoHelper.getS3BucketAccessParams(storageEntity);
+        params.setS3KeyPrefix(actualFileS3KeyPrefix);
+
+        // Return the newly created parameters.
+        return params;
     }
 
     /**

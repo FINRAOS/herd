@@ -42,16 +42,6 @@ import org.finra.dm.dao.StsDao;
 import org.finra.dm.dao.config.DaoSpringModuleConfig;
 import org.finra.dm.dao.helper.AwsHelper;
 import org.finra.dm.dao.helper.DmStringHelper;
-import org.finra.dm.model.dto.AwsParamsDto;
-import org.finra.dm.model.dto.ConfigurationValue;
-import org.finra.dm.model.dto.S3FileTransferRequestParamsDto;
-import org.finra.dm.model.jpa.BusinessObjectDataEntity;
-import org.finra.dm.model.jpa.BusinessObjectDataStatusEntity;
-import org.finra.dm.model.jpa.BusinessObjectFormatEntity;
-import org.finra.dm.model.jpa.StorageAttributeEntity;
-import org.finra.dm.model.jpa.StorageEntity;
-import org.finra.dm.model.jpa.StorageFileEntity;
-import org.finra.dm.model.jpa.StorageUnitEntity;
 import org.finra.dm.model.api.xml.BusinessObjectData;
 import org.finra.dm.model.api.xml.BusinessObjectDataCreateRequest;
 import org.finra.dm.model.api.xml.BusinessObjectDataKey;
@@ -59,6 +49,15 @@ import org.finra.dm.model.api.xml.DownloadSingleInitiationResponse;
 import org.finra.dm.model.api.xml.UploadSingleCredentialExtensionResponse;
 import org.finra.dm.model.api.xml.UploadSingleInitiationRequest;
 import org.finra.dm.model.api.xml.UploadSingleInitiationResponse;
+import org.finra.dm.model.dto.AwsParamsDto;
+import org.finra.dm.model.dto.ConfigurationValue;
+import org.finra.dm.model.dto.S3FileTransferRequestParamsDto;
+import org.finra.dm.model.jpa.BusinessObjectDataEntity;
+import org.finra.dm.model.jpa.BusinessObjectDataStatusEntity;
+import org.finra.dm.model.jpa.BusinessObjectFormatEntity;
+import org.finra.dm.model.jpa.StorageEntity;
+import org.finra.dm.model.jpa.StorageFileEntity;
+import org.finra.dm.model.jpa.StorageUnitEntity;
 import org.finra.dm.service.UploadDownloadAsyncService;
 import org.finra.dm.service.UploadDownloadHelperService;
 import org.finra.dm.service.UploadDownloadService;
@@ -126,7 +125,8 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         StorageEntity sourceStorageEntity = dmDaoHelper.getStorageEntity(StorageEntity.MANAGED_LOADING_DOCK_STORAGE);
 
         // Get S3 bucket name for the storage. Please note that since those values are required we pass a "true" flag.
-        String s3BucketName = dmDaoHelper.getStorageAttributeValueByName(StorageAttributeEntity.ATTRIBUTE_BUCKET_NAME, sourceStorageEntity, true);
+        String s3BucketName = dmDaoHelper
+            .getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), sourceStorageEntity, true);
 
         // Get the S3 managed "external" storage entity and make sure it exists.
         StorageEntity targetStorageEntity = dmDaoHelper.getStorageEntity(StorageEntity.MANAGED_EXTERNAL_STORAGE);
@@ -310,8 +310,9 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
             StorageEntity s3ManagedLoadingDockStorageEntity = dmDaoHelper.getStorageEntity(StorageEntity.MANAGED_LOADING_DOCK_STORAGE);
 
             // Get bucket name for S3 managed "loading dock" storage. Please note that since this attribute value is required we pass a "true" flag.
-            s3ManagedLoadingDockBucketName =
-                dmDaoHelper.getStorageAttributeValueByName(StorageAttributeEntity.ATTRIBUTE_BUCKET_NAME, s3ManagedLoadingDockStorageEntity, true);
+            s3ManagedLoadingDockBucketName = dmDaoHelper
+                .getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME),
+                    s3ManagedLoadingDockStorageEntity, true);
 
             // Get the storage unit entity for this business object data in the S3 managed "loading dock" storage and make sure it exists.
             StorageUnitEntity storageUnitEntity = dmDaoHelper.getStorageUnitEntity(sourceBusinessObjectDataEntity, StorageEntity.MANAGED_LOADING_DOCK_STORAGE);
@@ -334,8 +335,9 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
             StorageEntity s3ManagedExternalStorageEntity = dmDaoHelper.getStorageEntity(StorageEntity.MANAGED_EXTERNAL_STORAGE);
 
             // Get bucket name for the S3 managed "external" bucket. Please note that since this attribute value is required we pass a "true" flag.
-            String s3ManagedExternalBucketName =
-                dmDaoHelper.getStorageAttributeValueByName(StorageAttributeEntity.ATTRIBUTE_BUCKET_NAME, s3ManagedExternalStorageEntity, true);
+            String s3ManagedExternalBucketName = dmDaoHelper
+                .getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME),
+                    s3ManagedExternalStorageEntity, true);
 
             // Change the status of the source business object data to RE-ENCRYPTING.
             businessObjectDataHelper.updateBusinessObjectDataStatus(sourceBusinessObjectDataEntity, BusinessObjectDataStatusEntity.RE_ENCRYPTING);
@@ -569,7 +571,9 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         // Validate that the storage unit contains only 1 file
         assertHasOneStorageFile(storageUnitEntity);
 
-        String s3BucketName = dmDaoHelper.getStorageAttributeValueByName(StorageAttributeEntity.ATTRIBUTE_BUCKET_NAME, storageUnitEntity.getStorage(), true);
+        String s3BucketName = dmDaoHelper
+            .getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), storageUnitEntity.getStorage(),
+                true);
         String s3ObjectKey = storageUnitEntity.getStorageFiles().iterator().next().getPath();
 
         // Get the temporary credentials
@@ -614,7 +618,8 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         StorageEntity storageEntity = dmDaoHelper.getStorageEntity(StorageEntity.MANAGED_LOADING_DOCK_STORAGE);
 
         // Get S3 bucket name for the storage. Please note that since those values are required we pass a "true" flag.
-        String s3BucketName = dmDaoHelper.getStorageAttributeValueByName(StorageAttributeEntity.ATTRIBUTE_BUCKET_NAME, storageEntity, true);
+        String s3BucketName =
+            dmDaoHelper.getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), storageEntity, true);
 
         // Get the storage unit entity for this business object data in the S3 managed "loading dock" storage and make sure it exists.
         StorageUnitEntity storageUnitEntity = dmDaoHelper.getStorageUnitEntity(businessObjectDataEntity, StorageEntity.MANAGED_LOADING_DOCK_STORAGE);

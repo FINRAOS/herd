@@ -209,7 +209,7 @@
                 "group": "tomcat"
               },
               "/home/ec2-user/sql/dm.postgres.create.sql": {
-                "source": "https://raw.githubusercontent.com/FINRAOS/herd/master/dm-build/dm-scripts/dm-scripts-sql/src/main/resources/dm.postgres.create.sql",
+                "source": "https://raw.githubusercontent.com/FINRAOS/herd/master/dm-build/dm-scripts/dm-scripts-sql/src/main/resources/dm-0.1.0/dm-0.1.0-postgres.create.sql",
                 "mode": "000664",
                 "owner": "ec2-user",
                 "group": "ec2-user"
@@ -227,7 +227,7 @@
                 "group": "ec2-user"
               },
               "/home/ec2-user/sql/quartz_tables_postgres.sql": {
-                "source": "https://raw.githubusercontent.com/FINRAOS/herd/master/dm-build/dm-scripts/dm-scripts-sql/src/main/resources/quartz_tables_postgres.sql",
+                "source": "https://raw.githubusercontent.com/FINRAOS/herd/master/dm-build/dm-scripts/dm-scripts-sql/src/main/resources/dm-0.1.0/quartz-2.2.1/quartz-2.2.1-postgres.create.sql",
                 "mode": "000664",
                 "owner": "ec2-user",
                 "group": "ec2-user"

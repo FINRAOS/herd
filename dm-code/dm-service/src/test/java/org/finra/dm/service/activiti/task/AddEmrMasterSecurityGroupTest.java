@@ -28,7 +28,7 @@ import org.junit.Test;
 import org.finra.dm.model.api.xml.Job;
 import org.finra.dm.model.api.xml.Parameter;
 import org.finra.dm.service.AbstractServiceTest;
-import org.finra.dm.service.activiti.ActivitiHelper;
+import org.finra.dm.service.activiti.ActivitiRuntimeHelper;
 
 /**
  * Tests the AddEmrMasterSecurityGroup class.
@@ -75,8 +75,8 @@ public class AddEmrMasterSecurityGroupTest extends AbstractServiceTest
             activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(job.getId()).includeProcessVariables().singleResult();
         Map<String, Object> variables = hisInstance.getProcessVariables();
         String securityGroupTaskStatus =
-            (String) variables.get("addSecurityGroupServiceTask" + ActivitiHelper.TASK_VARIABLE_MARKER + ActivitiHelper.VARIABLE_STATUS);
+            (String) variables.get("addSecurityGroupServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + ActivitiRuntimeHelper.VARIABLE_STATUS);
 
-        assertEquals(securityGroupTaskStatus, ActivitiHelper.TASK_STATUS_ERROR);
+        assertEquals(securityGroupTaskStatus, ActivitiRuntimeHelper.TASK_STATUS_ERROR);
     }
 }

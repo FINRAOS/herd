@@ -22,6 +22,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -32,13 +33,7 @@ import org.springframework.util.CollectionUtils;
 
 import org.finra.dm.dao.DmDao;
 import org.finra.dm.dao.config.DaoSpringModuleConfig;
-import org.finra.dm.model.jpa.BusinessObjectDataAttributeDefinitionEntity;
-import org.finra.dm.model.jpa.BusinessObjectDefinitionEntity;
-import org.finra.dm.model.jpa.BusinessObjectFormatEntity;
-import org.finra.dm.model.jpa.CustomDdlEntity;
-import org.finra.dm.model.jpa.FileTypeEntity;
-import org.finra.dm.model.jpa.PartitionKeyGroupEntity;
-import org.finra.dm.model.jpa.SchemaColumnEntity;
+import org.finra.dm.model.api.xml.Attribute;
 import org.finra.dm.model.api.xml.AttributeDefinition;
 import org.finra.dm.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.dm.model.api.xml.BusinessObjectFormat;
@@ -53,8 +48,17 @@ import org.finra.dm.model.api.xml.BusinessObjectFormatUpdateRequest;
 import org.finra.dm.model.api.xml.CustomDdlKey;
 import org.finra.dm.model.api.xml.Schema;
 import org.finra.dm.model.api.xml.SchemaColumn;
+import org.finra.dm.model.jpa.BusinessObjectDataAttributeDefinitionEntity;
+import org.finra.dm.model.jpa.BusinessObjectDefinitionEntity;
+import org.finra.dm.model.jpa.BusinessObjectFormatAttributeEntity;
+import org.finra.dm.model.jpa.BusinessObjectFormatEntity;
+import org.finra.dm.model.jpa.CustomDdlEntity;
+import org.finra.dm.model.jpa.FileTypeEntity;
+import org.finra.dm.model.jpa.PartitionKeyGroupEntity;
+import org.finra.dm.model.jpa.SchemaColumnEntity;
 import org.finra.dm.service.BusinessObjectFormatService;
 import org.finra.dm.service.helper.BusinessObjectFormatHelper;
+import org.finra.dm.service.helper.DdlGenerator;
 import org.finra.dm.service.helper.DdlGeneratorFactory;
 import org.finra.dm.service.helper.DmDaoHelper;
 import org.finra.dm.service.helper.DmHelper;
@@ -120,12 +124,6 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         // Get the latest format version for this business format, if it exists.
         BusinessObjectFormatEntity latestVersionBusinessObjectFormatEntity = dmDao.getBusinessObjectFormatByAltKey(businessObjectFormatKey);
 
-        // Create a business object format entity from the request information.
-        Integer businessObjectFormatVersion =
-            latestVersionBusinessObjectFormatEntity == null ? 0 : latestVersionBusinessObjectFormatEntity.getBusinessObjectFormatVersion() + 1;
-        BusinessObjectFormatEntity newBusinessObjectFormatEntity =
-            createBusinessObjectFormatEntity(request, businessObjectDefinitionEntity, fileTypeEntity, businessObjectFormatVersion);
-
         // If the latest version exists, perform the additive schema validation and update the latest entity.
         if (latestVersionBusinessObjectFormatEntity != null)
         {
@@ -144,8 +142,11 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
             dmDao.saveAndRefresh(latestVersionBusinessObjectFormatEntity);
         }
 
-        // Persist the new entity.
-        newBusinessObjectFormatEntity = dmDao.saveAndRefresh(newBusinessObjectFormatEntity);
+        // Create a business object format entity from the request information.
+        Integer businessObjectFormatVersion =
+            latestVersionBusinessObjectFormatEntity == null ? 0 : latestVersionBusinessObjectFormatEntity.getBusinessObjectFormatVersion() + 1;
+        BusinessObjectFormatEntity newBusinessObjectFormatEntity =
+            createBusinessObjectFormatEntity(request, businessObjectDefinitionEntity, fileTypeEntity, businessObjectFormatVersion);
 
         // Create and return the business object format object from the persisted entity.
         return businessObjectFormatHelper.createBusinessObjectFormatFromEntity(newBusinessObjectFormatEntity);
@@ -165,6 +166,9 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         // Perform validation and trim the alternate key parameters.
         validateBusinessObjectFormatKey(businessObjectFormatKey, true);
 
+        // Validate optional attributes. This is also going to trim the attribute names.
+        dmHelper.validateAttributes(request.getAttributes());
+
         // If namespace is not specified, get the namespace code by locating the legacy business object definition.
         businessObjectFormatHelper.populateLegacyNamespace(businessObjectFormatKey);
 
@@ -176,6 +180,63 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
 
         // Validate optional schema information.  This is also going to trim the relative schema column field values.
         validateBusinessObjectFormatSchema(request.getSchema(), businessObjectFormatEntity.getPartitionKey());
+
+        // Update the attributes.
+        // Load all existing attribute entities in a map with a "lowercase" attribute name as the key for case insensitivity.
+        Map<String, BusinessObjectFormatAttributeEntity> existingAttributeEntities = new HashMap<>();
+        for (BusinessObjectFormatAttributeEntity attributeEntity : businessObjectFormatEntity.getAttributes())
+        {
+            String mapKey = attributeEntity.getName().toLowerCase();
+            if (existingAttributeEntities.containsKey(mapKey))
+            {
+                throw new IllegalStateException(String.format("Found duplicate attribute with name \"%s\" for business object format {%s}.", mapKey,
+                    businessObjectFormatHelper.businessObjectFormatKeyToString(businessObjectFormatKey)));
+            }
+            existingAttributeEntities.put(mapKey, attributeEntity);
+        }
+
+        // Process the list of attributes to determine that business object definition attribute entities should be created, updated, or deleted.
+        List<BusinessObjectFormatAttributeEntity> createdAttributeEntities = new ArrayList<>();
+        List<BusinessObjectFormatAttributeEntity> retainedAttributeEntities = new ArrayList<>();
+        if (!CollectionUtils.isEmpty(request.getAttributes()))
+        {
+            for (Attribute attribute : request.getAttributes())
+            {
+                // Use a "lowercase" attribute name for case insensitivity.
+                String lowercaseAttributeName = attribute.getName().toLowerCase();
+                if (existingAttributeEntities.containsKey(lowercaseAttributeName))
+                {
+                    // Check if the attribute value needs to be updated.
+                    BusinessObjectFormatAttributeEntity attributeEntity = existingAttributeEntities.get(lowercaseAttributeName);
+                    if (!StringUtils.equals(attribute.getValue(), attributeEntity.getValue()))
+                    {
+                        // Update the business object attribute entity.
+                        attributeEntity.setValue(attribute.getValue());
+                    }
+
+                    // Add this entity to the list of business object definition attribute entities to be retained.
+                    retainedAttributeEntities.add(attributeEntity);
+                }
+                else
+                {
+                    // Create a new business object attribute entity.
+                    BusinessObjectFormatAttributeEntity attributeEntity = new BusinessObjectFormatAttributeEntity();
+                    businessObjectFormatEntity.getAttributes().add(attributeEntity);
+                    attributeEntity.setBusinessObjectFormat(businessObjectFormatEntity);
+                    attributeEntity.setName(attribute.getName());
+                    attributeEntity.setValue(attribute.getValue());
+
+                    // Add this entity to the list of the newly created business object definition attribute entities.
+                    retainedAttributeEntities.add(attributeEntity);
+                }
+            }
+        }
+
+        // Remove any of the currently existing attribute entities that did not get onto the retained entities list.
+        businessObjectFormatEntity.getAttributes().retainAll(retainedAttributeEntities);
+
+        // Add all of the newly created business object definition attribute entities.
+        businessObjectFormatEntity.getAttributes().addAll(createdAttributeEntities);
 
         // Get business object format model object.
         BusinessObjectFormat businessObjectFormat = businessObjectFormatHelper.createBusinessObjectFormatFromEntity(businessObjectFormatEntity);
@@ -219,14 +280,27 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
     }
 
     /**
-     * Gets a business object format.
+     * Gets a business object format for the specified key. This method starts a new transaction.
      *
-     * @param businessObjectFormatKey the business object format alternate key
+     * @param businessObjectFormatKey the business object format key
      *
      * @return the business object format
      */
     @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public BusinessObjectFormat getBusinessObjectFormat(BusinessObjectFormatKey businessObjectFormatKey)
+    {
+        return getBusinessObjectFormatImpl(businessObjectFormatKey);
+    }
+
+    /**
+     * Gets a business object format for the specified key.
+     *
+     * @param businessObjectFormatKey the business object format key
+     *
+     * @return the business object format
+     */
+    protected BusinessObjectFormat getBusinessObjectFormatImpl(BusinessObjectFormatKey businessObjectFormatKey)
     {
         // Perform validation and trim the alternate key parameters.
         validateBusinessObjectFormatKey(businessObjectFormatKey, false);
@@ -415,8 +489,17 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         businessObjectFormatDdl.setOutputFormat(request.getOutputFormat());
         businessObjectFormatDdl.setTableName(request.getTableName());
         businessObjectFormatDdl.setCustomDdlName(customDdlEntity != null ? customDdlEntity.getCustomDdlName() : request.getCustomDdlName());
-        businessObjectFormatDdl.setDdl(
-            ddlGeneratorFactory.getDdlGenerator(request.getOutputFormat()).generateCreateTableDdl(request, businessObjectFormatEntity, customDdlEntity));
+        DdlGenerator ddlGenerator = ddlGeneratorFactory.getDdlGenerator(request.getOutputFormat());
+        String ddl;
+        if (Boolean.TRUE.equals(request.isReplaceColumns()))
+        {
+            ddl = ddlGenerator.generateReplaceColumnsStatement(request, businessObjectFormatEntity);
+        }
+        else
+        {
+            ddl = ddlGenerator.generateCreateTableDdl(request, businessObjectFormatEntity, customDdlEntity);
+        }
+        businessObjectFormatDdl.setDdl(ddl);
 
         // Return business object format DDL.
         return businessObjectFormatDdl;
@@ -475,6 +558,9 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
 
         // Remove leading and trailing spaces.
         request.setPartitionKey(request.getPartitionKey().trim());
+
+        // Validate attributes.
+        dmHelper.validateAttributes(request.getAttributes());
 
         // Validate attribute definitions if they are specified.
         if (!CollectionUtils.isEmpty(request.getAttributeDefinitions()))
@@ -707,6 +793,15 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         Assert.hasText(request.getTableName(), "A table name must be specified.");
         request.setTableName(request.getTableName().trim());
 
+        if (BooleanUtils.isTrue(request.isReplaceColumns()))
+        {
+            Assert.isTrue(BooleanUtils.isNotTrue(request.isIncludeDropTableStatement()),
+                "'includeDropTableStatement' must not be specified when 'replaceColumns' is true");
+            Assert.isTrue(BooleanUtils.isNotTrue(request.isIncludeIfNotExistsOption()),
+                "'includeIfNotExistsOption' must not be specified when 'replaceColumns' is true");
+            Assert.isTrue(StringUtils.isBlank(request.getCustomDdlName()), "'customDdlName' must not be specified when 'replaceColumns' is true");
+        }
+
         if (request.getCustomDdlName() != null)
         {
             request.setCustomDdlName(request.getCustomDdlName().trim());
@@ -749,7 +844,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
     }
 
     /**
-     * Creates a new business object format entity from the request information.
+     * Creates and persists a new business object format entity from the request information.
      *
      * @param request the request.
      *
@@ -766,12 +861,29 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         businessObjectFormatEntity.setLatestVersion(Boolean.TRUE);
         businessObjectFormatEntity.setPartitionKey(request.getPartitionKey());
         businessObjectFormatEntity.setDescription(request.getDescription());
+
+        // Create the attributes if they are specified.
+        if (!CollectionUtils.isEmpty(request.getAttributes()))
+        {
+            List<BusinessObjectFormatAttributeEntity> attributeEntities = new ArrayList<>();
+            businessObjectFormatEntity.setAttributes(attributeEntities);
+            for (Attribute attribute : request.getAttributes())
+            {
+                BusinessObjectFormatAttributeEntity attributeEntity = new BusinessObjectFormatAttributeEntity();
+                attributeEntities.add(attributeEntity);
+                attributeEntity.setBusinessObjectFormat(businessObjectFormatEntity);
+                attributeEntity.setName(attribute.getName());
+                attributeEntity.setValue(attribute.getValue());
+            }
+        }
+
         businessObjectFormatEntity.setAttributeDefinitions(createAttributeDefinitionEntities(request.getAttributeDefinitions(), businessObjectFormatEntity));
 
         // Add optional schema information.
         populateBusinessObjectFormatSchema(businessObjectFormatEntity, request.getSchema());
 
-        return businessObjectFormatEntity;
+        // Persist and return the new entity.
+        return dmDao.saveAndRefresh(businessObjectFormatEntity);
     }
 
     /**

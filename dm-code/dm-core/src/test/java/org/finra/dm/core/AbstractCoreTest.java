@@ -63,6 +63,7 @@ public abstract class AbstractCoreTest
     public static final long ROW_COUNT_1000 = 1000L;
 
     public static final String INVALID_BOOLEAN_VALUE = "INVALID_BOOLEAN_VALUE";
+    public static final String INVALID_INTEGER_VALUE = "INVALID_INTEGER_VALUE";
 
     @Autowired
     protected ApplicationContext appContext;

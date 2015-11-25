@@ -23,8 +23,39 @@
       </layout>
    </appender>
 
+   <logger name="org.springframework" additivity="false">
+      <level value="WARN"/>
+      <appender-ref ref="CONSOLE"/>
+   </logger>
+
+   <logger name="org.apache" additivity="false">
+      <level value="WARN"/>
+      <appender-ref ref="CONSOLE"/>
+   </logger>
+
+   <!-- Turn on SQL logging by commenting out the following. -->
+   <!--
+   <logger name="org.hibernate.SQL" additivity="false">
+      <level value="WARN"/>
+      <appender-ref ref="CONSOLE"/>
+   </logger>
+   -->
+
+   <logger name="org.finra.dm" additivity="false">
+      <level value="INFO"/>
+      <appender-ref ref="CONSOLE"/>
+   </logger>
+
+   <!-- Turn off the stop watch tracking by un-commenting this. -->
+   <!--
+   <logger name="org.finra.dm.core.StopWatchAdvice" additivity="false">
+      <level value="WARN"/>
+      <appender-ref ref="FILE"/>
+   </logger>
+   -->
+
    <root>
-      <level value="OFF"/>
+      <level value="WARN"/>
       <appender-ref ref="CONSOLE"/>
    </root>
 

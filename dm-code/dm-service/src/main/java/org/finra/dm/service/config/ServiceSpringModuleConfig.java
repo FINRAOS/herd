@@ -33,6 +33,7 @@ import com.amazonaws.ClientConfiguration;
 import org.activiti.engine.HistoryService;
 import org.activiti.engine.IdentityService;
 import org.activiti.engine.ManagementService;
+import org.activiti.engine.ProcessEngine;
 import org.activiti.engine.RepositoryService;
 import org.activiti.engine.RuntimeService;
 import org.activiti.engine.TaskService;
@@ -52,8 +53,6 @@ import org.quartz.CronTrigger;
 import org.quartz.JobDetail;
 import org.quartz.TriggerKey;
 import org.quartz.impl.StdSchedulerFactory;
-import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler;
-import org.springframework.aop.interceptor.SimpleAsyncUncaughtExceptionHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -66,9 +65,6 @@ import org.springframework.core.task.TaskExecutor;
 import org.springframework.jdbc.datasource.init.DatabasePopulatorUtils;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 import org.springframework.jms.config.DefaultJmsListenerContainerFactory;
-import org.springframework.scheduling.annotation.AsyncConfigurer;
-import org.springframework.scheduling.annotation.EnableAsync;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.web.method.annotation.ExceptionHandlerMethodResolver;
@@ -92,10 +88,9 @@ import org.finra.dm.service.systemjobs.AbstractSystemJob;
 @Configuration
 // Component scan all packages, but exclude the configuration ones since they are explicitly specified.
 @ComponentScan(value = "org.finra.dm.service",
-    excludeFilters = @ComponentScan.Filter(type = FilterType.REGEX, pattern = "org\\.finra\\.dm\\.service\\.config\\..*") )
+    excludeFilters = @ComponentScan.Filter(type = FilterType.REGEX, pattern = "org\\.finra\\.dm\\.service\\.config\\..*"))
 @Import({ServiceBasicAopSpringModuleConfig.class, ServiceAppAopSpringModuleConfig.class})
-@EnableAsync
-public class ServiceSpringModuleConfig implements AsyncConfigurer
+public class ServiceSpringModuleConfig
 {
     /**
      * The Activiti DB schema update param bean name.
@@ -152,47 +147,20 @@ public class ServiceSpringModuleConfig implements AsyncConfigurer
      * @return a Spring job executor.
      */
     @Bean
-    public JobExecutor jobExecutor()
+    public JobExecutor jobExecutor(TaskExecutor taskExecutor)
     {
-        return new SpringJobExecutor(getAsyncExecutor());
-    }
-
-    /**
-     * Returns an Async "task" executor which is also a normal "executor". This is being wired into Activity via the job executor bean. It is also being used by
-     * the "@EnableAsync" annotation and the fact that this class implements AsyncConfigurer. That way, all methods annotated with "@Async" will be executed
-     * asynchronously by this executor. Thus, we have a shared thread pool that handles both Async method calls as well as Activiti asynchronous job executions
-     * (e.g. timers, messages, etc.).
-     *
-     * @return the async task executor.
-     */
-    @Override
-    @Bean // This will call the "initialize" method of the ThreadPoolTaskExecutor automatically.
-    public TaskExecutor getAsyncExecutor()
-    {
-        // Create a Spring thread pool "task" executor that is backed by a JDK Thread Pool Executor.
-        // Use the environment to make the key thread pool parameters configurable although changing them would require a server restart.
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(configurationHelper.getProperty(ConfigurationValue.THREAD_POOL_CORE_POOL_SIZE, Integer.class));
-        executor.setMaxPoolSize(configurationHelper.getProperty(ConfigurationValue.THREAD_POOL_MAX_POOL_SIZE, Integer.class));
-        executor.setKeepAliveSeconds(configurationHelper.getProperty(ConfigurationValue.THREAD_POOL_KEEP_ALIVE_SECS, Integer.class));
-        return executor;
-    }
-
-    @Override
-    public AsyncUncaughtExceptionHandler getAsyncUncaughtExceptionHandler()
-    {
-        // In case any @Async methods return "void" and not a "Future", this exception handler will handle those cases since the caller has not way to access
-        // the exception without a "Future". Just use an out-of-the-box Spring handler that logs those exceptions.
-        return new SimpleAsyncUncaughtExceptionHandler();
+        return new SpringJobExecutor(taskExecutor);
     }
 
     /**
      * Gets the Activiti Process Engine Configuration.
      *
+     * @param jobExecutor the job executor to set on the configuration.
+     *
      * @return the Activiti Process Engine Configuration.
      */
     @Bean
-    public SpringProcessEngineConfiguration activitiProcessEngineConfiguration()
+    public SpringProcessEngineConfiguration activitiProcessEngineConfiguration(JobExecutor jobExecutor)
     {
         // Initialize a new process engine configuration for Activiti that is Spring enabled.
         SpringProcessEngineConfiguration configuration = new SpringProcessEngineConfiguration();
@@ -210,7 +178,7 @@ public class ServiceSpringModuleConfig implements AsyncConfigurer
         configuration.setJobExecutorActivate(true);
 
         // Explicitly wire in our "Spring" job executor which in turn is configured with our own Async executor.
-        configuration.setJobExecutor(jobExecutor());
+        configuration.setJobExecutor(jobExecutor);
 
         // Set the allowed beans to an empty map so the Activiti workflows won't be able to call any arbitrary bean (e.g. services, etc.).
         configuration.setBeans(new HashMap<>());
@@ -233,10 +201,10 @@ public class ServiceSpringModuleConfig implements AsyncConfigurer
     }
 
     /**
-     * Initializes the {@link ScriptingEngines} and optionally the {@link ResolverFactory} of the given {@link ProcessEngineConfigurationImpl}.
-     * The initialization logic has been copied from the protected initScriptingEngines() method in {@link ProcessEngineConfigurationImpl}.
-     * This initialization will use the {@link SecuredScriptingEngines} implementation of {@link ScriptingEngines}.
-     * 
+     * Initializes the {@link ScriptingEngines} and optionally the {@link ResolverFactory} of the given {@link ProcessEngineConfigurationImpl}. The
+     * initialization logic has been copied from the protected initScriptingEngines() method in {@link ProcessEngineConfigurationImpl}. This initialization will
+     * use the {@link SecuredScriptingEngines} implementation of {@link ScriptingEngines}.
+     *
      * @param configuration the {@link ProcessEngineConfigurationImpl} whom {@link ScriptingEngines} will be initialized.
      */
     private void initScriptingEngines(ProcessEngineConfigurationImpl configuration)
@@ -265,51 +233,53 @@ public class ServiceSpringModuleConfig implements AsyncConfigurer
     /**
      * Gets the Activiti Process Engine.
      *
+     * @param activitiProcessEngineConfiguration the Activiti process engine configuration to use.
+     *
      * @return the Activiti Process Engine.
      */
     @Bean(destroyMethod = "destroy")
-    public ProcessEngineFactoryBean activitiProcessEngine()
+    public ProcessEngineFactoryBean activitiProcessEngine(SpringProcessEngineConfiguration activitiProcessEngineConfiguration)
     {
         // Create and return a factory bean that can return an Activiti process engine based on our Activiti process engine configuration bean.
         ProcessEngineFactoryBean bean = new ProcessEngineFactoryBean();
-        bean.setProcessEngineConfiguration(activitiProcessEngineConfiguration());
+        bean.setProcessEngineConfiguration(activitiProcessEngineConfiguration);
         return bean;
     }
 
     @Bean
-    public RepositoryService activitiRepositoryService() throws Exception
+    public RepositoryService activitiRepositoryService(ProcessEngine activitiProcessEngine) throws Exception
     {
-        return activitiProcessEngine().getObject().getRepositoryService();
+        return activitiProcessEngine.getRepositoryService();
     }
 
     @Bean
-    public RuntimeService activitiRuntimeService() throws Exception
+    public RuntimeService activitiRuntimeService(ProcessEngine activitiProcessEngine) throws Exception
     {
-        return activitiProcessEngine().getObject().getRuntimeService();
+        return activitiProcessEngine.getRuntimeService();
     }
 
     @Bean
-    public TaskService activitiTaskService() throws Exception
+    public TaskService activitiTaskService(ProcessEngine activitiProcessEngine) throws Exception
     {
-        return activitiProcessEngine().getObject().getTaskService();
+        return activitiProcessEngine.getTaskService();
     }
 
     @Bean
-    public HistoryService activitiHistoryService() throws Exception
+    public HistoryService activitiHistoryService(ProcessEngine activitiProcessEngine) throws Exception
     {
-        return activitiProcessEngine().getObject().getHistoryService();
+        return activitiProcessEngine.getHistoryService();
     }
 
     @Bean
-    public ManagementService activitiManagementService() throws Exception
+    public ManagementService activitiManagementService(ProcessEngine activitiProcessEngine) throws Exception
     {
-        return activitiProcessEngine().getObject().getManagementService();
+        return activitiProcessEngine.getManagementService();
     }
 
     @Bean
-    public IdentityService activitiIdentityService() throws Exception
+    public IdentityService activitiIdentityService(ProcessEngine activitiProcessEngine) throws Exception
     {
-        return activitiProcessEngine().getObject().getIdentityService();
+        return activitiProcessEngine.getIdentityService();
     }
 
     /**
@@ -353,8 +323,8 @@ public class ServiceSpringModuleConfig implements AsyncConfigurer
 
         // Configure ThreadPool.
         quartzProperties.setProperty(StdSchedulerFactory.PROP_THREAD_POOL_CLASS, "org.quartz.simpl.SimpleThreadPool");
-        quartzProperties.setProperty("org.quartz.threadPool.threadCount", configurationHelper
-            .getProperty(ConfigurationValue.SYSTEM_JOBS_THREAD_POOL_THREAD_COUNT));
+        quartzProperties
+            .setProperty("org.quartz.threadPool.threadCount", configurationHelper.getProperty(ConfigurationValue.SYSTEM_JOBS_THREAD_POOL_THREAD_COUNT));
         quartzProperties.setProperty("org.quartz.threadPool.threadsInheritContextClassLoaderOfInitializingThread", "true");
 
         // Configure JobStore.

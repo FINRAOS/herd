@@ -24,7 +24,7 @@ import org.activiti.bpmn.model.FieldExtension;
 import org.junit.Test;
 
 import org.finra.dm.model.api.xml.Parameter;
-import org.finra.dm.service.activiti.ActivitiHelper;
+import org.finra.dm.service.activiti.ActivitiRuntimeHelper;
 
 /**
  * Tests the CheckBusinessObjectDataAvailability Activiti task wrapper.
@@ -50,7 +50,7 @@ public class CheckBusinessObjectDataAvailabilityTest extends DmActivitiServiceTa
 
         parameters.add(buildParameter("businessObjectFormatVersion", FORMAT_VERSION.toString()));
         parameters.add(buildParameter("partitionKey", FIRST_PARTITION_COLUMN_NAME));
-        parameters.add(buildParameter("partitionValues", dmHelper.buildStringWithDefaultDelimiter(PARTITION_VALUES_AVAILABLE)));
+        parameters.add(buildParameter("partitionValues", dmHelper.buildStringWithDefaultDelimiter(STORAGE_1_AVAILABLE_PARTITION_VALUES)));
         parameters.add(buildParameter("businessObjectDataVersion", DATA_VERSION.toString()));
 
         Map<String, Object> variableValuesToValidate = new HashMap<>();
@@ -87,7 +87,7 @@ public class CheckBusinessObjectDataAvailabilityTest extends DmActivitiServiceTa
 
         parameters.add(buildParameter("businessObjectFormatVersion", FORMAT_VERSION.toString()));
         parameters.add(buildParameter("partitionKey", FIRST_PARTITION_COLUMN_NAME));
-        parameters.add(buildParameter("partitionValues", dmHelper.buildStringWithDefaultDelimiter(PARTITION_VALUES_AVAILABLE)));
+        parameters.add(buildParameter("partitionValues", dmHelper.buildStringWithDefaultDelimiter(STORAGE_1_AVAILABLE_PARTITION_VALUES)));
         parameters.add(buildParameter("businessObjectDataVersion", DATA_VERSION.toString()));
 
         Map<String, Object> variableValuesToValidate = new HashMap<>();
@@ -134,7 +134,7 @@ public class CheckBusinessObjectDataAvailabilityTest extends DmActivitiServiceTa
         parameters.add(buildParameter("businessObjectFormatVersion", "invalid_integer"));
 
         Map<String, Object> variableValuesToValidate = new HashMap<>();
-        variableValuesToValidate.put(ActivitiHelper.VARIABLE_ERROR_MESSAGE, "\"BusinessObjectFormatVersion\" must be a valid integer value.");
+        variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"BusinessObjectFormatVersion\" must be a valid integer value.");
 
         testActivitiServiceTaskFailure(CheckBusinessObjectDataAvailability.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
     }
@@ -154,7 +154,7 @@ public class CheckBusinessObjectDataAvailabilityTest extends DmActivitiServiceTa
         parameters.add(buildParameter("businessObjectDataVersion", "invalid_integer"));
 
         Map<String, Object> variableValuesToValidate = new HashMap<>();
-        variableValuesToValidate.put(ActivitiHelper.VARIABLE_ERROR_MESSAGE, "\"BusinessObjectDataVersion\" must be a valid integer value.");
+        variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"BusinessObjectDataVersion\" must be a valid integer value.");
 
         testActivitiServiceTaskFailure(CheckBusinessObjectDataAvailability.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
     }

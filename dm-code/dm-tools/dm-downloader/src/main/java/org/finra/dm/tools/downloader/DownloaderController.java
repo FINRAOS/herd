@@ -34,19 +34,20 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
 import org.finra.dm.core.DmFileUtils;
-import org.finra.dm.model.dto.DmRegServerAccessParamsDto;
-import org.finra.dm.model.dto.DownloaderInputManifestDto;
-import org.finra.dm.model.dto.DownloaderOutputManifestDto;
-import org.finra.dm.model.dto.ManifestFile;
-import org.finra.dm.model.dto.S3FileTransferRequestParamsDto;
-import org.finra.dm.model.jpa.StorageAttributeEntity;
-import org.finra.dm.model.jpa.StorageEntity;
+import org.finra.dm.core.helper.ConfigurationHelper;
 import org.finra.dm.model.api.xml.Attribute;
 import org.finra.dm.model.api.xml.BusinessObjectData;
 import org.finra.dm.model.api.xml.S3KeyPrefixInformation;
 import org.finra.dm.model.api.xml.Storage;
 import org.finra.dm.model.api.xml.StorageFile;
 import org.finra.dm.model.api.xml.StorageUnit;
+import org.finra.dm.model.dto.ConfigurationValue;
+import org.finra.dm.model.dto.DmRegServerAccessParamsDto;
+import org.finra.dm.model.dto.DownloaderInputManifestDto;
+import org.finra.dm.model.dto.DownloaderOutputManifestDto;
+import org.finra.dm.model.dto.ManifestFile;
+import org.finra.dm.model.dto.S3FileTransferRequestParamsDto;
+import org.finra.dm.model.jpa.StorageEntity;
 import org.finra.dm.service.helper.StorageFileHelper;
 import org.finra.dm.tools.common.databridge.DataBridgeController;
 
@@ -69,6 +70,9 @@ public class DownloaderController extends DataBridgeController
 
     @Autowired
     private StorageFileHelper storageFileHelper;
+
+    @Autowired
+    protected ConfigurationHelper configurationHelper;
 
     /**
      * The downloader output manifest file name.
@@ -134,7 +138,8 @@ public class DownloaderController extends DataBridgeController
             Storage s3ManagedStorage = downloaderWebClient.getStorage(StorageEntity.MANAGED_STORAGE);
 
             // Get S3 managed bucket name.  Please note that since this value is required we pass a "true" flag.
-            String s3BucketName = dmHelper.getStorageAttributeValueByName(StorageAttributeEntity.ATTRIBUTE_BUCKET_NAME, s3ManagedStorage, true);
+            String s3BucketName = dmHelper
+                .getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), s3ManagedStorage, true);
 
             // Get the list of S3 files matching the expected S3 key prefix.
             s3FileTransferRequestParamsDto.setS3BucketName(s3BucketName);

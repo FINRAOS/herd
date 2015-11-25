@@ -26,6 +26,7 @@ import org.finra.dm.dao.helper.DmStringHelper;
 import org.finra.dm.dao.helper.JsonHelper;
 import org.finra.dm.dao.helper.XmlHelper;
 import org.finra.dm.service.activiti.ActivitiHelper;
+import org.finra.dm.service.activiti.ActivitiRuntimeHelper;
 import org.finra.dm.service.helper.DmDaoHelper;
 import org.finra.dm.service.helper.DmErrorInformationExceptionHandler;
 import org.finra.dm.service.helper.DmHelper;
@@ -73,6 +74,9 @@ public abstract class BaseJavaDelegate implements JavaDelegate
     protected ActivitiHelper activitiHelper;
 
     @Autowired
+    protected ActivitiRuntimeHelper activitiRuntimeHelper;
+
+    @Autowired
     @Qualifier("dmErrorInformationExceptionHandler") // This is to ensure we get the base class bean rather than any classes that extend it.
     private DmErrorInformationExceptionHandler errorInformationExceptionHandler;
 
@@ -82,7 +86,7 @@ public abstract class BaseJavaDelegate implements JavaDelegate
      * @param execution the delegation execution.
      *
      * @throws Exception when a problem is encountered. A BpmnError should be thrown when there is a problem that should be handled by the workflow. All other
-     * errors will be considered system errors that will be logged.
+     *             errors will be considered system errors that will be logged.
      */
     public abstract void executeImpl(DelegateExecution execution) throws Exception;
 
@@ -105,28 +109,38 @@ public abstract class BaseJavaDelegate implements JavaDelegate
             executeImpl(execution);
 
             // Set a success status as a workflow variable.
-            activitiHelper.setTaskSuccessInWorkflow(execution);
-        }
-        catch (BpmnError ex)
-        {
-            // Set the error status and error message as workflow variables.
-            activitiHelper.setTaskErrorInWorkflow(execution, ex.getMessage());
-
-            // Continue throwing the original exception and let workflow handle it with a Boundary event handler.
-            throw ex;
+            activitiRuntimeHelper.setTaskSuccessInWorkflow(execution);
         }
         catch (Exception ex)
         {
-            // Set the error status and error message as workflow variables.
-            activitiHelper.setTaskErrorInWorkflow(execution, ex.getMessage());
+            handleException(execution, ex);
+        }
+    }
 
-            // Log the error if the exception should be reported.
-            if (errorInformationExceptionHandler.isReportableError(ex))
-            {
-                LOGGER.error(
-                    activitiHelper.getProcessIdentifyingInformation(execution) + " Unexpected error occurred during task \"" + getClass().getSimpleName() +
-                        "\".", ex);
-            }
+    /**
+     * Handles any exception thrown by an Activiti task.
+     * 
+     * @param execution The execution which identifies the task.
+     * @param exception The exception that has been thrown
+     * @throws Exception Some exceptions may choose to bubble up the exception
+     */
+    protected void handleException(DelegateExecution execution, Exception exception) throws Exception
+    {
+        // Set the error status and error message as workflow variables.
+        activitiRuntimeHelper.setTaskErrorInWorkflow(execution, exception.getMessage());
+
+        // Continue throwing the original exception and let workflow handle it with a Boundary event handler.
+        if (exception instanceof BpmnError)
+        {
+            throw exception;
+        }
+
+        // Log the error if the exception should be reported.
+        if (errorInformationExceptionHandler.isReportableError(exception))
+        {
+            LOGGER.error(
+                activitiHelper.getProcessIdentifyingInformation(execution) + " Unexpected error occurred during task \"" + getClass().getSimpleName() +
+                    "\".", exception);
         }
     }
 
@@ -142,6 +156,12 @@ public abstract class BaseJavaDelegate implements JavaDelegate
     {
         String jsonResponse = jsonHelper.objectToJson(responseObject);
         setTaskWorkflowVariable(execution, VARIABLE_JSON_RESPONSE, jsonResponse);
+    }
+
+    public void setJsonResponseAsWorkflowVariable(Object responseObject, String executionId, String activitiId) throws Exception
+    {
+        String jsonResponse = jsonHelper.objectToJson(responseObject);
+        setTaskWorkflowVariable(executionId, activitiId, VARIABLE_JSON_RESPONSE, jsonResponse);
     }
 
     public boolean isSpringInitialized()
@@ -163,7 +183,12 @@ public abstract class BaseJavaDelegate implements JavaDelegate
      */
     protected void setTaskWorkflowVariable(DelegateExecution execution, String variableName, Object variableValue)
     {
-        activitiHelper.setTaskWorkflowVariable(execution, variableName, variableValue);
+        activitiRuntimeHelper.setTaskWorkflowVariable(execution, variableName, variableValue);
+    }
+
+    protected void setTaskWorkflowVariable(String executionId, String activitiId, String variableName, Object variableValue)
+    {
+        activitiRuntimeHelper.setTaskWorkflowVariable(executionId, activitiId, variableName, variableValue);
     }
 
     /**

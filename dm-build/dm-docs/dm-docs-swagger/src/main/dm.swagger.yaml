@@ -1,4 +1,3 @@
-        /download/single/initiation/namespaces/APP_A/businessObjectDefinitionNames/PROCESS_ORDERS/businessObjectFormatUsages/UPLD/businessObjectFormatFileTypes/ATCHM/businessObjectFormatVersions/0/partitionValues/testPartitionValue/businessObjectDataVersions/0
 ---
 #
 # Copyright 2015 herd contributors
@@ -31,6 +30,10 @@ definitions:
       partition values
     type: boolean
   Attribute:
+    type: object
+    required:
+    - name
+    - value
     properties:
       name:
         description: Name of the individual piece of metadata
@@ -38,16 +41,29 @@ definitions:
       value:
         description: Value of the individual piece of metadata
         type: string
-    required:
-    - name
-    - value
   Attributes:
+    type: array
     items:
       $ref: "#/definitions/Attribute"
-      xml:
-        name: attribute
-    type: array
     xml:
+      name: attributes
+      wrapped: true
+  AttributeDefinition:
+    required:
+    - name
+    properties:
+      name:
+        description: Name of the individual piece of metadata that must be specified
+          when registering business object data against this format
+        type: string
+    xml:
+      name: attributeDefinition
+  AttributeDefinitions:
+    type: array
+    items:
+      $ref: "#/definitions/AttributeDefinition"
+    xml:
+      name: attributeDefinitions
       wrapped: true
   awsAccessKey:
     description: The access key ID that identifies the temporary security credentials
@@ -374,7 +390,9 @@ definitions:
             </partitionValueFilter>
           </partitionValueFilters>
           <businessObjectDataVersion>0</businessObjectDataVersion>
-          <storageName>S3_MANAGED</storageName>
+          <storageNames>
+            <storageName>S3_MANAGED</storageName>
+          </storageNames>
           <availableStatuses>
             <businessObjectDataStatus>
               <businessObjectFormatVersion>1</businessObjectFormatVersion>
@@ -406,7 +424,7 @@ definitions:
     allOf:
     - $ref: "#/definitions/formatKey"
     - required:
-      - storageName
+      - storageNames
       - partitionValueFilters
       type: object
       properties:
@@ -418,8 +436,11 @@ definitions:
           type: array
         businessObjectFormatVersion:
           $ref: "#/definitions/businessObjectFormatVersion"
-        storageName:
-          $ref: "#/definitions/storageName"
+        storageNames:
+          description: The list of storage names
+          items:
+            $ref: "#/definitions/storageName"
+          type: array
     example: |-
         <businessObjectDataAvailabilityRequest>
           <namespace>APP_A</namespace>
@@ -444,7 +465,9 @@ definitions:
             </partitionValueFilter>
           </partitionValueFilters>
           <businessObjectDataVersion>0</businessObjectDataVersion>
-          <storageName>S3_MANAGED</storageName>
+          <storageNames>
+            <storageName>S3_MANAGED</storageName>
+          </storageNames>
         </businessObjectDataAvailabilityRequest>
   businessObjectDataCreateRequest:
     allOf:
@@ -520,14 +543,47 @@ definitions:
           <createNewVersion>false</createNewVersion>
         </businessObjectDataCreateRequest>
   businessObjectDataDdl:
-    allOf:
-    - $ref: "#/definitions/businessObjectDataDdlRequest"
-    - required:
-      - ddl
-      type: object
-      properties:
-        ddl:
-          $ref: "#/definitions/ddl"
+    properties:
+      namespace:
+        $ref: "#/definitions/namespaceString"
+      businessObjectDefinitionName:
+        $ref: "#/definitions/businessObjectDefinitionName"
+      businessObjectFormatUsage:
+        $ref: "#/definitions/businessObjectFormatUsage"
+      businessObjectFormatFileType:
+        $ref: "#/definitions/businessObjectFormatFileType"
+      businessObjectFormatVersion:
+        $ref: "#/definitions/businessObjectFormatVersion"
+      partitionValueFilters:
+        items:
+          $ref: "#/definitions/partitionValueFilter"
+        type: array
+      businessObjectDataVersion:
+        $ref: "#/definitions/businessObjectDataVersion"
+      storageNames:
+        description: The list of storage names
+        items:
+          $ref: "#/definitions/storageName"
+        type: array
+      outputFormat:
+        $ref: "#/definitions/outputFormat"
+      tableName:
+        $ref: "#/definitions/tableName"
+      customDdlName:
+        $ref: "#/definitions/customDdlName"
+      ddl:
+        $ref: "#/definitions/ddl"
+    required:
+    - namespace
+    - businessObjectDefinitionName
+    - businessObjectFormatFileType
+    - businessObjectFormatUsage
+    - partitionValueFilters
+    - storageNames
+    - outputFormat
+    - tableName
+    - ddl
+    type: object
     example: |-
         <businessObjectDataDdl>
           <namespace>APP_A</namespace>
@@ -552,7 +608,9 @@ definitions:
             </partitionValueFilter>
           </partitionValueFilters>
           <businessObjectDataVersion>0</businessObjectDataVersion>
-          <storageName>S3_MANAGED</storageName>
+          <storageNames>
+            <storageName>S3_MANAGED</storageName>
+          </storageNames>
           <outputFormat>HIVE_13_DDL</outputFormat>
           <tableName>NEW_ORDERS_PRC</tableName>
           <customDdlName>NEW_ORDERS_HIVE_13</customDdlName>
@@ -560,22 +618,61 @@ definitions:
                          ALTER TABLE `NEW_ORDERS_PRC` ADD IF NOT EXISTS PARTITION ( pkey=value ) location "s3://" );]]</ddl>
         </businessObjectDataDdl>
   businessObjectDataDdlRequest:
-    allOf:
-    - $ref: "#/definitions/businessObjectFormatDdlRequest"
-    - required:
-      - partitionValueFilters
-      - storageName
-      properties:
-        businessObjectDataVersion:
-          $ref: "#/definitions/businessObjectDataVersion"
-        allowMissingData:
-          $ref: "#/definitions/allowMissingData"
-        storageName:
+    properties:
+      namespace:
+        $ref: "#/definitions/namespaceString"
+      businessObjectDefinitionName:
+        $ref: "#/definitions/businessObjectDefinitionName"
+      businessObjectFormatUsage:
+        $ref: "#/definitions/businessObjectFormatUsage"
+      businessObjectFormatFileType:
+        $ref: "#/definitions/businessObjectFormatFileType"
+      businessObjectFormatVersion:
+        description: The version of the business object format (e.g. 0). When format
+          version is not specified, the latest format version is used to retrieve
+          the schema and the business object data with the latest business format
+          version available for the specified partition value is returned back
+        format: int32
+        type: integer
+      partitionValueFilters:
+        items:
+          $ref: "#/definitions/partitionValueFilter"
+        type: array
+      businessObjectDataVersion:
+        description: The version of the business object data (e.g. 0). When data
+          version is not specified, the latest "VALID" business object data is
+          returned back.
+        format: int32
+        type: integer
+      storageNames:
+        description: The list of storage names
+        items:
           $ref: "#/definitions/storageName"
-        partitionValueFilters:
-          items:
-            $ref: "#/definitions/partitionValueFilter"
-          type: array
+        type: array
+      outputFormat:
+        $ref: "#/definitions/outputFormat"
+      tableName:
+        $ref: "#/definitions/tableName"
+      customDdlName:
+        $ref: "#/definitions/customDdlName"
+      includeDropTableStatement:
+        $ref: "#/definitions/includeDropTableStatement"
+      includeIfNotExistsOption:
+        $ref: "#/definitions/includeIfNotExistsOption"
+      includeDropPartitions:
+        $ref: "#/definitions/includeDropPartitions"
+      allowMissingData:
+        $ref: "#/definitions/allowMissingData"
+    required:
+    - namespace
+    - businessObjectDefinitionName
+    - businessObjectFormatFileType
+    - businessObjectFormatUsage
+    - partitionValueFilters
+    - storageNames
+    - outputFormat
+    - tableName
+    type: object    
     example: |-
         <businessObjectDataDdlRequest>
           <namespace>APP_A</namespace>
@@ -600,12 +697,15 @@ definitions:
             </partitionValueFilter>
           </partitionValueFilters>
           <businessObjectDataVersion>0</businessObjectDataVersion>
-          <storageName>S3_MANAGED</storageName>
+          <storageNames>
+            <storageName>S3_MANAGED</storageName>
+          </storageNames>
           <outputFormat>HIVE_13_DDL</outputFormat>
           <tableName>NEW_ORDERS_PRC</tableName>
           <customDdlName>NEW_ORDERS_HIVE_13</customDdlName>
-          <includeDropTableStatement>true</includeDropTableStatement>
+          <includeDropTableStatement>false</includeDropTableStatement>
           <includeIfNotExistsOption>true</includeIfNotExistsOption>
+          <includeDropPartitions>true</includeDropPartitions>
           <allowMissingData>true</allowMissingData>
         </businessObjectDataDdlRequest>
   businessObjectDataEventType:
@@ -1059,9 +1159,15 @@ definitions:
           <latestVersion>true</latestVersion>
           <partitionKey>PROCESS_DATE</partitionKey>
           <description>New Orders</description>
+          <attributes>
+            <attribute>
+              <name>test name</name>
+              <value>test value</value>
+            </attribute>
+          </attributes>
           <attributeDefinitions>
             <attributeDefinition>
-              <name>test name</name>
+              <name>business-object-data-required-attribute-name</name>
             </attributeDefinition>
           </attributeDefinitions>
           <schema>
@@ -1095,28 +1201,44 @@ definitions:
           </schema>
         </businessObjectFormat>
   businessObjectFormatCreateRequest:
-    allOf:
-    - $ref: "#/definitions/formatKey"
-    - required:
-      - partitionKey
-      type: object
-      properties:
-        partitionKey:
-          $ref: "#/definitions/partitionKey"
-        description:
-          $ref: "#/definitions/description"
-        attributeDefinitions:
-          description: This will be a list of attribute definitions (for storage of
-            metadata with objects) which are required to be specified when registering
-            Business Object Data against this format. This list will define which
-            metadata must be specified, but additional metadata can still be registered
-            which is not specified in this list. The metadata (attributes) will allow
-            applications to store custom data with registered data for use by consumers
-            of the data
-          $ref: "#/definitions/Attributes"
-        schema:
-          description: An optional schema associated with this business object format
-          $ref: "#/definitions/Schema"
+    required:
+    - namespace
+    - businessObjectDefinitionName
+    - businessObjectFormatFileType
+    - businessObjectFormatUsage
+    - partitionKey
+    properties:
+      namespace:
+        $ref: "#/definitions/namespaceString"
+      businessObjectDefinitionName:
+        $ref: "#/definitions/businessObjectDefinitionName"
+      businessObjectFormatUsage:
+        $ref: "#/definitions/businessObjectFormatUsage"
+      businessObjectFormatFileType:
+        $ref: "#/definitions/businessObjectFormatFileType"
+      businessObjectFormatVersion:
+        $ref: "#/definitions/businessObjectFormatVersion"
+      partitionKey:
+        $ref: "#/definitions/partitionKey"
+      description:
+        description: The description of this business object format
+        $ref: "#/definitions/description"
+      attributes:
+        description: This specifies a list of custom metadata to be stored with
+          the business object format when registered
+        $ref: "#/definitions/Attributes"
+      attributeDefinitions:
+        description: This will be a list of attribute definitions (for storage of
+          metadata with objects) which are required to be specified when registering
+          business object data against this format. This list will define which
+          metadata must be specified, but additional metadata can still be registered
+          which is not specified in this list. The metadata (attributes) will allow
+          applications to store custom data with registered data for use by consumers
+          of the data
+        $ref: "#/definitions/AttributeDefinitions"
+      schema:
+        description: An optional schema associated with this business object format
+        $ref: "#/definitions/Schema"
     example: |-
         <businessObjectFormatCreateRequest>
           <namespace>APP_A</namespace>
@@ -1125,9 +1247,15 @@ definitions:
           <businessObjectFormatFileType>ORC</businessObjectFormatFileType>
           <partitionKey>PROCESS_DATE</partitionKey>
           <description>New Orders</description>
+          <attributes>
+            <attribute>
+              <name>test name</name>
+              <value>test value</value>
+            </attribute>
+          </attributes>
           <attributeDefinitions>
             <attributeDefinition>
-              <name>test name</name>
+              <name>business-object-data-required-attribute-name</name>
             </attributeDefinition>
           </attributeDefinitions>
           <schema>
@@ -1265,6 +1393,8 @@ definitions:
           $ref: "#/definitions/tableName"
         includeIfNotExistsOption:
           $ref: "#/definitions/includeIfNotExistsOption"
+        replaceColumns:
+          $ref: "#/definitions/replaceColumns"
     example: |-
         <businessObjectFormatDdlRequest>
           <namespace>APP_A</namespace>
@@ -1351,8 +1481,17 @@ definitions:
       $ref: "#/definitions/businessObjectFormatKey"
     type: array
   businessObjectFormatUpdateRequest:
-    allOf:
-    - $ref: "#/definitions/businessObjectFormatCreateRequest"
+    properties:
+      description:
+        description: The description of this business object format
+        $ref: "#/definitions/description"
+      attributes:
+        description: This specifies a list of custom metadata to be stored with
+          the business object format when registered
+        $ref: "#/definitions/Attributes"
+      schema:
+        description: An optional schema associated with this business object format
+        $ref: "#/definitions/Schema"
     example: |-
         <businessObjectFormatUpdateRequest>
           <description>New Orders</description>
@@ -2206,6 +2345,11 @@ definitions:
     description: The internal Id that uniquely references this entity
     format: int32
     type: integer
+  includeDropPartitions:
+    default: false
+    description: If true, DROP PARTITION IF EXISTS statements will be added to
+      the generated DDL for all partitions as per specified partition value filters
+    type: boolean
   includeDropTableStatement:
     default: false
     description: If true, drop table statement for existing table will be added to
@@ -2217,6 +2361,10 @@ definitions:
       statement in the generated DDL. Please note that this parameter value has no
       effect on the relative CREATE TABLE ... statement, if generated DDL uses custom
       DDL
+    type: boolean
+  replaceColumns:
+    default: false
+    description: If true, an ALTER TABLE ... REPLACE COLUMNS will be generated.
     type: boolean
   jarLocation:
     description: Location of the JAR file
@@ -3023,6 +3171,16 @@ definitions:
       type and the data should be stored according to the S3 Naming Conventions
     example: S3_MANAGED
     type: string
+  storageNames:
+    description: The list of storage names
+    example: |-
+        <storageNames>
+            <storageName>S3_MANAGED</storageName>
+            <storageName>S3_MANAGED_EXTERNAL</storageName>
+        </storageNames>
+    items:
+      $ref: "#/definitions/storageName"
+    type: array
   storagePlatform:
     example: |-
         <storagePlatform>
@@ -4250,15 +4408,26 @@ parameters:
   "/businessObjectFormats":
     post:
       description: |-
-        Registers a new Business Object Format (BOF) which is identified by usage, file type and a previously registered business object definition.
+        Registers a new Business Object Format (BOF) which is identified by usage,
+        file type and a previously registered business object definition.
 
-        Think of each BOF as providing the all the details needed to now how to read and process a particular set of data files (ie file format, file structure, etc). Each BOF registered in Data Management is a metadata object describing these specifics of the data layout for a previously registered Business Object Definition - down to details for each field in the relative schema.
+        Think of each BOF as providing the all the details needed to how to read
+        and process a particular set of data files (ie file format, file structure,
+        etc). Each BOF registered in Data Management is a metadata object describing
+        these specifics of the data layout for a previously registered Business
+        Object Definition - down to details for each field in the relative schema.
 
         BOF is derived from Business Object Definition with the following relationships:
-        * for one business object definition, there could be many business object formats defined
-        * for any given business object format, there is only one business object definition
-        * New BOF versions must be "additive" to the previous version. Meaning, a new BOF version schema can only add regular (non-partitioning) columns and all existing regular and partition columns must remain the same.
-        * Business object format must be associated with an existing partition key group in order to use partition value ranges with Business Object Data Availability and Business Object Data Generate DDL services.
+        - for one business object definition, there could be many business object formats defined
+        - for any given business object format, there is only one business object definition
+
+        NOTES:
+        * New BOF versions must be "additive" to the previous version. Meaning,
+          a new BOF version schema can only add regular (non-partitioning) columns
+          and all existing regular and partition columns must remain the same.
+        * Business object format must be associated with an existing partition key
+          group in order to use partition value ranges with Business Object Data
+          Availability and Business Object Data Generate DDL services.
       operationId: addFormat
       parameters:
       - required: true
@@ -5550,6 +5719,11 @@ parameters:
         Storage corresponds to an S3 bucket, an HDFS cluster, a database, or a NFS server.
         * "S3_MANAGED" is the name of the special S3 storage platform instance that contains business object
         data controlled by Data Management.
+
+        * There are 3 storage attributes that have special meaning to the system. These attribute names are the defaults, but they can be modified by updating the Data Management Web Application Configuration Options.
+         * bucket.name - the name of the bucket associated with the storage. This is required if file existence validation is configured for the storage.
+         * validate.path.prefix - optional boolean that determines whether path prefix validation is performed on this storage.
+         * validate.file.existence - optional boolean that determines whether file existence validation is performed on this storage.
 
         Any changes to business object data in the managed storage should be done via Data Management system.
         Storage can define a list of custom metadata (set of attributes) that can be used

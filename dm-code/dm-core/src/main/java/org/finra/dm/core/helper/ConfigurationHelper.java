@@ -15,10 +15,9 @@
 */
 package org.finra.dm.core.helper;
 
-import org.springframework.core.convert.ConversionFailedException;
-
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
@@ -32,11 +31,15 @@ public class ConfigurationHelper
 {
     private static final Logger LOGGER = Logger.getLogger(ConfigurationHelper.class);
 
+    @Autowired
+    private Environment environment;
+
     /**
      * Calls {@link #getProperty(ConfigurationValue, Class, Environment)} using String targetType.
-     * 
+     *
      * @param configurationValue {@link ConfigurationValue}
      * @param environment {@link Environment}
+     *
      * @return String value
      */
     public static String getProperty(ConfigurationValue configurationValue, Environment environment)
@@ -45,14 +48,15 @@ public class ConfigurationHelper
     }
 
     /**
-     * Wrapper for {@link Environment#getProperty(String, Class, Object)} using the given {@link ConfigurationValue} as the key and default value.
-     * Optionally, uses the configured default value if the property is not found in the environment. The configured default value must be of the same class, or
-     * must be a sub-class of the given targetType.
-     * 
+     * Wrapper for {@link Environment#getProperty(String, Class, Object)} using the given {@link ConfigurationValue} as the key and default value. Optionally,
+     * uses the configured default value if the property is not found in the environment. The configured default value must be of the same class, or must be a
+     * sub-class of the given targetType.
+     *
      * @param <T> The return type
      * @param configurationValue The {@link ConfigurationValue} with property key and default value.
      * @param targetType The returned object's type
      * @param environment The {@link Environment} containing the property
+     *
      * @return The property value
      */
     public static <T> T getProperty(ConfigurationValue configurationValue, Class<T> targetType, Environment environment)
@@ -78,8 +82,8 @@ public class ConfigurationHelper
          */
         if (genericDefaultValue != null && !targetType.isAssignableFrom(genericDefaultValue.getClass()))
         {
-            throw new IllegalArgumentException("targetType '" + targetType + "' is not assignable from the default value of type '"
-                + genericDefaultValue.getClass() + "'.");
+            throw new IllegalArgumentException(
+                "targetType '" + targetType + "' is not assignable from the default value of type '" + genericDefaultValue.getClass() + "'.");
         }
 
         @SuppressWarnings("unchecked")
@@ -96,19 +100,18 @@ public class ConfigurationHelper
              * If the environment value is not convertible into the targetType, catch it and log a warning.
              * Return the default value.
              */
-            LOGGER.warn("Error converting environment property with key '" + key + "' and value '" + environment.getProperty(key) + "' into a '" + targetType
-                + "'.", conversionFailedException);
+            LOGGER.warn(
+                "Error converting environment property with key '" + key + "' and value '" + environment.getProperty(key) + "' into a '" + targetType + "'.",
+                conversionFailedException);
         }
         return value;
     }
 
-    @Autowired
-    private Environment environment;
-
     /**
      * Calls {@link #getProperty(ConfigurationValue, Class)} where the target type is {@link String}.
-     * 
+     *
      * @param configurationValue {@link ConfigurationValue}
+     *
      * @return The string value
      */
     public String getProperty(ConfigurationValue configurationValue)
@@ -118,9 +121,10 @@ public class ConfigurationHelper
 
     /**
      * Calls {@link #getProperty(ConfigurationValue, Class, Environment)}
-     * 
+     *
      * @param configurationValue The {@link ConfigurationValue}
      * @param targetType The return type
+     *
      * @return The property value
      */
     public <T> T getProperty(ConfigurationValue configurationValue, Class<T> targetType)

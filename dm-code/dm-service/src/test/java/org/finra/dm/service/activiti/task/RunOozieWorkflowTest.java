@@ -31,7 +31,7 @@ import org.finra.dm.model.api.xml.Job;
 import org.finra.dm.model.api.xml.Parameter;
 import org.finra.dm.model.api.xml.RunOozieWorkflowRequest;
 import org.finra.dm.service.AbstractServiceTest;
-import org.finra.dm.service.activiti.ActivitiHelper;
+import org.finra.dm.service.activiti.ActivitiRuntimeHelper;
 
 /**
  * Tests the RunOozieWorkflow class.
@@ -59,10 +59,10 @@ public class RunOozieWorkflowTest extends AbstractServiceTest
         HistoricProcessInstance hisInstance =
                 activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(job.getId()).includeProcessVariables().singleResult();
         Map<String, Object> variables = hisInstance.getProcessVariables();
-        String oozieJobTaskStatus = (String) variables.get("runOozieWorkflowTask" + ActivitiHelper.TASK_VARIABLE_MARKER + ActivitiHelper.VARIABLE_STATUS);
-        String oozieJobId = (String) variables.get("runOozieWorkflowTask" + ActivitiHelper.TASK_VARIABLE_MARKER + RunOozieWorkflow.VARIABLE_ID);
+        String oozieJobTaskStatus = (String) variables.get("runOozieWorkflowTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + ActivitiRuntimeHelper.VARIABLE_STATUS);
+        String oozieJobId = (String) variables.get("runOozieWorkflowTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + RunOozieWorkflow.VARIABLE_ID);
 
-        assertEquals(oozieJobTaskStatus, ActivitiHelper.TASK_STATUS_SUCCESS);
+        assertEquals(oozieJobTaskStatus, ActivitiRuntimeHelper.TASK_STATUS_SUCCESS);
         assertNotNull(oozieJobId);
     }
 
@@ -87,10 +87,10 @@ public class RunOozieWorkflowTest extends AbstractServiceTest
         HistoricProcessInstance hisInstance =
                 activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(job.getId()).includeProcessVariables().singleResult();
         Map<String, Object> variables = hisInstance.getProcessVariables();
-        String oozieJobTaskStatus = (String) variables.get("runOozieWorkflowTask" + ActivitiHelper.TASK_VARIABLE_MARKER + ActivitiHelper.VARIABLE_STATUS);
-        String oozieJobId = (String) variables.get("runOozieWorkflowTask" + ActivitiHelper.TASK_VARIABLE_MARKER + RunOozieWorkflow.VARIABLE_ID);
+        String oozieJobTaskStatus = (String) variables.get("runOozieWorkflowTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + ActivitiRuntimeHelper.VARIABLE_STATUS);
+        String oozieJobId = (String) variables.get("runOozieWorkflowTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + RunOozieWorkflow.VARIABLE_ID);
 
-        assertEquals(oozieJobTaskStatus, ActivitiHelper.TASK_STATUS_SUCCESS);
+        assertEquals(oozieJobTaskStatus, ActivitiRuntimeHelper.TASK_STATUS_SUCCESS);
         assertNotNull(oozieJobId);
     }
 
@@ -112,10 +112,10 @@ public class RunOozieWorkflowTest extends AbstractServiceTest
         HistoricProcessInstance hisInstance =
                 activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(job.getId()).includeProcessVariables().singleResult();
         Map<String, Object> variables = hisInstance.getProcessVariables();
-        String oozieJobTaskStatus = (String) variables.get("runOozieWorkflowTask" + ActivitiHelper.TASK_VARIABLE_MARKER + ActivitiHelper.VARIABLE_STATUS);
-        String oozieJobId = (String) variables.get("runOozieWorkflowTask" + ActivitiHelper.TASK_VARIABLE_MARKER + RunOozieWorkflow.VARIABLE_ID);
+        String oozieJobTaskStatus = (String) variables.get("runOozieWorkflowTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + ActivitiRuntimeHelper.VARIABLE_STATUS);
+        String oozieJobId = (String) variables.get("runOozieWorkflowTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + RunOozieWorkflow.VARIABLE_ID);
 
-        assertEquals(oozieJobTaskStatus, ActivitiHelper.TASK_STATUS_ERROR);
+        assertEquals(oozieJobTaskStatus, ActivitiRuntimeHelper.TASK_STATUS_ERROR);
         assertNull(oozieJobId);
     }
 
@@ -137,10 +137,10 @@ public class RunOozieWorkflowTest extends AbstractServiceTest
         HistoricProcessInstance hisInstance =
                 activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(job.getId()).includeProcessVariables().singleResult();
         Map<String, Object> variables = hisInstance.getProcessVariables();
-        String oozieJobTaskStatus = (String) variables.get("runOozieWorkflowTask" + ActivitiHelper.TASK_VARIABLE_MARKER + ActivitiHelper.VARIABLE_STATUS);
-        String oozieJobId = (String) variables.get("runOozieWorkflowTask" + ActivitiHelper.TASK_VARIABLE_MARKER + RunOozieWorkflow.VARIABLE_ID);
+        String oozieJobTaskStatus = (String) variables.get("runOozieWorkflowTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + ActivitiRuntimeHelper.VARIABLE_STATUS);
+        String oozieJobId = (String) variables.get("runOozieWorkflowTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + RunOozieWorkflow.VARIABLE_ID);
 
-        assertEquals(oozieJobTaskStatus, ActivitiHelper.TASK_STATUS_ERROR);
+        assertEquals(oozieJobTaskStatus, ActivitiRuntimeHelper.TASK_STATUS_ERROR);
         assertNull(oozieJobId);
     }
     
@@ -162,10 +162,10 @@ public class RunOozieWorkflowTest extends AbstractServiceTest
         HistoricProcessInstance hisInstance =
                 activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(job.getId()).includeProcessVariables().singleResult();
         Map<String, Object> variables = hisInstance.getProcessVariables();
-        String oozieJobTaskStatus = (String) variables.get("runOozieWorkflowTask" + ActivitiHelper.TASK_VARIABLE_MARKER + ActivitiHelper.VARIABLE_STATUS);
-        String oozieJobId = (String) variables.get("runOozieWorkflowTask" + ActivitiHelper.TASK_VARIABLE_MARKER + RunOozieWorkflow.VARIABLE_ID);
+        String oozieJobTaskStatus = (String) variables.get("runOozieWorkflowTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + ActivitiRuntimeHelper.VARIABLE_STATUS);
+        String oozieJobId = (String) variables.get("runOozieWorkflowTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + RunOozieWorkflow.VARIABLE_ID);
 
-        assertEquals(oozieJobTaskStatus, ActivitiHelper.TASK_STATUS_ERROR);
+        assertEquals(oozieJobTaskStatus, ActivitiRuntimeHelper.TASK_STATUS_ERROR);
         assertNull(oozieJobId);
     }
 
@@ -187,10 +187,10 @@ public class RunOozieWorkflowTest extends AbstractServiceTest
         HistoricProcessInstance hisInstance =
                 activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(job.getId()).includeProcessVariables().singleResult();
         Map<String, Object> variables = hisInstance.getProcessVariables();
-        String oozieJobTaskStatus = (String) variables.get("runOozieWorkflowTask" + ActivitiHelper.TASK_VARIABLE_MARKER + ActivitiHelper.VARIABLE_STATUS);
-        String oozieJobId = (String) variables.get("runOozieWorkflowTask" + ActivitiHelper.TASK_VARIABLE_MARKER + RunOozieWorkflow.VARIABLE_ID);
+        String oozieJobTaskStatus = (String) variables.get("runOozieWorkflowTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + ActivitiRuntimeHelper.VARIABLE_STATUS);
+        String oozieJobId = (String) variables.get("runOozieWorkflowTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + RunOozieWorkflow.VARIABLE_ID);
 
-        assertEquals(oozieJobTaskStatus, ActivitiHelper.TASK_STATUS_ERROR);
+        assertEquals(oozieJobTaskStatus, ActivitiRuntimeHelper.TASK_STATUS_ERROR);
         assertNull(oozieJobId);
     }
 }

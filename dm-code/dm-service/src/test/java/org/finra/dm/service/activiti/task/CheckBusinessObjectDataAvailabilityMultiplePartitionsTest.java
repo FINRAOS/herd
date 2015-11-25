@@ -25,7 +25,7 @@ import org.junit.Test;
 
 import org.finra.dm.model.api.xml.BusinessObjectDataAvailabilityRequest;
 import org.finra.dm.model.api.xml.Parameter;
-import org.finra.dm.service.activiti.ActivitiHelper;
+import org.finra.dm.service.activiti.ActivitiRuntimeHelper;
 
 /**
  * Tests the CheckBusinessObjectDataAvailabilityMultiplePartitions Activiti task wrapper.
@@ -100,7 +100,7 @@ public class CheckBusinessObjectDataAvailabilityMultiplePartitionsTest extends D
         parameters.add(buildParameter("businessObjectDataAvailabilityRequest", "some_request"));
 
         Map<String, Object> variableValuesToValidate = new HashMap<>();
-        variableValuesToValidate.put(ActivitiHelper.VARIABLE_ERROR_MESSAGE, "\"ContentType\" must be a valid value of either \"xml\" or \"json\".");
+        variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"ContentType\" must be a valid value of either \"xml\" or \"json\".");
 
         testActivitiServiceTaskFailure(CheckBusinessObjectDataAvailabilityMultiplePartitions.class.getCanonicalName(), fieldExtensionList, parameters, 
             variableValuesToValidate);
@@ -120,7 +120,7 @@ public class CheckBusinessObjectDataAvailabilityMultiplePartitionsTest extends D
         parameters.add(buildParameter("businessObjectDataAvailabilityRequest", ""));
 
         Map<String, Object> variableValuesToValidate = new HashMap<>();
-        variableValuesToValidate.put(ActivitiHelper.VARIABLE_ERROR_MESSAGE, "\"BusinessObjectDataAvailabilityRequest\" must be specified.");
+        variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"BusinessObjectDataAvailabilityRequest\" must be specified.");
 
         testActivitiServiceTaskFailure(CheckBusinessObjectDataAvailabilityMultiplePartitions.class.getCanonicalName(), fieldExtensionList, parameters, 
             variableValuesToValidate);
@@ -140,7 +140,7 @@ public class CheckBusinessObjectDataAvailabilityMultiplePartitionsTest extends D
         parameters.add(buildParameter("businessObjectDataAvailabilityRequest", "wrong_xml_request"));
 
         Map<String, Object> variableValuesToValidate = new HashMap<>();
-        variableValuesToValidate.put(ActivitiHelper.VARIABLE_ERROR_MESSAGE, "\"BusinessObjectDataAvailabilityRequest\" must be valid xml string.");
+        variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"BusinessObjectDataAvailabilityRequest\" must be valid xml string.");
 
         testActivitiServiceTaskFailure(CheckBusinessObjectDataAvailabilityMultiplePartitions.class.getCanonicalName(), fieldExtensionList, parameters, 
             variableValuesToValidate);
@@ -160,7 +160,7 @@ public class CheckBusinessObjectDataAvailabilityMultiplePartitionsTest extends D
         parameters.add(buildParameter("businessObjectDataAvailabilityRequest", "wrong_json_request"));
 
         Map<String, Object> variableValuesToValidate = new HashMap<>();
-        variableValuesToValidate.put(ActivitiHelper.VARIABLE_ERROR_MESSAGE, "\"BusinessObjectDataAvailabilityRequest\" must be valid json string.");
+        variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"BusinessObjectDataAvailabilityRequest\" must be valid json string.");
 
         testActivitiServiceTaskFailure(CheckBusinessObjectDataAvailabilityMultiplePartitions.class.getCanonicalName(), fieldExtensionList, parameters, 
             variableValuesToValidate);

@@ -25,7 +25,7 @@ import org.junit.Test;
 
 import org.finra.dm.model.api.xml.BusinessObjectDataCreateRequest;
 import org.finra.dm.model.api.xml.Parameter;
-import org.finra.dm.service.activiti.ActivitiHelper;
+import org.finra.dm.service.activiti.ActivitiRuntimeHelper;
 
 /**
  * Tests the RegisterBusinessObjectData Activiti task wrapper.
@@ -91,7 +91,7 @@ public class RegisterBusinessObjectDataTest extends DmActivitiServiceTaskTest
         parameters.add(buildParameter("businessObjectDataCreateRequest", "some_request"));
 
         Map<String, Object> variableValuesToValidate = new HashMap<>();
-        variableValuesToValidate.put(ActivitiHelper.VARIABLE_ERROR_MESSAGE, "\"ContentType\" must be a valid value of either \"xml\" or \"json\".");
+        variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"ContentType\" must be a valid value of either \"xml\" or \"json\".");
 
         testActivitiServiceTaskFailure(RegisterBusinessObjectData.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
     }
@@ -110,7 +110,7 @@ public class RegisterBusinessObjectDataTest extends DmActivitiServiceTaskTest
         parameters.add(buildParameter("businessObjectDataCreateRequest", ""));
 
         Map<String, Object> variableValuesToValidate = new HashMap<>();
-        variableValuesToValidate.put(ActivitiHelper.VARIABLE_ERROR_MESSAGE, "\"BusinessObjectDataCreateRequest\" must be specified.");
+        variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"BusinessObjectDataCreateRequest\" must be specified.");
 
         testActivitiServiceTaskFailure(RegisterBusinessObjectData.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
     }
@@ -129,7 +129,7 @@ public class RegisterBusinessObjectDataTest extends DmActivitiServiceTaskTest
         parameters.add(buildParameter("businessObjectDataCreateRequest", "wrong_xml_request"));
 
         Map<String, Object> variableValuesToValidate = new HashMap<>();
-        variableValuesToValidate.put(ActivitiHelper.VARIABLE_ERROR_MESSAGE, "\"BusinessObjectDataCreateRequest\" must be valid xml string.");
+        variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"BusinessObjectDataCreateRequest\" must be valid xml string.");
 
         testActivitiServiceTaskFailure(RegisterBusinessObjectData.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
     }
@@ -148,7 +148,7 @@ public class RegisterBusinessObjectDataTest extends DmActivitiServiceTaskTest
         parameters.add(buildParameter("businessObjectDataCreateRequest", "wrong_json_request"));
 
         Map<String, Object> variableValuesToValidate = new HashMap<>();
-        variableValuesToValidate.put(ActivitiHelper.VARIABLE_ERROR_MESSAGE, "\"BusinessObjectDataCreateRequest\" must be valid json string.");
+        variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"BusinessObjectDataCreateRequest\" must be valid json string.");
 
         testActivitiServiceTaskFailure(RegisterBusinessObjectData.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
     }

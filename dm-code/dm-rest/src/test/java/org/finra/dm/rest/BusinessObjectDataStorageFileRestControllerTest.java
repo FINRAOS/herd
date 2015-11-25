@@ -27,6 +27,10 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import org.finra.dm.model.api.xml.BusinessObjectDataStorageFilesCreateRequest;
+import org.finra.dm.model.api.xml.BusinessObjectDataStorageFilesCreateResponse;
+import org.finra.dm.model.api.xml.SchemaColumn;
+import org.finra.dm.model.api.xml.StorageFile;
 import org.finra.dm.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.dm.model.jpa.BusinessObjectDataEntity;
 import org.finra.dm.model.jpa.BusinessObjectDefinitionEntity;
@@ -36,10 +40,6 @@ import org.finra.dm.model.jpa.FileTypeEntity;
 import org.finra.dm.model.jpa.NamespaceEntity;
 import org.finra.dm.model.jpa.StorageEntity;
 import org.finra.dm.model.jpa.StorageUnitEntity;
-import org.finra.dm.model.api.xml.BusinessObjectDataStorageFilesCreateRequest;
-import org.finra.dm.model.api.xml.BusinessObjectDataStorageFilesCreateResponse;
-import org.finra.dm.model.api.xml.SchemaColumn;
-import org.finra.dm.model.api.xml.StorageFile;
 
 /**
  * Tests for {@link BusinessObjectDataStorageFileRestController#createBusinessObjectDataStorageFiles(org.finra.dm.model.api.xml.BusinessObjectDataStorageFilesCreateRequest)}
@@ -164,7 +164,7 @@ public class BusinessObjectDataStorageFileRestControllerTest extends AbstractRes
         }
         BusinessObjectFormatEntity businessObjectFormatEntity = super
             .createBusinessObjectFormatEntity(businessObjectDefinitionEntity, FORMAT_USAGE_CODE, fileTypeEntity, FORMAT_VERSION, null, true, PARTITION_KEY,
-                null, null, null, null, schemaColumns, null);
+                null, NO_ATTRIBUTES, null, null, null, schemaColumns, null);
         BusinessObjectDataEntity businessObjectDataEntity =
             createBusinessObjectDataEntity(businessObjectFormatEntity, PARTITION_VALUE, SUB_PARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS);
 

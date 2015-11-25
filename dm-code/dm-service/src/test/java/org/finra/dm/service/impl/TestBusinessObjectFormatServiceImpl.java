@@ -20,10 +20,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.finra.dm.dao.config.DaoSpringModuleConfig;
+import org.finra.dm.model.api.xml.BusinessObjectFormat;
 import org.finra.dm.model.api.xml.BusinessObjectFormatDdl;
 import org.finra.dm.model.api.xml.BusinessObjectFormatDdlCollectionRequest;
 import org.finra.dm.model.api.xml.BusinessObjectFormatDdlCollectionResponse;
 import org.finra.dm.model.api.xml.BusinessObjectFormatDdlRequest;
+import org.finra.dm.model.api.xml.BusinessObjectFormatKey;
 
 /**
  * This is a Business Object Format service implementation for testing.  It overwrites the base class methods to change transactional attributes.
@@ -33,6 +35,12 @@ import org.finra.dm.model.api.xml.BusinessObjectFormatDdlRequest;
 @Primary
 public class TestBusinessObjectFormatServiceImpl extends BusinessObjectFormatServiceImpl
 {
+    @Override
+    public BusinessObjectFormat getBusinessObjectFormat(BusinessObjectFormatKey businessObjectFormatKey)
+    {
+        return getBusinessObjectFormatImpl(businessObjectFormatKey);
+    }
+
     @Override
     public BusinessObjectFormatDdl generateBusinessObjectFormatDdl(BusinessObjectFormatDdlRequest request)
     {

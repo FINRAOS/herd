@@ -16,6 +16,7 @@
 package org.finra.dm.core.helper;
 
 import org.apache.log4j.Logger;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 /**
@@ -42,5 +43,11 @@ public class DmThreadHelper
             // Don't do anything since this is just a sleep.
             LOGGER.warn("Couldn't sleep for " + millis + " milliseconds.", e);
         }
+    }
+
+    @Async
+    public void executeAsync(Runnable runnable)
+    {
+        runnable.run();
     }
 }

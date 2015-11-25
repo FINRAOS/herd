@@ -55,6 +55,22 @@ import org.finra.dm.core.helper.ConfigurationHelper;
 import org.finra.dm.dao.DmDao;
 import org.finra.dm.dao.config.DaoSpringModuleConfig;
 import org.finra.dm.dao.helper.DmDaoSecurityHelper;
+import org.finra.dm.model.api.xml.BusinessObjectDataKey;
+import org.finra.dm.model.api.xml.BusinessObjectDataNotificationRegistrationKey;
+import org.finra.dm.model.api.xml.BusinessObjectDefinitionKey;
+import org.finra.dm.model.api.xml.BusinessObjectFormatKey;
+import org.finra.dm.model.api.xml.CustomDdlKey;
+import org.finra.dm.model.api.xml.EmrClusterDefinitionKey;
+import org.finra.dm.model.api.xml.ExpectedPartitionValueKey;
+import org.finra.dm.model.api.xml.FileTypeKey;
+import org.finra.dm.model.api.xml.NamespaceKey;
+import org.finra.dm.model.api.xml.PartitionKeyGroupKey;
+import org.finra.dm.model.api.xml.PartitionValueRange;
+import org.finra.dm.model.api.xml.StorageBusinessObjectDefinitionDailyUploadStat;
+import org.finra.dm.model.api.xml.StorageBusinessObjectDefinitionDailyUploadStats;
+import org.finra.dm.model.api.xml.StorageDailyUploadStat;
+import org.finra.dm.model.api.xml.StorageDailyUploadStats;
+import org.finra.dm.model.api.xml.StorageKey;
 import org.finra.dm.model.dto.ConfigurationValue;
 import org.finra.dm.model.dto.DateRangeDto;
 import org.finra.dm.model.dto.StorageAlternateKeyDto;
@@ -107,22 +123,6 @@ import org.finra.dm.model.jpa.StorageFileViewEntity_;
 import org.finra.dm.model.jpa.StoragePlatformEntity;
 import org.finra.dm.model.jpa.StorageUnitEntity;
 import org.finra.dm.model.jpa.StorageUnitEntity_;
-import org.finra.dm.model.api.xml.BusinessObjectDataKey;
-import org.finra.dm.model.api.xml.BusinessObjectDataNotificationRegistrationKey;
-import org.finra.dm.model.api.xml.BusinessObjectDefinitionKey;
-import org.finra.dm.model.api.xml.BusinessObjectFormatKey;
-import org.finra.dm.model.api.xml.CustomDdlKey;
-import org.finra.dm.model.api.xml.EmrClusterDefinitionKey;
-import org.finra.dm.model.api.xml.ExpectedPartitionValueKey;
-import org.finra.dm.model.api.xml.FileTypeKey;
-import org.finra.dm.model.api.xml.NamespaceKey;
-import org.finra.dm.model.api.xml.PartitionKeyGroupKey;
-import org.finra.dm.model.api.xml.PartitionValueRange;
-import org.finra.dm.model.api.xml.StorageBusinessObjectDefinitionDailyUploadStat;
-import org.finra.dm.model.api.xml.StorageBusinessObjectDefinitionDailyUploadStats;
-import org.finra.dm.model.api.xml.StorageDailyUploadStat;
-import org.finra.dm.model.api.xml.StorageDailyUploadStats;
-import org.finra.dm.model.api.xml.StorageKey;
 
 /**
  * The DM DAO implementation.
@@ -1168,9 +1168,9 @@ public class DmDaoImpl extends BaseJpaDaoImpl implements DmDao
      */
     @Override
     public String getBusinessObjectDataMaxPartitionValue(int partitionColumnPosition, BusinessObjectFormatKey businessObjectFormatKey,
-        Integer businessObjectDataVersion, String storageName, String upperBoundPartitionValue, String lowerBoundPartitionValue)
+        Integer businessObjectDataVersion, List<String> storageNames, String upperBoundPartitionValue, String lowerBoundPartitionValue)
     {
-        return getBusinessObjectDataPartitionValue(partitionColumnPosition, businessObjectFormatKey, businessObjectDataVersion, storageName,
+        return getBusinessObjectDataPartitionValue(partitionColumnPosition, businessObjectFormatKey, businessObjectDataVersion, storageNames,
             AggregateFunction.GREATEST, upperBoundPartitionValue, lowerBoundPartitionValue);
     }
 
@@ -1179,9 +1179,9 @@ public class DmDaoImpl extends BaseJpaDaoImpl implements DmDao
      */
     @Override
     public String getBusinessObjectDataMinPartitionValue(int partitionColumnPosition, BusinessObjectFormatKey businessObjectFormatKey,
-        Integer businessObjectDataVersion, String storageName)
+        Integer businessObjectDataVersion, List<String> storageNames)
     {
-        return getBusinessObjectDataPartitionValue(partitionColumnPosition, businessObjectFormatKey, businessObjectDataVersion, storageName,
+        return getBusinessObjectDataPartitionValue(partitionColumnPosition, businessObjectFormatKey, businessObjectDataVersion, storageNames,
             AggregateFunction.LEAST, null, null);
     }
 
@@ -1193,7 +1193,7 @@ public class DmDaoImpl extends BaseJpaDaoImpl implements DmDao
      * available format version for each partition value will be used.
      * @param businessObjectDataVersion the business object data version. If a business object data version isn't specified, the latest data version for each
      * partition value will be used.
-     * @param storageName the name of the storage where the business object data storage unit is located (case-insensitive)
+     * @param storageNames the list of storages (case-insensitive)
      * @param aggregateFunction the aggregate function to use against partition values
      * @param upperBoundPartitionValue the optional inclusive upper bound for the maximum available partition value
      * @param lowerBoundPartitionValue the optional inclusive lower bound for the maximum available partition value
@@ -1201,7 +1201,7 @@ public class DmDaoImpl extends BaseJpaDaoImpl implements DmDao
      * @return the partition value
      */
     private String getBusinessObjectDataPartitionValue(int partitionColumnPosition, BusinessObjectFormatKey businessObjectFormatKey,
-        Integer businessObjectDataVersion, String storageName, AggregateFunction aggregateFunction, String upperBoundPartitionValue,
+        Integer businessObjectDataVersion, List<String> storageNames, AggregateFunction aggregateFunction, String upperBoundPartitionValue,
         String lowerBoundPartitionValue)
     {
         // Create the criteria builder and the criteria.
@@ -1285,9 +1285,13 @@ public class DmDaoImpl extends BaseJpaDaoImpl implements DmDao
                 builder.and(mainQueryRestriction, builder.greaterThanOrEqualTo(businessObjectDataEntity.get(singleValuedAttribute), lowerBoundPartitionValue));
         }
 
-        // Add a storage name restriction to the query where clause.
-        mainQueryRestriction =
-            builder.and(mainQueryRestriction, builder.equal(builder.upper(storageEntity.get(StorageEntity_.name)), storageName.toUpperCase()));
+        // Add a storage name restriction to the main query where clause.
+        List<String> uppercaseStorageNames = new ArrayList<>();
+        for (String storageName : storageNames)
+        {
+            uppercaseStorageNames.add(storageName.toUpperCase());
+        }
+        mainQueryRestriction = builder.and(mainQueryRestriction, builder.upper(storageEntity.get(StorageEntity_.name)).in(uppercaseStorageNames));
 
         criteria.select(partitionValue).where(mainQueryRestriction);
 
@@ -1958,6 +1962,185 @@ public class DmDaoImpl extends BaseJpaDaoImpl implements DmDao
         return entityManager.createQuery(criteria).getResultList();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<StorageUnitEntity> getStorageUnitsByPartitionFiltersAndStorages(BusinessObjectFormatKey businessObjectFormatKey,
+        List<List<String>> partitionFilters, Integer businessObjectDataVersion, String businessObjectDataStatus, List<String> storageNames)
+    {
+        List<StorageUnitEntity> resultStorageUnitEntities = new ArrayList<>();
+
+        // Loop through each chunk of partition filters until we have reached the end of the list.
+        for (int i = 0; i < partitionFilters.size(); i += MAX_PARTITION_FILTERS_PER_REQUEST)
+        {
+            // Get a sub-list for the current chunk of partition filters.
+            List<StorageUnitEntity> storageUnitEntitiesSubset =
+                getStorageUnitsByPartitionFiltersAndStorages(businessObjectFormatKey, partitionFilters, businessObjectDataVersion, businessObjectDataStatus,
+                    storageNames, i,
+                    (i + MAX_PARTITION_FILTERS_PER_REQUEST) > partitionFilters.size() ? partitionFilters.size() - i : MAX_PARTITION_FILTERS_PER_REQUEST);
+
+            // Add the sub-list to the result.
+            resultStorageUnitEntities.addAll(storageUnitEntitiesSubset);
+        }
+
+        return resultStorageUnitEntities;
+    }
+
+    /**
+     * Retrieves a list of storage unit entities per specified parameters. This method processes a sublist of partition filters specified by
+     * partitionFilterSubListFromIndex and partitionFilterSubListSize parameters.
+     *
+     * @param businessObjectFormatKey the business object format key (case-insensitive). If a business object format version isn't specified, the latest
+     * available format version for each partition value will be used.
+     * @param partitionFilters the list of partition filter to be used to select business object data instances. Each partition filter contains a list of
+     * primary and sub-partition values in the right order up to the maximum partition levels allowed by business object data registration - with partition
+     * values for the relative partitions not to be used for selection passed as nulls.
+     * @param businessObjectDataVersion the business object data version. If a business object data version isn't specified, the latest data version based on
+     * the specified business object data status is returned.
+     * @param businessObjectDataStatus the business object data status. This parameter is ignored when the business object data version is specified. When
+     * business object data version and business object data status both are not specified, the latest data version for each set of partition values will be
+     * used regardless of the status.
+     * @param storageNames the list of storage names where the business object data storage units should be looked for (case-insensitive)
+     * @param partitionFilterSubListFromIndex the index of the first element in the partition filter sublist
+     * @param partitionFilterSubListSize the size of the partition filter sublist
+     *
+     * @return the list of storage unit entities sorted by partition values
+     */
+    private List<StorageUnitEntity> getStorageUnitsByPartitionFiltersAndStorages(BusinessObjectFormatKey businessObjectFormatKey,
+        List<List<String>> partitionFilters, Integer businessObjectDataVersion, String businessObjectDataStatus, List<String> storageNames,
+        int partitionFilterSubListFromIndex, int partitionFilterSubListSize)
+    {
+        // Create the criteria builder and the criteria.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Tuple> criteria = builder.createTupleQuery();
+
+        // The criteria root is the storage unit.
+        Root<StorageUnitEntity> storageUnitEntity = criteria.from(StorageUnitEntity.class);
+
+        // Join to the other tables we can filter on.
+        Join<StorageUnitEntity, BusinessObjectDataEntity> businessObjectDataEntity = storageUnitEntity.join(StorageUnitEntity_.businessObjectData);
+        Join<StorageUnitEntity, StorageEntity> storageEntity = storageUnitEntity.join(StorageUnitEntity_.storage);
+        Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> businessObjectFormatEntity =
+            businessObjectDataEntity.join(BusinessObjectDataEntity_.businessObjectFormat);
+        Join<BusinessObjectFormatEntity, FileTypeEntity> fileTypeEntity = businessObjectFormatEntity.join(BusinessObjectFormatEntity_.fileType);
+        Join<BusinessObjectFormatEntity, BusinessObjectDefinitionEntity> businessObjectDefinitionEntity =
+            businessObjectFormatEntity.join(BusinessObjectFormatEntity_.businessObjectDefinition);
+
+        // Create the standard restrictions (i.e. the standard where clauses).
+
+        // Create a standard restriction based on the business object format key values.
+        // Please note that we specify not to ignore the business object format version.
+        Predicate mainQueryRestriction =
+            getQueryRestriction(builder, businessObjectFormatEntity, fileTypeEntity, businessObjectDefinitionEntity, businessObjectFormatKey, false);
+
+        // If a format version was not specified, use the latest available for this set of partition values.
+        if (businessObjectFormatKey.getBusinessObjectFormatVersion() == null)
+        {
+            // Business object format version is not specified, so just use the latest available for this set of partition values.
+            Subquery<Integer> subQuery = criteria.subquery(Integer.class);
+
+            // The criteria root is the business object data.
+            Root<BusinessObjectDataEntity> subBusinessObjectDataEntity = subQuery.from(BusinessObjectDataEntity.class);
+
+            // Join to the other tables we can filter on.
+            Join<BusinessObjectDataEntity, StorageUnitEntity> subStorageUnitEntity = subBusinessObjectDataEntity.join(BusinessObjectDataEntity_.storageUnits);
+            Join<StorageUnitEntity, StorageEntity> subStorageEntity = subStorageUnitEntity.join(StorageUnitEntity_.storage);
+            Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> subBusinessObjectFormatEntity =
+                subBusinessObjectDataEntity.join(BusinessObjectDataEntity_.businessObjectFormat);
+            Join<BusinessObjectFormatEntity, BusinessObjectDefinitionEntity> subBusinessObjectDefinitionEntity =
+                subBusinessObjectFormatEntity.join(BusinessObjectFormatEntity_.businessObjectDefinition);
+            Join<BusinessObjectFormatEntity, FileTypeEntity> subBusinessObjectFormatFileTypeEntity =
+                subBusinessObjectFormatEntity.join(BusinessObjectFormatEntity_.fileType);
+            Join<BusinessObjectDataEntity, BusinessObjectDataStatusEntity> subBusinessObjectDataStatusEntity =
+                subBusinessObjectDataEntity.join(BusinessObjectDataEntity_.status);
+
+            // Create the standard restrictions (i.e. the standard where clauses).
+            Predicate subQueryRestriction = builder.equal(subBusinessObjectDefinitionEntity, businessObjectDefinitionEntity);
+            subQueryRestriction = builder.and(subQueryRestriction, builder.equal(subBusinessObjectFormatEntity.get(BusinessObjectFormatEntity_.usage),
+                businessObjectFormatEntity.get(BusinessObjectFormatEntity_.usage)));
+            subQueryRestriction = builder.and(subQueryRestriction, builder.equal(subBusinessObjectFormatFileTypeEntity, fileTypeEntity));
+
+            // Create and add standard restrictions on primary and sub-partition values.
+            subQueryRestriction =
+                builder.and(subQueryRestriction, getQueryRestrictionOnPartitionValues(builder, subBusinessObjectDataEntity, businessObjectDataEntity));
+
+            // Add restrictions on business object data version and business object data status.
+            Predicate subQueryRestrictionOnBusinessObjectDataVersionAndStatus =
+                getQueryRestrictionOnBusinessObjectDataVersionAndStatus(builder, subBusinessObjectDataEntity, subBusinessObjectDataStatusEntity,
+                    businessObjectDataVersion, businessObjectDataStatus);
+            if (subQueryRestrictionOnBusinessObjectDataVersionAndStatus != null)
+            {
+                subQueryRestriction = builder.and(subQueryRestriction, subQueryRestrictionOnBusinessObjectDataVersionAndStatus);
+            }
+
+            // Create and add a standard restriction on storage.
+            subQueryRestriction = builder.and(subQueryRestriction, builder.equal(subStorageEntity, storageEntity));
+
+            subQuery.select(builder.max(subBusinessObjectFormatEntity.get(BusinessObjectFormatEntity_.businessObjectFormatVersion))).where(subQueryRestriction);
+
+            mainQueryRestriction = builder
+                .and(mainQueryRestriction, builder.in(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.businessObjectFormatVersion)).value(subQuery));
+        }
+
+        // Add restriction as per specified primary and/or sub-partition values.
+        mainQueryRestriction = builder.and(mainQueryRestriction, getQueryRestrictionOnPartitionValues(builder, businessObjectDataEntity,
+            partitionFilters.subList(partitionFilterSubListFromIndex, partitionFilterSubListFromIndex + partitionFilterSubListSize)));
+
+        // If a data version was specified, use it. Otherwise, use the latest one as per specified business object data status.
+        if (businessObjectDataVersion != null)
+        {
+            mainQueryRestriction =
+                builder.and(mainQueryRestriction, builder.equal(businessObjectDataEntity.get(BusinessObjectDataEntity_.version), businessObjectDataVersion));
+        }
+        else
+        {
+            // Business object data version is not specified, so get the latest one as per specified business object data status, if any.
+            // Meaning, when both business object data version and business object data status are not specified, we just return
+            // the latest business object data version in the specified storage.
+            Subquery<Integer> subQuery =
+                getMaximumBusinessObjectDataVersionSubQuery(builder, criteria, businessObjectDataEntity, businessObjectFormatEntity, businessObjectDataStatus,
+                    storageEntity);
+
+            mainQueryRestriction =
+                builder.and(mainQueryRestriction, builder.in(businessObjectDataEntity.get(BusinessObjectDataEntity_.version)).value(subQuery));
+        }
+
+        // Add a storage name restriction to the main query where clause.
+        List<String> uppercaseStorageNames = new ArrayList<>();
+        for (String storageName : storageNames)
+        {
+            uppercaseStorageNames.add(storageName.toUpperCase());
+        }
+        mainQueryRestriction = builder.and(mainQueryRestriction, builder.upper(storageEntity.get(StorageEntity_.name)).in(uppercaseStorageNames));
+
+        // Add the clauses for the query.
+        // Please note that we use multiselect here in order to eliminate the Hibernate N+1 SELECT's problem,
+        // happening when we select storage unit entities and access their relative business object data entities.
+        // This is an alternative approach, since adding @Fetch(FetchMode.JOIN) failed to address the issue.
+        criteria.multiselect(storageUnitEntity, businessObjectDataEntity, businessObjectFormatEntity).where(mainQueryRestriction);
+
+        // Order by partitions and storage names.
+        List<Order> orderBy = new ArrayList<>();
+        for (SingularAttribute<BusinessObjectDataEntity, String> businessObjectDataPartition : BUSINESS_OBJECT_DATA_PARTITIONS)
+        {
+            orderBy.add(builder.asc(businessObjectDataEntity.get(businessObjectDataPartition)));
+        }
+        orderBy.add(builder.asc(storageEntity.get(StorageEntity_.name)));
+        criteria.orderBy(orderBy);
+
+        List<Tuple> tuples = entityManager.createQuery(criteria).getResultList();
+
+        // Build a list of storage unit entities to return.
+        List<StorageUnitEntity> storageUnitEntities = new ArrayList<>();
+        for (Tuple tuple : tuples)
+        {
+            storageUnitEntities.add(tuple.get(storageUnitEntity));
+        }
+
+        return storageUnitEntities;
+    }
+
     // StorageFile
 
     /**
@@ -2021,7 +2204,7 @@ public class DmDaoImpl extends BaseJpaDaoImpl implements DmDao
      * {@inheritDoc}
      */
     @Override
-    public List<StorageFileEntity> getStorageFileEntities(String storageName, String filePathPrefix)
+    public List<StorageFileEntity> getStorageFilesByStorageAndFilePathPrefix(String storageName, String filePathPrefix)
     {
         // Create the criteria builder and the criteria.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
@@ -2050,8 +2233,7 @@ public class DmDaoImpl extends BaseJpaDaoImpl implements DmDao
      * {@inheritDoc}
      */
     @Override
-    public List<StorageFileEntity> getStorageFilesByStorageAndBusinessObjectData(StorageEntity storageEntity,
-        List<BusinessObjectDataEntity> businessObjectDataEntities)
+    public List<StorageFileEntity> getStorageFilesByStorageUnits(List<StorageUnitEntity> storageUnitEntities)
     {
         // Create the criteria builder and the criteria.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
@@ -2064,9 +2246,7 @@ public class DmDaoImpl extends BaseJpaDaoImpl implements DmDao
         Join<StorageFileEntity, StorageUnitEntity> storageUnitEntity = storageFileEntity.join(StorageFileEntity_.storageUnit);
 
         // Create the standard restrictions (i.e. the standard where clauses).
-        Predicate queryRestriction = builder.equal(storageUnitEntity.get(StorageUnitEntity_.storage), storageEntity);
-        queryRestriction = builder
-            .and(queryRestriction, getPredicateForInClause(builder, storageUnitEntity.get(StorageUnitEntity_.businessObjectData), businessObjectDataEntities));
+        Predicate queryRestriction = getPredicateForInClause(builder, storageUnitEntity, storageUnitEntities);
 
         // Order the results by storage file path.
         Order orderBy = builder.asc(storageFileEntity.get(StorageFileEntity_.path));

@@ -35,6 +35,10 @@ import org.springframework.beans.factory.annotation.Qualifier;
 
 import org.finra.dm.model.AlreadyExistsException;
 import org.finra.dm.model.ObjectNotFoundException;
+import org.finra.dm.model.api.xml.BusinessObjectDataStorageFilesCreateRequest;
+import org.finra.dm.model.api.xml.BusinessObjectDataStorageFilesCreateResponse;
+import org.finra.dm.model.api.xml.SchemaColumn;
+import org.finra.dm.model.api.xml.StorageFile;
 import org.finra.dm.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.dm.model.jpa.BusinessObjectDataEntity;
 import org.finra.dm.model.jpa.BusinessObjectDefinitionEntity;
@@ -45,10 +49,6 @@ import org.finra.dm.model.jpa.NamespaceEntity;
 import org.finra.dm.model.jpa.StorageEntity;
 import org.finra.dm.model.jpa.StorageFileEntity;
 import org.finra.dm.model.jpa.StorageUnitEntity;
-import org.finra.dm.model.api.xml.BusinessObjectDataStorageFilesCreateRequest;
-import org.finra.dm.model.api.xml.BusinessObjectDataStorageFilesCreateResponse;
-import org.finra.dm.model.api.xml.SchemaColumn;
-import org.finra.dm.model.api.xml.StorageFile;
 
 public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTest
 {
@@ -633,7 +633,7 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
         }
         BusinessObjectFormatEntity businessObjectFormatEntity = super
             .createBusinessObjectFormatEntity(businessObjectDefinitionEntity, FORMAT_USAGE_CODE, fileTypeEntity, FORMAT_VERSION, null, true, PARTITION_KEY,
-                null, null, null, null, schemaColumns, null);
+                null, NO_ATTRIBUTES, null, null, null, schemaColumns, null);
         BusinessObjectDataEntity businessObjectDataEntity =
             createBusinessObjectDataEntity(businessObjectFormatEntity, PARTITION_VALUE, SUB_PARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS);
 

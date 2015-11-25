@@ -32,7 +32,7 @@ import org.junit.Test;
 import org.finra.dm.model.api.xml.Job;
 import org.finra.dm.model.api.xml.Parameter;
 import org.finra.dm.service.AbstractServiceTest;
-import org.finra.dm.service.activiti.ActivitiHelper;
+import org.finra.dm.service.activiti.ActivitiRuntimeHelper;
 
 public class AddEmrStepsTest extends AbstractServiceTest
 {
@@ -251,10 +251,10 @@ public class AddEmrStepsTest extends AbstractServiceTest
             activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(job.getId()).includeProcessVariables().singleResult();
         Map<String, Object> variables = hisInstance.getProcessVariables();
 
-        String addStepServiceTaskStatus = (String) variables.get("addStepServiceTask" + ActivitiHelper.TASK_VARIABLE_MARKER + ActivitiHelper.VARIABLE_STATUS);
-        assertEquals(ActivitiHelper.TASK_STATUS_SUCCESS, addStepServiceTaskStatus);
+        String addStepServiceTaskStatus = (String) variables.get("addStepServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + ActivitiRuntimeHelper.VARIABLE_STATUS);
+        assertEquals(ActivitiRuntimeHelper.TASK_STATUS_SUCCESS, addStepServiceTaskStatus);
 
-        String addStepId = (String) variables.get("addStepServiceTask" + ActivitiHelper.TASK_VARIABLE_MARKER + BaseAddEmrStep.VARIABLE_EMR_STEP_ID);
+        String addStepId = (String) variables.get("addStepServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + BaseAddEmrStep.VARIABLE_EMR_STEP_ID);
         assertNotNull(addStepId);
     }
 
@@ -273,8 +273,8 @@ public class AddEmrStepsTest extends AbstractServiceTest
             activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(job.getId()).includeProcessVariables().singleResult();
         Map<String, Object> variables = hisInstance.getProcessVariables();
 
-        String addStepServiceTaskStatus = (String) variables.get("addStepServiceTask" + ActivitiHelper.TASK_VARIABLE_MARKER + ActivitiHelper.VARIABLE_STATUS);
-        assertEquals(ActivitiHelper.TASK_STATUS_ERROR, addStepServiceTaskStatus);
+        String addStepServiceTaskStatus = (String) variables.get("addStepServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + ActivitiRuntimeHelper.VARIABLE_STATUS);
+        assertEquals(ActivitiRuntimeHelper.TASK_STATUS_ERROR, addStepServiceTaskStatus);
     }
 
     private List<Parameter> getCommonParameters(String stepName)

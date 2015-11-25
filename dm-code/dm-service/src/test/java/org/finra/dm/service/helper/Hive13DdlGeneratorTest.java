@@ -24,12 +24,16 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.finra.dm.model.dto.HivePartitionDto;
 import org.finra.dm.model.jpa.BusinessObjectDataEntity;
+import org.finra.dm.model.jpa.BusinessObjectFormatEntity;
+import org.finra.dm.model.jpa.SchemaColumnEntity;
 import org.finra.dm.model.api.xml.BusinessObjectDataKey;
+import org.finra.dm.model.api.xml.BusinessObjectFormatDdlRequest;
 import org.finra.dm.model.api.xml.SchemaColumn;
 import org.finra.dm.service.AbstractServiceTest;
 
@@ -219,8 +223,76 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
         // Loop over all entries in the test vector.
         for (Object set : testVector.entrySet())
         {
-            Map.Entry entry = (Map.Entry) set;
+            Map.Entry<?, ?> entry = (Map.Entry<?, ?>) set;
             assertEquals(entry.getValue(), hive13DdlGenerator.escapeSingleQuotes((String) entry.getKey()));
+        }
+    }
+
+    /**
+     * Asserts that generateReplaceColumnsStatement() generates the correct DDL statement.
+     */
+    @Test
+    public void testGenerateReplaceColumnsStatement()
+    {
+        BusinessObjectFormatDdlRequest businessObjectFormatDdlRequest = new BusinessObjectFormatDdlRequest();
+        businessObjectFormatDdlRequest.setTableName(TABLE_NAME);
+        BusinessObjectFormatEntity businessObjectFormatEntity = createBusinessObjectFormatEntity(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE,
+            FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION, true, PARTITION_KEY);
+        {
+            SchemaColumnEntity schemaColumnEntity = new SchemaColumnEntity();
+            schemaColumnEntity.setPosition(0);
+            schemaColumnEntity.setName("col1");
+            schemaColumnEntity.setType("varchar");
+            schemaColumnEntity.setSize("255");
+            schemaColumnEntity.setDescription("lorem ipsum");
+            businessObjectFormatEntity.getSchemaColumns().add(schemaColumnEntity);
+        }
+        {
+            SchemaColumnEntity schemaColumnEntity = new SchemaColumnEntity();
+            schemaColumnEntity.setPosition(1);
+            schemaColumnEntity.setName("col2");
+            schemaColumnEntity.setType("date");
+            businessObjectFormatEntity.getSchemaColumns().add(schemaColumnEntity);
+        }
+        String actual = hive13DdlGenerator.generateReplaceColumnsStatement(businessObjectFormatDdlRequest, businessObjectFormatEntity);
+
+        String expected = "ALTER TABLE `" + businessObjectFormatDdlRequest.getTableName() + "` REPLACE COLUMNS (\n"
+            + "    `col1` VARCHAR(255) COMMENT 'lorem ipsum',\n"
+            + "    `col2` DATE);";
+
+        Assert.assertEquals("generated DDL", expected, actual);
+    }
+
+    /**
+     * Asserts that generateReplaceColumnsStatement() throws an IllegalArgumentException when the format entity only specified partitions, but no columns.
+     */
+    @Test
+    public void testGenerateReplaceColumnsStatementAssertionErrorIfColumnsEmpty()
+    {
+        BusinessObjectFormatDdlRequest businessObjectFormatDdlRequest = new BusinessObjectFormatDdlRequest();
+        businessObjectFormatDdlRequest.setTableName(TABLE_NAME);
+        BusinessObjectFormatEntity businessObjectFormatEntity = createBusinessObjectFormatEntity(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE,
+            FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION, true, PARTITION_KEY);
+
+        {
+            SchemaColumnEntity schemaColumnEntity = new SchemaColumnEntity();
+            schemaColumnEntity.setPartitionLevel(0);
+            schemaColumnEntity.setName("col1");
+            schemaColumnEntity.setType("date");
+            businessObjectFormatEntity.getSchemaColumns().add(schemaColumnEntity);
+        }
+
+        try
+        {
+            hive13DdlGenerator.generateReplaceColumnsStatement(businessObjectFormatDdlRequest, businessObjectFormatEntity);
+            Assert.fail("expected IllegalArgumentException, but no exception was thrown");
+        }
+        catch (Exception e)
+        {
+            Assert.assertEquals("thrown exception type", IllegalArgumentException.class, e.getClass());
+            Assert.assertEquals("thrown exception message", "No schema columns specified for business object format {namespace: \"" + NAMESPACE_CD
+                + "\", businessObjectDefinitionName: \"" + BOD_NAME + "\", businessObjectFormatUsage: \"" + FORMAT_USAGE_CODE
+                + "\", businessObjectFormatFileType: \"" + FORMAT_FILE_TYPE_CODE + "\", businessObjectFormatVersion: " + FORMAT_VERSION + "}.", e.getMessage());
         }
     }
 

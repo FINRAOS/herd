@@ -28,12 +28,12 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.finra.dm.model.ObjectNotFoundException;
+import org.finra.dm.model.api.xml.BusinessObjectDataKey;
 import org.finra.dm.model.jpa.BusinessObjectDataEntity;
 import org.finra.dm.model.jpa.BusinessObjectFormatEntity;
 import org.finra.dm.model.jpa.StorageEntity;
 import org.finra.dm.model.jpa.StoragePlatformEntity;
 import org.finra.dm.model.jpa.StorageUnitEntity;
-import org.finra.dm.model.api.xml.BusinessObjectDataKey;
 import org.finra.dm.service.AbstractServiceTest;
 
 /**
@@ -90,15 +90,24 @@ public class DmDaoHelperTest extends AbstractServiceTest
         // - attribute does not exist
         // - attribute exists with a blank text value
         // - attribute exists with a null value
-        for (String attributeName : Arrays.asList("I_DO_NOT_EXIST", ATTRIBUTE_NAME_2_MIXED_CASE, ATTRIBUTE_NAME_3_MIXED_CASE))
+        String attributeNoExist = "I_DO_NOT_EXIST";
+        for (String attributeName : Arrays.asList(attributeNoExist, ATTRIBUTE_NAME_2_MIXED_CASE, ATTRIBUTE_NAME_3_MIXED_CASE))
         {
             try
             {
                 dmDaoHelper.getStorageAttributeValueByName(attributeName, storageEntity, true);
             }
-            catch (IllegalArgumentException e)
+            catch (IllegalStateException e)
             {
-                Assert.assertEquals(String.format("Attribute \"%s\" for \"%s\" storage must be configured.", attributeName, STORAGE_NAME), e.getMessage());
+                if (attributeName.equals(attributeNoExist))
+                {
+                    Assert.assertEquals(String.format("Attribute \"%s\" for \"%s\" storage must be configured.", attributeName, STORAGE_NAME), e.getMessage());
+                }
+                else
+                {
+                    Assert.assertEquals(String.format("Attribute \"%s\" for \"%s\" storage must have a value that is not blank.", attributeName, STORAGE_NAME),
+                        e.getMessage());
+                }
             }
         }
     }

@@ -19,6 +19,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
+import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler;
+import org.springframework.aop.interceptor.SimpleAsyncUncaughtExceptionHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -26,9 +28,15 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
+import org.springframework.core.task.TaskExecutor;
+import org.springframework.scheduling.annotation.AsyncConfigurer;
+import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
+import org.finra.dm.core.helper.ConfigurationHelper;
 import org.finra.dm.core.helper.SecurityManagerHelper;
 import org.finra.dm.model.api.xml.BuildInformation;
+import org.finra.dm.model.dto.ConfigurationValue;
 
 /**
  * Core Spring module configuration.
@@ -37,12 +45,16 @@ import org.finra.dm.model.api.xml.BuildInformation;
 // Component scan all packages, but exclude the configuration ones since they are explicitly specified.
 @ComponentScan(value = "org.finra.dm.core", excludeFilters = @ComponentScan.Filter(type = FilterType.REGEX, pattern = "org\\.finra\\.dm\\.core\\.config\\..*") )
 @PropertySource("classpath:dmBuildInfo.properties")
-public class CoreSpringModuleConfig
+@EnableAsync
+public class CoreSpringModuleConfig implements AsyncConfigurer
 {
     private static final Logger LOGGER = Logger.getLogger(CoreSpringModuleConfig.class);
 
     @Autowired
     private Environment environment;
+
+    @Autowired
+    private ConfigurationHelper configurationHelper;
 
     /**
      * Initializer for this class.
@@ -95,5 +107,34 @@ public class CoreSpringModuleConfig
             propertyMap.put(property, System.getProperty(property));
         }
         return propertyMap;
+    }
+
+    /**
+     * Returns an Async "task" executor which is also a normal "executor". This is being wired into Activity via the job executor bean. It is also being used by
+     * the "@EnableAsync" annotation and the fact that this class implements AsyncConfigurer. That way, all methods annotated with "@Async" will be executed
+     * asynchronously by this executor. Thus, we have a shared thread pool that handles both Async method calls as well as Activiti asynchronous job executions
+     * (e.g. timers, messages, etc.).
+     *
+     * @return the async task executor.
+     */
+    @Override
+    @Bean // This will call the "initialize" method of the ThreadPoolTaskExecutor automatically.
+    public TaskExecutor getAsyncExecutor()
+    {
+        // Create a Spring thread pool "task" executor that is backed by a JDK Thread Pool Executor.
+        // Use the environment to make the key thread pool parameters configurable although changing them would require a server restart.
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(configurationHelper.getProperty(ConfigurationValue.THREAD_POOL_CORE_POOL_SIZE, Integer.class));
+        executor.setMaxPoolSize(configurationHelper.getProperty(ConfigurationValue.THREAD_POOL_MAX_POOL_SIZE, Integer.class));
+        executor.setKeepAliveSeconds(configurationHelper.getProperty(ConfigurationValue.THREAD_POOL_KEEP_ALIVE_SECS, Integer.class));
+        return executor;
+    }
+
+    @Override
+    public AsyncUncaughtExceptionHandler getAsyncUncaughtExceptionHandler()
+    {
+        // In case any @Async methods return "void" and not a "Future", this exception handler will handle those cases since the caller has not way to access
+        // the exception without a "Future". Just use an out-of-the-box Spring handler that logs those exceptions.
+        return new SimpleAsyncUncaughtExceptionHandler();
     }
 }

@@ -41,9 +41,19 @@ public enum ConfigurationValue
     SHOW_SQL("hibernate.show_sql", "false"),
 
     /**
-     * The S3 managed bucket name. This is required so there is no default.
+     * The S3 attribute name for bucket name. The default is "bucket.name".
      */
-    S3_MANAGED_BUCKET_NAME("s3.managed.bucket.name", null),
+    S3_ATTRIBUTE_NAME_BUCKET_NAME("s3.attribute.name.bucket.name", "bucket.name"),
+
+    /**
+     * The S3 attribute name for validating the path prefix. The default is "validate.path.prefix".
+     */
+    S3_ATTRIBUTE_NAME_VALIDATE_PATH_PREFIX("s3.attribute.name.validate.path.prefix", "validate.path.prefix"),
+
+    /**
+     * The S3 attribute name for validating the file existence. The default is "validate.file.existence".
+     */
+    S3_ATTRIBUTE_NAME_VALIDATE_FILE_EXISTENCE("s3.attribute.name.validate.file.existence", "validate.file.existence"),
 
     /**
      * The optional S3 endpoint to use when using S3 services. This is optional and there is no default.

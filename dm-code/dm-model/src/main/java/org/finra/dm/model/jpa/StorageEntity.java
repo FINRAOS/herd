@@ -109,17 +109,6 @@ public class StorageEntity extends AuditableEntity
         this.attributes = attributes;
     }
 
-    /**
-     * Returns true if this storage is S3 managed storage, false otherwise.
-     *
-     * @return true if this storage is S3 managed storage, false otherwise
-     */
-    public boolean isS3ManagedStorage()
-    {
-        // Just check the storage name against hard coded S3 managed bucket storage name.
-        return (name != null && name.compareToIgnoreCase(MANAGED_STORAGE) == 0);
-    }
-
     @Override
     public boolean equals(Object o)
     {
