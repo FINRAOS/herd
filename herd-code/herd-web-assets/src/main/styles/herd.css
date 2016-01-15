@@ -1,0 +1,216 @@
+/*
+* Copyright 2015 herd contributors
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+@import url("https://fonts.googleapis.com/css?family=Roboto:100,300,400");
+
+@import 'datePicker.css';
+
+h1 {
+   font-size: 36px;
+   font-family: Roboto;
+   font-weight: 100;
+   color: #fff;
+}
+
+body {
+   margin: 0px;
+   background-color: #ededed;
+}
+
+.top-content {
+   background-color: #e85115;
+   padding: 45px 0px 55px 90px;
+}
+
+.filter-name {
+   border-bottom: 1px solid #fff;
+   display: inline-block;
+}
+
+.filter-name-input {
+   font-size: 36px;
+   font-family: Roboto;
+   font-weight: 100;
+   color: #fff;
+   background-color: transparent;
+   border: none;
+   width: 600px;
+}
+
+.filter-dateRange, .filter-fileType {
+   margin-top: 45px;
+}
+
+.filter-dateRange-label, .filter-fileType-label {
+   font-size: 14px;
+   font-family: Roboto;
+   font-weight: 300;
+   color: #ededed;
+   margin-right: 5px;
+}
+
+.herd-date-range-divider {
+   font-size: 14px;
+   font-family: Roboto;
+   font-weight: 300;
+   color: #ededed;
+   margin: 0px 2px 0px 2px;
+}
+
+.herd-date-range-start-input, .herd-date-range-end-input, .filter-fileType-input {
+   font-size: 16px;
+   font-family: Roboto;
+   font-weight: 300;
+   color: #000;
+   border: none;
+   padding: 5px 5px;
+}
+
+.herd-date-range-start-input, .herd-date-range-end-input {
+   width: 90px;
+}
+
+.herd-date-range {
+   display: inline-block;
+}
+
+.herd-date-range>* {
+   display: inline-block;
+   vertical-align: middle;
+}
+
+.filter-submit-button {
+   background: none;
+   border: none;
+   cursor: pointer;
+}
+
+.status-table {
+   width: 100%;
+   box-sizing: border-box;
+   border-collapse: collapse;
+}
+
+.table-header-level-1 {
+   font-size: 24px;
+   font-family: Roboto;
+   font-weight: 100;
+   color: #000;
+   text-align: center;
+   height: 50px;
+}
+
+.table-header-level-2 {
+   font-size: 16px;
+   font-family: Roboto;
+   font-weight: 300;
+   color: #000;
+   text-align: center;
+   background-color: #fff;
+   height: 50px;
+   border-bottom: 4px solid #ededed;
+}
+
+.table-header-level-2>th.not-expected {
+   color: #cccccc;
+}
+
+.table-header-level-2>th.month-end {
+   border-right: 2px solid #ededed;
+}
+
+.status-table>tbody {
+   background-color: #fff;
+}
+
+.status-table>tbody>tr {
+   border-bottom: 2px solid #ededed;
+   height: 55px;
+}
+
+.status-table>tbody>tr>td {
+   text-align: center;
+   width: 55px;
+}
+
+.status-table>tbody>tr>td.object-name, .status-table>tbody>tr>td.object-namespace {
+   border-right: 2px solid #ededed;
+   font-size: 16px;
+   font-family: Roboto;
+   font-weight: 400;
+   text-align: left;
+   padding-left: 15px;
+   width: auto;
+}
+
+.main-content {
+   padding: 20px 30px 95px 90px
+}
+
+.month-end {
+   border-right: 2px solid #ededed;
+}
+
+tr.table-header-level-2>th.object-name {
+   border-right: 2px solid #ededed;
+}
+
+tbody>tr>td.not-expected {
+   background-color: #fafafa;
+}
+
+.calendar-back-button, .calendar-forward-button {
+   background: none;
+   border: none;
+   cursor: pointer;
+}
+
+.calendar-back-button {
+   float: left;
+}
+
+.calendar-forward-button {
+   float: right;
+}
+
+tr.is-error>td {
+   color: red;
+}
+
+.error {
+   display: inline-block;
+   font-size: 14px;
+   font-family: Roboto;
+   font-weight: 400;
+   background-color: #f2dede;
+   border-color: #ebccd1;
+   color: #a94442;
+   padding: 15px;
+   margin-bottom: 20px;
+   border: 1px solid transparent;
+   border-radius: 4px;
+}
+
+.error>* {
+   vertical-align: middle;
+}
+
+.error-wrapper {
+   position: absolute;
+   top: 0px;
+   left: 0px;
+   right: 0px;
+   text-align: center;
+}

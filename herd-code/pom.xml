@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Copyright 2015 herd contributors
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+   <modelVersion>4.0.0</modelVersion>
+
+   <parent>
+      <groupId>org.finra.herd</groupId>
+      <artifactId>herd</artifactId>
+      <version>0.8.0-SNAPSHOT</version>
+   </parent>
+
+   <name>herd code</name>
+   <packaging>pom</packaging>
+
+   <artifactId>herd-code</artifactId>
+
+   <description>This project contains the herd code. This is where all source code and non-build related files reside.</description>
+   <url>http://finraos.github.io/herd/</url>
+
+   <dependencies>
+      <!-- These are dependencies that apply to the entire code base. -->
+      <dependency>
+         <groupId>junit</groupId>
+         <artifactId>junit</artifactId>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>log4j</groupId>
+         <artifactId>log4j</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.postgresql</groupId>
+         <artifactId>postgresql</artifactId>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>com.h2database</groupId>
+         <artifactId>h2</artifactId>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.slf4j</groupId>
+         <artifactId>slf4j-api</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.slf4j</groupId>
+         <artifactId>slf4j-log4j12</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.apache.commons</groupId>
+         <artifactId>commons-dbcp2</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>com.google.code.findbugs</groupId>
+         <artifactId>annotations</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>io.swagger</groupId>
+         <artifactId>swagger-annotations</artifactId>
+      </dependency>
+   </dependencies>
+
+   <build>
+
+      <plugins>
+         <!-- Plugins to be used by all extending projects. -->
+         <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>build-helper-maven-plugin</artifactId>
+            <version>${maven.build.helper.plugin.version}</version>
+            <executions>
+               <execution>
+                  <phase>generate-sources</phase>
+                  <goals>
+                     <goal>add-source</goal>
+                  </goals>
+                  <configuration>
+                     <sources>
+                        <source>target/generated-sources</source>
+                     </sources>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-checkstyle-plugin</artifactId>
+            <version>${maven.checkstyle.plugin.version}</version>
+            <!-- Use our custom rule set which is built as part of build-tools. -->
+            <configuration>
+               <!-- Exclude auto-generated files. -->
+               <excludes>org/finra/herd/model/xml/**</excludes>
+               <configLocation>herd-cs.xml</configLocation>
+               <headerLocation>apache-license-header.txt</headerLocation>
+               <!-- Display the Checkstyle errors on the build output. -->
+               <consoleOutput>true</consoleOutput>
+            </configuration>
+            <!-- We need to specify a dependency on the tools project to get access to the herd-cs.xml file. -->
+            <dependencies>
+               <dependency>
+                  <groupId>${project.groupId}</groupId>
+                  <artifactId>herd-build-tools</artifactId>
+                  <version>${project.version}</version>
+               </dependency>
+            </dependencies>
+         </plugin>
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-pmd-plugin</artifactId>
+            <version>${maven.pmd.plugin.version}</version>
+            <configuration>
+               <targetJdk>${maven.compiler.source}</targetJdk>
+               <!-- Use our custom rule set which is built as part of build-tools. -->
+               <rulesets>
+                  <ruleset>herd-pmd.xml</ruleset>
+               </rulesets>
+               <!-- Display the PMD errors on the build output. -->
+               <verbose>true</verbose>
+            </configuration>
+            <!-- We need to specify a dependency on the tools project to get access to the herd-pmd.xml file. -->
+            <dependencies>
+               <dependency>
+                  <groupId>${project.groupId}</groupId>
+                  <artifactId>herd-build-tools</artifactId>
+                  <version>${project.version}</version>
+               </dependency>
+            </dependencies>
+         </plugin>
+         <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>findbugs-maven-plugin</artifactId>
+            <configuration>
+               <excludeFilterFile>herd-findbugs-exclude.xml</excludeFilterFile>
+               <!-- Enables analysis which takes more memory, but finds the most bugs. Another value is "Low" which uses less memory, but finds less bugs. -->
+               <effort>Max</effort>
+               <!-- Reports all bugs when threshold is "Low". Other values are "Medium" and "Max". -->
+               <threshold>Low</threshold>
+               <!-- Produces an XML report which can be read with "mvn findbugs:gui". -->
+               <xmlOutput>true</xmlOutput>
+            </configuration>
+            <!-- We need to specify a dependency on the tools project to get access to the herd-findbugs-exclude.xml file. -->
+            <dependencies>
+               <dependency>
+                  <groupId>${project.groupId}</groupId>
+                  <artifactId>herd-build-tools</artifactId>
+                  <version>${project.version}</version>
+               </dependency>
+            </dependencies>
+         </plugin>
+         <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>cobertura-maven-plugin</artifactId>
+            <configuration>
+               <check/>
+               <formats>
+                  <format>html</format>
+                  <format>xml</format>
+               </formats>
+               <aggregate>true</aggregate>
+               <instrumentation>
+                  <!-- We are excluding model classes since they are more or less POJO's
+                      that don't contain business logic. It doesn't make sense to add test cases
+                      to test getters and setters. We are excluding Spring JavaConfig configurations
+                      (all within "config" packages) because it is Java code that creates Spring
+                      beans (similar to XML configurations) and not business logic. If you add
+                      additional exclusions, make sure you do a clean build. Otherwise, the classes
+                      you previously built will still exist in the clover database and will still
+                      be listed in the report. We are excluding the implementation of AWSOperations
+                      and S3Operations, since unit tests use a mock implementation. We are also excluding
+                      system jobs, since they would not be called directly from the unit tests.
+                     -->
+                  <excludes>
+                     <exclude>org/finra/herd/model/**</exclude>
+                     <exclude>org/finra/herd/**/config/**</exclude>
+                     <exclude>org/finra/herd/dao/**/*OperationsImpl.class</exclude>
+                     <exclude>org/finra/herd/service/systemjobs/**</exclude>
+                  </excludes>
+               </instrumentation>
+            </configuration>
+            <executions>
+               <execution>
+                  <phase>test</phase>
+                  <goals>
+                     <goal>cobertura</goal>
+                  </goals>
+               </execution>
+            </executions>
+         </plugin>
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+         </plugin>
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-jar-plugin</artifactId>
+            <executions>
+               <execution>
+                  <goals>
+                     <goal>test-jar</goal>
+                  </goals>
+               </execution>
+            </executions>
+         </plugin>
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-source-plugin</artifactId>
+            <executions>
+               <execution>
+                  <id>attach-sources</id>
+                  <goals>
+                     <goal>jar</goal>
+                  </goals>
+               </execution>
+            </executions>
+         </plugin>
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <executions>
+               <!-- Build individual Javadoc JAR's for each sub-project. -->
+               <execution>
+                  <id>jar</id>
+                  <goals>
+                     <goal>jar</goal>
+                  </goals>
+               </execution>
+            </executions>
+         </plugin>
+      </plugins>
+
+   </build>
+
+   <modules>
+      <module>herd-model-api</module>
+      <module>herd-model-api-15</module>
+      <module>herd-model</module>
+      <module>herd-core</module>
+      <module>herd-dao</module>
+      <module>herd-service</module>
+      <module>herd-ui</module>
+      <module>herd-rest</module>
+      <module>herd-app</module>
+      <module>herd-war</module>
+      <module>herd-tools</module>
+      <module>herd-web-assets</module>
+   </modules>
+
+</project>

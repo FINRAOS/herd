@@ -1,0 +1,21 @@
+{
+  "name": "herd",
+  "version": "0.0.0",
+  "license": "Apache-2.0",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular": "~1.4.0",
+    "angular-route": "~1.4.0",
+    "angular-mocks": "~1.4.0",
+    "underscore": "~1.8.3",
+    "jquery": "~2.1.4",
+    "moment": "~2.10.3",
+    "angular-bootstrap": "~0.13.0"
+  }
+}

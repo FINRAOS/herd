@@ -1,0 +1,2317 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+  Copyright 2015 herd contributors
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" version="1.0">
+
+   <!-- Build Information -->
+   <xs:element name="buildInformation" type="buildInformation"/>
+   <xs:complexType name="buildInformation">
+      <xs:annotation>
+         <xs:documentation>The information about the current build of the application.</xs:documentation>
+      </xs:annotation>
+      <xs:all>
+         <xs:element name="buildOs" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The OS in which the current build was built in.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="buildUser" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The user who built the current build.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="buildDate" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The date which was this build was built.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="buildNumber" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The version number of the current build.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <!-- Error Information -->
+   <xs:element name="errorInformation" type="errorInformation"/>
+   <xs:complexType name="errorInformation">
+      <xs:all>
+         <xs:element name="statusCode" type="xs:int"/>
+         <xs:element name="statusDescription" type="xs:string"/>
+         <xs:element name="message" type="xs:string"/>
+         <xs:element name="messageDetails" type="messageDetails" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="messageDetails">
+      <xs:sequence>
+         <xs:element name="message" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+
+   <!-- ***** Storage Platform ***** -->
+
+   <xs:element name="storagePlatforms" type="storagePlatforms"/>
+   <xs:complexType name="storagePlatforms">
+      <xs:sequence>
+         <xs:element name="storagePlatform" type="storagePlatform" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:element name="storagePlatform" type="storagePlatform"/>
+   <xs:complexType name="storagePlatform">
+      <xs:all>
+         <xs:element name="name" type="xs:string"/>
+      </xs:all>
+   </xs:complexType>
+
+   <!-- ***** Storage ***** -->
+
+   <xs:element name="storageCreateRequest" type="storageCreateRequest"/>
+   <xs:complexType name="storageCreateRequest">
+      <xs:all>
+         <xs:element name="name" type="xs:string"/>
+         <xs:element name="storagePlatformName" type="xs:string"/>
+         <xs:element name="attributes" type="attributes" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="storageKeys" type="storageKeys"/>
+   <xs:complexType name="storageKeys">
+      <xs:sequence>
+         <xs:element name="storageKey" type="storageKey" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+   <xs:complexType name="storageKey">
+      <xs:all>
+         <xs:element name="storageName" type="xs:string"/>
+      </xs:all>
+   </xs:complexType>
+
+   <!-- There is nothing that is currently updated, but we will have something in the future. -->
+   <xs:element name="storageUpdateRequest" type="storageUpdateRequest"/>
+   <xs:complexType name="storageUpdateRequest">
+      <xs:all>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="storage" type="storage"/>
+   <xs:complexType name="storage">
+      <xs:all>
+         <xs:element name="name" type="xs:string"/>
+         <xs:element name="storagePlatformName" type="xs:string"/>
+         <xs:element name="attributes" type="attributes" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <!-- ***** Storage Daily Upload Stats ***** -->
+
+   <xs:element name="storageDailyUploadStats" type="storageDailyUploadStats"/>
+   <xs:complexType name="storageDailyUploadStats">
+      <xs:sequence>
+         <xs:element name="storageDailyUploadStat" type="storageDailyUploadStat" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="storageDailyUploadStat">
+      <xs:sequence>
+         <xs:element name="uploadDate" type="xs:date"/>
+         <xs:element name="totalFiles" type="xs:long"/>
+         <xs:element name="totalBytes" type="xs:long"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:element name="storageBusinessObjectDefinitionDailyUploadStats" type="storageBusinessObjectDefinitionDailyUploadStats"/>
+   <xs:complexType name="storageBusinessObjectDefinitionDailyUploadStats">
+      <xs:sequence>
+         <xs:element name="storageBusinessObjectDefinitionDailyUploadStat" type="storageBusinessObjectDefinitionDailyUploadStat" minOccurs="0"
+                     maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="storageBusinessObjectDefinitionDailyUploadStat">
+      <xs:sequence>
+         <xs:element name="uploadDate" type="xs:date"/>
+         <xs:element name="namespace" type="xs:string"/>
+         <xs:element name="dataProviderName" type="xs:string"/>
+         <xs:element name="businessObjectDefinitionName" type="xs:string"/>
+         <xs:element name="totalFiles" type="xs:long"/>
+         <xs:element name="totalBytes" type="xs:long"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <!-- ***** Namespace ***** -->
+
+   <xs:element name="namespaceCreateRequest" type="namespaceCreateRequest"/>
+   <xs:complexType name="namespaceCreateRequest">
+      <xs:all>
+         <xs:element name="namespaceCode" type="xs:string"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="namespace" type="namespace"/>
+   <xs:complexType name="namespace">
+      <xs:all>
+         <xs:element name="namespaceCode" type="xs:string"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="namespaceKeys" type="namespaceKeys"/>
+   <xs:complexType name="namespaceKeys">
+      <xs:sequence>
+         <xs:element name="namespaceKey" type="namespaceKey" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+   <xs:complexType name="namespaceKey">
+      <xs:all>
+         <xs:element name="namespaceCode" type="xs:string"/>
+      </xs:all>
+   </xs:complexType>
+
+   <!-- ***** Data Provider ***** -->
+
+   <xs:element name="dataProviderCreateRequest" type="dataProviderCreateRequest"/>
+   <xs:complexType name="dataProviderCreateRequest">
+      <xs:all>
+         <xs:element name="dataProviderName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The data provider name</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="dataProvider" type="dataProvider"/>
+   <xs:complexType name="dataProvider">
+      <xs:all>
+         <xs:element name="dataProviderName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The data provider name</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="dataProviderKeys" type="dataProviderKeys">
+      <xs:annotation>
+         <xs:documentation>The list of data provider keys</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+   <xs:complexType name="dataProviderKeys">
+      <xs:sequence>
+         <xs:element name="dataProviderKey" type="dataProviderKey" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>The data provider key</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+   <xs:complexType name="dataProviderKey">
+      <xs:all>
+         <xs:element name="dataProviderName" type="xs:string"/>
+      </xs:all>
+   </xs:complexType>
+
+   <!-- ***** Business Object Definition ***** -->
+
+   <xs:element name="businessObjectDefinitionCreateRequest" type="businessObjectDefinitionCreateRequest"/>
+   <xs:complexType name="businessObjectDefinitionCreateRequest">
+      <xs:all>
+         <xs:element name="namespace" type="xs:string"/>
+         <xs:element name="businessObjectDefinitionName" type="xs:string"/>
+         <xs:element name="dataProviderName" type="xs:string"/>
+         <xs:element name="description" type="xs:string" minOccurs="0"/>
+         <xs:element name="attributes" type="attributes" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDefinitionUpdateRequest" type="businessObjectDefinitionUpdateRequest"/>
+   <xs:complexType name="businessObjectDefinitionUpdateRequest">
+      <xs:all>
+         <xs:element name="description" type="xs:string" minOccurs="0"/>
+         <xs:element name="attributes" type="attributes" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDefinition" type="businessObjectDefinition"/>
+   <xs:complexType name="businessObjectDefinition">
+      <xs:all>
+         <xs:element name="id" type="xs:int"/>
+         <xs:element name="namespace" type="xs:string"/>
+         <xs:element name="businessObjectDefinitionName" type="xs:string"/>
+         <xs:element name="dataProviderName" type="xs:string"/>
+         <xs:element name="description" type="xs:string" minOccurs="0"/>
+         <xs:element name="attributes" type="attributes" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDefinitionKeys" type="businessObjectDefinitionKeys"/>
+   <xs:complexType name="businessObjectDefinitionKeys">
+      <xs:sequence>
+         <xs:element name="businessObjectDefinitionKey" type="businessObjectDefinitionKey" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+   <xs:complexType name="businessObjectDefinitionKey">
+      <xs:all>
+         <xs:element name="namespace" type="xs:string"/>
+         <xs:element name="businessObjectDefinitionName" type="xs:string"/>
+      </xs:all>
+   </xs:complexType>
+
+   <!-- ***** File Type ***** -->
+
+   <xs:element name="fileTypeKeys" type="fileTypeKeys"/>
+   <xs:complexType name="fileTypeKeys">
+      <xs:sequence>
+         <xs:element name="fileTypeKey" type="fileTypeKey" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+   <xs:complexType name="fileTypeKey">
+      <xs:all>
+         <xs:element name="fileTypeCode" type="xs:string"/>
+      </xs:all>
+   </xs:complexType>
+
+   <!-- ***** Partition Key Group ***** -->
+
+   <xs:element name="partitionKeyGroupCreateRequest" type="partitionKeyGroupCreateRequest"/>
+   <xs:complexType name="partitionKeyGroupCreateRequest">
+      <xs:all>
+         <xs:element name="partitionKeyGroupKey" type="partitionKeyGroupKey"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="partitionKeyGroup" type="partitionKeyGroup"/>
+   <xs:complexType name="partitionKeyGroup">
+      <xs:all>
+         <xs:element name="partitionKeyGroupKey" type="partitionKeyGroupKey"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="partitionKeyGroupKeys" type="partitionKeyGroupKeys"/>
+   <xs:complexType name="partitionKeyGroupKeys">
+      <xs:sequence>
+         <xs:element name="partitionKeyGroupKey" type="partitionKeyGroupKey" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="partitionKeyGroupKey">
+      <xs:all>
+         <xs:element name="partitionKeyGroupName" type="xs:string"/>
+      </xs:all>
+   </xs:complexType>
+
+   <!-- ***** Expected Partition Value ***** -->
+
+   <xs:element name="expectedPartitionValuesCreateRequest" type="expectedPartitionValuesCreateRequest"/>
+   <xs:complexType name="expectedPartitionValuesCreateRequest">
+      <xs:all>
+         <xs:element name="partitionKeyGroupKey" type="partitionKeyGroupKey"/>
+         <xs:element name="expectedPartitionValues" type="expectedPartitionValues"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="expectedPartitionValueInformation" type="expectedPartitionValueInformation"/>
+   <xs:complexType name="expectedPartitionValueInformation">
+      <xs:all>
+         <xs:element name="expectedPartitionValueKey" type="expectedPartitionValueKey"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="expectedPartitionValuesInformation" type="expectedPartitionValuesInformation"/>
+   <xs:complexType name="expectedPartitionValuesInformation">
+      <xs:all>
+         <xs:element name="partitionKeyGroupKey" type="partitionKeyGroupKey"/>
+         <xs:element name="expectedPartitionValues" type="expectedPartitionValues"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="expectedPartitionValuesDeleteRequest" type="expectedPartitionValuesDeleteRequest"/>
+   <xs:complexType name="expectedPartitionValuesDeleteRequest">
+      <xs:all>
+         <xs:element name="partitionKeyGroupKey" type="partitionKeyGroupKey"/>
+         <xs:element name="expectedPartitionValues" type="expectedPartitionValues"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="expectedPartitionValueKey">
+      <xs:all>
+         <xs:element name="partitionKeyGroupName" type="xs:string"/>
+         <xs:element name="expectedPartitionValue" type="xs:string"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="expectedPartitionValues">
+      <xs:sequence>
+         <xs:element name="expectedPartitionValue" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <!-- ***** Business Object Format ***** -->
+
+   <xs:element name="businessObjectFormatCreateRequest" type="businessObjectFormatCreateRequest"/>
+   <xs:complexType name="businessObjectFormatCreateRequest">
+      <xs:all>
+         <xs:element name="namespace" type="xs:string"/>
+         <xs:element name="businessObjectDefinitionName" type="xs:string"/>
+         <xs:element name="businessObjectFormatUsage" type="xs:string"/>
+         <xs:element name="businessObjectFormatFileType" type="xs:string"/>
+         <xs:element name="partitionKey" type="xs:string"/>
+         <xs:element name="description" type="xs:string" minOccurs="0"/>
+         <xs:element name="attributes" type="attributes" minOccurs="0"/>
+         <xs:element name="attributeDefinitions" type="attributeDefinitions" minOccurs="0"/>
+         <xs:element name="schema" type="schema" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="businessObjectFormatUpdateRequest" type="businessObjectFormatUpdateRequest"/>
+   <xs:complexType name="businessObjectFormatUpdateRequest">
+      <xs:all>
+         <xs:element name="description" type="xs:string" minOccurs="0"/>
+         <xs:element name="attributes" type="attributes" minOccurs="0"/>
+         <xs:element name="schema" type="schema" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="businessObjectFormat" type="businessObjectFormat"/>
+   <xs:complexType name="businessObjectFormat">
+      <xs:all>
+         <xs:element name="id" type="xs:int"/>
+         <xs:element name="namespace" type="xs:string"/>
+         <xs:element name="businessObjectDefinitionName" type="xs:string"/>
+         <xs:element name="businessObjectFormatUsage" type="xs:string"/>
+         <xs:element name="businessObjectFormatFileType" type="xs:string"/>
+         <xs:element name="businessObjectFormatVersion" type="xs:int"/>
+         <xs:element name="latestVersion" type="xs:boolean"/>
+         <xs:element name="partitionKey" type="xs:string"/>
+         <xs:element name="description" type="xs:string" minOccurs="0"/>
+         <xs:element name="attributes" type="attributes" minOccurs="0"/>
+         <xs:element name="attributeDefinitions" type="attributeDefinitions" minOccurs="0"/>
+         <xs:element name="schema" type="schema" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="attributeDefinitions">
+      <xs:sequence>
+         <xs:element name="attributeDefinition" type="attributeDefinition" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <!--
+     For now, the existence of an attribute definition implies that it is required. In the future, we will more than likely add a "required" boolean
+     to this type which will allow the user to specify whether the attribute is required or not, in addition to other attribute definition properties
+     (e.g. type, min length, max length, etc.).
+    -->
+   <xs:complexType name="attributeDefinition">
+      <xs:all>
+         <xs:element name="name" type="xs:string"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="schema">
+      <xs:all>
+         <xs:element name="columns" type="schemaColumns"/>
+         <xs:element name="partitions" type="schemaColumns" minOccurs="0"/>
+         <xs:element name="nullValue" type="xs:string" minOccurs="0"/>
+         <xs:element name="delimiter" type="xs:string" minOccurs="0"/>
+         <xs:element name="escapeCharacter" type="xs:string" minOccurs="0"/>
+         <xs:element name="partitionKeyGroup" type="xs:string" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="schemaColumns">
+      <xs:sequence>
+         <xs:element name="column" type="schemaColumn" maxOccurs="1000"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="schemaColumn">
+      <xs:all>
+         <xs:element name="name" type="xs:string"/>
+         <xs:element name="type" type="xs:string"/>
+         <!--
+            The schema column size element is a string, since, for "NUMERIC" and "DECIMAL" data types, we should be able to specify both
+            the maximum number of digits (p) that are present in the number and the maximum number of decimal places (s) as a "p,s" string.
+         -->
+         <xs:element name="size" type="xs:string" minOccurs="0"/>
+         <xs:element name="required" type="xs:boolean" minOccurs="0"/>
+         <xs:element name="defaultValue" type="xs:string" minOccurs="0"/>
+         <xs:element name="description" type="xs:string" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="businessObjectFormatKeys" type="businessObjectFormatKeys"/>
+   <xs:complexType name="businessObjectFormatKeys">
+      <xs:sequence>
+         <xs:element name="businessObjectFormatKey" type="businessObjectFormatKey" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+   <xs:complexType name="businessObjectFormatKey">
+      <xs:all>
+         <xs:element name="namespace" type="xs:string"/>
+         <xs:element name="businessObjectDefinitionName" type="xs:string"/>
+         <xs:element name="businessObjectFormatUsage" type="xs:string"/>
+         <xs:element name="businessObjectFormatFileType" type="xs:string"/>
+         <!--
+           This is required, but is left as optional here so the auto-generated object becomes "Integer" and not "int".
+           That way, JSON objects that deserialize into the auto-generated object don't use the default int value of "0" and instead will leave
+           the field as null. The validation that this field is required is handled via the service layer validation.
+           -->
+         <xs:element name="businessObjectFormatVersion" type="xs:int" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <!-- ***** Custom DDL ***** -->
+
+   <xs:element name="customDdlCreateRequest" type="customDdlCreateRequest"/>
+   <xs:complexType name="customDdlCreateRequest">
+      <xs:all>
+         <xs:element name="customDdlKey" type="customDdlKey"/>
+         <xs:element name="ddl" type="xs:string"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="customDdl" type="customDdl"/>
+   <xs:complexType name="customDdl">
+      <xs:all>
+         <xs:element name="id" type="xs:int"/>
+         <xs:element name="customDdlKey" type="customDdlKey"/>
+         <xs:element name="ddl" type="xs:string"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="customDdlUpdateRequest" type="customDdlUpdateRequest"/>
+   <xs:complexType name="customDdlUpdateRequest">
+      <xs:all>
+         <xs:element name="ddl" type="xs:string"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="customDdlKeys" type="customDdlKeys"/>
+   <xs:complexType name="customDdlKeys">
+      <xs:sequence>
+         <xs:element name="customDdlKey" type="customDdlKey" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+   <xs:complexType name="customDdlKey">
+      <xs:all>
+         <xs:element name="namespace" type="xs:string"/>
+         <xs:element name="businessObjectDefinitionName" type="xs:string"/>
+         <xs:element name="businessObjectFormatUsage" type="xs:string"/>
+         <xs:element name="businessObjectFormatFileType" type="xs:string"/>
+         <!--
+           This is required, but is left as optional here so the auto-generated object becomes "Integer" and not "int".
+           That way, JSON objects that deserialize into the auto-generated object don't use the default int value of "0" and instead will leave
+           the field as null. The validation that this field is required is handled via the service layer validation.
+           -->
+         <xs:element name="businessObjectFormatVersion" type="xs:int" minOccurs="0"/>
+         <xs:element name="customDdlName" type="xs:string"/>
+      </xs:all>
+   </xs:complexType>
+
+   <!-- ***** Business Object Format DDL ***** -->
+
+   <xs:element name="businessObjectFormatDdlRequest" type="businessObjectFormatDdlRequest"/>
+   <xs:complexType name="businessObjectFormatDdlRequest">
+      <xs:all>
+         <xs:element name="namespace" type="xs:string"/>
+         <xs:element name="businessObjectDefinitionName" type="xs:string"/>
+         <xs:element name="businessObjectFormatUsage" type="xs:string"/>
+         <xs:element name="businessObjectFormatFileType" type="xs:string"/>
+         <!--
+           This is required, but is left as optional here so the auto-generated object becomes "Integer" and not "int".
+           That way, JSON objects that deserialize into the auto-generated object don't use the default int value of "0" and instead will leave
+           the field as null. The validation that this field is required is handled via the service layer validation.
+           -->
+         <xs:element name="businessObjectFormatVersion" type="xs:int" minOccurs="0"/>
+         <xs:element ref="outputFormat"/>
+         <xs:element name="tableName" type="xs:string"/>
+         <xs:element name="customDdlName" type="xs:string" minOccurs="0"/>
+         <xs:element name="includeDropTableStatement" type="xs:boolean" minOccurs="0"/>
+         <xs:element name="includeIfNotExistsOption" type="xs:boolean" minOccurs="0"/>
+         <xs:element name="replaceColumns" type="xs:boolean" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="businessObjectFormatDdl" type="businessObjectFormatDdl"/>
+   <xs:complexType name="businessObjectFormatDdl">
+      <xs:all>
+         <xs:element name="namespace" type="xs:string"/>
+         <xs:element name="businessObjectDefinitionName" type="xs:string"/>
+         <xs:element name="businessObjectFormatUsage" type="xs:string"/>
+         <xs:element name="businessObjectFormatFileType" type="xs:string"/>
+         <!--
+           This is required, but is left as optional here so the auto-generated object becomes "Integer" and not "int".
+           That way, JSON objects that deserialize into the auto-generated object don't use the default int value of "0" and instead will leave
+           the field as null. The validation that this field is required is handled via the service layer validation.
+           -->
+         <xs:element name="businessObjectFormatVersion" type="xs:int" minOccurs="0"/>
+         <xs:element ref="outputFormat"/>
+         <xs:element name="tableName" type="xs:string"/>
+         <xs:element name="customDdlName" type="xs:string" minOccurs="0"/>
+         <xs:element name="ddl" type="xs:string"/>
+      </xs:all>
+   </xs:complexType>
+
+   <!-- ***** Business Object Format DDL Collection ***** -->
+
+   <xs:element name="businessObjectFormatDdlCollectionRequest" type="businessObjectFormatDdlCollectionRequest"/>
+   <xs:complexType name="businessObjectFormatDdlCollectionRequest">
+      <xs:all>
+         <xs:element name="businessObjectFormatDdlRequests" type="businessObjectFormatDdlRequests"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectFormatDdlRequests">
+      <xs:sequence>
+         <xs:element name="businessObjectFormatDdlRequest" type="businessObjectFormatDdlRequest" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:element name="businessObjectFormatDdlCollectionResponse" type="businessObjectFormatDdlCollectionResponse"/>
+   <xs:complexType name="businessObjectFormatDdlCollectionResponse">
+      <xs:all>
+         <xs:element name="businessObjectFormatDdlResponses" type="businessObjectFormatDdlResponses"/>
+         <xs:element name="ddlCollection" type="xs:string"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectFormatDdlResponses">
+      <xs:sequence>
+         <xs:element name="businessObjectFormatDdl" type="businessObjectFormatDdl" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <!-- ***** Business Object Data ***** -->
+
+   <xs:element name="s3KeyPrefixInformation" type="s3KeyPrefixInformation"/>
+   <xs:complexType name="s3KeyPrefixInformation">
+      <xs:all>
+         <xs:element name="s3KeyPrefix" type="xs:string"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDataCreateRequest" type="businessObjectDataCreateRequest"/>
+   <xs:complexType name="businessObjectDataCreateRequest">
+      <xs:all>
+         <xs:element name="namespace" type="xs:string"/>
+         <xs:element name="businessObjectDefinitionName" type="xs:string"/>
+         <xs:element name="businessObjectFormatUsage" type="xs:string"/>
+         <xs:element name="businessObjectFormatFileType" type="xs:string"/>
+         <!--
+           This is required, but is left as optional here so the auto-generated object becomes "Integer" and not "int".
+           That way, JSON objects that deserialize into the auto-generated object don't use the default int value of "0" and instead will leave
+           the field as null. The validation that this field is required is handled via the service layer validation.
+           -->
+         <xs:element name="businessObjectFormatVersion" type="xs:int" minOccurs="0"/>
+         <xs:element name="partitionKey" type="xs:string"/>
+         <xs:element name="partitionValue" type="xs:string"/>
+         <xs:element name="subPartitionValues" type="subPartitionValues" minOccurs="0"/>
+         <xs:element name="status" type="xs:string" minOccurs="0"/>
+         <xs:element name="storageUnits" type="storageUnitsCreateRequest"/>
+         <xs:element name="attributes" type="attributes" minOccurs="0"/>
+         <xs:element name="businessObjectDataParents" type="businessObjectDataParents" minOccurs="0"/>
+         <xs:element name="createNewVersion" type="xs:boolean" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="subPartitionValues">
+      <xs:sequence>
+         <xs:element name="partitionValue" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="storageUnitsCreateRequest">
+      <xs:sequence>
+         <xs:element name="storageUnit" type="storageUnitCreateRequest" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="storageUnitCreateRequest">
+      <xs:all>
+         <xs:element name="storageName" type="xs:string"/>
+         <xs:element name="storageDirectory" type="storageDirectory" minOccurs="0"/>
+         <xs:element name="storageFiles" type="storageFiles" minOccurs="0"/>
+         <xs:element name="discoverStorageFiles" type="xs:boolean" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="businessObjectData" type="businessObjectData"/>
+   <xs:complexType name="businessObjectData">
+      <xs:annotation>
+         <xs:documentation>The business object data</xs:documentation>
+      </xs:annotation>
+      <xs:all>
+         <xs:element name="id" type="xs:int"/>
+         <xs:element name="namespace" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The namespace of the business object data</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectDefinitionName" type="xs:string"/>
+         <xs:element name="businessObjectFormatUsage" type="xs:string"/>
+         <xs:element name="businessObjectFormatFileType" type="xs:string"/>
+         <xs:element name="businessObjectFormatVersion" type="xs:int"/>
+         <xs:element name="partitionKey" type="xs:string"/>
+         <xs:element name="partitionValue" type="xs:string"/>
+         <xs:element name="subPartitionValues" type="subPartitionValues" minOccurs="0"/>
+         <xs:element name="version" type="xs:int"/>
+         <xs:element name="latestVersion" type="xs:boolean"/>
+         <xs:element name="status" type="xs:string"/>
+         <xs:element name="storageUnits" type="storageUnits">
+            <xs:annotation>
+               <xs:documentation>The list of storage units of the business object data</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="attributes" type="attributes" minOccurs="0"/>
+         <xs:element name="businessObjectDataParents" type="businessObjectDataParents" minOccurs="0"/>
+         <xs:element name="businessObjectDataChildren" type="businessObjectDataChildren" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="storageUnits">
+      <xs:sequence>
+         <xs:element name="storageUnit" type="storageUnit" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="storageUnit">
+      <xs:all>
+         <xs:element name="storage" type="storage">
+            <xs:annotation>
+               <xs:documentation>The storage of this unit</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="storageDirectory" type="storageDirectory" minOccurs="0"/>
+         <xs:element name="storageFiles" type="storageFiles" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The list of files in this storage unit</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="storageDirectory">
+      <xs:all>
+         <xs:element name="directoryPath" type="xs:string"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="storageFiles">
+      <xs:sequence>
+         <xs:element name="storageFile" type="storageFile" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="storageFile">
+      <xs:all>
+         <xs:element name="filePath" type="xs:string"/>
+         <xs:element name="fileSizeBytes" type="xs:long" minOccurs="0"/>
+         <xs:element name="rowCount" type="xs:long" minOccurs="0"/>
+         <xs:element name="archiveId" type="xs:string" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="attributes">
+      <xs:sequence>
+         <xs:element name="attribute" type="attribute" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="attribute">
+      <xs:all>
+         <xs:element name="name" type="xs:string"/>
+         <xs:element name="value" type="xs:string" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDataParents">
+      <xs:sequence>
+         <xs:element name="businessObjectDataKey" type="businessObjectDataKey" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+   <xs:complexType name="businessObjectDataChildren">
+      <xs:sequence>
+         <xs:element name="businessObjectDataKey" type="businessObjectDataKey" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+   <xs:complexType name="businessObjectDataKey">
+      <xs:all>
+         <xs:element name="namespace" type="xs:string"/>
+         <xs:element name="businessObjectDefinitionName" type="xs:string"/>
+         <xs:element name="businessObjectFormatUsage" type="xs:string"/>
+         <xs:element name="businessObjectFormatFileType" type="xs:string"/>
+         <!--
+           The "version" fields below are required, but they are left as optional here so the auto-generated object becomes "Integer" and not "int".
+           That way, JSON objects that deserialize into the auto-generated object don't use the default int value of "0" and instead will leave
+           the relative field as null. The validation that the field is required is handled via the service layer validation.
+           -->
+         <xs:element name="businessObjectFormatVersion" type="xs:int" minOccurs="0"/>
+         <xs:element name="partitionValue" type="xs:string"/>
+         <xs:element name="subPartitionValues" type="subPartitionValues" minOccurs="0"/>
+         <xs:element name="businessObjectDataVersion" type="xs:int" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDataVersions" type="businessObjectDataVersions"/>
+   <xs:complexType name="businessObjectDataVersions">
+      <xs:sequence>
+         <xs:element name="businessObjectDataVersion" type="businessObjectDataVersion" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDataVersion">
+      <xs:all>
+         <xs:element name="businessObjectDataKey" type="businessObjectDataKey"/>
+         <xs:element name="status" type="xs:string"/>
+      </xs:all>
+   </xs:complexType>
+
+   <!-- ***** Business Object Data Status ***** -->
+
+   <xs:element name="businessObjectDataStatusInformation" type="businessObjectDataStatusInformation"/>
+   <xs:complexType name="businessObjectDataStatusInformation">
+      <xs:all>
+         <xs:element name="businessObjectDataKey" type="businessObjectDataKey"/>
+         <xs:element name="status" type="xs:string"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDataStatusUpdateRequest" type="businessObjectDataStatusUpdateRequest"/>
+   <xs:complexType name="businessObjectDataStatusUpdateRequest">
+      <xs:all>
+         <xs:element name="status" type="xs:string" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDataStatusUpdateResponse" type="businessObjectDataStatusUpdateResponse"/>
+   <xs:complexType name="businessObjectDataStatusUpdateResponse">
+      <xs:all>
+         <xs:element name="businessObjectDataKey" type="businessObjectDataKey"/>
+         <xs:element name="status" type="xs:string"/>
+         <xs:element name="previousStatus" type="xs:string"/>
+      </xs:all>
+   </xs:complexType>
+
+   <!-- ***** Business Object Data Attribute ***** -->
+
+   <xs:element name="businessObjectDataAttributeCreateRequest" type="businessObjectDataAttributeCreateRequest"/>
+   <xs:complexType name="businessObjectDataAttributeCreateRequest">
+      <xs:all>
+         <xs:element name="businessObjectDataAttributeKey" type="businessObjectDataAttributeKey"/>
+         <xs:element name="businessObjectDataAttributeValue" type="xs:string" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDataAttribute" type="businessObjectDataAttribute"/>
+   <xs:complexType name="businessObjectDataAttribute">
+      <xs:all>
+         <xs:element name="id" type="xs:int"/>
+         <xs:element name="businessObjectDataAttributeKey" type="businessObjectDataAttributeKey"/>
+         <xs:element name="businessObjectDataAttributeValue" type="xs:string" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDataAttributeUpdateRequest" type="businessObjectDataAttributeUpdateRequest"/>
+   <xs:complexType name="businessObjectDataAttributeUpdateRequest">
+      <xs:all>
+         <xs:element name="businessObjectDataAttributeValue" type="xs:string" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDataAttributeKeys" type="businessObjectDataAttributeKeys"/>
+   <xs:complexType name="businessObjectDataAttributeKeys">
+      <xs:sequence>
+         <xs:element name="businessObjectDataAttributeKey" type="businessObjectDataAttributeKey" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+   <xs:complexType name="businessObjectDataAttributeKey">
+      <xs:all>
+         <xs:element name="namespace" type="xs:string"/>
+         <xs:element name="businessObjectDefinitionName" type="xs:string"/>
+         <xs:element name="businessObjectFormatUsage" type="xs:string"/>
+         <xs:element name="businessObjectFormatFileType" type="xs:string"/>
+         <!--
+           The "version" fields below are required, but they are left as optional here so the auto-generated object becomes "Integer" and not "int".
+           That way, JSON objects that deserialize into the auto-generated object don't use the default int value of "0" and instead will leave
+           the relative field as null. The validation that the field is required is handled via the service layer validation.
+           -->
+         <xs:element name="businessObjectFormatVersion" type="xs:int" minOccurs="0"/>
+         <xs:element name="partitionValue" type="xs:string"/>
+         <xs:element name="subPartitionValues" type="subPartitionValues" minOccurs="0"/>
+         <xs:element name="businessObjectDataVersion" type="xs:int" minOccurs="0"/>
+         <xs:element name="businessObjectDataAttributeName" type="xs:string"/>
+      </xs:all>
+   </xs:complexType>
+
+   <!-- ***** Business Object Data Availability ***** -->
+
+   <xs:element name="businessObjectDataAvailabilityRequest" type="businessObjectDataAvailabilityRequest"/>
+   <xs:complexType name="businessObjectDataAvailabilityRequest">
+      <xs:all>
+         <xs:element name="namespace" type="xs:string"/>
+         <xs:element name="businessObjectDefinitionName" type="xs:string"/>
+         <xs:element name="businessObjectFormatUsage" type="xs:string"/>
+         <xs:element name="businessObjectFormatFileType" type="xs:string"/>
+         <xs:element name="businessObjectFormatVersion" type="xs:int" minOccurs="0"/>
+         <xs:element name="partitionValueFilters" type="partitionValueFilters" minOccurs="0"/>
+         <xs:element name="partitionValueFilter" type="partitionValueFilter" minOccurs="0"/>
+         <xs:element name="businessObjectDataVersion" type="xs:int" minOccurs="0"/>
+         <xs:element name="storageNames" type="storageNames" minOccurs="0"/>
+         <xs:element name="storageName" type="xs:string" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="partitionValueFilters">
+      <xs:sequence>
+         <xs:element name="partitionValueFilter" type="partitionValueFilter" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="partitionValueFilter">
+      <xs:all>
+         <xs:element name="partitionKey" type="xs:string" minOccurs="0"/>
+         <xs:element name="partitionValues" type="partitionValues" minOccurs="0"/>
+         <xs:element name="partitionValueRange" type="partitionValueRange" minOccurs="0"/>
+         <xs:element name="latestBeforePartitionValue" type="latestBeforePartitionValue" minOccurs="0"/>
+         <xs:element name="latestAfterPartitionValue" type="latestAfterPartitionValue" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="partitionValues">
+      <xs:sequence>
+         <xs:element name="partitionValue" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="partitionValueRange">
+      <xs:all>
+         <xs:element name="startPartitionValue" type="xs:string"/>
+         <xs:element name="endPartitionValue" type="xs:string"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="latestBeforePartitionValue">
+      <xs:all>
+         <xs:element name="partitionValue" type="xs:string"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="latestAfterPartitionValue">
+      <xs:all>
+         <xs:element name="partitionValue" type="xs:string"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="storageNames">
+      <xs:sequence>
+         <xs:element name="storageName" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDataAvailability" type="businessObjectDataAvailability"/>
+   <xs:complexType name="businessObjectDataAvailability">
+      <xs:all>
+         <xs:element name="namespace" type="xs:string"/>
+         <xs:element name="businessObjectDefinitionName" type="xs:string"/>
+         <xs:element name="businessObjectFormatUsage" type="xs:string"/>
+         <xs:element name="businessObjectFormatFileType" type="xs:string"/>
+         <xs:element name="businessObjectFormatVersion" type="xs:int" minOccurs="0"/>
+         <xs:element name="partitionValueFilters" type="partitionValueFilters" minOccurs="0"/>
+         <xs:element name="partitionValueFilter" type="partitionValueFilter" minOccurs="0"/>
+         <xs:element name="businessObjectDataVersion" type="xs:int" minOccurs="0"/>
+         <xs:element name="storageNames" type="storageNames" minOccurs="0"/>
+         <xs:element name="storageName" type="xs:string" minOccurs="0"/>
+         <xs:element name="availableStatuses" type="businessObjectDataStatuses" minOccurs="0"/>
+         <xs:element name="notAvailableStatuses" type="businessObjectDataStatuses" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDataStatuses">
+      <xs:sequence>
+         <xs:element name="businessObjectDataStatus" type="businessObjectDataStatus" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDataStatus">
+      <xs:all>
+         <xs:element name="businessObjectFormatVersion" type="xs:int" minOccurs="0"/>
+         <xs:element name="partitionValue" type="xs:string"/>
+         <xs:element name="subPartitionValues" type="subPartitionValues" minOccurs="0"/>
+         <xs:element name="businessObjectDataVersion" type="xs:int" minOccurs="0"/>
+         <xs:element name="reason" type="xs:string" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <!-- ***** Business Object Data Availability Collection ***** -->
+
+   <xs:element name="businessObjectDataAvailabilityCollectionRequest" type="businessObjectDataAvailabilityCollectionRequest"/>
+   <xs:complexType name="businessObjectDataAvailabilityCollectionRequest">
+      <xs:all>
+         <xs:element name="businessObjectDataAvailabilityRequests" type="businessObjectDataAvailabilityRequests"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDataAvailabilityRequests">
+      <xs:sequence>
+         <xs:element name="businessObjectDataAvailabilityRequest" type="businessObjectDataAvailabilityRequest" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDataAvailabilityCollectionResponse" type="businessObjectDataAvailabilityCollectionResponse"/>
+   <xs:complexType name="businessObjectDataAvailabilityCollectionResponse">
+      <xs:all>
+         <xs:element name="businessObjectDataAvailabilityResponses" type="businessObjectDataAvailabilityResponses"/>
+         <xs:element name="isAllDataAvailable" type="xs:boolean"/>
+         <xs:element name="isAllDataNotAvailable" type="xs:boolean"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDataAvailabilityResponses">
+      <xs:sequence>
+         <xs:element name="businessObjectDataAvailability" type="businessObjectDataAvailability" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <!-- ***** Business Object Data DDL ***** -->
+
+   <xs:element name="businessObjectDataDdlRequest" type="businessObjectDataDdlRequest"/>
+   <xs:complexType name="businessObjectDataDdlRequest">
+      <xs:all>
+         <xs:element name="namespace" type="xs:string"/>
+         <xs:element name="businessObjectDefinitionName" type="xs:string"/>
+         <xs:element name="businessObjectFormatUsage" type="xs:string"/>
+         <xs:element name="businessObjectFormatFileType" type="xs:string"/>
+         <xs:element name="businessObjectFormatVersion" type="xs:int" minOccurs="0"/>
+         <xs:element name="partitionValueFilters" type="partitionValueFilters" minOccurs="0"/>
+         <xs:element name="partitionValueFilter" type="partitionValueFilter" minOccurs="0"/>
+         <xs:element name="businessObjectDataVersion" type="xs:int" minOccurs="0"/>
+         <xs:element name="storageNames" type="storageNames" minOccurs="0"/>
+         <xs:element name="storageName" type="xs:string" minOccurs="0"/>
+         <xs:element ref="outputFormat"/>
+         <xs:element name="tableName" type="xs:string"/>
+         <xs:element name="customDdlName" type="xs:string" minOccurs="0"/>
+         <xs:element name="includeDropTableStatement" type="xs:boolean" minOccurs="0"/>
+         <xs:element name="includeIfNotExistsOption" type="xs:boolean" minOccurs="0"/>
+         <xs:element name="includeDropPartitions" type="xs:boolean" minOccurs="0"/>
+         <xs:element name="allowMissingData" type="xs:boolean" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDataDdl" type="businessObjectDataDdl"/>
+   <xs:complexType name="businessObjectDataDdl">
+      <xs:all>
+         <xs:element name="namespace" type="xs:string"/>
+         <xs:element name="businessObjectDefinitionName" type="xs:string"/>
+         <xs:element name="businessObjectFormatUsage" type="xs:string"/>
+         <xs:element name="businessObjectFormatFileType" type="xs:string"/>
+         <xs:element name="businessObjectFormatVersion" type="xs:int" minOccurs="0"/>
+         <xs:element name="partitionValueFilters" type="partitionValueFilters" minOccurs="0"/>
+         <xs:element name="partitionValueFilter" type="partitionValueFilter" minOccurs="0"/>
+         <xs:element name="businessObjectDataVersion" type="xs:int" minOccurs="0"/>
+         <xs:element name="storageNames" type="storageNames" minOccurs="0"/>
+         <xs:element name="storageName" type="xs:string" minOccurs="0"/>
+         <xs:element ref="outputFormat"/>
+         <xs:element name="tableName" type="xs:string"/>
+         <xs:element name="customDdlName" type="xs:string" minOccurs="0"/>
+         <xs:element name="ddl" type="xs:string"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="outputFormat">
+      <xs:simpleType>
+         <xs:restriction base="xs:string">
+            <!--
+             To more easily support JSON, we should ensure that values chosen here produce a BusinessObjectDataDdlOutputFormatEnum class without a constructor.
+             In other words, we should ensure that the enum name and enum value are the same. Otherwise, passing JSON would require the entire object
+             to be specified.
+             -->
+            <xs:enumeration value="HIVE_13_DDL"/>
+         </xs:restriction>
+      </xs:simpleType>
+   </xs:element>
+
+   <!-- ***** Business Object Data DDL Collection ***** -->
+
+   <xs:element name="businessObjectDataDdlCollectionRequest" type="businessObjectDataDdlCollectionRequest"/>
+   <xs:complexType name="businessObjectDataDdlCollectionRequest">
+      <xs:all>
+         <xs:element name="businessObjectDataDdlRequests" type="businessObjectDataDdlRequests"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDataDdlRequests">
+      <xs:sequence>
+         <xs:element name="businessObjectDataDdlRequest" type="businessObjectDataDdlRequest" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDataDdlCollectionResponse" type="businessObjectDataDdlCollectionResponse"/>
+   <xs:complexType name="businessObjectDataDdlCollectionResponse">
+      <xs:all>
+         <xs:element name="businessObjectDataDdlResponses" type="businessObjectDataDdlResponses"/>
+         <xs:element name="ddlCollection" type="xs:string"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDataDdlResponses">
+      <xs:sequence>
+         <xs:element name="businessObjectDataDdl" type="businessObjectDataDdl" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <!-- ***** Business Object Data Notification  ***** -->
+
+   <xs:element name="businessObjectDataNotificationRegistrationCreateRequest" type="businessObjectDataNotificationRegistrationCreateRequest"/>
+   <xs:complexType name="businessObjectDataNotificationRegistrationCreateRequest">
+      <xs:annotation>
+         <xs:documentation>The request to create a business object data notification registration.</xs:documentation>
+      </xs:annotation>
+      <xs:all>
+         <xs:element name="businessObjectDataNotificationRegistrationKey" type="notificationRegistrationKey">
+            <xs:annotation>
+               <xs:documentation>A unique identifier for a business object data notification registration.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectDataEventType" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The type of business object data event in which this notification should trigger.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectDataNotificationFilter" type="businessObjectDataNotificationFilter">
+            <xs:annotation>
+               <xs:documentation>The filter to use against business object data events. The notification will only trigger for events matching this filter.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="jobActions" type="jobActions">
+            <xs:annotation>
+               <xs:documentation>The list of jobs to execute when this notification is triggered.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="notificationRegistrationStatus" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The status of the notification registration.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDataNotificationRegistrationUpdateRequest" type="businessObjectDataNotificationRegistrationUpdateRequest"/>
+   <xs:complexType name="businessObjectDataNotificationRegistrationUpdateRequest">
+      <xs:annotation>
+         <xs:documentation>The request to update a business object data notification registration.</xs:documentation>
+      </xs:annotation>
+      <xs:all>
+         <xs:element name="businessObjectDataEventType" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The type of business object data event in which this notification should trigger.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectDataNotificationFilter" type="businessObjectDataNotificationFilter">
+            <xs:annotation>
+               <xs:documentation>The filter to use against business object data events. The notification will only trigger for events matching this filter.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="jobActions" type="jobActions">
+            <xs:annotation>
+               <xs:documentation>The list of jobs to execute when this notification is triggered.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="notificationRegistrationStatus" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The status of the notification registration.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDataNotificationRegistration" type="businessObjectDataNotificationRegistration"/>
+   <xs:complexType name="businessObjectDataNotificationRegistration">
+      <xs:annotation>
+         <xs:documentation>A notification registration for business object data events.</xs:documentation>
+      </xs:annotation>
+      <xs:all>
+         <xs:element name="id" type="xs:int">
+            <xs:annotation>
+               <xs:documentation>A system unique ID of this registration.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectDataNotificationRegistrationKey" type="notificationRegistrationKey">
+            <xs:annotation>
+               <xs:documentation>A unique identifier for a business object data notification registration.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectDataEventType" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The type of business object data event in which this notification should trigger.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectDataNotificationFilter" type="businessObjectDataNotificationFilter">
+            <xs:annotation>
+               <xs:documentation>The filter to use against business object data events.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="jobActions" type="jobActions">
+            <xs:annotation>
+               <xs:documentation>The list of jobs to execute when this notification is triggered.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="notificationRegistrationStatus" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The status of the notification registration.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="notificationRegistrationStatusUpdateRequest" type="notificationRegistrationStatusUpdateRequest"/>
+   <xs:complexType name="notificationRegistrationStatusUpdateRequest">
+      <xs:annotation>
+         <xs:documentation>The request to update a notification registration status.</xs:documentation>
+      </xs:annotation>
+      <xs:all>
+         <xs:element name="notificationRegistrationStatus" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The status of the notification registration.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="notificationRegistrationStatusUpdateResponse" type="notificationRegistrationStatusUpdateResponse"/>
+   <xs:complexType name="notificationRegistrationStatusUpdateResponse">
+      <xs:annotation>
+         <xs:documentation>The response to update a notification registration status.</xs:documentation>
+      </xs:annotation>
+      <xs:all>
+         <xs:element name="notificationRegistrationKey" type="notificationRegistrationKey">
+            <xs:annotation>
+               <xs:documentation>A unique identifier for a notification registration.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="notificationRegistrationStatus" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The status of the notification registration.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDataNotificationRegistrationKeys" type="businessObjectDataNotificationRegistrationKeys"/>
+   <xs:complexType name="businessObjectDataNotificationRegistrationKeys">
+      <xs:sequence>
+         <xs:element name="businessObjectDataNotificationRegistrationKey" type="notificationRegistrationKey" minOccurs="0"
+                     maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+   <xs:complexType name="notificationRegistrationKey">
+      <xs:annotation>
+         <xs:documentation>The unique key to a notification registration.</xs:documentation>
+      </xs:annotation>
+      <xs:all>
+         <xs:element name="namespace" type="xs:string"/>
+         <xs:element name="notificationName" type="xs:string"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDataNotificationFilter">
+      <xs:annotation>
+         <xs:documentation>The filter of business object data notification registration.</xs:documentation>
+      </xs:annotation>
+      <xs:all>
+         <xs:element name="namespace" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The namespace of the business object definition.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectDefinitionName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The business object definition name.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectFormatUsage" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The business object format usage.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectFormatFileType" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The business object format file type.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectFormatVersion" type="xs:int" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The business object format version.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="storageName" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The storage name.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="newBusinessObjectDataStatus" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The new business object data status.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="oldBusinessObjectDataStatus" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The old business object data status.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="jobActions">
+      <xs:sequence>
+         <xs:element name="jobAction" type="jobAction" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="jobAction">
+      <xs:annotation>
+         <xs:documentation>A notification action which executes an Activiti job when triggered.</xs:documentation>
+      </xs:annotation>
+      <xs:all>
+         <xs:element name="namespace" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The namespace</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="jobName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The job name</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="correlationData" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The correlation data</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <!-- ***** File Upload and Download ***** -->
+
+   <xs:element name="uploadSingleInitiationRequest" type="uploadSingleInitiationRequest"/>
+   <xs:complexType name="uploadSingleInitiationRequest">
+      <xs:all>
+         <xs:element name="sourceBusinessObjectFormatKey" type="businessObjectFormatKey"/>
+         <xs:element name="targetBusinessObjectFormatKey" type="businessObjectFormatKey"/>
+         <xs:element name="businessObjectDataAttributes" type="attributes" minOccurs="0"/>
+         <xs:element name="file" type="file"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="uploadSingleInitiationResponse" type="uploadSingleInitiationResponse"/>
+   <xs:complexType name="uploadSingleInitiationResponse">
+      <xs:all>
+         <xs:element name="sourceBusinessObjectData" type="businessObjectData"/>
+         <xs:element name="targetBusinessObjectData" type="businessObjectData"/>
+         <xs:element name="file" type="file"/>
+         <xs:element name="uuid" type="xs:string"/>
+         <xs:element name="awsAccessKey" type="xs:string"/>
+         <xs:element name="awsSecretKey" type="xs:string"/>
+         <xs:element name="awsSessionToken" type="xs:string"/>
+         <xs:element name="awsSessionExpirationTime" type="xs:dateTime"/>
+         <xs:element name="awsKmsKeyId" type="xs:string"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="file">
+      <xs:all>
+         <xs:element name="fileName" type="xs:string"/>
+         <!--
+           This is required, but is left as optional here so the auto-generated object becomes "Long" and not "long".
+           That way, JSON objects that deserialize into the auto-generated object don't use the default int value of "0" and instead will leave
+           the field as null. The validation that this field is required is handled via the service layer validation.
+           -->
+         <xs:element name="fileSizeBytes" type="xs:long" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="uploadSingleCredentialExtensionResponse" type="uploadSingleCredentialExtensionResponse"/>
+   <xs:complexType name="uploadSingleCredentialExtensionResponse">
+      <xs:sequence>
+         <xs:element name="awsAccessKey" type="xs:string"/>
+         <xs:element name="awsSecretKey" type="xs:string"/>
+         <xs:element name="awsSessionToken" type="xs:string"/>
+         <xs:element name="awsSessionExpirationTime" type="xs:dateTime"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:element name="downloadSingleInitiationResponse" type="downloadSingleInitiationResponse"/>
+   <xs:complexType name="downloadSingleInitiationResponse">
+      <xs:sequence>
+         <xs:element name="businessObjectData" type="businessObjectData"/>
+         <xs:element name="awsAccessKey" type="xs:string"/>
+         <xs:element name="awsSecretKey" type="xs:string"/>
+         <xs:element name="awsSessionToken" type="xs:string"/>
+         <xs:element name="awsSessionExpirationTime" type="xs:dateTime"/>
+         <xs:element name="preSignedUrl" type="xs:string"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <!-- ***** System Job ***** -->
+
+   <xs:element name="systemJobRunRequest" type="systemJobRunRequest"/>
+   <xs:complexType name="systemJobRunRequest">
+      <xs:all>
+         <xs:element name="jobName" type="xs:string"/>
+         <xs:element name="parameters" type="parameters" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="systemJobRunResponse" type="systemJobRunResponse"/>
+   <xs:complexType name="systemJobRunResponse">
+      <xs:all>
+         <xs:element name="jobName" type="xs:string"/>
+         <xs:element name="parameters" type="parameters" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <!-- ***** EMR Steps Request Definition ***** -->
+
+   <xs:element name="emrShellStepAddRequest" type="emrShellStepAddRequest"/>
+   <xs:complexType name="emrShellStepAddRequest">
+      <xs:all>
+         <xs:element name="namespace" type="xs:string"/>
+         <xs:element name="emrClusterDefinitionName" type="xs:string"/>
+         <xs:element name="emrClusterName" type="xs:string"/>
+         <xs:element name="stepName" type="xs:string"/>
+         <xs:element name="scriptLocation" type="xs:string"/>
+         <xs:element name="scriptArguments" type="scriptArguments" minOccurs="0"/>
+         <xs:element name="continueOnError" type="xs:boolean" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="emrHiveStepAddRequest" type="emrHiveStepAddRequest"/>
+   <xs:complexType name="emrHiveStepAddRequest">
+      <xs:all>
+         <xs:element name="namespace" type="xs:string"/>
+         <xs:element name="emrClusterDefinitionName" type="xs:string"/>
+         <xs:element name="emrClusterName" type="xs:string"/>
+         <xs:element name="stepName" type="xs:string"/>
+         <xs:element name="scriptLocation" type="xs:string"/>
+         <xs:element name="scriptArguments" type="scriptArguments" minOccurs="0"/>
+         <xs:element name="continueOnError" type="xs:boolean" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="emrPigStepAddRequest" type="emrPigStepAddRequest"/>
+   <xs:complexType name="emrPigStepAddRequest">
+      <xs:all>
+         <xs:element name="namespace" type="xs:string"/>
+         <xs:element name="emrClusterDefinitionName" type="xs:string"/>
+         <xs:element name="emrClusterName" type="xs:string"/>
+         <xs:element name="stepName" type="xs:string"/>
+         <xs:element name="scriptLocation" type="xs:string"/>
+         <xs:element name="scriptArguments" type="scriptArguments" minOccurs="0"/>
+         <xs:element name="continueOnError" type="xs:boolean" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="emrOozieStepAddRequest" type="emrOozieStepAddRequest"/>
+   <xs:complexType name="emrOozieStepAddRequest">
+      <xs:all>
+         <xs:element name="namespace" type="xs:string"/>
+         <xs:element name="emrClusterDefinitionName" type="xs:string"/>
+         <xs:element name="emrClusterName" type="xs:string"/>
+         <xs:element name="stepName" type="xs:string"/>
+         <xs:element name="workflowXmlLocation" type="xs:string"/>
+         <xs:element name="ooziePropertiesFileLocation" type="xs:string"/>
+         <xs:element name="continueOnError" type="xs:boolean" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="emrHadoopJarStepAddRequest" type="emrHadoopJarStepAddRequest"/>
+   <xs:complexType name="emrHadoopJarStepAddRequest">
+      <xs:all>
+         <xs:element name="namespace" type="xs:string"/>
+         <xs:element name="emrClusterDefinitionName" type="xs:string"/>
+         <xs:element name="emrClusterName" type="xs:string"/>
+         <xs:element name="stepName" type="xs:string"/>
+         <xs:element name="jarLocation" type="xs:string"/>
+         <xs:element name="mainClass" type="xs:string" minOccurs="0"/>
+         <xs:element name="scriptArguments" type="scriptArguments" minOccurs="0"/>
+         <xs:element name="continueOnError" type="xs:boolean" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="scriptArguments">
+      <xs:sequence>
+         <xs:element name="argument" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:element name="runOozieWorkflowRequest" type="runOozieWorkflowRequest"/>
+   <xs:complexType name="runOozieWorkflowRequest">
+      <xs:all>
+         <xs:element name="namespace" type="xs:string"/>
+         <xs:element name="emrClusterDefinitionName" type="xs:string"/>
+         <xs:element name="emrClusterName" type="xs:string"/>
+         <xs:element name="workflowLocation" type="xs:string"/>
+         <xs:element name="parameters" type="parameters" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <!-- ***** EMR Steps Definition ***** -->
+
+   <xs:element name="emrShellStep" type="emrShellStep"/>
+   <xs:complexType name="emrShellStep">
+      <xs:all>
+         <xs:element name="id" type="xs:string"/>
+         <xs:element name="namespace" type="xs:string"/>
+         <xs:element name="emrClusterDefinitionName" type="xs:string"/>
+         <xs:element name="emrClusterName" type="xs:string"/>
+         <xs:element name="stepName" type="xs:string"/>
+         <xs:element name="scriptLocation" type="xs:string"/>
+         <xs:element name="scriptArguments" type="scriptArguments" minOccurs="0"/>
+         <xs:element name="continueOnError" type="xs:boolean" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="emrHiveStep" type="emrHiveStep"/>
+   <xs:complexType name="emrHiveStep">
+      <xs:all>
+         <xs:element name="id" type="xs:string"/>
+         <xs:element name="namespace" type="xs:string"/>
+         <xs:element name="emrClusterDefinitionName" type="xs:string"/>
+         <xs:element name="emrClusterName" type="xs:string"/>
+         <xs:element name="stepName" type="xs:string"/>
+         <xs:element name="scriptLocation" type="xs:string"/>
+         <xs:element name="scriptArguments" type="scriptArguments" minOccurs="0"/>
+         <xs:element name="continueOnError" type="xs:boolean" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="emrPigStep" type="emrPigStep"/>
+   <xs:complexType name="emrPigStep">
+      <xs:all>
+         <xs:element name="id" type="xs:string"/>
+         <xs:element name="namespace" type="xs:string"/>
+         <xs:element name="emrClusterDefinitionName" type="xs:string"/>
+         <xs:element name="emrClusterName" type="xs:string"/>
+         <xs:element name="stepName" type="xs:string"/>
+         <xs:element name="scriptLocation" type="xs:string"/>
+         <xs:element name="scriptArguments" type="scriptArguments" minOccurs="0"/>
+         <xs:element name="continueOnError" type="xs:boolean" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="emrOozieStep" type="emrOozieStep"/>
+   <xs:complexType name="emrOozieStep">
+      <xs:all>
+         <xs:element name="id" type="xs:string"/>
+         <xs:element name="namespace" type="xs:string"/>
+         <xs:element name="emrClusterDefinitionName" type="xs:string"/>
+         <xs:element name="emrClusterName" type="xs:string"/>
+         <xs:element name="stepName" type="xs:string"/>
+         <xs:element name="workflowXmlLocation" type="xs:string"/>
+         <xs:element name="ooziePropertiesFileLocation" type="xs:string"/>
+         <xs:element name="continueOnError" type="xs:boolean" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="emrHadoopJarStep" type="emrHadoopJarStep"/>
+   <xs:complexType name="emrHadoopJarStep">
+      <xs:all>
+         <xs:element name="id" type="xs:string"/>
+         <xs:element name="namespace" type="xs:string"/>
+         <xs:element name="emrClusterDefinitionName" type="xs:string"/>
+         <xs:element name="emrClusterName" type="xs:string"/>
+         <xs:element name="stepName" type="xs:string"/>
+         <xs:element name="jarLocation" type="xs:string"/>
+         <xs:element name="mainClass" type="xs:string" minOccurs="0"/>
+         <xs:element name="scriptArguments" type="scriptArguments" minOccurs="0"/>
+         <xs:element name="continueOnError" type="xs:boolean" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="oozieWorkflowJob" type="oozieWorkflowJob"/>
+   <xs:complexType name="oozieWorkflowJob">
+      <xs:all>
+         <xs:element name="id" type="xs:string" minOccurs="0"/>
+         <xs:element name="namespace" type="xs:string" minOccurs="0"/>
+         <xs:element name="emrClusterDefinitionName" type="xs:string" minOccurs="0"/>
+         <xs:element name="emrClusterName" type="xs:string" minOccurs="0"/>
+         <xs:element name="status" type="xs:string" minOccurs="0"/>
+         <xs:element name="errorCode" type="xs:string" minOccurs="0"/>
+         <xs:element name="errorMessage" type="xs:string" minOccurs="0"/>
+         <xs:element name="startTime" type="xs:dateTime" minOccurs="0"/>
+         <xs:element name="endTime" type="xs:dateTime" minOccurs="0"/>
+         <xs:element name="workflowActions" type="oozieWorkflowActions" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="oozieWorkflowActions" type="oozieWorkflowActions"/>
+   <xs:complexType name="oozieWorkflowActions">
+      <xs:sequence>
+         <xs:element name="workflowAction" type="oozieWorkflowAction" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:element name="oozieWorkflowAction" type="oozieWorkflowAction"/>
+   <xs:complexType name="oozieWorkflowAction">
+      <xs:all>
+         <xs:element name="id" type="xs:string" minOccurs="0"/>
+         <xs:element name="name" type="xs:string" minOccurs="0"/>
+         <xs:element name="status" type="xs:string" minOccurs="0"/>
+         <xs:element name="startTime" type="xs:dateTime" minOccurs="0"/>
+         <xs:element name="endTime" type="xs:dateTime" minOccurs="0"/>
+         <xs:element name="errorCode" type="xs:string" minOccurs="0"/>
+         <xs:element name="errorMessage" type="xs:string" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <!-- ***** EMR Security Groups Request Definition ***** -->
+
+   <xs:element name="emrMasterSecurityGroupAddRequest" type="emrMasterSecurityGroupAddRequest"/>
+   <xs:complexType name="emrMasterSecurityGroupAddRequest">
+      <xs:all>
+         <xs:element name="namespace" type="xs:string"/>
+         <xs:element name="emrClusterDefinitionName" type="xs:string"/>
+         <xs:element name="emrClusterName" type="xs:string"/>
+         <xs:element name="securityGroupIds" type="securityGroupIds"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="emrMasterSecurityGroup" type="emrMasterSecurityGroup"/>
+   <xs:complexType name="emrMasterSecurityGroup">
+      <xs:all>
+         <xs:element name="namespace" type="xs:string"/>
+         <xs:element name="emrClusterDefinitionName" type="xs:string"/>
+         <xs:element name="emrClusterName" type="xs:string"/>
+         <xs:element name="securityGroupIds" type="securityGroupIds"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="securityGroupIds">
+      <xs:sequence>
+         <xs:element name="securityGroupId" type="xs:string" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <!-- ***** Jobs ***** -->
+
+   <xs:element name="jobDefinitionCreateRequest" type="jobDefinitionCreateRequest"/>
+   <xs:complexType name="jobDefinitionCreateRequest">
+      <xs:all>
+         <xs:element name="namespace" type="xs:string"/>
+         <xs:element name="jobName" type="xs:string"/>
+         <xs:element name="description" type="xs:string" minOccurs="0"/>
+         <xs:element name="activitiJobXml" type="xs:string"/>
+         <xs:element name="parameters" type="parameters" minOccurs="0"/>
+         <xs:element name="s3PropertiesLocation" type="s3PropertiesLocation" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="jobDefinitionUpdateRequest" type="jobDefinitionUpdateRequest"/>
+   <xs:complexType name="jobDefinitionUpdateRequest">
+      <xs:all>
+         <xs:element name="description" type="xs:string" minOccurs="0"/>
+         <xs:element name="activitiJobXml" type="xs:string"/>
+         <xs:element name="parameters" type="parameters" minOccurs="0"/>
+         <xs:element name="s3PropertiesLocation" type="s3PropertiesLocation" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="jobDefinition" type="jobDefinition"/>
+   <xs:complexType name="jobDefinition">
+      <xs:all>
+         <xs:element name="id" type="xs:int"/>
+         <xs:element name="namespace" type="xs:string"/>
+         <xs:element name="jobName" type="xs:string"/>
+         <xs:element name="description" type="xs:string" minOccurs="0"/>
+         <xs:element name="activitiJobXml" type="xs:string"/>
+         <xs:element name="parameters" type="parameters" minOccurs="0"/>
+         <xs:element name="s3PropertiesLocation" type="s3PropertiesLocation" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="jobCreateRequest" type="jobCreateRequest"/>
+   <xs:complexType name="jobCreateRequest">
+      <xs:all>
+         <xs:element name="namespace" type="xs:string"/>
+         <xs:element name="jobName" type="xs:string"/>
+         <xs:element name="parameters" type="parameters" minOccurs="0"/>
+         <xs:element name="s3PropertiesLocation" type="s3PropertiesLocation" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="job" type="job"/>
+   <xs:complexType name="job">
+      <xs:all>
+         <xs:element name="id" type="xs:string"/>
+         <xs:element ref="status" minOccurs="0"/>
+         <xs:element name="namespace" type="xs:string" minOccurs="0"/>
+         <xs:element name="jobName" type="xs:string" minOccurs="0"/>
+         <xs:element name="currentWorkflowStep" type="workflowStep" minOccurs="0"/>
+         <xs:element name="completedWorkflowSteps" type="workflowSteps" minOccurs="0"/>
+         <xs:element name="parameters" type="parameters" minOccurs="0"/>
+         <xs:element name="activitiJobXml" type="xs:string" minOccurs="0"/>
+         <xs:element name="workflowErrors" type="workflowErrors" minOccurs="0"/>
+         <xs:element name="deleteReason" type="xs:string" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="parameters">
+      <xs:sequence>
+         <xs:element name="parameter" type="parameter" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="parameter">
+      <xs:all>
+         <xs:element name="name" type="xs:string"/>
+         <xs:element name="value" type="xs:string" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="workflowSteps">
+      <xs:sequence>
+         <xs:element name="workflowStep" type="workflowStep" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="workflowStep">
+      <xs:all>
+         <xs:element name="id" type="xs:string"/>
+         <xs:element name="name" type="xs:string" minOccurs="0"/>
+         <xs:element name="startTime" type="xs:date" minOccurs="0"/>
+         <xs:element name="endTime" type="xs:date" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="workflowErrors">
+      <xs:sequence>
+         <xs:element name="workflowError" type="workflowError" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="workflowError">
+      <xs:all>
+         <xs:element name="errorMessage" type="xs:string"/>
+         <xs:element name="retriesLeft" type="xs:int"/>
+         <xs:element name="errorStackTrace" type="xs:string" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="status">
+      <xs:simpleType>
+         <xs:restriction base="xs:string">
+            <xs:enumeration value="RUNNING"/>
+            <xs:enumeration value="COMPLETED"/>
+         </xs:restriction>
+      </xs:simpleType>
+   </xs:element>
+
+   <xs:element name="jobSummaries" type="jobSummaries"/>
+   <xs:complexType name="jobSummaries">
+      <xs:sequence>
+         <xs:element name="jobSummary" type="jobSummary" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="jobSummary">
+      <xs:all>
+         <xs:element name="id" type="xs:string"/>
+         <!--
+          Although namespace should typically be present, we are leaving it as optional in case somebody runs an Activiti job outside of the herd infrastructure.
+         -->
+         <xs:element name="namespace" type="xs:string" minOccurs="0"/>
+         <xs:element name="jobName" type="xs:string"/>
+         <xs:element name="startTime" type="xs:dateTime"/>
+         <xs:element name="endTime" type="xs:dateTime" minOccurs="0"/>
+         <xs:element ref="status" minOccurs="0"/>
+         <xs:element name="totalExceptions" type="xs:long"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="jobSignalRequest" type="jobSignalRequest"/>
+   <xs:complexType name="jobSignalRequest">
+      <xs:all>
+         <xs:element name="id" type="xs:string"/>
+         <xs:element name="receiveTaskId" type="xs:string"/>
+         <xs:element name="parameters" type="parameters" minOccurs="0"/>
+         <xs:element name="s3PropertiesLocation" type="s3PropertiesLocation" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <!-- ***** EMR Cluster Definition ***** -->
+
+   <xs:element name="emrClusterDefinitionCreateRequest" type="emrClusterDefinitionCreateRequest"/>
+   <xs:complexType name="emrClusterDefinitionCreateRequest">
+      <xs:all>
+         <xs:element name="emrClusterDefinitionKey" type="emrClusterDefinitionKey"/>
+         <xs:element name="emrClusterDefinition" type="emrClusterDefinition"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="emrClusterDefinitionInformation" type="emrClusterDefinitionInformation"/>
+   <xs:complexType name="emrClusterDefinitionInformation">
+      <xs:all>
+         <xs:element name="id" type="xs:int"/>
+         <xs:element name="emrClusterDefinitionKey" type="emrClusterDefinitionKey"/>
+         <xs:element name="emrClusterDefinition" type="emrClusterDefinition"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="emrClusterDefinitionUpdateRequest" type="emrClusterDefinitionUpdateRequest"/>
+   <xs:complexType name="emrClusterDefinitionUpdateRequest">
+      <xs:all>
+         <xs:element name="emrClusterDefinition" type="emrClusterDefinition"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterDefinitionKey">
+      <xs:all>
+         <xs:element name="namespace" type="xs:string"/>
+         <xs:element name="emrClusterDefinitionName" type="xs:string"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="emrClusterDefinition" type="emrClusterDefinition"/>
+   <xs:complexType name="emrClusterDefinition">
+      <xs:all>
+         <xs:element name="sshKeyPairName" type="xs:string" minOccurs="0"/>
+         <xs:element name="subnetId" type="xs:string" minOccurs="0"/>
+         <xs:element name="logBucket" type="xs:string" minOccurs="0"/>
+         <xs:element name="keepAlive" type="xs:boolean" minOccurs="0"/>
+         <xs:element name="visibleToAll" type="xs:boolean" minOccurs="0"/>
+         <xs:element name="terminationProtection" type="xs:boolean" minOccurs="0"/>
+         <xs:element name="encryptionEnabled" type="xs:boolean" minOccurs="0"/>
+         <xs:element name="serviceIamRole" type="xs:string" minOccurs="0"/>
+         <xs:element name="ec2NodeIamProfileName" type="xs:string" minOccurs="0"/>
+         <xs:element name="amiVersion" type="xs:string" minOccurs="0"/>
+         <xs:element name="releaseLabel" type="xs:string" minOccurs="0"/>
+         <xs:element name="hadoopVersion" type="xs:string" minOccurs="0"/>
+         <xs:element name="hiveVersion" type="xs:string" minOccurs="0"/>
+         <xs:element name="pigVersion" type="xs:string" minOccurs="0"/>
+         <xs:element name="installOozie" type="xs:boolean" minOccurs="0"/>
+         <xs:element name="customBootstrapActionMaster" type="scriptDefinitions" minOccurs="0"/>
+         <xs:element name="customBootstrapActionAll" type="scriptDefinitions" minOccurs="0"/>
+         <xs:element name="additionalInfo" type="xs:string" minOccurs="0"/>
+         <xs:element name="instanceDefinitions" type="instanceDefinitions" minOccurs="0"/>
+         <xs:element name="nodeTags" type="nodeTags" minOccurs="0"/>
+         <xs:element name="supportedProduct" type="xs:string" minOccurs="0"/>
+         <xs:element name="applications" type="emrClusterDefinitionApplications" minOccurs="0"/>
+         <xs:element name="configurations" type="emrClusterDefinitionConfigurations" minOccurs="0"/>
+         <xs:element name="daemonConfigurations" type="daemonConfigurations" minOccurs="0"/>
+         <xs:element name="hadoopConfigurations" type="hadoopConfigurations" minOccurs="0"/>
+         <xs:element name="hadoopJarSteps" type="hadoopJarSteps" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterDefinitionConfigurations">
+      <xs:sequence>
+         <xs:element name="configuration" type="emrClusterDefinitionConfiguration" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterDefinitionConfiguration">
+      <xs:sequence>
+         <xs:element name="classification" type="xs:string" minOccurs="0"/>
+         <xs:element name="configurations" type="emrClusterDefinitionConfigurations" minOccurs="0"/>
+         <xs:element name="properties" type="emrClusterDefinitionConfigurationProperties" minOccurs="0"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterDefinitionConfigurationProperties">
+      <xs:sequence>
+         <xs:element name="property" type="parameter" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterDefinitionApplications">
+      <xs:sequence>
+         <xs:element name="application" type="emrClusterDefinitionApplication" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterDefinitionApplication">
+      <xs:sequence>
+         <xs:element name="name" type="xs:string" minOccurs="0"/>
+         <xs:element name="version" type="xs:string" minOccurs="0"/>
+         <xs:element name="args" type="emrClusterDefinitionApplicationArguments" minOccurs="0"/>
+         <xs:element name="additionalInfoList" type="emrClusterDefinitionApplicationAdditionalInfoList" minOccurs="0"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterDefinitionApplicationArguments">
+      <xs:sequence>
+         <xs:element name="arg" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="emrClusterDefinitionApplicationAdditionalInfoList">
+      <xs:sequence>
+         <xs:element name="additionalInfo" type="parameter" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="hadoopJarSteps">
+      <xs:sequence>
+         <xs:element name="hadoopJarStep" type="hadoopJarStep" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="hadoopJarStep">
+      <xs:all>
+         <xs:element name="stepName" type="xs:string"/>
+         <xs:element name="jarLocation" type="xs:string"/>
+         <xs:element name="mainClass" type="xs:string" minOccurs="0"/>
+         <xs:element name="scriptArguments" type="scriptArguments" minOccurs="0"/>
+         <xs:element name="continueOnError" type="xs:boolean" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="scriptDefinitions">
+      <xs:sequence>
+         <xs:element name="scriptDefinition" type="scriptDefinition" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="scriptDefinition">
+      <xs:all>
+         <xs:element name="scriptName" type="xs:string"/>
+         <xs:element name="scriptLocation" type="xs:string"/>
+         <xs:element name="scriptArguments" type="scriptArguments" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="instanceDefinitions">
+      <xs:all>
+         <xs:element name="masterInstances" type="masterInstanceDefinition" minOccurs="0"/>
+         <xs:element name="coreInstances" type="instanceDefinition" minOccurs="0"/>
+         <xs:element name="taskInstances" type="instanceDefinition" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="masterInstanceDefinition">
+      <xs:all>
+         <xs:element name="instanceCount" type="xs:int"/>
+         <xs:element name="instanceType" type="xs:string"/>
+         <xs:element name="instanceSpotPrice" type="xs:decimal" minOccurs="0"/>
+         <xs:element name="instanceMaxSearchPrice" type="xs:decimal" minOccurs="0"/>
+         <xs:element name="instanceOnDemandThreshold" type="xs:decimal" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="instanceDefinition">
+      <xs:all>
+         <xs:element name="instanceCount" type="xs:int"/>
+         <xs:element name="instanceType" type="xs:string"/>
+         <xs:element name="instanceSpotPrice" type="xs:decimal" minOccurs="0"/>
+         <xs:element name="instanceMaxSearchPrice" type="xs:decimal" minOccurs="0"/>
+         <xs:element name="instanceOnDemandThreshold" type="xs:decimal" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="nodeTags">
+      <xs:sequence>
+         <xs:element name="nodeTag" type="nodeTag" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="nodeTag">
+      <xs:all>
+         <xs:element name="tagName" type="xs:string"/>
+         <xs:element name="tagValue" type="xs:string"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="daemonConfigurations">
+      <xs:sequence>
+         <xs:element name="daemonParam" type="parameter" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="hadoopConfigurations">
+      <xs:choice minOccurs="0" maxOccurs="2">
+         <xs:element name="configurationFiles" type="configurationFiles" minOccurs="0"/>
+         <xs:element name="keyValuePairConfigurations" type="keyValuePairConfigurations" minOccurs="0"/>
+      </xs:choice>
+   </xs:complexType>
+
+   <xs:complexType name="configurationFiles">
+      <xs:sequence>
+         <xs:element name="configurationFile" type="configurationFile" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="configurationFile">
+      <xs:all>
+         <xs:element name="fileNameShortcut" type="xs:string"/>
+         <xs:element name="configFileLocation" type="xs:string"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="keyValuePairConfigurations">
+      <xs:sequence>
+         <xs:element name="keyValuePairConfiguration" type="keyValuePairConfiguration" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="keyValuePairConfiguration">
+      <xs:all>
+         <xs:element name="keyValueShortcut" type="xs:string"/>
+         <xs:element name="attribKey" type="xs:string"/>
+         <xs:element name="attribVal" type="xs:string"/>
+      </xs:all>
+   </xs:complexType>
+
+   <!-- ***** EMR Create Cluster ***** -->
+
+   <xs:element name="emrClusterCreateRequest" type="emrClusterCreateRequest"/>
+   <xs:complexType name="emrClusterCreateRequest">
+      <xs:all>
+         <xs:element name="namespace" type="xs:string"/>
+         <xs:element name="emrClusterDefinitionName" type="xs:string"/>
+         <xs:element name="emrClusterName" type="xs:string"/>
+         <xs:element name="dryRun" type="xs:boolean" minOccurs="0"/>
+         <xs:element name="emrClusterDefinitionOverride" type="emrClusterDefinition" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="emrCluster" type="emrCluster"/>
+   <xs:complexType name="emrCluster">
+      <xs:all>
+         <xs:element name="id" type="xs:string" minOccurs="0"/>
+         <xs:element name="status" type="xs:string" minOccurs="0"/>
+         <xs:element name="namespace" type="xs:string"/>
+         <xs:element name="emrClusterDefinitionName" type="xs:string"/>
+         <xs:element name="emrClusterName" type="xs:string"/>
+         <xs:element name="activeStep" type="emrStep" minOccurs="0"/>
+         <xs:element name="step" type="emrStep" minOccurs="0"/>
+         <xs:element name="oozieWorkflowJobs" type="oozieWorkflowJobs" minOccurs="0"/>
+         <xs:element name="dryRun" type="xs:boolean" minOccurs="0"/>
+         <xs:element name="emrClusterCreated" type="xs:boolean" minOccurs="0"/>
+         <xs:element name="emrClusterDefinition" type="emrClusterDefinition" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="emrStep">
+      <xs:all>
+         <xs:element name="id" type="xs:string"/>
+         <xs:element name="stepName" type="xs:string"/>
+         <xs:element name="jarLocation" type="xs:string" minOccurs="0"/>
+         <xs:element name="mainClass" type="xs:string" minOccurs="0"/>
+         <xs:element name="scriptArguments" type="scriptArguments" minOccurs="0"/>
+         <xs:element name="continueOnError" type="xs:string" minOccurs="0"/>
+         <xs:element name="status" type="xs:string"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="oozieWorkflowJobs" type="oozieWorkflowJobs"/>
+   <xs:complexType name="oozieWorkflowJobs">
+      <xs:sequence>
+         <xs:element name="workflowJob" type="oozieWorkflowJob" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <!-- ***** Business Object Data Storage File ***** -->
+
+   <xs:element name="businessObjectDataStorageFilesCreateRequest" type="businessObjectDataStorageFilesCreateRequest"/>
+   <xs:complexType name="businessObjectDataStorageFilesCreateRequest">
+      <xs:all>
+         <xs:element name="namespace" type="xs:string"/>
+         <xs:element name="businessObjectDefinitionName" type="xs:string"/>
+         <xs:element name="businessObjectFormatUsage" type="xs:string"/>
+         <xs:element name="businessObjectFormatFileType" type="xs:string"/>
+         <!--
+           The "version" fields below are required, but they are left as optional here so the auto-generated object becomes "Integer" and not "int".
+           That way, JSON objects that deserialize into the auto-generated object don't use the default int value of "0" and instead will leave
+           the field as null. The validation that this field is required is handled via the service layer validation.
+           -->
+         <xs:element name="businessObjectFormatVersion" type="xs:int" minOccurs="0"/>
+         <xs:element name="partitionValue" type="xs:string"/>
+         <xs:element name="subPartitionValues" type="subPartitionValues" minOccurs="0"/>
+         <xs:element name="businessObjectDataVersion" type="xs:int" minOccurs="0"/>
+         <xs:element name="storageName" type="xs:string"/>
+         <xs:element name="storageFiles" type="storageFiles"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDataStorageFilesCreateResponse" type="businessObjectDataStorageFilesCreateResponse"/>
+   <xs:complexType name="businessObjectDataStorageFilesCreateResponse">
+      <xs:all>
+         <xs:element name="namespace" type="xs:string"/>
+         <xs:element name="businessObjectDefinitionName" type="xs:string"/>
+         <xs:element name="businessObjectFormatUsage" type="xs:string"/>
+         <xs:element name="businessObjectFormatFileType" type="xs:string"/>
+         <!--
+           The "version" fields below are required, but they are left as optional here so the auto-generated object becomes "Integer" and not "int".
+           That way, JSON objects that deserialize into the auto-generated object don't use the default int value of "0" and instead will leave
+           the field as null. The validation that this field is required is handled via the service layer validation.
+           -->
+         <xs:element name="businessObjectFormatVersion" type="xs:int" minOccurs="0"/>
+         <xs:element name="partitionValue" type="xs:string"/>
+         <xs:element name="subPartitionValues" type="subPartitionValues" minOccurs="0"/>
+         <xs:element name="businessObjectDataVersion" type="xs:int" minOccurs="0"/>
+         <xs:element name="storageName" type="xs:string"/>
+         <xs:element name="storageFiles" type="storageFiles"/>
+      </xs:all>
+   </xs:complexType>
+
+   <!-- ***** JDBC ***** -->
+
+   <xs:element name="jdbcExecutionRequest" type="jdbcExecutionRequest"/>
+   <xs:complexType name="jdbcExecutionRequest">
+      <xs:sequence>
+         <xs:element name="connection" type="jdbcConnection"/>
+         <xs:element name="statements">
+            <xs:complexType>
+               <xs:sequence>
+                  <xs:element name="statement" type="jdbcStatement" maxOccurs="unbounded"/>
+               </xs:sequence>
+            </xs:complexType>
+         </xs:element>
+         <xs:element name="s3PropertiesLocation" type="s3PropertiesLocation" minOccurs="0"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="s3PropertiesLocation">
+      <xs:sequence>
+         <xs:element name="bucketName" type="xs:string"/>
+         <xs:element name="key" type="xs:string"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="jdbcConnection">
+      <xs:sequence>
+         <xs:element name="url" type="xs:string"/>
+         <xs:element name="username" type="xs:string"/>
+         <xs:element name="password" type="xs:string"/>
+         <xs:element name="databaseType" type="jdbcDatabaseType"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="jdbcStatement">
+      <xs:sequence>
+         <xs:element name="type" type="jdbcStatementType"/>
+         <xs:element name="sql" type="xs:string"/>
+         <xs:element name="continueOnError" type="xs:boolean" minOccurs="0"/>
+         <xs:element name="status" type="jdbcStatementStatus" minOccurs="0"/>
+         <xs:element name="result" type="xs:string" minOccurs="0"/>
+         <xs:element name="resultSet" type="jdbcStatementResultSet" minOccurs="0"/>
+         <xs:element name="errorMessage" type="xs:string" minOccurs="0"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="jdbcStatementResultSet">
+      <xs:sequence>
+         <xs:element name="columnNames" type="jdbcStatementResultSetColumnNames" minOccurs="0"/>
+         <xs:element name="rows" type="jdbcStatementResultSetRows" minOccurs="0"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="jdbcStatementResultSetColumnNames">
+      <xs:sequence>
+         <xs:element name="columnName" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="jdbcStatementResultSetRows">
+      <xs:sequence>
+         <xs:element name="row" type="jdbcStatementResultSetRow" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="jdbcStatementResultSetRow">
+      <xs:sequence>
+         <xs:element name="column" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:element name="jdbcExecutionResponse" type="jdbcExecutionResponse"/>
+   <xs:complexType name="jdbcExecutionResponse">
+      <xs:sequence>
+         <xs:element name="connection" type="jdbcConnection"/>
+         <xs:element name="statements">
+            <xs:complexType>
+               <xs:sequence>
+                  <xs:element name="statement" type="jdbcStatement" maxOccurs="unbounded"/>
+               </xs:sequence>
+            </xs:complexType>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:simpleType name="jdbcStatementType">
+      <xs:restriction base="xs:string">
+         <xs:enumeration value="UPDATE"/>
+         <xs:enumeration value="QUERY"/>
+      </xs:restriction>
+   </xs:simpleType>
+
+   <xs:simpleType name="jdbcStatementStatus">
+      <xs:restriction base="xs:string">
+         <xs:enumeration value="SUCCESS"/>
+         <xs:enumeration value="ERROR"/>
+         <xs:enumeration value="SKIPPED"/>
+      </xs:restriction>
+   </xs:simpleType>
+
+   <xs:simpleType name="jdbcDatabaseType">
+      <xs:restriction base="xs:string">
+         <xs:enumeration value="ORACLE"/>
+         <xs:enumeration value="POSTGRES"/>
+         <xs:enumeration value="REDSHIFT"/>
+      </xs:restriction>
+   </xs:simpleType>
+
+   <!-- ***** Business Object Data Invalidation ***** -->
+
+   <xs:element name="businessObjectDataInvalidateUnregisteredRequest" type="businessObjectDataInvalidateUnregisteredRequest"/>
+   <xs:complexType name="businessObjectDataInvalidateUnregisteredRequest">
+      <xs:sequence>
+         <xs:element name="namespace" type="xs:string"/>
+         <xs:element name="businessObjectDefinitionName" type="xs:string"/>
+         <xs:element name="businessObjectFormatUsage" type="xs:string"/>
+         <xs:element name="businessObjectFormatFileType" type="xs:string"/>
+         <!--
+           The "version" fields below are required, but they are left as optional here so the auto-generated object becomes "Integer" and not "int".
+           That way, JSON objects that deserialize into the auto-generated object don't use the default int value of "0" and instead will leave
+           the relative field as null. The validation that the field is required is handled via the service layer validation.
+           -->
+         <xs:element name="businessObjectFormatVersion" type="xs:int" minOccurs="0"/>
+         <xs:element name="partitionValue" type="xs:string"/>
+         <xs:element name="subPartitionValues" type="subPartitionValues" minOccurs="0"/>
+         <xs:element name="storageName" type="xs:string"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDataInvalidateUnregisteredResponse" type="businessObjectDataInvalidateUnregisteredResponse"/>
+   <xs:complexType name="businessObjectDataInvalidateUnregisteredResponse">
+      <xs:sequence>
+         <xs:element name="namespace" type="xs:string"/>
+         <xs:element name="businessObjectDefinitionName" type="xs:string"/>
+         <xs:element name="businessObjectFormatUsage" type="xs:string"/>
+         <xs:element name="businessObjectFormatFileType" type="xs:string"/>
+         <!--
+           The "version" fields below are required, but they are left as optional here so the auto-generated object becomes "Integer" and not "int".
+           That way, JSON objects that deserialize into the auto-generated object don't use the default int value of "0" and instead will leave
+           the relative field as null. The validation that the field is required is handled via the service layer validation.
+           -->
+         <xs:element name="businessObjectFormatVersion" type="xs:int" minOccurs="0"/>
+         <xs:element name="partitionValue" type="xs:string"/>
+         <xs:element name="subPartitionValues" type="subPartitionValues" minOccurs="0"/>
+         <xs:element name="storageName" type="xs:string"/>
+         <xs:element name="registeredBusinessObjectDataList" type="businessObjectDataList" minOccurs="0"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDataList">
+      <xs:sequence>
+         <xs:element ref="businessObjectData" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:element name="jobDeleteRequest" type="jobDeleteRequest"/>
+   <xs:complexType name="jobDeleteRequest">
+      <xs:sequence>
+         <xs:element name="deleteReason" type="xs:string" minOccurs="1"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDataUploadCredential" type="businessObjectDataUploadCredential"/>
+   <xs:complexType name="businessObjectDataUploadCredential">
+      <xs:sequence>
+         <xs:element name="awsCredential" type="awsCredential"/>
+         <xs:element name="awsKmsKeyId" type="xs:string" minOccurs="0"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDataDownloadCredential" type="businessObjectDataDownloadCredential"/>
+   <xs:complexType name="businessObjectDataDownloadCredential">
+      <xs:sequence>
+         <xs:element name="awsCredential" type="awsCredential"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="awsCredential">
+      <xs:sequence>
+         <xs:element name="awsAccessKey" type="xs:string"/>
+         <xs:element name="awsSecretKey" type="xs:string"/>
+         <xs:element name="awsSessionToken" type="xs:string"/>
+         <xs:element name="awsSessionExpirationTime" type="xs:dateTime"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <!-- ***** Storage Policy ***** -->
+
+   <xs:element name="storagePolicyCreateRequest" type="storagePolicyCreateRequest"/>
+   <xs:complexType name="storagePolicyCreateRequest">
+      <xs:all>
+         <xs:element name="storagePolicyKey" type="storagePolicyKey"/>
+         <xs:element name="storagePolicyRule" type="storagePolicyRule"/>
+         <xs:element name="storagePolicyFilter" type="storagePolicyFilter"/>
+         <xs:element name="storagePolicyTransition" type="storagePolicyTransition"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="storagePolicy" type="storagePolicy"/>
+   <xs:complexType name="storagePolicy">
+      <xs:all>
+         <xs:element name="id" type="xs:int"/>
+         <xs:element name="storagePolicyKey" type="storagePolicyKey"/>
+         <xs:element name="storagePolicyRule" type="storagePolicyRule"/>
+         <xs:element name="storagePolicyFilter" type="storagePolicyFilter"/>
+         <xs:element name="storagePolicyTransition" type="storagePolicyTransition"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="storagePolicyKey">
+      <xs:all>
+         <xs:element name="namespace" type="xs:string"/>
+         <xs:element name="storagePolicyName" type="xs:string"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="storagePolicyRule">
+      <xs:all>
+         <xs:element name="ruleType" type="xs:string"/>
+         <!--
+           This is required, but is left as optional here so the auto-generated object becomes "Integer" and not "int".
+           That way, JSON objects that deserialize into the auto-generated object don't use the default int value of "0" and instead will leave
+           the field as null. The validation that this field is required is handled via the service layer validation.
+           -->
+         <xs:element name="ruleValue" type="xs:int" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="storagePolicyFilter">
+      <xs:all>
+         <xs:element name="namespace" type="xs:string" minOccurs="0"/>
+         <xs:element name="businessObjectDefinitionName" type="xs:string" minOccurs="0"/>
+         <xs:element name="businessObjectFormatUsage" type="xs:string" minOccurs="0"/>
+         <xs:element name="businessObjectFormatFileType" type="xs:string" minOccurs="0"/>
+         <xs:element name="storageName" type="xs:string"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="storagePolicyTransition">
+      <xs:all>
+         <xs:element name="destinationStorageName" type="xs:string"/>
+      </xs:all>
+   </xs:complexType>
+
+</xs:schema>

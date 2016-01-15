@@ -19,17 +19,1052 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
    <modelVersion>4.0.0</modelVersion>
 
-   <name>DM</name>
+   <name>herd</name>
    <packaging>pom</packaging>
 
-   <groupId>org.finra.dm</groupId>
-   <artifactId>dm</artifactId>
-   <version>0.1.0</version>
+   <groupId>org.finra.herd</groupId>
+   <artifactId>herd</artifactId>
+   <version>0.8.0-SNAPSHOT</version>
+
+   <description>This is the base pom for the herd project.</description>
+   <url>http://finraos.github.io/herd/</url>
+
+   <properties>
+
+      <!-- Third Party JAR Dependencies -->
+      <!--
+        Note that upgrading the Activiti version will automatically attempt to upgrade the DB which will have problems running as the application user since
+        table modification permissions won't be present. Instead, only upgrade the version when the DB scripts have been run by the DBA. The DB scripts
+        are located in the activiti-engine JAR in the org.activiti.db.upgrade package.
+       -->
+      <activiti.version>5.19.0.1</activiti.version>
+      <aspectj.version>1.8.7</aspectj.version>
+      <aws.sdk.version>1.10.43</aws.sdk.version>
+      <aws.sqs.messaging.version>1.0.0</aws.sqs.messaging.version>
+      <commons.cli.version>1.3.1</commons.cli.version>
+      <commons.codec.version>1.10</commons.codec.version>
+      <commons.collections4.version>4.1</commons.collections4.version>
+      <commons.compress.version>1.10</commons.compress.version>
+      <commons.configuration.version>1.10</commons.configuration.version>
+      <commons-dbcp2.version>2.1.1</commons-dbcp2.version>
+      <commons.io.version>2.4</commons.io.version>
+      <commons.lang3.version>3.4</commons.lang3.version>
+      <eclipse.persistence.version>2.6.2</eclipse.persistence.version>
+      <findbugs.version>3.0.1</findbugs.version>
+      <hibernate.jpa.api>1.0.0.Final</hibernate.jpa.api>
+      <hibernate.validator.version>5.2.2.Final</hibernate.validator.version>
+      <hibernate.version>4.3.11.Final</hibernate.version>
+      <h2db.version>1.4.190</h2db.version>
+      <jackson.mapper.version>1.9.13</jackson.mapper.version>
+      <jackson.version>2.6.4</jackson.version>
+      <javax.servlet.version>3.0.1</javax.servlet.version>
+      <jstl-impl.version>1.2.2</jstl-impl.version>
+      <!--
+      TODO: This explicit dependency will be needed when we migrate to Hibernate 5.
+      <jta.version>1.1</jta.version>
+      -->
+      <junit.version>4.12</junit.version>
+      <log4j.version>1.2.17</log4j.version>
+      <maven.plugin.api.version>3.3.9</maven.plugin.api.version>
+      <maven.plugin.annotations.version>3.4</maven.plugin.annotations.version>
+      <oracle.driver.version>11.2.0.2.0</oracle.driver.version>
+      <oozie.version>4.2.0</oozie.version>
+      <plexus.utils.version>3.0.22</plexus.utils.version>
+      <postgresql.driver.version>9.4-1206-jdbc42</postgresql.driver.version>
+      <quartz.scheduler.version>2.2.2</quartz.scheduler.version>
+      <roaster.version>2.17.3.Final</roaster.version>
+      <slf4j.version>1.7.13</slf4j.version>
+      <spring.security.version>4.0.3.RELEASE</spring.security.version>
+      <spring.version>4.2.4.RELEASE</spring.version>
+      <swagger.version>1.5.4</swagger.version>
+      <velocity.version>1.7</velocity.version>
+      <woodstox.version>4.4.1</woodstox.version>
+
+      <!-- Third Party Plugin Dependencies -->
+      <jaxb.xew.plugin.version>1.6</jaxb.xew.plugin.version>
+      <jaxb2.basics.annotate.version>1.0.2</jaxb2.basics.annotate.version>
+      <jaxb2.basics.runtime.version>0.10.0</jaxb2.basics.runtime.version>
+      <jaxb2.basics.tools.version>0.10.0</jaxb2.basics.tools.version>
+      <jaxb2.basics.version>0.10.0</jaxb2.basics.version>
+      <jaxb2.value.constructor.version>3.0</jaxb2.value.constructor.version>
+      <maven.assembly.plugin.version>2.6</maven.assembly.plugin.version>
+      <maven.antrun.plugin.version>1.8</maven.antrun.plugin.version>
+      <maven.build.helper.plugin.version>1.10</maven.build.helper.plugin.version>
+      <maven.checkstyle.plugin.version>2.17</maven.checkstyle.plugin.version>
+      <maven.cobertura.plugin.version>2.7</maven.cobertura.plugin.version>
+      <maven.compiler.plugin.version>3.3</maven.compiler.plugin.version>
+      <maven.dependency.plugin.version>2.10</maven.dependency.plugin.version>
+      <maven.exec.plugin.version>1.4.0</maven.exec.plugin.version>
+      <maven.findbugs.plugin.version>3.0.3</maven.findbugs.plugin.version>
+      <maven.gpg.plugin.version>1.6</maven.gpg.plugin.version>
+      <maven.jar.plugin.version>2.6</maven.jar.plugin.version>
+      <maven.jaxb2.plugin.version>0.13.1</maven.jaxb2.plugin.version>
+      <maven.plugin.plugin>3.4</maven.plugin.plugin>
+      <maven.pmd.plugin.version>3.6</maven.pmd.plugin.version>
+      <maven.processor.plugin.version>2.2.4</maven.processor.plugin.version>
+      <maven.resources.plugin.version>2.7</maven.resources.plugin.version>
+      <maven.source.plugin.version>2.4</maven.source.plugin.version>
+      <maven.javadoc.plugin.version>2.10.3</maven.javadoc.plugin.version>
+      <maven.surefire.plugin.version>2.19</maven.surefire.plugin.version>
+      <maven.war.plugin.version>2.6</maven.war.plugin.version>
+      <versions.maven.plugin.version>2.2</versions.maven.plugin.version>
+
+      <!-- Compiler Information -->
+      <maven.compiler.source>1.8</maven.compiler.source>
+      <maven.compiler.target>1.8</maven.compiler.target>
+
+      <!-- Timestamps and Encoding -->
+      <maven.build.timestamp.format>yyyyMMdd_HHmmss</maven.build.timestamp.format>
+      <build.timestamp>${maven.build.timestamp}</build.timestamp>
+      <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+   </properties>
+
+   <!-- Default versions of all standard dependencies. They can be overridden
+      in sub-projects if needed. -->
+   <dependencyManagement>
+
+      <dependencies>
+
+         <!-- herd Dependencies -->
+         <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>herd-model-api</artifactId>
+            <version>${project.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>herd-model-api</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+         </dependency>
+         <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>herd-model</artifactId>
+            <version>${project.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>herd-model</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+         </dependency>
+         <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>herd-core</artifactId>
+            <version>${project.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>herd-core</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+         </dependency>
+         <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>herd-dao</artifactId>
+            <version>${project.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>herd-dao</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+         </dependency>
+         <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>herd-service</artifactId>
+            <version>${project.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>herd-service</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+         </dependency>
+         <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>herd-ui</artifactId>
+            <version>${project.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>herd-ui</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+         </dependency>
+         <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>herd-rest</artifactId>
+            <version>${project.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>herd-rest</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+         </dependency>
+         <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>herd-app</artifactId>
+            <version>${project.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>herd-app</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+         </dependency>
+         <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>herd-tools-common</artifactId>
+            <version>${project.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>herd-tools-common</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+         </dependency>
+         <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>herd-web-assets</artifactId>
+            <version>${project.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>herd-docs-swagger</artifactId>
+            <version>${project.version}</version>
+         </dependency>
+
+         <!-- Third Party Dependencies -->
+         <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-core</artifactId>
+            <version>${aws.sdk.version}</version>
+            <exclusions>
+               <exclusion>
+                  <groupId>commons-logging</groupId>
+                  <artifactId>commons-logging</artifactId>
+               </exclusion>
+            </exclusions>
+         </dependency>
+         <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-ec2</artifactId>
+            <version>${aws.sdk.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-emr</artifactId>
+            <version>${aws.sdk.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-s3</artifactId>
+            <version>${aws.sdk.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-glacier</artifactId>
+            <version>${aws.sdk.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-sts</artifactId>
+            <version>${aws.sdk.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-config</artifactId>
+            <version>${aws.sdk.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>amazon-sqs-java-messaging-lib</artifactId>
+            <version>${aws.sqs.messaging.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-sqs</artifactId>
+            <version>${aws.sdk.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.aspectj</groupId>
+            <artifactId>aspectjweaver</artifactId>
+            <version>${aspectj.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.aspectj</groupId>
+            <artifactId>aspectjrt</artifactId>
+            <version>${aspectj.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>commons-cli</groupId>
+            <artifactId>commons-cli</artifactId>
+            <version>${commons.cli.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-collections4</artifactId>
+            <version>${commons.collections4.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-compress</artifactId>
+            <version>${commons.compress.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>commons-configuration</groupId>
+            <artifactId>commons-configuration</artifactId>
+            <version>${commons.configuration.version}</version>
+            <!-- Commons Configuration has dependencies on an old version of commons-logging we don't want. -->
+            <exclusions>
+               <exclusion>
+                  <artifactId>commons-logging</artifactId>
+                  <groupId>commons-logging</groupId>
+               </exclusion>
+            </exclusions>
+         </dependency>
+         <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>${commons.lang3.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>${commons.io.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>${commons.codec.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.hibernate.javax.persistence</groupId>
+            <artifactId>hibernate-jpa-2.1-api</artifactId>
+            <version>${hibernate.jpa.api}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-core</artifactId>
+            <version>${hibernate.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-ehcache</artifactId>
+            <version>${hibernate.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-entitymanager</artifactId>
+            <version>${hibernate.version}</version>
+            <!-- hibernate-entitymanager 4.3.6.Final has dependencies on old version of xml-apis that we don't want. -->
+            <exclusions>
+               <exclusion>
+                  <groupId>xml-apis</groupId>
+                  <artifactId>xml-apis</artifactId>
+               </exclusion>
+               <exclusion>
+                  <groupId>org.jboss.logging</groupId>
+                  <artifactId>jboss-logging</artifactId>
+               </exclusion>
+            </exclusions>
+         </dependency>
+         <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-jpamodelgen</artifactId>
+            <version>${hibernate.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-validator</artifactId>
+            <version>${hibernate.validator.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-validator-annotation-processor</artifactId>
+            <version>${hibernate.validator.version}</version>
+         </dependency>
+         <!--
+         TODO: This explicit dependency will be needed when we migrate to Hibernate 5.
+         However, we should consider using the new transaction manager (Artifact Id: javax.transaction-api, Version: 1.2) instead.
+         <dependency>
+            <groupId>javax.transaction</groupId>
+            <artifactId>jta</artifactId>
+            <version>${jta.version}</version>
+         </dependency>
+         -->
+         <dependency>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>jackson-mapper-asl</artifactId>
+            <version>${jackson.mapper.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <version>${javax.servlet.version}</version>
+            <scope>provided</scope>
+         </dependency>
+         <dependency>
+            <groupId>org.glassfish.web</groupId>
+            <artifactId>javax.servlet.jsp.jstl</artifactId>
+            <version>${jstl-impl.version}</version>
+            <!-- JSTL 1.2.2 has dependencies on old versions of Servlet and JSP API that we don't want. -->
+            <exclusions>
+               <exclusion>
+                  <groupId>javax.servlet</groupId>
+                  <artifactId>servlet-api</artifactId>
+               </exclusion>
+               <exclusion>
+                  <groupId>javax.servlet.jsp</groupId>
+                  <artifactId>jsp-api</artifactId>
+               </exclusion>
+            </exclusions>
+         </dependency>
+         <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+         </dependency>
+         <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>${log4j.version}</version>
+         </dependency>
+         <!-- This is needed to test JdbcDatabaseType since it needs to load a real driver and we don't want to expose H2 as a valid enum value. -->
+         <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>${postgresql.driver.version}</version>
+            <scope>test</scope>
+         </dependency>
+         <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>${h2db.version}</version>
+            <scope>test</scope>
+         </dependency>
+         <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>${slf4j.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-aop</artifactId>
+            <version>${spring.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-beans</artifactId>
+            <version>${spring.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <version>${spring.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context-support</artifactId>
+            <version>${spring.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-core</artifactId>
+            <version>${spring.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-expression</artifactId>
+            <version>${spring.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-jdbc</artifactId>
+            <version>${spring.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-orm</artifactId>
+            <version>${spring.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-oxm</artifactId>
+            <version>${spring.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-test</artifactId>
+            <version>${spring.version}</version>
+            <scope>test</scope>
+         </dependency>
+         <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-tx</artifactId>
+            <version>${spring.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-web</artifactId>
+            <version>${spring.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-webmvc</artifactId>
+            <version>${spring.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-jms</artifactId>
+            <version>${spring.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-web</artifactId>
+            <version>${spring.security.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-config</artifactId>
+            <version>${spring.security.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>${jackson.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <version>${jackson.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jackson.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.jvnet.jaxb2_commons</groupId>
+            <artifactId>jaxb2-basics</artifactId>
+            <version>${jaxb2.basics.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.jvnet.jaxb2_commons</groupId>
+            <artifactId>jaxb2-basics-annotate</artifactId>
+            <version>${jaxb2.basics.annotate.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.jvnet.jaxb2_commons</groupId>
+            <artifactId>jaxb2-basics-runtime</artifactId>
+            <version>${jaxb2.basics.runtime.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.jvnet.jaxb2_commons</groupId>
+            <artifactId>jaxb2-basics-tools</artifactId>
+            <version>${jaxb2.basics.tools.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.jvnet.jaxb2_commons</groupId>
+            <artifactId>jaxb2-value-constructor</artifactId>
+            <version>${jaxb2.value.constructor.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-dbcp2</artifactId>
+            <version>${commons-dbcp2.version}</version>
+            <scope>test</scope>
+         </dependency>
+         <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>annotations</artifactId>
+            <version>${findbugs.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.apache.velocity</groupId>
+            <artifactId>velocity</artifactId>
+            <version>${velocity.version}</version>
+            <exclusions>
+               <exclusion>
+                  <groupId>commons-lang</groupId>
+                  <artifactId>commons-lang</artifactId>
+               </exclusion>
+            </exclusions>
+         </dependency>
+         <dependency>
+            <groupId>org.codehaus.woodstox</groupId>
+            <artifactId>woodstox-core-asl</artifactId>
+            <version>${woodstox.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-plugin-api</artifactId>
+            <version>${maven.plugin.api.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.apache.maven.plugin-tools</groupId>
+            <artifactId>maven-plugin-annotations</artifactId>
+            <version>${maven.plugin.annotations.version}</version>
+            <scope>provided</scope>
+         </dependency>
+         <dependency>
+            <groupId>org.codehaus.plexus</groupId>
+            <artifactId>plexus-utils</artifactId>
+            <version>${plexus.utils.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>io.swagger</groupId>
+            <artifactId>swagger-core</artifactId>
+            <version>${swagger.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>io.swagger</groupId>
+            <artifactId>swagger-annotations</artifactId>
+            <version>${swagger.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.jboss.forge.roaster</groupId>
+            <artifactId>roaster-api</artifactId>
+            <version>${roaster.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.jboss.forge.roaster</groupId>
+            <artifactId>roaster-jdt</artifactId>
+            <version>${roaster.version}</version>
+         </dependency>
+
+         <!--
+           We are using a custom JAXB implementation instead of the one that comes with the JDK because this is the only way to bolt in our own
+           CharacterEscapeHandler (see jaxb2Marshaller method in RestSpringModuleConfig). To use the bundled JAXB implementation would require us to
+           implement an "internal" Java packaged CharacterEscapeHandler which isn't available to the javac compiler from the Maven command line
+           (although it is available within an IDE). If we wanted to stick with using Sun's JAXB implementation, we could simply add in its external
+           Maven dependency here which will override the internal JAXB implementation because it gets auto-discovered. The next paragraphs describe how.
+
+           Spring's Jaxb2Marshaller class calls JAXBContext.newInstance(jaxb2Classes) which in turn calls ContextFinder.find with the “model” classes
+           we passed in (via packages to scan). If we configure a file called "org/finra/herd/model/xml/jaxb.properties" that contains
+           a "javax.xml.bind.context.factory" property, this gets used first to select the factory class for the JAXB implementation. This is how
+           we add EclipseLink MOXy (see below).
+
+           If we didn't configure this file, the ContextFinder proceeds to try other locations and eventually finds this file (for Sun's implementation):
+           "jaxb-impl-2.2.11.jar!/META-INF/services/javax.xml.bind.JAXBContext" by looking on the classpath for META-INF/services/javax.xml.bind.JAXBContext.
+           This file exists in jaxb-impl-2.2.11.jar and contains the text "com.sun.xml.bind.v2.ContextFactory" which bootstraps the external JAXB
+           implementation.
+
+           If the external context file hadn't been found (i.e. we didn't add any external JAXB dependency here), the ContextFinder would eventually try to use
+           “com.sun.xml.internal.bind.v2.ContextFactory” which is the JDK internal default implementation.
+
+           Since EclipseLink MOXy JAR doesn't have a JAXBContext file present and hence it doesn't get auto-discovered, we need to configure the explicit
+           "jaxb.properties" file.  We have configured a file called "org/finra/herd/model/xml/jaxb.properties" that contains a "javax.xml.bind.context.factory"
+           property, which is used to select the factory class for the JAXB implementation.
+         -->
+         <dependency>
+            <groupId>org.eclipse.persistence</groupId>
+            <artifactId>org.eclipse.persistence.moxy</artifactId>
+            <version>${eclipse.persistence.version}</version>
+         </dependency>
+
+         <!-- Quartz framework -->
+         <dependency>
+            <groupId>org.quartz-scheduler</groupId>
+            <artifactId>quartz</artifactId>
+            <version>${quartz.scheduler.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.quartz-scheduler</groupId>
+            <artifactId>quartz-jobs</artifactId>
+            <version>${quartz.scheduler.version}</version>
+         </dependency>
+
+         <!-- Oozie client -->
+         <dependency>
+            <groupId>org.apache.oozie</groupId>
+            <artifactId>oozie-client</artifactId>
+            <version>${oozie.version}</version>
+            <exclusions>
+               <exclusion>
+                  <groupId>com.google.code.findbugs</groupId>
+                  <artifactId>jsr305</artifactId>
+               </exclusion>
+               <exclusion>
+                  <groupId>org.codehaus.jackson</groupId>
+                  <artifactId>jackson-core-asl</artifactId>
+               </exclusion>
+            </exclusions>
+         </dependency>
+
+         <!-- Activiti Dependencies -->
+         <dependency>
+            <groupId>org.activiti</groupId>
+            <artifactId>activiti-spring</artifactId>
+            <version>${activiti.version}</version>
+            <exclusions>
+               <!-- Exclude Activiti's version of joda-time (i.e. 2.6) since AWS requires a newer version (i.e. 2.8.1) -->
+               <exclusion>
+                  <groupId>joda-time</groupId>
+                  <artifactId>joda-time</artifactId>
+               </exclusion>
+            </exclusions>
+         </dependency>
+      </dependencies>
+
+   </dependencyManagement>
+
+   <!-- Build information -->
+   <build>
+
+      <!-- Default versions of plugins. -->
+      <pluginManagement>
+         <plugins>
+            <plugin>
+               <groupId>com.github.jaxb-xew-plugin</groupId>
+               <artifactId>jaxb-xew-plugin</artifactId>
+               <version>${jaxb.xew.plugin.version}</version>
+            </plugin>
+            <plugin>
+               <groupId>org.codehaus.mojo</groupId>
+               <artifactId>build-helper-maven-plugin</artifactId>
+               <version>${maven.build.helper.plugin.version}</version>
+            </plugin>
+            <plugin>
+               <groupId>org.apache.maven.plugins</groupId>
+               <artifactId>maven-antrun-plugin</artifactId>
+               <version>${maven.antrun.plugin.version}</version>
+            </plugin>
+            <plugin>
+               <groupId>org.apache.maven.plugins</groupId>
+               <artifactId>maven-assembly-plugin</artifactId>
+               <version>${maven.assembly.plugin.version}</version>
+            </plugin>
+            <plugin>
+               <groupId>org.bsc.maven</groupId>
+               <artifactId>maven-processor-plugin</artifactId>
+               <version>${maven.processor.plugin.version}</version>
+            </plugin>
+            <plugin>
+               <groupId>org.codehaus.mojo</groupId>
+               <artifactId>cobertura-maven-plugin</artifactId>
+               <version>${maven.cobertura.plugin.version}</version>
+            </plugin>
+            <plugin>
+               <groupId>org.apache.maven.plugins</groupId>
+               <artifactId>maven-compiler-plugin</artifactId>
+               <version>${maven.compiler.plugin.version}</version>
+               <configuration>
+                  <source>${maven.compiler.source}</source>
+                  <target>${maven.compiler.target}</target>
+               </configuration>
+            </plugin>
+            <plugin>
+               <groupId>org.apache.maven.plugins</groupId>
+               <artifactId>maven-dependency-plugin</artifactId>
+               <version>${maven.dependency.plugin.version}</version>
+            </plugin>
+            <plugin>
+               <groupId>org.apache.maven.plugins</groupId>
+               <artifactId>maven-jar-plugin</artifactId>
+               <version>${maven.jar.plugin.version}</version>
+            </plugin>
+            <plugin>
+               <groupId>org.apache.maven.plugins</groupId>
+               <artifactId>maven-source-plugin</artifactId>
+               <version>${maven.source.plugin.version}</version>
+            </plugin>
+            <plugin>
+               <groupId>org.apache.maven.plugins</groupId>
+               <artifactId>maven-javadoc-plugin</artifactId>
+               <version>${maven.javadoc.plugin.version}</version>
+               <configuration>
+                  <minmemory>128m</minmemory>
+                  <maxmemory>768m</maxmemory>
+                  <header>herd API</header>
+                  <footer>herd API</footer>
+                  <doctitle>herd ${project.version} API</doctitle>
+                  <notimestamp>true</notimestamp>
+                  <!-- This is needed in Java 8 to ensure strict Javadoc checking isn't enforced. -->
+                  <additionalparam>-Xdoclint:none</additionalparam>
+               </configuration>
+            </plugin>
+            <plugin>
+               <groupId>org.apache.maven.plugins</groupId>
+               <artifactId>maven-surefire-plugin</artifactId>
+               <version>${maven.surefire.plugin.version}</version>
+            </plugin>
+            <plugin>
+               <groupId>org.apache.maven.plugins</groupId>
+               <artifactId>maven-war-plugin</artifactId>
+               <version>${maven.war.plugin.version}</version>
+            </plugin>
+            <plugin>
+               <groupId>org.codehaus.mojo</groupId>
+               <artifactId>versions-maven-plugin</artifactId>
+               <version>${versions.maven.plugin.version}</version>
+            </plugin>
+            <plugin>
+               <groupId>org.jvnet.jaxb2.maven2</groupId>
+               <artifactId>maven-jaxb2-plugin</artifactId>
+               <version>${maven.jaxb2.plugin.version}</version>
+            </plugin>
+            <plugin>
+               <groupId>org.jvnet.jaxb2_commons</groupId>
+               <artifactId>jaxb2-basics</artifactId>
+               <version>${jaxb2.basics.version}</version>
+            </plugin>
+            <plugin>
+               <groupId>org.jvnet.jaxb2_commons</groupId>
+               <artifactId>jaxb2-basics-annotate</artifactId>
+               <version>${jaxb2.basics.annotate.version}</version>
+            </plugin>
+            <plugin>
+               <groupId>org.jvnet.jaxb2_commons</groupId>
+               <artifactId>jaxb2-basics-tools</artifactId>
+               <version>${jaxb2.basics.tools.version}</version>
+            </plugin>
+            <plugin>
+               <groupId>org.jvnet.jaxb2_commons</groupId>
+               <artifactId>jaxb2-value-constructor</artifactId>
+               <version>${jaxb2.value.constructor.version}</version>
+            </plugin>
+            <plugin>
+               <groupId>org.codehaus.mojo</groupId>
+               <artifactId>findbugs-maven-plugin</artifactId>
+               <version>${maven.findbugs.plugin.version}</version>
+            </plugin>
+            <plugin>
+               <groupId>org.apache.maven.plugins</groupId>
+               <artifactId>maven-resources-plugin</artifactId>
+               <version>${maven.resources.plugin.version}</version>
+            </plugin>
+            <plugin>
+               <groupId>org.codehaus.mojo</groupId>
+               <artifactId>exec-maven-plugin</artifactId>
+               <version>${maven.exec.plugin.version}</version>
+            </plugin>
+            <plugin>
+               <groupId>org.apache.maven.plugins</groupId>
+               <artifactId>maven-plugin-plugin</artifactId>
+               <version>${maven.plugin.plugin}</version>
+            </plugin>
+            <plugin>
+               <groupId>${project.groupId}</groupId>
+               <artifactId>herd-swaggergen-maven-plugin</artifactId>
+               <version>${project.version}</version>
+            </plugin>
+         </plugins>
+      </pluginManagement>
+
+   </build>
+
+   <licenses>
+      <license>
+         <name>The Apache License, Version 2.0</name>
+         <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      </license>
+   </licenses>
+
+   <developers>
+      <developer>
+         <id>mchao47</id>
+         <name>Michael Chao</name>
+         <email>mchao47@gmail.com</email>
+         <url>https://github.com/mchao47</url>
+         <organization>FINRA</organization>
+         <organizationUrl>https://www.linkedin.com/pub/michael-chao/24/791/42</organizationUrl>
+         <roles>
+            <role>technical project manager</role>
+         </roles>
+      </developer>
+      <developer>
+         <id>Ebs2002</id>
+         <name>Shane Ebersole</name>
+         <email>ebs2002@gmail.com</email>
+         <url>https://github.com/Ebs2002</url>
+         <organization>FINRA</organization>
+         <organizationUrl>https://www.linkedin.com/pub/shane-ebersole/2/360/76</organizationUrl>
+         <roles>
+            <role>tester</role>
+         </roles>
+      </developer>
+      <developer>
+         <id>afelde</id>
+         <name>Arthur Felde</name>
+         <email>afelde@gmail.com</email>
+         <url>https://github.com/afelde</url>
+         <organization>FINRA</organization>
+         <organizationUrl>http://www.finra.org</organizationUrl>
+         <roles>
+            <role>developer</role>
+         </roles>
+      </developer>
+      <developer>
+         <id>thomas-frank-cs</id>
+         <name>Thomas Frank</name>
+         <email>thomas.frank.cs@gmail.com</email>
+         <url>https://github.com/thomas-frank-cs</url>
+         <organization>FINRA</organization>
+         <organizationUrl>http://www.finra.org</organizationUrl>
+         <roles>
+            <role>tester</role>
+         </roles>
+      </developer>
+      <developer>
+         <name>Pragnya Gandhi</name>
+         <email>ToPragnya@gmail.com</email>
+         <organization>FINRA</organization>
+         <roles>
+            <role>database administrator</role>
+         </roles>
+      </developer>
+      <developer>
+         <id>TimGriesbach</id>
+         <name>Tim Griesbach</name>
+         <email>timgriesbach@yahoo.com</email>
+         <url>https://github.com/TimGriesbach</url>
+         <organization>FINRA</organization>
+         <organizationUrl>http://www.finra.org</organizationUrl>
+         <roles>
+            <role>technical project manager</role>
+         </roles>
+      </developer>
+      <developer>
+         <id>patricia-finra</id>
+         <name>Patricia Hu</name>
+         <email>patriciahu@gmail.com</email>
+         <url>https://github.com/patricia-finra</url>
+         <organization>FINRA</organization>
+         <organizationUrl>http://www.finra.org</organizationUrl>
+         <roles>
+            <role>database administrator</role>
+         </roles>
+      </developer>
+      <developer>
+         <id>tkatkov</id>
+         <name>Taras Katkov</name>
+         <email>tkatkov@gmail.com</email>
+         <url>https://github.com/tkatkov</url>
+         <roles>
+            <role>developer</role>
+         </roles>
+      </developer>
+      <developer>
+         <id>foxsmart</id>
+         <name>Andrew Pach</name>
+         <email>apach@foxsmart.com</email>
+         <url>https://github.com/foxsmart</url>
+         <organization>Fox Smart</organization>
+         <organizationUrl>https://www.linkedin.com/in/foxsmart</organizationUrl>
+         <roles>
+            <role>architect</role>
+            <role>developer</role>
+         </roles>
+      </developer>
+      <developer>
+         <id>seoj</id>
+         <name>Max Seo</name>
+         <email>jmseo2@gmail.com</email>
+         <url>https://github.com/seoj</url>
+         <organization>FINRA</organization>
+         <organizationUrl>https://www.linkedin.com/pub/max-seo/98/184/a1b</organizationUrl>
+         <roles>
+            <role>developer</role>
+         </roles>
+      </developer>
+      <developer>
+         <name>Kumar Siddhartha</name>
+         <organization>FINRA</organization>
+         <organizationUrl>http://www.finra.org</organizationUrl>
+         <roles>
+            <role>tester</role>
+         </roles>
+      </developer>
+      <developer>
+         <id>walw</id>
+         <name>Wayne Wang</name>
+         <email>wal_wang@yahoo.com</email>
+         <url>https://github.com/walw</url>
+         <organization>FINRA</organization>
+         <organizationUrl>http://www.finra.org</organizationUrl>
+         <roles>
+            <role>database administrator</role>
+         </roles>
+      </developer>
+      <developer>
+         <id>nateiam</id>
+         <name>Nate Weisz</name>
+         <email>nateiam@gmail.com</email>
+         <url>https://github.com/nateiam</url>
+         <organization>FINRA</organization>
+         <organizationUrl>https://www.linkedin.com/in/nateweisz</organizationUrl>
+         <roles>
+            <role>product manager</role>
+         </roles>
+      </developer>
+   </developers>
+
+   <scm>
+      <connection>scm:git:https://github.com/FINRAOS/Herd</connection>
+      <developerConnection>scm:git:https://github.com/FINRAOS/Herd</developerConnection>
+      <url>https://github.com/FINRAOS/Herd</url>
+   </scm>
+
+   <profiles>
+      <profile>
+         <id>release</id>
+         <build>
+            <plugins>
+               <plugin>
+                  <groupId>org.apache.maven.plugins</groupId>
+                  <artifactId>maven-gpg-plugin</artifactId>
+                  <version>${maven.gpg.plugin.version}</version>
+                  <executions>
+                     <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                           <goal>sign</goal>
+                        </goals>
+                     </execution>
+                  </executions>
+               </plugin>
+            </plugins>
+         </build>
+      </profile>
+   </profiles>
+
+   <distributionManagement>
+      <repository>
+         <id>sonatype-nexus-staging</id>
+         <name>Nexus Staging Repository</name>
+         <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+      </repository>
+
+      <snapshotRepository>
+         <id>sonatype-nexus-snapshots</id>
+         <name>Nexus Snapshot Repository</name>
+         <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+      </snapshotRepository>
+   </distributionManagement>
 
    <modules>
-      <module>dm-build</module>
-      <module>dm-code</module>
+      <module>herd-build</module>
+      <module>herd-code</module>
    </modules>
 
 </project>
-

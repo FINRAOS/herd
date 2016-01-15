@@ -1,0 +1,417 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Copyright 2015 herd contributors
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+   <modelVersion>4.0.0</modelVersion>
+
+   <parent>
+      <groupId>org.finra.herd</groupId>
+      <artifactId>herd-docs</artifactId>
+      <version>0.8.0-SNAPSHOT</version>
+   </parent>
+
+   <name>herd docs javadoc</name>
+   <artifactId>herd-docs-javadoc</artifactId>
+   <packaging>jar</packaging>
+
+   <description>This project produces project-wide javadoc.</description>
+   <url>http://finraos.github.io/herd/</url>
+
+   <dependencies>
+      <dependency>
+         <groupId>javax.servlet</groupId>
+         <artifactId>javax.servlet-api</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.springframework</groupId>
+         <artifactId>spring-aop</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.springframework</groupId>
+         <artifactId>spring-beans</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.springframework</groupId>
+         <artifactId>spring-context</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.springframework</groupId>
+         <artifactId>spring-context-support</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.springframework</groupId>
+         <artifactId>spring-core</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.springframework</groupId>
+         <artifactId>spring-expression</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.springframework</groupId>
+         <artifactId>spring-jdbc</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.springframework</groupId>
+         <artifactId>spring-orm</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.springframework</groupId>
+         <artifactId>spring-oxm</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.springframework</groupId>
+         <artifactId>spring-tx</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.springframework</groupId>
+         <artifactId>spring-web</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.springframework</groupId>
+         <artifactId>spring-webmvc</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.springframework</groupId>
+         <artifactId>spring-jms</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.springframework.security</groupId>
+         <artifactId>spring-security-web</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.springframework.security</groupId>
+         <artifactId>spring-security-config</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>log4j</groupId>
+         <artifactId>log4j</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>com.google.code.findbugs</groupId>
+         <artifactId>annotations</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.apache.commons</groupId>
+         <artifactId>commons-lang3</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>commons-cli</groupId>
+         <artifactId>commons-cli</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>commons-io</groupId>
+         <artifactId>commons-io</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>commons-codec</groupId>
+         <artifactId>commons-codec</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.apache.commons</groupId>
+         <artifactId>commons-collections4</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.apache.commons</groupId>
+         <artifactId>commons-compress</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.quartz-scheduler</groupId>
+         <artifactId>quartz</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.aspectj</groupId>
+         <artifactId>aspectjrt</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.hibernate.javax.persistence</groupId>
+         <artifactId>hibernate-jpa-2.1-api</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>com.amazonaws</groupId>
+         <artifactId>aws-java-sdk-core</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>com.amazonaws</groupId>
+         <artifactId>aws-java-sdk-ec2</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>com.amazonaws</groupId>
+         <artifactId>aws-java-sdk-emr</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>com.amazonaws</groupId>
+         <artifactId>aws-java-sdk-s3</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>com.amazonaws</groupId>
+         <artifactId>aws-java-sdk-sts</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>com.amazonaws</groupId>
+         <artifactId>aws-java-sdk-config</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>com.amazonaws</groupId>
+         <artifactId>amazon-sqs-java-messaging-lib</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>com.amazonaws</groupId>
+         <artifactId>aws-java-sdk-sqs</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>com.amazonaws</groupId>
+         <artifactId>aws-java-sdk-glacier</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.apache.oozie</groupId>
+         <artifactId>oozie-client</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.hibernate</groupId>
+         <artifactId>hibernate-ehcache</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>commons-configuration</groupId>
+         <artifactId>commons-configuration</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.eclipse.persistence</groupId>
+         <artifactId>org.eclipse.persistence.moxy</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.jvnet.jaxb2_commons</groupId>
+         <artifactId>jaxb2-basics</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.jvnet.jaxb2_commons</groupId>
+         <artifactId>jaxb2-basics-annotate</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.jvnet.jaxb2_commons</groupId>
+         <artifactId>jaxb2-basics-runtime</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.jvnet.jaxb2_commons</groupId>
+         <artifactId>jaxb2-basics-tools</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.jvnet.jaxb2_commons</groupId>
+         <artifactId>jaxb2-value-constructor</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.hibernate</groupId>
+         <artifactId>hibernate-jpamodelgen</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.apache.velocity</groupId>
+         <artifactId>velocity</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>io.swagger</groupId>
+         <artifactId>swagger-annotations</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.activiti</groupId>
+         <artifactId>activiti-spring</artifactId>
+      </dependency>
+   </dependencies>
+
+   <build>
+      <plugins>
+
+         <!-- Disable the compiler which isn't needed for Javadoc.  -->
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <executions>
+               <execution>
+                  <id>default-compile</id>
+                  <phase>none</phase>
+               </execution>
+            </executions>
+         </plugin>
+
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <executions>
+               <!-- Copy all the sources from the various locations into a "javadoc-work" directory in our target directory. -->
+               <execution>
+                  <id>copy-sources</id>
+                  <phase>generate-sources</phase>
+                  <configuration>
+                     <target>
+                        <mkdir dir="${project.build.directory}/javadoc-work"/>
+                        <copy todir="${project.build.directory}/javadoc-work">
+                           <fileset dir="../../../herd-code">
+                              <include name="**/src/main/java/**/*.java"/>
+                              <include name="**/src/main/resources/**"/>
+                           </fileset>
+                        </copy>
+                     </target>
+                  </configuration>
+                  <goals>
+                     <goal>run</goal>
+                  </goals>
+               </execution>
+            </executions>
+         </plugin>
+
+         <!-- Use the maven-jaxb2-plugin to auto-generate our Java model classes from the XSD and XJB resources. -->
+         <plugin>
+            <!--
+            This Maven 2 plugin wraps the JAXB 2.x XJC compiler and provides the capability to generate Java sources from XML Schemas.
+            General instructions on how to use the Maven JAXB2 plugin can be found here:
+            http://confluence.highsource.org/display/MJIIP/Maven+JAXB2+Plugin
+            -->
+            <groupId>org.jvnet.jaxb2.maven2</groupId>
+            <artifactId>maven-jaxb2-plugin</artifactId>
+            <executions>
+               <execution>
+                  <id>herd-jaxb-generate</id>
+                  <phase>generate-sources</phase>
+                  <goals>
+                     <goal>generate</goal>
+                  </goals>
+                  <configuration>
+                     <schemaDirectory>${project.build.directory}/javadoc-work/herd-model-api/src/main/resources</schemaDirectory>
+                     <generatePackage>org.finra.herd.model.api.xml</generatePackage>
+                     <generateDirectory>${project.build.directory}/javadoc-work</generateDirectory>
+                  </configuration>
+               </execution>
+            </executions>
+            <configuration>
+               <extension>true</extension>
+               <args>
+                  <arg>-no-header</arg>
+                  <arg>-Xxew</arg>
+                  <arg>-Xxew:instantiate none</arg>
+                  <arg>-Xvalue-constructor</arg>
+                  <arg>-XtoString</arg>
+                  <arg>-Xequals</arg>
+                  <arg>-XhashCode</arg>
+                  <arg>-Xcopyable</arg>
+                  <arg>-Xannotate</arg>
+               </args>
+               <plugins>
+                  <plugin>
+                     <!--
+                     This JAXB plugin utilises the power of  @XmlElementWrapper  annotation.
+                     Originally  xjc  trends to create wrapper classes which are the containers for collections.
+                     This plugin goes through all properties to find ones which can be represented in the model in more optimal way.
+                     General instructions on how to use the JAXB plugin can be found here: https://github.com/dmak/jaxb-xew-plugin
+                     -->
+                     <groupId>com.github.jaxb-xew-plugin</groupId>
+                     <artifactId>jaxb-xew-plugin</artifactId>
+                     <!-- TODO: Please investigate if we can remove the below plugin version. -->
+                     <version>${jaxb.xew.plugin.version}</version>
+                  </plugin>
+                  <plugin>
+                     <groupId>org.jvnet.jaxb2_commons</groupId>
+                     <artifactId>jaxb2-basics-annotate</artifactId>
+                     <!-- TODO: Please investigate if we can remove the below plugin version. -->
+                     <version>${jaxb2.basics.annotate.version}</version>
+                  </plugin>
+                  <plugin>
+                     <!-- JAXB2 Basics Basic Plugins -->
+                     <groupId>org.jvnet.jaxb2_commons</groupId>
+                     <artifactId>jaxb2-basics</artifactId>
+                     <!-- TODO: Please investigate if we can remove the below plugin version. -->
+                     <version>${jaxb2.basics.version}</version>
+                  </plugin>
+                  <plugin>
+                     <!-- JAXB2 Basics Tools -->
+                     <groupId>org.jvnet.jaxb2_commons</groupId>
+                     <artifactId>jaxb2-basics-tools</artifactId>
+                     <!-- TODO: Please investigate if we can remove the below plugin version. -->
+                     <version>${jaxb2.basics.tools.version}</version>
+                  </plugin>
+                  <plugin>
+                     <!-- JAXB2 Value Constructor -->
+                     <groupId>org.jvnet.jaxb2_commons</groupId>
+                     <artifactId>jaxb2-value-constructor</artifactId>
+                     <!-- TODO: Please investigate if we can remove the below plugin version. -->
+                     <version>${jaxb2.value.constructor.version}</version>
+                  </plugin>
+               </plugins>
+            </configuration>
+            <dependencies>
+               <dependency>
+                  <groupId>org.eclipse.persistence</groupId>
+                  <artifactId>org.eclipse.persistence.moxy</artifactId>
+                  <!-- TODO: Please investigate if we can remove the below version. -->
+                  <version>${eclipse.persistence.version}</version>
+               </dependency>
+            </dependencies>
+         </plugin>
+
+         <!-- Generate the meta-model classes. -->
+         <plugin>
+            <groupId>org.bsc.maven</groupId>
+            <artifactId>maven-processor-plugin</artifactId>
+            <executions>
+               <execution>
+                  <id>process</id>
+                  <goals>
+                     <goal>process</goal>
+                  </goals>
+                  <phase>generate-sources</phase>
+                  <configuration>
+                     <sourceDirectory>${project.build.directory}/javadoc-work/herd-model/src/main/java</sourceDirectory>
+                     <includes>
+                        <include>**/model/jpa/*.java</include>
+                     </includes>
+                     <!-- source output directory -->
+                     <outputDirectory>${project.build.directory}/javadoc-work</outputDirectory>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
+
+         <!-- Generate the aggregate Javadoc. -->
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <executions>
+               <execution>
+                  <id>package</id>
+                  <phase>package</phase>
+                  <goals>
+                     <goal>jar</goal>
+                  </goals>
+                  <configuration>
+                     <sourcepath>${project.build.directory}/javadoc-work</sourcepath>
+                     <notimestamp>true</notimestamp>
+                  </configuration>
+               </execution>
+            </executions>
+            <configuration>
+               <minmemory>128m</minmemory>
+               <maxmemory>768m</maxmemory>
+               <header>herd API</header>
+               <footer>herd API</footer>
+               <doctitle>herd ${project.version} API</doctitle>
+               <notimestamp>true</notimestamp>
+               <!-- This is needed in Java 8 to ensure strict Javadoc checking isn't enforced. -->
+               <additionalparam>-Xdoclint:none</additionalparam>
+            </configuration>
+         </plugin>
+
+      </plugins>
+   </build>
+
+</project>

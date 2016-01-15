@@ -1,0 +1,26 @@
+{
+	"curly": true,
+	"undef": true,
+	"unused": true,
+	"laxbreak": true,
+	"globals": 
+	{
+		"require": true,
+		"jasmine": true,
+		"describe": true,
+		"fdescribe": true,
+		"expect": true,
+		"it": true,
+		"fit": true,
+		"beforeEach": true,
+		"spyOn": true,
+		"module": true,
+		"inject": true,
+		"_": true,
+		"angular": true,
+		"moment": true,
+		"console": true,
+        "herd": true,
+        "window": true
+	}
+}

@@ -1,0 +1,50 @@
+---
+swagger: "2.0"
+definitions:
+  basicCase:
+    required:
+    - "string"
+    properties:
+      string:
+        type: "string"
+      objectInteger:
+        type: "integer"
+        format: "int32"
+      primitiveInteger:
+        type: "integer"
+        format: "int32"
+      objectLong:
+        type: "integer"
+        format: "int32"
+      primitiveLong:
+        type: "integer"
+        format: "int32"
+      bigDecimal:
+        type: "number"
+      objectBoolean:
+        type: "boolean"
+      primitiveBoolean:
+        type: "boolean"
+      enumType:
+        type: "string"
+        enum:
+        - "A"
+        - "B"
+        - "C"
+      list:
+        type: "array"
+        items:
+          type: "string"
+      basicCase:
+        $ref: "#/definitions/basicCase"
+      serializable:
+        type: "string"
+    example: "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n<foo>\n\
+      \    <string>string</string>\n    <objectInteger>0</objectInteger>\n    <primitiveInteger>0</primitiveInteger>\n\
+      \    <objectLong>0</objectLong>\n    <primitiveLong>0</primitiveLong>\n    <bigDecimal>0</bigDecimal>\n\
+      \    <objectBoolean>true</objectBoolean>\n    <primitiveBoolean>true</primitiveBoolean>\n\
+      \    <enumType>A</enumType>\n    <list>string</list>\n    <basicCase>\n    \
+      \    <primitiveInteger>0</primitiveInteger>\n        <primitiveLong>0</primitiveLong>\n\
+      \        <primitiveBoolean>false</primitiveBoolean>\n    </basicCase>\n    <serializable>string</serializable>\n\
+      </foo>\n"
+  trivialCase: {}
