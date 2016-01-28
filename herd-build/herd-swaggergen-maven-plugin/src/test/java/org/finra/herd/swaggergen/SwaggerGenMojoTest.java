@@ -29,13 +29,20 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 public class SwaggerGenMojoTest extends AbstractTest
 {
+    private SwaggerGenMojo getSwaggerGenMojo()
+    {
+        SwaggerGenMojo swaggerGenMojo = new SwaggerGenMojo();
+        swaggerGenMojo.setLog(LOG);
+        return swaggerGenMojo;
+    }
+
     @Test
     public void test_1() throws Exception
     {
         File tempDir = Files.createTempDir();
         String outputFileName = "swagger.yaml";
 
-        SwaggerGenMojo swaggerGenMojo = new SwaggerGenMojo();
+        SwaggerGenMojo swaggerGenMojo = getSwaggerGenMojo();
         ReflectionTestUtils.setField(swaggerGenMojo, "outputDirectory", tempDir);
         ReflectionTestUtils.setField(swaggerGenMojo, "outputFilename", outputFileName);
         ReflectionTestUtils.setField(swaggerGenMojo, "restJavaPackage", "org.finra.herd.swaggergen.test.swaggerGenMojo.rest");
@@ -58,7 +65,7 @@ public class SwaggerGenMojoTest extends AbstractTest
         tempDir = Paths.get(tempDir.toURI()).resolve("non_existent").toFile();
         String outputFileName = "swagger.yaml";
 
-        SwaggerGenMojo swaggerGenMojo = new SwaggerGenMojo();
+        SwaggerGenMojo swaggerGenMojo = getSwaggerGenMojo();
         ReflectionTestUtils.setField(swaggerGenMojo, "outputDirectory", tempDir);
         ReflectionTestUtils.setField(swaggerGenMojo, "outputFilename", outputFileName);
         ReflectionTestUtils.setField(swaggerGenMojo, "restJavaPackage", "org.finra.herd.swaggergen.test.swaggerGenMojo.rest");
@@ -80,7 +87,7 @@ public class SwaggerGenMojoTest extends AbstractTest
         File tempDir = Files.createTempDir();
         String outputFileName = "swagger.yaml";
 
-        SwaggerGenMojo swaggerGenMojo = new SwaggerGenMojo();
+        SwaggerGenMojo swaggerGenMojo = getSwaggerGenMojo();
         ReflectionTestUtils.setField(swaggerGenMojo, "outputDirectory", tempDir);
         ReflectionTestUtils.setField(swaggerGenMojo, "outputFilename", outputFileName);
         ReflectionTestUtils.setField(swaggerGenMojo, "restJavaPackage", "org.finra.herd.swaggergen.test.swaggerGenMojo.rest");
@@ -101,7 +108,7 @@ public class SwaggerGenMojoTest extends AbstractTest
         File tempDir = Files.createTempDir();
         String outputFileName = "swagger.yaml";
 
-        SwaggerGenMojo swaggerGenMojo = new SwaggerGenMojo();
+        SwaggerGenMojo swaggerGenMojo = getSwaggerGenMojo();
         ReflectionTestUtils.setField(swaggerGenMojo, "outputDirectory", tempDir);
         ReflectionTestUtils.setField(swaggerGenMojo, "outputFilename", outputFileName);
         ReflectionTestUtils.setField(swaggerGenMojo, "restJavaPackage", "org.finra.herd.swaggergen.test.swaggerGenMojo.rest");
@@ -130,7 +137,7 @@ public class SwaggerGenMojoTest extends AbstractTest
         File tempDir = Files.createTempDir();
         String outputFileName = "swagger.yaml";
 
-        SwaggerGenMojo swaggerGenMojo = new SwaggerGenMojo();
+        SwaggerGenMojo swaggerGenMojo = getSwaggerGenMojo();
         ReflectionTestUtils.setField(swaggerGenMojo, "outputDirectory", tempDir);
         ReflectionTestUtils.setField(swaggerGenMojo, "outputFilename", outputFileName);
         ReflectionTestUtils.setField(swaggerGenMojo, "restJavaPackage", "org.finra.herd.swaggergen.test.swaggerGenMojo.rest");
