@@ -49,7 +49,7 @@ public class ExampleXmlGeneratorTest extends AbstractTest
         ExampleXmlGenerator exampleXmlGenerator = new ExampleXmlGenerator(LOG, DatetimeCase.class);
         String exampleXml = exampleXmlGenerator.getExampleXml();
         Pattern pattern = Pattern.compile(
-            "<xmlGregorianCalendar>[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{3}-[0-9]{2}:[0-9]{2}</xmlGregorianCalendar>");
+            "<xmlGregorianCalendar>[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{3}(\\+|-|Z)([0-9]{2}:[0-9]{2})?</xmlGregorianCalendar>");
         Matcher matcher = pattern.matcher(exampleXml);
         assertTrue(matcher.find());
     }
