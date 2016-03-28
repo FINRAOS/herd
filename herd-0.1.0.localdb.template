@@ -1,0 +1,554 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Herd AWS CloudFormation Sample Template (Local PostgreSQL)",
+
+  "Parameters" : {
+
+    "InstanceType" : {
+      "Description" : "Herd Application and Database Server EC2 instance type",
+      "Type" : "String",
+      "Default" : "t1.micro",
+      "AllowedValues" : [ "t1.micro", "t2.micro", "t2.small", "t2.medium",
+                          "m1.small", "m1.medium", "m1.large", "m1.xlarge",
+                          "m2.xlarge", "m2.2xlarge", "m2.4xlarge", "m3.medium",
+                          "m3.large", "m3.xlarge", "m3.2xlarge" ],
+      "ConstraintDescription" : "must be a valid EC2 instance type."
+    },
+
+    "TimeOut" : {
+      "Description" : "Stack Start Timeout (in seconds)",
+      "Type" : "String",
+      "Default" : "600"
+    },
+
+    "KeyName": {
+      "Description" : "Name of an existing EC2 KeyPair to enable SSH access to the instance",
+      "Type": "AWS::EC2::KeyPair::KeyName",
+      "ConstraintDescription" : "must be the name of an existing EC2 KeyPair."
+    },
+    
+    "SSHLocation" : {
+      "Description" : " The IP address range that can be used to SSH to the EC2 instances",
+      "Type": "String",
+      "MinLength": "9",
+      "MaxLength": "18",
+      "Default": "0.0.0.0/0",
+      "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+      "ConstraintDescription": "must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+
+    "DBPassword": {
+      "Default": "password",
+      "NoEcho": "true",
+      "Description" : "The database \"postgres\" account password (default \"password\")",
+      "Type": "String",
+      "MinLength": "8",
+      "MaxLength": "41",
+      "AllowedPattern" : "[a-zA-Z0-9]*",
+      "ConstraintDescription" : "must contain only alphanumeric characters."
+    }
+  },
+
+  "Mappings" : {
+    "AWSInstanceType2Arch" : {
+      "t1.micro"    : { "Arch" : "PV64"   },
+      "t2.micro"    : { "Arch" : "HVM64"  },
+      "t2.small"    : { "Arch" : "HVM64"  },
+      "t2.medium"   : { "Arch" : "HVM64"  },
+      "m1.small"    : { "Arch" : "PV64"   },
+      "m1.medium"   : { "Arch" : "PV64"   },
+      "m1.large"    : { "Arch" : "PV64"   },
+      "m1.xlarge"   : { "Arch" : "PV64"   },
+      "m2.xlarge"   : { "Arch" : "PV64"   },
+      "m2.2xlarge"  : { "Arch" : "PV64"   },
+      "m2.4xlarge"  : { "Arch" : "PV64"   },
+      "m3.medium"   : { "Arch" : "HVM64"  },
+      "m3.large"    : { "Arch" : "HVM64"  },
+      "m3.xlarge"   : { "Arch" : "HVM64"  },
+      "m3.2xlarge"  : { "Arch" : "HVM64"  }
+    },
+
+    "AWSRegionArch2AMI" : {
+      "us-east-1"        : {"PV64" : "ami-0f4cfd64", "HVM64" : "ami-0d4cfd66"},
+      "us-west-2"        : {"PV64" : "ami-d3c5d1e3", "HVM64" : "ami-d5c5d1e5"},
+      "us-west-1"        : {"PV64" : "ami-85ea13c1", "HVM64" : "ami-87ea13c3"},
+      "eu-west-1"        : {"PV64" : "ami-d6d18ea1", "HVM64" : "ami-e4d18e93"},
+      "eu-central-1"     : {"PV64" : "ami-a4b0b7b9", "HVM64" : "ami-a6b0b7bb"},
+      "ap-northeast-1"   : {"PV64" : "ami-1a1b9f1a", "HVM64" : "ami-1c1b9f1c"},
+      "ap-southeast-1"   : {"PV64" : "ami-d24b4280", "HVM64" : "ami-d44b4286"},
+      "ap-southeast-2"   : {"PV64" : "ami-ef7b39d5", "HVM64" : "ami-db7b39e1"},
+      "sa-east-1"        : {"PV64" : "ami-5b098146", "HVM64" : "ami-55098148"},
+      "cn-north-1"       : {"PV64" : "ami-bec45887", "HVM64" : "ami-bcc45885"}
+    }
+  },
+
+  "Resources" : {
+
+    "herdServerRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version" : "2012-10-17",
+          "Statement": [ {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": [ "ec2.amazonaws.com" ]
+            },
+            "Action": [ "sts:AssumeRole" ]
+          } ]
+        },
+        "Path": "/",
+        "Policies": [ {
+          "PolicyName": "root",
+          "PolicyDocument": {
+            "Version": "2012-10-17",
+            "Statement": [
+              {
+                "Action": ["sqs:*"],
+                "Effect": "Allow",
+                "Resource": "*"
+              },
+              {
+                "Effect": "Allow",
+                "Action": [
+                  "s3:Get*",
+                  "s3:List*"
+                ],
+                "Resource": "*"
+              }
+            ]
+          }
+        } ]
+      }
+    },
+
+    "herdInstanceProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Path": "/",
+        "Roles": [ { "Ref": "herdServerRole" } ]
+      }
+    },
+
+    "herdInstanceSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Enable WEB server access",
+        "SecurityGroupIngress" : [
+          {"IpProtocol" : "tcp", "FromPort" : "22",   "ToPort" : "22",   "CidrIp" : { "Ref" : "SSHLocation"}},
+          {"IpProtocol" : "tcp", "FromPort" : "8080", "ToPort" : "8080", "CidrIp" : { "Ref" : "SSHLocation"}}
+         ]
+      }
+    },
+
+    "herdQueueIn" : {
+      "Type" : "AWS::SQS::Queue"
+    },
+
+    "herdS3Bucket" : {
+      "Type" : "AWS::S3::Bucket",
+      "Properties" : {
+        "AccessControl" : "BucketOwnerFullControl"
+      }
+    },
+
+    "herdApplicationServer" : {
+      "Type" : "AWS::EC2::Instance",
+      "Metadata" : {
+        "Comment" : "Install Herd",
+        "AWS::CloudFormation::Init" : {
+          "config": {
+            "packages": {
+              "yum": {
+                "java-1.8.0-openjdk": [],
+                "postgresql9*": [],
+                "tomcat8": []
+              }
+            },
+            "commands": {
+              "1-remove-java7": {
+                "command": "yum remove -y java-1.7.0-openjdk"
+              }
+            },
+            "files": {
+              "/etc/cfn/cfn-hup.conf": {
+                "content": {
+                  "Fn::Join": [
+                    "", [
+                      "[main]\n",
+                      "stack=", {"Ref": "AWS::StackId"}, "\n",
+                      "region=", {"Ref": "AWS::Region"}, "\n"
+                    ]
+                  ]
+                },
+                "mode": "000400",
+                "owner": "root",
+                "group": "root"
+              },
+              "/etc/cfn/hooks.d/cfn-auto-reloader.conf": {
+                "content": {
+                  "Fn::Join": [
+                    "", [
+                      "[cfn-auto-reloader-hook]\n",
+                      "triggers=post.update\n",
+                      "path=Resources.herdApplicationServer.Metadata.AWS::CloudFormation::Init\n",
+                      "action=/opt/aws/bin/cfn-init -v ",
+                      "         --stack ", {"Ref": "AWS::StackName"},
+                      "         --resource herdApplicationServer ",
+                      "         --region ", {"Ref": "AWS::Region"}, "\n",
+                      "runas=root\n"
+                    ]
+                  ]
+                }
+              },
+              "/usr/share/tomcat8/webapps/dm-app.war": {
+                "source": "https://github.com/FINRAOS/herd/raw/dist/dm-app.war",
+                "mode": "000550",
+                "owner": "tomcat",
+                "group": "tomcat"
+              },
+              "/home/ec2-user/sql/dm.postgres.create.sql": {
+                "source": "https://raw.githubusercontent.com/FINRAOS/herd/v0.1.0/dm-build/dm-scripts/dm-scripts-sql/src/main/resources/dm.postgres.create.sql",
+                "mode": "000664",
+                "owner": "ec2-user",
+                "group": "ec2-user"
+              },
+              "/home/ec2-user/sql/dm.postgres.1.0.0.refdata.sql": {
+                "source": "https://raw.githubusercontent.com/FINRAOS/herd/v0.1.0/dm-build/dm-scripts/dm-scripts-cloud-formation/src/main/resources/dm-refdata.sql",
+                "mode": "000664",
+                "owner": "ec2-user",
+                "group": "ec2-user"
+              },
+              "/home/ec2-user/sql/dm-cfg.sql": {
+                "source": "https://raw.githubusercontent.com/FINRAOS/herd/v0.1.0/dm-build/dm-scripts/dm-scripts-cloud-formation/src/main/resources/dm-cfg.sql",
+                "mode": "000664",
+                "owner": "ec2-user",
+                "group": "ec2-user"
+              },
+              "/home/ec2-user/sql/quartz_tables_postgres.sql": {
+                "source": "https://raw.githubusercontent.com/FINRAOS/herd/v0.1.0/dm-build/dm-scripts/dm-scripts-sql/src/main/resources/quartz_tables_postgres.sql",
+                "mode": "000664",
+                "owner": "ec2-user",
+                "group": "ec2-user"
+              },
+              "/home/ec2-user/sql/activiti.postgres.create.engine.sql": {
+                "source": "https://raw.githubusercontent.com/Activiti/Activiti/activiti-5.16.3/modules/activiti-engine/src/main/resources/org/activiti/db/create/activiti.postgres.create.engine.sql",
+                "mode": "000664",
+                "owner": "ec2-user",
+                "group": "ec2-user"
+              },
+              "/home/ec2-user/sql/activiti.postgres.create.history.sql": {
+                "source": "https://raw.githubusercontent.com/Activiti/Activiti/activiti-5.16.3/modules/activiti-engine/src/main/resources/org/activiti/db/create/activiti.postgres.create.history.sql",
+                "mode": "000664",
+                "owner": "ec2-user",
+                "group": "ec2-user"
+              },
+              "/home/ec2-user/sql/activiti.postgres.create.identity.sql": {
+                "source": "https://raw.githubusercontent.com/Activiti/Activiti/activiti-5.16.3/modules/activiti-engine/src/main/resources/org/activiti/db/create/activiti.postgres.create.identity.sql",
+                "mode": "000664",
+                "owner": "ec2-user",
+                "group": "ec2-user"
+              },
+              "/usr/share/tomcat8/lib/postgresql-9.4-1202.jdbc41.jar": {
+                "source": "https://jdbc.postgresql.org/download/postgresql-9.4-1202.jdbc41.jar",
+                "mode": "000644"
+              },
+              "/usr/share/tomcat8/conf/context.xml": {
+                "content": {
+                  "Fn::Join": [
+                    "\n", [
+                      "<?xml version=\"1.0\"?>",
+                      "<Context>",
+                      "  <WatchedResource>WEB-INF/web.xml</WatchedResource>",
+                      "  <ResourceLink name=\"jdbc/DMDB\" global=\"jdbc/DMDB\" type=\"javax.sql.DataSource\" />",
+                      "</Context>\n"
+                    ]
+                  ]
+                },
+                "mode": "000664",
+                "owner": "tomcat",
+                "group": "tomcat"
+              },
+              "/usr/share/tomcat8/conf/server.xml": {
+                "content": {
+                  "Fn::Join": [
+                    "", [
+                      "<?xml version='1.0' encoding='utf-8'?>\n",
+                      "<Server port=\"8005\" shutdown=\"SHUTDOWN\">\n",
+                      "  <Listener className=\"org.apache.catalina.startup.VersionLoggerListener\" />\n",
+                      "  <!-- Security listener. Documentation at /docs/config/listeners.html\n",
+                      "  <Listener className=\"org.apache.catalina.security.SecurityListener\" />\n",
+                      "  -->\n",
+                      "  <!--APR library loader. Documentation at /docs/apr.html -->\n",
+                      "  <Listener className=\"org.apache.catalina.core.AprLifecycleListener\" SSLEngine=\"on\" />\n",
+                      "  <!-- Prevent memory leaks due to use of particular java/javax APIs-->\n",
+                      "  <Listener className=\"org.apache.catalina.core.JreMemoryLeakPreventionListener\" />\n",
+                      "  <Listener className=\"org.apache.catalina.mbeans.GlobalResourcesLifecycleListener\" />\n",
+                      "  <Listener className=\"org.apache.catalina.core.ThreadLocalLeakPreventionListener\" />\n",
+                      "\n",
+                      "  <GlobalNamingResources>\n",
+                      "        <Resource name=\"jdbc/DMDB\"\n",
+                      "                   url=\"jdbc:postgresql://localhost:5432/postgres\"\n",
+                      "                   username=\"postgres\"\n",
+                      "                   password=\"", {"Ref": "DBPassword"}, "\"\n",
+                      "                   auth=\"Container\"\n",
+                      "                   driverClassName=\"org.postgresql.Driver\"\n",
+                      "                   factory=\"org.apache.commons.dbcp.BasicDataSourceFactory\"\n",
+                      "                   initialSize=\"2\"\n",
+                      "                   jmxEnabled=\"true\"\n",
+                      "                   logAbandoned=\"true\"\n",
+                      "                   maxActive=\"200\"\n",
+                      "                   maxIdle=\"200\"\n",
+                      "                   maxWait=\"10000\"\n",
+                      "                   minEvictableIdleTimeMillis=\"60000\"\n",
+                      "                   minIdle=\"10\"\n",
+                      "                   removeAbandoned=\"true\"\n",
+                      "                   removeAbandonedTimeout=\"885\"\n",
+                      "                   testOnBorrow=\"true\"\n",
+                      "                   testOnReturn=\"false\"\n",
+                      "                   testWhileIdle=\"true\"\n",
+                      "                   timeBetweenEvictionRunsMillis=\"5000\"\n",
+                      "                   type=\"javax.sql.DataSource\"\n",
+                      "                   validationInterval=\"30000\"\n",
+                      "                   validationQuery=\"SELECT 1\"/>\n",
+                      "    <!-- Editable user database that can also be used by\n",
+                      "         UserDatabaseRealm to authenticate users\n",
+                      "    -->\n",
+                      "    <Resource name=\"UserDatabase\" auth=\"Container\"\n",
+                      "              type=\"org.apache.catalina.UserDatabase\"\n",
+                      "              description=\"User database that can be updated and saved\"\n",
+                      "              factory=\"org.apache.catalina.users.MemoryUserDatabaseFactory\"\n",
+                      "              pathname=\"conf/tomcat-users.xml\" />\n",
+                      "  </GlobalNamingResources>\n",
+                      "\n",
+                      "  <!-- A \"Service\" is a collection of one or more \"Connectors\" that share\n",
+                      "       a single \"Container\" Note:  A \"Service\" is not itself a \"Container\",\n",
+                      "       so you may not define subcomponents such as \"Valves\" at this level.\n",
+                      "       Documentation at /docs/config/service.html\n",
+                      "   -->\n",
+                      "  <Service name=\"Catalina\">\n",
+                      "\n",
+                      "    <!--The connectors can use a shared executor, you can define one or more named thread pools-->\n",
+                      "    <!--\n",
+                      "    <Executor name=\"tomcatThreadPool\" namePrefix=\"catalina-exec-\"\n",
+                      "        maxThreads=\"150\" minSpareThreads=\"4\"/>\n",
+                      "    -->\n",
+                      "\n",
+                      "\n",
+                      "    <!-- A \"Connector\" represents an endpoint by which requests are received\n",
+                      "         and responses are returned. Documentation at :\n",
+                      "         Java HTTP Connector: /docs/config/http.html (blocking & non-blocking)\n",
+                      "         Java AJP  Connector: /docs/config/ajp.html\n",
+                      "         APR (HTTP/AJP) Connector: /docs/apr.html\n",
+                      "         Define a non-SSL/TLS HTTP/1.1 Connector on port 8080\n",
+                      "    -->\n",
+                      "    <Connector port=\"8080\" protocol=\"HTTP/1.1\"\n",
+                      "               connectionTimeout=\"20000\"\n",
+                      "               redirectPort=\"8443\" />\n",
+                      "    <!-- A \"Connector\" using the shared thread pool-->\n",
+                      "    <!--\n",
+                      "    <Connector executor=\"tomcatThreadPool\"\n",
+                      "               port=\"8080\" protocol=\"HTTP/1.1\"\n",
+                      "               connectionTimeout=\"20000\"\n",
+                      "               redirectPort=\"8443\" />\n",
+                      "    -->\n",
+                      "    <!-- Define a SSL/TLS HTTP/1.1 Connector on port 8443\n",
+                      "         This connector uses the NIO implementation that requires the JSSE\n",
+                      "         style configuration. When using the APR/native implementation, the\n",
+                      "         OpenSSL style configuration is required as described in the APR/native\n",
+                      "         documentation -->\n",
+                      "    <!--\n",
+                      "    <Connector port=\"8443\" protocol=\"org.apache.coyote.http11.Http11NioProtocol\"\n",
+                      "               maxThreads=\"150\" SSLEnabled=\"true\" scheme=\"https\" secure=\"true\"\n",
+                      "               clientAuth=\"false\" sslProtocol=\"TLS\" />\n",
+                      "    -->\n",
+                      "\n",
+                      "    <!-- Define an AJP 1.3 Connector on port 8009 -->\n",
+                      "    <Connector port=\"8009\" protocol=\"AJP/1.3\" redirectPort=\"8443\" />\n",
+                      "\n",
+                      "\n",
+                      "    <!-- An Engine represents the entry point (within Catalina) that processes\n",
+                      "         every request.  The Engine implementation for Tomcat stand alone\n",
+                      "         analyzes the HTTP headers included with the request, and passes them\n",
+                      "         on to the appropriate Host (virtual host).\n",
+                      "         Documentation at /docs/config/engine.html -->\n",
+                      "\n",
+                      "    <!-- You should set jvmRoute to support load-balancing via AJP ie :\n",
+                      "    <Engine name=\"Catalina\" defaultHost=\"localhost\" jvmRoute=\"jvm1\">\n",
+                      "    -->\n",
+                      "    <Engine name=\"Catalina\" defaultHost=\"localhost\">\n",
+                      "\n",
+                      "      <!--For clustering, please take a look at documentation at:\n",
+                      "          /docs/cluster-howto.html  (simple how to)\n",
+                      "          /docs/config/cluster.html (reference documentation) -->\n",
+                      "      <!--\n",
+                      "      <Cluster className=\"org.apache.catalina.ha.tcp.SimpleTcpCluster\"/>\n",
+                      "      -->\n",
+                      "\n",
+                      "      <!-- Use the LockOutRealm to prevent attempts to guess user passwords\n",
+                      "           via a brute-force attack -->\n",
+                      "      <Realm className=\"org.apache.catalina.realm.LockOutRealm\">\n",
+                      "        <!-- This Realm uses the UserDatabase configured in the global JNDI\n",
+                      "             resources under the key \"UserDatabase\".  Any edits\n",
+                      "             that are performed against this UserDatabase are immediately\n",
+                      "             available for use by the Realm.  -->\n",
+                      "        <Realm className=\"org.apache.catalina.realm.UserDatabaseRealm\"\n",
+                      "               resourceName=\"UserDatabase\"/>\n",
+                      "      </Realm>\n",
+                      "\n",
+                      "      <Host name=\"localhost\"  appBase=\"webapps\"\n",
+                      "            unpackWARs=\"true\" autoDeploy=\"true\">\n",
+                      "\n",
+                      "        <!-- SingleSignOn valve, share authentication between web applications\n",
+                      "             Documentation at: /docs/config/valve.html -->\n",
+                      "        <!--\n",
+                      "        <Valve className=\"org.apache.catalina.authenticator.SingleSignOn\" />\n",
+                      "        -->\n",
+                      "\n",
+                      "        <!-- Access log processes all example.\n",
+                      "             Documentation at: /docs/config/valve.html\n",
+                      "             Note: The pattern used is equivalent to using pattern=\"common\" -->\n",
+                      "        <Valve className=\"org.apache.catalina.valves.AccessLogValve\" directory=\"logs\"\n",
+                      "               prefix=\"localhost_access_log\" suffix=\".txt\"\n",
+                      "               pattern=\"%h %l %u %t &quot;%r&quot; %s %b\" />\n",
+                      "\n",
+                      "      </Host>\n",
+                      "    </Engine>\n",
+                      "  </Service>\n",
+                      "</Server>\n"
+                    ]
+                  ]
+                },
+                "mode": "000664",
+                "owner": "tomcat",
+                "group": "tomcat"
+              }
+            },
+            "services": {
+              "sysvinit": {
+                "cfn-hup": {
+                  "enabled": "true", "ensureRunning": "true",
+                  "files": ["/etc/cfn/cfn-hup.conf", "/etc/cfn/hooks.d/cfn-auto-reloader.conf"]
+                }
+              }
+            }
+          }
+        }
+      },
+      "Properties" : {
+        "ImageId" : { "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" },
+                    { "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "InstanceType" }, "Arch" ] } ] },
+        "InstanceType" : { "Ref" : "InstanceType" },
+        "IamInstanceProfile" : { "Ref": "herdInstanceProfile" },
+        "KeyName" : { "Ref" : "KeyName" },
+        "Tags" : [ {"Key" : "Application", "Value" : { "Ref" : "AWS::StackId"} } ],
+        "SecurityGroups": [{"Ref": "herdInstanceSecurityGroup"}],
+        "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["", [
+          "#!/bin/bash -xe\n",
+          "yum update -y aws-cfn-bootstrap\n",
+
+          "/opt/aws/bin/cfn-init -v ",
+          "         --stack ", { "Ref" : "AWS::StackName" },
+          "         --resource herdApplicationServer ",
+          "         --region ", { "Ref" : "AWS::Region" }, "\n",
+
+          "set -x\n",
+          "exec > >(tee /var/log/user-data.log|logger -t user-data ) 2>&1\n",
+
+          "# Configure Postgresql\n",
+          "service postgresql initdb\n",
+          "service postgresql start\n",
+
+          "echo \"Defaults:root !requiretty\" >> /etc/sudoers\n",
+          "sudo -u postgres psql -c \"ALTER USER postgres PASSWORD '", {"Ref": "DBPassword"},"';\"\n",
+
+          "# Local auth\n",
+          "sed -i 's/^local\\s\\+all\\s\\+all\\s\\+peer/local all all md5/g' /var/lib/pgsql9/data/pg_hba.conf\n",
+          "sed -i 's/^host\\s\\+all\\s\\+all\\s\\+127\\.0\\.0\\.1\\/32\\s\\+ident/host all all 127.0.0.1\\/32 md5/g' /var/lib/pgsql9/data/pg_hba.conf\n",
+
+          "service postgresql restart\n",
+          "export PGPASSWORD=",{"Ref": "DBPassword"},"\n",
+          "export PGUSER=postgres\n",
+          "export PGDATABASE=postgres\n",
+          "cd /home/ec2-user/sql\n",
+          "psql -f dm.postgres.create.sql\n",
+          "psql -f dm.postgres.1.0.0.refdata.sql\n",
+          "psql -f dm-cfg.sql\n",
+          "psql -f activiti.postgres.create.engine.sql\n",
+          "psql -f activiti.postgres.create.history.sql\n",
+          "psql -f activiti.postgres.create.identity.sql\n",
+          "psql -f quartz_tables_postgres.sql\n",
+
+          "psql -c \"INSERT INTO cnfgn VALUES ('s3.managed.bucket.name','",{"Ref": "herdS3Bucket" },"', NULL);\"\n",
+          "psql -c \"INSERT INTO cnfgn VALUES ('dm.notification.sqs.incoming.queue.name','",{"Fn::GetAtt": ["herdQueueIn", "QueueName"]},"', NULL);\"\n",
+
+          "service tomcat8 start\n",
+          "\nsleep 15\n",
+
+          "/usr/bin/wget http://localhost:8080/dm-app/rest/buildInfo -t12 --retry-connrefused -qO-\n",
+          "\n",
+          "/usr/bin/curl -s -X POST --header 'Content-Type: application/json' -d '{",
+          "\"namespaceCode\": \"DEMO\"",
+          "}' http://localhost:8080/dm-app/rest/namespaces\n",
+
+          "/usr/bin/curl -s -X POST --header 'Content-Type: application/json' -d '{",
+          "\"attributes\": [",
+          "{\"name\": \"bucket.name\",\"value\": \"",{"Ref": "herdS3Bucket" }, "\"}",
+          "],\"name\": \"HERD_DEMO\", \"storagePlatformName\": \"S3\"",
+          "}' http://localhost:8080/dm-app/rest/storages\n",
+
+          "/usr/bin/curl -s -X POST --header 'Content-Type: application/json' -d '{",
+          "\"attributes\": [",
+          "{\"name\": \"bucket.name\"  ,\"value\": \"",{"Ref": "herdS3Bucket" }, "\"}",
+          "],\"name\": \"S3_MANAGED\", \"storagePlatformName\": \"S3\"",
+          "}' http://localhost:8080/dm-app/rest/storages\n",
+
+          "# If all went well, signal success\n",
+          "/opt/aws/bin/cfn-signal -e $? -r 'Herd Server configuration' '", { "Ref" : "herdServerWaitHandle" }, "'\n"
+        ]]}}
+      }
+    },
+
+    "herdServerWaitHandle" : {
+      "Type" : "AWS::CloudFormation::WaitConditionHandle"
+    },
+
+    "herdServerWaitCondition" : {
+      "Type" : "AWS::CloudFormation::WaitCondition",
+      "DependsOn" : "herdApplicationServer",
+      "Properties" : {
+        "Handle"  : { "Ref" : "herdServerWaitHandle" },
+        "Timeout" : { "Ref" : "TimeOut" }
+      }
+    }
+ },
+
+  "Outputs" : {
+    "HerdIP" : {
+      "Value" : { "Fn::GetAtt" : ["herdApplicationServer", "PublicIp"] },
+      "Description" : "Herd application server IP"
+    },
+    "HerdBuildInfo" : {
+      "Value" : { "Fn::Join" : [ "", ["http://", { "Fn::GetAtt" : ["herdApplicationServer", "PublicIp"] },":8080/dm-app/displayBuildInfo"]]},
+      "Description" : "Herd build information page"
+    },
+    "HerdRESTAPI" : {
+      "Value" : { "Fn::Join" : [ "", ["http://", { "Fn::GetAtt" : ["herdApplicationServer", "PublicIp"] },":8080/dm-app/docs/rest/index.html"]]},
+      "Description" : "Herd REST API documentation"
+    },
+    "HerdUI" : {
+      "Value" : { "Fn::Join" : [ "", ["http://", { "Fn::GetAtt" : ["herdApplicationServer", "PublicIp"] },":8080/dm-app/dm-ui/"]]},
+      "Description" : "Herd UI"
+    },
+    "S3BucketSecureURL" : {
+      "Value" : { "Ref" : "herdS3Bucket"},
+      "Description" : "Name of Herd S3 bucket"
+    },
+    "SQSQueueName" : {
+      "Value" : {"Fn::GetAtt": ["herdQueueIn", "QueueName"]},
+      "Description" : "Name of Herd SQS in queue"
+    }
+  }
+}
+
