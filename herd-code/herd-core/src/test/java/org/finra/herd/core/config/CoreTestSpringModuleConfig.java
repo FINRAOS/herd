@@ -15,6 +15,12 @@
 */
 package org.finra.herd.core.config;
 
+import java.net.MalformedURLException;
+
+import javax.annotation.PostConstruct;
+import javax.xml.parsers.FactoryConfigurationError;
+
+import org.apache.log4j.xml.DOMConfigurator;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
@@ -25,4 +31,13 @@ import org.springframework.context.annotation.Import;
 @Import({CoreSpringModuleConfig.class, CoreEnvTestSpringModuleConfig.class})
 public class CoreTestSpringModuleConfig
 {
+    @PostConstruct
+    public static void initialize() throws MalformedURLException, FactoryConfigurationError
+    {
+        /*
+         * Explicitly set the log4j configuration file location. This configuration is only necessary at the core layer of the application. The higher layers
+         * will use the configurer override provided by the DAO layer test configurations.
+         */
+        DOMConfigurator.configure(CoreTestSpringModuleConfig.class.getResource("/herd-log4j-test.xml"));
+    }
 }
