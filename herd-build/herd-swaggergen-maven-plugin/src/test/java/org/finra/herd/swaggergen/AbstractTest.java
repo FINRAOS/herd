@@ -35,7 +35,7 @@ public abstract class AbstractTest
     static
     {
         ConsoleLogger logger = new ConsoleLogger();
-        logger.setThreshold(AbstractLogger.LEVEL_DEBUG);
+        logger.setThreshold(AbstractLogger.LEVEL_ERROR);
         LOG = new DefaultLog(logger);
     }
 
