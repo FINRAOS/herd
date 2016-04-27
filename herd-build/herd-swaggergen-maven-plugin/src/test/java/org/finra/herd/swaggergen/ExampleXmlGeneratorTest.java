@@ -15,6 +15,7 @@
 */
 package org.finra.herd.swaggergen;
 
+import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -51,7 +52,7 @@ public class ExampleXmlGeneratorTest extends AbstractTest
         Pattern pattern = Pattern.compile(
             "<xmlGregorianCalendar>[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{3}-[0-9]{2}:[0-9]{2}</xmlGregorianCalendar>");
         Matcher matcher = pattern.matcher(exampleXml);
-        assertTrue(matcher.find());
+        assertTrue(format("exampleXml does not match pattern. exampleXml: %s, pattern: %s", exampleXml, pattern), matcher.find());
     }
 
     @Test
