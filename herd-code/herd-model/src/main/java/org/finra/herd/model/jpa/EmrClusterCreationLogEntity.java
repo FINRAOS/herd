@@ -23,11 +23,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
-@XmlRootElement
-@XmlType
 @Entity
 @Table(name = EmrClusterCreationLogEntity.TABLE_NAME)
 public class EmrClusterCreationLogEntity extends AuditableEntity
@@ -36,7 +32,8 @@ public class EmrClusterCreationLogEntity extends AuditableEntity
 
     @Id
     @GeneratedValue(generator = EmrClusterCreationLogEntity.TABLE_NAME + "_seq")
-    @SequenceGenerator(name = EmrClusterCreationLogEntity.TABLE_NAME + "_seq", sequenceName = EmrClusterCreationLogEntity.TABLE_NAME + "_seq")
+    @SequenceGenerator(name = EmrClusterCreationLogEntity.TABLE_NAME + "_seq", sequenceName = EmrClusterCreationLogEntity.TABLE_NAME + "_seq",
+        allocationSize = 1)
     @Column(name = EmrClusterCreationLogEntity.TABLE_NAME + "_id")
     private Integer id;
 
@@ -114,80 +111,5 @@ public class EmrClusterCreationLogEntity extends AuditableEntity
     public void setEmrClusterDefinition(String emrClusterDefinition)
     {
         this.emrClusterDefinition = emrClusterDefinition;
-    }
-
-    @Override
-    public int hashCode()
-    {
-        int prime = 31;
-        int result = 1;
-        result = prime * result + ((emrClusterDefinitionName == null) ? 0 : emrClusterDefinitionName.hashCode());
-        result = prime * result + ((emrClusterId == null) ? 0 : emrClusterId.hashCode());
-        result = prime * result + ((id == null) ? 0 : id.hashCode());
-        result = prime * result + ((namespace == null) ? 0 : namespace.hashCode());
-        return result;
-    }
-
-    @Override
-    public boolean equals(Object obj)
-    {
-        if (this == obj)
-        {
-            return true;
-        }
-        if (obj == null)
-        {
-            return false;
-        }
-        if (getClass() != obj.getClass())
-        {
-            return false;
-        }
-        EmrClusterCreationLogEntity other = (EmrClusterCreationLogEntity) obj;
-        if (emrClusterDefinitionName == null)
-        {
-            if (other.emrClusterDefinitionName != null)
-            {
-                return false;
-            }
-        }
-        else if (!emrClusterDefinitionName.equals(other.emrClusterDefinitionName))
-        {
-            return false;
-        }
-        if (emrClusterId == null)
-        {
-            if (other.emrClusterId != null)
-            {
-                return false;
-            }
-        }
-        else if (!emrClusterId.equals(other.emrClusterId))
-        {
-            return false;
-        }
-        if (id == null)
-        {
-            if (other.id != null)
-            {
-                return false;
-            }
-        }
-        else if (!id.equals(other.id))
-        {
-            return false;
-        }
-        if (namespace == null)
-        {
-            if (other.namespace != null)
-            {
-                return false;
-            }
-        }
-        else if (!namespace.equals(other.namespace))
-        {
-            return false;
-        }
-        return true;
     }
 }

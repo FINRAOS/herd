@@ -33,6 +33,12 @@ public class MockS3Bucket
      */
     private Map<String, MockS3Object> objects = new HashMap<>();
 
+    /**
+     * Versions registered against this bucket.
+     */
+    private Map<String, MockS3Object> versions = new HashMap<>();
+
+
     public String getName()
     {
         return name;
@@ -51,6 +57,16 @@ public class MockS3Bucket
     public void setObjects(Map<String, MockS3Object> objects)
     {
         this.objects = objects;
+    }
+
+    public Map<String, MockS3Object> getVersions()
+    {
+        return versions;
+    }
+
+    public void setVersions(Map<String, MockS3Object> versions)
+    {
+        this.versions = versions;
     }
 
     @Override

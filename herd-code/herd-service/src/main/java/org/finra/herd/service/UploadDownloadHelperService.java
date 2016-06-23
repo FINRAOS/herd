@@ -16,26 +16,34 @@
 package org.finra.herd.service;
 
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
-import org.finra.herd.model.dto.AwsParamsDto;
+import org.finra.herd.model.dto.CompleteUploadSingleParamsDto;
 
 public interface UploadDownloadHelperService
 {
     /**
-     * Synchronously moves the file to target bucket from source bucket and updates the source business object data status to DELETED and target business object
-     * data status to VALID. If S3 copy fails, marks the target BData to INVALID and source BData to DELETED.
+     * Prepares to move an S3 file from the source bucket to the target bucket. On success, both the target and source business object data statuses are set to
+     * "RE-ENCRYPTING" and the DTO is updated accordingly.
      *
-     * @param sourceBusinessObjectDataKey the source business object data key
-     * @param targetBusinessObjectDataKey the target business object data key
-     * @param sourceBucketName the source bucket name
-     * @param targetBucketName the target bucket name
-     * @param filePath the file path
-     * @param kmsKeyId the KMS id for target bucket
-     * @param awsParams the aws parameters
-     *
-     * @return Array containing status updates to source and target business object data, null if no changes happened.
+     * @param objectKey the object key (i.e. filename)
+     * @param completeUploadSingleParamsDto the DTO to be initialized with parameters required for complete upload single message processing
      */
-    public String[] performFileMoveSync(BusinessObjectDataKey sourceBusinessObjectDataKey, BusinessObjectDataKey targetBusinessObjectDataKey,
-        String sourceBucketName, String targetBucketName, String filePath, String kmsKeyId, AwsParamsDto awsParams);
+    public void prepareForFileMove(String objectKey, CompleteUploadSingleParamsDto completeUploadSingleParamsDto);
+
+    /**
+     * Moves an S3 file from the source bucket to the target bucket. Updates the target business object data status in the DTO based on the result of S3 copy
+     * operation. If S3 copy fails, the target business object data status in the DTO is set to "INVALID", otherwise it is set to "VALID".
+     *
+     * @param completeUploadSingleParamsDto the DTO that contains complete upload single message parameters
+     */
+    public void performFileMove(CompleteUploadSingleParamsDto completeUploadSingleParamsDto);
+
+    /**
+     * Executes the steps required to complete the processing of complete upload single message following a successful S3 file move operation. The method also
+     * updates the DTO that contains complete upload single message parameters.
+     *
+     * @param completeUploadSingleParamsDto the DTO that contains complete upload single message parameters
+     */
+    public void executeFileMoveAfterSteps(CompleteUploadSingleParamsDto completeUploadSingleParamsDto);
 
     /**
      * Updates the business object data status in a new transaction.
@@ -44,4 +52,12 @@ public interface UploadDownloadHelperService
      * @param businessObjectDataStatus the business object data status
      */
     public void updateBusinessObjectDataStatus(BusinessObjectDataKey businessObjectDataKey, String businessObjectDataStatus);
+
+    /**
+     * Asserts that the S3 object in the specified bucket and key does not exist.
+     *
+     * @param bucketName The S3 bucket name
+     * @param key The S3 key
+     */
+    public void assertS3ObjectKeyDoesNotExist(String bucketName, String key);
 }

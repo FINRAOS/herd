@@ -135,7 +135,7 @@ public class UploaderApp extends DataBridgeApp
             S3FileTransferRequestParamsDto.builder().localPath(argParser.getStringValue(localPathOpt)).useRrs(argParser.getBooleanValue(rrsOpt))
                 .s3AccessKey(argParser.getStringValue(s3AccessKeyOpt)).s3SecretKey(argParser.getStringValue(s3SecretKeyOpt))
                 .s3Endpoint(argParser.getStringValue(s3EndpointOpt)).maxThreads(maxThreads).httpProxyHost(argParser.getStringValue(httpProxyHostOpt))
-                .httpProxyPort(httpProxyPort).build();
+                .httpProxyPort(httpProxyPort).socketTimeout(argParser.getIntegerValue(socketTimeoutOpt)).build();
 
         // Call the controller with the user specified parameters to perform the upload.
         UploaderController controller = applicationContext.getBean(UploaderController.class);

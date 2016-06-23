@@ -33,18 +33,6 @@ import org.finra.herd.model.api.xml.EmrHadoopJarStepAddRequest;
 public class EmrHadoopJarStepHelper extends EmrStepHelper
 {
     @Override
-    public String getStepType()
-    {
-        return EmrHadoopJarStep.class.getName();
-    }
-
-    @Override
-    public String getStepRequestType()
-    {
-        return EmrHadoopJarStepAddRequest.class.getName();
-    }
-
-    @Override
     public Object buildResponseFromRequest(Object stepRequest)
     {
         EmrHadoopJarStepAddRequest emrHadoopJarStepAddRequest = (EmrHadoopJarStepAddRequest) stepRequest;
@@ -82,8 +70,104 @@ public class EmrHadoopJarStepHelper extends EmrStepHelper
     {
         EmrHadoopJarStep hadoopJarStep = (EmrHadoopJarStep) step;
 
-        return emrHelper.getEmrHadoopJarStepConfig(hadoopJarStep.getStepName(), hadoopJarStep.getJarLocation(), hadoopJarStep.getMainClass(), 
+        return emrHelper.getEmrHadoopJarStepConfig(hadoopJarStep.getStepName(), hadoopJarStep.getJarLocation(), hadoopJarStep.getMainClass(),
             hadoopJarStep.getScriptArguments(), hadoopJarStep.isContinueOnError());
+    }
+
+    @Override
+    public String getRequestEmrClusterDefinitionName(Object stepRequest)
+    {
+        return ((EmrHadoopJarStepAddRequest) stepRequest).getEmrClusterDefinitionName();
+    }
+
+    @Override
+    public String getRequestEmrClusterId(Object stepRequest)
+    {
+        return ((EmrHadoopJarStepAddRequest) stepRequest).getEmrClusterId();
+    }
+
+    @Override
+    public String getRequestEmrClusterName(Object stepRequest)
+    {
+        return ((EmrHadoopJarStepAddRequest) stepRequest).getEmrClusterName();
+    }
+
+    @Override
+    public String getRequestNamespace(Object stepRequest)
+    {
+        return ((EmrHadoopJarStepAddRequest) stepRequest).getNamespace();
+    }
+
+    @Override
+    public String getRequestStepName(Object stepRequest)
+    {
+        return ((EmrHadoopJarStepAddRequest) stepRequest).getStepName();
+    }
+
+    @Override
+    public String getStepId(Object step)
+    {
+        return ((EmrHadoopJarStep) step).getId();
+    }
+
+    @Override
+    public String getStepRequestType()
+    {
+        return EmrHadoopJarStepAddRequest.class.getName();
+    }
+
+    @Override
+    public String getStepType()
+    {
+        return EmrHadoopJarStep.class.getName();
+    }
+
+    @Override
+    public Boolean isRequestContinueOnError(Object stepRequest)
+    {
+        return ((EmrHadoopJarStepAddRequest) stepRequest).isContinueOnError();
+    }
+
+    @Override
+    public void setRequestContinueOnError(Object stepRequest, Boolean continueOnError)
+    {
+        ((EmrHadoopJarStepAddRequest) stepRequest).setContinueOnError(continueOnError);
+    }
+
+    @Override
+    public void setRequestEmrClusterDefinitionName(Object stepRequest, String clusterDefinitionName)
+    {
+        ((EmrHadoopJarStepAddRequest) stepRequest).setEmrClusterDefinitionName(clusterDefinitionName);
+    }
+
+    @Override
+    public void setRequestEmrClusterId(Object stepRequest, String emrClusterId)
+    {
+        ((EmrHadoopJarStepAddRequest) stepRequest).setEmrClusterId(emrClusterId);
+    }
+
+    @Override
+    public void setRequestEmrClusterName(Object stepRequest, String clusterName)
+    {
+        ((EmrHadoopJarStepAddRequest) stepRequest).setEmrClusterName(clusterName);
+    }
+
+    @Override
+    public void setRequestNamespace(Object stepRequest, String namespace)
+    {
+        ((EmrHadoopJarStepAddRequest) stepRequest).setNamespace(namespace);
+    }
+
+    @Override
+    public void setRequestStepName(Object stepRequest, String stepName)
+    {
+        ((EmrHadoopJarStepAddRequest) stepRequest).setStepName(stepName);
+    }
+
+    @Override
+    public void setStepId(Object step, String stepId)
+    {
+        ((EmrHadoopJarStep) step).setId(stepId);
     }
 
     @Override
@@ -106,77 +190,5 @@ public class EmrHadoopJarStepHelper extends EmrStepHelper
         {
             throw new IllegalArgumentException("Hadoop JAR location must be specified.");
         }
-    }
-
-    @Override
-    public String getStepId(Object step)
-    {
-        return ((EmrHadoopJarStep) step).getId();
-    }
-
-    @Override
-    public void setStepId(Object step, String stepId)
-    {
-        ((EmrHadoopJarStep) step).setId(stepId);
-    }
-
-    @Override
-    public String getRequestStepName(Object stepRequest)
-    {
-        return ((EmrHadoopJarStepAddRequest) stepRequest).getStepName();
-    }
-
-    @Override
-    public void setRequestStepName(Object stepRequest, String stepName)
-    {
-        ((EmrHadoopJarStepAddRequest) stepRequest).setStepName(stepName);
-    }
-
-    @Override
-    public Boolean isRequestContinueOnError(Object stepRequest)
-    {
-        return ((EmrHadoopJarStepAddRequest) stepRequest).isContinueOnError();
-    }
-
-    @Override
-    public void setRequestContinueOnError(Object stepRequest, Boolean continueOnError)
-    {
-        ((EmrHadoopJarStepAddRequest) stepRequest).setContinueOnError(continueOnError);
-    }
-
-    @Override
-    public String getRequestNamespace(Object stepRequest)
-    {
-        return ((EmrHadoopJarStepAddRequest) stepRequest).getNamespace();
-    }
-
-    @Override
-    public void setRequestNamespace(Object stepRequest, String namespace)
-    {
-        ((EmrHadoopJarStepAddRequest) stepRequest).setNamespace(namespace);
-    }
-
-    @Override
-    public String getRequestEmrClusterDefinitionName(Object stepRequest)
-    {
-        return ((EmrHadoopJarStepAddRequest) stepRequest).getEmrClusterDefinitionName();
-    }
-
-    @Override
-    public void setRequestEmrClusterDefinitionName(Object stepRequest, String clusterDefinitionName)
-    {
-        ((EmrHadoopJarStepAddRequest) stepRequest).setEmrClusterDefinitionName(clusterDefinitionName);
-    }
-
-    @Override
-    public String getRequestEmrClusterName(Object stepRequest)
-    {
-        return ((EmrHadoopJarStepAddRequest) stepRequest).getEmrClusterName();
-    }
-
-    @Override
-    public void setRequestEmrClusterName(Object stepRequest, String clusterName)
-    {
-        ((EmrHadoopJarStepAddRequest) stepRequest).setEmrClusterName(clusterName);
     }
 }

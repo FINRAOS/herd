@@ -15,8 +15,9 @@
 */
 package org.finra.herd.service.helper;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -25,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.velocity.exception.MethodInvocationException;
 import org.apache.velocity.exception.ParseErrorException;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,9 +36,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 
 import org.finra.herd.dao.helper.HerdDaoSecurityHelper;
+import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
-import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.service.AbstractServiceTest;
 
 /**
@@ -200,12 +202,14 @@ public class DefaultSqsMessageBuilderTest extends AbstractServiceTest
 
         try
         {
-            // Get the system monitor response.
-            String systemMonitorResponseMessage = defaultSqsMessageBuilder.buildSystemMonitorResponse(getTestSystemMonitorIncomingMessage());
-
-            // Ensure the variable that resulted from the XPath expression is not present in the message.
-            assertTrue("Invalid <context-message-type> tag found.",
-                systemMonitorResponseMessage.contains("<context-message-type>$incoming_message_context_message_type</context-message-type>"));
+            // Try to get a system monitor response when XPath expressions are removed.
+            defaultSqsMessageBuilder.buildSystemMonitorResponse(getTestSystemMonitorIncomingMessage());
+            fail("Should throw an MethodInvocationException when the velocity template contains an undefined variable.");
+        }
+        catch (MethodInvocationException e)
+        {
+            assertEquals(String.format("Variable $incoming_message_correlation_id has not been set at systemMonitorResponse[line 11, column 29]"),
+                e.getMessage());
         }
         finally
         {
@@ -271,8 +275,8 @@ public class DefaultSqsMessageBuilderTest extends AbstractServiceTest
     private void testBuildBusinessObjectDataStatusChangeMessage(List<String> subPartitionValues, String triggeredByUsername)
     {
         // Create a business object data entity.
-        BusinessObjectDataEntity businessObjectDataEntity = createTestValidBusinessObjectData(subPartitionValues);
-        BusinessObjectDataKey businessObjectDataKey = herdDaoHelper.getBusinessObjectDataKey(businessObjectDataEntity);
+        BusinessObjectDataEntity businessObjectDataEntity = createTestValidBusinessObjectData(subPartitionValues, NO_ATTRIBUTE_DEFINITIONS, NO_ATTRIBUTES);
+        BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity);
 
         String newBusinessObjectDataStatus = "testNewBusinessObjectDataStatus";
         String oldBusinessObjectDataStatus = "testOldBusinessObjectDataStatus";
@@ -283,6 +287,6 @@ public class DefaultSqsMessageBuilderTest extends AbstractServiceTest
 
         // Validate the message.
         validateBusinessObjectDataStatusChangeMessage(message, businessObjectDataKey, businessObjectDataEntity.getId(), triggeredByUsername,
-            newBusinessObjectDataStatus, oldBusinessObjectDataStatus);
+            newBusinessObjectDataStatus, oldBusinessObjectDataStatus, NO_ATTRIBUTES);
     }
 }

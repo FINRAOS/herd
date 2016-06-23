@@ -15,7 +15,11 @@
 */
 package org.finra.herd.core.helper;
 
-import org.junit.Assert;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
+
 import org.junit.Test;
 import org.springframework.mock.env.MockEnvironment;
 
@@ -35,8 +39,8 @@ public class ConfigurationHelperTest extends AbstractCoreTest
 
         String value = ConfigurationHelper.getProperty(configurationValue, String.class, environment);
 
-        Assert.assertNotNull("value", value);
-        Assert.assertEquals("value", expectedValue, value);
+        assertNotNull("value", value);
+        assertEquals("value", expectedValue, value);
     }
 
     @Test
@@ -50,12 +54,12 @@ public class ConfigurationHelperTest extends AbstractCoreTest
 
         String value = ConfigurationHelper.getProperty(configurationValue, String.class, environment);
 
-        Assert.assertNotNull("value", value);
-        Assert.assertEquals("value", expectedValue, value);
+        assertNotNull("value", value);
+        assertEquals("value", expectedValue, value);
     }
 
     @Test
-    public void testGetPropertyReturnDefaultWhenValueConversionFails()
+    public void testGetPropertyReturnDefaultWhenValueConversionFails() throws Exception
     {
         ConfigurationValue configurationValue = ConfigurationValue.EMR_OOZIE_JOBS_TO_INCLUDE_IN_CLUSTER_STATUS;
         Integer expectedValue = (Integer) configurationValue.getDefaultValue();
@@ -63,10 +67,11 @@ public class ConfigurationHelperTest extends AbstractCoreTest
         MockEnvironment environment = new MockEnvironment();
         environment.setProperty(configurationValue.getKey(), "NOT_AN_INTEGER");
 
-        Integer value = ConfigurationHelper.getProperty(configurationValue, Integer.class, environment);
-
-        Assert.assertNotNull("value", value);
-        Assert.assertEquals("value", expectedValue, value);
+        executeWithoutLogging(ConfigurationHelper.class, () -> {
+            Integer value = ConfigurationHelper.getProperty(configurationValue, Integer.class, environment);
+            assertNotNull("value", value);
+            assertEquals("value", expectedValue, value);
+        });
     }
 
     @Test
@@ -81,12 +86,12 @@ public class ConfigurationHelperTest extends AbstractCoreTest
         try
         {
             ConfigurationHelper.getProperty(configurationValue, givenType, environment);
-            Assert.fail("expected IllegalArgumentException, but no exception was thrown");
+            fail("expected IllegalArgumentException, but no exception was thrown");
         }
         catch (Exception e)
         {
-            Assert.assertEquals("thrown exception type", IllegalStateException.class, e.getClass());
-            Assert.assertEquals("thrown exception message",
+            assertEquals("thrown exception type", IllegalStateException.class, e.getClass());
+            assertEquals("thrown exception message",
                 "targetType \"" + givenType + "\" is not assignable from the default value of type \"" + expectedDefaultType + "\" for configuration value " +
                     "\"HERD_ENVIRONMENT\".", e.getMessage());
         }
@@ -101,7 +106,7 @@ public class ConfigurationHelperTest extends AbstractCoreTest
 
         String value = ConfigurationHelper.getProperty(configurationValue, String.class, environment);
 
-        Assert.assertNull("value", value);
+        assertNull("value", value);
     }
 
     @Test
@@ -112,12 +117,12 @@ public class ConfigurationHelperTest extends AbstractCoreTest
         try
         {
             ConfigurationHelper.getProperty(null, String.class, environment);
-            Assert.fail("expected IllegalArgumentException, but no exception was thrown");
+            fail("expected IllegalArgumentException, but no exception was thrown");
         }
         catch (Exception e)
         {
-            Assert.assertEquals("thrown exception type", IllegalStateException.class, e.getClass());
-            Assert.assertEquals("thrown exception message", "configurationValue is required", e.getMessage());
+            assertEquals("thrown exception type", IllegalStateException.class, e.getClass());
+            assertEquals("thrown exception message", "configurationValue is required", e.getMessage());
         }
     }
 
@@ -129,12 +134,12 @@ public class ConfigurationHelperTest extends AbstractCoreTest
         try
         {
             ConfigurationHelper.getProperty(ConfigurationValue.HERD_ENVIRONMENT, null, environment);
-            Assert.fail("expected IllegalArgumentException, but no exception was thrown");
+            fail("expected IllegalArgumentException, but no exception was thrown");
         }
         catch (Exception e)
         {
-            Assert.assertEquals("thrown exception type", IllegalStateException.class, e.getClass());
-            Assert.assertEquals("thrown exception message", "targetType is required", e.getMessage());
+            assertEquals("thrown exception type", IllegalStateException.class, e.getClass());
+            assertEquals("thrown exception message", "targetType is required", e.getMessage());
         }
     }
 
@@ -147,7 +152,7 @@ public class ConfigurationHelperTest extends AbstractCoreTest
 
         String value = ConfigurationHelper.getProperty(configurationValue, environment);
 
-        Assert.assertEquals("value", configurationValue.getDefaultValue(), value);
+        assertEquals("value", configurationValue.getDefaultValue(), value);
     }
 
     @Test
@@ -157,7 +162,7 @@ public class ConfigurationHelperTest extends AbstractCoreTest
 
         String value = configurationHelper.getProperty(configurationValue, String.class);
 
-        Assert.assertEquals("value", configurationValue.getDefaultValue(), value);
+        assertEquals("value", configurationValue.getDefaultValue(), value);
     }
 
     @Test
@@ -167,6 +172,50 @@ public class ConfigurationHelperTest extends AbstractCoreTest
 
         String value = configurationHelper.getProperty(configurationValue);
 
-        Assert.assertEquals("value", configurationValue.getDefaultValue(), value);
+        assertEquals("value", configurationValue.getDefaultValue(), value);
+    }
+
+    @Test
+    public void testGetBooleanPropertyValue()
+    {
+        ConfigurationValue configurationValue = ConfigurationValue.USER_NAMESPACE_AUTHORIZATION_ENABLED;
+
+        MockEnvironment environment = new MockEnvironment();
+        environment.setProperty(configurationValue.getKey(), "true");
+
+        assertEquals(Boolean.TRUE, configurationHelper.getBooleanProperty(configurationValue, environment));
+    }
+
+    @Test
+    public void testGetBooleanPropertyValueConversionFails()
+    {
+        ConfigurationValue configurationValue = ConfigurationValue.USER_NAMESPACE_AUTHORIZATION_ENABLED;
+
+        MockEnvironment environment = new MockEnvironment();
+        environment.setProperty(configurationValue.getKey(), "NOT_A_BOOLEAN");
+
+        try
+        {
+            configurationHelper.getBooleanProperty(configurationValue, environment);
+            fail("Should throw an IllegalStatueException when property value is not boolean.");
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals(String.format("Configuration \"%s\" has an invalid boolean value: \"NOT_A_BOOLEAN\".", configurationValue.getKey()), e.getMessage());
+        }
+    }
+
+    @Test
+    public void testGetBooleanPropertyValidationThrowsWhenConfigurationValueIsNull()
+    {
+        try
+        {
+            configurationHelper.getBooleanProperty(null);
+            fail("Should throw an IllegalStateException when configuration value is null.");
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals("configurationValue is required", e.getMessage());
+        }
     }
 }

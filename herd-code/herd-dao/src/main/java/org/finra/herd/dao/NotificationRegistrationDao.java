@@ -17,7 +17,7 @@ package org.finra.herd.dao;
 
 import org.finra.herd.model.jpa.NotificationRegistrationEntity;
 
-public interface NotificationRegistrationDao
+public interface NotificationRegistrationDao extends BaseJpaDao
 {
     /**
      * Returns the notification registration by its namespace and name.

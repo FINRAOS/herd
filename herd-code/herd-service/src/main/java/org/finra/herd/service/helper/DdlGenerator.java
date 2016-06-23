@@ -30,16 +30,9 @@ import org.finra.herd.model.jpa.StorageEntity;
  */
 public abstract class DdlGenerator
 {
-    public static final String TABLE_NAME_CUSTOM_DDL_TOKEN = "${table.name}";
-
     public static final String NON_PARTITIONED_TABLE_LOCATION_CUSTOM_DDL_TOKEN = "${non-partitioned.table.location}";
 
-    /**
-     * Gets the supported DDL output format that this generator can support.
-     *
-     * @return BusinessObjectDataDdlOutputFormatEnum supported output format.
-     */
-    public abstract BusinessObjectDataDdlOutputFormatEnum getDdlOutputFormat();
+    public static final String TABLE_NAME_CUSTOM_DDL_TOKEN = "${table.name}";
 
     /**
      * This method generates the create table DDL as per specified business object format DDL request.
@@ -69,4 +62,11 @@ public abstract class DdlGenerator
         CustomDdlEntity customDdlEntity, List<String> storageNames, List<StorageEntity> storageEntities, Map<StorageEntity, String> s3BucketNames);
 
     public abstract String generateReplaceColumnsStatement(BusinessObjectFormatDdlRequest request, BusinessObjectFormatEntity businessObjectFormatEntity);
+
+    /**
+     * Gets the supported DDL output format that this generator can support.
+     *
+     * @return BusinessObjectDataDdlOutputFormatEnum supported output format.
+     */
+    public abstract BusinessObjectDataDdlOutputFormatEnum getDdlOutputFormat();
 }

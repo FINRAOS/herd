@@ -28,6 +28,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.jpa.NotificationEventTypeEntity;
 import org.finra.herd.service.BusinessObjectDataService;
 import org.finra.herd.service.NotificationEventService;
+import org.finra.herd.service.helper.BusinessObjectDataHelper;
 
 /**
  * An Activiti task that registers the business object data.
@@ -52,6 +53,9 @@ public class RegisterBusinessObjectData extends BaseJavaDelegate
     private Expression businessObjectDataCreateRequest;
 
     @Autowired
+    private BusinessObjectDataHelper businessObjectDataHelper;
+
+    @Autowired
     private BusinessObjectDataService businessObjectDataService;
 
     @Autowired
@@ -70,7 +74,7 @@ public class RegisterBusinessObjectData extends BaseJavaDelegate
         BusinessObjectData businessObjectData = businessObjectDataService.createBusinessObjectData(request);
 
         // Trigger notifications.
-        BusinessObjectDataKey businessObjectDataKey = herdHelper.getBusinessObjectDataKey(businessObjectData);
+        BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectData);
 
         // Create business object data notifications.
         for (NotificationEventTypeEntity.EventTypesBdata eventType : Arrays

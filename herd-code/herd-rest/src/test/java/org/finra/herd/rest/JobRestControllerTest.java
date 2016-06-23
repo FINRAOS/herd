@@ -22,11 +22,16 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 
 import org.activiti.engine.task.Task;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
+import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.CollectionUtils;
 
 import org.finra.herd.model.ObjectNotFoundException;
@@ -38,7 +43,11 @@ import org.finra.herd.model.api.xml.JobSignalRequest;
 import org.finra.herd.model.api.xml.JobStatusEnum;
 import org.finra.herd.model.api.xml.JobSummaries;
 import org.finra.herd.model.api.xml.JobSummary;
+import org.finra.herd.model.api.xml.NamespaceAuthorization;
+import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.api.xml.Parameter;
+import org.finra.herd.model.dto.ApplicationUser;
+import org.finra.herd.model.dto.SecurityUserWrapper;
 
 /**
  * This class tests various functionality within the Job REST controller.
@@ -55,7 +64,7 @@ public class JobRestControllerTest extends AbstractRestTest
         JobDefinitionCreateRequest jobDefinitionCreateRequest = createJobDefinitionCreateRequest();
 
         // Create the job definition.
-        jobDefinitionRestController.createJobDefinition(jobDefinitionCreateRequest);
+        jobDefinitionService.createJobDefinition(jobDefinitionCreateRequest, false);
 
         // Create a job create request using hard coded test values.
         JobCreateRequest jobCreateRequest = createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME);
@@ -78,6 +87,53 @@ public class JobRestControllerTest extends AbstractRestTest
         assertTrue(resultParameters.containsAll(expectedParameters));
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void testCreateJobDuplicateParameterName() throws Exception
+    {
+        // Create a job create request using hard coded test values.
+        JobCreateRequest jobCreateRequest = createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME);
+
+        // Add a duplicate parameter.
+        Parameter parameter = new Parameter();
+        parameter.setName(addWhitespace(jobCreateRequest.getParameters().get(0).getName().toUpperCase()));
+        parameter.setValue(jobCreateRequest.getParameters().get(0).getValue());
+        jobCreateRequest.getParameters().add(parameter);
+
+        // Try to create a job.
+        jobRestController.createJob(jobCreateRequest);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testCreateJobJobNameEmpty() throws Exception
+    {
+        // Try to create a job by passing an empty job name.
+        jobRestController.createJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, " "));
+    }
+
+    @Test(expected = ObjectNotFoundException.class)
+    public void testCreateJobJobNameNoExists() throws Exception
+    {
+        // Create the namespace entity.
+        createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
+
+        // Try to create a job using non-existing job definition name.
+        jobRestController.createJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, "I_DO_NOT_EXIST"));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testCreateJobNamespaceEmpty() throws Exception
+    {
+        // Try to create a job by passing an empty namespace code.
+        jobRestController.createJob(createJobCreateRequest(" ", TEST_ACTIVITI_JOB_NAME));
+    }
+
+    @Test(expected = ObjectNotFoundException.class)
+    public void testCreateJobNamespaceNoExists() throws Exception
+    {
+        // Try to create a job using non-existing namespace code.
+        jobRestController.createJob(createJobCreateRequest("I_DO_NOT_EXIST", TEST_ACTIVITI_JOB_NAME));
+    }
+
     @Test
     public void testCreateJobNoParams() throws Exception
     {
@@ -89,7 +145,7 @@ public class JobRestControllerTest extends AbstractRestTest
         jobDefinitionCreateRequest.setParameters(null);
 
         // Create the job definition.
-        jobDefinitionRestController.createJobDefinition(jobDefinitionCreateRequest);
+        jobDefinitionService.createJobDefinition(jobDefinitionCreateRequest, false);
 
         // Create a job create request using hard coded test values.
         JobCreateRequest jobCreateRequest = createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME);
@@ -108,20 +164,6 @@ public class JobRestControllerTest extends AbstractRestTest
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testCreateJobNamespaceEmpty() throws Exception
-    {
-        // Try to create a job by passing an empty namespace code.
-        jobRestController.createJob(createJobCreateRequest(" ", TEST_ACTIVITI_JOB_NAME));
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testCreateJobJobNameEmpty() throws Exception
-    {
-        // Try to create a job by passing an empty job name.
-        jobRestController.createJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, " "));
-    }
-
-    @Test(expected = IllegalArgumentException.class)
     public void testCreateJobParameterNameEmpty() throws Exception
     {
         // Create a job create request using hard coded test values.
@@ -135,37 +177,15 @@ public class JobRestControllerTest extends AbstractRestTest
         jobRestController.createJob(jobCreateRequest);
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testCreateJobDuplicateParameterName() throws Exception
+    @Test
+    public void testDeleteJob() throws Exception
     {
-        // Create a job create request using hard coded test values.
-        JobCreateRequest jobCreateRequest = createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME);
-
-        // Add a duplicate parameter.
-        Parameter parameter = new Parameter();
-        parameter.setName(addWhitespace(jobCreateRequest.getParameters().get(0).getName().toUpperCase()));
-        parameter.setValue(jobCreateRequest.getParameters().get(0).getValue());
-        jobCreateRequest.getParameters().add(parameter);
-
-        // Try to create a job.
-        jobRestController.createJob(jobCreateRequest);
-    }
-
-    @Test(expected = ObjectNotFoundException.class)
-    public void testCreateJobNamespaceNoExists() throws Exception
-    {
-        // Try to create a job using non-existing namespace code.
-        jobRestController.createJob(createJobCreateRequest("I_DO_NOT_EXIST", TEST_ACTIVITI_JOB_NAME));
-    }
-
-    @Test(expected = ObjectNotFoundException.class)
-    public void testCreateJobJobNameNoExists() throws Exception
-    {
-        // Create the namespace entity.
-        createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
-
-        // Try to create a job using non-existing job definition name.
-        jobRestController.createJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, "I_DO_NOT_EXIST"));
+        createJobDefinition(ACTIVITI_XML_TEST_RECEIVE_TASK_WITH_CLASSPATH);
+        Job job = jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
+        JobDeleteRequest jobDeleteRequest = new JobDeleteRequest();
+        jobDeleteRequest.setDeleteReason("test delete reason");
+        Job deletedJob = jobRestController.deleteJob(job.getId(), jobDeleteRequest);
+        assertNotNull(deletedJob);
     }
 
     @Test
@@ -173,7 +193,7 @@ public class JobRestControllerTest extends AbstractRestTest
     {
         createJobDefinition(ACTIVITI_XML_TEST_USER_TASK_WITH_CLASSPATH);
 
-        Job job = createAndStartJobSync(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
+        Job job = jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
 
         String activitiXml = IOUtils.toString(resourceLoader.getResource(ACTIVITI_XML_TEST_USER_TASK_WITH_CLASSPATH).getInputStream());
         // Job should be waiting at User task.
@@ -221,7 +241,7 @@ public class JobRestControllerTest extends AbstractRestTest
     {
         createJobDefinition(ACTIVITI_XML_HERD_INTERMEDIATE_TIMER_WITH_CLASSPATH);
 
-        Job job = createAndStartJobSync(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
+        Job job = jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
 
         String activitiXml = IOUtils.toString(resourceLoader.getResource(ACTIVITI_XML_HERD_INTERMEDIATE_TIMER_WITH_CLASSPATH).getInputStream());
         // Job should be waiting at User task.
@@ -259,13 +279,54 @@ public class JobRestControllerTest extends AbstractRestTest
         jobRestController.getJob(null, false);
     }
 
+    /**
+     * This is a happy path test for the REST endpoint. All the detailed tests are in the service tier.
+     */
+    @Test
+    public void testGetJobs() throws Exception
+    {
+        // Delete all jobs from the history table so we start clean.
+        deleteAllHistoricJobs();
+
+        // There should be no jobs initially.
+        JobSummaries jobSummaries = jobRestController.getJobs(NO_NAMESPACE, NO_ACTIVITI_JOB_NAME, NO_ACTIVITI_JOB_STATUS, NO_START_TIME, NO_END_TIME);
+        assertEquals(0, jobSummaries.getJobSummaries().size());
+
+        // Create a "standard" job definition we can run a job against.
+        createJobDefinition(ACTIVITI_XML_TEST_USER_TASK_WITH_CLASSPATH);
+
+        ApplicationUser applicationUser = new ApplicationUser(getClass());
+        applicationUser.setNamespaceAuthorizations(
+            new HashSet<>(Arrays.asList(new NamespaceAuthorization(TEST_ACTIVITI_NAMESPACE_CD, Arrays.asList(NamespacePermissionEnum.values())))));
+        SecurityContextHolder.getContext().setAuthentication(
+            new TestingAuthenticationToken(new SecurityUserWrapper("username", "", true, true, true, true, Collections.emptyList(), applicationUser), null));
+
+        // Create and start a job that will wait at a User task which will keep it running. Then complete the wait task which will cause the job to complete.
+        Job completedJob = jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
+        List<Task> tasks = activitiTaskService.createTaskQuery().processInstanceId(completedJob.getId()).list();
+        activitiTaskService.complete(tasks.get(0).getId());
+
+        // Query all the jobs which will have all 3 jobs created.
+        jobSummaries = jobRestController.getJobs(NO_NAMESPACE, NO_ACTIVITI_JOB_NAME, NO_ACTIVITI_JOB_STATUS, NO_START_TIME, NO_END_TIME);
+        assertEquals(1, jobSummaries.getJobSummaries().size());
+
+        // Get the job summary and perform some validation.
+        JobSummary jobSummary = jobSummaries.getJobSummaries().get(0);
+        assertNotNull(jobSummary.getStartTime()); // Ensure a start time is present (all jobs must have a start time).
+        assertNotNull(jobSummary.getEndTime()); // Ensure that the job has an end time since it's completed.
+        assertEquals(TEST_ACTIVITI_NAMESPACE_CD, jobSummary.getNamespace()); // Namespace should match the query filter.
+        assertEquals(TEST_ACTIVITI_JOB_NAME, jobSummary.getJobName()); // Job name should match the query filter.
+        assertEquals(JobStatusEnum.COMPLETED, jobSummary.getStatus()); // Make sure the status is running to match the filter.
+        assertEquals(0, jobSummary.getTotalExceptions()); // No exceptions should be present.
+    }
+
     @Test
     public void testSignalJob() throws Exception
     {
         createJobDefinition(ACTIVITI_XML_TEST_RECEIVE_TASK_WITH_CLASSPATH);
 
         // Start the job.
-        Job job = createAndStartJobSync(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
+        Job job = jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
 
         // Job should be waiting at Receive task.
         Job jobGet = jobRestController.getJob(job.getId(), false);
@@ -292,32 +353,6 @@ public class JobRestControllerTest extends AbstractRestTest
     }
 
     @Test
-    public void testSignalJobNoParameters() throws Exception
-    {
-        createJobDefinition(ACTIVITI_XML_TEST_RECEIVE_TASK_WITH_CLASSPATH);
-
-        // Start the job.
-        Job job = createAndStartJobSync(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
-
-        // Job should be waiting at Receive task.
-        Job jobGet = jobRestController.getJob(job.getId(), false);
-        assertEquals(JobStatusEnum.RUNNING, jobGet.getStatus());
-        assertEquals("receivetask1", jobGet.getCurrentWorkflowStep().getId());
-
-        // Signal job to continue.
-        JobSignalRequest jobSignalRequest = new JobSignalRequest(job.getId(), "receivetask1", null, null);
-
-        Job signalJob = jobRestController.signalJob(jobSignalRequest);
-
-        assertEquals(JobStatusEnum.RUNNING, signalJob.getStatus());
-        assertEquals("receivetask1", signalJob.getCurrentWorkflowStep().getId());
-
-        // Job should have been completed.
-        jobGet = jobRestController.getJob(job.getId(), true);
-        assertEquals(JobStatusEnum.COMPLETED, jobGet.getStatus());
-    }
-
-    @Test
     public void testSignalJobNoExists() throws Exception
     {
         // Signal job with job id that does not exist.
@@ -336,7 +371,7 @@ public class JobRestControllerTest extends AbstractRestTest
         createJobDefinition(ACTIVITI_XML_TEST_RECEIVE_TASK_WITH_CLASSPATH);
 
         // Start the job.
-        Job job = createAndStartJobSync(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
+        Job job = jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
 
         try
         {
@@ -355,49 +390,29 @@ public class JobRestControllerTest extends AbstractRestTest
         }
     }
 
-    /**
-     * This is a happy path test for the REST endpoint. All the detailed tests are in the service tier.
-     */
     @Test
-    public void testGetJobs() throws Exception
-    {
-        // Delete all jobs from the history table so we start clean.
-        deleteAllHistoricJobs();
-
-        // There should be no jobs initially.
-        JobSummaries jobSummaries = jobRestController.getJobs(null, null, null);
-        assertEquals(0, jobSummaries.getJobSummaries().size());
-
-        // Create a "standard" job definition we can run a job against.
-        createJobDefinition(ACTIVITI_XML_TEST_USER_TASK_WITH_CLASSPATH);
-
-        // Create and start a job that will wait at a User task which will keep it running. Then complete the wait task which will cause the job to complete.
-        Job completedJob = createAndStartJobSync(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
-        List<Task> tasks = activitiTaskService.createTaskQuery().processInstanceId(completedJob.getId()).list();
-        activitiTaskService.complete(tasks.get(0).getId());
-
-        // Query all the jobs which will have all 3 jobs created.
-        jobSummaries = jobRestController.getJobs(null, null, null);
-        assertEquals(1, jobSummaries.getJobSummaries().size());
-
-        // Get the job summary and perform some validation.
-        JobSummary jobSummary = jobSummaries.getJobSummaries().get(0);
-        assertNotNull(jobSummary.getStartTime()); // Ensure a start time is present (all jobs must have a start time).
-        assertNotNull(jobSummary.getEndTime()); // Ensure that the job has an end time since it's completed.
-        assertEquals(TEST_ACTIVITI_NAMESPACE_CD, jobSummary.getNamespace()); // Namespace should match the query filter.
-        assertEquals(TEST_ACTIVITI_JOB_NAME, jobSummary.getJobName()); // Job name should match the query filter.
-        assertEquals(JobStatusEnum.COMPLETED, jobSummary.getStatus()); // Make sure the status is running to match the filter.
-        assertEquals(0, jobSummary.getTotalExceptions()); // No exceptions should be present.
-    }
-
-    @Test
-    public void testDeleteJob() throws Exception
+    public void testSignalJobNoParameters() throws Exception
     {
         createJobDefinition(ACTIVITI_XML_TEST_RECEIVE_TASK_WITH_CLASSPATH);
-        Job job = createAndStartJobSync(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
-        JobDeleteRequest jobDeleteRequest = new JobDeleteRequest();
-        jobDeleteRequest.setDeleteReason("test delete reason");
-        Job deletedJob = jobRestController.deleteJob(job.getId(), jobDeleteRequest);
-        assertNotNull(deletedJob);
+
+        // Start the job.
+        Job job = jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
+
+        // Job should be waiting at Receive task.
+        Job jobGet = jobRestController.getJob(job.getId(), false);
+        assertEquals(JobStatusEnum.RUNNING, jobGet.getStatus());
+        assertEquals("receivetask1", jobGet.getCurrentWorkflowStep().getId());
+
+        // Signal job to continue.
+        JobSignalRequest jobSignalRequest = new JobSignalRequest(job.getId(), "receivetask1", null, null);
+
+        Job signalJob = jobRestController.signalJob(jobSignalRequest);
+
+        assertEquals(JobStatusEnum.RUNNING, signalJob.getStatus());
+        assertEquals("receivetask1", signalJob.getCurrentWorkflowStep().getId());
+
+        // Job should have been completed.
+        jobGet = jobRestController.getJob(job.getId(), true);
+        assertEquals(JobStatusEnum.COMPLETED, jobGet.getStatus());
     }
 }

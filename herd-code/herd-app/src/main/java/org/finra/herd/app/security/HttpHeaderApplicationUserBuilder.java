@@ -38,6 +38,7 @@ import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.model.dto.ApplicationUser;
 import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.service.helper.UserNamespaceAuthorizationHelper;
 
 /**
  * Http headers based Application user builder.
@@ -52,6 +53,9 @@ public class HttpHeaderApplicationUserBuilder implements ApplicationUserBuilder
 
     @Autowired
     private HerdStringHelper herdStringHelper;
+
+    @Autowired
+    private UserNamespaceAuthorizationHelper userNamespaceAuthorizationHelper;
 
     public static final String HTTP_HEADER_USER_ID = "useridHeader";
     public static final String HTTP_HEADER_FIRST_NAME = "firstNameHeader";
@@ -135,6 +139,7 @@ public class HttpHeaderApplicationUserBuilder implements ApplicationUserBuilder
         buildEmail(applicationUser, headerMap, headerNames.get(HTTP_HEADER_EMAIL));
         buildSessionId(applicationUser, headerMap, HTTP_HEADER_SESSION_ID);
         buildSessionInitTime(applicationUser, headerMap, headerNames.get(HTTP_HEADER_SESSION_INIT_TIME));
+        userNamespaceAuthorizationHelper.buildNamespaceAuthorizations(applicationUser);
 
         if (includeRoles)
         {
@@ -259,7 +264,7 @@ public class HttpHeaderApplicationUserBuilder implements ApplicationUserBuilder
             boolean useRoleRegexGroupName = StringUtils.isNotBlank(roleRegexGroupName);
             while (matcher.find())
             {
-                String role = null;
+                String role;
 
                 // Decide whether to use group or not
                 if (useRoleRegexGroupName)

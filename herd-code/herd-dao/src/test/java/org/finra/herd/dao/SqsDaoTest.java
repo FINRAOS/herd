@@ -33,5 +33,10 @@ public class SqsDaoTest extends AbstractDaoTest
         testAwsParamsDto.setHttpProxyHost(HTTP_PROXY_HOST);
         testAwsParamsDto.setHttpProxyPort(HTTP_PROXY_PORT);
         sqsDao.sendSqsTextMessage(testAwsParamsDto, JMS_QUEUE_NAME, MESSAGE_TEXT);
+
+        // Send a text message to the specified AWS SQS queue without specifying HTTP proxy settings.
+        testAwsParamsDto.setHttpProxyHost(null);
+        testAwsParamsDto.setHttpProxyPort(null);
+        sqsDao.sendSqsTextMessage(testAwsParamsDto, JMS_QUEUE_NAME, MESSAGE_TEXT);
     }
 }

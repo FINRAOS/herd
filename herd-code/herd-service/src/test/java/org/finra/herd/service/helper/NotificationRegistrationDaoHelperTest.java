@@ -31,32 +31,30 @@ public class NotificationRegistrationDaoHelperTest extends AbstractServiceTest
     @Test
     public void testGetNotificationRegistrationAssertReturnEntityWhenEntityExists()
     {
-        NotificationRegistrationKey businessObjectDataNotificationRegistrationKey = new NotificationRegistrationKey(
-            NAMESPACE_CD, BOD_NAME);
-        createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE, NAMESPACE_CD, BOD_NAME,
+        NotificationRegistrationKey businessObjectDataNotificationRegistrationKey = new NotificationRegistrationKey(NAMESPACE, BDEF_NAME);
+        createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE, NAMESPACE, BDEF_NAME,
             FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS, getTestJobActions());
-        NotificationRegistrationEntity notificationRegistrationEntity = notificationRegistrationDaoHelper.getNotificationRegistration(NAMESPACE_CD, BOD_NAME);
+        NotificationRegistrationEntity notificationRegistrationEntity = notificationRegistrationDaoHelper.getNotificationRegistration(NAMESPACE, BDEF_NAME);
         assertNotNull(notificationRegistrationEntity);
-        assertEquals(NAMESPACE_CD, notificationRegistrationEntity.getNamespace().getCode());
-        assertEquals(BOD_NAME, notificationRegistrationEntity.getName());
+        assertEquals(NAMESPACE, notificationRegistrationEntity.getNamespace().getCode());
+        assertEquals(BDEF_NAME, notificationRegistrationEntity.getName());
     }
 
     @Test
     public void testGetNotificationRegistrationAssertThrowWhenEntityNotExist()
     {
-        NotificationRegistrationKey businessObjectDataNotificationRegistrationKey = new NotificationRegistrationKey(
-            NAMESPACE_CD, BOD_NAME);
-        createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE, NAMESPACE_CD, BOD_NAME,
+        NotificationRegistrationKey businessObjectDataNotificationRegistrationKey = new NotificationRegistrationKey(NAMESPACE, BDEF_NAME);
+        createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE, NAMESPACE, BDEF_NAME,
             FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS, getTestJobActions());
         try
         {
-            notificationRegistrationDaoHelper.getNotificationRegistration(NAMESPACE_CD, "DOES_NOT_EXIST");
+            notificationRegistrationDaoHelper.getNotificationRegistration(NAMESPACE, "DOES_NOT_EXIST");
             fail();
         }
         catch (Exception e)
         {
             assertEquals(ObjectNotFoundException.class, e.getClass());
-            assertEquals("The notification registration with namespace \"" + NAMESPACE_CD + "\" and name \"DOES_NOT_EXIST\" was not found.", e.getMessage());
+            assertEquals("The notification registration with namespace \"" + NAMESPACE + "\" and name \"DOES_NOT_EXIST\" was not found.", e.getMessage());
         }
     }
 }

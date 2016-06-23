@@ -19,26 +19,29 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-import org.finra.herd.model.jpa.StorageUnitEntity;
+import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.dto.StorageUnitAlternateKeyDto;
 import org.finra.herd.service.AbstractServiceTest;
 
 public class StorageUnitHelperTest extends AbstractServiceTest
 {
     @Test
-    public void testUpdateStorageUnitStatus()
+    public void testCreateStorageUnitKey()
     {
-        // Create and persist a storage unit entity.
-        StorageUnitEntity storageUnitEntity =
-            createStorageUnitEntity(STORAGE_NAME, BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS, STORAGE_UNIT_STATUS, NO_STORAGE_DIRECTORY_PATH);
+        // Get a storage unit key.
+        StorageUnitAlternateKeyDto resultStorageUnitAlternateKeyDto = storageUnitHelper.createStorageUnitKey(
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION), STORAGE_NAME);
 
-        // Create and persist a storage status entity.
-        createStorageUnitStatusEntity(STORAGE_UNIT_STATUS_2);
-
-        // Update the storage unit status.
-        storageUnitHelper.updateStorageUnitStatus(storageUnitEntity, STORAGE_UNIT_STATUS_2, REASON);
-
-        // Validate the results.
-        assertEquals(STORAGE_UNIT_STATUS_2, storageUnitEntity.getStatus().getCode());
+        // Validate the result object.
+        assertEquals(resultStorageUnitAlternateKeyDto.getNamespace(), BDEF_NAMESPACE);
+        assertEquals(resultStorageUnitAlternateKeyDto.getBusinessObjectDefinitionName(), BDEF_NAME);
+        assertEquals(resultStorageUnitAlternateKeyDto.getBusinessObjectFormatUsage(), FORMAT_USAGE_CODE);
+        assertEquals(resultStorageUnitAlternateKeyDto.getBusinessObjectFormatFileType(), FORMAT_FILE_TYPE_CODE);
+        assertEquals(resultStorageUnitAlternateKeyDto.getBusinessObjectFormatVersion(), FORMAT_VERSION);
+        assertEquals(resultStorageUnitAlternateKeyDto.getPartitionValue(), PARTITION_VALUE);
+        assertEquals(resultStorageUnitAlternateKeyDto.getSubPartitionValues(), SUBPARTITION_VALUES);
+        assertEquals(resultStorageUnitAlternateKeyDto.getBusinessObjectDataVersion(), DATA_VERSION);
+        assertEquals(resultStorageUnitAlternateKeyDto.getStorageName(), STORAGE_NAME);
     }
 }

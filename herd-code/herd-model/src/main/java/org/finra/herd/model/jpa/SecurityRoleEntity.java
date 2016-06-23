@@ -19,14 +19,10 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 /**
  * A security role.
  */
-@XmlRootElement
-@XmlType
 @Table(name = "scrty_role")
 @Entity
 public class SecurityRoleEntity extends AuditableEntity
@@ -59,39 +55,5 @@ public class SecurityRoleEntity extends AuditableEntity
     public void setDescription(String description)
     {
         this.description = description;
-    }
-
-    @Override
-    public boolean equals(Object other)
-    {
-        if (this == other)
-        {
-            return true;
-        }
-        if (other == null || getClass() != other.getClass())
-        {
-            return false;
-        }
-
-        SecurityRoleEntity securityRole = (SecurityRoleEntity) other;
-
-        if (code != null ? !code.equals(securityRole.code) : securityRole.code != null)
-        {
-            return false;
-        }
-        if (description != null ? !description.equals(securityRole.description) : securityRole.description != null)
-        {
-            return false;
-        }
-
-        return true;
-    }
-
-    @Override
-    public int hashCode()
-    {
-        int result = code != null ? code.hashCode() : 0;
-        result = 31 * result + (description != null ? description.hashCode() : 0);
-        return result;
     }
 }

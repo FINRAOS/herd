@@ -47,9 +47,6 @@ public class MockOozieOperationsImpl implements OozieOperations
     // Created clusters
     private Map<String, WorkflowJob> oozieJobs = new HashMap<>();
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String runOozieWorkflow(OozieClient oozieClient, Properties conf) throws OozieClientException
     {

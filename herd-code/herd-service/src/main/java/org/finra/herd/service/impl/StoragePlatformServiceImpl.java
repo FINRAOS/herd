@@ -22,11 +22,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
-import org.finra.herd.dao.HerdDao;
+import org.finra.herd.dao.StoragePlatformDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
-import org.finra.herd.model.jpa.StoragePlatformEntity;
 import org.finra.herd.model.api.xml.StoragePlatform;
 import org.finra.herd.model.api.xml.StoragePlatforms;
+import org.finra.herd.model.jpa.StoragePlatformEntity;
 import org.finra.herd.service.StoragePlatformService;
 import org.finra.herd.service.helper.StoragePlatformHelper;
 
@@ -41,7 +41,7 @@ public class StoragePlatformServiceImpl implements StoragePlatformService
     private StoragePlatformHelper storagePlatformHelper;
 
     @Autowired
-    private HerdDao herdDao;
+    private StoragePlatformDao storagePlatformDao;
 
     @Override
     public StoragePlatform getStoragePlatform(String storagePlatformName)
@@ -63,7 +63,7 @@ public class StoragePlatformServiceImpl implements StoragePlatformService
     @Override
     public StoragePlatforms getStoragePlatforms()
     {
-        List<StoragePlatformEntity> storagePlatformEntities = herdDao.findAll(StoragePlatformEntity.class);
+        List<StoragePlatformEntity> storagePlatformEntities = storagePlatformDao.findAll(StoragePlatformEntity.class);
         StoragePlatforms storagePlatforms = new StoragePlatforms();
         for (StoragePlatformEntity storagePlatformEntity : storagePlatformEntities)
         {

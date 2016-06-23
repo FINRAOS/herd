@@ -24,9 +24,9 @@ import com.amazonaws.services.elasticmapreduce.model.StepConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
-import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.api.xml.EmrOozieStep;
 import org.finra.herd.model.api.xml.EmrOozieStepAddRequest;
+import org.finra.herd.model.dto.ConfigurationValue;
 
 /**
  * The Oozie step helper.
@@ -34,18 +34,6 @@ import org.finra.herd.model.api.xml.EmrOozieStepAddRequest;
 @Component
 public class EmrOozieStepHelper extends EmrStepHelper
 {
-    @Override
-    public String getStepType()
-    {
-        return EmrOozieStep.class.getName();
-    }
-
-    @Override
-    public String getStepRequestType()
-    {
-        return EmrOozieStepAddRequest.class.getName();
-    }
-
     @Override
     public Object buildResponseFromRequest(Object stepRequest)
     {
@@ -78,9 +66,8 @@ public class EmrOozieStepHelper extends EmrStepHelper
         // As a workaround, a custom shell script is used to run the Oozie client to add any oozie job
         // Once Oozie SDK implementation is in place, this custom shell script can be removed
         // Get the custom oozie shell script
-        String oozieShellScript =
-            emrHelper.getS3StagingLocation() + configurationHelper.getProperty(ConfigurationValue.S3_URL_PATH_DELIMITER)
-                + configurationHelper.getProperty(ConfigurationValue.EMR_OOZIE_RUN_SCRIPT);
+        String oozieShellScript = emrHelper.getS3StagingLocation() + configurationHelper.getProperty(ConfigurationValue.S3_URL_PATH_DELIMITER) +
+            configurationHelper.getProperty(ConfigurationValue.EMR_OOZIE_RUN_SCRIPT);
 
         // Default ActionOnFailure is to cancel the execution and wait
         ActionOnFailure actionOnFailure = ActionOnFailure.CANCEL_AND_WAIT;
@@ -103,6 +90,102 @@ public class EmrOozieStepHelper extends EmrStepHelper
         // Build the StepConfig object and return
         HadoopJarStepConfig jarConfig = new HadoopJarStepConfig(hadoopJarForShellScript).withArgs(argsList);
         return new StepConfig().withName(oozieStep.getStepName().trim()).withActionOnFailure(actionOnFailure).withHadoopJarStep(jarConfig);
+    }
+
+    @Override
+    public String getRequestEmrClusterDefinitionName(Object stepRequest)
+    {
+        return ((EmrOozieStepAddRequest) stepRequest).getEmrClusterDefinitionName();
+    }
+
+    @Override
+    public String getRequestEmrClusterId(Object stepRequest)
+    {
+        return ((EmrOozieStepAddRequest) stepRequest).getEmrClusterId();
+    }
+
+    @Override
+    public String getRequestEmrClusterName(Object stepRequest)
+    {
+        return ((EmrOozieStepAddRequest) stepRequest).getEmrClusterName();
+    }
+
+    @Override
+    public String getRequestNamespace(Object stepRequest)
+    {
+        return ((EmrOozieStepAddRequest) stepRequest).getNamespace();
+    }
+
+    @Override
+    public String getRequestStepName(Object stepRequest)
+    {
+        return ((EmrOozieStepAddRequest) stepRequest).getStepName();
+    }
+
+    @Override
+    public String getStepId(Object step)
+    {
+        return ((EmrOozieStep) step).getId();
+    }
+
+    @Override
+    public String getStepRequestType()
+    {
+        return EmrOozieStepAddRequest.class.getName();
+    }
+
+    @Override
+    public String getStepType()
+    {
+        return EmrOozieStep.class.getName();
+    }
+
+    @Override
+    public Boolean isRequestContinueOnError(Object stepRequest)
+    {
+        return ((EmrOozieStepAddRequest) stepRequest).isContinueOnError();
+    }
+
+    @Override
+    public void setRequestContinueOnError(Object stepRequest, Boolean continueOnError)
+    {
+        ((EmrOozieStepAddRequest) stepRequest).setContinueOnError(continueOnError);
+    }
+
+    @Override
+    public void setRequestEmrClusterDefinitionName(Object stepRequest, String clusterDefinitionName)
+    {
+        ((EmrOozieStepAddRequest) stepRequest).setEmrClusterDefinitionName(clusterDefinitionName);
+    }
+
+    @Override
+    public void setRequestEmrClusterId(Object stepRequest, String emrClusterId)
+    {
+        ((EmrOozieStepAddRequest) stepRequest).setEmrClusterId(emrClusterId);
+    }
+
+    @Override
+    public void setRequestEmrClusterName(Object stepRequest, String clusterName)
+    {
+        ((EmrOozieStepAddRequest) stepRequest).setEmrClusterName(clusterName);
+    }
+
+    @Override
+    public void setRequestNamespace(Object stepRequest, String namespace)
+    {
+        ((EmrOozieStepAddRequest) stepRequest).setNamespace(namespace);
+    }
+
+    @Override
+    public void setRequestStepName(Object stepRequest, String stepName)
+    {
+        ((EmrOozieStepAddRequest) stepRequest).setStepName(stepName);
+    }
+
+    @Override
+    public void setStepId(Object step, String stepId)
+    {
+        ((EmrOozieStep) step).setId(stepId);
     }
 
     @Override
@@ -139,77 +222,5 @@ public class EmrOozieStepHelper extends EmrStepHelper
         {
             throw new IllegalArgumentException("Oozie properties file location must be specified.");
         }
-    }
-
-    @Override
-    public String getStepId(Object step)
-    {
-        return ((EmrOozieStep) step).getId();
-    }
-
-    @Override
-    public void setStepId(Object step, String stepId)
-    {
-        ((EmrOozieStep) step).setId(stepId);
-    }
-
-    @Override
-    public String getRequestStepName(Object stepRequest)
-    {
-        return ((EmrOozieStepAddRequest) stepRequest).getStepName();
-    }
-
-    @Override
-    public void setRequestStepName(Object stepRequest, String stepName)
-    {
-        ((EmrOozieStepAddRequest) stepRequest).setStepName(stepName);
-    }
-
-    @Override
-    public Boolean isRequestContinueOnError(Object stepRequest)
-    {
-        return ((EmrOozieStepAddRequest) stepRequest).isContinueOnError();
-    }
-
-    @Override
-    public void setRequestContinueOnError(Object stepRequest, Boolean continueOnError)
-    {
-        ((EmrOozieStepAddRequest) stepRequest).setContinueOnError(continueOnError);
-    }
-
-    @Override
-    public String getRequestNamespace(Object stepRequest)
-    {
-        return ((EmrOozieStepAddRequest) stepRequest).getNamespace();
-    }
-
-    @Override
-    public void setRequestNamespace(Object stepRequest, String namespace)
-    {
-        ((EmrOozieStepAddRequest) stepRequest).setNamespace(namespace);
-    }
-
-    @Override
-    public String getRequestEmrClusterDefinitionName(Object stepRequest)
-    {
-        return ((EmrOozieStepAddRequest) stepRequest).getEmrClusterDefinitionName();
-    }
-
-    @Override
-    public void setRequestEmrClusterDefinitionName(Object stepRequest, String clusterDefinitionName)
-    {
-        ((EmrOozieStepAddRequest) stepRequest).setEmrClusterDefinitionName(clusterDefinitionName);
-    }
-
-    @Override
-    public String getRequestEmrClusterName(Object stepRequest)
-    {
-        return ((EmrOozieStepAddRequest) stepRequest).getEmrClusterName();
-    }
-
-    @Override
-    public void setRequestEmrClusterName(Object stepRequest, String clusterName)
-    {
-        ((EmrOozieStepAddRequest) stepRequest).setEmrClusterName(clusterName);
     }
 }

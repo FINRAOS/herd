@@ -17,6 +17,7 @@ package org.finra.herd.service.helper;
 
 import java.io.StringReader;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
@@ -28,6 +29,7 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathFactory;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -40,6 +42,8 @@ import org.finra.herd.dao.helper.HerdDaoSecurityHelper;
 import org.finra.herd.dao.helper.JavaPropertiesHelper;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.model.jpa.BusinessObjectDataAttributeDefinitionEntity;
+import org.finra.herd.model.jpa.BusinessObjectDataAttributeEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 
 /**
@@ -50,35 +54,31 @@ import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 public class DefaultSqsMessageBuilder implements SqsMessageBuilder
 {
     @Autowired
-    private HerdDaoHelper herdDaoHelper;
+    private BusinessObjectDataDaoHelper businessObjectDataDaoHelper;
+
+    @Autowired
+    private BusinessObjectFormatHelper businessObjectFormatHelper;
+
+    @Autowired
+    private ConfigurationHelper configurationHelper;
+
+    private DocumentBuilder documentBuilder;
 
     @Autowired
     private HerdDaoSecurityHelper herdDaoSecurityHelper;
 
     @Autowired
-    private ConfigurationHelper configurationHelper;
+    private JavaPropertiesHelper javaPropertiesHelper;
 
     @Autowired
     private VelocityHelper velocityHelper;
 
-    @Autowired
-    private JavaPropertiesHelper javaPropertiesHelper;
-
-    private DocumentBuilder documentBuilder;
     private XPath xpath;
 
     public DefaultSqsMessageBuilder() throws ParserConfigurationException
     {
         documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
         xpath = XPathFactory.newInstance().newXPath();
-    }
-
-    @Override
-    public String buildSystemMonitorResponse(String systemMonitorRequestPayload)
-    {
-        return evaluateVelocityTemplate(ConfigurationValue.HERD_NOTIFICATION_SQS_SYS_MONITOR_RESPONSE_VELOCITY_TEMPLATE,
-            getIncomingMessageValueMap(systemMonitorRequestPayload, ConfigurationValue.HERD_NOTIFICATION_SQS_SYS_MONITOR_REQUEST_XPATH_PROPERTIES),
-            "systemMonitorResponse");
     }
 
     @Override
@@ -91,12 +91,47 @@ public class DefaultSqsMessageBuilder implements SqsMessageBuilder
         velocityContextMap.put("newBusinessObjectDataStatus", newBusinessObjectDataStatus);
         velocityContextMap.put("oldBusinessObjectDataStatus", oldBusinessObjectDataStatus);
 
-        BusinessObjectDataEntity businessObjectDataEntity = herdDaoHelper.getBusinessObjectDataEntity(businessObjectDataKey);
+        // Retrieve business object data entity and business object data id to the context.
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataKey);
         velocityContextMap.put("businessObjectDataId", businessObjectDataEntity.getId());
+
+        // Load all attribute definitions for this business object data in a map for easy access.
+        Map<String, BusinessObjectDataAttributeDefinitionEntity> attributeDefinitionEntityMap =
+            businessObjectFormatHelper.getAttributeDefinitionEntities(businessObjectDataEntity.getBusinessObjectFormat());
+
+        // Build an ordered map of business object data attributes that are flagged to be published in notification messages.
+        Map<String, String> businessObjectDataAttributes = new LinkedHashMap<>();
+        if (!attributeDefinitionEntityMap.isEmpty())
+        {
+            for (BusinessObjectDataAttributeEntity attributeEntity : businessObjectDataEntity.getAttributes())
+            {
+                if (attributeDefinitionEntityMap.containsKey(attributeEntity.getName().toUpperCase()))
+                {
+                    BusinessObjectDataAttributeDefinitionEntity attributeDefinitionEntity =
+                        attributeDefinitionEntityMap.get(attributeEntity.getName().toUpperCase());
+
+                    if (BooleanUtils.isTrue(attributeDefinitionEntity.getPublish()))
+                    {
+                        businessObjectDataAttributes.put(attributeEntity.getName(), attributeEntity.getValue());
+                    }
+                }
+            }
+        }
+
+        // Add the map of business object data attributes to the context.
+        velocityContextMap.put("businessObjectDataAttributes", businessObjectDataAttributes);
 
         // Evaluate the template and return the value.
         return evaluateVelocityTemplate(ConfigurationValue.HERD_NOTIFICATION_SQS_BUSINESS_OBJECT_DATA_STATUS_CHANGE_VELOCITY_TEMPLATE, velocityContextMap,
             "businessObjectDataStatusChangeEvent");
+    }
+
+    @Override
+    public String buildSystemMonitorResponse(String systemMonitorRequestPayload)
+    {
+        return evaluateVelocityTemplate(ConfigurationValue.HERD_NOTIFICATION_SQS_SYS_MONITOR_RESPONSE_VELOCITY_TEMPLATE,
+            getIncomingMessageValueMap(systemMonitorRequestPayload, ConfigurationValue.HERD_NOTIFICATION_SQS_SYS_MONITOR_REQUEST_XPATH_PROPERTIES),
+            "systemMonitorResponse");
     }
 
     /**

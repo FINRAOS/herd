@@ -76,7 +76,7 @@ public class CheckEmrCluster extends BaseEmrCluster
                 setTaskWorkflowVariable(execution, "activeStep_jarLocation", emrCluster.getActiveStep().getJarLocation());
                 setTaskWorkflowVariable(execution, "activeStep_mainClass", emrCluster.getActiveStep().getMainClass());
                 setTaskWorkflowVariable(execution, "activeStep_scriptArguments",
-                    herdHelper.buildStringWithDefaultDelimiter(emrCluster.getActiveStep().getScriptArguments()));
+                    herdStringHelper.buildStringWithDefaultDelimiter(emrCluster.getActiveStep().getScriptArguments()));
                 setTaskWorkflowVariable(execution, "activeStep_continueOnError", emrCluster.getActiveStep().getContinueOnError());
             }
         }
@@ -92,7 +92,7 @@ public class CheckEmrCluster extends BaseEmrCluster
                 setTaskWorkflowVariable(execution, "step_jarLocation", emrCluster.getStep().getJarLocation());
                 setTaskWorkflowVariable(execution, "step_mainClass", emrCluster.getStep().getMainClass());
                 setTaskWorkflowVariable(execution, "step_scriptArguments",
-                    herdHelper.buildStringWithDefaultDelimiter(emrCluster.getStep().getScriptArguments()));
+                    herdStringHelper.buildStringWithDefaultDelimiter(emrCluster.getStep().getScriptArguments()));
                 setTaskWorkflowVariable(execution, "step_continueOnError", emrCluster.getStep().getContinueOnError());
             }
         }

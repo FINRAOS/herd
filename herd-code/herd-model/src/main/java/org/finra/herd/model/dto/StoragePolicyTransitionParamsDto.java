@@ -39,28 +39,24 @@ public class StoragePolicyTransitionParamsDto
      * @param businessObjectDataKey the business object data key
      * @param sourceStorageName the source storage name
      * @param sourceBucketName the source S3 bucket name
-     * @param sourceStorageUnitId the source storage unit id
      * @param sourceS3KeyPrefix the source S3 key prefix
      * @param sourceStorageFiles the list of source storage files
-     * @param sourceStorageFilesSizeBytes the total size in bytes of source storage files
      * @param destinationStorageName the destination storage name
-     * @param destinationVaultName the destination Glacier vault name
-     * @param destinationStorageFile the destination storage file
+     * @param destinationBucketName the destination S3 bucket name
+     * @param destinationS3KeyBasePrefix the destination S3 key base prefix
      */
     public StoragePolicyTransitionParamsDto(final BusinessObjectDataKey businessObjectDataKey, final String sourceStorageName, final String sourceBucketName,
-        final Integer sourceStorageUnitId, final String sourceS3KeyPrefix, final List<StorageFile> sourceStorageFiles, final long sourceStorageFilesSizeBytes,
-        final String destinationStorageName, final String destinationVaultName, final StorageFile destinationStorageFile)
+        final String sourceS3KeyPrefix, final List<StorageFile> sourceStorageFiles, final String destinationStorageName, final String destinationBucketName,
+        final String destinationS3KeyBasePrefix)
     {
         this.businessObjectDataKey = businessObjectDataKey;
         this.sourceStorageName = sourceStorageName;
         this.sourceBucketName = sourceBucketName;
-        this.sourceStorageUnitId = sourceStorageUnitId;
         this.sourceS3KeyPrefix = sourceS3KeyPrefix;
         this.sourceStorageFiles = sourceStorageFiles;
-        this.sourceStorageFilesSizeBytes = sourceStorageFilesSizeBytes;
         this.destinationStorageName = destinationStorageName;
-        this.destinationVaultName = destinationVaultName;
-        this.destinationStorageFile = destinationStorageFile;
+        this.destinationBucketName = destinationBucketName;
+        this.destinationS3KeyBasePrefix = destinationS3KeyBasePrefix;
     }
 
     /**
@@ -79,11 +75,6 @@ public class StoragePolicyTransitionParamsDto
     private String sourceBucketName;
 
     /**
-     * The source storage unit id.
-     */
-    private Integer sourceStorageUnitId;
-
-    /**
      * The source S3 key prefix.
      */
     private String sourceS3KeyPrefix;
@@ -94,24 +85,20 @@ public class StoragePolicyTransitionParamsDto
     private List<StorageFile> sourceStorageFiles;
 
     /**
-     * The total size in bytes of source storage files.
-     */
-    private long sourceStorageFilesSizeBytes;
-
-    /**
      * The destination storage name.
      */
     private String destinationStorageName;
 
     /**
-     * The destination AWS Glacier vault name.
+     * The destination AWS S3 bucket name.
      */
-    private String destinationVaultName;
+    private String destinationBucketName;
 
     /**
-     * The destination storage file.
+     * The destination S3 key base prefix. To build the actual destination S3 key prefix, please concatenate this base prefix with the source S3 key prefix
+     * using "/" character as a separator.
      */
-    private StorageFile destinationStorageFile;
+    private String destinationS3KeyBasePrefix;
 
     public BusinessObjectDataKey getBusinessObjectDataKey()
     {
@@ -143,16 +130,6 @@ public class StoragePolicyTransitionParamsDto
         this.sourceBucketName = sourceBucketName;
     }
 
-    public Integer getSourceStorageUnitId()
-    {
-        return sourceStorageUnitId;
-    }
-
-    public void setSourceStorageUnitId(Integer sourceStorageUnitId)
-    {
-        this.sourceStorageUnitId = sourceStorageUnitId;
-    }
-
     public String getSourceS3KeyPrefix()
     {
         return sourceS3KeyPrefix;
@@ -173,16 +150,6 @@ public class StoragePolicyTransitionParamsDto
         this.sourceStorageFiles = sourceStorageFiles;
     }
 
-    public long getSourceStorageFilesSizeBytes()
-    {
-        return sourceStorageFilesSizeBytes;
-    }
-
-    public void setSourceStorageFilesSizeBytes(long sourceStorageFilesSizeBytes)
-    {
-        this.sourceStorageFilesSizeBytes = sourceStorageFilesSizeBytes;
-    }
-
     public String getDestinationStorageName()
     {
         return destinationStorageName;
@@ -193,23 +160,23 @@ public class StoragePolicyTransitionParamsDto
         this.destinationStorageName = destinationStorageName;
     }
 
-    public String getDestinationVaultName()
+    public String getDestinationBucketName()
     {
-        return destinationVaultName;
+        return destinationBucketName;
     }
 
-    public void setDestinationVaultName(String destinationVaultName)
+    public void setDestinationBucketName(String destinationBucketName)
     {
-        this.destinationVaultName = destinationVaultName;
+        this.destinationBucketName = destinationBucketName;
     }
 
-    public StorageFile getDestinationStorageFile()
+    public String getDestinationS3KeyBasePrefix()
     {
-        return destinationStorageFile;
+        return destinationS3KeyBasePrefix;
     }
 
-    public void setDestinationStorageFile(StorageFile destinationStorageFile)
+    public void setDestinationS3KeyBasePrefix(String destinationS3KeyBasePrefix)
     {
-        this.destinationStorageFile = destinationStorageFile;
+        this.destinationS3KeyBasePrefix = destinationS3KeyBasePrefix;
     }
 }

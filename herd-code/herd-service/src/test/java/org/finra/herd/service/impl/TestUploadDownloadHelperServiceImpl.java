@@ -20,29 +20,62 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
-import org.finra.herd.model.dto.AwsParamsDto;
+import org.finra.herd.model.annotation.PublishJmsMessages;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.dto.CompleteUploadSingleParamsDto;
 
 /**
- * This is a Upload download helper service implementation for testing.
+ * This is an upload download helper service implementation for testing.
  */
 @Service
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 @Primary
 public class TestUploadDownloadHelperServiceImpl extends UploadDownloadHelperServiceImpl
 {
-    // Overwrite the base class method to change transactional attributes.
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Overwrite the base class method to change transactional attributes.
+     */
+    @PublishJmsMessages
+    @Override
+    public void prepareForFileMove(String objectKey, CompleteUploadSingleParamsDto completeUploadSingleParamsDto)
+    {
+        prepareForFileMoveImpl(objectKey, completeUploadSingleParamsDto);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Overwrite the base class method to change transactional attributes.
+     */
+    @Override
+    public void performFileMove(CompleteUploadSingleParamsDto completeUploadSingleParamsDto)
+    {
+        performFileMoveImpl(completeUploadSingleParamsDto);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Overwrite the base class method to change transactional attributes.
+     */
+    @PublishJmsMessages
+    @Override
+    public void executeFileMoveAfterSteps(CompleteUploadSingleParamsDto completeUploadSingleParamsDto)
+    {
+        executeFileMoveAfterStepsImpl(completeUploadSingleParamsDto);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Overwrite the base class method to change transactional attributes.
+     */
+    @PublishJmsMessages
     @Override
     public void updateBusinessObjectDataStatus(BusinessObjectDataKey businessObjectDataKey, String businessObjectDataStatus)
     {
         updateBusinessObjectDataStatusImpl(businessObjectDataKey, businessObjectDataStatus);
-    }
-
-    @Override
-    public String[] performFileMoveSync(BusinessObjectDataKey sourceBusinessObjectDataKey, BusinessObjectDataKey targetBusinessObjectDataKey,
-        String sourceBucketName, String targetBucketName, String filePath, String kmsKeyId, AwsParamsDto awsParams)
-    {
-        return performFileMoveSyncImpl(sourceBusinessObjectDataKey, targetBusinessObjectDataKey, sourceBucketName, targetBucketName, filePath, kmsKeyId, 
-            awsParams);
     }
 }

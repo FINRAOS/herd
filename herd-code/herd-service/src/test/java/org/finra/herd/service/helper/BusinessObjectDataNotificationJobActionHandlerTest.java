@@ -24,9 +24,9 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
-import org.finra.herd.model.api.xml.NotificationRegistrationKey;
 import org.finra.herd.model.api.xml.JobAction;
 import org.finra.herd.model.api.xml.JobDefinition;
+import org.finra.herd.model.api.xml.NotificationRegistrationKey;
 import org.finra.herd.model.dto.BusinessObjectDataNotificationEventParamsDto;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataNotificationRegistrationEntity;
@@ -42,9 +42,6 @@ import org.finra.herd.service.NotificationActionService;
 public class BusinessObjectDataNotificationJobActionHandlerTest extends AbstractServiceTest
 {
     @Autowired
-    HerdHelper herdHelper;
-
-    @Autowired
     private NotificationActionFactory notificationActionFactory;
 
     @Test
@@ -58,17 +55,17 @@ public class BusinessObjectDataNotificationJobActionHandlerTest extends Abstract
 
         // Create and persist a business object data notification registration entity.
         BusinessObjectDataNotificationRegistrationEntity businessObjectDataNotificationRegistrationEntity =
-            createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE_CD, NOTIFICATION_NAME),
-                NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_RGSTN.name(), BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+            createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME),
+                NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_RGSTN.name(), BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
                 FORMAT_VERSION, STORAGE_NAME, null, null, jobActions);
 
         BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION);
 
         // Create a business object data entity.
         BusinessObjectDataEntity businessObjectDataEntity =
-            createBusinessObjectDataEntity(BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            createBusinessObjectDataEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS);
 
         BusinessObjectDataNotificationEventParamsDto businessObjectDataNotificationEventParams = new BusinessObjectDataNotificationEventParamsDto();
@@ -80,14 +77,14 @@ public class BusinessObjectDataNotificationJobActionHandlerTest extends Abstract
             .setNotificationJobAction((NotificationJobActionEntity) businessObjectDataNotificationRegistrationEntity.getNotificationActions().toArray()[0]);
         businessObjectDataNotificationEventParams.setStorageName(STORAGE_NAME);
 
-        String expectedValue = String
-            .format("namespace: \"%s\", actionId: \"%s\" with " + herdHelper.businessObjectDataKeyToString(businessObjectDataKey) + ", storageName: \"%s\"",
-                businessObjectDataNotificationRegistrationEntity.getNamespace().getCode(),
+        String expectedValue =
+            String.format("namespace: \"%s\", actionId: \"%s\" with " + businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey) +
+                ", storageName: \"%s\"", businessObjectDataNotificationRegistrationEntity.getNamespace().getCode(),
                 ((NotificationJobActionEntity) businessObjectDataNotificationRegistrationEntity.getNotificationActions().toArray()[0]).getId(), STORAGE_NAME);
 
         NotificationActionService notificationActionService = notificationActionFactory
             .getNotificationActionHandler(NotificationTypeEntity.NOTIFICATION_TYPE_BDATA,
                 NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_RGSTN.name());
-        assertEquals(expectedValue, notificationActionService.getIdentifyingInformation(businessObjectDataNotificationEventParams, herdHelper));
+        assertEquals(expectedValue, notificationActionService.getIdentifyingInformation(businessObjectDataNotificationEventParams, businessObjectDataHelper));
     }
 }

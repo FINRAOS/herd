@@ -19,14 +19,10 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 /**
  * A storage policy rule type.
  */
-@XmlRootElement
-@XmlType
 @Table(name = "strge_plcy_rule_type_cd_lk")
 @Entity
 public class StoragePolicyRuleTypeEntity extends AuditableEntity

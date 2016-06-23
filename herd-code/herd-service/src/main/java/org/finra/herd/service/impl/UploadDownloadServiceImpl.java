@@ -21,13 +21,14 @@ import java.util.UUID;
 import com.amazonaws.auth.policy.Policy;
 import com.amazonaws.auth.policy.actions.S3Actions;
 import com.amazonaws.services.securitytoken.model.Credentials;
-import org.apache.log4j.Logger;
+import org.apache.commons.collections4.IterableUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
 
 import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.core.helper.ConfigurationHelper;
@@ -35,14 +36,18 @@ import org.finra.herd.dao.S3Dao;
 import org.finra.herd.dao.StsDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.dao.helper.AwsHelper;
+import org.finra.herd.dao.helper.JsonHelper;
+import org.finra.herd.model.annotation.NamespacePermission;
+import org.finra.herd.model.annotation.PublishJmsMessages;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.DownloadSingleInitiationResponse;
+import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.api.xml.UploadSingleCredentialExtensionResponse;
 import org.finra.herd.model.api.xml.UploadSingleInitiationRequest;
 import org.finra.herd.model.api.xml.UploadSingleInitiationResponse;
-import org.finra.herd.model.dto.AwsParamsDto;
+import org.finra.herd.model.dto.CompleteUploadSingleParamsDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
@@ -51,15 +56,19 @@ import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.StorageFileEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
-import org.finra.herd.service.UploadDownloadAsyncService;
 import org.finra.herd.service.UploadDownloadHelperService;
 import org.finra.herd.service.UploadDownloadService;
+import org.finra.herd.service.helper.AttributeHelper;
 import org.finra.herd.service.helper.AwsPolicyBuilder;
+import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
-import org.finra.herd.service.helper.HerdDaoHelper;
-import org.finra.herd.service.helper.HerdHelper;
+import org.finra.herd.service.helper.BusinessObjectFormatDaoHelper;
+import org.finra.herd.service.helper.BusinessObjectFormatHelper;
 import org.finra.herd.service.helper.KmsActions;
+import org.finra.herd.service.helper.S3KeyPrefixHelper;
 import org.finra.herd.service.helper.StorageDaoHelper;
+import org.finra.herd.service.helper.StorageHelper;
+import org.finra.herd.service.helper.StorageUnitDaoHelper;
 
 /**
  * The upload download service implementation.
@@ -68,41 +77,56 @@ import org.finra.herd.service.helper.StorageDaoHelper;
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 public class UploadDownloadServiceImpl implements UploadDownloadService
 {
-    private static final Logger LOGGER = Logger.getLogger(UploadDownloadServiceImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(UploadDownloadServiceImpl.class);
 
     @Autowired
-    private ConfigurationHelper configurationHelper;
-
-    @Autowired
-    private HerdHelper herdHelper;
-
-    @Autowired
-    private HerdDaoHelper herdDaoHelper;
-
-    @Autowired
-    private StsDao stsDao;
+    private AttributeHelper attributeHelper;
 
     @Autowired
     private AwsHelper awsHelper;
 
     @Autowired
-    private S3Dao s3Dao;
+    private BusinessObjectDataDaoHelper businessObjectDataDaoHelper;
 
     @Autowired
     private BusinessObjectDataHelper businessObjectDataHelper;
 
     @Autowired
-    private UploadDownloadHelperService uploadDownloadHelperService;
+    private BusinessObjectFormatDaoHelper businessObjectFormatDaoHelper;
 
     @Autowired
-    private UploadDownloadAsyncService uploadDownloadAsyncService;
+    private BusinessObjectFormatHelper businessObjectFormatHelper;
+
+    @Autowired
+    private ConfigurationHelper configurationHelper;
+
+    @Autowired
+    private JsonHelper jsonHelper;
+
+    @Autowired
+    private S3KeyPrefixHelper s3KeyPrefixHelper;
+
+    @Autowired
+    private S3Dao s3Dao;
 
     @Autowired
     private StorageDaoHelper storageDaoHelper;
 
-    /**
-     * {@inheritDoc}
-     */
+    @Autowired
+    private StorageHelper storageHelper;
+
+    @Autowired
+    private StorageUnitDaoHelper storageUnitDaoHelper;
+
+    @Autowired
+    private StsDao stsDao;
+
+    @Autowired
+    private UploadDownloadHelperService uploadDownloadHelperService;
+
+    @PublishJmsMessages
+    @NamespacePermission(fields = {"#uploadSingleInitiationRequest?.sourceBusinessObjectFormatKey?.namespace",
+        "#uploadSingleInitiationRequest?.targetBusinessObjectFormatKey?.namespace"}, permissions = NamespacePermissionEnum.WRITE)
     @Override
     public UploadSingleInitiationResponse initiateUploadSingle(UploadSingleInitiationRequest uploadSingleInitiationRequest)
     {
@@ -111,54 +135,70 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
 
         // Get the business object format for the specified parameters and make sure it exists.
         BusinessObjectFormatEntity sourceBusinessObjectFormatEntity =
-            herdDaoHelper.getBusinessObjectFormatEntity(uploadSingleInitiationRequest.getSourceBusinessObjectFormatKey());
+            businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(uploadSingleInitiationRequest.getSourceBusinessObjectFormatKey());
 
         // Get the target business object format entity for the specified parameters and make sure it exists.
         BusinessObjectFormatEntity targetBusinessObjectFormatEntity =
-            herdDaoHelper.getBusinessObjectFormatEntity(uploadSingleInitiationRequest.getTargetBusinessObjectFormatKey());
+            businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(uploadSingleInitiationRequest.getTargetBusinessObjectFormatKey());
 
         // Get the S3 managed "loading dock" storage entity and make sure it exists.
         StorageEntity sourceStorageEntity = storageDaoHelper.getStorageEntity(StorageEntity.MANAGED_LOADING_DOCK_STORAGE);
 
         // Get S3 bucket name for the storage. Please note that since those values are required we pass a "true" flag.
-        String s3BucketName = getStorageBucketName(sourceStorageEntity);
+        String s3BucketName = storageHelper.getStorageBucketName(sourceStorageEntity);
 
         // Get the S3 managed "external" storage entity and make sure it exists.
-        StorageEntity targetStorageEntity = storageDaoHelper.getStorageEntity(StorageEntity.MANAGED_EXTERNAL_STORAGE);
+        String targetStorageName;
+        if (uploadSingleInitiationRequest.getTargetStorageName() != null)
+        {
+            targetStorageName = uploadSingleInitiationRequest.getTargetStorageName();
+        }
+        else
+        {
+            targetStorageName = configurationHelper.getProperty(ConfigurationValue.S3_EXTERNAL_STORAGE_NAME_DEFAULT);
+        }
+        StorageEntity targetStorageEntity = storageDaoHelper.getStorageEntity(targetStorageName);
+
+        assertTargetStorageEntityValid(targetStorageEntity);
 
         // Generate a random UUID value.
         String uuid = UUID.randomUUID().toString();
 
-        // Create source business object data key with partition value set to the generated UUID.
-        BusinessObjectDataKey sourceBusinessObjectDataKey =
-            new BusinessObjectDataKey(uploadSingleInitiationRequest.getSourceBusinessObjectFormatKey().getNamespace(),
-                uploadSingleInitiationRequest.getSourceBusinessObjectFormatKey().getBusinessObjectDefinitionName(),
-                uploadSingleInitiationRequest.getSourceBusinessObjectFormatKey().getBusinessObjectFormatUsage(),
-                uploadSingleInitiationRequest.getSourceBusinessObjectFormatKey().getBusinessObjectFormatFileType(),
-                uploadSingleInitiationRequest.getSourceBusinessObjectFormatKey().getBusinessObjectFormatVersion(), uuid, null,
-                BusinessObjectDataEntity.BUSINESS_OBJECT_DATA_INITIAL_VERSION);
+        // Create business object data key with partition value set to the generated UUID.
+        BusinessObjectDataKey businessObjectDataKey = new BusinessObjectDataKey(uploadSingleInitiationRequest.getSourceBusinessObjectFormatKey().getNamespace(),
+            uploadSingleInitiationRequest.getSourceBusinessObjectFormatKey().getBusinessObjectDefinitionName(),
+            uploadSingleInitiationRequest.getSourceBusinessObjectFormatKey().getBusinessObjectFormatUsage(),
+            uploadSingleInitiationRequest.getSourceBusinessObjectFormatKey().getBusinessObjectFormatFileType(),
+            uploadSingleInitiationRequest.getSourceBusinessObjectFormatKey().getBusinessObjectFormatVersion(), uuid, null,
+            BusinessObjectDataEntity.BUSINESS_OBJECT_DATA_INITIAL_VERSION);
 
-        // Get a file upload specific S3 key prefix based on the generated UUID.
-        String storageDirectoryPath = businessObjectDataHelper.buildFileUploadS3KeyPrefix(sourceBusinessObjectFormatEntity, sourceBusinessObjectDataKey);
-        String storageFilePath = String.format("%s/%s", storageDirectoryPath, uploadSingleInitiationRequest.getFile().getFileName());
+        // Get a file upload specific S3 key prefix for the source storage based on the generated UUID.
+        String sourceStorageDirectoryPath = s3KeyPrefixHelper.buildS3KeyPrefix(sourceStorageEntity, sourceBusinessObjectFormatEntity, businessObjectDataKey);
+        String sourceStorageFilePath = String.format("%s/%s", sourceStorageDirectoryPath, uploadSingleInitiationRequest.getFile().getFileName());
 
         // Create a business object data create request.
         BusinessObjectDataCreateRequest sourceBusinessObjectDataCreateRequest = businessObjectDataHelper
             .createBusinessObjectDataCreateRequest(sourceBusinessObjectFormatEntity, uuid, BusinessObjectDataStatusEntity.UPLOADING,
-                uploadSingleInitiationRequest.getBusinessObjectDataAttributes(), sourceStorageEntity, storageDirectoryPath, storageFilePath,
+                uploadSingleInitiationRequest.getBusinessObjectDataAttributes(), sourceStorageEntity, sourceStorageDirectoryPath, sourceStorageFilePath,
                 uploadSingleInitiationRequest.getFile().getFileSizeBytes(), null);
 
         // Create a new business object data instance. Set the flag to false, since for the file upload service the file size value is optional.
-        BusinessObjectData sourceBusinessObjectData = businessObjectDataHelper.createBusinessObjectData(sourceBusinessObjectDataCreateRequest, false);
+        BusinessObjectData sourceBusinessObjectData = businessObjectDataDaoHelper.createBusinessObjectData(sourceBusinessObjectDataCreateRequest, false);
+
+        // Get a file upload specific S3 key prefix for the target storage based on the generated UUID.
+        String targetStorageDirectoryPath = s3KeyPrefixHelper.buildS3KeyPrefix(targetStorageEntity, targetBusinessObjectFormatEntity, businessObjectDataKey);
+        String targetStorageFilePath = String.format("%s/%s", targetStorageDirectoryPath, uploadSingleInitiationRequest.getFile().getFileName());
+
+        uploadDownloadHelperService.assertS3ObjectKeyDoesNotExist(storageHelper.getStorageBucketName(targetStorageEntity), targetStorageFilePath);
 
         // Create a target business object data based on the source business object data and target business object format.
         BusinessObjectDataCreateRequest targetBusinessObjectDataCreateRequest = businessObjectDataHelper
             .createBusinessObjectDataCreateRequest(targetBusinessObjectFormatEntity, uuid, BusinessObjectDataStatusEntity.UPLOADING,
-                uploadSingleInitiationRequest.getBusinessObjectDataAttributes(), targetStorageEntity, storageDirectoryPath, storageFilePath,
+                uploadSingleInitiationRequest.getBusinessObjectDataAttributes(), targetStorageEntity, targetStorageDirectoryPath, targetStorageFilePath,
                 uploadSingleInitiationRequest.getFile().getFileSizeBytes(), null);
 
         // Create a target business object data instance. Set the flag to false, since for the file upload service the file size value is optional.
-        BusinessObjectData targetBusinessObjectData = businessObjectDataHelper.createBusinessObjectData(targetBusinessObjectDataCreateRequest, false);
+        BusinessObjectData targetBusinessObjectData = businessObjectDataDaoHelper.createBusinessObjectData(targetBusinessObjectDataCreateRequest, false);
 
         // Get decrypted AWS ARN of the role that is required to provide access to S3_MANAGED_LOADING_DOCK storage.
         String awsRoleArn = getStorageUploadRoleArn(sourceStorageEntity);
@@ -166,12 +206,12 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         // Get expiration interval for the pre-signed URL to be generated.
         Integer awsRoleDurationSeconds = getStorageUploadSessionDuration(sourceStorageEntity);
 
-        String awsKmsKeyId = getStorageKmsKeyId(sourceStorageEntity);
+        String awsKmsKeyId = storageHelper.getStorageKmsKeyId(sourceStorageEntity);
 
         // Get the temporary security credentials to access S3_MANAGED_STORAGE.
         Credentials assumedSessionCredentials = stsDao
             .getTemporarySecurityCredentials(awsHelper.getAwsParamsDto(), String.valueOf(sourceBusinessObjectData.getId()), awsRoleArn, awsRoleDurationSeconds,
-                createUploaderPolicy(s3BucketName, storageFilePath, awsKmsKeyId));
+                createUploaderPolicy(s3BucketName, sourceStorageFilePath, awsKmsKeyId));
 
         // Create the response.
         UploadSingleInitiationResponse response = new UploadSingleInitiationResponse();
@@ -184,8 +224,37 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         response.setAwsSessionToken(assumedSessionCredentials.getSessionToken());
         response.setAwsSessionExpirationTime(HerdDateUtils.getXMLGregorianCalendarValue(assumedSessionCredentials.getExpiration()));
         response.setAwsKmsKeyId(awsKmsKeyId);
+        response.setTargetStorageName(targetStorageName);
 
         return response;
+    }
+
+    /**
+     * Asserts that the given target storage entity has valid attributes.
+     *
+     * @param targetStorageEntity Target storage entity.
+     */
+    private void assertTargetStorageEntityValid(StorageEntity targetStorageEntity)
+    {
+        try
+        {
+            // Assert that the target storage has a bucket name
+            storageHelper.getStorageBucketName(targetStorageEntity);
+        }
+        catch (IllegalStateException e)
+        {
+            throw new IllegalArgumentException(e.getMessage(), e);
+        }
+
+        try
+        {
+            // Assert that the target storage has a KMS key ID
+            storageHelper.getStorageKmsKeyId(targetStorageEntity);
+        }
+        catch (IllegalStateException e)
+        {
+            throw new IllegalArgumentException(e.getMessage(), e);
+        }
     }
 
     /**
@@ -220,188 +289,58 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         return new AwsPolicyBuilder().withS3(s3BucketName, s3Key, S3Actions.GetObject).withKms(awsKmsKeyId, KmsActions.DECRYPT).build();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public CompleteUploadSingleMessageResult performCompleteUploadSingleMessage(String objectKey)
     {
         return performCompleteUploadSingleMessageImpl(objectKey);
     }
 
     /**
-     * Implementation of the complete upload single message.
+     * Performs the completion of upload single file. Runs in new transaction and logs the error if an error occurs.
      *
-     * @param objectKey the object key (i.e. filename).
+     * @param objectKey the object key.
      *
-     * @return the complete upload single message result.
+     * @return CompleteUploadSingleMessageResult
      */
     protected CompleteUploadSingleMessageResult performCompleteUploadSingleMessageImpl(String objectKey)
     {
-        BusinessObjectDataKey sourceBusinessObjectDataKey = null;
-        BusinessObjectDataKey targetBusinessObjectDataKey = null;
-
-        String sourceOldStatus = null;
-        String sourceNewStatus = null;
-        String targetOldStatus = null;
-        String targetNewStatus = null;
-
-        StorageFileEntity storageFileEntity = null;
-        String s3ManagedLoadingDockBucketName = null;
-        try
-        {
-            // Obtain the source business object data entities.
-            BusinessObjectDataEntity sourceBusinessObjectDataEntity =
-                storageDaoHelper.getStorageFileEntity(StorageEntity.MANAGED_LOADING_DOCK_STORAGE, objectKey).getStorageUnit().getBusinessObjectData();
-            sourceBusinessObjectDataKey = herdDaoHelper.getBusinessObjectDataKey(sourceBusinessObjectDataEntity);
-
-            sourceOldStatus = sourceBusinessObjectDataEntity.getStatus().getCode();
-
-            // Obtain the target business object data entities.
-            BusinessObjectDataEntity targetBusinessObjectDataEntity =
-                storageDaoHelper.getStorageFileEntity(StorageEntity.MANAGED_EXTERNAL_STORAGE, objectKey).getStorageUnit().getBusinessObjectData();
-            targetBusinessObjectDataKey = herdDaoHelper.getBusinessObjectDataKey(targetBusinessObjectDataEntity);
-
-            targetOldStatus = targetBusinessObjectDataEntity.getStatus().getCode();
-
-            // Verify that source business object data status is "UPLOADING".
-            assertBusinessObjectDataStatusEquals(BusinessObjectDataStatusEntity.UPLOADING, sourceBusinessObjectDataEntity);
-
-            // Verify that source business object data status is "UPLOADING".
-            assertBusinessObjectDataStatusEquals(BusinessObjectDataStatusEntity.UPLOADING, targetBusinessObjectDataEntity);
-
-            // Get the S3 managed "loading dock" storage entity and make sure it exists.
-            StorageEntity s3ManagedLoadingDockStorageEntity = storageDaoHelper.getStorageEntity(StorageEntity.MANAGED_LOADING_DOCK_STORAGE);
-
-            // Get bucket name for S3 managed "loading dock" storage. Please note that since this attribute value is required we pass a "true" flag.
-            s3ManagedLoadingDockBucketName = getStorageBucketName(s3ManagedLoadingDockStorageEntity);
-
-            // Get the storage unit entity for this business object data in the S3 managed "loading dock" storage and make sure it exists.
-            StorageUnitEntity storageUnitEntity =
-                storageDaoHelper.getStorageUnitEntity(sourceBusinessObjectDataEntity, StorageEntity.MANAGED_LOADING_DOCK_STORAGE);
-
-            // Get the storage file entity.
-            storageFileEntity = storageUnitEntity.getStorageFiles().iterator().next();
-
-            AwsParamsDto awsParamsDto = awsHelper.getAwsParamsDto();
-            S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto =
-                S3FileTransferRequestParamsDto.builder().s3BucketName(s3ManagedLoadingDockBucketName).s3KeyPrefix(storageFileEntity.getPath())
-                    .httpProxyHost(awsParamsDto.getHttpProxyHost()).httpProxyPort(awsParamsDto.getHttpProxyPort()).build();
-
-            // Get the metadata for the S3 object.
-            s3Dao.validateS3File(s3FileTransferRequestParamsDto, storageFileEntity.getFileSizeBytes());
-
-            // Get the S3 managed "external" storage entity and make sure it exists.
-            StorageEntity s3ManagedExternalStorageEntity = storageDaoHelper.getStorageEntity(StorageEntity.MANAGED_EXTERNAL_STORAGE);
-
-            // Get AWS KMS External Key ID.
-            String awsKmsExternalKeyId = getStorageKmsKeyId(s3ManagedExternalStorageEntity);
-
-            String s3ManagedExternalBucketName = getStorageBucketName(s3ManagedExternalStorageEntity);
-
-            // Change the status of the source business object data to RE-ENCRYPTING.
-            businessObjectDataHelper.updateBusinessObjectDataStatus(sourceBusinessObjectDataEntity, BusinessObjectDataStatusEntity.RE_ENCRYPTING);
-            sourceNewStatus = BusinessObjectDataStatusEntity.RE_ENCRYPTING;
-
-            // Change the status of the target business object data to RE-ENCRYPTING.
-            businessObjectDataHelper.updateBusinessObjectDataStatus(targetBusinessObjectDataEntity, BusinessObjectDataStatusEntity.RE_ENCRYPTING);
-            targetNewStatus = BusinessObjectDataStatusEntity.RE_ENCRYPTING;
-
-            // Asynchronous call to move file and re-encryption and update statuses.
-            uploadDownloadAsyncService
-                .performFileMoveAsync(sourceBusinessObjectDataKey, targetBusinessObjectDataKey, s3ManagedLoadingDockBucketName, s3ManagedExternalBucketName,
-                    storageFileEntity.getPath(), awsKmsExternalKeyId, awsHelper.getAwsParamsDto());
-        }
-        catch (RuntimeException ex)
-        {
-            // Either source/target business object data does not exist or not in UPLOADING state.
-
-            if (sourceBusinessObjectDataKey != null)
-            {
-                // Update the source to DELETED
-                try
-                {
-                    // Set the source business object data status to DELETED in new transaction as we want to throw the original exception which will mark the
-                    // transaction to rollback.
-                    uploadDownloadHelperService.updateBusinessObjectDataStatus(sourceBusinessObjectDataKey, BusinessObjectDataStatusEntity.DELETED);
-                    sourceNewStatus = BusinessObjectDataStatusEntity.DELETED;
-                }
-                catch (Exception e)
-                {
-                    sourceNewStatus = null;
-                    LOGGER.error(String.format("Failed to update source business object data status to \"DELETED\" for source business object data %s.",
-                        herdHelper.businessObjectDataKeyToString(sourceBusinessObjectDataKey)), e);
-                }
-            }
-
-            if (targetBusinessObjectDataKey != null)
-            {
-                // Update the target INVALID
-                try
-                {
-                    // Set the target business object data status to INVALID in new transaction as we want to throw the original exception which will mark the
-                    // transaction to rollback.
-                    uploadDownloadHelperService.updateBusinessObjectDataStatus(targetBusinessObjectDataKey, BusinessObjectDataStatusEntity.INVALID);
-                    targetNewStatus = BusinessObjectDataStatusEntity.INVALID;
-                }
-                catch (Exception e)
-                {
-                    targetNewStatus = null;
-                    LOGGER.error(String.format("Failed to update target business object data status to \"INVALID\" for target business object data %s.",
-                        herdHelper.businessObjectDataKeyToString(targetBusinessObjectDataKey)), e);
-                }
-            }
-
-            // Delete the file from S3 if storage file information exists.
-            if (storageFileEntity != null && !StringUtils.isEmpty(storageFileEntity.getPath()))
-            {
-                try
-                {
-                    // Delete the source file from S3.
-                    AwsParamsDto awsParams = awsHelper.getAwsParamsDto();
-
-                    S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto =
-                        S3FileTransferRequestParamsDto.builder().s3BucketName(s3ManagedLoadingDockBucketName).s3KeyPrefix(storageFileEntity.getPath())
-                            .httpProxyHost(awsParams.getHttpProxyHost()).httpProxyPort(awsParams.getHttpProxyPort()).build();
-
-                    s3Dao.deleteFile(s3FileTransferRequestParamsDto);
-                }
-                catch (Exception e)
-                {
-                    LOGGER.error(String.format("Failed to delete the source business object data file: \"%s\" for source business object data %s.",
-                        storageFileEntity.getPath(), herdHelper.businessObjectDataKeyToString(sourceBusinessObjectDataKey)), e);
-                }
-            }
-
-            // Log the error.
-            LOGGER.error(String.format("Failed to process upload single completion request for file: \"%s\".", objectKey), ex);
-        }
-
-        return generateCompleteUploadSingleMessageResult(sourceBusinessObjectDataKey, targetBusinessObjectDataKey, sourceOldStatus, sourceNewStatus,
-            targetOldStatus, targetNewStatus);
-    }
-
-    private CompleteUploadSingleMessageResult generateCompleteUploadSingleMessageResult(BusinessObjectDataKey sourceBusinessObjectDataKey,
-        BusinessObjectDataKey targetBusinessObjectDataKey, String sourceOldStatus, String sourceNewStatus, String targetOldStatus, String targetNewStatus)
-    {
+        // Create an instance of the result message for complete upload single operation.
         CompleteUploadSingleMessageResult completeUploadSingleMessageResult = new CompleteUploadSingleMessageResult();
 
-        completeUploadSingleMessageResult.setSourceBusinessObjectDataKey(sourceBusinessObjectDataKey);
-        completeUploadSingleMessageResult.setSourceOldStatus(sourceOldStatus);
-        completeUploadSingleMessageResult.setSourceNewStatus(sourceNewStatus);
+        // Create an instance of complete upload single parameters DTO.
+        CompleteUploadSingleParamsDto completeUploadSingleParamsDto = new CompleteUploadSingleParamsDto();
 
-        completeUploadSingleMessageResult.setTargetBusinessObjectDataKey(targetBusinessObjectDataKey);
-        completeUploadSingleMessageResult.setTargetOldStatus(targetOldStatus);
-        completeUploadSingleMessageResult.setTargetNewStatus(targetNewStatus);
+        // Prepare for the file move.
+        uploadDownloadHelperService.prepareForFileMove(objectKey, completeUploadSingleParamsDto);
 
-        LOGGER.debug(String.format(
-            "completeUploadSingleMessageResult- SourceBusinessObjectDataKey: \"%s\", sourceOldStatus: \"%s\", sourceNewStatus: \"%s\", " +
-                "TargetBusinessObjectDataKey: \"%s\", targetOldStatus: \"%s\", targetNewStatus: \"%s\"",
-            herdHelper.businessObjectDataKeyToString(completeUploadSingleMessageResult.getSourceBusinessObjectDataKey()),
-            completeUploadSingleMessageResult.getSourceOldStatus(), completeUploadSingleMessageResult.getSourceNewStatus(),
-            herdHelper.businessObjectDataKeyToString(completeUploadSingleMessageResult.getTargetBusinessObjectDataKey()),
-            completeUploadSingleMessageResult.getTargetOldStatus(), completeUploadSingleMessageResult.getTargetNewStatus()));
+        // Update the result message.
+        completeUploadSingleMessageResult.setSourceBusinessObjectDataKey(completeUploadSingleParamsDto.getSourceBusinessObjectDataKey());
+        completeUploadSingleMessageResult.setSourceOldBusinessObjectDataStatus(completeUploadSingleParamsDto.getSourceOldStatus());
+        completeUploadSingleMessageResult.setSourceNewBusinessObjectDataStatus(completeUploadSingleParamsDto.getSourceNewStatus());
+        completeUploadSingleMessageResult.setTargetBusinessObjectDataKey(completeUploadSingleParamsDto.getTargetBusinessObjectDataKey());
+        completeUploadSingleMessageResult.setTargetOldBusinessObjectDataStatus(completeUploadSingleParamsDto.getTargetOldStatus());
+        completeUploadSingleMessageResult.setTargetNewBusinessObjectDataStatus(completeUploadSingleParamsDto.getTargetNewStatus());
+
+        // If the target business object data status is "RE-ENCRYPTING", continue the processing.
+        if (BusinessObjectDataStatusEntity.RE_ENCRYPTING.equals(completeUploadSingleParamsDto.getTargetNewStatus()))
+        {
+            // Move the S3 file from the source to the target bucket.
+            uploadDownloadHelperService.performFileMove(completeUploadSingleParamsDto);
+
+            // Execute the steps required to complete the processing of the complete upload single message.
+            uploadDownloadHelperService.executeFileMoveAfterSteps(completeUploadSingleParamsDto);
+
+            // Update the result message.
+            completeUploadSingleMessageResult.setSourceNewBusinessObjectDataStatus(completeUploadSingleParamsDto.getSourceNewStatus());
+            completeUploadSingleMessageResult.setTargetNewBusinessObjectDataStatus(completeUploadSingleParamsDto.getTargetNewStatus());
+        }
+
+        // Log the result of the complete upload single operation.
+        if (LOGGER.isDebugEnabled())
+        {
+            LOGGER.debug("completeUploadSingleMessageResult={}", jsonHelper.objectToJson(completeUploadSingleMessageResult));
+        }
 
         return completeUploadSingleMessageResult;
     }
@@ -412,12 +351,16 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
     public static class CompleteUploadSingleMessageResult
     {
         private BusinessObjectDataKey sourceBusinessObjectDataKey;
-        private String sourceOldStatus;
-        private String sourceNewStatus;
+
+        private String sourceOldBusinessObjectDataStatus;
+
+        private String sourceNewBusinessObjectDataStatus;
 
         private BusinessObjectDataKey targetBusinessObjectDataKey;
-        private String targetOldStatus;
-        private String targetNewStatus;
+
+        private String targetOldBusinessObjectDataStatus;
+
+        private String targetNewBusinessObjectDataStatus;
 
         public BusinessObjectDataKey getSourceBusinessObjectDataKey()
         {
@@ -429,24 +372,24 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
             this.sourceBusinessObjectDataKey = sourceBusinessObjectDataKey;
         }
 
-        public String getSourceOldStatus()
+        public String getSourceOldBusinessObjectDataStatus()
         {
-            return sourceOldStatus;
+            return sourceOldBusinessObjectDataStatus;
         }
 
-        public void setSourceOldStatus(String sourceOldStatus)
+        public void setSourceOldBusinessObjectDataStatus(String sourceOldBusinessObjectDataStatus)
         {
-            this.sourceOldStatus = sourceOldStatus;
+            this.sourceOldBusinessObjectDataStatus = sourceOldBusinessObjectDataStatus;
         }
 
-        public String getSourceNewStatus()
+        public String getSourceNewBusinessObjectDataStatus()
         {
-            return sourceNewStatus;
+            return sourceNewBusinessObjectDataStatus;
         }
 
-        public void setSourceNewStatus(String sourceNewStatus)
+        public void setSourceNewBusinessObjectDataStatus(String sourceNewBusinessObjectDataStatus)
         {
-            this.sourceNewStatus = sourceNewStatus;
+            this.sourceNewBusinessObjectDataStatus = sourceNewBusinessObjectDataStatus;
         }
 
         public BusinessObjectDataKey getTargetBusinessObjectDataKey()
@@ -459,24 +402,24 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
             this.targetBusinessObjectDataKey = targetBusinessObjectDataKey;
         }
 
-        public String getTargetOldStatus()
+        public String getTargetOldBusinessObjectDataStatus()
         {
-            return targetOldStatus;
+            return targetOldBusinessObjectDataStatus;
         }
 
-        public void setTargetOldStatus(String targetOldStatus)
+        public void setTargetOldBusinessObjectDataStatus(String targetOldBusinessObjectDataStatus)
         {
-            this.targetOldStatus = targetOldStatus;
+            this.targetOldBusinessObjectDataStatus = targetOldBusinessObjectDataStatus;
         }
 
-        public String getTargetNewStatus()
+        public String getTargetNewBusinessObjectDataStatus()
         {
-            return targetNewStatus;
+            return targetNewBusinessObjectDataStatus;
         }
 
-        public void setTargetNewStatus(String targetNewStatus)
+        public void setTargetNewBusinessObjectDataStatus(String targetNewBusinessObjectDataStatus)
         {
-            this.targetNewStatus = targetNewStatus;
+            this.targetNewBusinessObjectDataStatus = targetNewBusinessObjectDataStatus;
         }
     }
 
@@ -490,23 +433,27 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         Assert.notNull(request, "An upload single initiation request must be specified.");
 
         // Validate and trim the source business object format key.
-        herdHelper.validateBusinessObjectFormatKey(request.getSourceBusinessObjectFormatKey());
+        businessObjectFormatHelper.validateBusinessObjectFormatKey(request.getSourceBusinessObjectFormatKey());
 
         // Validate and trim the target business object format key.
-        herdHelper.validateBusinessObjectFormatKey(request.getTargetBusinessObjectFormatKey());
+        businessObjectFormatHelper.validateBusinessObjectFormatKey(request.getTargetBusinessObjectFormatKey());
 
         // Validate and trim the attributes.
-        herdHelper.validateAttributes(request.getBusinessObjectDataAttributes());
+        attributeHelper.validateAttributes(request.getBusinessObjectDataAttributes());
 
         // Validate and trim the file information.
         Assert.notNull(request.getFile(), "File information must be specified.");
         Assert.hasText(request.getFile().getFileName(), "A file name must be specified.");
         request.getFile().setFileName(request.getFile().getFileName().trim());
+
+        String targetStorageName = request.getTargetStorageName();
+        if (targetStorageName != null)
+        {
+            request.setTargetStorageName(targetStorageName.trim());
+        }
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    @NamespacePermission(fields = "#namespace", permissions = NamespacePermissionEnum.READ)
     @Override
     public DownloadSingleInitiationResponse initiateDownloadSingle(String namespace, String businessObjectDefinitionName, String businessObjectFormatUsage,
         String businessObjectFormatFileType, Integer businessObjectFormatVersion, String partitionValue, Integer businessObjectDataVersion)
@@ -517,31 +464,31 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
                 businessObjectFormatVersion, partitionValue, null, businessObjectDataVersion);
 
         // Validate the parameters
-        herdHelper.validateBusinessObjectDataKey(businessObjectDataKey, true, true);
+        businessObjectDataHelper.validateBusinessObjectDataKey(businessObjectDataKey, true, true);
 
-        // Retrieve the persisted business objecty data
-        BusinessObjectDataEntity businessObjectDataEntity = herdDaoHelper.getBusinessObjectDataEntity(businessObjectDataKey);
+        // Retrieve the persisted business object data
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataKey);
 
         // Make sure the status of the business object data is VALID
-        assertBusinessObjectDataStatusEquals(BusinessObjectDataStatusEntity.VALID, businessObjectDataEntity);
+        businessObjectDataHelper.assertBusinessObjectDataStatusEquals(BusinessObjectDataStatusEntity.VALID, businessObjectDataEntity);
 
         // Get the external storage registered against this data
         // Validate that the storage unit exists
-        StorageUnitEntity storageUnitEntity = storageDaoHelper.getStorageUnitEntity(businessObjectDataEntity, StorageEntity.MANAGED_EXTERNAL_STORAGE);
+        StorageUnitEntity storageUnitEntity = IterableUtils.get(businessObjectDataEntity.getStorageUnits(), 0);
 
         // Validate that the storage unit contains only 1 file
         assertHasOneStorageFile(storageUnitEntity);
 
-        String s3BucketName = getStorageBucketName(storageUnitEntity.getStorage());
-        String s3ObjectKey = storageUnitEntity.getStorageFiles().iterator().next().getPath();
+        String s3BucketName = storageHelper.getStorageBucketName(storageUnitEntity.getStorage());
+        String s3ObjectKey = IterableUtils.get(storageUnitEntity.getStorageFiles(), 0).getPath();
 
         // Get the temporary credentials
-        Credentials downloaderCredentials = getExternalDownloaderCredentials(storageUnitEntity.getStorage(), String.valueOf(businessObjectDataEntity.getId()),
-            s3ObjectKey);
+        Credentials downloaderCredentials =
+            getExternalDownloaderCredentials(storageUnitEntity.getStorage(), String.valueOf(businessObjectDataEntity.getId()), s3ObjectKey);
 
         // Generate a pre-signed URL
         Date expiration = downloaderCredentials.getExpiration();
-        S3FileTransferRequestParamsDto s3BucketAccessParams = storageDaoHelper.getS3BucketAccessParams(storageUnitEntity.getStorage());
+        S3FileTransferRequestParamsDto s3BucketAccessParams = storageHelper.getS3BucketAccessParams(storageUnitEntity.getStorage());
         // Enable S3SigV4 ONLY for this request
         // Signature V4 is ONLY required for KMS encrypted, pre-signed URL generation and SHOULD NOT be used for any other requests.
         s3BucketAccessParams.setSignerOverride(S3FileTransferRequestParamsDto.SIGNER_OVERRIDE_V4);
@@ -558,9 +505,7 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         return response;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    @NamespacePermission(fields = "#namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public UploadSingleCredentialExtensionResponse extendUploadSingleCredentials(String namespace, String businessObjectDefinitionName,
         String businessObjectFormatUsage, String businessObjectFormatFileType, Integer businessObjectFormatVersion, String partitionValue,
@@ -572,30 +517,30 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
                 businessObjectFormatVersion, partitionValue, null, businessObjectDataVersion);
 
         // Get the business object data for the key.
-        BusinessObjectDataEntity businessObjectDataEntity = herdDaoHelper.getBusinessObjectDataEntity(businessObjectDataKey);
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataKey);
 
         // Ensure the status of the business object data is "uploading" in order to extend credentials.
         if (!(businessObjectDataEntity.getStatus().getCode().equals(BusinessObjectDataStatusEntity.UPLOADING)))
         {
             throw new IllegalArgumentException(String.format(String
                 .format("Business object data {%s} has a status of \"%s\" and must be \"%s\" to extend " + "credentials.",
-                    herdHelper.businessObjectDataKeyToString(businessObjectDataKey), businessObjectDataEntity.getStatus().getCode(),
+                    businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey), businessObjectDataEntity.getStatus().getCode(),
                     BusinessObjectDataStatusEntity.UPLOADING)));
         }
 
         // Get the S3 managed "loading dock" storage entity and make sure it exists.
         StorageEntity storageEntity = storageDaoHelper.getStorageEntity(StorageEntity.MANAGED_LOADING_DOCK_STORAGE);
 
-        String s3BucketName = getStorageBucketName(storageEntity);
+        String s3BucketName = storageHelper.getStorageBucketName(storageEntity);
 
         // Get the storage unit entity for this business object data in the S3 managed "loading dock" storage and make sure it exists.
-        StorageUnitEntity storageUnitEntity = storageDaoHelper.getStorageUnitEntity(businessObjectDataEntity, StorageEntity.MANAGED_LOADING_DOCK_STORAGE);
+        StorageUnitEntity storageUnitEntity = storageUnitDaoHelper.getStorageUnitEntity(StorageEntity.MANAGED_LOADING_DOCK_STORAGE, businessObjectDataEntity);
 
         // Validate that the storage unit contains exactly one storage file.
         assertHasOneStorageFile(storageUnitEntity);
 
         // Get the storage file entity.
-        StorageFileEntity storageFileEntity = storageUnitEntity.getStorageFiles().iterator().next();
+        StorageFileEntity storageFileEntity = IterableUtils.get(storageUnitEntity.getStorageFiles(), 0);
 
         // Get the storage file path.
         String storageFilePath = storageFileEntity.getPath();
@@ -604,7 +549,7 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
 
         Integer awsRoleDurationSeconds = getStorageUploadSessionDuration(storageEntity);
 
-        String awsKmsKeyId = getStorageKmsKeyId(storageEntity);
+        String awsKmsKeyId = storageHelper.getStorageKmsKeyId(storageEntity);
 
         // Get the temporary security credentials to access S3_MANAGED_STORAGE.
         Credentials assumedSessionCredentials = stsDao
@@ -633,7 +578,7 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         Assert.isTrue(storageUnitEntity.getStorageFiles().size() == 1, String
             .format("Found %d registered storage files when expecting one in \"%s\" storage for the business object data {%s}.",
                 storageUnitEntity.getStorageFiles().size(), storageUnitEntity.getStorage().getName(),
-                herdDaoHelper.businessObjectDataEntityAltKeyToString(storageUnitEntity.getBusinessObjectData())));
+                businessObjectDataHelper.businessObjectDataEntityAltKeyToString(storageUnitEntity.getBusinessObjectData())));
     }
 
     /**
@@ -648,97 +593,61 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
     private Credentials getExternalDownloaderCredentials(StorageEntity storageEntity, String sessionName, String s3ObjectKey)
     {
         return stsDao.getTemporarySecurityCredentials(awsHelper.getAwsParamsDto(), sessionName, getStorageDownloadRoleArn(storageEntity),
-            getStorageDownloadSessionDuration(storageEntity), createDownloaderPolicy(getStorageBucketName(storageEntity), s3ObjectKey, getStorageKmsKeyId(
-                storageEntity)));
-    }
-
-    /**
-     * Asserts that the status of the given data is equal to the given expected value.
-     *
-     * @param expectedBusinessObjectDataStatusCode - the expected status
-     * @param businessObjectDataEntity - the data entity
-     *
-     * @throws IllegalArgumentException when status does not equal
-     */
-    private void assertBusinessObjectDataStatusEquals(String expectedBusinessObjectDataStatusCode, BusinessObjectDataEntity businessObjectDataEntity)
-    {
-        String businessObjectDataStatusCode = businessObjectDataEntity.getStatus().getCode();
-        Assert.isTrue(expectedBusinessObjectDataStatusCode.equals(businessObjectDataStatusCode), String.format(
-            "Business object data status \"%s\" does not match the expected status \"%s\" for the business object data {%s}.", businessObjectDataStatusCode,
-            expectedBusinessObjectDataStatusCode, herdDaoHelper.businessObjectDataEntityAltKeyToString(businessObjectDataEntity)));
-    }
-
-    /**
-     * Gets the storage's bucket name. Throws if not defined.
-     * 
-     * @param storageEntity The storage entity
-     * @return S3 bucket name
-     */
-    private String getStorageBucketName(StorageEntity storageEntity)
-    {
-        return storageDaoHelper.getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), storageEntity,
-            true);
-    }
-
-    /**
-     * Gets the storage's KMS key ID. Throws if not defined.
-     * 
-     * @param storageEntity The storage entity
-     * @return KMS key ID
-     */
-    private String getStorageKmsKeyId(StorageEntity storageEntity)
-    {
-        return storageDaoHelper.getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KMS_KEY_ID), storageEntity,
-            true);
+            getStorageDownloadSessionDuration(storageEntity),
+            createDownloaderPolicy(storageHelper.getStorageBucketName(storageEntity), s3ObjectKey, storageHelper.getStorageKmsKeyId(storageEntity)));
     }
 
     /**
      * Gets the storage's upload session duration in seconds. Defaults to the configured default value if not defined.
-     * 
+     *
      * @param storageEntity The storage entity
+     *
      * @return Upload session duration in seconds
      */
     private Integer getStorageUploadSessionDuration(StorageEntity storageEntity)
     {
-        return storageDaoHelper.getStorageAttributeIntegerValueByName(configurationHelper.getProperty(
-            ConfigurationValue.S3_ATTRIBUTE_NAME_UPLOAD_SESSION_DURATION_SECS), storageEntity, configurationHelper.getProperty(
-                ConfigurationValue.AWS_S3_DEFAULT_UPLOAD_SESSION_DURATION_SECS, Integer.class));
+        return storageHelper
+            .getStorageAttributeIntegerValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_UPLOAD_SESSION_DURATION_SECS),
+                storageEntity, configurationHelper.getProperty(ConfigurationValue.AWS_S3_DEFAULT_UPLOAD_SESSION_DURATION_SECS, Integer.class));
     }
 
     /**
      * Gets the storage's upload role ARN. Throws if not defined.
-     * 
+     *
      * @param storageEntity The storage entity
+     *
      * @return Upload role ARN
      */
     private String getStorageUploadRoleArn(StorageEntity storageEntity)
     {
-        return storageDaoHelper.getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_UPLOAD_ROLE_ARN),
-            storageEntity, true);
+        return storageHelper
+            .getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_UPLOAD_ROLE_ARN), storageEntity, true);
     }
 
     /**
      * Gets the storage's download session duration in seconds. Defaults to the configured default value if not defined.
-     * 
+     *
      * @param storageEntity The storage entity
+     *
      * @return Download session duration in seconds
      */
     private Integer getStorageDownloadSessionDuration(StorageEntity storageEntity)
     {
-        return storageDaoHelper.getStorageAttributeIntegerValueByName(configurationHelper.getProperty(
-            ConfigurationValue.S3_ATTRIBUTE_NAME_DOWNLOAD_SESSION_DURATION_SECS), storageEntity, configurationHelper.getProperty(
-                ConfigurationValue.AWS_S3_DEFAULT_DOWNLOAD_SESSION_DURATION_SECS, Integer.class));
+        return storageHelper
+            .getStorageAttributeIntegerValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_DOWNLOAD_SESSION_DURATION_SECS),
+                storageEntity, configurationHelper.getProperty(ConfigurationValue.AWS_S3_DEFAULT_DOWNLOAD_SESSION_DURATION_SECS, Integer.class));
     }
 
     /**
      * Gets the storage's download role ARN. Throws if not defined.
-     * 
+     *
      * @param storageEntity The storage entity
+     *
      * @return Download role ARN
      */
     private String getStorageDownloadRoleArn(StorageEntity storageEntity)
     {
-        return storageDaoHelper.getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_DOWNLOAD_ROLE_ARN),
-            storageEntity, true);
+        return storageHelper
+            .getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_DOWNLOAD_ROLE_ARN), storageEntity, true);
     }
 }

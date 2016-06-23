@@ -16,14 +16,19 @@
 package org.finra.herd.service.impl;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -31,8 +36,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
-import org.finra.herd.dao.HerdDao;
+import org.finra.herd.dao.BusinessObjectDataDao;
+import org.finra.herd.dao.BusinessObjectFormatDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
+import org.finra.herd.model.annotation.NamespacePermission;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.AttributeDefinition;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
@@ -46,6 +53,7 @@ import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKeys;
 import org.finra.herd.model.api.xml.BusinessObjectFormatUpdateRequest;
 import org.finra.herd.model.api.xml.CustomDdlKey;
+import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.api.xml.Schema;
 import org.finra.herd.model.api.xml.SchemaColumn;
 import org.finra.herd.model.jpa.BusinessObjectDataAttributeDefinitionEntity;
@@ -57,11 +65,16 @@ import org.finra.herd.model.jpa.FileTypeEntity;
 import org.finra.herd.model.jpa.PartitionKeyGroupEntity;
 import org.finra.herd.model.jpa.SchemaColumnEntity;
 import org.finra.herd.service.BusinessObjectFormatService;
+import org.finra.herd.service.helper.AttributeHelper;
+import org.finra.herd.service.helper.BusinessObjectDefinitionDaoHelper;
+import org.finra.herd.service.helper.BusinessObjectDefinitionHelper;
+import org.finra.herd.service.helper.BusinessObjectFormatDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectFormatHelper;
+import org.finra.herd.service.helper.CustomDdlDaoHelper;
 import org.finra.herd.service.helper.DdlGenerator;
 import org.finra.herd.service.helper.DdlGeneratorFactory;
-import org.finra.herd.service.helper.HerdDaoHelper;
-import org.finra.herd.service.helper.HerdHelper;
+import org.finra.herd.service.helper.FileTypeDaoHelper;
+import org.finra.herd.service.helper.PartitionKeyGroupDaoHelper;
 
 /**
  * The business object format service implementation.
@@ -70,20 +83,44 @@ import org.finra.herd.service.helper.HerdHelper;
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatService
 {
-    @Autowired
-    private HerdHelper herdHelper;
+    /**
+     * List all schema column data types for which size increase is considered to be an additive schema change.
+     */
+    public static final Set<String> SCHEMA_COLUMN_DATA_TYPES_WITH_ALLOWED_SIZE_INCREASE =
+        Collections.unmodifiableSet(new HashSet<>(Arrays.asList("CHAR", "VARCHAR", "VARCHAR2")));
 
     @Autowired
-    private HerdDao herdDao;
+    private AttributeHelper attributeHelper;
 
     @Autowired
-    private HerdDaoHelper herdDaoHelper;
+    private BusinessObjectDataDao businessObjectDataDao;
+
+    @Autowired
+    private BusinessObjectDefinitionDaoHelper businessObjectDefinitionDaoHelper;
+
+    @Autowired
+    private BusinessObjectDefinitionHelper businessObjectDefinitionHelper;
+
+    @Autowired
+    private BusinessObjectFormatDao businessObjectFormatDao;
+
+    @Autowired
+    private BusinessObjectFormatDaoHelper businessObjectFormatDaoHelper;
 
     @Autowired
     private BusinessObjectFormatHelper businessObjectFormatHelper;
 
     @Autowired
+    private CustomDdlDaoHelper customDdlDaoHelper;
+
+    @Autowired
     private DdlGeneratorFactory ddlGeneratorFactory;
+
+    @Autowired
+    private FileTypeDaoHelper fileTypeDaoHelper;
+
+    @Autowired
+    private PartitionKeyGroupDaoHelper partitionKeyGroupDaoHelper;
 
     /**
      * Creates a new business object format.
@@ -92,6 +129,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
      *
      * @return the created business object format.
      */
+    @NamespacePermission(fields = "#request.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public BusinessObjectFormat createBusinessObjectFormat(BusinessObjectFormatCreateRequest request)
     {
@@ -102,14 +140,14 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         BusinessObjectFormatKey businessObjectFormatKey = getBusinessObjectFormatKey(request);
 
         // Get the business object definition and ensure it exists.
-        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = herdDaoHelper.getBusinessObjectDefinitionEntity(new BusinessObjectDefinitionKey(
-            businessObjectFormatKey.getNamespace(), businessObjectFormatKey.getBusinessObjectDefinitionName()));
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(
+            new BusinessObjectDefinitionKey(businessObjectFormatKey.getNamespace(), businessObjectFormatKey.getBusinessObjectDefinitionName()));
 
         // Get business object format file type and ensure it exists.
-        FileTypeEntity fileTypeEntity = herdDaoHelper.getFileTypeEntity(request.getBusinessObjectFormatFileType());
+        FileTypeEntity fileTypeEntity = fileTypeDaoHelper.getFileTypeEntity(request.getBusinessObjectFormatFileType());
 
         // Get the latest format version for this business format, if it exists.
-        BusinessObjectFormatEntity latestVersionBusinessObjectFormatEntity = herdDao.getBusinessObjectFormatByAltKey(businessObjectFormatKey);
+        BusinessObjectFormatEntity latestVersionBusinessObjectFormatEntity = businessObjectFormatDao.getBusinessObjectFormatByAltKey(businessObjectFormatKey);
 
         // If the latest version exists, perform the additive schema validation and update the latest entity.
         if (latestVersionBusinessObjectFormatEntity != null)
@@ -126,7 +164,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
 
             // Update the latest entity.
             latestVersionBusinessObjectFormatEntity.setLatestVersion(false);
-            herdDao.saveAndRefresh(latestVersionBusinessObjectFormatEntity);
+            businessObjectFormatDao.saveAndRefresh(latestVersionBusinessObjectFormatEntity);
         }
 
         // Create a business object format entity from the request information.
@@ -147,6 +185,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
      *
      * @return the updated business object format.
      */
+    @NamespacePermission(fields = "#businessObjectFormatKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public BusinessObjectFormat updateBusinessObjectFormat(BusinessObjectFormatKey businessObjectFormatKey, BusinessObjectFormatUpdateRequest request)
     {
@@ -154,10 +193,10 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         validateBusinessObjectFormatKey(businessObjectFormatKey, true);
 
         // Validate optional attributes. This is also going to trim the attribute names.
-        herdHelper.validateAttributes(request.getAttributes());
+        attributeHelper.validateAttributes(request.getAttributes());
 
         // Retrieve and ensure that a business object format exists.
-        BusinessObjectFormatEntity businessObjectFormatEntity = herdDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey);
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey);
 
         // Update business object format description.
         businessObjectFormatEntity.setDescription(request.getDescription());
@@ -250,14 +289,14 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
             clearBusinessObjectFormatSchema(businessObjectFormatEntity);
 
             // In order to avoid INSERT-then-DELETE, we need to flush the session before we add new schema column entities.
-            herdDao.saveAndRefresh(businessObjectFormatEntity);
+            businessObjectFormatDao.saveAndRefresh(businessObjectFormatEntity);
 
             // Populates schema information within the business object format entity.
             populateBusinessObjectFormatSchema(businessObjectFormatEntity, request.getSchema());
         }
 
         // Persist and refresh the entity.
-        businessObjectFormatEntity = herdDao.saveAndRefresh(businessObjectFormatEntity);
+        businessObjectFormatEntity = businessObjectFormatDao.saveAndRefresh(businessObjectFormatEntity);
 
         // Create and return the business object format object from the persisted entity.
         return businessObjectFormatHelper.createBusinessObjectFormatFromEntity(businessObjectFormatEntity);
@@ -270,6 +309,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
      *
      * @return the business object format
      */
+    @NamespacePermission(fields = "#businessObjectFormatKey.namespace", permissions = NamespacePermissionEnum.READ)
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public BusinessObjectFormat getBusinessObjectFormat(BusinessObjectFormatKey businessObjectFormatKey)
@@ -290,7 +330,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         validateBusinessObjectFormatKey(businessObjectFormatKey, false);
 
         // Retrieve and ensure that a business object format exists.
-        BusinessObjectFormatEntity businessObjectFormatEntity = herdDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey);
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey);
 
         // Create and return the business object format object from the persisted entity.
         return businessObjectFormatHelper.createBusinessObjectFormatFromEntity(businessObjectFormatEntity);
@@ -303,6 +343,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
      *
      * @return the business object format that was deleted
      */
+    @NamespacePermission(fields = "#businessObjectFormatKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public BusinessObjectFormat deleteBusinessObjectFormat(BusinessObjectFormatKey businessObjectFormatKey)
     {
@@ -310,37 +351,37 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         validateBusinessObjectFormatKey(businessObjectFormatKey, true);
 
         // Retrieve and ensure that a business object format exists.
-        BusinessObjectFormatEntity businessObjectFormatEntity = herdDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey);
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey);
 
         // Check if we are allowed to delete this business object format.
-        if (herdDao.getBusinessObjectDataCount(businessObjectFormatKey) > 0L)
+        if (businessObjectDataDao.getBusinessObjectDataCount(businessObjectFormatKey) > 0L)
         {
             throw new IllegalArgumentException(String
                 .format("Can not delete a business object format that has business object data associated with it. Business object format: {%s}",
-                    herdDaoHelper.businessObjectFormatEntityAltKeyToString(businessObjectFormatEntity)));
+                    businessObjectFormatHelper.businessObjectFormatEntityAltKeyToString(businessObjectFormatEntity)));
         }
 
         // Delete this business object format.
-        herdDao.delete(businessObjectFormatEntity);
+        businessObjectFormatDao.delete(businessObjectFormatEntity);
 
         // If this business object format version is the latest, set the latest flag on the previous version of this object format, if it exists.
         if (businessObjectFormatEntity.getLatestVersion())
         {
             // Get the maximum version for this business object format, if it exists.
-            Integer maxBusinessObjectFormatVersion = herdDao.getBusinessObjectFormatMaxVersion(businessObjectFormatKey);
+            Integer maxBusinessObjectFormatVersion = businessObjectFormatDao.getBusinessObjectFormatMaxVersion(businessObjectFormatKey);
 
             if (maxBusinessObjectFormatVersion != null)
             {
                 // Retrieve the previous version business object format entity. Since we successfully got the maximum
                 // version for this business object format, the retrieved entity is not expected to be null.
-                BusinessObjectFormatEntity previousVersionBusinessObjectFormatEntity = herdDao.getBusinessObjectFormatByAltKey(
+                BusinessObjectFormatEntity previousVersionBusinessObjectFormatEntity = businessObjectFormatDao.getBusinessObjectFormatByAltKey(
                     new BusinessObjectFormatKey(businessObjectFormatKey.getNamespace(), businessObjectFormatKey.getBusinessObjectDefinitionName(),
                         businessObjectFormatKey.getBusinessObjectFormatUsage(), businessObjectFormatKey.getBusinessObjectFormatFileType(),
                         maxBusinessObjectFormatVersion));
 
                 // Update the previous version business object format entity.
                 previousVersionBusinessObjectFormatEntity.setLatestVersion(true);
-                herdDao.saveAndRefresh(previousVersionBusinessObjectFormatEntity);
+                businessObjectFormatDao.saveAndRefresh(previousVersionBusinessObjectFormatEntity);
             }
         }
 
@@ -356,19 +397,20 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
      *
      * @return the list of business object formats.
      */
+    @NamespacePermission(fields = "#businessObjectDefinitionKey?.namespace", permissions = NamespacePermissionEnum.READ)
     @Override
     public BusinessObjectFormatKeys getBusinessObjectFormats(BusinessObjectDefinitionKey businessObjectDefinitionKey, boolean latestBusinessObjectFormatVersion)
     {
         // Perform validation and trim.
-        herdHelper.validateBusinessObjectDefinitionKey(businessObjectDefinitionKey);
+        businessObjectDefinitionHelper.validateBusinessObjectDefinitionKey(businessObjectDefinitionKey);
 
         // Ensure that a business object definition already exists with the specified name.
-        herdDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
+        businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
 
         // Gets the list of keys and return them.
         BusinessObjectFormatKeys businessObjectFormatKeys = new BusinessObjectFormatKeys();
         businessObjectFormatKeys.getBusinessObjectFormatKeys()
-            .addAll(herdDao.getBusinessObjectFormats(businessObjectDefinitionKey, latestBusinessObjectFormatVersion));
+            .addAll(businessObjectFormatDao.getBusinessObjectFormats(businessObjectDefinitionKey, latestBusinessObjectFormatVersion));
         return businessObjectFormatKeys;
     }
 
@@ -380,6 +422,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
      *
      * @return the business object format DDL information
      */
+    @NamespacePermission(fields = "#request.namespace", permissions = NamespacePermissionEnum.READ)
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public BusinessObjectFormatDdl generateBusinessObjectFormatDdl(BusinessObjectFormatDdlRequest request)
@@ -395,6 +438,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
      *
      * @return the business object format DDL information
      */
+    @NamespacePermission(fields = "#request?.businessObjectFormatDdlRequests?.![namespace]", permissions = NamespacePermissionEnum.READ)
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public BusinessObjectFormatDdlCollectionResponse generateBusinessObjectFormatDdlCollection(BusinessObjectFormatDdlCollectionRequest request)
@@ -420,12 +464,12 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
 
         // Get the business object format entity for the specified parameters and make sure it exists.
         // Please note that when format version is not specified, we should get back the latest format version.
-        BusinessObjectFormatEntity businessObjectFormatEntity = herdDaoHelper.getBusinessObjectFormatEntity(
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(
             new BusinessObjectFormatKey(request.getNamespace(), request.getBusinessObjectDefinitionName(), request.getBusinessObjectFormatUsage(),
                 request.getBusinessObjectFormatFileType(), request.getBusinessObjectFormatVersion()));
 
         // Get business object format key.
-        BusinessObjectFormatKey businessObjectFormatKey = herdDaoHelper.getBusinessObjectFormatKey(businessObjectFormatEntity);
+        BusinessObjectFormatKey businessObjectFormatKey = businessObjectFormatHelper.getBusinessObjectFormatKey(businessObjectFormatEntity);
 
         // Validate that format has schema information.
         Assert.notEmpty(businessObjectFormatEntity.getSchemaColumns(), String.format(
@@ -438,7 +482,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         CustomDdlEntity customDdlEntity = null;
         if (StringUtils.isNotBlank(request.getCustomDdlName()))
         {
-            customDdlEntity = herdDaoHelper.getCustomDdlEntity(
+            customDdlEntity = customDdlDaoHelper.getCustomDdlEntity(
                 new CustomDdlKey(businessObjectFormatKey.getNamespace(), businessObjectFormatKey.getBusinessObjectDefinitionName(),
                     businessObjectFormatKey.getBusinessObjectFormatUsage(), businessObjectFormatKey.getBusinessObjectFormatFileType(),
                     businessObjectFormatKey.getBusinessObjectFormatVersion(), request.getCustomDdlName()));
@@ -525,7 +569,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         request.setPartitionKey(request.getPartitionKey().trim());
 
         // Validate attributes.
-        herdHelper.validateAttributes(request.getAttributes());
+        attributeHelper.validateAttributes(request.getAttributes());
 
         // Validate attribute definitions if they are specified.
         if (!CollectionUtils.isEmpty(request.getAttributeDefinitions()))
@@ -697,14 +741,75 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
             oldSchema.getEscapeCharacter().equals(newSchema.getEscapeCharacter()),
             String.format("%s New format version escape character does not match to the previous format version escape character.", mainErrorMessage));
 
-        // Validate that there are no changes to partition columns.
-        Assert.isTrue(oldSchema.getPartitions() == null ? newSchema.getPartitions() == null : oldSchema.getPartitions().equals(newSchema.getPartitions()),
-            String.format("%s New format version partition columns do not match to the previous format version partition columns.", mainErrorMessage));
+        // Validate that there are no non-additive changes to partition columns.
+        Assert.isTrue(validateNewSchemaColumnsAreAdditiveToOldSchemaColumns(newSchema.getPartitions(), oldSchema.getPartitions()),
+            String.format("%s Non-additive changes detected to the previously defined partition columns.", mainErrorMessage));
 
-        // Validate that there are no changes to the previous format version regular columns.
-        Assert.isTrue(oldSchema.getColumns().size() <= newSchema.getColumns().size() &&
-            oldSchema.getColumns().equals(newSchema.getColumns().subList(0, oldSchema.getColumns().size())),
-            String.format("%s Changes detected to the previously defined regular (non-partitioning) columns.", mainErrorMessage));
+        // Validate that there are no non-additive changes to the previous format version regular columns.
+        // No null check is needed on schema columns, since at least one column is required if format schema is specified.
+        Assert.isTrue((oldSchema.getColumns().size() <= newSchema.getColumns().size()) &&
+            validateNewSchemaColumnsAreAdditiveToOldSchemaColumns(newSchema.getColumns().subList(0, oldSchema.getColumns().size()), oldSchema.getColumns()),
+            String.format("%s Non-additive changes detected to the previously defined regular (non-partitioning) columns.", mainErrorMessage));
+    }
+
+    /**
+     * Validate that a new list of schema columns is additive to an old one.
+     *
+     * @param newSchemaColumns the list of schema columns from the new schema
+     * @param oldSchemaColumns the list of schema columns from the old schema
+     *
+     * @return true if schema columns are additive, false otherwise
+     */
+    private boolean validateNewSchemaColumnsAreAdditiveToOldSchemaColumns(List<SchemaColumn> newSchemaColumns, List<SchemaColumn> oldSchemaColumns)
+    {
+        // Null check is required for the new and old list of columns, since partition columns are optional in format schema.
+        if (newSchemaColumns == null || oldSchemaColumns == null)
+        {
+            return (newSchemaColumns == null && oldSchemaColumns == null);
+        }
+        else if (newSchemaColumns.size() != oldSchemaColumns.size())
+        {
+            return false;
+        }
+        else
+        {
+            // Loop through the schema columns and compare each pair of new and old columns.
+            for (int i = 0; i < newSchemaColumns.size(); i++)
+            {
+                // Get instance copies for both new and old schema columns.
+                // Null check is not needed here, since schema column instance can not be null.
+                SchemaColumn newSchemaColumnCopy = (SchemaColumn) newSchemaColumns.get(i).clone();
+                SchemaColumn oldSchemaColumnCopy = (SchemaColumn) oldSchemaColumns.get(i).clone();
+
+                // Since we allow column description to be changed, set the description field to null for both columns.
+                newSchemaColumnCopy.setDescription(null);
+                oldSchemaColumnCopy.setDescription(null);
+
+                // For a set of data types, size increase is considered to be an additive change.
+                // Null check on schema column date type is not needed, since it is a required field for schema column.
+                if (SCHEMA_COLUMN_DATA_TYPES_WITH_ALLOWED_SIZE_INCREASE.contains(newSchemaColumnCopy.getType().toUpperCase()))
+                {
+                    // The below string to integer conversion methods return an int represented by the string, or zero if conversion fails.
+                    int newSize = NumberUtils.toInt(newSchemaColumnCopy.getSize());
+                    int oldSize = NumberUtils.toInt(oldSchemaColumnCopy.getSize());
+
+                    // If new size is greater than the old one and they are both positive integers, then set the size field to null for both columns.
+                    if (oldSize > 0 && newSize >= oldSize)
+                    {
+                        newSchemaColumnCopy.setSize(null);
+                        oldSchemaColumnCopy.setSize(null);
+                    }
+                }
+
+                // Fail the validation if columns do not match.
+                if (!newSchemaColumnCopy.equals(oldSchemaColumnCopy))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
     }
 
     /**
@@ -846,7 +951,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         populateBusinessObjectFormatSchema(businessObjectFormatEntity, request.getSchema());
 
         // Persist and return the new entity.
-        return herdDao.saveAndRefresh(businessObjectFormatEntity);
+        return businessObjectFormatDao.saveAndRefresh(businessObjectFormatEntity);
     }
 
     /**
@@ -866,10 +971,14 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         {
             for (AttributeDefinition attributeDefinition : attributeDefinitions)
             {
+                // Create a new business object data attribute definition entity.
                 BusinessObjectDataAttributeDefinitionEntity attributeDefinitionEntity = new BusinessObjectDataAttributeDefinitionEntity();
                 attributeDefinitionEntities.add(attributeDefinitionEntity);
                 attributeDefinitionEntity.setBusinessObjectFormat(businessObjectFormatEntity);
                 attributeDefinitionEntity.setName(attributeDefinition.getName());
+
+                // For the "publish" option, default a Boolean null value to "false".
+                attributeDefinitionEntity.setPublish(BooleanUtils.isTrue(attributeDefinition.isPublish()));
             }
         }
 
@@ -891,7 +1000,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
             PartitionKeyGroupEntity partitionKeyGroupEntity = null;
             if (StringUtils.isNotBlank(schema.getPartitionKeyGroup()))
             {
-                partitionKeyGroupEntity = herdDaoHelper.getPartitionKeyGroupEntity(schema.getPartitionKeyGroup());
+                partitionKeyGroupEntity = partitionKeyGroupDaoHelper.getPartitionKeyGroupEntity(schema.getPartitionKeyGroup());
             }
 
             businessObjectFormatEntity.setNullValue(schema.getNullValue());

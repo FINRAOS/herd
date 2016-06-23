@@ -20,7 +20,6 @@ import java.net.URL;
 import java.util.List;
 
 import com.amazonaws.AmazonClientException;
-import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.AbortMultipartUploadRequest;
@@ -31,12 +30,15 @@ import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.ListMultipartUploadsRequest;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
+import com.amazonaws.services.s3.model.ListVersionsRequest;
 import com.amazonaws.services.s3.model.MultipartUploadListing;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.PutObjectResult;
+import com.amazonaws.services.s3.model.RestoreObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.model.VersionListing;
 import com.amazonaws.services.s3.transfer.Copy;
 import com.amazonaws.services.s3.transfer.Download;
 import com.amazonaws.services.s3.transfer.MultipleFileDownload;
@@ -66,9 +68,14 @@ public interface S3Operations
     public Copy copyFile(CopyObjectRequest copyObjectRequest, TransferManager transferManager);
 
     /**
-     * Deletes the S3 file.
+     * Requests to restore a key in the specified bucket.
+     *
+     * @param requestRestore the request object containing all the options for restoring an object
+     * @param s3Client the {@link AmazonS3} implementation to use
+     *
+     * @throws AmazonClientException if an Amazon client exception occurs
      */
-    public void deleteFile(String bucketName, String key, AmazonS3Client s3Client);
+    public void restoreObject(RestoreObjectRequest requestRestore, AmazonS3Client s3Client) throws AmazonClientException;
 
     /**
      * Lists multipart uploads.
@@ -83,7 +90,7 @@ public interface S3Operations
     /**
      * Delete the objects.
      */
-    public DeleteObjectsResult deleteObjects(DeleteObjectsRequest deleteObjectRequest, AmazonS3Client s3Client);
+    public DeleteObjectsResult deleteObjects(DeleteObjectsRequest deleteObjectsRequest, AmazonS3Client s3Client);
 
     /**
      * List the objects.
@@ -91,6 +98,13 @@ public interface S3Operations
      * @return object listing.
      */
     public ObjectListing listObjects(ListObjectsRequest listObjectsRequest, AmazonS3Client s3Client);
+
+    /**
+     * List the versions.
+     *
+     * @return version listing.
+     */
+    public VersionListing listVersions(ListVersionsRequest listVersionsRequest, AmazonS3Client s3Client);
 
     /**
      * Put an object.
@@ -134,10 +148,9 @@ public interface S3Operations
      * @param transferManager the transfer manager.
      *
      * @return the upload information.
-     * @throws AmazonServiceException if an Amazon service exception occurs.
-     * @throws AmazonClientException if an Amazon client exception occurs.
+     * @throws AmazonClientException if an Amazon client exception occurs
      */
-    public Upload upload(PutObjectRequest putObjectRequest, TransferManager transferManager) throws AmazonServiceException, AmazonClientException;
+    public Upload upload(PutObjectRequest putObjectRequest, TransferManager transferManager) throws AmazonClientException;
 
     public Download download(String bucket, String key, File file, TransferManager transferManager);
 

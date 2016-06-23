@@ -48,7 +48,9 @@ import org.finra.herd.model.dto.DownloaderOutputManifestDto;
 import org.finra.herd.model.dto.ManifestFile;
 import org.finra.herd.model.dto.RegServerAccessParamsDto;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
+import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.service.helper.StorageFileHelper;
+import org.finra.herd.service.helper.StorageHelper;
 import org.finra.herd.tools.common.databridge.AutoRefreshCredentialProvider;
 import org.finra.herd.tools.common.databridge.DataBridgeController;
 
@@ -59,6 +61,12 @@ import org.finra.herd.tools.common.databridge.DataBridgeController;
 public class DownloaderController extends DataBridgeController
 {
     private static final Logger LOGGER = Logger.getLogger(DownloaderController.class);
+
+    @Autowired
+    private BusinessObjectDataHelper businessObjectDataHelper;
+
+    @Autowired
+    private ConfigurationHelper configurationHelper;
 
     @Autowired
     private DownloaderManifestReader manifestReader;
@@ -73,7 +81,7 @@ public class DownloaderController extends DataBridgeController
     private StorageFileHelper storageFileHelper;
 
     @Autowired
-    protected ConfigurationHelper configurationHelper;
+    private StorageHelper storageHelper;
 
     /**
      * The downloader output manifest file name.
@@ -113,17 +121,18 @@ public class DownloaderController extends DataBridgeController
             BusinessObjectData businessObjectData = downloaderWebClient.getBusinessObjectData(manifest);
 
             manifest.setBusinessObjectDataVersion(String.valueOf(businessObjectData.getVersion()));
+            manifest.setBusinessObjectFormatVersion(String.valueOf(businessObjectData.getBusinessObjectFormatVersion()));
             s3FileTransferRequestParamsDto.getAdditionalAwsCredentialsProviders().add(new AutoRefreshCredentialProvider()
             {
                 @Override
                 public AwsCredential getNewAwsCredential() throws Exception
                 {
-                    return downloaderWebClient.getBusinessObjectDataDownloadCredential(manifest, storageName).getAwsCredential();
+                    return downloaderWebClient.getStorageUnitDownloadCredential(manifest, storageName).getAwsCredential();
                 }
             });
 
             // Get a storage unit that belongs to the S3 storage.
-            StorageUnit storageUnit = herdHelper.getStorageUnitByStorageName(businessObjectData, storageName);
+            StorageUnit storageUnit = businessObjectDataHelper.getStorageUnitByStorageName(businessObjectData, storageName);
 
             // Get the expected S3 key prefix and S3 bucket name.
             S3KeyPrefixInformation s3KeyPrefixInformation = downloaderWebClient.getS3KeyPrefix(businessObjectData);
@@ -151,18 +160,18 @@ public class DownloaderController extends DataBridgeController
             Storage storage = downloaderWebClient.getStorage(storageName);
 
             // Get S3 bucket name.  Please note that since this value is required we pass a "true" flag.
-            String s3BucketName = herdHelper
-                .getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), storage, true);
+            String s3BucketName =
+                storageHelper.getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), storage, true);
 
             // Get the list of S3 files matching the expected S3 key prefix.
             s3FileTransferRequestParamsDto.setS3BucketName(s3BucketName);
             // Since the S3 key prefix represents a directory, we add a trailing '/' character to it.
             s3FileTransferRequestParamsDto.setS3KeyPrefix(s3KeyPrefixInformation.getS3KeyPrefix() + "/");
             // When listing S3 files, we ignore 0 byte objects that represent S3 directories.
-            List<String> actualS3Files = storageFileHelper.getFilePaths(s3Service.listDirectory(s3FileTransferRequestParamsDto, true));
+            List<String> actualS3Files = storageFileHelper.getFilePathsFromS3ObjectSummaries(s3Service.listDirectory(s3FileTransferRequestParamsDto, true));
 
             // Validate S3 files before we start the download.
-            herdHelper.validateS3Files(storageUnit, actualS3Files, s3KeyPrefixInformation.getS3KeyPrefix());
+            storageFileHelper.validateStorageUnitS3Files(storageUnit, actualS3Files, s3KeyPrefixInformation.getS3KeyPrefix());
 
             // Special handling for the maxThreads command line option.
             s3FileTransferRequestParamsDto.setMaxThreads(adjustIntegerValue(s3FileTransferRequestParamsDto.getMaxThreads(), MIN_THREADS, MAX_THREADS));
@@ -173,7 +182,7 @@ public class DownloaderController extends DataBridgeController
             s3Service.downloadDirectory(s3FileTransferRequestParamsDto);
 
             // Validate the downloaded files.
-            herdHelper.validateDownloadedS3Files(s3FileTransferRequestParamsDto.getLocalPath(), s3KeyPrefixInformation.getS3KeyPrefix(), storageUnit);
+            storageFileHelper.validateDownloadedS3Files(s3FileTransferRequestParamsDto.getLocalPath(), s3KeyPrefixInformation.getS3KeyPrefix(), storageUnit);
 
             // Log a list of files downloaded to the target local directory.
             if (LOGGER.isInfoEnabled())
@@ -225,8 +234,7 @@ public class DownloaderController extends DataBridgeController
      *
      * @return the created downloader output manifest instance
      */
-    private DownloaderOutputManifestDto createDownloaderOutputManifestDto(BusinessObjectData businessObjectData, StorageUnit storageUnit,
-        String s3KeyPrefix)
+    protected DownloaderOutputManifestDto createDownloaderOutputManifestDto(BusinessObjectData businessObjectData, StorageUnit storageUnit, String s3KeyPrefix)
     {
         DownloaderOutputManifestDto downloaderOutputManifestDto = new DownloaderOutputManifestDto();
 

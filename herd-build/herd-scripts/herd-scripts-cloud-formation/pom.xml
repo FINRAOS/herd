@@ -21,7 +21,7 @@
    <parent>
       <groupId>org.finra.herd</groupId>
       <artifactId>herd-scripts</artifactId>
-      <version>0.8.0-SNAPSHOT</version>
+      <version>0.20.0-SNAPSHOT</version>
    </parent>
 
    <name>herd scripts cloud formation</name>
@@ -29,5 +29,86 @@
 
    <description>This project contains the cloud formation scripts and supporting files to configure a running instance of herd.</description>
    <url>http://finraos.github.io/herd/</url>
+
+   <build>
+      <plugins>
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <executions>
+               <execution>
+                  <phase>generate-resources</phase>
+                  <configuration>
+                     <exportAntProperties>true</exportAntProperties>
+                     <target>
+                        <!-- Generate a list of herd postgres upgrade scripts. -->
+                        <property name="herd.postgres.upgrade.scripts.path" location="${basedir}/../herd-scripts-sql/src/main/resources"/>
+                        <fileset id="herd-postgres-upgrade-scripts" dir="${herd.postgres.upgrade.scripts.path}">
+                           <include name="**/*.upgrade.sql"/>
+                        </fileset>
+                        <pathconvert targetos="unix" pathsep="," property="herd.postgres.upgrade.scripts" refid="herd-postgres-upgrade-scripts">
+                           <map from="${herd.postgres.upgrade.scripts.path}/" to=""/>
+                        </pathconvert>
+                     </target>
+                  </configuration>
+                  <goals>
+                     <goal>run</goal>
+                  </goals>
+               </execution>
+            </executions>
+         </plugin>
+         <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>build-helper-maven-plugin</artifactId>
+            <executions>
+               <!-- Set the "herd.tag.version" property based on "project.version" value
+                    by adding "v" prefix and removing the "SNAPSHOT" prefix if it is there. -->
+               <execution>
+                  <id>regex-property</id>
+                  <phase>generate-resources</phase>
+                  <goals>
+                     <goal>regex-property</goal>
+                  </goals>
+                  <configuration>
+                     <name>herd.tag.version</name>
+                     <value>${project.version}</value>
+                     <regex>^([0-9]+)\.([0-9]+)\.([0-9]+)(-SNAPSHOT)?$</regex>
+                     <replacement>v$1.$2.$3</replacement>
+                     <failIfNoMatch>true</failIfNoMatch>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
+         <plugin>
+            <groupId>com.googlecode.velocity-maven-plugin</groupId>
+            <artifactId>velocity-maven-plugin</artifactId>
+            <executions>
+               <execution>
+                  <id>generate-aws-cloud-formation-template</id>
+                  <phase>generate-resources</phase>
+                  <goals>
+                     <goal>velocity</goal>
+                  </goals>
+               </execution>
+            </executions>
+            <configuration>
+               <templateFiles>
+                  <directory>src/main/resources</directory>
+                  <includes>
+                     <include>herd.localdb.template.vm</include>
+                  </includes>
+               </templateFiles>
+               <outputDirectory>target/classes</outputDirectory>
+               <removeExtension>.vm</removeExtension>
+               <templateValues>
+                  <herdTagVersion>${herd.tag.version}</herdTagVersion>
+                  <herdLastMajorDatabaseReleaseVersion>${herd.last.major.database.release.version}</herdLastMajorDatabaseReleaseVersion>
+                  <activitiVersion>${activiti.version}</activitiVersion>
+                  <herdPostgresUpgradeScripts>${herd.postgres.upgrade.scripts}</herdPostgresUpgradeScripts>
+               </templateValues>
+            </configuration>
+         </plugin>
+      </plugins>
+   </build>
 
 </project>

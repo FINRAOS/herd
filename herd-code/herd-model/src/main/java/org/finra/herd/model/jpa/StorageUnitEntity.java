@@ -28,14 +28,10 @@ import javax.persistence.OneToMany;
 import javax.persistence.OrderBy;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 /**
  * A storage unit.
  */
-@XmlRootElement
-@XmlType
 @Table(name = StorageUnitEntity.TABLE_NAME)
 @Entity
 public class StorageUnitEntity extends AuditableEntity
@@ -48,7 +44,7 @@ public class StorageUnitEntity extends AuditableEntity
     @Id
     @Column(name = TABLE_NAME + "_id")
     @GeneratedValue(generator = TABLE_NAME + "_seq")
-    @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq")
+    @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq", allocationSize = 1)
     private Integer id;
 
     @OneToMany(mappedBy = "storageUnit", orphanRemoval = true, cascade = {CascadeType.ALL})
@@ -160,62 +156,5 @@ public class StorageUnitEntity extends AuditableEntity
     public void setParentStorageUnit(StorageUnitEntity parentStorageUnit)
     {
         this.parentStorageUnit = parentStorageUnit;
-    }
-
-    @Override
-    public boolean equals(Object other)
-    {
-        if (this == other)
-        {
-            return true;
-        }
-        if (other == null || getClass() != other.getClass())
-        {
-            return false;
-        }
-
-        StorageUnitEntity that = (StorageUnitEntity) other;
-
-        if (!businessObjectData.equals(that.businessObjectData))
-        {
-            return false;
-        }
-        if (directoryPath != null ? !directoryPath.equals(that.directoryPath) : that.directoryPath != null)
-        {
-            return false;
-        }
-        if (!id.equals(that.id))
-        {
-            return false;
-        }
-        if (!storage.equals(that.storage))
-        {
-            return false;
-        }
-        if (storageFiles != null ? !storageFiles.equals(that.storageFiles) : that.storageFiles != null)
-        {
-            return false;
-        }
-        if (!status.equals(that.status))
-        {
-            return false;
-        }
-        if (parentStorageUnit != null ? !parentStorageUnit.equals(that.parentStorageUnit) : that.parentStorageUnit != null)
-        {
-            return false;
-        }
-
-        return true;
-    }
-
-    @Override
-    public int hashCode()
-    {
-        int result = id.hashCode();
-        result = 31 * result + (storageFiles != null ? storageFiles.hashCode() : 0);
-        result = 31 * result + storage.hashCode();
-        result = 31 * result + businessObjectData.hashCode();
-        result = 31 * result + (directoryPath != null ? directoryPath.hashCode() : 0);
-        return result;
     }
 }

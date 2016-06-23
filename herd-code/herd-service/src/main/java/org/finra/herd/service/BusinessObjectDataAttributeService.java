@@ -27,14 +27,50 @@ import org.finra.herd.model.api.xml.BusinessObjectDataKey;
  */
 public interface BusinessObjectDataAttributeService
 {
-    public BusinessObjectDataAttribute createBusinessObjectDataAttribute(BusinessObjectDataAttributeCreateRequest customDdlCreateRequest);
+    /**
+     * Creates a new business object data attribute.
+     *
+     * @param businessObjectDataAttributeCreateRequest the information needed to create a business object data attribute
+     *
+     * @return the newly created business object data attribute
+     */
+    public BusinessObjectDataAttribute createBusinessObjectDataAttribute(BusinessObjectDataAttributeCreateRequest businessObjectDataAttributeCreateRequest);
 
+    /**
+     * Gets an existing business object data attribute by key.
+     *
+     * @param businessObjectDataAttributeKey the business object data attribute key
+     *
+     * @return the business object data attribute information
+     */
     public BusinessObjectDataAttribute getBusinessObjectDataAttribute(BusinessObjectDataAttributeKey businessObjectDataAttributeKey);
 
+    /**
+     * Updates an existing business object data attribute by key.
+     *
+     * @param businessObjectDataAttributeKey the business object data attribute key
+     * @param businessObjectDataAttributeUpdateRequest the information needed to update a business object data attribute
+     *
+     * @return the business object data attribute information
+     */
     public BusinessObjectDataAttribute updateBusinessObjectDataAttribute(BusinessObjectDataAttributeKey businessObjectDataAttributeKey,
-        BusinessObjectDataAttributeUpdateRequest customDdlUpdateRequest);
+        BusinessObjectDataAttributeUpdateRequest businessObjectDataAttributeUpdateRequest);
 
+    /**
+     * Deletes an existing business object data attribute by key.
+     *
+     * @param businessObjectDataAttributeKey the business object data attribute key
+     *
+     * @return the business object data attribute information for the attribute that got deleted
+     */
     public BusinessObjectDataAttribute deleteBusinessObjectDataAttribute(BusinessObjectDataAttributeKey businessObjectDataAttributeKey);
 
+    /**
+     * Gets a list of keys for all existing business object data attributes.
+     *
+     * @param businessObjectDataKey the business object data key
+     *
+     * @return the list of business object data attribute keys
+     */
     public BusinessObjectDataAttributeKeys getBusinessObjectDataAttributes(BusinessObjectDataKey businessObjectDataKey);
 }

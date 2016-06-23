@@ -15,19 +15,18 @@
 */
 package org.finra.herd.service.activiti.task;
 
-import org.activiti.engine.delegate.Expression;
-
 import org.activiti.engine.delegate.DelegateExecution;
-import org.apache.log4j.Logger;
+import org.activiti.engine.delegate.Expression;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import org.finra.herd.model.dto.EmrClusterAlternateKeyDto;
 import org.finra.herd.model.api.xml.EmrCluster;
+import org.finra.herd.model.dto.EmrClusterAlternateKeyDto;
 
 /**
  * An Activiti task that terminates the EMR cluster
  * <p/>
- * 
  * <pre>
  * <extensionElements>
  *   <activiti:field name="namespaceCode" stringValue="" />
@@ -40,9 +39,10 @@ import org.finra.herd.model.api.xml.EmrCluster;
 @Component
 public class TerminateEmrCluster extends BaseEmrCluster
 {
-    private static final Logger LOGGER = Logger.getLogger(TerminateEmrCluster.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(TerminateEmrCluster.class);
 
     private Expression overrideTerminationProtection;
+    private Expression emrClusterId;
 
     @Override
     public void executeImpl(DelegateExecution execution) throws Exception
@@ -50,13 +50,14 @@ public class TerminateEmrCluster extends BaseEmrCluster
         EmrClusterAlternateKeyDto emrClusterAlternateKeyDto = getClusterAlternateKey(execution);
 
         boolean overrideTerminationProtectionBoolean =
-                activitiHelper.getExpressionVariableAsBoolean(overrideTerminationProtection, execution, "overrideTerminationProtection", false, false);
-        
+            activitiHelper.getExpressionVariableAsBoolean(overrideTerminationProtection, execution, "overrideTerminationProtection", false, false);
+        String emrClusterIdString = activitiHelper.getExpressionVariableAsString(emrClusterId, execution);
+
         // Terminate the EMR cluster.
-        EmrCluster emrCluster = emrService.terminateCluster(emrClusterAlternateKeyDto, overrideTerminationProtectionBoolean);
+        EmrCluster emrCluster = emrService.terminateCluster(emrClusterAlternateKeyDto, overrideTerminationProtectionBoolean, emrClusterIdString);
 
         // Set workflow variables based on the result EMR cluster that was terminated.
         setIdStatusWorkflowVariables(execution, emrCluster);
-        LOGGER.info(activitiHelper.getProcessIdentifyingInformation(execution) + " EMR cluster terminated with cluster Id: " + emrCluster.getId());
+        LOGGER.info("{} EMR cluster terminated. emrClusterId=\"{}\"", activitiHelper.getProcessIdentifyingInformation(execution), emrCluster.getId());
     }
 }

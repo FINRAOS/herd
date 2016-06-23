@@ -28,6 +28,11 @@ public class MockS3Object
     private String key;
 
     /**
+     * Optional version attribute of this object.
+     */
+    private String version;
+
+    /**
      * The metadata of this object.
      */
     private ObjectMetadata objectMetadata;
@@ -45,6 +50,16 @@ public class MockS3Object
     public void setKey(String key)
     {
         this.key = key;
+    }
+
+    public String getVersion()
+    {
+        return version;
+    }
+
+    public void setVersion(String version)
+    {
+        this.version = version;
     }
 
     public ObjectMetadata getObjectMetadata()
@@ -70,29 +85,34 @@ public class MockS3Object
     @Override
     public int hashCode()
     {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((key == null) ? 0 : key.hashCode());
+        int result = key != null ? key.hashCode() : 0;
+        result = 31 * result + (version != null ? version.hashCode() : 0);
         return result;
     }
 
     @Override
-    public boolean equals(Object obj)
+    public boolean equals(Object o)
     {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        MockS3Object other = (MockS3Object) obj;
-        if (key == null)
+        if (this == o)
         {
-            if (other.key != null)
-                return false;
+            return true;
         }
-        else if (!key.equals(other.key))
+        if (!(o instanceof MockS3Object))
+        {
             return false;
+        }
+
+        MockS3Object that = (MockS3Object) o;
+
+        if (key != null ? !key.equals(that.key) : that.key != null)
+        {
+            return false;
+        }
+        if (version != null ? !version.equals(that.version) : that.version != null)
+        {
+            return false;
+        }
+
         return true;
     }
 }

@@ -28,22 +28,27 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
-import org.finra.herd.dao.HerdDao;
+import org.finra.herd.dao.BusinessObjectDefinitionDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
+import org.finra.herd.model.annotation.NamespacePermission;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.BusinessObjectDefinition;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKeys;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionUpdateRequest;
+import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionAttributeEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.DataProviderEntity;
 import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.service.BusinessObjectDefinitionService;
-import org.finra.herd.service.helper.HerdDaoHelper;
-import org.finra.herd.service.helper.HerdHelper;
+import org.finra.herd.service.helper.AttributeHelper;
+import org.finra.herd.service.helper.BusinessObjectDefinitionDaoHelper;
+import org.finra.herd.service.helper.BusinessObjectDefinitionHelper;
+import org.finra.herd.service.helper.DataProviderDaoHelper;
+import org.finra.herd.service.helper.NamespaceDaoHelper;
 
 /**
  * The business object definition service implementation.
@@ -53,13 +58,22 @@ import org.finra.herd.service.helper.HerdHelper;
 public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefinitionService
 {
     @Autowired
-    private HerdHelper herdHelper;
+    private AttributeHelper attributeHelper;
 
     @Autowired
-    private HerdDao herdDao;
+    private BusinessObjectDefinitionDao businessObjectDefinitionDao;
 
     @Autowired
-    private HerdDaoHelper herdDaoHelper;
+    private BusinessObjectDefinitionDaoHelper businessObjectDefinitionDaoHelper;
+
+    @Autowired
+    private BusinessObjectDefinitionHelper businessObjectDefinitionHelper;
+
+    @Autowired
+    private DataProviderDaoHelper dataProviderDaoHelper;
+
+    @Autowired
+    private NamespaceDaoHelper namespaceDaoHelper;
 
     /**
      * Creates a new business object definition.
@@ -68,6 +82,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
      *
      * @return the created business object definition.
      */
+    @NamespacePermission(fields = "#request.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public BusinessObjectDefinition createBusinessObjectDefinition(BusinessObjectDefinitionCreateRequest request)
     {
@@ -75,17 +90,18 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         validateBusinessObjectDefinitionCreateRequest(request);
 
         // Get the namespace and ensure it exists.
-        NamespaceEntity namespaceEntity = herdDaoHelper.getNamespaceEntity(request.getNamespace());
+        NamespaceEntity namespaceEntity = namespaceDaoHelper.getNamespaceEntity(request.getNamespace());
 
         // Get the data provider and ensure it exists.
-        DataProviderEntity dataProviderEntity = herdDaoHelper.getDataProviderEntity(request.getDataProviderName());
+        DataProviderEntity dataProviderEntity = dataProviderDaoHelper.getDataProviderEntity(request.getDataProviderName());
 
         // Get business object definition key.
         BusinessObjectDefinitionKey businessObjectDefinitionKey =
             new BusinessObjectDefinitionKey(request.getNamespace(), request.getBusinessObjectDefinitionName());
 
         // Ensure a business object definition with the specified key doesn't already exist.
-        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = herdDao.getBusinessObjectDefinitionByKey(businessObjectDefinitionKey);
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
+            businessObjectDefinitionDao.getBusinessObjectDefinitionByKey(businessObjectDefinitionKey);
         if (businessObjectDefinitionEntity != null)
         {
             throw new AlreadyExistsException(String
@@ -108,16 +124,18 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
      *
      * @return the updated business object definition
      */
+    @NamespacePermission(fields = "#businessObjectDefinitionKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public BusinessObjectDefinition updateBusinessObjectDefinition(BusinessObjectDefinitionKey businessObjectDefinitionKey,
         BusinessObjectDefinitionUpdateRequest request)
     {
         // Perform validation and trim.
-        herdHelper.validateBusinessObjectDefinitionKey(businessObjectDefinitionKey);
+        businessObjectDefinitionHelper.validateBusinessObjectDefinitionKey(businessObjectDefinitionKey);
         validateBusinessObjectDefinitionUpdateRequest(request);
 
         // Retrieve and ensure that a business object definition already exists with the specified key.
-        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = herdDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
+            businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
 
         // Update and persist the entity.
         updateBusinessObjectDefinitionEntity(businessObjectDefinitionEntity, request);
@@ -133,6 +151,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
      *
      * @return the business object definition.
      */
+    @NamespacePermission(fields = "#businessObjectDefinitionKey.namespace", permissions = NamespacePermissionEnum.READ)
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public BusinessObjectDefinition getBusinessObjectDefinition(BusinessObjectDefinitionKey businessObjectDefinitionKey)
@@ -150,10 +169,11 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     protected BusinessObjectDefinition getBusinessObjectDefinitionImpl(BusinessObjectDefinitionKey businessObjectDefinitionKey)
     {
         // Perform validation and trim.
-        herdHelper.validateBusinessObjectDefinitionKey(businessObjectDefinitionKey);
+        businessObjectDefinitionHelper.validateBusinessObjectDefinitionKey(businessObjectDefinitionKey);
 
         // Retrieve and ensure that a business object definition already exists with the specified key.
-        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = herdDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
+            businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
 
         // Create and return the business object definition object from the persisted entity.
         return createBusinessObjectDefinitionFromEntity(businessObjectDefinitionEntity);
@@ -166,17 +186,19 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
      *
      * @return the business object definition that was deleted.
      */
+    @NamespacePermission(fields = "#businessObjectDefinitionKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public BusinessObjectDefinition deleteBusinessObjectDefinition(BusinessObjectDefinitionKey businessObjectDefinitionKey)
     {
         // Perform validation and trim.
-        herdHelper.validateBusinessObjectDefinitionKey(businessObjectDefinitionKey);
+        businessObjectDefinitionHelper.validateBusinessObjectDefinitionKey(businessObjectDefinitionKey);
 
         // Retrieve and ensure that a business object definition already exists with the specified key.
-        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = herdDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
+            businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
 
         // Delete the business object definition.
-        herdDao.delete(businessObjectDefinitionEntity);
+        businessObjectDefinitionDao.delete(businessObjectDefinitionEntity);
 
         // Create and return the business object definition object from the deleted entity.
         return createBusinessObjectDefinitionFromEntity(businessObjectDefinitionEntity);
@@ -191,7 +213,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     public BusinessObjectDefinitionKeys getBusinessObjectDefinitions()
     {
         BusinessObjectDefinitionKeys businessObjectDefinitionKeys = new BusinessObjectDefinitionKeys();
-        businessObjectDefinitionKeys.getBusinessObjectDefinitionKeys().addAll(herdDao.getBusinessObjectDefinitions());
+        businessObjectDefinitionKeys.getBusinessObjectDefinitionKeys().addAll(businessObjectDefinitionDao.getBusinessObjectDefinitions());
         return businessObjectDefinitionKeys;
     }
 
@@ -202,6 +224,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
      *
      * @return the business object definition keys
      */
+    @NamespacePermission(fields = "#namespaceCode", permissions = NamespacePermissionEnum.READ)
     @Override
     public BusinessObjectDefinitionKeys getBusinessObjectDefinitions(String namespaceCode)
     {
@@ -210,7 +233,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 
         // Retrieve and return the list of business object definitions
         BusinessObjectDefinitionKeys businessObjectDefinitionKeys = new BusinessObjectDefinitionKeys();
-        businessObjectDefinitionKeys.getBusinessObjectDefinitionKeys().addAll(herdDao.getBusinessObjectDefinitions(namespaceCode.trim()));
+        businessObjectDefinitionKeys.getBusinessObjectDefinitionKeys().addAll(businessObjectDefinitionDao.getBusinessObjectDefinitions(namespaceCode.trim()));
         return businessObjectDefinitionKeys;
     }
 
@@ -234,7 +257,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         request.setDataProviderName(request.getDataProviderName().trim());
 
         // Validate attributes.
-        herdHelper.validateAttributes(request.getAttributes());
+        attributeHelper.validateAttributes(request.getAttributes());
     }
 
     /**
@@ -247,7 +270,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     private void validateBusinessObjectDefinitionUpdateRequest(BusinessObjectDefinitionUpdateRequest request)
     {
         // Validate attributes.
-        herdHelper.validateAttributes(request.getAttributes());
+        attributeHelper.validateAttributes(request.getAttributes());
     }
 
     /**
@@ -285,7 +308,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         }
 
         // Persist and return the new entity.
-        return herdDao.saveAndRefresh(businessObjectDefinitionEntity);
+        return businessObjectDefinitionDao.saveAndRefresh(businessObjectDefinitionEntity);
     }
 
     /**
@@ -359,7 +382,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         businessObjectDefinitionEntity.getAttributes().addAll(createdAttributeEntities);
 
         // Persist the entity.
-        herdDao.saveAndRefresh(businessObjectDefinitionEntity);
+        businessObjectDefinitionDao.saveAndRefresh(businessObjectDefinitionEntity);
     }
 
     /**

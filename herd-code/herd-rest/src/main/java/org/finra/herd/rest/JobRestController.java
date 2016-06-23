@@ -16,6 +16,7 @@
 package org.finra.herd.rest;
 
 import io.swagger.annotations.Api;
+import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -47,7 +48,7 @@ public class JobRestController extends HerdBaseController
     private JobService jobService;
 
     /**
-     * Creates and starts a new job asynchronously.
+     * Creates and starts a new job asynchronously. <p>Requires EXECUTE permission on namespace</p>
      *
      * @param request the information needed to create the job.
      *
@@ -58,15 +59,18 @@ public class JobRestController extends HerdBaseController
     public Job createJob(@RequestBody JobCreateRequest request) throws Exception
     {
         // Create and return a new job.
-        return jobService.createAndStartJob(request, true);
+        return jobService.createAndStartJob(request);
     }
 
     /**
-     * Gets a list of job executions based on the specified filter parameters. This currently only retrieves running jobs.
+     * <p>Gets a list of job executions based on the specified filter parameters. This currently only retrieves running jobs.</p> <p>Jobs' namespace to which
+     * you do not have READ permissions to will be omitted from the result.</p>
      *
-     * @param namespace an optional namespace filter.
-     * @param jobName an optional job name filter.
-     * @param status an optional status filter.
+     * @param namespace an optional namespace filter
+     * @param jobName an optional job name filter
+     * @param status an optional job status filter
+     * @param startTime an optional start time filter (ex. 2015, 2015-12, 2015-12-12T3:4:5)
+     * @param endTime an optional end time filter (ex. 2015, 2015-12, 2015-12-12T3:4:5)
      *
      * @return the list of job summaries.
      * @throws Exception if any problems were encountered.
@@ -74,14 +78,15 @@ public class JobRestController extends HerdBaseController
     @RequestMapping(value = "/jobs", method = RequestMethod.GET)
     @Secured(SecurityFunctions.FN_JOBS_GET)
     public JobSummaries getJobs(@RequestParam(value = "namespace", required = false) String namespace,
-        @RequestParam(value = "jobName", required = false) String jobName, @RequestParam(value = "status", required = false) JobStatusEnum status)
+        @RequestParam(value = "jobName", required = false) String jobName, @RequestParam(value = "status", required = false) JobStatusEnum status,
+        @RequestParam(value = "startTime", required = false) DateTime startTime, @RequestParam(value = "endTime", required = false) DateTime endTime)
         throws Exception
     {
-        return jobService.getJobs(namespace, jobName, status);
+        return jobService.getJobs(namespace, jobName, status, startTime, endTime);
     }
 
     /**
-     * Gets the details of a previously submitted job.
+     * Gets the details of a previously submitted job. <p>Requires READ permission on namespace</p>
      *
      * @param id the job id.
      *
@@ -96,7 +101,7 @@ public class JobRestController extends HerdBaseController
     }
 
     /**
-     * Signals the job with the receive task.
+     * Signals the job with the receive task. <p>Requires EXECUTE permission on namespace</p>
      *
      * @param request the information needed to signal the job.
      *
@@ -111,7 +116,7 @@ public class JobRestController extends HerdBaseController
     }
 
     /**
-     * Deletes a currently running job and preserves the job state in history.
+     * Deletes a currently running job and preserves the job state in history. <p>Requires EXECUTE permission on namespace</p>
      *
      * @param id The job id
      * @param jobDeleteRequest The delete request

@@ -27,11 +27,11 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import org.finra.herd.app.AbstractAppTest;
-import org.finra.herd.model.dto.ConfigurationValue;
-import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.api.xml.BusinessObjectDefinition;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
+import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 
 /**
  * This class tests the security user wrapper.
@@ -42,7 +42,7 @@ public class SecurityUserWrapperTest extends AbstractAppTest
     public void testCreateBusinessObjectDefinitionWithTrustedUser() throws Exception
     {
         // Create and persist database entities required for testing.
-        createNamespaceEntity(NAMESPACE_CD);
+        createNamespaceEntity(NAMESPACE);
         createDataProviderEntity(DATA_PROVIDER_NAME);
 
         // Override security configuration to disable the security.
@@ -63,12 +63,12 @@ public class SecurityUserWrapperTest extends AbstractAppTest
             // Create a business object definition.
             // This indirectly requires the "FN_BUSINESS_OBJECT_DEFINITIONS_POST" function point to be present in the authenticated user.
             BusinessObjectDefinitionCreateRequest request =
-                createBusinessObjectDefinitionCreateRequest(NAMESPACE_CD, BOD_NAME, DATA_PROVIDER_NAME, BOD_DESCRIPTION);
+                createBusinessObjectDefinitionCreateRequest(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
             BusinessObjectDefinition businessObjectDefinition = businessObjectDefinitionRestController.createBusinessObjectDefinition(request);
 
             // Retrieve the newly created business object definition and validate the created by field.
             BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
-                herdDao.getBusinessObjectDefinitionByKey(new BusinessObjectDefinitionKey(NAMESPACE_CD, BOD_NAME));
+                businessObjectDefinitionDao.getBusinessObjectDefinitionByKey(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME));
 
             // Validate the newly created entity.
             assertEquals(Integer.valueOf(businessObjectDefinition.getId()), businessObjectDefinitionEntity.getId());

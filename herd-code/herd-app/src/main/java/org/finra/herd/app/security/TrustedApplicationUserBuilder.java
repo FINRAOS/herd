@@ -20,13 +20,19 @@ import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 import org.finra.herd.model.dto.ApplicationUser;
+import org.finra.herd.service.helper.UserNamespaceAuthorizationHelper;
 
 /**
  * Application user builder that builds a trusted user with trusted role.
  */
 public class TrustedApplicationUserBuilder implements ApplicationUserBuilder
 {
+    @Autowired
+    private UserNamespaceAuthorizationHelper userNamespaceAuthorizationHelper;
+
     // TODO Should we make these values configurable.
     public static final String TRUSTED_USER_ID = "TRUSTED_USER";
     public static final String TRUSTED_USER_FIRST_NAME = "TRUSTED_USER_FIRST_NAME";
@@ -63,6 +69,7 @@ public class TrustedApplicationUserBuilder implements ApplicationUserBuilder
         applicationUser.setLastName(TRUSTED_USER_LAST_NAME);
         applicationUser.setEmail(TRUSTED_USER_EMAIL);
         applicationUser.setSessionId(request.getSession().getId());
+        applicationUser.setNamespaceAuthorizations(userNamespaceAuthorizationHelper.getAllNamespaceAuthorizations());
 
         if (includeRoles)
         {

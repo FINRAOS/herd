@@ -22,14 +22,18 @@ import org.springframework.transaction.annotation.Transactional;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 
 /**
- * This is a Upload download service implementation for testing.
+ * This is an upload download service implementation for testing.
  */
 @Service
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 @Primary
 public class TestUploadDownloadServiceImpl extends UploadDownloadServiceImpl
 {
-    // Overwrite the base class method to change transactional attributes.
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Overwrite the base class method to change transactional attributes.
+     */
     @Override
     public CompleteUploadSingleMessageResult performCompleteUploadSingleMessage(String objectKey)
     {

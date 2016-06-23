@@ -57,13 +57,15 @@ import org.finra.herd.model.dto.ConfigurationValue;
 /**
  * Mock implementation of AWS EMR operations.
  */
-public class MockEmrOperationsImpl implements EmrOperations
+public class MockEmrOperationsImpl extends AbstractDaoTest implements EmrOperations
 {
     @Autowired
     protected ConfigurationHelper configurationHelper;
 
     public static final String MOCK_CLUSTER_NAME = "mock_cluster_name";
+
     public static final String MOCK_EMR_MAKER = "mock_cluster_marker";
+
     public static final String MOCK_CLUSTER_NOT_PROVISIONED_NAME = "mock_cluster_not_provisioned_name";
 
     public static final String MOCK_STEP_RUNNING_NAME = "mock_step_running_name";
@@ -77,7 +79,7 @@ public class MockEmrOperationsImpl implements EmrOperations
     public String runEmrJobFlow(AmazonElasticMapReduceClient emrClient, RunJobFlowRequest jobFlowRequest)
     {
         String clusterStatus = ClusterState.BOOTSTRAPPING.toString();
-        
+
         if (StringUtils.isNotBlank(jobFlowRequest.getAmiVersion()))
         {
             if (jobFlowRequest.getAmiVersion().equals(MockAwsOperationsHelper.AMAZON_THROTTLING_EXCEPTION))
@@ -103,11 +105,11 @@ public class MockEmrOperationsImpl implements EmrOperations
             {
                 throw new AmazonServiceException(MockAwsOperationsHelper.AMAZON_SERVICE_EXCEPTION);
             }
-            else if(jobFlowRequest.getAmiVersion().equals(MockAwsOperationsHelper.AMAZON_CLUSTER_STATUS_WAITING))
+            else if (jobFlowRequest.getAmiVersion().equals(MockAwsOperationsHelper.AMAZON_CLUSTER_STATUS_WAITING))
             {
                 clusterStatus = ClusterState.WAITING.toString();
             }
-            else if(jobFlowRequest.getAmiVersion().equals(MockAwsOperationsHelper.AMAZON_CLUSTER_STATUS_RUNNING))
+            else if (jobFlowRequest.getAmiVersion().equals(MockAwsOperationsHelper.AMAZON_CLUSTER_STATUS_RUNNING))
             {
                 clusterStatus = ClusterState.RUNNING.toString();
             }
@@ -169,8 +171,7 @@ public class MockEmrOperationsImpl implements EmrOperations
         if (cluster != null)
         {
             return new DescribeClusterResult().withCluster(
-                    new Cluster().withId(cluster.getJobFlowId()).withName(cluster.getJobFlowName()).withStatus(
-                            new ClusterStatus().withState(cluster.getStatus())));
+                new Cluster().withId(cluster.getJobFlowId()).withName(cluster.getJobFlowName()).withStatus(new ClusterStatus().withState(cluster.getStatus())));
         }
         else
         {
@@ -226,13 +227,13 @@ public class MockEmrOperationsImpl implements EmrOperations
         cluster.setJobFlowName(jobFlowRequest.getName());
         cluster.setStatus(status);
         emrClusters.put(cluster.getJobFlowId(), cluster);
-        
+
         // Add the steps
-        for(StepConfig stepConfig : jobFlowRequest.getSteps())
+        for (StepConfig stepConfig : jobFlowRequest.getSteps())
         {
             addClusterStep(cluster.getJobFlowId(), stepConfig);
         }
-        
+
         return cluster;
     }
 
@@ -290,8 +291,7 @@ public class MockEmrOperationsImpl implements EmrOperations
     @Override
     public ListInstancesResult listClusterInstancesRequest(AmazonElasticMapReduceClient emrClient, ListInstancesRequest listInstancesRequest)
     {
-        MockEmrJobFlow cluster = getClusterByName(
-                buildEmrClusterName(AbstractDaoTest.NAMESPACE_CD, AbstractDaoTest.EMR_CLUSTER_DEFINITION_NAME, MOCK_CLUSTER_NOT_PROVISIONED_NAME));
+        MockEmrJobFlow cluster = getClusterByName(buildEmrClusterName(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, MOCK_CLUSTER_NOT_PROVISIONED_NAME));
 
         if (cluster != null && listInstancesRequest.getClusterId().equals(cluster.getJobFlowId()))
         {
@@ -329,10 +329,11 @@ public class MockEmrOperationsImpl implements EmrOperations
         for (MockEmrJobFlow step : cluster.getSteps())
         {
             if ((listStepsRequest.getStepStates() == null || listStepsRequest.getStepStates().isEmpty()) ||
-                    listStepsRequest.getStepStates().contains(step.getStatus()))
+                listStepsRequest.getStepStates().contains(step.getStatus()))
             {
                 StepSummary stepSummary =
-                        new StepSummary().withId(step.getJobFlowId()).withName(step.getJobFlowName()).withStatus(new StepStatus().withState(step.getStatus()));
+                    new StepSummary().withId(step.getJobFlowId()).withName(step.getJobFlowName()).withStatus(new StepStatus().withState(step.getStatus()))
+                        .withConfig(new HadoopStepConfig().withJar(step.getJarLocation()));
                 steps.add(stepSummary);
             }
         }
@@ -358,7 +359,7 @@ public class MockEmrOperationsImpl implements EmrOperations
             {
                 HadoopStepConfig hadoopStepConfig = new HadoopStepConfig().withJar(step.getJarLocation());
                 stepResult = new Step().withId(step.getJobFlowId()).withName(step.getJobFlowName()).withStatus(new StepStatus().withState(step.getStatus()))
-                        .withConfig(hadoopStepConfig);
+                    .withConfig(hadoopStepConfig);
                 break;
             }
         }

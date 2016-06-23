@@ -20,14 +20,10 @@ import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 /**
  * A notification job action.
  */
-@XmlRootElement
-@XmlType
 @Entity
 @DiscriminatorValue(ActionTypeEntity.ACTION_TYPE_JOB)
 public class NotificationJobActionEntity extends NotificationActionEntity
@@ -63,44 +59,5 @@ public class NotificationJobActionEntity extends NotificationActionEntity
     public void setCorrelationData(String correlationData)
     {
         this.correlationData = correlationData;
-    }
-
-    @Override
-    public boolean equals(Object other)
-    {
-        if (this == other)
-        {
-            return true;
-        }
-        if (other == null || getClass() != other.getClass())
-        {
-            return false;
-        }
-        if (!super.equals(other))
-        {
-            return false;
-        }
-
-        NotificationJobActionEntity that = (NotificationJobActionEntity) other;
-
-        if (correlationData != null ? !correlationData.equals(that.correlationData) : that.correlationData != null)
-        {
-            return false;
-        }
-        if (jobDefinition != null ? !jobDefinition.equals(that.jobDefinition) : that.jobDefinition != null)
-        {
-            return false;
-        }
-
-        return true;
-    }
-
-    @Override
-    public int hashCode()
-    {
-        int result = super.hashCode();
-        result = 31 * result + (jobDefinition != null ? jobDefinition.hashCode() : 0);
-        result = 31 * result + (correlationData != null ? correlationData.hashCode() : 0);
-        return result;
     }
 }

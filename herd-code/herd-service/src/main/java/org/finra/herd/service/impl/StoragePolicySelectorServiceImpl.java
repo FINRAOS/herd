@@ -24,12 +24,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.finra.herd.core.HerdDateUtils;
+import org.finra.herd.dao.BusinessObjectDataDao;
 import org.finra.herd.dao.HerdDao;
 import org.finra.herd.dao.SqsDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
@@ -44,7 +46,7 @@ import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.herd.model.jpa.StoragePolicyEntity;
 import org.finra.herd.model.jpa.StoragePolicyRuleTypeEntity;
 import org.finra.herd.service.StoragePolicySelectorService;
-import org.finra.herd.service.helper.HerdDaoHelper;
+import org.finra.herd.service.helper.BusinessObjectDataHelper;
 
 /**
  * The file upload cleanup service implementation.
@@ -53,6 +55,8 @@ import org.finra.herd.service.helper.HerdDaoHelper;
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 public class StoragePolicySelectorServiceImpl implements StoragePolicySelectorService
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(StoragePolicySelectorServiceImpl.class);
+
     /**
      * List of business object data statuses that storage policies apply to.
      */
@@ -69,26 +73,24 @@ public class StoragePolicySelectorServiceImpl implements StoragePolicySelectorSe
         .asList(new StoragePolicyPriorityLevel(false, false, false), new StoragePolicyPriorityLevel(false, true, true),
             new StoragePolicyPriorityLevel(true, false, false), new StoragePolicyPriorityLevel(true, true, true)));
 
-    private static final Logger LOGGER = Logger.getLogger(StoragePolicySelectorServiceImpl.class);
+    @Autowired
+    private AwsHelper awsHelper;
+
+    @Autowired
+    private BusinessObjectDataDao businessObjectDataDao;
+
+    @Autowired
+    private BusinessObjectDataHelper businessObjectDataHelper;
 
     @Autowired
     private HerdDao herdDao;
 
     @Autowired
-    private HerdDaoHelper herdDaoHelper;
+    private JsonHelper jsonHelper;
 
     @Autowired
     private SqsDao sqsDao;
 
-    @Autowired
-    private AwsHelper awsHelper;
-
-    @Autowired
-    private JsonHelper jsonHelper;
-
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public List<StoragePolicySelection> execute(String sqsQueueName, int maxResult)
     {
@@ -112,7 +114,7 @@ public class StoragePolicySelectorServiceImpl implements StoragePolicySelectorSe
             int startPosition = 0;
             while (true)
             {
-                Map<BusinessObjectDataEntity, StoragePolicyEntity> map = herdDao
+                Map<BusinessObjectDataEntity, StoragePolicyEntity> map = businessObjectDataDao
                     .getBusinessObjectDataEntitiesMatchingStoragePolicies(storagePolicyPriorityLevel, SUPPORTED_BUSINESS_OBJECT_DATA_STATUSES, startPosition,
                         maxResult);
 
@@ -140,9 +142,10 @@ public class StoragePolicySelectorServiceImpl implements StoragePolicySelectorSe
                                 // Add this storage policy selection to the result list.
                                 StoragePolicySelection storagePolicySelection = new StoragePolicySelection();
                                 resultStoragePolicySelections.add(storagePolicySelection);
-                                storagePolicySelection.setBusinessObjectDataKey(herdDaoHelper.getBusinessObjectDataKey(businessObjectDataEntity));
+                                storagePolicySelection.setBusinessObjectDataKey(businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity));
                                 storagePolicySelection
                                     .setStoragePolicyKey(new StoragePolicyKey(storagePolicyEntity.getNamespace().getCode(), storagePolicyEntity.getName()));
+                                storagePolicySelection.setStoragePolicyVersion(storagePolicyEntity.getVersion());
                             }
 
                             // Stop adding storage policy selections to the result list if we reached the max result limit.
@@ -202,7 +205,7 @@ public class StoragePolicySelectorServiceImpl implements StoragePolicySelectorSe
             }
             catch (Exception e)
             {
-                LOGGER.error(String.format("Failed to post message on \"%s\" SQS queue. Message: %s", sqsQueueName, messageText));
+                LOGGER.error("Failed to publish message to the JMS queue. jmsQueueName=\"{}\" jmsMessagePayload={}", sqsQueueName, messageText);
 
                 // Throw the exception up.
                 throw new IllegalStateException(e.getMessage(), e);

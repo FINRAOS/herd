@@ -25,6 +25,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import org.finra.herd.dao.RetryPolicyFactory;
 import org.finra.herd.dao.StsDao;
 import org.finra.herd.dao.StsOperations;
 import org.finra.herd.model.dto.AwsParamsDto;
@@ -37,6 +38,9 @@ public class StsDaoImpl implements StsDao
 {
     @Autowired
     private StsOperations stsOperations;
+
+    @Autowired
+    private RetryPolicyFactory retryPolicyFactory;
 
     /**
      * Returns a set of temporary security credentials (consisting of an access key ID, a secret access key, and a security token) that can be used to access
@@ -61,7 +65,7 @@ public class StsDaoImpl implements StsDao
         // - Java System Properties - aws.accessKeyId and aws.secretKey
         // - Instance Profile Credentials - delivered through the Amazon EC2 metadata service
 
-        ClientConfiguration clientConfiguration = new ClientConfiguration();
+        ClientConfiguration clientConfiguration = new ClientConfiguration().withRetryPolicy(retryPolicyFactory.getRetryPolicy());
 
         // Only set the proxy hostname and/or port if they're configured.
         if (StringUtils.isNotBlank(awsParamsDto.getHttpProxyHost()))

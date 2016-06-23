@@ -54,9 +54,9 @@ public class CheckBusinessObjectDataAvailabilityMultiplePartitionsTest extends H
         Map<String, Object> variableValuesToValidate = new HashMap<>();
         variableValuesToValidate.put(CheckBusinessObjectDataAvailabilityMultiplePartitions.VARIABLE_IS_ALL_DATA_AVAILABLE, false);
         variableValuesToValidate.put(BaseJavaDelegate.VARIABLE_JSON_RESPONSE, VARIABLE_VALUE_NOT_NULL);
-        
-        testActivitiServiceTaskSuccess(
-            CheckBusinessObjectDataAvailabilityMultiplePartitions.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+
+        testActivitiServiceTaskSuccess(CheckBusinessObjectDataAvailabilityMultiplePartitions.class.getCanonicalName(), fieldExtensionList, parameters,
+            variableValuesToValidate);
     }
 
     @Test
@@ -81,9 +81,9 @@ public class CheckBusinessObjectDataAvailabilityMultiplePartitionsTest extends H
         Map<String, Object> variableValuesToValidate = new HashMap<>();
         variableValuesToValidate.put(CheckBusinessObjectDataAvailabilityMultiplePartitions.VARIABLE_IS_ALL_DATA_AVAILABLE, false);
         variableValuesToValidate.put(BaseJavaDelegate.VARIABLE_JSON_RESPONSE, VARIABLE_VALUE_NOT_NULL);
-        
-        testActivitiServiceTaskSuccess(
-            CheckBusinessObjectDataAvailabilityMultiplePartitions.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+
+        testActivitiServiceTaskSuccess(CheckBusinessObjectDataAvailabilityMultiplePartitions.class.getCanonicalName(), fieldExtensionList, parameters,
+            variableValuesToValidate);
     }
 
     @Test
@@ -102,8 +102,10 @@ public class CheckBusinessObjectDataAvailabilityMultiplePartitionsTest extends H
         Map<String, Object> variableValuesToValidate = new HashMap<>();
         variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"ContentType\" must be a valid value of either \"xml\" or \"json\".");
 
-        testActivitiServiceTaskFailure(CheckBusinessObjectDataAvailabilityMultiplePartitions.class.getCanonicalName(), fieldExtensionList, parameters, 
-            variableValuesToValidate);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            testActivitiServiceTaskFailure(CheckBusinessObjectDataAvailabilityMultiplePartitions.class.getCanonicalName(), fieldExtensionList, parameters,
+                variableValuesToValidate);
+        });
     }
 
     @Test
@@ -122,8 +124,10 @@ public class CheckBusinessObjectDataAvailabilityMultiplePartitionsTest extends H
         Map<String, Object> variableValuesToValidate = new HashMap<>();
         variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"BusinessObjectDataAvailabilityRequest\" must be specified.");
 
-        testActivitiServiceTaskFailure(CheckBusinessObjectDataAvailabilityMultiplePartitions.class.getCanonicalName(), fieldExtensionList, parameters, 
-            variableValuesToValidate);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            testActivitiServiceTaskFailure(CheckBusinessObjectDataAvailabilityMultiplePartitions.class.getCanonicalName(), fieldExtensionList, parameters,
+                variableValuesToValidate);
+        });
     }
 
     @Test
@@ -142,8 +146,10 @@ public class CheckBusinessObjectDataAvailabilityMultiplePartitionsTest extends H
         Map<String, Object> variableValuesToValidate = new HashMap<>();
         variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"BusinessObjectDataAvailabilityRequest\" must be valid xml string.");
 
-        testActivitiServiceTaskFailure(CheckBusinessObjectDataAvailabilityMultiplePartitions.class.getCanonicalName(), fieldExtensionList, parameters, 
-            variableValuesToValidate);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            testActivitiServiceTaskFailure(CheckBusinessObjectDataAvailabilityMultiplePartitions.class.getCanonicalName(), fieldExtensionList, parameters,
+                variableValuesToValidate);
+        });
     }
 
     @Test
@@ -162,7 +168,9 @@ public class CheckBusinessObjectDataAvailabilityMultiplePartitionsTest extends H
         Map<String, Object> variableValuesToValidate = new HashMap<>();
         variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"BusinessObjectDataAvailabilityRequest\" must be valid json string.");
 
-        testActivitiServiceTaskFailure(CheckBusinessObjectDataAvailabilityMultiplePartitions.class.getCanonicalName(), fieldExtensionList, parameters, 
-            variableValuesToValidate);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            testActivitiServiceTaskFailure(CheckBusinessObjectDataAvailabilityMultiplePartitions.class.getCanonicalName(), fieldExtensionList, parameters,
+                variableValuesToValidate);
+        });
     }
 }

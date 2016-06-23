@@ -15,20 +15,19 @@
 */
 package org.finra.herd.service.activiti;
 
-import org.activiti.engine.impl.cmd.ExecuteJobsCmd;
+import java.lang.reflect.Field;
+
+import org.activiti.engine.impl.cmd.ExecuteAsyncJobCmd;
 import org.activiti.engine.impl.context.Context;
 import org.activiti.engine.impl.interceptor.Command;
 import org.activiti.engine.impl.interceptor.CommandConfig;
 import org.activiti.engine.impl.interceptor.CommandInvoker;
-import org.activiti.engine.impl.persistence.entity.ExecutionEntity;
 import org.activiti.engine.impl.persistence.entity.JobEntity;
-import org.apache.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-
-import org.finra.herd.service.activiti.task.BaseJavaDelegate;
-import org.finra.herd.service.helper.HerdErrorInformationExceptionHandler;
+import org.springframework.util.ReflectionUtils;
 
 /**
  * A custom herd Activiti command invoker that extends the default standard Activiti command invoker so we can handle exceptions being thrown in a custom way.
@@ -36,22 +35,12 @@ import org.finra.herd.service.helper.HerdErrorInformationExceptionHandler;
 @Component
 public class HerdCommandInvoker extends CommandInvoker
 {
-    private static final Logger LOGGER = Logger.getLogger(BaseJavaDelegate.class);
-
-    @Autowired
-    private ActivitiHelper activitiHelper;
-
-    @Autowired
-    @Qualifier("herdErrorInformationExceptionHandler") // This is to ensure we get the base class bean rather than any classes that extend it.
-    private HerdErrorInformationExceptionHandler errorInformationExceptionHandler;
+    private static final Logger LOGGER = LoggerFactory.getLogger(HerdCommandInvoker.class);
 
     @Override
     public <T> T execute(CommandConfig config, Command<T> command)
     {
-        // NOTE: Attempting to set process instance variables here had resulted in a problem when asynchronous tasks were encountered.
-        // In this case, the task somehow is getting marked as one which needs to be retried (i.e. a message entry in ACT_RU_JOB gets added) forever.
-        // This essentially gets the workflow stuck on the async task. Beware of this situation when trying to address the "set variable" issue mentioned
-        // below in the TODO comments.
+        LOGGER.debug("command=\"{}\"", command.getClass().getName());
         try
         {
             // Perform the normal execution.
@@ -59,46 +48,62 @@ public class HerdCommandInvoker extends CommandInvoker
         }
         catch (Exception e)
         {
-            // We want to perform some custom steps (i.e. logging) in the case of a "execute jobs command" which occurs when an async task is complete.
-            if (command instanceof ExecuteJobsCmd)
+            LOGGER.debug(String.format("HerdCommandInvoker caught an exception."), e);
+            /*
+             * Attempt to handle exception based on the command.
+             * If we bubble the exception up here, the transaction will be rolled back and all variables which were not committed will not be persisted.
+             * The problem with swallowing the exception, however, is that the exception message is not persisted automatically. To get around it, we must save
+             * the exception message and stacktrace into a JobEntity which is associated with the current execution.
+             */
+
+            if (command instanceof ExecuteAsyncJobCmd)
             {
-                // Get a handle to the Activiti execution.
-                ExecuteJobsCmd executeJobsCmd = (ExecuteJobsCmd) command;
-                ExecutionEntity execution = getExecution(executeJobsCmd);
-
-                // TODO: We want to set the error status and error message as workflow variables so workflows will have a way to detect and react to errors.
-                if (errorInformationExceptionHandler.isReportableError(e))
-                {
-                    // In the case of an error that is reportable, we will log an error.
-                    LOGGER.error(
-                        activitiHelper.getProcessIdentifyingInformation(execution) + " Unexpected error occurred during task \"" + getClass().getSimpleName() +
-                            "\".", e);
-                }
-                else
-                {
-                    // TODO: In the case where we don't want to report an error, we will log a warning for now since setting workflow variables above
-                    // isn't working. We can remove this warning log message if we can find another way to notify the workflow (i.e. after the previous
-                    // TODO has been addressed).
-                    LOGGER.warn(activitiHelper.getProcessIdentifyingInformation(execution) +
-                        " This is a workflow related error and should be handled by the workflow creator \"" + getClass().getSimpleName() + "\".", e);
-                }
+                /*
+                 * ExecuteAsyncJobCmd is executed when a task is asynchronous.
+                 * Save the exception information in the command's JobEntity
+                 */
+                ExecuteAsyncJobCmd executeAsyncJobCmd = (ExecuteAsyncJobCmd) command;
+                JobEntity jobEntity = getJobEntity(executeAsyncJobCmd);
+                jobEntity.setExceptionMessage(ExceptionUtils.getMessage(e));
+                jobEntity.setExceptionStacktrace(ExceptionUtils.getStackTrace(e));
+                return null;
             }
-
-            // Re-throw the exception.
-            throw e;
+            else
+            {
+                /*
+                 * We do not know how to handle any other commands, so just bubble it up and let Activiti's default mechanism kick in.
+                 */
+                throw e;
+            }
         }
     }
 
     /**
-     * Gets the execution entity from the execute jobs command.
-     *
-     * @param executeJobsCmd the execute jobs command.
-     *
-     * @return the execution entity.
+     * Gets the JobEntity from the given ExecuteAsyncJobCmd.
+     * 
+     * @param executeAsyncJobCmd The ExecuteAsyncJobCmd
+     * @return The JobEntity
      */
-    private ExecutionEntity getExecution(ExecuteJobsCmd executeJobsCmd)
+    private JobEntity getJobEntity(ExecuteAsyncJobCmd executeAsyncJobCmd)
     {
-        JobEntity job = Context.getCommandContext().getJobEntityManager().findJobById(executeJobsCmd.getJobId());
-        return Context.getCommandContext().getExecutionEntityManager().findExecutionById(job.getExecutionId());
+        /*
+         * Unfortunately, ExecuteAsyncJobCmd does not provide an accessible method to get the JobEntity stored within it.
+         * We use reflection to force the value out of the object.
+         * Also, we cannot simply get the entity and update it. We must retrieve it through the entity manager so it registers in Activiti's persistent object
+         * cache. This way when the transaction commits, Activiti is aware of any changes in the JobEntity and persists them correctly.
+         */
+        try
+        {
+            Field field = ExecuteAsyncJobCmd.class.getDeclaredField("job");
+            ReflectionUtils.makeAccessible(field);
+            return Context.getCommandContext().getJobEntityManager().findJobById(((JobEntity) ReflectionUtils.getField(field, executeAsyncJobCmd)).getId());
+        }
+        catch (NoSuchFieldException | SecurityException e)
+        {
+            /*
+             * This exception should not happen.
+             */
+            throw new IllegalStateException(e);
+        }
     }
 }

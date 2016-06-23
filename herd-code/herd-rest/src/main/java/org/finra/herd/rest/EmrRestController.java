@@ -60,6 +60,7 @@ public class EmrRestController extends HerdBaseController
 
     /**
      * Gets an existing EMR cluster details.
+     * <p>Requires READ permission on namespace</p>
      *
      * @param namespace the namespace
      * @param emrClusterDefinitionName the EMR cluster definition name
@@ -89,6 +90,7 @@ public class EmrRestController extends HerdBaseController
 
     /**
      * Creates a new EMR cluster.
+     * <p>Requires EXECUTE permission on namespace</p>
      *
      * @param request the information needed to create the EMR cluster.
      *
@@ -103,11 +105,13 @@ public class EmrRestController extends HerdBaseController
 
     /**
      * Terminates an existing EMR cluster.
+     * <p>Requires EXECUTE permission on namespace</p>
      *
      * @param namespace the namespace
      * @param emrClusterDefinitionName the EMR cluster definition name
      * @param emrClusterName the EMR cluster name
      * @param overrideTerminationProtection parameter for whether to override termination protection
+     * @param emrClusterId EMR cluster ID
      *
      * @return the EMR cluster that was terminated
      * @throws Exception if there was an error terminating the EMR cluster.
@@ -117,16 +121,18 @@ public class EmrRestController extends HerdBaseController
     @Secured(SecurityFunctions.FN_EMR_CLUSTERS_DELETE)
     public EmrCluster terminateEmrCluster(@PathVariable("namespace") String namespace,
         @PathVariable("emrClusterDefinitionName") String emrClusterDefinitionName, @PathVariable("emrClusterName") String emrClusterName,
-        @RequestParam(value = "overrideTerminationProtection", required = false, defaultValue = "false") Boolean overrideTerminationProtection) throws Exception
+        @RequestParam(value = "overrideTerminationProtection", required = false, defaultValue = "false") Boolean overrideTerminationProtection,
+        @RequestParam(value = "emrClusterId", required = false) String emrClusterId) throws Exception
     {
         EmrClusterAlternateKeyDto alternateKey =
             EmrClusterAlternateKeyDto.builder().namespace(namespace).emrClusterDefinitionName(emrClusterDefinitionName).emrClusterName(emrClusterName).build();
 
-        return emrService.terminateCluster(alternateKey, overrideTerminationProtection);
+        return emrService.terminateCluster(alternateKey, overrideTerminationProtection, emrClusterId);
     }
 
     /**
      * Adds a shell step to the existing cluster
+     * <p>Requires EXECUTE permission on namespace</p>
      *
      * @param request the information needed to add shell step to the EMR cluster.
      *
@@ -142,6 +148,7 @@ public class EmrRestController extends HerdBaseController
 
     /**
      * Adds a hive step to the existing cluster
+     * <p>Requires EXECUTE permission on namespace</p>
      *
      * @param request the information needed to add hive step to the EMR cluster.
      *
@@ -156,6 +163,7 @@ public class EmrRestController extends HerdBaseController
 
     /**
      * Adds a Pig step to the existing cluster
+     * <p>Requires EXECUTE permission on namespace</p>
      *
      * @param request the information needed to add Pig step to the EMR cluster.
      *
@@ -170,6 +178,7 @@ public class EmrRestController extends HerdBaseController
 
     /**
      * Adds a oozie step to the existing cluster
+     * <p>Requires EXECUTE permission on namespace</p>
      *
      * @param request the information needed to add oozie step to the EMR cluster.
      *
@@ -185,6 +194,7 @@ public class EmrRestController extends HerdBaseController
 
     /**
      * Adds a Hadoop Jar step to the existing cluster
+     * <p>Requires EXECUTE permission on namespace</p>
      *
      * @param request the information needed to add Hadoop Jar step to the EMR cluster.
      *
@@ -199,6 +209,7 @@ public class EmrRestController extends HerdBaseController
 
     /**
      * Adds security groups to the master node of an existing cluster
+     * <p>Requires WRITE permission on namespace</p>
      *
      * @param request the information needed to add security groups to master node of the EMR cluster.
      *
@@ -213,6 +224,7 @@ public class EmrRestController extends HerdBaseController
 
     /**
      * Submits an oozie workflow to the existing cluster.
+     * <p>Requires EXECUTE permission on namespace</p>
      *
      * @param request the information needed to run oozie workflow to the EMR cluster.
      *
@@ -228,12 +240,14 @@ public class EmrRestController extends HerdBaseController
 
     /**
      * Retrieves an existing Oozie workflow job for the specified EMR cluster and workflow job ID.
+     * <p>Requires READ permission on namespace</p>
      *
      * @param namespace Namespace of the EMR cluster
      * @param emrClusterDefinitionName EMR cluster definition name
      * @param emrClusterName EMR cluster name
      * @param oozieWorkflowJobId Oozie workflow job ID
      * @param verbose true to return more detailed information, false or null otherwise
+     * @param emrClusterId The EMR cluster ID
      *
      * @return the Oozie workflow job information
      * @throws Exception when errors occur, whether user or system
@@ -245,8 +259,9 @@ public class EmrRestController extends HerdBaseController
     public OozieWorkflowJob getEmrOozieWorkflow(@PathVariable("namespace") String namespace,
         @PathVariable("emrClusterDefinitionName") String emrClusterDefinitionName, @PathVariable("emrClusterName") String emrClusterName,
         @PathVariable("oozieWorkflowJobId") String oozieWorkflowJobId,
-        @RequestParam(value = "verbose", required = false, defaultValue = "false") Boolean verbose) throws Exception
+        @RequestParam(value = "verbose", required = false, defaultValue = "false") Boolean verbose,
+        @RequestParam(value = "emrClusterId", required = false) String emrClusterId) throws Exception
     {
-        return emrService.getEmrOozieWorkflowJob(namespace, emrClusterDefinitionName, emrClusterName, oozieWorkflowJobId, verbose);
+        return emrService.getEmrOozieWorkflowJob(namespace, emrClusterDefinitionName, emrClusterName, oozieWorkflowJobId, verbose, emrClusterId);
     }
 }

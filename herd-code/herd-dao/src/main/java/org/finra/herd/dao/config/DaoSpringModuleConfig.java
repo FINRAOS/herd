@@ -19,11 +19,13 @@ import java.util.Properties;
 
 import javax.sql.DataSource;
 
+import com.amazonaws.retry.RetryPolicy.BackoffStrategy;
 import net.sf.ehcache.config.CacheConfiguration;
 import org.apache.commons.configuration.ConfigurationConverter;
 import org.apache.commons.configuration.DatabaseConfiguration;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CachingConfigurer;
@@ -37,7 +39,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.FilterType;
-import org.springframework.context.annotation.Import;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
@@ -52,6 +53,7 @@ import org.finra.herd.core.ApplicationContextHolder;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.CacheKeyGenerator;
 import org.finra.herd.dao.ReloadablePropertySource;
+import org.finra.herd.dao.SimpleExponentialBackoffStrategy;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.jpa.ConfigurationEntity;
 
@@ -62,12 +64,11 @@ import org.finra.herd.model.jpa.ConfigurationEntity;
 // Component scan all packages, but exclude the configuration ones since they are explicitly specified.
 @ComponentScan(value = "org.finra.herd.dao",
     excludeFilters = @ComponentScan.Filter(type = FilterType.REGEX, pattern = "org\\.finra\\.herd\\.dao\\.config\\..*"))
-@Import(DaoAopSpringModuleConfig.class)
 @EnableTransactionManagement
 @EnableCaching
 public class DaoSpringModuleConfig implements CachingConfigurer
 {
-    private static final Logger LOGGER = Logger.getLogger(DaoSpringModuleConfig.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DaoSpringModuleConfig.class);
 
     @Autowired
     private ConfigurationHelper configurationHelper;
@@ -137,7 +138,7 @@ public class DaoSpringModuleConfig implements CachingConfigurer
                 String.format("No database type found. Ensure the \"%s\" configuration entry is configured.", ConfigurationValue.DATABASE_TYPE.getKey()));
         }
         Database database = Database.valueOf(databaseType);
-        LOGGER.info("JPA Target Database: " + database);
+        LOGGER.info("jpaTargetDatabase={}", database);
         hibernateJpaVendorAdapter.setDatabase(database);
         hibernateJpaVendorAdapter.setGenerateDdl(false);
         return hibernateJpaVendorAdapter;
@@ -160,14 +161,14 @@ public class DaoSpringModuleConfig implements CachingConfigurer
                 .format("No hibernate dialect found. Ensure the \"%s\" configuration entry is configured.", ConfigurationValue.HIBERNATE_DIALECT.getKey()));
         }
         properties.setProperty(ConfigurationValue.HIBERNATE_DIALECT.getKey(), hibernateDialect);
-        LOGGER.info("Hibernate Dialect: " + properties.getProperty(ConfigurationValue.HIBERNATE_DIALECT.getKey()));
+        LOGGER.info("hibernateDialect={}", properties.getProperty(ConfigurationValue.HIBERNATE_DIALECT.getKey()));
         properties.setProperty("hibernate.query.substitutions", "true='Y', false='N', yes='Y', no='N'");
         properties.setProperty("hibernate.cache.region.factory_class", "org.hibernate.cache.ehcache.EhCacheRegionFactory");
         properties.setProperty("hibernate.cache.use_query_cache", "true");
         properties.setProperty("hibernate.cache.use_second_level_cache", "true");
         // Set the "show sql" flag.
         properties.setProperty(ConfigurationValue.SHOW_SQL.getKey(), configurationHelper.getProperty(ConfigurationValue.SHOW_SQL));
-        LOGGER.info("Show SQL: " + properties.getProperty(ConfigurationValue.SHOW_SQL.getKey()));
+        LOGGER.info("hibernateShowSql={}", properties.getProperty(ConfigurationValue.SHOW_SQL.getKey()));
         properties.setProperty("hibernate.archive.autodetection", "class, hbm");
 
         // Set the Hibernate HBM2DDL Auto param if it is configured. This is only needed in JUnits.
@@ -301,5 +302,11 @@ public class DaoSpringModuleConfig implements CachingConfigurer
     public CacheErrorHandler errorHandler()
     {
         return new SimpleCacheErrorHandler();
+    }
+
+    @Bean
+    public BackoffStrategy backoffStrategy()
+    {
+        return new SimpleExponentialBackoffStrategy();
     }
 }

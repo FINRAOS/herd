@@ -19,16 +19,12 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 import org.hibernate.annotations.Type;
 
 /**
  * A storage unit status.
  */
-@XmlRootElement
-@XmlType
 @Table(name = "strge_unit_stts_cd_lk")
 @Entity
 public class StorageUnitStatusEntity extends AuditableEntity
@@ -37,6 +33,7 @@ public class StorageUnitStatusEntity extends AuditableEntity
     public static final String ENABLED = "ENABLED";
     public static final String DISABLED = "DISABLED";
     public static final String ARCHIVING = "ARCHIVING";
+    public static final String RESTORING = "RESTORING";
 
     @Id
     @Column(name = "strge_unit_stts_cd")
@@ -77,41 +74,5 @@ public class StorageUnitStatusEntity extends AuditableEntity
     public void setAvailable(Boolean available)
     {
         this.available = available;
-    }
-
-    @Override
-    public boolean equals(Object other)
-    {
-        if (this == other)
-        {
-            return true;
-        }
-        if (other == null || getClass() != other.getClass())
-        {
-            return false;
-        }
-
-        StorageUnitStatusEntity that = (StorageUnitStatusEntity) other;
-
-        if (!code.equals(that.code))
-        {
-            return false;
-        }
-        if (!description.equals(that.description))
-        {
-            return false;
-        }
-        if (!available.equals(that.available))
-        {
-            return false;
-        }
-
-        return true;
-    }
-
-    @Override
-    public int hashCode()
-    {
-        return code.hashCode();
     }
 }

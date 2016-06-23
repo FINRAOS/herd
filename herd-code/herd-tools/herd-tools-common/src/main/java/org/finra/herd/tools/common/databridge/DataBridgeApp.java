@@ -27,8 +27,8 @@ import org.finra.herd.core.ApplicationContextHolder;
 import org.finra.herd.core.ArgumentParser;
 import org.finra.herd.core.config.CoreSpringModuleConfig;
 import org.finra.herd.model.api.xml.BuildInformation;
-import org.finra.herd.service.config.ServiceBasicAopSpringModuleConfig;
 import org.finra.herd.tools.common.ToolsCommonConstants;
+import org.finra.herd.tools.common.config.DataBridgeAopSpringModuleConfig;
 import org.finra.herd.tools.common.config.DataBridgeEnvSpringModuleConfig;
 import org.finra.herd.tools.common.config.DataBridgeSpringModuleConfig;
 
@@ -60,6 +60,7 @@ public abstract class DataBridgeApp
     protected Option httpProxyHostOpt;
     protected Option httpProxyPortOpt;
     protected Option maxThreadsOpt;
+    protected Option socketTimeoutOpt;
 
     // Boolean values for command line options that are of type "Boolean".
     protected Boolean useSsl;
@@ -147,6 +148,8 @@ public abstract class DataBridgeApp
             httpProxyHostOpt = argParser.addArgument("n", "httpProxyHost", true, "HTTP proxy host.", false);
             httpProxyPortOpt = argParser.addArgument("o", "httpProxyPort", true, "HTTP proxy port.", false);
             maxThreadsOpt = argParser.addArgument("t", "maxThreads", true, "Maximum number of threads.", false);
+            socketTimeoutOpt =
+                argParser.addArgument("c", "socketTimeout", true, "The socket timeout in milliseconds. 0 indicates no timeout. Default 50000.", false);
 
             // Parse command line arguments without failing on any missing required arguments by passing "false" as the second argument.
             argParser.parseArguments(args, false);
@@ -254,7 +257,7 @@ public abstract class DataBridgeApp
         // that we don't need and don't want (i.e. we don't want the database to be running as a pre-requisite for running the uploader).
         AnnotationConfigApplicationContext applicationContext = new AnnotationConfigApplicationContext();
         ApplicationContextHolder.setApplicationContext(applicationContext);
-        applicationContext.register(CoreSpringModuleConfig.class, ServiceBasicAopSpringModuleConfig.class, DataBridgeSpringModuleConfig.class,
+        applicationContext.register(CoreSpringModuleConfig.class, DataBridgeSpringModuleConfig.class, DataBridgeAopSpringModuleConfig.class,
             DataBridgeEnvSpringModuleConfig.class);
         applicationContext.refresh();
         return applicationContext;

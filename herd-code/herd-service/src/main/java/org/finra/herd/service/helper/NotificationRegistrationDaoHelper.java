@@ -33,9 +33,10 @@ public class NotificationRegistrationDaoHelper
 
     /**
      * Gets a notification registration entity by its namespace and name, or throws an ObjectNotFoundException if not found.
-     * 
+     *
      * @param namespace The namespace of the notification registration
      * @param name The name of the notification registration
+     *
      * @return The notification registration entity
      */
     public NotificationRegistrationEntity getNotificationRegistration(String namespace, String name)

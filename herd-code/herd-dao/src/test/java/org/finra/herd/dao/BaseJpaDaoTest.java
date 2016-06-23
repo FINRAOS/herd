@@ -93,23 +93,6 @@ public class BaseJpaDaoTest extends AbstractDaoTest
         assertNull(storagePlatformEntity);
     }
 
-    @Test
-    public void testQueryByNamedParams()
-    {
-        Map<String, String> namedParams = new HashMap<>();
-        namedParams.put(StoragePlatformEntity.COLUMN_NAME, StoragePlatformEntity.S3);
-        List<StoragePlatformEntity> storagePlatformEntities =
-            baseJpaDao.queryByNamedParams(StoragePlatformEntity.GET_STORAGE_PLATFORM_BY_NAME_QUERY_STRING, namedParams);
-        validateSingleS3StorageEntity(storagePlatformEntities);
-    }
-
-    @Test
-    public void testQueryByNamedQuery()
-    {
-        List<StoragePlatformEntity> storagePlatformEntities = baseJpaDao.queryByNamedQuery(StoragePlatformEntity.QUERY_GET_S3_STORAGE_PLATFORM);
-        validateSingleS3StorageEntity(storagePlatformEntities);
-    }
-
     /**
      * Validates that the list contains a single S3 storage platform entity.
      *

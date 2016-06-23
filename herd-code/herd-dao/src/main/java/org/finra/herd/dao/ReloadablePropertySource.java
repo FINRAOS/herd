@@ -20,7 +20,11 @@ import java.util.Properties;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationConverter;
-import org.apache.log4j.Logger;
+import org.apache.commons.configuration.event.ConfigurationErrorEvent;
+import org.apache.commons.configuration.event.ConfigurationErrorListener;
+import org.apache.commons.configuration.event.EventSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.util.StringUtils;
 
@@ -33,7 +37,7 @@ import org.springframework.util.StringUtils;
  */
 public class ReloadablePropertySource extends MapPropertySource
 {
-    private static final Logger LOGGER = Logger.getLogger(ReloadablePropertySource.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ReloadablePropertySource.class);
 
     // The configuration that can read properties.
     protected Configuration configuration;
@@ -43,6 +47,8 @@ public class ReloadablePropertySource extends MapPropertySource
 
     // The interval in milliseconds to wait before refreshing the properties. Defaults to 0 (i.e. always refresh).
     protected long refreshIntervalMillis = 0;
+
+    protected ConfigurationErrorEvent lastConfigurationErrorEvent;
 
     // The number of milliseconds in a second.
     private static final int MILLISECONDS_IN_A_SECOND = 1000;
@@ -72,15 +78,30 @@ public class ReloadablePropertySource extends MapPropertySource
      * @param configuration the configuration that knows how to read properties.
      * @param refreshIntervalSecs the refresh interval in seconds to wait before refreshing the properties when a property is requested.
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public ReloadablePropertySource(String name, Properties source, Configuration configuration, long refreshIntervalSecs)
     {
         super(name, (Map) source);
         this.configuration = configuration;
+
+        /*
+         * Catches any errors and records it in the lastConfigurationErrorEvent variable.
+         * It is safe to assume that all configurations are an instance of EventSource.
+         * All concrete implementations of Configuration are an extension of AbstractConfiguration, which is an extension of EventSource.
+         */
+        ((EventSource) configuration).addErrorListener(new ConfigurationErrorListener()
+        {
+            @Override
+            public void configurationError(ConfigurationErrorEvent event)
+            {
+                lastConfigurationErrorEvent = event;
+            }
+        });
+
         this.refreshIntervalMillis = refreshIntervalSecs * MILLISECONDS_IN_A_SECOND;
         updateLastRefreshTime();
         updateRefreshInterval();
-        LOGGER.info("A refresh interval of " + refreshIntervalSecs + " seconds has been configured.");
+        LOGGER.info("A refresh interval has been configured. propertiesRefreshIntervalInSeconds={}", refreshIntervalSecs);
     }
 
     /**
@@ -101,46 +122,54 @@ public class ReloadablePropertySource extends MapPropertySource
     /**
      * Refreshes the properties from the configuration if it's time to.
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "rawtypes"})
     protected void refreshPropertiesIfNeeded()
     {
         // Ensure we update the properties in a synchronized fashion to avoid possibly corrupting the properties.
         synchronized (this)
         {
             // See if it's time to refresh the properties (i.e. the elapsed time is greater than the configured refresh interval).
-            LOGGER.debug(
-                "Checking if properties need to be refreshed. Current time is " + System.currentTimeMillis() + " and last refresh time is " + lastRefreshTime +
-                    " which is a delta of " + (System.currentTimeMillis() - lastRefreshTime) + ".");
+            LOGGER.debug("Checking if properties need to be refreshed. currentTime={} lastRefreshTime={} millisecondsSinceLastPropertiesRefresh={}",
+                System.currentTimeMillis(), lastRefreshTime, System.currentTimeMillis() - lastRefreshTime);
 
             if (System.currentTimeMillis() - lastRefreshTime >= refreshIntervalMillis)
             {
                 // Enough time has passed so refresh the properties.
-                LOGGER.debug("Refreshing properties.");
+                LOGGER.debug("Refreshing properties...");
 
                 // Get the latest properties from the configuration.
                 Properties properties = ConfigurationConverter.getProperties(configuration);
 
-                // Log the properties we just retrieved from the configuration.
-                if (LOGGER.isDebugEnabled())
+                if (lastConfigurationErrorEvent != null)
                 {
-                    LOGGER.debug("New properties just retrieved.");
-                    for (Map.Entry<Object, Object> entry : properties.entrySet())
-                    {
-                        LOGGER.debug("Key [" + entry.getKey() + "] = " + entry.getValue());
-                    }
+                    LOGGER.error("An error occurred while retrieving configurations. Previous values are retained. See cause for details.",
+                        lastConfigurationErrorEvent.getCause());
+                    lastConfigurationErrorEvent = null;
                 }
-
-                // Update our property sources properties with the ones just read by clearing and adding in the new ones since the "source" is final.
-                this.source.clear();
-                this.source.putAll((Map) properties);
-
-                // Log the properties we have in our property source.
-                if (LOGGER.isDebugEnabled())
+                else
                 {
-                    LOGGER.debug("Updated reloadable properties.");
-                    for (Object key : source.keySet())
+                    // Log the properties we just retrieved from the configuration.
+                    if (LOGGER.isDebugEnabled())
                     {
-                        LOGGER.debug("Key [" + key + "] = " + properties.get(key));
+                        LOGGER.debug("New properties just retrieved.");
+                        for (Map.Entry<Object, Object> entry : properties.entrySet())
+                        {
+                            LOGGER.debug("{}=\"{}\"", entry.getKey(), entry.getValue());
+                        }
+                    }
+
+                    // Update our property sources properties with the ones just read by clearing and adding in the new ones since the "source" is final.
+                    this.source.clear();
+                    this.source.putAll((Map) properties);
+
+                    // Log the properties we have in our property source.
+                    if (LOGGER.isDebugEnabled())
+                    {
+                        LOGGER.debug("Updated reloadable properties.");
+                        for (Object key : source.keySet())
+                        {
+                            LOGGER.debug("{}=\"{}\"", key, properties.get(key));
+                        }
                     }
                 }
 
@@ -160,7 +189,7 @@ public class ReloadablePropertySource extends MapPropertySource
     {
         // Update when the properties were last refreshed to the current time.
         this.lastRefreshTime = System.currentTimeMillis();
-        LOGGER.debug("Last refresh time set to " + lastRefreshTime);
+        LOGGER.debug("Updated last refresh time. lastPropertiesRefreshTime={}", lastRefreshTime);
     }
 
     /**

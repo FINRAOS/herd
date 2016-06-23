@@ -29,44 +29,42 @@ import java.util.Map;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 
-import org.finra.herd.dao.HerdDao;
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.ObjectNotFoundException;
-import org.finra.herd.model.dto.ConfigurationValue;
-import org.finra.herd.model.jpa.EmrClusterDefinitionEntity;
-import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.model.api.xml.EmrClusterDefinition;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionCreateRequest;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionInformation;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionKey;
+import org.finra.herd.model.api.xml.EmrClusterDefinitionKeys;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionUpdateRequest;
+import org.finra.herd.model.api.xml.InstanceDefinition;
 import org.finra.herd.model.api.xml.NodeTag;
+import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.model.jpa.EmrClusterDefinitionEntity;
+import org.finra.herd.model.jpa.NamespaceEntity;
+import org.finra.herd.service.impl.EmrClusterDefinitionServiceImpl;
 
 /**
  * This class tests various functionality within the EMR Cluster Definition REST controller.
  */
 public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
 {
-    @Autowired
-    HerdDao herdDao;
-
     @Test
     public void testCreateEmrClusterDefinition() throws Exception
     {
         // Create and persist the namespace entity.
-        createNamespaceEntity(NAMESPACE_CD);
+        createNamespaceEntity(NAMESPACE);
 
         // Create an EMR cluster definition create request.
-        EmrClusterDefinitionCreateRequest request = createEmrClusterDefinitionCreateRequest(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME,
+        EmrClusterDefinitionCreateRequest request = createEmrClusterDefinitionCreateRequest(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME,
             getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH));
 
         // Create an EMR cluster definition.
         EmrClusterDefinitionInformation resultEmrClusterDefinition = emrClusterDefinitionService.createEmrClusterDefinition(request);
 
         // Validate the returned object.
-        validateEmrClusterDefinition(null, NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME,
+        validateEmrClusterDefinition(null, NAMESPACE, EMR_CLUSTER_DEFINITION_NAME,
             getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH), resultEmrClusterDefinition);
     }
 
@@ -88,7 +86,7 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
         // Try to perform a create without specifying an EMR cluster definition name.
         try
         {
-            emrClusterDefinitionService.createEmrClusterDefinition(createEmrClusterDefinitionCreateRequest(NAMESPACE_CD, BLANK_TEXT,
+            emrClusterDefinitionService.createEmrClusterDefinition(createEmrClusterDefinitionCreateRequest(NAMESPACE, BLANK_TEXT,
                 getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH)));
             fail("Should throw an IllegalArgumentException when EMR cluster definition name is not specified.");
         }
@@ -100,7 +98,7 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
         // Try to perform a create without specifying an EMR cluster definition configuration.
         try
         {
-            emrClusterDefinitionService.createEmrClusterDefinition(createEmrClusterDefinitionCreateRequest(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME, null));
+            emrClusterDefinitionService.createEmrClusterDefinition(createEmrClusterDefinitionCreateRequest(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, null));
             fail("Should throw an IllegalArgumentException when EMR cluster definition configuration is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -113,8 +111,8 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
         {
             EmrClusterDefinition emrClusterDefinitionConfiguration = getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH);
             emrClusterDefinitionConfiguration.setInstanceDefinitions(null);
-            emrClusterDefinitionService.createEmrClusterDefinition(
-                createEmrClusterDefinitionCreateRequest(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME, emrClusterDefinitionConfiguration));
+            emrClusterDefinitionService
+                .createEmrClusterDefinition(createEmrClusterDefinitionCreateRequest(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, emrClusterDefinitionConfiguration));
             fail("Should throw an IllegalArgumentException when instance definitions are not specified.");
         }
         catch (IllegalArgumentException e)
@@ -127,8 +125,8 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
         {
             EmrClusterDefinition emrClusterDefinitionConfiguration = getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH);
             emrClusterDefinitionConfiguration.getInstanceDefinitions().setMasterInstances(null);
-            emrClusterDefinitionService.createEmrClusterDefinition(
-                createEmrClusterDefinitionCreateRequest(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME, emrClusterDefinitionConfiguration));
+            emrClusterDefinitionService
+                .createEmrClusterDefinition(createEmrClusterDefinitionCreateRequest(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, emrClusterDefinitionConfiguration));
             fail("Should throw an IllegalArgumentException when master instances are not specified.");
         }
         catch (IllegalArgumentException e)
@@ -141,8 +139,8 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
         {
             EmrClusterDefinition emrClusterDefinitionConfiguration = getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH);
             emrClusterDefinitionConfiguration.getInstanceDefinitions().getMasterInstances().setInstanceCount(0);
-            emrClusterDefinitionService.createEmrClusterDefinition(
-                createEmrClusterDefinitionCreateRequest(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME, emrClusterDefinitionConfiguration));
+            emrClusterDefinitionService
+                .createEmrClusterDefinition(createEmrClusterDefinitionCreateRequest(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, emrClusterDefinitionConfiguration));
             fail("Should throw an IllegalArgumentException when instance count is less than one for master instances.");
         }
         catch (IllegalArgumentException e)
@@ -155,8 +153,8 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
         {
             EmrClusterDefinition emrClusterDefinitionConfiguration = getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH);
             emrClusterDefinitionConfiguration.getInstanceDefinitions().getMasterInstances().setInstanceType(BLANK_TEXT);
-            emrClusterDefinitionService.createEmrClusterDefinition(
-                createEmrClusterDefinitionCreateRequest(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME, emrClusterDefinitionConfiguration));
+            emrClusterDefinitionService
+                .createEmrClusterDefinition(createEmrClusterDefinitionCreateRequest(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, emrClusterDefinitionConfiguration));
             fail("Should throw an IllegalArgumentException when instance type for master instances is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -164,32 +162,18 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
             assertEquals("An instance type for master instances must be specified.", e.getMessage());
         }
 
-        // Try to perform a create without specifying core instances.
+        // Try to perform a create with instance count less than 0 for core instances.
         try
         {
             EmrClusterDefinition emrClusterDefinitionConfiguration = getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH);
-            emrClusterDefinitionConfiguration.getInstanceDefinitions().setCoreInstances(null);
-            emrClusterDefinitionService.createEmrClusterDefinition(
-                createEmrClusterDefinitionCreateRequest(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME, emrClusterDefinitionConfiguration));
-            fail("Should throw an IllegalArgumentException when core instances are not specified.");
-        }
-        catch (IllegalArgumentException e)
-        {
-            assertEquals("Core instances must be specified.", e.getMessage());
-        }
-
-        // Try to perform a create with instance count less than one for core instances.
-        try
-        {
-            EmrClusterDefinition emrClusterDefinitionConfiguration = getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH);
-            emrClusterDefinitionConfiguration.getInstanceDefinitions().getCoreInstances().setInstanceCount(0);
-            emrClusterDefinitionService.createEmrClusterDefinition(
-                createEmrClusterDefinitionCreateRequest(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME, emrClusterDefinitionConfiguration));
+            emrClusterDefinitionConfiguration.getInstanceDefinitions().getCoreInstances().setInstanceCount(-1);
+            emrClusterDefinitionService
+                .createEmrClusterDefinition(createEmrClusterDefinitionCreateRequest(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, emrClusterDefinitionConfiguration));
             fail("Should throw an IllegalArgumentException when instance count is less than one for core instances.");
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals("At least 1 core instance must be specified.", e.getMessage());
+            assertEquals("At least 0 core instance must be specified.", e.getMessage());
         }
 
         // Try to perform a create without specifying instance type for core instances.
@@ -197,8 +181,8 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
         {
             EmrClusterDefinition emrClusterDefinitionConfiguration = getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH);
             emrClusterDefinitionConfiguration.getInstanceDefinitions().getCoreInstances().setInstanceType(BLANK_TEXT);
-            emrClusterDefinitionService.createEmrClusterDefinition(
-                createEmrClusterDefinitionCreateRequest(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME, emrClusterDefinitionConfiguration));
+            emrClusterDefinitionService
+                .createEmrClusterDefinition(createEmrClusterDefinitionCreateRequest(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, emrClusterDefinitionConfiguration));
             fail("Should throw an IllegalArgumentException when instance type for core instances is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -211,8 +195,8 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
         {
             EmrClusterDefinition emrClusterDefinitionConfiguration = getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH);
             emrClusterDefinitionConfiguration.setNodeTags(new ArrayList<NodeTag>());
-            emrClusterDefinitionService.createEmrClusterDefinition(
-                createEmrClusterDefinitionCreateRequest(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME, emrClusterDefinitionConfiguration));
+            emrClusterDefinitionService
+                .createEmrClusterDefinition(createEmrClusterDefinitionCreateRequest(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, emrClusterDefinitionConfiguration));
             fail("Should throw an IllegalArgumentException when node tags are not specified.");
         }
         catch (IllegalArgumentException e)
@@ -228,8 +212,8 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
             nodeTag.setTagName(BLANK_TEXT);
             nodeTag.setTagValue(ATTRIBUTE_VALUE_1);
             emrClusterDefinitionConfiguration.getNodeTags().add(nodeTag);
-            emrClusterDefinitionService.createEmrClusterDefinition(
-                createEmrClusterDefinitionCreateRequest(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME, emrClusterDefinitionConfiguration));
+            emrClusterDefinitionService
+                .createEmrClusterDefinition(createEmrClusterDefinitionCreateRequest(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, emrClusterDefinitionConfiguration));
             fail("Should throw an IllegalArgumentException when node tag name is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -245,8 +229,8 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
             nodeTag.setTagName(ATTRIBUTE_NAME_1_MIXED_CASE);
             nodeTag.setTagValue(BLANK_TEXT);
             emrClusterDefinitionConfiguration.getNodeTags().add(nodeTag);
-            emrClusterDefinitionService.createEmrClusterDefinition(
-                createEmrClusterDefinitionCreateRequest(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME, emrClusterDefinitionConfiguration));
+            emrClusterDefinitionService
+                .createEmrClusterDefinition(createEmrClusterDefinitionCreateRequest(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, emrClusterDefinitionConfiguration));
             fail("Should throw an IllegalArgumentException when node tag value is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -259,18 +243,18 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
     public void testCreateEmrClusterDefinitionTrimParameters() throws Exception
     {
         // Create and persist the namespace entity.
-        createNamespaceEntity(NAMESPACE_CD);
+        createNamespaceEntity(NAMESPACE);
 
         // Create an EMR cluster definition create request by passing namespace and EMR cluster definition name with leading and trailing whitespace characters.
         EmrClusterDefinitionCreateRequest request =
-            createEmrClusterDefinitionCreateRequest(addWhitespace(NAMESPACE_CD), addWhitespace(EMR_CLUSTER_DEFINITION_NAME),
+            createEmrClusterDefinitionCreateRequest(addWhitespace(NAMESPACE), addWhitespace(EMR_CLUSTER_DEFINITION_NAME),
                 getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH));
 
         // Create an EMR cluster definition.
         EmrClusterDefinitionInformation resultEmrClusterDefinition = emrClusterDefinitionService.createEmrClusterDefinition(request);
 
         // Validate the returned object.
-        validateEmrClusterDefinition(null, NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME,
+        validateEmrClusterDefinition(null, NAMESPACE, EMR_CLUSTER_DEFINITION_NAME,
             getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH), resultEmrClusterDefinition);
     }
 
@@ -278,18 +262,17 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
     public void testCreateEmrClusterDefinitionUpperCaseParameters() throws Exception
     {
         // Create and persist the namespace entity with a lowercase name.
-        createNamespaceEntity(NAMESPACE_CD.toLowerCase());
+        createNamespaceEntity(NAMESPACE.toLowerCase());
 
         // Create an EMR cluster definition create request by passing the EMR cluster definition name key parameters in upper case.
-        EmrClusterDefinitionCreateRequest request =
-            createEmrClusterDefinitionCreateRequest(NAMESPACE_CD.toUpperCase(), EMR_CLUSTER_DEFINITION_NAME.toUpperCase(),
-                getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH));
+        EmrClusterDefinitionCreateRequest request = createEmrClusterDefinitionCreateRequest(NAMESPACE.toUpperCase(), EMR_CLUSTER_DEFINITION_NAME.toUpperCase(),
+            getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH));
 
         // Create an EMR cluster definition.
         EmrClusterDefinitionInformation resultEmrClusterDefinition = emrClusterDefinitionService.createEmrClusterDefinition(request);
 
         // Validate the returned object.
-        validateEmrClusterDefinition(null, NAMESPACE_CD.toLowerCase(), EMR_CLUSTER_DEFINITION_NAME.toUpperCase(),
+        validateEmrClusterDefinition(null, NAMESPACE.toLowerCase(), EMR_CLUSTER_DEFINITION_NAME.toUpperCase(),
             getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH), resultEmrClusterDefinition);
     }
 
@@ -297,18 +280,17 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
     public void testCreateEmrClusterDefinitionLowerCaseParameters() throws Exception
     {
         // Create and persist the namespace entity with an uppercase name.
-        createNamespaceEntity(NAMESPACE_CD.toUpperCase());
+        createNamespaceEntity(NAMESPACE.toUpperCase());
 
         // Create an EMR cluster definition create request by passing the EMR cluster definition name key parameters in lower case.
-        EmrClusterDefinitionCreateRequest request =
-            createEmrClusterDefinitionCreateRequest(NAMESPACE_CD.toLowerCase(), EMR_CLUSTER_DEFINITION_NAME.toLowerCase(),
-                getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH));
+        EmrClusterDefinitionCreateRequest request = createEmrClusterDefinitionCreateRequest(NAMESPACE.toLowerCase(), EMR_CLUSTER_DEFINITION_NAME.toLowerCase(),
+            getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH));
 
         // Create an EMR cluster definition.
         EmrClusterDefinitionInformation resultEmrClusterDefinition = emrClusterDefinitionService.createEmrClusterDefinition(request);
 
         // Validate the returned object.
-        validateEmrClusterDefinition(null, NAMESPACE_CD.toUpperCase(), EMR_CLUSTER_DEFINITION_NAME.toLowerCase(),
+        validateEmrClusterDefinition(null, NAMESPACE.toUpperCase(), EMR_CLUSTER_DEFINITION_NAME.toLowerCase(),
             getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH), resultEmrClusterDefinition);
     }
 
@@ -333,7 +315,7 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
     public void testCreateEmrClusterDefinitionEmrClusterDefinitionAlreadyExists() throws Exception
     {
         // Create and persist the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         // Create and persist the EMR cluster definition entity.
         createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
@@ -342,7 +324,7 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
         // Try to perform a create using an already existing EMR cluster definition name.
         try
         {
-            emrClusterDefinitionService.createEmrClusterDefinition(createEmrClusterDefinitionCreateRequest(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME,
+            emrClusterDefinitionService.createEmrClusterDefinition(createEmrClusterDefinitionCreateRequest(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME,
                 getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH)));
             fail("Should throw an AlreadyExistsException when EMR cluster definition already exists.");
         }
@@ -350,7 +332,7 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
         {
             assertEquals(String
                 .format("Unable to create EMR cluster definition with name \"%s\" for namespace \"%s\" because it already exists.", EMR_CLUSTER_DEFINITION_NAME,
-                    NAMESPACE_CD), e.getMessage());
+                    NAMESPACE), e.getMessage());
         }
     }
 
@@ -358,7 +340,7 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
     public void testCreateEmrClusterDefinitionMaxInstancesSetToZero() throws Exception
     {
         // Create and persist the namespace entity.
-        createNamespaceEntity(NAMESPACE_CD);
+        createNamespaceEntity(NAMESPACE);
 
         // Override configuration to set the maximum allowed number of EMR instances to zero.
         Map<String, Object> overrideMap = new HashMap<>();
@@ -368,14 +350,14 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
         try
         {
             // Create an EMR cluster definition create request.
-            EmrClusterDefinitionCreateRequest request = createEmrClusterDefinitionCreateRequest(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME,
+            EmrClusterDefinitionCreateRequest request = createEmrClusterDefinitionCreateRequest(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME,
                 getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH));
 
             // Create an EMR cluster definition.
             EmrClusterDefinitionInformation resultEmrClusterDefinition = emrClusterDefinitionService.createEmrClusterDefinition(request);
 
             // Validate the returned object.
-            validateEmrClusterDefinition(null, NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME,
+            validateEmrClusterDefinition(null, NAMESPACE, EMR_CLUSTER_DEFINITION_NAME,
                 getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH), resultEmrClusterDefinition);
         }
         finally
@@ -401,8 +383,8 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
         emrClusterDefinitionConfiguration.getInstanceDefinitions().getCoreInstances().setInstanceCount(1);
         try
         {
-            emrClusterDefinitionService.createEmrClusterDefinition(
-                createEmrClusterDefinitionCreateRequest(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME, emrClusterDefinitionConfiguration));
+            emrClusterDefinitionService
+                .createEmrClusterDefinition(createEmrClusterDefinitionCreateRequest(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, emrClusterDefinitionConfiguration));
             fail("Should throw an IllegalArgumentException when total number of instances exceeds maximum allowed.");
         }
         catch (IllegalArgumentException e)
@@ -430,8 +412,8 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
                 nodeTag.setTagValue(ATTRIBUTE_VALUE_1);
                 emrClusterDefinitionConfiguration.getNodeTags().add(nodeTag);
             }
-            emrClusterDefinitionService.createEmrClusterDefinition(
-                createEmrClusterDefinitionCreateRequest(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME, emrClusterDefinitionConfiguration));
+            emrClusterDefinitionService
+                .createEmrClusterDefinition(createEmrClusterDefinitionCreateRequest(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, emrClusterDefinitionConfiguration));
             fail("Should throw an IllegalArgumentException when duplicate node tag names are specified.");
         }
         catch (IllegalArgumentException e)
@@ -463,7 +445,7 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
                 try
                 {
                     emrClusterDefinitionService.createEmrClusterDefinition(
-                        createEmrClusterDefinitionCreateRequest(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME, emrClusterDefinitionConfiguration));
+                        createEmrClusterDefinitionCreateRequest(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, emrClusterDefinitionConfiguration));
                     fail(String.format("Should throw an IllegalArgumentException when \"%s\" required AWS node tag is not specified.", mandatoryAwsTagName));
                 }
                 catch (IllegalArgumentException e)
@@ -479,11 +461,60 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
         }
     }
 
+    /**
+     * Asserts that when 0 is specified for core instance count, no validation exception is thrown.
+     */
+    @Test
+    public void testCreateEmrClusterDefinitionCoreInstanceCount0AssertResponseCoreInstanceDefinitionIsNull() throws Exception
+    {
+        // Create and persist the namespace entity.
+        createNamespaceEntity(NAMESPACE);
+
+        // Create an EMR cluster definition create request.
+        EmrClusterDefinitionCreateRequest request = createEmrClusterDefinitionCreateRequest(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME,
+            getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH));
+
+        InstanceDefinition coreInstanceDefinition = new InstanceDefinition(0, "m1.medium", null, null, null);
+        request.getEmrClusterDefinition().getInstanceDefinitions().setCoreInstances(coreInstanceDefinition);
+
+        // Create an EMR cluster definition.
+        EmrClusterDefinitionInformation emrClusterDefinitionInformation = emrClusterDefinitionService.createEmrClusterDefinition(request);
+        assertNull(emrClusterDefinitionInformation.getEmrClusterDefinition().getInstanceDefinitions().getCoreInstances());
+    }
+
+    /**
+     * Asserts that when a negative number is specified for core instance count, a validation exception is thrown.
+     */
+    @Test
+    public void testCreateEmrClusterDefinitionCoreInstanceCountNegativeAssertException() throws Exception
+    {
+        // Create and persist the namespace entity.
+        createNamespaceEntity(NAMESPACE);
+
+        // Create an EMR cluster definition create request.
+        EmrClusterDefinitionCreateRequest request = createEmrClusterDefinitionCreateRequest(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME,
+            getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH));
+
+        InstanceDefinition coreInstanceDefinition = new InstanceDefinition(-1, "m1.medium", null, null, null);
+        request.getEmrClusterDefinition().getInstanceDefinitions().setCoreInstances(coreInstanceDefinition);
+
+        // Create an EMR cluster definition.
+        try
+        {
+            emrClusterDefinitionService.createEmrClusterDefinition(request);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("At least 0 core instance must be specified.", e.getMessage());
+        }
+    }
+
     @Test
     public void testGetEmrClusterDefinition() throws Exception
     {
         // Create and persist the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         // Create and persist the EMR cluster definition entity.
         EmrClusterDefinitionEntity emrClusterDefinitionEntity = createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
@@ -491,10 +522,10 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
 
         // Get the EMR cluster definition.
         EmrClusterDefinitionInformation resultEmrClusterDefinition =
-            emrClusterDefinitionService.getEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME));
+            emrClusterDefinitionService.getEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME));
 
         // Validate the returned object.
-        validateEmrClusterDefinition(emrClusterDefinitionEntity.getId(), NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME,
+        validateEmrClusterDefinition(emrClusterDefinitionEntity.getId(), NAMESPACE, EMR_CLUSTER_DEFINITION_NAME,
             getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH), resultEmrClusterDefinition);
     }
 
@@ -515,7 +546,7 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
         // Try to perform a get without specifying an EMR cluster definition name.
         try
         {
-            emrClusterDefinitionService.getEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE_CD, BLANK_TEXT));
+            emrClusterDefinitionService.getEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE, BLANK_TEXT));
             fail("Should throw an IllegalArgumentException when EMR cluster definition name is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -528,7 +559,7 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
     public void testGetEmrClusterDefinitionTrimParameters() throws Exception
     {
         // Create and persist the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         // Create and persist the EMR cluster definition entity.
         EmrClusterDefinitionEntity emrClusterDefinitionEntity = createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
@@ -536,10 +567,10 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
 
         // Get an EMR cluster definition by passing namespace and EMR cluster definition name with leading and trailing whitespace characters.
         EmrClusterDefinitionInformation resultEmrClusterDefinition = emrClusterDefinitionService
-            .getEmrClusterDefinition(new EmrClusterDefinitionKey(addWhitespace(NAMESPACE_CD), addWhitespace(EMR_CLUSTER_DEFINITION_NAME)));
+            .getEmrClusterDefinition(new EmrClusterDefinitionKey(addWhitespace(NAMESPACE), addWhitespace(EMR_CLUSTER_DEFINITION_NAME)));
 
         // Validate the returned object.
-        validateEmrClusterDefinition(emrClusterDefinitionEntity.getId(), NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME,
+        validateEmrClusterDefinition(emrClusterDefinitionEntity.getId(), NAMESPACE, EMR_CLUSTER_DEFINITION_NAME,
             getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH), resultEmrClusterDefinition);
     }
 
@@ -547,7 +578,7 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
     public void testGetEmrClusterDefinitionUpperCaseParameters() throws Exception
     {
         // Create and persist the namespace entity with a lowercase name.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD.toLowerCase());
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE.toLowerCase());
 
         // Create and persist the EMR cluster definition entity with a lowercase name.
         EmrClusterDefinitionEntity emrClusterDefinitionEntity = createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME.toLowerCase(),
@@ -555,10 +586,10 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
 
         // Get an EMR cluster definition by passing the EMR cluster definition name key parameters in upper case.
         EmrClusterDefinitionInformation resultEmrClusterDefinition = emrClusterDefinitionService
-            .getEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE_CD.toUpperCase(), EMR_CLUSTER_DEFINITION_NAME.toUpperCase()));
+            .getEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE.toUpperCase(), EMR_CLUSTER_DEFINITION_NAME.toUpperCase()));
 
         // Validate the returned object.
-        validateEmrClusterDefinition(emrClusterDefinitionEntity.getId(), NAMESPACE_CD.toLowerCase(), EMR_CLUSTER_DEFINITION_NAME.toLowerCase(),
+        validateEmrClusterDefinition(emrClusterDefinitionEntity.getId(), NAMESPACE.toLowerCase(), EMR_CLUSTER_DEFINITION_NAME.toLowerCase(),
             getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH), resultEmrClusterDefinition);
     }
 
@@ -566,7 +597,7 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
     public void testGetEmrClusterDefinitionLowerCaseParameters() throws Exception
     {
         // Create and persist the namespace entity with an uppercase name.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD.toUpperCase());
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE.toUpperCase());
 
         // Create and persist the EMR cluster definition entity with an uppercase name.
         EmrClusterDefinitionEntity emrClusterDefinitionEntity = createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME.toUpperCase(),
@@ -574,10 +605,10 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
 
         // Get an EMR cluster definition by passing the EMR cluster definition name key parameters in lower case.
         EmrClusterDefinitionInformation resultEmrClusterDefinition = emrClusterDefinitionService
-            .getEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE_CD.toLowerCase(), EMR_CLUSTER_DEFINITION_NAME.toLowerCase()));
+            .getEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE.toLowerCase(), EMR_CLUSTER_DEFINITION_NAME.toLowerCase()));
 
         // Validate the returned object.
-        validateEmrClusterDefinition(emrClusterDefinitionEntity.getId(), NAMESPACE_CD.toUpperCase(), EMR_CLUSTER_DEFINITION_NAME.toUpperCase(),
+        validateEmrClusterDefinition(emrClusterDefinitionEntity.getId(), NAMESPACE.toUpperCase(), EMR_CLUSTER_DEFINITION_NAME.toUpperCase(),
             getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH), resultEmrClusterDefinition);
     }
 
@@ -588,13 +619,12 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
         String testEmrClusterDefinitionName = "I_DO_NOT_EXIST";
         try
         {
-            emrClusterDefinitionService.getEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE_CD, testEmrClusterDefinitionName));
+            emrClusterDefinitionService.getEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE, testEmrClusterDefinitionName));
             fail("Should throw an ObjectNotFoundException when EMR cluster definition does not exist.");
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(
-                String.format("EMR cluster definition with name \"%s\" doesn't exist for namespace \"%s\".", testEmrClusterDefinitionName, NAMESPACE_CD),
+            assertEquals(String.format("EMR cluster definition with name \"%s\" doesn't exist for namespace \"%s\".", testEmrClusterDefinitionName, NAMESPACE),
                 e.getMessage());
         }
     }
@@ -603,7 +633,7 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
     public void testUpdateEmrClusterDefinition() throws Exception
     {
         // Create and persist the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         // Create and persist the EMR cluster definition entity using minimal test XML configuration.
         EmrClusterDefinitionEntity emrClusterDefinitionEntity = createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
@@ -613,13 +643,15 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
         EmrClusterDefinitionUpdateRequest request =
             createEmrClusterDefinitionUpdateRequest(getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH));
 
-        // Update the EMR cluster definition.
-        EmrClusterDefinitionInformation updatedEmrClusterDefinition =
-            emrClusterDefinitionService.updateEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME), request);
+        executeWithoutLogging(EmrClusterDefinitionServiceImpl.class, () -> {
+            // Update the EMR cluster definition.
+            EmrClusterDefinitionInformation updatedEmrClusterDefinition =
+                emrClusterDefinitionService.updateEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME), request);
 
-        // Validate the returned object.
-        validateEmrClusterDefinition(emrClusterDefinitionEntity.getId(), NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME,
-            getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH), updatedEmrClusterDefinition);
+            // Validate the returned object.
+            validateEmrClusterDefinition(emrClusterDefinitionEntity.getId(), NAMESPACE, EMR_CLUSTER_DEFINITION_NAME,
+                getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH), updatedEmrClusterDefinition);
+        });
     }
 
     @Test
@@ -640,7 +672,7 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
         // Try to perform an update without specifying an EMR cluster definition name.
         try
         {
-            emrClusterDefinitionService.updateEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE_CD, BLANK_TEXT),
+            emrClusterDefinitionService.updateEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE, BLANK_TEXT),
                 createEmrClusterDefinitionUpdateRequest(getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH)));
             fail("Should throw an IllegalArgumentException when EMR cluster definition name is not specified.");
         }
@@ -652,8 +684,8 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
         // Try to perform an update without specifying an EMR cluster definition configuration.
         try
         {
-            emrClusterDefinitionService.updateEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME),
-                createEmrClusterDefinitionUpdateRequest(null));
+            emrClusterDefinitionService
+                .updateEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME), createEmrClusterDefinitionUpdateRequest(null));
             fail("Should throw an IllegalArgumentException when EMR cluster definition configuration is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -666,7 +698,7 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
         {
             EmrClusterDefinition emrClusterDefinitionConfiguration = getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH);
             emrClusterDefinitionConfiguration.setInstanceDefinitions(null);
-            emrClusterDefinitionService.updateEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME),
+            emrClusterDefinitionService.updateEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME),
                 createEmrClusterDefinitionUpdateRequest(emrClusterDefinitionConfiguration));
             fail("Should throw an IllegalArgumentException when instance definitions are not specified.");
         }
@@ -680,7 +712,7 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
         {
             EmrClusterDefinition emrClusterDefinitionConfiguration = getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH);
             emrClusterDefinitionConfiguration.getInstanceDefinitions().setMasterInstances(null);
-            emrClusterDefinitionService.updateEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME),
+            emrClusterDefinitionService.updateEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME),
                 createEmrClusterDefinitionUpdateRequest(emrClusterDefinitionConfiguration));
             fail("Should throw an IllegalArgumentException when master instances are not specified.");
         }
@@ -694,7 +726,7 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
         {
             EmrClusterDefinition emrClusterDefinitionConfiguration = getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH);
             emrClusterDefinitionConfiguration.getInstanceDefinitions().getMasterInstances().setInstanceCount(0);
-            emrClusterDefinitionService.updateEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME),
+            emrClusterDefinitionService.updateEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME),
                 createEmrClusterDefinitionUpdateRequest(emrClusterDefinitionConfiguration));
             fail("Should throw an IllegalArgumentException when instance count is less than one for master instances.");
         }
@@ -708,7 +740,7 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
         {
             EmrClusterDefinition emrClusterDefinitionConfiguration = getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH);
             emrClusterDefinitionConfiguration.getInstanceDefinitions().getMasterInstances().setInstanceType(BLANK_TEXT);
-            emrClusterDefinitionService.updateEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME),
+            emrClusterDefinitionService.updateEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME),
                 createEmrClusterDefinitionUpdateRequest(emrClusterDefinitionConfiguration));
             fail("Should throw an IllegalArgumentException when instance type for master instances is not specified.");
         }
@@ -717,32 +749,18 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
             assertEquals("An instance type for master instances must be specified.", e.getMessage());
         }
 
-        // Try to perform an update without specifying core instances.
+        // Try to perform an update with instance count less than 0 for core instances.
         try
         {
             EmrClusterDefinition emrClusterDefinitionConfiguration = getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH);
-            emrClusterDefinitionConfiguration.getInstanceDefinitions().setCoreInstances(null);
-            emrClusterDefinitionService.updateEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME),
-                createEmrClusterDefinitionUpdateRequest(emrClusterDefinitionConfiguration));
-            fail("Should throw an IllegalArgumentException when core instances are not specified.");
-        }
-        catch (IllegalArgumentException e)
-        {
-            assertEquals("Core instances must be specified.", e.getMessage());
-        }
-
-        // Try to perform an update with instance count less than one for core instances.
-        try
-        {
-            EmrClusterDefinition emrClusterDefinitionConfiguration = getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH);
-            emrClusterDefinitionConfiguration.getInstanceDefinitions().getCoreInstances().setInstanceCount(0);
-            emrClusterDefinitionService.updateEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME),
+            emrClusterDefinitionConfiguration.getInstanceDefinitions().getCoreInstances().setInstanceCount(-1);
+            emrClusterDefinitionService.updateEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME),
                 createEmrClusterDefinitionUpdateRequest(emrClusterDefinitionConfiguration));
             fail("Should throw an IllegalArgumentException when instance count is less than one for core instances.");
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals("At least 1 core instance must be specified.", e.getMessage());
+            assertEquals("At least 0 core instance must be specified.", e.getMessage());
         }
 
         // Try to perform an update without specifying instance type for core instances.
@@ -750,7 +768,7 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
         {
             EmrClusterDefinition emrClusterDefinitionConfiguration = getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH);
             emrClusterDefinitionConfiguration.getInstanceDefinitions().getCoreInstances().setInstanceType(BLANK_TEXT);
-            emrClusterDefinitionService.updateEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME),
+            emrClusterDefinitionService.updateEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME),
                 createEmrClusterDefinitionUpdateRequest(emrClusterDefinitionConfiguration));
             fail("Should throw an IllegalArgumentException when instance type for core instances is not specified.");
         }
@@ -764,7 +782,7 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
         {
             EmrClusterDefinition emrClusterDefinitionConfiguration = getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH);
             emrClusterDefinitionConfiguration.setNodeTags(new ArrayList<NodeTag>());
-            emrClusterDefinitionService.updateEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME),
+            emrClusterDefinitionService.updateEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME),
                 createEmrClusterDefinitionUpdateRequest(emrClusterDefinitionConfiguration));
             fail("Should throw an IllegalArgumentException when node tags are not specified.");
         }
@@ -781,7 +799,7 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
             nodeTag.setTagName(BLANK_TEXT);
             nodeTag.setTagValue(ATTRIBUTE_VALUE_1);
             emrClusterDefinitionConfiguration.getNodeTags().add(nodeTag);
-            emrClusterDefinitionService.updateEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME),
+            emrClusterDefinitionService.updateEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME),
                 createEmrClusterDefinitionUpdateRequest(emrClusterDefinitionConfiguration));
             fail("Should throw an IllegalArgumentException when node tag name is not specified.");
         }
@@ -798,7 +816,7 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
             nodeTag.setTagName(ATTRIBUTE_NAME_1_MIXED_CASE);
             nodeTag.setTagValue(BLANK_TEXT);
             emrClusterDefinitionConfiguration.getNodeTags().add(nodeTag);
-            emrClusterDefinitionService.updateEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME),
+            emrClusterDefinitionService.updateEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME),
                 createEmrClusterDefinitionUpdateRequest(emrClusterDefinitionConfiguration));
             fail("Should throw an IllegalArgumentException when node tag value is not specified.");
         }
@@ -812,61 +830,67 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
     public void testUpdateEmrClusterDefinitionTrimParameters() throws Exception
     {
         // Create and persist the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         // Create and persist the EMR cluster definition entity using minimal test XML configuration.
         EmrClusterDefinitionEntity emrClusterDefinitionEntity = createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             getTestEmrClusterDefinitionConfigurationXml(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH));
 
-        // Update an EMR cluster definition with the normal test XML configuration by passing namespace
-        // and EMR cluster definition name with leading and trailing whitespace characters.
-        EmrClusterDefinitionInformation updatedEmrClusterDefinition = emrClusterDefinitionService
-            .updateEmrClusterDefinition(new EmrClusterDefinitionKey(addWhitespace(NAMESPACE_CD), addWhitespace(EMR_CLUSTER_DEFINITION_NAME)),
-                createEmrClusterDefinitionUpdateRequest(getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH)));
+        executeWithoutLogging(EmrClusterDefinitionServiceImpl.class, () -> {
+            // Update an EMR cluster definition with the normal test XML configuration by passing namespace
+            // and EMR cluster definition name with leading and trailing whitespace characters.
+            EmrClusterDefinitionInformation updatedEmrClusterDefinition = emrClusterDefinitionService
+                .updateEmrClusterDefinition(new EmrClusterDefinitionKey(addWhitespace(NAMESPACE), addWhitespace(EMR_CLUSTER_DEFINITION_NAME)),
+                    createEmrClusterDefinitionUpdateRequest(getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH)));
 
-        // Validate the returned object.
-        validateEmrClusterDefinition(emrClusterDefinitionEntity.getId(), NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME,
-            getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH), updatedEmrClusterDefinition);
+            // Validate the returned object.
+            validateEmrClusterDefinition(emrClusterDefinitionEntity.getId(), NAMESPACE, EMR_CLUSTER_DEFINITION_NAME,
+                getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH), updatedEmrClusterDefinition);
+        });
     }
 
     @Test
     public void testUpdateEmrClusterDefinitionUpperCaseParameters() throws Exception
     {
         // Create and persist the namespace entity with a lowercase name.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD.toLowerCase());
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE.toLowerCase());
 
         // Create and persist the EMR cluster definition entity with a lowercase name using minimal test XML configuration.
         EmrClusterDefinitionEntity emrClusterDefinitionEntity = createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME.toLowerCase(),
             getTestEmrClusterDefinitionConfigurationXml(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH));
 
-        // Update an EMR cluster definition with the normal test XML configuration by passing the EMR cluster definition name key parameters in upper case.
-        EmrClusterDefinitionInformation updatedEmrClusterDefinition = emrClusterDefinitionService
-            .updateEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE_CD.toUpperCase(), EMR_CLUSTER_DEFINITION_NAME.toUpperCase()),
-                createEmrClusterDefinitionUpdateRequest(getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH)));
+        executeWithoutLogging(EmrClusterDefinitionServiceImpl.class, () -> {
+            // Update an EMR cluster definition with the normal test XML configuration by passing the EMR cluster definition name key parameters in upper case.
+            EmrClusterDefinitionInformation updatedEmrClusterDefinition = emrClusterDefinitionService
+                .updateEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE.toUpperCase(), EMR_CLUSTER_DEFINITION_NAME.toUpperCase()),
+                    createEmrClusterDefinitionUpdateRequest(getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH)));
 
-        // Validate the returned object.
-        validateEmrClusterDefinition(emrClusterDefinitionEntity.getId(), NAMESPACE_CD.toLowerCase(), EMR_CLUSTER_DEFINITION_NAME.toLowerCase(),
-            getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH), updatedEmrClusterDefinition);
+            // Validate the returned object.
+            validateEmrClusterDefinition(emrClusterDefinitionEntity.getId(), NAMESPACE.toLowerCase(), EMR_CLUSTER_DEFINITION_NAME.toLowerCase(),
+                getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH), updatedEmrClusterDefinition);
+        });
     }
 
     @Test
     public void testUpdateEmrClusterDefinitionLowerCaseParameters() throws Exception
     {
         // Create and persist the namespace entity with an uppercase name.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD.toUpperCase());
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE.toUpperCase());
 
         // Create and persist the EMR cluster definition entity with an uppercase name using minimal test XML configuration.
         EmrClusterDefinitionEntity emrClusterDefinitionEntity = createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME.toUpperCase(),
             getTestEmrClusterDefinitionConfigurationXml(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH));
 
-        // Update an EMR cluster definition with the normal test XML configuration by passing the EMR cluster definition name key parameters in lower case.
-        EmrClusterDefinitionInformation updatedEmrClusterDefinition = emrClusterDefinitionService
-            .updateEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE_CD.toLowerCase(), EMR_CLUSTER_DEFINITION_NAME.toLowerCase()),
-                createEmrClusterDefinitionUpdateRequest(getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH)));
+        executeWithoutLogging(EmrClusterDefinitionServiceImpl.class, () -> {
+            // Update an EMR cluster definition with the normal test XML configuration by passing the EMR cluster definition name key parameters in lower case.
+            EmrClusterDefinitionInformation updatedEmrClusterDefinition = emrClusterDefinitionService
+                .updateEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE.toLowerCase(), EMR_CLUSTER_DEFINITION_NAME.toLowerCase()),
+                    createEmrClusterDefinitionUpdateRequest(getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH)));
 
-        // Validate the returned object.
-        validateEmrClusterDefinition(emrClusterDefinitionEntity.getId(), NAMESPACE_CD.toUpperCase(), EMR_CLUSTER_DEFINITION_NAME.toUpperCase(),
-            getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH), updatedEmrClusterDefinition);
+            // Validate the returned object.
+            validateEmrClusterDefinition(emrClusterDefinitionEntity.getId(), NAMESPACE.toUpperCase(), EMR_CLUSTER_DEFINITION_NAME.toUpperCase(),
+                getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH), updatedEmrClusterDefinition);
+        });
     }
 
     @Test
@@ -876,14 +900,13 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
         String testEmrClusterDefinitionName = "I_DO_NOT_EXIST";
         try
         {
-            emrClusterDefinitionService.updateEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE_CD, testEmrClusterDefinitionName),
+            emrClusterDefinitionService.updateEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE, testEmrClusterDefinitionName),
                 createEmrClusterDefinitionUpdateRequest(getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH)));
             fail("Should throw an ObjectNotFoundException when EMR cluster definition does not exist.");
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(
-                String.format("EMR cluster definition with name \"%s\" doesn't exist for namespace \"%s\".", testEmrClusterDefinitionName, NAMESPACE_CD),
+            assertEquals(String.format("EMR cluster definition with name \"%s\" doesn't exist for namespace \"%s\".", testEmrClusterDefinitionName, NAMESPACE),
                 e.getMessage());
         }
     }
@@ -904,7 +927,7 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
         emrClusterDefinitionConfiguration.getInstanceDefinitions().getCoreInstances().setInstanceCount(1);
         try
         {
-            emrClusterDefinitionService.updateEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME),
+            emrClusterDefinitionService.updateEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME),
                 createEmrClusterDefinitionUpdateRequest(emrClusterDefinitionConfiguration));
             fail("Should throw an IllegalArgumentException when total number of instances exceeds maximum allowed.");
         }
@@ -933,7 +956,7 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
                 nodeTag.setTagValue(ATTRIBUTE_VALUE_1);
                 emrClusterDefinitionConfiguration.getNodeTags().add(nodeTag);
             }
-            emrClusterDefinitionService.updateEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME),
+            emrClusterDefinitionService.updateEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME),
                 createEmrClusterDefinitionUpdateRequest(emrClusterDefinitionConfiguration));
             fail("Should throw an IllegalArgumentException when duplicate node tag names are specified.");
         }
@@ -965,7 +988,7 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
                 emrClusterDefinitionConfiguration.setNodeTags(getTestNodeTags(testMandatoryAwsTagNames, mandatoryAwsTagName));
                 try
                 {
-                    emrClusterDefinitionService.updateEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME),
+                    emrClusterDefinitionService.updateEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME),
                         createEmrClusterDefinitionUpdateRequest(emrClusterDefinitionConfiguration));
                     fail(String.format("Should throw an IllegalArgumentException when \"%s\" required AWS node tag is not specified.", mandatoryAwsTagName));
                 }
@@ -986,25 +1009,27 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
     public void testDeleteEmrClusterDefinition() throws Exception
     {
         // Create and persist the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         // Create and persist the EMR cluster definition entity.
         EmrClusterDefinitionEntity emrClusterDefinitionEntity = createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             getTestEmrClusterDefinitionConfigurationXml(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH));
 
         // Validate that this EMR cluster definition exists.
-        assertNotNull(herdDao.getEmrClusterDefinitionByAltKey(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME));
+        assertNotNull(emrClusterDefinitionDao.getEmrClusterDefinitionByAltKey(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME));
 
-        // Delete this EMR cluster definition.
-        EmrClusterDefinitionInformation deletedEmrClusterDefinition =
-            emrClusterDefinitionService.deleteEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME));
+        executeWithoutLogging(EmrClusterDefinitionServiceImpl.class, () -> {
+            // Delete this EMR cluster definition.
+            EmrClusterDefinitionInformation deletedEmrClusterDefinition =
+                emrClusterDefinitionService.deleteEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME));
 
-        // Validate the returned object.
-        validateEmrClusterDefinition(emrClusterDefinitionEntity.getId(), NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME,
-            getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH), deletedEmrClusterDefinition);
+            // Validate the returned object.
+            validateEmrClusterDefinition(emrClusterDefinitionEntity.getId(), NAMESPACE, EMR_CLUSTER_DEFINITION_NAME,
+                getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH), deletedEmrClusterDefinition);
 
-        // Ensure that this EMR cluster definition is no longer there.
-        assertNull(herdDao.getEmrClusterDefinitionByAltKey(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME));
+            // Ensure that this EMR cluster definition is no longer there.
+            assertNull(emrClusterDefinitionDao.getEmrClusterDefinitionByAltKey(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME));
+        });
     }
 
     @Test
@@ -1024,7 +1049,7 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
         // Try to perform a delete without specifying an EMR cluster definition name.
         try
         {
-            emrClusterDefinitionService.deleteEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE_CD, BLANK_TEXT));
+            emrClusterDefinitionService.deleteEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE, BLANK_TEXT));
             fail("Should throw an IllegalArgumentException when EMR cluster definition name is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -1037,75 +1062,81 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
     public void testDeleteEmrClusterDefinitionTrimParameters() throws Exception
     {
         // Create and persist the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         // Create and persist the EMR cluster definition entity.
         EmrClusterDefinitionEntity emrClusterDefinitionEntity = createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             getTestEmrClusterDefinitionConfigurationXml(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH));
 
         // Validate that this EMR cluster definition exists.
-        assertNotNull(herdDao.getEmrClusterDefinitionByAltKey(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME));
+        assertNotNull(emrClusterDefinitionDao.getEmrClusterDefinitionByAltKey(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME));
 
-        // Delete this EMR cluster definition by passing namespace and EMR cluster definition name with leading and trailing whitespace characters.
-        EmrClusterDefinitionInformation deletedEmrClusterDefinition = emrClusterDefinitionService
-            .deleteEmrClusterDefinition(new EmrClusterDefinitionKey(addWhitespace(NAMESPACE_CD), addWhitespace(EMR_CLUSTER_DEFINITION_NAME)));
+        executeWithoutLogging(EmrClusterDefinitionServiceImpl.class, () -> {
+            // Delete this EMR cluster definition by passing namespace and EMR cluster definition name with leading and trailing whitespace characters.
+            EmrClusterDefinitionInformation deletedEmrClusterDefinition = emrClusterDefinitionService
+                .deleteEmrClusterDefinition(new EmrClusterDefinitionKey(addWhitespace(NAMESPACE), addWhitespace(EMR_CLUSTER_DEFINITION_NAME)));
 
-        // Validate the returned object.
-        validateEmrClusterDefinition(emrClusterDefinitionEntity.getId(), NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME,
-            getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH), deletedEmrClusterDefinition);
+            // Validate the returned object.
+            validateEmrClusterDefinition(emrClusterDefinitionEntity.getId(), NAMESPACE, EMR_CLUSTER_DEFINITION_NAME,
+                getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH), deletedEmrClusterDefinition);
 
-        // Ensure that this EMR cluster definition is no longer there.
-        assertNull(herdDao.getEmrClusterDefinitionByAltKey(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME));
+            // Ensure that this EMR cluster definition is no longer there.
+            assertNull(emrClusterDefinitionDao.getEmrClusterDefinitionByAltKey(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME));
+        });
     }
 
     @Test
     public void testDeleteEmrClusterDefinitionUpperCaseParameters() throws Exception
     {
         // Create and persist the namespace entity with a lowercase name.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD.toLowerCase());
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE.toLowerCase());
 
         // Create and persist the EMR cluster definition entity with a lowercase name.
         EmrClusterDefinitionEntity emrClusterDefinitionEntity = createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME.toLowerCase(),
             getTestEmrClusterDefinitionConfigurationXml(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH));
 
         // Validate that this EMR cluster definition exists.
-        assertNotNull(herdDao.getEmrClusterDefinitionByAltKey(NAMESPACE_CD.toLowerCase(), EMR_CLUSTER_DEFINITION_NAME.toLowerCase()));
+        assertNotNull(emrClusterDefinitionDao.getEmrClusterDefinitionByAltKey(NAMESPACE.toLowerCase(), EMR_CLUSTER_DEFINITION_NAME.toLowerCase()));
 
-        // Delete this EMR cluster definition by passing the EMR cluster definition name key parameters in upper case.
-        EmrClusterDefinitionInformation deletedEmrClusterDefinition = emrClusterDefinitionService
-            .deleteEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE_CD.toUpperCase(), EMR_CLUSTER_DEFINITION_NAME.toUpperCase()));
+        executeWithoutLogging(EmrClusterDefinitionServiceImpl.class, () -> {
+            // Delete this EMR cluster definition by passing the EMR cluster definition name key parameters in upper case.
+            EmrClusterDefinitionInformation deletedEmrClusterDefinition = emrClusterDefinitionService
+                .deleteEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE.toUpperCase(), EMR_CLUSTER_DEFINITION_NAME.toUpperCase()));
 
-        // Validate the returned object.
-        validateEmrClusterDefinition(emrClusterDefinitionEntity.getId(), NAMESPACE_CD.toLowerCase(), EMR_CLUSTER_DEFINITION_NAME.toLowerCase(),
-            getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH), deletedEmrClusterDefinition);
+            // Validate the returned object.
+            validateEmrClusterDefinition(emrClusterDefinitionEntity.getId(), NAMESPACE.toLowerCase(), EMR_CLUSTER_DEFINITION_NAME.toLowerCase(),
+                getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH), deletedEmrClusterDefinition);
 
-        // Ensure that this EMR cluster definition is no longer there.
-        assertNull(herdDao.getEmrClusterDefinitionByAltKey(NAMESPACE_CD.toLowerCase(), EMR_CLUSTER_DEFINITION_NAME.toLowerCase()));
+            // Ensure that this EMR cluster definition is no longer there.
+            assertNull(emrClusterDefinitionDao.getEmrClusterDefinitionByAltKey(NAMESPACE.toLowerCase(), EMR_CLUSTER_DEFINITION_NAME.toLowerCase()));
+        });
     }
 
     @Test
     public void testDeleteEmrClusterDefinitionLowerCaseParameters() throws Exception
     {
         // Create and persist the namespace entity with an uppercase name.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD.toUpperCase());
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE.toUpperCase());
 
         // Create and persist the EMR cluster definition entity with an uppercase name.
         EmrClusterDefinitionEntity emrClusterDefinitionEntity = createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME.toUpperCase(),
             getTestEmrClusterDefinitionConfigurationXml(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH));
 
         // Validate that this EMR cluster definition exists.
-        assertNotNull(herdDao.getEmrClusterDefinitionByAltKey(NAMESPACE_CD.toUpperCase(), EMR_CLUSTER_DEFINITION_NAME.toUpperCase()));
+        assertNotNull(emrClusterDefinitionDao.getEmrClusterDefinitionByAltKey(NAMESPACE.toUpperCase(), EMR_CLUSTER_DEFINITION_NAME.toUpperCase()));
 
-        // Delete this EMR cluster definition by passing the EMR cluster definition name key parameters in lower case.
-        EmrClusterDefinitionInformation deletedEmrClusterDefinition = emrClusterDefinitionService
-            .deleteEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE_CD.toLowerCase(), EMR_CLUSTER_DEFINITION_NAME.toLowerCase()));
+        executeWithoutLogging(EmrClusterDefinitionServiceImpl.class, () -> {
+            // Delete this EMR cluster definition by passing the EMR cluster definition name key parameters in lower case.
+            EmrClusterDefinitionInformation deletedEmrClusterDefinition = emrClusterDefinitionService
+                .deleteEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE.toLowerCase(), EMR_CLUSTER_DEFINITION_NAME.toLowerCase()));
 
-        // Validate the returned object.
-        validateEmrClusterDefinition(emrClusterDefinitionEntity.getId(), NAMESPACE_CD.toUpperCase(), EMR_CLUSTER_DEFINITION_NAME.toUpperCase(),
-            getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH), deletedEmrClusterDefinition);
+            // Validate the returned object.
+            validateEmrClusterDefinition(emrClusterDefinitionEntity.getId(), NAMESPACE.toUpperCase(), EMR_CLUSTER_DEFINITION_NAME.toUpperCase(),
+                getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH), deletedEmrClusterDefinition);
 
-        // Ensure that this EMR cluster definition is no longer there.
-        assertNull(herdDao.getEmrClusterDefinitionByAltKey(NAMESPACE_CD.toUpperCase(), EMR_CLUSTER_DEFINITION_NAME.toUpperCase()));
+            // Ensure that this EMR cluster definition is no longer there.
+            assertNull(emrClusterDefinitionDao.getEmrClusterDefinitionByAltKey(NAMESPACE.toUpperCase(), EMR_CLUSTER_DEFINITION_NAME.toUpperCase()));
+        });
     }
 
     @Test
@@ -1115,15 +1146,95 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
         String testEmrClusterDefinitionName = "I_DO_NOT_EXIST";
         try
         {
-            emrClusterDefinitionService.deleteEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE_CD, testEmrClusterDefinitionName));
+            emrClusterDefinitionService.deleteEmrClusterDefinition(new EmrClusterDefinitionKey(NAMESPACE, testEmrClusterDefinitionName));
             fail("Should throw an ObjectNotFoundException when EMR cluster definition does not exist.");
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(
-                String.format("EMR cluster definition with name \"%s\" doesn't exist for namespace \"%s\".", testEmrClusterDefinitionName, NAMESPACE_CD),
+            assertEquals(String.format("EMR cluster definition with name \"%s\" doesn't exist for namespace \"%s\".", testEmrClusterDefinitionName, NAMESPACE),
                 e.getMessage());
         }
+    }
+
+    @Test
+    public void testGetEmrClusterDefinitions() throws Exception
+    {
+        // Create and persist an EMR cluster definition entity.
+        createEmrClusterDefinitionEntity(createNamespaceEntity(NAMESPACE), EMR_CLUSTER_DEFINITION_NAME,
+            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
+
+        // Create an EMR cluster definition key.
+        EmrClusterDefinitionKey emrClusterDefinitionKey = new EmrClusterDefinitionKey(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME);
+
+        // Retrieve and validate EMR cluster definition keys.
+        assertEquals(new EmrClusterDefinitionKeys(Arrays.asList(emrClusterDefinitionKey)), emrClusterDefinitionService.getEmrClusterDefinitions(NAMESPACE));
+    }
+
+    @Test
+    public void testGetEmrClusterDefinitionsMissingRequiredParameters() throws Exception
+    {
+        // Try to perform a get without specifying a namespace.
+        try
+        {
+            emrClusterDefinitionService.getEmrClusterDefinitions(BLANK_TEXT);
+            fail("Should throw an IllegalArgumentException when namespace is not specified.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("A namespace must be specified.", e.getMessage());
+        }
+    }
+
+    @Test
+    public void testGetEmrClusterDefinitionsTrimParameters() throws Exception
+    {
+        // Create and persist an EMR cluster definition entity.
+        createEmrClusterDefinitionEntity(createNamespaceEntity(NAMESPACE), EMR_CLUSTER_DEFINITION_NAME,
+            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
+
+        // Create an EMR cluster definition key.
+        EmrClusterDefinitionKey emrClusterDefinitionKey = new EmrClusterDefinitionKey(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME);
+
+        // Retrieve EMR cluster definition keys by passing namespace with leading and trailing whitespace characters.
+        assertEquals(new EmrClusterDefinitionKeys(Arrays.asList(emrClusterDefinitionKey)),
+            emrClusterDefinitionService.getEmrClusterDefinitions(addWhitespace(NAMESPACE)));
+    }
+
+    @Test
+    public void testGetEmrClusterDefinitionsUpperCaseParameters() throws Exception
+    {
+        // Create and persist an EMR cluster definition entity.
+        createEmrClusterDefinitionEntity(createNamespaceEntity(NAMESPACE), EMR_CLUSTER_DEFINITION_NAME,
+            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
+
+        // Create an EMR cluster definition key.
+        EmrClusterDefinitionKey emrClusterDefinitionKey = new EmrClusterDefinitionKey(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME);
+
+        // Retrieve EMR cluster definition keys by passing namespace parameter value in uppercase.
+        assertEquals(new EmrClusterDefinitionKeys(Arrays.asList(emrClusterDefinitionKey)),
+            emrClusterDefinitionService.getEmrClusterDefinitions(NAMESPACE.toUpperCase()));
+    }
+
+    @Test
+    public void testGetEmrClusterDefinitionsLowerCaseParameters() throws Exception
+    {
+        // Create and persist an EMR cluster definition entity.
+        createEmrClusterDefinitionEntity(createNamespaceEntity(NAMESPACE), EMR_CLUSTER_DEFINITION_NAME,
+            IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
+
+        // Create an EMR cluster definition key.
+        EmrClusterDefinitionKey emrClusterDefinitionKey = new EmrClusterDefinitionKey(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME);
+
+        // Retrieve EMR cluster definition keys by passing namespace parameter value in lowercase.
+        assertEquals(new EmrClusterDefinitionKeys(Arrays.asList(emrClusterDefinitionKey)),
+            emrClusterDefinitionService.getEmrClusterDefinitions(NAMESPACE.toLowerCase()));
+    }
+
+    @Test
+    public void testGetEmrClusterDefinitionsNamespaceNoExists() throws Exception
+    {
+        // Try to get all EMR cluster definition for a non-existing namespace.
+        assertEquals(new EmrClusterDefinitionKeys(new ArrayList<>()), emrClusterDefinitionService.getEmrClusterDefinitions("I_DO_NOT_EXIST"));
     }
 
     /**

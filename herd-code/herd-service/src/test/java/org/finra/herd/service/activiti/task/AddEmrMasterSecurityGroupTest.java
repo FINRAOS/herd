@@ -68,15 +68,17 @@ public class AddEmrMasterSecurityGroupTest extends AbstractServiceTest
         parameter = new Parameter("securityGroupIds", "");
         parameters.add(parameter);
 
-        // Run a job with Activiti XML that will add SecurityGroups EMR master node.
-        Job job = createJobForCreateCluster(ACTIVITI_XML_ADD_EMR_MASTER_SECURITY_GROUPS_WITH_CLASSPATH, parameters);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            // Run a job with Activiti XML that will add SecurityGroups EMR master node.
+            Job job = createJobForCreateCluster(ACTIVITI_XML_ADD_EMR_MASTER_SECURITY_GROUPS_WITH_CLASSPATH, parameters);
 
-        HistoricProcessInstance hisInstance =
-            activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(job.getId()).includeProcessVariables().singleResult();
-        Map<String, Object> variables = hisInstance.getProcessVariables();
-        String securityGroupTaskStatus =
-            (String) variables.get("addSecurityGroupServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + ActivitiRuntimeHelper.VARIABLE_STATUS);
+            HistoricProcessInstance hisInstance =
+                activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(job.getId()).includeProcessVariables().singleResult();
+            Map<String, Object> variables = hisInstance.getProcessVariables();
+            String securityGroupTaskStatus =
+                (String) variables.get("addSecurityGroupServiceTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + ActivitiRuntimeHelper.VARIABLE_STATUS);
 
-        assertEquals(securityGroupTaskStatus, ActivitiRuntimeHelper.TASK_STATUS_ERROR);
+            assertEquals(securityGroupTaskStatus, ActivitiRuntimeHelper.TASK_STATUS_ERROR);
+        });
     }
 }

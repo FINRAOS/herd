@@ -19,14 +19,10 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 /**
  * A namespace.
  */
-@XmlRootElement
-@XmlType
 @Table(name = NamespaceEntity.TABLE_NAME)
 @Entity
 public class NamespaceEntity extends AuditableEntity
@@ -48,28 +44,5 @@ public class NamespaceEntity extends AuditableEntity
     public void setCode(String code)
     {
         this.code = code;
-    }
-
-    @Override
-    public boolean equals(Object other)
-    {
-        if (this == other)
-        {
-            return true;
-        }
-        if (other == null || getClass() != other.getClass())
-        {
-            return false;
-        }
-
-        NamespaceEntity that = (NamespaceEntity) other;
-
-        return !(code != null ? !code.equals(that.code) : that.code != null);
-    }
-
-    @Override
-    public int hashCode()
-    {
-        return (code != null ? code.hashCode() : 0);
     }
 }

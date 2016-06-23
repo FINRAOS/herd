@@ -106,8 +106,10 @@ public class CheckBusinessObjectDataAvailabilityCollectionTest extends HerdActiv
         Map<String, Object> variableValuesToValidate = new HashMap<>();
         variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"ContentType\" must be a valid value of either \"xml\" or \"json\".");
 
-        testActivitiServiceTaskFailure(CheckBusinessObjectDataAvailabilityCollection.class.getCanonicalName(), fieldExtensionList, parameters,
-            variableValuesToValidate);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            testActivitiServiceTaskFailure(CheckBusinessObjectDataAvailabilityCollection.class.getCanonicalName(), fieldExtensionList, parameters,
+                variableValuesToValidate);
+        });
     }
 
     @Test
@@ -126,8 +128,10 @@ public class CheckBusinessObjectDataAvailabilityCollectionTest extends HerdActiv
         Map<String, Object> variableValuesToValidate = new HashMap<>();
         variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"BusinessObjectDataAvailabilityCollectionRequest\" must be specified.");
 
-        testActivitiServiceTaskFailure(CheckBusinessObjectDataAvailabilityCollection.class.getCanonicalName(), fieldExtensionList, parameters,
-            variableValuesToValidate);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            testActivitiServiceTaskFailure(CheckBusinessObjectDataAvailabilityCollection.class.getCanonicalName(), fieldExtensionList, parameters,
+                variableValuesToValidate);
+        });
     }
 
     @Test
@@ -144,10 +148,13 @@ public class CheckBusinessObjectDataAvailabilityCollectionTest extends HerdActiv
         parameters.add(buildParameter("businessObjectDataAvailabilityCollectionRequest", "wrong_xml_request"));
 
         Map<String, Object> variableValuesToValidate = new HashMap<>();
-        variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"BusinessObjectDataAvailabilityCollectionRequest\" must be valid xml string.");
+        variableValuesToValidate
+            .put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"BusinessObjectDataAvailabilityCollectionRequest\" must be valid xml string.");
 
-        testActivitiServiceTaskFailure(CheckBusinessObjectDataAvailabilityCollection.class.getCanonicalName(), fieldExtensionList, parameters,
-            variableValuesToValidate);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            testActivitiServiceTaskFailure(CheckBusinessObjectDataAvailabilityCollection.class.getCanonicalName(), fieldExtensionList, parameters,
+                variableValuesToValidate);
+        });
     }
 
     @Test
@@ -164,9 +171,12 @@ public class CheckBusinessObjectDataAvailabilityCollectionTest extends HerdActiv
         parameters.add(buildParameter("businessObjectDataAvailabilityCollectionRequest", "wrong_json_request"));
 
         Map<String, Object> variableValuesToValidate = new HashMap<>();
-        variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"BusinessObjectDataAvailabilityCollectionRequest\" must be valid json string.");
+        variableValuesToValidate
+            .put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"BusinessObjectDataAvailabilityCollectionRequest\" must be valid json string.");
 
-        testActivitiServiceTaskFailure(CheckBusinessObjectDataAvailabilityCollection.class.getCanonicalName(), fieldExtensionList, parameters,
-            variableValuesToValidate);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            testActivitiServiceTaskFailure(CheckBusinessObjectDataAvailabilityCollection.class.getCanonicalName(), fieldExtensionList, parameters,
+                variableValuesToValidate);
+        });
     }
 }

@@ -18,10 +18,11 @@ package org.finra.herd.dao;
 import java.util.List;
 
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.BusinessObjectDataNotificationFilter;
 import org.finra.herd.model.api.xml.NotificationRegistrationKey;
 import org.finra.herd.model.jpa.BusinessObjectDataNotificationRegistrationEntity;
 
-public interface BusinessObjectDataNotificationRegistrationDao
+public interface BusinessObjectDataNotificationRegistrationDao extends BaseJpaDao
 {
     /**
      * Retrieves a business object data notification registration entity by alternate key.
@@ -30,17 +31,31 @@ public interface BusinessObjectDataNotificationRegistrationDao
      *
      * @return the business object data notification registration entity
      */
-    public BusinessObjectDataNotificationRegistrationEntity getBusinessObjectDataNotificationRegistrationByAltKey(
-        NotificationRegistrationKey key);
+    public BusinessObjectDataNotificationRegistrationEntity getBusinessObjectDataNotificationRegistrationByAltKey(NotificationRegistrationKey key);
 
     /**
-     * Retrieves a list of business object data notification registration keys defined for the specified namespace.
+     * Retrieves a list of business object data notification registration keys defined for the specified business object data notification registration
+     * namespace.
      *
-     * @param namespaceCode the namespace code (case-insensitive)
+     * @param namespace the namespace of the business object data notification registration (case-insensitive)
      *
      * @return the list of business object data notification registration keys
      */
-    public List<NotificationRegistrationKey> getBusinessObjectDataNotificationRegistrationKeys(String namespaceCode);
+    public List<NotificationRegistrationKey> getBusinessObjectDataNotificationRegistrationKeysByNamespace(String namespace);
+
+    /**
+     * Gets a list of keys for all existing business object data notification registrations that match the specified business object data notification filter
+     * parameters.
+     *
+     * @param businessObjectDataNotificationFilter the filter for the business object data notification. Only the following four filter parameters are used to
+     * match the business object data notification registrations: <p><ul> <li>the namespace of the business object definition (required, case-insensitive)
+     * <li>the name of the business object definition (required, case-insensitive) <li>the usage of the business object format (optional, case-insensitive)
+     * <li>the file type of the business object format (optional, case-insensitive) </ul>
+     *
+     * @return the list of business object data notification registration keys
+     */
+    public List<NotificationRegistrationKey> getBusinessObjectDataNotificationRegistrationKeysByNotificationFilter(
+        BusinessObjectDataNotificationFilter businessObjectDataNotificationFilter);
 
     /**
      * Retrieves a list of business object data notification entities that match given input parameters. Gets only ENABLED notification registrations.
@@ -49,7 +64,7 @@ public interface BusinessObjectDataNotificationRegistrationDao
      * @param businessObjectDataKey the business object data key (case-insensitive)
      * @param newBusinessObjectDataStatus the new business object data status (case-insensitive)
      * @param oldBusinessObjectDataStatus the old (previous) business object data status (case-insensitive). This parameter will be null for business object
-     *            data registration
+     * data registration
      *
      * @return the list of business object data notification entities
      */
@@ -63,7 +78,7 @@ public interface BusinessObjectDataNotificationRegistrationDao
      * @param businessObjectDataKey the business object data key (case-insensitive)
      * @param newBusinessObjectDataStatus the new business object data status (case-insensitive)
      * @param oldBusinessObjectDataStatus the old (previous) business object data status (case-insensitive). This parameter will be null for business object
-     *            data registration
+     * data registration
      * @param notificationRegistrationStatus The status of the notification registration. Optional. Defaults to any. Case-insensitive.
      *
      * @return the list of business object data notification entities

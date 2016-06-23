@@ -30,6 +30,7 @@ import org.finra.herd.model.dto.StoragePolicySelection;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.herd.model.jpa.StoragePolicyRuleTypeEntity;
+import org.finra.herd.model.jpa.StoragePolicyStatusEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
 
@@ -45,12 +46,13 @@ public class StoragePolicySelectorServiceTest extends AbstractServiceTest
         StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
 
         // Create and persist a storage policy entity.
-        createStoragePolicyEntity(storagePolicyKey, StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS, BOD_NAMESPACE, BOD_NAME,
-            FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2);
+        createStoragePolicyEntity(storagePolicyKey, StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS, BDEF_NAMESPACE, BDEF_NAME,
+            FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION,
+            LATEST_VERSION_FLAG_SET);
 
         // Create and persist a storage unit in the storage policy filter storage.
         StorageUnitEntity storageUnitEntity =
-            createStorageUnitEntity(STORAGE_NAME, BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID, StorageUnitStatusEntity.ENABLED,
                 NO_STORAGE_DIRECTORY_PATH);
 
@@ -62,8 +64,8 @@ public class StoragePolicySelectorServiceTest extends AbstractServiceTest
 
         // Validate the results.
         assertEquals(Arrays.asList(new StoragePolicySelection(
-            new BusinessObjectDataKey(BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                DATA_VERSION), storagePolicyKey)), resultStoragePolicySelections);
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION), storagePolicyKey, INITIAL_VERSION)), resultStoragePolicySelections);
     }
 
     @Test
@@ -71,12 +73,12 @@ public class StoragePolicySelectorServiceTest extends AbstractServiceTest
     {
         // Create and persist a storage policy entity.
         createStoragePolicyEntity(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME),
-            StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS, BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-            STORAGE_NAME, STORAGE_NAME_2);
+            StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+            STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Create and persist a storage unit in the storage policy filter storage.
         StorageUnitEntity storageUnitEntity =
-            createStorageUnitEntity(STORAGE_NAME, BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID, StorageUnitStatusEntity.ENABLED,
                 NO_STORAGE_DIRECTORY_PATH);
 
@@ -100,11 +102,12 @@ public class StoragePolicySelectorServiceTest extends AbstractServiceTest
     {
         // Create and persist a storage policy entity with a non-supported storage policy type.
         createStoragePolicyEntity(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME), STORAGE_POLICY_RULE_TYPE, BDATA_AGE_IN_DAYS,
-            BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2);
+            BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED,
+            INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Create and persist a storage unit in the storage policy filter storage.
         StorageUnitEntity storageUnitEntity =
-            createStorageUnitEntity(STORAGE_NAME, BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID, StorageUnitStatusEntity.ENABLED,
                 NO_STORAGE_DIRECTORY_PATH);
 
@@ -128,12 +131,12 @@ public class StoragePolicySelectorServiceTest extends AbstractServiceTest
     {
         // Create and persist a storage policy entity.
         createStoragePolicyEntity(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME),
-            StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS, BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-            STORAGE_NAME, STORAGE_NAME_2);
+            StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+            STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Create and persist a storage unit in the storage policy filter storage.
         StorageUnitEntity storageUnitEntity =
-            createStorageUnitEntity(STORAGE_NAME, BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID, STORAGE_UNIT_STATUS,
                 NO_STORAGE_DIRECTORY_PATH);
 
@@ -155,12 +158,12 @@ public class StoragePolicySelectorServiceTest extends AbstractServiceTest
     {
         // Storage a storage policy with a filter that has no fields specified.
         createStoragePolicyEntity(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD_2, STORAGE_POLICY_NAME_2),
-            StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS, NO_BOD_NAMESPACE, NO_BOD_NAME, NO_FORMAT_USAGE_CODE,
-            NO_FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2);
+            StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS, NO_BDEF_NAMESPACE, NO_BDEF_NAME, NO_FORMAT_USAGE_CODE,
+            NO_FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Create and persist a storage unit in the storage policy filter storage.
         StorageUnitEntity storageUnitEntity =
-            createStorageUnitEntity(STORAGE_NAME, BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID, StorageUnitStatusEntity.ENABLED,
                 NO_STORAGE_DIRECTORY_PATH);
 
@@ -176,8 +179,8 @@ public class StoragePolicySelectorServiceTest extends AbstractServiceTest
         // Storage a storage policy with a filter that has only usage and file type specified
         // and with the age restriction greater than the current business object data entity age.
         createStoragePolicyEntity(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD_2, STORAGE_POLICY_NAME),
-            StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS + 2, NO_BOD_NAMESPACE, NO_BOD_NAME, FORMAT_USAGE_CODE,
-            FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2);
+            StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS + 2, NO_BDEF_NAMESPACE, NO_BDEF_NAME, FORMAT_USAGE_CODE,
+            FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Execute the storage policy selection and validate the results. The business object data is not expected to be selected.
         assertEquals(0, storagePolicySelectorService.execute(SQS_QUEUE_NAME, MAX_RESULT).size());
@@ -191,8 +194,8 @@ public class StoragePolicySelectorServiceTest extends AbstractServiceTest
         // Storage a storage policy with a filter that has only business object definition
         // specified and with the age restriction greater than the current business object data entity age.
         createStoragePolicyEntity(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME_2),
-            StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS + 4, BOD_NAMESPACE, BOD_NAME, NO_FORMAT_USAGE_CODE,
-            NO_FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2);
+            StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS + 4, BDEF_NAMESPACE, BDEF_NAME, NO_FORMAT_USAGE_CODE,
+            NO_FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Execute the storage policy selection and validate the results. The business object data is not expected to be selected.
         assertEquals(0, storagePolicySelectorService.execute(SQS_QUEUE_NAME, MAX_RESULT).size());
@@ -206,8 +209,8 @@ public class StoragePolicySelectorServiceTest extends AbstractServiceTest
         // Storage a storage policy with a filter that has business object definition, usage, and file type
         // specified and with the age restriction greater than the current business object data entity age.
         createStoragePolicyEntity(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME),
-            StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS + 6, BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-            STORAGE_NAME, STORAGE_NAME_2);
+            StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS + 6, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+            STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Execute the storage policy selection and validate the results. The business object data is not expected to be selected.
         assertEquals(0, storagePolicySelectorService.execute(SQS_QUEUE_NAME, MAX_RESULT).size());
@@ -226,12 +229,13 @@ public class StoragePolicySelectorServiceTest extends AbstractServiceTest
         StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
 
         // Create and persist a storage policy entity.
-        createStoragePolicyEntity(storagePolicyKey, StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS, BOD_NAMESPACE, BOD_NAME,
-            FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2);
+        createStoragePolicyEntity(storagePolicyKey, StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS, BDEF_NAMESPACE, BDEF_NAME,
+            FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION,
+            LATEST_VERSION_FLAG_SET);
 
         // Create and persist a storage unit in the storage policy filter storage.
         StorageUnitEntity storageUnitEntity1 =
-            createStorageUnitEntity(STORAGE_NAME, BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID, StorageUnitStatusEntity.ENABLED,
                 NO_STORAGE_DIRECTORY_PATH);
 
@@ -240,7 +244,7 @@ public class StoragePolicySelectorServiceTest extends AbstractServiceTest
 
         // Create and persist a second storage unit in the storage policy filter storage.
         StorageUnitEntity storageUnitEntity2 =
-            createStorageUnitEntity(STORAGE_NAME, BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE_2,
+            createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE_2,
                 SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID, StorageUnitStatusEntity.ENABLED,
                 NO_STORAGE_DIRECTORY_PATH);
 
@@ -252,7 +256,7 @@ public class StoragePolicySelectorServiceTest extends AbstractServiceTest
 
         // Validate the results. Only the oldest business object data should get selected.
         assertEquals(Arrays.asList(new StoragePolicySelection(
-            new BusinessObjectDataKey(BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE_2, SUBPARTITION_VALUES,
-                DATA_VERSION), storagePolicyKey)), resultStoragePolicySelections);
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE_2,
+                SUBPARTITION_VALUES, DATA_VERSION), storagePolicyKey, INITIAL_VERSION)), resultStoragePolicySelections);
     }
 }

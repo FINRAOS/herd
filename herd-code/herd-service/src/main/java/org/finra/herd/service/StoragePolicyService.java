@@ -18,13 +18,38 @@ package org.finra.herd.service;
 import org.finra.herd.model.api.xml.StoragePolicy;
 import org.finra.herd.model.api.xml.StoragePolicyCreateRequest;
 import org.finra.herd.model.api.xml.StoragePolicyKey;
+import org.finra.herd.model.api.xml.StoragePolicyUpdateRequest;
 
 /**
  * The storage policy service.
  */
 public interface StoragePolicyService
 {
+    /**
+     * Creates a new storage policy.
+     *
+     * @param request the information needed to create a storage policy
+     *
+     * @return the newly created storage policy
+     */
     public StoragePolicy createStoragePolicy(StoragePolicyCreateRequest request);
 
-    public StoragePolicy getStoragePolicy(StoragePolicyKey key);
+    /**
+     * Updates an existing storage policy by key.
+     *
+     * @param storagePolicyKey the storage policy key
+     * @param request the information needed to update the storage policy
+     *
+     * @return the updated storage policy
+     */
+    public StoragePolicy updateStoragePolicy(StoragePolicyKey storagePolicyKey, StoragePolicyUpdateRequest request);
+
+    /**
+     * Gets an existing storage policy by key.
+     *
+     * @param storagePolicyKey the storage policy key
+     *
+     * @return the storage policy information
+     */
+    public StoragePolicy getStoragePolicy(StoragePolicyKey storagePolicyKey);
 }

@@ -15,6 +15,7 @@
 */
 package org.finra.herd.dao;
 
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
 
@@ -87,38 +88,6 @@ public interface BaseJpaDao
     public <T> List<T> queryByNamedParams(String queryString, Map<String, ?> params);
 
     /**
-     * Executes a named query with a named set of parameters.
-     *
-     * @param queryName the query name of the query to execute.
-     * @param params the named parameter map.
-     * @param <T> the type of class to be returned.
-     *
-     * @return the results of the query.
-     */
-    public <T> List<T> queryByNamedQueryAndNamedParams(String queryName, Map<String, ?> params);
-
-    /**
-     * Executes a named query with no parameters.
-     *
-     * @param queryName the query name of the query to execute.
-     * @param <T> the type of class to be returned.
-     *
-     * @return the results of the query.
-     */
-    public <T> List<T> queryByNamedQuery(String queryName);
-
-    /**
-     * Executes a named query with a named set of parameters.
-     *
-     * @param queryName the query name of the query to execute.
-     * @param params the named parameter map.
-     * @param <T> the type of class to be returned.
-     *
-     * @return the single entity returned by the query.
-     */
-    public <T> T queryUniqueByNamedQueryAndNamedParams(String queryName, Map<String, ?> params);
-
-    /**
      * Executes a query string and returns the results.
      *
      * @param queryString the query string.
@@ -163,4 +132,11 @@ public interface BaseJpaDao
      * @param <T> the type of entity.
      */
     public <T> void detach(T entity);
+
+    /**
+     * Gets the current timestamp.
+     *
+     * @return current timestamp
+     */
+    public Timestamp getCurrentTimestamp();
 }

@@ -19,14 +19,12 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
+
+import org.hibernate.annotations.Type;
 
 /**
  * A business object data status.
  */
-@XmlRootElement
-@XmlType
 @Table(name = "bus_objct_data_stts_cd_lk")
 @Entity
 public class BusinessObjectDataStatusEntity extends AuditableEntity
@@ -46,6 +44,10 @@ public class BusinessObjectDataStatusEntity extends AuditableEntity
 
     @Column(name = "bus_objct_data_stts_ds")
     private String description;
+
+    @Column(name = "pre_rgstn_stts_fl")
+    @Type(type = "yes_no")
+    private Boolean preRegistrationStatus;
 
     public String getCode()
     {
@@ -67,35 +69,13 @@ public class BusinessObjectDataStatusEntity extends AuditableEntity
         this.description = description;
     }
 
-    @Override
-    public boolean equals(Object other)
+    public Boolean getPreRegistrationStatus()
     {
-        if (this == other)
-        {
-            return true;
-        }
-        if (other == null || getClass() != other.getClass())
-        {
-            return false;
-        }
-
-        BusinessObjectDataStatusEntity that = (BusinessObjectDataStatusEntity) other;
-
-        if (!code.equals(that.code))
-        {
-            return false;
-        }
-        if (!description.equals(that.description))
-        {
-            return false;
-        }
-
-        return true;
+        return preRegistrationStatus;
     }
 
-    @Override
-    public int hashCode()
+    public void setPreRegistrationStatus(Boolean preRegistrationStatus)
     {
-        return code.hashCode();
+        this.preRegistrationStatus = preRegistrationStatus;
     }
 }

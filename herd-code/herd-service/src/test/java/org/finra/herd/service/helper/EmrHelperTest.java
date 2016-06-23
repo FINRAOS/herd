@@ -28,8 +28,7 @@ import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 
 import org.finra.herd.dao.impl.MockEmrOperationsImpl;
-import org.finra.herd.model.dto.AwsParamsDto;
-import org.finra.herd.model.jpa.NamespaceEntity;
+import org.finra.herd.model.api.xml.EmrCluster;
 import org.finra.herd.model.api.xml.EmrClusterCreateRequest;
 import org.finra.herd.model.api.xml.EmrClusterDefinition;
 import org.finra.herd.model.api.xml.EmrHadoopJarStep;
@@ -38,6 +37,8 @@ import org.finra.herd.model.api.xml.EmrOozieStep;
 import org.finra.herd.model.api.xml.EmrPigStep;
 import org.finra.herd.model.api.xml.EmrShellStep;
 import org.finra.herd.model.api.xml.NodeTag;
+import org.finra.herd.model.dto.AwsParamsDto;
+import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.service.AbstractServiceTest;
 
 /**
@@ -94,7 +95,7 @@ public class EmrHelperTest extends AbstractServiceTest
     public void testCreateEmrClusterBlankTags() throws Exception
     {
         // Create the namespace entity.
-        createNamespaceEntity(NAMESPACE_CD);
+        createNamespaceEntity(NAMESPACE);
 
         String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
 
@@ -119,18 +120,6 @@ public class EmrHelperTest extends AbstractServiceTest
     }
 
     /**
-     * This method tests the scenario in which the proxy details are blank
-     */
-    @Test
-    public void testGetEmrClusterIdByNameForBlankAwsProxy() throws Exception
-    {
-        // Following method must throw ObjectNotFoundException, as the namespace entity ${TEST_ACTIVITI_NAMESPACE_CD} does not exist.
-        AwsParamsDto testAwsParams = emrHelper.getAwsParamsDto();
-        testAwsParams.setHttpProxyHost("");
-        emrDao.getActiveEmrClusterIdByName("", testAwsParams);
-    }
-
-    /**
      * This method fills-up the parameters required for the EMR cluster create request. This is called from all the other test methods.
      */
     private EmrClusterCreateRequest getNewEmrClusterCreateRequest() throws Exception
@@ -139,7 +128,7 @@ public class EmrHelperTest extends AbstractServiceTest
         EmrClusterCreateRequest request = new EmrClusterCreateRequest();
 
         // Fill in the parameters.
-        request.setNamespace(NAMESPACE_CD);
+        request.setNamespace(NAMESPACE);
         request.setEmrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME);
         request.setEmrClusterName("UT_EMR_CLUSTER" + String.format("-%.3f", Math.random()));
 
@@ -153,13 +142,13 @@ public class EmrHelperTest extends AbstractServiceTest
     public void testEmrAddStepsAllTypesNegativeTestCase() throws Exception
     {
         // Create the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
 
         EmrClusterCreateRequest request = getNewEmrClusterCreateRequest();
-        emrService.createCluster(request);
+        EmrCluster emrCluster = emrService.createCluster(request);
 
         EmrStepHelper stepHelper = null;
 
@@ -172,7 +161,7 @@ public class EmrHelperTest extends AbstractServiceTest
         List<Object> steps = new ArrayList<>();
 
         // Shell step parameters
-        EmrShellStep shellStep = new EmrShellStep(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME, request.getEmrClusterName(), null, null, null, null, null);
+        EmrShellStep shellStep = new EmrShellStep(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, request.getEmrClusterName(), null, null, null, null, null, null);
         shellStep.setScriptLocation("s3://test-bucket-managed/app-a/test/test_script.sh");
         shellStep.setStepName("Test Shell Script");
         shellStep.setScriptArguments(shellScriptArgs);
@@ -181,7 +170,7 @@ public class EmrHelperTest extends AbstractServiceTest
         steps.add(shellStep);
 
         // Hive step parameters
-        EmrHiveStep hiveStep = new EmrHiveStep(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME, request.getEmrClusterName(), null, null, null, null, null);
+        EmrHiveStep hiveStep = new EmrHiveStep(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, request.getEmrClusterName(), null, null, null, null, null, null);
         hiveStep.setStepName("Test Hive");
         hiveStep.setScriptLocation("s3://test-bucket-managed/app-a/test/test_hive.hql");
         hiveStep.setContinueOnError(true);
@@ -189,7 +178,7 @@ public class EmrHelperTest extends AbstractServiceTest
         steps.add(hiveStep);
 
         // Pig step parameter
-        EmrPigStep pigStep = new EmrPigStep(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME, request.getEmrClusterName(), null, null, null, null, null);
+        EmrPigStep pigStep = new EmrPigStep(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, request.getEmrClusterName(), null, null, null, null, null, null);
         pigStep.setStepName("Test Pig");
         pigStep.setContinueOnError(true);
         pigStep.setScriptLocation("s3://test-bucket-managed/app-a/test/test_pig.pig");
@@ -197,7 +186,7 @@ public class EmrHelperTest extends AbstractServiceTest
         steps.add(pigStep);
 
         // Oozie step that includes a shell script to install oozie
-        shellStep = new EmrShellStep(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME, request.getEmrClusterName(), null, null, null, null, null);
+        shellStep = new EmrShellStep(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, request.getEmrClusterName(), null, null, null, null, null, null);
         shellStep.setScriptLocation("s3://test-bucket-managed/app-a/bootstrap/install_oozie.sh");
         shellStep.setStepName("Install Oozie");
         List<String> shellScriptArgsOozie = new ArrayList<>();
@@ -207,7 +196,7 @@ public class EmrHelperTest extends AbstractServiceTest
         steps.add(shellStep);
 
         // Oozie job addition
-        EmrOozieStep oozieStep = new EmrOozieStep(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME, request.getEmrClusterName(), null, null, null, null, null);
+        EmrOozieStep oozieStep = new EmrOozieStep(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, request.getEmrClusterName(), null, null, null, null, null, null);
         oozieStep.setStepName("Test Oozie");
         oozieStep.setContinueOnError(true);
         oozieStep.setWorkflowXmlLocation("s3://test-bucket-managed/app-a/test/workflow.xml");
@@ -217,7 +206,7 @@ public class EmrHelperTest extends AbstractServiceTest
 
         // Hadoop jar step configuration
         EmrHadoopJarStep hadoopJarStep =
-            new EmrHadoopJarStep(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME, request.getEmrClusterName(), null, null, null, null, null, null);
+            new EmrHadoopJarStep(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, request.getEmrClusterName(), null, null, null, null, null, null, null);
         hadoopJarStep.setContinueOnError(true);
         hadoopJarStep.setStepName("Hadoop Jar");
         hadoopJarStep.setJarLocation("s3://test-bucket-managed/app-a/test/hadoop-mapreduce-examples-2.4.0.jar");
@@ -229,8 +218,7 @@ public class EmrHelperTest extends AbstractServiceTest
         {
             stepHelper = emrStepHelperFactory.getStepHelper(emrStep.getClass().getName());
 
-            emrDao.addEmrStep(request.getNamespace() + "." + request.getEmrClusterDefinitionName() + "." + request.getEmrClusterName(),
-                stepHelper.getEmrStepConfig(emrStep), emrHelper.getAwsParamsDto());
+            emrDao.addEmrStep(emrCluster.getId(), stepHelper.getEmrStepConfig(emrStep), emrHelper.getAwsParamsDto());
         }
     }
 

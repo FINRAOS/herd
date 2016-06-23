@@ -35,6 +35,20 @@ public class EmrStepHelperFactory implements InitializingBean
 
     private Map<String, EmrStepHelper> emrStepHelperMap;
 
+    @Override
+    public void afterPropertiesSet() throws Exception
+    {
+        emrStepHelperMap = new HashMap<>();
+
+        // Add all the available EMR step helpers.
+        Map<String, EmrStepHelper> helperBeanMap = applicationContext.getBeansOfType(EmrStepHelper.class);
+        for (EmrStepHelper stepHelper : helperBeanMap.values())
+        {
+            emrStepHelperMap.put(stepHelper.getStepRequestType(), stepHelper);
+            emrStepHelperMap.put(stepHelper.getStepType(), stepHelper);
+        }
+    }
+
     /**
      * This method returns the EMR step helper for the given class.
      *
@@ -52,19 +66,5 @@ public class EmrStepHelperFactory implements InitializingBean
             throw new IllegalArgumentException("No supported EMR step helper found for stepType: " + stepType + ".");
         }
         return stepHelper;
-    }
-
-    @Override
-    public void afterPropertiesSet() throws Exception
-    {
-        emrStepHelperMap = new HashMap<>();
-
-        // Add all the available EMR step helpers.
-        Map<String, EmrStepHelper> helperBeanMap = applicationContext.getBeansOfType(EmrStepHelper.class);
-        for (EmrStepHelper stepHelper : helperBeanMap.values())
-        {
-            emrStepHelperMap.put(stepHelper.getStepRequestType(), stepHelper);
-            emrStepHelperMap.put(stepHelper.getStepType(), stepHelper);
-        }
     }
 }

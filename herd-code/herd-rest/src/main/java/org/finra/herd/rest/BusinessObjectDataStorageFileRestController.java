@@ -41,7 +41,8 @@ public class BusinessObjectDataStorageFileRestController extends HerdBaseControl
     private BusinessObjectDataStorageFileService businessObjectDataStorageFileService;
 
     /**
-     * Creates new file(s) for a given business object data and storage.
+     * Creates new file(s) for a given business object data and storage. <p>Addition of storage files is only allowed for business object data with a
+     * pre-registration status.</p> <p>Requires WRITE permission on namespace</p>
      *
      * @param businessObjectDataStorageFilesCreateRequest - the create file request
      *

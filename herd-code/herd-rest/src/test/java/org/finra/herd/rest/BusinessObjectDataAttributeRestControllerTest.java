@@ -24,38 +24,33 @@ import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import org.finra.herd.model.ObjectNotFoundException;
-import org.finra.herd.model.jpa.BusinessObjectDataAttributeEntity;
-import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.api.xml.BusinessObjectDataAttribute;
 import org.finra.herd.model.api.xml.BusinessObjectDataAttributeKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataAttributeKeys;
-import org.finra.herd.service.helper.HerdDaoHelper;
+import org.finra.herd.model.jpa.BusinessObjectDataAttributeEntity;
+import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 
 /**
  * This class tests various functionality within the business object data attribute REST controller.
  */
 public class BusinessObjectDataAttributeRestControllerTest extends AbstractRestTest
 {
-    @Autowired
-    protected HerdDaoHelper herdDaoHelper;
-
     @Test
     public void testCreateBusinessObjectDataAttribute()
     {
         // Create and persist a business object data entity.
-        createBusinessObjectDataEntity(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+        createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
             DATA_VERSION, true, BDATA_STATUS);
 
         // Create a business object data attribute.
         BusinessObjectDataAttribute resultBusinessObjectDataAttribute = businessObjectDataAttributeRestController.createBusinessObjectDataAttribute(
-            createBusinessObjectDataAttributeCreateRequest(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            createBusinessObjectDataAttributeCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1));
 
         // Validate the returned object.
-        validateBusinessObjectDataAttribute(null, NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+        validateBusinessObjectDataAttribute(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
             SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1, resultBusinessObjectDataAttribute);
     }
 
@@ -64,17 +59,17 @@ public class BusinessObjectDataAttributeRestControllerTest extends AbstractRestT
     {
         // Create and persist a business object data attribute entity.
         BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity =
-            createBusinessObjectDataAttributeEntity(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1);
 
         // Retrieve the business object data attribute.
         BusinessObjectDataAttribute resultBusinessObjectDataAttribute = businessObjectDataAttributeRestController
-            .getBusinessObjectDataAttribute(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            .getBusinessObjectDataAttribute(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2), SUBPARTITION_VALUES.get(3), DATA_VERSION,
                 ATTRIBUTE_NAME_1_MIXED_CASE);
 
         // Validate the returned object.
-        validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+        validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
             FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1,
             resultBusinessObjectDataAttribute);
     }
@@ -90,7 +85,7 @@ public class BusinessObjectDataAttributeRestControllerTest extends AbstractRestT
 
             // Create and persist an attribute for the business object data with the relative number of subpartition values.
             BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity =
-                createBusinessObjectDataAttributeEntity(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                     subPartitionValues, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1);
 
             // Retrieve the attribute of the business object data using the relative endpoint.
@@ -99,34 +94,34 @@ public class BusinessObjectDataAttributeRestControllerTest extends AbstractRestT
             {
                 case 0:
                     resultBusinessObjectDataAttribute = businessObjectDataAttributeRestController
-                        .getBusinessObjectDataAttribute(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                        .getBusinessObjectDataAttribute(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                             DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE);
                     break;
                 case 1:
                     resultBusinessObjectDataAttribute = businessObjectDataAttributeRestController
-                        .getBusinessObjectDataAttribute(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                        .getBusinessObjectDataAttribute(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                             subPartitionValues.get(0), DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE);
                     break;
                 case 2:
                     resultBusinessObjectDataAttribute = businessObjectDataAttributeRestController
-                        .getBusinessObjectDataAttribute(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                        .getBusinessObjectDataAttribute(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                             subPartitionValues.get(0), subPartitionValues.get(1), DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE);
                     break;
                 case 3:
                     resultBusinessObjectDataAttribute = businessObjectDataAttributeRestController
-                        .getBusinessObjectDataAttribute(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                        .getBusinessObjectDataAttribute(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                             subPartitionValues.get(0), subPartitionValues.get(1), subPartitionValues.get(2), DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE);
                     break;
                 case 4:
                     resultBusinessObjectDataAttribute = businessObjectDataAttributeRestController
-                        .getBusinessObjectDataAttribute(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                        .getBusinessObjectDataAttribute(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                             subPartitionValues.get(0), subPartitionValues.get(1), subPartitionValues.get(2), subPartitionValues.get(3), DATA_VERSION,
                             ATTRIBUTE_NAME_1_MIXED_CASE);
                     break;
             }
 
             // Validate the returned object.
-            validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+            validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
                 FORMAT_VERSION, PARTITION_VALUE, subPartitionValues, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1,
                 resultBusinessObjectDataAttribute);
         }
@@ -141,13 +136,13 @@ public class BusinessObjectDataAttributeRestControllerTest extends AbstractRestT
         // Create and persist a business object data attribute entities.
         for (String businessObjectDataAttributeName : testBusinessObjectDataAttributeNames)
         {
-            createBusinessObjectDataAttributeEntity(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, DATA_VERSION, businessObjectDataAttributeName, ATTRIBUTE_VALUE_1);
         }
 
         // Retrieve a list of business object data attribute keys.
         BusinessObjectDataAttributeKeys resultBusinessObjectDataAttributeKeys = businessObjectDataAttributeRestController
-            .getBusinessObjectDataAttributes(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            .getBusinessObjectDataAttributes(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2), SUBPARTITION_VALUES.get(3), DATA_VERSION);
 
         // Validate the returned object.
@@ -155,7 +150,7 @@ public class BusinessObjectDataAttributeRestControllerTest extends AbstractRestT
         assertEquals(testBusinessObjectDataAttributeNames.size(), resultBusinessObjectDataAttributeKeys.getBusinessObjectDataAttributeKeys().size());
         for (int i = 0; i < testBusinessObjectDataAttributeNames.size(); i++)
         {
-            validateBusinessObjectDataAttributeKey(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            validateBusinessObjectDataAttributeKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, DATA_VERSION, testBusinessObjectDataAttributeNames.get(i),
                 resultBusinessObjectDataAttributeKeys.getBusinessObjectDataAttributeKeys().get(i));
         }
@@ -177,7 +172,7 @@ public class BusinessObjectDataAttributeRestControllerTest extends AbstractRestT
             // Create and persist business object data attribute entities with the relative number of subpartition values.
             for (String businessObjectDataAttributeName : testBusinessObjectDataAttributeNames)
             {
-                createBusinessObjectDataAttributeEntity(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                     subPartitionValues, DATA_VERSION, businessObjectDataAttributeName, ATTRIBUTE_VALUE_1);
             }
 
@@ -187,27 +182,27 @@ public class BusinessObjectDataAttributeRestControllerTest extends AbstractRestT
             {
                 case 0:
                     resultBusinessObjectDataAttributeKeys = businessObjectDataAttributeRestController
-                        .getBusinessObjectDataAttributes(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                        .getBusinessObjectDataAttributes(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                             DATA_VERSION);
                     break;
                 case 1:
                     resultBusinessObjectDataAttributeKeys = businessObjectDataAttributeRestController
-                        .getBusinessObjectDataAttributes(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                        .getBusinessObjectDataAttributes(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                             SUBPARTITION_VALUES.get(0), DATA_VERSION);
                     break;
                 case 2:
                     resultBusinessObjectDataAttributeKeys = businessObjectDataAttributeRestController
-                        .getBusinessObjectDataAttributes(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                        .getBusinessObjectDataAttributes(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                             SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), DATA_VERSION);
                     break;
                 case 3:
                     resultBusinessObjectDataAttributeKeys = businessObjectDataAttributeRestController
-                        .getBusinessObjectDataAttributes(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                        .getBusinessObjectDataAttributes(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                             SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2), DATA_VERSION);
                     break;
                 case 4:
                     resultBusinessObjectDataAttributeKeys = businessObjectDataAttributeRestController
-                        .getBusinessObjectDataAttributes(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                        .getBusinessObjectDataAttributes(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                             SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2), SUBPARTITION_VALUES.get(3), DATA_VERSION);
                     break;
             }
@@ -217,7 +212,7 @@ public class BusinessObjectDataAttributeRestControllerTest extends AbstractRestT
             assertEquals(testBusinessObjectDataAttributeNames.size(), resultBusinessObjectDataAttributeKeys.getBusinessObjectDataAttributeKeys().size());
             for (int j = 0; j < testBusinessObjectDataAttributeNames.size(); j++)
             {
-                validateBusinessObjectDataAttributeKey(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                validateBusinessObjectDataAttributeKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                     subPartitionValues, DATA_VERSION, testBusinessObjectDataAttributeNames.get(j),
                     resultBusinessObjectDataAttributeKeys.getBusinessObjectDataAttributeKeys().get(j));
             }
@@ -229,17 +224,17 @@ public class BusinessObjectDataAttributeRestControllerTest extends AbstractRestT
     {
         // Create and persist a business object data attribute entity.
         BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity =
-            createBusinessObjectDataAttributeEntity(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1);
 
         // Update the business object data attribute.
         BusinessObjectDataAttribute updatedBusinessObjectDataAttribute = businessObjectDataAttributeRestController
-            .updateBusinessObjectDataAttribute(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            .updateBusinessObjectDataAttribute(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2), SUBPARTITION_VALUES.get(3), DATA_VERSION,
                 ATTRIBUTE_NAME_1_MIXED_CASE, createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_2));
 
         // Validate the returned object.
-        validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+        validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
             FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_2,
             updatedBusinessObjectDataAttribute);
     }
@@ -255,7 +250,7 @@ public class BusinessObjectDataAttributeRestControllerTest extends AbstractRestT
 
             // Create and persist an attribute for the business object data with the relative number of subpartition values.
             BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity =
-                createBusinessObjectDataAttributeEntity(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                     subPartitionValues, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1);
 
             // Update the attribute of the business object data using the relative endpoint.
@@ -264,37 +259,37 @@ public class BusinessObjectDataAttributeRestControllerTest extends AbstractRestT
             {
                 case 0:
                     resultBusinessObjectDataAttribute = businessObjectDataAttributeRestController
-                        .updateBusinessObjectDataAttribute(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                        .updateBusinessObjectDataAttribute(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                             DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_2));
                     break;
                 case 1:
                     resultBusinessObjectDataAttribute = businessObjectDataAttributeRestController
-                        .updateBusinessObjectDataAttribute(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                        .updateBusinessObjectDataAttribute(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                             subPartitionValues.get(0), DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE,
                             createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_2));
                     break;
                 case 2:
                     resultBusinessObjectDataAttribute = businessObjectDataAttributeRestController
-                        .updateBusinessObjectDataAttribute(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                        .updateBusinessObjectDataAttribute(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                             subPartitionValues.get(0), subPartitionValues.get(1), DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE,
                             createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_2));
                     break;
                 case 3:
                     resultBusinessObjectDataAttribute = businessObjectDataAttributeRestController
-                        .updateBusinessObjectDataAttribute(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                        .updateBusinessObjectDataAttribute(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                             subPartitionValues.get(0), subPartitionValues.get(1), subPartitionValues.get(2), DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE,
                             createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_2));
                     break;
                 case 4:
                     resultBusinessObjectDataAttribute = businessObjectDataAttributeRestController
-                        .updateBusinessObjectDataAttribute(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                        .updateBusinessObjectDataAttribute(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                             subPartitionValues.get(0), subPartitionValues.get(1), subPartitionValues.get(2), subPartitionValues.get(3), DATA_VERSION,
                             ATTRIBUTE_NAME_1_MIXED_CASE, createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_2));
                     break;
             }
 
             // Validate the returned object.
-            validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+            validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
                 FORMAT_VERSION, PARTITION_VALUE, subPartitionValues, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_2,
                 resultBusinessObjectDataAttribute);
         }
@@ -305,30 +300,30 @@ public class BusinessObjectDataAttributeRestControllerTest extends AbstractRestT
     {
         // Create and persist a business object data attribute entity.
         BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity =
-            createBusinessObjectDataAttributeEntity(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1);
 
         // Validate that this business object data attribute exists.
-        herdDaoHelper.getBusinessObjectDataAttributeEntity(
-            new BusinessObjectDataAttributeKey(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+        businessObjectDataAttributeDaoHelper.getBusinessObjectDataAttributeEntity(
+            new BusinessObjectDataAttributeKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE));
 
         // Delete this business object data attribute.
         BusinessObjectDataAttribute deletedBusinessObjectDataAttribute = businessObjectDataAttributeRestController
-            .deleteBusinessObjectDataAttribute(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            .deleteBusinessObjectDataAttribute(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2), SUBPARTITION_VALUES.get(3), DATA_VERSION,
                 ATTRIBUTE_NAME_1_MIXED_CASE);
 
         // Validate the returned object.
-        validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+        validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
             FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1,
             deletedBusinessObjectDataAttribute);
 
         // Ensure that this business object data attribute is no longer there.
         try
         {
-            herdDaoHelper.getBusinessObjectDataAttributeEntity(
-                new BusinessObjectDataAttributeKey(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            businessObjectDataAttributeDaoHelper.getBusinessObjectDataAttributeEntity(
+                new BusinessObjectDataAttributeKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                     SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE));
             fail("Should throw an ObjectNotFoundException when business object data attribute does not exist.");
         }
@@ -338,7 +333,7 @@ public class BusinessObjectDataAttributeRestControllerTest extends AbstractRestT
                 String.format("Attribute with name \"%s\" does not exist for business object data {namespace: \"%s\", businessObjectDefinitionName: \"%s\", " +
                     "businessObjectFormatUsage: \"%s\", businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d, " +
                     "businessObjectDataPartitionValue: \"%s\", businessObjectDataSubPartitionValues: \"%s,%s,%s,%s\", businessObjectDataVersion: %d}.",
-                    ATTRIBUTE_NAME_1_MIXED_CASE, NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    ATTRIBUTE_NAME_1_MIXED_CASE, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                     SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2), SUBPARTITION_VALUES.get(3), DATA_VERSION),
                 e.getMessage());
         }
@@ -355,12 +350,12 @@ public class BusinessObjectDataAttributeRestControllerTest extends AbstractRestT
 
             // Create and persist a business object data attribute entity with the relative number of subpartition values.
             BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity =
-                createBusinessObjectDataAttributeEntity(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                     subPartitionValues, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1);
 
             // Validate that this business object data attribute exists.
-            herdDaoHelper.getBusinessObjectDataAttributeEntity(
-                new BusinessObjectDataAttributeKey(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            businessObjectDataAttributeDaoHelper.getBusinessObjectDataAttributeEntity(
+                new BusinessObjectDataAttributeKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                     subPartitionValues, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE));
 
             // Delete this business object data attribute using the relative endpoint.
@@ -369,42 +364,42 @@ public class BusinessObjectDataAttributeRestControllerTest extends AbstractRestT
             {
                 case 0:
                     deletedBusinessObjectDataAttribute = businessObjectDataAttributeRestController
-                        .deleteBusinessObjectDataAttribute(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                        .deleteBusinessObjectDataAttribute(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                             DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE);
                     break;
                 case 1:
                     deletedBusinessObjectDataAttribute = businessObjectDataAttributeRestController
-                        .deleteBusinessObjectDataAttribute(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                        .deleteBusinessObjectDataAttribute(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                             subPartitionValues.get(0), DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE);
                     break;
                 case 2:
                     deletedBusinessObjectDataAttribute = businessObjectDataAttributeRestController
-                        .deleteBusinessObjectDataAttribute(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                        .deleteBusinessObjectDataAttribute(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                             subPartitionValues.get(0), subPartitionValues.get(1), DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE);
                     break;
                 case 3:
                     deletedBusinessObjectDataAttribute = businessObjectDataAttributeRestController
-                        .deleteBusinessObjectDataAttribute(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                        .deleteBusinessObjectDataAttribute(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                             subPartitionValues.get(0), subPartitionValues.get(1), subPartitionValues.get(2), DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE);
                     break;
                 case 4:
                     deletedBusinessObjectDataAttribute = businessObjectDataAttributeRestController
-                        .deleteBusinessObjectDataAttribute(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                        .deleteBusinessObjectDataAttribute(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                             subPartitionValues.get(0), subPartitionValues.get(1), subPartitionValues.get(2), subPartitionValues.get(3), DATA_VERSION,
                             ATTRIBUTE_NAME_1_MIXED_CASE);
                     break;
             }
 
             // Validate the returned object.
-            validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+            validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
                 FORMAT_VERSION, PARTITION_VALUE, subPartitionValues, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1,
                 deletedBusinessObjectDataAttribute);
 
             // Ensure that this business object data attribute is no longer there.
             try
             {
-                herdDaoHelper.getBusinessObjectDataAttributeEntity(
-                    new BusinessObjectDataAttributeKey(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                businessObjectDataAttributeDaoHelper.getBusinessObjectDataAttributeEntity(
+                    new BusinessObjectDataAttributeKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                         subPartitionValues, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE));
                 fail("Should throw an ObjectNotFoundException when business object data attribute does not exist.");
             }
@@ -413,7 +408,7 @@ public class BusinessObjectDataAttributeRestControllerTest extends AbstractRestT
                 assertEquals(String.format("Attribute with name \"%s\" does not exist for business object data {namespace: \"%s\", " +
                     "businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", businessObjectFormatFileType: \"%s\", " +
                     "businessObjectFormatVersion: %d, businessObjectDataPartitionValue: \"%s\", businessObjectDataSubPartitionValues: \"%s\", " +
-                    "businessObjectDataVersion: %d}.", ATTRIBUTE_NAME_1_MIXED_CASE, NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+                    "businessObjectDataVersion: %d}.", ATTRIBUTE_NAME_1_MIXED_CASE, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
                     FORMAT_VERSION, PARTITION_VALUE, StringUtils.join(subPartitionValues, ","), DATA_VERSION), e.getMessage());
             }
         }

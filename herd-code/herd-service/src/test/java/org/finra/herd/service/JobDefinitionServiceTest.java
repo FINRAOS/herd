@@ -18,24 +18,32 @@ package org.finra.herd.service;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.activiti.bpmn.model.BpmnModel;
+import org.activiti.bpmn.model.EndEvent;
+import org.activiti.bpmn.model.Process;
+import org.activiti.bpmn.model.ScriptTask;
+import org.activiti.bpmn.model.SequenceFlow;
+import org.activiti.bpmn.model.StartEvent;
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
+import org.finra.herd.dao.helper.HerdDaoSecurityHelper;
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.ObjectNotFoundException;
-import org.finra.herd.model.jpa.JobDefinitionEntity;
 import org.finra.herd.model.api.xml.JobDefinition;
 import org.finra.herd.model.api.xml.JobDefinitionCreateRequest;
 import org.finra.herd.model.api.xml.JobDefinitionUpdateRequest;
 import org.finra.herd.model.api.xml.Parameter;
 import org.finra.herd.model.api.xml.S3PropertiesLocation;
+import org.finra.herd.model.jpa.JobDefinitionEntity;
 
 /**
  * This class tests functionality within the JobDefinitionService.
@@ -69,7 +77,7 @@ public class JobDefinitionServiceTest extends AbstractServiceTest
         request.setJobName(invalidJobName);
 
         // The following method is expected to throw an IllegalArgumentException.
-        jobDefinitionService.createJobDefinition(request);
+        jobDefinitionService.createJobDefinition(request, false);
     }
 
     /**
@@ -82,7 +90,7 @@ public class JobDefinitionServiceTest extends AbstractServiceTest
         JobDefinitionCreateRequest request = createJobDefinitionCreateRequest();
 
         // Following method must throw ObjectNotFoundException, as the namespace entity ${TEST_ACTIVITI_NAMESPACE_CD} does not exist.
-        jobDefinitionService.createJobDefinition(request);
+        jobDefinitionService.createJobDefinition(request, false);
     }
 
     /**
@@ -96,11 +104,11 @@ public class JobDefinitionServiceTest extends AbstractServiceTest
 
         // Create and persist a valid job definition.
         JobDefinitionCreateRequest request = createJobDefinitionCreateRequest();
-        jobDefinitionService.createJobDefinition(request);
+        jobDefinitionService.createJobDefinition(request, false);
 
         // Create the same request again which is an invalid operation, as the workflow exists.
         // Following must throw AlreadyExistsException
-        jobDefinitionService.createJobDefinition(request);
+        jobDefinitionService.createJobDefinition(request, false);
     }
 
     /**
@@ -123,7 +131,7 @@ public class JobDefinitionServiceTest extends AbstractServiceTest
         request.setActivitiJobXml(IOUtils.toString(xmlStream).replaceAll("startEvent", ""));
 
         // Try creating the job definition and this must throw XMLException.
-        jobDefinitionService.createJobDefinition(request);
+        jobDefinitionService.createJobDefinition(request, false);
     }
 
     /**
@@ -147,7 +155,7 @@ public class JobDefinitionServiceTest extends AbstractServiceTest
         request.setParameters(parameterEntities);
 
         // Try creating the job definition.
-        jobDefinitionService.createJobDefinition(request);
+        jobDefinitionService.createJobDefinition(request, false);
     }
 
     /**
@@ -165,7 +173,7 @@ public class JobDefinitionServiceTest extends AbstractServiceTest
         request.setParameters(null);
 
         // Try creating the job definition.
-        jobDefinitionService.createJobDefinition(request);
+        jobDefinitionService.createJobDefinition(request, false);
     }
 
     /**
@@ -190,12 +198,12 @@ public class JobDefinitionServiceTest extends AbstractServiceTest
         request.setActivitiJobXml(IOUtils.toString(xmlStream).replaceAll("serviceTask", "invalidActivitiTask"));
 
         // Try creating the job definition and the Activiti layer mush throw an exception.
-        jobDefinitionService.createJobDefinition(request);
+        jobDefinitionService.createJobDefinition(request, false);
     }
 
     /**
      * Asserts that when a job definition is created using {@link S3PropertiesLocation}, the S3 location information is persisted.
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -208,7 +216,7 @@ public class JobDefinitionServiceTest extends AbstractServiceTest
         JobDefinitionCreateRequest request = createJobDefinitionCreateRequest();
         request.setS3PropertiesLocation(s3PropertiesLocation);
 
-        JobDefinition jobDefinition = jobDefinitionService.createJobDefinition(request);
+        JobDefinition jobDefinition = jobDefinitionService.createJobDefinition(request, false);
 
         Assert.assertEquals("jobDefinition s3PropertiesLocation", request.getS3PropertiesLocation(), jobDefinition.getS3PropertiesLocation());
 
@@ -221,7 +229,7 @@ public class JobDefinitionServiceTest extends AbstractServiceTest
 
     /**
      * Asserts that if {@link S3PropertiesLocation} is given, bucket name is required.
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -235,7 +243,7 @@ public class JobDefinitionServiceTest extends AbstractServiceTest
 
     /**
      * Asserts that if {@link S3PropertiesLocation} is given, key is required.
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -286,21 +294,19 @@ public class JobDefinitionServiceTest extends AbstractServiceTest
         createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
 
         // Create the job definition in the database.
-        jobDefinitionService.createJobDefinition(createRequest);
+        JobDefinition jobDefinition = jobDefinitionService.createJobDefinition(createRequest, false);
 
         // Create an update request with a varied set of data that is based on the same data used in the create request.
         JobDefinitionUpdateRequest updateRequest = createUpdateRequest(createRequest);
 
         // Update the job definition in the database.
-        JobDefinition jobDefinition = jobDefinitionService.updateJobDefinition(createRequest.getNamespace(), createRequest.getJobName(), updateRequest);
+        JobDefinition updatedJobDefinition =
+            jobDefinitionService.updateJobDefinition(createRequest.getNamespace(), createRequest.getJobName(), updateRequest, false);
 
         // Validate the updated job definition.
-        assertNotNull(jobDefinition);
-        assertEquals(createRequest.getNamespace(), jobDefinition.getNamespace());
-        assertEquals(createRequest.getJobName(), jobDefinition.getJobName());
-        assertEquals(updateRequest.getDescription(), jobDefinition.getDescription());
-        assertEquals(updateRequest.getParameters(), jobDefinition.getParameters());
-        assertTrue(jobDefinition.getActivitiJobXml().contains("Unit Test 2"));
+        assertEquals(new JobDefinition(jobDefinition.getId(), jobDefinition.getNamespace(), jobDefinition.getJobName(), updateRequest.getDescription(),
+            updateRequest.getActivitiJobXml(), updateRequest.getParameters(), jobDefinition.getS3PropertiesLocation(), HerdDaoSecurityHelper.SYSTEM_USER),
+            updatedJobDefinition);
     }
 
     @Test(expected = ObjectNotFoundException.class)
@@ -314,7 +320,7 @@ public class JobDefinitionServiceTest extends AbstractServiceTest
             updateRequest.getActivitiJobXml().replace(TEST_ACTIVITI_NAMESPACE_CD + "." + TEST_ACTIVITI_JOB_NAME, INVALID_NAME + "." + INVALID_NAME));
 
         // Try to update a job definition that has a namespace that doesn't exist.
-        jobDefinitionService.updateJobDefinition(INVALID_NAME, INVALID_NAME, updateRequest);
+        jobDefinitionService.updateJobDefinition(INVALID_NAME, INVALID_NAME, updateRequest, false);
     }
 
     @Test(expected = ObjectNotFoundException.class)
@@ -331,7 +337,7 @@ public class JobDefinitionServiceTest extends AbstractServiceTest
         createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
 
         // Try to update a job definition that has a namespace that exists, but a job name that doesn't exist.
-        jobDefinitionService.updateJobDefinition(TEST_ACTIVITI_NAMESPACE_CD, INVALID_NAME, updateRequest);
+        jobDefinitionService.updateJobDefinition(TEST_ACTIVITI_NAMESPACE_CD, INVALID_NAME, updateRequest, false);
     }
 
     @Test
@@ -346,17 +352,22 @@ public class JobDefinitionServiceTest extends AbstractServiceTest
         JobDefinitionCreateRequest createRequest = createJobDefinitionCreateRequest();
 
         // Create the job definition in the database.
-        jobDefinitionService.createJobDefinition(createRequest);
+        JobDefinition jobDefinition = jobDefinitionService.createJobDefinition(createRequest, false);
 
         // Create an update request with a varied set of data that is based on the same data used in the create request.
         JobDefinitionUpdateRequest updateRequest = createUpdateRequest(createRequest);
         updateRequest.setS3PropertiesLocation(s3PropertiesLocation);
 
         // Update the job definition in the database.
-        JobDefinition updatedJobDefinition = jobDefinitionService.updateJobDefinition(createRequest.getNamespace(), createRequest.getJobName(), updateRequest);
+        JobDefinition updatedJobDefinition =
+            jobDefinitionService.updateJobDefinition(createRequest.getNamespace(), createRequest.getJobName(), updateRequest, false);
         JobDefinitionEntity updatedJobDefinitionEntity = herdDao.findById(JobDefinitionEntity.class, updatedJobDefinition.getId());
 
-        Assert.assertEquals("updatedJobDefinition s3PropertiesLocation", s3PropertiesLocation, updatedJobDefinition.getS3PropertiesLocation());
+        // Validate the updated job definition.
+        assertEquals(new JobDefinition(jobDefinition.getId(), jobDefinition.getNamespace(), jobDefinition.getJobName(), updateRequest.getDescription(),
+            updateRequest.getActivitiJobXml(), updateRequest.getParameters(), s3PropertiesLocation, HerdDaoSecurityHelper.SYSTEM_USER), updatedJobDefinition);
+
+        // Validate the updated job definition entity.
         Assert.assertEquals("updatedJobDefinitionEntity s3BucketName", s3PropertiesLocation.getBucketName(), updatedJobDefinitionEntity.getS3BucketName());
         Assert.assertEquals("updatedJobDefinitionEntity s3ObjectKey", s3PropertiesLocation.getKey(), updatedJobDefinitionEntity.getS3ObjectKey());
     }
@@ -374,18 +385,191 @@ public class JobDefinitionServiceTest extends AbstractServiceTest
         createRequest.setS3PropertiesLocation(s3PropertiesLocation);
 
         // Create the job definition in the database.
-        jobDefinitionService.createJobDefinition(createRequest);
+        JobDefinition jobDefinition = jobDefinitionService.createJobDefinition(createRequest, false);
 
         // Create an update request with a varied set of data that is based on the same data used in the create request.
         JobDefinitionUpdateRequest updateRequest = createUpdateRequest(createRequest);
 
         // Update the job definition in the database.
-        JobDefinition updatedJobDefinition = jobDefinitionService.updateJobDefinition(createRequest.getNamespace(), createRequest.getJobName(), updateRequest);
+        JobDefinition updatedJobDefinition =
+            jobDefinitionService.updateJobDefinition(createRequest.getNamespace(), createRequest.getJobName(), updateRequest, false);
         JobDefinitionEntity updatedJobDefinitionEntity = herdDao.findById(JobDefinitionEntity.class, updatedJobDefinition.getId());
 
-        Assert.assertNull("updatedJobDefinition s3PropertiesLocation", updatedJobDefinition.getS3PropertiesLocation());
+        // Validate the updated job definition.
+        assertEquals(new JobDefinition(jobDefinition.getId(), jobDefinition.getNamespace(), jobDefinition.getJobName(), updateRequest.getDescription(),
+            updateRequest.getActivitiJobXml(), updateRequest.getParameters(), null, HerdDaoSecurityHelper.SYSTEM_USER), updatedJobDefinition);
+
+        // Validate the updated job definition entity.
         Assert.assertNull("updatedJobDefinitionEntity s3BucketName", updatedJobDefinitionEntity.getS3BucketName());
         Assert.assertNull("updatedJobDefinitionEntity s3ObjectKey", updatedJobDefinitionEntity.getS3ObjectKey());
+    }
+
+    /**
+     * Asserts that create job definition proceeds without exceptions when first task is set to async
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testCreateJobDefinitionAssertSuccessWhenFirstTaskAsync() throws Exception
+    {
+        String namespace = NAMESPACE;
+        String jobName = JOB_NAME;
+        BpmnModel bpmnModel = new BpmnModel();
+        Process process = new Process();
+        process.setId(namespace + '.' + jobName);
+        {
+            StartEvent element = new StartEvent();
+            element.setId("start");
+            process.addFlowElement(element);
+        }
+        {
+            ScriptTask element = new ScriptTask();
+            element.setId("script");
+            element.setScriptFormat("js");
+            element.setScript("// do nothing");
+            element.setAsynchronous(true);
+            process.addFlowElement(element);
+        }
+        {
+            EndEvent element = new EndEvent();
+            element.setId("end");
+            process.addFlowElement(element);
+        }
+        process.addFlowElement(new SequenceFlow("start", "script"));
+        process.addFlowElement(new SequenceFlow("script", "end"));
+        bpmnModel.addProcess(process);
+        String activitiJobXml = getActivitiXmlFromBpmnModel(bpmnModel);
+        createNamespaceEntity(namespace);
+
+        jobDefinitionService.createJobDefinition(new JobDefinitionCreateRequest(namespace, jobName, null, activitiJobXml, null, null), true);
+
+        // Assert no exceptions
+    }
+
+    /**
+     * Asserts that create job definition proceeds throws an exception when the first task is not async
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testCreateJobDefinitionAssertThrowErrorWhenFirstTaskNotAsync() throws Exception
+    {
+        String namespace = NAMESPACE;
+        String jobName = JOB_NAME;
+        BpmnModel bpmnModel = new BpmnModel();
+        Process process = new Process();
+        process.setId(namespace + '.' + jobName);
+        {
+            StartEvent element = new StartEvent();
+            element.setId("start");
+            process.addFlowElement(element);
+        }
+        {
+            ScriptTask element = new ScriptTask();
+            element.setId("script");
+            element.setScriptFormat("js");
+            element.setScript("// do nothing");
+            process.addFlowElement(element);
+        }
+        {
+            EndEvent element = new EndEvent();
+            element.setId("end");
+            process.addFlowElement(element);
+        }
+        process.addFlowElement(new SequenceFlow("start", "script"));
+        process.addFlowElement(new SequenceFlow("script", "end"));
+        bpmnModel.addProcess(process);
+        String activitiJobXml = getActivitiXmlFromBpmnModel(bpmnModel);
+        createNamespaceEntity(namespace);
+        try
+        {
+            jobDefinitionService.createJobDefinition(new JobDefinitionCreateRequest(namespace, jobName, null, activitiJobXml, null, null), true);
+            fail();
+        }
+        catch (Exception e)
+        {
+            assertEquals(IllegalArgumentException.class, e.getClass());
+            assertEquals("Element with id \"script\" must be set to activiti:async=true. All tasks which start the workflow must be asynchronous to prevent " +
+                "certain undesired transactional behavior, such as records of workflow not being saved on errors. Please refer to Activiti and herd " +
+                "documentations for details.", e.getMessage());
+        }
+    }
+
+    /**
+     * Asserts that create job definition proceeds without exceptions when first task does not support async (ex. events)
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testCreateJobDefinitionAssertSuccessWhenFirstTaskNotAsyncable() throws Exception
+    {
+        String namespace = NAMESPACE;
+        String jobName = JOB_NAME;
+        BpmnModel bpmnModel = new BpmnModel();
+        Process process = new Process();
+        process.setId(namespace + '.' + jobName);
+        {
+            StartEvent element = new StartEvent();
+            element.setId("start");
+            process.addFlowElement(element);
+        }
+        {
+            EndEvent element = new EndEvent();
+            element.setId("end");
+            process.addFlowElement(element);
+        }
+        process.addFlowElement(new SequenceFlow("start", "end"));
+        bpmnModel.addProcess(process);
+        String activitiJobXml = getActivitiXmlFromBpmnModel(bpmnModel);
+        createNamespaceEntity(namespace);
+
+        jobDefinitionService.createJobDefinition(new JobDefinitionCreateRequest(namespace, jobName, null, activitiJobXml, null, null), true);
+
+        // Assert no exceptions
+    }
+
+    /**
+     * Asserts that update job definition proceeds without exceptions when first task is set to async
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testUpdateJobDefinitionAssertSuccessWhenFirstTaskAsync() throws Exception
+    {
+        String namespace = NAMESPACE;
+        String jobName = JOB_NAME;
+        BpmnModel bpmnModel = new BpmnModel();
+        Process process = new Process();
+        process.setId(namespace + '.' + jobName);
+        {
+            StartEvent element = new StartEvent();
+            element.setId("start");
+            process.addFlowElement(element);
+        }
+        {
+            ScriptTask element = new ScriptTask();
+            element.setId("script");
+            element.setScriptFormat("js");
+            element.setScript("// do nothing");
+            element.setAsynchronous(true);
+            process.addFlowElement(element);
+        }
+        {
+            EndEvent element = new EndEvent();
+            element.setId("end");
+            process.addFlowElement(element);
+        }
+        process.addFlowElement(new SequenceFlow("start", "script"));
+        process.addFlowElement(new SequenceFlow("script", "end"));
+        bpmnModel.addProcess(process);
+        String activitiJobXml = getActivitiXmlFromBpmnModel(bpmnModel);
+        createNamespaceEntity(namespace);
+
+        jobDefinitionService.createJobDefinition(new JobDefinitionCreateRequest(namespace, jobName, null, activitiJobXml, null, null), true);
+
+        jobDefinitionService.updateJobDefinition(namespace, jobName, new JobDefinitionUpdateRequest(null, activitiJobXml, null, null), true);
+
+        // Assert no exceptions
     }
 
     /**
@@ -428,7 +612,7 @@ public class JobDefinitionServiceTest extends AbstractServiceTest
         JobDefinitionCreateRequest request = createJobDefinitionCreateRequest();
 
         // Create the job definition in the database.
-        JobDefinition jobDefinition = jobDefinitionService.createJobDefinition(request);
+        JobDefinition jobDefinition = jobDefinitionService.createJobDefinition(request, false);
 
         // Validate the created job definition.
         validateJobDefinition(jobDefinition);
@@ -453,6 +637,8 @@ public class JobDefinitionServiceTest extends AbstractServiceTest
         Parameter parameter = jobDefinition.getParameters().get(0);
         assertEquals(ATTRIBUTE_NAME_1_MIXED_CASE, parameter.getName());
         assertEquals(ATTRIBUTE_VALUE_1, parameter.getValue());
+
+        assertEquals(HerdDaoSecurityHelper.SYSTEM_USER, jobDefinition.getLastUpdatedByUserId());
     }
 
     private S3PropertiesLocation getS3PropertiesLocation()
@@ -465,7 +651,7 @@ public class JobDefinitionServiceTest extends AbstractServiceTest
 
     /**
      * Asserts that when a job definition is created with the given {@link S3PropertiesLocation}, then an exception of the given type and message is thrown.
-     * 
+     *
      * @param s3PropertiesLocation {@link S3PropertiesLocation}
      * @param exceptionType expected exception type
      * @param exceptionMessage expected exception message
@@ -480,7 +666,7 @@ public class JobDefinitionServiceTest extends AbstractServiceTest
 
         try
         {
-            jobDefinitionService.createJobDefinition(request);
+            jobDefinitionService.createJobDefinition(request, false);
             Assert.fail("expected " + exceptionType + ", but no exception was thrown");
         }
         catch (Exception e)

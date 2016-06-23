@@ -19,26 +19,33 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.JobCreateRequest;
 import org.finra.herd.model.api.xml.Parameter;
 import org.finra.herd.model.dto.BusinessObjectDataNotificationEventParamsDto;
 import org.finra.herd.model.dto.NotificationEventParamsDto;
+import org.finra.herd.model.jpa.BusinessObjectDataNotificationRegistrationEntity;
 import org.finra.herd.model.jpa.JobDefinitionEntity;
 import org.finra.herd.model.jpa.NotificationEventTypeEntity;
 import org.finra.herd.model.jpa.NotificationJobActionEntity;
 import org.finra.herd.model.jpa.NotificationTypeEntity;
 import org.finra.herd.service.JobService;
-import org.finra.herd.service.helper.HerdHelper;
+import org.finra.herd.service.helper.BusinessObjectDataHelper;
+import org.finra.herd.service.helper.NotificationRegistrationHelper;
 
 /**
  * The abstract class for business object data notification job action service.
  */
 public abstract class BusinessObjectDataNotificationJobActionServiceImpl extends NotificationActionServiceImpl
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BusinessObjectDataNotificationJobActionServiceImpl.class);
+
     /**
      * The parameters that are sent along with the notification.
      */
@@ -57,10 +64,16 @@ public abstract class BusinessObjectDataNotificationJobActionServiceImpl extends
     private static final String PARAM_OLD_BUSINESS_OBJECT_DATA_STATUS = "notification_oldBusinessObjectDataStatus";
 
     @Autowired
+    private HerdStringHelper herdStringHelper;
+
+    @Autowired
     private JobService jobService;
 
     @Autowired
-    protected JsonHelper jsonHelper;
+    private JsonHelper jsonHelper;
+
+    @Autowired
+    private NotificationRegistrationHelper notificationRegistrationHelper;
 
     protected BusinessObjectDataNotificationJobActionServiceImpl()
     {
@@ -94,7 +107,20 @@ public abstract class BusinessObjectDataNotificationJobActionServiceImpl extends
             request.setJobName(jobDefinitionEntity.getName());
             request.setParameters(buildJobParameters(businessObjectDataNotificationEventParams));
 
-            return jobService.createAndStartJob(request, true);
+            /*
+             * Log enough information so we can trace back what notification registration triggered what workflow.
+             * This also allows us to reproduce the workflow execution if needed by logging the entire jobCreateRequest in JSON format.
+             */
+            if (LOGGER.isInfoEnabled())
+            {
+                BusinessObjectDataNotificationRegistrationEntity businessObjectDataNotificationRegistration =
+                    businessObjectDataNotificationEventParams.getBusinessObjectDataNotificationRegistration();
+                LOGGER.info("Starting a job due to a notification. notificationRegistrationKey={} jobCreateRequest={}",
+                    jsonHelper.objectToJson(notificationRegistrationHelper.getNotificationRegistrationKey(businessObjectDataNotificationRegistration)),
+                    jsonHelper.objectToJson(request));
+            }
+
+            return jobService.createAndStartJob(request);
         }
         else
         {
@@ -104,7 +130,7 @@ public abstract class BusinessObjectDataNotificationJobActionServiceImpl extends
     }
 
     @Override
-    public String getIdentifyingInformation(NotificationEventParamsDto notificationEventParams, HerdHelper herdHelper)
+    public String getIdentifyingInformation(NotificationEventParamsDto notificationEventParams, BusinessObjectDataHelper businessObjectDataHelper)
     {
         if (notificationEventParams instanceof BusinessObjectDataNotificationEventParamsDto)
         {
@@ -112,8 +138,8 @@ public abstract class BusinessObjectDataNotificationJobActionServiceImpl extends
                 (BusinessObjectDataNotificationEventParamsDto) notificationEventParams;
 
             return String.format("namespace: \"%s\", actionId: \"%s\" with " +
-                herdHelper
-                    .businessObjectDataKeyToString(herdHelper.getBusinessObjectDataKey(businessObjectDataNotificationEventParams.getBusinessObjectData())) +
+                businessObjectDataHelper.businessObjectDataKeyToString(
+                    businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataNotificationEventParams.getBusinessObjectData())) +
                 ", storageName: \"%s\"", businessObjectDataNotificationEventParams.getBusinessObjectDataNotificationRegistration().getNamespace().getCode(),
                 businessObjectDataNotificationEventParams.getNotificationJobAction().getId(), businessObjectDataNotificationEventParams.getStorageName());
         }
@@ -144,9 +170,9 @@ public abstract class BusinessObjectDataNotificationJobActionServiceImpl extends
         parameters.add(new Parameter(PARAM_BUSINESS_OBJECT_FORMAT_FILE_TYPE, businessObjectData.getBusinessObjectFormatFileType()));
         parameters.add(new Parameter(PARAM_BUSINESS_OBJECT_FORMAT_VERSION, Integer.toString(businessObjectData.getBusinessObjectFormatVersion())));
         parameters.add(new Parameter(PARAM_PARTITION_COLUMN_NAMES,
-            herdHelper.buildStringWithDefaultDelimiter(businessObjectDataNotificationEventParams.getPartitionColumnNames())));
-        parameters.add(
-            new Parameter(PARAM_PARTITION_VALUES, herdHelper.buildStringWithDefaultDelimiter(businessObjectDataNotificationEventParams.getPartitionValues())));
+            herdStringHelper.buildStringWithDefaultDelimiter(businessObjectDataNotificationEventParams.getPartitionColumnNames())));
+        parameters.add(new Parameter(PARAM_PARTITION_VALUES,
+            herdStringHelper.buildStringWithDefaultDelimiter(businessObjectDataNotificationEventParams.getPartitionValues())));
         parameters.add(new Parameter(PARAM_BUSINESS_OBJECT_DATA_VERSION, Integer.toString(businessObjectData.getVersion())));
         parameters.add(new Parameter(PARAM_NEW_BUSINESS_OBJECT_DATA_STATUS, businessObjectDataNotificationEventParams.getNewBusinessObjectDataStatus()));
         parameters.add(new Parameter(PARAM_OLD_BUSINESS_OBJECT_DATA_STATUS, businessObjectDataNotificationEventParams.getOldBusinessObjectDataStatus()));

@@ -41,15 +41,15 @@ import org.springframework.test.context.ContextConfiguration;
 
 import org.finra.herd.core.AbstractCoreTest;
 import org.finra.herd.core.Command;
+import org.finra.herd.dao.helper.XmlHelper;
+import org.finra.herd.model.api.xml.Attribute;
+import org.finra.herd.model.api.xml.BusinessObjectData;
+import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.dto.ManifestFile;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.dto.S3FileTransferResultsDto;
 import org.finra.herd.model.dto.UploaderInputManifestDto;
 import org.finra.herd.model.jpa.StorageEntity;
-import org.finra.herd.model.api.xml.Attribute;
-import org.finra.herd.model.api.xml.BusinessObjectData;
-import org.finra.herd.model.api.xml.BusinessObjectDataKey;
-import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.service.S3Service;
 import org.finra.herd.tools.common.config.DataBridgeTestSpringModuleConfig;
 
@@ -142,6 +142,9 @@ public abstract class AbstractDataBridgeTest extends AbstractCoreTest
      */
     @Autowired
     protected S3Service s3Service;
+
+    @Autowired
+    protected XmlHelper xmlHelper;
 
     /**
      * Sets up the test environment.
@@ -460,8 +463,7 @@ public abstract class AbstractDataBridgeTest extends AbstractCoreTest
         s3FileTransferRequestParamsDto.setS3KeyPrefix(s3KeyPrefixWithTrailingSlash);
 
         // Validate the uploaded S3 files and created directory markers, if any.
-        List<StorageFile> actualS3Files = s3Service.listDirectory(s3FileTransferRequestParamsDto);
-        assertEquals(manifestFiles.size() + directoryPaths.size(), actualS3Files.size());
+        assertEquals(manifestFiles.size() + directoryPaths.size(), s3Service.listDirectory(s3FileTransferRequestParamsDto).size());
     }
 
     /**

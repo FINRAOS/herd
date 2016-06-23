@@ -17,6 +17,7 @@ package org.finra.herd.service.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
@@ -35,18 +36,26 @@ public class StoragePolicyProcessorServiceImpl implements StoragePolicyProcessor
     @Autowired
     private StoragePolicyProcessorHelperService storagePolicyProcessorHelperService;
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public void processStoragePolicySelectionMessage(StoragePolicySelection storagePolicySelection) throws InterruptedException
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public void processStoragePolicySelectionMessage(StoragePolicySelection storagePolicySelection)
+    {
+        processStoragePolicySelectionMessageImpl(storagePolicySelection);
+    }
+
+    /**
+     * Performs a storage policy transition as specified by the storage policy selection message.
+     *
+     * @param storagePolicySelection the storage policy selection message
+     */
+    protected void processStoragePolicySelectionMessageImpl(StoragePolicySelection storagePolicySelection)
     {
         // Initiate the storage policy transition.
         StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto =
             storagePolicyProcessorHelperService.initiateStoragePolicyTransition(storagePolicySelection);
 
         // Execute the actual data transfer using the DAO tier.
-        storagePolicyTransitionParamsDto = storagePolicyProcessorHelperService.executeStoragePolicyTransition(storagePolicyTransitionParamsDto);
+        storagePolicyProcessorHelperService.executeStoragePolicyTransition(storagePolicyTransitionParamsDto);
 
         // Complete the storage policy transition.
         storagePolicyProcessorHelperService.completeStoragePolicyTransition(storagePolicyTransitionParamsDto);

@@ -24,22 +24,18 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 
-import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataVersions;
-import org.finra.herd.service.helper.HerdDaoHelper;
+import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 
 /**
  * This class tests get business object data versions functionality within the business object data REST controller.
  */
 public class BusinessObjectDataServiceGetBusinessObjectDataVersionsTest extends AbstractServiceTest
 {
-    @Autowired
-    HerdDaoHelper herdDaoHelper;
-
     private static final int NUMBER_OF_FORMAT_VERSIONS = 2;
+
     private static final int NUMBER_OF_DATA_VERSIONS_PER_FORMAT_VERSION = 3;
 
     @Test
@@ -55,13 +51,13 @@ public class BusinessObjectDataServiceGetBusinessObjectDataVersionsTest extends 
                 businessObjectDataVersion++)
             {
                 BusinessObjectDataVersions businessObjectDataVersions = businessObjectDataService.getBusinessObjectDataVersions(
-                    new BusinessObjectDataKey(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, businessObjectFormatVersion, PARTITION_VALUE,
+                    new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, businessObjectFormatVersion, PARTITION_VALUE,
                         SUBPARTITION_VALUES, businessObjectDataVersion));
 
                 // Validate the returned object.
                 assertNotNull(businessObjectDataVersions);
                 assertEquals(1, businessObjectDataVersions.getBusinessObjectDataVersions().size());
-                validateBusinessObjectDataKey(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, businessObjectFormatVersion, PARTITION_VALUE,
+                validateBusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, businessObjectFormatVersion, PARTITION_VALUE,
                     SUBPARTITION_VALUES, businessObjectDataVersion,
                     businessObjectDataVersions.getBusinessObjectDataVersions().get(0).getBusinessObjectDataKey());
                 assertEquals(BDATA_STATUS, businessObjectDataVersions.getBusinessObjectDataVersions().get(0).getStatus());
@@ -76,7 +72,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataVersionsTest extends 
         try
         {
             businessObjectDataService.getBusinessObjectDataVersions(
-                new BusinessObjectDataKey(BLANK_TEXT, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                new BusinessObjectDataKey(BLANK_TEXT, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                     DATA_VERSION));
             fail("Should throw an IllegalArgumentException when namespace is not specified.");
         }
@@ -89,8 +85,8 @@ public class BusinessObjectDataServiceGetBusinessObjectDataVersionsTest extends 
         try
         {
             businessObjectDataService.getBusinessObjectDataVersions(
-                new BusinessObjectDataKey(NAMESPACE_CD, BLANK_TEXT, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                    SUBPARTITION_VALUES, DATA_VERSION));
+                new BusinessObjectDataKey(NAMESPACE, BLANK_TEXT, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                    DATA_VERSION));
             fail("Should throw an IllegalArgumentException when business object definition name is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -102,7 +98,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataVersionsTest extends 
         try
         {
             businessObjectDataService.getBusinessObjectDataVersions(
-                new BusinessObjectDataKey(NAMESPACE_CD, BOD_NAME, BLANK_TEXT, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, BLANK_TEXT, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                     DATA_VERSION));
             fail("Should throw an IllegalArgumentException when business object format usage is not specified.");
         }
@@ -115,7 +111,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataVersionsTest extends 
         try
         {
             businessObjectDataService.getBusinessObjectDataVersions(
-                new BusinessObjectDataKey(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, BLANK_TEXT, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, BLANK_TEXT, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                     DATA_VERSION));
             fail("Should throw an IllegalArgumentException when business object format file type is not specified.");
         }
@@ -128,7 +124,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataVersionsTest extends 
         try
         {
             businessObjectDataService.getBusinessObjectDataVersions(
-                new BusinessObjectDataKey(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, BLANK_TEXT, SUBPARTITION_VALUES,
+                new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, BLANK_TEXT, SUBPARTITION_VALUES,
                     DATA_VERSION));
             fail("Should throw an IllegalArgumentException when partition value is not specified.");
         }
@@ -141,7 +137,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataVersionsTest extends 
         try
         {
             businessObjectDataService.getBusinessObjectDataVersions(
-                new BusinessObjectDataKey(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                     Arrays.asList(BLANK_TEXT), DATA_VERSION));
             fail("Should throw an IllegalArgumentException when subpartition value is not specified.");
         }
@@ -159,7 +155,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataVersionsTest extends 
 
         // Retrieve business object data versions without specifying any of the optional parameters including the subpartition values.
         BusinessObjectDataVersions resultBusinessObjectDataVersions = businessObjectDataService.getBusinessObjectDataVersions(
-            new BusinessObjectDataKey(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null, PARTITION_VALUE, null, null));
+            new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null, PARTITION_VALUE, null, null));
 
         // Validate the returned object.
         assertNotNull(resultBusinessObjectDataVersions);
@@ -175,7 +171,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataVersionsTest extends 
 
         // Retrieve business object data versions without specifying business object format version.
         BusinessObjectDataVersions resultBusinessObjectDataVersions = businessObjectDataService.getBusinessObjectDataVersions(
-            new BusinessObjectDataKey(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null, PARTITION_VALUE, SUBPARTITION_VALUES,
+            new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null, PARTITION_VALUE, SUBPARTITION_VALUES,
                 INITIAL_DATA_VERSION));
 
         // Validate the returned object.
@@ -191,7 +187,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataVersionsTest extends 
 
         // Retrieve business object data versions without specifying business object data version.
         BusinessObjectDataVersions resultBusinessObjectDataVersions = businessObjectDataService.getBusinessObjectDataVersions(
-            new BusinessObjectDataKey(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+            new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, null));
 
         // Validate the returned object.
@@ -207,7 +203,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataVersionsTest extends 
 
         // Retrieve the business object data versions using input parameters with leading and trailing empty spaces.
         BusinessObjectDataVersions resultBusinessObjectDataVersions = businessObjectDataService.getBusinessObjectDataVersions(
-            new BusinessObjectDataKey(addWhitespace(NAMESPACE_CD), addWhitespace(BOD_NAME), addWhitespace(FORMAT_USAGE_CODE),
+            new BusinessObjectDataKey(addWhitespace(NAMESPACE), addWhitespace(BDEF_NAME), addWhitespace(FORMAT_USAGE_CODE),
                 addWhitespace(FORMAT_FILE_TYPE_CODE), INITIAL_FORMAT_VERSION, addWhitespace(PARTITION_VALUE), addWhitespace(SUBPARTITION_VALUES),
                 INITIAL_DATA_VERSION));
 
@@ -224,7 +220,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataVersionsTest extends 
 
         // Retrieve business object data versions using upper case input parameters (except for case-sensitive partition values).
         BusinessObjectDataVersions resultBusinessObjectDataVersions = businessObjectDataService.getBusinessObjectDataVersions(
-            new BusinessObjectDataKey(NAMESPACE_CD.toUpperCase(), BOD_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(), FORMAT_FILE_TYPE_CODE.toUpperCase(),
+            new BusinessObjectDataKey(NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(), FORMAT_FILE_TYPE_CODE.toUpperCase(),
                 INITIAL_FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, INITIAL_DATA_VERSION));
 
         // Validate the returned object.
@@ -240,7 +236,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataVersionsTest extends 
 
         // Retrieve business object data versions using lower case input parameters (except for case-sensitive partition values).
         BusinessObjectDataVersions resultBusinessObjectDataVersions = businessObjectDataService.getBusinessObjectDataVersions(
-            new BusinessObjectDataKey(NAMESPACE_CD.toLowerCase(), BOD_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(), FORMAT_FILE_TYPE_CODE.toLowerCase(),
+            new BusinessObjectDataKey(NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(), FORMAT_FILE_TYPE_CODE.toLowerCase(),
                 INITIAL_FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, INITIAL_DATA_VERSION));
 
         // Validate the returned object.
@@ -256,7 +252,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataVersionsTest extends 
 
         // Validate that we can retrieve all business object data versions.
         BusinessObjectDataVersions resultBusinessObjectDataVersions = businessObjectDataService.getBusinessObjectDataVersions(
-            new BusinessObjectDataKey(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+            new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, INITIAL_DATA_VERSION));
 
         // Validate the returned object.
@@ -265,7 +261,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataVersionsTest extends 
 
         // Try to get business object data versions using invalid namespace.
         resultBusinessObjectDataVersions = businessObjectDataService.getBusinessObjectDataVersions(
-            new BusinessObjectDataKey("I_DO_NOT_EXIST", BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+            new BusinessObjectDataKey("I_DO_NOT_EXIST", BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, INITIAL_DATA_VERSION));
 
         // Validate the returned object.
@@ -274,7 +270,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataVersionsTest extends 
 
         // Try to get business object data versions using invalid business object definition name.
         resultBusinessObjectDataVersions = businessObjectDataService.getBusinessObjectDataVersions(
-            new BusinessObjectDataKey(NAMESPACE_CD, "I_DO_NOT_EXIST", FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+            new BusinessObjectDataKey(NAMESPACE, "I_DO_NOT_EXIST", FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, INITIAL_DATA_VERSION));
 
         // Validate the returned object.
@@ -283,7 +279,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataVersionsTest extends 
 
         // Try to get business object data versions using invalid format usage.        
         resultBusinessObjectDataVersions = businessObjectDataService.getBusinessObjectDataVersions(
-            new BusinessObjectDataKey(NAMESPACE_CD, BOD_NAME, "I_DO_NOT_EXIST", FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+            new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, "I_DO_NOT_EXIST", FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, INITIAL_DATA_VERSION));
 
         // Validate the returned object.
@@ -292,7 +288,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataVersionsTest extends 
 
         // Try to get business object data versions using invalid format file type.
         resultBusinessObjectDataVersions = businessObjectDataService.getBusinessObjectDataVersions(
-            new BusinessObjectDataKey(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, "I_DO_NOT_EXIST", INITIAL_FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+            new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, "I_DO_NOT_EXIST", INITIAL_FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 INITIAL_DATA_VERSION));
 
         // Validate the returned object.
@@ -301,7 +297,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataVersionsTest extends 
 
         // Try to get business object data versions using invalid partition value.
         resultBusinessObjectDataVersions = businessObjectDataService.getBusinessObjectDataVersions(
-            new BusinessObjectDataKey(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, "I_DO_NOT_EXIST",
+            new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, "I_DO_NOT_EXIST",
                 SUBPARTITION_VALUES, INITIAL_DATA_VERSION));
 
         // Validate the returned object.
@@ -314,7 +310,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataVersionsTest extends 
             List<String> testSubPartitionValues = new ArrayList<>(SUBPARTITION_VALUES);
             testSubPartitionValues.set(i, "I_DO_NOT_EXIST");
             resultBusinessObjectDataVersions = businessObjectDataService.getBusinessObjectDataVersions(
-                new BusinessObjectDataKey(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+                new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
                     testSubPartitionValues, INITIAL_DATA_VERSION));
 
             // Validate the returned object.
@@ -329,7 +325,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataVersionsTest extends 
             List<String> testSubPartitionValues = new ArrayList<>(SUBPARTITION_VALUES);
             testSubPartitionValues.add("EXTRA_SUBPARTITION_VALUE");
             businessObjectDataService.getBusinessObjectDataVersions(
-                new BusinessObjectDataKey(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+                new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
                     testSubPartitionValues, INITIAL_DATA_VERSION));
             fail("Should throw an IllegalArgumentException when passing too many subpartition values.");
         }
@@ -340,7 +336,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataVersionsTest extends 
 
         // Try to get business object data versions using invalid business object format version.
         resultBusinessObjectDataVersions = businessObjectDataService.getBusinessObjectDataVersions(
-            new BusinessObjectDataKey(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INVALID_FORMAT_VERSION, PARTITION_VALUE,
+            new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INVALID_FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, INITIAL_DATA_VERSION));
 
         // Validate the returned object.
@@ -349,7 +345,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataVersionsTest extends 
 
         // Try to get business object data versions using invalid business object data version.
         resultBusinessObjectDataVersions = businessObjectDataService.getBusinessObjectDataVersions(
-            new BusinessObjectDataKey(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+            new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, INVALID_DATA_VERSION));
 
         // Validate the returned object.
@@ -364,13 +360,13 @@ public class BusinessObjectDataServiceGetBusinessObjectDataVersionsTest extends 
     {
         for (int businessObjectFormatVersion = INITIAL_FORMAT_VERSION; businessObjectFormatVersion < NUMBER_OF_FORMAT_VERSIONS; businessObjectFormatVersion++)
         {
-            createBusinessObjectFormatEntity(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, businessObjectFormatVersion, FORMAT_DESCRIPTION,
+            createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, businessObjectFormatVersion, FORMAT_DESCRIPTION,
                 businessObjectFormatVersion == SECOND_FORMAT_VERSION, PARTITION_KEY);
 
             for (int businessObjectDataVersion = INITIAL_DATA_VERSION; businessObjectDataVersion < NUMBER_OF_DATA_VERSIONS_PER_FORMAT_VERSION;
                 businessObjectDataVersion++)
             {
-                createBusinessObjectDataEntity(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, businessObjectFormatVersion, PARTITION_VALUE,
+                createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, businessObjectFormatVersion, PARTITION_VALUE,
                     subPartitionValues, businessObjectDataVersion, businessObjectDataVersion == SECOND_DATA_VERSION, BDATA_STATUS);
             }
         }

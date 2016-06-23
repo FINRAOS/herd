@@ -20,7 +20,8 @@ import java.util.Map;
 import org.activiti.engine.delegate.DelegateExecution;
 import org.activiti.engine.delegate.Expression;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 /**
@@ -30,7 +31,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class LogVariables extends BaseJavaDelegate
 {
-    private static final Logger LOGGER = Logger.getLogger(LogVariables.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(LogVariables.class);
 
     /**
      * A regular expression that determines whether a process variable will be logged. This should be defined in the workflow as a field. For example:
@@ -56,8 +57,8 @@ public class LogVariables extends BaseJavaDelegate
             // If a REGEX wasn't specified or if the variable key matches the REGEX, log the variable. Otherwise, skip it.
             if (StringUtils.isBlank(regexValue) || variableEntry.getKey().matches(regexValue))
             {
-                LOGGER.info(activitiHelper.getProcessIdentifyingInformation(execution) + " Process Variable \"" + variableEntry.getKey() + "\"=\"" +
-                    variableEntry.getValue() + "\"");
+                LOGGER.info("{} Process Variable {}=\"{}\"", activitiHelper.getProcessIdentifyingInformation(execution), variableEntry.getKey(),
+                    variableEntry.getValue());
             }
         }
     }

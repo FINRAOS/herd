@@ -23,10 +23,10 @@ import static org.junit.Assert.fail;
 import org.junit.Test;
 
 import org.finra.herd.model.AlreadyExistsException;
-import org.finra.herd.model.jpa.PartitionKeyGroupEntity;
 import org.finra.herd.model.api.xml.PartitionKeyGroup;
 import org.finra.herd.model.api.xml.PartitionKeyGroupKey;
 import org.finra.herd.model.api.xml.PartitionKeyGroupKeys;
+import org.finra.herd.model.jpa.PartitionKeyGroupEntity;
 
 /**
  * This class tests various functionality within the partition key group REST controller.
@@ -169,7 +169,7 @@ public class PartitionKeyGroupServiceTest extends AbstractServiceTest
         validatePartitionKeyGroup(PARTITION_KEY_GROUP, deletedPartitionKeyGroup);
 
         // Ensure that this partition key group is no longer there.
-        assertNull(herdDao.getPartitionKeyGroupByKey(createPartitionKeyGroupKey(PARTITION_KEY_GROUP)));
+        assertNull(partitionKeyGroupDao.getPartitionKeyGroupByKey(createPartitionKeyGroupKey(PARTITION_KEY_GROUP)));
     }
 
     @Test
@@ -204,7 +204,7 @@ public class PartitionKeyGroupServiceTest extends AbstractServiceTest
         validatePartitionKeyGroup(PARTITION_KEY_GROUP, deletedPartitionKeyGroup);
 
         // Ensure that this partition key group is no longer there.
-        assertNull(herdDao.getPartitionKeyGroupByKey(createPartitionKeyGroupKey(PARTITION_KEY_GROUP)));
+        assertNull(partitionKeyGroupDao.getPartitionKeyGroupByKey(createPartitionKeyGroupKey(PARTITION_KEY_GROUP)));
     }
 
     @Test
@@ -221,7 +221,7 @@ public class PartitionKeyGroupServiceTest extends AbstractServiceTest
         validatePartitionKeyGroup(PARTITION_KEY_GROUP.toLowerCase(), deletedPartitionKeyGroup);
 
         // Ensure that this partition key group is no longer there.
-        assertNull(herdDao.getPartitionKeyGroupByKey(createPartitionKeyGroupKey(PARTITION_KEY_GROUP.toLowerCase())));
+        assertNull(partitionKeyGroupDao.getPartitionKeyGroupByKey(createPartitionKeyGroupKey(PARTITION_KEY_GROUP.toLowerCase())));
     }
 
     @Test
@@ -241,7 +241,7 @@ public class PartitionKeyGroupServiceTest extends AbstractServiceTest
         validatePartitionKeyGroup(PARTITION_KEY_GROUP.toUpperCase(), deletedPartitionKeyGroup);
 
         // Ensure that this partition key group is no longer there.
-        assertNull(herdDao.getPartitionKeyGroupByKey(createPartitionKeyGroupKey(PARTITION_KEY_GROUP.toUpperCase())));
+        assertNull(partitionKeyGroupDao.getPartitionKeyGroupByKey(createPartitionKeyGroupKey(PARTITION_KEY_GROUP.toUpperCase())));
     }
 
     @Test
@@ -261,7 +261,7 @@ public class PartitionKeyGroupServiceTest extends AbstractServiceTest
         validatePartitionKeyGroup(PARTITION_KEY_GROUP, deletedPartitionKeyGroup);
 
         // Ensure that this partition key group is no longer there.
-        assertNull(herdDao.getPartitionKeyGroupByKey(createPartitionKeyGroupKey(PARTITION_KEY_GROUP)));
+        assertNull(partitionKeyGroupDao.getPartitionKeyGroupByKey(createPartitionKeyGroupKey(PARTITION_KEY_GROUP)));
     }
 
     @Test
@@ -271,7 +271,7 @@ public class PartitionKeyGroupServiceTest extends AbstractServiceTest
         createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
 
         // Create a business object format that uses this partition key group.
-        createBusinessObjectFormatEntity(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION, true,
+        createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION, true,
             PARTITION_KEY, PARTITION_KEY_GROUP);
 
         // Try to delete this partition key group.

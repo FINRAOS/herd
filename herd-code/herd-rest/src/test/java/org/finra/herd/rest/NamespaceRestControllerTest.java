@@ -34,23 +34,23 @@ public class NamespaceRestControllerTest extends AbstractRestTest
     public void testCreateNamespace() throws Exception
     {
         // Create a namespace.
-        Namespace resultNamespace = namespaceRestController.createNamespace(createNamespaceCreateRequest(NAMESPACE_CD));
+        Namespace resultNamespace = namespaceRestController.createNamespace(createNamespaceCreateRequest(NAMESPACE));
 
         // Validate the returned object.
-        validateNamespace(NAMESPACE_CD, resultNamespace);
+        validateNamespace(NAMESPACE, resultNamespace);
     }
 
     @Test
     public void testGetNamespace() throws Exception
     {
         // Create and persist a namespace entity.
-        createNamespaceEntity(NAMESPACE_CD);
+        createNamespaceEntity(NAMESPACE);
 
         // Retrieve the namespace.
-        Namespace resultNamespace = namespaceRestController.getNamespace(NAMESPACE_CD);
+        Namespace resultNamespace = namespaceRestController.getNamespace(NAMESPACE);
 
         // Validate the returned object.
-        validateNamespace(NAMESPACE_CD, resultNamespace);
+        validateNamespace(NAMESPACE, resultNamespace);
     }
 
     @Test
@@ -79,20 +79,20 @@ public class NamespaceRestControllerTest extends AbstractRestTest
     public void testDeleteNamespace() throws Exception
     {
         // Create and persist a namespace entity.
-        createNamespaceEntity(NAMESPACE_CD);
+        createNamespaceEntity(NAMESPACE);
 
         // Validate that this namespace exists.
-        NamespaceKey namespaceKey = new NamespaceKey(NAMESPACE_CD);
-        assertNotNull(herdDao.getNamespaceByKey(namespaceKey));
+        NamespaceKey namespaceKey = new NamespaceKey(NAMESPACE);
+        assertNotNull(namespaceDao.getNamespaceByKey(namespaceKey));
 
         // Delete this namespace.
-        Namespace deletedNamespace = namespaceRestController.deleteNamespace(NAMESPACE_CD);
+        Namespace deletedNamespace = namespaceRestController.deleteNamespace(NAMESPACE);
 
         // Validate the returned object.
-        validateNamespace(NAMESPACE_CD, deletedNamespace);
+        validateNamespace(NAMESPACE, deletedNamespace);
 
         // Ensure that this namespace is no longer there.
-        assertNull(herdDao.getNamespaceByKey(namespaceKey));
+        assertNull(namespaceDao.getNamespaceByKey(namespaceKey));
     }
 
 }

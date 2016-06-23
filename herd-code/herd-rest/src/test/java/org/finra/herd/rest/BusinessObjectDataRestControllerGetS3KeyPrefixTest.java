@@ -47,12 +47,12 @@ public class BusinessObjectDataRestControllerGetS3KeyPrefixTest extends Abstract
         // Get an S3 key prefix by passing all parameters including partition key, business object data version,
         // and "create new version" flag (has no effect when data version is specified).
         S3KeyPrefixInformation resultS3KeyPrefixInformation = businessObjectDataRestController
-            .getS3KeyPrefix(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, testPartitionKey, PARTITION_VALUE,
-                getDelimitedFieldValues(SUBPARTITION_VALUES), DATA_VERSION, false, getServletRequestWithPartitionInfo(testPartitionKey));
+            .getS3KeyPrefix(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, testPartitionKey, PARTITION_VALUE,
+                getDelimitedFieldValues(SUBPARTITION_VALUES), DATA_VERSION, STORAGE_NAME, false, getServletRequestWithPartitionInfo(testPartitionKey));
 
         // Get the expected S3 key prefix value using the business object data version.
         String expectedS3KeyPrefix =
-            getExpectedS3KeyPrefix(NAMESPACE_CD, DATA_PROVIDER_NAME, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, testPartitionKey,
+            getExpectedS3KeyPrefix(NAMESPACE, DATA_PROVIDER_NAME, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, testPartitionKey,
                 PARTITION_VALUE, testSubPartitionColumns.toArray(new SchemaColumn[testSubPartitionColumns.size()]),
                 SUBPARTITION_VALUES.toArray(new String[SUBPARTITION_VALUES.size()]), DATA_VERSION);
 

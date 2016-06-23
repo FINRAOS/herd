@@ -15,21 +15,13 @@
 */
 package org.finra.herd.service.impl;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
-import org.apache.commons.io.filefilter.TrueFileFilter;
+import com.amazonaws.services.s3.model.S3ObjectSummary;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -39,38 +31,36 @@ import org.springframework.util.CollectionUtils;
 
 import org.finra.herd.core.HerdFileUtils;
 import org.finra.herd.core.helper.ConfigurationHelper;
-import org.finra.herd.dao.HerdDao;
+import org.finra.herd.dao.S3Dao;
+import org.finra.herd.dao.StorageFileDao;
+import org.finra.herd.dao.StorageUnitDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
-import org.finra.herd.dao.helper.AwsHelper;
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.api.xml.StoragePolicyKey;
-import org.finra.herd.model.dto.AwsParamsDto;
 import org.finra.herd.model.dto.ConfigurationValue;
-import org.finra.herd.model.dto.GlacierArchiveTransferRequestParamsDto;
-import org.finra.herd.model.dto.GlacierArchiveTransferResultsDto;
+import org.finra.herd.model.dto.S3FileCopyRequestParamsDto;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.dto.StoragePolicySelection;
 import org.finra.herd.model.dto.StoragePolicyTransitionParamsDto;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.StorageEntity;
-import org.finra.herd.model.jpa.StorageFileEntity;
 import org.finra.herd.model.jpa.StoragePlatformEntity;
 import org.finra.herd.model.jpa.StoragePolicyEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
-import org.finra.herd.service.GlacierService;
 import org.finra.herd.service.S3Service;
 import org.finra.herd.service.StoragePolicyProcessorHelperService;
+import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
-import org.finra.herd.service.helper.HerdDaoHelper;
-import org.finra.herd.service.helper.HerdHelper;
-import org.finra.herd.service.helper.StorageDaoHelper;
+import org.finra.herd.service.helper.S3KeyPrefixHelper;
 import org.finra.herd.service.helper.StorageFileHelper;
+import org.finra.herd.service.helper.StorageHelper;
+import org.finra.herd.service.helper.StoragePolicyDaoHelper;
 import org.finra.herd.service.helper.StoragePolicyHelper;
-import org.finra.herd.service.helper.StorageUnitHelper;
-import org.finra.herd.service.helper.TarHelper;
+import org.finra.herd.service.helper.StorageUnitDaoHelper;
+import org.finra.herd.service.helper.StorageUnitStatusDaoHelper;
 
 /**
  * An implementation of the helper service class for the storage policy processor service.
@@ -79,50 +69,50 @@ import org.finra.herd.service.helper.TarHelper;
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyProcessorHelperService
 {
-    private static final Logger LOGGER = Logger.getLogger(StoragePolicyProcessorHelperServiceImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(StoragePolicyProcessorHelperServiceImpl.class);
 
     @Autowired
-    protected HerdHelper herdHelper;
+    private BusinessObjectDataDaoHelper businessObjectDataDaoHelper;
 
     @Autowired
-    protected HerdDao herdDao;
+    private BusinessObjectDataHelper businessObjectDataHelper;
 
     @Autowired
-    protected HerdDaoHelper herdDaoHelper;
+    private ConfigurationHelper configurationHelper;
 
     @Autowired
-    protected StorageDaoHelper storageDaoHelper;
+    private S3Dao s3Dao;
 
     @Autowired
-    protected ConfigurationHelper configurationHelper;
+    private S3KeyPrefixHelper s3KeyPrefixHelper;
 
     @Autowired
-    protected StoragePolicyHelper storagePolicyHelper;
+    private S3Service s3Service;
 
     @Autowired
-    protected BusinessObjectDataHelper businessObjectDataHelper;
+    private StorageFileDao storageFileDao;
 
     @Autowired
-    protected StorageUnitHelper storageUnitHelper;
+    private StorageFileHelper storageFileHelper;
 
     @Autowired
-    protected StorageFileHelper storageFileHelper;
+    private StorageHelper storageHelper;
 
     @Autowired
-    protected AwsHelper awsHelper;
+    private StoragePolicyDaoHelper storagePolicyDaoHelper;
 
     @Autowired
-    protected S3Service s3Service;
+    private StoragePolicyHelper storagePolicyHelper;
 
     @Autowired
-    protected GlacierService glacierService;
+    private StorageUnitDao storageUnitDao;
 
     @Autowired
-    protected TarHelper tarHelper;
+    private StorageUnitDaoHelper storageUnitDaoHelper;
 
-    /**
-     * {@inheritDoc}
-     */
+    @Autowired
+    private StorageUnitStatusDaoHelper storageUnitStatusDaoHelper;
+
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public StoragePolicyTransitionParamsDto initiateStoragePolicyTransition(StoragePolicySelection storagePolicySelection)
@@ -142,28 +132,29 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
         // Validate and trim the storage policy selection message content.
         validateStoragePolicySelection(storagePolicySelection);
 
-        // Get the business object data and storage policy keys.
+        // Get the business object data and storage policy keys from the storage policy selection message.
         BusinessObjectDataKey businessObjectDataKey = storagePolicySelection.getBusinessObjectDataKey();
         StoragePolicyKey storagePolicyKey = storagePolicySelection.getStoragePolicyKey();
+        Integer storagePolicyVersion = storagePolicySelection.getStoragePolicyVersion();
 
         // Retrieve the business object data entity and ensure it exists.
-        BusinessObjectDataEntity businessObjectDataEntity = herdDaoHelper.getBusinessObjectDataEntity(businessObjectDataKey);
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataKey);
 
         // Validate the business object data.
         validateBusinessObjectData(businessObjectDataEntity, businessObjectDataKey);
 
         // Retrieve the storage policy and ensure it exists.
-        StoragePolicyEntity storagePolicyEntity = storageDaoHelper.getStoragePolicyEntity(storagePolicyKey);
+        StoragePolicyEntity storagePolicyEntity = storagePolicyDaoHelper.getStoragePolicyEntityByKeyAndVersion(storagePolicyKey, storagePolicyVersion);
 
         // Get the source storage name.
         String sourceStorageName = storagePolicyEntity.getStorage().getName();
 
         // Validate the source storage.
-        validateSourceStorage(storagePolicyEntity.getStorage(), storagePolicyKey);
+        validateSourceStorage(storagePolicyEntity.getStorage(), storagePolicyKey, storagePolicyVersion);
 
         // Validate that storage policy filter storage has S3 bucket name configured.
         // Please note that since S3 bucket name attribute value is required we pass a "true" flag.
-        String sourceBucketName = storageDaoHelper
+        String sourceBucketName = storageHelper
             .getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), storagePolicyEntity.getStorage(),
                 true);
 
@@ -171,70 +162,65 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
         String destinationStorageName = storagePolicyEntity.getDestinationStorage().getName();
 
         // Validate the destination storage.
-        validateDestinationStorage(storagePolicyEntity.getDestinationStorage(), storagePolicyKey);
+        validateDestinationStorage(storagePolicyEntity.getDestinationStorage(), storagePolicyKey, storagePolicyVersion);
 
-        // Validate that storage policy transition destination storage has Glacier vault name configured.
-        // Please note that since Glacier vault name attribute value is required we pass a "true" flag.
-        String destinationVaultName = storageDaoHelper
-            .getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.GLACIER_ATTRIBUTE_NAME_VAULT_NAME),
+        // Validate that storage policy transition destination storage has S3 bucket name configured - this is a bucket name for the "archive" S3 bucket.
+        // Please note that since S3 bucket name attribute value is required we pass a "true" flag.
+        String destinationBucketName = storageHelper
+            .getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME),
                 storagePolicyEntity.getDestinationStorage(), true);
 
         // Retrieve the source storage unit and ensure it exists.
-        StorageUnitEntity sourceStorageUnitEntity = storageDaoHelper.getStorageUnitEntity(businessObjectDataEntity, sourceStorageName);
+        StorageUnitEntity sourceStorageUnitEntity = storageUnitDaoHelper.getStorageUnitEntity(sourceStorageName, businessObjectDataEntity);
 
         // Validate the source storage unit.
         validateSourceStorageUnit(sourceStorageUnitEntity, sourceStorageName, businessObjectDataKey);
 
         // Try to retrieve the destination storage unit.
         StorageUnitEntity destinationStorageUnitEntity =
-            herdDao.getStorageUnitByBusinessObjectDataAndStorageName(businessObjectDataEntity, destinationStorageName);
+            storageUnitDao.getStorageUnitByBusinessObjectDataAndStorageName(businessObjectDataEntity, destinationStorageName);
 
         // Validate the destination storage unit, if one exists.
         validateDestinationStorageUnit(destinationStorageUnitEntity, destinationStorageName, businessObjectDataKey);
 
-        // Get business object data key and S3 key prefix for this business object data.
-        String s3KeyPrefix =
-            businessObjectDataHelper.buildS3KeyPrefix(sourceStorageUnitEntity.getBusinessObjectData().getBusinessObjectFormat(), businessObjectDataKey);
+        // Get S3 key prefix for this business object data.
+        String sourceS3KeyPrefix = s3KeyPrefixHelper
+            .buildS3KeyPrefix(storagePolicyEntity.getStorage(), sourceStorageUnitEntity.getBusinessObjectData().getBusinessObjectFormat(),
+                businessObjectDataKey);
 
-        // Retrieve the storage files registered with this business object data in the specified storage.
-        List<StorageFile> storageFiles = new ArrayList<>();
-        long storageFilesSizeBytes = 0;
-        for (StorageFileEntity storageFileEntity : sourceStorageUnitEntity.getStorageFiles())
-        {
-            storageFiles.add(storageFileHelper.createStorageFileFromEntity(storageFileEntity));
-            storageFilesSizeBytes += storageFileEntity.getFileSizeBytes();
-        }
+        // Retrieve storage files registered with this business object data in the source storage.
+        List<StorageFile> storageFiles = storageFileHelper.createStorageFilesFromEntities(sourceStorageUnitEntity.getStorageFiles());
 
         // Validate that we have storage files registered in the source storage.
         Assert.isTrue(!CollectionUtils.isEmpty(storageFiles), String
             .format("Business object data has no storage files registered in \"%s\" storage. Business object data: {%s}", sourceStorageName,
-                herdHelper.businessObjectDataKeyToString(businessObjectDataKey)));
+                businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)));
 
         // Validate that the total size of storage files for the business object data is not greater than the threshold value configured in the system.
-        validateTotalStorageFilesSize(sourceStorageName, businessObjectDataKey, storageFilesSizeBytes);
+        // Get the total size in byte of all storage files.
+        validateTotalStorageFilesSize(sourceStorageName, businessObjectDataKey, storageFileHelper.getStorageFilesSizeBytes(storageFiles));
 
         // Validate storage file paths registered with this business object data in the specified storage.
-        storageDaoHelper.validateStorageFiles(storageFileHelper.getFilePaths(storageFiles), s3KeyPrefix, sourceStorageUnitEntity.getBusinessObjectData(),
-            sourceStorageUnitEntity.getStorage().getName());
+        storageFileHelper.validateStorageFiles(storageFileHelper.getFilePathsFromStorageFiles(storageFiles), sourceS3KeyPrefix,
+            sourceStorageUnitEntity.getBusinessObjectData(), sourceStorageUnitEntity.getStorage().getName());
 
         // Validate that this storage does not have any other registered storage files that
         // start with the S3 key prefix, but belong to other business object data instances.
         // Since the S3 key prefix represents a directory, we add a trailing '/' character to it.
-        String s3KeyPrefixWithTrailingSlash = s3KeyPrefix + "/";
-        Long registeredStorageFileCount = herdDao.getStorageFileCount(sourceStorageName, s3KeyPrefixWithTrailingSlash);
+        Long registeredStorageFileCount = storageFileDao.getStorageFileCount(sourceStorageName, StringUtils.appendIfMissing(sourceS3KeyPrefix, "/"));
         if (registeredStorageFileCount != storageFiles.size())
         {
             throw new IllegalStateException(String
                 .format("Found %d registered storage file(s) matching business object data S3 key prefix in the storage that is not equal to the number " +
                     "of storage files (%d) registered with the business object data in that storage. " +
                     "Storage: {%s}, s3KeyPrefix {%s}, business object data: {%s}", registeredStorageFileCount, storageFiles.size(), sourceStorageName,
-                    s3KeyPrefix, herdHelper.businessObjectDataKeyToString(businessObjectDataKey)));
+                    sourceS3KeyPrefix, businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)));
         }
 
         // Retrieve and ensure the ARCHIVING storage unit status entity exists.
-        StorageUnitStatusEntity storageUnitStatusEntity = storageDaoHelper.getStorageUnitStatusEntity(StorageUnitStatusEntity.ARCHIVING);
+        StorageUnitStatusEntity storageUnitStatusEntity = storageUnitStatusDaoHelper.getStorageUnitStatusEntity(StorageUnitStatusEntity.ARCHIVING);
 
-        // If not exists, create the destination storage unit with the ARCHIVING status. Otherwise, update the already existing storage unit.
+        // If not exists, create the destination storage unit. Otherwise, update the already existing storage unit.
         if (destinationStorageUnitEntity == null)
         {
             // Create the destination storage unit.
@@ -243,27 +229,31 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
             destinationStorageUnitEntity.setStorage(storagePolicyEntity.getDestinationStorage());
             destinationStorageUnitEntity.setBusinessObjectData(businessObjectDataEntity);
             destinationStorageUnitEntity.setStatus(storageUnitStatusEntity);
-            herdDao.saveAndRefresh(destinationStorageUnitEntity);
+            storageUnitDao.saveAndRefresh(destinationStorageUnitEntity);
         }
 
-        // Set the parent storage unit on the destination storage unit.
+        // Set the storage directory path for the destination storage unit.
+        // The directory path is constructed  by concatenating the source S3 bucket name with the source S3 key prefix.
+        String destinationS3KeyBasePrefix = sourceBucketName;
+        destinationStorageUnitEntity.setDirectoryPath(String.format("%s/%s", destinationS3KeyBasePrefix, sourceS3KeyPrefix));
+
+        // Set the source storage unit as a parent for the destination storage unit.
         destinationStorageUnitEntity.setParentStorageUnit(sourceStorageUnitEntity);
 
         // Update the storage unit status. We make this call even for the newly created storage unit,
         // since this call also adds an entry to the storage unit status history table.
-        storageUnitHelper.updateStorageUnitStatus(destinationStorageUnitEntity, storageUnitStatusEntity, StorageUnitStatusEntity.ARCHIVING);
+        storageUnitDaoHelper.updateStorageUnitStatus(destinationStorageUnitEntity, storageUnitStatusEntity, StorageUnitStatusEntity.ARCHIVING);
 
         // Build the storage policy transition parameters DTO.
         StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto = new StoragePolicyTransitionParamsDto();
         storagePolicyTransitionParamsDto.setBusinessObjectDataKey(businessObjectDataKey);
         storagePolicyTransitionParamsDto.setSourceStorageName(sourceStorageName);
         storagePolicyTransitionParamsDto.setSourceBucketName(sourceBucketName);
-        storagePolicyTransitionParamsDto.setSourceStorageUnitId(sourceStorageUnitEntity.getId());
-        storagePolicyTransitionParamsDto.setSourceS3KeyPrefix(s3KeyPrefix);
+        storagePolicyTransitionParamsDto.setSourceS3KeyPrefix(sourceS3KeyPrefix);
         storagePolicyTransitionParamsDto.setSourceStorageFiles(storageFiles);
-        storagePolicyTransitionParamsDto.setSourceStorageFilesSizeBytes(storageFilesSizeBytes);
         storagePolicyTransitionParamsDto.setDestinationStorageName(destinationStorageName);
-        storagePolicyTransitionParamsDto.setDestinationVaultName(destinationVaultName);
+        storagePolicyTransitionParamsDto.setDestinationBucketName(destinationBucketName);
+        storagePolicyTransitionParamsDto.setDestinationS3KeyBasePrefix(destinationS3KeyBasePrefix);
 
         return storagePolicyTransitionParamsDto;
     }
@@ -276,8 +266,9 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
     private void validateStoragePolicySelection(StoragePolicySelection storagePolicySelection)
     {
         Assert.notNull(storagePolicySelection, "A storage policy selection must be specified.");
-        herdHelper.validateBusinessObjectDataKey(storagePolicySelection.getBusinessObjectDataKey(), true, true);
+        businessObjectDataHelper.validateBusinessObjectDataKey(storagePolicySelection.getBusinessObjectDataKey(), true, true);
         storagePolicyHelper.validateStoragePolicyKey(storagePolicySelection.getStoragePolicyKey());
+        Assert.notNull(storagePolicySelection.getStoragePolicyVersion(), "A storage policy version must be specified.");
     }
 
     /**
@@ -290,7 +281,7 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
     {
         Assert.isTrue(StoragePolicySelectorServiceImpl.SUPPORTED_BUSINESS_OBJECT_DATA_STATUSES.contains(businessObjectDataEntity.getStatus().getCode()), String
             .format("Business object data status \"%s\" is not supported by the storage policy feature. Business object data: {%s}",
-                businessObjectDataEntity.getStatus().getCode(), herdHelper.businessObjectDataKeyToString(businessObjectDataKey)));
+                businessObjectDataEntity.getStatus().getCode(), businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)));
     }
 
     /**
@@ -298,32 +289,33 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
      *
      * @param storageEntity the storage entity
      * @param storagePolicyKey the storage policy key
+     * @param storagePolicyVersion the storage policy version
      */
-    private void validateSourceStorage(StorageEntity storageEntity, StoragePolicyKey storagePolicyKey)
+    private void validateSourceStorage(StorageEntity storageEntity, StoragePolicyKey storagePolicyKey, Integer storagePolicyVersion)
     {
         // Validate that storage platform is S3 for the storage policy filter storage.
         Assert.isTrue(StoragePlatformEntity.S3.equals(storageEntity.getStoragePlatform().getName()), String
             .format("Storage platform for storage policy filter storage with name \"%s\" is not \"%s\". Storage policy: {%s}", storageEntity.getName(),
-                StoragePlatformEntity.S3, storagePolicyHelper.storagePolicyKeyToString(storagePolicyKey)));
+                StoragePlatformEntity.S3, storagePolicyHelper.storagePolicyKeyAndVersionToString(storagePolicyKey, storagePolicyVersion)));
 
         // Validate that storage policy filter storage has the S3 path prefix validation enabled.
-        if (!storageDaoHelper
+        if (!storageHelper
             .getBooleanStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_PATH_PREFIX), storageEntity,
                 false, true))
         {
             throw new IllegalStateException(String
                 .format("Path prefix validation must be enabled on \"%s\" storage. Storage policy: {%s}", storageEntity.getName(),
-                    storagePolicyHelper.storagePolicyKeyToString(storagePolicyKey)));
+                    storagePolicyHelper.storagePolicyKeyAndVersionToString(storagePolicyKey, storagePolicyVersion)));
         }
 
         // Validate that storage policy filter storage has the S3 file existence validation enabled.
-        if (!storageDaoHelper
+        if (!storageHelper
             .getBooleanStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_FILE_EXISTENCE), storageEntity,
                 false, true))
         {
             throw new IllegalStateException(String
                 .format("File existence validation must be enabled on \"%s\" storage. Storage policy: {%s}", storageEntity.getName(),
-                    storagePolicyHelper.storagePolicyKeyToString(storagePolicyKey)));
+                    storagePolicyHelper.storagePolicyKeyAndVersionToString(storagePolicyKey, storagePolicyVersion)));
         }
     }
 
@@ -332,13 +324,15 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
      *
      * @param storageEntity the destination storage entity
      * @param storagePolicyKey the storage policy key
+     * @param storagePolicyVersion the storage policy version
      */
-    private void validateDestinationStorage(StorageEntity storageEntity, StoragePolicyKey storagePolicyKey)
+    private void validateDestinationStorage(StorageEntity storageEntity, StoragePolicyKey storagePolicyKey, Integer storagePolicyVersion)
     {
         // Validate that storage platform is GLACIER for the destination storage.
         Assert.isTrue(StoragePlatformEntity.GLACIER.equals(storageEntity.getStoragePlatform().getName()), String
             .format("Storage platform for storage policy transition destination storage with name \"%s\" is not \"%s\". Storage policy: {%s}",
-                storageEntity.getName(), StoragePlatformEntity.GLACIER, storagePolicyHelper.storagePolicyKeyToString(storagePolicyKey)));
+                storageEntity.getName(), StoragePlatformEntity.GLACIER,
+                storagePolicyHelper.storagePolicyKeyAndVersionToString(storagePolicyKey, storagePolicyVersion)));
     }
 
     /**
@@ -353,11 +347,11 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
         Assert.isTrue(StorageUnitStatusEntity.ENABLED.equals(storageUnitEntity.getStatus().getCode()), String.format(
             "Source storage unit status is \"%s\", but must be \"%s\" for storage policy transition to proceed. Storage: {%s}, business object data: {%s}",
             storageUnitEntity.getStatus().getCode(), StorageUnitStatusEntity.ENABLED, storageName,
-            herdHelper.businessObjectDataKeyToString(businessObjectDataKey)));
+            businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)));
     }
 
     /**
-     * Validate that if destination storage unit exists it is in DISABLED state and has no more than one storage file.
+     * Validate that if destination storage unit exists it is in DISABLED state and has no storage files.
      *
      * @param storageUnitEntity the destination storage unit entity, may be null
      * @param storageName the destination storage name
@@ -372,15 +366,16 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
             {
                 throw new AlreadyExistsException(String
                     .format("Destination storage unit already exists and has \"%s\" status. Storage: {%s}, business object data: {%s}",
-                        storageUnitEntity.getStatus().getCode(), storageName, herdHelper.businessObjectDataKeyToString(businessObjectDataKey)));
+                        storageUnitEntity.getStatus().getCode(), storageName, businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)));
             }
 
-            // Throw an exception if destination storage unit has more than one storage file.
-            if (storageUnitEntity.getStorageFiles().size() > 1)
+            // Throw an exception if destination storage unit has any storage files.
+            if (!CollectionUtils.isEmpty(storageUnitEntity.getStorageFiles()))
             {
                 throw new IllegalStateException(String.format(
-                    "Destination storage unit has %d storage files, but must have none or just one storage file. Storage: {%s}, business object data: {%s}",
-                    storageUnitEntity.getStorageFiles().size(), storageName, herdHelper.businessObjectDataKeyToString(businessObjectDataKey)));
+                    "Destination storage unit already exists and has %d storage file(s), but must have no storage files. " +
+                        "Storage: {%s}, business object data: {%s}", storageUnitEntity.getStorageFiles().size(), storageName,
+                    businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)));
             }
         }
     }
@@ -406,164 +401,137 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
                 "Total size of storage files (%d bytes) for business object data in \"%s\" storage is greater " +
                     "than the configured threshold of %d GB (%d bytes) as per \"%s\" configuration entry. Business object data: {%s}", storageFilesSizeBytes,
                 storageName, storageFilesSizeThresholdGb, storageFilesSizeThresholdBytes,
-                ConfigurationValue.STORAGE_POLICY_PROCESSOR_BDATA_SIZE_THRESHOLD_GB.getKey(), herdHelper.businessObjectDataKeyToString(businessObjectDataKey)));
+                ConfigurationValue.STORAGE_POLICY_PROCESSOR_BDATA_SIZE_THRESHOLD_GB.getKey(),
+                businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)));
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    public StoragePolicyTransitionParamsDto executeStoragePolicyTransition(StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto)
+    public void executeStoragePolicyTransition(StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto)
     {
-        return executeStoragePolicyTransitionImpl(storagePolicyTransitionParamsDto);
+        executeStoragePolicyTransitionImpl(storagePolicyTransitionParamsDto);
     }
 
     /**
      * Executes a storage policy transition as per specified storage policy selection.
      *
      * @param storagePolicyTransitionParamsDto the storage policy transition DTO that contains parameters needed to perform a storage policy transition
-     *
-     * @return the storage policy transition DTO updated with the policy transition results
      */
-    protected StoragePolicyTransitionParamsDto executeStoragePolicyTransitionImpl(StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto)
+    protected void executeStoragePolicyTransitionImpl(StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto)
     {
-        Path localTempDirPath = null;
-        File tarFile = null;
+        boolean cleanUpDestinationS3BucketOnFailure = false;
+        S3FileTransferRequestParamsDto destinationS3FileTransferRequestParamsDto = null;
 
         try
         {
-            // Get a temporary directory name configured in the system configuration.
-            String rootTempDir = configurationHelper.getProperty(ConfigurationValue.STORAGE_POLICY_PROCESSOR_TEMP_DIR);
-
-            // If the temporary directory is not configured, default it to the system provided temporary directory.
-            if (StringUtils.isBlank(rootTempDir))
-            {
-                rootTempDir = Files.createTempDirectory(null).toString();
-            }
-
-            // Add a unique temporary subfolder created using source storage unit id and the system timestamp.
-            String timestamp = new SimpleDateFormat("yyyyMMddhhmm", Locale.US).format(new Date());
-            String tempSubfolderName = String.format("%d-%s", storagePolicyTransitionParamsDto.getSourceStorageUnitId(), timestamp);
-            localTempDirPath = Paths.get(rootTempDir, tempSubfolderName);
-
-            // Crate a temporary directory.
-            LOGGER.info(String.format("Creating \"%s\" local temporary directory ...", localTempDirPath.toString()));
-            if (!localTempDirPath.toFile().mkdir())
-            {
-                String errorMessage = String.format("Failed to create \"%s\" local temporary directory.", localTempDirPath.toString());
-                localTempDirPath = null;
-                throw new IllegalStateException(errorMessage);
-            }
-
             // Create an S3 file transfer parameters DTO to access the source S3 bucket.
-            S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = storageDaoHelper.getS3FileTransferRequestParamsDto();
-
-            // Get the list of S3 files matching the expected S3 key prefix.
-            s3FileTransferRequestParamsDto.setS3BucketName(storagePolicyTransitionParamsDto.getSourceBucketName());
-            // Get an optional S3 endpoint configuration value to be used for AWS S3 services.
-            s3FileTransferRequestParamsDto.setS3Endpoint(configurationHelper.getProperty(ConfigurationValue.S3_ENDPOINT));
             // Since the S3 key prefix represents a directory, we add a trailing '/' character to it.
-            s3FileTransferRequestParamsDto.setS3KeyPrefix(storagePolicyTransitionParamsDto.getSourceS3KeyPrefix() + "/");
+            S3FileTransferRequestParamsDto sourceS3FileTransferRequestParamsDto = storageHelper.getS3FileTransferRequestParamsDto();
+            sourceS3FileTransferRequestParamsDto.setS3BucketName(storagePolicyTransitionParamsDto.getSourceBucketName());
+            sourceS3FileTransferRequestParamsDto.setS3Endpoint(configurationHelper.getProperty(ConfigurationValue.S3_ENDPOINT));
+            sourceS3FileTransferRequestParamsDto.setS3KeyPrefix(StringUtils.appendIfMissing(storagePolicyTransitionParamsDto.getSourceS3KeyPrefix(), "/"));
+
+            // Get actual source S3 files by selecting all S3 keys matching the source S3 key prefix form the source S3 bucket.
             // When listing S3 files, we ignore 0 byte objects that represent S3 directories.
-            List<String> actualS3Files = storageFileHelper.getFilePaths(s3Service.listDirectory(s3FileTransferRequestParamsDto, true));
+            List<S3ObjectSummary> actualSourceS3Files = s3Service.listDirectory(sourceS3FileTransferRequestParamsDto, true);
 
-            // Validate S3 files before we start the download.
-            herdHelper.validateS3Files(storagePolicyTransitionParamsDto.getSourceStorageName(), storagePolicyTransitionParamsDto.getSourceStorageFiles(),
-                actualS3Files, storagePolicyTransitionParamsDto.getSourceS3KeyPrefix());
-
-            // Download S3 files to the temporary local directory.
-            s3FileTransferRequestParamsDto.setLocalPath(localTempDirPath.toString());
-            s3FileTransferRequestParamsDto.setRecursive(true);
-            s3Service.downloadDirectory(s3FileTransferRequestParamsDto);
-
-            // Validate the downloaded S3 files.
-            herdHelper.validateDownloadedS3Files(s3FileTransferRequestParamsDto.getLocalPath(), storagePolicyTransitionParamsDto.getSourceS3KeyPrefix(),
-                storagePolicyTransitionParamsDto.getSourceStorageFiles());
-
-            // Log a list of files downloaded to the target local directory.
-            if (LOGGER.isInfoEnabled())
-            {
-                logDownloadedS3Files(localTempDirPath.toFile());
-            }
-
-            // Create a TAR file name for this archive using source storage unit id and the system timestamp.
-            String tarFileName = tempSubfolderName + ".tar";
-            Path tarFilePath = Paths.get(rootTempDir, tarFileName);
-            tarFile = tarFilePath.toFile();
-
-            // Create a TAR archive.
-            tarHelper.createTarArchive(tarFile, localTempDirPath);
-
-            // Log the TAR file contents.
-            if (LOGGER.isInfoEnabled())
-            {
-                tarHelper.logTarFileContents(tarFile);
-            }
-
-            // Sanity check the TAR file size.
-            tarHelper.validateTarFileSize(tarFile, storagePolicyTransitionParamsDto.getSourceStorageFilesSizeBytes(),
+            // Validate existence and file size of the source S3 files.
+            storageFileHelper.validateSourceS3Files(storagePolicyTransitionParamsDto.getSourceStorageFiles(), actualSourceS3Files,
                 storagePolicyTransitionParamsDto.getSourceStorageName(), storagePolicyTransitionParamsDto.getBusinessObjectDataKey());
 
-            // Upload the archive to Glacier.
-            GlacierArchiveTransferRequestParamsDto glacierArchiveTransferRequestParamsDto = new GlacierArchiveTransferRequestParamsDto();
-            AwsParamsDto awsParamsDto = awsHelper.getAwsParamsDto();
-            glacierArchiveTransferRequestParamsDto.setHttpProxyHost(awsParamsDto.getHttpProxyHost());
-            glacierArchiveTransferRequestParamsDto.setHttpProxyPort(awsParamsDto.getHttpProxyPort());
-            glacierArchiveTransferRequestParamsDto.setVaultName(storagePolicyTransitionParamsDto.getDestinationVaultName());
-            glacierArchiveTransferRequestParamsDto.setLocalFilePath(tarFilePath.toString());
-            GlacierArchiveTransferResultsDto glacierArchiveTransferResultsDto = glacierService.uploadArchive(glacierArchiveTransferRequestParamsDto);
+            // Create an S3 file transfer parameters DTO to access the destination S3 bucket.
+            // Create the destination S3 key prefix by concatenating the destination S3 key base prefix with the source S3 key prefix.
+            // Since the S3 key prefix represents a directory, we add a trailing '/' character to it.
+            destinationS3FileTransferRequestParamsDto = storageHelper.getS3FileTransferRequestParamsDto();
+            destinationS3FileTransferRequestParamsDto.setS3BucketName(storagePolicyTransitionParamsDto.getDestinationBucketName());
+            destinationS3FileTransferRequestParamsDto.setS3Endpoint(configurationHelper.getProperty(ConfigurationValue.S3_ENDPOINT));
+            destinationS3FileTransferRequestParamsDto.setS3KeyPrefix(String.format("%s/%s", storagePolicyTransitionParamsDto.getDestinationS3KeyBasePrefix(),
+                StringUtils.appendIfMissing(storagePolicyTransitionParamsDto.getSourceS3KeyPrefix(), "/")));
 
-            // Update the storagePolicyTransitionParamsDto with the upload results.
-            StorageFile destinationStorageFile = new StorageFile();
-            storagePolicyTransitionParamsDto.setDestinationStorageFile(destinationStorageFile);
-            destinationStorageFile.setFilePath(tarFileName);
-            destinationStorageFile.setFileSizeBytes(tarFile.length());
-            destinationStorageFile.setArchiveId(glacierArchiveTransferResultsDto.getArchiveId());
-
-            return storagePolicyTransitionParamsDto;
-        }
-        catch (InterruptedException | IOException e)
-        {
-            LOGGER.error("Failed to execute storage policy transition.", e);
-            throw new IllegalStateException(e);
-        }
-        finally
-        {
-            if (localTempDirPath != null)
+            // Check that the destination S3 key prefix is empty.
+            // When listing S3 files, by default, we do not ignore 0 byte objects that represent S3 directories.
+            if (s3Service.listDirectory(destinationS3FileTransferRequestParamsDto).isEmpty())
             {
-                LOGGER.info(String.format("Deleting \"%s\" local temporary directory ...", localTempDirPath.toString()));
-                HerdFileUtils.deleteDirectoryIgnoreException(localTempDirPath.toFile());
+                cleanUpDestinationS3BucketOnFailure = true;
+            }
+            else
+            {
+                throw new IllegalStateException(String.format("The destination S3 key prefix is not empty. S3 bucket name: {%s}, S3 key prefix: {%s}",
+                    destinationS3FileTransferRequestParamsDto.getS3BucketName(), destinationS3FileTransferRequestParamsDto.getS3KeyPrefix()));
             }
 
-            if (tarFile != null && tarFile.exists())
+            // Copy source S3 files to the destination S3 bucket.
+            S3FileCopyRequestParamsDto s3FileCopyRequestParamsDto = storageHelper.getS3FileCopyRequestParamsDto();
+            s3FileCopyRequestParamsDto.setSourceBucketName(storagePolicyTransitionParamsDto.getSourceBucketName());
+            s3FileCopyRequestParamsDto.setTargetBucketName(storagePolicyTransitionParamsDto.getDestinationBucketName());
+            List<StorageFile> expectedDestinationS3Files = new ArrayList<>();
+            for (S3ObjectSummary sourceS3File : actualSourceS3Files)
             {
-                LOGGER.info(String.format("Deleting \"%s\" local TAR archive file copy ...", tarFile.getPath()));
-                HerdFileUtils.deleteFileIgnoreException(tarFile);
+                // Create the destination S3 key by concatenating the destination S3 key base prefix with the source S3 key prefix.
+                String destinationS3FilePath = String.format("%s/%s", storagePolicyTransitionParamsDto.getDestinationS3KeyBasePrefix(), sourceS3File.getKey());
+
+                // Update the list of expected destination S3 files. Please note that we do not validate row count information.
+                expectedDestinationS3Files.add(new StorageFile(destinationS3FilePath, sourceS3File.getSize(), null));
+
+                // Copy the file from source S3 bucket to target bucket.
+                s3FileCopyRequestParamsDto.setSourceObjectKey(sourceS3File.getKey());
+                s3FileCopyRequestParamsDto.setTargetObjectKey(destinationS3FilePath);
+                try
+                {
+                    s3Dao.copyFile(s3FileCopyRequestParamsDto);
+                }
+                catch (Exception e)
+                {
+                    throw new IllegalStateException(
+                        String.format("Failed to copy S3 file. Source storage: {%s}, source S3 bucket name: {%s}, source S3 object key: {%s}, " +
+                            "target storage: {%s}, target S3 bucket name: {%s}, target S3 object key: {%s}, " +
+                            "business object data: {%s}", storagePolicyTransitionParamsDto.getSourceStorageName(),
+                            s3FileCopyRequestParamsDto.getSourceBucketName(), s3FileCopyRequestParamsDto.getSourceObjectKey(),
+                            storagePolicyTransitionParamsDto.getDestinationStorageName(), s3FileCopyRequestParamsDto.getTargetBucketName(),
+                            s3FileCopyRequestParamsDto.getTargetObjectKey(),
+                            businessObjectDataHelper.businessObjectDataKeyToString(storagePolicyTransitionParamsDto.getBusinessObjectDataKey())), e);
+                }
             }
+
+            // Get the list of S3 files matching the destination S3 key prefix. When listing S3 files, we ignore 0 byte objects that represent S3 directories.
+            List<S3ObjectSummary> actualDestinationS3Files = s3Service.listDirectory(destinationS3FileTransferRequestParamsDto, true);
+
+            // Validate existence and file size of the copied S3 files
+            storageFileHelper
+                .validateCopiedS3Files(expectedDestinationS3Files, actualDestinationS3Files, storagePolicyTransitionParamsDto.getDestinationStorageName(),
+                    storagePolicyTransitionParamsDto.getBusinessObjectDataKey());
+
+            // Log a list of files copied to the destination S3 bucket.
+            if (LOGGER.isInfoEnabled())
+            {
+                LOGGER.info("Copied S3 files to the destination S3 bucket. s3KeyCount={} s3BucketName=\"{}\"", actualDestinationS3Files.size(),
+                    destinationS3FileTransferRequestParamsDto.getS3BucketName());
+
+                for (S3ObjectSummary s3File : actualDestinationS3Files)
+                {
+                    LOGGER.info("s3Key=\"{}\"", s3File.getKey());
+                }
+            }
+        }
+        catch (RuntimeException e)
+        {
+            // Check if we need to rollback the S3 copy operation by deleting all keys matching destination S3 key prefix in the destination S3 bucket.
+            if (cleanUpDestinationS3BucketOnFailure)
+            {
+                LOGGER.info("Rolling back the S3 copy operation by deleting all keys matching the S3 key prefix... s3KeyPrefix=\"{}\" s3BucketName=\"{}\"",
+                    destinationS3FileTransferRequestParamsDto.getS3KeyPrefix(), destinationS3FileTransferRequestParamsDto.getS3BucketName());
+
+                // Delete all object keys from the destination S3 bucket matching the expected S3 key prefix.
+                // Please note that when deleting S3 files, by default, we also delete all 0 byte objects that represent S3 directories.
+                s3Service.deleteDirectoryIgnoreException(destinationS3FileTransferRequestParamsDto);
+            }
+
+            // Rethrow the original exception.
+            throw e;
         }
     }
 
-    /**
-     * Logs all files found in the specified local directory.
-     *
-     * @param directory the target local directory
-     */
-    private void logDownloadedS3Files(File directory)
-    {
-        Collection<File> files = HerdFileUtils.listFiles(directory, TrueFileFilter.INSTANCE, TrueFileFilter.INSTANCE);
-        LOGGER.info(String.format("Downloaded %d S3 files in \"%s\" temporary local directory:", files.size(), directory.getPath()));
-
-        for (File file : files)
-        {
-            LOGGER.info(String.format("    %s", file.getPath()));
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void completeStoragePolicyTransition(StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto)
@@ -582,72 +550,42 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
         BusinessObjectDataKey businessObjectDataKey = storagePolicyTransitionParamsDto.getBusinessObjectDataKey();
 
         // Retrieve the business object data and ensure it exists.
-        BusinessObjectDataEntity businessObjectDataEntity = herdDaoHelper.getBusinessObjectDataEntity(businessObjectDataKey);
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataKey);
 
         // Validate that business object data status is supported by the storage policy feature.
         String businessObjectDataStatus = businessObjectDataEntity.getStatus().getCode();
         Assert.isTrue(StoragePolicySelectorServiceImpl.SUPPORTED_BUSINESS_OBJECT_DATA_STATUSES.contains(businessObjectDataStatus), String
             .format("Business object data status \"%s\" is not supported by the storage policy feature. Business object data: {%s}", businessObjectDataStatus,
-                herdHelper.businessObjectDataKeyToString(businessObjectDataKey)));
+                businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)));
 
         // Retrieve the source storage unit and ensure it exists.
         StorageUnitEntity sourceStorageUnitEntity =
-            storageDaoHelper.getStorageUnitEntity(businessObjectDataEntity, storagePolicyTransitionParamsDto.getSourceStorageName());
+            storageUnitDaoHelper.getStorageUnitEntity(storagePolicyTransitionParamsDto.getSourceStorageName(), businessObjectDataEntity);
 
         // Validate that source storage unit status is ENABLED.
         Assert.isTrue(StorageUnitStatusEntity.ENABLED.equals(sourceStorageUnitEntity.getStatus().getCode()), String.format(
             "Source storage unit status is \"%s\", but must be \"%s\" for storage policy transition to proceed. Storage: {%s}, business object data: {%s}",
             sourceStorageUnitEntity.getStatus().getCode(), StorageUnitStatusEntity.ENABLED, storagePolicyTransitionParamsDto.getSourceStorageName(),
-            herdHelper.businessObjectDataKeyToString(businessObjectDataKey)));
+            businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)));
 
         // Retrieve the destination storage unit and ensure it exists.
         StorageUnitEntity destinationStorageUnitEntity =
-            storageDaoHelper.getStorageUnitEntity(businessObjectDataEntity, storagePolicyTransitionParamsDto.getDestinationStorageName());
+            storageUnitDaoHelper.getStorageUnitEntity(storagePolicyTransitionParamsDto.getDestinationStorageName(), businessObjectDataEntity);
 
         // Validate that destination storage unit status is ARCHIVING.
         Assert.isTrue(StorageUnitStatusEntity.ARCHIVING.equals(destinationStorageUnitEntity.getStatus().getCode()), String.format(
             "Destination storage unit status is \"%s\", but must be \"%s\" for storage policy transition to proceed. Storage: {%s}, business object data: {%s}",
             destinationStorageUnitEntity.getStatus().getCode(), StorageUnitStatusEntity.ARCHIVING, storagePolicyTransitionParamsDto.getDestinationStorageName(),
-            herdHelper.businessObjectDataKeyToString(businessObjectDataKey)));
-
-        // Save the destination storage file info.
-        StorageFileEntity destinationStorageFileEntity;
-        if (destinationStorageUnitEntity.getStorageFiles().size() == 0)
-        {
-            // Create a new storage file entity and add it to the destination storage unit.
-            destinationStorageFileEntity = new StorageFileEntity();
-            destinationStorageFileEntity.setStorageUnit(destinationStorageUnitEntity);
-        }
-        else if (destinationStorageUnitEntity.getStorageFiles().size() == 1)
-        {
-            // Get the existing destination storage file entity.
-            destinationStorageFileEntity = destinationStorageUnitEntity.getStorageFiles().iterator().next();
-        }
-        else
-        {
-            // Throw an exception if destination storage unit has no more than one storage file.
-            throw new IllegalStateException(String
-                .format("Destination storage unit has %d storage files, but must have none or just one storage file. Storage: {%s}, business object data: {%s}",
-                    destinationStorageUnitEntity.getStorageFiles().size(), storagePolicyTransitionParamsDto.getDestinationStorageName(),
-                    herdHelper.businessObjectDataKeyToString(businessObjectDataKey)));
-        }
-        destinationStorageFileEntity.setPath(storagePolicyTransitionParamsDto.getDestinationStorageFile().getFilePath());
-        destinationStorageFileEntity.setFileSizeBytes(storagePolicyTransitionParamsDto.getDestinationStorageFile().getFileSizeBytes());
-        destinationStorageFileEntity.setRowCount(null);
-        destinationStorageFileEntity.setArchiveId(storagePolicyTransitionParamsDto.getDestinationStorageFile().getArchiveId());
-        herdDao.saveAndRefresh(destinationStorageFileEntity);
+            businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)));
 
         // Change the destination storage unit status to ENABLED.
         String reason = StorageUnitStatusEntity.ARCHIVING;
-        storageUnitHelper.updateStorageUnitStatus(destinationStorageUnitEntity, StorageUnitStatusEntity.ENABLED, reason);
+        storageUnitDaoHelper.updateStorageUnitStatus(destinationStorageUnitEntity, StorageUnitStatusEntity.ENABLED, reason);
 
         // Change the source storage unit status to DISABLED.
-        storageUnitHelper.updateStorageUnitStatus(sourceStorageUnitEntity, StorageUnitStatusEntity.DISABLED, reason);
+        storageUnitDaoHelper.updateStorageUnitStatus(sourceStorageUnitEntity, StorageUnitStatusEntity.DISABLED, reason);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public void executeStoragePolicyTransitionAfterStep(StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto)
@@ -662,25 +600,15 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
      */
     protected void executeStoragePolicyTransitionAfterStepImpl(StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto)
     {
-        // Delete the source S3 data.
-
-        // Since the S3 key prefix represents a directory, we add a trailing '/' character to it.
-        String s3KeyPrefixWithTrailingSlash = storagePolicyTransitionParamsDto.getSourceS3KeyPrefix() + "/";
-
-        LOGGER.info(String.format("Deleting source S3 data objects matching \"%s\" prefix from \"%s\" S3 bucket ...", s3KeyPrefixWithTrailingSlash,
-            storagePolicyTransitionParamsDto.getSourceBucketName()));
-
         // Create an S3 file transfer parameters DTO to access the source S3 bucket.
-        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = storageDaoHelper.getS3FileTransferRequestParamsDto();
-        // Set the source S3 bucket name.
+        // Since the S3 key prefix represents a directory, we add a trailing '/' character to it.
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = storageHelper.getS3FileTransferRequestParamsDto();
         s3FileTransferRequestParamsDto.setS3BucketName(storagePolicyTransitionParamsDto.getSourceBucketName());
-        // Set an optional S3 endpoint configuration value to be used for AWS S3 services.
         s3FileTransferRequestParamsDto.setS3Endpoint(configurationHelper.getProperty(ConfigurationValue.S3_ENDPOINT));
-        // Set the S3 key prefix with a trailing '/' character.
-        s3FileTransferRequestParamsDto.setS3KeyPrefix(s3KeyPrefixWithTrailingSlash);
+        s3FileTransferRequestParamsDto.setS3KeyPrefix(StringUtils.appendIfMissing(storagePolicyTransitionParamsDto.getSourceS3KeyPrefix(), "/"));
 
-        // Try to delete a list of all keys/objects from S3 managed bucket matching the expected S3 key prefix.
-        // Please note that when deleting S3 files, we also delete all 0 byte objects that represent S3 directories.
+        // Delete the source S3 data by deleting all keys/objects from the source S3 bucket matching the source S3 key prefix.
+        // Please note that when deleting S3 files, by default, we also delete all 0 byte objects that represent S3 directories.
         s3Service.deleteDirectoryIgnoreException(s3FileTransferRequestParamsDto);
     }
 }

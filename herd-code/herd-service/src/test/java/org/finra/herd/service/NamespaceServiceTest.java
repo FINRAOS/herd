@@ -38,10 +38,10 @@ public class NamespaceServiceTest extends AbstractServiceTest
     public void testCreateNamespace() throws Exception
     {
         // Create a namespace.
-        Namespace resultNamespace = namespaceService.createNamespace(createNamespaceCreateRequest(NAMESPACE_CD));
+        Namespace resultNamespace = namespaceService.createNamespace(createNamespaceCreateRequest(NAMESPACE));
 
         // Validate the returned object.
-        validateNamespace(NAMESPACE_CD, resultNamespace);
+        validateNamespace(NAMESPACE, resultNamespace);
     }
 
     @Test
@@ -63,47 +63,47 @@ public class NamespaceServiceTest extends AbstractServiceTest
     public void testCreateNamespaceTrimParameters()
     {
         // Create a namespace using input parameters with leading and trailing empty spaces.
-        Namespace resultNamespace = namespaceService.createNamespace(createNamespaceCreateRequest(addWhitespace(NAMESPACE_CD)));
+        Namespace resultNamespace = namespaceService.createNamespace(createNamespaceCreateRequest(addWhitespace(NAMESPACE)));
 
         // Validate the returned object.
-        validateNamespace(NAMESPACE_CD, resultNamespace);
+        validateNamespace(NAMESPACE, resultNamespace);
     }
 
     @Test
     public void testCreateNamespaceUpperCaseParameters()
     {
         // Create a namespace using upper case input parameters.
-        Namespace resultNamespace = namespaceService.createNamespace(createNamespaceCreateRequest(NAMESPACE_CD.toUpperCase()));
+        Namespace resultNamespace = namespaceService.createNamespace(createNamespaceCreateRequest(NAMESPACE.toUpperCase()));
 
         // Validate the returned object.
-        validateNamespace(NAMESPACE_CD.toUpperCase(), resultNamespace);
+        validateNamespace(NAMESPACE.toUpperCase(), resultNamespace);
     }
 
     @Test
     public void testCreateNamespaceLowerCaseParameters()
     {
         // Create a namespace using lower case input parameters.
-        Namespace resultNamespace = namespaceService.createNamespace(createNamespaceCreateRequest(NAMESPACE_CD.toLowerCase()));
+        Namespace resultNamespace = namespaceService.createNamespace(createNamespaceCreateRequest(NAMESPACE.toLowerCase()));
 
         // Validate the returned object.
-        validateNamespace(NAMESPACE_CD.toLowerCase(), resultNamespace);
+        validateNamespace(NAMESPACE.toLowerCase(), resultNamespace);
     }
 
     @Test
     public void testCreateNamespaceAlreadyExists() throws Exception
     {
         // Create and persist a namespace.
-        createNamespaceEntity(NAMESPACE_CD);
+        createNamespaceEntity(NAMESPACE);
 
         // Try to create a namespace when it already exists.
         try
         {
-            namespaceService.createNamespace(createNamespaceCreateRequest(NAMESPACE_CD));
+            namespaceService.createNamespace(createNamespaceCreateRequest(NAMESPACE));
             fail("Should throw an AlreadyExistsException when namespace already exists.");
         }
         catch (AlreadyExistsException e)
         {
-            assertEquals(String.format("Unable to create namespace \"%s\" because it already exists.", NAMESPACE_CD), e.getMessage());
+            assertEquals(String.format("Unable to create namespace \"%s\" because it already exists.", NAMESPACE), e.getMessage());
         }
     }
 
@@ -111,13 +111,13 @@ public class NamespaceServiceTest extends AbstractServiceTest
     public void testGetNamespace() throws Exception
     {
         // Create and persist a namespace entity.
-        createNamespaceEntity(NAMESPACE_CD);
+        createNamespaceEntity(NAMESPACE);
 
         // Retrieve the namespace.
-        Namespace resultNamespace = namespaceService.getNamespace(new NamespaceKey(NAMESPACE_CD));
+        Namespace resultNamespace = namespaceService.getNamespace(new NamespaceKey(NAMESPACE));
 
         // Validate the returned object.
-        validateNamespace(NAMESPACE_CD, resultNamespace);
+        validateNamespace(NAMESPACE, resultNamespace);
     }
 
     @Test
@@ -139,39 +139,39 @@ public class NamespaceServiceTest extends AbstractServiceTest
     public void testGetNamespaceTrimParameters()
     {
         // Create and persist a namespace entity.
-        createNamespaceEntity(NAMESPACE_CD);
+        createNamespaceEntity(NAMESPACE);
 
         // Retrieve the namespace using input parameters with leading and trailing empty spaces.
-        Namespace resultNamespace = namespaceService.getNamespace(new NamespaceKey(addWhitespace(NAMESPACE_CD)));
+        Namespace resultNamespace = namespaceService.getNamespace(new NamespaceKey(addWhitespace(NAMESPACE)));
 
         // Validate the returned object.
-        validateNamespace(NAMESPACE_CD, resultNamespace);
+        validateNamespace(NAMESPACE, resultNamespace);
     }
 
     @Test
     public void testGetNamespaceUpperCaseParameters()
     {
         // Create and persist a namespace entity using lower case values.
-        createNamespaceEntity(NAMESPACE_CD.toLowerCase());
+        createNamespaceEntity(NAMESPACE.toLowerCase());
 
         // Retrieve the namespace using upper case input parameters.
-        Namespace resultNamespace = namespaceService.getNamespace(new NamespaceKey(NAMESPACE_CD.toUpperCase()));
+        Namespace resultNamespace = namespaceService.getNamespace(new NamespaceKey(NAMESPACE.toUpperCase()));
 
         // Validate the returned object.
-        validateNamespace(NAMESPACE_CD.toLowerCase(), resultNamespace);
+        validateNamespace(NAMESPACE.toLowerCase(), resultNamespace);
     }
 
     @Test
     public void testGetNamespaceLowerCaseParameters()
     {
         // Create and persist a namespace entity using upper case values.
-        createNamespaceEntity(NAMESPACE_CD.toUpperCase());
+        createNamespaceEntity(NAMESPACE.toUpperCase());
 
         // Retrieve the namespace using lower case input parameters.
-        Namespace resultNamespace = namespaceService.getNamespace(new NamespaceKey(NAMESPACE_CD.toLowerCase()));
+        Namespace resultNamespace = namespaceService.getNamespace(new NamespaceKey(NAMESPACE.toLowerCase()));
 
         // Validate the returned object.
-        validateNamespace(NAMESPACE_CD.toUpperCase(), resultNamespace);
+        validateNamespace(NAMESPACE.toUpperCase(), resultNamespace);
     }
 
     @Test
@@ -180,12 +180,12 @@ public class NamespaceServiceTest extends AbstractServiceTest
         // Try to get a non-existing namespace.
         try
         {
-            namespaceService.getNamespace(new NamespaceKey(NAMESPACE_CD));
+            namespaceService.getNamespace(new NamespaceKey(NAMESPACE));
             fail("Should throw an ObjectNotFoundException when namespace doesn't exist.");
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(String.format("Namespace \"%s\" doesn't exist.", NAMESPACE_CD), e.getMessage());
+            assertEquals(String.format("Namespace \"%s\" doesn't exist.", NAMESPACE), e.getMessage());
         }
     }
 
@@ -215,20 +215,20 @@ public class NamespaceServiceTest extends AbstractServiceTest
     public void testDeleteNamespace() throws Exception
     {
         // Create and persist a namespace entity.
-        createNamespaceEntity(NAMESPACE_CD);
+        createNamespaceEntity(NAMESPACE);
 
         // Validate that this namespace exists.
-        NamespaceKey namespaceKey = new NamespaceKey(NAMESPACE_CD);
-        assertNotNull(herdDao.getNamespaceByKey(namespaceKey));
+        NamespaceKey namespaceKey = new NamespaceKey(NAMESPACE);
+        assertNotNull(namespaceDao.getNamespaceByKey(namespaceKey));
 
         // Delete this namespace.
-        Namespace deletedNamespace = namespaceService.deleteNamespace(new NamespaceKey(NAMESPACE_CD));
+        Namespace deletedNamespace = namespaceService.deleteNamespace(new NamespaceKey(NAMESPACE));
 
         // Validate the returned object.
-        validateNamespace(NAMESPACE_CD, deletedNamespace);
+        validateNamespace(NAMESPACE, deletedNamespace);
 
         // Ensure that this namespace is no longer there.
-        assertNull(herdDao.getNamespaceByKey(namespaceKey));
+        assertNull(namespaceDao.getNamespaceByKey(namespaceKey));
     }
 
     @Test
@@ -250,60 +250,60 @@ public class NamespaceServiceTest extends AbstractServiceTest
     public void testDeleteNamespaceTrimParameters()
     {
         // Create and persist a namespace entity.
-        createNamespaceEntity(NAMESPACE_CD);
+        createNamespaceEntity(NAMESPACE);
 
         // Validate that this namespace exists.
-        NamespaceKey namespaceKey = new NamespaceKey(NAMESPACE_CD);
-        assertNotNull(herdDao.getNamespaceByKey(namespaceKey));
+        NamespaceKey namespaceKey = new NamespaceKey(NAMESPACE);
+        assertNotNull(namespaceDao.getNamespaceByKey(namespaceKey));
 
         // Delete this namespace using input parameters with leading and trailing empty spaces.
-        Namespace deletedNamespace = namespaceService.deleteNamespace(new NamespaceKey(addWhitespace(NAMESPACE_CD)));
+        Namespace deletedNamespace = namespaceService.deleteNamespace(new NamespaceKey(addWhitespace(NAMESPACE)));
 
         // Validate the returned object.
-        validateNamespace(NAMESPACE_CD, deletedNamespace);
+        validateNamespace(NAMESPACE, deletedNamespace);
 
         // Ensure that this namespace is no longer there.
-        assertNull(herdDao.getNamespaceByKey(namespaceKey));
+        assertNull(namespaceDao.getNamespaceByKey(namespaceKey));
     }
 
     @Test
     public void testDeleteNamespaceUpperCaseParameters()
     {
         // Create and persist a namespace entity using lower case values.
-        createNamespaceEntity(NAMESPACE_CD.toLowerCase());
+        createNamespaceEntity(NAMESPACE.toLowerCase());
 
         // Validate that this namespace exists.
-        NamespaceKey namespaceKey = new NamespaceKey(NAMESPACE_CD.toLowerCase());
-        assertNotNull(herdDao.getNamespaceByKey(namespaceKey));
+        NamespaceKey namespaceKey = new NamespaceKey(NAMESPACE.toLowerCase());
+        assertNotNull(namespaceDao.getNamespaceByKey(namespaceKey));
 
         // Delete this namespace using upper case input parameters.
-        Namespace deletedNamespace = namespaceService.deleteNamespace(new NamespaceKey(NAMESPACE_CD.toUpperCase()));
+        Namespace deletedNamespace = namespaceService.deleteNamespace(new NamespaceKey(NAMESPACE.toUpperCase()));
 
         // Validate the returned object.
-        validateNamespace(NAMESPACE_CD.toLowerCase(), deletedNamespace);
+        validateNamespace(NAMESPACE.toLowerCase(), deletedNamespace);
 
         // Ensure that this namespace is no longer there.
-        assertNull(herdDao.getNamespaceByKey(namespaceKey));
+        assertNull(namespaceDao.getNamespaceByKey(namespaceKey));
     }
 
     @Test
     public void testDeleteNamespaceLowerCaseParameters()
     {
         // Create and persist a namespace entity using upper case values.
-        createNamespaceEntity(NAMESPACE_CD.toUpperCase());
+        createNamespaceEntity(NAMESPACE.toUpperCase());
 
         // Validate that this namespace exists.
-        NamespaceKey namespaceKey = new NamespaceKey(NAMESPACE_CD.toUpperCase());
-        assertNotNull(herdDao.getNamespaceByKey(namespaceKey));
+        NamespaceKey namespaceKey = new NamespaceKey(NAMESPACE.toUpperCase());
+        assertNotNull(namespaceDao.getNamespaceByKey(namespaceKey));
 
         // Delete the namespace using lower case input parameters.
-        Namespace deletedNamespace = namespaceService.deleteNamespace(new NamespaceKey(NAMESPACE_CD.toLowerCase()));
+        Namespace deletedNamespace = namespaceService.deleteNamespace(new NamespaceKey(NAMESPACE.toLowerCase()));
 
         // Validate the returned object.
-        validateNamespace(NAMESPACE_CD.toUpperCase(), deletedNamespace);
+        validateNamespace(NAMESPACE.toUpperCase(), deletedNamespace);
 
         // Ensure that this namespace is no longer there.
-        assertNull(herdDao.getNamespaceByKey(namespaceKey));
+        assertNull(namespaceDao.getNamespaceByKey(namespaceKey));
     }
 
     @Test
@@ -312,12 +312,12 @@ public class NamespaceServiceTest extends AbstractServiceTest
         // Try to get a non-existing namespace.
         try
         {
-            namespaceService.deleteNamespace(new NamespaceKey(NAMESPACE_CD));
+            namespaceService.deleteNamespace(new NamespaceKey(NAMESPACE));
             fail("Should throw an ObjectNotFoundException when namespace doesn't exist.");
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(String.format("Namespace \"%s\" doesn't exist.", NAMESPACE_CD), e.getMessage());
+            assertEquals(String.format("Namespace \"%s\" doesn't exist.", NAMESPACE), e.getMessage());
         }
     }
 }

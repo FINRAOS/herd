@@ -17,16 +17,17 @@ package org.finra.herd.service.activiti.task;
 
 import org.activiti.engine.delegate.DelegateExecution;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
 import org.finra.herd.model.api.xml.EmrCluster;
 import org.finra.herd.model.api.xml.EmrClusterCreateRequest;
 import org.finra.herd.model.api.xml.EmrClusterDefinition;
-import org.springframework.stereotype.Component;
 
 /**
  * An Activiti task that creates the EMR cluster
  * <p/>
- * 
  * <pre>
  * <extensionElements>
  *   <activiti:field name="namespaceCode" stringValue="" />
@@ -41,7 +42,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class CreateEmrCluster extends BaseEmrCluster
 {
-    private static final Logger LOGGER = Logger.getLogger(CreateEmrCluster.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(CreateEmrCluster.class);
 
     @Override
     public void executeImpl(DelegateExecution execution) throws Exception
@@ -67,7 +68,7 @@ public class CreateEmrCluster extends BaseEmrCluster
         else if (StringUtils.isNotBlank(contentTypeString) && StringUtils.isNotBlank(emrClusterDefinitionOverrideString))
         {
             EmrClusterDefinition emrClusterDefinitionOverride =
-                    getRequestObject(contentTypeString, emrClusterDefinitionOverrideString, EmrClusterDefinition.class);
+                getRequestObject(contentTypeString, emrClusterDefinitionOverrideString, EmrClusterDefinition.class);
             request.setEmrClusterDefinitionOverride(emrClusterDefinitionOverride);
         }
 
@@ -76,6 +77,6 @@ public class CreateEmrCluster extends BaseEmrCluster
 
         // Set workflow variables based on the result EMR cluster that was created.
         setResultWorkflowVariables(execution, emrCluster);
-        LOGGER.info(activitiHelper.getProcessIdentifyingInformation(execution) + " EMR cluster started with cluster Id: " + emrCluster.getId());
+        LOGGER.info("{} EMR cluster started. emrClusterId=\"{}\"", activitiHelper.getProcessIdentifyingInformation(execution), emrCluster.getId());
     }
 }

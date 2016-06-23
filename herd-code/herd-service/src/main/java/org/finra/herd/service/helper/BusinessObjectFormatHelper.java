@@ -19,9 +19,12 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.AttributeDefinition;
@@ -40,6 +43,22 @@ import org.finra.herd.model.jpa.SchemaColumnEntity;
 @Component
 public class BusinessObjectFormatHelper
 {
+    /**
+     * Returns a string representation of the alternate key values for the business object format.
+     *
+     * @param businessObjectFormatEntity the business object format entity
+     *
+     * @return the string representation of the alternate key values for the business object format entity
+     */
+    public String businessObjectFormatEntityAltKeyToString(BusinessObjectFormatEntity businessObjectFormatEntity)
+    {
+        return String.format("namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", " +
+            "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d",
+            businessObjectFormatEntity.getBusinessObjectDefinition().getNamespace().getCode(),
+            businessObjectFormatEntity.getBusinessObjectDefinition().getName(), businessObjectFormatEntity.getUsage(),
+            businessObjectFormatEntity.getFileType().getCode(), businessObjectFormatEntity.getBusinessObjectFormatVersion());
+    }
+
     /**
      * Returns a string representation of the business object format key.
      *
@@ -113,6 +132,7 @@ public class BusinessObjectFormatHelper
             AttributeDefinition attributeDefinition = new AttributeDefinition();
             attributeDefinitions.add(attributeDefinition);
             attributeDefinition.setName(attributeDefinitionEntity.getName());
+            attributeDefinition.setPublish(attributeDefinitionEntity.getPublish());
         }
 
         // Only add schema information if this format has any schema columns defined.
@@ -175,33 +195,80 @@ public class BusinessObjectFormatHelper
     }
 
     /**
-     * A schema column "position" comparator. A static named inner class was created as opposed to an anonymous inner class since it has no dependencies on it's
-     * containing class and is therefore more efficient.
+     * Returns a map with attribute names in uppercase mapped to the relative attribute definition entities.
+     *
+     * @param businessObjectFormatEntity the business object format entity
+     *
+     * @return the attribute definition entities loaded in a map
      */
-    private static class SchemaColumnPositionComparator implements Comparator<SchemaColumnEntity>, Serializable
+    public Map<String, BusinessObjectDataAttributeDefinitionEntity> getAttributeDefinitionEntities(BusinessObjectFormatEntity businessObjectFormatEntity)
     {
-        private static final long serialVersionUID = -5860079250619473538L;
+        Map<String, BusinessObjectDataAttributeDefinitionEntity> result = new HashMap<>();
 
-        @Override
-        public int compare(SchemaColumnEntity entity1, SchemaColumnEntity entity2)
+        for (BusinessObjectDataAttributeDefinitionEntity businessObjectDataAttributeDefinitionEntity : businessObjectFormatEntity.getAttributeDefinitions())
         {
-            return entity1.getPosition().compareTo(entity2.getPosition());
+            result.put(businessObjectDataAttributeDefinitionEntity.getName().toUpperCase(), businessObjectDataAttributeDefinitionEntity);
         }
+
+        return result;
     }
 
     /**
-     * A schema column "partitionLevel" comparator. A static named inner class was created as opposed to an anonymous inner class since it has no dependencies
-     * on it's containing class and is therefore more efficient.
+     * Creates a business object format key from specified business object format entity.
+     *
+     * @param businessObjectFormatEntity the business object format entity
+     *
+     * @return the business object format key
      */
-    private static class SchemaColumnPartitionLevelComparator implements Comparator<SchemaColumnEntity>, Serializable
+    public BusinessObjectFormatKey getBusinessObjectFormatKey(BusinessObjectFormatEntity businessObjectFormatEntity)
     {
-        private static final long serialVersionUID = -6222033387743498432L;
+        BusinessObjectFormatKey businessObjectFormatKey = new BusinessObjectFormatKey();
 
-        @Override
-        public int compare(SchemaColumnEntity entity1, SchemaColumnEntity entity2)
-        {
-            return entity1.getPartitionLevel().compareTo(entity2.getPartitionLevel());
-        }
+        businessObjectFormatKey.setNamespace(businessObjectFormatEntity.getBusinessObjectDefinition().getNamespace().getCode());
+        businessObjectFormatKey.setBusinessObjectDefinitionName(businessObjectFormatEntity.getBusinessObjectDefinition().getName());
+        businessObjectFormatKey.setBusinessObjectFormatUsage(businessObjectFormatEntity.getUsage());
+        businessObjectFormatKey.setBusinessObjectFormatFileType(businessObjectFormatEntity.getFileType().getCode());
+        businessObjectFormatKey.setBusinessObjectFormatVersion(businessObjectFormatEntity.getBusinessObjectFormatVersion());
+
+        return businessObjectFormatKey;
+    }
+
+    /**
+     * Returns a business object format key for the business object format.
+     *
+     * @param businessObjectFormat the business object format
+     *
+     * @return the business object format key
+     */
+    public BusinessObjectFormatKey getBusinessObjectFormatKey(BusinessObjectFormat businessObjectFormat)
+    {
+        return new BusinessObjectFormatKey(businessObjectFormat.getNamespace(), businessObjectFormat.getBusinessObjectDefinitionName(),
+            businessObjectFormat.getBusinessObjectFormatUsage(), businessObjectFormat.getBusinessObjectFormatFileType(),
+            businessObjectFormat.getBusinessObjectFormatVersion());
+    }
+
+    /**
+     * Validates the business object format key. This method also trims the key parameters.
+     *
+     * @param businessObjectFormatKey the business object format key
+     *
+     * @throws IllegalArgumentException if any validation errors were found
+     */
+    public void validateBusinessObjectFormatKey(BusinessObjectFormatKey businessObjectFormatKey) throws IllegalArgumentException
+    {
+        // Validate.
+        Assert.notNull(businessObjectFormatKey, "A business object format key must be specified.");
+        Assert.hasText(businessObjectFormatKey.getNamespace(), "A namespace must be specified.");
+        Assert.hasText(businessObjectFormatKey.getBusinessObjectDefinitionName(), "A business object definition name must be specified.");
+        Assert.hasText(businessObjectFormatKey.getBusinessObjectFormatUsage(), "A business object format usage must be specified.");
+        Assert.hasText(businessObjectFormatKey.getBusinessObjectFormatFileType(), "A business object format file type must be specified.");
+        Assert.notNull(businessObjectFormatKey.getBusinessObjectFormatVersion(), "A business object format version must be specified.");
+
+        // Remove leading and trailing spaces.
+        businessObjectFormatKey.setNamespace(businessObjectFormatKey.getNamespace().trim());
+        businessObjectFormatKey.setBusinessObjectDefinitionName(businessObjectFormatKey.getBusinessObjectDefinitionName().trim());
+        businessObjectFormatKey.setBusinessObjectFormatUsage(businessObjectFormatKey.getBusinessObjectFormatUsage().trim());
+        businessObjectFormatKey.setBusinessObjectFormatFileType(businessObjectFormatKey.getBusinessObjectFormatFileType().trim());
     }
 
     /**
@@ -221,5 +288,35 @@ public class BusinessObjectFormatHelper
         schemaColumn.setDefaultValue(schemaColumnEntity.getDefaultValue());
         schemaColumn.setDescription(schemaColumnEntity.getDescription());
         return schemaColumn;
+    }
+
+    /**
+     * A schema column "partitionLevel" comparator. A static named inner class was created as opposed to an anonymous inner class since it has no dependencies
+     * on it's containing class and is therefore more efficient.
+     */
+    private static class SchemaColumnPartitionLevelComparator implements Comparator<SchemaColumnEntity>, Serializable
+    {
+        private static final long serialVersionUID = -6222033387743498432L;
+
+        @Override
+        public int compare(SchemaColumnEntity entity1, SchemaColumnEntity entity2)
+        {
+            return entity1.getPartitionLevel().compareTo(entity2.getPartitionLevel());
+        }
+    }
+
+    /**
+     * A schema column "position" comparator. A static named inner class was created as opposed to an anonymous inner class since it has no dependencies on it's
+     * containing class and is therefore more efficient.
+     */
+    private static class SchemaColumnPositionComparator implements Comparator<SchemaColumnEntity>, Serializable
+    {
+        private static final long serialVersionUID = -5860079250619473538L;
+
+        @Override
+        public int compare(SchemaColumnEntity entity1, SchemaColumnEntity entity2)
+        {
+            return entity1.getPosition().compareTo(entity2.getPosition());
+        }
     }
 }

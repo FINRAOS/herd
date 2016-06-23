@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.finra.herd.model.api.xml.StoragePolicy;
 import org.finra.herd.model.api.xml.StoragePolicyCreateRequest;
 import org.finra.herd.model.api.xml.StoragePolicyKey;
+import org.finra.herd.model.api.xml.StoragePolicyUpdateRequest;
 import org.finra.herd.model.dto.SecurityFunctions;
 import org.finra.herd.service.StoragePolicyService;
 import org.finra.herd.ui.constants.UiConstants;
@@ -46,6 +47,7 @@ public class StoragePolicyRestController extends HerdBaseController
 
     /**
      * Creates a new storage policy.
+     * <p>Requires WRITE permission on namespace and READ permission on filter namespace</p>
      *
      * @param request the information needed to create the storage policy
      *
@@ -59,7 +61,28 @@ public class StoragePolicyRestController extends HerdBaseController
     }
 
     /**
+     * Updates an existing storage policy by key.
+     * <p>Requires WRITE permission on namespace and READ permission on filter namespace</p>
+     *
+     * @param namespace the namespace
+     * @param storagePolicyName the storage policy name
+     * @param request the information needed to update the storage policy
+     *
+     * @return the updated storage policy
+     */
+    @RequestMapping(value = STORAGE_POLICIES_URI_PREFIX + "/namespaces/{namespace}/storagePolicyNames/{storagePolicyName}",
+        method = RequestMethod.PUT,
+        consumes = {"application/xml", "application/json"})
+    @Secured(SecurityFunctions.FN_STORAGE_POLICIES_PUT)
+    public StoragePolicy updateStoragePolicy(@PathVariable("namespace") String namespace, @PathVariable("storagePolicyName") String storagePolicyName,
+        @RequestBody StoragePolicyUpdateRequest request)
+    {
+        return storagePolicyService.updateStoragePolicy(new StoragePolicyKey(namespace, storagePolicyName), request);
+    }
+
+    /**
      * Gets an existing storage policy by key.
+     * <p>Requires READ permission on namespace</p>
      *
      * @param namespace the namespace
      * @param storagePolicyName the storage policy name

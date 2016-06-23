@@ -25,6 +25,7 @@ import org.junit.Test;
 
 import org.finra.herd.model.api.xml.Parameter;
 import org.finra.herd.model.api.xml.SchemaColumn;
+import org.finra.herd.model.jpa.StoragePlatformEntity;
 import org.finra.herd.service.activiti.ActivitiRuntimeHelper;
 
 /**
@@ -46,9 +47,12 @@ public class GetS3KeyPrefixTest extends HerdActivitiServiceTaskTest
         String partitionKey = partitionColumns.get(0).getName();
 
         // Create a business object format entity.
-        createBusinessObjectFormatEntity(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+        createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
             LATEST_VERSION_FLAG_SET, partitionKey, NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
             SCHEMA_NULL_VALUE_BACKSLASH_N, columns, partitionColumns);
+
+        // Create an S3 storage.
+        createStorageEntity(STORAGE_NAME, StoragePlatformEntity.S3);
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
 
@@ -65,20 +69,21 @@ public class GetS3KeyPrefixTest extends HerdActivitiServiceTaskTest
 
         List<Parameter> parameters = new ArrayList<>();
 
-        parameters.add(buildParameter("namespace", NAMESPACE_CD));
-        parameters.add(buildParameter("businessObjectDefinitionName", BOD_NAME));
+        parameters.add(buildParameter("namespace", NAMESPACE));
+        parameters.add(buildParameter("businessObjectDefinitionName", BDEF_NAME));
         parameters.add(buildParameter("businessObjectFormatUsage", FORMAT_USAGE_CODE));
         parameters.add(buildParameter("businessObjectFormatFileType", FORMAT_FILE_TYPE_CODE));
         parameters.add(buildParameter("businessObjectFormatVersion", FORMAT_VERSION.toString()));
         parameters.add(buildParameter("partitionKey", partitionKey));
         parameters.add(buildParameter("partitionValue", PARTITION_VALUE));
-        parameters.add(buildParameter("subPartitionValues", herdHelper.buildStringWithDefaultDelimiter(SUBPARTITION_VALUES)));
+        parameters.add(buildParameter("subPartitionValues", herdStringHelper.buildStringWithDefaultDelimiter(SUBPARTITION_VALUES)));
         parameters.add(buildParameter("businessObjectDataVersion", DATA_VERSION.toString()));
+        parameters.add(buildParameter("storageName", STORAGE_NAME));
         parameters.add(buildParameter("createNewVersion", "false"));
 
         // Get the expected S3 key prefix value.
         String expectedS3KeyPrefix =
-            getExpectedS3KeyPrefix(NAMESPACE_CD, DATA_PROVIDER_NAME, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, partitionKey,
+            getExpectedS3KeyPrefix(NAMESPACE, DATA_PROVIDER_NAME, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, partitionKey,
                 PARTITION_VALUE, subPartitionColumns.toArray(new SchemaColumn[subPartitionColumns.size()]),
                 SUBPARTITION_VALUES.toArray(new String[SUBPARTITION_VALUES.size()]), DATA_VERSION);
 
@@ -101,7 +106,7 @@ public class GetS3KeyPrefixTest extends HerdActivitiServiceTaskTest
         fieldExtensionList.add(buildFieldExtension("businessObjectDataVersion", "${businessObjectDataVersion}"));
         fieldExtensionList.add(buildFieldExtension("createNewVersion", "${createNewVersion}"));
         List<Parameter> parameters = new ArrayList<>();
-        parameters.add(buildParameter("namespace", NAMESPACE_CD));
+        parameters.add(buildParameter("namespace", NAMESPACE));
         parameters.add(buildParameter("businessObjectFormatVersion", FORMAT_VERSION.toString()));
         parameters.add(buildParameter("businessObjectDataVersion", DATA_VERSION.toString()));
         parameters.add(buildParameter("createNewVersion", "false"));
@@ -109,7 +114,9 @@ public class GetS3KeyPrefixTest extends HerdActivitiServiceTaskTest
         Map<String, Object> variableValuesToValidate = new HashMap<>();
         variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "A business object definition name must be specified.");
 
-        testActivitiServiceTaskFailure(GetS3KeyPrefix.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            testActivitiServiceTaskFailure(GetS3KeyPrefix.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+        });
     }
 
     /**
@@ -121,9 +128,11 @@ public class GetS3KeyPrefixTest extends HerdActivitiServiceTaskTest
         Map<String, Object> variableValuesToValidate = new HashMap<>();
         variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"businessObjectFormatVersion\" must be specified.");
 
-        // Validate that activiti task fails when we do not pass a business object format version value.
-        testActivitiServiceTaskFailure(GetS3KeyPrefix.class.getCanonicalName(), new ArrayList<FieldExtension>(), new ArrayList<Parameter>(),
-            variableValuesToValidate);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            // Validate that activiti task fails when we do not pass a business object format version value.
+            testActivitiServiceTaskFailure(GetS3KeyPrefix.class.getCanonicalName(), new ArrayList<FieldExtension>(), new ArrayList<Parameter>(),
+                variableValuesToValidate);
+        });
     }
 
     /**
@@ -135,10 +144,10 @@ public class GetS3KeyPrefixTest extends HerdActivitiServiceTaskTest
     public void testGetS3KeyPrefixMissingOptionalParameters() throws Exception
     {
         // Create a business object definition entity.
-        createBusinessObjectDefinitionEntity(NAMESPACE_CD, BOD_NAME, DATA_PROVIDER_NAME, BOD_DESCRIPTION);
+        createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
 
         // Create a business object format entity without a schema.
-        createBusinessObjectFormatEntity(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION, true,
+        createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION, true,
             PARTITION_KEY);
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
@@ -152,8 +161,8 @@ public class GetS3KeyPrefixTest extends HerdActivitiServiceTaskTest
 
         List<Parameter> parameters = new ArrayList<>();
 
-        parameters.add(buildParameter("namespace", NAMESPACE_CD));
-        parameters.add(buildParameter("businessObjectDefinitionName", BOD_NAME));
+        parameters.add(buildParameter("namespace", NAMESPACE));
+        parameters.add(buildParameter("businessObjectDefinitionName", BDEF_NAME));
         parameters.add(buildParameter("businessObjectFormatUsage", FORMAT_USAGE_CODE));
         parameters.add(buildParameter("businessObjectFormatFileType", FORMAT_FILE_TYPE_CODE));
         parameters.add(buildParameter("businessObjectFormatVersion", FORMAT_VERSION.toString()));
@@ -161,7 +170,48 @@ public class GetS3KeyPrefixTest extends HerdActivitiServiceTaskTest
 
         // Get the expected S3 key prefix value.
         String expectedS3KeyPrefix =
-            getExpectedS3KeyPrefix(NAMESPACE_CD, DATA_PROVIDER_NAME, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_KEY,
+            getExpectedS3KeyPrefix(NAMESPACE, DATA_PROVIDER_NAME, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_KEY,
+                PARTITION_VALUE, null, null, INITIAL_DATA_VERSION);
+
+        // Run the activiti task and validate the returned S3 key prefix value.
+        Map<String, Object> variableValuesToValidate = new HashMap<>();
+        variableValuesToValidate.put(GetS3KeyPrefix.VARIABLE_S3_KEY_PREFIX, expectedS3KeyPrefix);
+        testActivitiServiceTaskSuccess(GetS3KeyPrefix.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+    }
+
+    @Test
+    public void testGetS3KeyPrefixMissingOptionalParametersSubPartitionValuesAsEmptyString() throws Exception
+    {
+        // Create a business object definition entity.
+        createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
+
+        // Create a business object format entity without a schema.
+        createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION, true,
+            PARTITION_KEY);
+
+        List<FieldExtension> fieldExtensionList = new ArrayList<>();
+
+        fieldExtensionList.add(buildFieldExtension("namespace", "${namespace}"));
+        fieldExtensionList.add(buildFieldExtension("businessObjectDefinitionName", "${businessObjectDefinitionName}"));
+        fieldExtensionList.add(buildFieldExtension("businessObjectFormatUsage", "${businessObjectFormatUsage}"));
+        fieldExtensionList.add(buildFieldExtension("businessObjectFormatFileType", "${businessObjectFormatFileType}"));
+        fieldExtensionList.add(buildFieldExtension("businessObjectFormatVersion", "${businessObjectFormatVersion}"));
+        fieldExtensionList.add(buildFieldExtension("partitionValue", "${partitionValue}"));
+        fieldExtensionList.add(buildFieldExtension("subPartitionValues", "${subPartitionValues}"));
+
+        List<Parameter> parameters = new ArrayList<>();
+
+        parameters.add(buildParameter("namespace", NAMESPACE));
+        parameters.add(buildParameter("businessObjectDefinitionName", BDEF_NAME));
+        parameters.add(buildParameter("businessObjectFormatUsage", FORMAT_USAGE_CODE));
+        parameters.add(buildParameter("businessObjectFormatFileType", FORMAT_FILE_TYPE_CODE));
+        parameters.add(buildParameter("businessObjectFormatVersion", FORMAT_VERSION.toString()));
+        parameters.add(buildParameter("partitionValue", PARTITION_VALUE));
+        parameters.add(buildParameter("subPartitionValues", EMPTY_STRING));
+
+        // Get the expected S3 key prefix value.
+        String expectedS3KeyPrefix =
+            getExpectedS3KeyPrefix(NAMESPACE, DATA_PROVIDER_NAME, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_KEY,
                 PARTITION_VALUE, null, null, INITIAL_DATA_VERSION);
 
         // Run the activiti task and validate the returned S3 key prefix value.
@@ -185,7 +235,9 @@ public class GetS3KeyPrefixTest extends HerdActivitiServiceTaskTest
         Map<String, Object> variableValuesToValidate = new HashMap<>();
         variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"businessObjectFormatVersion\" must be a valid integer value.");
 
-        testActivitiServiceTaskFailure(GetS3KeyPrefix.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            testActivitiServiceTaskFailure(GetS3KeyPrefix.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+        });
     }
 
     /**
@@ -205,7 +257,9 @@ public class GetS3KeyPrefixTest extends HerdActivitiServiceTaskTest
         Map<String, Object> variableValuesToValidate = new HashMap<>();
         variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"businessObjectDataVersion\" must be a valid integer value.");
 
-        testActivitiServiceTaskFailure(GetS3KeyPrefix.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            testActivitiServiceTaskFailure(GetS3KeyPrefix.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+        });
     }
 
     /**
@@ -225,9 +279,12 @@ public class GetS3KeyPrefixTest extends HerdActivitiServiceTaskTest
         parameters.add(buildParameter("createNewVersion", "NOT_A_BOOLEAN"));
 
         Map<String, Object> variableValuesToValidate = new HashMap<>();
-        variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"createNewVersion\" must be a valid boolean value of \"true\" or \"false\".");
+        variableValuesToValidate
+            .put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"createNewVersion\" must be a valid boolean value of \"true\" or \"false\".");
 
-        testActivitiServiceTaskFailure(GetS3KeyPrefix.class.getCanonicalName(), fieldExtensionList, parameters, null);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            testActivitiServiceTaskFailure(GetS3KeyPrefix.class.getCanonicalName(), fieldExtensionList, parameters, null);
+        });
     }
 
     /**
@@ -238,7 +295,7 @@ public class GetS3KeyPrefixTest extends HerdActivitiServiceTaskTest
     public void testGetS3KeyPrefixInitialDataVersionExists() throws Exception
     {
         // Create an initial version of a business object data.
-        createBusinessObjectDataEntity(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, INITIAL_DATA_VERSION,
+        createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, INITIAL_DATA_VERSION,
             true, BDATA_STATUS);
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
@@ -254,8 +311,8 @@ public class GetS3KeyPrefixTest extends HerdActivitiServiceTaskTest
 
         List<Parameter> parameters = new ArrayList<>();
 
-        parameters.add(buildParameter("namespace", NAMESPACE_CD));
-        parameters.add(buildParameter("businessObjectDefinitionName", BOD_NAME));
+        parameters.add(buildParameter("namespace", NAMESPACE));
+        parameters.add(buildParameter("businessObjectDefinitionName", BDEF_NAME));
         parameters.add(buildParameter("businessObjectFormatUsage", FORMAT_USAGE_CODE));
         parameters.add(buildParameter("businessObjectFormatFileType", FORMAT_FILE_TYPE_CODE));
         parameters.add(buildParameter("businessObjectFormatVersion", FORMAT_VERSION.toString()));
@@ -265,7 +322,7 @@ public class GetS3KeyPrefixTest extends HerdActivitiServiceTaskTest
 
         // Get the expected S3 key prefix value.
         String expectedS3KeyPrefix =
-            getExpectedS3KeyPrefix(NAMESPACE_CD, DATA_PROVIDER_NAME, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_KEY,
+            getExpectedS3KeyPrefix(NAMESPACE, DATA_PROVIDER_NAME, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_KEY,
                 PARTITION_VALUE, null, null, SECOND_DATA_VERSION);
 
         // Run the activiti task and validate the returned S3 key prefix value.

@@ -23,14 +23,10 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 /**
  * A custom DDL.
  */
-@XmlRootElement
-@XmlType
 @Table(name = CustomDdlEntity.TABLE_NAME)
 @Entity
 public class CustomDdlEntity extends AuditableEntity
@@ -43,7 +39,7 @@ public class CustomDdlEntity extends AuditableEntity
     @Id
     @Column(name = TABLE_NAME + "_id")
     @GeneratedValue(generator = TABLE_NAME + "_seq")
-    @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq")
+    @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq", allocationSize = 1)
     private Integer id;
 
     @ManyToOne
@@ -94,43 +90,5 @@ public class CustomDdlEntity extends AuditableEntity
     public void setDdl(String ddl)
     {
         this.ddl = ddl;
-    }
-
-    @Override
-    public boolean equals(Object other)
-    {
-        if (this == other)
-        {
-            return true;
-        }
-        if (other == null || getClass() != other.getClass())
-        {
-            return false;
-        }
-
-        CustomDdlEntity that = (CustomDdlEntity) other;
-
-        if (!businessObjectFormat.equals(that.businessObjectFormat))
-        {
-            return false;
-        }
-        if (!customDdlName.equals(that.customDdlName))
-        {
-            return false;
-        }
-        if (!ddl.equals(that.ddl))
-        {
-            return false;
-        }
-
-        return true;
-    }
-
-    @Override
-    public int hashCode()
-    {
-        int result = businessObjectFormat.hashCode();
-        result = 31 * result + customDdlName.hashCode();
-        return result;
     }
 }

@@ -36,7 +36,7 @@ import org.junit.Test;
 
 import org.finra.herd.core.Command;
 import org.finra.herd.core.HerdDateUtils;
-import org.finra.herd.dao.HerdDao;
+import org.finra.herd.dao.impl.AbstractHerdDao;
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.Storage;
@@ -62,10 +62,15 @@ import org.finra.herd.model.jpa.StorageUnitStatusEntity;
 public class StorageServiceTest extends AbstractServiceTest
 {
     private static final int PAST_UPLOAD_DATES_TO_REPORT_ON = 7;
+
     private static final int TODAY_UPLOAD_DATE = 1;
+
     private static final int ADDITIONAL_UPLOAD_DATE = 1;
+
     private static final int BDEFS_PER_DAY = 3;
+
     private static final int FORMATS_PER_BDEF = 2;
+
     private static final int FILES_PER_FORMAT = 5;
 
     @Test
@@ -207,7 +212,7 @@ public class StorageServiceTest extends AbstractServiceTest
     {
         // Create a storage unit entity that refers to a newly created storage.
         final StorageUnitEntity storageUnitEntity =
-            createStorageUnitEntity(STORAGE_NAME, BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS, STORAGE_UNIT_STATUS, NO_STORAGE_DIRECTORY_PATH);
 
         executeWithoutLogging(SqlExceptionHelper.class, new Command()
@@ -261,7 +266,7 @@ public class StorageServiceTest extends AbstractServiceTest
     @Test
     public void testGetStorageUploadStats() throws JAXBException, IOException
     {
-        SimpleDateFormat sdf = new SimpleDateFormat(HerdDao.DEFAULT_SINGLE_DAY_DATE_MASK);
+        SimpleDateFormat sdf = new SimpleDateFormat(AbstractHerdDao.DEFAULT_SINGLE_DAY_DATE_MASK);
         Date currentDate = HerdDateUtils.getCurrentCalendarNoTime().getTime();
         StorageDailyUploadStats uploadStats;
 
@@ -270,7 +275,7 @@ public class StorageServiceTest extends AbstractServiceTest
 
         // Validate that we get no records back, when we specify wrong (5 days into the future) upload date.
         StorageAlternateKeyDto alternateKey = StorageAlternateKeyDto.builder().storageName(STORAGE_NAME).build();
-        uploadStats = storageService.getStorageUploadStats(alternateKey, herdHelper.getDateFromString(sdf.format(HerdDateUtils.addDays(currentDate, 5))));
+        uploadStats = storageService.getStorageUploadStats(alternateKey, storageHelper.getDateFromString(sdf.format(HerdDateUtils.addDays(currentDate, 5))));
         assertTrue(uploadStats.getStorageDailyUploadStats().isEmpty());
 
         // Validate upload stats for the entire range of upload dates (partition values) pre-populated in the test storage.
@@ -283,7 +288,7 @@ public class StorageServiceTest extends AbstractServiceTest
         for (Date date = startDate; !date.after(endDate); date = HerdDateUtils.addDays(date, 1))
         {
             // Retrieve and validate upload stats for each upload date (partition value) loaded in the test storage.
-            uploadStats = storageService.getStorageUploadStats(alternateKey, herdHelper.getDateFromString(sdf.format(date)));
+            uploadStats = storageService.getStorageUploadStats(alternateKey, storageHelper.getDateFromString(sdf.format(date)));
             assertTrue(uploadStats.getStorageDailyUploadStats().size() == 1);
             XMLGregorianCalendar expectedUploadDate = HerdDateUtils.getXMLGregorianCalendarValue(date);
             assertTrue(uploadStats.getStorageDailyUploadStats().get(0).getUploadDate().equals(expectedUploadDate));
@@ -299,12 +304,12 @@ public class StorageServiceTest extends AbstractServiceTest
     @Test(expected = ObjectNotFoundException.class)
     public void testGetStorageUploadStatsWrongStorageName() throws JAXBException, IOException
     {
-        SimpleDateFormat sdf = new SimpleDateFormat(HerdDao.DEFAULT_SINGLE_DAY_DATE_MASK);
+        SimpleDateFormat sdf = new SimpleDateFormat(AbstractHerdDao.DEFAULT_SINGLE_DAY_DATE_MASK);
         Date currentDate = HerdDateUtils.getCurrentCalendarNoTime().getTime();
 
         // Try to get storage upload statistics for a non-existing storage.
         StorageAlternateKeyDto alternateKey = StorageAlternateKeyDto.builder().storageName("I_DO_NOT_EXIST").build();
-        storageService.getStorageUploadStats(alternateKey, herdHelper.getDateFromString(sdf.format(currentDate)));
+        storageService.getStorageUploadStats(alternateKey, storageHelper.getDateFromString(sdf.format(currentDate)));
     }
 
     @Test
@@ -317,14 +322,14 @@ public class StorageServiceTest extends AbstractServiceTest
         {
             try
             {
-                storageService.getStorageUploadStats(alternateKey, herdHelper.getDateFromString(uploadDateString));
+                storageService.getStorageUploadStats(alternateKey, storageHelper.getDateFromString(uploadDateString));
                 fail(String.format("Should throw an IllegalArgumentException when upload date is not a valid date in %s format.",
-                    HerdDao.DEFAULT_SINGLE_DAY_DATE_MASK.toUpperCase()));
+                    AbstractHerdDao.DEFAULT_SINGLE_DAY_DATE_MASK.toUpperCase()));
             }
             catch (IllegalArgumentException e)
             {
                 assertEquals(String.format("A date value \"%s\" must contain %d characters and be in \"%s\" format.", uploadDateString.trim(),
-                    HerdDao.DEFAULT_SINGLE_DAY_DATE_MASK.length(), HerdDao.DEFAULT_SINGLE_DAY_DATE_MASK.toUpperCase()), e.getMessage());
+                    AbstractHerdDao.DEFAULT_SINGLE_DAY_DATE_MASK.length(), AbstractHerdDao.DEFAULT_SINGLE_DAY_DATE_MASK.toUpperCase()), e.getMessage());
             }
         }
     }
@@ -339,15 +344,14 @@ public class StorageServiceTest extends AbstractServiceTest
         {
             try
             {
-                storageService.getStorageUploadStats(alternateKey, herdHelper.getDateFromString(uploadDateString));
+                storageService.getStorageUploadStats(alternateKey, storageHelper.getDateFromString(uploadDateString));
                 fail(String.format("Should throw an IllegalArgumentException when upload date is not a valid date in %s format.",
-                    HerdDao.DEFAULT_SINGLE_DAY_DATE_MASK.toUpperCase()));
+                    AbstractHerdDao.DEFAULT_SINGLE_DAY_DATE_MASK.toUpperCase()));
             }
             catch (IllegalArgumentException e)
             {
-                assertEquals(
-                    String.format("A date value \"%s\" must be in \"%s\" format.", uploadDateString.trim(), HerdDao.DEFAULT_SINGLE_DAY_DATE_MASK.toUpperCase()),
-                    e.getMessage());
+                assertEquals(String.format("A date value \"%s\" must be in \"%s\" format.", uploadDateString.trim(),
+                    AbstractHerdDao.DEFAULT_SINGLE_DAY_DATE_MASK.toUpperCase()), e.getMessage());
             }
         }
     }
@@ -367,7 +371,7 @@ public class StorageServiceTest extends AbstractServiceTest
 
         // Validate that we get back the number of records expected for the case when no upload date is specified.
         StorageAlternateKeyDto alternateKey = StorageAlternateKeyDto.builder().storageName(STORAGE_NAME).build();
-        uploadStats = storageService.getStorageUploadStats(alternateKey, herdHelper.getDateFromString(" "));
+        uploadStats = storageService.getStorageUploadStats(alternateKey, storageHelper.getDateFromString(" "));
         int expectedRecordCount = PAST_UPLOAD_DATES_TO_REPORT_ON + TODAY_UPLOAD_DATE;
         assertTrue(uploadStats.getStorageDailyUploadStats().size() == expectedRecordCount);
 
@@ -399,7 +403,7 @@ public class StorageServiceTest extends AbstractServiceTest
     @Test
     public void testGetStorageUploadStatsByBusinessObjectDefinition() throws JAXBException, IOException
     {
-        SimpleDateFormat sdf = new SimpleDateFormat(HerdDao.DEFAULT_SINGLE_DAY_DATE_MASK);
+        SimpleDateFormat sdf = new SimpleDateFormat(AbstractHerdDao.DEFAULT_SINGLE_DAY_DATE_MASK);
         Date currentDate = HerdDateUtils.getCurrentCalendarNoTime().getTime();
         StorageBusinessObjectDefinitionDailyUploadStats uploadStats;
 
@@ -409,7 +413,7 @@ public class StorageServiceTest extends AbstractServiceTest
         // Validate that we get no records back, when we specify wrong (5 days into the future) upload date.
         StorageAlternateKeyDto alternateKey = StorageAlternateKeyDto.builder().storageName(STORAGE_NAME).build();
         uploadStats = storageService
-            .getStorageUploadStatsByBusinessObjectDefinition(alternateKey, herdHelper.getDateFromString(sdf.format(HerdDateUtils.addDays(currentDate, 5))));
+            .getStorageUploadStatsByBusinessObjectDefinition(alternateKey, storageHelper.getDateFromString(sdf.format(HerdDateUtils.addDays(currentDate, 5))));
         assertTrue(uploadStats.getStorageBusinessObjectDefinitionDailyUploadStats().isEmpty());
 
         // Validate all days for business object data pre-created in the test storage.
@@ -421,7 +425,7 @@ public class StorageServiceTest extends AbstractServiceTest
 
         for (Date date = startDate; !date.after(endDate); date = HerdDateUtils.addDays(date, 1))
         {
-            uploadStats = storageService.getStorageUploadStatsByBusinessObjectDefinition(alternateKey, herdHelper.getDateFromString(sdf.format(date)));
+            uploadStats = storageService.getStorageUploadStatsByBusinessObjectDefinition(alternateKey, storageHelper.getDateFromString(sdf.format(date)));
 
             // For each upload date, iterate over business objects definitions and validate the upload stats.
             assertTrue(uploadStats.getStorageBusinessObjectDefinitionDailyUploadStats().size() == BDEFS_PER_DAY);
@@ -430,9 +434,9 @@ public class StorageServiceTest extends AbstractServiceTest
             {
                 // Validate upload stats.
                 StorageBusinessObjectDefinitionDailyUploadStat uploadStat = uploadStats.getStorageBusinessObjectDefinitionDailyUploadStats().get(i);
-                String expectedBdefName = String.format("%s_%d", BOD_NAME, i);
+                String expectedBdefName = String.format("%s_%d", BDEF_NAME, i);
                 assertTrue(uploadStat.getUploadDate().equals(expectedUploadDate));
-                assertTrue(uploadStat.getNamespace().equals(NAMESPACE_CD));
+                assertTrue(uploadStat.getNamespace().equals(NAMESPACE));
                 assertTrue(uploadStat.getDataProviderName().equals(DATA_PROVIDER_NAME));
                 assertTrue(uploadStat.getBusinessObjectDefinitionName().equals(expectedBdefName));
                 assertTrue(uploadStat.getTotalFiles() == expectedTotalFiles);
@@ -449,12 +453,12 @@ public class StorageServiceTest extends AbstractServiceTest
     @Test(expected = ObjectNotFoundException.class)
     public void testGetStorageUploadStatsByBusinessObjectDefinitionWrongStorageName() throws JAXBException, IOException
     {
-        SimpleDateFormat sdf = new SimpleDateFormat(HerdDao.DEFAULT_SINGLE_DAY_DATE_MASK);
+        SimpleDateFormat sdf = new SimpleDateFormat(AbstractHerdDao.DEFAULT_SINGLE_DAY_DATE_MASK);
         Date currentDate = HerdDateUtils.getCurrentCalendarNoTime().getTime();
 
         // Try to get storage upload statistics for a non-existing storage.
         StorageAlternateKeyDto alternateKey = StorageAlternateKeyDto.builder().storageName("I_DO_NOT_EXIST").build();
-        storageService.getStorageUploadStatsByBusinessObjectDefinition(alternateKey, herdHelper.getDateFromString(sdf.format(currentDate)));
+        storageService.getStorageUploadStatsByBusinessObjectDefinition(alternateKey, storageHelper.getDateFromString(sdf.format(currentDate)));
     }
 
     /*
@@ -472,7 +476,7 @@ public class StorageServiceTest extends AbstractServiceTest
 
         // Validate that we get back the number of records expected for the case when no upload date is specified.
         StorageAlternateKeyDto alternateKey = StorageAlternateKeyDto.builder().storageName(STORAGE_NAME).build();
-        uploadStats = storageService.getStorageUploadStatsByBusinessObjectDefinition(alternateKey, herdHelper.getDateFromString(" "));
+        uploadStats = storageService.getStorageUploadStatsByBusinessObjectDefinition(alternateKey, storageHelper.getDateFromString(" "));
         int expectedRecordCount = (PAST_UPLOAD_DATES_TO_REPORT_ON + TODAY_UPLOAD_DATE) * BDEFS_PER_DAY;
         assertTrue(uploadStats.getStorageBusinessObjectDefinitionDailyUploadStats().size() == expectedRecordCount);
 
@@ -490,9 +494,9 @@ public class StorageServiceTest extends AbstractServiceTest
             {
                 // Validate each upload statistics record.
                 StorageBusinessObjectDefinitionDailyUploadStat uploadStat = uploadStats.getStorageBusinessObjectDefinitionDailyUploadStats().get(index);
-                String expectedBdefName = String.format("%s_%d", BOD_NAME, i);
+                String expectedBdefName = String.format("%s_%d", BDEF_NAME, i);
                 assertTrue(uploadStat.getUploadDate().equals(expectedUploadDate));
-                assertTrue(uploadStat.getNamespace().equals(NAMESPACE_CD));
+                assertTrue(uploadStat.getNamespace().equals(NAMESPACE));
                 assertTrue(uploadStat.getDataProviderName().equals(DATA_PROVIDER_NAME));
                 assertTrue(uploadStat.getBusinessObjectDefinitionName().equals(expectedBdefName));
                 assertTrue(uploadStat.getTotalFiles() == expectedTotalFiles);
@@ -527,7 +531,7 @@ public class StorageServiceTest extends AbstractServiceTest
     {
         // Create relative database entities.
         StorageEntity storageEntity = createStorageEntity(STORAGE_NAME);
-        createNamespaceEntity(NAMESPACE_CD);
+        createNamespaceEntity(NAMESPACE);
         createDataProviderEntity(DATA_PROVIDER_NAME);
 
         // Create test business object format file types.
@@ -540,20 +544,20 @@ public class StorageServiceTest extends AbstractServiceTest
         // Create test business object definitions.
         for (int x = 0; x < BDEFS_PER_DAY; x++)
         {
-            String bdefName = String.format("%s_%d", BOD_NAME, x);
-            createBusinessObjectDefinitionEntity(NAMESPACE_CD, bdefName, DATA_PROVIDER_NAME, "Description of " + bdefName);
+            String bdefName = String.format("%s_%d", BDEF_NAME, x);
+            createBusinessObjectDefinitionEntity(NAMESPACE, bdefName, DATA_PROVIDER_NAME, "Description of " + bdefName);
 
             // Create relative business object formats for each of the business object definitions.
             for (int y = 0; y < FORMATS_PER_BDEF; y++)
             {
                 String formatUsageCode = String.format("%s_%d", FORMAT_USAGE_CODE, y);
                 String formatFileTypeCode = String.format("%s_%d", FORMAT_FILE_TYPE_CODE, y);
-                createBusinessObjectFormatEntity(NAMESPACE_CD, bdefName, formatUsageCode, formatFileTypeCode, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION,
+                createBusinessObjectFormatEntity(NAMESPACE, bdefName, formatUsageCode, formatFileTypeCode, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION,
                     Boolean.FALSE, PARTITION_KEY);
 
                 // For each format, iterate over (ADDITIONAL_UPLOAD_DATE + PAST_UPLOAD_DATES_TO_REPORT_ON +
                 // TODAY_UPLOAD_DATE + ADDITIONAL_UPLOAD_DATE) number of days...
-                SimpleDateFormat sdf = new SimpleDateFormat(HerdDao.DEFAULT_SINGLE_DAY_DATE_MASK);
+                SimpleDateFormat sdf = new SimpleDateFormat(AbstractHerdDao.DEFAULT_SINGLE_DAY_DATE_MASK);
                 Date currentDate = HerdDateUtils.getCurrentCalendarNoTime().getTime();
                 Date startDate = HerdDateUtils.addDays(currentDate, -(PAST_UPLOAD_DATES_TO_REPORT_ON + ADDITIONAL_UPLOAD_DATE));
                 Date endDate = HerdDateUtils.addDays(currentDate, ADDITIONAL_UPLOAD_DATE);
@@ -562,7 +566,7 @@ public class StorageServiceTest extends AbstractServiceTest
                 {
                     String partitionValue = sdf.format(date);
                     BusinessObjectDataEntity bode =
-                        createBusinessObjectDataEntity(NAMESPACE_CD, bdefName, formatUsageCode, formatFileTypeCode, INITIAL_FORMAT_VERSION, partitionValue,
+                        createBusinessObjectDataEntity(NAMESPACE, bdefName, formatUsageCode, formatFileTypeCode, INITIAL_FORMAT_VERSION, partitionValue,
                             INITIAL_DATA_VERSION, Boolean.FALSE, BDATA_STATUS);
                     StorageUnitEntity storageUnitEntity =
                         createStorageUnitEntity(storageEntity, bode, StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
@@ -571,7 +575,7 @@ public class StorageServiceTest extends AbstractServiceTest
                     for (int z = 0; z < FILES_PER_FORMAT; z++)
                     {
                         String s3FilePath = String.format("%s/%d_%s",
-                            getExpectedS3KeyPrefix(NAMESPACE_CD, DATA_PROVIDER_NAME, bdefName, formatUsageCode, formatFileTypeCode, INITIAL_FORMAT_VERSION,
+                            getExpectedS3KeyPrefix(NAMESPACE, DATA_PROVIDER_NAME, bdefName, formatUsageCode, formatFileTypeCode, INITIAL_FORMAT_VERSION,
                                 PARTITION_KEY, partitionValue, null, null, INITIAL_DATA_VERSION), z + 1, LOCAL_FILE);
 
                         StorageFileEntity storageFileEntity = createStorageFileEntity(storageUnitEntity, s3FilePath, FILE_SIZE_1_KB, ROW_COUNT_1000);

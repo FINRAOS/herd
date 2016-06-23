@@ -27,9 +27,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import org.finra.herd.dao.BusinessObjectDataNotificationRegistrationDao;
-import org.finra.herd.dao.HerdDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
+import org.finra.herd.model.annotation.NamespacePermission;
+import org.finra.herd.model.annotation.NamespacePermissions;
 import org.finra.herd.model.api.xml.BusinessObjectDataNotificationFilter;
 import org.finra.herd.model.api.xml.BusinessObjectDataNotificationRegistration;
 import org.finra.herd.model.api.xml.BusinessObjectDataNotificationRegistrationCreateRequest;
@@ -37,6 +38,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDataNotificationRegistrationKe
 import org.finra.herd.model.api.xml.BusinessObjectDataNotificationRegistrationUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.JobAction;
+import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.api.xml.NotificationRegistrationKey;
 import org.finra.herd.model.jpa.BusinessObjectDataNotificationRegistrationEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
@@ -50,8 +52,13 @@ import org.finra.herd.model.jpa.NotificationJobActionEntity;
 import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.service.BusinessObjectDataNotificationRegistrationService;
 import org.finra.herd.service.helper.BusinessObjectDataNotificationRegistrationDaoHelper;
-import org.finra.herd.service.helper.HerdDaoHelper;
-import org.finra.herd.service.helper.HerdHelper;
+import org.finra.herd.service.helper.BusinessObjectDataNotificationRegistrationHelper;
+import org.finra.herd.service.helper.BusinessObjectDataStatusDaoHelper;
+import org.finra.herd.service.helper.BusinessObjectDefinitionDaoHelper;
+import org.finra.herd.service.helper.FileTypeDaoHelper;
+import org.finra.herd.service.helper.JobDefinitionDaoHelper;
+import org.finra.herd.service.helper.NamespaceDaoHelper;
+import org.finra.herd.service.helper.NotificationEventTypeDaoHelper;
 import org.finra.herd.service.helper.NotificationRegistrationStatusDaoHelper;
 import org.finra.herd.service.helper.StorageDaoHelper;
 
@@ -63,33 +70,42 @@ import org.finra.herd.service.helper.StorageDaoHelper;
 public class BusinessObjectDataNotificationRegistrationServiceImpl implements BusinessObjectDataNotificationRegistrationService
 {
     @Autowired
-    private HerdHelper herdHelper;
-
-    @Autowired
-    private HerdDao herdDao;
-
-    @Autowired
-    private HerdDaoHelper herdDaoHelper;
-
-    @Autowired
-    private StorageDaoHelper storageDaoHelper;
-
-    @Autowired
     private BusinessObjectDataNotificationRegistrationDao businessObjectDataNotificationRegistrationDao;
 
     @Autowired
     private BusinessObjectDataNotificationRegistrationDaoHelper businessObjectDataNotificationRegistrationDaoHelper;
 
     @Autowired
+    private BusinessObjectDataNotificationRegistrationHelper businessObjectDataNotificationRegistrationHelper;
+
+    @Autowired
+    private BusinessObjectDataStatusDaoHelper businessObjectDataStatusDaoHelper;
+
+    @Autowired
+    private BusinessObjectDefinitionDaoHelper businessObjectDefinitionDaoHelper;
+
+    @Autowired
+    private FileTypeDaoHelper fileTypeDaoHelper;
+
+    @Autowired
+    private JobDefinitionDaoHelper jobDefinitionDaoHelper;
+
+    @Autowired
+    private NamespaceDaoHelper namespaceDaoHelper;
+
+    @Autowired
+    private NotificationEventTypeDaoHelper notificationEventTypeDaoHelper;
+
+    @Autowired
     private NotificationRegistrationStatusDaoHelper notificationRegistrationStatusDaoHelper;
 
-    /**
-     * Creates a new business object data notification.
-     *
-     * @param request the information needed to create a business object data notification
-     *
-     * @return the newly created business object data notification
-     */
+    @Autowired
+    private StorageDaoHelper storageDaoHelper;
+
+    @NamespacePermissions(
+        {@NamespacePermission(fields = "#request?.businessObjectDataNotificationRegistrationKey?.namespace", permissions = NamespacePermissionEnum.WRITE),
+            @NamespacePermission(fields = "#request?.businessObjectDataNotificationFilter?.namespace", permissions = NamespacePermissionEnum.READ),
+            @NamespacePermission(fields = "#request?.jobActions?.![namespace]", permissions = NamespacePermissionEnum.EXECUTE)})
     @Override
     public BusinessObjectDataNotificationRegistration createBusinessObjectDataNotificationRegistration(
         BusinessObjectDataNotificationRegistrationCreateRequest request)
@@ -101,23 +117,24 @@ public class BusinessObjectDataNotificationRegistrationServiceImpl implements Bu
         NotificationRegistrationKey key = request.getBusinessObjectDataNotificationRegistrationKey();
 
         // Retrieve and ensure that namespace exists with the specified namespace code.
-        NamespaceEntity namespaceEntity = herdDaoHelper.getNamespaceEntity(key.getNamespace());
+        NamespaceEntity namespaceEntity = namespaceDaoHelper.getNamespaceEntity(key.getNamespace());
 
         // Retrieve and ensure that notification event type exists.
-        NotificationEventTypeEntity notificationEventTypeEntity = herdDaoHelper.getNotificationEventTypeEntity(request.getBusinessObjectDataEventType());
+        NotificationEventTypeEntity notificationEventTypeEntity =
+            notificationEventTypeDaoHelper.getNotificationEventTypeEntity(request.getBusinessObjectDataEventType());
 
         // Get the business object data notification filter.
         BusinessObjectDataNotificationFilter filter = request.getBusinessObjectDataNotificationFilter();
 
         // Retrieve and ensure that business object definition exists.
-        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = herdDaoHelper.getBusinessObjectDefinitionEntity(new BusinessObjectDefinitionKey(filter
-            .getNamespace(), filter.getBusinessObjectDefinitionName()));
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoHelper
+            .getBusinessObjectDefinitionEntity(new BusinessObjectDefinitionKey(filter.getNamespace(), filter.getBusinessObjectDefinitionName()));
 
         // If specified, retrieve and ensure that file type exists.
         FileTypeEntity fileTypeEntity = null;
         if (StringUtils.isNotBlank(filter.getBusinessObjectFormatFileType()))
         {
-            fileTypeEntity = herdDaoHelper.getFileTypeEntity(filter.getBusinessObjectFormatFileType());
+            fileTypeEntity = fileTypeDaoHelper.getFileTypeEntity(filter.getBusinessObjectFormatFileType());
         }
 
         // If specified, retrieve and ensure that storage exists.
@@ -131,19 +148,19 @@ public class BusinessObjectDataNotificationRegistrationServiceImpl implements Bu
         BusinessObjectDataStatusEntity newBusinessObjectDataStatus = null;
         if (StringUtils.isNotBlank(filter.getNewBusinessObjectDataStatus()))
         {
-            newBusinessObjectDataStatus = herdDaoHelper.getBusinessObjectDataStatusEntity(filter.getNewBusinessObjectDataStatus());
+            newBusinessObjectDataStatus = businessObjectDataStatusDaoHelper.getBusinessObjectDataStatusEntity(filter.getNewBusinessObjectDataStatus());
         }
 
         // If specified, retrieve and ensure that old business object data status exists.
         BusinessObjectDataStatusEntity oldBusinessObjectDataStatus = null;
         if (StringUtils.isNotBlank(filter.getOldBusinessObjectDataStatus()))
         {
-            oldBusinessObjectDataStatus = herdDaoHelper.getBusinessObjectDataStatusEntity(filter.getOldBusinessObjectDataStatus());
+            oldBusinessObjectDataStatus = businessObjectDataStatusDaoHelper.getBusinessObjectDataStatusEntity(filter.getOldBusinessObjectDataStatus());
         }
 
         // Ensure a business object data notification with the specified name doesn't already exist for the specified namespace.
-        BusinessObjectDataNotificationRegistrationEntity businessObjectDataNotificationRegistrationEntity = businessObjectDataNotificationRegistrationDao
-            .getBusinessObjectDataNotificationRegistrationByAltKey(key);
+        BusinessObjectDataNotificationRegistrationEntity businessObjectDataNotificationRegistrationEntity =
+            businessObjectDataNotificationRegistrationDao.getBusinessObjectDataNotificationRegistrationByAltKey(key);
         if (businessObjectDataNotificationRegistrationEntity != null)
         {
             throw new AlreadyExistsException(String
@@ -163,25 +180,37 @@ public class BusinessObjectDataNotificationRegistrationServiceImpl implements Bu
                 request.getBusinessObjectDataNotificationFilter(), request.getJobActions(), request.getNotificationRegistrationStatus());
 
         // Persist the new entity.
-        businessObjectDataNotificationRegistrationEntity = herdDao.saveAndRefresh(businessObjectDataNotificationRegistrationEntity);
+        businessObjectDataNotificationRegistrationEntity =
+            businessObjectDataNotificationRegistrationDao.saveAndRefresh(businessObjectDataNotificationRegistrationEntity);
 
         // Create and return the business object data notification object from the persisted entity.
         return createBusinessObjectDataNotificationFromEntity(businessObjectDataNotificationRegistrationEntity);
     }
 
-    /**
-     * Updates an existing business object data notification by key.
-     *
-     * @param key the business object data notification registration key
-     *
-     * @return the business object data notification that got updated
-     */
+    @NamespacePermission(fields = "#key?.namespace", permissions = NamespacePermissionEnum.READ)
+    @Override
+    public BusinessObjectDataNotificationRegistration getBusinessObjectDataNotificationRegistration(NotificationRegistrationKey key)
+    {
+        // Validate and trim the key.
+        businessObjectDataNotificationRegistrationHelper.validateBusinessObjectDataNotificationRegistrationKey(key);
+
+        // Retrieve and ensure that a business object data notification exists with the specified key.
+        BusinessObjectDataNotificationRegistrationEntity businessObjectDataNotificationRegistrationEntity =
+            businessObjectDataNotificationRegistrationDaoHelper.getBusinessObjectDataNotificationRegistrationEntity(key);
+
+        // Create and return the business object data notification object from the persisted entity.
+        return createBusinessObjectDataNotificationFromEntity(businessObjectDataNotificationRegistrationEntity);
+    }
+
+    @NamespacePermissions({@NamespacePermission(fields = "#key?.namespace", permissions = NamespacePermissionEnum.WRITE),
+        @NamespacePermission(fields = "#request?.businessObjectDataNotificationFilter?.namespace", permissions = NamespacePermissionEnum.READ),
+        @NamespacePermission(fields = "#request?.jobActions?.![namespace]", permissions = NamespacePermissionEnum.EXECUTE)})
     @Override
     public BusinessObjectDataNotificationRegistration updateBusinessObjectDataNotificationRegistration(NotificationRegistrationKey key,
         BusinessObjectDataNotificationRegistrationUpdateRequest request)
     {
         // Validate and trim the key.
-        herdHelper.validateBusinessObjectDataNotificationRegistrationKey(key);
+        businessObjectDataNotificationRegistrationHelper.validateBusinessObjectDataNotificationRegistrationKey(key);
 
         // Validate and trim the request parameters.
         validateBusinessObjectDataNotificationRegistrationUpdateRequest(request);
@@ -192,23 +221,24 @@ public class BusinessObjectDataNotificationRegistrationServiceImpl implements Bu
         String oldBusinessObjectDataNotificationRegistrationName = oldBusinessObjectDataNotificationRegistrationEntity.getName();
 
         // Retrieve the namespace with the specified namespace code.
-        NamespaceEntity namespaceEntity = herdDaoHelper.getNamespaceEntity(key.getNamespace());
+        NamespaceEntity namespaceEntity = namespaceDaoHelper.getNamespaceEntity(key.getNamespace());
 
         // Retrieve and ensure that notification event type exists.
-        NotificationEventTypeEntity notificationEventTypeEntity = herdDaoHelper.getNotificationEventTypeEntity(request.getBusinessObjectDataEventType());
+        NotificationEventTypeEntity notificationEventTypeEntity =
+            notificationEventTypeDaoHelper.getNotificationEventTypeEntity(request.getBusinessObjectDataEventType());
 
         // Get the business object data notification filter.
         BusinessObjectDataNotificationFilter filter = request.getBusinessObjectDataNotificationFilter();
 
         // Retrieve and ensure that business object definition exists. Since namespace is specified, retrieve a business object definition by it's key.
-        BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
-            herdDaoHelper.getBusinessObjectDefinitionEntity(new BusinessObjectDefinitionKey(filter.getNamespace(), filter.getBusinessObjectDefinitionName()));
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoHelper
+            .getBusinessObjectDefinitionEntity(new BusinessObjectDefinitionKey(filter.getNamespace(), filter.getBusinessObjectDefinitionName()));
 
         // If specified, retrieve and ensure that file type exists.
         FileTypeEntity fileTypeEntity = null;
         if (StringUtils.isNotBlank(filter.getBusinessObjectFormatFileType()))
         {
-            fileTypeEntity = herdDaoHelper.getFileTypeEntity(filter.getBusinessObjectFormatFileType());
+            fileTypeEntity = fileTypeDaoHelper.getFileTypeEntity(filter.getBusinessObjectFormatFileType());
         }
 
         // If specified, retrieve and ensure that storage exists.
@@ -222,18 +252,18 @@ public class BusinessObjectDataNotificationRegistrationServiceImpl implements Bu
         BusinessObjectDataStatusEntity newBusinessObjectDataStatus = null;
         if (StringUtils.isNotBlank(filter.getNewBusinessObjectDataStatus()))
         {
-            newBusinessObjectDataStatus = herdDaoHelper.getBusinessObjectDataStatusEntity(filter.getNewBusinessObjectDataStatus());
+            newBusinessObjectDataStatus = businessObjectDataStatusDaoHelper.getBusinessObjectDataStatusEntity(filter.getNewBusinessObjectDataStatus());
         }
 
         // If specified, retrieve and ensure that old business object data status exists.
         BusinessObjectDataStatusEntity oldBusinessObjectDataStatus = null;
         if (StringUtils.isNotBlank(filter.getOldBusinessObjectDataStatus()))
         {
-            oldBusinessObjectDataStatus = herdDaoHelper.getBusinessObjectDataStatusEntity(filter.getOldBusinessObjectDataStatus());
+            oldBusinessObjectDataStatus = businessObjectDataStatusDaoHelper.getBusinessObjectDataStatusEntity(filter.getOldBusinessObjectDataStatus());
         }
 
         // Delete the business object data notification.
-        herdDao.delete(oldBusinessObjectDataNotificationRegistrationEntity);
+        businessObjectDataNotificationRegistrationDao.delete(oldBusinessObjectDataNotificationRegistrationEntity);
 
         // Create a business object data notification registration entity from the request information.
         BusinessObjectDataNotificationRegistrationEntity newBusinessObjectDataNotificationRegistrationEntity =
@@ -243,80 +273,64 @@ public class BusinessObjectDataNotificationRegistrationServiceImpl implements Bu
                 request.getBusinessObjectDataNotificationFilter(), request.getJobActions(), request.getNotificationRegistrationStatus());
 
         // Persist the new entity.
-        newBusinessObjectDataNotificationRegistrationEntity = herdDao.saveAndRefresh(newBusinessObjectDataNotificationRegistrationEntity);
+        newBusinessObjectDataNotificationRegistrationEntity =
+            businessObjectDataNotificationRegistrationDao.saveAndRefresh(newBusinessObjectDataNotificationRegistrationEntity);
 
         // Create and return the business object data notification object from the persisted entity.
         return createBusinessObjectDataNotificationFromEntity(newBusinessObjectDataNotificationRegistrationEntity);
     }
 
-    /**
-     * Gets an existing business object data notification by key.
-     *
-     * @param key the business object data notification registration key
-     *
-     * @return the business object data notification information
-     */
-    @Override
-    public BusinessObjectDataNotificationRegistration getBusinessObjectDataNotificationRegistration(NotificationRegistrationKey key)
-    {
-        // Validate and trim the key.
-        herdHelper.validateBusinessObjectDataNotificationRegistrationKey(key);
-
-        // Retrieve and ensure that a business object data notification exists with the specified key.
-        BusinessObjectDataNotificationRegistrationEntity businessObjectDataNotificationRegistrationEntity = businessObjectDataNotificationRegistrationDaoHelper
-            .getBusinessObjectDataNotificationRegistrationEntity(key);
-
-        // Create and return the business object data notification object from the persisted entity.
-        return createBusinessObjectDataNotificationFromEntity(businessObjectDataNotificationRegistrationEntity);
-    }
-
-    /**
-     * Deletes an existing business object data notification by key.
-     *
-     * @param key the business object data notification registration key
-     *
-     * @return the business object data notification that got deleted
-     */
+    @NamespacePermission(fields = "#key?.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public BusinessObjectDataNotificationRegistration deleteBusinessObjectDataNotificationRegistration(NotificationRegistrationKey key)
     {
         // Validate and trim the key.
-        herdHelper.validateBusinessObjectDataNotificationRegistrationKey(key);
+        businessObjectDataNotificationRegistrationHelper.validateBusinessObjectDataNotificationRegistrationKey(key);
 
         // Retrieve and ensure that a business object data notification exists with the specified key.
-        BusinessObjectDataNotificationRegistrationEntity businessObjectDataNotificationRegistrationEntity = businessObjectDataNotificationRegistrationDaoHelper
-            .getBusinessObjectDataNotificationRegistrationEntity(key);
+        BusinessObjectDataNotificationRegistrationEntity businessObjectDataNotificationRegistrationEntity =
+            businessObjectDataNotificationRegistrationDaoHelper.getBusinessObjectDataNotificationRegistrationEntity(key);
 
         // Delete the business object data notification.
-        herdDao.delete(businessObjectDataNotificationRegistrationEntity);
+        businessObjectDataNotificationRegistrationDao.delete(businessObjectDataNotificationRegistrationEntity);
 
         // Create and return the business object data notification object from the deleted entity.
         return createBusinessObjectDataNotificationFromEntity(businessObjectDataNotificationRegistrationEntity);
     }
 
-    /**
-     * Gets a list of keys for all existing business object data notifications.
-     *
-     * @param namespaceCode the namespace code.
-     *
-     * @return the business object data notification registration keys
-     */
     @Override
-    public BusinessObjectDataNotificationRegistrationKeys getBusinessObjectDataNotificationRegistrations(String namespaceCode)
+    public BusinessObjectDataNotificationRegistrationKeys getBusinessObjectDataNotificationRegistrationsByNamespace(String namespace)
     {
-        String namespaceCodeLocal = namespaceCode;
+        String namespaceLocal = namespace;
 
         // Validate and trim the namespace value.
-        Assert.hasText(namespaceCodeLocal, "A namespace must be specified.");
-        namespaceCodeLocal = namespaceCodeLocal.trim();
+        Assert.hasText(namespaceLocal, "A namespace must be specified.");
+        namespaceLocal = namespaceLocal.trim();
 
         // Ensure that this namespace exists.
-        herdDaoHelper.getNamespaceEntity(namespaceCodeLocal);
+        namespaceDaoHelper.getNamespaceEntity(namespaceLocal);
+
+        // Create and populate a list of business object data notification registration keys.
+        BusinessObjectDataNotificationRegistrationKeys businessObjectDataNotificationKeys = new BusinessObjectDataNotificationRegistrationKeys();
+        businessObjectDataNotificationKeys.getBusinessObjectDataNotificationRegistrationKeys()
+            .addAll(businessObjectDataNotificationRegistrationDao.getBusinessObjectDataNotificationRegistrationKeysByNamespace(namespaceLocal));
+
+        return businessObjectDataNotificationKeys;
+    }
+
+    @NamespacePermission(fields = "#businessObjectDataNotificationFilter?.namespace", permissions = NamespacePermissionEnum.READ)
+    @Override
+    public BusinessObjectDataNotificationRegistrationKeys getBusinessObjectDataNotificationRegistrationsByNotificationFilter(
+        BusinessObjectDataNotificationFilter businessObjectDataNotificationFilter)
+    {
+        // Validate and trim the business object data notification filter parameters.
+        validateBusinessObjectDataNotificationFilterBusinessObjectDefinitionFields(businessObjectDataNotificationFilter);
+        trimBusinessObjectDataNotificationFilterBusinessObjectFormatFields(businessObjectDataNotificationFilter);
 
         // Create and populate a list of business object data notification registration keys.
         BusinessObjectDataNotificationRegistrationKeys businessObjectDataNotificationKeys = new BusinessObjectDataNotificationRegistrationKeys();
         businessObjectDataNotificationKeys.getBusinessObjectDataNotificationRegistrationKeys().addAll(businessObjectDataNotificationRegistrationDao
-            .getBusinessObjectDataNotificationRegistrationKeys(namespaceCodeLocal));
+            .getBusinessObjectDataNotificationRegistrationKeysByNotificationFilter(businessObjectDataNotificationFilter));
 
         return businessObjectDataNotificationKeys;
     }
@@ -330,7 +344,8 @@ public class BusinessObjectDataNotificationRegistrationServiceImpl implements Bu
     {
         Assert.notNull(request, "A business object data notification create request must be specified.");
 
-        herdHelper.validateBusinessObjectDataNotificationRegistrationKey(request.getBusinessObjectDataNotificationRegistrationKey());
+        businessObjectDataNotificationRegistrationHelper
+            .validateBusinessObjectDataNotificationRegistrationKey(request.getBusinessObjectDataNotificationRegistrationKey());
 
         Assert.hasText(request.getBusinessObjectDataEventType(), "A business object data event type must be specified.");
         request.setBusinessObjectDataEventType(request.getBusinessObjectDataEventType().trim());
@@ -366,21 +381,9 @@ public class BusinessObjectDataNotificationRegistrationServiceImpl implements Bu
     {
         Assert.notNull(filter, "A business object data notification filter must be specified.");
 
-        Assert.hasText(filter.getNamespace(), "A namespace must be specified.");
-        filter.setNamespace(filter.getNamespace().trim());
+        validateBusinessObjectDataNotificationFilterBusinessObjectDefinitionFields(filter);
 
-        Assert.hasText(filter.getBusinessObjectDefinitionName(), "A business object definition name must be specified.");
-        filter.setBusinessObjectDefinitionName(filter.getBusinessObjectDefinitionName().trim());
-
-        if (filter.getBusinessObjectFormatUsage() != null)
-        {
-            filter.setBusinessObjectFormatUsage(filter.getBusinessObjectFormatUsage().trim());
-        }
-
-        if (filter.getBusinessObjectFormatFileType() != null)
-        {
-            filter.setBusinessObjectFormatFileType(filter.getBusinessObjectFormatFileType().trim());
-        }
+        trimBusinessObjectDataNotificationFilterBusinessObjectFormatFields(filter);
 
         if (filter.getStorageName() != null)
         {
@@ -410,6 +413,38 @@ public class BusinessObjectDataNotificationRegistrationServiceImpl implements Bu
         {
             Assert.isTrue(!filter.getOldBusinessObjectDataStatus().equalsIgnoreCase(filter.getNewBusinessObjectDataStatus()),
                 "The new business object data status is the same as the old one.");
+        }
+    }
+
+    /**
+     * Validates the business object definition specific fields in the business object data notification filter. This method also trims the filter parameters.
+     *
+     * @param filter the business object data notification filter
+     */
+    private void validateBusinessObjectDataNotificationFilterBusinessObjectDefinitionFields(BusinessObjectDataNotificationFilter filter)
+    {
+        Assert.hasText(filter.getNamespace(), "A business object definition namespace must be specified.");
+        filter.setNamespace(filter.getNamespace().trim());
+
+        Assert.hasText(filter.getBusinessObjectDefinitionName(), "A business object definition name must be specified.");
+        filter.setBusinessObjectDefinitionName(filter.getBusinessObjectDefinitionName().trim());
+    }
+
+    /**
+     * Trims the business object format specific fields in the business object data notification filter.
+     *
+     * @param filter the business object data notification filter
+     */
+    private void trimBusinessObjectDataNotificationFilterBusinessObjectFormatFields(BusinessObjectDataNotificationFilter filter)
+    {
+        if (filter.getBusinessObjectFormatUsage() != null)
+        {
+            filter.setBusinessObjectFormatUsage(filter.getBusinessObjectFormatUsage().trim());
+        }
+
+        if (filter.getBusinessObjectFormatFileType() != null)
+        {
+            filter.setBusinessObjectFormatFileType(filter.getBusinessObjectFormatFileType().trim());
         }
     }
 
@@ -467,8 +502,7 @@ public class BusinessObjectDataNotificationRegistrationServiceImpl implements Bu
         NotificationEventTypeEntity notificationEventTypeEntity, BusinessObjectDefinitionEntity businessObjectDefinitionEntity, FileTypeEntity fileTypeEntity,
         StorageEntity storageEntity, BusinessObjectDataStatusEntity newBusinessObjectDataStatusEntity,
         BusinessObjectDataStatusEntity oldBusinessObjectDataStatusEntity, NotificationRegistrationKey key,
-        BusinessObjectDataNotificationFilter businessObjectDataNotificationFilter, List<JobAction> jobActions,
-        String notificationRegistrationStatus)
+        BusinessObjectDataNotificationFilter businessObjectDataNotificationFilter, List<JobAction> jobActions, String notificationRegistrationStatus)
     {
         // Create a new entity.
         BusinessObjectDataNotificationRegistrationEntity businessObjectDataNotificationRegistrationEntity =
@@ -487,8 +521,8 @@ public class BusinessObjectDataNotificationRegistrationServiceImpl implements Bu
         businessObjectDataNotificationRegistrationEntity.setStorage(storageEntity);
         businessObjectDataNotificationRegistrationEntity.setNewBusinessObjectDataStatus(newBusinessObjectDataStatusEntity);
         businessObjectDataNotificationRegistrationEntity.setOldBusinessObjectDataStatus(oldBusinessObjectDataStatusEntity);
-        businessObjectDataNotificationRegistrationEntity.setNotificationRegistrationStatus(notificationRegistrationStatusDaoHelper
-            .getNotificationRegistrationStatus(notificationRegistrationStatus.trim()));
+        businessObjectDataNotificationRegistrationEntity.setNotificationRegistrationStatus(
+            notificationRegistrationStatusDaoHelper.getNotificationRegistrationStatus(notificationRegistrationStatus.trim()));
 
         // Create the relative entities for job actions.
         // TODO: We need to add a null/empty list check here, if/when list of job actions will become optional (due to addition of other action types).
@@ -497,7 +531,7 @@ public class BusinessObjectDataNotificationRegistrationServiceImpl implements Bu
         for (JobAction jobAction : jobActions)
         {
             // Retrieve and ensure that job definition exists.
-            JobDefinitionEntity jobDefinitionEntity = herdDaoHelper.getJobDefinitionEntity(jobAction.getNamespace(), jobAction.getJobName());
+            JobDefinitionEntity jobDefinitionEntity = jobDefinitionDaoHelper.getJobDefinitionEntity(jobAction.getNamespace(), jobAction.getJobName());
 
             // Create a new entity.
             NotificationJobActionEntity notificationJobActionEntity = new NotificationJobActionEntity();
@@ -565,8 +599,8 @@ public class BusinessObjectDataNotificationRegistrationServiceImpl implements Bu
             }
         }
 
-        businessObjectDataNotificationRegistration.setNotificationRegistrationStatus(businessObjectDataNotificationRegistrationEntity
-            .getNotificationRegistrationStatus().getCode());
+        businessObjectDataNotificationRegistration
+            .setNotificationRegistrationStatus(businessObjectDataNotificationRegistrationEntity.getNotificationRegistrationStatus().getCode());
 
         return businessObjectDataNotificationRegistration;
     }

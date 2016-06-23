@@ -32,46 +32,43 @@ import org.finra.herd.ui.AbstractUiTest;
 public abstract class AbstractRestTest extends AbstractUiTest
 {
     @Autowired
-    protected HerdRestController herdRestController;
-
-    @Autowired
-    protected StoragePlatformRestController storagePlatformRestController;
-
-    @Autowired
-    protected StorageRestController storageRestController;
-
-    @Autowired
-    protected StoragePolicyRestController storagePolicyRestController;
-
-    @Autowired
-    protected NamespaceRestController namespaceRestController;
-
-    @Autowired
-    protected DataProviderRestController dataProviderRestController;
-
-    @Autowired
-    protected BusinessObjectDataRestController businessObjectDataRestController;
-
-    @Autowired
     protected BusinessObjectDataAttributeRestController businessObjectDataAttributeRestController;
-
-    @Autowired
-    protected BusinessObjectDataStatusRestController businessObjectDataStatusRestController;
 
     @Autowired
     protected BusinessObjectDataNotificationRegistrationRestController businessObjectDataNotificationRegistrationRestController;
 
     @Autowired
-    protected JobDefinitionRestController jobDefinitionRestController;
+    protected BusinessObjectDataRestController businessObjectDataRestController;
 
     @Autowired
-    protected JobRestController jobRestController;
+    protected BusinessObjectDataStatusRestController businessObjectDataStatusRestController;
+
+    @Autowired
+    protected BusinessObjectDataStorageFileRestController businessObjectDataStorageFileRestController;
+
+    @Autowired
+    protected BusinessObjectDefinitionColumnRestController businessObjectDefinitionColumnRestController;
 
     @Autowired
     protected BusinessObjectDefinitionRestController businessObjectDefinitionRestController;
 
     @Autowired
-    protected PartitionKeyGroupRestController partitionKeyGroupRestController;
+    protected BusinessObjectFormatRestController businessObjectFormatRestController;
+
+    @Autowired
+    protected CurrentUserRestController currentUserRestController;
+
+    @Autowired
+    protected CustomDdlRestController customDdlRestController;
+
+    @Autowired
+    protected DataProviderRestController dataProviderRestController;
+
+    @Autowired
+    protected EmrClusterDefinitionRestController emrClusterDefinitionRestController;
+
+    @Autowired
+    protected EmrRestController emrRestController;
 
     @Autowired
     protected ExpectedPartitionValueRestController expectedPartitionValueRestController;
@@ -80,28 +77,40 @@ public abstract class AbstractRestTest extends AbstractUiTest
     protected FileTypeRestController fileTypeRestController;
 
     @Autowired
-    protected BusinessObjectFormatRestController businessObjectFormatRestController;
+    protected HerdRestController herdRestController;
 
     @Autowired
-    protected CustomDdlRestController customDdlRestController;
+    protected JobDefinitionRestController jobDefinitionRestController;
 
     @Autowired
-    protected EmrRestController emrRestController;
+    protected JobRestController jobRestController;
 
     @Autowired
-    protected EmrClusterDefinitionRestController emrClusterDefinitionRestController;
+    protected NamespaceRestController namespaceRestController;
 
     @Autowired
-    protected BusinessObjectDataStorageFileRestController businessObjectDataStorageFileRestController;
+    protected NotificationRegistrationStatusRestController notificationRegistrationStatusRestController;
 
     @Autowired
-    protected UploadDownloadRestController uploadDownloadRestController;
+    protected PartitionKeyGroupRestController partitionKeyGroupRestController;
+
+    @Autowired
+    protected StoragePlatformRestController storagePlatformRestController;
+
+    @Autowired
+    protected StoragePolicyRestController storagePolicyRestController;
+
+    @Autowired
+    protected StorageRestController storageRestController;
 
     @Autowired
     protected SystemJobRestController systemJobRestController;
 
     @Autowired
-    protected NotificationRegistrationStatusRestController notificationRegistrationStatusRestController;
+    protected UploadDownloadRestController uploadDownloadRestController;
+
+    @Autowired
+    protected UserNamespaceAuthorizationRestController userNamespaceAuthorizationRestController;
 
     /**
      * Returns a DelimitedFieldValues instance initiated with the list values.

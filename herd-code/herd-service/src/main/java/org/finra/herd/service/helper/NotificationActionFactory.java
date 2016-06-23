@@ -37,6 +37,19 @@ public class NotificationActionFactory implements InitializingBean
 
     private Map<String, NotificationActionService> notificationActionHandlerServiceMap;
 
+    @Override
+    public void afterPropertiesSet() throws Exception
+    {
+        notificationActionHandlerServiceMap = new HashMap<>();
+
+        // Add all the available notification action helpers.
+        Map<String, NotificationActionService> handlerBeanMap = applicationContext.getBeansOfType(NotificationActionService.class);
+        for (NotificationActionService actionHandler : handlerBeanMap.values())
+        {
+            notificationActionHandlerServiceMap.put(actionHandler.getNotificationType() + "|" + actionHandler.getNotificationActionType(), actionHandler);
+        }
+    }
+
     /**
      * This method returns the notification action handler for the given notification type and action type.
      *
@@ -57,18 +70,5 @@ public class NotificationActionFactory implements InitializingBean
                 "No supported notification handler found for notificationType \"" + notificationType + "\" and actionType: \"" + actionType + "\".");
         }
         return actionHandlerService;
-    }
-
-    @Override
-    public void afterPropertiesSet() throws Exception
-    {
-        notificationActionHandlerServiceMap = new HashMap<>();
-
-        // Add all the available notification action helpers.
-        Map<String, NotificationActionService> handlerBeanMap = applicationContext.getBeansOfType(NotificationActionService.class);
-        for (NotificationActionService actionHandler : handlerBeanMap.values())
-        {
-            notificationActionHandlerServiceMap.put(actionHandler.getNotificationType() + "|" + actionHandler.getNotificationActionType(), actionHandler);
-        }
     }
 }

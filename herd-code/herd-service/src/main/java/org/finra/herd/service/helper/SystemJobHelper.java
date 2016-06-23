@@ -22,6 +22,8 @@ import java.util.List;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
 import org.quartz.TriggerKey;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.scheduling.quartz.SchedulerFactoryBean;
@@ -37,11 +39,13 @@ import org.finra.herd.service.systemjobs.AbstractSystemJob;
 @Component
 public class SystemJobHelper
 {
-    @Autowired
-    private SchedulerFactoryBean schedulerFactory;
+    private static final Logger LOGGER = LoggerFactory.getLogger(SystemJobHelper.class);
 
     @Autowired
     private ApplicationContext applicationContext;
+
+    @Autowired
+    private SchedulerFactoryBean schedulerFactory;
 
     /**
      * Starts a system job asynchronously.
@@ -70,6 +74,11 @@ public class SystemJobHelper
         // Prepare a trigger to run the system job only once.
         TriggerKey triggerKey = TriggerKey.triggerKey(jobName + AbstractSystemJob.RUN_ONCE_TRIGGER_SUFFIX);
         Trigger trigger = newTrigger().withIdentity(triggerKey).forJob(jobName).usingJobData(systemJob.getJobDataMap(parameters)).startNow().build();
+
+        LOGGER.debug(String.format("schedule job with trigger: calendarName: %s, description: %s, endTime: %s, finalFireTime: %s, jobKey: %s, key: %s, " +
+            "misfireInstruction: %s, nextFireTime: %s, previousFireTime: %s, priority: %s, startTime: %s", trigger.getCalendarName(), trigger.getDescription(),
+            trigger.getEndTime(), trigger.getFinalFireTime(), trigger.getJobKey(), trigger.getKey(), trigger.getMisfireInstruction(), trigger.getNextFireTime(),
+            trigger.getPreviousFireTime(), trigger.getPriority(), trigger.getStartTime()));
 
         // Schedule the system job.
         schedulerFactory.getScheduler().scheduleJob(trigger);

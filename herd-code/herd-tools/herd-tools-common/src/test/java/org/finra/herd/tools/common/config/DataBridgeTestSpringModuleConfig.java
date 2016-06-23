@@ -19,14 +19,12 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
 import org.finra.herd.core.config.CoreTestSpringModuleConfig;
-import org.finra.herd.service.config.ServiceBasicAopSpringModuleConfig;
 
 /**
  * This is a testing convenience configuration that imports the appropriate test configurations.
  */
 @Configuration
-@Import(
-    {DataBridgeSpringModuleConfig.class, DataBridgeEnvTestSpringModuleConfig.class, ServiceBasicAopSpringModuleConfig.class, CoreTestSpringModuleConfig.class})
+@Import({DataBridgeSpringModuleConfig.class, DataBridgeEnvTestSpringModuleConfig.class, CoreTestSpringModuleConfig.class})
 public class DataBridgeTestSpringModuleConfig
 {
 }

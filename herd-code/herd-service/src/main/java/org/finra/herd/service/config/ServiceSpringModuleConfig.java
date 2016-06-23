@@ -61,13 +61,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.FilterType;
-import org.springframework.context.annotation.Import;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.jdbc.datasource.init.DatabasePopulatorUtils;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 import org.springframework.jms.config.DefaultJmsListenerContainerFactory;
-import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.web.method.annotation.ExceptionHandlerMethodResolver;
@@ -92,8 +91,6 @@ import org.finra.herd.service.systemjobs.AbstractSystemJob;
 // Component scan all packages, but exclude the configuration ones since they are explicitly specified.
 @ComponentScan(value = "org.finra.herd.service",
     excludeFilters = @ComponentScan.Filter(type = FilterType.REGEX, pattern = "org\\.finra\\.herd\\.service\\.config\\..*"))
-@Import({ServiceBasicAopSpringModuleConfig.class, ServiceAppAopSpringModuleConfig.class})
-@EnableScheduling
 public class ServiceSpringModuleConfig
 {
     /**
@@ -157,27 +154,47 @@ public class ServiceSpringModuleConfig
     }
 
     /**
+     * Activiti's dedicated TaskExecutor bean definition.
+     * 
+     * @return TaskExecutor
+     */
+    @Bean
+    public TaskExecutor activitiTaskExecutor()
+    {
+        ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
+        taskExecutor.setCorePoolSize(configurationHelper.getProperty(ConfigurationValue.ACTIVITI_THREAD_POOL_CORE_POOL_SIZE, Integer.class));
+        taskExecutor.setMaxPoolSize(configurationHelper.getProperty(ConfigurationValue.ACTIVITI_THREAD_POOL_MAX_POOL_SIZE, Integer.class));
+        taskExecutor.setKeepAliveSeconds(configurationHelper.getProperty(ConfigurationValue.ACTIVITI_THREAD_POOL_KEEP_ALIVE_SECS, Integer.class));
+        taskExecutor.setQueueCapacity(configurationHelper.getProperty(ConfigurationValue.ACTIVITI_THREAD_POOL_QUEUE_CAPACITY, Integer.class));
+        return taskExecutor;
+    }
+
+    /**
      * Returns an Activiti Async executor that uses our configured task executor.
      *
-     * @param taskExecutor the task executor.
+     * @param activitiTaskExecutor the task executor. Note that the parameter must be named as is so that Spring IoC knows which TaskExecutor bean to autowire.
+     * @param springRejectedJobsHandler The Spring rejected jobs handler
      *
      * @return the Async executor.
      */
     @Bean
-    public AsyncExecutor asyncExecutor(TaskExecutor taskExecutor, SpringRejectedJobsHandler springRejectedJobsHandler)
+    public AsyncExecutor activitiAsyncExecutor(TaskExecutor activitiTaskExecutor, SpringRejectedJobsHandler springRejectedJobsHandler)
     {
-        return new SpringAsyncExecutor(taskExecutor, springRejectedJobsHandler);
+        SpringAsyncExecutor activitiAsyncExecutor = new SpringAsyncExecutor(activitiTaskExecutor, springRejectedJobsHandler);
+        activitiAsyncExecutor
+            .setAsyncJobLockTimeInMillis(configurationHelper.getProperty(ConfigurationValue.ACTIVITI_ASYNC_JOB_LOCK_TIME_MILLIS, Integer.class));
+        return activitiAsyncExecutor;
     }
 
     /**
      * Gets the Activiti Process Engine Configuration.
      *
-     * @param asyncExecutor the async executor to set on the configuration.
+     * @param activitiAsyncExecutor the async executor to set on the configuration.
      *
      * @return the Activiti Process Engine Configuration.
      */
     @Bean
-    public SpringProcessEngineConfiguration activitiProcessEngineConfiguration(AsyncExecutor asyncExecutor)
+    public SpringProcessEngineConfiguration activitiProcessEngineConfiguration(AsyncExecutor activitiAsyncExecutor)
     {
         // Initialize a new process engine configuration for Activiti that is Spring enabled.
         SpringProcessEngineConfiguration configuration = new SpringProcessEngineConfiguration();
@@ -196,7 +213,7 @@ public class ServiceSpringModuleConfig
 
         // Explicitly wire in our "Spring" async executor which in turn is configured with our own task executor.
         configuration.setAsyncExecutorEnabled(true);
-        configuration.setAsyncExecutor(asyncExecutor);
+        configuration.setAsyncExecutor(activitiAsyncExecutor);
 
         // Set the allowed beans to an empty map so the Activiti workflows won't be able to call any arbitrary bean (e.g. services, etc.).
         configuration.setBeans(new HashMap<>());
@@ -209,6 +226,8 @@ public class ServiceSpringModuleConfig
 
         // Initialize the scripting engines.
         initScriptingEngines(configuration);
+
+        configuration.setMailServerDefaultFrom(configurationHelper.getProperty(ConfigurationValue.ACTIVITI_DEFAULT_MAIL_FROM));
 
         // Attach a custom herd process engine configurator that will allow us to modify the configuration before the engine is built.
         List<ProcessEngineConfigurator> herdConfigurators = new ArrayList<>();

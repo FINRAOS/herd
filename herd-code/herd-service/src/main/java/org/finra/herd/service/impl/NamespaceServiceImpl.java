@@ -20,17 +20,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
-import org.finra.herd.dao.HerdDao;
+import org.finra.herd.dao.NamespaceDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
-import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.model.api.xml.Namespace;
 import org.finra.herd.model.api.xml.NamespaceCreateRequest;
 import org.finra.herd.model.api.xml.NamespaceKey;
 import org.finra.herd.model.api.xml.NamespaceKeys;
+import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.service.NamespaceService;
-import org.finra.herd.service.helper.HerdDaoHelper;
-import org.finra.herd.service.helper.HerdHelper;
+import org.finra.herd.service.helper.NamespaceDaoHelper;
+import org.finra.herd.service.helper.NamespaceHelper;
 
 /**
  * The namespace service implementation.
@@ -40,17 +40,14 @@ import org.finra.herd.service.helper.HerdHelper;
 public class NamespaceServiceImpl implements NamespaceService
 {
     @Autowired
-    private HerdHelper herdHelper;
+    private NamespaceDao namespaceDao;
 
     @Autowired
-    private HerdDao herdDao;
+    private NamespaceDaoHelper namespaceDaoHelper;
 
     @Autowired
-    private HerdDaoHelper herdDaoHelper;
+    private NamespaceHelper namespaceHelper;
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Namespace createNamespace(NamespaceCreateRequest request)
     {
@@ -61,66 +58,56 @@ public class NamespaceServiceImpl implements NamespaceService
         NamespaceKey namespaceKey = new NamespaceKey(request.getNamespaceCode());
 
         // Ensure a namespace with the specified namespace key doesn't already exist.
-        NamespaceEntity namespaceEntity = herdDao.getNamespaceByKey(namespaceKey);
+        NamespaceEntity namespaceEntity = namespaceDao.getNamespaceByKey(namespaceKey);
         if (namespaceEntity != null)
         {
-            throw new AlreadyExistsException(
-                String.format("Unable to create namespace \"%s\" because it already exists.", namespaceKey.getNamespaceCode()));
+            throw new AlreadyExistsException(String.format("Unable to create namespace \"%s\" because it already exists.", namespaceKey.getNamespaceCode()));
         }
 
         // Create a namespace entity from the request information.
         namespaceEntity = createNamespaceEntity(request);
 
         // Persist the new entity.
-        namespaceEntity = herdDao.saveAndRefresh(namespaceEntity);
+        namespaceEntity = namespaceDao.saveAndRefresh(namespaceEntity);
 
         // Create and return the namespace object from the persisted entity.
         return createNamespaceFromEntity(namespaceEntity);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Namespace getNamespace(NamespaceKey namespaceKey)
     {
         // Perform validation and trim.
-        herdHelper.validateNamespaceKey(namespaceKey);
+        namespaceHelper.validateNamespaceKey(namespaceKey);
 
         // Retrieve and ensure that a namespace already exists with the specified key.
-        NamespaceEntity namespaceEntity = herdDaoHelper.getNamespaceEntity(namespaceKey.getNamespaceCode());
+        NamespaceEntity namespaceEntity = namespaceDaoHelper.getNamespaceEntity(namespaceKey.getNamespaceCode());
 
         // Create and return the namespace object from the persisted entity.
         return createNamespaceFromEntity(namespaceEntity);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Namespace deleteNamespace(NamespaceKey namespaceKey)
     {
         // Perform validation and trim.
-        herdHelper.validateNamespaceKey(namespaceKey);
+        namespaceHelper.validateNamespaceKey(namespaceKey);
 
         // Retrieve and ensure that a namespace already exists with the specified key.
-        NamespaceEntity namespaceEntity = herdDaoHelper.getNamespaceEntity(namespaceKey.getNamespaceCode());
+        NamespaceEntity namespaceEntity = namespaceDaoHelper.getNamespaceEntity(namespaceKey.getNamespaceCode());
 
         // Delete the namespace.
-        herdDao.delete(namespaceEntity);
+        namespaceDao.delete(namespaceEntity);
 
         // Create and return the namespace object from the deleted entity.
         return createNamespaceFromEntity(namespaceEntity);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public NamespaceKeys getNamespaces()
     {
         NamespaceKeys namespaceKeys = new NamespaceKeys();
-        namespaceKeys.getNamespaceKeys().addAll(herdDao.getNamespaces());
+        namespaceKeys.getNamespaceKeys().addAll(namespaceDao.getNamespaces());
         return namespaceKeys;
     }
 

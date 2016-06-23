@@ -34,18 +34,6 @@ import org.finra.herd.model.api.xml.EmrPigStepAddRequest;
 public class EmrPigStepHelper extends EmrStepHelper
 {
     @Override
-    public String getStepType()
-    {
-        return EmrPigStep.class.getName();
-    }
-
-    @Override
-    public String getStepRequestType()
-    {
-        return EmrPigStepAddRequest.class.getName();
-    }
-
-    @Override
     public Object buildResponseFromRequest(Object stepRequest)
     {
         EmrPigStepAddRequest emrPigStepAddRequest = (EmrPigStepAddRequest) stepRequest;
@@ -103,24 +91,27 @@ public class EmrPigStepHelper extends EmrStepHelper
     }
 
     @Override
-    public void validateAddStepRequest(Object step)
+    public String getRequestEmrClusterDefinitionName(Object stepRequest)
     {
-        EmrPigStepAddRequest pigStepRequest = (EmrPigStepAddRequest) step;
-
-        validateStepName(pigStepRequest.getStepName());
-        validateScriptLocation(pigStepRequest.getScriptLocation());
+        return ((EmrPigStepAddRequest) stepRequest).getEmrClusterDefinitionName();
     }
 
     @Override
-    public String getStepId(Object step)
+    public String getRequestEmrClusterId(Object stepRequest)
     {
-        return ((EmrPigStep) step).getId();
+        return ((EmrPigStepAddRequest) stepRequest).getEmrClusterId();
     }
 
     @Override
-    public void setStepId(Object step, String stepId)
+    public String getRequestEmrClusterName(Object stepRequest)
     {
-        ((EmrPigStep) step).setId(stepId);
+        return ((EmrPigStepAddRequest) stepRequest).getEmrClusterName();
+    }
+
+    @Override
+    public String getRequestNamespace(Object stepRequest)
+    {
+        return ((EmrPigStepAddRequest) stepRequest).getNamespace();
     }
 
     @Override
@@ -130,9 +121,21 @@ public class EmrPigStepHelper extends EmrStepHelper
     }
 
     @Override
-    public void setRequestStepName(Object stepRequest, String stepName)
+    public String getStepId(Object step)
     {
-        ((EmrPigStepAddRequest) stepRequest).setStepName(stepName);
+        return ((EmrPigStep) step).getId();
+    }
+
+    @Override
+    public String getStepRequestType()
+    {
+        return EmrPigStepAddRequest.class.getName();
+    }
+
+    @Override
+    public String getStepType()
+    {
+        return EmrPigStep.class.getName();
     }
 
     @Override
@@ -148,9 +151,21 @@ public class EmrPigStepHelper extends EmrStepHelper
     }
 
     @Override
-    public String getRequestNamespace(Object stepRequest)
+    public void setRequestEmrClusterDefinitionName(Object stepRequest, String clusterDefinitionName)
     {
-        return ((EmrPigStepAddRequest) stepRequest).getNamespace();
+        ((EmrPigStepAddRequest) stepRequest).setEmrClusterDefinitionName(clusterDefinitionName);
+    }
+
+    @Override
+    public void setRequestEmrClusterId(Object stepRequest, String emrClusterId)
+    {
+        ((EmrPigStepAddRequest) stepRequest).setEmrClusterId(emrClusterId);
+    }
+
+    @Override
+    public void setRequestEmrClusterName(Object stepRequest, String clusterName)
+    {
+        ((EmrPigStepAddRequest) stepRequest).setEmrClusterName(clusterName);
     }
 
     @Override
@@ -160,26 +175,23 @@ public class EmrPigStepHelper extends EmrStepHelper
     }
 
     @Override
-    public String getRequestEmrClusterDefinitionName(Object stepRequest)
+    public void setRequestStepName(Object stepRequest, String stepName)
     {
-        return ((EmrPigStepAddRequest) stepRequest).getEmrClusterDefinitionName();
+        ((EmrPigStepAddRequest) stepRequest).setStepName(stepName);
     }
 
     @Override
-    public void setRequestEmrClusterDefinitionName(Object stepRequest, String clusterDefinitionName)
+    public void setStepId(Object step, String stepId)
     {
-        ((EmrPigStepAddRequest) stepRequest).setEmrClusterDefinitionName(clusterDefinitionName);
+        ((EmrPigStep) step).setId(stepId);
     }
 
     @Override
-    public String getRequestEmrClusterName(Object stepRequest)
+    public void validateAddStepRequest(Object step)
     {
-        return ((EmrPigStepAddRequest) stepRequest).getEmrClusterName();
-    }
+        EmrPigStepAddRequest pigStepRequest = (EmrPigStepAddRequest) step;
 
-    @Override
-    public void setRequestEmrClusterName(Object stepRequest, String clusterName)
-    {
-        ((EmrPigStepAddRequest) stepRequest).setEmrClusterName(clusterName);
+        validateStepName(pigStepRequest.getStepName());
+        validateScriptLocation(pigStepRequest.getScriptLocation());
     }
 }

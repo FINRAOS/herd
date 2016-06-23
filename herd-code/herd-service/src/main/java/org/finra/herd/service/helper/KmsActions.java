@@ -19,8 +19,7 @@ import com.amazonaws.auth.policy.Action;
 import com.amazonaws.auth.policy.actions.S3Actions;
 
 /**
- * List of KMS actions for IAM policies.
- * This really should be part of AWS SDK similar to {@link S3Actions}, but it is not included.
+ * List of KMS actions for IAM policies. This really should be part of AWS SDK similar to {@link S3Actions}, but it is not included.
  */
 public enum KmsActions implements Action
 {
