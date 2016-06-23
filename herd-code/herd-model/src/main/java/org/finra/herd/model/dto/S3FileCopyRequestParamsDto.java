@@ -30,6 +30,16 @@ public class S3FileCopyRequestParamsDto extends S3FileTransferRequestParamsDto
      */
     private String targetBucketName;
 
+    /**
+     * The source S3 object key
+     */
+    private String sourceObjectKey;
+
+    /**
+     * The target S3 object key
+     */
+    private String targetObjectKey;
+
     public String getSourceBucketName()
     {
         return sourceBucketName;
@@ -48,5 +58,25 @@ public class S3FileCopyRequestParamsDto extends S3FileTransferRequestParamsDto
     public void setTargetBucketName(String targetBucketName)
     {
         this.targetBucketName = targetBucketName;
+    }
+
+    public String getSourceObjectKey()
+    {
+        return sourceObjectKey;
+    }
+
+    public void setSourceObjectKey(String sourceObjectKey)
+    {
+        this.sourceObjectKey = sourceObjectKey;
+    }
+
+    public String getTargetObjectKey()
+    {
+        return targetObjectKey;
+    }
+
+    public void setTargetObjectKey(String targetObjectKey)
+    {
+        this.targetObjectKey = targetObjectKey;
     }
 }

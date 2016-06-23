@@ -44,6 +44,7 @@ public class JobDefinitionRestController extends HerdBaseController
 
     /**
      * Creates a new job definition.
+     * <p>Requires WRITE permission on namespace</p>
      *
      * @param request the information needed to create the job definition.
      *
@@ -53,11 +54,12 @@ public class JobDefinitionRestController extends HerdBaseController
     @Secured(SecurityFunctions.FN_JOB_DEFINITIONS_POST)
     public JobDefinition createJobDefinition(@RequestBody JobDefinitionCreateRequest request) throws Exception
     {
-        return jobDefinitionService.createJobDefinition(request);
+        return jobDefinitionService.createJobDefinition(request, true);
     }
 
     /**
      * Updates an existing job definition.
+     * <p>Requires WRITE permission on namespace</p>
      *
      * @param namespace the namespace of the job definition.
      * @param jobName the job name of the job definition.
@@ -71,11 +73,12 @@ public class JobDefinitionRestController extends HerdBaseController
     public JobDefinition updateJobDefinition(@PathVariable("namespace") String namespace, @PathVariable("jobName") String jobName,
         @RequestBody JobDefinitionUpdateRequest request) throws Exception
     {
-        return jobDefinitionService.updateJobDefinition(namespace, jobName, request);
+        return jobDefinitionService.updateJobDefinition(namespace, jobName, request, true);
     }
 
     /**
      * Gets an existing job definition.
+     * <p>Requires READ permission on namespace</p>
      *
      * @param namespace the namespace of the job definition.
      * @param jobName the job name of the job definition.

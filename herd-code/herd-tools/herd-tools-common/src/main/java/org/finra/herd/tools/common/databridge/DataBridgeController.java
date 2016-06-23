@@ -15,12 +15,12 @@
 */
 package org.finra.herd.tools.common.databridge;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.finra.herd.model.dto.DataBridgeBaseManifestDto;
 import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.service.S3Service;
-import org.finra.herd.service.helper.HerdHelper;
 
 /**
  * A base class for the uploader and downloader controller. This class is abstract since it is not an actual controller, but just a help class that provides
@@ -33,9 +33,6 @@ public abstract class DataBridgeController
 
     @Autowired
     protected S3Service s3Service;
-
-    @Autowired
-    protected HerdHelper herdHelper;
 
     /**
      * Adjusts an Integer value according to the specified range of values.
@@ -66,14 +63,15 @@ public abstract class DataBridgeController
     /**
      * Gets the storage name from a databridge manifest. Defaults to {@link StorageEntity#MANAGED_STORAGE S3 managed storage} when manifest does not specify a
      * storage name. The storage name is whitespace trimmed.
-     * 
+     *
      * @param manifest Databridge manifest
+     *
      * @return The storage name
      */
     protected String getStorageNameFromManifest(DataBridgeBaseManifestDto manifest)
     {
         String storageName;
-        if (manifest.getStorageName() != null)
+        if (StringUtils.isNotBlank(manifest.getStorageName()))
         {
             storageName = manifest.getStorageName().trim();
         }

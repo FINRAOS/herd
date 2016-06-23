@@ -28,8 +28,8 @@ import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
-import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.core.Authentication;
@@ -41,11 +41,12 @@ import org.springframework.test.context.web.WebAppConfiguration;
 import org.finra.herd.app.config.AppTestSpringModuleConfig;
 import org.finra.herd.app.security.HttpHeaderApplicationUserBuilder;
 import org.finra.herd.app.security.HttpHeaderAuthenticationFilter;
-import org.finra.herd.app.security.SecurityUserWrapper;
 import org.finra.herd.app.security.TrustedApplicationUserBuilder;
 import org.finra.herd.app.security.TrustedUserAuthenticationFilter;
+import org.finra.herd.model.api.xml.NamespaceAuthorization;
 import org.finra.herd.model.dto.ApplicationUser;
 import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.model.dto.SecurityUserWrapper;
 import org.finra.herd.rest.AbstractRestTest;
 
 /**
@@ -113,11 +114,12 @@ public abstract class AbstractAppTest extends AbstractRestTest
 
     protected Map<String, Object> getDefaultSecurityEnvironmentVariables()
     {
-        Map<String, Object> defaultEnvironmentVariables = new HashMap<String, Object>();
+        Map<String, Object> defaultEnvironmentVariables = new HashMap<>();
         defaultEnvironmentVariables.put(ConfigurationValue.SECURITY_HTTP_HEADER_NAMES.getKey(), "useridHeader=userId|firstNameHeader=firstName" +
             "|lastNameHeader=lastName|emailHeader=email|rolesHeader=roles|sessionInitTimeHeader=sessionInitTime");
         defaultEnvironmentVariables.put(ConfigurationValue.SECURITY_HTTP_HEADER_ROLE_REGEX.getKey(), "(?<role>.+?)(,|$)");
         defaultEnvironmentVariables.put(ConfigurationValue.SECURITY_HTTP_HEADER_ROLE_REGEX_GROUP.getKey(), "role");
+        defaultEnvironmentVariables.put(ConfigurationValue.USER_NAMESPACE_AUTHORIZATION_ENABLED.getKey(), "true");
         return defaultEnvironmentVariables;
     }
 
@@ -135,15 +137,16 @@ public abstract class AbstractAppTest extends AbstractRestTest
      * @throws Exception if any errors were encountered.
      */
     protected void validateHttpHeaderApplicationUser(String expectedUserId, String expectedFirstName, String expectedLastName, String expectedEmail,
-        String expectedRole, String expectedSessionInitTime, String[] expectedFunctions) throws Exception
+        String expectedRole, String expectedSessionInitTime, String[] expectedFunctions, Set<NamespaceAuthorization> expectedNamespaceAuthorizations)
+        throws Exception
     {
-        Set<String> roles = new HashSet<String>();
+        Set<String> roles = new HashSet<>();
         if (expectedRole != null)
         {
             roles.add(expectedRole);
         }
-        validateHttpHeaderApplicationUser(expectedUserId, expectedFirstName, expectedLastName, expectedEmail, roles, expectedSessionInitTime,
-            expectedFunctions);
+        validateHttpHeaderApplicationUser(expectedUserId, expectedFirstName, expectedLastName, expectedEmail, roles, expectedSessionInitTime, expectedFunctions,
+            expectedNamespaceAuthorizations);
     }
 
     /**
@@ -161,7 +164,8 @@ public abstract class AbstractAppTest extends AbstractRestTest
      * @throws Exception if any errors were encountered.
      */
     protected void validateHttpHeaderApplicationUser(String expectedUserId, String expectedFirstName, String expectedLastName, String expectedEmail,
-        Set<String> expectedRoles, String expectedSessionInitTime, String[] expectedFunctions) throws Exception
+        Set<String> expectedRoles, String expectedSessionInitTime, String[] expectedFunctions, Set<NamespaceAuthorization> expectedNamespaceAuthorizations)
+        throws Exception
     {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -199,6 +203,12 @@ public abstract class AbstractAppTest extends AbstractRestTest
             }
 
             assertArrayEquals(expectedFunctions, functions.toArray(new String[user.getAuthorities().size()]));
+        }
+
+        // Validate namespace authorizations.
+        if (expectedNamespaceAuthorizations != null)
+        {
+            assertEquals(expectedNamespaceAuthorizations, applicationUser.getNamespaceAuthorizations());
         }
     }
 

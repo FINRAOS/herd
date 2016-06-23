@@ -20,6 +20,7 @@ import java.io.IOException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 
 import org.finra.herd.dao.HttpClientOperations;
 
@@ -32,5 +33,11 @@ public class HttpClientOperationsImpl implements HttpClientOperations
     public CloseableHttpResponse execute(CloseableHttpClient httpClient, HttpUriRequest request) throws IOException
     {
         return httpClient.execute(request);
+    }
+
+    @Override
+    public CloseableHttpClient createHttpClient()
+    {
+        return HttpClientBuilder.create().build();
     }
 }

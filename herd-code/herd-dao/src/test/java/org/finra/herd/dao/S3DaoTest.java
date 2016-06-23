@@ -17,10 +17,21 @@ package org.finra.herd.dao;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.argThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -29,27 +40,64 @@ import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 
+import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
-import com.amazonaws.services.s3.model.GetObjectRequest;
+import com.amazonaws.ClientConfiguration;
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.auth.AWSCredentialsProviderChain;
+import com.amazonaws.auth.BasicSessionCredentials;
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
+import com.amazonaws.internal.StaticCredentialsProvider;
+import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.Headers;
+import com.amazonaws.services.s3.model.AbortMultipartUploadRequest;
+import com.amazonaws.services.s3.model.AmazonS3Exception;
+import com.amazonaws.services.s3.model.DeleteObjectsRequest.KeyVersion;
+import com.amazonaws.services.s3.model.DeleteObjectsResult.DeletedObject;
+import com.amazonaws.services.s3.model.ListMultipartUploadsRequest;
+import com.amazonaws.services.s3.model.ListObjectsRequest;
+import com.amazonaws.services.s3.model.ListVersionsRequest;
+import com.amazonaws.services.s3.model.MultiObjectDeleteException;
+import com.amazonaws.services.s3.model.MultiObjectDeleteException.DeleteError;
+import com.amazonaws.services.s3.model.MultipartUpload;
+import com.amazonaws.services.s3.model.MultipartUploadListing;
+import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.s3.model.PutObjectResult;
 import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.services.s3.model.S3ObjectInputStream;
+import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.amazonaws.services.s3.model.S3VersionSummary;
+import com.amazonaws.services.s3.model.StorageClass;
+import com.amazonaws.services.s3.model.VersionListing;
+import com.amazonaws.services.s3.transfer.Copy;
 import com.amazonaws.services.s3.transfer.Transfer;
+import com.amazonaws.services.s3.transfer.Transfer.TransferState;
+import com.amazonaws.services.s3.transfer.TransferProgress;
+import com.amazonaws.services.s3.transfer.Upload;
+import com.google.common.base.Objects;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.apache.log4j.PatternLayout;
+import org.apache.log4j.WriterAppender;
 import org.fusesource.hawtbuf.ByteArrayInputStream;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentMatcher;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
+import org.springframework.test.util.ReflectionTestUtils;
 
+import org.finra.herd.dao.helper.JavaPropertiesHelper;
 import org.finra.herd.dao.impl.MockS3OperationsImpl;
 import org.finra.herd.dao.impl.S3DaoImpl;
 import org.finra.herd.model.ObjectNotFoundException;
-import org.finra.herd.model.api.xml.StorageFile;
+import org.finra.herd.model.api.xml.AwsCredential;
+import org.finra.herd.model.dto.HerdAWSCredentialsProvider;
 import org.finra.herd.model.dto.S3FileCopyRequestParamsDto;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.dto.S3FileTransferResultsDto;
@@ -80,8 +128,16 @@ public class S3DaoTest extends AbstractDaoTest
         // Clean up the local directory.
         FileUtils.deleteDirectory(localTempPath.toFile());
 
-        // Clean up the destination S3 folder.
-        s3Dao.deleteDirectory(getTestS3FileTransferRequestParamsDto());
+        // Delete test files from S3 storage. Since test S3 key prefix represents a directory, we add a trailing '/' character to it.
+        for (S3FileTransferRequestParamsDto params : Arrays.asList(getTestS3FileTransferRequestParamsDto(),
+            S3FileTransferRequestParamsDto.builder().s3BucketName(getS3LoadingDockBucketName()).s3KeyPrefix(TEST_S3_KEY_PREFIX + "/").build(),
+            S3FileTransferRequestParamsDto.builder().s3BucketName(getS3ExternalBucketName()).s3KeyPrefix(TEST_S3_KEY_PREFIX + "/").build()))
+        {
+            if (!s3Dao.listDirectory(params).isEmpty())
+            {
+                s3Dao.deleteDirectory(params);
+            }
+        }
 
         s3Operations.rollback();
     }
@@ -92,13 +148,40 @@ public class S3DaoTest extends AbstractDaoTest
     @Test
     public void testCopyFile() throws InterruptedException
     {
+        // Put a 1 byte file in S3.
+        s3Operations.putObject(new PutObjectRequest(getS3LoadingDockBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[1]), null), null);
+
         S3FileCopyRequestParamsDto transferDto = new S3FileCopyRequestParamsDto();
         transferDto.setSourceBucketName(getS3LoadingDockBucketName());
         transferDto.setTargetBucketName(getS3ExternalBucketName());
-        transferDto.setS3KeyPrefix("testKeyPrefix");
+        transferDto.setSourceObjectKey(TARGET_S3_KEY);
+        transferDto.setTargetObjectKey(TARGET_S3_KEY);
         transferDto.setKmsKeyId(MockS3OperationsImpl.MOCK_KMS_ID);
         S3FileTransferResultsDto resultsDto = s3Dao.copyFile(transferDto);
         assertEquals(Long.valueOf(1L), resultsDto.getTotalFilesTransferred());
+    }
+
+    /**
+     * Test S3 file copy without a KMS ID specified.
+     */
+    @Test
+    public void testCopyFileNoKmsId() throws InterruptedException
+    {
+        // Put a 1 byte file in S3.
+        s3Operations.putObject(new PutObjectRequest(getS3LoadingDockBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[1]), null), null);
+
+        // Perform an S3 file copy operation when KMS ID value is not specified.
+        for (String kmsId : Arrays.asList(BLANK_TEXT, null))
+        {
+            S3FileCopyRequestParamsDto transferDto = new S3FileCopyRequestParamsDto();
+            transferDto.setSourceBucketName(getS3LoadingDockBucketName());
+            transferDto.setTargetBucketName(getS3ExternalBucketName());
+            transferDto.setSourceObjectKey(TARGET_S3_KEY);
+            transferDto.setTargetObjectKey(TARGET_S3_KEY);
+            transferDto.setKmsKeyId(kmsId);
+            S3FileTransferResultsDto resultsDto = s3Dao.copyFile(transferDto);
+            assertEquals(Long.valueOf(1L), resultsDto.getTotalFilesTransferred());
+        }
     }
 
     /**
@@ -107,12 +190,16 @@ public class S3DaoTest extends AbstractDaoTest
     @Test
     public void testCopyFileInvalidKmsId() throws InterruptedException
     {
+        // Put a 1 byte file in S3.
+        s3Operations.putObject(new PutObjectRequest(getS3LoadingDockBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[1]), null), null);
+
         try
         {
             S3FileCopyRequestParamsDto transferDto = new S3FileCopyRequestParamsDto();
             transferDto.setSourceBucketName(getS3LoadingDockBucketName());
             transferDto.setTargetBucketName(getS3ExternalBucketName());
-            transferDto.setS3KeyPrefix("testKeyPrefix");
+            transferDto.setSourceObjectKey(TARGET_S3_KEY);
+            transferDto.setTargetObjectKey(TARGET_S3_KEY);
             transferDto.setKmsKeyId(MockS3OperationsImpl.MOCK_KMS_ID_FAILED_TRANSFER);
             s3Dao.copyFile(transferDto);
             fail("An AmazonServiceException was expected but not thrown.");
@@ -130,12 +217,16 @@ public class S3DaoTest extends AbstractDaoTest
     @Test
     public void testCopyFileInvalidKmsIdIllegalStateException() throws InterruptedException
     {
+        // Put a 1 byte file in S3.
+        s3Operations.putObject(new PutObjectRequest(getS3LoadingDockBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[1]), null), null);
+
         try
         {
             S3FileCopyRequestParamsDto transferDto = new S3FileCopyRequestParamsDto();
             transferDto.setSourceBucketName(getS3LoadingDockBucketName());
             transferDto.setTargetBucketName(getS3ExternalBucketName());
-            transferDto.setS3KeyPrefix("testKeyPrefix");
+            transferDto.setSourceObjectKey(TARGET_S3_KEY);
+            transferDto.setTargetObjectKey(TARGET_S3_KEY);
             transferDto.setKmsKeyId(MockS3OperationsImpl.MOCK_KMS_ID_FAILED_TRANSFER_NO_EXCEPTION);
             s3Dao.copyFile(transferDto);
             fail("An IllegalStateException was expected but not thrown.");
@@ -153,12 +244,16 @@ public class S3DaoTest extends AbstractDaoTest
     @Test
     public void testCopyFileInvalidKmsIdCancelled() throws InterruptedException
     {
+        // Put a 1 byte file in S3.
+        s3Operations.putObject(new PutObjectRequest(getS3LoadingDockBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[1]), null), null);
+
         try
         {
             S3FileCopyRequestParamsDto transferDto = new S3FileCopyRequestParamsDto();
             transferDto.setSourceBucketName(getS3LoadingDockBucketName());
             transferDto.setTargetBucketName(getS3ExternalBucketName());
-            transferDto.setS3KeyPrefix("testKeyPrefix");
+            transferDto.setSourceObjectKey(TARGET_S3_KEY);
+            transferDto.setTargetObjectKey(TARGET_S3_KEY);
             transferDto.setKmsKeyId(MockS3OperationsImpl.MOCK_KMS_ID_CANCELED_TRANSFER);
             s3Dao.copyFile(transferDto);
             fail("An IllegalStateException was expected but not thrown.");
@@ -166,31 +261,294 @@ public class S3DaoTest extends AbstractDaoTest
         catch (IllegalStateException ex)
         {
             assertEquals("Invalid IllegalStateException message returned.",
-                "The transfer operation \"" + MockS3OperationsImpl.MOCK_TRANSFER_DESCRIPTION + "\" did not complete successfully. " +
-                    "Current state: \"" + Transfer.TransferState.Canceled + "\".", ex.getMessage());
+                "The transfer operation \"" + MockS3OperationsImpl.MOCK_TRANSFER_DESCRIPTION + "\" did not complete successfully. " + "Current state: \"" +
+                    Transfer.TransferState.Canceled + "\".", ex.getMessage());
+        }
+    }
+
+    @Test
+    public void testRestoreObjects()
+    {
+        // Put a 1 byte Glacier storage class file in S3.
+        ObjectMetadata metadata = new ObjectMetadata();
+        metadata.setHeader(Headers.STORAGE_CLASS, StorageClass.Glacier);
+        metadata.setOngoingRestore(false);
+        s3Operations.putObject(new PutObjectRequest(getS3ManagedBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[1]), metadata), null);
+
+        // Initiate a restore request for the test S3 file.
+        S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
+        params.setS3BucketName(getS3ManagedBucketName());
+        params.setFiles(Arrays.asList(new File(TARGET_S3_KEY)));
+        s3Dao.restoreObjects(params, S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS);
+
+        // Validate that there is an ongoing restore request for this object.
+        ObjectMetadata objectMetadata = s3Operations.getObjectMetadata(getS3ManagedBucketName(), TARGET_S3_KEY, null);
+        assertTrue(objectMetadata.getOngoingRestore());
+    }
+
+    @Test
+    public void testRestoreObjectsEmptyList()
+    {
+        // Initiate a restore request for an empty list of S3 files.
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = getTestS3FileTransferRequestParamsDto();
+        s3FileTransferRequestParamsDto.setFiles(new ArrayList<>());
+        s3Dao.restoreObjects(s3FileTransferRequestParamsDto, 0);
+    }
+
+    @Test
+    public void testRestoreObjectsAmazonServiceException()
+    {
+        // Build a mock file path that triggers an Amazon service exception when we request to restore an object.
+        String testKey = String.format("%s/%s", TEST_S3_KEY_PREFIX, MockS3OperationsImpl.MOCK_S3_FILE_NAME_SERVICE_EXCEPTION);
+
+        // Put a 1 byte Glacier storage class file in S3.
+        ObjectMetadata metadata = new ObjectMetadata();
+        metadata.setHeader(Headers.STORAGE_CLASS, StorageClass.Glacier);
+        metadata.setOngoingRestore(false);
+        s3Operations.putObject(new PutObjectRequest(getS3ManagedBucketName(), testKey, new ByteArrayInputStream(new byte[1]), metadata), null);
+
+        // Try to initiate a restore request for a mocked S3 file that would trigger an Amazon service exception when we request to restore an object.
+        try
+        {
+            S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
+            params.setS3BucketName(getS3ManagedBucketName());
+            params.setFiles(Arrays.asList(new File(testKey)));
+            s3Dao.restoreObjects(params, S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS);
+            fail("Should throw an IllegalStateException when an S3 restore object operation fails.");
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals(String.format("Failed to initiate a restore request for \"%s\" key in \"%s\" bucket. " +
+                "Reason: InternalError (Service: null; Status Code: 0; Error Code: null; Request ID: null)", testKey, getS3ManagedBucketName()),
+                e.getMessage());
+        }
+    }
+
+    @Test
+    public void testRestoreObjectsNonGlacierObject()
+    {
+        // Put a 1 byte non-Glacier storage class file in S3.
+        ObjectMetadata metadata = new ObjectMetadata();
+        metadata.setHeader(Headers.STORAGE_CLASS, StorageClass.Standard);
+        metadata.setOngoingRestore(false);
+        s3Operations.putObject(new PutObjectRequest(getS3ManagedBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[1]), metadata), null);
+
+        // Try to initiate a restore request for a non-Glacier file.
+        try
+        {
+            S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
+            params.setS3BucketName(getS3ManagedBucketName());
+            params.setFiles(Arrays.asList(new File(TARGET_S3_KEY)));
+            s3Dao.restoreObjects(params, S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS);
+            fail("Should throw an IllegalStateException when file has a non-Glacier storage class.");
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals(String.format("Failed to initiate a restore request for \"%s\" key in \"%s\" bucket. " +
+                "Reason: object is not in Glacier (Service: null; Status Code: 0; Error Code: null; Request ID: null)", TARGET_S3_KEY,
+                getS3ManagedBucketName()), e.getMessage());
+        }
+    }
+
+    @Test
+    public void testRestoreObjectsGlacierObjectAlreadyBeingRestored()
+    {
+        // Put a 1 byte Glacier storage class file in S3 flagged as already being restored.
+        ObjectMetadata metadata = new ObjectMetadata();
+        metadata.setHeader(Headers.STORAGE_CLASS, StorageClass.Glacier);
+        metadata.setOngoingRestore(true);
+        s3Operations.putObject(new PutObjectRequest(getS3ManagedBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[1]), metadata), null);
+
+        // Initiate a restore request for the test S3 file.
+        S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
+        params.setS3BucketName(getS3ManagedBucketName());
+        params.setFiles(Arrays.asList(new File(TARGET_S3_KEY)));
+        s3Dao.restoreObjects(params, S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS);
+
+        // Validate that there is still an ongoing restore request for this object.
+        ObjectMetadata objectMetadata = s3Operations.getObjectMetadata(getS3ManagedBucketName(), TARGET_S3_KEY, null);
+        assertTrue(objectMetadata.getOngoingRestore());
+    }
+
+    @Test
+    public void testValidateGlacierS3FilesRestored()
+    {
+        // Put a 1 byte already restored Glacier storage class file in S3.
+        ObjectMetadata metadata = new ObjectMetadata();
+        metadata.setHeader(Headers.STORAGE_CLASS, StorageClass.Glacier);
+        metadata.setOngoingRestore(false);
+        s3Operations.putObject(new PutObjectRequest(getS3ManagedBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[1]), metadata), null);
+
+        // Validate the file.
+        S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
+        params.setS3BucketName(getS3ManagedBucketName());
+        params.setFiles(Arrays.asList(new File(TARGET_S3_KEY)));
+        s3Dao.validateGlacierS3FilesRestored(params);
+    }
+
+    @Test
+    public void testValidateGlacierS3FilesRestoredEmptyList()
+    {
+        // Make a call to validate Glacier S3 files being restored for an empty list of S3 files.
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = getTestS3FileTransferRequestParamsDto();
+        s3FileTransferRequestParamsDto.setFiles(new ArrayList<>());
+        s3Dao.validateGlacierS3FilesRestored(s3FileTransferRequestParamsDto);
+    }
+
+    @Test
+    public void testValidateGlacierS3FilesRestoredGlacierObjectRestoreNotInitiated()
+    {
+        // Put a 1 byte Glacier storage class file in S3 that has no restore initiated (OngoingRestore flag is null).
+        ObjectMetadata metadata = new ObjectMetadata();
+        metadata.setHeader(Headers.STORAGE_CLASS, StorageClass.Glacier);
+        s3Operations.putObject(new PutObjectRequest(getS3ManagedBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[1]), metadata), null);
+
+        // Try to validate if the Glacier S3 file is already restored.
+        try
+        {
+            S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
+            params.setS3BucketName(getS3ManagedBucketName());
+            params.setFiles(Arrays.asList(new File(TARGET_S3_KEY)));
+            s3Dao.validateGlacierS3FilesRestored(params);
+            fail("Should throw an IllegalArgumentException when Glacier S3 file is not restored.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(String
+                .format("Archived Glacier S3 file \"%s\" is not restored. StorageClass {GLACIER}, OngoingRestore flag {null}, Glacier S3 bucket name {%s}",
+                    TARGET_S3_KEY, getS3ManagedBucketName()), e.getMessage());
+        }
+    }
+
+    @Test
+    public void testValidateGlacierS3FilesRestoredGlacierObjectRestoreInProgress()
+    {
+        // Put a 1 byte Glacier storage class file in S3 that is still being restored (OngoingRestore flag is true).
+        ObjectMetadata metadata = new ObjectMetadata();
+        metadata.setHeader(Headers.STORAGE_CLASS, StorageClass.Glacier);
+        metadata.setOngoingRestore(true);
+        s3Operations.putObject(new PutObjectRequest(getS3ManagedBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[1]), metadata), null);
+
+        // Try to validate if the Glacier S3 file is already restored.
+        try
+        {
+            S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
+            params.setS3BucketName(getS3ManagedBucketName());
+            params.setFiles(Arrays.asList(new File(TARGET_S3_KEY)));
+            s3Dao.validateGlacierS3FilesRestored(params);
+            fail("Should throw an IllegalArgumentException when Glacier S3 file is not restored.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(String
+                .format("Archived Glacier S3 file \"%s\" is not restored. StorageClass {GLACIER}, OngoingRestore flag {true}, Glacier S3 bucket name {%s}",
+                    TARGET_S3_KEY, getS3ManagedBucketName()), e.getMessage());
+        }
+    }
+
+    @Test
+    public void testValidateGlacierS3FilesRestoredAmazonServiceException()
+    {
+        // Build a mock file path that triggers an Amazon service exception when we request S3 metadata for the object.
+        String testKey = String.format("%s/%s", TEST_S3_KEY_PREFIX, MockS3OperationsImpl.MOCK_S3_FILE_NAME_SERVICE_EXCEPTION);
+
+        // Put a 1 byte Glacier storage class file in S3.
+        ObjectMetadata metadata = new ObjectMetadata();
+        metadata.setHeader(Headers.STORAGE_CLASS, StorageClass.Glacier);
+        metadata.setOngoingRestore(false);
+        s3Operations.putObject(new PutObjectRequest(getS3ManagedBucketName(), testKey, new ByteArrayInputStream(new byte[1]), metadata), null);
+
+        // Try to validate if the Glacier S3 file is already restored for a mocked S3 file
+        // that triggers an Amazon service exception when we request S3 metadata for the object.
+        try
+        {
+            S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
+            params.setS3BucketName(getS3ManagedBucketName());
+            params.setFiles(Arrays.asList(new File(testKey)));
+            s3Dao.validateGlacierS3FilesRestored(params);
+            fail("Should throw an IllegalStateException when Glacier S3 object validation fails due to an Amazon service exception.");
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals(String.format("Fail to check restore status for \"%s\" key in \"%s\" bucket. " +
+                "Reason: InternalError (Service: null; Status Code: 0; Error Code: null; Request ID: null)", testKey, getS3ManagedBucketName()),
+                e.getMessage());
         }
     }
 
     /**
-     * Test S3 exception handling in the getObjectMetadata S3Dao operation.
+     * Test "access denied" scenario for the getObjectMetadata S3Dao operation.
      */
-    @Test(expected = IllegalStateException.class)
-    public void testGetObjectMetadataException()
+    @Test
+    public void testGetObjectMetadataAccessDenied()
     {
         S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = getTestS3FileTransferRequestParamsDto();
-        s3FileTransferRequestParamsDto.setS3KeyPrefix(MockS3OperationsImpl.MOCK_S3_FILE_NAME_SERVICE_EXCEPTION);
-        s3Dao.getObjectMetadata(s3FileTransferRequestParamsDto);
+
+        // Try to retrieve S3 object metadata when S3 access is denied.
+        try
+        {
+            s3FileTransferRequestParamsDto.setS3BucketName(MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_ACCESS_DENIED);
+            s3FileTransferRequestParamsDto.setS3KeyPrefix(TARGET_S3_KEY);
+            s3Dao.getObjectMetadata(s3FileTransferRequestParamsDto);
+            fail("Should throw an ObjectNotFoundException when S3 access is denied.");
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals("Failed to get S3 metadata for object key \"" + TARGET_S3_KEY +
+                "\" from bucket \"MOCK_S3_BUCKET_NAME_ACCESS_DENIED\". Reason: AccessDenied (Service: null; Status Code: 403; Error Code: null; Request ID: null)",
+                e.getMessage());
+        }
+    }
+
+    /**
+     * Test "bucket not found" scenario for the getObjectMetadata S3Dao operation.
+     */
+    @Test
+    public void testGetObjectMetadataS3BucketNoExists()
+    {
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = getTestS3FileTransferRequestParamsDto();
+
+        // Try to retrieve S3 object metadata when S3 bucket does not exist.
+        s3FileTransferRequestParamsDto.setS3BucketName(MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_NO_SUCH_BUCKET_EXCEPTION);
+        s3FileTransferRequestParamsDto.setS3KeyPrefix(TARGET_S3_KEY);
+        assertNull(s3Dao.getObjectMetadata(s3FileTransferRequestParamsDto));
     }
 
     /**
      * Test "key not found" scenario for the getObjectMetadata S3Dao operation.
      */
     @Test
-    public void testGetObjectMetadataKeyNotFound()
+    public void testGetObjectMetadataS3KeyNoExists()
+    {
+        // Try to retrieve S3 object metadata for a non-existing S3 key.
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = getTestS3FileTransferRequestParamsDto();
+        s3FileTransferRequestParamsDto.setS3BucketName(S3_BUCKET_NAME);
+        s3FileTransferRequestParamsDto.setS3KeyPrefix(TARGET_S3_KEY);
+        assertNull(s3Dao.getObjectMetadata(s3FileTransferRequestParamsDto));
+    }
+
+    /**
+     * Test S3 exception handling in the getObjectMetadata S3Dao operation.
+     */
+    @Test
+    public void testGetObjectMetadataServiceException()
     {
         S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = getTestS3FileTransferRequestParamsDto();
-        s3FileTransferRequestParamsDto.setS3KeyPrefix(MockS3OperationsImpl.MOCK_S3_FILE_NAME_NOT_FOUND);
-        Assert.assertNull(s3Dao.getObjectMetadata(s3FileTransferRequestParamsDto));
+
+        // Validate that S3 service exception is handled correctly when retrieving S3 object metadata.
+        try
+        {
+            s3FileTransferRequestParamsDto.setS3BucketName(MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_INTERNAL_ERROR);
+            s3FileTransferRequestParamsDto.setS3KeyPrefix(TARGET_S3_KEY);
+            s3Dao.getObjectMetadata(s3FileTransferRequestParamsDto);
+            fail("Should throw an IllegalStateException when Amazon service exception occurs.");
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals(String.format("Failed to get S3 metadata for object key \"%s\" from bucket \"%s\". " +
+                "Reason: InternalError (Service: null; Status Code: 0; Error Code: null; Request ID: null)", s3FileTransferRequestParamsDto.getS3KeyPrefix(),
+                s3FileTransferRequestParamsDto.getS3BucketName()), e.getMessage());
+        }
     }
 
     /**
@@ -202,28 +560,159 @@ public class S3DaoTest extends AbstractDaoTest
         s3Dao.getObjectMetadata(null);
     }
 
+    /**
+     * Get ObjectMetadata with a socket timeout setting.
+     */
+    @Test
+    public void testGetObjectMetadataWithSocketTimeout()
+    {
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = getTestS3FileTransferRequestParamsDto();
+        s3FileTransferRequestParamsDto.setSocketTimeout(10000);
+
+        // Try to retrieve S3 object metadata when S3 access is denied.
+        try
+        {
+            s3FileTransferRequestParamsDto.setS3BucketName(MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_ACCESS_DENIED);
+            s3FileTransferRequestParamsDto.setS3KeyPrefix(TARGET_S3_KEY);
+            s3Dao.getObjectMetadata(s3FileTransferRequestParamsDto);
+            fail("Should throw an ObjectNotFoundException when S3 access is denied.");
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals("Failed to get S3 metadata for object key \"" + TARGET_S3_KEY +
+                "\" from bucket \"MOCK_S3_BUCKET_NAME_ACCESS_DENIED\". Reason: AccessDenied (Service: null; Status Code: 403; Error Code: null; Request ID: null)",
+                e.getMessage());
+        }
+    }
+
+    /**
+     * The method is successful when both bucket and key exists.
+     */
+    @Test
+    public void testS3FileExists()
+    {
+        String expectedKey = "foo";
+        String expectedValue = "bar";
+
+        ByteArrayInputStream inputStream = new ByteArrayInputStream((expectedKey + "=" + expectedValue).getBytes());
+        PutObjectRequest putObjectRequest = new PutObjectRequest(S3_BUCKET_NAME, TARGET_S3_KEY, inputStream, new ObjectMetadata());
+        s3Operations.putObject(putObjectRequest, null);
+
+        S3FileTransferRequestParamsDto params = getTestS3FileTransferRequestParamsDto();
+        params.setS3BucketName(S3_BUCKET_NAME);
+        params.setS3KeyPrefix(TARGET_S3_KEY);
+        Assert.assertTrue(s3Dao.s3FileExists(params));
+    }
+
+    @Test
+    public void testS3FileExistsKeyNoExists()
+    {
+        S3FileTransferRequestParamsDto params = getTestS3FileTransferRequestParamsDto();
+        params.setS3BucketName(S3_BUCKET_NAME);
+        params.setS3KeyPrefix(TARGET_S3_KEY);
+        Assert.assertFalse(s3Dao.s3FileExists(params));
+    }
+
+    /**
+     * Throws an ObjectNotFoundException when S3 bucket does not exist. This should result as a 404 to clients.
+     */
+    @Test
+    public void testS3FileExistsBucketNoExists()
+    {
+        try
+        {
+            S3FileTransferRequestParamsDto params = getTestS3FileTransferRequestParamsDto();
+            params.setS3BucketName(MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_NO_SUCH_BUCKET_EXCEPTION);
+            params.setS3KeyPrefix(TARGET_S3_KEY);
+            s3Dao.s3FileExists(params);
+            Assert.fail("expected ObjectNotFoundException to be thrown, but no exceptions were thrown");
+        }
+        catch (ObjectNotFoundException e)
+        {
+            Assert.assertEquals("thrown exception type", ObjectNotFoundException.class, e.getClass());
+            Assert.assertEquals("thrown exception message",
+                "Specified S3 bucket '" + MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_NO_SUCH_BUCKET_EXCEPTION + "' does not exist.", e.getMessage());
+        }
+    }
+
+    /**
+     * Throws an ObjectNotFoundException when application does not have access to the given object.
+     */
+    @Test
+    public void testS3FileExistsAccessDenied()
+    {
+        try
+        {
+            S3FileTransferRequestParamsDto params = getTestS3FileTransferRequestParamsDto();
+            params.setS3BucketName(MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_ACCESS_DENIED);
+            params.setS3KeyPrefix(TARGET_S3_KEY);
+            s3Dao.s3FileExists(params);
+            Assert.fail("expected ObjectNotFoundException to be thrown, but no exceptions were thrown");
+        }
+        catch (ObjectNotFoundException e)
+        {
+            Assert.assertEquals("thrown exception type", ObjectNotFoundException.class, e.getClass());
+            Assert.assertEquals("thrown exception message",
+                "Application does not have access to the specified S3 object at bucket '" + MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_ACCESS_DENIED +
+                    "' and key '" +
+                    TARGET_S3_KEY + "'.", e.getMessage());
+        }
+    }
+
+    /**
+     * Throws the exception as-is without wrapping if the exception is of type AmazonServiceException or children.
+     */
+    @Test
+    public void testS3FileExistsGenericAmazonError()
+    {
+        try
+        {
+            S3FileTransferRequestParamsDto params = getTestS3FileTransferRequestParamsDto();
+            params.setS3BucketName(MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_INTERNAL_ERROR);
+            params.setS3KeyPrefix(TARGET_S3_KEY);
+            s3Dao.s3FileExists(params);
+            Assert.fail("expected AmazonServiceException to be thrown, but no exceptions were thrown");
+        }
+        catch (Exception e)
+        {
+            Assert.assertEquals("thrown exception type", AmazonServiceException.class, e.getClass());
+        }
+    }
+
     @Test
     public void testValidateS3File() throws IOException, InterruptedException
     {
-        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = getTestS3FileTransferRequestParamsDto();
+        // Put a 1 KB file in S3.
+        PutObjectRequest putObjectRequest =
+            new PutObjectRequest(getS3ManagedBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[(int) FILE_SIZE_1_KB]), null);
+        s3Operations.putObject(putObjectRequest, null);
 
+        // Validate the S3 file.
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = getTestS3FileTransferRequestParamsDto();
+        s3FileTransferRequestParamsDto.setS3KeyPrefix(TARGET_S3_KEY);
         s3Dao.validateS3File(s3FileTransferRequestParamsDto, FILE_SIZE_1_KB);
     }
 
     @Test(expected = ObjectNotFoundException.class)
     public void testValidateS3FileObjectNotFoundException() throws IOException, InterruptedException
     {
+        // Try to validate a non-existing S3 file.
         S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = getTestS3FileTransferRequestParamsDto();
-        s3FileTransferRequestParamsDto.setS3KeyPrefix(MockS3OperationsImpl.MOCK_S3_FILE_NAME_NOT_FOUND);
-
+        s3FileTransferRequestParamsDto.setS3KeyPrefix(TARGET_S3_KEY);
         s3Dao.validateS3File(s3FileTransferRequestParamsDto, FILE_SIZE_1_KB);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testValidateS3FileRuntimeExceptionFileSizeDoesNotMatch() throws IOException, InterruptedException
     {
-        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = getTestS3FileTransferRequestParamsDto();
+        // Put a 1 KB file in S3.
+        PutObjectRequest putObjectRequest =
+            new PutObjectRequest(getS3ManagedBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[(int) FILE_SIZE_1_KB]), null);
+        s3Operations.putObject(putObjectRequest, null);
 
+        // Try to validate an S3 file by specifying an incorrect file size.
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = getTestS3FileTransferRequestParamsDto();
+        s3FileTransferRequestParamsDto.setS3KeyPrefix(TARGET_S3_KEY);
         s3Dao.validateS3File(s3FileTransferRequestParamsDto, FILE_SIZE_1_KB + 999);
     }
 
@@ -234,6 +723,15 @@ public class S3DaoTest extends AbstractDaoTest
     public void testListDirectoryNullPointerException()
     {
         s3Dao.listDirectory(null);
+    }
+
+    /**
+     * Test that we get an exception when trying to perform listVersions operation without properly initialized S3FileTransferRequestParamsDto parameters.
+     */
+    @Test(expected = NullPointerException.class)
+    public void testListVersionsNullPointerException()
+    {
+        s3Dao.listVersions(null);
     }
 
     /**
@@ -455,8 +953,7 @@ public class S3DaoTest extends AbstractDaoTest
         Assert.assertTrue(results.getTotalFilesTransferred() == 1L);
 
         // Validate the zero bytes upload.
-        List<StorageFile> actualStorageFiles = s3Dao.listDirectory(s3FileTransferRequestParamsDto);
-        Assert.assertTrue(actualStorageFiles.size() == 1);
+        Assert.assertEquals(1, s3Dao.listDirectory(s3FileTransferRequestParamsDto).size());
     }
 
     /**
@@ -486,8 +983,7 @@ public class S3DaoTest extends AbstractDaoTest
         Assert.assertTrue(results.getTotalFilesTransferred() == NUM_OF_FILES);
 
         // Validate the empty folder upload.
-        List<StorageFile> actualStorageFiles = s3Dao.listDirectory(s3FileTransferRequestParamsDto);
-        Assert.assertTrue(actualStorageFiles.size() == NUM_OF_FILES);
+        Assert.assertEquals(NUM_OF_FILES, s3Dao.listDirectory(s3FileTransferRequestParamsDto).size());
     }
 
     /**
@@ -502,14 +998,14 @@ public class S3DaoTest extends AbstractDaoTest
         // Validate that S3 directory is not empty.
         S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = getTestS3FileTransferRequestParamsDto();
         s3FileTransferRequestParamsDto.setS3KeyPrefix(TEST_S3_KEY_PREFIX + "/");
-        List<StorageFile> storageFiles = s3Dao.listDirectory(s3FileTransferRequestParamsDto);
-        Assert.assertTrue(storageFiles.size() > 0);
+        List<S3ObjectSummary> s3ObjectSummaries = s3Dao.listDirectory(s3FileTransferRequestParamsDto);
+        Assert.assertTrue(s3ObjectSummaries.size() > 0);
 
         // Delete a list of files from S3 using s3Dao.
         List<File> requestFileList = new ArrayList<>();
-        for (StorageFile storageFile : storageFiles)
+        for (S3ObjectSummary s3ObjectSummary : s3ObjectSummaries)
         {
-            requestFileList.add(new File(storageFile.getFilePath()));
+            requestFileList.add(new File(s3ObjectSummary.getKey()));
         }
         s3FileTransferRequestParamsDto.setFiles(requestFileList);
         s3FileTransferRequestParamsDto.setS3KeyPrefix(null);
@@ -517,8 +1013,7 @@ public class S3DaoTest extends AbstractDaoTest
 
         // Validate that S3 directory got deleted.
         s3FileTransferRequestParamsDto.setS3KeyPrefix(TEST_S3_KEY_PREFIX + "/");
-        storageFiles = s3Dao.listDirectory(s3FileTransferRequestParamsDto);
-        Assert.assertTrue(storageFiles.size() == 0);
+        Assert.assertEquals(0, s3Dao.listDirectory(s3FileTransferRequestParamsDto).size());
     }
 
     /**
@@ -544,15 +1039,80 @@ public class S3DaoTest extends AbstractDaoTest
         // Validate that S3 directory is not empty.
         S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = getTestS3FileTransferRequestParamsDto();
         s3FileTransferRequestParamsDto.setS3KeyPrefix(TEST_S3_KEY_PREFIX + "/");
-        List<StorageFile> storageFiles = s3Dao.listDirectory(s3FileTransferRequestParamsDto);
-        Assert.assertTrue(storageFiles.size() > 0);
+        Assert.assertTrue(s3Dao.listDirectory(s3FileTransferRequestParamsDto).size() > 0);
 
         // Delete directory from S3 using s3Dao.
         s3Dao.deleteDirectory(s3FileTransferRequestParamsDto);
 
         // Validate that S3 directory got deleted.
-        storageFiles = s3Dao.listDirectory(s3FileTransferRequestParamsDto);
-        Assert.assertTrue(storageFiles.size() == 0);
+        Assert.assertEquals(0, s3Dao.listDirectory(s3FileTransferRequestParamsDto).size());
+    }
+
+    @Test
+    public void testDeleteDirectoryRootKeyPrefix()
+    {
+        for (String s3KeyPrefix : Arrays.asList(null, BLANK_TEXT, "/"))
+        {
+            try
+            {
+                s3Dao.deleteDirectory(S3FileTransferRequestParamsDto.builder().s3KeyPrefix(s3KeyPrefix).build());
+                fail("Should throw an IllegalArgumentException when S3 key prefix specifies a root directory.");
+            }
+            catch (IllegalArgumentException e)
+            {
+                assertEquals("Deleting from root directory is not allowed.", e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * Test that we are able to perform the deleteDirectory S3Dao operation on S3 with enabled versioning using our DAO tier.
+     */
+    @Test
+    public void testDeleteDirectoryBucketVersioningEnabled() throws IOException, InterruptedException
+    {
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = null;
+
+        try
+        {
+            // Create local test files.
+            for (String file : LOCAL_FILES)
+            {
+                createLocalFile(localTempPath.toString(), file, FILE_SIZE_1_KB);
+            }
+
+            // Upload twice the same set of test files to an S3 bucket with enabled versioning.
+            // Since the S3 key prefix represents a directory, we add a trailing '/' character to it.
+            s3FileTransferRequestParamsDto = getTestS3FileTransferRequestParamsDto();
+            s3FileTransferRequestParamsDto.setS3BucketName(MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_VERSIONING_ENABLED);
+            s3FileTransferRequestParamsDto.setS3KeyPrefix(TEST_S3_KEY_PREFIX + "/");
+            s3FileTransferRequestParamsDto.setLocalPath(localTempPath.toString());
+            s3FileTransferRequestParamsDto.setRecursive(true);
+            for (int i = 0; i < 2; i++)
+            {
+                S3FileTransferResultsDto results = s3Dao.uploadDirectory(s3FileTransferRequestParamsDto);
+                Assert.assertEquals(Long.valueOf(LOCAL_FILES.size()), results.getTotalFilesTransferred());
+            }
+
+            // Validate the existence of keys and key versions for the uploaded test files in S3.
+            Assert.assertEquals(LOCAL_FILES.size(), s3Dao.listDirectory(s3FileTransferRequestParamsDto).size());
+            Assert.assertEquals(LOCAL_FILES.size() * 2, s3Dao.listVersions(s3FileTransferRequestParamsDto).size());
+
+            // Delete directory from S3 using s3Dao.
+            s3Dao.deleteDirectory(s3FileTransferRequestParamsDto);
+
+            // Validate that S3 directory got deleted.
+            Assert.assertEquals(0, s3Dao.listDirectory(s3FileTransferRequestParamsDto).size());
+            Assert.assertEquals(0, s3Dao.listVersions(s3FileTransferRequestParamsDto).size());
+        }
+        catch (Exception e)
+        {
+            // Clean up the S3 on failure.
+            if (s3FileTransferRequestParamsDto != null)
+            {
+                s3Dao.deleteDirectory(s3FileTransferRequestParamsDto);
+            }
+        }
     }
 
     @Test
@@ -649,15 +1209,70 @@ public class S3DaoTest extends AbstractDaoTest
     }
 
     @Test
+    public void testListDirectoryRootKeyPrefix()
+    {
+        for (String s3KeyPrefix : Arrays.asList(null, BLANK_TEXT, "/"))
+        {
+            try
+            {
+                s3Dao.listDirectory(S3FileTransferRequestParamsDto.builder().s3KeyPrefix(s3KeyPrefix).build());
+                fail("Should throw an IllegalArgumentException when S3 key prefix specifies a root directory.");
+            }
+            catch (IllegalArgumentException e)
+            {
+                assertEquals("Listing of S3 objects from root directory is not allowed.", e.getMessage());
+            }
+        }
+    }
+
+    @Test
     public void testListDirectoryNoSuchBucket()
     {
         S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
         s3FileTransferRequestParamsDto.setS3BucketName(MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_NO_SUCH_BUCKET_EXCEPTION);
+        s3FileTransferRequestParamsDto.setS3KeyPrefix(TEST_S3_KEY_PREFIX);
 
         try
         {
             s3Dao.listDirectory(s3FileTransferRequestParamsDto);
-            fail("expected a IllegalArgumentException to be thrown, but no exceptions thrown");
+            fail("expected an IllegalArgumentException to be thrown, but no exceptions thrown");
+        }
+        catch (Exception e)
+        {
+            assertEquals("thrown exception type", IllegalArgumentException.class, e.getClass());
+            assertEquals("thrown exception message",
+                "The specified bucket '" + MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_NO_SUCH_BUCKET_EXCEPTION + "' does not exist.", e.getMessage());
+        }
+    }
+
+    @Test
+    public void testListVersionsRootKeyPrefix()
+    {
+        for (String s3KeyPrefix : Arrays.asList(null, BLANK_TEXT, "/"))
+        {
+            try
+            {
+                s3Dao.listVersions(S3FileTransferRequestParamsDto.builder().s3KeyPrefix(s3KeyPrefix).build());
+                fail("Should throw an IllegalArgumentException when S3 key prefix specifies a root directory.");
+            }
+            catch (IllegalArgumentException e)
+            {
+                assertEquals("Listing of S3 key versions from root directory is not allowed.", e.getMessage());
+            }
+        }
+    }
+
+    @Test
+    public void testListVersionsNoSuchBucket()
+    {
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+        s3FileTransferRequestParamsDto.setS3BucketName(MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_NO_SUCH_BUCKET_EXCEPTION);
+        s3FileTransferRequestParamsDto.setS3KeyPrefix(TEST_S3_KEY_PREFIX);
+
+        try
+        {
+            s3Dao.listVersions(s3FileTransferRequestParamsDto);
+            fail("expected an IllegalArgumentException to be thrown, but no exceptions thrown");
         }
         catch (Exception e)
         {
@@ -669,41 +1284,37 @@ public class S3DaoTest extends AbstractDaoTest
 
     /**
      * The method is successful when both bucket and key exists.
-     *
-     * @throws IOException
      */
     @Test
-    public void testGetS3ObjectSuccess() throws IOException
+    public void testGetProperties()
     {
-        String expectedContentString = "test";
-        ByteArrayInputStream inputStream = new ByteArrayInputStream(expectedContentString.getBytes());
-        PutObjectRequest putObjectRequest = new PutObjectRequest("test_bucket", "test_key", inputStream, new ObjectMetadata());
+        String expectedKey = "foo";
+        String expectedValue = "bar";
+
+        ByteArrayInputStream inputStream = new ByteArrayInputStream((expectedKey + "=" + expectedValue).getBytes());
+        PutObjectRequest putObjectRequest = new PutObjectRequest(S3_BUCKET_NAME, TARGET_S3_KEY, inputStream, new ObjectMetadata());
         s3Operations.putObject(putObjectRequest, null);
 
-        GetObjectRequest getObjectRequest = new GetObjectRequest("test_bucket", "test_key");
-        S3Object s3Object = s3Dao.getS3Object(getObjectRequest, getTestS3FileTransferRequestParamsDto());
+        Properties properties = s3Dao.getProperties(S3_BUCKET_NAME, TARGET_S3_KEY, getTestS3FileTransferRequestParamsDto());
 
-        S3ObjectInputStream resultInputStream = s3Object.getObjectContent();
-        String actualContentString = IOUtils.toString(resultInputStream);
-        Assert.assertEquals("result content string", expectedContentString, actualContentString);
+        Assert.assertEquals("properties key '" + expectedKey + "'", expectedValue, properties.get(expectedKey));
     }
 
     /**
      * Throws an ObjectNotFoundException when S3 object key does not exist. This should result as a 404 to clients.
      */
     @Test
-    public void testGetS3ObjectThrowsWhenKeyDoesNotExist()
+    public void testGetPropertiesThrowsWhenKeyDoesNotExist()
     {
-        GetObjectRequest getObjectRequest = new GetObjectRequest("test_bucket", "test_key");
         try
         {
-            s3Dao.getS3Object(getObjectRequest, getTestS3FileTransferRequestParamsDto());
+            s3Dao.getProperties(S3_BUCKET_NAME, TARGET_S3_KEY, getTestS3FileTransferRequestParamsDto());
             Assert.fail("expected ObjectNotFoundException to be thrown, but no exceptions were thrown");
         }
         catch (Exception e)
         {
             Assert.assertEquals("thrown exception type", ObjectNotFoundException.class, e.getClass());
-            Assert.assertEquals("thrown exception message", "Specified S3 object key '" + getObjectRequest.getKey() + "' does not exist.", e.getMessage());
+            Assert.assertEquals("thrown exception message", "Specified S3 object key '" + TARGET_S3_KEY + "' does not exist.", e.getMessage());
         }
     }
 
@@ -711,18 +1322,18 @@ public class S3DaoTest extends AbstractDaoTest
      * Throws an ObjectNotFoundException when S3 bucket does not exist. This should result as a 404 to clients.
      */
     @Test
-    public void testGetS3ObjectThrowsWhenBucketDoesNotExist()
+    public void testGetPropertiesThrowsWhenBucketDoesNotExist()
     {
-        GetObjectRequest getObjectRequest = new GetObjectRequest(MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_NO_SUCH_BUCKET_EXCEPTION, "test_key");
         try
         {
-            s3Dao.getS3Object(getObjectRequest, getTestS3FileTransferRequestParamsDto());
+            s3Dao.getProperties(MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_NO_SUCH_BUCKET_EXCEPTION, TARGET_S3_KEY, getTestS3FileTransferRequestParamsDto());
             Assert.fail("expected ObjectNotFoundException to be thrown, but no exceptions were thrown");
         }
         catch (Exception e)
         {
             Assert.assertEquals("thrown exception type", ObjectNotFoundException.class, e.getClass());
-            Assert.assertEquals("thrown exception message", "Specified S3 bucket '" + getObjectRequest.getBucketName() + "' does not exist.", e.getMessage());
+            Assert.assertEquals("thrown exception message",
+                "Specified S3 bucket '" + MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_NO_SUCH_BUCKET_EXCEPTION + "' does not exist.", e.getMessage());
         }
     }
 
@@ -730,20 +1341,20 @@ public class S3DaoTest extends AbstractDaoTest
      * Throws an ObjectNotFoundException when application does not have access to the given object.
      */
     @Test
-    public void testGetS3ObjectThrowsWhenAccessDenied()
+    public void testGetPropertiesThrowsWhenAccessDenied()
     {
-        GetObjectRequest getObjectRequest = new GetObjectRequest(MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_ACCESS_DENIED, "test_key");
         try
         {
-            s3Dao.getS3Object(getObjectRequest, getTestS3FileTransferRequestParamsDto());
+            s3Dao.getProperties(MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_ACCESS_DENIED, TARGET_S3_KEY, getTestS3FileTransferRequestParamsDto());
             Assert.fail("expected ObjectNotFoundException to be thrown, but no exceptions were thrown");
         }
         catch (Exception e)
         {
             Assert.assertEquals("thrown exception type", ObjectNotFoundException.class, e.getClass());
             Assert.assertEquals("thrown exception message",
-                "Application does not have access to the specified S3 object at bucket '" + getObjectRequest.getBucketName() + "' and key '" +
-                    getObjectRequest.getKey() + "'.", e.getMessage());
+                "Application does not have access to the specified S3 object at bucket '" + MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_ACCESS_DENIED +
+                    "' and key '" +
+                    TARGET_S3_KEY + "'.", e.getMessage());
         }
     }
 
@@ -751,35 +1362,17 @@ public class S3DaoTest extends AbstractDaoTest
      * Throws the exception as-is without wrapping if the exception is of type AmazonServiceException or children.
      */
     @Test
-    public void testGetS3ObjectThrowsAsIsWhenGenericAmazonError()
+    public void testGetPropertiesThrowsAsIsWhenGenericAmazonError()
     {
-        GetObjectRequest getObjectRequest = new GetObjectRequest(MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_INTERNAL_ERROR, "test_key");
         try
         {
-            s3Dao.getS3Object(getObjectRequest, getTestS3FileTransferRequestParamsDto());
+            s3Dao.getProperties(MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_INTERNAL_ERROR, TARGET_S3_KEY, getTestS3FileTransferRequestParamsDto());
             Assert.fail("expected AmazonServiceException to be thrown, but no exceptions were thrown");
         }
         catch (Exception e)
         {
             Assert.assertEquals("thrown exception type", AmazonServiceException.class, e.getClass());
         }
-    }
-
-    @Test
-    public void testGetProperties()
-    {
-        String expectedKey = "foo";
-        String expectedValue = "bar";
-        String s3BucketName = "test_bucket";
-        String s3ObjectKey = "test_key";
-
-        ByteArrayInputStream inputStream = new ByteArrayInputStream((expectedKey + "=" + expectedValue).getBytes());
-        PutObjectRequest putObjectRequest = new PutObjectRequest(s3BucketName, s3ObjectKey, inputStream, new ObjectMetadata());
-        s3Operations.putObject(putObjectRequest, null);
-
-        Properties properties = s3Dao.getProperties(s3BucketName, s3ObjectKey, getTestS3FileTransferRequestParamsDto());
-
-        Assert.assertEquals("properties key '" + expectedKey + "'", expectedValue, properties.get(expectedKey));
     }
 
     /**
@@ -796,5 +1389,1529 @@ public class S3DaoTest extends AbstractDaoTest
         String result = s3Dao.generateGetObjectPresignedUrl(bucketName, key, expiration, s3FileTransferRequestParamsDto);
 
         Assert.assertEquals("result", "https://" + bucketName + "/" + key + "?method=GET&expiration=" + expiration.getTime(), result);
+    }
+
+    @Test
+    public void testCreateDirectoryAssertCallsPutObject()
+    {
+        S3Operations originalS3Operations = (S3Operations) ReflectionTestUtils.getField(s3Dao, "s3Operations");
+        S3Operations mockS3Operations = mock(S3Operations.class);
+        ReflectionTestUtils.setField(s3Dao, "s3Operations", mockS3Operations);
+
+        try
+        {
+            String s3BucketName = "s3BucketName";
+            String s3KeyPrefix = "s3KeyPrefix";
+            String expectedS3KeyPrefix = s3KeyPrefix + "/";
+
+            S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+            s3FileTransferRequestParamsDto.setS3BucketName(s3BucketName);
+            s3FileTransferRequestParamsDto.setS3KeyPrefix(s3KeyPrefix);
+
+            when(mockS3Operations.putObject(any(), any())).then(new Answer<PutObjectResult>()
+            {
+                @Override
+                public PutObjectResult answer(InvocationOnMock invocation) throws Throwable
+                {
+                    PutObjectRequest putObjectRequest = invocation.getArgumentAt(0, PutObjectRequest.class);
+                    assertEquals(s3BucketName, putObjectRequest.getBucketName());
+                    assertEquals(expectedS3KeyPrefix, putObjectRequest.getKey());
+
+                    PutObjectResult putObjectResult = new PutObjectResult();
+                    return putObjectResult;
+                }
+            });
+
+            s3Dao.createDirectory(s3FileTransferRequestParamsDto);
+        }
+        finally
+        {
+            ReflectionTestUtils.setField(s3Dao, "s3Operations", originalS3Operations);
+        }
+    }
+
+    @Test
+    public void testCreateDirectoryAssertAddTrailingSlashOnlyIfNotPresent()
+    {
+        S3Operations originalS3Operations = (S3Operations) ReflectionTestUtils.getField(s3Dao, "s3Operations");
+        S3Operations mockS3Operations = mock(S3Operations.class);
+        ReflectionTestUtils.setField(s3Dao, "s3Operations", mockS3Operations);
+
+        try
+        {
+            String s3BucketName = "s3BucketName";
+            String s3KeyPrefix = "s3KeyPrefix/";
+
+            S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+            s3FileTransferRequestParamsDto.setS3BucketName(s3BucketName);
+            s3FileTransferRequestParamsDto.setS3KeyPrefix(s3KeyPrefix);
+
+            when(mockS3Operations.putObject(any(), any())).then(new Answer<PutObjectResult>()
+            {
+                @Override
+                public PutObjectResult answer(InvocationOnMock invocation) throws Throwable
+                {
+                    PutObjectRequest putObjectRequest = invocation.getArgumentAt(0, PutObjectRequest.class);
+                    assertEquals(s3BucketName, putObjectRequest.getBucketName());
+                    assertEquals(s3KeyPrefix, putObjectRequest.getKey());
+
+                    PutObjectResult putObjectResult = new PutObjectResult();
+                    return putObjectResult;
+                }
+            });
+
+            s3Dao.createDirectory(s3FileTransferRequestParamsDto);
+        }
+        finally
+        {
+            ReflectionTestUtils.setField(s3Dao, "s3Operations", originalS3Operations);
+        }
+    }
+
+    @Test
+    public void testCreateDirectoryAssertWrapAmazonServiceException()
+    {
+        S3Operations originalS3Operations = (S3Operations) ReflectionTestUtils.getField(s3Dao, "s3Operations");
+        S3Operations mockS3Operations = mock(S3Operations.class);
+        ReflectionTestUtils.setField(s3Dao, "s3Operations", mockS3Operations);
+
+        try
+        {
+            String s3BucketName = "s3BucketName";
+            String s3KeyPrefix = "s3KeyPrefix/";
+
+            S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+            s3FileTransferRequestParamsDto.setS3BucketName(s3BucketName);
+            s3FileTransferRequestParamsDto.setS3KeyPrefix(s3KeyPrefix);
+
+            when(mockS3Operations.putObject(any(), any())).thenThrow(new AmazonServiceException("amazonServiceExceptionMessage"));
+
+            try
+            {
+                s3Dao.createDirectory(s3FileTransferRequestParamsDto);
+                fail();
+            }
+            catch (Exception e)
+            {
+                assertEquals(IllegalStateException.class, e.getClass());
+                assertEquals("Failed to create 0 byte S3 object with \"s3KeyPrefix/\" key in bucket \"s3BucketName\". Reason: amazonServiceExceptionMessage " +
+                    "(Service: null; Status Code: 0; Error Code: null; Request ID: null)", e.getMessage());
+            }
+        }
+        finally
+        {
+            ReflectionTestUtils.setField(s3Dao, "s3Operations", originalS3Operations);
+        }
+    }
+
+    @Test
+    public void testListDirectoryAssertIgnoreDirectories()
+    {
+        S3Operations originalS3Operations = (S3Operations) ReflectionTestUtils.getField(s3Dao, "s3Operations");
+        S3Operations mockS3Operations = mock(S3Operations.class);
+        ReflectionTestUtils.setField(s3Dao, "s3Operations", mockS3Operations);
+
+        try
+        {
+            String s3BucketName = "s3BucketName";
+            String s3KeyPrefix = "s3KeyPrefix";
+
+            S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+            s3FileTransferRequestParamsDto.setS3BucketName(s3BucketName);
+            s3FileTransferRequestParamsDto.setS3KeyPrefix(s3KeyPrefix);
+            boolean ignoreZeroByteDirectoryMarkers = true;
+
+            when(mockS3Operations.listObjects(any(), any())).then(new Answer<ObjectListing>()
+            {
+                @Override
+                public ObjectListing answer(InvocationOnMock invocation) throws Throwable
+                {
+                    ListObjectsRequest listObjectsRequest = invocation.getArgumentAt(0, ListObjectsRequest.class);
+                    assertEquals(s3BucketName, listObjectsRequest.getBucketName());
+                    assertEquals(s3KeyPrefix, listObjectsRequest.getPrefix());
+
+                    ObjectListing objectListing = new ObjectListing();
+                    {
+                        S3ObjectSummary s3ObjectSummary = new S3ObjectSummary();
+                        s3ObjectSummary.setBucketName(s3BucketName);
+                        s3ObjectSummary.setKey("valid/object/key");
+                        s3ObjectSummary.setSize(1024l);
+                        objectListing.getObjectSummaries().add(s3ObjectSummary);
+                    }
+                    {
+                        S3ObjectSummary s3ObjectSummary = new S3ObjectSummary();
+                        s3ObjectSummary.setBucketName(s3BucketName);
+                        s3ObjectSummary.setKey("empty/file");
+                        s3ObjectSummary.setSize(0l);
+                        objectListing.getObjectSummaries().add(s3ObjectSummary);
+                    }
+                    {
+                        S3ObjectSummary s3ObjectSummary = new S3ObjectSummary();
+                        s3ObjectSummary.setBucketName(s3BucketName);
+                        s3ObjectSummary.setKey("directory/path/");
+                        s3ObjectSummary.setSize(0l);
+                        objectListing.getObjectSummaries().add(s3ObjectSummary);
+                    }
+                    // directory with a non-zero size is impossible, but we have a conditional branch to cover
+                    {
+                        S3ObjectSummary s3ObjectSummary = new S3ObjectSummary();
+                        s3ObjectSummary.setBucketName(s3BucketName);
+                        s3ObjectSummary.setKey("another/directory/path/");
+                        s3ObjectSummary.setSize(1024l);
+                        objectListing.getObjectSummaries().add(s3ObjectSummary);
+                    }
+                    return objectListing;
+                }
+            });
+
+            List<S3ObjectSummary> s3ObjectSummaries = s3Dao.listDirectory(s3FileTransferRequestParamsDto, ignoreZeroByteDirectoryMarkers);
+            assertEquals(3, s3ObjectSummaries.size());
+            assertEquals("valid/object/key", s3ObjectSummaries.get(0).getKey());
+            assertEquals(1024l, s3ObjectSummaries.get(0).getSize());
+            assertEquals("empty/file", s3ObjectSummaries.get(1).getKey());
+            assertEquals(0l, s3ObjectSummaries.get(1).getSize());
+            assertEquals("another/directory/path/", s3ObjectSummaries.get(2).getKey());
+            assertEquals(1024l, s3ObjectSummaries.get(2).getSize());
+        }
+        finally
+        {
+            ReflectionTestUtils.setField(s3Dao, "s3Operations", originalS3Operations);
+        }
+    }
+
+    @Test
+    public void testListDirectoryAssertTruncatedResult()
+    {
+        S3Operations originalS3Operations = (S3Operations) ReflectionTestUtils.getField(s3Dao, "s3Operations");
+        S3Operations mockS3Operations = mock(S3Operations.class);
+        ReflectionTestUtils.setField(s3Dao, "s3Operations", mockS3Operations);
+
+        try
+        {
+            String s3BucketName = "s3BucketName";
+            String s3KeyPrefix = "s3KeyPrefix";
+            String expectedFilePath = "key";
+            long expectedFileSize = 1024l;
+
+            S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+            s3FileTransferRequestParamsDto.setS3BucketName(s3BucketName);
+            s3FileTransferRequestParamsDto.setS3KeyPrefix(s3KeyPrefix);
+            boolean ignoreZeroByteDirectoryMarkers = true;
+
+            when(mockS3Operations.listObjects(any(), any())).then(new Answer<ObjectListing>()
+            {
+                @Override
+                public ObjectListing answer(InvocationOnMock invocation) throws Throwable
+                {
+                    ListObjectsRequest listObjectsRequest = invocation.getArgumentAt(0, ListObjectsRequest.class);
+                    String marker = listObjectsRequest.getMarker();
+
+                    ObjectListing objectListing = new ObjectListing();
+                    if (marker == null)
+                    {
+                        objectListing.setNextMarker("marker");
+                        objectListing.setTruncated(true);
+                    }
+                    else
+                    {
+                        assertEquals("marker", marker);
+                        S3ObjectSummary s3ObjectSummary = new S3ObjectSummary();
+                        s3ObjectSummary.setKey(expectedFilePath);
+                        s3ObjectSummary.setSize(expectedFileSize);
+                        objectListing.getObjectSummaries().add(s3ObjectSummary);
+                    }
+                    return objectListing;
+                }
+            });
+
+            List<S3ObjectSummary> s3ObjectSummaries = s3Dao.listDirectory(s3FileTransferRequestParamsDto, ignoreZeroByteDirectoryMarkers);
+            assertEquals(1, s3ObjectSummaries.size());
+            assertEquals(expectedFilePath, s3ObjectSummaries.get(0).getKey());
+            assertEquals(expectedFileSize, s3ObjectSummaries.get(0).getSize());
+        }
+        finally
+        {
+            ReflectionTestUtils.setField(s3Dao, "s3Operations", originalS3Operations);
+        }
+    }
+
+    @Test
+    public void testListDirectoryAssertHandleGenericAmazonS3Exception()
+    {
+        S3Operations originalS3Operations = (S3Operations) ReflectionTestUtils.getField(s3Dao, "s3Operations");
+        S3Operations mockS3Operations = mock(S3Operations.class);
+        ReflectionTestUtils.setField(s3Dao, "s3Operations", mockS3Operations);
+
+        try
+        {
+            String s3BucketName = "s3BucketName";
+            String s3KeyPrefix = "s3KeyPrefix";
+
+            S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+            s3FileTransferRequestParamsDto.setS3BucketName(s3BucketName);
+            s3FileTransferRequestParamsDto.setS3KeyPrefix(s3KeyPrefix);
+            boolean ignoreZeroByteDirectoryMarkers = true;
+
+            when(mockS3Operations.listObjects(any(), any())).thenThrow(new AmazonS3Exception("message"));
+
+            try
+            {
+                s3Dao.listDirectory(s3FileTransferRequestParamsDto, ignoreZeroByteDirectoryMarkers);
+                fail();
+            }
+            catch (Exception e)
+            {
+                assertEquals(IllegalStateException.class, e.getClass());
+                assertEquals("Error accessing S3", e.getMessage());
+            }
+        }
+        finally
+        {
+            ReflectionTestUtils.setField(s3Dao, "s3Operations", originalS3Operations);
+        }
+    }
+
+    @Test
+    public void testListDirectoryAssertHandleAmazonClientException()
+    {
+        S3Operations originalS3Operations = (S3Operations) ReflectionTestUtils.getField(s3Dao, "s3Operations");
+        S3Operations mockS3Operations = mock(S3Operations.class);
+        ReflectionTestUtils.setField(s3Dao, "s3Operations", mockS3Operations);
+
+        try
+        {
+            String s3BucketName = "s3BucketName";
+            String s3KeyPrefix = "s3KeyPrefix";
+
+            S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+            s3FileTransferRequestParamsDto.setS3BucketName(s3BucketName);
+            s3FileTransferRequestParamsDto.setS3KeyPrefix(s3KeyPrefix);
+            boolean ignoreZeroByteDirectoryMarkers = true;
+
+            when(mockS3Operations.listObjects(any(), any())).thenThrow(new AmazonClientException("message"));
+
+            try
+            {
+                s3Dao.listDirectory(s3FileTransferRequestParamsDto, ignoreZeroByteDirectoryMarkers);
+                fail();
+            }
+            catch (Exception e)
+            {
+                assertEquals(IllegalStateException.class, e.getClass());
+                assertEquals("Failed to list keys with prefix \"s3KeyPrefix\" from bucket \"s3BucketName\". Reason: message", e.getMessage());
+            }
+        }
+        finally
+        {
+            ReflectionTestUtils.setField(s3Dao, "s3Operations", originalS3Operations);
+        }
+    }
+
+    @Test
+    public void testListVersionsAssertKeyAndVersionIdMarker()
+    {
+        S3Operations originalS3Operations = (S3Operations) ReflectionTestUtils.getField(s3Dao, "s3Operations");
+        S3Operations mockS3Operations = mock(S3Operations.class);
+        ReflectionTestUtils.setField(s3Dao, "s3Operations", mockS3Operations);
+
+        try
+        {
+            String s3BucketName = "s3BucketName";
+            String s3KeyPrefix = "s3KeyPrefix";
+            String expectedKey = "key";
+            String expectedVersionId = "versionId";
+
+            S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+            s3FileTransferRequestParamsDto.setS3BucketName(s3BucketName);
+            s3FileTransferRequestParamsDto.setS3KeyPrefix(s3KeyPrefix);
+
+            when(mockS3Operations.listVersions(any(), any())).then(new Answer<VersionListing>()
+            {
+                @Override
+                public VersionListing answer(InvocationOnMock invocation) throws Throwable
+                {
+                    ListVersionsRequest listVersionsRequest = invocation.getArgumentAt(0, ListVersionsRequest.class);
+                    String keyMarker = listVersionsRequest.getKeyMarker();
+                    String versionIdMarker = listVersionsRequest.getVersionIdMarker();
+
+                    VersionListing versionListing = new VersionListing();
+                    if (keyMarker == null || versionIdMarker == null)
+                    {
+                        versionListing.setTruncated(true);
+                        versionListing.setNextKeyMarker("nextKeyMarker");
+                        versionListing.setNextVersionIdMarker("nextVersionIdMarker");
+                    }
+                    else
+                    {
+                        assertEquals("nextKeyMarker", listVersionsRequest.getKeyMarker());
+                        assertEquals("nextVersionIdMarker", listVersionsRequest.getVersionIdMarker());
+
+                        S3VersionSummary s3VersionSummary = new S3VersionSummary();
+                        s3VersionSummary.setKey(expectedKey);
+                        s3VersionSummary.setVersionId(expectedVersionId);
+                        versionListing.getVersionSummaries().add(s3VersionSummary);
+                    }
+                    return versionListing;
+                }
+            });
+
+            List<KeyVersion> listVersions = s3Dao.listVersions(s3FileTransferRequestParamsDto);
+            assertEquals(1, listVersions.size());
+            assertEquals(expectedKey, listVersions.get(0).getKey());
+            assertEquals(expectedVersionId, listVersions.get(0).getVersion());
+        }
+        finally
+        {
+            ReflectionTestUtils.setField(s3Dao, "s3Operations", originalS3Operations);
+        }
+    }
+
+    @Test
+    public void testListVersionsAssertHandleGenericAmazonS3Exception()
+    {
+        S3Operations originalS3Operations = (S3Operations) ReflectionTestUtils.getField(s3Dao, "s3Operations");
+        S3Operations mockS3Operations = mock(S3Operations.class);
+        ReflectionTestUtils.setField(s3Dao, "s3Operations", mockS3Operations);
+
+        try
+        {
+            String s3BucketName = "s3BucketName";
+            String s3KeyPrefix = "s3KeyPrefix";
+
+            S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+            s3FileTransferRequestParamsDto.setS3BucketName(s3BucketName);
+            s3FileTransferRequestParamsDto.setS3KeyPrefix(s3KeyPrefix);
+
+            when(mockS3Operations.listVersions(any(), any())).thenThrow(new AmazonS3Exception("message"));
+
+            try
+            {
+                s3Dao.listVersions(s3FileTransferRequestParamsDto);
+                fail();
+            }
+            catch (Exception e)
+            {
+                assertEquals(IllegalStateException.class, e.getClass());
+                assertEquals("Error accessing S3", e.getMessage());
+            }
+        }
+        finally
+        {
+            ReflectionTestUtils.setField(s3Dao, "s3Operations", originalS3Operations);
+        }
+    }
+
+    @Test
+    public void testListVersionsAssertHandleAmazonClientException()
+    {
+        S3Operations originalS3Operations = (S3Operations) ReflectionTestUtils.getField(s3Dao, "s3Operations");
+        S3Operations mockS3Operations = mock(S3Operations.class);
+        ReflectionTestUtils.setField(s3Dao, "s3Operations", mockS3Operations);
+
+        try
+        {
+            String s3BucketName = "s3BucketName";
+            String s3KeyPrefix = "s3KeyPrefix";
+
+            S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+            s3FileTransferRequestParamsDto.setS3BucketName(s3BucketName);
+            s3FileTransferRequestParamsDto.setS3KeyPrefix(s3KeyPrefix);
+
+            when(mockS3Operations.listVersions(any(), any())).thenThrow(new AmazonClientException("message"));
+
+            try
+            {
+                s3Dao.listVersions(s3FileTransferRequestParamsDto);
+                fail();
+            }
+            catch (Exception e)
+            {
+                assertEquals(IllegalStateException.class, e.getClass());
+                assertEquals("Failed to list keys/key versions with prefix \"s3KeyPrefix\" from bucket \"s3BucketName\". Reason: message", e.getMessage());
+            }
+        }
+        finally
+        {
+            ReflectionTestUtils.setField(s3Dao, "s3Operations", originalS3Operations);
+        }
+    }
+
+    @Test
+    public void testDeleteFileListAssertHandleGenericExceptions()
+    {
+        S3Operations originalS3Operations = (S3Operations) ReflectionTestUtils.getField(s3Dao, "s3Operations");
+        S3Operations mockS3Operations = mock(S3Operations.class);
+        ReflectionTestUtils.setField(s3Dao, "s3Operations", mockS3Operations);
+
+        try
+        {
+            S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+            s3FileTransferRequestParamsDto.setS3BucketName("s3BucketName");
+            s3FileTransferRequestParamsDto.setFiles(Arrays.asList(new File("file")));
+
+            when(mockS3Operations.deleteObjects(any(), any())).thenThrow(new AmazonServiceException("testException"));
+
+            try
+            {
+                s3Dao.deleteFileList(s3FileTransferRequestParamsDto);
+                fail();
+            }
+            catch (Exception e)
+            {
+                assertEquals(IllegalStateException.class, e.getClass());
+                assertEquals(
+                    "Failed to delete a list of keys from bucket \"s3BucketName\". Reason: testException (Service: null; Status Code: 0; Error Code: null; Request ID: null)",
+                    e.getMessage());
+            }
+        }
+        finally
+        {
+            ReflectionTestUtils.setField(s3Dao, "s3Operations", originalS3Operations);
+        }
+    }
+
+    @Test
+    public void testDeleteDirectoryAssertHandleAmazonClientException()
+    {
+        S3Operations originalS3Operations = (S3Operations) ReflectionTestUtils.getField(s3Dao, "s3Operations");
+        S3Operations mockS3Operations = mock(S3Operations.class);
+        ReflectionTestUtils.setField(s3Dao, "s3Operations", mockS3Operations);
+
+        try
+        {
+            S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+            s3FileTransferRequestParamsDto.setS3BucketName("s3BucketName");
+            s3FileTransferRequestParamsDto.setS3KeyPrefix("s3KeyPrefix");
+
+            VersionListing versionListing = new VersionListing();
+            versionListing.getVersionSummaries().add(new S3VersionSummary());
+            when(mockS3Operations.listVersions(any(), any())).thenReturn(versionListing);
+            when(mockS3Operations.deleteObjects(any(), any())).thenThrow(new AmazonClientException("message"));
+
+            try
+            {
+                s3Dao.deleteDirectory(s3FileTransferRequestParamsDto);
+                fail();
+            }
+            catch (Exception e)
+            {
+                assertEquals(IllegalStateException.class, e.getClass());
+                assertEquals("Failed to delete keys/key versions with prefix \"s3KeyPrefix\" from bucket \"s3BucketName\". Reason: message", e.getMessage());
+            }
+        }
+        finally
+        {
+            ReflectionTestUtils.setField(s3Dao, "s3Operations", originalS3Operations);
+        }
+    }
+
+    @Test
+    public void testAbortMultipartUploadsAssertAbortOnlyBeforeThreshold()
+    {
+        S3Operations originalS3Operations = (S3Operations) ReflectionTestUtils.getField(s3Dao, "s3Operations");
+        S3Operations mockS3Operations = mock(S3Operations.class);
+        ReflectionTestUtils.setField(s3Dao, "s3Operations", mockS3Operations);
+
+        try
+        {
+            String s3BucketName = "s3BucketName";
+            String uploadKey = "uploadKey1";
+            String uploadId = "uploadId1";
+            Date uploadInitiated = new Date(0);
+
+            S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+            s3FileTransferRequestParamsDto.setS3BucketName(s3BucketName);
+            Date thresholdDate = new Date(1);
+
+            when(mockS3Operations.listMultipartUploads(any(), any())).then(new Answer<MultipartUploadListing>()
+            {
+                @Override
+                public MultipartUploadListing answer(InvocationOnMock invocation) throws Throwable
+                {
+                    ListMultipartUploadsRequest listMultipartUploadsRequest = invocation.getArgumentAt(0, ListMultipartUploadsRequest.class);
+                    assertEquals(s3BucketName, listMultipartUploadsRequest.getBucketName());
+
+                    MultipartUploadListing multipartUploadListing = new MultipartUploadListing();
+                    {
+                        MultipartUpload multipartUpload = new MultipartUpload();
+                        multipartUpload.setUploadId(uploadId);
+                        multipartUpload.setKey(uploadKey);
+                        multipartUpload.setInitiated(uploadInitiated);
+                        multipartUploadListing.getMultipartUploads().add(multipartUpload);
+                    }
+                    // This upload is not aborted since the initiated date is greater than the threshold
+                    {
+                        MultipartUpload multipartUpload = new MultipartUpload();
+                        multipartUpload.setUploadId("uploadId2");
+                        multipartUpload.setKey("uploadKey2");
+                        multipartUpload.setInitiated(new Date(2));
+                        multipartUploadListing.getMultipartUploads().add(multipartUpload);
+                    }
+                    return multipartUploadListing;
+                }
+            });
+
+            assertEquals(1, s3Dao.abortMultipartUploads(s3FileTransferRequestParamsDto, thresholdDate));
+
+            verify(mockS3Operations).listMultipartUploads(any(), any());
+
+            /*
+             * Assert that S3Operations.abortMultipartUpload is called exactly ONCE with arguments matching the given ArgumentMatcher
+             */
+            verify(mockS3Operations).abortMultipartUpload(argThat(new ArgumentMatcher<AbortMultipartUploadRequest>()
+            {
+                @Override
+                public boolean matches(Object argument)
+                {
+                    AbortMultipartUploadRequest abortMultipartUploadRequest = (AbortMultipartUploadRequest) argument;
+                    return Objects.equal(s3BucketName, abortMultipartUploadRequest.getBucketName()) &&
+                        Objects.equal(uploadKey, abortMultipartUploadRequest.getKey()) && Objects.equal(uploadId, abortMultipartUploadRequest.getUploadId());
+                }
+            }), any());
+            // Assert that no other interactions occur with the mock
+            verifyNoMoreInteractions(mockS3Operations);
+        }
+        finally
+        {
+            ReflectionTestUtils.setField(s3Dao, "s3Operations", originalS3Operations);
+        }
+    }
+
+    @Test
+    public void testAbortMultipartUploadsAssertTruncatedResult()
+    {
+        S3Operations originalS3Operations = (S3Operations) ReflectionTestUtils.getField(s3Dao, "s3Operations");
+        S3Operations mockS3Operations = mock(S3Operations.class);
+        ReflectionTestUtils.setField(s3Dao, "s3Operations", mockS3Operations);
+
+        try
+        {
+            String s3BucketName = "s3BucketName";
+            String uploadKey = "uploadKey";
+            String uploadId = "uploadId";
+            Date uploadInitiated = new Date(0);
+
+            S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+            s3FileTransferRequestParamsDto.setS3BucketName(s3BucketName);
+            Date thresholdDate = new Date(1);
+
+            when(mockS3Operations.listMultipartUploads(any(), any())).then(new Answer<MultipartUploadListing>()
+            {
+                @Override
+                public MultipartUploadListing answer(InvocationOnMock invocation) throws Throwable
+                {
+                    ListMultipartUploadsRequest listMultipartUploadsRequest = invocation.getArgumentAt(0, ListMultipartUploadsRequest.class);
+                    String keyMarker = listMultipartUploadsRequest.getKeyMarker();
+                    String uploadIdMarker = listMultipartUploadsRequest.getUploadIdMarker();
+
+                    MultipartUploadListing multipartUploadListing = new MultipartUploadListing();
+                    if (keyMarker == null || uploadIdMarker == null)
+                    {
+                        multipartUploadListing.setNextKeyMarker("nextKeyMarker");
+                        multipartUploadListing.setNextUploadIdMarker("nextUploadIdMarker");
+                        multipartUploadListing.setTruncated(true);
+                    }
+                    else
+                    {
+                        assertEquals("nextKeyMarker", keyMarker);
+                        assertEquals("nextUploadIdMarker", uploadIdMarker);
+
+                        MultipartUpload multipartUpload = new MultipartUpload();
+                        multipartUpload.setUploadId(uploadId);
+                        multipartUpload.setKey(uploadKey);
+                        multipartUpload.setInitiated(uploadInitiated);
+                        multipartUploadListing.getMultipartUploads().add(multipartUpload);
+                    }
+                    return multipartUploadListing;
+                }
+            });
+
+            assertEquals(1, s3Dao.abortMultipartUploads(s3FileTransferRequestParamsDto, thresholdDate));
+
+            // Assert listMultipartUploads() is called twice due to truncation
+            verify(mockS3Operations, times(2)).listMultipartUploads(any(), any());
+
+            /*
+             * Assert that S3Operations.abortMultipartUpload is called exactly ONCE with arguments matching the given ArgumentMatcher
+             */
+            verify(mockS3Operations).abortMultipartUpload(argThat(new ArgumentMatcher<AbortMultipartUploadRequest>()
+            {
+                @Override
+                public boolean matches(Object argument)
+                {
+                    AbortMultipartUploadRequest abortMultipartUploadRequest = (AbortMultipartUploadRequest) argument;
+                    return Objects.equal(s3BucketName, abortMultipartUploadRequest.getBucketName()) &&
+                        Objects.equal(uploadKey, abortMultipartUploadRequest.getKey()) && Objects.equal(uploadId, abortMultipartUploadRequest.getUploadId());
+                }
+            }), any());
+            // Assert that no other interactions occur with the mock
+            verifyNoMoreInteractions(mockS3Operations);
+        }
+        finally
+        {
+            ReflectionTestUtils.setField(s3Dao, "s3Operations", originalS3Operations);
+        }
+    }
+
+    /**
+     * When any exception is thrown during the flow, the S3 client should be shut down gracefully. The exception is thrown as-is, without any wrapping or
+     * special handling.
+     */
+    @Test
+    public void testAbortMultipartUploadsAssertHandleGenericException()
+    {
+        S3Operations originalS3Operations = (S3Operations) ReflectionTestUtils.getField(s3Dao, "s3Operations");
+        S3Operations mockS3Operations = mock(S3Operations.class);
+        ReflectionTestUtils.setField(s3Dao, "s3Operations", mockS3Operations);
+
+        try
+        {
+            String s3BucketName = "s3BucketName";
+
+            S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+            s3FileTransferRequestParamsDto.setS3BucketName(s3BucketName);
+            Date thresholdDate = new Date(1);
+
+            when(mockS3Operations.listMultipartUploads(any(), any())).thenThrow(new AmazonServiceException("message"));
+
+            try
+            {
+                s3Dao.abortMultipartUploads(s3FileTransferRequestParamsDto, thresholdDate);
+                fail();
+            }
+            catch (Exception e)
+            {
+                assertEquals(AmazonServiceException.class, e.getClass());
+                assertEquals("message (Service: null; Status Code: 0; Error Code: null; Request ID: null)", e.getMessage());
+            }
+        }
+        finally
+        {
+            ReflectionTestUtils.setField(s3Dao, "s3Operations", originalS3Operations);
+        }
+    }
+
+    @Test
+    public void testGetPropertiesHandleIllegalArgumentException() throws Exception
+    {
+        S3Operations originalS3Operations = (S3Operations) ReflectionTestUtils.getField(s3Dao, "s3Operations");
+        S3Operations mockS3Operations = mock(S3Operations.class);
+        ReflectionTestUtils.setField(s3Dao, "s3Operations", mockS3Operations);
+
+        JavaPropertiesHelper originalJavaPropertiesHelper = (JavaPropertiesHelper) ReflectionTestUtils.getField(s3Dao, "javaPropertiesHelper");
+        JavaPropertiesHelper mockJavaPropertiesHelper = mock(JavaPropertiesHelper.class);
+        ReflectionTestUtils.setField(s3Dao, "javaPropertiesHelper", mockJavaPropertiesHelper);
+
+        try
+        {
+            String bucketName = "bucketName";
+            String key = "key";
+            S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+
+            S3Object s3Object = new S3Object();
+            s3Object.setObjectContent(new ByteArrayInputStream(new byte[] {0}));
+            when(mockS3Operations.getS3Object(any(), any())).thenReturn(s3Object);
+            when(mockJavaPropertiesHelper.getProperties(any(InputStream.class))).thenThrow(new IllegalArgumentException("message"));
+
+            try
+            {
+                s3Dao.getProperties(bucketName, key, s3FileTransferRequestParamsDto);
+                fail();
+            }
+            catch (Exception e)
+            {
+                assertEquals(IllegalArgumentException.class, e.getClass());
+                assertEquals("The properties file in S3 bucket 'bucketName' and key 'key' is invalid.", e.getMessage());
+            }
+        }
+        finally
+        {
+            ReflectionTestUtils.setField(s3Dao, "s3Operations", originalS3Operations);
+            ReflectionTestUtils.setField(s3Dao, "javaPropertiesHelper", originalJavaPropertiesHelper);
+        }
+    }
+
+    @Test
+    public void testGetPropertiesHandleGenericException() throws Exception
+    {
+        S3Operations originalS3Operations = (S3Operations) ReflectionTestUtils.getField(s3Dao, "s3Operations");
+        S3Operations mockS3Operations = mock(S3Operations.class);
+        ReflectionTestUtils.setField(s3Dao, "s3Operations", mockS3Operations);
+
+        JavaPropertiesHelper originalJavaPropertiesHelper = (JavaPropertiesHelper) ReflectionTestUtils.getField(s3Dao, "javaPropertiesHelper");
+        JavaPropertiesHelper mockJavaPropertiesHelper = mock(JavaPropertiesHelper.class);
+        ReflectionTestUtils.setField(s3Dao, "javaPropertiesHelper", mockJavaPropertiesHelper);
+
+        try
+        {
+            String bucketName = "bucketName";
+            String key = "key";
+            S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+
+            S3Object s3Object = new S3Object();
+            s3Object.setObjectContent(new ByteArrayInputStream(new byte[] {0}));
+            when(mockS3Operations.getS3Object(any(), any())).thenReturn(s3Object);
+            when(mockJavaPropertiesHelper.getProperties(any(InputStream.class))).thenThrow(new RuntimeException("message"));
+
+            try
+            {
+                s3Dao.getProperties(bucketName, key, s3FileTransferRequestParamsDto);
+                fail();
+            }
+            catch (Exception e)
+            {
+                assertEquals(RuntimeException.class, e.getClass());
+                assertEquals("message", e.getMessage());
+            }
+        }
+        finally
+        {
+            ReflectionTestUtils.setField(s3Dao, "s3Operations", originalS3Operations);
+            ReflectionTestUtils.setField(s3Dao, "javaPropertiesHelper", originalJavaPropertiesHelper);
+        }
+    }
+
+    @Test
+    public void testGenerateGetObjectPresignedUrlHandleExceptions() throws Exception
+    {
+        S3Operations originalS3Operations = (S3Operations) ReflectionTestUtils.getField(s3Dao, "s3Operations");
+        S3Operations mockS3Operations = mock(S3Operations.class);
+        ReflectionTestUtils.setField(s3Dao, "s3Operations", mockS3Operations);
+
+        try
+        {
+            String bucketName = "bucketName";
+            String key = "key";
+            Date expiration = new Date();
+            S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+
+            when(mockS3Operations.generatePresignedUrl(any(), any())).thenThrow(new RuntimeException("message"));
+
+            try
+            {
+                s3Dao.generateGetObjectPresignedUrl(bucketName, key, expiration, s3FileTransferRequestParamsDto);
+                fail();
+            }
+            catch (Exception e)
+            {
+                assertEquals(RuntimeException.class, e.getClass());
+                assertEquals("message", e.getMessage());
+            }
+        }
+        finally
+        {
+            ReflectionTestUtils.setField(s3Dao, "s3Operations", originalS3Operations);
+        }
+    }
+
+    @Test
+    public void testPrepareMetadataAssertSetKmsHeaders()
+    {
+        S3Operations originalS3Operations = (S3Operations) ReflectionTestUtils.getField(s3Dao, "s3Operations");
+        S3Operations mockS3Operations = mock(S3Operations.class);
+        ReflectionTestUtils.setField(s3Dao, "s3Operations", mockS3Operations);
+
+        try
+        {
+            String s3BucketName = "s3BucketName";
+            String s3KeyPrefix = "s3KeyPrefix";
+            String kmsKeyId = "kmsKeyId";
+
+            S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+            s3FileTransferRequestParamsDto.setS3BucketName(s3BucketName);
+            s3FileTransferRequestParamsDto.setS3KeyPrefix(s3KeyPrefix);
+            s3FileTransferRequestParamsDto.setKmsKeyId(kmsKeyId);
+
+            when(mockS3Operations.putObject(any(), any())).then(new Answer<PutObjectResult>()
+            {
+                @Override
+                public PutObjectResult answer(InvocationOnMock invocation) throws Throwable
+                {
+                    PutObjectRequest putObjectRequest = invocation.getArgumentAt(0, PutObjectRequest.class);
+                    ObjectMetadata metadata = putObjectRequest.getMetadata();
+                    assertEquals("aws:kms", metadata.getSSEAlgorithm());
+                    assertEquals(kmsKeyId, metadata.getRawMetadata().get(Headers.SERVER_SIDE_ENCRYPTION_AWS_KMS_KEYID));
+                    return new PutObjectResult();
+                }
+            });
+
+            s3Dao.createDirectory(s3FileTransferRequestParamsDto);
+        }
+        finally
+        {
+            ReflectionTestUtils.setField(s3Dao, "s3Operations", originalS3Operations);
+        }
+    }
+
+    @Test
+    public void testGetAmazonS3AssertProxyIsSet()
+    {
+        S3Operations originalS3Operations = (S3Operations) ReflectionTestUtils.getField(s3Dao, "s3Operations");
+        S3Operations mockS3Operations = mock(S3Operations.class);
+        ReflectionTestUtils.setField(s3Dao, "s3Operations", mockS3Operations);
+
+        try
+        {
+            String s3BucketName = "s3BucketName";
+            String s3KeyPrefix = "s3KeyPrefix";
+            String httpProxyHost = "httpProxyHost";
+            Integer httpProxyPort = 1234;
+
+            S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+            s3FileTransferRequestParamsDto.setS3BucketName(s3BucketName);
+            s3FileTransferRequestParamsDto.setS3KeyPrefix(s3KeyPrefix);
+            s3FileTransferRequestParamsDto.setHttpProxyHost(httpProxyHost);
+            s3FileTransferRequestParamsDto.setHttpProxyPort(httpProxyPort);
+
+            when(mockS3Operations.putObject(any(), any())).then(new Answer<PutObjectResult>()
+            {
+                @Override
+                public PutObjectResult answer(InvocationOnMock invocation) throws Throwable
+                {
+                    AmazonS3Client amazonS3Client = invocation.getArgumentAt(1, AmazonS3Client.class);
+                    ClientConfiguration clientConfiguration = (ClientConfiguration) ReflectionTestUtils.getField(amazonS3Client, "clientConfiguration");
+                    assertEquals(httpProxyHost, clientConfiguration.getProxyHost());
+                    assertEquals(httpProxyPort.intValue(), clientConfiguration.getProxyPort());
+                    return new PutObjectResult();
+                }
+            });
+
+            s3Dao.createDirectory(s3FileTransferRequestParamsDto);
+        }
+        finally
+        {
+            ReflectionTestUtils.setField(s3Dao, "s3Operations", originalS3Operations);
+        }
+    }
+
+    @Test
+    public void testGetAmazonS3AssertProxyIsNotSetWhenProxyHostIsBlank()
+    {
+        S3Operations originalS3Operations = (S3Operations) ReflectionTestUtils.getField(s3Dao, "s3Operations");
+        S3Operations mockS3Operations = mock(S3Operations.class);
+        ReflectionTestUtils.setField(s3Dao, "s3Operations", mockS3Operations);
+
+        try
+        {
+            String s3BucketName = "s3BucketName";
+            String s3KeyPrefix = "s3KeyPrefix";
+            String httpProxyHost = "";
+            Integer httpProxyPort = 1234;
+
+            S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+            s3FileTransferRequestParamsDto.setS3BucketName(s3BucketName);
+            s3FileTransferRequestParamsDto.setS3KeyPrefix(s3KeyPrefix);
+            s3FileTransferRequestParamsDto.setHttpProxyHost(httpProxyHost);
+            s3FileTransferRequestParamsDto.setHttpProxyPort(httpProxyPort);
+
+            when(mockS3Operations.putObject(any(), any())).then(new Answer<PutObjectResult>()
+            {
+                @Override
+                public PutObjectResult answer(InvocationOnMock invocation) throws Throwable
+                {
+                    AmazonS3Client amazonS3Client = invocation.getArgumentAt(1, AmazonS3Client.class);
+                    ClientConfiguration clientConfiguration = (ClientConfiguration) ReflectionTestUtils.getField(amazonS3Client, "clientConfiguration");
+                    assertNull(clientConfiguration.getProxyHost());
+                    return new PutObjectResult();
+                }
+            });
+
+            s3Dao.createDirectory(s3FileTransferRequestParamsDto);
+        }
+        finally
+        {
+            ReflectionTestUtils.setField(s3Dao, "s3Operations", originalS3Operations);
+        }
+    }
+
+    @Test
+    public void testGetAmazonS3AssertProxyIsNotSetWhenProxyPortIsNull()
+    {
+        S3Operations originalS3Operations = (S3Operations) ReflectionTestUtils.getField(s3Dao, "s3Operations");
+        S3Operations mockS3Operations = mock(S3Operations.class);
+        ReflectionTestUtils.setField(s3Dao, "s3Operations", mockS3Operations);
+
+        try
+        {
+            String s3BucketName = "s3BucketName";
+            String s3KeyPrefix = "s3KeyPrefix";
+            String httpProxyHost = "httpProxyHost";
+            Integer httpProxyPort = null;
+
+            S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+            s3FileTransferRequestParamsDto.setS3BucketName(s3BucketName);
+            s3FileTransferRequestParamsDto.setS3KeyPrefix(s3KeyPrefix);
+            s3FileTransferRequestParamsDto.setHttpProxyHost(httpProxyHost);
+            s3FileTransferRequestParamsDto.setHttpProxyPort(httpProxyPort);
+
+            when(mockS3Operations.putObject(any(), any())).then(new Answer<PutObjectResult>()
+            {
+                @Override
+                public PutObjectResult answer(InvocationOnMock invocation) throws Throwable
+                {
+                    AmazonS3Client amazonS3Client = invocation.getArgumentAt(1, AmazonS3Client.class);
+                    ClientConfiguration clientConfiguration = (ClientConfiguration) ReflectionTestUtils.getField(amazonS3Client, "clientConfiguration");
+                    assertNull(clientConfiguration.getProxyHost());
+                    return new PutObjectResult();
+                }
+            });
+
+            s3Dao.createDirectory(s3FileTransferRequestParamsDto);
+        }
+        finally
+        {
+            ReflectionTestUtils.setField(s3Dao, "s3Operations", originalS3Operations);
+        }
+    }
+
+    @Test
+    public void testGetAmazonS3AssertSignerOverrideIsSetWhenProxyIsSet()
+    {
+        S3Operations originalS3Operations = (S3Operations) ReflectionTestUtils.getField(s3Dao, "s3Operations");
+        S3Operations mockS3Operations = mock(S3Operations.class);
+        ReflectionTestUtils.setField(s3Dao, "s3Operations", mockS3Operations);
+
+        try
+        {
+            String s3BucketName = "s3BucketName";
+            String s3KeyPrefix = "s3KeyPrefix";
+            String httpProxyHost = "httpProxyHost";
+            Integer httpProxyPort = 1234;
+            String signerOverride = S3FileTransferRequestParamsDto.SIGNER_OVERRIDE_V4;
+
+            S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+            s3FileTransferRequestParamsDto.setS3BucketName(s3BucketName);
+            s3FileTransferRequestParamsDto.setS3KeyPrefix(s3KeyPrefix);
+            s3FileTransferRequestParamsDto.setHttpProxyHost(httpProxyHost);
+            s3FileTransferRequestParamsDto.setHttpProxyPort(httpProxyPort);
+            s3FileTransferRequestParamsDto.setSignerOverride(signerOverride);
+
+            when(mockS3Operations.putObject(any(), any())).then(new Answer<PutObjectResult>()
+            {
+                @Override
+                public PutObjectResult answer(InvocationOnMock invocation) throws Throwable
+                {
+                    AmazonS3Client amazonS3Client = invocation.getArgumentAt(1, AmazonS3Client.class);
+                    ClientConfiguration clientConfiguration = (ClientConfiguration) ReflectionTestUtils.getField(amazonS3Client, "clientConfiguration");
+                    assertEquals(signerOverride, clientConfiguration.getSignerOverride());
+                    return new PutObjectResult();
+                }
+            });
+
+            s3Dao.createDirectory(s3FileTransferRequestParamsDto);
+        }
+        finally
+        {
+            ReflectionTestUtils.setField(s3Dao, "s3Operations", originalS3Operations);
+        }
+    }
+
+    @Test
+    public void testGetAmazonS3AssertS3EndpointIsSet()
+    {
+        S3Operations originalS3Operations = (S3Operations) ReflectionTestUtils.getField(s3Dao, "s3Operations");
+        S3Operations mockS3Operations = mock(S3Operations.class);
+        ReflectionTestUtils.setField(s3Dao, "s3Operations", mockS3Operations);
+
+        try
+        {
+            String s3BucketName = "s3BucketName";
+            String s3KeyPrefix = "s3KeyPrefix";
+            String s3Endpoint = "s3Endpoint";
+
+            S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+            s3FileTransferRequestParamsDto.setS3BucketName(s3BucketName);
+            s3FileTransferRequestParamsDto.setS3KeyPrefix(s3KeyPrefix);
+            s3FileTransferRequestParamsDto.setS3Endpoint(s3Endpoint);
+
+            when(mockS3Operations.putObject(any(), any())).then(new Answer<PutObjectResult>()
+            {
+                @Override
+                public PutObjectResult answer(InvocationOnMock invocation) throws Throwable
+                {
+                    AmazonS3Client amazonS3Client = invocation.getArgumentAt(1, AmazonS3Client.class);
+                    assertEquals(new URI("https://" + s3Endpoint), ReflectionTestUtils.getField(amazonS3Client, "endpoint"));
+                    return new PutObjectResult();
+                }
+            });
+
+            s3Dao.createDirectory(s3FileTransferRequestParamsDto);
+        }
+        finally
+        {
+            ReflectionTestUtils.setField(s3Dao, "s3Operations", originalS3Operations);
+        }
+    }
+
+    @Test
+    public void testGetAWSCredentialsProviderAssertStaticCredentialsSet()
+    {
+        S3Operations originalS3Operations = (S3Operations) ReflectionTestUtils.getField(s3Dao, "s3Operations");
+        S3Operations mockS3Operations = mock(S3Operations.class);
+        ReflectionTestUtils.setField(s3Dao, "s3Operations", mockS3Operations);
+
+        try
+        {
+            String s3BucketName = "s3BucketName";
+            String s3KeyPrefix = "s3KeyPrefix";
+            String s3AccessKey = "s3AccessKey";
+            String s3SecretKey = "s3SecretKey";
+
+            S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+            s3FileTransferRequestParamsDto.setS3BucketName(s3BucketName);
+            s3FileTransferRequestParamsDto.setS3KeyPrefix(s3KeyPrefix);
+            s3FileTransferRequestParamsDto.setS3AccessKey(s3AccessKey);
+            s3FileTransferRequestParamsDto.setS3SecretKey(s3SecretKey);
+
+            when(mockS3Operations.putObject(any(), any())).then(new Answer<PutObjectResult>()
+            {
+                @SuppressWarnings("unchecked")
+                @Override
+                public PutObjectResult answer(InvocationOnMock invocation) throws Throwable
+                {
+                    AmazonS3Client amazonS3Client = invocation.getArgumentAt(1, AmazonS3Client.class);
+                    AWSCredentialsProviderChain awsCredentialsProviderChain =
+                        (AWSCredentialsProviderChain) ReflectionTestUtils.getField(amazonS3Client, "awsCredentialsProvider");
+                    List<AWSCredentialsProvider> credentialsProviders =
+                        (List<AWSCredentialsProvider>) ReflectionTestUtils.getField(awsCredentialsProviderChain, "credentialsProviders");
+                    // Expect 2 providers: the static provider, and the default provider
+                    assertEquals(2, credentialsProviders.size());
+
+                    // Only verify the static value
+                    assertEquals(StaticCredentialsProvider.class, credentialsProviders.get(0).getClass());
+                    StaticCredentialsProvider staticCredentialsProvider = (StaticCredentialsProvider) credentialsProviders.get(0);
+                    assertEquals(s3AccessKey, staticCredentialsProvider.getCredentials().getAWSAccessKeyId());
+                    assertEquals(s3SecretKey, staticCredentialsProvider.getCredentials().getAWSSecretKey());
+                    return new PutObjectResult();
+                }
+            });
+
+            s3Dao.createDirectory(s3FileTransferRequestParamsDto);
+        }
+        finally
+        {
+            ReflectionTestUtils.setField(s3Dao, "s3Operations", originalS3Operations);
+        }
+    }
+
+    @Test
+    public void testGetAWSCredentialsProviderAssertStaticCredentialsIsNotSetWhenAccessKeyIsNull()
+    {
+        S3Operations originalS3Operations = (S3Operations) ReflectionTestUtils.getField(s3Dao, "s3Operations");
+        S3Operations mockS3Operations = mock(S3Operations.class);
+        ReflectionTestUtils.setField(s3Dao, "s3Operations", mockS3Operations);
+
+        try
+        {
+            String s3BucketName = "s3BucketName";
+            String s3KeyPrefix = "s3KeyPrefix";
+            String s3AccessKey = null;
+            String s3SecretKey = "s3SecretKey";
+
+            S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+            s3FileTransferRequestParamsDto.setS3BucketName(s3BucketName);
+            s3FileTransferRequestParamsDto.setS3KeyPrefix(s3KeyPrefix);
+            s3FileTransferRequestParamsDto.setS3AccessKey(s3AccessKey);
+            s3FileTransferRequestParamsDto.setS3SecretKey(s3SecretKey);
+
+            when(mockS3Operations.putObject(any(), any())).then(new Answer<PutObjectResult>()
+            {
+                @SuppressWarnings("unchecked")
+                @Override
+                public PutObjectResult answer(InvocationOnMock invocation) throws Throwable
+                {
+                    AmazonS3Client amazonS3Client = invocation.getArgumentAt(1, AmazonS3Client.class);
+                    AWSCredentialsProviderChain awsCredentialsProviderChain =
+                        (AWSCredentialsProviderChain) ReflectionTestUtils.getField(amazonS3Client, "awsCredentialsProvider");
+                    List<AWSCredentialsProvider> credentialsProviders =
+                        (List<AWSCredentialsProvider>) ReflectionTestUtils.getField(awsCredentialsProviderChain, "credentialsProviders");
+                    assertEquals(1, credentialsProviders.size());
+                    assertEquals(DefaultAWSCredentialsProviderChain.class, credentialsProviders.get(0).getClass());
+                    return new PutObjectResult();
+                }
+            });
+
+            s3Dao.createDirectory(s3FileTransferRequestParamsDto);
+        }
+        finally
+        {
+            ReflectionTestUtils.setField(s3Dao, "s3Operations", originalS3Operations);
+        }
+    }
+
+    @Test
+    public void testGetAWSCredentialsProviderAssertStaticCredentialsIsNotSetWhenSecretKeyIsNull()
+    {
+        S3Operations originalS3Operations = (S3Operations) ReflectionTestUtils.getField(s3Dao, "s3Operations");
+        S3Operations mockS3Operations = mock(S3Operations.class);
+        ReflectionTestUtils.setField(s3Dao, "s3Operations", mockS3Operations);
+
+        try
+        {
+            String s3BucketName = "s3BucketName";
+            String s3KeyPrefix = "s3KeyPrefix";
+            String s3AccessKey = "s3AccessKey";
+            String s3SecretKey = null;
+
+            S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+            s3FileTransferRequestParamsDto.setS3BucketName(s3BucketName);
+            s3FileTransferRequestParamsDto.setS3KeyPrefix(s3KeyPrefix);
+            s3FileTransferRequestParamsDto.setS3AccessKey(s3AccessKey);
+            s3FileTransferRequestParamsDto.setS3SecretKey(s3SecretKey);
+
+            when(mockS3Operations.putObject(any(), any())).then(new Answer<PutObjectResult>()
+            {
+                @SuppressWarnings("unchecked")
+                @Override
+                public PutObjectResult answer(InvocationOnMock invocation) throws Throwable
+                {
+                    AmazonS3Client amazonS3Client = invocation.getArgumentAt(1, AmazonS3Client.class);
+                    AWSCredentialsProviderChain awsCredentialsProviderChain =
+                        (AWSCredentialsProviderChain) ReflectionTestUtils.getField(amazonS3Client, "awsCredentialsProvider");
+                    List<AWSCredentialsProvider> credentialsProviders =
+                        (List<AWSCredentialsProvider>) ReflectionTestUtils.getField(awsCredentialsProviderChain, "credentialsProviders");
+                    assertEquals(1, credentialsProviders.size());
+                    assertEquals(DefaultAWSCredentialsProviderChain.class, credentialsProviders.get(0).getClass());
+                    return new PutObjectResult();
+                }
+            });
+
+            s3Dao.createDirectory(s3FileTransferRequestParamsDto);
+        }
+        finally
+        {
+            ReflectionTestUtils.setField(s3Dao, "s3Operations", originalS3Operations);
+        }
+    }
+
+    /**
+     * A case where additional credentials provider is given in the request params. The credentials returned should be an AWS session credential where the
+     * values are from the provided custom credentials provider.
+     */
+    @Test
+    public void testGetAWSCredentialsProviderAssertAdditionalProviderIsSet() throws Exception
+    {
+        S3Operations originalS3Operations = (S3Operations) ReflectionTestUtils.getField(s3Dao, "s3Operations");
+        S3Operations mockS3Operations = mock(S3Operations.class);
+        ReflectionTestUtils.setField(s3Dao, "s3Operations", mockS3Operations);
+
+        try
+        {
+            String s3BucketName = "s3BucketName";
+            String s3KeyPrefix = "s3KeyPrefix";
+            String awsAccessKey = "awsAccessKey";
+            String awsSecretKey = "awsSecretKey";
+            String awsSessionToken = "awsSessionToken";
+
+            S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+            s3FileTransferRequestParamsDto.setS3BucketName(s3BucketName);
+            s3FileTransferRequestParamsDto.setS3KeyPrefix(s3KeyPrefix);
+            s3FileTransferRequestParamsDto.setAdditionalAwsCredentialsProviders(Arrays.asList(new HerdAWSCredentialsProvider()
+            {
+                @Override
+                public AwsCredential getAwsCredential()
+                {
+                    return new AwsCredential(awsAccessKey, awsSecretKey, awsSessionToken, null);
+                }
+            }));
+
+            when(mockS3Operations.putObject(any(), any())).then(new Answer<PutObjectResult>()
+            {
+                @SuppressWarnings("unchecked")
+                @Override
+                public PutObjectResult answer(InvocationOnMock invocation) throws Throwable
+                {
+                    AmazonS3Client amazonS3Client = invocation.getArgumentAt(1, AmazonS3Client.class);
+                    AWSCredentialsProviderChain awsCredentialsProviderChain =
+                        (AWSCredentialsProviderChain) ReflectionTestUtils.getField(amazonS3Client, "awsCredentialsProvider");
+                    List<AWSCredentialsProvider> credentialsProviders =
+                        (List<AWSCredentialsProvider>) ReflectionTestUtils.getField(awsCredentialsProviderChain, "credentialsProviders");
+                    assertEquals(2, credentialsProviders.size());
+
+                    // refresh() does nothing, but gives code coverage
+                    credentialsProviders.get(0).refresh();
+
+                    /*
+                     * We can't inspect the field directly since the class definition is private.
+                     * Instead we call the getCredentials() and verify that it returns the credentials staged as part of this test.
+                     */
+                    AWSCredentials credentials = awsCredentialsProviderChain.getCredentials();
+                    assertEquals(BasicSessionCredentials.class, credentials.getClass());
+
+                    BasicSessionCredentials basicSessionCredentials = (BasicSessionCredentials) credentials;
+
+                    assertEquals(awsAccessKey, basicSessionCredentials.getAWSAccessKeyId());
+                    assertEquals(awsSecretKey, basicSessionCredentials.getAWSSecretKey());
+                    assertEquals(awsSessionToken, basicSessionCredentials.getSessionToken());
+
+                    return new PutObjectResult();
+                }
+            });
+
+            s3Dao.createDirectory(s3FileTransferRequestParamsDto);
+        }
+        finally
+        {
+            ReflectionTestUtils.setField(s3Dao, "s3Operations", originalS3Operations);
+        }
+    }
+
+    @Test
+    public void testPerformTransferAssertLogWhenStepCountGt300() throws Exception
+    {
+        S3Operations originalS3Operations = (S3Operations) ReflectionTestUtils.getField(s3Dao, "s3Operations");
+        S3Operations mockS3Operations = mock(S3Operations.class);
+        ReflectionTestUtils.setField(s3Dao, "s3Operations", mockS3Operations);
+
+        // Shorten the sleep interval for faster tests
+        long originalSleepIntervalsMillis = (long) ReflectionTestUtils.getField(s3Dao, "sleepIntervalsMillis");
+        ReflectionTestUtils.setField(s3Dao, "sleepIntervalsMillis", 1l);
+
+        try
+        {
+            S3FileCopyRequestParamsDto s3FileCopyRequestParamsDto = new S3FileCopyRequestParamsDto();
+            s3FileCopyRequestParamsDto.setSourceBucketName("sourceBucketName");
+            s3FileCopyRequestParamsDto.setSourceObjectKey("sourceObjectKey");
+            s3FileCopyRequestParamsDto.setTargetBucketName("targetBucketName");
+            s3FileCopyRequestParamsDto.setTargetObjectKey("targetObjectKey");
+            s3FileCopyRequestParamsDto.setKmsKeyId("kmsKeyId");
+
+            when(mockS3Operations.copyFile(any(), any())).then(new Answer<Copy>()
+            {
+                @Override
+                public Copy answer(InvocationOnMock invocation) throws Throwable
+                {
+                    Copy mockTransfer = mock(Copy.class);
+
+                    when(mockTransfer.getProgress()).thenReturn(new TransferProgress());
+                    when(mockTransfer.getState()).thenReturn(TransferState.Completed);
+                    when(mockTransfer.isDone()).then(new Answer<Boolean>()
+                    {
+                        int callCount = 0;
+
+                        @Override
+                        public Boolean answer(InvocationOnMock invocation) throws Throwable
+                        {
+                            return callCount++ > 600;
+                        }
+                    });
+                    return mockTransfer;
+                }
+            });
+
+            s3Dao.copyFile(s3FileCopyRequestParamsDto);
+        }
+        finally
+        {
+            ReflectionTestUtils.setField(s3Dao, "s3Operations", originalS3Operations);
+            ReflectionTestUtils.setField(s3Dao, "sleepIntervalsMillis", originalSleepIntervalsMillis);
+        }
+    }
+
+    @Test
+    public void testPerformTransferAssertHandleFailedWithAmazonClientException() throws Exception
+    {
+        S3Operations originalS3Operations = (S3Operations) ReflectionTestUtils.getField(s3Dao, "s3Operations");
+        S3Operations mockS3Operations = mock(S3Operations.class);
+        ReflectionTestUtils.setField(s3Dao, "s3Operations", mockS3Operations);
+
+        // Shorten the sleep interval for faster tests
+        long originalSleepIntervalsMillis = (long) ReflectionTestUtils.getField(s3Dao, "sleepIntervalsMillis");
+        ReflectionTestUtils.setField(s3Dao, "sleepIntervalsMillis", 1l);
+
+        try
+        {
+            S3FileCopyRequestParamsDto s3FileCopyRequestParamsDto = new S3FileCopyRequestParamsDto();
+            s3FileCopyRequestParamsDto.setSourceBucketName("sourceBucketName");
+            s3FileCopyRequestParamsDto.setSourceObjectKey("sourceObjectKey");
+            s3FileCopyRequestParamsDto.setTargetBucketName("targetBucketName");
+            s3FileCopyRequestParamsDto.setTargetObjectKey("targetObjectKey");
+            s3FileCopyRequestParamsDto.setKmsKeyId("kmsKeyId");
+
+            when(mockS3Operations.copyFile(any(), any())).then(new Answer<Copy>()
+            {
+                @Override
+                public Copy answer(InvocationOnMock invocation) throws Throwable
+                {
+                    Copy mockTransfer = mock(Copy.class);
+
+                    when(mockTransfer.getProgress()).thenReturn(new TransferProgress());
+                    when(mockTransfer.getState()).thenReturn(TransferState.Failed);
+                    when(mockTransfer.isDone()).thenReturn(true);
+                    when(mockTransfer.waitForException()).thenReturn(new AmazonClientException("message"));
+                    return mockTransfer;
+                }
+            });
+
+            try
+            {
+                s3Dao.copyFile(s3FileCopyRequestParamsDto);
+                fail();
+            }
+            catch (Exception e)
+            {
+                assertEquals(AmazonClientException.class, e.getClass());
+                assertEquals("message", e.getMessage());
+            }
+        }
+        finally
+        {
+            ReflectionTestUtils.setField(s3Dao, "s3Operations", originalS3Operations);
+            ReflectionTestUtils.setField(s3Dao, "sleepIntervalsMillis", originalSleepIntervalsMillis);
+        }
+    }
+
+    @Test
+    public void testPerformTransferAssertErrorWhenTransferBytesMismatch() throws Exception
+    {
+        S3Operations originalS3Operations = (S3Operations) ReflectionTestUtils.getField(s3Dao, "s3Operations");
+        S3Operations mockS3Operations = mock(S3Operations.class);
+        ReflectionTestUtils.setField(s3Dao, "s3Operations", mockS3Operations);
+
+        // Shorten the sleep interval for faster tests
+        long originalSleepIntervalsMillis = (long) ReflectionTestUtils.getField(s3Dao, "sleepIntervalsMillis");
+        ReflectionTestUtils.setField(s3Dao, "sleepIntervalsMillis", 1l);
+
+        try
+        {
+            S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+            s3FileTransferRequestParamsDto.setLocalPath("localPath");
+
+            when(mockS3Operations.upload(any(), any())).then(new Answer<Upload>()
+            {
+                @Override
+                public Upload answer(InvocationOnMock invocation) throws Throwable
+                {
+                    Upload mockedUpload = mock(Upload.class);
+                    TransferProgress transferProgress = new TransferProgress();
+                    // bytesTransferred < totalBytesToTransfer should cause error
+                    ReflectionTestUtils.setField(transferProgress, "bytesTransferred", 0l);
+                    ReflectionTestUtils.setField(transferProgress, "totalBytesToTransfer", 1l);
+                    when(mockedUpload.getProgress()).thenReturn(transferProgress);
+                    when(mockedUpload.isDone()).thenReturn(true);
+                    when(mockedUpload.getState()).thenReturn(TransferState.Completed);
+                    return mockedUpload;
+                }
+            });
+
+            try
+            {
+                s3Dao.uploadFile(s3FileTransferRequestParamsDto);
+                fail();
+            }
+            catch (Exception e)
+            {
+                assertEquals(IllegalArgumentException.class, e.getClass());
+                assertEquals("Actual number of bytes transferred is less than expected (actual: 0 bytes; expected: 1 bytes).", e.getMessage());
+            }
+        }
+        finally
+        {
+            ReflectionTestUtils.setField(s3Dao, "s3Operations", originalS3Operations);
+            ReflectionTestUtils.setField(s3Dao, "sleepIntervalsMillis", originalSleepIntervalsMillis);
+        }
+    }
+
+    @Test
+    public void testValidateS3FileSkipSizeValidationWhenSizeIsNull() throws IOException, InterruptedException
+    {
+        S3Operations originalS3Operations = (S3Operations) ReflectionTestUtils.getField(s3Dao, "s3Operations");
+        S3Operations mockS3Operations = mock(S3Operations.class);
+        ReflectionTestUtils.setField(s3Dao, "s3Operations", mockS3Operations);
+
+        try
+        {
+            S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+            when(mockS3Operations.getObjectMetadata(any(), any(), any())).thenReturn(new ObjectMetadata());
+            s3Dao.validateS3File(s3FileTransferRequestParamsDto, null);
+        }
+        finally
+        {
+            ReflectionTestUtils.setField(s3Dao, "s3Operations", originalS3Operations);
+        }
+    }
+
+    /**
+     * Asserts that when delete directory is called but S3 throws MultiObjectDeleteException, the exception is logged properly.
+     */
+    @Test
+    public void testDeleteDirectoryAssertMultiObjectDeleteExceptionLogged() throws Exception
+    {
+        // Inject mock
+        S3Operations mockS3Operations = mock(S3Operations.class);
+        S3Operations originalS3Operations = (S3Operations) ReflectionTestUtils.getField(s3Dao, "s3Operations");
+        ReflectionTestUtils.setField(s3Dao, "s3Operations", mockS3Operations);
+
+        // Override logger with my own appender to inspect the output
+        Logger logger = Logger.getLogger(S3DaoImpl.class);
+        Level originalLoggerLevel = logger.getLevel();
+        logger.setLevel(Level.ERROR);
+        StringWriter writer = new StringWriter();
+        WriterAppender testAppender = new WriterAppender(new PatternLayout("%m%n"), writer);
+        logger.addAppender(testAppender);
+
+        try
+        {
+            // Set up mocked behavior
+
+            // Return a list of mock version listing
+            VersionListing versionListing = new VersionListing();
+            S3VersionSummary s3VersionSummary = new S3VersionSummary();
+            s3VersionSummary.setKey("s3VersionSummaryKey");
+            s3VersionSummary.setVersionId("s3VersionSummaryVersionId");
+            versionListing.setVersionSummaries(Arrays.asList(s3VersionSummary));
+
+            when(mockS3Operations.listVersions(any(), any())).thenReturn(versionListing);
+
+            // Have mock implementation throw exception
+            List<DeleteError> errors = new ArrayList<>();
+            {
+                DeleteError deleteError = new DeleteError();
+                deleteError.setCode("deleteError1Code");
+                deleteError.setKey("deleteError1Key");
+                deleteError.setMessage("deleteError1Message");
+                deleteError.setVersionId("deleteError1VersionId");
+                errors.add(deleteError);
+            }
+            {
+                DeleteError deleteError = new DeleteError();
+                deleteError.setCode("deleteError2Code");
+                deleteError.setKey("deleteError2Key");
+                deleteError.setMessage("deleteError2Message");
+                deleteError.setVersionId("deleteError2VersionId");
+                errors.add(deleteError);
+            }
+            List<DeletedObject> deletedObjects = new ArrayList<>();
+            MultiObjectDeleteException multiObjectDeleteException = new MultiObjectDeleteException(errors, deletedObjects);
+            when(mockS3Operations.deleteObjects(any(), any())).thenThrow(multiObjectDeleteException);
+
+            // try the operation and catch exception
+            try
+            {
+                S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+                s3FileTransferRequestParamsDto.setS3KeyPrefix("/test/prefix");
+                s3Dao.deleteDirectory(s3FileTransferRequestParamsDto);
+                fail();
+            }
+            catch (Exception e)
+            {
+                // Inspect and assert exception
+                assertEquals(IllegalStateException.class, e.getClass());
+                assertEquals(multiObjectDeleteException, e.getCause());
+            }
+
+            assertEquals(String.format("Error deleting multiple objects. Below are the list of objects which failed to delete.%n" +
+                "s3Key=\"deleteError1Key\" s3VersionId=\"deleteError1VersionId\" " +
+                "s3DeleteErrorCode=\"deleteError1Code\" s3DeleteErrorMessage=\"deleteError1Message\"%n" +
+                "s3Key=\"deleteError2Key\" s3VersionId=\"deleteError2VersionId\" " +
+                "s3DeleteErrorCode=\"deleteError2Code\" s3DeleteErrorMessage=\"deleteError2Message\"%n%n"), writer.toString());
+        }
+        finally
+        {
+            // Restore original resources
+            ReflectionTestUtils.setField(s3Dao, "s3Operations", originalS3Operations);
+            logger.setLevel(originalLoggerLevel);
+            logger.removeAppender(testAppender);
+        }
     }
 }

@@ -34,21 +34,19 @@ import org.finra.herd.model.api.xml.EmrClusterDefinition;
  */
 public interface EmrDao
 {
-    public String addEmrStep(String clusterName, StepConfig emrStepConfig, AwsParamsDto awsParamsDto) throws Exception;
+    public String addEmrStep(String clusterId, StepConfig emrStepConfig, AwsParamsDto awsParamsDto) throws Exception;
     
-    public List<String> addEmrMasterSecurityGroups(String clusterName, List<String> securityGroups, AwsParamsDto awsParams) throws Exception;
+    public List<String> addEmrMasterSecurityGroups(String clusterId, List<String> securityGroups, AwsParamsDto awsParams) throws Exception;
     
     public Instance getEmrMasterInstance(String clusterId, AwsParamsDto awsParams) throws Exception;
     
     public String createEmrCluster(String clusterName, EmrClusterDefinition emrClusterDefinition, AwsParamsDto awsParams);
     
-    public String terminateEmrCluster(String clusterName, boolean overrideTerminationProtection, AwsParamsDto awsParams);
+    public void terminateEmrCluster(String clusterId, boolean overrideTerminationProtection, AwsParamsDto awsParams);
     
     public Cluster getEmrClusterById(String clusterId, AwsParamsDto awsParams);
     
     public String getEmrClusterStatusById(String clusterId, AwsParamsDto awsParams);
-    
-    public String getActiveEmrClusterIdByName(String clusterName, AwsParamsDto awsParams);
     
     public ClusterSummary getActiveEmrClusterByName(String clusterName, AwsParamsDto awsParams);
     

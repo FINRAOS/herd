@@ -91,9 +91,6 @@ public class OozieDaoImpl implements OozieDao
     @Autowired
     private EmrHelper emrHelper;
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String runOozieWorkflow(String masterIpAddress, String workflowLocation, List<Parameter> parameters) throws Exception
     {
@@ -127,9 +124,6 @@ public class OozieDaoImpl implements OozieDao
         return oozieOperations.runOozieWorkflow(oozieClient, conf);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public WorkflowJob getEmrOozieWorkflow(String masterIpAddress, String emrOozieWorkflowId) throws OozieClientException
     {
@@ -157,9 +151,6 @@ public class OozieDaoImpl implements OozieDao
         return workflowJob;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public List<WorkflowJob> getRunningEmrOozieJobsByName(String masterIpAddress, String appName, int start, int len) throws OozieClientException
     {

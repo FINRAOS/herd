@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionCreateRequest;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionInformation;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionKey;
+import org.finra.herd.model.api.xml.EmrClusterDefinitionKeys;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionUpdateRequest;
 import org.finra.herd.model.dto.SecurityFunctions;
 import org.finra.herd.service.EmrClusterDefinitionService;
@@ -46,7 +47,7 @@ public class EmrClusterDefinitionRestController extends HerdBaseController
     private EmrClusterDefinitionService emrClusterDefinitionService;
 
     /**
-     * Creates a new EMR cluster definition.
+     * Creates a new EMR cluster definition. <p>Requires WRITE permission on namespace</p>
      *
      * @param request the information needed to create an EMR cluster definition
      *
@@ -60,7 +61,7 @@ public class EmrClusterDefinitionRestController extends HerdBaseController
     }
 
     /**
-     * Gets an existing EMR cluster definition by namespace and name.
+     * Gets an existing EMR cluster definition by namespace and name. <p>Requires READ permission on namespace</p>
      *
      * @param namespace the namespace
      * @param emrClusterDefinitionName the EMR cluster definition name
@@ -77,7 +78,7 @@ public class EmrClusterDefinitionRestController extends HerdBaseController
     }
 
     /**
-     * Updates an existing EMR cluster definition by namespace and name.
+     * Updates an existing EMR cluster definition by namespace and name. <p>Requires WRITE permission on namespace</p>
      *
      * @param namespace the namespace
      * @param emrClusterDefinitionName the EMR cluster definition name
@@ -96,7 +97,7 @@ public class EmrClusterDefinitionRestController extends HerdBaseController
     }
 
     /**
-     * Deletes an existing EMR cluster definition by namespace and name.
+     * Deletes an existing EMR cluster definition by namespace and name. <p>Requires WRITE permission on namespace</p>
      *
      * @param namespace the namespace
      * @param emrClusterDefinitionName the EMR cluster definition name
@@ -110,5 +111,19 @@ public class EmrClusterDefinitionRestController extends HerdBaseController
         @PathVariable("emrClusterDefinitionName") String emrClusterDefinitionName) throws Exception
     {
         return emrClusterDefinitionService.deleteEmrClusterDefinition(new EmrClusterDefinitionKey(namespace, emrClusterDefinitionName));
+    }
+
+    /**
+     * Gets a list of keys for all EMR cluster definitions defined in the system for the specified namespace. <p>Requires READ permission on namespace</p>
+     *
+     * @param namespace the namespace
+     *
+     * @return the EMR cluster definition keys
+     */
+    @RequestMapping(value = EMR_CLUSTER_DEFINITIONS_URI_PREFIX + "/namespaces/{namespace}", method = RequestMethod.GET)
+    @Secured(SecurityFunctions.FN_EMR_CLUSTER_DEFINITIONS_ALL_GET)
+    public EmrClusterDefinitionKeys getEmrClusterDefinitions(@PathVariable("namespace") String namespace) throws Exception
+    {
+        return emrClusterDefinitionService.getEmrClusterDefinitions(namespace);
     }
 }

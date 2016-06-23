@@ -21,6 +21,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
+import org.finra.herd.model.annotation.NamespacePermission;
+import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.api.xml.NotificationRegistrationKey;
 import org.finra.herd.model.api.xml.NotificationRegistrationStatusUpdateRequest;
 import org.finra.herd.model.api.xml.NotificationRegistrationStatusUpdateResponse;
@@ -40,6 +42,7 @@ public class NotificationRegistrationStatusServiceImpl implements NotificationRe
     @Autowired
     private NotificationRegistrationStatusDaoHelper notificationRegistrationStatusDaoHelper;
 
+    @NamespacePermission(fields = "#namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public NotificationRegistrationStatusUpdateResponse updateNotificationRegistrationStatus(String namespace, String notificationName,
         NotificationRegistrationStatusUpdateRequest notificationRegistrationStatusUpdateRequest)

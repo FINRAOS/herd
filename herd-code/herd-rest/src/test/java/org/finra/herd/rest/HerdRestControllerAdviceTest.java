@@ -65,7 +65,7 @@ public class HerdRestControllerAdviceTest extends AbstractRestTest
     public void testCheckNotAllowedMethod()
     {
         // Create the not allowed key
-        ConfigurationEntity configurationEntity = herdDao.getConfigurationByKey(ConfigurationValue.NOT_ALLOWED_HERD_ENDPOINTS.getKey());
+        ConfigurationEntity configurationEntity = configurationDao.getConfigurationByKey(ConfigurationValue.NOT_ALLOWED_HERD_ENDPOINTS.getKey());
         if (configurationEntity == null)
         {
             configurationEntity = new ConfigurationEntity();

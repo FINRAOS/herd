@@ -19,14 +19,10 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 /**
  * A data provider.
  */
-@XmlRootElement
-@XmlType
 @Table(name = DataProviderEntity.TABLE_NAME)
 @Entity
 public class DataProviderEntity extends AuditableEntity

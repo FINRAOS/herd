@@ -45,7 +45,7 @@ public class NotificationActionEntity extends AuditableEntity
     @Id
     @Column(name = TABLE_NAME + "_id")
     @GeneratedValue(generator = TABLE_NAME + "_seq")
-    @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq")
+    @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq", allocationSize = 1)
     private Integer id;
 
     @ManyToOne
@@ -70,39 +70,5 @@ public class NotificationActionEntity extends AuditableEntity
     public void setNotificationRegistration(NotificationRegistrationEntity notificationRegistration)
     {
         this.notificationRegistration = notificationRegistration;
-    }
-
-    @Override
-    public boolean equals(Object other)
-    {
-        if (this == other)
-        {
-            return true;
-        }
-        if (other == null || getClass() != other.getClass())
-        {
-            return false;
-        }
-
-        NotificationActionEntity that = (NotificationActionEntity) other;
-
-        if (notificationRegistration != null ? !notificationRegistration.equals(that.notificationRegistration) : that.notificationRegistration != null)
-        {
-            return false;
-        }
-        if (id != null ? !id.equals(that.id) : that.id != null)
-        {
-            return false;
-        }
-
-        return true;
-    }
-
-    @Override
-    public int hashCode()
-    {
-        int result = id != null ? id.hashCode() : 0;
-        result = 31 * result + (notificationRegistration != null ? notificationRegistration.hashCode() : 0);
-        return result;
     }
 }

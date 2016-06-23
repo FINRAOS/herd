@@ -19,17 +19,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import org.finra.herd.dao.HerdDao;
+import org.finra.herd.dao.BusinessObjectFormatDao;
+import org.finra.herd.dao.PartitionKeyGroupDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
-import org.finra.herd.model.jpa.PartitionKeyGroupEntity;
 import org.finra.herd.model.api.xml.PartitionKeyGroup;
 import org.finra.herd.model.api.xml.PartitionKeyGroupCreateRequest;
 import org.finra.herd.model.api.xml.PartitionKeyGroupKey;
 import org.finra.herd.model.api.xml.PartitionKeyGroupKeys;
+import org.finra.herd.model.jpa.PartitionKeyGroupEntity;
 import org.finra.herd.service.PartitionKeyGroupService;
-import org.finra.herd.service.helper.HerdDaoHelper;
-import org.finra.herd.service.helper.HerdHelper;
+import org.finra.herd.service.helper.PartitionKeyGroupDaoHelper;
+import org.finra.herd.service.helper.PartitionKeyGroupHelper;
 
 /**
  * The partition key group service implementation.
@@ -39,13 +40,16 @@ import org.finra.herd.service.helper.HerdHelper;
 public class PartitionKeyGroupServiceImpl implements PartitionKeyGroupService
 {
     @Autowired
-    private HerdHelper herdHelper;
+    private BusinessObjectFormatDao businessObjectFormatDao;
 
     @Autowired
-    private HerdDao herdDao;
+    private PartitionKeyGroupDao partitionKeyGroupDao;
 
     @Autowired
-    private HerdDaoHelper herdDaoHelper;
+    private PartitionKeyGroupDaoHelper partitionKeyGroupDaoHelper;
+
+    @Autowired
+    private PartitionKeyGroupHelper partitionKeyGroupHelper;
 
     /**
      * Creates a new partition key group.
@@ -58,10 +62,10 @@ public class PartitionKeyGroupServiceImpl implements PartitionKeyGroupService
     public PartitionKeyGroup createPartitionKeyGroup(PartitionKeyGroupCreateRequest request)
     {
         // Perform the validation.
-        herdHelper.validatePartitionKeyGroupKey(request.getPartitionKeyGroupKey());
+        partitionKeyGroupHelper.validatePartitionKeyGroupKey(request.getPartitionKeyGroupKey());
 
         // Ensure a partition key group with the specified name doesn't already exist.
-        PartitionKeyGroupEntity partitionKeyGroupEntity = herdDao.getPartitionKeyGroupByKey(request.getPartitionKeyGroupKey());
+        PartitionKeyGroupEntity partitionKeyGroupEntity = partitionKeyGroupDao.getPartitionKeyGroupByKey(request.getPartitionKeyGroupKey());
         if (partitionKeyGroupEntity != null)
         {
             throw new AlreadyExistsException(String.format("Unable to create partition key group with name \"%s\" because it already exists.",
@@ -72,7 +76,7 @@ public class PartitionKeyGroupServiceImpl implements PartitionKeyGroupService
         partitionKeyGroupEntity = createPartitionKeyGroupEntity(request);
 
         // Persist the new entity.
-        partitionKeyGroupEntity = herdDao.saveAndRefresh(partitionKeyGroupEntity);
+        partitionKeyGroupEntity = partitionKeyGroupDao.saveAndRefresh(partitionKeyGroupEntity);
 
         // Create and return the partition key group object from the persisted entity.
         return createPartitionKeyGroupFromEntity(partitionKeyGroupEntity);
@@ -89,10 +93,10 @@ public class PartitionKeyGroupServiceImpl implements PartitionKeyGroupService
     public PartitionKeyGroup getPartitionKeyGroup(PartitionKeyGroupKey partitionKeyGroupKey)
     {
         // Perform validation and trim.
-        herdHelper.validatePartitionKeyGroupKey(partitionKeyGroupKey);
+        partitionKeyGroupHelper.validatePartitionKeyGroupKey(partitionKeyGroupKey);
 
         // Retrieve and ensure that a partition key group exists with the specified name.
-        PartitionKeyGroupEntity partitionKeyGroupEntity = herdDaoHelper.getPartitionKeyGroupEntity(partitionKeyGroupKey);
+        PartitionKeyGroupEntity partitionKeyGroupEntity = partitionKeyGroupDaoHelper.getPartitionKeyGroupEntity(partitionKeyGroupKey);
 
         // Create and return the partition key group object from the persisted entity.
         return createPartitionKeyGroupFromEntity(partitionKeyGroupEntity);
@@ -109,20 +113,20 @@ public class PartitionKeyGroupServiceImpl implements PartitionKeyGroupService
     public PartitionKeyGroup deletePartitionKeyGroup(PartitionKeyGroupKey partitionKeyGroupKey)
     {
         // Perform validation and trim.
-        herdHelper.validatePartitionKeyGroupKey(partitionKeyGroupKey);
+        partitionKeyGroupHelper.validatePartitionKeyGroupKey(partitionKeyGroupKey);
 
         // Retrieve and ensure that a partition key group already exists with the specified name.
-        PartitionKeyGroupEntity partitionKeyGroupEntity = herdDaoHelper.getPartitionKeyGroupEntity(partitionKeyGroupKey);
+        PartitionKeyGroupEntity partitionKeyGroupEntity = partitionKeyGroupDaoHelper.getPartitionKeyGroupEntity(partitionKeyGroupKey);
 
         // Check if we are allowed to delete this business object format.
-        if (herdDao.getBusinessObjectFormatCount(partitionKeyGroupEntity) > 0L)
+        if (businessObjectFormatDao.getBusinessObjectFormatCount(partitionKeyGroupEntity) > 0L)
         {
             throw new IllegalArgumentException(String.format("Can not delete \"%s\" partition key group since it is being used by a business object format.",
                 partitionKeyGroupKey.getPartitionKeyGroupName()));
         }
 
         // Delete the partition key group.
-        herdDao.delete(partitionKeyGroupEntity);
+        partitionKeyGroupDao.delete(partitionKeyGroupEntity);
 
         // Create and return the partition key group object from the deleted entity.
         return createPartitionKeyGroupFromEntity(partitionKeyGroupEntity);
@@ -138,7 +142,7 @@ public class PartitionKeyGroupServiceImpl implements PartitionKeyGroupService
     {
         // Create and populate a list of partition key group keys.
         PartitionKeyGroupKeys partitionKeyGroupKeys = new PartitionKeyGroupKeys();
-        partitionKeyGroupKeys.getPartitionKeyGroupKeys().addAll(herdDao.getPartitionKeyGroups());
+        partitionKeyGroupKeys.getPartitionKeyGroupKeys().addAll(partitionKeyGroupDao.getPartitionKeyGroups());
 
         return partitionKeyGroupKeys;
     }

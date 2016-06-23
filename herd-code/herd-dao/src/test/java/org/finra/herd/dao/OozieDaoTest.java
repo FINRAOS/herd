@@ -39,62 +39,39 @@ public class OozieDaoTest extends AbstractDaoTest
      * Tests the scenario where the job is run.
      */
     @Test
-    public void testRunEmrOozieWorkflow()
+    public void testRunEmrOozieWorkflow() throws Exception
     {
         String masterIpAddress = "0.0.0.0";
         List<Parameter> parameters = new ArrayList<>();
         parameters.add(new Parameter("param1", "value1"));
-        
-        try
-        {
-            String workflowJobId = oozieDao.runOozieWorkflow(masterIpAddress, "s3_workflow_location", parameters);
-            Assert.assertNotNull("workflowJobId is null", workflowJobId);
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-            Assert.fail("unexpected exception thrown: " + e);
-        }
+
+        String workflowJobId = oozieDao.runOozieWorkflow(masterIpAddress, "s3_workflow_location", parameters);
+        Assert.assertNotNull("workflowJobId is null", workflowJobId);
     }
 
     /**
      * Tests the scenario where the job is run with no parameters.
      */
     @Test
-    public void testRunEmrOozieWorkflowNoParams()
+    public void testRunEmrOozieWorkflowNoParams() throws Exception
     {
         String masterIpAddress = "0.0.0.0";
-        
-        try
-        {
-            String workflowJobId = oozieDao.runOozieWorkflow(masterIpAddress, "s3_workflow_location", null);
-            Assert.assertNotNull("workflowJobId is null", workflowJobId);
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-            Assert.fail("unexpected exception thrown: " + e);
-        }
+
+        String workflowJobId = oozieDao.runOozieWorkflow(masterIpAddress, "s3_workflow_location", null);
+        Assert.assertNotNull("workflowJobId is null", workflowJobId);
     }
 
     /**
      * Tests the happy path scenario where workflow job is obtained.
      */
     @Test
-    public void testGetEmrOozieWorkflow()
+    public void testGetEmrOozieWorkflow() throws Exception
     {
         String masterIpAddress = "0.0.0.0";
         String emrOozieWorkflowId = MockOozieOperationsImpl.CASE_1_JOB_ID;
-        try
-        {
-            WorkflowJob workflowJob = oozieDao.getEmrOozieWorkflow(masterIpAddress, emrOozieWorkflowId);
-            Assert.assertNotNull("workflowJob is null", workflowJob);
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-            Assert.fail("unexpected exception thrown: " + e);
-        }
+
+        WorkflowJob workflowJob = oozieDao.getEmrOozieWorkflow(masterIpAddress, emrOozieWorkflowId);
+        Assert.assertNotNull("workflowJob is null", workflowJob);
     }
 
     /**
@@ -149,46 +126,76 @@ public class OozieDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void testGetRunningEmrOozieJobs()
+    public void testGetRunningEmrOozieJobsByName() throws Exception
     {
         String masterIpAddress = "0.0.0.0";
-        try
-        {
-            List<WorkflowJob> workflowJobs = oozieDao.getRunningEmrOozieJobsByName(masterIpAddress, null, 1, 50);
 
-            Assert.assertNotNull("workflowJob is null", workflowJobs);
-            
-            int clientRunningCount = 0;
-            int clientNotRunningCount = 0;
-            int nonHerdWrapperCount = 0;
-            
-            for(WorkflowJob workflowJob : workflowJobs)
+        List<WorkflowJob> workflowJobs = oozieDao.getRunningEmrOozieJobsByName(masterIpAddress, JOB_NAME, 1, 50);
+
+        Assert.assertNotNull("workflowJob is null", workflowJobs);
+
+        int clientRunningCount = 0;
+        int clientNotRunningCount = 0;
+        int nonHerdWrapperCount = 0;
+
+        for (WorkflowJob workflowJob : workflowJobs)
+        {
+            if (workflowJob.getAppName().equals(OozieDaoImpl.HERD_OOZIE_WRAPPER_WORKFLOW_NAME))
             {
-                if(workflowJob.getAppName().equals(OozieDaoImpl.HERD_OOZIE_WRAPPER_WORKFLOW_NAME))
+                if (workflowJob.getActions() != null && workflowJob.getActions().get(0).getExternalId().equals(MockOozieOperationsImpl.CASE_1_CLIENT_JOB_ID))
                 {
-                    if(workflowJob.getActions() != null && workflowJob.getActions().get(0).getExternalId().equals(MockOozieOperationsImpl.CASE_1_CLIENT_JOB_ID))
-                    {
-                        clientRunningCount++;
-                    }
-                    else
-                    {
-                        clientNotRunningCount++;
-                    }
+                    clientRunningCount++;
                 }
                 else
                 {
-                    nonHerdWrapperCount++;
+                    clientNotRunningCount++;
                 }
             }
-            
-            assertTrue(50 == clientRunningCount);
-            assertTrue(40 == clientNotRunningCount);
-            assertTrue(10 == nonHerdWrapperCount);
+            else
+            {
+                nonHerdWrapperCount++;
+            }
         }
-        catch (Exception e)
+
+        assertTrue(50 == clientRunningCount);
+        assertTrue(40 == clientNotRunningCount);
+        assertTrue(10 == nonHerdWrapperCount);
+    }
+
+    @Test
+    public void testGetRunningEmrOozieJobsByNameAppNameNotSpecified() throws Exception
+    {
+        String masterIpAddress = "0.0.0.0";
+
+        List<WorkflowJob> workflowJobs = oozieDao.getRunningEmrOozieJobsByName(masterIpAddress, null, 1, 50);
+
+        Assert.assertNotNull("workflowJob is null", workflowJobs);
+
+        int clientRunningCount = 0;
+        int clientNotRunningCount = 0;
+        int nonHerdWrapperCount = 0;
+
+        for (WorkflowJob workflowJob : workflowJobs)
         {
-            e.printStackTrace();
-            Assert.fail("unexpected exception thrown: " + e);
+            if (workflowJob.getAppName().equals(OozieDaoImpl.HERD_OOZIE_WRAPPER_WORKFLOW_NAME))
+            {
+                if (workflowJob.getActions() != null && workflowJob.getActions().get(0).getExternalId().equals(MockOozieOperationsImpl.CASE_1_CLIENT_JOB_ID))
+                {
+                    clientRunningCount++;
+                }
+                else
+                {
+                    clientNotRunningCount++;
+                }
+            }
+            else
+            {
+                nonHerdWrapperCount++;
+            }
         }
+
+        assertTrue(50 == clientRunningCount);
+        assertTrue(40 == clientNotRunningCount);
+        assertTrue(10 == nonHerdWrapperCount);
     }
 }

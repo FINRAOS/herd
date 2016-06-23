@@ -27,6 +27,7 @@ import org.springframework.security.web.authentication.preauth.PreAuthenticatedA
 import org.springframework.stereotype.Component;
 
 import org.finra.herd.model.dto.ApplicationUser;
+import org.finra.herd.model.dto.SecurityUserWrapper;
 
 @Component
 public class HerdUserDetailsService implements AuthenticationUserDetailsService<PreAuthenticatedAuthenticationToken>

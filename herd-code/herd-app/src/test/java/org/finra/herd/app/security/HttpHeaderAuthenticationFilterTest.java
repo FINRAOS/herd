@@ -30,6 +30,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import org.finra.herd.app.AbstractAppTest;
+import org.finra.herd.model.api.xml.NamespaceAuthorization;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.jpa.SecurityFunctionEntity;
 import org.finra.herd.model.jpa.SecurityRoleEntity;
@@ -40,30 +41,202 @@ import org.finra.herd.model.jpa.SecurityRoleFunctionEntity;
  */
 public class HttpHeaderAuthenticationFilterTest extends AbstractAppTest
 {
-    private final String[] TEST_FUNCTIONS = {"test_function_1", "test_function_2"}; 
+    private final String[] TEST_FUNCTIONS = {"test_function_1", "test_function_2"};
 
     @Test
     public void testHttpHeaderAuthenticationFilter() throws Exception
     {
-        modifyPropertySourceInEnvironment(getDefaultSecurityEnvironmentVariables());
         setupTestFunctions("testRole");
-        
-        MockHttpServletRequest request =
-                getRequestWithHeaders("testUser", "testFirstName", "testLastName", "testEmail", "testRole", "Wed, 11 Mar 2015 10:24:09");
-        // Invalidate user session if exists.
-        invalidateApplicationUser(request);
+        modifyPropertySourceInEnvironment(getDefaultSecurityEnvironmentVariables());
 
-        httpHeaderAuthenticationFilter.init(new MockFilterConfig());
-        httpHeaderAuthenticationFilter.doFilter(request, new MockHttpServletResponse(), new MockFilterChain());
+        try
+        {
+            MockHttpServletRequest request =
+                getRequestWithHeaders(USER_ID, "testFirstName", "testLastName", "testEmail", "testRole", "Wed, 11 Mar 2015 10:24:09");
 
-        validateHttpHeaderApplicationUser("testUser", "testFirstName", "testLastName", "testEmail", "testRole", "Wed, 11 Mar 2015 10:24:09", TEST_FUNCTIONS);
+            // Invalidate user session if exists.
+            invalidateApplicationUser(request);
 
-        // retry with same request.
-        httpHeaderAuthenticationFilter.doFilter(request, new MockHttpServletResponse(), new MockFilterChain());
+            httpHeaderAuthenticationFilter.init(new MockFilterConfig());
+            httpHeaderAuthenticationFilter.doFilter(request, new MockHttpServletResponse(), new MockFilterChain());
 
-        validateHttpHeaderApplicationUser("testUser", "testFirstName", "testLastName", "testEmail", "testRole", "Wed, 11 Mar 2015 10:24:09", TEST_FUNCTIONS);
+            validateHttpHeaderApplicationUser(USER_ID, "testFirstName", "testLastName", "testEmail", "testRole", "Wed, 11 Mar 2015 10:24:09", TEST_FUNCTIONS,
+                null);
 
-        restorePropertySourceInEnvironment();
+            // retry with same request.
+            httpHeaderAuthenticationFilter.doFilter(request, new MockHttpServletResponse(), new MockFilterChain());
+
+            validateHttpHeaderApplicationUser(USER_ID, "testFirstName", "testLastName", "testEmail", "testRole", "Wed, 11 Mar 2015 10:24:09", TEST_FUNCTIONS,
+                null);
+        }
+        finally
+        {
+            restorePropertySourceInEnvironment();
+        }
+    }
+
+    @Test
+    public void testHttpHeaderAuthenticationFilterRegularUser() throws Exception
+    {
+        // Create and persist the relative database entities.
+        createNamespaceEntity(NAMESPACE);
+        createUserNamespaceAuthorizationEntity(USER_ID, createNamespaceEntity(NAMESPACE_2), SUPPORTED_NAMESPACE_PERMISSIONS);
+        createUserNamespaceAuthorizationEntity(USER_ID, createNamespaceEntity(NAMESPACE_3), SUPPORTED_NAMESPACE_PERMISSIONS);
+
+        // Create an ordered set of expected namespace authorizations.
+        Set<NamespaceAuthorization> expectedNamespaceAuthorizations = new HashSet<>();
+        expectedNamespaceAuthorizations.add(new NamespaceAuthorization(NAMESPACE_2, SUPPORTED_NAMESPACE_PERMISSIONS));
+        expectedNamespaceAuthorizations.add(new NamespaceAuthorization(NAMESPACE_3, SUPPORTED_NAMESPACE_PERMISSIONS));
+
+        setupTestFunctions("testRole");
+        modifyPropertySourceInEnvironment(getDefaultSecurityEnvironmentVariables());
+
+        try
+        {
+            MockHttpServletRequest request =
+                getRequestWithHeaders(USER_ID, "testFirstName", "testLastName", "testEmail", "testRole", "Wed, 11 Mar 2015 10:24:09");
+
+            // Invalidate user session if exists.
+            invalidateApplicationUser(request);
+
+            httpHeaderAuthenticationFilter.init(new MockFilterConfig());
+            httpHeaderAuthenticationFilter.doFilter(request, new MockHttpServletResponse(), new MockFilterChain());
+
+            validateHttpHeaderApplicationUser(USER_ID, "testFirstName", "testLastName", "testEmail", "testRole", "Wed, 11 Mar 2015 10:24:09", TEST_FUNCTIONS,
+                expectedNamespaceAuthorizations);
+
+            // retry with same request.
+            httpHeaderAuthenticationFilter.doFilter(request, new MockHttpServletResponse(), new MockFilterChain());
+
+            validateHttpHeaderApplicationUser(USER_ID, "testFirstName", "testLastName", "testEmail", "testRole", "Wed, 11 Mar 2015 10:24:09", TEST_FUNCTIONS,
+                expectedNamespaceAuthorizations);
+        }
+        finally
+        {
+            restorePropertySourceInEnvironment();
+        }
+    }
+
+    @Test
+    public void testHttpHeaderAuthenticationFilterAdminUser() throws Exception
+    {
+        // Create and persist the relative database entities.
+        createUserEntity(USER_ID, true);
+        createNamespaceEntity(NAMESPACE);
+        createNamespaceEntity(NAMESPACE_2);
+
+        // Create an ordered set of expected namespace authorizations.
+        Set<NamespaceAuthorization> expectedNamespaceAuthorizations = new HashSet<>();
+        expectedNamespaceAuthorizations.add(new NamespaceAuthorization(NAMESPACE, SUPPORTED_NAMESPACE_PERMISSIONS));
+        expectedNamespaceAuthorizations.add(new NamespaceAuthorization(NAMESPACE_2, SUPPORTED_NAMESPACE_PERMISSIONS));
+
+        setupTestFunctions("testRole");
+        modifyPropertySourceInEnvironment(getDefaultSecurityEnvironmentVariables());
+
+        try
+        {
+            MockHttpServletRequest request =
+                getRequestWithHeaders(USER_ID, "testFirstName", "testLastName", "testEmail", "testRole", "Wed, 11 Mar 2015 10:24:09");
+            // Invalidate user session if exists.
+            invalidateApplicationUser(request);
+
+            httpHeaderAuthenticationFilter.init(new MockFilterConfig());
+            httpHeaderAuthenticationFilter.doFilter(request, new MockHttpServletResponse(), new MockFilterChain());
+
+            validateHttpHeaderApplicationUser(USER_ID, "testFirstName", "testLastName", "testEmail", "testRole", "Wed, 11 Mar 2015 10:24:09", TEST_FUNCTIONS,
+                expectedNamespaceAuthorizations);
+
+            // retry with same request.
+            httpHeaderAuthenticationFilter.doFilter(request, new MockHttpServletResponse(), new MockFilterChain());
+
+            validateHttpHeaderApplicationUser(USER_ID, "testFirstName", "testLastName", "testEmail", "testRole", "Wed, 11 Mar 2015 10:24:09", TEST_FUNCTIONS,
+                expectedNamespaceAuthorizations);
+        }
+        finally
+        {
+            restorePropertySourceInEnvironment();
+        }
+    }
+
+    @Test
+    public void testHttpHeaderAuthenticationFilterUserAuthorizationDisabled() throws Exception
+    {
+        // Create and persist the relative database entities.
+        createUserEntity(USER_ID, true);
+        createNamespaceEntity(NAMESPACE);
+        createNamespaceEntity(NAMESPACE_2);
+
+        // Create an ordered set of expected namespace authorizations.
+        Set<NamespaceAuthorization> expectedNamespaceAuthorizations = new HashSet<>();
+        expectedNamespaceAuthorizations.add(new NamespaceAuthorization(NAMESPACE, SUPPORTED_NAMESPACE_PERMISSIONS));
+        expectedNamespaceAuthorizations.add(new NamespaceAuthorization(NAMESPACE_2, SUPPORTED_NAMESPACE_PERMISSIONS));
+
+        setupTestFunctions("testRole");
+        Map<String, Object> overrideMap = getDefaultSecurityEnvironmentVariables();
+        overrideMap.put(ConfigurationValue.USER_NAMESPACE_AUTHORIZATION_ENABLED.getKey(), "false");
+        modifyPropertySourceInEnvironment(overrideMap);
+
+        try
+        {
+            MockHttpServletRequest request =
+                getRequestWithHeaders(USER_ID, "testFirstName", "testLastName", "testEmail", "testRole", "Wed, 11 Mar 2015 10:24:09");
+            // Invalidate user session if exists.
+            invalidateApplicationUser(request);
+
+            httpHeaderAuthenticationFilter.init(new MockFilterConfig());
+            httpHeaderAuthenticationFilter.doFilter(request, new MockHttpServletResponse(), new MockFilterChain());
+
+            validateHttpHeaderApplicationUser(USER_ID, "testFirstName", "testLastName", "testEmail", "testRole", "Wed, 11 Mar 2015 10:24:09", TEST_FUNCTIONS,
+                expectedNamespaceAuthorizations);
+
+            // retry with same request.
+            httpHeaderAuthenticationFilter.doFilter(request, new MockHttpServletResponse(), new MockFilterChain());
+
+            validateHttpHeaderApplicationUser(USER_ID, "testFirstName", "testLastName", "testEmail", "testRole", "Wed, 11 Mar 2015 10:24:09", TEST_FUNCTIONS,
+                expectedNamespaceAuthorizations);
+        }
+        finally
+        {
+            restorePropertySourceInEnvironment();
+        }
+    }
+
+    @Test
+    public void testHttpHeaderAuthenticationFilterUserAuthorizationInvalidConfigurationValue() throws Exception
+    {
+        // Create and persist the relative database entities.
+        createUserEntity(USER_ID, true);
+        createNamespaceEntity(NAMESPACE);
+        createNamespaceEntity(NAMESPACE_2);
+
+        // Create an ordered set of expected namespace authorizations.
+        Set<NamespaceAuthorization> expectedNamespaceAuthorizations = new HashSet<>();
+        expectedNamespaceAuthorizations.add(new NamespaceAuthorization(NAMESPACE, SUPPORTED_NAMESPACE_PERMISSIONS));
+        expectedNamespaceAuthorizations.add(new NamespaceAuthorization(NAMESPACE_2, SUPPORTED_NAMESPACE_PERMISSIONS));
+
+        setupTestFunctions("testRole");
+        Map<String, Object> overrideMap = getDefaultSecurityEnvironmentVariables();
+        overrideMap.put(ConfigurationValue.USER_NAMESPACE_AUTHORIZATION_ENABLED.getKey(), "NOT_A_BOOLEAN");
+        modifyPropertySourceInEnvironment(overrideMap);
+
+        try
+        {
+            MockHttpServletRequest request =
+                getRequestWithHeaders(USER_ID, "testFirstName", "testLastName", "testEmail", "testRole", "Wed, 11 Mar 2015 10:24:09");
+
+            // Invalidate user session if exists.
+            invalidateApplicationUser(request);
+
+            httpHeaderAuthenticationFilter.init(new MockFilterConfig());
+            httpHeaderAuthenticationFilter.doFilter(request, new MockHttpServletResponse(), new MockFilterChain());
+
+            // Validate that there is no authentication.
+            assertNull(SecurityContextHolder.getContext().getAuthentication());
+        }
+        finally
+        {
+            restorePropertySourceInEnvironment();
+        }
     }
 
     @Test
@@ -71,16 +244,21 @@ public class HttpHeaderAuthenticationFilterTest extends AbstractAppTest
     {
         modifyPropertySourceInEnvironment(getDefaultSecurityEnvironmentVariables());
 
-        // Invalidate user session if exists.
-        invalidateApplicationUser(null);
+        try
+        {
+            // Invalidate user session if exists.
+            invalidateApplicationUser(null);
 
-        httpHeaderAuthenticationFilter.init(new MockFilterConfig());
-        httpHeaderAuthenticationFilter.doFilter(new MockHttpServletRequest(), new MockHttpServletResponse(), new MockFilterChain());
+            httpHeaderAuthenticationFilter.init(new MockFilterConfig());
+            httpHeaderAuthenticationFilter.doFilter(new MockHttpServletRequest(), new MockHttpServletResponse(), new MockFilterChain());
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        assertNull(authentication);
-
-        restorePropertySourceInEnvironment();
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            assertNull(authentication);
+        }
+        finally
+        {
+            restorePropertySourceInEnvironment();
+        }
     }
 
     @Test
@@ -88,32 +266,37 @@ public class HttpHeaderAuthenticationFilterTest extends AbstractAppTest
     {
         modifyPropertySourceInEnvironment(getDefaultSecurityEnvironmentVariables());
 
-        MockHttpServletRequest request =
-                getRequestWithHeaders("testUser", "testFirstName", "testLastName", "testEmail", "testRole", "Wed, 11 Mar 2015 10:24:09");
+        try
+        {
+            MockHttpServletRequest request =
+                getRequestWithHeaders(USER_ID, "testFirstName", "testLastName", "testEmail", "testRole", "Wed, 11 Mar 2015 10:24:09");
 
-        // Invalidate user session if exists.
-        invalidateApplicationUser(request);
+            // Invalidate user session if exists.
+            invalidateApplicationUser(request);
 
-        httpHeaderAuthenticationFilter.init(new MockFilterConfig());
-        httpHeaderAuthenticationFilter.doFilter(request, new MockHttpServletResponse(), new MockFilterChain());
+            httpHeaderAuthenticationFilter.init(new MockFilterConfig());
+            httpHeaderAuthenticationFilter.doFilter(request, new MockHttpServletResponse(), new MockFilterChain());
 
-        validateHttpHeaderApplicationUser("testUser", "testFirstName", "testLastName", "testEmail", "testRole", "Wed, 11 Mar 2015 10:24:09", null);
+            validateHttpHeaderApplicationUser(USER_ID, "testFirstName", "testLastName", "testEmail", "testRole", "Wed, 11 Mar 2015 10:24:09", null, null);
 
-        // Change the userId in the header.
-        request = getRequestWithHeaders("testUserNew", "testFirstName", "testLastName", "testEmail", "testRole", "Wed, 11 Mar 2015 10:24:09");
+            // Change the userId in the header.
+            request = getRequestWithHeaders(USER_ID_2, "testFirstName", "testLastName", "testEmail", "testRole", "Wed, 11 Mar 2015 10:24:09");
 
-        httpHeaderAuthenticationFilter.doFilter(request, new MockHttpServletResponse(), new MockFilterChain());
+            httpHeaderAuthenticationFilter.doFilter(request, new MockHttpServletResponse(), new MockFilterChain());
 
-        validateHttpHeaderApplicationUser("testUserNew", "testFirstName", "testLastName", "testEmail", "testRole", "Wed, 11 Mar 2015 10:24:09", null);
+            validateHttpHeaderApplicationUser(USER_ID_2, "testFirstName", "testLastName", "testEmail", "testRole", "Wed, 11 Mar 2015 10:24:09", null, null);
 
-        // Change the session init time in the header.
-        request = getRequestWithHeaders("testUserNew", "testFirstName", "testLastName", "testEmail", "testRole", "Wed, 11 Mar 2015 11:24:09");
+            // Change the session init time in the header.
+            request = getRequestWithHeaders(USER_ID_2, "testFirstName", "testLastName", "testEmail", "testRole", "Wed, 11 Mar 2015 11:24:09");
 
-        httpHeaderAuthenticationFilter.doFilter(request, new MockHttpServletResponse(), new MockFilterChain());
+            httpHeaderAuthenticationFilter.doFilter(request, new MockHttpServletResponse(), new MockFilterChain());
 
-        validateHttpHeaderApplicationUser("testUserNew", "testFirstName", "testLastName", "testEmail", "testRole", "Wed, 11 Mar 2015 11:24:09", null);
-
-        restorePropertySourceInEnvironment();
+            validateHttpHeaderApplicationUser(USER_ID_2, "testFirstName", "testLastName", "testEmail", "testRole", "Wed, 11 Mar 2015 11:24:09", null, null);
+        }
+        finally
+        {
+            restorePropertySourceInEnvironment();
+        }
     }
 
     @Test
@@ -121,18 +304,22 @@ public class HttpHeaderAuthenticationFilterTest extends AbstractAppTest
     {
         modifyPropertySourceInEnvironment(getDefaultSecurityEnvironmentVariables());
 
-        MockHttpServletRequest request =
-                getRequestWithHeaders("testUser", "testFirstName", "testLastName", "testEmail", null, "Wed, 11 Mar 2015 10:24:09");
+        try
+        {
+            MockHttpServletRequest request = getRequestWithHeaders(USER_ID, "testFirstName", "testLastName", "testEmail", null, "Wed, 11 Mar 2015 10:24:09");
 
-        // Invalidate user session if exists.
-        invalidateApplicationUser(request);
+            // Invalidate user session if exists.
+            invalidateApplicationUser(request);
 
-        httpHeaderAuthenticationFilter.init(new MockFilterConfig());
-        httpHeaderAuthenticationFilter.doFilter(request, new MockHttpServletResponse(), new MockFilterChain());
+            httpHeaderAuthenticationFilter.init(new MockFilterConfig());
+            httpHeaderAuthenticationFilter.doFilter(request, new MockHttpServletResponse(), new MockFilterChain());
 
-        validateHttpHeaderApplicationUser("testUser", "testFirstName", "testLastName", "testEmail", (String) null, "Wed, 11 Mar 2015 10:24:09", null);
-
-        restorePropertySourceInEnvironment();
+            validateHttpHeaderApplicationUser(USER_ID, "testFirstName", "testLastName", "testEmail", (String) null, "Wed, 11 Mar 2015 10:24:09", null, null);
+        }
+        finally
+        {
+            restorePropertySourceInEnvironment();
+        }
     }
 
     @Test
@@ -140,18 +327,22 @@ public class HttpHeaderAuthenticationFilterTest extends AbstractAppTest
     {
         modifyPropertySourceInEnvironment(getDefaultSecurityEnvironmentVariables());
 
-        MockHttpServletRequest request =
-                getRequestWithHeaders("testUser", "testFirstName", "testLastName", "testEmail", null, null);
+        try
+        {
+            MockHttpServletRequest request = getRequestWithHeaders(USER_ID, "testFirstName", "testLastName", "testEmail", null, null);
 
-        // Invalidate user session if exists.
-        invalidateApplicationUser(request);
+            // Invalidate user session if exists.
+            invalidateApplicationUser(request);
 
-        httpHeaderAuthenticationFilter.init(new MockFilterConfig());
-        httpHeaderAuthenticationFilter.doFilter(request, new MockHttpServletResponse(), new MockFilterChain());
+            httpHeaderAuthenticationFilter.init(new MockFilterConfig());
+            httpHeaderAuthenticationFilter.doFilter(request, new MockHttpServletResponse(), new MockFilterChain());
 
-        validateHttpHeaderApplicationUser("testUser", "testFirstName", "testLastName", "testEmail", (String) null, null, null);
-
-        restorePropertySourceInEnvironment();
+            validateHttpHeaderApplicationUser(USER_ID, "testFirstName", "testLastName", "testEmail", (String) null, null, null, null);
+        }
+        finally
+        {
+            restorePropertySourceInEnvironment();
+        }
     }
 
     @Test
@@ -159,23 +350,28 @@ public class HttpHeaderAuthenticationFilterTest extends AbstractAppTest
     {
         modifyPropertySourceInEnvironment(getDefaultSecurityEnvironmentVariables());
 
-        MockHttpServletRequest request =
-                getRequestWithHeaders("testUser", "testFirstName", "testLastName", "testEmail", "testRole", "Wed, 11 Mar 2015 10:24:09");
-        // Invalidate user session if exists.
-        invalidateApplicationUser(request);
+        try
+        {
+            MockHttpServletRequest request =
+                getRequestWithHeaders(USER_ID, "testFirstName", "testLastName", "testEmail", "testRole", "Wed, 11 Mar 2015 10:24:09");
+            // Invalidate user session if exists.
+            invalidateApplicationUser(request);
 
-        httpHeaderAuthenticationFilter.init(new MockFilterConfig());
-        httpHeaderAuthenticationFilter.doFilter(request, new MockHttpServletResponse(), new MockFilterChain());
+            httpHeaderAuthenticationFilter.init(new MockFilterConfig());
+            httpHeaderAuthenticationFilter.doFilter(request, new MockHttpServletResponse(), new MockFilterChain());
 
-        validateHttpHeaderApplicationUser("testUser", "testFirstName", "testLastName", "testEmail", "testRole", "Wed, 11 Mar 2015 10:24:09", null);
+            validateHttpHeaderApplicationUser(USER_ID, "testFirstName", "testLastName", "testEmail", "testRole", "Wed, 11 Mar 2015 10:24:09", null, null);
 
-        // Try again with no header, user should be invalidated.
-        httpHeaderAuthenticationFilter.doFilter(new MockHttpServletRequest(), new MockHttpServletResponse(), new MockFilterChain());
+            // Try again with no header, user should be invalidated.
+            httpHeaderAuthenticationFilter.doFilter(new MockHttpServletRequest(), new MockHttpServletResponse(), new MockFilterChain());
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        assertNull(authentication);
-
-        restorePropertySourceInEnvironment();
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            assertNull(authentication);
+        }
+        finally
+        {
+            restorePropertySourceInEnvironment();
+        }
     }
 
     @Test
@@ -183,21 +379,25 @@ public class HttpHeaderAuthenticationFilterTest extends AbstractAppTest
     {
         modifyPropertySourceInEnvironment(getDefaultSecurityEnvironmentVariables());
 
-        MockHttpServletRequest request =
-                getRequestWithHeaders("testUser", "testFirstName", "testLastName", "testEmail", "testRole1,testRole2",
-                        "Wed, 11 Mar 2015 10:24:09");
-        // Invalidate user session if exists.
-        invalidateApplicationUser(request);
+        try
+        {
+            MockHttpServletRequest request =
+                getRequestWithHeaders(USER_ID, "testFirstName", "testLastName", "testEmail", "testRole1,testRole2", "Wed, 11 Mar 2015 10:24:09");
+            // Invalidate user session if exists.
+            invalidateApplicationUser(request);
 
-        httpHeaderAuthenticationFilter.init(new MockFilterConfig());
-        httpHeaderAuthenticationFilter.doFilter(request, new MockHttpServletResponse(), new MockFilterChain());
+            httpHeaderAuthenticationFilter.init(new MockFilterConfig());
+            httpHeaderAuthenticationFilter.doFilter(request, new MockHttpServletResponse(), new MockFilterChain());
 
-        Set<String> expectedRoles = new HashSet<String>();
-        expectedRoles.add("testRole1");
-        expectedRoles.add("testRole2");
-        validateHttpHeaderApplicationUser("testUser", "testFirstName", "testLastName", "testEmail", expectedRoles, "Wed, 11 Mar 2015 10:24:09", null);
-
-        restorePropertySourceInEnvironment();
+            Set<String> expectedRoles = new HashSet<>();
+            expectedRoles.add("testRole1");
+            expectedRoles.add("testRole2");
+            validateHttpHeaderApplicationUser(USER_ID, "testFirstName", "testLastName", "testEmail", expectedRoles, "Wed, 11 Mar 2015 10:24:09", null, null);
+        }
+        finally
+        {
+            restorePropertySourceInEnvironment();
+        }
     }
 
     @Test
@@ -207,19 +407,23 @@ public class HttpHeaderAuthenticationFilterTest extends AbstractAppTest
         overrideMap.put(ConfigurationValue.SECURITY_HTTP_HEADER_ROLE_REGEX.getKey(), " ");
         modifyPropertySourceInEnvironment(overrideMap);
 
-        MockHttpServletRequest request =
-                getRequestWithHeaders("testUser", "testFirstName", "testLastName", "testEmail", "testRole1,testRole2",
-                        "Wed, 11 Mar 2015 10:24:09");
-        // Invalidate user session if exists.
-        invalidateApplicationUser(request);
+        try
+        {
+            MockHttpServletRequest request =
+                getRequestWithHeaders(USER_ID, "testFirstName", "testLastName", "testEmail", "testRole1,testRole2", "Wed, 11 Mar 2015 10:24:09");
+            // Invalidate user session if exists.
+            invalidateApplicationUser(request);
 
-        httpHeaderAuthenticationFilter.init(new MockFilterConfig());
-        httpHeaderAuthenticationFilter.doFilter(request, new MockHttpServletResponse(), new MockFilterChain());
+            httpHeaderAuthenticationFilter.init(new MockFilterConfig());
+            httpHeaderAuthenticationFilter.doFilter(request, new MockHttpServletResponse(), new MockFilterChain());
 
-        Set<String> expectedRoles = new HashSet<String>();
-        validateHttpHeaderApplicationUser("testUser", "testFirstName", "testLastName", "testEmail", expectedRoles, "Wed, 11 Mar 2015 10:24:09", null);
-
-        restorePropertySourceInEnvironment();
+            Set<String> expectedRoles = new HashSet<>();
+            validateHttpHeaderApplicationUser(USER_ID, "testFirstName", "testLastName", "testEmail", expectedRoles, "Wed, 11 Mar 2015 10:24:09", null, null);
+        }
+        finally
+        {
+            restorePropertySourceInEnvironment();
+        }
     }
 
     @Test
@@ -229,21 +433,26 @@ public class HttpHeaderAuthenticationFilterTest extends AbstractAppTest
         overrideMap.put(ConfigurationValue.SECURITY_HTTP_HEADER_ROLE_REGEX_GROUP.getKey(), " ");
         modifyPropertySourceInEnvironment(overrideMap);
 
-        MockHttpServletRequest request =
-                getRequestWithHeaders("testUser", "testFirstName", "testLastName", "testEmail", "testRole1,testRole2",
-                        "Wed, 11 Mar 2015 10:24:09");
-        // Invalidate user session if exists.
-        invalidateApplicationUser(request);
+        try
+        {
+            MockHttpServletRequest request =
+                getRequestWithHeaders(USER_ID, "testFirstName", "testLastName", "testEmail", "testRole1,testRole2", "Wed, 11 Mar 2015 10:24:09");
+            // Invalidate user session if exists.
+            invalidateApplicationUser(request);
 
-        httpHeaderAuthenticationFilter.init(new MockFilterConfig());
-        httpHeaderAuthenticationFilter.doFilter(request, new MockHttpServletResponse(), new MockFilterChain());
+            httpHeaderAuthenticationFilter.init(new MockFilterConfig());
+            httpHeaderAuthenticationFilter.doFilter(request, new MockHttpServletResponse(), new MockFilterChain());
 
-        Set<String> expectedRoles = new HashSet<String>();
-        expectedRoles.add("testRole1,");
-        expectedRoles.add("testRole2");
-        validateHttpHeaderApplicationUser("testUser", "testFirstName", "testLastName", "testEmail", expectedRoles, "Wed, 11 Mar 2015 10:24:09", null);
+            Set<String> expectedRoles = new HashSet<>();
+            expectedRoles.add("testRole1,");
+            expectedRoles.add("testRole2");
+            validateHttpHeaderApplicationUser(USER_ID, "testFirstName", "testLastName", "testEmail", expectedRoles, "Wed, 11 Mar 2015 10:24:09", null, null);
 
-        restorePropertySourceInEnvironment();
+        }
+        finally
+        {
+            restorePropertySourceInEnvironment();
+        }
     }
 
     @Test
@@ -251,36 +460,42 @@ public class HttpHeaderAuthenticationFilterTest extends AbstractAppTest
     {
         modifyPropertySourceInEnvironment(getDefaultSecurityEnvironmentVariables());
 
-        MockHttpServletRequest request =
+        try
+        {
+            MockHttpServletRequest request =
                 getRequestWithHeaders("testUser@company.com", "testFirstName", "testLastName", "testEmail", "testRole", "Wed, 11 Mar 2015 10:24:09");
-        // Invalidate user session if exists.
-        invalidateApplicationUser(request);
+            // Invalidate user session if exists.
+            invalidateApplicationUser(request);
 
-        httpHeaderAuthenticationFilter.init(new MockFilterConfig());
-        httpHeaderAuthenticationFilter.doFilter(request, new MockHttpServletResponse(), new MockFilterChain());
+            httpHeaderAuthenticationFilter.init(new MockFilterConfig());
+            httpHeaderAuthenticationFilter.doFilter(request, new MockHttpServletResponse(), new MockFilterChain());
 
-        validateHttpHeaderApplicationUser("testUser@company.com", "testFirstName", "testLastName", "testEmail", "testRole", "Wed, 11 Mar 2015 10:24:09", null);
-
-        restorePropertySourceInEnvironment();
+            validateHttpHeaderApplicationUser("testUser@company.com", "testFirstName", "testLastName", "testEmail", "testRole", "Wed, 11 Mar 2015 10:24:09",
+                null, null);
+        }
+        finally
+        {
+            restorePropertySourceInEnvironment();
+        }
     }
-    
+
     private void setupTestFunctions(String roleId)
     {
         SecurityRoleEntity securityRoleEntity = new SecurityRoleEntity();
         securityRoleEntity.setCode(roleId);
-        
+
         herdDao.saveAndRefresh(securityRoleEntity);
-        
-        for(String function : TEST_FUNCTIONS)
+
+        for (String function : TEST_FUNCTIONS)
         {
             SecurityFunctionEntity securityFunctionEntity = new SecurityFunctionEntity();
             securityFunctionEntity.setCode(function);
             herdDao.saveAndRefresh(securityFunctionEntity);
-            
+
             SecurityRoleFunctionEntity securityRoleFunctionEntity = new SecurityRoleFunctionEntity();
             securityRoleFunctionEntity.setSecurityRole(securityRoleEntity);
             securityRoleFunctionEntity.setSecurityFunction(securityFunctionEntity);
-            
+
             herdDao.saveAndRefresh(securityRoleFunctionEntity);
         }
     }

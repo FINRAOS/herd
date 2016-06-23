@@ -18,6 +18,7 @@ package org.finra.herd.service.config;
 import org.activiti.engine.ProcessEngineConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.jms.annotation.EnableJms;
 
 /**
@@ -25,13 +26,14 @@ import org.springframework.jms.annotation.EnableJms;
  */
 @Configuration
 @EnableJms
+@Import({ServiceSchedulingModuleConfig.class})
 public class ServiceEnvSpringModuleConfig
 {
     /**
      * Returns the Activiti database schema update approach. Values should come from a "DB_SCHEMA_UPDATE_*" constant in ProcessEngineConfiguration or
      * ProcessEngineConfigurationImpl.
      *
-     * @return the the Activiti database schema update approach.
+     * @return the Activiti database schema update approach.
      */
     @Bean
     public String activitiDbSchemaUpdateParam()

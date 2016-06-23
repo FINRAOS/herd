@@ -20,12 +20,17 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.amazonaws.AmazonServiceException;
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.PutObjectRequest;
 import org.apache.commons.lang3.StringUtils;
+import org.fusesource.hawtbuf.ByteArrayInputStream;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -39,6 +44,7 @@ import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.StoragePlatformEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
+import org.finra.herd.service.impl.FileUploadCleanupServiceImpl;
 
 /**
  * This class tests functionality within the FileUploadCleanupService.
@@ -53,14 +59,26 @@ public class FileUploadCleanupServiceTest extends AbstractServiceTest
         s3BucketName = getS3ManagedBucketName();
     }
 
+    /**
+     * Cleans up the S3 test path that we are using.
+     */
+    @After
+    public void cleanEnv() throws IOException
+    {
+        // Clean up the destination S3 folder.
+        s3Dao.deleteDirectory(getTestS3FileTransferRequestParamsDto());
+
+        s3Operations.rollback();
+    }
+
     @Test
     public void testDeleteBusinessObjectData() throws Exception
     {
-        // Prepare database entries required for testing.
+        // Prepare database entries required for testing without creating an S3 file.
         BusinessObjectDataKey testBusinessObjectKey =
-            new BusinessObjectDataKey(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+            new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION);
-        createTestDatabaseEntities(testBusinessObjectKey, STORAGE_NAME, s3BucketName, MockS3OperationsImpl.MOCK_S3_FILE_NAME_NOT_FOUND, 15);
+        createTestDatabaseEntities(testBusinessObjectKey, STORAGE_NAME, s3BucketName, TARGET_S3_KEY, 15);
 
         // Delete the business object data.
         List<BusinessObjectDataKey> resultBusinessObjectDataKeys = fileUploadCleanupService.deleteBusinessObjectData(STORAGE_NAME, 10);
@@ -77,9 +95,13 @@ public class FileUploadCleanupServiceTest extends AbstractServiceTest
     {
         // Prepare database entries required for testing.
         BusinessObjectDataKey testBusinessObjectKey =
-            new BusinessObjectDataKey(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+            new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION);
-        createTestDatabaseEntities(testBusinessObjectKey, STORAGE_NAME, s3BucketName, LOCAL_FILE, 15);
+        createTestDatabaseEntities(testBusinessObjectKey, STORAGE_NAME, s3BucketName, TARGET_S3_KEY, 15);
+
+        // Put a file in S3.
+        PutObjectRequest putObjectRequest = new PutObjectRequest(s3BucketName, TARGET_S3_KEY, new ByteArrayInputStream(new byte[1]), new ObjectMetadata());
+        s3Operations.putObject(putObjectRequest, null);
 
         // Delete the business object data.
         List<BusinessObjectDataKey> resultBusinessObjectDataKeys = fileUploadCleanupService.deleteBusinessObjectData(STORAGE_NAME, 10);
@@ -95,17 +117,19 @@ public class FileUploadCleanupServiceTest extends AbstractServiceTest
     {
         // Prepare database entries required for testing.
         BusinessObjectDataKey testBusinessObjectKey =
-            new BusinessObjectDataKey(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+            new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION);
         createTestDatabaseEntities(testBusinessObjectKey, STORAGE_NAME, s3BucketName, MockS3OperationsImpl.MOCK_S3_FILE_NAME_SERVICE_EXCEPTION, 15);
 
-        // Delete the business object data.
-        List<BusinessObjectDataKey> resultBusinessObjectDataKeys = fileUploadCleanupService.deleteBusinessObjectData(STORAGE_NAME, 10);
+        executeWithoutLogging(FileUploadCleanupServiceImpl.class, () -> {
+            // Delete the business object data.
+            List<BusinessObjectDataKey> resultBusinessObjectDataKeys = fileUploadCleanupService.deleteBusinessObjectData(STORAGE_NAME, 10);
 
-        // Validate the results.
-        assertNotNull(resultBusinessObjectDataKeys);
-        assertTrue(resultBusinessObjectDataKeys.isEmpty());
-        validateBusinessObjectDataStatus(testBusinessObjectKey, BDATA_STATUS);
+            // Validate the results.
+            assertNotNull(resultBusinessObjectDataKeys);
+            assertTrue(resultBusinessObjectDataKeys.isEmpty());
+            validateBusinessObjectDataStatus(testBusinessObjectKey, BDATA_STATUS);
+        });
     }
 
     @Test
@@ -183,7 +207,7 @@ public class FileUploadCleanupServiceTest extends AbstractServiceTest
 
     private void validateBusinessObjectDataStatus(BusinessObjectDataKey businessObjectDataKey, String expectedBusinessObjectDataStatus)
     {
-        BusinessObjectDataEntity businessObjectDataEntity = herdDao.getBusinessObjectDataByAltKey(businessObjectDataKey);
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDao.getBusinessObjectDataByAltKey(businessObjectDataKey);
         assertNotNull(businessObjectDataEntity);
         assertEquals(expectedBusinessObjectDataStatus, businessObjectDataEntity.getStatus().getCode());
     }

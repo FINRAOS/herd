@@ -15,21 +15,25 @@
 */
 package org.finra.herd.tools.common.databridge;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.fail;
+
 import java.util.GregorianCalendar;
 
 import javax.xml.datatype.DatatypeFactory;
 
 import org.junit.Test;
 
+import org.finra.herd.core.AbstractCoreTest;
 import org.finra.herd.model.api.xml.AwsCredential;
-import static org.junit.Assert.*;
 
-public class AutoRefreshCredentialProviderTest
+public class AutoRefreshCredentialProviderTest extends AbstractCoreTest
 {
     /**
      * The getAwsCredential method should return the cached credential if the session hasn't expired. If the session expired, a new credential should be
      * generated.
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -67,14 +71,16 @@ public class AutoRefreshCredentialProviderTest
                 throw new Exception("test");
             }
         };
+
         try
         {
-            autoRefreshCredentialProvider.getAwsCredential();
+            executeWithoutLogging(AutoRefreshCredentialProvider.class, () -> {
+                autoRefreshCredentialProvider.getAwsCredential();
+            });
             fail();
         }
         catch (Exception e)
         {
-            e.printStackTrace();
             assertEquals(IllegalStateException.class, e.getClass());
             Throwable cause = e.getCause();
             assertEquals(Exception.class, cause.getClass());

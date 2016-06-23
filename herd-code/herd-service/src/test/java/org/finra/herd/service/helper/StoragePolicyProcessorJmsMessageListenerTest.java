@@ -16,31 +16,23 @@
 package org.finra.herd.service.helper;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
-import org.apache.commons.io.FileUtils;
-import org.junit.After;
-import org.junit.Before;
+import com.amazonaws.services.s3.model.PutObjectRequest;
+import org.fusesource.hawtbuf.ByteArrayInputStream;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import org.finra.herd.dao.impl.MockGlacierOperationsImpl;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.api.xml.StoragePolicyKey;
-import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.dto.StoragePolicySelection;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
-import org.finra.herd.model.jpa.StorageFileEntity;
+import org.finra.herd.model.jpa.StoragePolicyStatusEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
 import org.finra.herd.service.AbstractServiceTest;
@@ -51,122 +43,96 @@ import org.finra.herd.service.AbstractServiceTest;
 public class StoragePolicyProcessorJmsMessageListenerTest extends AbstractServiceTest
 {
     @Autowired
+    private StorageFileHelper storageFileHelper;
+
+    @Autowired
     StoragePolicyProcessorJmsMessageListener storagePolicyProcessorJmsMessageListener;
-
-    private final String S3_KEY_PREFIX =
-        getExpectedS3KeyPrefix(BOD_NAMESPACE, DATA_PROVIDER_NAME, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_KEY,
-            PARTITION_VALUE, null, null, DATA_VERSION);
-
-    private static final Path LOCAL_TEMP_DIR =
-        Paths.get(System.getProperty("java.io.tmpdir"), "herd-storage-policy-processor-jms-message-listener-test-" + RANDOM_SUFFIX);
-
-    /**
-     * Sets up the test environment.
-     */
-    @Before
-    public void setup() throws Exception
-    {
-        // Create local temp directories.
-        LOCAL_TEMP_DIR.toFile().mkdirs();
-
-        // Create local test files.
-        for (String filePath : LOCAL_FILES)
-        {
-            createLocalFile(LOCAL_TEMP_DIR.toString(), filePath, FILE_SIZE_1_KB);
-        }
-
-        // Upload test file to S3. Since the S3 key prefix represents a directory, we add a trailing '/' character to it.
-        s3Dao.uploadDirectory(
-            S3FileTransferRequestParamsDto.builder().s3BucketName(S3_BUCKET_NAME).s3KeyPrefix(S3_KEY_PREFIX + "/").localPath(LOCAL_TEMP_DIR.toString())
-                .recursive(true).build());
-
-        // Clean up the temporary directory.
-        FileUtils.cleanDirectory(LOCAL_TEMP_DIR.toFile());
-    }
-
-    /**
-     * Cleans up the test environment.
-     */
-    @After
-    public void cleanEnv() throws IOException
-    {
-        // Delete the local temporary directory.
-        FileUtils.deleteDirectory(LOCAL_TEMP_DIR.toFile());
-
-        // Delete test files from the S3 storage. Since the S3 key prefix represents a directory, we add a trailing '/' character to it.
-        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto =
-            S3FileTransferRequestParamsDto.builder().s3BucketName(S3_BUCKET_NAME).s3KeyPrefix(S3_KEY_PREFIX + "/").localPath(LOCAL_TEMP_DIR.toString())
-                .recursive(true).build();
-        if (!s3Dao.listDirectory(s3FileTransferRequestParamsDto).isEmpty())
-        {
-            s3Dao.deleteDirectory(s3FileTransferRequestParamsDto);
-        }
-    }
 
     @Test
     public void testProcessMessage() throws Exception
     {
-        // Override configuration.
-        Map<String, Object> overrideMap = new HashMap<>();
-        overrideMap.put(ConfigurationValue.STORAGE_POLICY_PROCESSOR_TEMP_DIR.getKey(), LOCAL_TEMP_DIR.toString());
-        modifyPropertySourceInEnvironment(overrideMap);
+        // Build the expected S3 key prefix for test business object data.
+        String s3KeyPrefix =
+            getExpectedS3KeyPrefix(BDEF_NAMESPACE, DATA_PROVIDER_NAME, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_KEY,
+                PARTITION_VALUE, null, null, DATA_VERSION);
+
+        // Create S3FileTransferRequestParamsDto to access the source and destination S3 bucket locations.
+        // Since test S3 key prefix represents a directory, we add a trailing '/' character to it.
+        S3FileTransferRequestParamsDto sourceS3FileTransferRequestParamsDto =
+            S3FileTransferRequestParamsDto.builder().s3BucketName(S3_BUCKET_NAME).s3KeyPrefix(s3KeyPrefix + "/").build();
+        S3FileTransferRequestParamsDto destinationS3FileTransferRequestParamsDto =
+            S3FileTransferRequestParamsDto.builder().s3BucketName(S3_BUCKET_NAME_2).s3KeyPrefix(S3_BUCKET_NAME + "/" + s3KeyPrefix + "/").build();
+
+        // Create and persist the relative database entities.
+        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
+            Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
+
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, DATA_VERSION);
+
+        // Create and persist a storage unit in the source storage.
+        StorageUnitEntity sourceStorageUnitEntity =
+            createStorageUnitEntity(STORAGE_NAME, businessObjectDataKey, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID,
+                StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
+
+        // Add storage files to the source storage unit.
+        for (String filePath : LOCAL_FILES)
+        {
+            createStorageFileEntity(sourceStorageUnitEntity, s3KeyPrefix + "/" + filePath, FILE_SIZE_1_KB, ROW_COUNT_1000);
+        }
+
+        // Get the source storage files.
+        List<StorageFile> sourceStorageFiles = storageFileHelper.createStorageFilesFromEntities(sourceStorageUnitEntity.getStorageFiles());
+
+        // Create a storage policy key.
+        StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
+
+        // Create and persist a storage policy entity.
+        createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+            FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         try
         {
-            // Create and persist the relative database entities.
-            createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BOD_NAMESPACE, BOD_NAME,
-                Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
-
-            // Create a business object data key.
-            BusinessObjectDataKey businessObjectDataKey =
-                new BusinessObjectDataKey(BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                    NO_SUBPARTITION_VALUES, DATA_VERSION);
-
-            // Create and persist a storage unit in the source storage.
-            StorageUnitEntity sourceStorageUnitEntity =
-                createStorageUnitEntity(STORAGE_NAME, businessObjectDataKey, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID,
-                    StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
-
-            // Add storage files to the source storage unit.
-            for (String filePath : LOCAL_FILES)
+            // Put relative S3 files into the source S3 bucket.
+            for (StorageFile storageFile : sourceStorageFiles)
             {
-                createStorageFileEntity(sourceStorageUnitEntity, S3_KEY_PREFIX + "/" + filePath, FILE_SIZE_1_KB, ROW_COUNT_1000);
+                s3Operations.putObject(new PutObjectRequest(S3_BUCKET_NAME, storageFile.getFilePath(),
+                    new ByteArrayInputStream(new byte[storageFile.getFileSizeBytes().intValue()]), null), null);
             }
-
-            // Create a storage policy key.
-            StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
-
-            // Create and persist a storage policy entity.
-            createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE,
-                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2);
 
             // Perform a storage policy transition.
             storagePolicyProcessorJmsMessageListener
-                .processMessage(jsonHelper.objectToJson(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey)), null);
+                .processMessage(jsonHelper.objectToJson(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION)), null);
 
             // Validate the status of the source storage unit.
             assertEquals(StorageUnitStatusEntity.DISABLED, sourceStorageUnitEntity.getStatus().getCode());
 
             // Retrieve and validate the destination storage unit.
             StorageUnitEntity destinationStorageUnitEntity =
-                herdDao.getStorageUnitByBusinessObjectDataAndStorageName(sourceStorageUnitEntity.getBusinessObjectData(), STORAGE_NAME_2);
+                storageUnitDao.getStorageUnitByBusinessObjectDataAndStorageName(sourceStorageUnitEntity.getBusinessObjectData(), STORAGE_NAME_2);
             assertEquals(StorageUnitStatusEntity.ENABLED, destinationStorageUnitEntity.getStatus().getCode());
-            assertEquals(1, destinationStorageUnitEntity.getStorageFiles().size());
-            StorageFileEntity destinationStorageFileEntity = destinationStorageUnitEntity.getStorageFiles().iterator().next();
-            assertNotNull(destinationStorageFileEntity);
-            assertTrue(destinationStorageFileEntity.getPath().startsWith(Integer.toString(sourceStorageUnitEntity.getId()) + "-"));
-            assertNull(destinationStorageFileEntity.getRowCount());
-            assertEquals(MockGlacierOperationsImpl.MOCK_GLACIER_ARCHIVE_ID, destinationStorageFileEntity.getArchiveId());
+            assertEquals(0, destinationStorageUnitEntity.getStorageFiles().size());
 
             // Validate that source S3 data is deleted.
-            S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto =
-                S3FileTransferRequestParamsDto.builder().s3BucketName(S3_BUCKET_NAME).s3KeyPrefix(S3_KEY_PREFIX + "/").build();
-            assertTrue(s3Dao.listDirectory(s3FileTransferRequestParamsDto).isEmpty());
+            assertTrue(s3Dao.listDirectory(sourceS3FileTransferRequestParamsDto).isEmpty());
+
+            // Validate that we have the copied S3 files at the expected S3 location.
+            assertEquals(sourceStorageFiles.size(), s3Dao.listDirectory(destinationS3FileTransferRequestParamsDto).size());
         }
         finally
         {
-            // Restore the property sources so we don't affect other tests.
-            restorePropertySourceInEnvironment();
+            // Delete test files from S3 storage.
+            for (S3FileTransferRequestParamsDto params : Arrays.asList(sourceS3FileTransferRequestParamsDto, destinationS3FileTransferRequestParamsDto))
+            {
+                if (!s3Dao.listDirectory(params).isEmpty())
+                {
+                    s3Dao.deleteDirectory(params);
+                }
+            }
+
+            s3Operations.rollback();
         }
     }
 
@@ -175,14 +141,16 @@ public class StoragePolicyProcessorJmsMessageListenerTest extends AbstractServic
     {
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 NO_SUBPARTITION_VALUES, DATA_VERSION);
 
         // Create a storage policy key.
         StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
 
         // Perform a storage policy transition.
-        storagePolicyProcessorJmsMessageListener
-            .processMessage(jsonHelper.objectToJson(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey)), null);
+        executeWithoutLogging(StoragePolicyProcessorJmsMessageListener.class, () -> {
+            storagePolicyProcessorJmsMessageListener
+                .processMessage(jsonHelper.objectToJson(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION)), null);
+        });
     }
 }

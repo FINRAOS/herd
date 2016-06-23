@@ -24,14 +24,13 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;
 
-import org.finra.herd.model.dto.DataBridgeBaseManifestDto;
-import org.finra.herd.model.dto.UploaderInputManifestDto;
 import org.finra.herd.model.api.xml.BusinessObjectDataUploadCredential;
 import org.finra.herd.model.api.xml.S3KeyPrefixInformation;
+import org.finra.herd.model.dto.DataBridgeBaseManifestDto;
+import org.finra.herd.model.dto.UploaderInputManifestDto;
 import org.finra.herd.tools.common.databridge.DataBridgeWebClient;
 
 /**
@@ -90,7 +89,7 @@ public class UploaderWebClient extends DataBridgeWebClient
         {
             httpGet.addHeader(getAuthorizationHeader());
         }
-        try (CloseableHttpClient httpClient = HttpClientBuilder.create().build())
+        try (CloseableHttpClient httpClient = httpClientOperations.createHttpClient())
         {
             LOGGER.info("Retrieving upload credentials from registration server...");
             return getBusinessObjectDataUploadCredential(httpClientOperations.execute(httpClient, httpGet));

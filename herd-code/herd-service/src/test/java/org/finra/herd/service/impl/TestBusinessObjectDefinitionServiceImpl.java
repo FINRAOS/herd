@@ -22,7 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.api.xml.BusinessObjectDefinition;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
-import org.finra.herd.service.BusinessObjectDefinitionService;
 
 /**
  * This is a Business Object Definition service implementation for testing.
@@ -30,7 +29,7 @@ import org.finra.herd.service.BusinessObjectDefinitionService;
 @Service
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 @Primary
-public class TestBusinessObjectDefinitionServiceImpl extends BusinessObjectDefinitionServiceImpl implements BusinessObjectDefinitionService
+public class TestBusinessObjectDefinitionServiceImpl extends BusinessObjectDefinitionServiceImpl
 {
     @Override
     public BusinessObjectDefinition getBusinessObjectDefinition(BusinessObjectDefinitionKey businessObjectDefinitionKey)

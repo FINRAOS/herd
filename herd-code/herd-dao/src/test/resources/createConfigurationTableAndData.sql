@@ -99,6 +99,13 @@ insert into CNFGN (CNFGN_KEY_NM, CNFGN_VALUE_DS) values ('herd.notification.sqs.
             <newBusinessObjectDataStatus>$newBusinessObjectDataStatus</newBusinessObjectDataStatus>
 #if($StringUtils.isNotEmpty($oldBusinessObjectDataStatus))            <oldBusinessObjectDataStatus>$oldBusinessObjectDataStatus</oldBusinessObjectDataStatus>
 #end
+#if($CollectionUtils.isNotEmpty($businessObjectDataAttributes.keySet()))
+            <attributes>
+#foreach($attributeName in $businessObjectDataAttributes.keySet())
+                <attribute name="$attributeName">$!businessObjectDataAttributes.get($attributeName)</attribute>
+#end
+            </attributes>
+#end
          </businessObjectDataStatusChanged>
       </datamgtEvent>
    </payload>
@@ -126,3 +133,5 @@ insert into CNFGN (CNFGN_KEY_NM, CNFGN_VALUE_DS) values ('emr.s3.hdfs.copy.scrip
 insert into CNFGN (CNFGN_KEY_NM, CNFGN_VALUE_DS) values ('emr.oozie.herd.wrapper.workflow.s3.location', 'HERD_SCRIPTS/emr/bootstrap/herd_oozie_wrapper/');
 
 insert into CNFGN (CNFGN_KEY_NM, CNFGN_VALUE_DS) values ('storage.policy.selector.job.sqs.queue.name', 'STORAGE_POLICY_SELECTOR_SQS_QUEUE_NAME');
+
+insert into CNFGN (CNFGN_KEY_NM, CNFGN_VALUE_DS) values ('emr.encryption.script', 'herd_SCRIPTS/encrypt_disks.sh');

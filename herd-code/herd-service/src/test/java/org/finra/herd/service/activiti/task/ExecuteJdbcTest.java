@@ -44,7 +44,7 @@ public class ExecuteJdbcTest extends HerdActivitiServiceTaskTest
     private static final String JAVA_DELEGATE_CLASS_NAME = ExecuteJdbc.class.getCanonicalName();
 
     @Test
-    public void testExecuteJdbcSuccess()
+    public void testExecuteJdbcSuccess() throws Exception
     {
         JdbcExecutionRequest jdbcExecutionRequest = createDefaultUpdateJdbcExecutionRequest();
 
@@ -53,29 +53,21 @@ public class ExecuteJdbcTest extends HerdActivitiServiceTaskTest
 
         populateParameters(jdbcExecutionRequest, fieldExtensionList, parameters);
 
-        try
-        {
-            JdbcExecutionResponse expectedJdbcExecutionResponse = new JdbcExecutionResponse();
-            expectedJdbcExecutionResponse.setStatements(jdbcExecutionRequest.getStatements());
-            expectedJdbcExecutionResponse.getStatements().get(0).setStatus(JdbcStatementStatus.SUCCESS);
-            expectedJdbcExecutionResponse.getStatements().get(0).setResult("1");
+        JdbcExecutionResponse expectedJdbcExecutionResponse = new JdbcExecutionResponse();
+        expectedJdbcExecutionResponse.setStatements(jdbcExecutionRequest.getStatements());
+        expectedJdbcExecutionResponse.getStatements().get(0).setStatus(JdbcStatementStatus.SUCCESS);
+        expectedJdbcExecutionResponse.getStatements().get(0).setResult("1");
 
-            String expectedJdbcExecutionResponseJson = jsonHelper.objectToJson(expectedJdbcExecutionResponse);
+        String expectedJdbcExecutionResponseJson = jsonHelper.objectToJson(expectedJdbcExecutionResponse);
 
-            Map<String, Object> variableValuesToValidate = new HashMap<>();
-            variableValuesToValidate.put(BaseJavaDelegate.VARIABLE_JSON_RESPONSE, expectedJdbcExecutionResponseJson);
+        Map<String, Object> variableValuesToValidate = new HashMap<>();
+        variableValuesToValidate.put(BaseJavaDelegate.VARIABLE_JSON_RESPONSE, expectedJdbcExecutionResponseJson);
 
-            testActivitiServiceTaskSuccess(JAVA_DELEGATE_CLASS_NAME, fieldExtensionList, parameters, variableValuesToValidate);
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-            Assert.fail();
-        }
+        testActivitiServiceTaskSuccess(JAVA_DELEGATE_CLASS_NAME, fieldExtensionList, parameters, variableValuesToValidate);
     }
 
     @Test
-    public void testExecuteJdbcErrorValidation()
+    public void testExecuteJdbcErrorValidation() throws Exception
     {
         JdbcExecutionRequest jdbcExecutionRequest = createDefaultUpdateJdbcExecutionRequest();
         jdbcExecutionRequest.setConnection(null);
@@ -85,23 +77,17 @@ public class ExecuteJdbcTest extends HerdActivitiServiceTaskTest
 
         populateParameters(jdbcExecutionRequest, fieldExtensionList, parameters);
 
-        try
-        {
-            Map<String, Object> variableValuesToValidate = new HashMap<>();
-            variableValuesToValidate.put(BaseJavaDelegate.VARIABLE_JSON_RESPONSE, VARIABLE_VALUE_IS_NULL);
-            variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "JDBC connection is required");
+        Map<String, Object> variableValuesToValidate = new HashMap<>();
+        variableValuesToValidate.put(BaseJavaDelegate.VARIABLE_JSON_RESPONSE, VARIABLE_VALUE_IS_NULL);
+        variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "JDBC connection is required");
 
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
             testActivitiServiceTaskFailure(JAVA_DELEGATE_CLASS_NAME, fieldExtensionList, parameters, variableValuesToValidate);
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-            Assert.fail();
-        }
+        });
     }
 
     @Test
-    public void testExecuteJdbcErrorStatement()
+    public void testExecuteJdbcErrorStatement() throws Exception
     {
         JdbcExecutionRequest jdbcExecutionRequest = createDefaultUpdateJdbcExecutionRequest();
         jdbcExecutionRequest.getStatements().get(0).setSql(MockJdbcOperations.CASE_2_SQL);
@@ -111,26 +97,20 @@ public class ExecuteJdbcTest extends HerdActivitiServiceTaskTest
 
         populateParameters(jdbcExecutionRequest, fieldExtensionList, parameters);
 
-        try
-        {
-            JdbcExecutionResponse expectedJdbcExecutionResponse = new JdbcExecutionResponse();
-            expectedJdbcExecutionResponse.setStatements(jdbcExecutionRequest.getStatements());
-            expectedJdbcExecutionResponse.getStatements().get(0).setStatus(JdbcStatementStatus.ERROR);
-            expectedJdbcExecutionResponse.getStatements().get(0).setErrorMessage("java.sql.SQLException: test DataIntegrityViolationException cause");
+        JdbcExecutionResponse expectedJdbcExecutionResponse = new JdbcExecutionResponse();
+        expectedJdbcExecutionResponse.setStatements(jdbcExecutionRequest.getStatements());
+        expectedJdbcExecutionResponse.getStatements().get(0).setStatus(JdbcStatementStatus.ERROR);
+        expectedJdbcExecutionResponse.getStatements().get(0).setErrorMessage("java.sql.SQLException: test DataIntegrityViolationException cause");
 
-            String expectedJdbcExecutionResponseString = jsonHelper.objectToJson(expectedJdbcExecutionResponse);
+        String expectedJdbcExecutionResponseString = jsonHelper.objectToJson(expectedJdbcExecutionResponse);
 
-            Map<String, Object> variableValuesToValidate = new HashMap<>();
-            variableValuesToValidate.put(BaseJavaDelegate.VARIABLE_JSON_RESPONSE, expectedJdbcExecutionResponseString);
-            variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "There are failed executions. See JSON response for details.");
+        Map<String, Object> variableValuesToValidate = new HashMap<>();
+        variableValuesToValidate.put(BaseJavaDelegate.VARIABLE_JSON_RESPONSE, expectedJdbcExecutionResponseString);
+        variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "There are failed executions. See JSON response for details.");
 
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
             testActivitiServiceTaskFailure(JAVA_DELEGATE_CLASS_NAME, fieldExtensionList, parameters, variableValuesToValidate);
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-            Assert.fail();
-        }
+        });
     }
 
     /**
@@ -146,41 +126,48 @@ public class ExecuteJdbcTest extends HerdActivitiServiceTaskTest
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public void testExecuteJdbcWithReceiveTask() throws Exception
     {
-        // Read workflow XML from classpath and deploy it.
-        activitiRepositoryService.createDeployment()
-            .addClasspathResource("org/finra/herd/service/testActivitiWorkflowExecuteJdbcTaskWithReceiveTask.bpmn20.xml").deploy();
+        try
+        { // Read workflow XML from classpath and deploy it.
+            activitiRepositoryService.createDeployment()
+                .addClasspathResource("org/finra/herd/service/testActivitiWorkflowExecuteJdbcTaskWithReceiveTask.bpmn20.xml").deploy();
 
-        JdbcExecutionRequest jdbcExecutionRequest = createDefaultUpdateJdbcExecutionRequest();
+            JdbcExecutionRequest jdbcExecutionRequest = createDefaultUpdateJdbcExecutionRequest();
 
-        // Set workflow variables.
-        Map<String, Object> variables = new HashMap<>();
-        variables.put("contentType", "xml");
-        variables.put("jdbcExecutionRequest", xmlHelper.objectToXml(jdbcExecutionRequest));
+            // Set workflow variables.
+            Map<String, Object> variables = new HashMap<>();
+            variables.put("contentType", "xml");
+            variables.put("jdbcExecutionRequest", xmlHelper.objectToXml(jdbcExecutionRequest));
 
-        // Execute workflow
-        ProcessInstance processInstance = activitiRuntimeService.startProcessInstanceByKey("test", variables);
+            // Execute workflow
+            ProcessInstance processInstance = activitiRuntimeService.startProcessInstanceByKey("test", variables);
 
-        // Wait for the process to finish
-        waitUntilAllProcessCompleted();
+            // Wait for the process to finish
+            waitUntilAllProcessCompleted();
 
-        // Assert output
-        Map<String, Object> outputVariables = getProcessInstanceHistoryVariables(processInstance);
+            // Assert output
+            Map<String, Object> outputVariables = getProcessInstanceHistoryVariables(processInstance);
 
-        JdbcExecutionResponse expectedJdbcExecutionResponse = new JdbcExecutionResponse();
-        JdbcStatement originalJdbcStatement = jdbcExecutionRequest.getStatements().get(0);
-        JdbcStatement expectedJdbcStatement = new JdbcStatement();
-        expectedJdbcStatement.setType(originalJdbcStatement.getType());
-        expectedJdbcStatement.setSql(originalJdbcStatement.getSql());
-        expectedJdbcStatement.setStatus(JdbcStatementStatus.SUCCESS);
-        expectedJdbcStatement.setResult("1");
-        expectedJdbcExecutionResponse.setStatements(Arrays.asList(expectedJdbcStatement));
+            JdbcExecutionResponse expectedJdbcExecutionResponse = new JdbcExecutionResponse();
+            JdbcStatement originalJdbcStatement = jdbcExecutionRequest.getStatements().get(0);
+            JdbcStatement expectedJdbcStatement = new JdbcStatement();
+            expectedJdbcStatement.setType(originalJdbcStatement.getType());
+            expectedJdbcStatement.setSql(originalJdbcStatement.getSql());
+            expectedJdbcStatement.setStatus(JdbcStatementStatus.SUCCESS);
+            expectedJdbcStatement.setResult("1");
+            expectedJdbcExecutionResponse.setStatements(Arrays.asList(expectedJdbcStatement));
 
-        String actualJdbcExecutionResponseString = (String) outputVariables.get("service_jsonResponse");
+            String actualJdbcExecutionResponseString = (String) outputVariables.get("service_jsonResponse");
 
-        JdbcExecutionResponse actualJdbcExecutionResponse = jsonHelper.unmarshallJsonToObject(JdbcExecutionResponse.class, actualJdbcExecutionResponseString);
+            JdbcExecutionResponse actualJdbcExecutionResponse =
+                jsonHelper.unmarshallJsonToObject(JdbcExecutionResponse.class, actualJdbcExecutionResponseString);
 
-        Assert.assertEquals("service_jsonResponse", expectedJdbcExecutionResponse, actualJdbcExecutionResponse);
-        Assert.assertEquals("service_taskStatus", "SUCCESS", outputVariables.get("service_taskStatus"));
+            Assert.assertEquals("service_jsonResponse", expectedJdbcExecutionResponse, actualJdbcExecutionResponse);
+            Assert.assertEquals("service_taskStatus", "SUCCESS", outputVariables.get("service_taskStatus"));
+        }
+        finally
+        {
+            deleteActivitiDeployments();
+        }
     }
 
     /**

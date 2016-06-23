@@ -20,6 +20,7 @@ import static org.junit.Assert.assertNotNull;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -31,6 +32,7 @@ import org.activiti.engine.history.HistoricProcessInstance;
 import org.junit.Test;
 
 import org.finra.herd.model.api.xml.BusinessObjectData;
+import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.Job;
 import org.finra.herd.model.api.xml.Parameter;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
@@ -259,13 +261,15 @@ public class GetBusinessObjectDataTest extends HerdActivitiServiceTaskTest
         setupDatabase(namespace, dataProviderName, businessObjectDefinitionName, fileTypeCode, businessObjectFormatUsage, businessObjectFormatVersion,
             businessObjectDataVersion, partitionKey, partitionValues);
 
-        Map<String, Object> variables =
-            executeJob(namespace, businessObjectDefinitionName, businessObjectFormatUsage, fileTypeCode, partitionKey, partitionValues[0], null,
-                businessObjectFormatVersion.toString(), "INVALID");
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            Map<String, Object> variables =
+                executeJob(namespace, businessObjectDefinitionName, businessObjectFormatUsage, fileTypeCode, partitionKey, partitionValues[0], null,
+                    businessObjectFormatVersion.toString(), "INVALID");
 
-        // Validate status
-        String serviceTaskStatus = (String) variables.get(getServiceTaskVariableName(ActivitiRuntimeHelper.VARIABLE_STATUS));
-        assertEquals(ActivitiRuntimeHelper.TASK_STATUS_ERROR, serviceTaskStatus);
+            // Validate status
+            String serviceTaskStatus = (String) variables.get(getServiceTaskVariableName(ActivitiRuntimeHelper.VARIABLE_STATUS));
+            assertEquals(ActivitiRuntimeHelper.TASK_STATUS_ERROR, serviceTaskStatus);
+        });
     }
 
     @Test
@@ -286,13 +290,15 @@ public class GetBusinessObjectDataTest extends HerdActivitiServiceTaskTest
         setupDatabase(namespace, dataProviderName, businessObjectDefinitionName, fileTypeCode, businessObjectFormatUsage, businessObjectFormatVersion,
             businessObjectDataVersion, partitionKey, partitionValues);
 
-        Map<String, Object> variables =
-            executeJob(namespace, businessObjectDefinitionName, businessObjectFormatUsage, fileTypeCode, partitionKey, partitionValues[0], null, "INVALID",
-                businessObjectDataVersion.toString());
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            Map<String, Object> variables =
+                executeJob(namespace, businessObjectDefinitionName, businessObjectFormatUsage, fileTypeCode, partitionKey, partitionValues[0], null, "INVALID",
+                    businessObjectDataVersion.toString());
 
-        // Validate status
-        String serviceTaskStatus = (String) variables.get(getServiceTaskVariableName(ActivitiRuntimeHelper.VARIABLE_STATUS));
-        assertEquals(ActivitiRuntimeHelper.TASK_STATUS_ERROR, serviceTaskStatus);
+            // Validate status
+            String serviceTaskStatus = (String) variables.get(getServiceTaskVariableName(ActivitiRuntimeHelper.VARIABLE_STATUS));
+            assertEquals(ActivitiRuntimeHelper.TASK_STATUS_ERROR, serviceTaskStatus);
+        });
     }
 
     @Test
@@ -360,12 +366,15 @@ public class GetBusinessObjectDataTest extends HerdActivitiServiceTaskTest
         setupDatabase(namespace, dataProviderName, businessObjectDefinitionName, fileTypeCode, businessObjectFormatUsage, businessObjectFormatVersion,
             businessObjectDataVersion, "INVALID", partitionValues);
 
-        Map<String, Object> variables =
-            executeJob(namespace, businessObjectDefinitionName, businessObjectFormatUsage, fileTypeCode, partitionKey, partitionValues[0], null, null, null);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            Map<String, Object> variables =
+                executeJob(namespace, businessObjectDefinitionName, businessObjectFormatUsage, fileTypeCode, partitionKey, partitionValues[0], null, null,
+                    null);
 
-        // Validate status
-        String serviceTaskStatus = (String) variables.get(getServiceTaskVariableName(ActivitiRuntimeHelper.VARIABLE_STATUS));
-        assertEquals(ActivitiRuntimeHelper.TASK_STATUS_ERROR, serviceTaskStatus);
+            // Validate status
+            String serviceTaskStatus = (String) variables.get(getServiceTaskVariableName(ActivitiRuntimeHelper.VARIABLE_STATUS));
+            assertEquals(ActivitiRuntimeHelper.TASK_STATUS_ERROR, serviceTaskStatus);
+        });
     }
 
     @Test
@@ -412,12 +421,14 @@ public class GetBusinessObjectDataTest extends HerdActivitiServiceTaskTest
         setupDatabase(namespace, dataProviderName, businessObjectDefinitionName, fileTypeCode, businessObjectFormatUsage, businessObjectFormatVersion,
             businessObjectDataVersion, partitionKey, partitionValues);
 
-        Map<String, Object> variables =
-            executeJob(namespace, businessObjectDefinitionName, businessObjectFormatUsage, null, partitionKey, partitionValues[0], null, null, null);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            Map<String, Object> variables =
+                executeJob(namespace, businessObjectDefinitionName, businessObjectFormatUsage, null, partitionKey, partitionValues[0], null, null, null);
 
-        // Validate status
-        String serviceTaskStatus = (String) variables.get(getServiceTaskVariableName(ActivitiRuntimeHelper.VARIABLE_STATUS));
-        assertEquals(ActivitiRuntimeHelper.TASK_STATUS_ERROR, serviceTaskStatus);
+            // Validate status
+            String serviceTaskStatus = (String) variables.get(getServiceTaskVariableName(ActivitiRuntimeHelper.VARIABLE_STATUS));
+            assertEquals(ActivitiRuntimeHelper.TASK_STATUS_ERROR, serviceTaskStatus);
+        });
     }
 
     @Test
@@ -438,12 +449,14 @@ public class GetBusinessObjectDataTest extends HerdActivitiServiceTaskTest
         setupDatabase(namespace, dataProviderName, businessObjectDefinitionName, fileTypeCode, businessObjectFormatUsage, businessObjectFormatVersion,
             businessObjectDataVersion, partitionKey, partitionValues);
 
-        Map<String, Object> variables =
-            executeJob(namespace, businessObjectDefinitionName, null, fileTypeCode, partitionKey, partitionValues[0], null, null, null);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            Map<String, Object> variables =
+                executeJob(namespace, businessObjectDefinitionName, null, fileTypeCode, partitionKey, partitionValues[0], null, null, null);
 
-        // Validate status
-        String serviceTaskStatus = (String) variables.get(getServiceTaskVariableName(ActivitiRuntimeHelper.VARIABLE_STATUS));
-        assertEquals(ActivitiRuntimeHelper.TASK_STATUS_ERROR, serviceTaskStatus);
+            // Validate status
+            String serviceTaskStatus = (String) variables.get(getServiceTaskVariableName(ActivitiRuntimeHelper.VARIABLE_STATUS));
+            assertEquals(ActivitiRuntimeHelper.TASK_STATUS_ERROR, serviceTaskStatus);
+        });
     }
 
     @Test
@@ -464,12 +477,14 @@ public class GetBusinessObjectDataTest extends HerdActivitiServiceTaskTest
         setupDatabase(namespace, dataProviderName, businessObjectDefinitionName, fileTypeCode, businessObjectFormatUsage, businessObjectFormatVersion,
             businessObjectDataVersion, partitionKey, partitionValues);
 
-        Map<String, Object> variables =
-            executeJob(namespace, null, businessObjectFormatUsage, fileTypeCode, partitionKey, partitionValues[0], null, null, null);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            Map<String, Object> variables =
+                executeJob(namespace, null, businessObjectFormatUsage, fileTypeCode, partitionKey, partitionValues[0], null, null, null);
 
-        // Validate status
-        String serviceTaskStatus = (String) variables.get(getServiceTaskVariableName(ActivitiRuntimeHelper.VARIABLE_STATUS));
-        assertEquals(ActivitiRuntimeHelper.TASK_STATUS_ERROR, serviceTaskStatus);
+            // Validate status
+            String serviceTaskStatus = (String) variables.get(getServiceTaskVariableName(ActivitiRuntimeHelper.VARIABLE_STATUS));
+            assertEquals(ActivitiRuntimeHelper.TASK_STATUS_ERROR, serviceTaskStatus);
+        });
     }
 
     @Test
@@ -490,12 +505,56 @@ public class GetBusinessObjectDataTest extends HerdActivitiServiceTaskTest
         setupDatabase(namespace, dataProviderName, businessObjectDefinitionName, fileTypeCode, businessObjectFormatUsage, businessObjectFormatVersion,
             businessObjectDataVersion, partitionKey, partitionValues);
 
-        Map<String, Object> variables =
-            executeJob(namespace, businessObjectDefinitionName, businessObjectFormatUsage, fileTypeCode, partitionKey, "INVALID", null, null, null);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            Map<String, Object> variables =
+                executeJob(namespace, businessObjectDefinitionName, businessObjectFormatUsage, fileTypeCode, partitionKey, "INVALID", null, null, null);
 
-        // Validate status
-        String serviceTaskStatus = (String) variables.get(getServiceTaskVariableName(ActivitiRuntimeHelper.VARIABLE_STATUS));
-        assertEquals(ActivitiRuntimeHelper.TASK_STATUS_ERROR, serviceTaskStatus);
+            // Validate status
+            String serviceTaskStatus = (String) variables.get(getServiceTaskVariableName(ActivitiRuntimeHelper.VARIABLE_STATUS));
+            assertEquals(ActivitiRuntimeHelper.TASK_STATUS_ERROR, serviceTaskStatus);
+        });
+    }
+
+    @Test
+    public void test_NoSubPartitions_NoFormatVersion_NoDataVersion_SubPartitionValuesAsEmptyString() throws Exception
+    {
+        // Create a business object data key without sub-partition values.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, DATA_VERSION);
+
+        // Create a business object data entity.
+        BusinessObjectDataEntity businessObjectDataEntity =
+            createBusinessObjectDataEntity(businessObjectDataKey, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID);
+
+        List<FieldExtension> fieldExtensionList = new ArrayList<>();
+
+        fieldExtensionList.add(buildFieldExtension("namespace", "${namespace}"));
+        fieldExtensionList.add(buildFieldExtension("businessObjectDefinitionName", "${businessObjectDefinitionName}"));
+        fieldExtensionList.add(buildFieldExtension("businessObjectFormatUsage", "${businessObjectFormatUsage}"));
+        fieldExtensionList.add(buildFieldExtension("businessObjectFormatFileType", "${businessObjectFormatFileType}"));
+        fieldExtensionList.add(buildFieldExtension("partitionValue", "${partitionValue}"));
+        fieldExtensionList.add(buildFieldExtension("subPartitionValues", "${subPartitionValues}"));
+
+        List<Parameter> parameters = new ArrayList<>();
+
+        parameters.add(buildParameter("namespace", BDEF_NAMESPACE));
+        parameters.add(buildParameter("businessObjectDefinitionName", BDEF_NAME));
+        parameters.add(buildParameter("businessObjectFormatUsage", FORMAT_USAGE_CODE));
+        parameters.add(buildParameter("businessObjectFormatFileType", FORMAT_FILE_TYPE_CODE));
+        parameters.add(buildParameter("partitionValue", PARTITION_VALUE));
+        parameters.add(buildParameter("subPartitionValues", EMPTY_STRING));
+
+        // Build the expected response object.
+        BusinessObjectData expectedBusinessObjectData =
+            new BusinessObjectData(businessObjectDataEntity.getId(), BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                PARTITION_KEY, PARTITION_VALUE, NO_SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID,
+                NO_STORAGE_UNITS, NO_ATTRIBUTES, NO_BUSINESS_OBJECT_DATA_PARENTS, NO_BUSINESS_OBJECT_DATA_CHILDREN);
+
+        // Run the activiti task and validate the returned response object.
+        Map<String, Object> variableValuesToValidate = new HashMap<>();
+        variableValuesToValidate.put(GetBusinessObjectDataStatus.VARIABLE_JSON_RESPONSE, jsonHelper.objectToJson(expectedBusinessObjectData));
+        testActivitiServiceTaskSuccess(GetBusinessObjectData.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
     }
 
     /**
@@ -583,7 +642,7 @@ public class GetBusinessObjectDataTest extends HerdActivitiServiceTaskTest
         storageFiles.add(storageFileEntity);
         storageUnitEntity.setStorageFiles(storageFiles);
         storageUnitEntity.setBusinessObjectData(businessObjectDataEntity);
-        storageUnitEntity.setStatus(herdDao.getStorageUnitStatusByCode(StorageUnitStatusEntity.ENABLED));
+        storageUnitEntity.setStatus(storageUnitStatusDao.getStorageUnitStatusByCode(StorageUnitStatusEntity.ENABLED));
         storageUnits.add(storageUnitEntity);
         businessObjectDataEntity.setStorageUnits(storageUnits);
         businessObjectDataEntity.setVersion(businessObjectDataVersion);

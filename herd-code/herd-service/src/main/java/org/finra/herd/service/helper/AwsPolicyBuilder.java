@@ -37,26 +37,41 @@ public class AwsPolicyBuilder
     }
 
     /**
-     * Adds a permission to allow the specified actions to the given bucket and s3 key prefix. The permissions will allow the given actions to all objects with
-     * the given prefix.
-     * 
-     * @param bucketName S3 Bucket name
-     * @param prefix S3 Object key prefix
-     * @param actions List of actions to allow
+     * Returns the policy object.
+     *
+     * @return The policy
+     */
+    public Policy build()
+    {
+        return policy;
+    }
+
+    /**
+     * Adds a permission to allow the specified actions to the given KMS key id.
+     *
+     * @param kmsKeyId Full ARN to the kms key
+     * @param actions List of actions
+     *
      * @return This builder
      */
-    public AwsPolicyBuilder withS3Prefix(String bucketName, String prefix, S3Actions... actions)
+    @SuppressWarnings("PMD.CloseResource")
+    public AwsPolicyBuilder withKms(String kmsKeyId, KmsActions... actions)
     {
-        return withS3(bucketName, prefix + "/*", actions);
+        Statement statement = new Statement(Effect.Allow);
+        statement.setActions(Arrays.asList(actions));
+        statement.setResources(Arrays.asList(new Resource(kmsKeyId)));
+        policy.getStatements().add(statement);
+        return this;
     }
 
     /**
      * Adds a permission to allow the specified actions to the given bucket and s3 object key. The permission will allow the given actions only to the specified
      * object key. If object key is null, the permission is applied to the bucket itself.
-     * 
+     *
      * @param bucketName S3 bucket name
      * @param objectKey S3 object key
      * @param actions List of actions to allow
+     *
      * @return This builder
      */
     @SuppressWarnings("PMD.CloseResource")
@@ -75,29 +90,17 @@ public class AwsPolicyBuilder
     }
 
     /**
-     * Adds a permission to allow the specified actions to the given KMS key id.
-     * 
-     * @param kmsKeyId Full ARN to the kms key
-     * @param actions List of actions
+     * Adds a permission to allow the specified actions to the given bucket and s3 key prefix. The permissions will allow the given actions to all objects with
+     * the given prefix.
+     *
+     * @param bucketName S3 Bucket name
+     * @param prefix S3 Object key prefix
+     * @param actions List of actions to allow
+     *
      * @return This builder
      */
-    @SuppressWarnings("PMD.CloseResource")
-    public AwsPolicyBuilder withKms(String kmsKeyId, KmsActions... actions)
+    public AwsPolicyBuilder withS3Prefix(String bucketName, String prefix, S3Actions... actions)
     {
-        Statement statement = new Statement(Effect.Allow);
-        statement.setActions(Arrays.asList(actions));
-        statement.setResources(Arrays.asList(new Resource(kmsKeyId)));
-        policy.getStatements().add(statement);
-        return this;
-    }
-
-    /**
-     * Returns the policy object.
-     * 
-     * @return The policy
-     */
-    public Policy build()
-    {
-        return policy;
+        return withS3(bucketName, prefix + "/*", actions);
     }
 }

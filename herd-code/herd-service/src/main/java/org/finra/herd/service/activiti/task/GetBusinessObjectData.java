@@ -42,6 +42,7 @@ import org.finra.herd.service.BusinessObjectDataService;
  *   <activiti:field name="subPartitionValues" stringValue=""/>
  *   <activiti:field name="businessObjectFormatVersion" stringValue=""/>
  *   <activiti:field name="businessObjectDataVersion" stringValue=""/>
+ *   <activiti:field name="businessObjectDataStatus" stringValue=""/>
  * </extensionElements>
  * </pre>
  */
@@ -57,6 +58,7 @@ public class GetBusinessObjectData extends BaseJavaDelegate
     private Expression subPartitionValues;
     private Expression businessObjectFormatVersion;
     private Expression businessObjectDataVersion;
+    private Expression businessObjectDataStatus;
 
     @Autowired
     private BusinessObjectDataService businessObjectDataService;
@@ -76,6 +78,7 @@ public class GetBusinessObjectData extends BaseJavaDelegate
             activitiHelper.getExpressionVariableAsInteger(this.businessObjectFormatVersion, execution, "businessObjectFormatVersion", false);
         Integer businessObjectDataVersion =
             activitiHelper.getExpressionVariableAsInteger(this.businessObjectDataVersion, execution, "businessObjectDataVersion", false);
+        String businessObjectDataStatus = activitiHelper.getExpressionVariableAsString(this.businessObjectDataStatus, execution);
 
         BusinessObjectDataKey businessObjectDataKey = new BusinessObjectDataKey();
         businessObjectDataKey.setNamespace(namespace);
@@ -87,7 +90,8 @@ public class GetBusinessObjectData extends BaseJavaDelegate
         businessObjectDataKey.setSubPartitionValues(subPartitionValues);
         businessObjectDataKey.setBusinessObjectDataVersion(businessObjectDataVersion);
 
-        BusinessObjectData businessObjectData = businessObjectDataService.getBusinessObjectData(businessObjectDataKey, businessObjectFormatPartitionKey);
+        BusinessObjectData businessObjectData =
+            businessObjectDataService.getBusinessObjectData(businessObjectDataKey, businessObjectFormatPartitionKey, businessObjectDataStatus);
 
         setJsonResponseAsWorkflowVariable(businessObjectData, execution);
     }

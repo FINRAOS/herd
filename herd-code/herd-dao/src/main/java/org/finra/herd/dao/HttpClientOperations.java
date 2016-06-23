@@ -39,4 +39,11 @@ public interface HttpClientOperations
      * @throws JAXBException if a JAXB parsing error occurred.
      */
     public CloseableHttpResponse execute(CloseableHttpClient httpClient, HttpUriRequest request) throws IOException, JAXBException;
+
+    /**
+     * Creates a new CloseableHttpClient.
+     * 
+     * @return CloseableHttpClient
+     */
+    public CloseableHttpClient createHttpClient();
 }

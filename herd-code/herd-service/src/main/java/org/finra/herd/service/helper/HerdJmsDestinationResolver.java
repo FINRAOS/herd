@@ -30,12 +30,13 @@ import org.finra.herd.model.dto.ConfigurationValue;
 @Component
 public class HerdJmsDestinationResolver implements DestinationResolver
 {
-    @Autowired
-    private ConfigurationHelper configurationHelper;
-
     // The queue names that are used to annotate the JMS listener {@link HerdJmsMessageListener}.
     public static final String SQS_DESTINATION_HERD_INCOMING = "herd_incoming_queue";
+
     public static final String SQS_DESTINATION_STORAGE_POLICY_SELECTOR_JOB_SQS_QUEUE = "storage_policy_selector_job_sqs_queue";
+
+    @Autowired
+    private ConfigurationHelper configurationHelper;
 
     @Override
     public Destination resolveDestinationName(Session session, String destinationName, boolean pubSubDomain) throws JMSException

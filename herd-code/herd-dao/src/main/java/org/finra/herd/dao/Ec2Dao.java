@@ -40,10 +40,12 @@ public interface Ec2Dao
      * 
      * @param availabilityZone The AZ which the spot prices belong in.
      * @param instanceTypes The instance types of the spot prices.
+     * @param productDescriptions The product descriptions to filter by. Empty collection will be ignored.
      * @param awsParamsDto AWS connection parameters.
      * @return List of latest spot prices.
      */
-    public List<SpotPrice> getLatestSpotPrices(String availabilityZone, Collection<String> instanceTypes, AwsParamsDto awsParamsDto);
+    public List<SpotPrice> getLatestSpotPrices(String availabilityZone, Collection<String> instanceTypes, Collection<String> productDescriptions,
+        AwsParamsDto awsParamsDto);
 
     /**
      * Returns a list of availability zones that contains the given collections of subnets.

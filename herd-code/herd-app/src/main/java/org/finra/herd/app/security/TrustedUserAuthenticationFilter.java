@@ -86,10 +86,7 @@ public class TrustedUserAuthenticationFilter extends GenericFilterBean
     {
         // Check if security is enabled
         // If security is not enabled, perform allow as trusted user.
-        Authentication currentAuthentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (!securityHelper.isSecurityEnabled(request) && (currentAuthentication == null || !securityHelper.isUserGeneratedByClass(currentAuthentication,
-            TrustedApplicationUserBuilder.class)))
+        if (!securityHelper.isSecurityEnabled(request))
         {
             // If authentication is not there or is not of trusted user type.
             PreAuthenticatedAuthenticationToken authRequest = new PreAuthenticatedAuthenticationToken(applicationUserBuilder.build(request), "N/A");

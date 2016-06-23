@@ -20,7 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
-import org.finra.herd.dao.HerdDao;
+import org.finra.herd.dao.DataProviderDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.api.xml.DataProvider;
@@ -29,7 +29,7 @@ import org.finra.herd.model.api.xml.DataProviderKey;
 import org.finra.herd.model.api.xml.DataProviderKeys;
 import org.finra.herd.model.jpa.DataProviderEntity;
 import org.finra.herd.service.DataProviderService;
-import org.finra.herd.service.helper.HerdDaoHelper;
+import org.finra.herd.service.helper.DataProviderDaoHelper;
 
 /**
  * The data provider service implementation.
@@ -39,14 +39,11 @@ import org.finra.herd.service.helper.HerdDaoHelper;
 public class DataProviderServiceImpl implements DataProviderService
 {
     @Autowired
-    private HerdDao herdDao;
+    private DataProviderDao dataProviderDao;
 
     @Autowired
-    private HerdDaoHelper herdDaoHelper;
+    private DataProviderDaoHelper dataProviderDaoHelper;
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public DataProvider createDataProvider(DataProviderCreateRequest request)
     {
@@ -57,7 +54,7 @@ public class DataProviderServiceImpl implements DataProviderService
         DataProviderKey dataProviderKey = new DataProviderKey(request.getDataProviderName());
 
         // Ensure a data provider with the specified data provider key doesn't already exist.
-        DataProviderEntity dataProviderEntity = herdDao.getDataProviderByKey(dataProviderKey);
+        DataProviderEntity dataProviderEntity = dataProviderDao.getDataProviderByKey(dataProviderKey);
         if (dataProviderEntity != null)
         {
             throw new AlreadyExistsException(
@@ -68,15 +65,12 @@ public class DataProviderServiceImpl implements DataProviderService
         dataProviderEntity = createDataProviderEntity(request);
 
         // Persist the new entity.
-        dataProviderEntity = herdDao.saveAndRefresh(dataProviderEntity);
+        dataProviderEntity = dataProviderDao.saveAndRefresh(dataProviderEntity);
 
         // Create and return the data provider object from the persisted entity.
         return createDataProviderFromEntity(dataProviderEntity);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public DataProvider getDataProvider(DataProviderKey dataProviderKey)
     {
@@ -84,15 +78,12 @@ public class DataProviderServiceImpl implements DataProviderService
         validateDataProviderKey(dataProviderKey);
 
         // Retrieve and ensure that a data provider already exists with the specified key.
-        DataProviderEntity dataProviderEntity = herdDaoHelper.getDataProviderEntity(dataProviderKey.getDataProviderName());
+        DataProviderEntity dataProviderEntity = dataProviderDaoHelper.getDataProviderEntity(dataProviderKey.getDataProviderName());
 
         // Create and return the data provider object from the persisted entity.
         return createDataProviderFromEntity(dataProviderEntity);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public DataProvider deleteDataProvider(DataProviderKey dataProviderKey)
     {
@@ -100,23 +91,20 @@ public class DataProviderServiceImpl implements DataProviderService
         validateDataProviderKey(dataProviderKey);
 
         // Retrieve and ensure that a data provider already exists with the specified key.
-        DataProviderEntity dataProviderEntity = herdDaoHelper.getDataProviderEntity(dataProviderKey.getDataProviderName());
+        DataProviderEntity dataProviderEntity = dataProviderDaoHelper.getDataProviderEntity(dataProviderKey.getDataProviderName());
 
         // Delete the data provider.
-        herdDao.delete(dataProviderEntity);
+        dataProviderDao.delete(dataProviderEntity);
 
         // Create and return the data provider object from the deleted entity.
         return createDataProviderFromEntity(dataProviderEntity);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public DataProviderKeys getDataProviders()
     {
         DataProviderKeys dataProviderKeys = new DataProviderKeys();
-        dataProviderKeys.getDataProviderKeys().addAll(herdDao.getDataProviders());
+        dataProviderKeys.getDataProviderKeys().addAll(dataProviderDao.getDataProviders());
         return dataProviderKeys;
     }
 

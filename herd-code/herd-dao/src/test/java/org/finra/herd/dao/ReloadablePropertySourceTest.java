@@ -19,9 +19,15 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Properties;
 
+import org.apache.commons.configuration.BaseConfiguration;
+import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.FileConfiguration;
 import org.apache.commons.configuration.PropertiesConfiguration;
@@ -199,6 +205,28 @@ public class ReloadablePropertySourceTest extends AbstractDaoTest
     }
 
     /**
+     * Asserts that when a property is requested from the configruation, and it fires an error event (ex. Database is not available), the previously stored
+     * values are not cleared.
+     */
+    @Test
+    public void testAssertGetPropertyErrorReturnPreviousValue() throws Exception
+    {
+        // Get a reloadable property source that loads properties from the configuration every time a property is read.
+        BaseConfiguration configuration = new BaseConfiguration()
+        {
+            @Override
+            public Object getProperty(String key)
+            {
+                fireError(EVENT_READ_PROPERTY, key, null, new IllegalStateException("test exception"));
+                return null;
+            }
+        };
+        configuration.addProperty(TEST_KEY, TEST_VALUE_1);
+        ReloadablePropertySource reloadablePropertySource = getNewReloadablePropertiesSource(0L, configuration);
+        verifyPropertySourceValue(reloadablePropertySource, TEST_VALUE_1);
+    }
+
+    /**
      * Updates the properties file with the latest version of the properties member variable.
      *
      * @throws Exception if the properties file couldn't be updated.
@@ -243,10 +271,22 @@ public class ReloadablePropertySourceTest extends AbstractDaoTest
      */
     private ReloadablePropertySource getNewReloadablePropertiesSource(Long refreshIntervalSecs) throws ConfigurationException
     {
-        return (refreshIntervalSecs == null ?
-            new ReloadablePropertySource(ReloadablePropertySource.class.getName(), cloneProperties(properties), getNewPropertiesConfiguration()) :
-            new ReloadablePropertySource(ReloadablePropertySource.class.getName(), cloneProperties(properties), getNewPropertiesConfiguration(),
-                refreshIntervalSecs));
+        return getNewReloadablePropertiesSource(refreshIntervalSecs, getNewPropertiesConfiguration());
+    }
+
+    /**
+     * Gets a new reloadable properties source object based on the properties member variable.
+     *
+     * @param refreshIntervalSecs the optional refresh interval in seconds. If null, then the default will be used.
+     * @param configuration A custom configuration
+     *
+     * @return the newly created reloadable properties source.
+     * @throws ConfigurationException if the reloadable properties source couldn't be created.
+     */
+    private ReloadablePropertySource getNewReloadablePropertiesSource(Long refreshIntervalSecs, Configuration configuration)
+    {
+        return (refreshIntervalSecs == null ? new ReloadablePropertySource(ReloadablePropertySource.class.getName(), cloneProperties(properties), configuration)
+            : new ReloadablePropertySource(ReloadablePropertySource.class.getName(), cloneProperties(properties), configuration, refreshIntervalSecs));
     }
 
     /**
@@ -259,7 +299,7 @@ public class ReloadablePropertySourceTest extends AbstractDaoTest
     private Properties cloneProperties(Properties properties)
     {
         Properties clonedProperties = new Properties();
-        for (Enumeration propertyNames = properties.propertyNames(); propertyNames.hasMoreElements(); )
+        for (Enumeration<?> propertyNames = properties.propertyNames(); propertyNames.hasMoreElements(); )
         {
             Object key = propertyNames.nextElement();
             clonedProperties.put(key, properties.get(key));

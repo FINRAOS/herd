@@ -36,6 +36,9 @@
    </jaxb:globalBindings>
    <jaxb:bindings schemaLocation="herd.xsd">
       <!-- This provides semantically meaningful customized names for type-safe enumerations. -->
+      <jaxb:bindings node="//xs:element[@name='namespacePermission']/xs:simpleType">
+         <jaxb:typesafeEnumClass name="NamespacePermissionEnum"/>
+      </jaxb:bindings>
       <jaxb:bindings node="//xs:element[@name='outputFormat']/xs:simpleType">
          <jaxb:typesafeEnumClass name="BusinessObjectDataDdlOutputFormatEnum"/>
       </jaxb:bindings>
@@ -56,6 +59,9 @@
       <jaxb:bindings node="//xs:complexType[@name='businessObjectDefinitionKeys']//xs:element[@name='businessObjectDefinitionKey']">
          <jaxb:property name="businessObjectDefinitionKeys"/>
       </jaxb:bindings>
+      <jaxb:bindings node="//xs:complexType[@name='businessObjectDefinitionColumnKeys']//xs:element[@name='businessObjectDefinitionColumnKey']">
+         <jaxb:property name="businessObjectDefinitionColumnKeys"/>
+      </jaxb:bindings>
       <jaxb:bindings node="//xs:complexType[@name='fileTypeKeys']//xs:element[@name='fileTypeKey']">
          <jaxb:property name="fileTypeKeys"/>
       </jaxb:bindings>
@@ -74,6 +80,9 @@
       <jaxb:bindings
          node="//xs:complexType[@name='businessObjectDataNotificationRegistrationKeys']//xs:element[@name='businessObjectDataNotificationRegistrationKey']">
          <jaxb:property name="businessObjectDataNotificationRegistrationKeys"/>
+      </jaxb:bindings>
+      <jaxb:bindings node="//xs:complexType[@name='emrClusterDefinitionKeys']//xs:element[@name='emrClusterDefinitionKey']">
+         <jaxb:property name="emrClusterDefinitionKeys"/>
       </jaxb:bindings>
 
       <!-- Add custom XmlCDATA annotations. The below bindings will add XmlCDATA annotations to the auto-generated classes specified below

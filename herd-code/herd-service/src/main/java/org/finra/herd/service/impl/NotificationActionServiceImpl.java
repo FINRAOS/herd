@@ -15,16 +15,10 @@
 */
 package org.finra.herd.service.impl;
 
-import org.springframework.beans.factory.annotation.Autowired;
-
 import org.finra.herd.service.NotificationActionService;
-import org.finra.herd.service.helper.HerdHelper;
 
 public abstract class NotificationActionServiceImpl implements NotificationActionService
 {
-    @Autowired
-    protected HerdHelper herdHelper;
-
     /**
      * The parameters that are sent along with the notification.
      */

@@ -19,7 +19,8 @@ import org.activiti.engine.RuntimeService;
 import org.activiti.engine.delegate.DelegateExecution;
 import org.activiti.engine.runtime.Execution;
 import org.activiti.engine.runtime.ExecutionQuery;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -40,7 +41,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class ActivitiRuntimeHelper
 {
-    private static final Logger LOGGER = Logger.getLogger(ActivitiRuntimeHelper.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ActivitiRuntimeHelper.class);
 
     public static final String VARIABLE_STATUS = "taskStatus";
     public static final String VARIABLE_ERROR_MESSAGE = "taskErrorMessage";
@@ -119,8 +120,8 @@ public class ActivitiRuntimeHelper
         setTaskWorkflowVariable(execution, VARIABLE_ERROR_MESSAGE, errorMessage);
         if (exception != null)
         {
-            LOGGER.warn("Workflow with Activiti id " + execution.getCurrentActivityId() + " and execution Id " + execution.getId() +
-                " encountered an error. Logging stack trace in case it is needed to debug an issue.", exception);
+            LOGGER.warn("Workflow encountered an error. Logging stack trace in case it is needed to debug an issue. " +
+                "activitiCurrentActivityId=\"{}\" activitiExecutionId=\"{}\"", execution.getCurrentActivityId(), execution.getId(), exception);
             // TODO: Remove this logging statement above and set a workflow variable with the stack trace instead.
             // setTaskWorkflowVariable(execution, "taskErrorStackTrace", ExceptionUtils.getStackTrace(exception));
         }

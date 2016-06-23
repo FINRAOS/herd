@@ -28,7 +28,6 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.finra.herd.dao.helper.JsonHelper;
-import org.finra.herd.dao.impl.MockS3OperationsImpl;
 import org.finra.herd.model.api.xml.UploadSingleInitiationResponse;
 import org.finra.herd.service.AbstractServiceTest;
 import org.finra.herd.service.UploadDownloadService;
@@ -44,9 +43,6 @@ public class HerdJmsMessageListenerTest extends AbstractServiceTest
     HerdJmsMessageListener herdJmsMessageListener;
 
     @Autowired
-    HerdHelper herdHelper;
-
-    @Autowired
     JsonHelper jsonHelper;
 
     @Autowired
@@ -55,7 +51,9 @@ public class HerdJmsMessageListenerTest extends AbstractServiceTest
     @Test
     public void testSystemMonitorMessage() throws Exception
     {
-        herdJmsMessageListener.processMessage(getTestSystemMonitorIncomingMessage(), null);
+        executeWithoutLogging(HerdJmsMessageListener.class, () -> {
+            herdJmsMessageListener.processMessage(getTestSystemMonitorIncomingMessage(), null);
+        });
     }
 
     @Test
@@ -83,15 +81,15 @@ public class HerdJmsMessageListenerTest extends AbstractServiceTest
     }
 
     @Test
-    public void testS3MessageS3FileSizeMismatch() throws Exception
+    public void testS3MessageS3FileNoExists() throws Exception
     {
         Logger.getLogger(UploadDownloadHelperServiceImpl.class).setLevel(Level.OFF);
 
         createDatabaseEntitiesForUploadDownloadTesting();
 
         UploadSingleInitiationResponse resultUploadSingleInitiationResponse = uploadDownloadService.initiateUploadSingle(
-            createUploadSingleInitiationRequest(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NAMESPACE_CD_2, BOD_NAME_2,
-                FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, MockS3OperationsImpl.MOCK_S3_FILE_NAME_0_BYTE_SIZE));
+            createUploadSingleInitiationRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NAMESPACE, BDEF_NAME_2,
+                FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, TARGET_S3_KEY));
 
         String filePath = resultUploadSingleInitiationResponse.getSourceBusinessObjectData().getStorageUnits().get(0).getStorageFiles().get(0).getFilePath();
 
@@ -105,6 +103,7 @@ public class HerdJmsMessageListenerTest extends AbstractServiceTest
         Logger.getLogger(UploadDownloadServiceImpl.class).setLevel(Level.OFF);
         Logger.getLogger(HerdJmsMessageListener.class).setLevel(Level.OFF);
 
+        // Try to process an S3 JMS message, when source S3 file does not exist.
         herdJmsMessageListener.processMessage(jsonHelper.objectToJson(s3EventNotification), null);
     }
 

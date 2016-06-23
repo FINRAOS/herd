@@ -92,7 +92,7 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
     @Test
     public void testRegisterBusinessObjectData() throws Exception
     {
-        HashMap<String, String> attributes = new HashMap<String, String>();
+        HashMap<String, String> attributes = new HashMap<>();
         attributes.put("testAttributeName", "testAttributeValue");
         testRegisterBusinessObjectData(attributes, false);
     }
@@ -100,7 +100,7 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
     @Test
     public void testRegisterBusinessObjectDataUseSsl() throws Exception
     {
-        testRegisterBusinessObjectData(new HashMap<String, String>(), true);
+        testRegisterBusinessObjectData(new HashMap<>(), true);
     }
 
     @Test
@@ -155,8 +155,11 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
         CloseableHttpResponse httpResponse = new MockCloseableHttpResponse(new BasicStatusLine(HttpVersion.HTTP_1_1, 200, "testReasonPhrase"));
         httpResponse.setEntity(new StringEntity("invalid xml"));
         String actionDescription = "testActionDescription";
-        BusinessObjectData businessObjectData = dataBridgeWebClient.getBusinessObjectData(httpResponse, actionDescription);
-        Assert.assertNull("businessObjectData", businessObjectData);
+
+        executeWithoutLogging(DataBridgeWebClient.class, () -> {
+            BusinessObjectData businessObjectData = dataBridgeWebClient.getBusinessObjectData(httpResponse, actionDescription);
+            Assert.assertNull("businessObjectData", businessObjectData);
+        });
     }
 
     @Test
@@ -171,7 +174,9 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
         String actionDescription = "testActionDescription";
         try
         {
-            dataBridgeWebClient.getBusinessObjectData(httpResponse, actionDescription);
+            executeWithoutLogging(DataBridgeWebClient.class, () -> {
+                dataBridgeWebClient.getBusinessObjectData(httpResponse, actionDescription);
+            });
             Assert.fail("expected HttpErrorResponseException, but no exception was thrown");
         }
         catch (Exception e)
@@ -221,8 +226,10 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
     }
 
     /**
-     * @param attributes
-     * @param useSsl
+     * Calls registerBusinessObjectData() method and makes assertions.
+     *
+     * @param attributes a map of business object data attributes
+     * @param useSsl specifies whether to use SSL or not
      *
      * @throws IOException
      * @throws JAXBException
@@ -244,10 +251,12 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
     }
 
     /**
-     * @param namespace
-     * @param subPartitionValues
-     * @param businessObjectDataVersion
-     * @param useSsl
+     * Calls getS3KeyPrefix() method and makes assertions.
+     *
+     * @param namespace the namespace
+     * @param subPartitionValues the list of sub-partition values
+     * @param businessObjectDataVersion the version of the business object data, may be null
+     * @param useSsl specifies whether to use SSL or not
      *
      * @throws Exception
      */
@@ -267,7 +276,7 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
     /**
      * Creates a UploaderInputManifestDto.
      *
-     * @return
+     * @return the created UploaderInputManifestDto instance
      */
     private UploaderInputManifestDto getUploaderInputManifestDto()
     {
@@ -300,7 +309,7 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
     /**
      * Calls getStorage() method and makes assertions.
      *
-     * @param useSsl
+     * @param useSsl specifies whether to use SSL or not
      *
      * @throws IOException
      * @throws JAXBException

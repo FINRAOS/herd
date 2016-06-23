@@ -16,8 +16,8 @@
 package org.finra.herd.service;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
@@ -26,11 +26,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.amazonaws.services.s3.model.PutObjectRequest;
+import org.fusesource.hawtbuf.ByteArrayInputStream;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
-import org.finra.herd.dao.impl.MockGlacierOperationsImpl;
+import org.finra.herd.dao.impl.MockS3OperationsImpl;
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.Attribute;
@@ -38,11 +40,13 @@ import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.api.xml.StoragePolicyKey;
 import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.dto.StoragePolicySelection;
 import org.finra.herd.model.dto.StoragePolicyTransitionParamsDto;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.herd.model.jpa.StorageFileEntity;
 import org.finra.herd.model.jpa.StoragePlatformEntity;
+import org.finra.herd.model.jpa.StoragePolicyStatusEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
 
@@ -56,12 +60,12 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
     public void testInitiateStoragePolicyTransition()
     {
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BOD_NAMESPACE, BOD_NAME,
+        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
             Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
 
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 NO_SUBPARTITION_VALUES, DATA_VERSION);
 
         // Create and persist a storage unit in the source storage.
@@ -71,7 +75,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
 
         // Get the expected S3 key prefix for the business object data key.
         String expectedS3KeyPrefix =
-            getExpectedS3KeyPrefix(BOD_NAMESPACE, DATA_PROVIDER_NAME, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_KEY,
+            getExpectedS3KeyPrefix(BDEF_NAMESPACE, DATA_PROVIDER_NAME, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_KEY,
                 PARTITION_VALUE, null, null, DATA_VERSION);
 
         // Add a storage file to the source storage unit.
@@ -81,23 +85,24 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
 
         // Create and persist a storage policy entity.
-        createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE,
-            FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2);
+        createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+            FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Initiate a storage policy transition.
-        storagePolicyProcessorHelperService.initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey));
+        storagePolicyProcessorHelperService
+            .initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION));
     }
 
     @Test
     public void testInitiateStoragePolicyTransitionDestinationStorageUnitDisabled()
     {
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BOD_NAMESPACE, BOD_NAME,
+        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
             Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
 
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 NO_SUBPARTITION_VALUES, DATA_VERSION);
 
         // Create and persist a storage unit in the source storage.
@@ -107,7 +112,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
 
         // Get the expected S3 key prefix for the business object data key.
         String expectedS3KeyPrefix =
-            getExpectedS3KeyPrefix(BOD_NAMESPACE, DATA_PROVIDER_NAME, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_KEY,
+            getExpectedS3KeyPrefix(BDEF_NAMESPACE, DATA_PROVIDER_NAME, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_KEY,
                 PARTITION_VALUE, null, null, DATA_VERSION);
 
         // Add a storage file to the source storage unit.
@@ -115,18 +120,19 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
 
         // Create and persist a destination storage unit with DISABLED status.
         StorageUnitEntity destinationStorageUnitEntity =
-            createStorageUnitEntity(herdDao.getStorageByName(STORAGE_NAME_2), sourceStorageUnitEntity.getBusinessObjectData(), StorageUnitStatusEntity.DISABLED,
-                NO_STORAGE_DIRECTORY_PATH);
+            createStorageUnitEntity(storageDao.getStorageByName(STORAGE_NAME_2), sourceStorageUnitEntity.getBusinessObjectData(),
+                StorageUnitStatusEntity.DISABLED, NO_STORAGE_DIRECTORY_PATH);
 
         // Create a storage policy key.
         StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
 
         // Create and persist a storage policy entity.
-        createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE,
-            FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2);
+        createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+            FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Initiate a storage policy transition.
-        storagePolicyProcessorHelperService.initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey));
+        storagePolicyProcessorHelperService
+            .initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION));
 
         // Validate the results.
         assertEquals(StorageUnitStatusEntity.ARCHIVING, destinationStorageUnitEntity.getStatus().getCode());
@@ -137,7 +143,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
     {
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION);
 
         // Create a storage policy key.
@@ -157,7 +163,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         // Try to initiate a storage policy transition when business object data key is not specified.
         try
         {
-            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(new StoragePolicySelection(null, storagePolicyKey));
+            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(new StoragePolicySelection(null, storagePolicyKey, INITIAL_VERSION));
             fail("Should throw an IllegalArgumentException when when business object data key is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -169,8 +175,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         try
         {
             storagePolicyProcessorHelperService.initiateStoragePolicyTransition(new StoragePolicySelection(
-                new BusinessObjectDataKey(NO_BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                    SUBPARTITION_VALUES, DATA_VERSION), storagePolicyKey));
+                new BusinessObjectDataKey(NO_BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    SUBPARTITION_VALUES, DATA_VERSION), storagePolicyKey, INITIAL_VERSION));
             fail("Should throw an IllegalArgumentException when when business object definition namespace is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -181,7 +187,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         // Try to initiate a storage policy transition when storage policy key is not specified.
         try
         {
-            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, null));
+            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, null, INITIAL_VERSION));
             fail("Should throw an IllegalArgumentException when when storage policy key is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -192,8 +198,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         // Try to initiate a storage policy transition when storage policy namespace is not specified.
         try
         {
-            storagePolicyProcessorHelperService
-                .initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, new StoragePolicyKey(null, STORAGE_POLICY_NAME)));
+            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(
+                new StoragePolicySelection(businessObjectDataKey, new StoragePolicyKey(null, STORAGE_POLICY_NAME), INITIAL_VERSION));
             fail("Should throw an IllegalArgumentException when when storage policy namespace is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -204,13 +210,25 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         // Try to initiate a storage policy transition when storage policy name is not specified.
         try
         {
-            storagePolicyProcessorHelperService
-                .initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, null)));
+            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(
+                new StoragePolicySelection(businessObjectDataKey, new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, null), INITIAL_VERSION));
             fail("Should throw an IllegalArgumentException when when storage policy name is not specified.");
         }
         catch (IllegalArgumentException e)
         {
             assertEquals("A storage policy name must be specified.", e.getMessage());
+        }
+
+        // Try to initiate a storage policy transition when storage policy version is not specified.
+        try
+        {
+            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(
+                new StoragePolicySelection(businessObjectDataKey, new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME), null));
+            fail("Should throw an IllegalArgumentException when when storage policy version is not specified.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("A storage policy version must be specified.", e.getMessage());
         }
     }
 
@@ -219,7 +237,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
     {
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION);
 
         // Create a storage policy key.
@@ -228,7 +246,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         // Try to initiate a storage policy transition when business object data does not exist.
         try
         {
-            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey));
+            storagePolicyProcessorHelperService
+                .initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION));
             fail("Should throw an ObjectNotFoundException when business object data does not exist.");
         }
         catch (ObjectNotFoundException e)
@@ -242,7 +261,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
     {
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION);
 
         // Create and persist a business object data entity with a status that is not supported by the storage policy feature.
@@ -254,7 +273,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         // Try to initiate a storage policy transition when business object data status is not supported by the storage policy feature.
         try
         {
-            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey));
+            storagePolicyProcessorHelperService
+                .initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION));
             fail("Should throw an IllegalArgumentException when business object data status is not supported by the storage policy feature.");
         }
         catch (IllegalArgumentException e)
@@ -270,7 +290,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
     {
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION);
 
         // Create and persist a business object data entity.
@@ -279,16 +299,18 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         // Create a storage policy key.
         StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
 
-        // Try to initiate a storage policy transition when business object data does not exist.
+        // Try to initiate a storage policy transition when storage policy does not exist.
         try
         {
-            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey));
+            storagePolicyProcessorHelperService
+                .initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION));
             fail("Should throw an ObjectNotFoundException when storage policy does not exist.");
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(String.format("Storage policy with name \"%s\" does not exist for \"%s\" namespace.", storagePolicyKey.getStoragePolicyName(),
-                storagePolicyKey.getNamespace()), e.getMessage());
+            assertEquals(String
+                .format("Storage policy with name \"%s\" and version \"%d\" does not exist for \"%s\" namespace.", storagePolicyKey.getStoragePolicyName(),
+                    INITIAL_VERSION, storagePolicyKey.getNamespace()), e.getMessage());
         }
     }
 
@@ -297,7 +319,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
     {
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION);
 
         // Create and persist a business object data entity.
@@ -310,19 +332,20 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         createStorageEntity(STORAGE_NAME, STORAGE_PLATFORM_CODE);
 
         // Create and persist a storage policy entity with storage policy filter storage having a non-S3 storage platform type.
-        createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE,
-            FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2);
+        createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+            FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Try to initiate a storage policy transition when storage policy filter storage has a non-S3 storage platform type.
         try
         {
-            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey));
+            storagePolicyProcessorHelperService
+                .initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION));
             fail("Should throw an IllegalArgumentException when using non-S3 storage platform for storage policy filter storage.");
         }
         catch (IllegalArgumentException e)
         {
             assertEquals(String.format("Storage platform for storage policy filter storage with name \"%s\" is not \"%s\". Storage policy: {%s}", STORAGE_NAME,
-                StoragePlatformEntity.S3, getExpectedStoragePolicyKeyAsString(storagePolicyKey)), e.getMessage());
+                StoragePlatformEntity.S3, getExpectedStoragePolicyKeyAndVersionAsString(storagePolicyKey, INITIAL_VERSION)), e.getMessage());
         }
     }
 
@@ -331,7 +354,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
     {
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION);
 
         // Create and persist a business object data entity.
@@ -348,19 +371,20 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         createStorageEntity(STORAGE_NAME, StoragePlatformEntity.S3, attributes);
 
         // Create and persist a storage policy entity with the storage policy filter storage having no S3 path prefix validation enabled.
-        createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE,
-            FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2);
+        createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+            FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Try to initiate a storage policy transition when storage policy filter storage has no S3 path prefix validation enabled.
         try
         {
-            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey));
+            storagePolicyProcessorHelperService
+                .initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION));
             fail("Should throw an IllegalStateException when storage policy filter storage has no S3 path prefix validation enabled.");
         }
         catch (IllegalStateException e)
         {
             assertEquals(String.format("Path prefix validation must be enabled on \"%s\" storage. Storage policy: {%s}", STORAGE_NAME,
-                getExpectedStoragePolicyKeyAsString(storagePolicyKey)), e.getMessage());
+                getExpectedStoragePolicyKeyAndVersionAsString(storagePolicyKey, INITIAL_VERSION)), e.getMessage());
         }
     }
 
@@ -369,7 +393,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
     {
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION);
 
         // Create and persist a business object data entity.
@@ -386,19 +410,20 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         createStorageEntity(STORAGE_NAME, StoragePlatformEntity.S3, attributes);
 
         // Create and persist a storage policy entity with storage policy filter storage has no S3 bucket name attribute configured.
-        createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE,
-            FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2);
+        createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+            FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Try to initiate a storage policy transition when storage policy filter storage has no S3 file existence validation enabled.
         try
         {
-            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey));
+            storagePolicyProcessorHelperService
+                .initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION));
             fail("Should throw an IllegalStateException when storage policy filter storage has no S3 file existence validation enabled.");
         }
         catch (IllegalStateException e)
         {
             assertEquals(String.format("File existence validation must be enabled on \"%s\" storage. Storage policy: {%s}", STORAGE_NAME,
-                getExpectedStoragePolicyKeyAsString(storagePolicyKey)), e.getMessage());
+                getExpectedStoragePolicyKeyAndVersionAsString(storagePolicyKey, INITIAL_VERSION)), e.getMessage());
         }
     }
 
@@ -407,7 +432,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
     {
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION);
 
         // Create and persist a business object data entity.
@@ -423,13 +448,14 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         createStorageEntity(STORAGE_NAME, StoragePlatformEntity.S3, attributes);
 
         // Create and persist a storage policy entity with storage policy filter storage has no S3 bucket name attribute configured.
-        createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE,
-            FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2);
+        createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+            FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Try to initiate a storage policy transition when storage policy filter storage has no S3 bucket name attribute configured.
         try
         {
-            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey));
+            storagePolicyProcessorHelperService
+                .initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION));
             fail("Should throw an IllegalStateException when storage policy filter storage has no S3 bucket name attribute configured.");
         }
         catch (IllegalStateException e)
@@ -443,12 +469,12 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
     public void testInitiateStoragePolicyTransitionDestinationStorageInvalidStoragePlatform()
     {
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BOD_NAMESPACE, BOD_NAME,
+        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
             Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
 
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION);
 
         // Create and persist a business object data entity.
@@ -458,20 +484,21 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
 
         // Create and persist a storage policy entity with storage policy transition destination storage having a non-GLACIER storage platform type.
-        createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE,
-            FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME);
+        createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+            FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Try to initiate a storage policy transition when storage policy transition destination storage has a non-GLACIER storage platform type.
         try
         {
-            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey));
+            storagePolicyProcessorHelperService
+                .initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION));
             fail("Should throw an IllegalArgumentException when using non-GLACIER storage platform for storage policy transition destination storage.");
         }
         catch (IllegalArgumentException e)
         {
             assertEquals(String
                 .format("Storage platform for storage policy transition destination storage with name \"%s\" is not \"%s\". Storage policy: {%s}", STORAGE_NAME,
-                    StoragePlatformEntity.GLACIER, getExpectedStoragePolicyKeyAsString(storagePolicyKey)), e.getMessage());
+                    StoragePlatformEntity.GLACIER, getExpectedStoragePolicyKeyAndVersionAsString(storagePolicyKey, INITIAL_VERSION)), e.getMessage());
         }
     }
 
@@ -479,7 +506,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
     public void testInitiateStoragePolicyTransitionDestinationStorageVaultNameNotConfigured()
     {
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BOD_NAMESPACE, BOD_NAME,
+        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
             Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), new ArrayList<>());
 
         // Create a Glacier storage without any attributes.
@@ -487,7 +514,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
 
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION);
 
         // Create and persist a business object data entity.
@@ -497,19 +524,20 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
 
         // Create and persist a storage policy entity with storage policy transition destination storage having no Glacier vault name attribute configured.
-        createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE,
-            FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2);
+        createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+            FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Try to initiate a storage policy transition when storage policy transition destination storage has no Glacier vault name attribute configured.
         try
         {
-            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey));
+            storagePolicyProcessorHelperService
+                .initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION));
             fail("Should throw an IllegalStateException when storage policy transition destination storage has no Glacier vault name attribute configured.");
         }
         catch (IllegalStateException e)
         {
             assertEquals(String.format("Attribute \"%s\" for \"%s\" storage must be configured.",
-                configurationHelper.getProperty(ConfigurationValue.GLACIER_ATTRIBUTE_NAME_VAULT_NAME), STORAGE_NAME_2), e.getMessage());
+                configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), STORAGE_NAME_2), e.getMessage());
         }
     }
 
@@ -517,12 +545,12 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
     public void testInitiateStoragePolicyTransitionSourceStorageUnitNoExists()
     {
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BOD_NAMESPACE, BOD_NAME,
+        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
             Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
 
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION);
 
         // Create and persist a business object data entity without any storage units.
@@ -532,13 +560,14 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
 
         // Create and persist a storage policy entity.
-        createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE,
-            FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2);
+        createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+            FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Try to initiate a storage policy transition when source storage unit does not exist.
         try
         {
-            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey));
+            storagePolicyProcessorHelperService
+                .initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION));
             fail("Should throw an ObjectNotFoundException when source storage unit does not exist.");
         }
         catch (ObjectNotFoundException e)
@@ -552,12 +581,12 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
     public void testInitiateStoragePolicyTransitionSourceStorageUnitNotEnabled()
     {
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BOD_NAMESPACE, BOD_NAME,
+        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
             Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
 
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION);
 
         // Create and persist a storage unit in the source storage having a non-ENABLED storage unit status.
@@ -568,13 +597,14 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
 
         // Create and persist a storage policy entity.
-        createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE,
-            FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2);
+        createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+            FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Try to initiate a storage policy transition when source storage unit does not have ENABLED status.
         try
         {
-            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey));
+            storagePolicyProcessorHelperService
+                .initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION));
             fail("Should throw an IllegalArgumentException when source storage unit does not have ENABLED status.");
         }
         catch (IllegalArgumentException e)
@@ -589,12 +619,12 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
     public void testInitiateStoragePolicyTransitionDestinationStorageUnitNotDisabled()
     {
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BOD_NAMESPACE, BOD_NAME,
+        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
             Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
 
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION);
 
         // Create and persist a storage unit in the source storage having the ENABLED storage unit status.
@@ -603,20 +633,21 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
                 StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
 
         // Create and persist a destination storage unit with a non-DISABLED status.
-        createStorageUnitEntity(herdDao.getStorageByName(STORAGE_NAME_2), sourceStorageUnitEntity.getBusinessObjectData(), STORAGE_UNIT_STATUS,
+        createStorageUnitEntity(storageDao.getStorageByName(STORAGE_NAME_2), sourceStorageUnitEntity.getBusinessObjectData(), STORAGE_UNIT_STATUS,
             NO_STORAGE_DIRECTORY_PATH);
 
         // Create a storage policy key.
         StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
 
         // Create and persist a storage policy entity.
-        createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE,
-            FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2);
+        createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+            FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Try to initiate a storage policy transition when destination storage unit exists and does not have DISABLED status.
         try
         {
-            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey));
+            storagePolicyProcessorHelperService
+                .initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION));
             fail("Should throw an AlreadyExistsException when destination storage unit exists and does not have DISABLED status.");
         }
         catch (AlreadyExistsException e)
@@ -628,15 +659,15 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
     }
 
     @Test
-    public void testInitiateStoragePolicyTransitionMultipleDestinationStorageFilesExist()
+    public void testInitiateStoragePolicyTransitionDestinationStorageFileExist()
     {
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BOD_NAMESPACE, BOD_NAME,
+        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
             Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
 
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION);
 
         // Create and persist a storage unit in the source storage having the ENABLED storage unit status.
@@ -646,34 +677,31 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
 
         // Create and persist a destination storage unit.
         StorageUnitEntity destinationStorageUnitEntity =
-            createStorageUnitEntity(herdDao.getStorageByName(STORAGE_NAME_2), sourceStorageUnitEntity.getBusinessObjectData(), StorageUnitStatusEntity.DISABLED,
-                NO_STORAGE_DIRECTORY_PATH);
+            createStorageUnitEntity(storageDao.getStorageByName(STORAGE_NAME_2), sourceStorageUnitEntity.getBusinessObjectData(),
+                StorageUnitStatusEntity.DISABLED, NO_STORAGE_DIRECTORY_PATH);
 
-        // Add two storage files to the destination storage unit.
-        List<String> destinationStorageFilePaths = Arrays.asList(FILE_NAME, FILE_NAME_2);
-        for (String filePath : destinationStorageFilePaths)
-        {
-            createStorageFileEntity(destinationStorageUnitEntity, filePath, FILE_SIZE, ROW_COUNT);
-        }
+        // Add a storage file to the destination storage unit.
+        createStorageFileEntity(destinationStorageUnitEntity, FILE_NAME, FILE_SIZE, ROW_COUNT);
 
         // Create a storage policy key.
         StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
 
         // Create and persist a storage policy entity.
-        createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE,
-            FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2);
+        createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+            FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Try to initiate a storage policy transition when destination storage unit exists and does not have DISABLED status.
         try
         {
-            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey));
-            fail("Should throw an IllegalStateException when destination storage unit contains multiple storage files.");
+            storagePolicyProcessorHelperService
+                .initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION));
+            fail("Should throw an IllegalStateException when destination storage unit contains any storage files.");
         }
         catch (IllegalStateException e)
         {
             assertEquals(String.format(
-                "Destination storage unit has %d storage files, but must have none or just one storage file. " + "Storage: {%s}, business object data: {%s}",
-                destinationStorageFilePaths.size(), STORAGE_NAME_2, getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
+                "Destination storage unit already exists and has 1 storage file(s), but must have no storage files. Storage: {%s}, business object data: {%s}",
+                STORAGE_NAME_2, getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
         }
     }
 
@@ -681,13 +709,13 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
     public void testInitiateStoragePolicyTransitionSubpartitionValuesWithoutFormatSchema()
     {
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BOD_NAMESPACE, BOD_NAME,
+        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
             Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
 
         // Create a business object data key. Please note that business object data key contains
         // sub-partition value that would require the relative business object format to have schema.
         BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION);
 
         // Create and persist a storage unit in the source storage.  Please note that the business object format is not going to have a schema.
@@ -698,19 +726,21 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
 
         // Create and persist a storage policy entity.
-        createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE,
-            FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2);
+        createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+            FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Try to initiate a storage policy transition when sub-partition values are used and format has no schema.
         try
         {
-            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey));
+            storagePolicyProcessorHelperService
+                .initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION));
             fail("Should throw an IllegalArgumentException when sub-partition values are used and format has no schema.");
         }
         catch (IllegalArgumentException e)
         {
             assertEquals(String.format("Schema must be defined when using subpartition values for business object format {%s}.",
-                getExpectedBusinessObjectFormatKeyAsString(BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION)), e.getMessage());
+                getExpectedBusinessObjectFormatKeyAsString(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION)),
+                e.getMessage());
         }
     }
 
@@ -718,12 +748,12 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
     public void testInitiateStoragePolicyTransitionStorageFilesNoExists()
     {
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BOD_NAMESPACE, BOD_NAME,
+        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
             Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
 
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 NO_SUBPARTITION_VALUES, DATA_VERSION);
 
         // Create and persist a storage unit in the source storage.  This storage unit has no storage files registered.
@@ -734,13 +764,14 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
 
         // Create and persist a storage policy entity.
-        createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE,
-            FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2);
+        createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+            FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Try to initiate a storage policy transition when source storage unit has no storage files registered.
         try
         {
-            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey));
+            storagePolicyProcessorHelperService
+                .initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION));
             fail("Should throw an IllegalArgumentException when source storage unit has no storage files registered.");
         }
         catch (IllegalArgumentException e)
@@ -761,12 +792,12 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         try
         {
             // Create and persist the relative database entities.
-            createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BOD_NAMESPACE, BOD_NAME,
+            createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
                 Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
 
             // Create a business object data key.
             BusinessObjectDataKey businessObjectDataKey =
-                new BusinessObjectDataKey(BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                     NO_SUBPARTITION_VALUES, DATA_VERSION);
 
             // Create and persist a storage unit in the source storage.  This storage unit has no storage files registered.
@@ -776,7 +807,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
 
             // Get the expected S3 key prefix for the business object data key.
             String expectedS3KeyPrefix =
-                getExpectedS3KeyPrefix(BOD_NAMESPACE, DATA_PROVIDER_NAME, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_KEY,
+                getExpectedS3KeyPrefix(BDEF_NAMESPACE, DATA_PROVIDER_NAME, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_KEY,
                     PARTITION_VALUE, null, null, DATA_VERSION);
 
             // Add a non-zero size storage file to the source storage unit.
@@ -786,13 +817,14 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
             StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
 
             // Create and persist a storage policy entity.
-            createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE,
-                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2);
+            createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
             // Try to initiate a storage policy transition when storage files size is greater than the threshold.
             try
             {
-                storagePolicyProcessorHelperService.initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey));
+                storagePolicyProcessorHelperService
+                    .initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION));
                 fail("Should throw an IllegalArgumentException when source storage unit has no storage files registered.");
             }
             catch (IllegalArgumentException e)
@@ -814,12 +846,12 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
     public void testInitiateStoragePolicyTransitionStorageFileDoesNotMatchS3KeyPrefix()
     {
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BOD_NAMESPACE, BOD_NAME,
+        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
             Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
 
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 NO_SUBPARTITION_VALUES, DATA_VERSION);
 
         // Create and persist a storage unit in the source storage.
@@ -829,7 +861,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
 
         // Get the expected S3 key prefix for the business object data key.
         String expectedS3KeyPrefix =
-            getExpectedS3KeyPrefix(BOD_NAMESPACE, DATA_PROVIDER_NAME, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_KEY,
+            getExpectedS3KeyPrefix(BDEF_NAMESPACE, DATA_PROVIDER_NAME, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_KEY,
                 PARTITION_VALUE, null, null, DATA_VERSION);
 
         // Add a storage file which is not matching the expected S3 key prefix to the source storage unit.
@@ -840,13 +872,14 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
 
         // Create and persist a storage policy entity.
-        createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE,
-            FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2);
+        createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+            FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Try to initiate a storage policy transition when source storage unit has a storage file that is not matching the expected S3 key prefix.
         try
         {
-            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey));
+            storagePolicyProcessorHelperService
+                .initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION));
             fail("Should throw an IllegalArgumentException when source storage unit has a storage file that is not matching the expected S3 key prefix.");
         }
         catch (IllegalArgumentException e)
@@ -862,14 +895,14 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
     public void testInitiateStoragePolicyTransitionOtherBusinessObjectDataHasStorageFilesMatchingS3KeyPrefix()
     {
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BOD_NAMESPACE, BOD_NAME,
+        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
             Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
 
         // Create two business object data keys.
         List<BusinessObjectDataKey> businessObjectDataKeys = Arrays.asList(
-            new BusinessObjectDataKey(BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 NO_SUBPARTITION_VALUES, DATA_VERSION),
-            new BusinessObjectDataKey(BOD_NAMESPACE_2, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            new BusinessObjectDataKey(BDEF_NAMESPACE_2, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 NO_SUBPARTITION_VALUES, DATA_VERSION));
 
         // For the business object data keys, create and persist two storage units in the source storage.
@@ -881,7 +914,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
 
         // Get the expected S3 key prefix for the business object data key.
         String expectedS3KeyPrefix =
-            getExpectedS3KeyPrefix(BOD_NAMESPACE, DATA_PROVIDER_NAME, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_KEY,
+            getExpectedS3KeyPrefix(BDEF_NAMESPACE, DATA_PROVIDER_NAME, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_KEY,
                 PARTITION_VALUE, null, null, DATA_VERSION);
 
         // To both storage unit add storage files having the same S3 key prefix.
@@ -893,14 +926,15 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
 
         // Create and persist a storage policy entity.
-        createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE,
-            FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2);
+        createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+            FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Try to initiate a storage policy transition when source storage has other
         // business object data storage files matching the expected S3 key prefix.
         try
         {
-            storagePolicyProcessorHelperService.initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKeys.get(0), storagePolicyKey));
+            storagePolicyProcessorHelperService
+                .initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKeys.get(0), storagePolicyKey, INITIAL_VERSION));
             fail("Should throw an IllegalStateException when source storage has other business object data storage files matching the expected S3 key prefix.");
         }
         catch (IllegalStateException e)
@@ -914,56 +948,189 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
     }
 
     @Test
-    public void testCompleteStoragePolicyTransition()
+    public void testExecuteStoragePolicyTransition()
     {
-        // Create and persist the relative database entities.
-        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BOD_NAMESPACE, BOD_NAME,
-            Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
+        // Create S3FileTransferRequestParamsDto to access the source and destination S3 bucket locations.
+        // Since test S3 key prefix represents a directory, we add a trailing '/' character to it.
+        S3FileTransferRequestParamsDto sourceS3FileTransferRequestParamsDto =
+            S3FileTransferRequestParamsDto.builder().s3BucketName(S3_BUCKET_NAME).s3KeyPrefix(TEST_S3_KEY_PREFIX + "/").build();
+        S3FileTransferRequestParamsDto destinationS3FileTransferRequestParamsDto =
+            S3FileTransferRequestParamsDto.builder().s3BucketName(S3_BUCKET_NAME_2).s3KeyPrefix(S3_BUCKET_NAME + "/" + TEST_S3_KEY_PREFIX + "/").build();
 
-        // Create a business object data key.
-        BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                NO_SUBPARTITION_VALUES, DATA_VERSION);
+        // Create a list of source storage files.
+        List<StorageFile> sourceStorageFiles = new ArrayList<>();
+        for (String file : LOCAL_FILES)
+        {
+            sourceStorageFiles.add(new StorageFile(String.format(String.format("%s/%s", TEST_S3_KEY_PREFIX, file)), FILE_SIZE_1_KB, ROW_COUNT));
+        }
 
-        // Create and persist a storage unit in the source storage.
-        StorageUnitEntity sourceStorageUnitEntity =
-            createStorageUnitEntity(STORAGE_NAME, businessObjectDataKey, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID,
-                StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
+        try
+        {
+            // Put relative S3 files into the source S3 bucket.
+            for (StorageFile storageFile : sourceStorageFiles)
+            {
+                s3Operations
+                    .putObject(new PutObjectRequest(S3_BUCKET_NAME, storageFile.getFilePath(), new ByteArrayInputStream(new byte[(int) FILE_SIZE_1_KB]), null),
+                        null);
+            }
 
-        // Create and persist a storage unit in the destination storage.
-        StorageUnitEntity destinationStorageUnitEntity =
-            createStorageUnitEntity(herdDao.getStorageByName(STORAGE_NAME_2), sourceStorageUnitEntity.getBusinessObjectData(),
-                StorageUnitStatusEntity.ARCHIVING, NO_STORAGE_DIRECTORY_PATH);
+            // Execute a storage policy transition.
+            storagePolicyProcessorHelperService.executeStoragePolicyTransition(new StoragePolicyTransitionParamsDto(
+                new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    NO_SUBPARTITION_VALUES, DATA_VERSION), STORAGE_NAME, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, sourceStorageFiles, STORAGE_NAME_2,
+                S3_BUCKET_NAME_2, S3_BUCKET_NAME));
 
-        // Complete a storage policy transition.
-        StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto =
-            new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME, STORAGE_UNIT_ID, TEST_S3_KEY_PREFIX, NO_STORAGE_FILES,
-                FILE_SIZE, STORAGE_NAME_2, GLACIER_VAULT_NAME,
-                new StorageFile(FILE_NAME, FILE_SIZE_2, NO_ROW_COUNT, MockGlacierOperationsImpl.MOCK_GLACIER_ARCHIVE_ID));
-        storagePolicyProcessorHelperService.completeStoragePolicyTransition(storagePolicyTransitionParamsDto);
+            // Validate that we still have our source S3 files in the source S3 bucket.
+            assertEquals(sourceStorageFiles.size(), s3Dao.listDirectory(sourceS3FileTransferRequestParamsDto).size());
 
-        // Validate the results.
-        assertEquals(StorageUnitStatusEntity.DISABLED, sourceStorageUnitEntity.getStatus().getCode());
-        assertEquals(StorageUnitStatusEntity.ENABLED, destinationStorageUnitEntity.getStatus().getCode());
-        assertEquals(1, destinationStorageUnitEntity.getStorageFiles().size());
-        StorageFileEntity destinationStorageFileEntity = destinationStorageUnitEntity.getStorageFiles().iterator().next();
-        assertNotNull(destinationStorageFileEntity);
-        assertEquals(FILE_NAME, destinationStorageFileEntity.getPath());
-        assertEquals(FILE_SIZE_2, destinationStorageFileEntity.getFileSizeBytes());
-        assertNull(destinationStorageFileEntity.getRowCount());
-        assertEquals(MockGlacierOperationsImpl.MOCK_GLACIER_ARCHIVE_ID, destinationStorageFileEntity.getArchiveId());
+            // Validate that we have the copied S3 files at the expected S3 location.
+            assertEquals(sourceStorageFiles.size(), s3Dao.listDirectory(destinationS3FileTransferRequestParamsDto).size());
+        }
+        finally
+        {
+            // Delete test files from S3 storage.
+            for (S3FileTransferRequestParamsDto params : Arrays.asList(sourceS3FileTransferRequestParamsDto, destinationS3FileTransferRequestParamsDto))
+            {
+                if (!s3Dao.listDirectory(params).isEmpty())
+                {
+                    s3Dao.deleteDirectory(params);
+                }
+            }
+
+            s3Operations.rollback();
+        }
     }
 
     @Test
-    public void testCompleteStoragePolicyTransitionDestinationStorageFileExists()
+    public void testExecuteStoragePolicyTransitionArchiveBucketPrefixNotEmpty()
+    {
+        // Create S3FileTransferRequestParamsDto to access the source and destination S3 bucket locations.
+        // Since test S3 key prefix represents a directory, we add a trailing '/' character to it.
+        S3FileTransferRequestParamsDto sourceS3FileTransferRequestParamsDto =
+            S3FileTransferRequestParamsDto.builder().s3BucketName(S3_BUCKET_NAME).s3KeyPrefix(TEST_S3_KEY_PREFIX + "/").build();
+        S3FileTransferRequestParamsDto destinationS3FileTransferRequestParamsDto =
+            S3FileTransferRequestParamsDto.builder().s3BucketName(S3_BUCKET_NAME_2).s3KeyPrefix(S3_BUCKET_NAME + "/" + TEST_S3_KEY_PREFIX + "/").build();
+
+        // Create a list of source storage files.
+        List<StorageFile> sourceStorageFiles =
+            Arrays.asList(new StorageFile(String.format(String.format("%s/%s", TEST_S3_KEY_PREFIX, LOCAL_FILE)), FILE_SIZE_1_KB, ROW_COUNT));
+
+        // Put relative S3 file into the source S3 bucket.
+        s3Operations.putObject(
+            new PutObjectRequest(S3_BUCKET_NAME, sourceStorageFiles.get(0).getFilePath(), new ByteArrayInputStream(new byte[(int) FILE_SIZE_1_KB]), null),
+            null);
+
+        try
+        {
+            // Put an S3 file under the destination prefix in the "archive" S3 bucket.
+            s3Operations.putObject(new PutObjectRequest(S3_BUCKET_NAME_2, S3_BUCKET_NAME + "/" + sourceStorageFiles.get(0).getFilePath(),
+                new ByteArrayInputStream(new byte[(int) FILE_SIZE_1_KB]), null), null);
+
+            // Try to execute a storage policy transition when destination S3 key prefix is not empty.
+            storagePolicyProcessorHelperService.executeStoragePolicyTransition(new StoragePolicyTransitionParamsDto(
+                new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    NO_SUBPARTITION_VALUES, DATA_VERSION), STORAGE_NAME, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, sourceStorageFiles, STORAGE_NAME_2,
+                S3_BUCKET_NAME_2, S3_BUCKET_NAME));
+            fail("Should throw an IllegalStateException when destination S3 key prefix is not empty.");
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals(String
+                .format("The destination S3 key prefix is not empty. S3 bucket name: {%s}, S3 key prefix: {%s/%s/}", S3_BUCKET_NAME_2, S3_BUCKET_NAME,
+                    TEST_S3_KEY_PREFIX), e.getMessage());
+
+            // Validate that we still have our source S3 files in the source S3 bucket.
+            assertEquals(sourceStorageFiles.size(), s3Dao.listDirectory(sourceS3FileTransferRequestParamsDto).size());
+
+            // Validate that we do not have the copied S3 files at the expected S3 location, but only a single "unexpected" S3 file.
+            assertEquals(1, s3Dao.listDirectory(destinationS3FileTransferRequestParamsDto).size());
+        }
+        finally
+        {
+            // Delete test files from S3 storage.
+            for (S3FileTransferRequestParamsDto params : Arrays.asList(sourceS3FileTransferRequestParamsDto, destinationS3FileTransferRequestParamsDto))
+            {
+                if (!s3Dao.listDirectory(params).isEmpty())
+                {
+                    s3Dao.deleteDirectory(params);
+                }
+            }
+
+            s3Operations.rollback();
+        }
+    }
+
+    @Test
+    public void testExecuteStoragePolicyTransitionS3CopyFails()
+    {
+        // Create S3FileTransferRequestParamsDto to access the source and destination S3 bucket locations.
+        // Since test S3 key prefix represents a directory, we add a trailing '/' character to it.
+        S3FileTransferRequestParamsDto sourceS3FileTransferRequestParamsDto =
+            S3FileTransferRequestParamsDto.builder().s3BucketName(S3_BUCKET_NAME).s3KeyPrefix(TEST_S3_KEY_PREFIX + "/").build();
+        S3FileTransferRequestParamsDto destinationS3FileTransferRequestParamsDto =
+            S3FileTransferRequestParamsDto.builder().s3BucketName(S3_BUCKET_NAME_2).s3KeyPrefix(S3_BUCKET_NAME + "/" + TEST_S3_KEY_PREFIX + "/").build();
+
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION);
+
+        // Create a list of source storage files using a mocked S3 file name to trigger an S3 file copy to fail with an Amazon service exception.
+        List<StorageFile> sourceStorageFiles = Arrays.asList(
+            new StorageFile(String.format(String.format("%s/%s", TEST_S3_KEY_PREFIX, MockS3OperationsImpl.MOCK_S3_FILE_NAME_SERVICE_EXCEPTION)), FILE_SIZE_1_KB,
+                ROW_COUNT));
+
+        try
+        {
+            // Put relative S3 file into the source S3 bucket.
+            s3Operations.putObject(
+                new PutObjectRequest(S3_BUCKET_NAME, sourceStorageFiles.get(0).getFilePath(), new ByteArrayInputStream(new byte[(int) FILE_SIZE_1_KB]), null),
+                null);
+
+            // Try to execute a storage policy transition when S3 file copy operation fails with an Amazon service exception.
+            storagePolicyProcessorHelperService.executeStoragePolicyTransition(
+                new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, sourceStorageFiles,
+                    STORAGE_NAME_2, S3_BUCKET_NAME_2, S3_BUCKET_NAME));
+            fail("Should throw an IllegalStateException when an S3 file copy fails.");
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals(String.format("Failed to copy S3 file. Source storage: {%s}, source S3 bucket name: {%s}, source S3 object key: {%s}, " +
+                "target storage: {%s}, target S3 bucket name: {%s}, target S3 object key: {%s/%s/%s}, business object data: {%s}", STORAGE_NAME, S3_BUCKET_NAME,
+                sourceStorageFiles.get(0).getFilePath(), STORAGE_NAME_2, S3_BUCKET_NAME_2, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX,
+                MockS3OperationsImpl.MOCK_S3_FILE_NAME_SERVICE_EXCEPTION, getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
+
+            // Validate that we still have our source S3 files in the source S3 bucket.
+            assertEquals(sourceStorageFiles.size(), s3Dao.listDirectory(sourceS3FileTransferRequestParamsDto).size());
+
+            // Validate that we do not have the copied S3 files at the expected S3 location.
+            assertTrue(s3Dao.listDirectory(destinationS3FileTransferRequestParamsDto).isEmpty());
+        }
+        finally
+        {
+            // Delete test files from S3 storage.
+            for (S3FileTransferRequestParamsDto params : Arrays.asList(sourceS3FileTransferRequestParamsDto, destinationS3FileTransferRequestParamsDto))
+            {
+                if (!s3Dao.listDirectory(params).isEmpty())
+                {
+                    s3Dao.deleteDirectory(params);
+                }
+            }
+
+            s3Operations.rollback();
+        }
+    }
+
+    @Test
+    public void testCompleteStoragePolicyTransition()
     {
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BOD_NAMESPACE, BOD_NAME,
+        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
             Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
 
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 NO_SUBPARTITION_VALUES, DATA_VERSION);
 
         // Create and persist a storage unit in the source storage.
@@ -973,29 +1140,19 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
 
         // Create and persist a storage unit in the destination storage.
         StorageUnitEntity destinationStorageUnitEntity =
-            createStorageUnitEntity(herdDao.getStorageByName(STORAGE_NAME_2), sourceStorageUnitEntity.getBusinessObjectData(),
+            createStorageUnitEntity(storageDao.getStorageByName(STORAGE_NAME_2), sourceStorageUnitEntity.getBusinessObjectData(),
                 StorageUnitStatusEntity.ARCHIVING, NO_STORAGE_DIRECTORY_PATH);
-
-        // Add a storage file to the destination storage unit.
-        createStorageFileEntity(destinationStorageUnitEntity, FILE_NAME, FILE_SIZE, ROW_COUNT);
 
         // Complete a storage policy transition.
         StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto =
-            new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME, STORAGE_UNIT_ID, TEST_S3_KEY_PREFIX, NO_STORAGE_FILES,
-                FILE_SIZE_1_KB, STORAGE_NAME_2, GLACIER_VAULT_NAME,
-                new StorageFile(FILE_NAME_2, FILE_SIZE_2, ROW_COUNT_2, MockGlacierOperationsImpl.MOCK_GLACIER_ARCHIVE_ID));
+            new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, NO_STORAGE_FILES, STORAGE_NAME_2,
+                S3_BUCKET_NAME_2, S3_BUCKET_NAME);
         storagePolicyProcessorHelperService.completeStoragePolicyTransition(storagePolicyTransitionParamsDto);
 
         // Validate the results.
         assertEquals(StorageUnitStatusEntity.DISABLED, sourceStorageUnitEntity.getStatus().getCode());
         assertEquals(StorageUnitStatusEntity.ENABLED, destinationStorageUnitEntity.getStatus().getCode());
-        assertEquals(1, destinationStorageUnitEntity.getStorageFiles().size());
-        StorageFileEntity destinationStorageFileEntity = destinationStorageUnitEntity.getStorageFiles().iterator().next();
-        assertNotNull(destinationStorageFileEntity);
-        assertEquals(FILE_NAME_2, destinationStorageFileEntity.getPath());
-        assertEquals(FILE_SIZE_2, destinationStorageFileEntity.getFileSizeBytes());
-        assertNull(destinationStorageFileEntity.getRowCount());
-        assertEquals(MockGlacierOperationsImpl.MOCK_GLACIER_ARCHIVE_ID, destinationStorageFileEntity.getArchiveId());
+        assertEquals(0, destinationStorageUnitEntity.getStorageFiles().size());
     }
 
     @Test
@@ -1003,14 +1160,13 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
     {
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION);
 
         // Try to complete a storage policy transition when business object data does not exist.
         StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto =
-            new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME, STORAGE_UNIT_ID, TEST_S3_KEY_PREFIX, NO_STORAGE_FILES,
-                FILE_SIZE_1_KB, STORAGE_NAME_2, GLACIER_VAULT_NAME,
-                new StorageFile(FILE_NAME_2, FILE_SIZE_2, ROW_COUNT_2, MockGlacierOperationsImpl.MOCK_GLACIER_ARCHIVE_ID));
+            new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, NO_STORAGE_FILES, STORAGE_NAME_2,
+                S3_BUCKET_NAME_2, S3_BUCKET_NAME);
         try
         {
             storagePolicyProcessorHelperService.completeStoragePolicyTransition(storagePolicyTransitionParamsDto);
@@ -1027,7 +1183,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
     {
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION);
 
         // Create and persist a business object data entity with a status that is not supported by the storage policy feature.
@@ -1035,9 +1191,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
 
         // Try to complete a storage policy transition when business object data status is not supported by the storage policy feature.
         StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto =
-            new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME, STORAGE_UNIT_ID, TEST_S3_KEY_PREFIX, NO_STORAGE_FILES,
-                FILE_SIZE_1_KB, STORAGE_NAME_2, GLACIER_VAULT_NAME,
-                new StorageFile(FILE_NAME_2, FILE_SIZE_2, ROW_COUNT_2, MockGlacierOperationsImpl.MOCK_GLACIER_ARCHIVE_ID));
+            new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, NO_STORAGE_FILES, STORAGE_NAME_2,
+                S3_BUCKET_NAME_2, S3_BUCKET_NAME);
         try
         {
             storagePolicyProcessorHelperService.completeStoragePolicyTransition(storagePolicyTransitionParamsDto);
@@ -1055,12 +1210,12 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
     public void testCompleteStoragePolicyTransitionSourceStorageUnitNoExists()
     {
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BOD_NAMESPACE, BOD_NAME,
+        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
             Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
 
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION);
 
         // Create and persist a business object data entity without any storage units.
@@ -1068,9 +1223,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
 
         // Try to complete a storage policy transition when source storage unit does not exist.
         StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto =
-            new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME, STORAGE_UNIT_ID, TEST_S3_KEY_PREFIX, NO_STORAGE_FILES,
-                FILE_SIZE_1_KB, STORAGE_NAME_2, GLACIER_VAULT_NAME,
-                new StorageFile(FILE_NAME_2, FILE_SIZE_2, ROW_COUNT_2, MockGlacierOperationsImpl.MOCK_GLACIER_ARCHIVE_ID));
+            new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, NO_STORAGE_FILES, STORAGE_NAME_2,
+                S3_BUCKET_NAME_2, S3_BUCKET_NAME);
         try
         {
             storagePolicyProcessorHelperService.completeStoragePolicyTransition(storagePolicyTransitionParamsDto);
@@ -1087,12 +1241,12 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
     public void testCompleteStoragePolicyTransitionSourceStorageUnitNotEnabled()
     {
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BOD_NAMESPACE, BOD_NAME,
+        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
             Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
 
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION);
 
         // Create and persist a storage unit in the source storage having a non-ENABLED storage unit status.
@@ -1101,9 +1255,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
 
         // Try to complete a storage policy transition when source storage unit does not have ENABLED status.
         StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto =
-            new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME, STORAGE_UNIT_ID, TEST_S3_KEY_PREFIX, NO_STORAGE_FILES,
-                FILE_SIZE_1_KB, STORAGE_NAME_2, GLACIER_VAULT_NAME,
-                new StorageFile(FILE_NAME_2, FILE_SIZE_2, ROW_COUNT_2, MockGlacierOperationsImpl.MOCK_GLACIER_ARCHIVE_ID));
+            new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, NO_STORAGE_FILES, STORAGE_NAME_2,
+                S3_BUCKET_NAME_2, S3_BUCKET_NAME);
         try
         {
             storagePolicyProcessorHelperService.completeStoragePolicyTransition(storagePolicyTransitionParamsDto);
@@ -1121,12 +1274,12 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
     public void testCompleteStoragePolicyTransitionDestinationStorageUnitNoExists()
     {
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BOD_NAMESPACE, BOD_NAME,
+        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
             Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
 
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION);
 
         // Create and persist a storage unit in the source storage.
@@ -1135,9 +1288,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
 
         // Try to complete a storage policy transition when destination storage unit does not exist.
         StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto =
-            new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME, STORAGE_UNIT_ID, TEST_S3_KEY_PREFIX, NO_STORAGE_FILES,
-                FILE_SIZE_1_KB, STORAGE_NAME_2, GLACIER_VAULT_NAME,
-                new StorageFile(FILE_NAME_2, FILE_SIZE_2, ROW_COUNT_2, MockGlacierOperationsImpl.MOCK_GLACIER_ARCHIVE_ID));
+            new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, NO_STORAGE_FILES, STORAGE_NAME_2,
+                S3_BUCKET_NAME_2, S3_BUCKET_NAME);
         try
         {
             storagePolicyProcessorHelperService.completeStoragePolicyTransition(storagePolicyTransitionParamsDto);
@@ -1154,12 +1306,12 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
     public void testCompleteStoragePolicyTransitionDestinationStorageUnitNotInArchivingState()
     {
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BOD_NAMESPACE, BOD_NAME,
+        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
             Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
 
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION);
 
         // Create and persist a storage unit in the source storage.
@@ -1168,14 +1320,13 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
                 StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
 
         // Create and persist a storage unit in the destination storage having a non-ARCHIVING storage unit status.
-        createStorageUnitEntity(herdDao.getStorageByName(STORAGE_NAME_2), sourceStorageUnitEntity.getBusinessObjectData(), STORAGE_UNIT_STATUS,
+        createStorageUnitEntity(storageDao.getStorageByName(STORAGE_NAME_2), sourceStorageUnitEntity.getBusinessObjectData(), STORAGE_UNIT_STATUS,
             NO_STORAGE_DIRECTORY_PATH);
 
         // Try to complete a storage policy transition when destination storage unit does not have ARCHIVING status.
         StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto =
-            new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME, STORAGE_UNIT_ID, TEST_S3_KEY_PREFIX, NO_STORAGE_FILES,
-                FILE_SIZE_1_KB, STORAGE_NAME_2, GLACIER_VAULT_NAME,
-                new StorageFile(FILE_NAME_2, FILE_SIZE_2, ROW_COUNT_2, MockGlacierOperationsImpl.MOCK_GLACIER_ARCHIVE_ID));
+            new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, NO_STORAGE_FILES, STORAGE_NAME_2,
+                S3_BUCKET_NAME_2, S3_BUCKET_NAME);
         try
         {
             storagePolicyProcessorHelperService.completeStoragePolicyTransition(storagePolicyTransitionParamsDto);
@@ -1186,53 +1337,6 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
             assertEquals(String.format("Destination storage unit status is \"%s\", but must be \"%s\" for storage policy transition to proceed. " +
                 "Storage: {%s}, business object data: {%s}", STORAGE_UNIT_STATUS, StorageUnitStatusEntity.ARCHIVING, STORAGE_NAME_2,
                 getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
-        }
-    }
-
-    @Test
-    public void testCompleteStoragePolicyTransitionMultipleDestinationStorageFilesExist()
-    {
-        // Create and persist the relative database entities.
-        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BOD_NAMESPACE, BOD_NAME,
-            Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
-
-        // Create a business object data key.
-        BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(BOD_NAMESPACE, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                NO_SUBPARTITION_VALUES, DATA_VERSION);
-
-        // Create and persist a storage unit in the source storage.
-        StorageUnitEntity sourceStorageUnitEntity =
-            createStorageUnitEntity(STORAGE_NAME, businessObjectDataKey, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID,
-                StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
-
-        // Create and persist a storage unit in the destination storage.
-        StorageUnitEntity destinationStorageUnitEntity =
-            createStorageUnitEntity(herdDao.getStorageByName(STORAGE_NAME_2), sourceStorageUnitEntity.getBusinessObjectData(),
-                StorageUnitStatusEntity.ARCHIVING, NO_STORAGE_DIRECTORY_PATH);
-
-        // Add two storage files to the destination storage unit.
-        List<String> destinationStorageFilePaths = Arrays.asList(FILE_NAME, FILE_NAME_2);
-        for (String filePath : destinationStorageFilePaths)
-        {
-            createStorageFileEntity(destinationStorageUnitEntity, filePath, FILE_SIZE, ROW_COUNT);
-        }
-
-        // Try to complete a storage policy transition when destination storage unit contains multiple storage files.
-        StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto =
-            new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME, STORAGE_UNIT_ID, TEST_S3_KEY_PREFIX, NO_STORAGE_FILES,
-                FILE_SIZE_1_KB, STORAGE_NAME_2, GLACIER_VAULT_NAME,
-                new StorageFile(FILE_NAME_3, FILE_SIZE_1_KB, NO_ROW_COUNT, MockGlacierOperationsImpl.MOCK_GLACIER_ARCHIVE_ID));
-        try
-        {
-            storagePolicyProcessorHelperService.completeStoragePolicyTransition(storagePolicyTransitionParamsDto);
-            fail("Should throw an IllegalStateException when destination storage unit contains multiple storage files.");
-        }
-        catch (IllegalStateException e)
-        {
-            assertEquals(String.format(
-                "Destination storage unit has %d storage files, but must have none or just one storage file. " + "Storage: {%s}, business object data: {%s}",
-                destinationStorageFilePaths.size(), STORAGE_NAME_2, getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
         }
     }
 

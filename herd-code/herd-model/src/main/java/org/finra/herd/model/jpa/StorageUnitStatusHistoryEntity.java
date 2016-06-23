@@ -23,14 +23,10 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 /**
  * Status history associated with storage unit.
  */
-@XmlRootElement
-@XmlType
 @Table(name = StorageUnitStatusHistoryEntity.TABLE_NAME)
 @Entity
 public class StorageUnitStatusHistoryEntity extends AuditableEntity
@@ -43,7 +39,7 @@ public class StorageUnitStatusHistoryEntity extends AuditableEntity
     @Id
     @Column(name = TABLE_NAME + "_id")
     @GeneratedValue(generator = TABLE_NAME + "_seq")
-    @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq")
+    @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq", allocationSize = 1)
     private Integer id;
 
     @ManyToOne

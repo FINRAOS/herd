@@ -199,7 +199,7 @@ public class DataProviderServiceTest extends AbstractServiceTest
         createDataProviderEntity(DATA_PROVIDER_NAME);
 
         // Validate that this data provider exists.
-        assertNotNull(herdDao.getDataProviderByKey(dataProviderKey));
+        assertNotNull(dataProviderDao.getDataProviderByKey(dataProviderKey));
 
         // Delete this data provider.
         DataProvider deletedDataProvider = dataProviderService.deleteDataProvider(new DataProviderKey(DATA_PROVIDER_NAME));
@@ -208,7 +208,7 @@ public class DataProviderServiceTest extends AbstractServiceTest
         assertEquals(new DataProvider(DATA_PROVIDER_NAME), deletedDataProvider);
 
         // Ensure that this data provider is no longer there.
-        assertNull(herdDao.getDataProviderByKey(dataProviderKey));
+        assertNull(dataProviderDao.getDataProviderByKey(dataProviderKey));
     }
 
     @Test
@@ -236,7 +236,7 @@ public class DataProviderServiceTest extends AbstractServiceTest
         createDataProviderEntity(DATA_PROVIDER_NAME);
 
         // Validate that this data provider exists.
-        assertNotNull(herdDao.getDataProviderByKey(dataProviderKey));
+        assertNotNull(dataProviderDao.getDataProviderByKey(dataProviderKey));
 
         // Delete this data provider using input parameters with leading and trailing empty spaces.
         DataProvider deletedDataProvider = dataProviderService.deleteDataProvider(new DataProviderKey(addWhitespace(DATA_PROVIDER_NAME)));
@@ -245,7 +245,7 @@ public class DataProviderServiceTest extends AbstractServiceTest
         assertEquals(new DataProvider(DATA_PROVIDER_NAME), deletedDataProvider);
 
         // Ensure that this data provider is no longer there.
-        assertNull(herdDao.getDataProviderByKey(dataProviderKey));
+        assertNull(dataProviderDao.getDataProviderByKey(dataProviderKey));
     }
 
     @Test
@@ -258,7 +258,7 @@ public class DataProviderServiceTest extends AbstractServiceTest
         createDataProviderEntity(DATA_PROVIDER_NAME);
 
         // Validate that this data provider exists.
-        assertNotNull(herdDao.getDataProviderByKey(dataProviderKey));
+        assertNotNull(dataProviderDao.getDataProviderByKey(dataProviderKey));
 
         // Delete this data provider using upper case input parameters.
         DataProvider deletedDataProvider = dataProviderService.deleteDataProvider(new DataProviderKey(DATA_PROVIDER_NAME.toUpperCase()));
@@ -267,7 +267,7 @@ public class DataProviderServiceTest extends AbstractServiceTest
         assertEquals(new DataProvider(DATA_PROVIDER_NAME), deletedDataProvider);
 
         // Ensure that this data provider is no longer there.
-        assertNull(herdDao.getDataProviderByKey(dataProviderKey));
+        assertNull(dataProviderDao.getDataProviderByKey(dataProviderKey));
     }
 
     @Test
@@ -280,7 +280,7 @@ public class DataProviderServiceTest extends AbstractServiceTest
         createDataProviderEntity(DATA_PROVIDER_NAME);
 
         // Validate that this data provider exists.
-        assertNotNull(herdDao.getDataProviderByKey(dataProviderKey));
+        assertNotNull(dataProviderDao.getDataProviderByKey(dataProviderKey));
 
         // Delete the data provider using lower case input parameters.
         DataProvider deletedDataProvider = dataProviderService.deleteDataProvider(new DataProviderKey(DATA_PROVIDER_NAME.toLowerCase()));
@@ -289,7 +289,7 @@ public class DataProviderServiceTest extends AbstractServiceTest
         assertEquals(new DataProvider(DATA_PROVIDER_NAME), deletedDataProvider);
 
         // Ensure that this data provider is no longer there.
-        assertNull(herdDao.getDataProviderByKey(dataProviderKey));
+        assertNull(dataProviderDao.getDataProviderByKey(dataProviderKey));
     }
 
     @Test

@@ -28,16 +28,12 @@ import javax.persistence.OneToMany;
 import javax.persistence.OrderBy;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 import org.hibernate.annotations.Type;
 
 /**
  * A business object format.
  */
-@XmlRootElement
-@XmlType
 @Table(name = BusinessObjectFormatEntity.TABLE_NAME)
 @Entity
 public class BusinessObjectFormatEntity extends AuditableEntity
@@ -50,7 +46,7 @@ public class BusinessObjectFormatEntity extends AuditableEntity
     @Id
     @Column(name = TABLE_NAME + "_id")
     @GeneratedValue(generator = TABLE_NAME + "_seq")
-    @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq")
+    @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq", allocationSize = 1)
     private Integer id;
 
     @ManyToOne
@@ -256,79 +252,5 @@ public class BusinessObjectFormatEntity extends AuditableEntity
     public void setSchemaColumns(Collection<SchemaColumnEntity> schemaColumns)
     {
         this.schemaColumns = schemaColumns;
-    }
-
-    @Override
-    public boolean equals(Object other)
-    {
-        if (this == other)
-        {
-            return true;
-        }
-        if (other == null || getClass() != other.getClass())
-        {
-            return false;
-        }
-
-        BusinessObjectFormatEntity that = (BusinessObjectFormatEntity) other;
-
-        if (!businessObjectFormatVersion.equals(that.businessObjectFormatVersion))
-        {
-            return false;
-        }
-        if (delimiter != null ? !delimiter.equals(that.delimiter) : that.delimiter != null)
-        {
-            return false;
-        }
-        if (description != null ? !description.equals(that.description) : that.description != null)
-        {
-            return false;
-        }
-        if (escapeCharacter != null ? !escapeCharacter.equals(that.escapeCharacter) : that.escapeCharacter != null)
-        {
-            return false;
-        }
-        if (!id.equals(that.id))
-        {
-            return false;
-        }
-        if (!latestVersion.equals(that.latestVersion))
-        {
-            return false;
-        }
-        if (nullValue != null ? !nullValue.equals(that.nullValue) : that.nullValue != null)
-        {
-            return false;
-        }
-        if (!partitionKey.equals(that.partitionKey))
-        {
-            return false;
-        }
-        if (partitionKeyGroup != null ? !partitionKeyGroup.equals(that.partitionKeyGroup) : that.partitionKeyGroup != null)
-        {
-            return false;
-        }
-        if (!usage.equals(that.usage))
-        {
-            return false;
-        }
-
-        return true;
-    }
-
-    @Override
-    public int hashCode()
-    {
-        int result = id.hashCode();
-        result = 31 * result + usage.hashCode();
-        result = 31 * result + businessObjectFormatVersion.hashCode();
-        result = 31 * result + latestVersion.hashCode();
-        result = 31 * result + (description != null ? description.hashCode() : 0);
-        result = 31 * result + partitionKey.hashCode();
-        result = 31 * result + (nullValue != null ? nullValue.hashCode() : 0);
-        result = 31 * result + (delimiter != null ? delimiter.hashCode() : 0);
-        result = 31 * result + (escapeCharacter != null ? escapeCharacter.hashCode() : 0);
-        result = 31 * result + (partitionKeyGroup != null ? partitionKeyGroup.hashCode() : 0);
-        return result;
     }
 }

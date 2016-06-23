@@ -30,8 +30,9 @@ public class NotificationRegistrationStatusDaoHelper
 
     /**
      * Gets a notification registration status entity by its code, or throws an ObjectNotFoundException if not found.
-     * 
+     *
      * @param code The code of the notification registration status
+     *
      * @return The notification registration status entity
      */
     public NotificationRegistrationStatusEntity getNotificationRegistrationStatus(String code)

@@ -24,15 +24,9 @@ import org.finra.herd.model.api.xml.S3PropertiesLocation;
 public class S3PropertiesLocationHelper
 {
     /**
-     * Validates the given {@link S3PropertiesLocation}.
-     * A {@link S3PropertiesLocation} is valid when:
-     * <ol>
-     * <li>bucket name is not blank, and;</li>
-     * <li>object key is not blank.</li>
-     * </ol>
-     * Throws a {@link IllegalArgumentException} when validation fails.
-     * The bucket name and key are trimmed as a side-effect.
-     * 
+     * Validates the given {@link S3PropertiesLocation}. A {@link S3PropertiesLocation} is valid when: <ol> <li>bucket name is not blank, and;</li> <li>object
+     * key is not blank.</li> </ol> Throws a {@link IllegalArgumentException} when validation fails. The bucket name and key are trimmed as a side-effect.
+     *
      * @param s3PropertiesLocation {@link S3PropertiesLocation}
      */
     public void validate(S3PropertiesLocation s3PropertiesLocation)

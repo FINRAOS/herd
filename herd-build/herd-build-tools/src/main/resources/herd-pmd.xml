@@ -145,7 +145,6 @@
    <rule ref="rulesets/java/design.xml/AvoidProtectedFieldInFinalClass"/>
    <rule ref="rulesets/java/design.xml/BadComparison"/>
    <rule ref="rulesets/java/design.xml/ClassWithOnlyPrivateConstructorsShouldBeFinal"/>
-   <rule ref="rulesets/java/design.xml/EmptyMethodInAbstractClassShouldBeAbstract"/>
    <rule ref="rulesets/java/design.xml/FinalFieldCouldBeStatic"/>
    <rule ref="rulesets/java/design.xml/IdempotentOperations"/>
    <rule ref="rulesets/java/design.xml/InstantiationToGetClass"/>
@@ -154,7 +153,6 @@
    <rule ref="rulesets/java/design.xml/OptimizableToArrayCall"/>
    <rule ref="rulesets/java/design.xml/SimpleDateFormatNeedsLocale"/>
    <rule ref="rulesets/java/design.xml/SimplifyBooleanExpressions"/>
-   <rule ref="rulesets/java/design.xml/SimplifyConditional"/>
    <rule ref="rulesets/java/design.xml/SingularField"/>
    <rule ref="rulesets/java/design.xml/SwitchDensity"/>
    <rule ref="rulesets/java/design.xml/UnsynchronizedStaticDateFormatter"/>

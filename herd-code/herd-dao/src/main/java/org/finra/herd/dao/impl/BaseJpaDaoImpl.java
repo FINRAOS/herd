@@ -15,7 +15,7 @@
 */
 package org.finra.herd.dao.impl;
 
-import java.util.HashMap;
+import java.sql.Timestamp;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +36,7 @@ import org.springframework.util.StringUtils;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.BaseJpaDao;
 import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.model.jpa.ConfigurationEntity;
 
 /**
  * A generic JPA DAO that can be used directly or as a base class for more specialized DAO's.
@@ -49,6 +50,7 @@ public class BaseJpaDaoImpl implements BaseJpaDao
     @PersistenceContext
     protected EntityManager entityManager;
 
+    @Override
     public EntityManager getEntityManager()
     {
         return entityManager;
@@ -62,6 +64,7 @@ public class BaseJpaDaoImpl implements BaseJpaDao
         return entityManager.find(entityClass, entityId);
     }
 
+    @Override
     public <T> List<T> findAll(Class<T> entityClass)
     {
         Validate.notNull(entityClass);
@@ -110,31 +113,8 @@ public class BaseJpaDaoImpl implements BaseJpaDao
         return executeQueryWithNamedParams(entityManager.createQuery(queryString), params);
     }
 
-    @Override
-    public <T> List<T> queryByNamedQueryAndNamedParams(String queryName, Map<String, ?> params)
-    {
-        Validate.notEmpty(queryName);
-        Validate.notEmpty(params);
-        return executeQueryWithNamedParams(entityManager.createNamedQuery(queryName), params);
-    }
-
-    public <T> List<T> queryByNamedQuery(String queryName)
-    {
-        Validate.notEmpty(queryName);
-        return executeQueryWithNamedParams(entityManager.createNamedQuery(queryName), new HashMap<String, Object>());
-    }
-
-    @Override
-    public <T> T queryUniqueByNamedQueryAndNamedParams(String queryName, Map<String, ?> params)
-    {
-        Validate.notEmpty(queryName);
-        Validate.notEmpty(params);
-        List<T> resultList = queryByNamedQueryAndNamedParams(queryName, params);
-        Validate.isTrue(resultList.isEmpty() || resultList.size() == 1, "Found more than one persistent instance with parameters " + params.toString());
-        return resultList.size() == 1 ? resultList.get(0) : null;
-    }
-
     @SuppressWarnings({"unchecked"})
+    @Override
     public <T> List<T> query(String queryString)
     {
         Validate.notEmpty(queryString);
@@ -173,6 +153,7 @@ public class BaseJpaDaoImpl implements BaseJpaDao
         entityManager.flush();
     }
 
+    @Override
     public <T> void detach(T entity)
     {
         Validate.notNull(entity);
@@ -251,5 +232,18 @@ public class BaseJpaDaoImpl implements BaseJpaDao
         Validate.isTrue(resultList.size() < 2, message);
 
         return resultList.size() == 1 ? resultList.get(0) : null;
+    }
+
+    @Override
+    public Timestamp getCurrentTimestamp()
+    {
+        // Create the criteria builder and the criteria.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Timestamp> criteria = builder.createQuery(Timestamp.class);
+
+        // Add the clauses for the query.
+        criteria.select(builder.currentTimestamp()).from(ConfigurationEntity.class);
+
+        return entityManager.createQuery(criteria).getSingleResult();
     }
 }

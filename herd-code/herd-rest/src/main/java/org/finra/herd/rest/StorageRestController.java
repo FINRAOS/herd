@@ -36,7 +36,7 @@ import org.finra.herd.model.api.xml.StorageUpdateRequest;
 import org.finra.herd.model.dto.SecurityFunctions;
 import org.finra.herd.model.dto.StorageAlternateKeyDto;
 import org.finra.herd.service.StorageService;
-import org.finra.herd.service.helper.HerdHelper;
+import org.finra.herd.service.helper.StorageHelper;
 import org.finra.herd.ui.constants.UiConstants;
 
 /**
@@ -50,10 +50,10 @@ public class StorageRestController extends HerdBaseController
     public static final String STORAGES_URI_PREFIX = "/storages";
 
     @Autowired
-    private StorageService storageService;
+    private StorageHelper storageHelper;
 
     @Autowired
-    private HerdHelper herdHelper;
+    private StorageService storageService;
 
     /**
      * Creates a new storage.
@@ -142,7 +142,7 @@ public class StorageRestController extends HerdBaseController
         @RequestParam(value = "uploadDate", required = false) String uploadDateString)
     {
         StorageAlternateKeyDto alternateKey = StorageAlternateKeyDto.builder().storageName(storageName).build();
-        Date uploadDate = herdHelper.getDateFromString(uploadDateString);
+        Date uploadDate = storageHelper.getDateFromString(uploadDateString);
         return storageService.getStorageUploadStats(alternateKey, uploadDate);
     }
 
@@ -161,7 +161,7 @@ public class StorageRestController extends HerdBaseController
         @RequestParam(value = "uploadDate", required = false) String uploadDateString)
     {
         StorageAlternateKeyDto alternateKey = StorageAlternateKeyDto.builder().storageName(storageName).build();
-        Date uploadDate = herdHelper.getDateFromString(uploadDateString);
+        Date uploadDate = storageHelper.getDateFromString(uploadDateString);
         return storageService.getStorageUploadStatsByBusinessObjectDefinition(alternateKey, uploadDate);
     }
 }

@@ -48,6 +48,7 @@ public class CheckEmrOozieWorkflowJob extends BaseJavaDelegate
     private Expression emrClusterName;
     private Expression oozieWorkflowJobId;
     private Expression verbose;
+    private Expression emrClusterId;
     
     @Autowired
     private EmrService emrService;
@@ -59,12 +60,13 @@ public class CheckEmrOozieWorkflowJob extends BaseJavaDelegate
         String emrClusterDefinitionNameString = activitiHelper.getExpressionVariableAsString(emrClusterDefinitionName, execution);
         String emrClusterNameString = activitiHelper.getExpressionVariableAsString(emrClusterName, execution);
         String oozieWorkflowJobIdString = activitiHelper.getExpressionVariableAsString(oozieWorkflowJobId, execution);
+        String emrClusterIdString = activitiHelper.getExpressionVariableAsString(emrClusterId, execution);
         
         boolean verboseBoolean = activitiHelper.getExpressionVariableAsBoolean(verbose, execution, "verbose", false, false);
         
         // Get the oozie job status.
-        OozieWorkflowJob oozieWorkflowJob = 
-            emrService.getEmrOozieWorkflowJob(namespaceString, emrClusterDefinitionNameString, emrClusterNameString, oozieWorkflowJobIdString, verboseBoolean);
+        OozieWorkflowJob oozieWorkflowJob = emrService.getEmrOozieWorkflowJob(namespaceString, emrClusterDefinitionNameString, emrClusterNameString,
+            oozieWorkflowJobIdString, verboseBoolean, emrClusterIdString);
 
         // Set the JSON response as a workflow variable.
         setJsonResponseAsWorkflowVariable(oozieWorkflowJob, execution);

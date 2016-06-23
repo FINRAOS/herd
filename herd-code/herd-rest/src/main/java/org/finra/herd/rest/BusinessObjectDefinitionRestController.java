@@ -46,6 +46,7 @@ public class BusinessObjectDefinitionRestController extends HerdBaseController
 
     /**
      * Creates a new business object definition.
+     * <p>Requires WRITE permission on namespace</p>
      *
      * @param request the information needed to create the business object definition.
      *
@@ -60,6 +61,7 @@ public class BusinessObjectDefinitionRestController extends HerdBaseController
 
     /**
      * Updates an existing business object definition by key.
+     * <p>Requires WRITE permission on namespace</p>
      *
      * @param namespace the namespace code
      * @param businessObjectDefinitionName the name of the business object definition to update
@@ -80,6 +82,7 @@ public class BusinessObjectDefinitionRestController extends HerdBaseController
 
     /**
      * Gets an existing business object definition by key.
+     * <p>Requires READ permission on namespace</p>
      *
      * @param namespace the namespace code
      * @param businessObjectDefinitionName the business object definition name
@@ -98,6 +101,7 @@ public class BusinessObjectDefinitionRestController extends HerdBaseController
 
     /**
      * Deletes an existing business object definition by key.
+     * <p>Requires WRITE permission on namespace</p>
      *
      * @param namespace the namespace code
      * @param businessObjectDefinitionName the business object definition name
@@ -128,6 +132,7 @@ public class BusinessObjectDefinitionRestController extends HerdBaseController
 
     /**
      * Gets the list of business object definitions that are defined in the system.
+     * <p>Requires READ permission on namespace</p>
      *
      * @param namespace the namespace code
      *

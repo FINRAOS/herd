@@ -21,14 +21,10 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 /**
  * An instance of JMS message.
  */
-@XmlRootElement
-@XmlType
 @Table(name = JmsMessageEntity.TABLE_NAME)
 @Entity
 public class JmsMessageEntity extends AuditableEntity
@@ -41,7 +37,7 @@ public class JmsMessageEntity extends AuditableEntity
     @Id
     @Column(name = TABLE_NAME + "_id")
     @GeneratedValue(generator = TABLE_NAME + "_seq")
-    @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq")
+    @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq", allocationSize = 1)
     private Integer id;
 
     /**
@@ -84,44 +80,5 @@ public class JmsMessageEntity extends AuditableEntity
     public void setMessageText(String messageText)
     {
         this.messageText = messageText;
-    }
-
-    @Override
-    public boolean equals(Object other)
-    {
-        if (this == other)
-        {
-            return true;
-        }
-        if (other == null || getClass() != other.getClass())
-        {
-            return false;
-        }
-
-        JmsMessageEntity that = (JmsMessageEntity) other;
-
-        if (id != null ? !id.equals(that.id) : that.id != null)
-        {
-            return false;
-        }
-        if (jmsQueueName != null ? !jmsQueueName.equals(that.jmsQueueName) : that.jmsQueueName != null)
-        {
-            return false;
-        }
-        if (messageText != null ? !messageText.equals(that.messageText) : that.messageText != null)
-        {
-            return false;
-        }
-
-        return true;
-    }
-
-    @Override
-    public int hashCode()
-    {
-        int result = id != null ? id.hashCode() : 0;
-        result = 31 * result + (jmsQueueName != null ? jmsQueueName.hashCode() : 0);
-        result = 31 * result + (messageText != null ? messageText.hashCode() : 0);
-        return result;
     }
 }

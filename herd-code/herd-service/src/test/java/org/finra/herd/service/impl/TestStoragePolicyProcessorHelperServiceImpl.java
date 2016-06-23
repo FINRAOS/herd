@@ -44,9 +44,9 @@ public class TestStoragePolicyProcessorHelperServiceImpl extends StoragePolicyPr
      * Overwrites the base class method to change transactional attributes.
      */
     @Override
-    public StoragePolicyTransitionParamsDto executeStoragePolicyTransition(StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto)
+    public void executeStoragePolicyTransition(StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto)
     {
-        return executeStoragePolicyTransitionImpl(storagePolicyTransitionParamsDto);
+        executeStoragePolicyTransitionImpl(storagePolicyTransitionParamsDto);
     }
 
     /**

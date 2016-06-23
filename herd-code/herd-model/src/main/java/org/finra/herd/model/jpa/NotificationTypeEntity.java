@@ -19,14 +19,10 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 /**
  * A notification type.
  */
-@XmlRootElement
-@XmlType
 @Table(name = "ntfcn_type_cd_lk")
 @Entity
 public class NotificationTypeEntity extends AuditableEntity
@@ -64,39 +60,5 @@ public class NotificationTypeEntity extends AuditableEntity
     public void setDescription(String description)
     {
         this.description = description;
-    }
-
-    @Override
-    public boolean equals(Object other)
-    {
-        if (this == other)
-        {
-            return true;
-        }
-        if (other == null || getClass() != other.getClass())
-        {
-            return false;
-        }
-
-        NotificationTypeEntity notificationType = (NotificationTypeEntity) other;
-
-        if (code != null ? !code.equals(notificationType.code) : notificationType.code != null)
-        {
-            return false;
-        }
-        if (description != null ? !description.equals(notificationType.description) : notificationType.description != null)
-        {
-            return false;
-        }
-
-        return true;
-    }
-
-    @Override
-    public int hashCode()
-    {
-        int result = code != null ? code.hashCode() : 0;
-        result = 31 * result + (description != null ? description.hashCode() : 0);
-        return result;
     }
 }

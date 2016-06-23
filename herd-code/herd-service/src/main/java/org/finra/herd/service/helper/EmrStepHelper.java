@@ -35,35 +35,58 @@ public abstract class EmrStepHelper
     protected EmrHelper emrHelper;
 
     /**
-     * Return the type of step it supports, the name of the step class.
+     * This method builds the Step object for the given Step request.
      *
-     * @return the Step class name
+     * @param stepRequest the step request object
+     *
+     * @return the step object
      */
-    public abstract String getStepType();
+    public abstract Object buildResponseFromRequest(Object stepRequest);
 
     /**
-     * Return the type of step request it supports, the name of the step request class.
+     * This method gets the StepConfig object for the given Step.
      *
-     * @return the Step request class name
+     * @param step the step object
+     *
+     * @return the step config object
      */
-    public abstract String getStepRequestType();
+    public abstract StepConfig getEmrStepConfig(Object step);
 
     /**
-     * Return the step Id.
+     * Return the cluster definition name.
      *
-     * @param step the Step object.
+     * @param stepRequest the Add Step request object.
      *
-     * @return the Step Id.
+     * @return the cluster definition name.
      */
-    public abstract String getStepId(Object step);
+    public abstract String getRequestEmrClusterDefinitionName(Object stepRequest);
 
     /**
-     * Sets the step Id.
+     * Gets EMR cluster ID.
      *
-     * @param step the Step object.
-     * @param stepId the step Id value to set.
+     * @param stepRequest The step request
+     *
+     * @return The EMR cluster ID
      */
-    public abstract void setStepId(Object step, String stepId);
+    public abstract String getRequestEmrClusterId(Object stepRequest);
+
+    /**
+     * Return the cluster name.
+     *
+     * @param stepRequest the Add Step request object.
+     *
+     * @return the cluster name.
+     */
+    public abstract String getRequestEmrClusterName(Object stepRequest);
+
+    /**
+     * Return the namespace.
+     *
+     * @param stepRequest the Add Step request object.
+     *
+     * @return the namespace.
+     */
+    public abstract String getRequestNamespace(Object stepRequest);
 
     /**
      * Return the step name.
@@ -75,12 +98,27 @@ public abstract class EmrStepHelper
     public abstract String getRequestStepName(Object stepRequest);
 
     /**
-     * Sets the step name.
+     * Return the step Id.
      *
-     * @param stepRequest the Add Step request object.
-     * @param stepName the step name value to set.
+     * @param step the Step object.
+     *
+     * @return the Step Id.
      */
-    public abstract void setRequestStepName(Object stepRequest, String stepName);
+    public abstract String getStepId(Object step);
+
+    /**
+     * Return the type of step request it supports, the name of the step request class.
+     *
+     * @return the Step request class name
+     */
+    public abstract String getStepRequestType();
+
+    /**
+     * Return the type of step it supports, the name of the step class.
+     *
+     * @return the Step class name
+     */
+    public abstract String getStepType();
 
     /**
      * Return the continue on error.
@@ -100,32 +138,6 @@ public abstract class EmrStepHelper
     public abstract void setRequestContinueOnError(Object stepRequest, Boolean continueOnError);
 
     /**
-     * Return the namespace.
-     *
-     * @param stepRequest the Add Step request object.
-     *
-     * @return the namespace.
-     */
-    public abstract String getRequestNamespace(Object stepRequest);
-
-    /**
-     * Sets the namespace.
-     *
-     * @param stepRequest the Add Step request object.
-     * @param namespace the namespace value to set.
-     */
-    public abstract void setRequestNamespace(Object stepRequest, String namespace);
-
-    /**
-     * Return the cluster definition name.
-     *
-     * @param stepRequest the Add Step request object.
-     *
-     * @return the cluster definition name.
-     */
-    public abstract String getRequestEmrClusterDefinitionName(Object stepRequest);
-
-    /**
      * Sets the cluster definition name.
      *
      * @param stepRequest the Add Step request object.
@@ -134,13 +146,12 @@ public abstract class EmrStepHelper
     public abstract void setRequestEmrClusterDefinitionName(Object stepRequest, String clusterDefinitionName);
 
     /**
-     * Return the cluster name.
+     * Sets EMR cluster ID.
      *
-     * @param stepRequest the Add Step request object.
-     *
-     * @return the cluster name.
+     * @param stepRequest The step request
+     * @param emrClusterId The EMR cluster ID
      */
-    public abstract String getRequestEmrClusterName(Object stepRequest);
+    public abstract void setRequestEmrClusterId(Object stepRequest, String emrClusterId);
 
     /**
      * Sets the cluster name.
@@ -151,22 +162,28 @@ public abstract class EmrStepHelper
     public abstract void setRequestEmrClusterName(Object stepRequest, String clusterName);
 
     /**
-     * This method builds the Step object for the given Step request.
+     * Sets the namespace.
      *
-     * @param stepRequest the step request object
-     *
-     * @return the step object
+     * @param stepRequest the Add Step request object.
+     * @param namespace the namespace value to set.
      */
-    public abstract Object buildResponseFromRequest(Object stepRequest);
+    public abstract void setRequestNamespace(Object stepRequest, String namespace);
 
     /**
-     * This method gets the the StepConfig object for the given Step.
+     * Sets the step name.
      *
-     * @param step the step object
-     *
-     * @return the step config object
+     * @param stepRequest the Add Step request object.
+     * @param stepName the step name value to set.
      */
-    public abstract StepConfig getEmrStepConfig(Object step);
+    public abstract void setRequestStepName(Object stepRequest, String stepName);
+
+    /**
+     * Sets the step Id.
+     *
+     * @param step the Step object.
+     * @param stepId the step Id value to set.
+     */
+    public abstract void setStepId(Object step, String stepId);
 
     /**
      * Validates the step request.

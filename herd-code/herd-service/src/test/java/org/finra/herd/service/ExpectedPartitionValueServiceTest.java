@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.log4j.Logger;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -45,8 +44,6 @@ public class ExpectedPartitionValueServiceTest extends AbstractServiceTest
     @Autowired
     @Qualifier(value = "expectedPartitionValueServiceImpl")
     private ExpectedPartitionValueService expectedPartitionValueServiceImpl;
-
-    private static Logger logger = Logger.getLogger(ExpectedPartitionValueServiceTest.class);
 
     @Test
     public void testCreateExpectedPartitionValues()
@@ -721,7 +718,6 @@ public class ExpectedPartitionValueServiceTest extends AbstractServiceTest
         List<String> testSortedExpectedPartitionValues = getTestSortedExpectedPartitionValues(MAX_PARTITION_VALUES);
         ExpectedPartitionValuesCreateRequest createRequest =
             createExpectedPartitionValuesCreateRequest(PARTITION_KEY_GROUP, testUnsortedExpectedPartitionValues);
-        logger.info(String.format("Testing createExpectedPartitionValues() with %d expected partition values...", MAX_PARTITION_VALUES));
         ExpectedPartitionValuesInformation resultPartitionValuesInformation = expectedPartitionValueService.createExpectedPartitionValues(createRequest);
 
         // Validate the returned object.
@@ -731,7 +727,6 @@ public class ExpectedPartitionValueServiceTest extends AbstractServiceTest
         assertEquals(testUnsortedExpectedPartitionValues.size(), partitionKeyGroupEntity.getExpectedPartitionValues().size());
 
         // Get expected partition value without an offset.
-        logger.info(String.format("Testing getExpectedPartitionValue() without an offset..."));
         ExpectedPartitionValueInformation resultPartitionValueInformation = expectedPartitionValueService
             .getExpectedPartitionValue(new ExpectedPartitionValueKey(PARTITION_KEY_GROUP, testSortedExpectedPartitionValues.get(MAX_PARTITION_VALUES / 2)),
                 null);
@@ -741,7 +736,6 @@ public class ExpectedPartitionValueServiceTest extends AbstractServiceTest
             resultPartitionValueInformation);
 
         // Get expected partition value by passing a large positive offset.
-        logger.info(String.format("Testing getExpectedPartitionValue() with %d offset...", LAST_ELEMENT_INDEX));
         resultPartitionValueInformation = expectedPartitionValueService
             .getExpectedPartitionValue(new ExpectedPartitionValueKey(PARTITION_KEY_GROUP, testSortedExpectedPartitionValues.get(0)), LAST_ELEMENT_INDEX);
 
@@ -750,7 +744,6 @@ public class ExpectedPartitionValueServiceTest extends AbstractServiceTest
             resultPartitionValueInformation);
 
         // Get expected partition value by passing a large negative offset.
-        logger.info(String.format("Testing getExpectedPartitionValue() with %d offset...", -LAST_ELEMENT_INDEX));
         resultPartitionValueInformation = expectedPartitionValueService
             .getExpectedPartitionValue(new ExpectedPartitionValueKey(PARTITION_KEY_GROUP, testSortedExpectedPartitionValues.get(LAST_ELEMENT_INDEX)),
                 -LAST_ELEMENT_INDEX);
@@ -759,7 +752,6 @@ public class ExpectedPartitionValueServiceTest extends AbstractServiceTest
         validateExpectedPartitionValueInformation(PARTITION_KEY_GROUP, testSortedExpectedPartitionValues.get(0), resultPartitionValueInformation);
 
         // Get a range of expected partition values.
-        logger.info(String.format("Testing getExpectedPartitionValues() with %d expected partition values...", MAX_PARTITION_VALUES));
         resultPartitionValuesInformation = expectedPartitionValueService.getExpectedPartitionValues(new PartitionKeyGroupKey(PARTITION_KEY_GROUP),
             new PartitionValueRange(testSortedExpectedPartitionValues.get(0), testSortedExpectedPartitionValues.get(LAST_ELEMENT_INDEX)));
 
@@ -769,7 +761,6 @@ public class ExpectedPartitionValueServiceTest extends AbstractServiceTest
         // Delete expected partition values from this partition key group.
         ExpectedPartitionValuesDeleteRequest deleteRequest =
             createExpectedPartitionValuesDeleteRequest(PARTITION_KEY_GROUP, testUnsortedExpectedPartitionValues);
-        logger.info(String.format("Testing deleteExpectedPartitionValues() with %d expected partition values...", MAX_PARTITION_VALUES));
         ExpectedPartitionValuesInformation deleteResultPartitionValuesInformation = expectedPartitionValueService.deleteExpectedPartitionValues(deleteRequest);
 
         // Validate the returned object.

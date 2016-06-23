@@ -15,6 +15,12 @@
 */
 package org.finra.herd.rest;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.access.annotation.Secured;
 
 /*
@@ -27,5 +33,38 @@ public abstract class HerdBaseController
     protected HerdBaseController()
     {
         // Prevent classes from instantiating except sub-classes.
+    }
+
+    /**
+     * Gets the given delimited field values as a list. If delimited field values is null, returns an empty list.
+     *
+     * @param delimitedFieldValues Delimited field values
+     *
+     * @return List of values
+     */
+    protected List<String> getList(DelimitedFieldValues delimitedFieldValues)
+    {
+        return delimitedFieldValues == null ? new ArrayList<>() : delimitedFieldValues.getValues();
+    }
+
+    /**
+     * Validates that the query string parameters aren't duplicated for a list of expected parameters.
+     *
+     * @param parameterMap the query string parameter map.
+     * @param parametersToCheck the query string parameters to check.
+     *
+     * @throws IllegalArgumentException if any duplicates were found.
+     */
+    public void validateNoDuplicateQueryStringParams(Map<String, String[]> parameterMap, String... parametersToCheck) throws IllegalArgumentException
+    {
+        List<String> parametersToCheckList = Arrays.asList(parametersToCheck);
+        for (Map.Entry<String, String[]> mapEntry : parameterMap.entrySet())
+        {
+            if ((parametersToCheckList.contains(mapEntry.getKey())) && (mapEntry.getValue().length != 1))
+            {
+                throw new IllegalArgumentException("Found " + mapEntry.getValue().length + " occurrences of query string parameter \"" + mapEntry.getKey() +
+                    "\", but 1 expected. Values found: \"" + StringUtils.join(mapEntry.getValue(), ", ") + "\".");
+            }
+        }
     }
 }

@@ -42,24 +42,25 @@ public class RunOozieWorkflowTest extends AbstractServiceTest
     public void testRunOozieWorkflowXml() throws Exception
     {
         String clusterName = "testCluster" + Math.random();
-        RunOozieWorkflowRequest runOozieRequest = new RunOozieWorkflowRequest(TEST_ACTIVITI_NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME, 
-            clusterName, OOZIE_WORKFLOW_LOCATION, null);
-        
+        RunOozieWorkflowRequest runOozieRequest =
+            new RunOozieWorkflowRequest(TEST_ACTIVITI_NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME, clusterName, OOZIE_WORKFLOW_LOCATION, null, null);
+
         List<Parameter> parameters = new ArrayList<>();
-        
+
         parameters.add(new Parameter("clusterName", clusterName));
         parameters.add(new Parameter("contentType", "xml"));
         parameters.add(new Parameter("runOozieWorkflowRequest", xmlHelper.objectToXml(runOozieRequest)));
 
         // Run a job with Activiti XML that will run the oozie workflow.
         Job job = createJobForCreateCluster(ACTIVITI_XML_RUN_OOZIE_WORKFLOW_WITH_CLASSPATH, parameters, MockAwsOperationsHelper.AMAZON_CLUSTER_STATUS_WAITING);
-        
+
         assertNotNull(job);
 
         HistoricProcessInstance hisInstance =
-                activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(job.getId()).includeProcessVariables().singleResult();
+            activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(job.getId()).includeProcessVariables().singleResult();
         Map<String, Object> variables = hisInstance.getProcessVariables();
-        String oozieJobTaskStatus = (String) variables.get("runOozieWorkflowTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + ActivitiRuntimeHelper.VARIABLE_STATUS);
+        String oozieJobTaskStatus =
+            (String) variables.get("runOozieWorkflowTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + ActivitiRuntimeHelper.VARIABLE_STATUS);
         String oozieJobId = (String) variables.get("runOozieWorkflowTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + RunOozieWorkflow.VARIABLE_ID);
 
         assertEquals(oozieJobTaskStatus, ActivitiRuntimeHelper.TASK_STATUS_SUCCESS);
@@ -70,24 +71,25 @@ public class RunOozieWorkflowTest extends AbstractServiceTest
     public void testRunOozieWorkflowJson() throws Exception
     {
         String clusterName = "testCluster" + Math.random();
-        RunOozieWorkflowRequest runOozieRequest = new RunOozieWorkflowRequest(TEST_ACTIVITI_NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME, 
-            clusterName, OOZIE_WORKFLOW_LOCATION, null);
-        
+        RunOozieWorkflowRequest runOozieRequest =
+            new RunOozieWorkflowRequest(TEST_ACTIVITI_NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME, clusterName, OOZIE_WORKFLOW_LOCATION, null, null);
+
         List<Parameter> parameters = new ArrayList<>();
-        
+
         parameters.add(new Parameter("clusterName", clusterName));
         parameters.add(new Parameter("contentType", "json"));
         parameters.add(new Parameter("runOozieWorkflowRequest", jsonHelper.objectToJson(runOozieRequest)));
 
         // Run a job with Activiti XML that will run the oozie workflow.
         Job job = createJobForCreateCluster(ACTIVITI_XML_RUN_OOZIE_WORKFLOW_WITH_CLASSPATH, parameters, MockAwsOperationsHelper.AMAZON_CLUSTER_STATUS_WAITING);
-        
+
         assertNotNull(job);
 
         HistoricProcessInstance hisInstance =
-                activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(job.getId()).includeProcessVariables().singleResult();
+            activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(job.getId()).includeProcessVariables().singleResult();
         Map<String, Object> variables = hisInstance.getProcessVariables();
-        String oozieJobTaskStatus = (String) variables.get("runOozieWorkflowTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + ActivitiRuntimeHelper.VARIABLE_STATUS);
+        String oozieJobTaskStatus =
+            (String) variables.get("runOozieWorkflowTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + ActivitiRuntimeHelper.VARIABLE_STATUS);
         String oozieJobId = (String) variables.get("runOozieWorkflowTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + RunOozieWorkflow.VARIABLE_ID);
 
         assertEquals(oozieJobTaskStatus, ActivitiRuntimeHelper.TASK_STATUS_SUCCESS);
@@ -99,24 +101,28 @@ public class RunOozieWorkflowTest extends AbstractServiceTest
     {
         String clusterName = "testCluster" + Math.random();
         List<Parameter> parameters = new ArrayList<>();
-        
+
         parameters.add(new Parameter("clusterName", clusterName));
         parameters.add(new Parameter("contentType", "wrong_content_type"));
         parameters.add(new Parameter("runOozieWorkflowRequest", "some_request"));
 
-        // Run a job with Activiti XML that will run the oozie workflow.
-        Job job = createJobForCreateCluster(ACTIVITI_XML_RUN_OOZIE_WORKFLOW_WITH_CLASSPATH, parameters, MockAwsOperationsHelper.AMAZON_CLUSTER_STATUS_WAITING);
-        
-        assertNotNull(job);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            // Run a job with Activiti XML that will run the oozie workflow.
+            Job job =
+                createJobForCreateCluster(ACTIVITI_XML_RUN_OOZIE_WORKFLOW_WITH_CLASSPATH, parameters, MockAwsOperationsHelper.AMAZON_CLUSTER_STATUS_WAITING);
 
-        HistoricProcessInstance hisInstance =
+            assertNotNull(job);
+
+            HistoricProcessInstance hisInstance =
                 activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(job.getId()).includeProcessVariables().singleResult();
-        Map<String, Object> variables = hisInstance.getProcessVariables();
-        String oozieJobTaskStatus = (String) variables.get("runOozieWorkflowTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + ActivitiRuntimeHelper.VARIABLE_STATUS);
-        String oozieJobId = (String) variables.get("runOozieWorkflowTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + RunOozieWorkflow.VARIABLE_ID);
+            Map<String, Object> variables = hisInstance.getProcessVariables();
+            String oozieJobTaskStatus =
+                (String) variables.get("runOozieWorkflowTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + ActivitiRuntimeHelper.VARIABLE_STATUS);
+            String oozieJobId = (String) variables.get("runOozieWorkflowTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + RunOozieWorkflow.VARIABLE_ID);
 
-        assertEquals(oozieJobTaskStatus, ActivitiRuntimeHelper.TASK_STATUS_ERROR);
-        assertNull(oozieJobId);
+            assertEquals(oozieJobTaskStatus, ActivitiRuntimeHelper.TASK_STATUS_ERROR);
+            assertNull(oozieJobId);
+        });
     }
 
     @Test
@@ -124,49 +130,57 @@ public class RunOozieWorkflowTest extends AbstractServiceTest
     {
         String clusterName = "testCluster" + Math.random();
         List<Parameter> parameters = new ArrayList<>();
-        
+
         parameters.add(new Parameter("clusterName", clusterName));
         parameters.add(new Parameter("contentType", "xml"));
         parameters.add(new Parameter("runOozieWorkflowRequest", ""));
 
-        // Run a job with Activiti XML that will run the oozie workflow.
-        Job job = createJobForCreateCluster(ACTIVITI_XML_RUN_OOZIE_WORKFLOW_WITH_CLASSPATH, parameters, MockAwsOperationsHelper.AMAZON_CLUSTER_STATUS_WAITING);
-        
-        assertNotNull(job);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            // Run a job with Activiti XML that will run the oozie workflow.
+            Job job =
+                createJobForCreateCluster(ACTIVITI_XML_RUN_OOZIE_WORKFLOW_WITH_CLASSPATH, parameters, MockAwsOperationsHelper.AMAZON_CLUSTER_STATUS_WAITING);
 
-        HistoricProcessInstance hisInstance =
+            assertNotNull(job);
+
+            HistoricProcessInstance hisInstance =
                 activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(job.getId()).includeProcessVariables().singleResult();
-        Map<String, Object> variables = hisInstance.getProcessVariables();
-        String oozieJobTaskStatus = (String) variables.get("runOozieWorkflowTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + ActivitiRuntimeHelper.VARIABLE_STATUS);
-        String oozieJobId = (String) variables.get("runOozieWorkflowTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + RunOozieWorkflow.VARIABLE_ID);
+            Map<String, Object> variables = hisInstance.getProcessVariables();
+            String oozieJobTaskStatus =
+                (String) variables.get("runOozieWorkflowTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + ActivitiRuntimeHelper.VARIABLE_STATUS);
+            String oozieJobId = (String) variables.get("runOozieWorkflowTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + RunOozieWorkflow.VARIABLE_ID);
 
-        assertEquals(oozieJobTaskStatus, ActivitiRuntimeHelper.TASK_STATUS_ERROR);
-        assertNull(oozieJobId);
+            assertEquals(oozieJobTaskStatus, ActivitiRuntimeHelper.TASK_STATUS_ERROR);
+            assertNull(oozieJobId);
+        });
     }
-    
+
     @Test
     public void testRunOozieWorkflowWrongXmlRequest() throws Exception
     {
         String clusterName = "testCluster" + Math.random();
         List<Parameter> parameters = new ArrayList<>();
-        
+
         parameters.add(new Parameter("clusterName", clusterName));
         parameters.add(new Parameter("contentType", "xml"));
         parameters.add(new Parameter("runOozieWorkflowRequest", "wrong_xml_request"));
 
-        // Run a job with Activiti XML that will run the oozie workflow.
-        Job job = createJobForCreateCluster(ACTIVITI_XML_RUN_OOZIE_WORKFLOW_WITH_CLASSPATH, parameters, MockAwsOperationsHelper.AMAZON_CLUSTER_STATUS_WAITING);
-        
-        assertNotNull(job);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            // Run a job with Activiti XML that will run the oozie workflow.
+            Job job =
+                createJobForCreateCluster(ACTIVITI_XML_RUN_OOZIE_WORKFLOW_WITH_CLASSPATH, parameters, MockAwsOperationsHelper.AMAZON_CLUSTER_STATUS_WAITING);
 
-        HistoricProcessInstance hisInstance =
+            assertNotNull(job);
+
+            HistoricProcessInstance hisInstance =
                 activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(job.getId()).includeProcessVariables().singleResult();
-        Map<String, Object> variables = hisInstance.getProcessVariables();
-        String oozieJobTaskStatus = (String) variables.get("runOozieWorkflowTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + ActivitiRuntimeHelper.VARIABLE_STATUS);
-        String oozieJobId = (String) variables.get("runOozieWorkflowTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + RunOozieWorkflow.VARIABLE_ID);
+            Map<String, Object> variables = hisInstance.getProcessVariables();
+            String oozieJobTaskStatus =
+                (String) variables.get("runOozieWorkflowTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + ActivitiRuntimeHelper.VARIABLE_STATUS);
+            String oozieJobId = (String) variables.get("runOozieWorkflowTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + RunOozieWorkflow.VARIABLE_ID);
 
-        assertEquals(oozieJobTaskStatus, ActivitiRuntimeHelper.TASK_STATUS_ERROR);
-        assertNull(oozieJobId);
+            assertEquals(oozieJobTaskStatus, ActivitiRuntimeHelper.TASK_STATUS_ERROR);
+            assertNull(oozieJobId);
+        });
     }
 
     @Test
@@ -174,23 +188,27 @@ public class RunOozieWorkflowTest extends AbstractServiceTest
     {
         String clusterName = "testCluster" + Math.random();
         List<Parameter> parameters = new ArrayList<>();
-        
+
         parameters.add(new Parameter("clusterName", clusterName));
         parameters.add(new Parameter("contentType", "json"));
         parameters.add(new Parameter("runOozieWorkflowRequest", "wrong_json_request"));
 
-        // Run a job with Activiti XML that will run the oozie workflow.
-        Job job = createJobForCreateCluster(ACTIVITI_XML_RUN_OOZIE_WORKFLOW_WITH_CLASSPATH, parameters, MockAwsOperationsHelper.AMAZON_CLUSTER_STATUS_WAITING);
-        
-        assertNotNull(job);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            // Run a job with Activiti XML that will run the oozie workflow.
+            Job job =
+                createJobForCreateCluster(ACTIVITI_XML_RUN_OOZIE_WORKFLOW_WITH_CLASSPATH, parameters, MockAwsOperationsHelper.AMAZON_CLUSTER_STATUS_WAITING);
 
-        HistoricProcessInstance hisInstance =
+            assertNotNull(job);
+
+            HistoricProcessInstance hisInstance =
                 activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(job.getId()).includeProcessVariables().singleResult();
-        Map<String, Object> variables = hisInstance.getProcessVariables();
-        String oozieJobTaskStatus = (String) variables.get("runOozieWorkflowTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + ActivitiRuntimeHelper.VARIABLE_STATUS);
-        String oozieJobId = (String) variables.get("runOozieWorkflowTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + RunOozieWorkflow.VARIABLE_ID);
+            Map<String, Object> variables = hisInstance.getProcessVariables();
+            String oozieJobTaskStatus =
+                (String) variables.get("runOozieWorkflowTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + ActivitiRuntimeHelper.VARIABLE_STATUS);
+            String oozieJobId = (String) variables.get("runOozieWorkflowTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + RunOozieWorkflow.VARIABLE_ID);
 
-        assertEquals(oozieJobTaskStatus, ActivitiRuntimeHelper.TASK_STATUS_ERROR);
-        assertNull(oozieJobId);
+            assertEquals(oozieJobTaskStatus, ActivitiRuntimeHelper.TASK_STATUS_ERROR);
+            assertNull(oozieJobId);
+        });
     }
 }

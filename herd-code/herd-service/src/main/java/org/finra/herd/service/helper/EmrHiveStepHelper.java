@@ -34,18 +34,6 @@ import org.finra.herd.model.api.xml.EmrHiveStepAddRequest;
 public class EmrHiveStepHelper extends EmrStepHelper
 {
     @Override
-    public String getStepType()
-    {
-        return EmrHiveStep.class.getName();
-    }
-
-    @Override
-    public String getStepRequestType()
-    {
-        return EmrHiveStepAddRequest.class.getName();
-    }
-
-    @Override
     public Object buildResponseFromRequest(Object stepRequest)
     {
         EmrHiveStepAddRequest emrHiveStepAddRequest = (EmrHiveStepAddRequest) stepRequest;
@@ -110,24 +98,27 @@ public class EmrHiveStepHelper extends EmrStepHelper
     }
 
     @Override
-    public void validateAddStepRequest(Object step)
+    public String getRequestEmrClusterDefinitionName(Object stepRequest)
     {
-        EmrHiveStepAddRequest hiveStepRequest = (EmrHiveStepAddRequest) step;
-
-        validateStepName(hiveStepRequest.getStepName());
-        validateScriptLocation(hiveStepRequest.getScriptLocation());
+        return ((EmrHiveStepAddRequest) stepRequest).getEmrClusterDefinitionName();
     }
 
     @Override
-    public String getStepId(Object step)
+    public String getRequestEmrClusterId(Object stepRequest)
     {
-        return ((EmrHiveStep) step).getId();
+        return ((EmrHiveStepAddRequest) stepRequest).getEmrClusterId();
     }
 
     @Override
-    public void setStepId(Object step, String stepId)
+    public String getRequestEmrClusterName(Object stepRequest)
     {
-        ((EmrHiveStep) step).setId(stepId);
+        return ((EmrHiveStepAddRequest) stepRequest).getEmrClusterName();
+    }
+
+    @Override
+    public String getRequestNamespace(Object stepRequest)
+    {
+        return ((EmrHiveStepAddRequest) stepRequest).getNamespace();
     }
 
     @Override
@@ -137,9 +128,21 @@ public class EmrHiveStepHelper extends EmrStepHelper
     }
 
     @Override
-    public void setRequestStepName(Object stepRequest, String stepName)
+    public String getStepId(Object step)
     {
-        ((EmrHiveStepAddRequest) stepRequest).setStepName(stepName);
+        return ((EmrHiveStep) step).getId();
+    }
+
+    @Override
+    public String getStepRequestType()
+    {
+        return EmrHiveStepAddRequest.class.getName();
+    }
+
+    @Override
+    public String getStepType()
+    {
+        return EmrHiveStep.class.getName();
     }
 
     @Override
@@ -155,9 +158,21 @@ public class EmrHiveStepHelper extends EmrStepHelper
     }
 
     @Override
-    public String getRequestNamespace(Object stepRequest)
+    public void setRequestEmrClusterDefinitionName(Object stepRequest, String clusterDefinitionName)
     {
-        return ((EmrHiveStepAddRequest) stepRequest).getNamespace();
+        ((EmrHiveStepAddRequest) stepRequest).setEmrClusterDefinitionName(clusterDefinitionName);
+    }
+
+    @Override
+    public void setRequestEmrClusterId(Object stepRequest, String emrClusterId)
+    {
+        ((EmrHiveStepAddRequest) stepRequest).setEmrClusterId(emrClusterId);
+    }
+
+    @Override
+    public void setRequestEmrClusterName(Object stepRequest, String clusterName)
+    {
+        ((EmrHiveStepAddRequest) stepRequest).setEmrClusterName(clusterName);
     }
 
     @Override
@@ -167,26 +182,23 @@ public class EmrHiveStepHelper extends EmrStepHelper
     }
 
     @Override
-    public String getRequestEmrClusterDefinitionName(Object stepRequest)
+    public void setRequestStepName(Object stepRequest, String stepName)
     {
-        return ((EmrHiveStepAddRequest) stepRequest).getEmrClusterDefinitionName();
+        ((EmrHiveStepAddRequest) stepRequest).setStepName(stepName);
     }
 
     @Override
-    public void setRequestEmrClusterDefinitionName(Object stepRequest, String clusterDefinitionName)
+    public void setStepId(Object step, String stepId)
     {
-        ((EmrHiveStepAddRequest) stepRequest).setEmrClusterDefinitionName(clusterDefinitionName);
+        ((EmrHiveStep) step).setId(stepId);
     }
 
     @Override
-    public String getRequestEmrClusterName(Object stepRequest)
+    public void validateAddStepRequest(Object step)
     {
-        return ((EmrHiveStepAddRequest) stepRequest).getEmrClusterName();
-    }
+        EmrHiveStepAddRequest hiveStepRequest = (EmrHiveStepAddRequest) step;
 
-    @Override
-    public void setRequestEmrClusterName(Object stepRequest, String clusterName)
-    {
-        ((EmrHiveStepAddRequest) stepRequest).setEmrClusterName(clusterName);
+        validateStepName(hiveStepRequest.getStepName());
+        validateScriptLocation(hiveStepRequest.getScriptLocation());
     }
 }

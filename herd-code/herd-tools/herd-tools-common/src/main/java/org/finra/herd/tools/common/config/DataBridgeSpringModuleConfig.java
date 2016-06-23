@@ -15,20 +15,26 @@
 */
 package org.finra.herd.tools.common.config;
 
+import com.amazonaws.retry.RetryPolicy.BackoffStrategy;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.FilterType;
+import org.springframework.context.annotation.Import;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
+import org.finra.herd.dao.RetryPolicyFactory;
 import org.finra.herd.dao.S3Dao;
+import org.finra.herd.dao.SimpleExponentialBackoffStrategy;
 import org.finra.herd.dao.helper.AwsHelper;
 import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.dao.helper.JavaPropertiesHelper;
 import org.finra.herd.dao.impl.S3DaoImpl;
 import org.finra.herd.service.S3Service;
-import org.finra.herd.service.helper.HerdHelper;
+import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.service.helper.StorageFileHelper;
+import org.finra.herd.service.helper.StorageHelper;
+import org.finra.herd.service.helper.StorageUnitHelper;
 import org.finra.herd.service.impl.S3ServiceImpl;
 
 /**
@@ -40,14 +46,9 @@ import org.finra.herd.service.impl.S3ServiceImpl;
     excludeFilters = @ComponentScan.Filter(type = FilterType.REGEX,
         pattern = {"org\\.finra\\.herd\\.tools\\.uploader\\.config\\..*", "org\\.finra\\.herd\\.tools\\.downloader\\.config\\..*",
             "org\\.finra\\.herd\\.tools\\.common\\.config\\..*"}))
+@Import(DataBridgeAopSpringModuleConfig.class)
 public class DataBridgeSpringModuleConfig
 {
-    @Bean
-    public HerdHelper herdHelper()
-    {
-        return new HerdHelper();
-    }
-
     @Bean
     public AwsHelper awsHelper()
     {
@@ -55,15 +56,15 @@ public class DataBridgeSpringModuleConfig
     }
 
     @Bean
-    public StorageFileHelper storageFileHelper()
+    public BackoffStrategy backoffStrategy()
     {
-        return new StorageFileHelper();
+        return new SimpleExponentialBackoffStrategy();
     }
 
     @Bean
-    public HerdStringHelper herdStringHelper()
+    public BusinessObjectDataHelper businessObjectDataHelper()
     {
-        return new HerdStringHelper();
+        return new BusinessObjectDataHelper();
     }
 
     // This dependency is required when HerdStringHelper is used.
@@ -74,9 +75,22 @@ public class DataBridgeSpringModuleConfig
     }
 
     @Bean
-    public S3Service s3Service()
+    public HerdStringHelper herdStringHelper()
     {
-        return new S3ServiceImpl();
+        return new HerdStringHelper();
+    }
+
+    // This dependency is required when S3Dao is used.
+    @Bean
+    public JavaPropertiesHelper javaPropertiesHelper()
+    {
+        return new JavaPropertiesHelper();
+    }
+
+    @Bean
+    public RetryPolicyFactory retryPolicyFactory()
+    {
+        return new RetryPolicyFactory();
     }
 
     @Bean
@@ -85,10 +99,27 @@ public class DataBridgeSpringModuleConfig
         return new S3DaoImpl();
     }
 
-    // This dependency is required when S3Dao is used.
     @Bean
-    public JavaPropertiesHelper javaPropertiesHelper()
+    public S3Service s3Service()
     {
-        return new JavaPropertiesHelper();
+        return new S3ServiceImpl();
+    }
+
+    @Bean
+    public StorageFileHelper storageFileHelper()
+    {
+        return new StorageFileHelper();
+    }
+
+    @Bean
+    public StorageHelper storageHelper()
+    {
+        return new StorageHelper();
+    }
+
+    @Bean
+    public StorageUnitHelper storageUnitHelper()
+    {
+        return new StorageUnitHelper();
     }
 }

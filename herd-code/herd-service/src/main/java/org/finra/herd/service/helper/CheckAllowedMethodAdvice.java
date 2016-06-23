@@ -21,13 +21,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
- * Advice that checks and blocks the methods to be blocked in configuration.  
+ * Advice that checks and blocks the methods to be blocked in configuration.
  */
 @Component
 public class CheckAllowedMethodAdvice
 {
     @Autowired
-    private HerdDaoHelper herdDaoHelper;
+    private ConfigurationDaoHelper configurationDaoHelper;
 
     /**
      * Checks whether the requested operation is permitted.
@@ -45,7 +45,7 @@ public class CheckAllowedMethodAdvice
         MethodSignature targetMethodSignature = (MethodSignature) pjp.getSignature();
         String methodName = targetClass.getName() + "." + targetMethodSignature.getName();
 
-        herdDaoHelper.checkNotAllowedMethod(methodName);
+        configurationDaoHelper.checkNotAllowedMethod(methodName);
         return pjp.proceed();
     }
 }

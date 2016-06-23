@@ -17,11 +17,13 @@ package org.finra.herd.dao.impl;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.concurrent.Executors;
 
@@ -46,17 +48,22 @@ import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.ListMultipartUploadsRequest;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
+import com.amazonaws.services.s3.model.ListVersionsRequest;
+import com.amazonaws.services.s3.model.MultiObjectDeleteException;
+import com.amazonaws.services.s3.model.MultiObjectDeleteException.DeleteError;
 import com.amazonaws.services.s3.model.MultipartUpload;
 import com.amazonaws.services.s3.model.MultipartUploadListing;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.s3.model.RestoreObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.amazonaws.services.s3.model.S3VersionSummary;
 import com.amazonaws.services.s3.model.SSEAlgorithm;
 import com.amazonaws.services.s3.model.SSEAwsKeyManagementParams;
 import com.amazonaws.services.s3.model.StorageClass;
+import com.amazonaws.services.s3.model.VersionListing;
 import com.amazonaws.services.s3.transfer.Copy;
 import com.amazonaws.services.s3.transfer.MultipleFileDownload;
 import com.amazonaws.services.s3.transfer.MultipleFileUpload;
@@ -65,22 +72,25 @@ import com.amazonaws.services.s3.transfer.Transfer;
 import com.amazonaws.services.s3.transfer.Transfer.TransferState;
 import com.amazonaws.services.s3.transfer.TransferManager;
 import com.amazonaws.services.s3.transfer.TransferProgress;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.http.HttpStatus;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
 
 import org.finra.herd.core.HerdDateUtils;
+import org.finra.herd.dao.RetryPolicyFactory;
 import org.finra.herd.dao.S3Dao;
 import org.finra.herd.dao.S3Operations;
 import org.finra.herd.dao.helper.AwsHelper;
 import org.finra.herd.dao.helper.JavaPropertiesHelper;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.AwsCredential;
-import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.dto.HerdAWSCredentialsProvider;
 import org.finra.herd.model.dto.S3FileCopyRequestParamsDto;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
@@ -89,9 +99,13 @@ import org.finra.herd.model.dto.S3FileTransferResultsDto;
 /**
  * The S3 DAO implementation.
  */
+// TODO: Refactor S3 Dao implementation and remove the PMD suppress warning statement below.
+@SuppressWarnings("PMD.TooManyMethods")
 @Repository
 public class S3DaoImpl implements S3Dao
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(S3DaoImpl.class);
+
     /**
      * A {@link AWSCredentialsProvider} which delegates to its wrapped {@link HerdAWSCredentialsProvider}
      */
@@ -125,24 +139,25 @@ public class S3DaoImpl implements S3Dao
     @Autowired
     private S3Operations s3Operations;
 
-    private static final Logger LOGGER = Logger.getLogger(S3DaoImpl.class);
-
     private static final int MAX_KEYS_PER_DELETE_REQUEST = 1000;
 
-    private static final long SLEEP_INTERVAL_MILLIS = 100;
+    private static final long DEFAULT_SLEEP_INTERVAL_MILLIS = 100;
 
     @Autowired
     private JavaPropertiesHelper javaPropertiesHelper;
 
+    private long sleepIntervalsMillis = DEFAULT_SLEEP_INTERVAL_MILLIS;
+
+    @Autowired
+    private RetryPolicyFactory retryPolicyFactory;
+
     @Override
     public ObjectMetadata getObjectMetadata(final S3FileTransferRequestParamsDto params)
     {
-        AmazonS3Client s3Client = null;
+        AmazonS3Client s3Client = getAmazonS3(params);
 
         try
         {
-            s3Client = getAmazonS3(params);
-
             return s3Operations.getObjectMetadata(params.getS3BucketName(), params.getS3KeyPrefix(), s3Client);
         }
         catch (AmazonServiceException e)
@@ -159,10 +174,23 @@ public class S3DaoImpl implements S3Dao
         finally
         {
             // Shutdown the AmazonS3Client instance to release resources.
-            if (s3Client != null)
-            {
-                s3Client.shutdown();
-            }
+            s3Client.shutdown();
+        }
+    }
+
+    @Override
+    public boolean s3FileExists(S3FileTransferRequestParamsDto params) throws RuntimeException
+    {
+        AmazonS3Client s3Client = getAmazonS3(params);
+
+        try
+        {
+            S3Object s3Object = getS3Object(s3Client, params.getS3BucketName(), params.getS3KeyPrefix(), false);
+            return (s3Object != null);
+        }
+        finally
+        {
+            s3Client.shutdown();
         }
     }
 
@@ -176,7 +204,7 @@ public class S3DaoImpl implements S3Dao
             throw new ObjectNotFoundException(String.format("File not found at s3://%s/%s location.", params.getS3BucketName(), params.getS3KeyPrefix()));
         }
 
-        Assert.isTrue(fileSizeInBytes == null || fileSizeInBytes.compareTo(objectMetadata.getContentLength()) == 0, String
+        Assert.isTrue(fileSizeInBytes == null || Objects.equals(fileSizeInBytes, objectMetadata.getContentLength()), String
             .format("Specified file size (%d bytes) does not match to the actual file size (%d bytes) reported by S3 for s3://%s/%s file.", fileSizeInBytes,
                 objectMetadata.getContentLength(), params.getS3BucketName(), params.getS3KeyPrefix()));
     }
@@ -193,15 +221,14 @@ public class S3DaoImpl implements S3Dao
         InputStream emptyContent = new ByteArrayInputStream(new byte[0]);
 
         // Create a PutObjectRequest passing the folder name suffixed by '/'.
-        String directoryName = params.getS3KeyPrefix() + (params.getS3KeyPrefix().endsWith("/") ? "" : "/");
+        String directoryName = StringUtils.appendIfMissing(params.getS3KeyPrefix(), "/");
         PutObjectRequest putObjectRequest = new PutObjectRequest(params.getS3BucketName(), directoryName, emptyContent, metadata);
         // KMS key ID is being set through prepareMetadata()
 
-        AmazonS3Client s3Client = null;
+        AmazonS3Client s3Client = getAmazonS3(params);
 
         try
         {
-            s3Client = getAmazonS3(params);
             s3Operations.putObject(putObjectRequest, s3Client);
         }
         catch (AmazonServiceException e)
@@ -213,30 +240,125 @@ public class S3DaoImpl implements S3Dao
         finally
         {
             // Shutdown the AmazonS3Client instance to release resources.
-            if (s3Client != null)
-            {
-                s3Client.shutdown();
-            }
+            s3Client.shutdown();
         }
     }
 
     @Override
-    public List<StorageFile> listDirectory(final S3FileTransferRequestParamsDto params)
+    public List<S3ObjectSummary> listDirectory(final S3FileTransferRequestParamsDto params)
     {
         // By default, we do not ignore 0 byte objects that represent S3 directories.
         return listDirectory(params, false);
     }
 
     @Override
-    public List<StorageFile> listDirectory(final S3FileTransferRequestParamsDto params, boolean ignoreZeroByteDirectoryMarkers)
+    public List<S3ObjectSummary> listDirectory(final S3FileTransferRequestParamsDto params, boolean ignoreZeroByteDirectoryMarkers)
     {
-        return listObjectsMatchingKeyPrefix(params, ignoreZeroByteDirectoryMarkers);
+        Assert.isTrue(!isRootKeyPrefix(params.getS3KeyPrefix()), "Listing of S3 objects from root directory is not allowed.");
+
+        AmazonS3Client s3Client = getAmazonS3(params);
+        List<S3ObjectSummary> s3ObjectSummaries = new ArrayList<>();
+
+        try
+        {
+            ListObjectsRequest listObjectsRequest = new ListObjectsRequest().withBucketName(params.getS3BucketName()).withPrefix(params.getS3KeyPrefix());
+            ObjectListing objectListing;
+
+            do
+            {
+                objectListing = s3Operations.listObjects(listObjectsRequest, s3Client);
+
+                for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries())
+                {
+                    // Ignore 0 byte objects that represent S3 directories.
+                    if (!(ignoreZeroByteDirectoryMarkers && objectSummary.getKey().endsWith("/") && objectSummary.getSize() == 0L))
+                    {
+                        s3ObjectSummaries.add(objectSummary);
+                    }
+                }
+
+                listObjectsRequest.setMarker(objectListing.getNextMarker());
+            }
+            while (objectListing.isTruncated());
+        }
+        catch (AmazonS3Exception amazonS3Exception)
+        {
+            if (S3Operations.ERROR_CODE_NO_SUCH_BUCKET.equals(amazonS3Exception.getErrorCode()))
+            {
+                throw new IllegalArgumentException("The specified bucket '" + params.getS3BucketName() + "' does not exist.", amazonS3Exception);
+            }
+            throw new IllegalStateException("Error accessing S3", amazonS3Exception);
+        }
+        catch (AmazonClientException e)
+        {
+            throw new IllegalStateException(String
+                .format("Failed to list keys with prefix \"%s\" from bucket \"%s\". Reason: %s", params.getS3KeyPrefix(), params.getS3BucketName(),
+                    e.getMessage()), e);
+        }
+        finally
+        {
+            // Shutdown the AmazonS3Client instance to release resources.
+            s3Client.shutdown();
+        }
+
+        return s3ObjectSummaries;
+    }
+
+    @Override
+    public List<DeleteObjectsRequest.KeyVersion> listVersions(final S3FileTransferRequestParamsDto params)
+    {
+        Assert.isTrue(!isRootKeyPrefix(params.getS3KeyPrefix()), "Listing of S3 key versions from root directory is not allowed.");
+
+        AmazonS3Client s3Client = getAmazonS3(params);
+        List<DeleteObjectsRequest.KeyVersion> keyVersions = new ArrayList<>();
+
+        try
+        {
+            ListVersionsRequest listVersionsRequest = new ListVersionsRequest().withBucketName(params.getS3BucketName()).withPrefix(params.getS3KeyPrefix());
+            VersionListing versionListing;
+
+            do
+            {
+                versionListing = s3Operations.listVersions(listVersionsRequest, s3Client);
+
+                for (S3VersionSummary versionSummary : versionListing.getVersionSummaries())
+                {
+                    keyVersions.add(new DeleteObjectsRequest.KeyVersion(versionSummary.getKey(), versionSummary.getVersionId()));
+                }
+
+                listVersionsRequest.setKeyMarker(versionListing.getNextKeyMarker());
+                listVersionsRequest.setVersionIdMarker(versionListing.getNextVersionIdMarker());
+            }
+            while (versionListing.isTruncated());
+        }
+        catch (AmazonS3Exception amazonS3Exception)
+        {
+            if (S3Operations.ERROR_CODE_NO_SUCH_BUCKET.equals(amazonS3Exception.getErrorCode()))
+            {
+                throw new IllegalArgumentException("The specified bucket '" + params.getS3BucketName() + "' does not exist.", amazonS3Exception);
+            }
+            throw new IllegalStateException("Error accessing S3", amazonS3Exception);
+        }
+        catch (AmazonClientException e)
+        {
+            throw new IllegalStateException(String
+                .format("Failed to list keys/key versions with prefix \"%s\" from bucket \"%s\". Reason: %s", params.getS3KeyPrefix(), params.getS3BucketName(),
+                    e.getMessage()), e);
+        }
+        finally
+        {
+            // Shutdown the AmazonS3Client instance to release resources.
+            s3Client.shutdown();
+        }
+
+        return keyVersions;
     }
 
     @Override
     public S3FileTransferResultsDto uploadFile(final S3FileTransferRequestParamsDto params) throws InterruptedException
     {
-        LOGGER.info(String.format("Uploading %s local file to s3://%s/%s ...", params.getLocalPath(), params.getS3BucketName(), params.getS3KeyPrefix()));
+        LOGGER.info("Uploading local file to S3... localPath=\"{}\" s3Key=\"{}\" s3BucketName=\"{}\"", params.getLocalPath(), params.getS3KeyPrefix(),
+            params.getS3BucketName());
 
         // Perform the transfer.
         S3FileTransferResultsDto results = performTransfer(params, new Transferer()
@@ -259,13 +381,11 @@ public class S3DaoImpl implements S3Dao
             }
         });
 
-        LOGGER.info("Local file \"" + params.getLocalPath() + "\" contains " + results.getTotalBytesTransferred() +
-            " byte(s) which was successfully transferred to S3 key prefix \"" + params.getS3KeyPrefix() + "\" in bucket \"" +
-            params.getS3BucketName() + "\" in " + HerdDateUtils.formatDuration(results.getDurationMillis(), true));
+        LOGGER.info("Uploaded local file to the S3. localPath=\"{}\" s3Key=\"{}\" s3BucketName=\"{}\" totalBytesTransferred={} transferDuration=\"{}\"",
+            params.getLocalPath(), params.getS3KeyPrefix(), params.getS3BucketName(), results.getTotalBytesTransferred(),
+            HerdDateUtils.formatDuration(results.getDurationMillis()));
 
-        LOGGER.info(String.format("Overall transfer rate: %.2f kBytes/s (%.2f Mbits/s)",
-            awsHelper.getTransferRateInKilobytesPerSecond(results.getTotalBytesTransferred(), results.getDurationMillis()),
-            awsHelper.getTransferRateInMegabitsPerSecond(results.getTotalBytesTransferred(), results.getDurationMillis())));
+        logOverallTransferRate(results);
 
         return results;
     }
@@ -273,15 +393,14 @@ public class S3DaoImpl implements S3Dao
     @Override
     public S3FileTransferResultsDto uploadFileList(final S3FileTransferRequestParamsDto params) throws InterruptedException
     {
-        LOGGER.info(String
-            .format("Uploading %d files from %s local directory to s3://%s/%s ...", params.getFiles().size(), params.getLocalPath(), params.getS3BucketName(),
-                params.getS3KeyPrefix()));
+        LOGGER.info("Uploading a list of files from the local directory to S3... localDirectory=\"{}\" s3KeyPrefix=\"{}\" s3BucketName=\"{}\" s3KeyCount={}",
+            params.getLocalPath(), params.getS3KeyPrefix(), params.getS3BucketName(), params.getFiles().size());
 
         if (LOGGER.isInfoEnabled())
         {
             for (File file : params.getFiles())
             {
-                LOGGER.info(String.format("    %s", file.getPath()));
+                LOGGER.info("s3Key=\"{}\"", file.getPath());
             }
         }
 
@@ -303,49 +422,12 @@ public class S3DaoImpl implements S3Dao
             }
         });
 
-        LOGGER.info(
-            "List of files relative to the common local parent directory \"" + params.getLocalPath() + "\" contains " + results.getTotalFilesTransferred() +
-                " file(s) and " +
-                results.getTotalBytesTransferred() + " byte(s) which was successfully transferred to S3 key prefix \"" + params.getS3KeyPrefix() +
-                "\" in bucket \"" +
-                params.getS3BucketName() + "\" in " + HerdDateUtils.formatDuration(results.getDurationMillis(), true));
+        LOGGER.info("Uploaded list of files from the local directory to S3. " +
+            "localDirectory=\"{}\" s3KeyPrefix=\"{}\" s3BucketName=\"{}\" s3KeyCount={} totalBytesTransferred={} transferDuration=\"{}\"",
+            params.getLocalPath(), params.getS3KeyPrefix(), params.getS3BucketName(), results.getTotalFilesTransferred(), results.getTotalBytesTransferred(),
+            HerdDateUtils.formatDuration(results.getDurationMillis()));
 
-        LOGGER.info(String.format("Overall transfer rate: %.2f kBytes/s (%.2f Mbits/s)",
-            awsHelper.getTransferRateInKilobytesPerSecond(results.getTotalBytesTransferred(), results.getDurationMillis()),
-            awsHelper.getTransferRateInMegabitsPerSecond(results.getTotalBytesTransferred(), results.getDurationMillis())));
-
-        return results;
-    }
-
-    @Override
-    public S3FileTransferResultsDto copyFile(final S3FileCopyRequestParamsDto params) throws InterruptedException
-    {
-        LOGGER.info(String
-            .format("Copying S3 object from s3://%s/%s to s3://%s/%s...", params.getSourceBucketName(), params.getS3KeyPrefix(), params.getTargetBucketName(),
-                params.getS3KeyPrefix()));
-
-        // Perform the copy.
-        S3FileTransferResultsDto results = performTransfer(params, new Transferer()
-        {
-            @Override
-            public Transfer performTransfer(TransferManager transferManager)
-            {
-                // Create a copy request.
-                CopyObjectRequest copyObjectRequest =
-                    new CopyObjectRequest(params.getSourceBucketName(), params.getS3KeyPrefix(), params.getTargetBucketName(), params.getS3KeyPrefix());
-                copyObjectRequest.withSSEAwsKeyManagementParams(new SSEAwsKeyManagementParams(params.getKmsKeyId()));
-
-                return s3Operations.copyFile(copyObjectRequest, transferManager);
-            }
-        });
-
-        LOGGER.info("File \"" + params.getS3KeyPrefix() + "\" contains " + results.getTotalBytesTransferred() +
-            " byte(s) which was successfully copied from source bucket:\"" + params.getSourceBucketName() + "\" to target bucket:\"" +
-            params.getTargetBucketName() + "\" in " + HerdDateUtils.formatDuration(results.getDurationMillis(), true));
-
-        LOGGER.info(String.format("Overall transfer rate: %.2f kBytes/s (%.2f Mbits/s)",
-            awsHelper.getTransferRateInKilobytesPerSecond(results.getTotalBytesTransferred(), results.getDurationMillis()),
-            awsHelper.getTransferRateInMegabitsPerSecond(results.getTotalBytesTransferred(), results.getDurationMillis())));
+        logOverallTransferRate(results);
 
         return results;
     }
@@ -353,7 +435,8 @@ public class S3DaoImpl implements S3Dao
     @Override
     public S3FileTransferResultsDto uploadDirectory(final S3FileTransferRequestParamsDto params) throws InterruptedException
     {
-        LOGGER.info(String.format("Uploading %s local directory to s3://%s/%s ...", params.getLocalPath(), params.getS3BucketName(), params.getS3KeyPrefix()));
+        LOGGER.info("Uploading local directory to S3... localDirectory=\"{}\" s3KeyPrefix=\"{}\" s3BucketName=\"{}\"", params.getLocalPath(),
+            params.getS3KeyPrefix(), params.getS3BucketName());
 
         // Perform the transfer.
         S3FileTransferResultsDto results = performTransfer(params, new Transferer()
@@ -373,146 +456,297 @@ public class S3DaoImpl implements S3Dao
             }
         });
 
-        LOGGER.info("Local directory \"" + params.getLocalPath() + "\" contains " + results.getTotalFilesTransferred() + " file(s) and " +
-            results.getTotalBytesTransferred() + " byte(s) which was successfully transferred to S3 key prefix \"" + params.getS3KeyPrefix() +
-            "\" in bucket \"" +
-            params.getS3BucketName() + "\" in " + HerdDateUtils.formatDuration(results.getDurationMillis(), true));
+        LOGGER.info("Uploaded local directory to S3. " +
+            "localDirectory=\"{}\" s3KeyPrefix=\"{}\" s3BucketName=\"{}\" s3KeyCount={} totalBytesTransferred={} transferDuration=\"{}\"",
+            params.getLocalPath(), params.getS3KeyPrefix(), params.getS3BucketName(), results.getTotalFilesTransferred(), results.getTotalBytesTransferred(),
+            HerdDateUtils.formatDuration(results.getDurationMillis()));
 
-        LOGGER.info(String.format("Overall transfer rate: %.2f kBytes/s (%.2f Mbits/s)",
-            awsHelper.getTransferRateInKilobytesPerSecond(results.getTotalBytesTransferred(), results.getDurationMillis()),
-            awsHelper.getTransferRateInMegabitsPerSecond(results.getTotalBytesTransferred(), results.getDurationMillis())));
+        logOverallTransferRate(results);
 
         return results;
     }
 
     @Override
-    public void deleteFile(final S3FileTransferRequestParamsDto params)
+    public S3FileTransferResultsDto copyFile(final S3FileCopyRequestParamsDto params) throws InterruptedException
     {
-        AmazonS3Client s3Client = getAmazonS3(params);
+        LOGGER
+            .info("Copying S3 object... sourceS3Key=\"{}\" sourceS3BucketName=\"{}\" targetS3Key=\"{}\" targetS3BucketName=\"{}\"", params.getSourceObjectKey(),
+                params.getSourceBucketName(), params.getTargetObjectKey(), params.getTargetBucketName());
 
-        s3Operations.deleteFile(params.getS3BucketName(), params.getS3KeyPrefix(), s3Client);
+        // Perform the copy.
+        S3FileTransferResultsDto results = performTransfer(params, new Transferer()
+        {
+            @Override
+            public Transfer performTransfer(TransferManager transferManager)
+            {
+                // Create a copy request.
+                CopyObjectRequest copyObjectRequest =
+                    new CopyObjectRequest(params.getSourceBucketName(), params.getSourceObjectKey(), params.getTargetBucketName(), params.getTargetObjectKey());
+
+                // If KMS Key ID is specified, set the AWS Key Management System parameters to be used to encrypt the object.
+                if (StringUtils.isNotBlank(params.getKmsKeyId()))
+                {
+                    copyObjectRequest.withSSEAwsKeyManagementParams(new SSEAwsKeyManagementParams(params.getKmsKeyId()));
+                }
+                // Otherwise, specify the server-side encryption algorithm for encrypting the object using AWS-managed keys.
+                else
+                {
+                    ObjectMetadata metadata = new ObjectMetadata();
+                    metadata.setSSEAlgorithm(ObjectMetadata.AES_256_SERVER_SIDE_ENCRYPTION);
+                    copyObjectRequest.setNewObjectMetadata(metadata);
+                }
+
+                return s3Operations.copyFile(copyObjectRequest, transferManager);
+            }
+        });
+
+        LOGGER.info("Copied S3 object. sourceS3Key=\"{}\" sourceS3BucketName=\"{}\" targetS3Key=\"{}\" targetS3BucketName=\"{}\" " +
+            "totalBytesTransferred={} transferDuration=\"{}\"", params.getSourceObjectKey(), params.getSourceBucketName(), params.getTargetObjectKey(),
+            params.getTargetBucketName(), results.getTotalBytesTransferred(), HerdDateUtils.formatDuration(results.getDurationMillis()));
+
+        logOverallTransferRate(results);
+
+        return results;
+    }
+
+    @Override
+    public void restoreObjects(final S3FileTransferRequestParamsDto params, int expirationInDays)
+    {
+        LOGGER.info("Restoring a list of objects in S3... s3KeyPrefix=\"{}\" s3BucketName=\"{}\" s3KeyCount={}", params.getS3KeyPrefix(),
+            params.getS3BucketName(), params.getFiles().size());
+
+        if (!CollectionUtils.isEmpty(params.getFiles()))
+        {
+            // Initialize a key value her for the error message in the catch block.
+            String key = params.getFiles().get(0).getPath().replaceAll("\\\\", "/");
+
+            try
+            {
+                // Create an S3 client.
+                AmazonS3Client s3Client = getAmazonS3(params);
+
+                // Create a restore object request.
+                RestoreObjectRequest requestRestore = new RestoreObjectRequest(params.getS3BucketName(), null, expirationInDays);
+
+                try
+                {
+                    for (File file : params.getFiles())
+                    {
+                        key = file.getPath().replaceAll("\\\\", "/");
+                        ObjectMetadata objectMetadata = s3Operations.getObjectMetadata(params.getS3BucketName(), key, s3Client);
+
+                        // Request a restore for objects that are not already being restored.
+                        if (BooleanUtils.isNotTrue(objectMetadata.getOngoingRestore()))
+                        {
+                            requestRestore.setKey(key);
+                            s3Operations.restoreObject(requestRestore, s3Client);
+                        }
+                    }
+                }
+                finally
+                {
+                    s3Client.shutdown();
+                }
+            }
+            catch (Exception e)
+            {
+                throw new IllegalStateException(String
+                    .format("Failed to initiate a restore request for \"%s\" key in \"%s\" bucket. Reason: %s", key, params.getS3BucketName(), e.getMessage()),
+                    e);
+            }
+        }
+    }
+
+    @Override
+    public void validateGlacierS3FilesRestored(S3FileTransferRequestParamsDto params) throws RuntimeException
+    {
+        LOGGER.info("Checking for already restored Glacier storage class objects... s3KeyPrefix=\"{}\" s3BucketName=\"{}\" s3KeyCount={}",
+            params.getS3KeyPrefix(), params.getS3BucketName(), params.getFiles().size());
+
+        if (!CollectionUtils.isEmpty(params.getFiles()))
+        {
+            // Initialize a key value her for the error message in the catch block.
+            String key = params.getFiles().get(0).getPath().replaceAll("\\\\", "/");
+
+            try
+            {
+                // Create an S3 client.
+                AmazonS3Client s3Client = getAmazonS3(params);
+
+                try
+                {
+                    for (File file : params.getFiles())
+                    {
+                        key = file.getPath().replaceAll("\\\\", "/");
+                        ObjectMetadata objectMetadata = s3Operations.getObjectMetadata(params.getS3BucketName(), key, s3Client);
+
+                        // Fail if a not already restored object is detected.
+                        if (BooleanUtils.isNotFalse(objectMetadata.getOngoingRestore()))
+                        {
+                            throw new IllegalArgumentException(String.format(
+                                "Archived Glacier S3 file \"%s\" is not restored. StorageClass {%s}, OngoingRestore flag {%s}, Glacier S3 bucket name {%s}",
+                                key, objectMetadata.getStorageClass(), objectMetadata.getOngoingRestore(), params.getS3BucketName()));
+                        }
+                    }
+                }
+                finally
+                {
+                    s3Client.shutdown();
+                }
+            }
+            catch (AmazonServiceException e)
+            {
+                throw new IllegalStateException(
+                    String.format("Fail to check restore status for \"%s\" key in \"%s\" bucket. Reason: %s", key, params.getS3BucketName(), e.getMessage()),
+                    e);
+            }
+        }
     }
 
     @Override
     public void deleteFileList(final S3FileTransferRequestParamsDto params)
     {
-        AmazonS3Client s3Client = null;
-
-        LOGGER.info(String.format("Deleting %d keys/objects from s3://%s ...", params.getFiles().size(), params.getS3BucketName()));
+        LOGGER.info("Deleting a list of objects from S3... s3BucketName=\"{}\" s3KeyCount={}", params.getS3BucketName(), params.getFiles().size());
 
         try
         {
             // In order to avoid a MalformedXML AWS exception, we send delete request only when we have any keys to delete.
             if (!params.getFiles().isEmpty())
             {
-                // Build a list of keys to be deleted.
-                List<DeleteObjectsRequest.KeyVersion> keys = new ArrayList<>();
-                for (File file : params.getFiles())
+                // Create an S3 client.
+                AmazonS3Client s3Client = getAmazonS3(params);
+
+                try
                 {
-                    keys.add(new DeleteObjectsRequest.KeyVersion(file.getPath().replaceAll("\\\\", "/")));
-                }
-
-                DeleteObjectsRequest multiObjectDeleteRequest = new DeleteObjectsRequest(params.getS3BucketName());
-                s3Client = getAmazonS3(params);
-
-                // The Multi-Object Delete request can contain a list of up to 1000 keys.
-                for (int i = 0; i < keys.size() / MAX_KEYS_PER_DELETE_REQUEST + 1; i++)
-                {
-                    List<DeleteObjectsRequest.KeyVersion> keysSubList =
-                        keys.subList(i * MAX_KEYS_PER_DELETE_REQUEST, Math.min(keys.size(), (i + 1) * MAX_KEYS_PER_DELETE_REQUEST));
-                    multiObjectDeleteRequest.setKeys(keysSubList);
-                    s3Operations.deleteObjects(multiObjectDeleteRequest, s3Client);
-
-                    LOGGER.info(String.format("Successfully requested the deletion of the following %d keys/objects from bucket \"%s\":", keysSubList.size(),
-                        params.getS3BucketName()));
-
-                    for (DeleteObjectsRequest.KeyVersion keyVersion : keysSubList)
+                    // Build a list of keys to be deleted.
+                    List<DeleteObjectsRequest.KeyVersion> keys = new ArrayList<>();
+                    for (File file : params.getFiles())
                     {
-                        LOGGER.info(String.format("    s3://%s/%s", params.getS3BucketName(), keyVersion.getKey()));
+                        keys.add(new DeleteObjectsRequest.KeyVersion(file.getPath().replaceAll("\\\\", "/")));
                     }
+
+                    // Delete the keys.
+                    deleteKeyVersions(s3Client, params.getS3BucketName(), keys);
+                }
+                finally
+                {
+                    s3Client.shutdown();
                 }
             }
         }
         catch (Exception e)
         {
             throw new IllegalStateException(
-                String.format("Failed to delete a list of keys/objects from bucket \"%s\". Reason: %s", params.getS3BucketName(), e.getMessage()), e);
-        }
-        finally
-        {
-            // Shutdown the AmazonS3Client instance to release resources.
-            if (s3Client != null)
-            {
-                s3Client.shutdown();
-            }
+                String.format("Failed to delete a list of keys from bucket \"%s\". Reason: %s", params.getS3BucketName(), e.getMessage()), e);
         }
     }
 
     @Override
     public void deleteDirectory(final S3FileTransferRequestParamsDto params)
     {
-        AmazonS3Client s3Client = null;
+        LOGGER.info("Deleting keys/key versions from S3... s3KeyPrefix=\"{}\" s3BucketName=\"{}\"", params.getS3KeyPrefix(), params.getS3BucketName());
 
-        LOGGER.info(String.format("Deleting keys/objects from s3://%s/%s ...", params.getS3BucketName(), params.getS3KeyPrefix()));
-
-        Assert.hasText(params.getS3KeyPrefix(), "Deleting from root directory is not allowed.");
+        Assert.isTrue(!isRootKeyPrefix(params.getS3KeyPrefix()), "Deleting from root directory is not allowed.");
 
         try
         {
-            // List S3 object including any 0 byte objects that represent S3 directories.
-            List<StorageFile> storageFiles = listObjectsMatchingKeyPrefix(params, false);
-            LOGGER.info(String.format("Found %d keys/objects in s3://%s/%s ...", storageFiles.size(), params.getS3BucketName(), params.getS3KeyPrefix()));
+            // List S3 versions.
+            List<DeleteObjectsRequest.KeyVersion> keyVersions = listVersions(params);
+            LOGGER.info("Found keys/key versions in S3 for deletion. s3KeyCount={} s3KeyPrefix=\"{}\" s3BucketName=\"{}\"", keyVersions.size(),
+                params.getS3KeyPrefix(), params.getS3BucketName());
 
-            // In order to avoid a MalformedXML AWS exception, we send delete request only when we have any keys to delete.
-            if (!storageFiles.isEmpty())
+            // In order to avoid a MalformedXML AWS exception, we send delete request only when we have any key versions to delete.
+            if (!keyVersions.isEmpty())
             {
-                DeleteObjectsRequest multiObjectDeleteRequest = new DeleteObjectsRequest(params.getS3BucketName());
-                s3Client = getAmazonS3(params);
+                // Create an S3 client.
+                AmazonS3Client s3Client = getAmazonS3(params);
 
-                // The Multi-Object Delete request can contain a list of up to 1000 keys.
-                for (int i = 0; i < storageFiles.size() / MAX_KEYS_PER_DELETE_REQUEST + 1; i++)
+                try
                 {
-                    // Prepare a list of S3 object keys to be deleted.
-                    List<DeleteObjectsRequest.KeyVersion> keys = new ArrayList<>();
-                    for (StorageFile storageFile : storageFiles
-                        .subList(i * MAX_KEYS_PER_DELETE_REQUEST, Math.min(storageFiles.size(), (i + 1) * MAX_KEYS_PER_DELETE_REQUEST)))
-                    {
-                        keys.add(new DeleteObjectsRequest.KeyVersion(storageFile.getFilePath()));
-                    }
-
-                    // Delete the S3 objects.
-                    multiObjectDeleteRequest.setKeys(keys);
-                    s3Operations.deleteObjects(multiObjectDeleteRequest, s3Client);
-
-                    LOGGER.info(String.format("Successfully deleted the following %d keys/objects with prefix \"%s\" from bucket \"%s\":", keys.size(),
-                        params.getS3KeyPrefix(), params.getS3BucketName()));
-
-                    for (DeleteObjectsRequest.KeyVersion keyVersion : keys)
-                    {
-                        LOGGER.info(String.format("    s3://%s/%s", params.getS3BucketName(), keyVersion.getKey()));
-                    }
+                    // Delete the key versions.
+                    deleteKeyVersions(s3Client, params.getS3BucketName(), keyVersions);
+                }
+                finally
+                {
+                    s3Client.shutdown();
                 }
             }
         }
         catch (AmazonClientException e)
         {
             throw new IllegalStateException(String
-                .format("Failed to delete keys/objects with prefix \"%s\" from bucket \"%s\". Reason: %s", params.getS3KeyPrefix(), params.getS3BucketName(),
-                    e.getMessage()), e);
+                .format("Failed to delete keys/key versions with prefix \"%s\" from bucket \"%s\". Reason: %s", params.getS3KeyPrefix(),
+                    params.getS3BucketName(), e.getMessage()), e);
         }
-        finally
+    }
+
+    /**
+     * Deletes a list of keys/key versions from the specified S3 bucket.
+     *
+     * @param s3Client the S3 client
+     * @param s3BucketName the S3 bucket name
+     * @param keyVersions the list of S3 keys/key versions
+     */
+    private void deleteKeyVersions(AmazonS3Client s3Client, String s3BucketName, List<DeleteObjectsRequest.KeyVersion> keyVersions)
+    {
+        // Create a request to delete multiple objects in the specified bucket.
+        DeleteObjectsRequest multiObjectDeleteRequest = new DeleteObjectsRequest(s3BucketName);
+
+        // The Multi-Object Delete request can contain a list of up to 1000 keys.
+        for (int i = 0; i < keyVersions.size() / MAX_KEYS_PER_DELETE_REQUEST + 1; i++)
         {
-            // Shutdown the AmazonS3Client instance to release resources.
-            if (s3Client != null)
+            List<DeleteObjectsRequest.KeyVersion> keysSubList =
+                keyVersions.subList(i * MAX_KEYS_PER_DELETE_REQUEST, Math.min(keyVersions.size(), (i + 1) * MAX_KEYS_PER_DELETE_REQUEST));
+            multiObjectDeleteRequest.setKeys(keysSubList);
+            try
             {
-                s3Client.shutdown();
+                s3Operations.deleteObjects(multiObjectDeleteRequest, s3Client);
+            }
+            catch (MultiObjectDeleteException multiObjectDeleteException)
+            {
+                logMultiObjectDeleteException(multiObjectDeleteException);
+                throw multiObjectDeleteException;
+            }
+
+            LOGGER.info("Successfully requested the deletion of the listed below keys/key versions from the S3 bucket. s3KeyCount={} s3BucketName=\"{}\"",
+                keysSubList.size(), s3BucketName);
+
+            for (DeleteObjectsRequest.KeyVersion keyVersion : keysSubList)
+            {
+                LOGGER.info("s3Key=\"{}\" s3VersionId=\"{}\"", keyVersion.getKey(), keyVersion.getVersion());
             }
         }
+    }
+
+    /**
+     * Logs the given MultiObjectDeleteException.
+     *
+     * @param multiObjectDeleteException The exception to log
+     */
+    private void logMultiObjectDeleteException(MultiObjectDeleteException multiObjectDeleteException)
+    {
+        // Create and initialize a string buffer. The initialization is required here in order to avoid an InsufficientStringBufferDeclaration PMD violation.
+        StringBuilder builder = new StringBuilder(128);
+        builder.append(String.format("Error deleting multiple objects. Below are the list of objects which failed to delete.%n"));
+        List<DeleteError> deleteErrors = multiObjectDeleteException.getErrors();
+        for (DeleteError deleteError : deleteErrors)
+        {
+            String key = deleteError.getKey();
+            String versionId = deleteError.getVersionId();
+            String code = deleteError.getCode();
+            String message = deleteError.getMessage();
+            builder
+                .append(String.format("s3Key=\"%s\" s3VersionId=\"%s\" s3DeleteErrorCode=\"%s\" s3DeleteErrorMessage=\"%s\"%n", key, versionId, code, message));
+        }
+        LOGGER.error(builder.toString());
     }
 
     @Override
     public S3FileTransferResultsDto downloadFile(final S3FileTransferRequestParamsDto params) throws InterruptedException
     {
+        LOGGER.info("Downloading S3 file... s3Key=\"{}\" s3BucketName=\"{}\" localPath=\"{}\"", params.getS3KeyPrefix(), params.getS3BucketName(),
+            params.getLocalPath());
+
         // Perform the transfer.
         S3FileTransferResultsDto results = performTransfer(params, new Transferer()
         {
@@ -524,13 +758,11 @@ public class S3DaoImpl implements S3Dao
         });
 
         LOGGER
-            .info("S3 file \"" + params.getS3KeyPrefix() + "\" in bucket \"" + params.getS3BucketName() + "\" contains " + results.getTotalBytesTransferred() +
-                " byte(s) which was successfully transferred to local file \"" + params.getLocalPath() + "\" in " +
-                HerdDateUtils.formatDuration(results.getDurationMillis(), true));
+            .info("Downloaded S3 file to the local system. s3Key=\"{}\" s3BucketName=\"{}\" localPath=\"{}\" totalBytesTransferred={} transferDuration=\"{}\"",
+                params.getS3KeyPrefix(), params.getS3BucketName(), params.getLocalPath(), results.getTotalBytesTransferred(),
+                HerdDateUtils.formatDuration(results.getDurationMillis()));
 
-        LOGGER.info(String.format("Overall transfer rate: %.2f kBytes/s (%.2f Mbits/s)",
-            awsHelper.getTransferRateInKilobytesPerSecond(results.getTotalBytesTransferred(), results.getDurationMillis()),
-            awsHelper.getTransferRateInMegabitsPerSecond(results.getTotalBytesTransferred(), results.getDurationMillis())));
+        logOverallTransferRate(results);
 
         return results;
     }
@@ -538,6 +770,9 @@ public class S3DaoImpl implements S3Dao
     @Override
     public S3FileTransferResultsDto downloadDirectory(final S3FileTransferRequestParamsDto params) throws InterruptedException
     {
+        LOGGER.info("Downloading S3 directory to the local system... s3KeyPrefix=\"{}\" s3BucketName=\"{}\" localDirectory=\"{}\"", params.getS3KeyPrefix(),
+            params.getS3BucketName(), params.getLocalPath());
+
         // Note that the directory download always recursively copies sub-directories.
         // To not recurse, we would have to list the files on S3 (AmazonS3Client.html#listObjects) and manually copy them one at a time.
 
@@ -551,32 +786,25 @@ public class S3DaoImpl implements S3Dao
             }
         });
 
-        LOGGER.info(
-            "S3 directory \"" + params.getS3KeyPrefix() + "\" in bucket \"" + params.getS3BucketName() + "\" contains " + results.getTotalBytesTransferred() +
-                " byte(s) which was successfully transferred to local directory \"" + params.getLocalPath() + "\" in " +
-                HerdDateUtils.formatDuration(results.getDurationMillis(), true));
+        LOGGER.info("Downloaded S3 directory to the local system. " +
+            "s3KeyPrefix=\"{}\" s3BucketName=\"{}\" localDirectory=\"{}\" s3KeyCount={} totalBytesTransferred={} transferDuration=\"{}\"",
+            params.getS3KeyPrefix(), params.getS3BucketName(), params.getLocalPath(), results.getTotalFilesTransferred(), results.getTotalBytesTransferred(),
+            HerdDateUtils.formatDuration(results.getDurationMillis()));
 
-        LOGGER.info(String.format("Overall transfer rate: %.2f kBytes/s (%.2f Mbits/s)",
-            awsHelper.getTransferRateInKilobytesPerSecond(results.getTotalBytesTransferred(), results.getDurationMillis()),
-            awsHelper.getTransferRateInMegabitsPerSecond(results.getTotalBytesTransferred(), results.getDurationMillis())));
+        logOverallTransferRate(results);
 
         return results;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public int abortMultipartUploads(S3FileTransferRequestParamsDto params, Date thresholdDate)
     {
-        AmazonS3Client s3Client = null;
+        // Create an Amazon S3 client.
+        AmazonS3Client s3Client = getAmazonS3(params);
         int abortedMultipartUploadsCount = 0;
 
         try
         {
-            // Create an Amazon S3 client.
-            s3Client = getAmazonS3(params);
-
             // List upload markers. Null implies initial list request.
             String uploadIdMarker = null;
             String keyMarker = null;
@@ -602,8 +830,8 @@ public class S3DaoImpl implements S3Dao
                             s3Client);
 
                         // Log the information about the aborted multipart upload.
-                        LOGGER.info(String.format("Aborted S3 multipart upload for \"%s\" object key initiated at [%s] in \"%s\" S3 bucket.", upload.getKey(),
-                            upload.getInitiated(), params.getS3BucketName()));
+                        LOGGER.info("Aborted S3 multipart upload. s3Key=\"{}\" s3BucketName=\"{}\" s3MultipartUploadInitiatedDate=\"{}\"", upload.getKey(),
+                            params.getS3BucketName(), upload.getInitiated());
 
                         // Increment the counter.
                         abortedMultipartUploadsCount++;
@@ -615,8 +843,8 @@ public class S3DaoImpl implements S3Dao
                 if (truncated)
                 {
                     // Record the list markers.
-                    uploadIdMarker = uploadListing.getUploadIdMarker();
-                    keyMarker = uploadListing.getKeyMarker();
+                    uploadIdMarker = uploadListing.getNextUploadIdMarker();
+                    keyMarker = uploadListing.getNextKeyMarker();
                 }
             }
             while (truncated);
@@ -624,10 +852,7 @@ public class S3DaoImpl implements S3Dao
         finally
         {
             // Shutdown the Amazon S3 client instance to release resources.
-            if (s3Client != null)
-            {
-                s3Client.shutdown();
-            }
+            s3Client.shutdown();
         }
 
         return abortedMultipartUploadsCount;
@@ -689,7 +914,7 @@ public class S3DaoImpl implements S3Dao
         else
         {
             // Create a transfer manager with our own executor configured with the specified total threads.
-            LOGGER.info("Creating a transfer manager with max threads: " + params.getMaxThreads());
+            LOGGER.info("Creating a transfer manager. fixedThreadPoolSize={}", params.getMaxThreads());
             return new TransferManager(getAmazonS3(params), Executors.newFixedThreadPool(params.getMaxThreads()));
         }
     }
@@ -705,12 +930,11 @@ public class S3DaoImpl implements S3Dao
     {
         AmazonS3Client amazonS3Client;
 
-        ClientConfiguration clientConfiguration = null;
+        ClientConfiguration clientConfiguration = new ClientConfiguration().withRetryPolicy(retryPolicyFactory.getRetryPolicy());
 
         // Creates and sets proxy configuration if proxy is specified
-        if (StringUtils.isNotBlank(params.getHttpProxyHost()) && StringUtils.isNotBlank(params.getHttpProxyPort().toString()))
+        if (StringUtils.isNotBlank(params.getHttpProxyHost()) && params.getHttpProxyPort() != null)
         {
-            clientConfiguration = new ClientConfiguration();
             clientConfiguration.setProxyHost(params.getHttpProxyHost());
             clientConfiguration.setProxyPort(params.getHttpProxyPort());
         }
@@ -718,31 +942,23 @@ public class S3DaoImpl implements S3Dao
         // Creates and sets signer override if signer override is specified
         if (StringUtils.isNotBlank(params.getSignerOverride()))
         {
-            if (clientConfiguration == null)
-            {
-                clientConfiguration = new ClientConfiguration();
-            }
-
             clientConfiguration.setSignerOverride(params.getSignerOverride());
         }
 
         AWSCredentialsProvider awsCredentialsProvider = getAWSCredentialsProvider(params);
-        if (clientConfiguration != null)
-        {
-            // Create an S3 client with HTTP proxy information.
-            amazonS3Client = new AmazonS3Client(awsCredentialsProvider, clientConfiguration);
-        }
-        else
-        {
-            // Create an S3 client with no proxy information.
-            amazonS3Client = new AmazonS3Client(awsCredentialsProvider);
-        }
+        // Create an S3 client with HTTP proxy information.
+        amazonS3Client = new AmazonS3Client(awsCredentialsProvider, clientConfiguration);
 
         // Set the optional endpoint if configured.
         if (StringUtils.isNotBlank(params.getS3Endpoint()))
         {
             LOGGER.info("Configured S3 Endpoint: " + params.getS3Endpoint());
             amazonS3Client.setEndpoint(params.getS3Endpoint());
+        }
+
+        if (params.getSocketTimeout() != null)
+        {
+            clientConfiguration.setSocketTimeout(params.getSocketTimeout());
         }
 
         // Return the newly created client.
@@ -786,13 +1002,10 @@ public class S3DaoImpl implements S3Dao
     private S3FileTransferResultsDto performTransfer(final S3FileTransferRequestParamsDto params, Transferer transferer) throws InterruptedException
     {
         // Create a transfer manager.
-        TransferManager transferManager = null;
+        TransferManager transferManager = getTransferManager(params);
 
         try
         {
-            // Create a transfer manager.
-            transferManager = getTransferManager(params);
-
             // Start a stop watch to keep track of how long the transfer takes.
             StopWatch stopWatch = new StopWatch();
             stopWatch.start();
@@ -801,24 +1014,20 @@ public class S3DaoImpl implements S3Dao
             Transfer transfer = transferer.performTransfer(transferManager);
             TransferProgress transferProgress = transfer.getProgress();
 
-            LOGGER.info(String
-                .format("%d bytes transferred out of %d (%.1f%%)", transferProgress.getBytesTransferred(), transferProgress.getTotalBytesToTransfer(),
-                    transferProgress.getPercentTransferred()));
+            logTransferProgress(transferProgress);
 
             long stepCount = 0;
 
             // Loop until the transfer is complete.
             do
             {
-                Thread.sleep(SLEEP_INTERVAL_MILLIS);
+                Thread.sleep(sleepIntervalsMillis);
                 stepCount++;
 
                 // Log progress status every 30 seconds and when transfer is complete.
                 if (transfer.isDone() || stepCount % 300 == 0)
                 {
-                    LOGGER.info(String
-                        .format("%d bytes transferred out of %d (%.1f%%)", transferProgress.getBytesTransferred(), transferProgress.getTotalBytesToTransfer(),
-                            transferProgress.getPercentTransferred()));
+                    logTransferProgress(transferProgress);
                 }
             }
             while (!transfer.isDone());
@@ -884,10 +1093,7 @@ public class S3DaoImpl implements S3Dao
         finally
         {
             // Shutdown the transfer manager to release resources. If this isn't done, the JVM may delay upon exiting.
-            if (transferManager != null)
-            {
-                transferManager.shutdownNow();
-            }
+            transferManager.shutdownNow();
         }
     }
 
@@ -907,92 +1113,50 @@ public class S3DaoImpl implements S3Dao
     }
 
     /**
-     * Lists all S3 objects matching the S3 key prefix in the given bucket (S3 bucket name). The S3 bucket name and S3 key prefix that identify the S3 objects
-     * to get listed are taken from the S3 file transfer request parameters DTO.
+     * Retrieves an S3 object.
      *
-     * @param params the S3 file transfer request parameters
-     * @param ignoreZeroByteDirectoryMarkers specifies whether to ignore 0 byte objects that represent S3 directories
+     * @param s3Client the S3 client
+     * @param bucketName the S3 bucket name
+     * @param key the S3 object key
+     * @param errorOnNoSuchKey true to throw an error when the object key is not found, otherwise return null
      *
-     * @return the list of all S3 objects represented as storage files that match the prefix in the given bucket
+     * @return the S3 object
+     * @throws ObjectNotFoundException when specified bucket or key does not exist or access to bucket or key is denied
      */
-    private List<StorageFile> listObjectsMatchingKeyPrefix(final S3FileTransferRequestParamsDto params, boolean ignoreZeroByteDirectoryMarkers)
+    private S3Object getS3Object(AmazonS3Client s3Client, String bucketName, String key, boolean errorOnNoSuchKey)
     {
-        AmazonS3Client s3Client = null;
-        List<StorageFile> storageFiles = new ArrayList<>();
-
         try
         {
-            s3Client = getAmazonS3(params);
-            ListObjectsRequest listObjectsRequest = new ListObjectsRequest().withBucketName(params.getS3BucketName()).withPrefix(params.getS3KeyPrefix());
-            ObjectListing objectListing;
-
-            do
-            {
-                objectListing = s3Operations.listObjects(listObjectsRequest, s3Client);
-
-                for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries())
-                {
-                    // Ignore 0 byte objects that represent S3 directories.
-                    if (!(ignoreZeroByteDirectoryMarkers && objectSummary.getKey().endsWith("/") && objectSummary.getSize() == 0L))
-                    {
-                        storageFiles.add(new StorageFile(objectSummary.getKey(), objectSummary.getSize(), null, null));
-                    }
-                }
-
-                listObjectsRequest.setMarker(objectListing.getNextMarker());
-            }
-            while (objectListing.isTruncated());
-        }
-        catch (AmazonS3Exception amazonS3Exception)
-        {
-            if (S3Operations.ERROR_CODE_NO_SUCH_BUCKET.equals(amazonS3Exception.getErrorCode()))
-            {
-                throw new IllegalArgumentException("The specified bucket '" + params.getS3BucketName() + "' does not exist.", amazonS3Exception);
-            }
-            throw new IllegalStateException("Error accessing S3", amazonS3Exception);
-        }
-        catch (AmazonClientException e)
-        {
-            throw new IllegalStateException(String
-                .format("Failed to list keys/objects with prefix \"%s\" from bucket \"%s\". Reason: %s", params.getS3KeyPrefix(), params.getS3BucketName(),
-                    e.getMessage()), e);
-        }
-        finally
-        {
-            // Shutdown the AmazonS3Client instance to release resources.
-            if (s3Client != null)
-            {
-                s3Client.shutdown();
-            }
-        }
-
-        return storageFiles;
-    }
-
-    @Override
-    public S3Object getS3Object(GetObjectRequest getObjectRequest, S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto)
-    {
-        AmazonS3Client s3 = getAmazonS3(s3FileTransferRequestParamsDto);
-        try
-        {
-            return s3Operations.getS3Object(getObjectRequest, s3);
+            GetObjectRequest getObjectRequest = new GetObjectRequest(bucketName, key);
+            return s3Operations.getS3Object(getObjectRequest, s3Client);
         }
         catch (AmazonServiceException amazonServiceException)
         {
             String errorCode = amazonServiceException.getErrorCode();
 
-            switch (errorCode)
+            if (S3Operations.ERROR_CODE_ACCESS_DENIED.equals(errorCode))
             {
-                case S3Operations.ERROR_CODE_ACCESS_DENIED:
-                    throw new ObjectNotFoundException(
-                        "Application does not have access to the specified S3 object at bucket '" + getObjectRequest.getBucketName() + "' and key '" +
-                            getObjectRequest.getKey() + "'.", amazonServiceException);
-                case S3Operations.ERROR_CODE_NO_SUCH_BUCKET:
-                    throw new ObjectNotFoundException("Specified S3 bucket '" + getObjectRequest.getBucketName() + "' does not exist.", amazonServiceException);
-                case S3Operations.ERROR_CODE_NO_SUCH_KEY:
-                    throw new ObjectNotFoundException("Specified S3 object key '" + getObjectRequest.getKey() + "' does not exist.", amazonServiceException);
-                default:
-                    throw amazonServiceException;
+                throw new ObjectNotFoundException("Application does not have access to the specified S3 object at bucket '" + bucketName + "' and key '" +
+                    key + "'.", amazonServiceException);
+            }
+            else if (S3Operations.ERROR_CODE_NO_SUCH_BUCKET.equals(errorCode))
+            {
+                throw new ObjectNotFoundException("Specified S3 bucket '" + bucketName + "' does not exist.", amazonServiceException);
+            }
+            else if (S3Operations.ERROR_CODE_NO_SUCH_KEY.equals(errorCode))
+            {
+                if (errorOnNoSuchKey)
+                {
+                    throw new ObjectNotFoundException("Specified S3 object key '" + key + "' does not exist.", amazonServiceException);
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            else
+            {
+                throw amazonServiceException;
             }
         }
     }
@@ -1000,21 +1164,20 @@ public class S3DaoImpl implements S3Dao
     @Override
     public Properties getProperties(String bucketName, String key, S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto)
     {
-        GetObjectRequest getObjectRequest = new GetObjectRequest(bucketName, key);
-        S3Object s3Object = getS3Object(getObjectRequest, s3FileTransferRequestParamsDto);
-        try (S3ObjectInputStream s3ObjectInputStream = s3Object.getObjectContent())
+        AmazonS3Client s3Client = getAmazonS3(s3FileTransferRequestParamsDto);
+
+        try
         {
-            return javaPropertiesHelper.getProperties(s3ObjectInputStream);
+            S3Object s3Object = getS3Object(s3Client, bucketName, key, true);
+            return javaPropertiesHelper.getProperties(s3Object.getObjectContent());
         }
         catch (IllegalArgumentException e)
         {
             throw new IllegalArgumentException("The properties file in S3 bucket '" + bucketName + "' and key '" + key + "' is invalid.", e);
         }
-        catch (IOException e)
+        finally
         {
-            // This exception can come when the try-with-resources attempts to close the stream.
-            // Not covered as JUnit, unfortunately no way of producing an IO exception.
-            throw new IllegalStateException("Error closing S3 object input stream. See cause for details.", e);
+            s3Client.shutdown();
         }
     }
 
@@ -1024,6 +1187,60 @@ public class S3DaoImpl implements S3Dao
         GeneratePresignedUrlRequest generatePresignedUrlRequest = new GeneratePresignedUrlRequest(bucketName, key, HttpMethod.GET);
         generatePresignedUrlRequest.setExpiration(expiration);
         AmazonS3Client s3 = getAmazonS3(s3FileTransferRequestParamsDto);
-        return s3Operations.generatePresignedUrl(generatePresignedUrlRequest, s3).toString();
+        try
+        {
+            return s3Operations.generatePresignedUrl(generatePresignedUrlRequest, s3).toString();
+        }
+        finally
+        {
+            s3.shutdown();
+        }
+    }
+
+    /**
+     * Returns true is S3 key prefix is a root.
+     *
+     * @param s3KeyPrefix the S3 key prefix to be validated
+     *
+     * @return true if S3 key prefix is a root; false otherwise
+     */
+    protected boolean isRootKeyPrefix(String s3KeyPrefix)
+    {
+        return StringUtils.isBlank(s3KeyPrefix) || s3KeyPrefix.equals("/");
+    }
+
+    /**
+     * Logs transfer progress for an S3 file transfer operation.
+     *
+     * @param transferProgress the progress of an S3 transfer operation
+     */
+    private void logTransferProgress(TransferProgress transferProgress)
+    {
+        // If the total bytes to transfer is set to 0, we do not log the transfer progress.
+        if (LOGGER.isInfoEnabled() && transferProgress.getTotalBytesToTransfer() > 0)
+        {
+            NumberFormat formatter = new DecimalFormat("#0.0");
+
+            LOGGER.info("progressBytesTransferred={} totalBytesToTransfer={} progressPercentTransferred={}", transferProgress.getBytesTransferred(),
+                transferProgress.getTotalBytesToTransfer(), formatter.format(transferProgress.getPercentTransferred()));
+        }
+    }
+
+    /**
+     * Logs overall transfer rate for an S3 file transfer operation.
+     *
+     * @param s3FileTransferResultsDto the DTO for the S3 file transfer operation results
+     */
+    private void logOverallTransferRate(S3FileTransferResultsDto s3FileTransferResultsDto)
+    {
+        if (LOGGER.isInfoEnabled())
+        {
+            NumberFormat formatter = new DecimalFormat("#0.00");
+
+            LOGGER.info("overallTransferRateKiloBytesPerSecond={} overallTransferRateMegaBitsPerSecond={}", formatter.format(awsHelper
+                .getTransferRateInKilobytesPerSecond(s3FileTransferResultsDto.getTotalBytesTransferred(), s3FileTransferResultsDto.getDurationMillis())),
+                formatter.format(awsHelper
+                    .getTransferRateInMegabitsPerSecond(s3FileTransferResultsDto.getTotalBytesTransferred(), s3FileTransferResultsDto.getDurationMillis())));
+        }
     }
 }

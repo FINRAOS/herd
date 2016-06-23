@@ -15,9 +15,12 @@
 */
 package org.finra.herd.service.activiti;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,22 +31,19 @@ import org.activiti.bpmn.model.ImplementationType;
 import org.activiti.bpmn.model.ServiceTask;
 import org.activiti.engine.ActivitiException;
 import org.activiti.engine.history.HistoricProcessInstance;
-import org.activiti.engine.impl.jobexecutor.FailedJobListener;
 import org.activiti.engine.impl.jobexecutor.TimerExecuteNestedActivityJobHandler;
 import org.activiti.engine.runtime.ProcessInstance;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronizationUtils;
 
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.Job;
 import org.finra.herd.model.api.xml.JobDefinition;
 import org.finra.herd.model.api.xml.Parameter;
 import org.finra.herd.model.jpa.JobDefinitionEntity;
+import org.finra.herd.service.activiti.task.BaseJavaDelegate;
 import org.finra.herd.service.activiti.task.HerdActivitiServiceTaskTest;
 import org.finra.herd.service.activiti.task.MockJavaDelegate;
 
@@ -60,7 +60,7 @@ public class ActivitiDelegateTest extends HerdActivitiServiceTaskTest
     {
         // Create and start the workflow.
         createJobDefinition(ACTIVITI_XML_HERD_TIMER_WITH_CLASSPATH);
-        Job job = jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME), false);
+        Job job = jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
         assertNotNull(job);
 
         // This workflow would normally automatically start a timer which would eventually complete the workflow, however, since
@@ -84,25 +84,31 @@ public class ActivitiDelegateTest extends HerdActivitiServiceTaskTest
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public void testTimerJobLowLevelActiviti() throws Exception
     {
-        // Read workflow XML from classpath and deploy it.
-        activitiRepositoryService.createDeployment().addClasspathResource(ACTIVITI_XML_HERD_TIMER).deploy();
+        try
+        {// Read workflow XML from classpath and deploy it.
+            activitiRepositoryService.createDeployment().addClasspathResource(ACTIVITI_XML_HERD_TIMER).deploy();
 
-        // Set workflow variables for no other reason than to make sure it doesn't cause any problems.
-        Map<String, Object> variables = new HashMap<>();
-        variables.put("key1", "value1");
+            // Set workflow variables for no other reason than to make sure it doesn't cause any problems.
+            Map<String, Object> variables = new HashMap<>();
+            variables.put("key1", "value1");
 
-        // Execute the workflow.
-        ProcessInstance processInstance = activitiRuntimeService.startProcessInstanceByKey("testNamespace.testHerdWorkflow", variables);
+            // Execute the workflow.
+            ProcessInstance processInstance = activitiRuntimeService.startProcessInstanceByKey("testNamespace.testHerdWorkflow", variables);
 
-        // Wait a reasonable amount of time for the process to finish.
-        waitUntilAllProcessCompleted();
+            // Wait a reasonable amount of time for the process to finish.
+            waitUntilAllProcessCompleted();
 
-        // Get the history for the process and ensure the workflow completed.
-        HistoricProcessInstance historicProcessInstance =
-            activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(processInstance.getProcessInstanceId()).singleResult();
+            // Get the history for the process and ensure the workflow completed.
+            HistoricProcessInstance historicProcessInstance =
+                activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(processInstance.getProcessInstanceId()).singleResult();
 
-        Assert.assertNotNull(historicProcessInstance);
-        Assert.assertNotNull(historicProcessInstance.getEndTime());
+            Assert.assertNotNull(historicProcessInstance);
+            Assert.assertNotNull(historicProcessInstance.getEndTime());
+        }
+        finally
+        {
+            deleteActivitiDeployments();
+        }
     }
 
     /**
@@ -112,11 +118,6 @@ public class ActivitiDelegateTest extends HerdActivitiServiceTaskTest
     @Test(expected = ActivitiException.class)
     public void testActivitiReportableError() throws Exception
     {
-        turnOffBaseJavaDelegateLogging();
-        Logger.getLogger(TimerExecuteNestedActivityJobHandler.class).setLevel(Level.OFF);
-        Logger.getLogger(FailedJobListener.class).setLevel(Level.OFF);
-        Logger.getLogger(TransactionSynchronizationUtils.class).setLevel(Level.OFF);
-
         BpmnModel bpmnModel = getBpmnModelForXmlResource(ACTIVITI_XML_HERD_TIMER_WITH_CLASSPATH);
 
         ServiceTask serviceTask = (ServiceTask) bpmnModel.getProcesses().get(0).getFlowElement("servicetask1");
@@ -133,11 +134,13 @@ public class ActivitiDelegateTest extends HerdActivitiServiceTaskTest
         Parameter parameter = new Parameter("exceptionToThrow", MockJavaDelegate.EXCEPTION_BPMN_ERROR);
         parameters.add(parameter);
 
-        Job job = jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME, parameters), false);
+        Job job = jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME, parameters));
         org.activiti.engine.runtime.Job timer = activitiManagementService.createJobQuery().processInstanceId(job.getId()).timers().singleResult();
         if (timer != null)
         {
-            activitiManagementService.executeJob(timer.getId());
+            executeWithoutLogging(Arrays.asList(ActivitiRuntimeHelper.class, TimerExecuteNestedActivityJobHandler.class), () -> {
+                activitiManagementService.executeJob(timer.getId());
+            });
         }
     }
 
@@ -148,11 +151,6 @@ public class ActivitiDelegateTest extends HerdActivitiServiceTaskTest
     @Test(expected = ActivitiException.class)
     public void testActivitiUnReportableError() throws Exception
     {
-        turnOffBaseJavaDelegateLogging();
-        Logger.getLogger(TimerExecuteNestedActivityJobHandler.class).setLevel(Level.OFF);
-        Logger.getLogger(FailedJobListener.class).setLevel(Level.OFF);
-        Logger.getLogger(TransactionSynchronizationUtils.class).setLevel(Level.OFF);
-
         BpmnModel bpmnModel = getBpmnModelForXmlResource(ACTIVITI_XML_HERD_TIMER_WITH_CLASSPATH);
 
         ServiceTask serviceTask = (ServiceTask) bpmnModel.getProcesses().get(0).getFlowElement("servicetask1");
@@ -161,11 +159,13 @@ public class ActivitiDelegateTest extends HerdActivitiServiceTaskTest
         serviceTask.setImplementation("${BeanNotAvailable}");
 
         createJobDefinitionForActivitiXml(getActivitiXmlFromBpmnModel(bpmnModel));
-        Job job = jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME, null), false);
+        Job job = jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME, null));
         org.activiti.engine.runtime.Job timer = activitiManagementService.createJobQuery().processInstanceId(job.getId()).timers().singleResult();
         if (timer != null)
         {
-            activitiManagementService.executeJob(timer.getId());
+            executeWithoutLogging(TimerExecuteNestedActivityJobHandler.class, () -> {
+                activitiManagementService.executeJob(timer.getId());
+            });
         }
     }
 
@@ -185,36 +185,8 @@ public class ActivitiDelegateTest extends HerdActivitiServiceTaskTest
         createJobDefinitionForActivitiXml(getActivitiXmlFromBpmnModel(bpmnModel));
 
         // Executing the job twice so that the same JavaDelegate object is used and spring beans are not wired again.
-        jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME), false);
-        jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME), false);
-    }
-
-    /**
-     * This method tests the scenario where a bpmn error is thrown by a java delegate.
-     */
-    @Test
-    public void testDelegateBpmnError() throws Exception
-    {
-        turnOffCreateAndStartProcessInstanceCmdLogging();
-
-        BpmnModel bpmnModel = getBpmnModelForXmlResource(ACTIVITI_XML_HERD_WORKFLOW);
-
-        ServiceTask serviceTask = (ServiceTask) bpmnModel.getProcesses().get(0).getFlowElement("servicetask1");
-
-        serviceTask.setImplementation(MockJavaDelegate.class.getCanonicalName());
-
-        FieldExtension exceptionField = new FieldExtension();
-        exceptionField.setFieldName("exceptionToThrow");
-        exceptionField.setExpression("${exceptionToThrow}");
-        serviceTask.getFieldExtensions().clear();
-        serviceTask.getFieldExtensions().add(exceptionField);
-
-        List<Parameter> parameters = new ArrayList<>();
-
-        Parameter parameter = new Parameter("exceptionToThrow", MockJavaDelegate.EXCEPTION_BPMN_ERROR);
-        parameters.add(parameter);
-
-        createJobFromActivitiXml(getActivitiXmlFromBpmnModel(bpmnModel), parameters);
+        jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
+        jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
     }
 
     /**
@@ -223,8 +195,6 @@ public class ActivitiDelegateTest extends HerdActivitiServiceTaskTest
     @Test
     public void testDelegateRuntimeError() throws Exception
     {
-        turnOffBaseJavaDelegateLogging();
-
         BpmnModel bpmnModel = getBpmnModelForXmlResource(ACTIVITI_XML_HERD_WORKFLOW);
 
         ServiceTask serviceTask = (ServiceTask) bpmnModel.getProcesses().get(0).getFlowElement("servicetask1");
@@ -242,7 +212,9 @@ public class ActivitiDelegateTest extends HerdActivitiServiceTaskTest
         Parameter parameter = new Parameter("exceptionToThrow", MockJavaDelegate.EXCEPTION_RUNTIME);
         parameters.add(parameter);
 
-        createJobFromActivitiXml(getActivitiXmlFromBpmnModel(bpmnModel), parameters);
+        executeWithoutLogging(Arrays.asList(ActivitiRuntimeHelper.class, BaseJavaDelegate.class), () -> {
+            createJobFromActivitiXml(getActivitiXmlFromBpmnModel(bpmnModel), parameters);
+        });
     }
 
     /**
@@ -252,7 +224,7 @@ public class ActivitiDelegateTest extends HerdActivitiServiceTaskTest
     public void testCreateProcessCommandProcessNotDefined() throws Exception
     {
         // Create the job with Activiti.
-        jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, "test_process_not_defined"), false);
+        jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, "test_process_not_defined"));
     }
 
     /**
@@ -264,12 +236,12 @@ public class ActivitiDelegateTest extends HerdActivitiServiceTaskTest
         // Define the job definition
         JobDefinition jobDefinition = createJobDefinition(ACTIVITI_XML_HERD_WORKFLOW);
 
-        JobDefinitionEntity jobDefinitionEntity = herdDao.getJobDefinitionByAltKey(jobDefinition.getNamespace(), jobDefinition.getJobName());
+        JobDefinitionEntity jobDefinitionEntity = jobDefinitionDao.getJobDefinitionByAltKey(jobDefinition.getNamespace(), jobDefinition.getJobName());
 
         // Suspend the job definition with activiti api
         activitiRepositoryService.suspendProcessDefinitionById(jobDefinitionEntity.getActivitiId());
 
-        jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME), false);
+        jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
     }
 
     /**
@@ -278,8 +250,6 @@ public class ActivitiDelegateTest extends HerdActivitiServiceTaskTest
     @Test
     public void testDelegateWrongClass() throws Exception
     {
-        turnOffCreateAndStartProcessInstanceCmdLogging();
-
         BpmnModel bpmnModel = getBpmnModelForXmlResource(ACTIVITI_XML_HERD_WORKFLOW);
         ServiceTask serviceTask = (ServiceTask) bpmnModel.getProcesses().get(0).getFlowElement("servicetask1");
 
@@ -287,7 +257,15 @@ public class ActivitiDelegateTest extends HerdActivitiServiceTaskTest
         serviceTask.getFieldExtensions().clear();
 
         // Run a job with Activiti XML that will start cluster.
-        Job job = createJobFromActivitiXml(getActivitiXmlFromBpmnModel(bpmnModel), null);
-        assertNotNull(job);
+        try
+        {
+            createJobFromActivitiXml(getActivitiXmlFromBpmnModel(bpmnModel), null);
+            fail();
+        }
+        catch (Exception e)
+        {
+            assertEquals(ActivitiException.class, e.getClass());
+            assertEquals("couldn't instantiate class ClassDoesNotExist", e.getMessage());
+        }
     }
 }

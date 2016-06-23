@@ -22,16 +22,20 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
-import org.finra.herd.dao.HerdDao;
+import org.finra.herd.dao.StoragePolicyDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
+import org.finra.herd.model.annotation.NamespacePermission;
+import org.finra.herd.model.annotation.NamespacePermissions;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
+import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.api.xml.StoragePolicy;
 import org.finra.herd.model.api.xml.StoragePolicyCreateRequest;
 import org.finra.herd.model.api.xml.StoragePolicyFilter;
 import org.finra.herd.model.api.xml.StoragePolicyKey;
 import org.finra.herd.model.api.xml.StoragePolicyRule;
 import org.finra.herd.model.api.xml.StoragePolicyTransition;
+import org.finra.herd.model.api.xml.StoragePolicyUpdateRequest;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.FileTypeEntity;
@@ -40,10 +44,17 @@ import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.StoragePlatformEntity;
 import org.finra.herd.model.jpa.StoragePolicyEntity;
 import org.finra.herd.model.jpa.StoragePolicyRuleTypeEntity;
+import org.finra.herd.model.jpa.StoragePolicyStatusEntity;
 import org.finra.herd.service.StoragePolicyService;
-import org.finra.herd.service.helper.HerdDaoHelper;
+import org.finra.herd.service.helper.BusinessObjectDefinitionDaoHelper;
+import org.finra.herd.service.helper.FileTypeDaoHelper;
+import org.finra.herd.service.helper.NamespaceDaoHelper;
 import org.finra.herd.service.helper.StorageDaoHelper;
+import org.finra.herd.service.helper.StorageHelper;
+import org.finra.herd.service.helper.StoragePolicyDaoHelper;
 import org.finra.herd.service.helper.StoragePolicyHelper;
+import org.finra.herd.service.helper.StoragePolicyRuleTypeDaoHelper;
+import org.finra.herd.service.helper.StoragePolicyStatusDaoHelper;
 
 /**
  * The storage policy service implementation.
@@ -53,27 +64,40 @@ import org.finra.herd.service.helper.StoragePolicyHelper;
 public class StoragePolicyServiceImpl implements StoragePolicyService
 {
     @Autowired
-    private HerdDao herdDao;
+    private BusinessObjectDefinitionDaoHelper businessObjectDefinitionDaoHelper;
 
     @Autowired
-    private HerdDaoHelper herdDaoHelper;
+    private ConfigurationHelper configurationHelper;
 
     @Autowired
-    protected ConfigurationHelper configurationHelper;
+    private FileTypeDaoHelper fileTypeDaoHelper;
 
     @Autowired
-    protected StoragePolicyHelper storagePolicyHelper;
+    private NamespaceDaoHelper namespaceDaoHelper;
 
     @Autowired
     private StorageDaoHelper storageDaoHelper;
 
-    /**
-     * Creates a new storage policy.
-     *
-     * @param request the information needed to create a storage policy
-     *
-     * @return the newly created storage policy
-     */
+    @Autowired
+    private StorageHelper storageHelper;
+
+    @Autowired
+    private StoragePolicyDao storagePolicyDao;
+
+    @Autowired
+    private StoragePolicyDaoHelper storagePolicyDaoHelper;
+
+    @Autowired
+    private StoragePolicyHelper storagePolicyHelper;
+
+    @Autowired
+    private StoragePolicyRuleTypeDaoHelper storagePolicyRuleTypeDaoHelper;
+
+    @Autowired
+    private StoragePolicyStatusDaoHelper storagePolicyStatusDaoHelper;
+
+    @NamespacePermissions({@NamespacePermission(fields = "#request?.storagePolicyKey?.namespace", permissions = NamespacePermissionEnum.WRITE),
+        @NamespacePermission(fields = "#request?.storagePolicyFilter?.namespace", permissions = NamespacePermissionEnum.READ)})
     @Override
     public StoragePolicy createStoragePolicy(StoragePolicyCreateRequest request)
     {
@@ -84,7 +108,7 @@ public class StoragePolicyServiceImpl implements StoragePolicyService
         StoragePolicyKey storagePolicyKey = request.getStoragePolicyKey();
 
         // Ensure a storage policy with the specified name doesn't already exist for the specified namespace.
-        StoragePolicyEntity storagePolicyEntity = herdDao.getStoragePolicyByAltKey(storagePolicyKey);
+        StoragePolicyEntity storagePolicyEntity = storagePolicyDao.getStoragePolicyByAltKey(storagePolicyKey);
         if (storagePolicyEntity != null)
         {
             throw new AlreadyExistsException(String.format("Unable to create storage policy with name \"%s\" because it already exists for namespace \"%s\".",
@@ -92,10 +116,11 @@ public class StoragePolicyServiceImpl implements StoragePolicyService
         }
 
         // Retrieve and ensure that namespace exists with the specified storage policy namespace code.
-        NamespaceEntity namespaceEntity = herdDaoHelper.getNamespaceEntity(storagePolicyKey.getNamespace());
+        NamespaceEntity namespaceEntity = namespaceDaoHelper.getNamespaceEntity(storagePolicyKey.getNamespace());
 
         // Retrieve and ensure that storage policy type exists.
-        StoragePolicyRuleTypeEntity storagePolicyRuleTypeEntity = storageDaoHelper.getStoragePolicyRuleTypeEntity(request.getStoragePolicyRule().getRuleType());
+        StoragePolicyRuleTypeEntity storagePolicyRuleTypeEntity =
+            storagePolicyRuleTypeDaoHelper.getStoragePolicyRuleTypeEntity(request.getStoragePolicyRule().getRuleType());
 
         // Get the storage policy filter.
         StoragePolicyFilter storagePolicyFilter = request.getStoragePolicyFilter();
@@ -104,7 +129,7 @@ public class StoragePolicyServiceImpl implements StoragePolicyService
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity = null;
         if (StringUtils.isNotBlank(storagePolicyFilter.getBusinessObjectDefinitionName()))
         {
-            businessObjectDefinitionEntity = herdDaoHelper.getBusinessObjectDefinitionEntity(
+            businessObjectDefinitionEntity = businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(
                 new BusinessObjectDefinitionKey(storagePolicyFilter.getNamespace(), storagePolicyFilter.getBusinessObjectDefinitionName()));
         }
 
@@ -112,65 +137,103 @@ public class StoragePolicyServiceImpl implements StoragePolicyService
         FileTypeEntity fileTypeEntity = null;
         if (StringUtils.isNotBlank(storagePolicyFilter.getBusinessObjectFormatFileType()))
         {
-            fileTypeEntity = herdDaoHelper.getFileTypeEntity(storagePolicyFilter.getBusinessObjectFormatFileType());
+            fileTypeEntity = fileTypeDaoHelper.getFileTypeEntity(storagePolicyFilter.getBusinessObjectFormatFileType());
         }
 
         // Retrieve and ensure that storage policy filter storage exists.
         StorageEntity storageEntity = storageDaoHelper.getStorageEntity(storagePolicyFilter.getStorageName());
 
-        // Validate that storage platform is S3 for the storage policy filter storage.
-        Assert.isTrue(StoragePlatformEntity.S3.equals(storageEntity.getStoragePlatform().getName()),
-            String.format("Storage platform for storage with name \"%s\" is not \"%s\".", storageEntity.getName(), StoragePlatformEntity.S3));
-
-        // Validate that storage policy filter storage has S3 bucket name configured.
-        // Please note that since S3 bucket name attribute value is required we pass a "true" flag.
-        storageDaoHelper.getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), storageEntity, true);
-
-        // Validate that storage policy filter storage has the S3 path prefix validation enabled.
-        if (!storageDaoHelper
-            .getBooleanStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_PATH_PREFIX), storageEntity,
-                false, true))
-        {
-            throw new IllegalStateException(String.format("Path prefix validation must be enabled on \"%s\" storage.", storageEntity.getName()));
-        }
-
-        // Validate that storage policy filter storage has the S3 file existence validation enabled.
-        if (!storageDaoHelper
-            .getBooleanStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_FILE_EXISTENCE), storageEntity,
-                false, true))
-        {
-            throw new IllegalStateException(String.format("File existence validation must be enabled on \"%s\" storage.", storageEntity.getName()));
-        }
+        // Validate the source storage.
+        validateSourceStorage(storageEntity);
 
         // Retrieve and ensure that destination storage exists.
         StorageEntity destinationStorageEntity = storageDaoHelper.getStorageEntity(request.getStoragePolicyTransition().getDestinationStorageName());
 
-        // Validate that storage platform is GLACIER for the destination storage.
-        Assert.isTrue(StoragePlatformEntity.GLACIER.equals(destinationStorageEntity.getStoragePlatform().getName()), String
-            .format("Storage platform for destination storage with name \"%s\" is not \"%s\".", destinationStorageEntity.getName(),
-                StoragePlatformEntity.GLACIER));
+        // Validate the destination storage.
+        validateDestinationStorage(destinationStorageEntity);
 
-        // Validate that storage policy transition destination storage has Glacier vault name configured.
-        // Please note that since Glacier vault name attribute value is required we pass a "true" flag.
-        storageDaoHelper
-            .getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.GLACIER_ATTRIBUTE_NAME_VAULT_NAME), destinationStorageEntity,
-                true);
+        // Retrieve and ensure that specified storage policy status exists.
+        StoragePolicyStatusEntity storagePolicyStatusEntity = storagePolicyStatusDaoHelper.getStoragePolicyStatusEntity(request.getStatus());
 
         // Create and persist a new storage policy entity from the request information.
-        storagePolicyEntity = createStoragePolicyEntity(request, namespaceEntity, storageEntity, destinationStorageEntity, storagePolicyRuleTypeEntity,
-            businessObjectDefinitionEntity, fileTypeEntity);
+        storagePolicyEntity = createStoragePolicyEntity(namespaceEntity, storagePolicyKey.getStoragePolicyName(), storageEntity, destinationStorageEntity,
+            storagePolicyRuleTypeEntity, request.getStoragePolicyRule().getRuleValue(), businessObjectDefinitionEntity,
+            request.getStoragePolicyFilter().getBusinessObjectFormatUsage(), fileTypeEntity, storagePolicyStatusEntity,
+            StoragePolicyEntity.STORAGE_POLICY_INITIAL_VERSION, true);
 
         // Create and return the storage policy object from the persisted entity.
         return createStoragePolicyFromEntity(storagePolicyEntity);
     }
 
-    /**
-     * Gets an existing storage policy by key.
-     *
-     * @param storagePolicyKey the storage policy registration key
-     *
-     * @return the storage policy information
-     */
+    @NamespacePermissions({@NamespacePermission(fields = "#storagePolicyKey?.namespace", permissions = NamespacePermissionEnum.WRITE), @NamespacePermission(
+        fields = "#request?.storagePolicyFilter?.namespace", permissions = NamespacePermissionEnum.READ)})
+    @Override
+    public StoragePolicy updateStoragePolicy(StoragePolicyKey storagePolicyKey, StoragePolicyUpdateRequest request)
+    {
+        // Validate and trim the key.
+        storagePolicyHelper.validateStoragePolicyKey(storagePolicyKey);
+
+        // Retrieve and ensure that a storage policy exists with the specified key.
+        StoragePolicyEntity storagePolicyEntity = storagePolicyDaoHelper.getStoragePolicyEntityByKey(storagePolicyKey);
+
+        // Validate and trim the request parameters.
+        validateStoragePolicyUpdateRequest(request);
+
+        // Retrieve and ensure that storage policy type exists.
+        StoragePolicyRuleTypeEntity storagePolicyRuleTypeEntity =
+            storagePolicyRuleTypeDaoHelper.getStoragePolicyRuleTypeEntity(request.getStoragePolicyRule().getRuleType());
+
+        // Get the storage policy filter.
+        StoragePolicyFilter storagePolicyFilter = request.getStoragePolicyFilter();
+
+        // If specified, retrieve and ensure that the business object definition exists.
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = null;
+        if (StringUtils.isNotBlank(storagePolicyFilter.getBusinessObjectDefinitionName()))
+        {
+            businessObjectDefinitionEntity = businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(
+                new BusinessObjectDefinitionKey(storagePolicyFilter.getNamespace(), storagePolicyFilter.getBusinessObjectDefinitionName()));
+        }
+
+        // If specified, retrieve and ensure that file type exists.
+        FileTypeEntity fileTypeEntity = null;
+        if (StringUtils.isNotBlank(storagePolicyFilter.getBusinessObjectFormatFileType()))
+        {
+            fileTypeEntity = fileTypeDaoHelper.getFileTypeEntity(storagePolicyFilter.getBusinessObjectFormatFileType());
+        }
+
+        // Retrieve and ensure that storage policy filter storage exists.
+        StorageEntity storageEntity = storageDaoHelper.getStorageEntity(storagePolicyFilter.getStorageName());
+
+        // Validate the source storage.
+        validateSourceStorage(storageEntity);
+
+        // Retrieve and ensure that destination storage exists.
+        StorageEntity destinationStorageEntity = storageDaoHelper.getStorageEntity(request.getStoragePolicyTransition().getDestinationStorageName());
+
+        // Validate the destination storage.
+        validateDestinationStorage(destinationStorageEntity);
+
+        // Retrieve and ensure that specified storage policy status exists.
+        StoragePolicyStatusEntity storagePolicyStatusEntity = storagePolicyStatusDaoHelper.getStoragePolicyStatusEntity(request.getStatus());
+
+        // Create and persist a new storage policy entity from the request information.
+        // Please note that simply adding 1 to the latest version without "DB locking" is sufficient here,
+        // even for multi-threading, since we are relying on the DB having version as part of the alternate key.
+        StoragePolicyEntity newVersionStoragePolicyEntity =
+            createStoragePolicyEntity(storagePolicyEntity.getNamespace(), storagePolicyEntity.getName(), storageEntity, destinationStorageEntity,
+                storagePolicyRuleTypeEntity, request.getStoragePolicyRule().getRuleValue(), businessObjectDefinitionEntity,
+                request.getStoragePolicyFilter().getBusinessObjectFormatUsage(), fileTypeEntity, storagePolicyStatusEntity,
+                storagePolicyEntity.getVersion() + 1, true);
+
+        // Update the existing latest version storage policy entity, so it would not be flagged as the latest version anymore.
+        storagePolicyEntity.setLatestVersion(false);
+        storagePolicyDao.saveAndRefresh(storagePolicyEntity);
+
+        // Create and return the storage policy object from the new version entity.
+        return createStoragePolicyFromEntity(newVersionStoragePolicyEntity);
+    }
+
+    @NamespacePermission(fields = "#storagePolicyKey?.namespace", permissions = NamespacePermissionEnum.READ)
     @Override
     public StoragePolicy getStoragePolicy(StoragePolicyKey storagePolicyKey)
     {
@@ -178,7 +241,7 @@ public class StoragePolicyServiceImpl implements StoragePolicyService
         storagePolicyHelper.validateStoragePolicyKey(storagePolicyKey);
 
         // Retrieve and ensure that a storage policy exists with the specified key.
-        StoragePolicyEntity storagePolicyEntity = storageDaoHelper.getStoragePolicyEntity(storagePolicyKey);
+        StoragePolicyEntity storagePolicyEntity = storagePolicyDaoHelper.getStoragePolicyEntityByKey(storagePolicyKey);
 
         // Create and return the storage policy object from the persisted entity.
         return createStoragePolicyFromEntity(storagePolicyEntity);
@@ -197,6 +260,28 @@ public class StoragePolicyServiceImpl implements StoragePolicyService
         validateStoragePolicyRule(request.getStoragePolicyRule());
         validateStoragePolicyFilter(request.getStoragePolicyFilter());
         validateStoragePolicyTransition(request.getStoragePolicyTransition());
+
+        // Validate storage policy status.
+        Assert.hasText(request.getStatus(), "A storage policy status must be specified.");
+        request.setStatus(request.getStatus().trim());
+    }
+
+    /**
+     * Validates the storage policy update request. This method also trims the request parameters.
+     *
+     * @param request the storage policy update request
+     */
+    private void validateStoragePolicyUpdateRequest(StoragePolicyUpdateRequest request)
+    {
+        Assert.notNull(request, "A storage policy update request must be specified.");
+
+        validateStoragePolicyRule(request.getStoragePolicyRule());
+        validateStoragePolicyFilter(request.getStoragePolicyFilter());
+        validateStoragePolicyTransition(request.getStoragePolicyTransition());
+
+        // Validate storage policy status.
+        Assert.hasText(request.getStatus(), "A storage policy status must be specified.");
+        request.setStatus(request.getStatus().trim());
     }
 
     /**
@@ -283,38 +368,94 @@ public class StoragePolicyServiceImpl implements StoragePolicyService
     }
 
     /**
-     * Creates and persists a new storage policy registration entity from the request information.
+     * Validates the source storage.
      *
-     * @param storagePolicyCreateRequest the storage policy create request
+     * @param storageEntity the storage entity
+     */
+    private void validateSourceStorage(StorageEntity storageEntity)
+    {
+        // Validate that storage platform is S3 for the storage policy filter storage.
+        Assert.isTrue(StoragePlatformEntity.S3.equals(storageEntity.getStoragePlatform().getName()),
+            String.format("Storage platform for storage with name \"%s\" is not \"%s\".", storageEntity.getName(), StoragePlatformEntity.S3));
+
+        // Validate that storage policy filter storage has S3 bucket name configured.
+        // Please note that since S3 bucket name attribute value is required we pass a "true" flag.
+        storageHelper.getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), storageEntity, true);
+
+        // Validate that storage policy filter storage has the S3 path prefix validation enabled.
+        if (!storageHelper
+            .getBooleanStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_PATH_PREFIX), storageEntity,
+                false, true))
+        {
+            throw new IllegalStateException(String.format("Path prefix validation must be enabled on \"%s\" storage.", storageEntity.getName()));
+        }
+
+        // Validate that storage policy filter storage has the S3 file existence validation enabled.
+        if (!storageHelper
+            .getBooleanStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_FILE_EXISTENCE), storageEntity,
+                false, true))
+        {
+            throw new IllegalStateException(String.format("File existence validation must be enabled on \"%s\" storage.", storageEntity.getName()));
+        }
+    }
+
+    /**
+     * Validates the destination storage.
+     *
+     * @param storageEntity the destination storage entity
+     */
+    private void validateDestinationStorage(StorageEntity storageEntity)
+    {
+        Assert.isTrue(StoragePlatformEntity.GLACIER.equals(storageEntity.getStoragePlatform().getName()),
+            String.format("Storage platform for destination storage with name \"%s\" is not \"%s\".", storageEntity.getName(), StoragePlatformEntity.GLACIER));
+
+        // Validate that storage policy transition destination storage has S3 bucket name configured for the "archive" S3 bucket.
+        // The "archive" S3 bucket is an S3 bucket that has an object lifecycle rule that moves data to Glacier after 0 days.
+        // Please note that since S3 bucket name attribute value is required we pass a "true" flag.
+        storageHelper.getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), storageEntity, true);
+    }
+
+    /**
+     * Creates and persists a new storage policy entity.
+     *
      * @param namespaceEntity the namespace entity
+     * @param storagePolicyName the storage policy name
      * @param storageEntity the storage entity
      * @param destinationStorageEntity the destination storage entity
      * @param storagePolicyRuleTypeEntity the storage policy rule type entity
      * @param businessObjectDefinitionEntity the business object definition entity
+     * @param businessObjectFormatUsage the business object format usage
      * @param fileTypeEntity the file type entity
+     * @param storagePolicyStatusEntity the storage policy status entity
+     * @param storagePolicyVersion the storage policy version
+     * @param storagePolicyLatestVersion specifies if this storage policy is flagged as latest version or not
      *
      * @return the newly created storage policy entity
      */
-    private StoragePolicyEntity createStoragePolicyEntity(StoragePolicyCreateRequest storagePolicyCreateRequest, NamespaceEntity namespaceEntity,
-        StorageEntity storageEntity, StorageEntity destinationStorageEntity, StoragePolicyRuleTypeEntity storagePolicyRuleTypeEntity,
-        BusinessObjectDefinitionEntity businessObjectDefinitionEntity, FileTypeEntity fileTypeEntity)
+    private StoragePolicyEntity createStoragePolicyEntity(NamespaceEntity namespaceEntity, String storagePolicyName, StorageEntity storageEntity,
+        StorageEntity destinationStorageEntity, StoragePolicyRuleTypeEntity storagePolicyRuleTypeEntity, Integer storagePolicyRuleValue,
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity, String businessObjectFormatUsage, FileTypeEntity fileTypeEntity,
+        StoragePolicyStatusEntity storagePolicyStatusEntity, Integer storagePolicyVersion, Boolean storagePolicyLatestVersion)
     {
         StoragePolicyEntity storagePolicyEntity = new StoragePolicyEntity();
 
         storagePolicyEntity.setNamespace(namespaceEntity);
-        storagePolicyEntity.setName(storagePolicyCreateRequest.getStoragePolicyKey().getStoragePolicyName());
+        storagePolicyEntity.setName(storagePolicyName);
         storagePolicyEntity.setStorage(storageEntity);
         storagePolicyEntity.setDestinationStorage(destinationStorageEntity);
         storagePolicyEntity.setStoragePolicyRuleType(storagePolicyRuleTypeEntity);
-        storagePolicyEntity.setStoragePolicyRuleValue(storagePolicyCreateRequest.getStoragePolicyRule().getRuleValue());
+        storagePolicyEntity.setStoragePolicyRuleValue(storagePolicyRuleValue);
         storagePolicyEntity.setBusinessObjectDefinition(businessObjectDefinitionEntity);
-        if (StringUtils.isNotBlank(storagePolicyCreateRequest.getStoragePolicyFilter().getBusinessObjectFormatUsage()))
+        if (StringUtils.isNotBlank(businessObjectFormatUsage))
         {
-            storagePolicyEntity.setUsage(storagePolicyCreateRequest.getStoragePolicyFilter().getBusinessObjectFormatUsage());
+            storagePolicyEntity.setUsage(businessObjectFormatUsage);
         }
         storagePolicyEntity.setFileType(fileTypeEntity);
+        storagePolicyEntity.setStatus(storagePolicyStatusEntity);
+        storagePolicyEntity.setVersion(storagePolicyVersion);
+        storagePolicyEntity.setLatestVersion(storagePolicyLatestVersion);
 
-        return herdDao.saveAndRefresh(storagePolicyEntity);
+        return storagePolicyDao.saveAndRefresh(storagePolicyEntity);
     }
 
     /**
@@ -353,6 +494,8 @@ public class StoragePolicyServiceImpl implements StoragePolicyService
         StoragePolicyTransition storagePolicyTransition = new StoragePolicyTransition();
         storagePolicy.setStoragePolicyTransition(storagePolicyTransition);
         storagePolicyTransition.setDestinationStorageName(storagePolicyEntity.getDestinationStorage().getName());
+
+        storagePolicy.setStatus(storagePolicyEntity.getStatus().getCode());
 
         return storagePolicy;
     }

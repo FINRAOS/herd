@@ -23,18 +23,21 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
+
+import org.hibernate.annotations.Type;
 
 /**
  * A storage policy.
  */
-@XmlRootElement
-@XmlType
 @Table(name = StoragePolicyEntity.TABLE_NAME)
 @Entity
 public class StoragePolicyEntity extends AuditableEntity
 {
+    /**
+     * The initial version to use when creating a storage policy record.
+     */
+    public static final int STORAGE_POLICY_INITIAL_VERSION = 0;
+
     /**
      * The table name.
      */
@@ -43,7 +46,7 @@ public class StoragePolicyEntity extends AuditableEntity
     @Id
     @Column(name = TABLE_NAME + "_id")
     @GeneratedValue(generator = TABLE_NAME + "_seq")
-    @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq")
+    @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq", allocationSize = 1)
     private Integer id;
 
     @ManyToOne
@@ -99,6 +102,17 @@ public class StoragePolicyEntity extends AuditableEntity
     @ManyToOne
     @JoinColumn(name = "file_type_cd", referencedColumnName = "file_type_cd")
     private FileTypeEntity fileType;
+
+    @ManyToOne
+    @JoinColumn(name = "strge_plcy_stts_cd", referencedColumnName = "strge_plcy_stts_cd", nullable = false)
+    private StoragePolicyStatusEntity status;
+
+    @Column(name = "vrsn_nb", nullable = false)
+    private Integer version;
+
+    @Column(name = "ltst_vrsn_fl", nullable = false)
+    @Type(type = "yes_no")
+    private Boolean latestVersion;
 
     public Integer getId()
     {
@@ -198,5 +212,35 @@ public class StoragePolicyEntity extends AuditableEntity
     public void setFileType(FileTypeEntity fileType)
     {
         this.fileType = fileType;
+    }
+
+    public StoragePolicyStatusEntity getStatus()
+    {
+        return status;
+    }
+
+    public void setStatus(StoragePolicyStatusEntity status)
+    {
+        this.status = status;
+    }
+
+    public Integer getVersion()
+    {
+        return version;
+    }
+
+    public void setVersion(Integer version)
+    {
+        this.version = version;
+    }
+
+    public Boolean getLatestVersion()
+    {
+        return latestVersion;
+    }
+
+    public void setLatestVersion(Boolean latestVersion)
+    {
+        this.latestVersion = latestVersion;
     }
 }

@@ -23,12 +23,14 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.AsyncResult;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
+import org.finra.herd.dao.BusinessObjectDataDao;
 import org.finra.herd.dao.BusinessObjectDataNotificationRegistrationDao;
-import org.finra.herd.dao.HerdDao;
+import org.finra.herd.dao.BusinessObjectFormatDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
@@ -49,7 +51,6 @@ import org.finra.herd.service.NotificationActionService;
 import org.finra.herd.service.NotificationEventService;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.service.helper.BusinessObjectFormatHelper;
-import org.finra.herd.service.helper.HerdHelper;
 import org.finra.herd.service.helper.NotificationActionFactory;
 
 /**
@@ -62,16 +63,7 @@ public class NotificationEventServiceImpl implements NotificationEventService
     private static final Logger LOGGER = Logger.getLogger(NotificationEventServiceImpl.class);
 
     @Autowired
-    private NotificationActionFactory notificationActionFactory;
-
-    @Autowired
-    private HerdHelper herdHelper;
-
-    @Autowired
-    private HerdDao herdDao;
-
-    @Autowired
-    private BusinessObjectFormatHelper businessObjectFormatHelper;
+    private BusinessObjectDataDao businessObjectDataDao;
 
     @Autowired
     private BusinessObjectDataHelper businessObjectDataHelper;
@@ -79,13 +71,26 @@ public class NotificationEventServiceImpl implements NotificationEventService
     @Autowired
     private BusinessObjectDataNotificationRegistrationDao businessObjectDataNotificationRegistrationDao;
 
-    /**
-     * {@inheritDoc}
-     */
+    @Autowired
+    private BusinessObjectFormatDao businessObjectFormatDao;
+
+    @Autowired
+    private BusinessObjectFormatHelper businessObjectFormatHelper;
+
+    @Autowired
+    private NotificationActionFactory notificationActionFactory;
+
+    @Override
     @Async
     public Future<Void> processBusinessObjectDataNotificationEventAsync(NotificationEventTypeEntity.EventTypesBdata eventType, BusinessObjectDataKey key,
         String newBusinessObjectDataStatus, String oldBusinessObjectDataStatus)
     {
+        /*
+         * Need to clear the security context here since the current thread may have been reused, which may might have left over its security context. If we do
+         * not clear the security context, any subsequent calls may be restricted by the permissions given to the previous thread's security context.
+         */
+        SecurityContextHolder.clearContext();
+
         processBusinessObjectDataNotificationEventSync(eventType, key, newBusinessObjectDataStatus, oldBusinessObjectDataStatus);
 
         // Return an AsyncResult so callers will know the future is "done". They can call "isDone" to know when this method has completed and they
@@ -93,18 +98,17 @@ public class NotificationEventServiceImpl implements NotificationEventService
         return new AsyncResult<>(null);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    @Override
     public List<Object> processBusinessObjectDataNotificationEventSync(NotificationEventTypeEntity.EventTypesBdata eventType,
         BusinessObjectDataKey businessObjectDataKey, String newBusinessObjectDataStatus, String oldBusinessObjectDataStatus)
     {
         // Retrieve the notifications matching the event type.
         List<BusinessObjectDataNotificationRegistrationEntity> businessObjectDataNotificationRegistrationEntities =
-            businessObjectDataNotificationRegistrationDao.getBusinessObjectDataNotificationRegistrations(eventType.name(), businessObjectDataKey,
-                newBusinessObjectDataStatus, oldBusinessObjectDataStatus);
+            businessObjectDataNotificationRegistrationDao
+                .getBusinessObjectDataNotificationRegistrations(eventType.name(), businessObjectDataKey, newBusinessObjectDataStatus,
+                    oldBusinessObjectDataStatus);
 
-        BusinessObjectDataEntity businessObjectDataEntity = herdDao.getBusinessObjectDataByAltKey(businessObjectDataKey);
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDao.getBusinessObjectDataByAltKey(businessObjectDataKey);
 
         List<BusinessObjectDataNotificationRegistrationEntity> notificationRegistrationsToProcess = new ArrayList<>();
 
@@ -139,11 +143,11 @@ public class NotificationEventServiceImpl implements NotificationEventService
         List<Object> notificationActions = new ArrayList<>();
 
         // Build a list of partition value that includes primary and sub-partition values, if any are specified in the business object data key.
-        List<String> partitionValues = getPartitionValues(businessObjectData);
+        List<String> partitionValues = businessObjectDataHelper.getPrimaryAndSubPartitionValues(businessObjectData);
 
         // Get a list of partition columns from the associated business object format.
         List<String> partitionColumnNames = null;
-        BusinessObjectFormatEntity businessObjectFormatEntity = herdDao.getBusinessObjectFormatByAltKey(
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDao.getBusinessObjectFormatByAltKey(
             new BusinessObjectFormatKey(businessObjectData.getNamespace(), businessObjectData.getBusinessObjectDefinitionName(),
                 businessObjectData.getBusinessObjectFormatUsage(), businessObjectData.getBusinessObjectFormatFileType(),
                 businessObjectData.getBusinessObjectFormatVersion()));
@@ -206,25 +210,10 @@ public class NotificationEventServiceImpl implements NotificationEventService
         catch (Exception e)
         {
             // Log the error.
-            LOGGER
-                .error("Unexpected error occurred when triggering notification action with " + actionHandler.getIdentifyingInformation(params, herdHelper), e);
+            LOGGER.error("Unexpected error occurred when triggering notification action with " +
+                actionHandler.getIdentifyingInformation(params, businessObjectDataHelper), e);
         }
 
         return null;
-    }
-
-    /**
-     * Returns a list of primary and sub-partition values per specified business object data.
-     *
-     * @param businessObjectData the business object data
-     *
-     * @return the list of primary and sub-partition values
-     */
-    private List<String> getPartitionValues(BusinessObjectData businessObjectData)
-    {
-        List<String> partitionValues = new ArrayList<>();
-        partitionValues.add(businessObjectData.getPartitionValue());
-        partitionValues.addAll(businessObjectData.getSubPartitionValues());
-        return partitionValues;
     }
 }

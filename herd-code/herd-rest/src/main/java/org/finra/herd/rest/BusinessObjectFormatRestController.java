@@ -53,6 +53,7 @@ public class BusinessObjectFormatRestController extends HerdBaseController
 
     /**
      * Creates a new business object format.
+     * <p>Requires WRITE permission on namespace</p>
      *
      * @param request the information needed to create the business object format.
      *
@@ -67,6 +68,7 @@ public class BusinessObjectFormatRestController extends HerdBaseController
 
     /**
      * Updates an existing business object format by alternate key.
+     * <p>Requires WRITE permission on namespace</p>
      *
      * @param namespace the namespace code
      * @param businessObjectDefinitionName the business object definition name
@@ -97,6 +99,7 @@ public class BusinessObjectFormatRestController extends HerdBaseController
 
     /**
      * Gets an existing business object format by alternate key.
+     * <p>Requires READ permission on namespace</p>
      *
      * @param namespace the namespace code
      * @param businessObjectDefinitionName the business object definition name
@@ -124,6 +127,7 @@ public class BusinessObjectFormatRestController extends HerdBaseController
 
     /**
      * Deletes an existing business format.
+     * <p>Requires WRITE permission on namespace</p>
      *
      * @param namespace the namespace code
      * @param businessObjectDefinitionName the business object definition name
@@ -153,6 +157,7 @@ public class BusinessObjectFormatRestController extends HerdBaseController
 
     /**
      * Gets a list of business object formats for the specified business object definition name.
+     * <p>Requires READ permission on namespace</p>
      *
      * @param namespace the namespace code
      * @param businessObjectDefinitionName the business object definition name
@@ -172,6 +177,7 @@ public class BusinessObjectFormatRestController extends HerdBaseController
 
     /**
      * Retrieves the DDL to initialize the specified type of the database system (e.g. Hive) by creating a table for the requested business object format.
+     * <p>Requires READ permission on namespace</p>
      *
      * @param businessObjectFormatDdlRequest the business object data DDL request
      *
@@ -186,6 +192,7 @@ public class BusinessObjectFormatRestController extends HerdBaseController
 
     /**
      * Retrieves the DDL to initialize the specified type of the database system (e.g. Hive) by creating tables for a collection of business object formats.
+     * <p>Requires READ permission on ALL namespaces</p>
      *
      * @param businessObjectFormatDdlCollectionRequest the business object format DDL collection request
      *

@@ -15,9 +15,11 @@
 */
 package org.finra.herd.service.helper;
 
+import java.io.IOException;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.jms.config.JmsListenerEndpointRegistry;
@@ -39,56 +41,16 @@ import org.finra.herd.service.StoragePolicyProcessorService;
 @Component
 public class StoragePolicyProcessorJmsMessageListener
 {
-    private static final Logger LOGGER = Logger.getLogger(StoragePolicyProcessorJmsMessageListener.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(StoragePolicyProcessorJmsMessageListener.class);
 
     @Autowired
-    private HerdHelper herdHelper;
+    private ConfigurationHelper configurationHelper;
 
     @Autowired
     private JsonHelper jsonHelper;
 
     @Autowired
-    private StoragePolicyHelper storagePolicyHelper;
-
-    @Autowired
     private StoragePolicyProcessorService storagePolicyProcessorService;
-
-    @Autowired
-    private ConfigurationHelper configurationHelper;
-
-    /**
-     * Processes a JMS message.
-     *
-     * @param payload the message payload
-     * @param allHeaders the JMS headers
-     */
-    @JmsListener(id = HerdJmsDestinationResolver.SQS_DESTINATION_STORAGE_POLICY_SELECTOR_JOB_SQS_QUEUE,
-        containerFactory = "storagePolicyProcessorJmsListenerContainerFactory",
-        destination = HerdJmsDestinationResolver.SQS_DESTINATION_STORAGE_POLICY_SELECTOR_JOB_SQS_QUEUE)
-    public void processMessage(String payload, @Headers Map<Object, Object> allHeaders)
-    {
-        LOGGER.info(String.format("JMS message received from \"%s\" queue. Headers: \"%s\" Payload: \"%s\"",
-            HerdJmsDestinationResolver.SQS_DESTINATION_STORAGE_POLICY_SELECTOR_JOB_SQS_QUEUE, allHeaders, payload));
-
-        // Process the message as storage policy selection message.
-        try
-        {
-            // Process messages coming from the storage policy selector job.
-            StoragePolicySelection storagePolicySelection = jsonHelper.unmarshallJsonToObject(StoragePolicySelection.class, payload);
-
-            LOGGER.debug(String.format("Received storage policy selection message: business object data: {%s}, " + "storage policy: {%s}",
-                herdHelper.businessObjectDataKeyToString(storagePolicySelection.getBusinessObjectDataKey()),
-                storagePolicyHelper.storagePolicyKeyToString(storagePolicySelection.getStoragePolicyKey())));
-
-            // Process the storage policy selection message.
-            storagePolicyProcessorService.processStoragePolicySelectionMessage(storagePolicySelection);
-        }
-        catch (Exception e)
-        {
-            LOGGER.error(String.format("Failed to process JMS message from \"%s\" queue. Payload: \"%s\"",
-                HerdJmsDestinationResolver.SQS_DESTINATION_STORAGE_POLICY_SELECTOR_JOB_SQS_QUEUE, payload), e);
-        }
-    }
 
     /**
      * Periodically check the configuration and apply the action to the storage policy processor JMS message listener service, if needed.
@@ -111,8 +73,8 @@ public class StoragePolicyProcessorJmsMessageListener
                 registry.getListenerContainer(HerdJmsDestinationResolver.SQS_DESTINATION_STORAGE_POLICY_SELECTOR_JOB_SQS_QUEUE);
 
             // Get the current JMS message listener status and the configuration value.
-            LOGGER.debug(String.format("controlStoragePolicyProcessorJmsMessageListener(): %s=%s jmsMessageListenerContainer.isRunning()=%b",
-                ConfigurationValue.STORAGE_POLICY_PROCESSOR_JMS_LISTENER_ENABLED.getKey(), jmsMessageListenerEnabled, jmsMessageListenerContainer.isRunning()));
+            LOGGER.debug("controlStoragePolicyProcessorJmsMessageListener(): {}={} jmsMessageListenerContainer.isRunning()={}",
+                ConfigurationValue.STORAGE_POLICY_PROCESSOR_JMS_LISTENER_ENABLED.getKey(), jmsMessageListenerEnabled, jmsMessageListenerContainer.isRunning());
 
             // Apply the relative action if needed.
             if (!jmsMessageListenerEnabled && jmsMessageListenerContainer.isRunning())
@@ -130,8 +92,41 @@ public class StoragePolicyProcessorJmsMessageListener
         }
         catch (Exception e)
         {
-            LOGGER.error(String
-                .format("controlStoragePolicyProcessorJmsMessageListener(): Failed to control the storage policy processor Jms message listener service."), e);
+            LOGGER.error("controlStoragePolicyProcessorJmsMessageListener(): Failed to control the storage policy processor Jms message listener service.", e);
+        }
+    }
+
+    /**
+     * Processes a JMS message.
+     *
+     * @param payload the message payload
+     * @param allHeaders the JMS headers
+     */
+    @JmsListener(id = HerdJmsDestinationResolver.SQS_DESTINATION_STORAGE_POLICY_SELECTOR_JOB_SQS_QUEUE,
+        containerFactory = "storagePolicyProcessorJmsListenerContainerFactory",
+        destination = HerdJmsDestinationResolver.SQS_DESTINATION_STORAGE_POLICY_SELECTOR_JOB_SQS_QUEUE)
+    public void processMessage(String payload, @Headers Map<Object, Object> allHeaders)
+    {
+        LOGGER.info("Message received from the JMS queue. jmsQueueName=\"{}\" jmsMessageHeaders=\"{}\" jmsMessagePayload={}",
+            HerdJmsDestinationResolver.SQS_DESTINATION_STORAGE_POLICY_SELECTOR_JOB_SQS_QUEUE, allHeaders, payload);
+
+        // Process the message as storage policy selection message.
+        try
+        {
+            // Process messages coming from the storage policy selector job.
+            StoragePolicySelection storagePolicySelection = jsonHelper.unmarshallJsonToObject(StoragePolicySelection.class, payload);
+
+            LOGGER.debug("Received storage policy selection message: businessObjectDataKey={} storagePolicyKey={} storagePolicyVersion={}",
+                jsonHelper.objectToJson(storagePolicySelection.getBusinessObjectDataKey()),
+                jsonHelper.objectToJson(storagePolicySelection.getStoragePolicyKey()), storagePolicySelection.getStoragePolicyVersion());
+
+            // Process the storage policy selection message.
+            storagePolicyProcessorService.processStoragePolicySelectionMessage(storagePolicySelection);
+        }
+        catch (RuntimeException | IOException e)
+        {
+            LOGGER.error("Failed to process message from the JMS queue. jmsQueueName=\"{}\" jmsMessagePayload={}",
+                HerdJmsDestinationResolver.SQS_DESTINATION_STORAGE_POLICY_SELECTOR_JOB_SQS_QUEUE, payload, e);
         }
     }
 }

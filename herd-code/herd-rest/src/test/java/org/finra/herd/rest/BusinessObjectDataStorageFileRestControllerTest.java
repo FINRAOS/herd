@@ -32,6 +32,7 @@ import org.finra.herd.model.api.xml.SchemaColumn;
 import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
+import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.DataProviderEntity;
@@ -47,22 +48,29 @@ import org.finra.herd.model.jpa.StorageUnitStatusEntity;
 public class BusinessObjectDataStorageFileRestControllerTest extends AbstractRestTest
 {
     private static final String FILE_PATH_1 = "file1";
+
     private static final String FILE_PATH_2 = "file2";
 
     private static final String PARTITION_KEY_2 = "pk2_" + Math.random();
+
     private static final String PARTITION_KEY_3 = "pk3_" + Math.random();
+
     private static final String PARTITION_KEY_4 = "pk4_" + Math.random();
+
     private static final String PARTITION_KEY_5 = "pk5_" + Math.random();
 
     private static final String PARTITION_VALUE_2 = "pv2_" + Math.random();
+
     private static final String PARTITION_VALUE_3 = "pv3_" + Math.random();
+
     private static final String PARTITION_VALUE_4 = "pv4_" + Math.random();
+
     private static final String PARTITION_VALUE_5 = "pv5_" + Math.random();
 
     private static final List<String> SUB_PARTITION_VALUES = Arrays.asList(PARTITION_VALUE_2, PARTITION_VALUE_3, PARTITION_VALUE_4, PARTITION_VALUE_5);
 
     private String testS3KeyPrefix =
-        getExpectedS3KeyPrefix(NAMESPACE_CD, DATA_PROVIDER_NAME, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_KEY,
+        getExpectedS3KeyPrefix(NAMESPACE, DATA_PROVIDER_NAME, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_KEY,
             PARTITION_VALUE, null, null, DATA_VERSION);
 
     /**
@@ -96,13 +104,13 @@ public class BusinessObjectDataStorageFileRestControllerTest extends AbstractRes
         createDataWithSubPartitions();
 
         BusinessObjectDataStorageFilesCreateRequest request =
-            createBusinessObjectDataStorageFilesCreateRequest(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            createBusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 SUB_PARTITION_VALUES, DATA_VERSION, STORAGE_NAME, Arrays.asList(createFile(FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000)));
 
         BusinessObjectDataStorageFilesCreateResponse response = businessObjectDataStorageFileRestController.createBusinessObjectDataStorageFiles(request);
 
         // Validate the returned object.
-        validateBusinessObjectDataStorageFilesCreateResponse(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+        validateBusinessObjectDataStorageFilesCreateResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
             SUB_PARTITION_VALUES, DATA_VERSION, STORAGE_NAME, request.getStorageFiles(), response);
     }
 
@@ -117,10 +125,10 @@ public class BusinessObjectDataStorageFileRestControllerTest extends AbstractRes
 
     private void createDataWithSubPartitions()
     {
-        NamespaceEntity namespaceEntity = super.createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = super.createNamespaceEntity(NAMESPACE);
         DataProviderEntity dataProviderEntity = super.createDataProviderEntity(DATA_PROVIDER_NAME);
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
-            super.createBusinessObjectDefinitionEntity(namespaceEntity, BOD_NAME, dataProviderEntity, null, null);
+            super.createBusinessObjectDefinitionEntity(namespaceEntity, BDEF_NAME, dataProviderEntity, null, null);
         FileTypeEntity fileTypeEntity = super.createFileTypeEntity(FORMAT_FILE_TYPE_CODE, FORMAT_DESCRIPTION);
         List<SchemaColumn> schemaColumns = new ArrayList<>();
         {
@@ -156,8 +164,11 @@ public class BusinessObjectDataStorageFileRestControllerTest extends AbstractRes
         BusinessObjectFormatEntity businessObjectFormatEntity = super
             .createBusinessObjectFormatEntity(businessObjectDefinitionEntity, FORMAT_USAGE_CODE, fileTypeEntity, FORMAT_VERSION, null, true, PARTITION_KEY,
                 null, NO_ATTRIBUTES, null, null, null, schemaColumns, null);
+        BusinessObjectDataStatusEntity businessObjectDataStatusEntity =
+            createBusinessObjectDataStatusEntity(BDATA_STATUS, DESCRIPTION, BDATA_STATUS_PRE_REGISTRATION_FLAG_SET);
         BusinessObjectDataEntity businessObjectDataEntity =
-            createBusinessObjectDataEntity(businessObjectFormatEntity, PARTITION_VALUE, SUB_PARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS);
+            createBusinessObjectDataEntity(businessObjectFormatEntity, PARTITION_VALUE, SUB_PARTITION_VALUES, DATA_VERSION, true,
+                businessObjectDataStatusEntity.getCode());
 
         StorageEntity storageEntity = super.createStorageEntity(STORAGE_NAME);
         StorageUnitEntity storageUnitEntity =

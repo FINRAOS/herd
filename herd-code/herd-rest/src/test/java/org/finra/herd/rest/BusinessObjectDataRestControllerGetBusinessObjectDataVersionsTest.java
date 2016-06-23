@@ -21,20 +21,16 @@ import static org.junit.Assert.assertNotNull;
 import java.util.List;
 
 import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import org.finra.herd.model.api.xml.BusinessObjectDataVersions;
-import org.finra.herd.service.helper.HerdDaoHelper;
 
 /**
  * This class tests get business object data versions functionality within the business object data REST controller.
  */
 public class BusinessObjectDataRestControllerGetBusinessObjectDataVersionsTest extends AbstractRestTest
 {
-    @Autowired
-    HerdDaoHelper herdDaoHelper;
-
     private static final int NUMBER_OF_FORMAT_VERSIONS = 2;
+
     private static final int NUMBER_OF_DATA_VERSIONS_PER_FORMAT_VERSION = 3;
 
     @Test
@@ -50,13 +46,13 @@ public class BusinessObjectDataRestControllerGetBusinessObjectDataVersionsTest e
                 businessObjectDataVersion++)
             {
                 BusinessObjectDataVersions businessObjectDataVersions = businessObjectDataRestController
-                    .getBusinessObjectDataVersions(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_VALUE,
+                    .getBusinessObjectDataVersions(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_VALUE,
                         getDelimitedFieldValues(SUBPARTITION_VALUES), businessObjectFormatVersion, businessObjectDataVersion);
 
                 // Validate the returned object.
                 assertNotNull(businessObjectDataVersions);
                 assertEquals(1, businessObjectDataVersions.getBusinessObjectDataVersions().size());
-                validateBusinessObjectDataKey(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, businessObjectFormatVersion, PARTITION_VALUE,
+                validateBusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, businessObjectFormatVersion, PARTITION_VALUE,
                     SUBPARTITION_VALUES, businessObjectDataVersion,
                     businessObjectDataVersions.getBusinessObjectDataVersions().get(0).getBusinessObjectDataKey());
                 assertEquals(BDATA_STATUS, businessObjectDataVersions.getBusinessObjectDataVersions().get(0).getStatus());
@@ -72,7 +68,7 @@ public class BusinessObjectDataRestControllerGetBusinessObjectDataVersionsTest e
 
         // Retrieve business object data versions without specifying any of the optional parameters including the subpartition values.
         BusinessObjectDataVersions resultBusinessObjectDataVersions = businessObjectDataRestController
-            .getBusinessObjectDataVersions(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_VALUE, null, null, null);
+            .getBusinessObjectDataVersions(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_VALUE, null, null, null);
 
         // Validate the returned object.
         assertNotNull(resultBusinessObjectDataVersions);
@@ -87,13 +83,13 @@ public class BusinessObjectDataRestControllerGetBusinessObjectDataVersionsTest e
     {
         for (int businessObjectFormatVersion = INITIAL_FORMAT_VERSION; businessObjectFormatVersion < NUMBER_OF_FORMAT_VERSIONS; businessObjectFormatVersion++)
         {
-            createBusinessObjectFormatEntity(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, businessObjectFormatVersion, FORMAT_DESCRIPTION,
+            createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, businessObjectFormatVersion, FORMAT_DESCRIPTION,
                 businessObjectFormatVersion == SECOND_FORMAT_VERSION, PARTITION_KEY);
 
             for (int businessObjectDataVersion = INITIAL_DATA_VERSION; businessObjectDataVersion < NUMBER_OF_DATA_VERSIONS_PER_FORMAT_VERSION;
                 businessObjectDataVersion++)
             {
-                createBusinessObjectDataEntity(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, businessObjectFormatVersion, PARTITION_VALUE,
+                createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, businessObjectFormatVersion, PARTITION_VALUE,
                     subPartitionValues, businessObjectDataVersion, businessObjectDataVersion == SECOND_DATA_VERSION, BDATA_STATUS);
             }
         }

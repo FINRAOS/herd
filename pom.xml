@@ -24,7 +24,7 @@
 
    <groupId>org.finra.herd</groupId>
    <artifactId>herd</artifactId>
-   <version>0.8.0-SNAPSHOT</version>
+   <version>0.20.0-SNAPSHOT</version>
 
    <description>This is the base pom for the herd project.</description>
    <url>http://finraos.github.io/herd/</url>
@@ -53,7 +53,7 @@
       <findbugs.version>3.0.1</findbugs.version>
       <hibernate.jpa.api>1.0.0.Final</hibernate.jpa.api>
       <hibernate.validator.version>5.2.2.Final</hibernate.validator.version>
-      <hibernate.version>4.3.11.Final</hibernate.version>
+      <hibernate.version>5.0.7.Final</hibernate.version>
       <h2db.version>1.4.190</h2db.version>
       <jackson.mapper.version>1.9.13</jackson.mapper.version>
       <jackson.version>2.6.4</jackson.version>
@@ -72,7 +72,7 @@
       <plexus.utils.version>3.0.22</plexus.utils.version>
       <postgresql.driver.version>9.4-1206-jdbc42</postgresql.driver.version>
       <quartz.scheduler.version>2.2.2</quartz.scheduler.version>
-      <roaster.version>2.17.3.Final</roaster.version>
+      <roaster.version>2.18.2.Final</roaster.version>
       <slf4j.version>1.7.13</slf4j.version>
       <spring.security.version>4.0.3.RELEASE</spring.security.version>
       <spring.version>4.2.4.RELEASE</spring.version>
@@ -96,6 +96,7 @@
       <maven.dependency.plugin.version>2.10</maven.dependency.plugin.version>
       <maven.exec.plugin.version>1.4.0</maven.exec.plugin.version>
       <maven.findbugs.plugin.version>3.0.3</maven.findbugs.plugin.version>
+      <maven.velocity.plugin.version>1.1.0</maven.velocity.plugin.version>
       <maven.gpg.plugin.version>1.6</maven.gpg.plugin.version>
       <maven.jar.plugin.version>2.6</maven.jar.plugin.version>
       <maven.jaxb2.plugin.version>0.13.1</maven.jaxb2.plugin.version>
@@ -108,6 +109,8 @@
       <maven.surefire.plugin.version>2.19</maven.surefire.plugin.version>
       <maven.war.plugin.version>2.6</maven.war.plugin.version>
       <versions.maven.plugin.version>2.2</versions.maven.plugin.version>
+      <mockito.version>1.10.19</mockito.version>
+      <nexus.staging.maven.plugin.version>1.6.7</nexus.staging.maven.plugin.version>
 
       <!-- Compiler Information -->
       <maven.compiler.source>1.8</maven.compiler.source>
@@ -117,6 +120,9 @@
       <maven.build.timestamp.format>yyyyMMdd_HHmmss</maven.build.timestamp.format>
       <build.timestamp>${maven.build.timestamp}</build.timestamp>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+      <!-- The version of the last herd major database release. This needed to generate a herd AWS CloudFormation template. -->
+      <herd.last.major.database.release.version>0.1.0</herd.last.major.database.release.version>
 
    </properties>
 
@@ -723,6 +729,13 @@
                </exclusion>
             </exclusions>
          </dependency>
+         
+         <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+            <version>${mockito.version}</version>
+            <scope>test</scope>
+         </dependency>
       </dependencies>
 
    </dependencyManagement>
@@ -862,6 +875,11 @@
                <artifactId>maven-plugin-plugin</artifactId>
                <version>${maven.plugin.plugin}</version>
             </plugin>
+            <plugin>
+               <groupId>com.googlecode.velocity-maven-plugin</groupId>
+               <artifactId>velocity-maven-plugin</artifactId>
+               <version>${maven.velocity.plugin.version}</version>
+            </plugin> 
             <plugin>
                <groupId>${project.groupId}</groupId>
                <artifactId>herd-swaggergen-maven-plugin</artifactId>
@@ -1040,8 +1058,22 @@
                         <goals>
                            <goal>sign</goal>
                         </goals>
+                        <configuration>
+                           <passphraseServerId>gpg.passphrase</passphraseServerId>
+                        </configuration>
                      </execution>
                   </executions>
+               </plugin>
+               <plugin>
+                  <groupId>org.sonatype.plugins</groupId>
+                  <artifactId>nexus-staging-maven-plugin</artifactId>
+                  <version>${nexus.staging.maven.plugin.version}</version>
+                  <extensions>true</extensions>
+                  <configuration>
+                     <serverId>finra-ossrh</serverId>
+                     <nexusUrl>https://oss.sonatype.org</nexusUrl>
+                     <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                  </configuration>
                </plugin>
             </plugins>
          </build>
@@ -1050,13 +1082,13 @@
 
    <distributionManagement>
       <repository>
-         <id>sonatype-nexus-staging</id>
+         <id>finra-ossrh</id>
          <name>Nexus Staging Repository</name>
          <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
       </repository>
 
       <snapshotRepository>
-         <id>sonatype-nexus-snapshots</id>
+         <id>finra-ossrh</id>
          <name>Nexus Snapshot Repository</name>
          <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
       </snapshotRepository>

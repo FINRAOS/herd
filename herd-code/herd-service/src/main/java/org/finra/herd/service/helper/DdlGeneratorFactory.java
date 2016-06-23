@@ -37,6 +37,19 @@ public class DdlGeneratorFactory implements InitializingBean
 
     private Map<BusinessObjectDataDdlOutputFormatEnum, DdlGenerator> ddlGeneratorMap;
 
+    @Override
+    public void afterPropertiesSet() throws Exception
+    {
+        ddlGeneratorMap = new HashMap<>();
+
+        // Add all the available DDL generators.
+        Map<String, DdlGenerator> ddlGeneratorBeanMap = applicationContext.getBeansOfType(DdlGenerator.class);
+        for (DdlGenerator ddlGenerator : ddlGeneratorBeanMap.values())
+        {
+            ddlGeneratorMap.put(ddlGenerator.getDdlOutputFormat(), ddlGenerator);
+        }
+    }
+
     /**
      * This method returns the DDL generator for the given output format.
      *
@@ -55,18 +68,5 @@ public class DdlGeneratorFactory implements InitializingBean
                 "No supported DDL generator found for output format: " + (outputFormat == null ? null : outputFormat.value()) + ".");
         }
         return generator;
-    }
-
-    @Override
-    public void afterPropertiesSet() throws Exception
-    {
-        ddlGeneratorMap = new HashMap<>();
-
-        // Add all the available DDL generators.
-        Map<String, DdlGenerator> ddlGeneratorBeanMap = applicationContext.getBeansOfType(DdlGenerator.class);
-        for (DdlGenerator ddlGenerator : ddlGeneratorBeanMap.values())
-        {
-            ddlGeneratorMap.put(ddlGenerator.getDdlOutputFormat(), ddlGenerator);
-        }
     }
 }

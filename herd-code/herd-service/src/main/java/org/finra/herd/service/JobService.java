@@ -15,6 +15,8 @@
 */
 package org.finra.herd.service;
 
+import org.joda.time.DateTime;
+
 import org.finra.herd.model.api.xml.Job;
 import org.finra.herd.model.api.xml.JobCreateRequest;
 import org.finra.herd.model.api.xml.JobDeleteRequest;
@@ -27,21 +29,59 @@ import org.finra.herd.model.api.xml.JobSummaries;
  */
 public interface JobService
 {
-    public Job createAndStartJob(JobCreateRequest jobCreateRequest, boolean isAsync) throws Exception;
-
-    public Job getJob(String id, boolean verbose) throws Exception;
-
-    public JobSummaries getJobs(String namespace, String jobName, JobStatusEnum jobStatus) throws Exception;
-
-    public Job signalJob(JobSignalRequest jobSignalRequest) throws Exception;
+    /**
+     * Creates and starts a new job asynchronously.
+     *
+     * @param jobCreateRequest the information needed to create the job
+     *
+     * @return the created job information
+     * @throws Exception if any problems were encountered
+     */
+    public Job createAndStartJob(JobCreateRequest jobCreateRequest) throws Exception;
 
     /**
-     * Deletes a currently running job and preserves the job state in history.
-     * 
-     * @param jobId The job id
-     * @param jobDeleteRequest The delete request
-     * @return The job that has been deleted
-     * @throws Exception when any exception occurs
+     * Deletes a currently running job and preserves the job state in history. The method calls org.activiti.engine.RuntimeService.deleteProcessInstance(String,
+     * String) on the specified jobId.
+     *
+     * @param jobId the job id
+     * @param jobDeleteRequest the delete request
+     *
+     * @return the job that has been deleted
+     * @throws Exception if any problems were encountered
      */
     public Job deleteJob(String jobId, JobDeleteRequest jobDeleteRequest) throws Exception;
+
+    /**
+     * Gets the details of a previously submitted job.
+     *
+     * @param id the job id
+     *
+     * @return the job information
+     * @throws Exception if any problems were encountered
+     */
+    public Job getJob(String id, boolean verbose) throws Exception;
+
+    /**
+     * <p>Gets a list of job executions based on the specified filter parameters.</p> <p>Jobs' namespace to which you do not have READ permissions to will be
+     * omitted from the result.</p>
+     *
+     * @param namespace an optional namespace filter
+     * @param jobName an optional job name filter
+     * @param jobStatus an optional job status filter
+     * @param startTime an optional job start time filter
+     * @param endTime an optional job end time filter
+     *
+     * @return the list of job summaries
+     * @throws Exception if any problems were encountered
+     */
+    public JobSummaries getJobs(String namespace, String jobName, JobStatusEnum jobStatus, DateTime startTime, DateTime endTime) throws Exception;
+
+    /**
+     * Signals the job with the receive task.
+     *
+     * @param jobSignalRequest the information needed to signal the job
+     *
+     * @return the created job information
+     */
+    public Job signalJob(JobSignalRequest jobSignalRequest) throws Exception;
 }

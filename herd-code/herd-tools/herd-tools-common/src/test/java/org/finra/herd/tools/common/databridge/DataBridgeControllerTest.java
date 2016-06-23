@@ -19,14 +19,14 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
+import org.finra.herd.core.AbstractCoreTest;
 import org.finra.herd.model.dto.DataBridgeBaseManifestDto;
 import org.finra.herd.model.jpa.StorageEntity;
-import org.finra.herd.tools.common.databridge.DataBridgeController;
 
 /**
  * Tests the Data Bridge Controller.
  */
-public class DataBridgeControllerTest
+public class DataBridgeControllerTest extends AbstractCoreTest
 {
     @Test
     public void testAdjustIntegerValueAllCases()
@@ -39,11 +39,10 @@ public class DataBridgeControllerTest
     }
 
     /**
-     * When manifest specifies storage name
-     * Assert return storage name
+     * When manifest specifies storage name Assert return storage name
      */
     @Test
-    public void testGetStorageNameFromManifest_1()
+    public void testGetStorageNameFromManifestAssertReturnStorageName()
     {
         DataBridgeController dataBridgeController = new BasicDataBridgeController();
         DataBridgeBaseManifestDto manifest = new DataBridgeBaseManifestDto();
@@ -53,11 +52,10 @@ public class DataBridgeControllerTest
     }
 
     /**
-     * When manifest specifies null storage name
-     * Assert return StorageEntity.MANAGED_STORAGE
+     * When manifest specifies null storage name Assert return StorageEntity.MANAGED_STORAGE
      */
     @Test
-    public void testGetStorageNameFromManifest_2()
+    public void testGetStorageNameFromManifestAssertReturnDefaultWhenStorageNameNull()
     {
         DataBridgeController dataBridgeController = new BasicDataBridgeController();
         DataBridgeBaseManifestDto manifest = new DataBridgeBaseManifestDto();
@@ -67,14 +65,26 @@ public class DataBridgeControllerTest
     }
 
     /**
-     * When manifest does not specify storage name
-     * Assert return StorageEntity.MANAGED_STORAGE
+     * When manifest does not specify storage name Assert return StorageEntity.MANAGED_STORAGE
      */
     @Test
-    public void testGetStorageNameFromManifest_3()
+    public void testGetStorageNameFromManifestAssertReturnDefaultWhenStorageNull()
     {
         DataBridgeController dataBridgeController = new BasicDataBridgeController();
         DataBridgeBaseManifestDto manifest = new DataBridgeBaseManifestDto();
+        String value = dataBridgeController.getStorageNameFromManifest(manifest);
+        assertEquals(StorageEntity.MANAGED_STORAGE, value);
+    }
+
+    /**
+     * When manifest specifies blank text storage name Assert return StorageEntity.MANAGED_STORAGE
+     */
+    @Test
+    public void testGetStorageNameFromManifestAssertReturnDefaultWhenStorageNameBlank()
+    {
+        DataBridgeController dataBridgeController = new BasicDataBridgeController();
+        DataBridgeBaseManifestDto manifest = new DataBridgeBaseManifestDto();
+        manifest.setStorageName(BLANK_TEXT);
         String value = dataBridgeController.getStorageNameFromManifest(manifest);
         assertEquals(StorageEntity.MANAGED_STORAGE, value);
     }

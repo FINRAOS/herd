@@ -22,6 +22,7 @@ import java.util.Map;
 
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
+import org.apache.velocity.runtime.RuntimeConstants;
 import org.springframework.stereotype.Component;
 
 /**
@@ -35,15 +36,17 @@ public class VelocityHelper
      */
     public VelocityHelper()
     {
+        Velocity.setProperty(RuntimeConstants.RUNTIME_REFERENCES_STRICT, true);
         Velocity.init();
     }
 
     /**
      * Wrapper for {@link Velocity#evaluate(org.apache.velocity.context.Context, java.io.Writer, String, java.io.InputStream)}
-     * 
+     *
      * @param templateReader A {@link Reader} of a Velocity template.
      * @param variables Variables to add to context
      * @param logTag The log tag
+     *
      * @return {@link String} result of evaluation
      */
     public String evaluate(Reader templateReader, Map<String, Object> variables, String logTag)
@@ -64,10 +67,11 @@ public class VelocityHelper
 
     /**
      * Wrapper for {@link Velocity#evaluate(org.apache.velocity.context.Context, java.io.Writer, String, java.io.InputStream)}
-     * 
+     *
      * @param template The template {@link String}
      * @param variables Variables to add to context
      * @param logTag The log tag
+     *
      * @return {@link String} result of evaluation
      */
     public String evaluate(String template, Map<String, Object> variables, String logTag)

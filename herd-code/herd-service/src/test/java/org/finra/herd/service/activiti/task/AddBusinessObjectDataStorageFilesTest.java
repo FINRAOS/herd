@@ -91,7 +91,10 @@ public class AddBusinessObjectDataStorageFilesTest extends HerdActivitiServiceTa
         Map<String, Object> variableValuesToValidate = new HashMap<>();
         variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"ContentType\" must be a valid value of either \"xml\" or \"json\".");
 
-        testActivitiServiceTaskFailure(AddBusinessObjectDataStorageFiles.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            testActivitiServiceTaskFailure(AddBusinessObjectDataStorageFiles.class.getCanonicalName(), fieldExtensionList, parameters,
+                variableValuesToValidate);
+        });
     }
 
     @Test
@@ -110,7 +113,10 @@ public class AddBusinessObjectDataStorageFilesTest extends HerdActivitiServiceTa
         Map<String, Object> variableValuesToValidate = new HashMap<>();
         variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"BusinessObjectDataCreateRequest\" must be specified.");
 
-        testActivitiServiceTaskFailure(AddBusinessObjectDataStorageFiles.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            testActivitiServiceTaskFailure(AddBusinessObjectDataStorageFiles.class.getCanonicalName(), fieldExtensionList, parameters,
+                variableValuesToValidate);
+        });
     }
 
     @Test
@@ -129,7 +135,10 @@ public class AddBusinessObjectDataStorageFilesTest extends HerdActivitiServiceTa
         Map<String, Object> variableValuesToValidate = new HashMap<>();
         variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"BusinessObjectDataStorageFilesCreateRequest\" must be valid xml string.");
 
-        testActivitiServiceTaskFailure(AddBusinessObjectDataStorageFiles.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            testActivitiServiceTaskFailure(AddBusinessObjectDataStorageFiles.class.getCanonicalName(), fieldExtensionList, parameters,
+                variableValuesToValidate);
+        });
     }
 
     @Test
@@ -146,8 +155,12 @@ public class AddBusinessObjectDataStorageFilesTest extends HerdActivitiServiceTa
         parameters.add(buildParameter("businessObjectDataStorageFilesCreateRequest", "wrong_json_request"));
 
         Map<String, Object> variableValuesToValidate = new HashMap<>();
-        variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"BusinessObjectDataStorageFilesCreateRequest\" must be valid json string.");
+        variableValuesToValidate
+            .put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"BusinessObjectDataStorageFilesCreateRequest\" must be valid json string.");
 
-        testActivitiServiceTaskFailure(AddBusinessObjectDataStorageFiles.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            testActivitiServiceTaskFailure(AddBusinessObjectDataStorageFiles.class.getCanonicalName(), fieldExtensionList, parameters,
+                variableValuesToValidate);
+        });
     }
 }

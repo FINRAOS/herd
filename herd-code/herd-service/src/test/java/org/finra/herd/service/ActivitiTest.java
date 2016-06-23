@@ -23,7 +23,6 @@ import java.util.List;
 import org.activiti.engine.RepositoryService;
 import org.activiti.engine.RuntimeService;
 import org.activiti.engine.repository.Deployment;
-import org.apache.log4j.Logger;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -32,8 +31,6 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class ActivitiTest extends AbstractServiceTest
 {
-    private static Logger logger = Logger.getLogger(ActivitiTest.class);
-
     @Autowired
     private RepositoryService repositoryService;
 
@@ -57,7 +54,6 @@ public class ActivitiTest extends AbstractServiceTest
     {
         Deployment deployment = repositoryService.createDeployment().addClasspathResource(ACTIVITI_XML_HERD_WORKFLOW).deploy();
         assertNotNull(deployment.getId());
-        logger.info("Test deployment done with Id: " + deployment.getId());
         return deployment.getId();
     }
 
@@ -65,17 +61,13 @@ public class ActivitiTest extends AbstractServiceTest
     {
         String processInstanceId = runtimeService.startProcessInstanceByKey(TEST_ACTIVITY_WORKFLOW_ID).getId();
         assertNotNull(processInstanceId);
-        logger.info("Test job submitted with Id: " + processInstanceId);
         return processInstanceId;
     }
 
     private void deleteWorkflow(String deploymentId) throws Exception
     {
         repositoryService.deleteDeployment(deploymentId);
-
         List<String> deployResources = repositoryService.getDeploymentResourceNames(deploymentId);
-
         assertTrue(deployResources.isEmpty());
-        logger.info("Deployment removed with Id: " + deploymentId);
     }
 }

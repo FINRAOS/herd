@@ -112,10 +112,12 @@ public class GetExpectedPartitionValueTest extends HerdActivitiServiceTaskTest
 
         List<Parameter> parameters = new ArrayList<>();
 
-        // Try to get an expected partition value information when partition key group name is not specified.
-        Map<String, Object> variableValuesToValidate = new HashMap<>();
-        variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "A partition key group name must be specified.");
-        testActivitiServiceTaskFailure(GetExpectedPartitionValue.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            // Try to get an expected partition value information when partition key group name is not specified.
+            Map<String, Object> variableValuesToValidate = new HashMap<>();
+            variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "A partition key group name must be specified.");
+            testActivitiServiceTaskFailure(GetExpectedPartitionValue.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+        });
     }
 
     /**
@@ -130,11 +132,13 @@ public class GetExpectedPartitionValueTest extends HerdActivitiServiceTaskTest
         List<Parameter> parameters = new ArrayList<>();
         parameters.add(buildParameter(GetExpectedPartitionValue.VARIABLE_OFFSET, INVALID_INTEGER_VALUE));
 
-        // Try to get an expected partition value instance when offset is not an integer.
-        Map<String, Object> variableValuesToValidate = new HashMap<>();
-        variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE,
-            String.format("\"%s\" must be a valid integer value.", GetExpectedPartitionValue.VARIABLE_OFFSET));
-        testActivitiServiceTaskFailure(GetExpectedPartitionValue.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            // Try to get an expected partition value instance when offset is not an integer.
+            Map<String, Object> variableValuesToValidate = new HashMap<>();
+            variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE,
+                String.format("\"%s\" must be a valid integer value.", GetExpectedPartitionValue.VARIABLE_OFFSET));
+            testActivitiServiceTaskFailure(GetExpectedPartitionValue.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+        });
     }
 
     /**
@@ -151,11 +155,13 @@ public class GetExpectedPartitionValueTest extends HerdActivitiServiceTaskTest
         parameters.add(buildParameter(GetExpectedPartitionValue.VARIABLE_PARTITION_KEY_GROUP_NAME, PARTITION_KEY_GROUP));
         parameters.add(buildParameter(GetExpectedPartitionValue.VARIABLE_EXPECTED_PARTITION_VALUE, STRING_VALUE));
 
-        // Try to get an expected partition value for a non-existing partition key group.
-        Map<String, Object> variableValuesToValidate = new HashMap<>();
-        variableValuesToValidate
-            .put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, String.format("Partition key group \"%s\" doesn't exist.", PARTITION_KEY_GROUP));
-        testActivitiServiceTaskFailure(GetExpectedPartitionValue.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            // Try to get an expected partition value for a non-existing partition key group.
+            Map<String, Object> variableValuesToValidate = new HashMap<>();
+            variableValuesToValidate
+                .put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, String.format("Partition key group \"%s\" doesn't exist.", PARTITION_KEY_GROUP));
+            testActivitiServiceTaskFailure(GetExpectedPartitionValue.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+        });
     }
 
     /**
@@ -175,10 +181,12 @@ public class GetExpectedPartitionValueTest extends HerdActivitiServiceTaskTest
         parameters.add(buildParameter(GetExpectedPartitionValue.VARIABLE_PARTITION_KEY_GROUP_NAME, PARTITION_KEY_GROUP));
         parameters.add(buildParameter(GetExpectedPartitionValue.VARIABLE_EXPECTED_PARTITION_VALUE, STRING_VALUE));
 
-        // Try to get a non-existing expected partition value.
-        Map<String, Object> variableValuesToValidate = new HashMap<>();
-        variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE,
-            String.format("Expected partition value \"%s\" doesn't exist in \"%s\" partition key group.", STRING_VALUE, PARTITION_KEY_GROUP));
-        testActivitiServiceTaskFailure(GetExpectedPartitionValue.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            // Try to get a non-existing expected partition value.
+            Map<String, Object> variableValuesToValidate = new HashMap<>();
+            variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE,
+                String.format("Expected partition value \"%s\" doesn't exist in \"%s\" partition key group.", STRING_VALUE, PARTITION_KEY_GROUP));
+            testActivitiServiceTaskFailure(GetExpectedPartitionValue.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+        });
     }
 }

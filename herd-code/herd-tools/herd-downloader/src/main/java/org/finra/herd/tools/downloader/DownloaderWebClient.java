@@ -26,13 +26,12 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;
 
 import org.finra.herd.model.api.xml.BusinessObjectData;
-import org.finra.herd.model.api.xml.BusinessObjectDataDownloadCredential;
 import org.finra.herd.model.api.xml.S3KeyPrefixInformation;
+import org.finra.herd.model.api.xml.StorageUnitDownloadCredential;
 import org.finra.herd.model.dto.DataBridgeBaseManifestDto;
 import org.finra.herd.model.dto.DownloaderInputManifestDto;
 import org.finra.herd.tools.common.databridge.DataBridgeWebClient;
@@ -66,6 +65,7 @@ public class DownloaderWebClient extends DataBridgeWebClient
         dataBridgeBaseManifestDto.setPartitionKey(businessObjectData.getPartitionKey());
         dataBridgeBaseManifestDto.setPartitionValue(businessObjectData.getPartitionValue());
         dataBridgeBaseManifestDto.setSubPartitionValues(businessObjectData.getSubPartitionValues());
+        dataBridgeBaseManifestDto.setStorageName(businessObjectData.getStorageUnits().get(0).getStorage().getName());
         return super.getS3KeyPrefix(dataBridgeBaseManifestDto, businessObjectData.getVersion(), Boolean.FALSE);
     }
 
@@ -107,7 +107,7 @@ public class DownloaderWebClient extends DataBridgeWebClient
 
         URI uri = uriBuilder.build();
 
-        CloseableHttpClient client = HttpClientBuilder.create().build();
+        CloseableHttpClient client = httpClientOperations.createHttpClient();
         HttpGet request = new HttpGet(uri);
         request.addHeader("Accepts", "application/xml");
 
@@ -129,24 +129,26 @@ public class DownloaderWebClient extends DataBridgeWebClient
     }
 
     /**
-     * Gets the business object data download credentials.
-     * 
+     * Gets the storage unit download credentials.
+     *
      * @param manifest The manifest
      * @param storageName The storage name
-     * @return {@link BusinessObjectDataDownloadCredential}
+     *
+     * @return StorageUnitDownloadCredential
      * @throws URISyntaxException When error occurs while URI creation
      * @throws IOException When error occurs communicating with server
      * @throws JAXBException When error occurs parsing XML
      */
-    public BusinessObjectDataDownloadCredential getBusinessObjectDataDownloadCredential(DownloaderInputManifestDto manifest, String storageName)
+    public StorageUnitDownloadCredential getStorageUnitDownloadCredential(DownloaderInputManifestDto manifest, String storageName)
         throws URISyntaxException, IOException, JAXBException
     {
-        URIBuilder uriBuilder = new URIBuilder().setScheme(getUriScheme()).setHost(regServerAccessParamsDto.getRegServerHost()).setPort(regServerAccessParamsDto
-            .getRegServerPort()).setPath(String.join("/", HERD_APP_REST_URI_PREFIX, "businessObjectData", "download", "credential", "namespaces", manifest
-                .getNamespace(), "businessObjectDefinitionNames", manifest.getBusinessObjectDefinitionName(), "businessObjectFormatUsages", manifest
-                    .getBusinessObjectFormatUsage(), "businessObjectFormatFileTypes", manifest.getBusinessObjectFormatFileType(),
-                "businessObjectFormatVersions", manifest.getBusinessObjectFormatVersion(), "partitionValues", manifest.getPartitionValue(),
-                "businessObjectDataVersions", manifest.getBusinessObjectDataVersion())).addParameter("storageName", storageName);
+        URIBuilder uriBuilder =
+            new URIBuilder().setScheme(getUriScheme()).setHost(regServerAccessParamsDto.getRegServerHost()).setPort(regServerAccessParamsDto.getRegServerPort())
+                .setPath(String.join("/", HERD_APP_REST_URI_PREFIX, "storageUnits", "download", "credential", "namespaces", manifest.getNamespace(),
+                    "businessObjectDefinitionNames", manifest.getBusinessObjectDefinitionName(), "businessObjectFormatUsages",
+                    manifest.getBusinessObjectFormatUsage(), "businessObjectFormatFileTypes", manifest.getBusinessObjectFormatFileType(),
+                    "businessObjectFormatVersions", manifest.getBusinessObjectFormatVersion(), "partitionValues", manifest.getPartitionValue(),
+                    "businessObjectDataVersions", manifest.getBusinessObjectDataVersion(), "storageNames", storageName));
         if (manifest.getSubPartitionValues() != null)
         {
             uriBuilder.addParameter("subPartitionValues", herdStringHelper.join(manifest.getSubPartitionValues(), "|", "\\"));
@@ -157,22 +159,22 @@ public class DownloaderWebClient extends DataBridgeWebClient
         {
             httpGet.addHeader(getAuthorizationHeader());
         }
-        try (CloseableHttpClient httpClient = HttpClientBuilder.create().build())
+        try (CloseableHttpClient httpClient = httpClientOperations.createHttpClient())
         {
             LOGGER.info("Retrieving download credentials from registration server...");
-            return getBusinessObjectDataDownloadCredential(httpClientOperations.execute(httpClient, httpGet));
+            return getStorageUnitDownloadCredential(httpClientOperations.execute(httpClient, httpGet));
         }
     }
 
     /**
-     * Gets the business object data download credentials.
-     * 
+     * Gets the storage unit download credentials.
+     *
      * @param httpResponse HTTP response
-     * @return {@link BusinessObjectDataDownloadCredential}
+     *
+     * @return StorageUnitDownloadCredential
      */
-    private BusinessObjectDataDownloadCredential getBusinessObjectDataDownloadCredential(CloseableHttpResponse response)
+    private StorageUnitDownloadCredential getStorageUnitDownloadCredential(CloseableHttpResponse response)
     {
-        return (BusinessObjectDataDownloadCredential) processXmlHttpResponse(response, "get business object data download credential",
-            BusinessObjectDataDownloadCredential.class);
+        return (StorageUnitDownloadCredential) processXmlHttpResponse(response, "get storage unit download credential", StorageUnitDownloadCredential.class);
     }
 }

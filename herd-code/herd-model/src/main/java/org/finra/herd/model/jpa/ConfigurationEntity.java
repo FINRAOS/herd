@@ -18,27 +18,15 @@ package org.finra.herd.model.jpa;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.persistence.NamedQuery;
 import javax.persistence.Table;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 /**
  * This is a configuration that has a key and value. It can be used to hold configuration information for a specific environment.
  */
-@XmlRootElement
-@XmlType
 @Table(name = ConfigurationEntity.TABLE_NAME)
 @Entity
-@NamedQuery(name = ConfigurationEntity.QUERY_GET_CONFIGURATION_BY_KEY,
-    query = "select c from ConfigurationEntity c where upper(c.key) = upper(:" + ConfigurationEntity.COLUMN_KEY + ")")
 public class ConfigurationEntity
 {
-    /**
-     * Query that gets a configuration by the key.
-     */
-    public static final String QUERY_GET_CONFIGURATION_BY_KEY = "getConfigurationByKey";
-
     /**
      * The table name.
      */

@@ -24,9 +24,9 @@ import com.amazonaws.services.elasticmapreduce.model.StepConfig;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
-import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.api.xml.EmrShellStep;
 import org.finra.herd.model.api.xml.EmrShellStepAddRequest;
+import org.finra.herd.model.dto.ConfigurationValue;
 
 /**
  * The Shell step helper.
@@ -34,18 +34,6 @@ import org.finra.herd.model.api.xml.EmrShellStepAddRequest;
 @Component
 public class EmrShellStepHelper extends EmrStepHelper
 {
-    @Override
-    public String getStepType()
-    {
-        return EmrShellStep.class.getName();
-    }
-
-    @Override
-    public String getStepRequestType()
-    {
-        return EmrShellStepAddRequest.class.getName();
-    }
-
     @Override
     public Object buildResponseFromRequest(Object stepRequest)
     {
@@ -108,15 +96,27 @@ public class EmrShellStepHelper extends EmrStepHelper
     }
 
     @Override
-    public String getStepId(Object step)
+    public String getRequestEmrClusterDefinitionName(Object step)
     {
-        return ((EmrShellStep) step).getId();
+        return ((EmrShellStepAddRequest) step).getEmrClusterDefinitionName();
     }
 
     @Override
-    public void setStepId(Object step, String stepId)
+    public String getRequestEmrClusterId(Object stepRequest)
     {
-        ((EmrShellStep) step).setId(stepId);
+        return ((EmrShellStepAddRequest) stepRequest).getEmrClusterId();
+    }
+
+    @Override
+    public String getRequestEmrClusterName(Object step)
+    {
+        return ((EmrShellStepAddRequest) step).getEmrClusterName();
+    }
+
+    @Override
+    public String getRequestNamespace(Object step)
+    {
+        return ((EmrShellStepAddRequest) step).getNamespace();
     }
 
     @Override
@@ -126,9 +126,21 @@ public class EmrShellStepHelper extends EmrStepHelper
     }
 
     @Override
-    public void setRequestStepName(Object step, String stepName)
+    public String getStepId(Object step)
     {
-        ((EmrShellStepAddRequest) step).setStepName(stepName);
+        return ((EmrShellStep) step).getId();
+    }
+
+    @Override
+    public String getStepRequestType()
+    {
+        return EmrShellStepAddRequest.class.getName();
+    }
+
+    @Override
+    public String getStepType()
+    {
+        return EmrShellStep.class.getName();
     }
 
     @Override
@@ -144,9 +156,21 @@ public class EmrShellStepHelper extends EmrStepHelper
     }
 
     @Override
-    public String getRequestNamespace(Object step)
+    public void setRequestEmrClusterDefinitionName(Object step, String clusterDefinitionName)
     {
-        return ((EmrShellStepAddRequest) step).getNamespace();
+        ((EmrShellStepAddRequest) step).setEmrClusterDefinitionName(clusterDefinitionName);
+    }
+
+    @Override
+    public void setRequestEmrClusterId(Object stepRequest, String emrClusterId)
+    {
+        ((EmrShellStepAddRequest) stepRequest).setEmrClusterId(emrClusterId);
+    }
+
+    @Override
+    public void setRequestEmrClusterName(Object step, String clusterName)
+    {
+        ((EmrShellStepAddRequest) step).setEmrClusterName(clusterName);
     }
 
     @Override
@@ -156,27 +180,15 @@ public class EmrShellStepHelper extends EmrStepHelper
     }
 
     @Override
-    public String getRequestEmrClusterDefinitionName(Object step)
+    public void setRequestStepName(Object step, String stepName)
     {
-        return ((EmrShellStepAddRequest) step).getEmrClusterDefinitionName();
+        ((EmrShellStepAddRequest) step).setStepName(stepName);
     }
 
     @Override
-    public void setRequestEmrClusterDefinitionName(Object step, String clusterDefinitionName)
+    public void setStepId(Object step, String stepId)
     {
-        ((EmrShellStepAddRequest) step).setEmrClusterDefinitionName(clusterDefinitionName);
-    }
-
-    @Override
-    public String getRequestEmrClusterName(Object step)
-    {
-        return ((EmrShellStepAddRequest) step).getEmrClusterName();
-    }
-
-    @Override
-    public void setRequestEmrClusterName(Object step, String clusterName)
-    {
-        ((EmrShellStepAddRequest) step).setEmrClusterName(clusterName);
+        ((EmrShellStep) step).setId(stepId);
     }
 
     @Override

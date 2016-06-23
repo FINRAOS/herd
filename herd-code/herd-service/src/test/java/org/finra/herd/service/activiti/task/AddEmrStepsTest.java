@@ -152,7 +152,9 @@ public class AddEmrStepsTest extends AbstractServiceTest
         parameter = new Parameter("stepName", "");
         parameters.add(parameter);
 
-        testActivitiAddEmrStepFailure(AddEmrShellStep.class.getCanonicalName(), new ArrayList<FieldExtension>(), parameters);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            testActivitiAddEmrStepFailure(AddEmrShellStep.class.getCanonicalName(), new ArrayList<>(), parameters);
+        });
     }
 
     @Test
@@ -169,7 +171,9 @@ public class AddEmrStepsTest extends AbstractServiceTest
         parameter = new Parameter("continueOnError", "");
         parameters.add(parameter);
 
-        testActivitiAddEmrStepFailure(AddEmrShellStep.class.getCanonicalName(), new ArrayList<FieldExtension>(), parameters);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            testActivitiAddEmrStepFailure(AddEmrShellStep.class.getCanonicalName(), new ArrayList<>(), parameters);
+        });
     }
 
     @Test
@@ -189,19 +193,22 @@ public class AddEmrStepsTest extends AbstractServiceTest
         parameter = new Parameter("scriptLocation", "A_SCRIPT_LOCATION");
         parameters.add(parameter);
 
-        testActivitiAddEmrStepFailure(AddEmrShellStep.class.getCanonicalName(), getScriptStepsFieldExtension(), parameters);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            testActivitiAddEmrStepFailure(AddEmrShellStep.class.getCanonicalName(), getScriptStepsFieldExtension(), parameters);
+        });
     }
 
     @Test
     public void testAddOozieStepNoWorkflowXml() throws Exception
     {
-        testActivitiAddEmrStepFailure(AddEmrOozieStep.class.getCanonicalName(), new ArrayList<FieldExtension>(), getCommonParameters("Oozie Step"));
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            testActivitiAddEmrStepFailure(AddEmrOozieStep.class.getCanonicalName(), new ArrayList<>(), getCommonParameters("Oozie Step"));
+        });
     }
 
     @Test
     public void testAddOozieStepNoOoziePropertiesLocation() throws Exception
     {
-
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
 
         FieldExtension exceptionField = new FieldExtension();
@@ -214,13 +221,17 @@ public class AddEmrStepsTest extends AbstractServiceTest
         Parameter parameter = new Parameter("workflowXmlLocation", "workflow_xml_location");
         parameters.add(parameter);
 
-        testActivitiAddEmrStepFailure(AddEmrOozieStep.class.getCanonicalName(), fieldExtensionList, parameters);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            testActivitiAddEmrStepFailure(AddEmrOozieStep.class.getCanonicalName(), fieldExtensionList, parameters);
+        });
     }
 
     @Test
     public void testAddHadoopJarStepNoJar() throws Exception
     {
-        testActivitiAddEmrStepFailure(AddEmrHadoopJarStep.class.getCanonicalName(), new ArrayList<FieldExtension>(), getCommonParameters("Hadoop jar Step"));
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            testActivitiAddEmrStepFailure(AddEmrHadoopJarStep.class.getCanonicalName(), new ArrayList<>(), getCommonParameters("Hadoop jar Step"));
+        });
     }
 
     private void testActivitiAddEmrStepSuccess(String implementation, List<FieldExtension> fieldExtensionList, List<Parameter> parameters) throws Exception

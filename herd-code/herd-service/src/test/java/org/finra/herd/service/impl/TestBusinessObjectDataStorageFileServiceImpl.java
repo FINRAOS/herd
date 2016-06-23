@@ -22,7 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageFilesCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageFilesCreateResponse;
-import org.finra.herd.service.BusinessObjectDataStorageFileService;
 
 /**
  * This is a Business Object Data Storage File service implementation for testing.
@@ -30,7 +29,7 @@ import org.finra.herd.service.BusinessObjectDataStorageFileService;
 @Service
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 @Primary
-public class TestBusinessObjectDataStorageFileServiceImpl extends BusinessObjectDataStorageFileServiceImpl implements BusinessObjectDataStorageFileService
+public class TestBusinessObjectDataStorageFileServiceImpl extends BusinessObjectDataStorageFileServiceImpl
 {
     // Overwrite the base class method to change transactional attributes.
     @Override

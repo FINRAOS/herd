@@ -33,16 +33,24 @@ public class JsonHelper
      * @param object the Java object to be serialized
      *
      * @return the JSON representation of the object
-     * @throws IOException if an I/O error occurred
+     * @throws IllegalStateException when an I/O error occurs
      */
-    public String objectToJson(Object object) throws IOException
+    public String objectToJson(Object object) throws IllegalStateException
     {
         ObjectMapper mapper = new ObjectMapper();
 
-        StringWriter sw = new StringWriter();
-        mapper.writeValue(sw, object);
+        StringWriter stringWriter = new StringWriter();
 
-        return sw.toString();
+        try
+        {
+            mapper.writeValue(stringWriter, object);
+        }
+        catch (IOException e)
+        {
+            throw new IllegalStateException(e);
+        }
+
+        return stringWriter.toString();
     }
 
     /**

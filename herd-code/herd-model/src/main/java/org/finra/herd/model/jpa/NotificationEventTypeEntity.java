@@ -19,14 +19,10 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 /**
  * A notification event type.
  */
-@XmlRootElement
-@XmlType
 @Table(name = "ntfcn_event_type_cd_lk")
 @Entity
 public class NotificationEventTypeEntity extends AuditableEntity
@@ -38,7 +34,9 @@ public class NotificationEventTypeEntity extends AuditableEntity
     {
         BUS_OBJCT_DATA_RGSTN,
         BUS_OBJCT_DATA_STTS_CHG;
-    };
+    }
+
+    ;
 
     /**
      * The code column.
@@ -68,39 +66,5 @@ public class NotificationEventTypeEntity extends AuditableEntity
     public void setDescription(String description)
     {
         this.description = description;
-    }
-
-    @Override
-    public boolean equals(Object other)
-    {
-        if (this == other)
-        {
-            return true;
-        }
-        if (other == null || getClass() != other.getClass())
-        {
-            return false;
-        }
-
-        NotificationEventTypeEntity notificationEventType = (NotificationEventTypeEntity) other;
-
-        if (code != null ? !code.equals(notificationEventType.code) : notificationEventType.code != null)
-        {
-            return false;
-        }
-        if (description != null ? !description.equals(notificationEventType.description) : notificationEventType.description != null)
-        {
-            return false;
-        }
-
-        return true;
-    }
-
-    @Override
-    public int hashCode()
-    {
-        int result = code != null ? code.hashCode() : 0;
-        result = 31 * result + (description != null ? description.hashCode() : 0);
-        return result;
     }
 }

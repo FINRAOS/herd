@@ -20,16 +20,18 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.finra.herd.core.HerdDateUtils;
-import org.finra.herd.dao.HerdDao;
+import org.finra.herd.dao.BusinessObjectDataDao;
 import org.finra.herd.dao.S3Dao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
+import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
@@ -41,9 +43,10 @@ import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.service.FileUploadCleanupService;
 import org.finra.herd.service.NotificationEventService;
 import org.finra.herd.service.UploadDownloadHelperService;
-import org.finra.herd.service.helper.HerdDaoHelper;
-import org.finra.herd.service.helper.HerdHelper;
+import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.service.helper.StorageDaoHelper;
+import org.finra.herd.service.helper.StorageHelper;
+import org.finra.herd.service.helper.StorageUnitDaoHelper;
 
 /**
  * The file upload cleanup service implementation.
@@ -52,54 +55,57 @@ import org.finra.herd.service.helper.StorageDaoHelper;
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 public class FileUploadCleanupServiceImpl implements FileUploadCleanupService
 {
-    private static final Logger LOGGER = Logger.getLogger(FileUploadCleanupServiceImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(FileUploadCleanupServiceImpl.class);
 
     @Autowired
-    private HerdHelper herdHelper;
+    private BusinessObjectDataDao businessObjectDataDao;
 
     @Autowired
-    private HerdDao herdDao;
+    private BusinessObjectDataHelper businessObjectDataHelper;
 
     @Autowired
-    private HerdDaoHelper herdDaoHelper;
+    private JsonHelper jsonHelper;
 
     @Autowired
     private S3Dao s3Dao;
 
     @Autowired
-    private UploadDownloadHelperService uploadDownloadHelperService;
-
-    @Autowired
     private StorageDaoHelper storageDaoHelper;
 
+    @Autowired
+    private StorageHelper storageHelper;
+
+    @Autowired
+    private StorageUnitDaoHelper storageUnitDaoHelper;
+
+    @Autowired
+    private UploadDownloadHelperService uploadDownloadHelperService;
+
     /**
-     * The @Lazy annotation below is added to address the following BeanCreationException:
-     * - Error creating bean with name 'notificationEventServiceImpl': Bean with name 'notificationEventServiceImpl' has been injected
-     *   into other beans [fileUploadCleanupServiceImpl] in its raw version as part of a circular reference, but has eventually been wrapped.
-     *   This means that said other beans do not use the final version of the bean. This is often the result of over-eager
-     *   type matching - consider using 'getBeanNamesOfType' with the 'allowEagerInit' flag turned off, for example.
+     * The @Lazy annotation below is added to address the following BeanCreationException: - Error creating bean with name 'notificationEventServiceImpl': Bean
+     * with name 'notificationEventServiceImpl' has been injected into other beans [fileUploadCleanupServiceImpl] in its raw version as part of a circular
+     * reference, but has eventually been wrapped. This means that said other beans do not use the final version of the bean. This is often the result of
+     * over-eager type matching - consider using 'getBeanNamesOfType' with the 'allowEagerInit' flag turned off, for example.
      */
     @Autowired
     @Lazy
     private NotificationEventService notificationEventService;
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public List<BusinessObjectDataKey> deleteBusinessObjectData(String storageName, int thresholdMinutes)
     {
-        LOGGER.info(String.format("Deleting dangling business object data in \"%s\" storage that is older than %d minutes...", storageName, thresholdMinutes));
+        LOGGER.info("Deleting dangling business object data from the storage that is older than the threshold... storageName=\"{}\" thresholdMinutes={}",
+            storageName, thresholdMinutes);
 
         // Get the storage entity and make sure it exists.
         StorageEntity storageEntity = storageDaoHelper.getStorageEntity(storageName);
 
         // Returns a new instance of S3FileTransferRequestParamsDto populated with all parameters, required to access the S3 bucket.
-        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = storageDaoHelper.getS3BucketAccessParams(storageEntity);
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = storageHelper.getS3BucketAccessParams(storageEntity);
 
         // Get dangling business object data records having storage files associated with the specified storage.
-        List<BusinessObjectDataEntity> businessObjectDataEntities =
-            herdDao.getBusinessObjectDataFromStorageOlderThan(storageName, thresholdMinutes, Arrays.asList(BusinessObjectDataStatusEntity.DELETED));
+        List<BusinessObjectDataEntity> businessObjectDataEntities = businessObjectDataDao
+            .getBusinessObjectDataFromStorageOlderThan(storageName, thresholdMinutes, Arrays.asList(BusinessObjectDataStatusEntity.DELETED));
 
         // Build a list of keys for business object data that got marked as DELETED.
         List<BusinessObjectDataKey> resultBusinessObjectDataKeys = new ArrayList<>();
@@ -110,7 +116,7 @@ public class FileUploadCleanupServiceImpl implements FileUploadCleanupService
             {
                 // Get the storage unit. Please note that the storage unit entity must exist,
                 // since we selected business object data entities associated with the storage.
-                StorageUnitEntity storageUnitEntity = storageDaoHelper.getStorageUnitEntity(businessObjectDataEntity, storageName);
+                StorageUnitEntity storageUnitEntity = storageUnitDaoHelper.getStorageUnitEntity(storageName, businessObjectDataEntity);
 
                 // Validate that none of the storage files (if any) exist in the relative S3 bucket.
                 boolean foundExistingS3File = false;
@@ -129,7 +135,7 @@ public class FileUploadCleanupServiceImpl implements FileUploadCleanupService
                 if (!foundExistingS3File)
                 {
                     // Update the business object data status.
-                    BusinessObjectDataKey businessObjectDataKey = herdDaoHelper.getBusinessObjectDataKey(businessObjectDataEntity);
+                    BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity);
                     String originalBusinessObjectStatus = businessObjectDataEntity.getStatus().getCode();
                     uploadDownloadHelperService.updateBusinessObjectDataStatus(businessObjectDataKey, BusinessObjectDataStatusEntity.DELETED);
 
@@ -142,36 +148,34 @@ public class FileUploadCleanupServiceImpl implements FileUploadCleanupService
                     resultBusinessObjectDataKeys.add(businessObjectDataKey);
 
                     // Log the business object data status change.
-                    LOGGER.info(String
-                        .format("Changed business object data status from \"%s\" to \"%s\" for business object data {%s}", originalBusinessObjectStatus,
-                            BusinessObjectDataStatusEntity.DELETED, herdHelper.businessObjectDataKeyToString(businessObjectDataKey)));
+                    LOGGER.info("Changed business object data status. " +
+                        "oldBusinessObjectDataStatus=\"{}\" newBusinessObjectDataStatus=\"{}\" businessObjectDataKey={}", originalBusinessObjectStatus,
+                        BusinessObjectDataStatusEntity.DELETED, jsonHelper.objectToJson(businessObjectDataKey));
                 }
             }
-            catch (Exception e)
+            catch (RuntimeException e)
             {
-                // Log the exception.
-                LOGGER.error(String
-                    .format("Failed to delete business object data {%s}.", herdDaoHelper.businessObjectDataEntityAltKeyToString(businessObjectDataEntity)), e);
+                // Log the exception and continue the processing.
+                LOGGER.error("Failed to delete business object data. businessObjectDataKey={}",
+                    jsonHelper.objectToJson(businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity)), e);
             }
         }
 
         return resultBusinessObjectDataKeys;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public int abortMultipartUploads(String storageName, int thresholdMinutes)
     {
         LOGGER.info(
-            String.format("Aborting S3 multipart uploads that were initiated in \"%s\" storage more than %d minutes ago...", storageName, thresholdMinutes));
+            "Aborting S3 multipart uploads that were initiated in the storage more than specified threshold ago... storageName=\"{}\" thresholdMinutes={}",
+            storageName, thresholdMinutes);
 
         // Get the storage entity and make sure it exists.
         StorageEntity storageEntity = storageDaoHelper.getStorageEntity(storageName);
 
         // Returns a new instance of S3FileTransferRequestParamsDto populated with all parameters, required to access the S3 bucket.
-        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = storageDaoHelper.getS3BucketAccessParams(storageEntity);
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = storageHelper.getS3BucketAccessParams(storageEntity);
 
         // Get the threshold date indicating which multipart uploads should be aborted.
         Date thresholdDate = HerdDateUtils.addMinutes(new Date(), -thresholdMinutes);

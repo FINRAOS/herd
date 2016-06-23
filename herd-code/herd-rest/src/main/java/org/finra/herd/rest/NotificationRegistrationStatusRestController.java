@@ -43,6 +43,7 @@ public class NotificationRegistrationStatusRestController extends HerdBaseContro
 
     /**
      * Updates the status of a notification registration.
+     * <p>Requires WRITE permission on namespace</p>
      * 
      * @param namespace The namespace of the notification registration.
      * @param notificationName The name of the notification registration.

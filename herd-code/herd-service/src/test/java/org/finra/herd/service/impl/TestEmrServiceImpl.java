@@ -20,26 +20,24 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
-import org.finra.herd.model.dto.EmrClusterAlternateKeyDto;
 import org.finra.herd.model.api.xml.EmrCluster;
 import org.finra.herd.model.api.xml.EmrClusterCreateRequest;
 import org.finra.herd.model.api.xml.EmrMasterSecurityGroup;
 import org.finra.herd.model.api.xml.EmrMasterSecurityGroupAddRequest;
 import org.finra.herd.model.api.xml.OozieWorkflowJob;
 import org.finra.herd.model.api.xml.RunOozieWorkflowRequest;
-import org.finra.herd.service.EmrService;
+import org.finra.herd.model.dto.EmrClusterAlternateKeyDto;
 
 /**
  * This is a EMR service implementation for test, to overwrite any behavior needed for test.
- *
  */
 @Service
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 @Primary
-public class TestEmrServiceImpl extends EmrServiceImpl implements EmrService
+public class TestEmrServiceImpl extends EmrServiceImpl
 {
     @Override
-    public EmrCluster getCluster(EmrClusterAlternateKeyDto alternateKey, String emrClusterId, String emrStepId, boolean verbose, boolean retrieveOozieJobs) 
+    public EmrCluster getCluster(EmrClusterAlternateKeyDto alternateKey, String emrClusterId, String emrStepId, boolean verbose, boolean retrieveOozieJobs)
         throws Exception
     {
         return getClusterImpl(alternateKey, emrClusterId, emrStepId, verbose, retrieveOozieJobs);
@@ -62,7 +60,7 @@ public class TestEmrServiceImpl extends EmrServiceImpl implements EmrService
     {
         return addSecurityGroupsToClusterMasterImpl(request);
     }
-    
+
     @Override
     public OozieWorkflowJob runOozieWorkflow(RunOozieWorkflowRequest request) throws Exception
     {
@@ -70,15 +68,16 @@ public class TestEmrServiceImpl extends EmrServiceImpl implements EmrService
     }
 
     @Override
-    public EmrCluster terminateCluster(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, boolean overrideTerminationProtection) throws Exception
+    public EmrCluster terminateCluster(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, boolean overrideTerminationProtection, String emrClusterId)
+        throws Exception
     {
-        return terminateClusterImpl(emrClusterAlternateKeyDto, overrideTerminationProtection);
+        return terminateClusterImpl(emrClusterAlternateKeyDto, overrideTerminationProtection, emrClusterId);
     }
 
     @Override
     public OozieWorkflowJob getEmrOozieWorkflowJob(String namespace, String emrClusterDefinitionName, String emrClusterName, String oozieWorkflowJobId,
-        Boolean verbose) throws Exception
+        Boolean verbose, String emrClusterId) throws Exception
     {
-        return getEmrOozieWorkflowJobImpl(namespace, emrClusterDefinitionName, emrClusterName, oozieWorkflowJobId, verbose);
+        return getEmrOozieWorkflowJobImpl(namespace, emrClusterDefinitionName, emrClusterName, oozieWorkflowJobId, verbose, emrClusterId);
     }
 }

@@ -31,11 +31,6 @@ import org.apache.commons.lang3.time.DateUtils;
  */
 public class HerdDateUtils extends DateUtils
 {
-    public static final long MILLIS_IN_ONE_SECOND = 1000; // 1000 milliseconds
-    public static final long MILLIS_IN_ONE_MINUTE = MILLIS_IN_ONE_SECOND * 60; // 1000 milliseconds * 60 seconds
-    public static final long MILLIS_IN_ONE_HOUR = MILLIS_IN_ONE_MINUTE * 60; // 1000 milliseconds * 60 seconds * 60 minutes
-    public static final long MILLIS_IN_ONE_DAY = MILLIS_IN_ONE_HOUR * 24; // 1000 milliseconds * 60 seconds * 60 minutes * 24 hours
-
     /**
      * Returns a calendar for the current day that does not have the time set.
      *
@@ -60,48 +55,40 @@ public class HerdDateUtils extends DateUtils
     }
 
     /**
-     * Formats a duration in milliseconds.
+     * Formats a "total milliseconds" duration.
      *
-     * @param duration The duration in milliseconds to format.
-     * @param displayMilliseconds Whether to display milliseconds or not.
+     * @param duration the duration in milliseconds to format.
      *
      * @return The formatted duration.
      */
-    public static String formatDuration(long duration, boolean displayMilliseconds)
+    public static String formatDuration(long duration)
     {
-        long remainingDuration = duration;
-
-        // If the duration is 0, then just return 0 with the correct granularity.
-        if (remainingDuration == 0)
-        {
-            return displayMilliseconds ? "0 Milliseconds" : "0 Seconds";
-        }
-
         // Initialize the result string.
         StringBuilder result = new StringBuilder();
 
-        // Compute each duration separately.
-        remainingDuration = processDuration(remainingDuration, MILLIS_IN_ONE_DAY, "Day", result, false);
-        remainingDuration = processDuration(remainingDuration, MILLIS_IN_ONE_HOUR, "Hour", result, false);
-        remainingDuration = processDuration(remainingDuration, MILLIS_IN_ONE_MINUTE, "Minute", result, false);
-        remainingDuration = processDuration(remainingDuration, MILLIS_IN_ONE_SECOND, "Second", result, false);
+        // Since we have to display the readable duration, append it initially.
 
-        // Compute the milliseconds.
-        long milliSeconds = remainingDuration;
-        if (milliSeconds > 0)
+        long remainingDuration = duration;
+
+        // If the duration is 0, then just return 0 milliseconds.
+        if (remainingDuration == 0)
         {
-            if (displayMilliseconds)
+            result.append("0 Milliseconds");
+        }
+        else
+        {
+            // Compute each duration separately.
+            remainingDuration = processDuration(remainingDuration, MILLIS_PER_DAY, "Day", result, false);
+            remainingDuration = processDuration(remainingDuration, MILLIS_PER_HOUR, "Hour", result, false);
+            remainingDuration = processDuration(remainingDuration, MILLIS_PER_MINUTE, "Minute", result, false);
+            remainingDuration = processDuration(remainingDuration, MILLIS_PER_SECOND, "Second", result, false);
+
+            // Compute the milliseconds.
+            long milliSeconds = remainingDuration;
+            if (milliSeconds > 0)
             {
                 // Just display the final millisecond portion no matter what (i.e. the duration is 1).
                 processDuration(remainingDuration, 1, "Millisecond", result, true);
-            }
-            else
-            {
-                // If no milliseconds are being displayed and the time is less than 1 second, return 0 seconds.
-                if (result.length() == 0)
-                {
-                    result.append("0 Seconds");
-                }
             }
         }
 
@@ -140,8 +127,8 @@ public class HerdDateUtils extends DateUtils
             // Append the duration along with the duration name (e.g. "5 day").
             result.append(String.valueOf(duration)).append(' ').append(durationName);
 
-            // If the duration is > 1, then make it plural (e.g. 5 day"s").
-            if (duration > 1)
+            // If the duration is not 1, then make it plural (e.g. 5 day"s").
+            if (duration != 1)
             {
                 result.append('s');
             }

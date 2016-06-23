@@ -29,7 +29,7 @@ public class ServiceEnvTestSpringModuleConfig
      * Returns the Activiti database schema update approach. Values should come from a "DB_SCHEMA_UPDATE_*" constant in ProcessEngineConfiguration or
      * ProcessEngineConfigurationImpl.
      *
-     * @return the the Activiti database schema update approach.
+     * @return the Activiti database schema update approach.
      */
     @Bean
     public String activitiDbSchemaUpdateParam()

@@ -33,11 +33,17 @@ public class StoragePolicySelection
 
     /**
      * Fully-initialising value constructor.
+     *
+     * @param businessObjectDataKey the business object data key
+     * @param storagePolicyKey the storage policy key
+     * @param storagePolicyVersion the storage policy version
      */
-    public StoragePolicySelection(final BusinessObjectDataKey businessObjectDataKey, final StoragePolicyKey storagePolicyKey)
+    public StoragePolicySelection(final BusinessObjectDataKey businessObjectDataKey, final StoragePolicyKey storagePolicyKey,
+        final Integer storagePolicyVersion)
     {
         this.businessObjectDataKey = businessObjectDataKey;
         this.storagePolicyKey = storagePolicyKey;
+        this.storagePolicyVersion = storagePolicyVersion;
     }
 
     /**
@@ -49,6 +55,11 @@ public class StoragePolicySelection
      * The storage policy Key.
      */
     private StoragePolicyKey storagePolicyKey;
+
+    /**
+     * The storage policy version.
+     */
+    private Integer storagePolicyVersion;
 
     public BusinessObjectDataKey getBusinessObjectDataKey()
     {
@@ -68,6 +79,16 @@ public class StoragePolicySelection
     public void setStoragePolicyKey(StoragePolicyKey storagePolicyKey)
     {
         this.storagePolicyKey = storagePolicyKey;
+    }
+
+    public Integer getStoragePolicyVersion()
+    {
+        return storagePolicyVersion;
+    }
+
+    public void setStoragePolicyVersion(Integer storagePolicyVersion)
+    {
+        this.storagePolicyVersion = storagePolicyVersion;
     }
 
     @Override
@@ -92,6 +113,10 @@ public class StoragePolicySelection
         {
             return false;
         }
+        if (storagePolicyVersion != null ? !storagePolicyVersion.equals(that.storagePolicyVersion) : that.storagePolicyVersion != null)
+        {
+            return false;
+        }
 
         return true;
     }
@@ -101,6 +126,7 @@ public class StoragePolicySelection
     {
         int result = businessObjectDataKey != null ? businessObjectDataKey.hashCode() : 0;
         result = 31 * result + (storagePolicyKey != null ? storagePolicyKey.hashCode() : 0);
+        result = 31 * result + (storagePolicyVersion != null ? storagePolicyVersion.hashCode() : 0);
         return result;
     }
 }

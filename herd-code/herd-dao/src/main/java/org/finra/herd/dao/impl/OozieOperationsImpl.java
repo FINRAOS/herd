@@ -29,27 +29,18 @@ import org.finra.herd.dao.OozieOperations;
  */
 public class OozieOperationsImpl implements OozieOperations
 {
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String runOozieWorkflow(OozieClient oozieClient, Properties conf) throws OozieClientException
     {
         return oozieClient.run(conf);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public WorkflowJob getJobInfo(OozieClient oozieClient, String jobId) throws OozieClientException
     {
         return oozieClient.getJobInfo(jobId);
     }
     
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public List<WorkflowJob> getJobsInfo(OozieClient oozieClient, String filter, int start, int len) throws OozieClientException
     {

@@ -33,7 +33,7 @@ public class InvalidateUnregisteredBusinessObjectDataTest extends HerdActivitiSe
 {
     /**
      * Tests a standard request that is valid XML.
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -76,7 +76,7 @@ public class InvalidateUnregisteredBusinessObjectDataTest extends HerdActivitiSe
 
     /**
      * Tests a standard request that is valid JSON.
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -119,7 +119,7 @@ public class InvalidateUnregisteredBusinessObjectDataTest extends HerdActivitiSe
 
     /**
      * Test request which results in ERROR.
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -147,14 +147,16 @@ public class InvalidateUnregisteredBusinessObjectDataTest extends HerdActivitiSe
          */
         Map<String, Object> variableValuesToValidate = new HashMap<>();
         variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_STATUS, ActivitiRuntimeHelper.TASK_STATUS_ERROR);
-        variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "Business object format with namespace \"" + request.getNamespace()
-            + "\", business object definition name \"" + request.getBusinessObjectDefinitionName() + "\", format usage \""
-            + request.getBusinessObjectFormatUsage() + "\", format file type \"" + request.getBusinessObjectFormatFileType() + "\", and format version \""
-            + request.getBusinessObjectFormatVersion() + "\" doesn't exist.");
+        variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE,
+            "Business object format with namespace \"" + request.getNamespace() + "\", business object definition name \"" +
+                request.getBusinessObjectDefinitionName() + "\", format usage \"" + request.getBusinessObjectFormatUsage() + "\", format file type \"" +
+                request.getBusinessObjectFormatFileType() + "\", and format version \"" + request.getBusinessObjectFormatVersion() + "\" doesn't exist.");
         variableValuesToValidate.put(BaseJavaDelegate.VARIABLE_JSON_RESPONSE, VARIABLE_VALUE_IS_NULL);
 
-        testActivitiServiceTaskFailure(InvalidateUnregisteredBusinessObjectData.class.getCanonicalName(), fieldExtensionList, parameters,
-            variableValuesToValidate);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            testActivitiServiceTaskFailure(InvalidateUnregisteredBusinessObjectData.class.getCanonicalName(), fieldExtensionList, parameters,
+                variableValuesToValidate);
+        });
     }
 
     private BusinessObjectDataInvalidateUnregisteredResponse getExpectedBusinessObjectDataInvalidateUnregisteredResponse(

@@ -31,12 +31,15 @@ import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.ListMultipartUploadsRequest;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
+import com.amazonaws.services.s3.model.ListVersionsRequest;
 import com.amazonaws.services.s3.model.MultipartUploadListing;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.PutObjectResult;
+import com.amazonaws.services.s3.model.RestoreObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.model.VersionListing;
 import com.amazonaws.services.s3.transfer.Copy;
 import com.amazonaws.services.s3.transfer.Download;
 import com.amazonaws.services.s3.transfer.MultipleFileDownload;
@@ -49,72 +52,54 @@ import org.finra.herd.dao.S3Operations;
 
 public class S3OperationsImpl implements S3Operations
 {
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public ObjectMetadata getObjectMetadata(String sourceBucketName, String filePath, AmazonS3Client s3Client)
     {
         return s3Client.getObjectMetadata(sourceBucketName, filePath);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Copy copyFile(CopyObjectRequest copyObjectRequest, TransferManager transferManager)
     {
         return transferManager.copy(copyObjectRequest);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public void deleteFile(String bucketName, String key, AmazonS3Client s3Client)
+    public void restoreObject(RestoreObjectRequest requestRestore, AmazonS3Client s3Client)
     {
-        s3Client.deleteObject(bucketName, key);
+        s3Client.restoreObject(requestRestore);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public MultipartUploadListing listMultipartUploads(ListMultipartUploadsRequest listMultipartUploadsRequest, AmazonS3Client s3Client)
     {
         return s3Client.listMultipartUploads(listMultipartUploadsRequest);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void abortMultipartUpload(AbortMultipartUploadRequest abortMultipartUploadRequest, AmazonS3Client s3Client)
     {
         s3Client.abortMultipartUpload(abortMultipartUploadRequest);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public DeleteObjectsResult deleteObjects(DeleteObjectsRequest deleteObjectRequest, AmazonS3Client s3Client)
+    public DeleteObjectsResult deleteObjects(DeleteObjectsRequest deleteObjectsRequest, AmazonS3Client s3Client)
     {
-        return s3Client.deleteObjects(deleteObjectRequest);
+        return s3Client.deleteObjects(deleteObjectsRequest);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public ObjectListing listObjects(ListObjectsRequest listObjectsRequest, AmazonS3Client s3Client)
     {
         return s3Client.listObjects(listObjectsRequest);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    @Override
+    public VersionListing listVersions(ListVersionsRequest listVersionsRequest, AmazonS3Client s3Client)
+    {
+        return s3Client.listVersions(listVersionsRequest);
+    }
+
     @Override
     public PutObjectResult putObject(PutObjectRequest putObjectRequest, AmazonS3Client s3Client)
     {

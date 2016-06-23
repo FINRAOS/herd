@@ -47,6 +47,8 @@ import org.apache.commons.lang3.BooleanUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
 import org.jboss.forge.roaster.Roaster;
+import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.Javadoc;
+import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.TagElement;
 import org.jboss.forge.roaster.model.JavaDocTag;
 import org.jboss.forge.roaster.model.source.AnnotationSource;
 import org.jboss.forge.roaster.model.source.JavaClassSource;
@@ -255,25 +257,13 @@ public class RestControllerProcessor
     {
         log.debug("Processing method \"" + method.getName() + "\".");
 
-        // Build a map of each parameter name to its description from the method Javadoc.
+        // Build a map of each parameter name to its description from the method Javadoc (i.e. all @param and @return values).
         Map<String, String> methodParamDescriptions = new HashMap<>();
-        JavaDocSource<MethodSource<JavaClassSource>> javaDoc = methodSource.getJavaDoc();
-        List<JavaDocTag> tags = javaDoc.getTags();
+        JavaDocSource<MethodSource<JavaClassSource>> javaDocSource = methodSource.getJavaDoc();
+        List<JavaDocTag> tags = javaDocSource.getTags();
         for (JavaDocTag javaDocTag : tags)
         {
-            if (javaDocTag.getName().equals("@param"))
-            {
-                // Get the index of the space that separates the parameter name from its description.
-                int index = javaDocTag.getValue().indexOf(' ');
-
-                // Store the parameter name and description in a map.
-                methodParamDescriptions.put(javaDocTag.getValue().substring(0, index), javaDocTag.getValue().substring(index).trim());
-            }
-            else if (javaDocTag.getName().equals("@return"))
-            {
-                // Store the return description.
-                methodParamDescriptions.put("@return", javaDocTag.getValue());
-            }
+            processJavaDocTag(javaDocTag, methodParamDescriptions);
         }
 
         List<String> produces = Collections.emptyList();
@@ -344,9 +334,27 @@ public class RestControllerProcessor
             Operation operation = new Operation();
             operation.tag(tagName);
             operation.summary(methodSummary);
-            if (javaDoc.getText() != null)
+
+            if (javaDocSource.getText() != null)
             {
-                operation.description(javaDoc.getText());
+                // Process the method description.
+                Javadoc javadoc = (Javadoc) javaDocSource.getInternal();
+                List<TagElement> tagList = javadoc.tags();
+                StringBuilder stringBuilder = new StringBuilder();
+                for (TagElement tagElement : tagList)
+                {
+                    // Tags that have a null tag name are related to the overall method description (as opposed to the individual parameters, etc.).
+                    // In most cases, there should be only 1, but perhaps that are other cases that could have more. This general logic comes from
+                    // JavaDocImpl.getText(). Although that implementation also filters out on TextElements, we'll grab them all in case there's something
+                    // else available (e.g. @link, etc.).
+                    if (tagElement.getTagName() == null)
+                    {
+                        processFragments(tagElement.fragments(), stringBuilder);
+                    }
+                }
+
+                // The string builder has the final method text to use.
+                operation.description(stringBuilder.toString());
                 setOperationId(tagName, method, operation);
             }
 
@@ -375,6 +383,70 @@ public class RestControllerProcessor
         else
         {
             log.debug("Skipping method \"" + method.getName() + "\" because it is either not a RequestMapping or it is hidden.");
+        }
+    }
+
+    /**
+     * Processes the Java doc tag (i.e. the parameters and return value).
+     *
+     * @param javaDocTag the Java doc tag
+     * @param methodParamDescriptions the map of method parameters to update.
+     */
+    private void processJavaDocTag(JavaDocTag javaDocTag, Map<String, String> methodParamDescriptions)
+    {
+        // Get the list of fragments which are the parts of an individual Javadoc parameter or return value.
+        TagElement tagElement = (TagElement) javaDocTag.getInternal();
+        List fragments = tagElement.fragments();
+
+        // We need to populate the parameter name and get the list of fragments that contain the actual text.
+        String paramName = "";
+        List subFragments = new ArrayList<>();
+        if (javaDocTag.getName().equals("@param"))
+        {
+            // In the case of @param, the first fragment is the name and the rest make up the description.
+            paramName = String.valueOf(fragments.get(0));
+            subFragments = fragments.subList(1, fragments.size());
+        }
+        else if (javaDocTag.getName().equals("@return"))
+        {
+            // In the case of @return, we'll use "@return" itself for the name and all the fragments make up the description.
+            paramName = "@return";
+            subFragments = fragments;
+        }
+
+        // Process all fragments and place the results in the map.
+        StringBuilder stringBuilder = new StringBuilder();
+        processFragments(subFragments, stringBuilder);
+        methodParamDescriptions.put(paramName, stringBuilder.toString());
+    }
+
+    /**
+     * Processes all the fragments that make up the description. This needs to be done manually as opposed to using the higher level roaster text retrieval
+     * methods since those eat carriage return characters and don't replace them with a space. The result is the the last word of one line and the first word of
+     * the next line are placed together with no separating space. This method builds it manually to fix this issue.
+     * <p>
+     * This method updates a passed in stringBuilder so callers can process multiple list of fragments and use the same stringBuilder to hold the processed
+     * contents of all of them.
+     *
+     * @param fragments the list of fragments.
+     * @param stringBuilder the string builder to update.
+     */
+    private void processFragments(List fragments, StringBuilder stringBuilder)
+    {
+        // Loop through the fragments.
+        for (Object fragment : fragments)
+        {
+            // Get and trim this fragment.
+            String fragmentString = String.valueOf(fragment).trim();
+
+            // If we have already processed a fragment, add a space.
+            if (stringBuilder.length() > 0)
+            {
+                stringBuilder.append(' ');
+            }
+
+            // Append this fragment to the string builder.
+            stringBuilder.append(fragmentString);
         }
     }
 
