@@ -134,7 +134,7 @@ public class EmrDaoImpl implements EmrDao
     /**
      * Add Security groups to the master node of EMR cluster.
      *
-     * @param clusterName EMR cluster name.
+     * @param clusterId EMR cluster Id.
      * @param securityGroups the security groups list.
      * @param awsParams the proxy details.
      *
@@ -206,10 +206,8 @@ public class EmrDaoImpl implements EmrDao
     /**
      * Terminates the EMR cluster.
      *
-     * @param clusterName the cluster name.
+     * @param clusterId the cluster Id.
      * @param awsParams AWS related parameters for access/secret keys and proxy details.
-     *
-     * @return the cluster Id.
      */
     @Override
     public void terminateEmrCluster(String clusterId, boolean overrideTerminationProtection, AwsParamsDto awsParams)
@@ -508,8 +506,9 @@ public class EmrDaoImpl implements EmrDao
      * Gets the additional master node security groups from the given EMR cluster definition. Automatically adds the configured EMR support security group. If
      * the support SG is not configured, the list of additional security group is retrieved from the given definition as-is. Otherwise, the list is initialized
      * as needed.
-     * 
+     *
      * @param emrClusterDefinition The EMR cluster definition
+     *
      * @return List of additional master node security groups
      */
     private List<String> getAdditionalMasterSecurityGroups(EmrClusterDefinition emrClusterDefinition)
@@ -633,9 +632,8 @@ public class EmrDaoImpl implements EmrDao
         if (!CollectionUtils.isEmpty(emrClusterDefinition.getHadoopConfigurations()))
         {
             ArrayList<String> argList = new ArrayList<>();
-            BootstrapActionConfig hadoopBootstrapActionConfig =
-                getBootstrapActionConfig(ConfigurationValue.EMR_CONFIGURE_HADOOP.getKey(), configurationHelper
-                    .getProperty(ConfigurationValue.EMR_CONFIGURE_HADOOP));
+            BootstrapActionConfig hadoopBootstrapActionConfig = getBootstrapActionConfig(ConfigurationValue.EMR_CONFIGURE_HADOOP.getKey(),
+                configurationHelper.getProperty(ConfigurationValue.EMR_CONFIGURE_HADOOP));
             // If config files are available, add them as arguments
             for (Object hadoopConfigObject : emrClusterDefinition.getHadoopConfigurations())
             {

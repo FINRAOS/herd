@@ -259,6 +259,7 @@
       <module>herd-war</module>
       <module>herd-tools</module>
       <module>herd-web-assets</module>
+      <module>herd-sdk</module>
    </modules>
 
 </project>

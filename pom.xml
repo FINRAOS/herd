@@ -58,6 +58,7 @@
       <jackson.mapper.version>1.9.13</jackson.mapper.version>
       <jackson.version>2.6.4</jackson.version>
       <javax.servlet.version>3.0.1</javax.servlet.version>
+      <jodatime.version>2.9.4</jodatime.version>
       <jstl-impl.version>1.2.2</jstl-impl.version>
       <!--
       TODO: This explicit dependency will be needed when we migrate to Hibernate 5.
@@ -67,6 +68,7 @@
       <log4j.version>1.2.17</log4j.version>
       <maven.plugin.api.version>3.3.9</maven.plugin.api.version>
       <maven.plugin.annotations.version>3.4</maven.plugin.annotations.version>
+      <migbase64.version>2.2</migbase64.version>
       <oracle.driver.version>11.2.0.2.0</oracle.driver.version>
       <oozie.version>4.2.0</oozie.version>
       <plexus.utils.version>3.0.22</plexus.utils.version>
@@ -76,7 +78,8 @@
       <slf4j.version>1.7.13</slf4j.version>
       <spring.security.version>4.0.3.RELEASE</spring.security.version>
       <spring.version>4.2.4.RELEASE</spring.version>
-      <swagger.version>1.5.4</swagger.version>
+      <sun.jersey.version>1.19.1</sun.jersey.version>
+      <swagger.version>1.5.9</swagger.version>
       <velocity.version>1.7</velocity.version>
       <woodstox.version>4.4.1</woodstox.version>
 
@@ -108,6 +111,7 @@
       <maven.javadoc.plugin.version>2.10.3</maven.javadoc.plugin.version>
       <maven.surefire.plugin.version>2.19</maven.surefire.plugin.version>
       <maven.war.plugin.version>2.6</maven.war.plugin.version>
+      <swagger-codegen-maven-plugin>2.1.5</swagger-codegen-maven-plugin>
       <versions.maven.plugin.version>2.2</versions.maven.plugin.version>
       <mockito.version>1.10.19</mockito.version>
       <nexus.staging.maven.plugin.version>1.6.7</nexus.staging.maven.plugin.version>
@@ -569,6 +573,16 @@
             <version>${jackson.version}</version>
          </dependency>
          <dependency>
+             <groupId>com.fasterxml.jackson.jaxrs</groupId>
+             <artifactId>jackson-jaxrs-json-provider</artifactId>
+             <version>${jackson.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-joda</artifactId>
+            <version>${jackson.version}</version>
+         </dependency>
+         <dependency>
             <groupId>org.jvnet.jaxb2_commons</groupId>
             <artifactId>jaxb2-basics</artifactId>
             <version>${jaxb2.basics.version}</version>
@@ -729,13 +743,36 @@
                </exclusion>
             </exclusions>
          </dependency>
-         
+
          <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-all</artifactId>
             <version>${mockito.version}</version>
             <scope>test</scope>
          </dependency>
+
+         <!-- Dependencies for the herd-sdk -->
+         <dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-client</artifactId>
+            <version>${sun.jersey.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>com.sun.jersey.contribs</groupId>
+            <artifactId>jersey-multipart</artifactId>
+            <version>${sun.jersey.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>joda-time</groupId>
+            <artifactId>joda-time</artifactId>
+            <version>${jodatime.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>com.brsanthu</groupId>
+            <artifactId>migbase64</artifactId>
+            <version>${migbase64.version}</version>
+         </dependency>
+
       </dependencies>
 
    </dependencyManagement>
@@ -879,11 +916,16 @@
                <groupId>com.googlecode.velocity-maven-plugin</groupId>
                <artifactId>velocity-maven-plugin</artifactId>
                <version>${maven.velocity.plugin.version}</version>
-            </plugin> 
+            </plugin>
             <plugin>
                <groupId>${project.groupId}</groupId>
                <artifactId>herd-swaggergen-maven-plugin</artifactId>
                <version>${project.version}</version>
+            </plugin>
+            <plugin>
+               <groupId>io.swagger</groupId>
+               <artifactId>swagger-codegen-maven-plugin</artifactId>
+               <version>${swagger-codegen-maven-plugin}</version>
             </plugin>
          </plugins>
       </pluginManagement>
