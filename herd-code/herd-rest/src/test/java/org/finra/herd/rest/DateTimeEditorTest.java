@@ -18,6 +18,8 @@ package org.finra.herd.rest;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -32,13 +34,14 @@ public class DateTimeEditorTest extends AbstractRestTest
     @Test
     public void testSetAsText()
     {
-        String dateTimeAsText = "2015-07-18T13:32:56.971-04:00";
+        String inputDateTimeAsText = "2015-07-18T13:32:56.971-04:00";
+        DateTime expectedDateTime = new DateTime(2015, 7, 18, 13, 32, 56, 971, DateTimeZone.forOffsetHours(-4));
 
-        dateTimeEditor.setAsText(dateTimeAsText);
-        assertEquals(dateTimeAsText.trim(), dateTimeEditor.getAsText());
+        dateTimeEditor.setAsText(inputDateTimeAsText);
+        assertEquals(expectedDateTime.toString(), dateTimeEditor.getValue().toString());
 
-        dateTimeEditor.setAsText(addWhitespace(dateTimeAsText));
-        assertEquals(dateTimeAsText.trim(), dateTimeEditor.getAsText());
+        dateTimeEditor.setAsText(addWhitespace(inputDateTimeAsText));
+        assertEquals(expectedDateTime.toString(), dateTimeEditor.getValue().toString());
 
         dateTimeEditor.setAsText(BLANK_TEXT);
         assertNull(dateTimeEditor.getValue());
