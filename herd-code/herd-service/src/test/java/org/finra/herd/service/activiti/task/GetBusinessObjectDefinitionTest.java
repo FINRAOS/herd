@@ -38,15 +38,15 @@ public class GetBusinessObjectDefinitionTest extends HerdActivitiServiceTaskTest
     public void testGetBusinessObjectDefinition() throws Exception
     {
         // Create and persist a business object definition entity.
-        createBusinessObjectDefinitionEntity(NAMESPACE_CD, BOD_NAME, DATA_PROVIDER_NAME, BOD_DESCRIPTION, getNewAttributes());
+        createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, getNewAttributes());
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
         fieldExtensionList.add(buildFieldExtension("namespace", "${namespace}"));
         fieldExtensionList.add(buildFieldExtension("businessObjectDefinitionName", "${businessObjectDefinitionName}"));
 
         List<Parameter> parameters = new ArrayList<>();
-        parameters.add(buildParameter("namespace", NAMESPACE_CD));
-        parameters.add(buildParameter("businessObjectDefinitionName", BOD_NAME));
+        parameters.add(buildParameter("namespace", NAMESPACE));
+        parameters.add(buildParameter("businessObjectDefinitionName", BDEF_NAME));
 
         // Run the activiti task.
         testActivitiServiceTaskSuccess(GetBusinessObjectDefinition.class.getCanonicalName(), fieldExtensionList, parameters, null);
@@ -61,10 +61,12 @@ public class GetBusinessObjectDefinitionTest extends HerdActivitiServiceTaskTest
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
         List<Parameter> parameters = new ArrayList<>();
 
-        // Try to get a business object definition instance when object definition name is not specified.
-        Map<String, Object> variableValuesToValidate = new HashMap<>();
-        variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "A namespace must be specified.");
-        testActivitiServiceTaskFailure(GetBusinessObjectDefinition.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            // Try to get a business object definition instance when object definition name is not specified.
+            Map<String, Object> variableValuesToValidate = new HashMap<>();
+            variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "A namespace must be specified.");
+            testActivitiServiceTaskFailure(GetBusinessObjectDefinition.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+        });
     }
 
     /**
@@ -78,13 +80,15 @@ public class GetBusinessObjectDefinitionTest extends HerdActivitiServiceTaskTest
         fieldExtensionList.add(buildFieldExtension("businessObjectDefinitionName", "${businessObjectDefinitionName}"));
 
         List<Parameter> parameters = new ArrayList<>();
-        parameters.add(buildParameter("namespace", NAMESPACE_CD));
-        parameters.add(buildParameter("businessObjectDefinitionName", BOD_NAME));
+        parameters.add(buildParameter("namespace", NAMESPACE));
+        parameters.add(buildParameter("businessObjectDefinitionName", BDEF_NAME));
 
-        // Try to get a non-existing business object definition.
-        Map<String, Object> variableValuesToValidate = new HashMap<>();
-        variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE,
-            String.format("Business object definition with name \"%s\" doesn't exist for namespace \"%s\".", BOD_NAME, NAMESPACE_CD));
-        testActivitiServiceTaskFailure(GetBusinessObjectDefinition.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            // Try to get a non-existing business object definition.
+            Map<String, Object> variableValuesToValidate = new HashMap<>();
+            variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE,
+                String.format("Business object definition with name \"%s\" doesn't exist for namespace \"%s\".", BDEF_NAME, NAMESPACE));
+            testActivitiServiceTaskFailure(GetBusinessObjectDefinition.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+        });
     }
 }

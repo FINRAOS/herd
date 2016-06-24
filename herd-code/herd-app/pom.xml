@@ -21,7 +21,7 @@
    <parent>
       <groupId>org.finra.herd</groupId>
       <artifactId>herd-code</artifactId>
-      <version>0.8.0-SNAPSHOT</version>
+      <version>0.20.0-SNAPSHOT</version>
    </parent>
 
    <name>herd app</name>
@@ -82,10 +82,6 @@
       <dependency>
          <groupId>javax.servlet</groupId>
          <artifactId>javax.servlet-api</artifactId>
-      </dependency>
-      <dependency>
-         <groupId>org.springframework.security</groupId>
-         <artifactId>spring-security-web</artifactId>
       </dependency>
       <dependency>
          <groupId>org.springframework</groupId>

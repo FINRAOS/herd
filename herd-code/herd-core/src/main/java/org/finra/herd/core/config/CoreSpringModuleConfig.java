@@ -25,10 +25,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
 import org.springframework.core.task.TaskExecutor;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.scheduling.annotation.AsyncConfigurer;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -47,6 +49,7 @@ import org.finra.herd.model.dto.ConfigurationValue;
     excludeFilters = @ComponentScan.Filter(type = FilterType.REGEX, pattern = "org\\.finra\\.herd\\.core\\.config\\..*"))
 @PropertySource("classpath:herdBuildInfo.properties")
 @EnableAsync
+@EnableAspectJAutoProxy(proxyTargetClass = true)
 public class CoreSpringModuleConfig implements AsyncConfigurer
 {
     private static final Logger LOGGER = Logger.getLogger(CoreSpringModuleConfig.class);
@@ -110,10 +113,8 @@ public class CoreSpringModuleConfig implements AsyncConfigurer
     }
 
     /**
-     * Returns an Async "task" executor which is also a normal "executor". This is being wired into Activity via the job executor bean. It is also being used by
-     * the "@EnableAsync" annotation and the fact that this class implements AsyncConfigurer. That way, all methods annotated with "@Async" will be executed
-     * asynchronously by this executor. Thus, we have a shared thread pool that handles both Async method calls as well as Activiti asynchronous job executions
-     * (e.g. timers, messages, etc.).
+     * Returns an Async "task" executor which is also a normal "executor".It is also being used by the "@EnableAsync" annotation and the fact that this class
+     * implements AsyncConfigurer. That way, all methods annotated with "@Async" will be executed asynchronously by this executor.
      *
      * @return the async task executor.
      */
@@ -137,5 +138,11 @@ public class CoreSpringModuleConfig implements AsyncConfigurer
         // In case any @Async methods return "void" and not a "Future", this exception handler will handle those cases since the caller has not way to access
         // the exception without a "Future". Just use an out-of-the-box Spring handler that logs those exceptions.
         return new SimpleAsyncUncaughtExceptionHandler();
+    }
+
+    @Bean
+    public SpelExpressionParser spelExpressionParser()
+    {
+        return new SpelExpressionParser();
     }
 }

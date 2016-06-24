@@ -45,7 +45,6 @@ import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicHeader;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,6 +58,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDataCreateRequest;
 import org.finra.herd.model.api.xml.ErrorInformation;
 import org.finra.herd.model.api.xml.S3KeyPrefixInformation;
 import org.finra.herd.model.api.xml.Storage;
+import org.finra.herd.model.api.xml.StorageDirectory;
 import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.api.xml.StorageUnitCreateRequest;
 import org.finra.herd.model.dto.DataBridgeBaseManifestDto;
@@ -129,7 +129,7 @@ public abstract class DataBridgeWebClient
             .setPort(regServerAccessParamsDto.getRegServerPort()).setPath(URI_PATH);
 
         Storage storage;
-        try (CloseableHttpClient client = HttpClientBuilder.create().build())
+        try (CloseableHttpClient client = httpClientOperations.createHttpClient())
         {
             HttpGet request = new HttpGet(uriBuilder.build());
             request.addHeader("Accepts", DEFAULT_ACCEPT);
@@ -179,6 +179,22 @@ public abstract class DataBridgeWebClient
 
         StorageUnitCreateRequest storageUnit = new StorageUnitCreateRequest();
         storageUnit.setStorageName(storageName);
+
+        /*
+         * Strips the trailing "/" from the prefix if a prefix is provided.
+         * The trailing "/" is added by UploaderController because other S3 operation seem to need it.
+         * However, a trailing "/" is disallowed when registering business object data with storage directory.
+         * Under normal flow, a S3 key prefix will always be set, but some unit tests set it to null. That's why the null check is here.
+         */
+        String storageDirectory = s3FileTransferRequestParamsDto.getS3KeyPrefix();
+        if (StringUtils.isNotBlank(storageDirectory))
+        {
+            if (storageDirectory.endsWith("/"))
+            {
+                storageDirectory = storageDirectory.substring(0, storageDirectory.length() - 1);
+            }
+            storageUnit.setStorageDirectory(new StorageDirectory(storageDirectory));
+        }
 
         List<StorageFile> storageFiles = new ArrayList<>();
         storageUnit.setStorageFiles(storageFiles);
@@ -240,7 +256,7 @@ public abstract class DataBridgeWebClient
         requestMarshaller.marshal(request, sw);
 
         BusinessObjectData businessObjectData;
-        try (CloseableHttpClient client = HttpClientBuilder.create().build())
+        try (CloseableHttpClient client = httpClientOperations.createHttpClient())
         {
             URI uri = new URIBuilder().setScheme(getUriScheme()).setHost(regServerAccessParamsDto.getRegServerHost())
                 .setPort(regServerAccessParamsDto.getRegServerPort()).setPath(HERD_APP_REST_URI_PREFIX + "/businessObjectData").build();
@@ -325,8 +341,13 @@ public abstract class DataBridgeWebClient
             uriBuilder.setParameter("businessObjectDataVersion", businessObjectDataVersion.toString());
         }
 
+        if (StringUtils.isNotBlank(manifest.getStorageName()))
+        {
+            uriBuilder.setParameter("storageName", manifest.getStorageName());
+        }
+
         S3KeyPrefixInformation s3KeyPrefixInformation;
-        try (CloseableHttpClient client = HttpClientBuilder.create().build())
+        try (CloseableHttpClient client = httpClientOperations.createHttpClient())
         {
             HttpGet request = new HttpGet(uriBuilder.build());
             request.addHeader("Accepts", DEFAULT_ACCEPT);

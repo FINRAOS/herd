@@ -46,6 +46,16 @@ public enum ConfigurationValue
     HERD_DATA_SOURCE_JNDI_NAME("herd.data.source.jndi.name", "java:comp/env/jdbc/herdDB"),
 
     /**
+     * The default name of the S3 storage. The default is "S3_MANAGED".
+     */
+    S3_STORAGE_NAME_DEFAULT("s3.storage.name.default", "S3_MANAGED"),
+
+    /**
+     * The default storage name for external storage for use with LFU.
+     */
+    S3_EXTERNAL_STORAGE_NAME_DEFAULT("s3.external.storage.name.default", "S3_MANAGED_EXTERNAL"),
+
+    /**
      * The S3 attribute name for bucket name. The default is "bucket.name".
      */
     S3_ATTRIBUTE_NAME_BUCKET_NAME("s3.attribute.name.bucket.name", "bucket.name"),
@@ -59,6 +69,11 @@ public enum ConfigurationValue
      * The S3 attribute name for validating the file existence. The default is "validate.file.existence".
      */
     S3_ATTRIBUTE_NAME_VALIDATE_FILE_EXISTENCE("s3.attribute.name.validate.file.existence", "validate.file.existence"),
+
+    /**
+     * The S3 attribute name for validating the file size. The default is "validate.file.size".
+     */
+    S3_ATTRIBUTE_NAME_VALIDATE_FILE_SIZE("s3.attribute.name.validate.file.size", "validate.file.size"),
 
     /**
      * The storage attribute name which specifies the upload role ARN.
@@ -86,14 +101,14 @@ public enum ConfigurationValue
     S3_ATTRIBUTE_NAME_KMS_KEY_ID("s3.attribute.name.kms.key.id", "kms.key.id"),
 
     /**
+     * The storage attribute name which specifies the S3 key prefix velocity template.
+     */
+    S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE("s3.attribute.name.key.prefix.velocity.template", "key.prefix.velocity.template"),
+
+    /**
      * The optional S3 endpoint to use when using S3 services. This is optional and there is no default.
      */
     S3_ENDPOINT("s3.endpoint", null),
-
-    /**
-     * The Glacier attribute name for vault name. The default is "vault.name".
-     */
-    GLACIER_ATTRIBUTE_NAME_VAULT_NAME("glacier.attribute.name.vault.name", "vault.name"),
 
     /**
      * The HTTP proxy hostname. This is optional and there is no default.
@@ -106,7 +121,7 @@ public enum ConfigurationValue
     HTTP_PROXY_PORT("http.proxy.port", null),
 
     /**
-     * The token delimiter to use for S3 key prefix templates. The default is the tilde character.
+     * The token delimiter to use for Activiti job definition ID template. The default is the tilde character.
      */
     TEMPLATE_TOKEN_DELIMITER("template.token.delimiter", "~"),
 
@@ -134,16 +149,6 @@ public enum ConfigurationValue
      * The S3 Staging resources location as per DB properties. The default is the S3 staging resource location.
      */
     S3_STAGING_RESOURCE_LOCATION("s3.staging.resources.location", "\\$\\{S3_STAGING_RESOURCE_LOCATION\\}"),
-
-    /**
-     * The tokenized template of the S3 key prefix. The default is computed dynamically so it is not listed here.
-     */
-    S3_KEY_PREFIX_TEMPLATE("s3.key.prefix.template", null),
-
-    /**
-     * The tokenized template of the S3 key prefix for the file upload. The default is computed dynamically so it is not listed here.
-     */
-    FILE_UPLOAD_S3_KEY_PREFIX_TEMPLATE("file.upload.s3.key.prefix.template", null),
 
     /**
      * This is the number of threads that are available for concurrent execution of system jobs. The default is 5.
@@ -189,9 +194,30 @@ public enum ConfigurationValue
     STORAGE_POLICY_SELECTOR_JOB_MAX_BDATA_INSTANCES("storage.policy.selector.job.max.business.object.data.instances", "1000"),
 
     /**
+     * The cron expression to schedule "businessObjectDataFinalizeRestore" system job. Default is to run the system job every 6 hours.
+     */
+    BDATA_FINALIZE_RESTORE_JOB_CRON_EXPRESSION("business.object.data.finalize.restore.job.cron.expression", "0 0 0/6 * * ?"),
+
+    /**
+     * The maximum number of business object data instances being restored that can get processed in a single run of this system job.  The default is 1000
+     * business object data instances.
+     */
+    BDATA_FINALIZE_RESTORE_JOB_MAX_BDATA_INSTANCES("business.object.data.finalize.restore.job.max.business.object.data.instances", "1000"),
+
+    /**
      * The tokenized template of the Activiti Id. The default is computed dynamically so it is not listed here.
      */
     ACTIVITI_JOB_DEFINITION_ID_TEMPLATE("activiti.job.definition.id.template", null),
+
+    /**
+     * The default "from" field for Activiti mail task
+     */
+    ACTIVITI_DEFAULT_MAIL_FROM("activiti.default.mail.from", null),
+
+    /**
+     * Asserts when the first task in the activiti workflow is asynchronous when the value is true.
+     */
+    ACTIVITI_JOB_DEFINITION_ASSERT_ASYNC("activiti.job.definition.assert.async", true),
 
     /**
      * The maximum number of results that will be returned in a jobs query. The default is 1000 results.
@@ -274,6 +300,11 @@ public enum ConfigurationValue
     EMR_CONFIGURE_DAEMON("emr.aws.configure.daemon", "s3://elasticmapreduce/bootstrap-actions/configure-daemons"),
 
     /**
+     * The list of product descriptions to filter by when looking up EMR spot price history.
+     */
+    EMR_SPOT_PRICE_HISTORY_PRODUCT_DESCRIPTIONS("emr.spot.price.history.product.descriptions", null),
+
+    /**
      * S3 protocol for constructing an S3 URL. The default is the standard "s3" prefix.
      */
     S3_URL_PROTOCOL("s3.url.protocol", "s3://"),
@@ -304,64 +335,9 @@ public enum ConfigurationValue
     MANDATORY_AWS_TAGS("mandatory.aws.tags", null),
 
     /**
-     * The minimum delay in seconds that will be waited before retrying an AWS operation. The default is 1 seconds.
+     * The number of times AWS SDK clients will retry on error before giving up.
      */
-    AWS_MIN_RETRY_DELAY_SECS("aws.min.retry.delay.secs", 1),
-
-    /**
-     * The maximum delay in seconds that will be waited before retrying an AWS operation. The default is 60 seconds.
-     */
-    AWS_MAX_RETRY_DELAY_SECS("aws.max.retry.delay.secs", 60),
-
-    /**
-     * The maximum duration in seconds that a failed AWS S3 operation will be retried for. The default is 245 seconds.
-     */
-    AWS_S3_EXCEPTION_MAX_RETRY_DURATION_SECS("aws.s3.exception.max.retry.duration.secs", 245),
-
-    /**
-     * The maximum duration in seconds that a failed AWS EMR operation will be retried for. The default is 245 seconds.
-     */
-    AWS_EMR_EXCEPTION_MAX_RETRY_DURATION_SECS("aws.emr.exception.max.retry.duration.secs", 245),
-
-    /**
-     * The maximum duration in seconds that a failed AWS EC2 operation will be retried for. The default is 245 seconds.
-     */
-    AWS_EC2_EXCEPTION_MAX_RETRY_DURATION_SECS("aws.ec2.exception.max.retry.duration.secs", 245),
-
-    /**
-     * The maximum duration in seconds that a failed AWS STS operation will be retried for. The default is 245 seconds.
-     */
-    AWS_STS_EXCEPTION_MAX_RETRY_DURATION_SECS("aws.sts.exception.max.retry.duration.secs", 245),
-
-    /**
-     * The maximum duration in seconds that a failed AWS SQS operation will be retried for. The default is 245 seconds.
-     */
-    AWS_SQS_EXCEPTION_MAX_RETRY_DURATION_SECS("aws.sqs.exception.max.retry.duration.secs", 245),
-
-    /**
-     * The error codes in AmazonServiceException that we re-try on for S3 operations.
-     */
-    AWS_S3_RETRY_ON_ERROR_CODES("aws.s3.retry.on.error.codes", null),
-
-    /**
-     * The error codes in AmazonServiceException that we re-try on for EMR operations.
-     */
-    AWS_EMR_RETRY_ON_ERROR_CODES("aws.emr.retry.on.error.codes", null),
-
-    /**
-     * The error codes in AmazonServiceException that we re-try on for EC2 operations.
-     */
-    AWS_EC2_RETRY_ON_ERROR_CODES("aws.ec2.retry.on.error.codes", null),
-
-    /**
-     * The error codes in AmazonServiceException that we re-try on for STS operations.
-     */
-    AWS_STS_RETRY_ON_ERROR_CODES("aws.sts.retry.on.error.codes", null),
-
-    /**
-     * The error codes in AmazonServiceException that we re-try on for SQS operations.
-     */
-    AWS_SQS_RETRY_ON_ERROR_CODES("aws.sqs.retry.on.error.codes", null),
+    AWS_MAX_RETRY_ATTEMPT("aws.max.retry.attempt", 8),
 
     /**
      * The default S3 upload session duration in seconds.
@@ -406,6 +382,31 @@ public enum ConfigurationValue
     THREAD_POOL_QUEUE_CAPACITY("thread.pool.queue.capacity", Integer.MAX_VALUE),
 
     /**
+     * The activiti thread pool core pool size.
+     */
+    ACTIVITI_THREAD_POOL_CORE_POOL_SIZE("activiti.thread.pool.core.pool.size", 25),
+
+    /**
+     * The activiti thread pool max pool size.
+     */
+    ACTIVITI_THREAD_POOL_MAX_POOL_SIZE("activiti.thread.pool.max.pool.size", Integer.MAX_VALUE),
+
+    /**
+     * The activiti thread pool keep alive in seconds.
+     */
+    ACTIVITI_THREAD_POOL_KEEP_ALIVE_SECS("activiti.thread.pool.keep.alive.secs", 60),
+
+    /**
+     * The activiti thread pool queue capacity.
+     */
+    ACTIVITI_THREAD_POOL_QUEUE_CAPACITY("activiti.thread.pool.queue.capacity", Integer.MAX_VALUE),
+
+    /**
+     * The Activiti asynchronous job lock expiration time in milliseconds. This value should be greater than the longest running task in Activiti.
+     */
+    ACTIVITI_ASYNC_JOB_LOCK_TIME_MILLIS("activiti.async.job.lock.time.millis", 60 * 60 * 1000),
+
+    /**
      * JMS listener concurrency limits via a "lower-upper" String, e.g. "5-10". Refer to DefaultMessageListenerContainer#setConcurrency for details.
      */
     JMS_LISTENER_POOL_CONCURRENCY_LIMITS("jms.listener.pool.concurrency.limits", "3-10"),
@@ -426,11 +427,6 @@ public enum ConfigurationValue
      * default is 10 GB.
      */
     STORAGE_POLICY_PROCESSOR_BDATA_SIZE_THRESHOLD_GB("storage.policy.processor.business.object.data.size.threshold.gigabytes", 10),
-
-    /**
-     * If temporary directory is specified, the storage policy processor uses it as a staging area; otherwise, a system temporary directory is used.
-     */
-    STORAGE_POLICY_PROCESSOR_TEMP_DIR("storage.policy.processor.temporary.directory", null),
 
     /**
      * The pagination size for the query that returns storage file paths. The default is 100000 results.
@@ -495,6 +491,16 @@ public enum ConfigurationValue
      * The regex group name to use to match a role.
      */
     SECURITY_HTTP_HEADER_ROLE_REGEX_GROUP("security.http.header.role.regex.group", null),
+
+    /**
+     * Indicates whether the user namespace authorization is enabled.
+     */
+    USER_NAMESPACE_AUTHORIZATION_ENABLED("user.namespace.authorization.enabled", "false"),
+
+    /**
+     * Indicates whether the namespace IAM role authorization is enabled
+     */
+    NAMESPACE_IAM_ROLE_AUTHORIZATION_ENABLED("namespace.iam.role.authorization.enabled", "false"),
 
     /**
      * Indicates whether the herd events are posted to AWS SQS.

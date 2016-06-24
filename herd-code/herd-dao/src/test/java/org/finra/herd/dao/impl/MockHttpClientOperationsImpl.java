@@ -38,6 +38,7 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicStatusLine;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,16 +49,17 @@ import org.finra.herd.dao.helper.XmlHelper;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.AwsCredential;
 import org.finra.herd.model.api.xml.BusinessObjectData;
-import org.finra.herd.model.api.xml.BusinessObjectDataDownloadCredential;
 import org.finra.herd.model.api.xml.BusinessObjectDataUploadCredential;
 import org.finra.herd.model.api.xml.S3KeyPrefixInformation;
 import org.finra.herd.model.api.xml.Storage;
 import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.api.xml.StorageUnit;
+import org.finra.herd.model.api.xml.StorageUnitDownloadCredential;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.StoragePlatformEntity;
+import org.finra.herd.model.jpa.StorageUnitStatusEntity;
 
 /**
  * Mock implementation of HTTP client operations.
@@ -98,10 +100,6 @@ public class MockHttpClientOperationsImpl implements HttpClientOperations
                 {
                     getBusinessObjectDataUploadCredentialResponse(response, uri);
                 }
-                else if (uri.getPath().startsWith("/herd-app/rest/businessObjectData/download/credential"))
-                {
-                    getBusinessObjectDataDownloadCredentialResponse(response, uri);
-                }
                 else
                 {
                     buildGetBusinessObjectDataResponse(response, uri);
@@ -111,6 +109,10 @@ public class MockHttpClientOperationsImpl implements HttpClientOperations
             {
                 checkHostname(request, HOSTNAME_THROW_IO_EXCEPTION_DURING_GET_STORAGES);
                 buildGetStorageResponse(response, uri);
+            }
+            else if (uri.getPath().startsWith("/herd-app/rest/storageUnits/download/credential"))
+            {
+                getStorageUnitDownloadCredentialResponse(response, uri);
             }
         }
         else if (request instanceof HttpPost)
@@ -132,14 +134,14 @@ public class MockHttpClientOperationsImpl implements HttpClientOperations
         response.setEntity(getHttpEntity(businessObjectDataUploadCredential));
     }
 
-    private void getBusinessObjectDataDownloadCredentialResponse(MockCloseableHttpResponse response, URI uri) throws UnsupportedCharsetException, JAXBException
+    private void getStorageUnitDownloadCredentialResponse(MockCloseableHttpResponse response, URI uri) throws UnsupportedCharsetException, JAXBException
     {
-        BusinessObjectDataDownloadCredential businessObjectDataDownloadCredential = new BusinessObjectDataDownloadCredential();
+        StorageUnitDownloadCredential storageUnitDownloadCredential = new StorageUnitDownloadCredential();
         AwsCredential awsCredential = new AwsCredential();
         awsCredential.setAwsAccessKey(uri.toString());
-        businessObjectDataDownloadCredential.setAwsCredential(awsCredential);
+        storageUnitDownloadCredential.setAwsCredential(awsCredential);
 
-        response.setEntity(getHttpEntity(businessObjectDataDownloadCredential));
+        response.setEntity(getHttpEntity(storageUnitDownloadCredential));
     }
 
     /**
@@ -218,8 +220,9 @@ public class MockHttpClientOperationsImpl implements HttpClientOperations
      */
     private void buildGetBusinessObjectDataResponse(MockCloseableHttpResponse response, URI uri) throws JAXBException
     {
-        Pattern pattern = Pattern.compile("/herd-app/rest/businessObjectData/namespaces/(.*)/businessObjectDefinitionNames/(.*)/businessObjectFormatUsages/(.*)" +
-            "/businessObjectFormatFileTypes/(.*).*");
+        Pattern pattern = Pattern.compile(
+            "/herd-app/rest/businessObjectData/namespaces/(.*)/businessObjectDefinitionNames/(.*)/businessObjectFormatUsages/(.*)" +
+                "/businessObjectFormatFileTypes/(.*).*");
         Matcher matcher = pattern.matcher(uri.getPath());
         if (matcher.find())
         {
@@ -245,6 +248,7 @@ public class MockHttpClientOperationsImpl implements HttpClientOperations
 
             List<StorageFile> storageFiles = new ArrayList<>();
             storageUnit.setStorageFiles(storageFiles);
+            storageUnit.setStorageUnitStatus(StorageUnitStatusEntity.ENABLED);
 
             List<String> localFiles = Arrays.asList("foo1.dat", "Foo2.dat", "FOO3.DAT", "folder/foo3.dat", "folder/foo2.dat", "folder/foo1.dat");
             for (String filename : localFiles)
@@ -322,5 +326,11 @@ public class MockHttpClientOperationsImpl implements HttpClientOperations
         LOGGER.debug("xml = " + xml);
         ContentType contentType = ContentType.APPLICATION_XML.withCharset(StandardCharsets.UTF_8);
         return new StringEntity(xml, contentType);
+    }
+
+    @Override
+    public CloseableHttpClient createHttpClient()
+    {
+        return HttpClientBuilder.create().build();
     }
 }

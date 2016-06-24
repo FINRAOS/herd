@@ -23,14 +23,10 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 /**
  * A storage file.
  */
-@XmlRootElement
-@XmlType
 @Table(name = StorageFileEntity.TABLE_NAME)
 @Entity
 public class StorageFileEntity extends AuditableEntity
@@ -43,7 +39,7 @@ public class StorageFileEntity extends AuditableEntity
     @Id
     @Column(name = TABLE_NAME + "_id")
     @GeneratedValue(generator = TABLE_NAME + "_seq")
-    @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq")
+    @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq", allocationSize = 1)
     private Integer id;
 
     /**
@@ -61,12 +57,6 @@ public class StorageFileEntity extends AuditableEntity
     @ManyToOne
     @JoinColumn(name = "strge_unit_id", referencedColumnName = "strge_unit_id", nullable = false)
     private StorageUnitEntity storageUnit;
-
-    /**
-     * The archive ID column.
-     */
-    @Column(name = "archive_id")
-    private String archiveId;
 
     public Integer getId()
     {
@@ -116,63 +106,5 @@ public class StorageFileEntity extends AuditableEntity
     public void setStorageUnit(StorageUnitEntity storageUnit)
     {
         this.storageUnit = storageUnit;
-    }
-
-    public String getArchiveId()
-    {
-        return archiveId;
-    }
-
-    public void setArchiveId(String archiveId)
-    {
-        this.archiveId = archiveId;
-    }
-
-    @Override
-    public boolean equals(Object other)
-    {
-        if (this == other)
-        {
-            return true;
-        }
-        if (other == null || getClass() != other.getClass())
-        {
-            return false;
-        }
-
-        StorageFileEntity that = (StorageFileEntity) other;
-
-        if (id != null ? !id.equals(that.id) : that.id != null)
-        {
-            return false;
-        }
-        if (path != null ? !path.equals(that.path) : that.path != null)
-        {
-            return false;
-        }
-        if (fileSizeBytes != null ? !fileSizeBytes.equals(that.fileSizeBytes) : that.fileSizeBytes != null)
-        {
-            return false;
-        }
-        if (rowCount != null ? !rowCount.equals(that.rowCount) : that.rowCount != null)
-        {
-            return false;
-        }
-        if (archiveId != null ? !archiveId.equals(that.archiveId) : that.archiveId != null)
-        {
-            return false;
-        }
-
-        return true;
-    }
-
-    @Override
-    public int hashCode()
-    {
-        int result = id != null ? id.hashCode() : 0;
-        result = 31 * result + (path != null ? path.hashCode() : 0);
-        result = 31 * result + (fileSizeBytes != null ? fileSizeBytes.hashCode() : 0);
-        result = 31 * result + (rowCount != null ? rowCount.hashCode() : 0);
-        return result;
     }
 }

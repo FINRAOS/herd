@@ -25,6 +25,7 @@ import java.util.List;
 
 import javax.xml.bind.JAXBException;
 
+import com.amazonaws.services.s3.model.S3ObjectSummary;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
@@ -37,12 +38,12 @@ import org.finra.herd.core.helper.HerdThreadHelper;
 import org.finra.herd.model.api.xml.AwsCredential;
 import org.finra.herd.model.api.xml.S3KeyPrefixInformation;
 import org.finra.herd.model.api.xml.Storage;
-import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.ManifestFile;
 import org.finra.herd.model.dto.RegServerAccessParamsDto;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.dto.UploaderInputManifestDto;
+import org.finra.herd.service.helper.StorageHelper;
 import org.finra.herd.tools.common.databridge.AutoRefreshCredentialProvider;
 import org.finra.herd.tools.common.databridge.DataBridgeController;
 
@@ -55,16 +56,19 @@ public class UploaderController extends DataBridgeController
     private static final Logger LOGGER = Logger.getLogger(UploaderController.class);
 
     @Autowired
-    private UploaderManifestReader manifestReader;
-
-    @Autowired
-    private UploaderWebClient uploaderWebClient;
+    private ConfigurationHelper configurationHelper;
 
     @Autowired
     private HerdThreadHelper herdThreadHelper;
 
     @Autowired
-    protected ConfigurationHelper configurationHelper;
+    private StorageHelper storageHelper;
+
+    @Autowired
+    private UploaderManifestReader manifestReader;
+
+    @Autowired
+    private UploaderWebClient uploaderWebClient;
 
     /**
      * Executes the uploader workflow.
@@ -98,6 +102,7 @@ public class UploaderController extends DataBridgeController
             UploaderInputManifestDto manifest = manifestReader.readJsonManifest(manifestPath);
 
             String storageName = getStorageNameFromManifest(manifest);
+            manifest.setStorageName(storageName);
 
             params.getAdditionalAwsCredentialsProviders().add(new AutoRefreshCredentialProvider()
             {
@@ -129,11 +134,11 @@ public class UploaderController extends DataBridgeController
 
             // Get S3 bucket name.  Please note that since this value is required we pass a "true" flag.
             String s3BucketName =
-                herdHelper.getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), storage, true);
+                storageHelper.getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), storage, true);
 
             // Set the KMS ID, if available
             String kmsKeyId =
-                herdHelper.getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KMS_KEY_ID), storage, false);
+                storageHelper.getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KMS_KEY_ID), storage, false);
             params.setKmsKeyId(kmsKeyId);
 
             // Special handling for the maxThreads command line option.
@@ -326,13 +331,13 @@ public class UploaderController extends DataBridgeController
      */
     protected void logS3KeyPrefixContents(S3FileTransferRequestParamsDto params)
     {
-        List<StorageFile> storageFiles = s3Service.listDirectory(params);
-        LOGGER
-            .info(String.format("Found %d keys with prefix \"%s\" in bucket \"%s\":", storageFiles.size(), params.getS3KeyPrefix(), params.getS3BucketName()));
+        List<S3ObjectSummary> s3ObjectSummaries = s3Service.listDirectory(params);
+        LOGGER.info(
+            String.format("Found %d keys with prefix \"%s\" in bucket \"%s\":", s3ObjectSummaries.size(), params.getS3KeyPrefix(), params.getS3BucketName()));
 
-        for (StorageFile storageFile : storageFiles)
+        for (S3ObjectSummary s3ObjectSummary : s3ObjectSummaries)
         {
-            LOGGER.info(String.format("    s3://%s/%s", params.getS3BucketName(), storageFile.getFilePath()));
+            LOGGER.info(String.format("    s3://%s/%s", params.getS3BucketName(), s3ObjectSummary.getKey()));
         }
     }
 }

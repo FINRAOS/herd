@@ -27,7 +27,6 @@ import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 
 import org.finra.herd.dao.Ec2Operations;
 import org.finra.herd.dao.EmrOperations;
-import org.finra.herd.dao.GlacierOperations;
 import org.finra.herd.dao.HttpClientOperations;
 import org.finra.herd.dao.JdbcOperations;
 import org.finra.herd.dao.KmsOperations;
@@ -38,7 +37,6 @@ import org.finra.herd.dao.SqsOperations;
 import org.finra.herd.dao.StsOperations;
 import org.finra.herd.dao.impl.MockEc2OperationsImpl;
 import org.finra.herd.dao.impl.MockEmrOperationsImpl;
-import org.finra.herd.dao.impl.MockGlacierOperationsImpl;
 import org.finra.herd.dao.impl.MockHttpClientOperationsImpl;
 import org.finra.herd.dao.impl.MockJdbcOperations;
 import org.finra.herd.dao.impl.MockKmsOperationsImpl;
@@ -146,12 +144,6 @@ public class DaoEnvTestSpringModuleConfig
     public S3Operations s3Operations()
     {
         return new MockS3OperationsImpl();
-    }
-
-    @Bean
-    public GlacierOperations glacierOperations()
-    {
-        return new MockGlacierOperationsImpl();
     }
 
     @Bean

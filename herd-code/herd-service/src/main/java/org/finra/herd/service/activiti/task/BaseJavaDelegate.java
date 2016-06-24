@@ -15,21 +15,31 @@
 */
 package org.finra.herd.service.activiti.task;
 
+import java.util.Collections;
+
 import org.activiti.engine.delegate.BpmnError;
 import org.activiti.engine.delegate.DelegateExecution;
 import org.activiti.engine.delegate.JavaDelegate;
-import org.apache.log4j.Logger;
+import org.apache.log4j.MDC;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 
+import org.finra.herd.dao.JobDefinitionDao;
 import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.dao.helper.XmlHelper;
+import org.finra.herd.model.dto.ApplicationUser;
+import org.finra.herd.model.dto.SecurityUserWrapper;
+import org.finra.herd.model.jpa.JobDefinitionEntity;
 import org.finra.herd.service.activiti.ActivitiHelper;
 import org.finra.herd.service.activiti.ActivitiRuntimeHelper;
-import org.finra.herd.service.helper.HerdDaoHelper;
+import org.finra.herd.service.helper.ConfigurationDaoHelper;
 import org.finra.herd.service.helper.HerdErrorInformationExceptionHandler;
-import org.finra.herd.service.helper.HerdHelper;
+import org.finra.herd.service.helper.UserNamespaceAuthorizationHelper;
 
 /**
  * This class handles the core flow for our Activiti "JavaDelegate" tasks and calls back sub-classes for the actual task implementation. All of our custom tasks
@@ -44,22 +54,31 @@ import org.finra.herd.service.helper.HerdHelper;
  */
 public abstract class BaseJavaDelegate implements JavaDelegate
 {
-    private static final Logger LOGGER = Logger.getLogger(BaseJavaDelegate.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(BaseJavaDelegate.class);
+
+    // MDC property key.  It can be referenced in a log4j.xml configuration.
+    private static final String ACTIVITI_PROCESS_INSTANCE_ID_KEY = "activitiProcessInstanceId";
 
     @Autowired
-    protected HerdHelper herdHelper;
+    protected ConfigurationDaoHelper configurationDaoHelper;
 
     @Autowired
-    protected XmlHelper xmlHelper;
+    protected HerdStringHelper daoHelper;
+
+    @Autowired
+    protected HerdStringHelper herdStringHelper;
+
+    @Autowired
+    protected JobDefinitionDao jobDefinitionDao;
 
     @Autowired
     protected JsonHelper jsonHelper;
 
     @Autowired
-    protected HerdDaoHelper herdDaoHelper;
+    protected UserNamespaceAuthorizationHelper userNamespaceAuthorizationHelper;
 
     @Autowired
-    protected HerdStringHelper daoHelper;
+    protected XmlHelper xmlHelper;
 
     /**
      * Variable that is set in workflow for the json response.
@@ -103,7 +122,13 @@ public abstract class BaseJavaDelegate implements JavaDelegate
         try
         {
             // Check if method is not allowed.
-            herdDaoHelper.checkNotAllowedMethod(this.getClass().getCanonicalName());
+            configurationDaoHelper.checkNotAllowedMethod(this.getClass().getCanonicalName());
+
+            // Check permissions.
+            checkPermissions(execution);
+
+            // Set the MDC property for the Activiti process instance ID.
+            MDC.put(ACTIVITI_PROCESS_INSTANCE_ID_KEY, "activitiProcessInstanceId=" + execution.getProcessInstanceId());
 
             // Perform the execution implementation handled in the sub-class.
             executeImpl(execution);
@@ -114,6 +139,36 @@ public abstract class BaseJavaDelegate implements JavaDelegate
         catch (Exception ex)
         {
             handleException(execution, ex);
+        }
+        finally
+        {
+            // Remove the MDC property to ensure they don't accidentally get used by anybody else.
+            MDC.remove(ACTIVITI_PROCESS_INSTANCE_ID_KEY);
+        }
+    }
+
+    /**
+     * Authenticates the last updater of the current process instance's process definition into the security context. If a user already exists in the current
+     * context, this method does nothing.
+     *
+     * @param execution The current execution context
+     */
+    private void checkPermissions(DelegateExecution execution)
+    {
+        String processDefinitionId = execution.getProcessDefinitionId();
+        JobDefinitionEntity jobDefinitionEntity = jobDefinitionDao.getJobDefinitionByProcessDefinitionId(processDefinitionId);
+        /*
+         * Rare cases JobDefinitionEntity can be null if the process definition was deployed manually without using Herd. (it happens in some unit tests)
+         * For these cases, there are no users in the context.
+         */
+        if (jobDefinitionEntity != null)
+        {
+            String updatedByUserId = jobDefinitionEntity.getUpdatedBy();
+            ApplicationUser applicationUser = new ApplicationUser(getClass());
+            applicationUser.setUserId(updatedByUserId);
+            userNamespaceAuthorizationHelper.buildNamespaceAuthorizations(applicationUser);
+            SecurityContextHolder.getContext().setAuthentication(new PreAuthenticatedAuthenticationToken(
+                new SecurityUserWrapper(updatedByUserId, "", true, true, true, true, Collections.emptyList(), applicationUser), null));
         }
     }
 
@@ -139,8 +194,8 @@ public abstract class BaseJavaDelegate implements JavaDelegate
         // Log the error if the exception should be reported.
         if (errorInformationExceptionHandler.isReportableError(exception))
         {
-            LOGGER.error(activitiHelper.getProcessIdentifyingInformation(execution) + " Unexpected error occurred during task \"" + getClass().getSimpleName() +
-                "\".", exception);
+            LOGGER.error("{} Unexpected error occurred during task. activitiTaskName=\"{}\"", activitiHelper.getProcessIdentifyingInformation(execution),
+                getClass().getSimpleName(), exception);
         }
     }
 

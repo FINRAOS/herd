@@ -20,7 +20,7 @@
 
    <appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">
       <layout class="org.apache.log4j.PatternLayout">
-         <param name="ConversionPattern" value="%d{MMM-dd-yyyy HH:mm:ss.SSS} [%t] %-5p %c{5}.%M(%X{uid}) - %m%n"/>
+         <param name="ConversionPattern" value="%d{MMM-dd-yyyy HH:mm:ss.SSS} [%t] %-5p %c{5}.%M %X{uid} %X{activitiProcessInstanceId} - %m%n"/>
       </layout>
    </appender>
 
@@ -29,7 +29,7 @@
       <param name="DatePattern" value="'.'yyyy-MM-dd"/>
       <param name="Append" value="true"/>
       <layout class="org.apache.log4j.PatternLayout">
-         <param name="ConversionPattern" value="%d{MMM-dd-yyyy HH:mm:ss.SSS} [%t] %-5p %c{5}.%M(%X{uid}) - %m%n"/>
+         <param name="ConversionPattern" value="%d{MMM-dd-yyyy HH:mm:ss.SSS} [%t] %-5p %c{5}.%M %X{uid} %X{activitiProcessInstanceId} - %m%n"/>
       </layout>
    </appender>
 

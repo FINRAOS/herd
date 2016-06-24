@@ -16,7 +16,7 @@
 package org.finra.herd.service;
 
 import org.finra.herd.model.dto.NotificationEventParamsDto;
-import org.finra.herd.service.helper.HerdHelper;
+import org.finra.herd.service.helper.BusinessObjectDataHelper;
 
 /**
  * The notification action service.
@@ -45,5 +45,5 @@ public interface NotificationActionService
     /**
      * Gets the identifying information.
      */
-    public String getIdentifyingInformation(NotificationEventParamsDto notificationEventParams, HerdHelper herdHelper);
+    public String getIdentifyingInformation(NotificationEventParamsDto notificationEventParams, BusinessObjectDataHelper businessObjectDataHelper);
 }

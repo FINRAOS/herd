@@ -32,9 +32,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.finra.herd.app.AbstractAppTest;
 import org.finra.herd.model.dto.ApplicationUser;
 import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.model.dto.SecurityUserWrapper;
 
 /**
- * Tests cases where the {@link org.finra.herd.app.security.TrustedUserAuthenticationFilter} and {@link org.finra.herd.app.security.HttpHeaderAuthenticationFilter} are used in sequence.
+ * Tests cases where the {@link org.finra.herd.app.security.TrustedUserAuthenticationFilter} and {@link org.finra.herd.app.security.HttpHeaderAuthenticationFilter}
+ * are used in sequence.
  */
 public class SecurityFilterChainTest extends AbstractAppTest
 {
@@ -47,7 +49,7 @@ public class SecurityFilterChainTest extends AbstractAppTest
     /**
      * When the filters are executed with security disabled, and the filters are run again with security enabled, the trusted user should no longer be in the
      * context and instead the user should be created based on the headers given in the request.
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -68,9 +70,8 @@ public class SecurityFilterChainTest extends AbstractAppTest
 
     /**
      * When the filters are executed twice with security enabled, and the user ID header changes between the requests, the session's user should be recreated
-     * with the
-     * new headers.
-     * 
+     * with the new headers.
+     *
      * @throws Exception
      */
     @Test
@@ -93,9 +94,8 @@ public class SecurityFilterChainTest extends AbstractAppTest
 
     /**
      * When the filters are executed twice with security enabled, and the session init time header changes between the requests, the session should be recreated
-     * with
-     * the new headers.
-     * 
+     * with the new headers.
+     *
      * @throws Exception
      */
     @Test
@@ -120,14 +120,13 @@ public class SecurityFilterChainTest extends AbstractAppTest
     }
 
     /**
-     * When the filters are executed twice with security enabled, and only the first name header changes between the requests, the session should NOT be
-     * recreated.
-     * This behavior should also apply for any headers other than userId and sessionInitTime.
-     * 
+     * When the filters are executed twice with security enabled, and only the first name header changes between the requests, the session should be
+     * recreated. This behavior should also apply for any headers other than userId and sessionInitTime.
+     *
      * @throws Exception
      */
     @Test
-    public void testFilterUserIsNotReauthenticatedWhenFirstNameChanges() throws Exception
+    public void testFilterUserIsReauthenticatedWhenFirstNameChanges() throws Exception
     {
         String expectedUserId = "testUser1";
         String firstName1 = "firstName1";
@@ -141,22 +140,15 @@ public class SecurityFilterChainTest extends AbstractAppTest
 
         requestHeaders.put("firstName", "differentFirstName");
         Authentication authentication2 = executeAuthenticationFilters(true, requestHeaders);
-        assertAuthenticatedUserId(expectedUserId, firstName1, null, authentication2);
+        assertAuthenticatedUserId(expectedUserId, "differentFirstName", null, authentication2);
     }
 
     /**
-     * Makes the following assertions about the given {@link Authentication}:
-     * <ol>
-     * <li>is not null</li>
-     * <li>principal is not null</li>
-     * <li>principal type is {@link org.finra.herd.app.security.SecurityUserWrapper}</li>
-     * <li>principal applicationUser is not null</li>
-     * <li>principal applicationUser userId equals given userId</li>
-     * <li>principal applicationUser firstName equals given firstName</li>
-     * <li>principal applicationUser uesrId equals given userId</li>
-     * <li>principal applicationUser sessionInitTime equals given sessionInitTime</li>
-     * </ol>
-     * 
+     * Makes the following assertions about the given {@link Authentication}: <ol> <li>is not null</li> <li>principal is not null</li> <li>principal type is
+     * {@link org.finra.herd.model.dto.SecurityUserWrapper}</li> <li>principal applicationUser is not null</li> <li>principal applicationUser userId equals
+     * given userId</li> <li>principal applicationUser firstName equals given firstName</li> <li>principal applicationUser uesrId equals given userId</li>
+     * <li>principal applicationUser sessionInitTime equals given sessionInitTime</li> </ol>
+     *
      * @param expectedUserId
      * @param expectedFirstName
      * @param expectedSessionInitTime
@@ -176,11 +168,13 @@ public class SecurityFilterChainTest extends AbstractAppTest
     }
 
     /**
-     * Executes {@link org.finra.herd.app.security.TrustedUserAuthenticationFilter} and {@link org.finra.herd.app.security.HttpHeaderAuthenticationFilter} in sequence with security enabled or disabled, with the given
-     * request headers. Returns the final {@link Authentication} as the result of the filter executions.
-     * 
+     * Executes {@link org.finra.herd.app.security.TrustedUserAuthenticationFilter} and {@link org.finra.herd.app.security.HttpHeaderAuthenticationFilter} in
+     * sequence with security enabled or disabled, with the given request headers. Returns the final {@link Authentication} as the result of the filter
+     * executions.
+     *
      * @param isSecurityEnabled true to enable security, false otherwise
      * @param requestHeaders request headers
+     *
      * @return {@link Authentication}, may be null if filters did not put any authentication in the context.
      * @throws Exception
      */

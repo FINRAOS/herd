@@ -29,16 +29,15 @@ public class NotificationRegistrationStatusRestControllerTest extends AbstractRe
     @Test
     public void testUpdateNotificationRegistrationStatusAssertSuccess()
     {
-        createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE_CD, NOTIFICATION_NAME),
-            NOTIFICATION_EVENT_TYPE, NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS,
-            getTestJobActions());
+        createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME), NOTIFICATION_EVENT_TYPE,
+            NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS, getTestJobActions());
         NotificationRegistrationStatusUpdateRequest notificationRegistrationStatusUpdateRequest = new NotificationRegistrationStatusUpdateRequest();
         notificationRegistrationStatusUpdateRequest.setNotificationRegistrationStatus("DISABLED");
-        NotificationRegistrationStatusUpdateResponse response = notificationRegistrationStatusRestController.updateNotificationRegistrationStatus(NAMESPACE_CD,
-            NOTIFICATION_NAME, notificationRegistrationStatusUpdateRequest);
+        NotificationRegistrationStatusUpdateResponse response = notificationRegistrationStatusRestController
+            .updateNotificationRegistrationStatus(NAMESPACE, NOTIFICATION_NAME, notificationRegistrationStatusUpdateRequest);
         assertNotNull(response);
         assertNotNull(response.getNotificationRegistrationKey());
-        assertEquals(NAMESPACE_CD, response.getNotificationRegistrationKey().getNamespace());
+        assertEquals(NAMESPACE, response.getNotificationRegistrationKey().getNamespace());
         assertEquals(NOTIFICATION_NAME, response.getNotificationRegistrationKey().getNotificationName());
         assertEquals("DISABLED", response.getNotificationRegistrationStatus());
     }

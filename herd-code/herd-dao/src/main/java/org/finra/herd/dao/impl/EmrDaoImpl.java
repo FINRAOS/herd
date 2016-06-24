@@ -62,6 +62,7 @@ import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.Ec2Dao;
 import org.finra.herd.dao.EmrDao;
 import org.finra.herd.dao.EmrOperations;
+import org.finra.herd.dao.RetryPolicyFactory;
 import org.finra.herd.dao.helper.EmrHelper;
 import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.model.api.xml.ConfigurationFile;
@@ -70,6 +71,7 @@ import org.finra.herd.model.api.xml.EmrClusterDefinition;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionApplication;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionConfiguration;
 import org.finra.herd.model.api.xml.HadoopJarStep;
+import org.finra.herd.model.api.xml.InstanceDefinition;
 import org.finra.herd.model.api.xml.KeyValuePairConfiguration;
 import org.finra.herd.model.api.xml.KeyValuePairConfigurations;
 import org.finra.herd.model.api.xml.NodeTag;
@@ -100,10 +102,13 @@ public class EmrDaoImpl implements EmrDao
     @Autowired
     private EmrHelper emrHelper;
 
+    @Autowired
+    private RetryPolicyFactory retryPolicyFactory;
+
     /**
      * Add an EMR Step. This method adds the step to EMR cluster based on the input.
      *
-     * @param clusterName EMR cluster name.
+     * @param clusterId EMR cluster ID.
      * @param emrStepConfig the EMR step config to be added.
      * @param awsParamsDto the proxy details.
      * <p/>
@@ -113,12 +118,9 @@ public class EmrDaoImpl implements EmrDao
      * @return the step id
      */
     @Override
-    public String addEmrStep(String clusterName, StepConfig emrStepConfig, AwsParamsDto awsParamsDto) throws Exception
+    public String addEmrStep(String clusterId, StepConfig emrStepConfig, AwsParamsDto awsParamsDto) throws Exception
     {
         List<StepConfig> steps = new ArrayList<>();
-
-        // Get the EMR cluster id
-        String clusterId = getValidEmrClusterIdByName(clusterName, awsParamsDto);
 
         steps.add(emrStepConfig);
 
@@ -139,11 +141,8 @@ public class EmrDaoImpl implements EmrDao
      * @return the security groups that were added.
      */
     @Override
-    public List<String> addEmrMasterSecurityGroups(String clusterName, List<String> securityGroups, AwsParamsDto awsParams) throws Exception
+    public List<String> addEmrMasterSecurityGroups(String clusterId, List<String> securityGroups, AwsParamsDto awsParams) throws Exception
     {
-        // Look up cluster
-        String clusterId = getValidEmrClusterIdByName(clusterName, awsParams);
-
         // Get the master EC2 instance
         ListInstancesRequest listInstancesRequest = new ListInstancesRequest().withClusterId(clusterId).withInstanceGroupTypes(InstanceGroupType.MASTER);
 
@@ -152,7 +151,7 @@ public class EmrDaoImpl implements EmrDao
         // Throw error in case there are no master instances found yet
         if (instances.size() == 0)
         {
-            throw new IllegalArgumentException("No master instances found for the cluster \"" + clusterName + "\".");
+            throw new IllegalArgumentException("No master instances found for the cluster \"" + clusterId + "\".");
         }
 
         for (Instance instance : instances)
@@ -213,14 +212,9 @@ public class EmrDaoImpl implements EmrDao
      * @return the cluster Id.
      */
     @Override
-    public String terminateEmrCluster(String clusterName, boolean overrideTerminationProtection, AwsParamsDto awsParams)
+    public void terminateEmrCluster(String clusterId, boolean overrideTerminationProtection, AwsParamsDto awsParams)
     {
-        // Get the cluster Id
-        String clusterId = getValidEmrClusterIdByName(clusterName, awsParams);
-
         emrOperations.terminateEmrCluster(getEmrClient(awsParams), clusterId, overrideTerminationProtection);
-
-        return clusterId;
     }
 
     /**
@@ -262,46 +256,6 @@ public class EmrDaoImpl implements EmrDao
         Cluster cluster = getEmrClusterById(clusterId, awsParams);
 
         return ((cluster == null) ? null : cluster.getStatus().getState());
-    }
-
-    /**
-     * Get Active EMR cluster Id by the cluster name.
-     *
-     * @param awsParams AWS related parameters for access/secret keys and proxy details.
-     * @param clusterName the cluster name value.
-     *
-     * @return the cluster Id from EMR.
-     * @throws IllegalArgumentException if no active cluster is found.
-     */
-    private String getValidEmrClusterIdByName(String clusterName, AwsParamsDto awsParams)
-    {
-        // Get the cluster Id
-        String clusterId = getActiveEmrClusterIdByName(clusterName, awsParams);
-
-        // Throw error in case no cluster is found.
-        if (StringUtils.isBlank(clusterId))
-        {
-            throw new IllegalArgumentException("The cluster \"" + clusterName + "\" does not exist.");
-        }
-
-        return clusterId;
-    }
-
-    /**
-     * Get an Active EMR cluster id by the cluster name. Cluster only in following states are returned: ClusterState.BOOTSTRAPPING, ClusterState.RUNNING,
-     * ClusterState.STARTING, ClusterState.WAITING
-     *
-     * @param awsParams AWS related parameters for access/secret keys and proxy details.
-     * @param clusterName the cluster name value.
-     *
-     * @return the ClusterSummary object.
-     */
-    @Override
-    public String getActiveEmrClusterIdByName(String clusterName, AwsParamsDto awsParams)
-    {
-        ClusterSummary clusterSummary = getActiveEmrClusterByName(clusterName, awsParams);
-
-        return (clusterSummary == null ? null : clusterSummary.getId());
     }
 
     /**
@@ -371,7 +325,7 @@ public class EmrDaoImpl implements EmrDao
         ListStepsRequest listStepsRequest = new ListStepsRequest().withClusterId(clusterId).withStepStates(StepState.RUNNING);
         List<StepSummary> stepSummaryList = emrOperations.listStepsRequest(getEmrClient(awsParamsDto), listStepsRequest).getSteps();
 
-        return (stepSummaryList != null && stepSummaryList.size() > 0) ? stepSummaryList.get(0) : null;
+        return !stepSummaryList.isEmpty() ? stepSummaryList.get(0) : null;
     }
 
     /**
@@ -403,22 +357,16 @@ public class EmrDaoImpl implements EmrDao
         // TODO Building EMR client every time requested, if this becomes a performance issue,
         // might need to consider storing a singleton or building the client once per request.
 
-        AmazonElasticMapReduceClient emrClient;
+        ClientConfiguration clientConfiguration = new ClientConfiguration().withRetryPolicy(retryPolicyFactory.getRetryPolicy());
 
         // Create an EMR client with HTTP proxy information.
-        if (StringUtils.isNotBlank(awsParamsDto.getHttpProxyHost()) && StringUtils.isNotBlank(awsParamsDto.getHttpProxyPort().toString()))
+        if (StringUtils.isNotBlank(awsParamsDto.getHttpProxyHost()) && awsParamsDto.getHttpProxyPort() != null)
         {
-            emrClient = new AmazonElasticMapReduceClient(
-                new ClientConfiguration().withProxyHost(awsParamsDto.getHttpProxyHost()).withProxyPort(awsParamsDto.getHttpProxyPort()));
-        }
-        // Create an EMR client with no proxy information
-        else
-        {
-            emrClient = new AmazonElasticMapReduceClient();
+            clientConfiguration.withProxyHost(awsParamsDto.getHttpProxyHost()).withProxyPort(awsParamsDto.getHttpProxyPort());
         }
 
         // Return the client.
-        return emrClient;
+        return new AmazonElasticMapReduceClient(clientConfiguration);
     }
 
     private String[] getActiveEmrClusterStates()
@@ -482,9 +430,12 @@ public class EmrDaoImpl implements EmrDao
                 emrClusterDefinition.getInstanceDefinitions().getMasterInstances().getInstanceSpotPrice()));
 
         // Fill-in the CORE node details
-        emrInstanceGroups.add(getInstanceGroupConfig(InstanceRoleType.CORE, emrClusterDefinition.getInstanceDefinitions().getCoreInstances().getInstanceType(),
-            emrClusterDefinition.getInstanceDefinitions().getCoreInstances().getInstanceCount(),
-            emrClusterDefinition.getInstanceDefinitions().getCoreInstances().getInstanceSpotPrice()));
+        InstanceDefinition coreInstances = emrClusterDefinition.getInstanceDefinitions().getCoreInstances();
+        if (coreInstances != null)
+        {
+            emrInstanceGroups.add(getInstanceGroupConfig(InstanceRoleType.CORE, coreInstances.getInstanceType(), coreInstances.getInstanceCount(),
+                coreInstances.getInstanceSpotPrice()));
+        }
 
         // Fill-in the TASK node details, if the optional task instances are specified.
         if (emrClusterDefinition.getInstanceDefinitions().getTaskInstances() != null)
@@ -511,14 +462,9 @@ public class EmrDaoImpl implements EmrDao
         JobFlowInstancesConfig jobFlowInstancesConfig = new JobFlowInstancesConfig();
 
         // Add the herd EMR support security group as additional group to master node.
-        String additionalSecurityGroup = configurationHelper.getProperty(ConfigurationValue.EMR_HERD_SUPPORT_SECURITY_GROUP);
+        jobFlowInstancesConfig.setAdditionalMasterSecurityGroups(getAdditionalMasterSecurityGroups(emrClusterDefinition));
 
-        if (StringUtils.isNotBlank(additionalSecurityGroup))
-        {
-            List<String> additionalSecurityGroups = new ArrayList<>();
-            additionalSecurityGroups.add(additionalSecurityGroup);
-            jobFlowInstancesConfig.setAdditionalMasterSecurityGroups(additionalSecurityGroups);
-        }
+        jobFlowInstancesConfig.setAdditionalSlaveSecurityGroups(emrClusterDefinition.getAdditionalSlaveSecurityGroups());
 
         // Fill-in the ssh key
         if (StringUtils.isNotBlank(emrClusterDefinition.getSshKeyPairName()))
@@ -556,6 +502,29 @@ public class EmrDaoImpl implements EmrDao
 
         // Return the object
         return jobFlowInstancesConfig;
+    }
+
+    /**
+     * Gets the additional master node security groups from the given EMR cluster definition. Automatically adds the configured EMR support security group. If
+     * the support SG is not configured, the list of additional security group is retrieved from the given definition as-is. Otherwise, the list is initialized
+     * as needed.
+     * 
+     * @param emrClusterDefinition The EMR cluster definition
+     * @return List of additional master node security groups
+     */
+    private List<String> getAdditionalMasterSecurityGroups(EmrClusterDefinition emrClusterDefinition)
+    {
+        List<String> additionalMasterSecurityGroups = emrClusterDefinition.getAdditionalMasterSecurityGroups();
+        String emrSupportSecurityGroup = configurationHelper.getProperty(ConfigurationValue.EMR_HERD_SUPPORT_SECURITY_GROUP);
+        if (StringUtils.isNotBlank(emrSupportSecurityGroup))
+        {
+            if (additionalMasterSecurityGroups == null)
+            {
+                additionalMasterSecurityGroups = new ArrayList<>();
+            }
+            additionalMasterSecurityGroups.add(emrSupportSecurityGroup);
+        }
+        return additionalMasterSecurityGroups;
     }
 
     /**
@@ -691,12 +660,10 @@ public class EmrDaoImpl implements EmrDao
                     }
                 }
             }
-            if (!CollectionUtils.isEmpty(argList))
-            {
-                // Add the bootstrap action with arguments
-                hadoopBootstrapActionConfig.getScriptBootstrapAction().setArgs(argList);
-                bootstrapActions.add(hadoopBootstrapActionConfig);
-            }
+
+            // Add the bootstrap action with arguments
+            hadoopBootstrapActionConfig.getScriptBootstrapAction().setArgs(argList);
+            bootstrapActions.add(hadoopBootstrapActionConfig);
         }
     }
 
@@ -959,16 +926,10 @@ public class EmrDaoImpl implements EmrDao
         }
 
         // Set the app installation steps
-        if (!getStepConfig(emrClusterDefinition).isEmpty())
-        {
-            runJobFlowRequest.setSteps(getStepConfig(emrClusterDefinition));
-        }
+        runJobFlowRequest.setSteps(getStepConfig(emrClusterDefinition));
 
         // Set the tags
-        if (!getEmrTags(emrClusterDefinition).isEmpty())
-        {
-            runJobFlowRequest.setTags(getEmrTags(emrClusterDefinition));
-        }
+        runJobFlowRequest.setTags(getEmrTags(emrClusterDefinition));
 
         // Assign supported products as applicable
         if (StringUtils.isNotBlank(emrClusterDefinition.getSupportedProduct()))

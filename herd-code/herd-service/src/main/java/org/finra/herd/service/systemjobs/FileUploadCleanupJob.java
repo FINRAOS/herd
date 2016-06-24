@@ -17,21 +17,22 @@ package org.finra.herd.service.systemjobs;
 
 import java.util.List;
 
-import org.apache.log4j.Logger;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
+import org.finra.herd.model.api.xml.Parameter;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.jpa.StorageEntity;
-import org.finra.herd.model.api.xml.Parameter;
 import org.finra.herd.service.FileUploadCleanupService;
-import org.finra.herd.service.helper.HerdHelper;
+import org.finra.herd.service.helper.ParameterHelper;
 
 /**
  * The file upload cleanup job.
@@ -40,24 +41,27 @@ import org.finra.herd.service.helper.HerdHelper;
 @DisallowConcurrentExecution
 public class FileUploadCleanupJob extends AbstractSystemJob
 {
-    public static final String JOB_NAME = "fileUploadCleanup";
+    private static final Logger LOGGER = LoggerFactory.getLogger(FileUploadCleanupJob.class);
 
-    private static final Logger LOGGER = Logger.getLogger(FileUploadCleanupJob.class);
+    public static final String JOB_NAME = "fileUploadCleanup";
 
     @Autowired
     private FileUploadCleanupService fileUploadCleanupService;
 
     @Autowired
-    protected HerdHelper herdHelper;
+    private ParameterHelper parameterHelper;
 
     @Override
     protected void executeInternal(JobExecutionContext context) throws JobExecutionException
     {
         // Log that the system job is started.
-        LOGGER.info(String.format("Started \"%s\" system job.", JOB_NAME));
+        LOGGER.info("Started system job. systemJobName=\"{}\"", JOB_NAME);
 
         // Get the parameter values.
-        int thresholdMinutes = herdHelper.getParameterValueAsInteger(parameters, ConfigurationValue.FILE_UPLOAD_CLEANUP_JOB_THRESHOLD_MINUTES);
+        int thresholdMinutes = parameterHelper.getParameterValueAsInteger(parameters, ConfigurationValue.FILE_UPLOAD_CLEANUP_JOB_THRESHOLD_MINUTES);
+
+        // Log the parameter values.
+        LOGGER.info("systemJobName={} {}={}", JOB_NAME, ConfigurationValue.FILE_UPLOAD_CLEANUP_JOB_THRESHOLD_MINUTES, thresholdMinutes);
 
         // Mark as DELETED any dangling business object data records with storage files in S3_MANAGED_LOADING_DOCK storage.
         try
@@ -67,7 +71,7 @@ public class FileUploadCleanupJob extends AbstractSystemJob
         catch (Exception e)
         {
             // Log the exception.
-            LOGGER.error("Failed to delete loading dock business object data.", e);
+            LOGGER.error("Failed to delete loading dock business object data. systemJobName=\"{}\"", JOB_NAME, e);
         }
 
         // Delete all orphaned multipart upload parts in all herd "managed" style S3 buckets.
@@ -76,17 +80,18 @@ public class FileUploadCleanupJob extends AbstractSystemJob
             try
             {
                 int abortedMultipartUploadsCount = fileUploadCleanupService.abortMultipartUploads(storageName, thresholdMinutes);
-                LOGGER.info(String.format("Aborted %d expired multipart uploads in \"%s\" storage.", abortedMultipartUploadsCount, storageName));
+                LOGGER.info("Aborted expired multipart uploads. systemJobName=\"{}\" storageName=\"{}\" abortedExpiredMultipartUploadCount={}", JOB_NAME,
+                    storageName, abortedMultipartUploadsCount);
             }
             catch (Exception e)
             {
                 // Log the exception.
-                LOGGER.error(String.format("Failed to abort expired multipart uploads in \"%s\" storage.", storageName), e);
+                LOGGER.error("Failed to abort expired multipart uploads. systemJobName=\"{}\" storageName=\"{}\"", JOB_NAME, storageName, e);
             }
         }
 
         // Log that the system job is ended.
-        LOGGER.info(String.format("Completed \"%s\" system job.", JOB_NAME));
+        LOGGER.info("Completed system job. systemJobName=\"{}\"", JOB_NAME);
     }
 
     @Override
@@ -98,7 +103,7 @@ public class FileUploadCleanupJob extends AbstractSystemJob
             Assert.isTrue(parameters.size() == 1, String.format("Too many parameters are specified for \"%s\" system job.", JOB_NAME));
             Assert.isTrue(parameters.get(0).getName().equalsIgnoreCase(ConfigurationValue.FILE_UPLOAD_CLEANUP_JOB_THRESHOLD_MINUTES.getKey()),
                 String.format("Parameter \"%s\" is not supported by \"%s\" system job.", parameters.get(0).getName(), FileUploadCleanupJob.JOB_NAME));
-            herdHelper.getParameterValueAsInteger(parameters.get(0));
+            parameterHelper.getParameterValueAsInteger(parameters.get(0));
         }
     }
 

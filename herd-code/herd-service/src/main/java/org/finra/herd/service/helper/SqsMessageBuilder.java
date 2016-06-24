@@ -23,15 +23,6 @@ import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 public interface SqsMessageBuilder
 {
     /**
-     * Builds the message for the ESB system monitor response.
-     *
-     * @param systemMonitorRequestPayload the system monitor request payload.
-     *
-     * @return the outgoing system monitor message or null if no message should be sent.
-     */
-    public String buildSystemMonitorResponse(String systemMonitorRequestPayload);
-
-    /**
      * Builds the message for the business object data status change.
      *
      * @param businessObjectDataKey the business object data key for the object whose status changed.
@@ -42,4 +33,13 @@ public interface SqsMessageBuilder
      */
     public String buildBusinessObjectDataStatusChangeMessage(BusinessObjectDataKey businessObjectDataKey, String newBusinessObjectDataStatus,
         String oldBusinessObjectDataStatus);
+
+    /**
+     * Builds the message for the ESB system monitor response.
+     *
+     * @param systemMonitorRequestPayload the system monitor request payload.
+     *
+     * @return the outgoing system monitor message or null if no message should be sent.
+     */
+    public String buildSystemMonitorResponse(String systemMonitorRequestPayload);
 }

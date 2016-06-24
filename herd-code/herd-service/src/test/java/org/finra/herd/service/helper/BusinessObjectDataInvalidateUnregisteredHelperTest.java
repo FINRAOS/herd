@@ -19,33 +19,24 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.log4j.Logger;
-import org.finra.herd.dao.S3Operations;
-import org.finra.herd.model.ObjectNotFoundException;
-import org.finra.herd.model.jpa.BusinessObjectDataEntity;
-import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
-import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
-import org.finra.herd.model.jpa.StorageEntity;
-import org.finra.herd.model.api.xml.BusinessObjectData;
-import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredRequest;
-import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredResponse;
-import org.finra.herd.model.api.xml.BusinessObjectDataKey;
-import org.finra.herd.model.api.xml.StorageUnit;
-import org.finra.herd.service.AbstractServiceTest;
-
-import org.fusesource.hawtbuf.ByteArrayInputStream;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.PutObjectRequest;
+import org.finra.herd.dao.S3Operations;
+import org.finra.herd.model.ObjectNotFoundException;
+import org.finra.herd.model.api.xml.BusinessObjectData;
+import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredResponse;
+import org.finra.herd.model.api.xml.StorageUnit;
+import org.finra.herd.model.jpa.BusinessObjectDataEntity;
+import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
+import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
+import org.finra.herd.service.AbstractServiceTest;
 
 public class BusinessObjectDataInvalidateUnregisteredHelperTest extends AbstractServiceTest
 {
-    private static final Logger LOGGER = Logger.getLogger(BusinessObjectDataInvalidateUnregisteredHelperTest.class);
-
     @Autowired
     private S3Operations s3Operations;
 
@@ -56,15 +47,12 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
     }
 
     /**
-     * Test case where S3 and herd are in sync because there are no data in either S3 or herd.
-     * Expects no new registrations.
-     * This is a happy path where common response values are asserted.
+     * Test case where S3 and herd are in sync because there are no data in either S3 or herd. Expects no new registrations. This is a happy path where common
+     * response values are asserted.
      */
     @Test
-    public void testInvalidateUnregisteredBusinessObjectDataS30Herd0()
+    public void testInvalidateUnregisteredBusinessObjectDataS30Herd0() throws Exception
     {
-        LOGGER.debug("start");
-
         BusinessObjectDataInvalidateUnregisteredRequest request = getDefaultBusinessObjectDataInvalidateUnregisteredRequest();
 
         // Given a business object format
@@ -78,43 +66,32 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
         }
 
         // Call the API
-        try
-        {
-            BusinessObjectDataInvalidateUnregisteredResponse actualResponse =
-                businessObjectDataInvalidateUnregisteredHelper.invalidateUnregisteredBusinessObjectData(request);
+        BusinessObjectDataInvalidateUnregisteredResponse actualResponse =
+            businessObjectDataInvalidateUnregisteredHelper.invalidateUnregisteredBusinessObjectData(request);
 
-            // Make assertions
-            Assert.assertNotNull("response is null", actualResponse);
-            Assert.assertEquals("response namespace", request.getNamespace(), actualResponse.getNamespace());
-            Assert.assertEquals("response business object definition name", request.getBusinessObjectDefinitionName(), actualResponse
-                .getBusinessObjectDefinitionName());
-            Assert.assertEquals("response business object format usage", request.getBusinessObjectFormatUsage(), actualResponse.getBusinessObjectFormatUsage());
-            Assert.assertEquals("response business object format file type", request.getBusinessObjectFormatFileType(), actualResponse
-                .getBusinessObjectFormatFileType());
-            Assert.assertEquals("response business object format version", request.getBusinessObjectFormatVersion(), actualResponse
-                .getBusinessObjectFormatVersion());
-            Assert.assertEquals("response partition value", request.getPartitionValue(), actualResponse.getPartitionValue());
-            Assert.assertEquals("response sub-partition values", request.getSubPartitionValues(), actualResponse.getSubPartitionValues());
-            Assert.assertEquals("response storage name", request.getStorageName(), actualResponse.getStorageName());
-            Assert.assertNotNull("response business object datas is null", actualResponse.getRegisteredBusinessObjectDataList());
-            Assert.assertEquals("response business object datas size", 0, actualResponse.getRegisteredBusinessObjectDataList().size());
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-            Assert.fail("unexpected exception thrown: " + e);
-        }
+        // Make assertions
+        Assert.assertNotNull("response is null", actualResponse);
+        Assert.assertEquals("response namespace", request.getNamespace(), actualResponse.getNamespace());
+        Assert.assertEquals("response business object definition name", request.getBusinessObjectDefinitionName(),
+            actualResponse.getBusinessObjectDefinitionName());
+        Assert.assertEquals("response business object format usage", request.getBusinessObjectFormatUsage(), actualResponse.getBusinessObjectFormatUsage());
+        Assert.assertEquals("response business object format file type", request.getBusinessObjectFormatFileType(),
+            actualResponse.getBusinessObjectFormatFileType());
+        Assert
+            .assertEquals("response business object format version", request.getBusinessObjectFormatVersion(), actualResponse.getBusinessObjectFormatVersion());
+        Assert.assertEquals("response partition value", request.getPartitionValue(), actualResponse.getPartitionValue());
+        Assert.assertEquals("response sub-partition values", request.getSubPartitionValues(), actualResponse.getSubPartitionValues());
+        Assert.assertEquals("response storage name", request.getStorageName(), actualResponse.getStorageName());
+        Assert.assertNotNull("response business object datas is null", actualResponse.getRegisteredBusinessObjectDataList());
+        Assert.assertEquals("response business object datas size", 0, actualResponse.getRegisteredBusinessObjectDataList().size());
     }
 
     /**
-     * Test case where herd and S3 are in sync because both have 1 object registered.
-     * Expects no new data registration.
+     * Test case where herd and S3 are in sync because both have 1 object registered. Expects no new data registration.
      */
     @Test
-    public void testInvalidateUnregisteredBusinessObjectDataS31Herd1()
+    public void testInvalidateUnregisteredBusinessObjectDataS31Herd1() throws Exception
     {
-        LOGGER.debug("start");
-
         BusinessObjectDataInvalidateUnregisteredRequest request = getDefaultBusinessObjectDataInvalidateUnregisteredRequest();
 
         // Given a business object format
@@ -130,31 +107,20 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
         }
 
         // Call the API
-        try
-        {
-            BusinessObjectDataInvalidateUnregisteredResponse actualResponse =
-                businessObjectDataInvalidateUnregisteredHelper.invalidateUnregisteredBusinessObjectData(request);
+        BusinessObjectDataInvalidateUnregisteredResponse actualResponse =
+            businessObjectDataInvalidateUnregisteredHelper.invalidateUnregisteredBusinessObjectData(request);
 
-            // Make assertions
-            Assert.assertNotNull("response business object datas is null", actualResponse.getRegisteredBusinessObjectDataList());
-            Assert.assertEquals("response business object datas size", 0, actualResponse.getRegisteredBusinessObjectDataList().size());
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-            Assert.fail("unexpected exception thrown: " + e);
-        }
+        // Make assertions
+        Assert.assertNotNull("response business object datas is null", actualResponse.getRegisteredBusinessObjectDataList());
+        Assert.assertEquals("response business object datas size", 0, actualResponse.getRegisteredBusinessObjectDataList().size());
     }
 
     /**
-     * Test case where S3 has 1 object, and herd has no object registered.
-     * Expects one new registration in INVALID status.
+     * Test case where S3 has 1 object, and herd has no object registered. Expects one new registration in INVALID status.
      */
     @Test
-    public void testInvalidateUnregisteredBusinessObjectDataS31Herd0()
+    public void testInvalidateUnregisteredBusinessObjectDataS31Herd0() throws Exception
     {
-        LOGGER.debug("start");
-
         BusinessObjectDataInvalidateUnregisteredRequest request = getDefaultBusinessObjectDataInvalidateUnregisteredRequest();
 
         // Given a business object format
@@ -172,48 +138,36 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
         }
 
         // Call API
-        try
-        {
-            BusinessObjectDataInvalidateUnregisteredResponse actualResponse =
-                businessObjectDataInvalidateUnregisteredHelper.invalidateUnregisteredBusinessObjectData(request);
+        BusinessObjectDataInvalidateUnregisteredResponse actualResponse =
+            businessObjectDataInvalidateUnregisteredHelper.invalidateUnregisteredBusinessObjectData(request);
 
-            // Make assertions
-            Assert.assertNotNull("response business object datas is null", actualResponse.getRegisteredBusinessObjectDataList());
-            Assert.assertEquals("response business object datas size", 1, actualResponse.getRegisteredBusinessObjectDataList().size());
-            {
-                BusinessObjectData businessObjectData = actualResponse.getRegisteredBusinessObjectDataList().get(0);
-                Assert.assertEquals("response business object data[0] version", 0, businessObjectData.getVersion());
-                Assert.assertEquals("response business object data[0] status", BusinessObjectDataInvalidateUnregisteredHelper.UNREGISTERED_STATUS,
-                    businessObjectData.getStatus());
-                Assert.assertNotNull("response business object data[0] storage units is null", businessObjectData.getStorageUnits());
-                Assert.assertEquals("response business object data[0] storage units size", 1, businessObjectData.getStorageUnits().size());
-                {
-                    String expectedS3KeyPrefix =
-                        businessObjectDataHelper.buildS3KeyPrefix(businessObjectFormatEntity, businessObjectDataHelper
-                            .createBusinessObjectDataKey(businessObjectData));
-                    StorageUnit storageUnit = businessObjectData.getStorageUnits().get(0);
-                    Assert.assertNotNull("response business object data[0] storage unit[0] storage directory is null", storageUnit.getStorageDirectory());
-                    Assert.assertEquals("response business object data[0] storage unit[0] storage directory path", expectedS3KeyPrefix, storageUnit
-                        .getStorageDirectory().getDirectoryPath());
-                }
-            }
-        }
-        catch (Exception e)
+        // Make assertions
+        Assert.assertNotNull("response business object datas is null", actualResponse.getRegisteredBusinessObjectDataList());
+        Assert.assertEquals("response business object datas size", 1, actualResponse.getRegisteredBusinessObjectDataList().size());
         {
-            e.printStackTrace();
-            Assert.fail("unexpected exception thrown: " + e);
+            BusinessObjectData businessObjectData = actualResponse.getRegisteredBusinessObjectDataList().get(0);
+            Assert.assertEquals("response business object data[0] version", 0, businessObjectData.getVersion());
+            Assert.assertEquals("response business object data[0] status", BusinessObjectDataInvalidateUnregisteredHelper.UNREGISTERED_STATUS,
+                businessObjectData.getStatus());
+            Assert.assertNotNull("response business object data[0] storage units is null", businessObjectData.getStorageUnits());
+            Assert.assertEquals("response business object data[0] storage units size", 1, businessObjectData.getStorageUnits().size());
+            {
+                String expectedS3KeyPrefix = s3KeyPrefixHelper.buildS3KeyPrefix(S3_KEY_PREFIX_VELOCITY_TEMPLATE, businessObjectFormatEntity,
+                    businessObjectDataHelper.createBusinessObjectDataKey(businessObjectData), STORAGE_NAME);
+                StorageUnit storageUnit = businessObjectData.getStorageUnits().get(0);
+                Assert.assertNotNull("response business object data[0] storage unit[0] storage directory is null", storageUnit.getStorageDirectory());
+                Assert.assertEquals("response business object data[0] storage unit[0] storage directory path", expectedS3KeyPrefix,
+                    storageUnit.getStorageDirectory().getDirectoryPath());
+            }
         }
     }
 
     /**
-     * Test case where S3 has 1 object, and herd has no object registered. The data has sub-partitions.
-     * Expects one new registration in INVALID status.
+     * Test case where S3 has 1 object, and herd has no object registered. The data has sub-partitions. Expects one new registration in INVALID status.
      */
     @Test
-    public void testInvalidateUnregisteredBusinessObjectDataS31Herd0WithSubPartitions()
+    public void testInvalidateUnregisteredBusinessObjectDataS31Herd0WithSubPartitions() throws Exception
     {
-        LOGGER.debug("start");
-
         BusinessObjectDataInvalidateUnregisteredRequest request = getDefaultBusinessObjectDataInvalidateUnregisteredRequest();
         request.setSubPartitionValues(SUBPARTITION_VALUES);
 
@@ -232,50 +186,38 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
         }
 
         // Call API
-        try
-        {
-            BusinessObjectDataInvalidateUnregisteredResponse actualResponse =
-                businessObjectDataInvalidateUnregisteredHelper.invalidateUnregisteredBusinessObjectData(request);
+        BusinessObjectDataInvalidateUnregisteredResponse actualResponse =
+            businessObjectDataInvalidateUnregisteredHelper.invalidateUnregisteredBusinessObjectData(request);
 
-            // Make assertions
-            Assert.assertNotNull("response sub-partition values is null", actualResponse.getSubPartitionValues());
-            Assert.assertEquals("response sub-partition values", request.getSubPartitionValues(), actualResponse.getSubPartitionValues());
-            Assert.assertNotNull("response business object datas is null", actualResponse.getRegisteredBusinessObjectDataList());
-            Assert.assertEquals("response business object datas size", 1, actualResponse.getRegisteredBusinessObjectDataList().size());
-            {
-                BusinessObjectData businessObjectData = actualResponse.getRegisteredBusinessObjectDataList().get(0);
-                Assert.assertEquals("response business object data[0] version", 0, businessObjectData.getVersion());
-                Assert.assertEquals("response business object data[0] status", BusinessObjectDataInvalidateUnregisteredHelper.UNREGISTERED_STATUS,
-                    businessObjectData.getStatus());
-                Assert.assertNotNull("response business object data[0] storage units is null", businessObjectData.getStorageUnits());
-                Assert.assertEquals("response business object data[0] storage units size", 1, businessObjectData.getStorageUnits().size());
-                {
-                    String expectedS3KeyPrefix =
-                        businessObjectDataHelper.buildS3KeyPrefix(businessObjectFormatEntity, businessObjectDataHelper
-                            .createBusinessObjectDataKey(businessObjectData));
-                    StorageUnit storageUnit = businessObjectData.getStorageUnits().get(0);
-                    Assert.assertNotNull("response business object data[0] storage unit[0] storage directory is null", storageUnit.getStorageDirectory());
-                    Assert.assertEquals("response business object data[0] storage unit[0] storage directory path", expectedS3KeyPrefix, storageUnit
-                        .getStorageDirectory().getDirectoryPath());
-                }
-            }
-        }
-        catch (Exception e)
+        // Make assertions
+        Assert.assertNotNull("response sub-partition values is null", actualResponse.getSubPartitionValues());
+        Assert.assertEquals("response sub-partition values", request.getSubPartitionValues(), actualResponse.getSubPartitionValues());
+        Assert.assertNotNull("response business object datas is null", actualResponse.getRegisteredBusinessObjectDataList());
+        Assert.assertEquals("response business object datas size", 1, actualResponse.getRegisteredBusinessObjectDataList().size());
         {
-            e.printStackTrace();
-            Assert.fail("unexpected exception thrown: " + e);
+            BusinessObjectData businessObjectData = actualResponse.getRegisteredBusinessObjectDataList().get(0);
+            Assert.assertEquals("response business object data[0] version", 0, businessObjectData.getVersion());
+            Assert.assertEquals("response business object data[0] status", BusinessObjectDataInvalidateUnregisteredHelper.UNREGISTERED_STATUS,
+                businessObjectData.getStatus());
+            Assert.assertNotNull("response business object data[0] storage units is null", businessObjectData.getStorageUnits());
+            Assert.assertEquals("response business object data[0] storage units size", 1, businessObjectData.getStorageUnits().size());
+            {
+                String expectedS3KeyPrefix = s3KeyPrefixHelper.buildS3KeyPrefix(S3_KEY_PREFIX_VELOCITY_TEMPLATE, businessObjectFormatEntity,
+                    businessObjectDataHelper.createBusinessObjectDataKey(businessObjectData), STORAGE_NAME);
+                StorageUnit storageUnit = businessObjectData.getStorageUnits().get(0);
+                Assert.assertNotNull("response business object data[0] storage unit[0] storage directory is null", storageUnit.getStorageDirectory());
+                Assert.assertEquals("response business object data[0] storage unit[0] storage directory path", expectedS3KeyPrefix,
+                    storageUnit.getStorageDirectory().getDirectoryPath());
+            }
         }
     }
 
     /**
-     * Test case where S3 has 2 objects, and herd has 1 object registered.
-     * Expects one new registration in INVALID status.
+     * Test case where S3 has 2 objects, and herd has 1 object registered. Expects one new registration in INVALID status.
      */
     @Test
-    public void testInvalidateUnregisteredBusinessObjectDataS32Herd1()
+    public void testInvalidateUnregisteredBusinessObjectDataS32Herd1() throws Exception
     {
-        LOGGER.debug("start");
-
         BusinessObjectDataInvalidateUnregisteredRequest request = getDefaultBusinessObjectDataInvalidateUnregisteredRequest();
 
         // Given a business object format
@@ -296,48 +238,36 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
         }
 
         // Call API
-        try
-        {
-            BusinessObjectDataInvalidateUnregisteredResponse actualResponse =
-                businessObjectDataInvalidateUnregisteredHelper.invalidateUnregisteredBusinessObjectData(request);
+        BusinessObjectDataInvalidateUnregisteredResponse actualResponse =
+            businessObjectDataInvalidateUnregisteredHelper.invalidateUnregisteredBusinessObjectData(request);
 
-            // Make assertions
-            Assert.assertNotNull("response business object datas is null", actualResponse.getRegisteredBusinessObjectDataList());
-            Assert.assertEquals("response business object datas size", 1, actualResponse.getRegisteredBusinessObjectDataList().size());
-            {
-                BusinessObjectData businessObjectData = actualResponse.getRegisteredBusinessObjectDataList().get(0);
-                Assert.assertEquals("response business object data[0] version", 1, businessObjectData.getVersion());
-                Assert.assertEquals("response business object data[0] status", BusinessObjectDataInvalidateUnregisteredHelper.UNREGISTERED_STATUS,
-                    businessObjectData.getStatus());
-                Assert.assertNotNull("response business object data[0] storage units is null", businessObjectData.getStorageUnits());
-                Assert.assertEquals("response business object data[0] storage units size", 1, businessObjectData.getStorageUnits().size());
-                {
-                    String expectedS3KeyPrefix =
-                        businessObjectDataHelper.buildS3KeyPrefix(businessObjectFormatEntity, businessObjectDataHelper
-                            .createBusinessObjectDataKey(businessObjectData));
-                    StorageUnit storageUnit = businessObjectData.getStorageUnits().get(0);
-                    Assert.assertNotNull("response business object data[0] storage unit[0] storage directory is null", storageUnit.getStorageDirectory());
-                    Assert.assertEquals("response business object data[0] storage unit[0] storage directory path", expectedS3KeyPrefix, storageUnit
-                        .getStorageDirectory().getDirectoryPath());
-                }
-            }
-        }
-        catch (Exception e)
+        // Make assertions
+        Assert.assertNotNull("response business object datas is null", actualResponse.getRegisteredBusinessObjectDataList());
+        Assert.assertEquals("response business object datas size", 1, actualResponse.getRegisteredBusinessObjectDataList().size());
         {
-            e.printStackTrace();
-            Assert.fail("unexpected exception thrown: " + e);
+            BusinessObjectData businessObjectData = actualResponse.getRegisteredBusinessObjectDataList().get(0);
+            Assert.assertEquals("response business object data[0] version", 1, businessObjectData.getVersion());
+            Assert.assertEquals("response business object data[0] status", BusinessObjectDataInvalidateUnregisteredHelper.UNREGISTERED_STATUS,
+                businessObjectData.getStatus());
+            Assert.assertNotNull("response business object data[0] storage units is null", businessObjectData.getStorageUnits());
+            Assert.assertEquals("response business object data[0] storage units size", 1, businessObjectData.getStorageUnits().size());
+            {
+                String expectedS3KeyPrefix = s3KeyPrefixHelper.buildS3KeyPrefix(S3_KEY_PREFIX_VELOCITY_TEMPLATE, businessObjectFormatEntity,
+                    businessObjectDataHelper.createBusinessObjectDataKey(businessObjectData), STORAGE_NAME);
+                StorageUnit storageUnit = businessObjectData.getStorageUnits().get(0);
+                Assert.assertNotNull("response business object data[0] storage unit[0] storage directory is null", storageUnit.getStorageDirectory());
+                Assert.assertEquals("response business object data[0] storage unit[0] storage directory path", expectedS3KeyPrefix,
+                    storageUnit.getStorageDirectory().getDirectoryPath());
+            }
         }
     }
 
     /**
-     * Test case where S3 has 2 objects, but herd has no object registered.
-     * Expects 2 new registrations in INVALID status.
+     * Test case where S3 has 2 objects, but herd has no object registered. Expects 2 new registrations in INVALID status.
      */
     @Test
-    public void testInvalidateUnregisteredBusinessObjectDataS32Herd0()
+    public void testInvalidateUnregisteredBusinessObjectDataS32Herd0() throws Exception
     {
-        LOGGER.debug("start");
-
         BusinessObjectDataInvalidateUnregisteredRequest request = getDefaultBusinessObjectDataInvalidateUnregisteredRequest();
 
         // Given a business object format
@@ -357,68 +287,55 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
         }
 
         // Call API
-        try
-        {
-            BusinessObjectDataInvalidateUnregisteredResponse actualResponse =
-                businessObjectDataInvalidateUnregisteredHelper.invalidateUnregisteredBusinessObjectData(request);
+        BusinessObjectDataInvalidateUnregisteredResponse actualResponse =
+            businessObjectDataInvalidateUnregisteredHelper.invalidateUnregisteredBusinessObjectData(request);
 
-            // Make assertions
-            Assert.assertNotNull("response business object datas is null", actualResponse.getRegisteredBusinessObjectDataList());
-            Assert.assertEquals("response business object datas size", 2, actualResponse.getRegisteredBusinessObjectDataList().size());
-            // Assert first data registered
+        // Make assertions
+        Assert.assertNotNull("response business object datas is null", actualResponse.getRegisteredBusinessObjectDataList());
+        Assert.assertEquals("response business object datas size", 2, actualResponse.getRegisteredBusinessObjectDataList().size());
+        // Assert first data registered
+        {
+            BusinessObjectData businessObjectData = actualResponse.getRegisteredBusinessObjectDataList().get(0);
+            Assert.assertEquals("response business object data[0] version", 0, businessObjectData.getVersion());
+            Assert.assertEquals("response business object data[0] status", BusinessObjectDataInvalidateUnregisteredHelper.UNREGISTERED_STATUS,
+                businessObjectData.getStatus());
+            Assert.assertNotNull("response business object data[0] storage units is null", businessObjectData.getStorageUnits());
+            Assert.assertEquals("response business object data[0] storage units size", 1, businessObjectData.getStorageUnits().size());
             {
-                BusinessObjectData businessObjectData = actualResponse.getRegisteredBusinessObjectDataList().get(0);
-                Assert.assertEquals("response business object data[0] version", 0, businessObjectData.getVersion());
-                Assert.assertEquals("response business object data[0] status", BusinessObjectDataInvalidateUnregisteredHelper.UNREGISTERED_STATUS,
-                    businessObjectData.getStatus());
-                Assert.assertNotNull("response business object data[0] storage units is null", businessObjectData.getStorageUnits());
-                Assert.assertEquals("response business object data[0] storage units size", 1, businessObjectData.getStorageUnits().size());
-                {
-                    String expectedS3KeyPrefix =
-                        businessObjectDataHelper.buildS3KeyPrefix(businessObjectFormatEntity, businessObjectDataHelper
-                            .createBusinessObjectDataKey(businessObjectData));
-                    StorageUnit storageUnit = businessObjectData.getStorageUnits().get(0);
-                    Assert.assertNotNull("response business object data[0] storage unit[0] storage directory is null", storageUnit.getStorageDirectory());
-                    Assert.assertEquals("response business object data[0] storage unit[0] storage directory path", expectedS3KeyPrefix, storageUnit
-                        .getStorageDirectory().getDirectoryPath());
-                }
-            }
-            // Assert second data registered
-            {
-                BusinessObjectData businessObjectData = actualResponse.getRegisteredBusinessObjectDataList().get(1);
-                Assert.assertEquals("response business object data[1] version", 1, businessObjectData.getVersion());
-                Assert.assertEquals("response business object data[1] status", BusinessObjectDataInvalidateUnregisteredHelper.UNREGISTERED_STATUS,
-                    businessObjectData.getStatus());
-                Assert.assertNotNull("response business object data[1] storage units is null", businessObjectData.getStorageUnits());
-                Assert.assertEquals("response business object data[1] storage units size", 1, businessObjectData.getStorageUnits().size());
-                {
-                    String expectedS3KeyPrefix =
-                        businessObjectDataHelper.buildS3KeyPrefix(businessObjectFormatEntity, businessObjectDataHelper
-                            .createBusinessObjectDataKey(businessObjectData));
-                    StorageUnit storageUnit = businessObjectData.getStorageUnits().get(0);
-                    Assert.assertNotNull("response business object data[1] storage unit[0] storage directory is null", storageUnit.getStorageDirectory());
-                    Assert.assertEquals("response business object data[1] storage unit[0] storage directory path", expectedS3KeyPrefix, storageUnit
-                        .getStorageDirectory().getDirectoryPath());
-                }
+                String expectedS3KeyPrefix = s3KeyPrefixHelper.buildS3KeyPrefix(S3_KEY_PREFIX_VELOCITY_TEMPLATE, businessObjectFormatEntity,
+                    businessObjectDataHelper.createBusinessObjectDataKey(businessObjectData), STORAGE_NAME);
+                StorageUnit storageUnit = businessObjectData.getStorageUnits().get(0);
+                Assert.assertNotNull("response business object data[0] storage unit[0] storage directory is null", storageUnit.getStorageDirectory());
+                Assert.assertEquals("response business object data[0] storage unit[0] storage directory path", expectedS3KeyPrefix,
+                    storageUnit.getStorageDirectory().getDirectoryPath());
             }
         }
-        catch (Exception e)
+        // Assert second data registered
         {
-            e.printStackTrace();
-            Assert.fail("unexpected exception thrown: " + e);
+            BusinessObjectData businessObjectData = actualResponse.getRegisteredBusinessObjectDataList().get(1);
+            Assert.assertEquals("response business object data[1] version", 1, businessObjectData.getVersion());
+            Assert.assertEquals("response business object data[1] status", BusinessObjectDataInvalidateUnregisteredHelper.UNREGISTERED_STATUS,
+                businessObjectData.getStatus());
+            Assert.assertNotNull("response business object data[1] storage units is null", businessObjectData.getStorageUnits());
+            Assert.assertEquals("response business object data[1] storage units size", 1, businessObjectData.getStorageUnits().size());
+            {
+                String expectedS3KeyPrefix = s3KeyPrefixHelper.buildS3KeyPrefix(S3_KEY_PREFIX_VELOCITY_TEMPLATE, businessObjectFormatEntity,
+                    businessObjectDataHelper.createBusinessObjectDataKey(businessObjectData), STORAGE_NAME);
+                StorageUnit storageUnit = businessObjectData.getStorageUnits().get(0);
+                Assert.assertNotNull("response business object data[1] storage unit[0] storage directory is null", storageUnit.getStorageDirectory());
+                Assert.assertEquals("response business object data[1] storage unit[0] storage directory path", expectedS3KeyPrefix,
+                    storageUnit.getStorageDirectory().getDirectoryPath());
+            }
         }
     }
 
     /**
-     * Test case where S3 has 1 object, and herd has no object registered.
-     * The S3 object is registered under version 1 so there is a gap for version 0 of registration.
-     * Expects no new registrations since the API does not consider the S3 objects after a gap.
+     * Test case where S3 has 1 object, and herd has no object registered. The S3 object is registered under version 1 so there is a gap for version 0 of
+     * registration. Expects no new registrations since the API does not consider the S3 objects after a gap.
      */
     @Test
     public void testInvalidateUnregisteredBusinessObjectDataS31Herd0WithGap()
     {
-        LOGGER.debug("start");
-
         BusinessObjectDataInvalidateUnregisteredRequest request = getDefaultBusinessObjectDataInvalidateUnregisteredRequest();
         request.setSubPartitionValues(SUBPARTITION_VALUES);
 
@@ -437,34 +354,21 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
         }
 
         // Call API
-        try
-        {
-            BusinessObjectDataInvalidateUnregisteredResponse actualResponse =
-                businessObjectDataInvalidateUnregisteredHelper.invalidateUnregisteredBusinessObjectData(request);
+        BusinessObjectDataInvalidateUnregisteredResponse actualResponse =
+            businessObjectDataInvalidateUnregisteredHelper.invalidateUnregisteredBusinessObjectData(request);
 
-            // Make assertions
-            Assert.assertNotNull("response business object datas is null", actualResponse.getRegisteredBusinessObjectDataList());
-            Assert.assertEquals("response business object datas size", 0, actualResponse.getRegisteredBusinessObjectDataList().size());
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-            Assert.fail("unexpected exception thrown: " + e);
-        }
+        // Make assertions
+        Assert.assertNotNull("response business object datas is null", actualResponse.getRegisteredBusinessObjectDataList());
+        Assert.assertEquals("response business object datas size", 0, actualResponse.getRegisteredBusinessObjectDataList().size());
     }
 
     /**
-     * The prefix search for S3 object should match prefixed directories, not sub-strings.
-     * For example:
-     * - If a S3 object exists with key "c/b/aa/test.txt"
-     * - If a search for prefix "c/b/a" is executed
-     * - The S3 object should NOT match, since it is a prefix, but not a prefix directory.
+     * The prefix search for S3 object should match prefixed directories, not sub-strings. For example: - If an S3 object exists with key "c/b/aa/test.txt" - If
+     * a search for prefix "c/b/a" is executed - The S3 object should NOT match, since it is a prefix, but not a prefix directory.
      */
     @Test
-    public void testInvalidateUnregisteredBusinessObjectDataS3PrefixWithSlash()
+    public void testInvalidateUnregisteredBusinessObjectDataS3PrefixWithSlash() throws Exception
     {
-        LOGGER.debug("start");
-
         BusinessObjectDataInvalidateUnregisteredRequest request = getDefaultBusinessObjectDataInvalidateUnregisteredRequest();
 
         // Given a business object format
@@ -485,20 +389,12 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
         }
 
         // Call API
-        try
-        {
-            BusinessObjectDataInvalidateUnregisteredResponse actualResponse =
-                businessObjectDataInvalidateUnregisteredHelper.invalidateUnregisteredBusinessObjectData(request);
+        BusinessObjectDataInvalidateUnregisteredResponse actualResponse =
+            businessObjectDataInvalidateUnregisteredHelper.invalidateUnregisteredBusinessObjectData(request);
 
-            // Make assertions, expect no data updates since nothing should match
-            Assert.assertNotNull("response business object datas is null", actualResponse.getRegisteredBusinessObjectDataList());
-            Assert.assertEquals("response business object datas size", 0, actualResponse.getRegisteredBusinessObjectDataList().size());
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-            Assert.fail("unexpected exception thrown: " + e);
-        }
+        // Make assertions, expect no data updates since nothing should match
+        Assert.assertNotNull("response business object datas is null", actualResponse.getRegisteredBusinessObjectDataList());
+        Assert.assertEquals("response business object datas size", 0, actualResponse.getRegisteredBusinessObjectDataList().size());
     }
 
     /**
@@ -507,8 +403,6 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
     @Test
     public void testInvalidateUnregisteredBusinessObjectDataValidationNamespaceRequired()
     {
-        LOGGER.debug("start");
-
         BusinessObjectDataInvalidateUnregisteredRequest request = getDefaultBusinessObjectDataInvalidateUnregisteredRequest();
         request.setNamespace(BLANK_TEXT);
 
@@ -541,8 +435,6 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
     @Test
     public void testInvalidateUnregisteredBusinessObjectDataValidationBusinessObjectDefinitionNameRequired()
     {
-        LOGGER.debug("start");
-
         BusinessObjectDataInvalidateUnregisteredRequest request = getDefaultBusinessObjectDataInvalidateUnregisteredRequest();
         request.setBusinessObjectDefinitionName(BLANK_TEXT);
 
@@ -575,8 +467,6 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
     @Test
     public void testInvalidateUnregisteredBusinessObjectDataValidationBusinessObjectFormatUsageRequired()
     {
-        LOGGER.debug("start");
-
         BusinessObjectDataInvalidateUnregisteredRequest request = getDefaultBusinessObjectDataInvalidateUnregisteredRequest();
         request.setBusinessObjectFormatUsage(BLANK_TEXT);
 
@@ -609,8 +499,6 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
     @Test
     public void testInvalidateUnregisteredBusinessObjectDataValidationBusinessObjectFormatMustExist()
     {
-        LOGGER.debug("start");
-
         BusinessObjectDataInvalidateUnregisteredRequest request = getDefaultBusinessObjectDataInvalidateUnregisteredRequest();
 
         // Given a business object format
@@ -635,12 +523,11 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
         catch (Exception e)
         {
             Assert.assertEquals("thrown exception type", ObjectNotFoundException.class, e.getClass());
-            Assert
-                .assertEquals(
-                    "thrown exception message", "Business object format with namespace \"" + request.getNamespace() + "\", business object definition name \""
-                        + request.getBusinessObjectDefinitionName() + "\", format usage \"" + request.getBusinessObjectFormatUsage()
-                        + "\", format file type \"" + request.getBusinessObjectFormatFileType() + "\", and format version \""
-                        + request.getBusinessObjectFormatVersion() + "\" doesn't exist.", e.getMessage());
+            Assert.assertEquals("thrown exception message",
+                "Business object format with namespace \"" + request.getNamespace() + "\", business object definition name \"" +
+                    request.getBusinessObjectDefinitionName() + "\", format usage \"" + request.getBusinessObjectFormatUsage() + "\", format file type \"" +
+                    request.getBusinessObjectFormatFileType() + "\", and format version \"" + request.getBusinessObjectFormatVersion() + "\" doesn't exist.",
+                e.getMessage());
         }
     }
 
@@ -650,8 +537,6 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
     @Test
     public void testInvalidateUnregisteredBusinessObjectDataValidationBusinessObjectFormatFileTypeRequired()
     {
-        LOGGER.debug("start");
-
         BusinessObjectDataInvalidateUnregisteredRequest request = getDefaultBusinessObjectDataInvalidateUnregisteredRequest();
         request.setBusinessObjectFormatFileType(BLANK_TEXT);
 
@@ -684,8 +569,6 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
     @Test
     public void testInvalidateUnregisteredBusinessObjectDataValidationBusinessObjectFormatVersionRequired()
     {
-        LOGGER.debug("start");
-
         BusinessObjectDataInvalidateUnregisteredRequest request = getDefaultBusinessObjectDataInvalidateUnregisteredRequest();
 
         // Given a business object format
@@ -720,8 +603,6 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
     @Test
     public void testInvalidateUnregisteredBusinessObjectDataValidationBusinessObjectFormatVersionNegative()
     {
-        LOGGER.debug("start");
-
         BusinessObjectDataInvalidateUnregisteredRequest request = getDefaultBusinessObjectDataInvalidateUnregisteredRequest();
         request.setBusinessObjectFormatVersion(-1);
 
@@ -754,8 +635,6 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
     @Test
     public void testInvalidateUnregisteredBusinessObjectDataValidationPartitionValueRequired()
     {
-        LOGGER.debug("start");
-
         BusinessObjectDataInvalidateUnregisteredRequest request = getDefaultBusinessObjectDataInvalidateUnregisteredRequest();
         request.setPartitionValue(BLANK_TEXT);
 
@@ -788,8 +667,6 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
     @Test
     public void testInvalidateUnregisteredBusinessObjectDataValidationStorageNameRequired()
     {
-        LOGGER.debug("start");
-
         BusinessObjectDataInvalidateUnregisteredRequest request = getDefaultBusinessObjectDataInvalidateUnregisteredRequest();
         request.setStorageName(BLANK_TEXT);
 
@@ -822,8 +699,6 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
     @Test
     public void testInvalidateUnregisteredBusinessObjectDataValidationStorageMustExist()
     {
-        LOGGER.debug("start");
-
         BusinessObjectDataInvalidateUnregisteredRequest request = getDefaultBusinessObjectDataInvalidateUnregisteredRequest();
         request.setStorageName("DOES_NOT_EXIST");
 
@@ -851,14 +726,11 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
     }
 
     /**
-     * Storage is found, but the storage platform is not S3.
-     * This API only works for S3 platforms since it requires S3 key prefix.
+     * Storage is found, but the storage platform is not S3. This API only works for S3 platforms since it requires S3 key prefix.
      */
     @Test
     public void testInvalidateUnregisteredBusinessObjectDataValidationStoragePlatformMustBeS3()
     {
-        LOGGER.debug("start");
-
         BusinessObjectDataInvalidateUnregisteredRequest request = getDefaultBusinessObjectDataInvalidateUnregisteredRequest();
         request.setStorageName(STORAGE_NAME);
 
@@ -882,8 +754,8 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
         catch (Exception e)
         {
             Assert.assertEquals("thrown exception type", IllegalArgumentException.class, e.getClass());
-            Assert.assertEquals("thrown exception message", "The specified storage '" + request.getStorageName() + "' is not a S3 storage platform.", e
-                .getMessage());
+            Assert.assertEquals("thrown exception message", "The specified storage '" + request.getStorageName() + "' is not an S3 storage platform.",
+                e.getMessage());
         }
     }
 
@@ -893,8 +765,6 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
     @Test
     public void testInvalidateUnregisteredBusinessObjectDataValidationSubPartitionValueNotBlank()
     {
-        LOGGER.debug("start");
-
         BusinessObjectDataInvalidateUnregisteredRequest request = getDefaultBusinessObjectDataInvalidateUnregisteredRequest();
         request.setSubPartitionValues(Arrays.asList(BLANK_TEXT));
 
@@ -925,10 +795,8 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
      * Asserts that values are trimmed before the request is processed.
      */
     @Test
-    public void testInvalidateUnregisteredBusinessObjectDataTrim()
+    public void testInvalidateUnregisteredBusinessObjectDataTrim() throws Exception
     {
-        LOGGER.debug("start");
-
         BusinessObjectDataInvalidateUnregisteredRequest request = getDefaultBusinessObjectDataInvalidateUnregisteredRequest();
         request.setSubPartitionValues(SUBPARTITION_VALUES);
 
@@ -956,86 +824,37 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
         request.setSubPartitionValues(paddedSubPartitionValues);
 
         // Call the API
-        try
-        {
-            BusinessObjectDataInvalidateUnregisteredResponse actualResponse =
-                businessObjectDataInvalidateUnregisteredHelper.invalidateUnregisteredBusinessObjectData(request);
+        BusinessObjectDataInvalidateUnregisteredResponse actualResponse =
+            businessObjectDataInvalidateUnregisteredHelper.invalidateUnregisteredBusinessObjectData(request);
 
-            // Make assertions
+        // Make assertions
             /*
              * Note: The API will modify the request to now contain the trimmed value.
              */
-            Assert.assertNotNull("response is null", actualResponse);
-            Assert.assertEquals("response namespace", request.getNamespace(), actualResponse.getNamespace());
-            Assert.assertEquals("response business object definition name", request.getBusinessObjectDefinitionName(), actualResponse
-                .getBusinessObjectDefinitionName());
-            Assert.assertEquals("response business object format usage", request.getBusinessObjectFormatUsage(), actualResponse.getBusinessObjectFormatUsage());
-            Assert.assertEquals("response business object format file type", request.getBusinessObjectFormatFileType(), actualResponse
-                .getBusinessObjectFormatFileType());
-            Assert.assertEquals("response business object format version", request.getBusinessObjectFormatVersion(), actualResponse
-                .getBusinessObjectFormatVersion());
-            Assert.assertEquals("response partition value", request.getPartitionValue(), actualResponse.getPartitionValue());
-            Assert.assertEquals("response sub-partition values", request.getSubPartitionValues(), actualResponse.getSubPartitionValues());
-            Assert.assertEquals("response storage name", request.getStorageName(), actualResponse.getStorageName());
-            Assert.assertNotNull("response business object datas is null", actualResponse.getRegisteredBusinessObjectDataList());
-            Assert.assertEquals("response business object datas size", 0, actualResponse.getRegisteredBusinessObjectDataList().size());
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-            Assert.fail("unexpected exception thrown: " + e);
-        }
-    }
-
-    /**
-     * Creates an object in S3 with the prefix constructed from the given parameters.
-     * The object's full path will be {prefix}/{UUID}
-     * 
-     * @param businessObjectFormatEntity business object format
-     * @param request request with partition values and storage
-     * @param businessObjectDataVersion business object data version to put
-     */
-    private void createS3Object(BusinessObjectFormatEntity businessObjectFormatEntity, BusinessObjectDataInvalidateUnregisteredRequest request,
-        int businessObjectDataVersion)
-    {
-        StorageEntity storageEntity = herdDao.getStorageByName(request.getStorageName());
-        String s3BucketName = storageDaoHelper.getS3BucketAccessParams(storageEntity).getS3BucketName();
-
-        BusinessObjectDataKey businessObjectDataKey = getBusinessObjectDataKey(request);
-        businessObjectDataKey.setBusinessObjectDataVersion(businessObjectDataVersion);
-
-        String s3KeyPrefix = businessObjectDataHelper.buildS3KeyPrefix(businessObjectFormatEntity, businessObjectDataKey);
-        String s3ObjectKey = s3KeyPrefix + "/test";
-        PutObjectRequest putObjectRequest = new PutObjectRequest(s3BucketName, s3ObjectKey, new ByteArrayInputStream(new byte[1]), new ObjectMetadata());
-        s3Operations.putObject(putObjectRequest, null);
-    }
-
-    /**
-     * Gets the {@link BusinessObjectDataKey} from the given request.
-     * 
-     * @param request {@link BusinessObjectDataInvalidateUnregisteredRequest}
-     * @return {@link BusinessObjectDataKey} minus the version
-     */
-    private BusinessObjectDataKey getBusinessObjectDataKey(BusinessObjectDataInvalidateUnregisteredRequest request)
-    {
-        BusinessObjectDataKey businessObjectDataKey = new BusinessObjectDataKey();
-        businessObjectDataKey.setNamespace(request.getNamespace());
-        businessObjectDataKey.setBusinessObjectDefinitionName(request.getBusinessObjectDefinitionName());
-        businessObjectDataKey.setBusinessObjectFormatUsage(request.getBusinessObjectFormatUsage());
-        businessObjectDataKey.setBusinessObjectFormatFileType(request.getBusinessObjectFormatFileType());
-        businessObjectDataKey.setBusinessObjectFormatVersion(request.getBusinessObjectFormatVersion());
-        businessObjectDataKey.setPartitionValue(request.getPartitionValue());
-        businessObjectDataKey.setSubPartitionValues(request.getSubPartitionValues());
-        return businessObjectDataKey;
+        Assert.assertNotNull("response is null", actualResponse);
+        Assert.assertEquals("response namespace", request.getNamespace(), actualResponse.getNamespace());
+        Assert.assertEquals("response business object definition name", request.getBusinessObjectDefinitionName(),
+            actualResponse.getBusinessObjectDefinitionName());
+        Assert.assertEquals("response business object format usage", request.getBusinessObjectFormatUsage(), actualResponse.getBusinessObjectFormatUsage());
+        Assert.assertEquals("response business object format file type", request.getBusinessObjectFormatFileType(),
+            actualResponse.getBusinessObjectFormatFileType());
+        Assert
+            .assertEquals("response business object format version", request.getBusinessObjectFormatVersion(), actualResponse.getBusinessObjectFormatVersion());
+        Assert.assertEquals("response partition value", request.getPartitionValue(), actualResponse.getPartitionValue());
+        Assert.assertEquals("response sub-partition values", request.getSubPartitionValues(), actualResponse.getSubPartitionValues());
+        Assert.assertEquals("response storage name", request.getStorageName(), actualResponse.getStorageName());
+        Assert.assertNotNull("response business object datas is null", actualResponse.getRegisteredBusinessObjectDataList());
+        Assert.assertEquals("response business object datas size", 0, actualResponse.getRegisteredBusinessObjectDataList().size());
     }
 
     /**
      * Creates and persists a {@link BusinessObjectDataEntity} with the specified parameters.
-     * 
+     *
      * @param businessObjectFormatEntity {@link BusinessObjectFormatEntity}
      * @param request {@link BusinessObjectDataInvalidateUnregisteredRequest} with bdata alt key
      * @param businessObjectDataVersion bdata version
      * @param latestVersion is this data the latest version?
+     *
      * @return the created {@link BusinessObjectDataEntity}
      */
     private BusinessObjectDataEntity createBusinessObjectData(BusinessObjectFormatEntity businessObjectFormatEntity,
@@ -1050,7 +869,7 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
         businessObjectDataEntity.setPartitionValue5(herdCollectionHelper.safeGet(request.getSubPartitionValues(), 3));
         businessObjectDataEntity.setVersion(businessObjectDataVersion);
         businessObjectDataEntity.setLatestVersion(latestVersion);
-        businessObjectDataEntity.setStatus(herdDao.getBusinessObjectDataStatusByCode(BusinessObjectDataStatusEntity.VALID));
+        businessObjectDataEntity.setStatus(businessObjectDataStatusDao.getBusinessObjectDataStatusByCode(BusinessObjectDataStatusEntity.VALID));
         herdDao.saveAndRefresh(businessObjectDataEntity);
         return businessObjectDataEntity;
     }

@@ -50,8 +50,8 @@ public class GetBusinessObjectFormatTest extends HerdActivitiServiceTaskTest
         fieldExtensionList.add(buildFieldExtension("businessObjectFormatVersion", "${businessObjectFormatVersion}"));
 
         List<Parameter> parameters = new ArrayList<>();
-        parameters.add(buildParameter("namespace", NAMESPACE_CD));
-        parameters.add(buildParameter("businessObjectDefinitionName", BOD_NAME));
+        parameters.add(buildParameter("namespace", NAMESPACE));
+        parameters.add(buildParameter("businessObjectDefinitionName", BDEF_NAME));
         parameters.add(buildParameter("businessObjectFormatUsage", FORMAT_USAGE_CODE));
         parameters.add(buildParameter("businessObjectFormatFileType", FORMAT_FILE_TYPE_CODE));
         parameters.add(buildParameter("businessObjectFormatVersion", INITIAL_FORMAT_VERSION.toString()));
@@ -78,8 +78,8 @@ public class GetBusinessObjectFormatTest extends HerdActivitiServiceTaskTest
         fieldExtensionList.add(buildFieldExtension("businessObjectFormatFileType", "${businessObjectFormatFileType}"));
 
         List<Parameter> parameters = new ArrayList<>();
-        parameters.add(buildParameter("namespace", NAMESPACE_CD));
-        parameters.add(buildParameter("businessObjectDefinitionName", BOD_NAME));
+        parameters.add(buildParameter("namespace", NAMESPACE));
+        parameters.add(buildParameter("businessObjectDefinitionName", BDEF_NAME));
         parameters.add(buildParameter("businessObjectFormatUsage", FORMAT_USAGE_CODE));
         parameters.add(buildParameter("businessObjectFormatFileType", FORMAT_FILE_TYPE_CODE));
 
@@ -99,12 +99,14 @@ public class GetBusinessObjectFormatTest extends HerdActivitiServiceTaskTest
         fieldExtensionList.add(buildFieldExtension("namespace", "${namespace}"));
 
         List<Parameter> parameters = new ArrayList<>();
-        parameters.add(buildParameter("namespace", NAMESPACE_CD));
+        parameters.add(buildParameter("namespace", NAMESPACE));
 
-        // Try to get a business object format instance when business object definition name is not specified.
-        Map<String, Object> variableValuesToValidate = new HashMap<>();
-        variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "A business object definition name must be specified.");
-        testActivitiServiceTaskFailure(GetBusinessObjectFormat.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            // Try to get a business object format instance when business object definition name is not specified.
+            Map<String, Object> variableValuesToValidate = new HashMap<>();
+            variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "A business object definition name must be specified.");
+            testActivitiServiceTaskFailure(GetBusinessObjectFormat.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+        });
     }
 
     /**
@@ -119,10 +121,12 @@ public class GetBusinessObjectFormatTest extends HerdActivitiServiceTaskTest
         List<Parameter> parameters = new ArrayList<>();
         parameters.add(buildParameter("businessObjectFormatVersion", INVALID_INTEGER_VALUE));
 
-        // Try to get a business object format instance when business object format version is not an integer.
-        Map<String, Object> variableValuesToValidate = new HashMap<>();
-        variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"businessObjectFormatVersion\" must be a valid integer value.");
-        testActivitiServiceTaskFailure(GetBusinessObjectFormat.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            // Try to get a business object format instance when business object format version is not an integer.
+            Map<String, Object> variableValuesToValidate = new HashMap<>();
+            variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"businessObjectFormatVersion\" must be a valid integer value.");
+            testActivitiServiceTaskFailure(GetBusinessObjectFormat.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+        });
     }
 
     /**
@@ -139,16 +143,18 @@ public class GetBusinessObjectFormatTest extends HerdActivitiServiceTaskTest
         fieldExtensionList.add(buildFieldExtension("businessObjectFormatVersion", "${businessObjectFormatVersion}"));
 
         List<Parameter> parameters = new ArrayList<>();
-        parameters.add(buildParameter("namespace", NAMESPACE_CD));
-        parameters.add(buildParameter("businessObjectDefinitionName", BOD_NAME));
+        parameters.add(buildParameter("namespace", NAMESPACE));
+        parameters.add(buildParameter("businessObjectDefinitionName", BDEF_NAME));
         parameters.add(buildParameter("businessObjectFormatUsage", FORMAT_USAGE_CODE));
         parameters.add(buildParameter("businessObjectFormatFileType", FORMAT_FILE_TYPE_CODE));
         parameters.add(buildParameter("businessObjectFormatVersion", FORMAT_VERSION.toString()));
 
-        // Try to get a non-existing business object format.
-        Map<String, Object> variableValuesToValidate = new HashMap<>();
-        variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, String
-            .format(getExpectedBusinessObjectFormatNotFoundErrorMessage(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION)));
-        testActivitiServiceTaskFailure(GetBusinessObjectFormat.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            // Try to get a non-existing business object format.
+            Map<String, Object> variableValuesToValidate = new HashMap<>();
+            variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, String
+                .format(getExpectedBusinessObjectFormatNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION)));
+            testActivitiServiceTaskFailure(GetBusinessObjectFormat.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+        });
     }
 }

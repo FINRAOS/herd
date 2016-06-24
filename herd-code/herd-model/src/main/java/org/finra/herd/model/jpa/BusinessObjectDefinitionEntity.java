@@ -28,14 +28,10 @@ import javax.persistence.OneToMany;
 import javax.persistence.OrderBy;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 /**
  * A business object definition.
  */
-@XmlRootElement
-@XmlType
 @Table(name = BusinessObjectDefinitionEntity.TABLE_NAME)
 @Entity
 public class BusinessObjectDefinitionEntity extends AuditableEntity
@@ -48,7 +44,7 @@ public class BusinessObjectDefinitionEntity extends AuditableEntity
     @Id
     @Column(name = TABLE_NAME + "_id")
     @GeneratedValue(generator = TABLE_NAME + "_seq")
-    @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq")
+    @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq", allocationSize = 1)
     private Integer id;
 
     /**
@@ -74,6 +70,10 @@ public class BusinessObjectDefinitionEntity extends AuditableEntity
     @OneToMany(mappedBy = "businessObjectDefinition", orphanRemoval = true, cascade = {CascadeType.ALL})
     @OrderBy("name")
     private Collection<BusinessObjectDefinitionAttributeEntity> attributes;
+
+    @OneToMany(mappedBy = "businessObjectDefinition", orphanRemoval = true, cascade = {CascadeType.ALL})
+    @OrderBy("name")
+    private Collection<BusinessObjectDefinitionColumnEntity> columns;
 
     public Integer getId()
     {
@@ -145,49 +145,13 @@ public class BusinessObjectDefinitionEntity extends AuditableEntity
         this.attributes = attributes;
     }
 
-    @Override
-    public boolean equals(Object other)
+    public Collection<BusinessObjectDefinitionColumnEntity> getColumns()
     {
-        if (this == other)
-        {
-            return true;
-        }
-        if (other == null || getClass() != other.getClass())
-        {
-            return false;
-        }
-
-        BusinessObjectDefinitionEntity that = (BusinessObjectDefinitionEntity) other;
-
-        if (dataProvider != null ? !dataProvider.equals(that.dataProvider) : that.dataProvider != null)
-        {
-            return false;
-        }
-        if (description != null ? !description.equals(that.description) : that.description != null)
-        {
-            return false;
-        }
-        if (id != null ? !id.equals(that.id) : that.id != null)
-        {
-            return false;
-        }
-        if (name != null ? !name.equals(that.name) : that.name != null)
-        {
-            return false;
-        }
-        if (namespace != null ? !namespace.equals(that.namespace) : that.namespace != null)
-        {
-            return false;
-        }
-
-        return true;
+        return columns;
     }
 
-    @Override
-    public int hashCode()
+    public void setColumns(Collection<BusinessObjectDefinitionColumnEntity> columns)
     {
-        int result = name != null ? name.hashCode() : 0;
-        result = 31 * result + (namespace != null ? namespace.hashCode() : 0);
-        return result;
+        this.columns = columns;
     }
 }

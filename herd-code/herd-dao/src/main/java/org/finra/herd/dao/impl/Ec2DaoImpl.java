@@ -44,6 +44,7 @@ import org.springframework.stereotype.Repository;
 
 import org.finra.herd.dao.Ec2Dao;
 import org.finra.herd.dao.Ec2Operations;
+import org.finra.herd.dao.RetryPolicyFactory;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.dto.AwsParamsDto;
 
@@ -60,6 +61,9 @@ public class Ec2DaoImpl implements Ec2Dao
 
     @Autowired
     private Ec2Operations ec2Operations;
+
+    @Autowired
+    private RetryPolicyFactory retryPolicyFactory;
 
     /**
      * Adds the security groups to an EC2 instance.
@@ -114,21 +118,16 @@ public class Ec2DaoImpl implements Ec2Dao
         // TODO Building EC2 client every time requested, if this becomes a performance issue,
         // might need to consider storing a singleton or building the client once per request.
 
-        AmazonEC2Client ec2Client = null;
+        ClientConfiguration clientConfiguration = new ClientConfiguration().withRetryPolicy(retryPolicyFactory.getRetryPolicy());
+
         // Create an EC2 client with HTTP proxy information.
         if (StringUtils.isNotBlank(awsParamsDto.getHttpProxyHost()) && awsParamsDto.getHttpProxyPort() != null)
         {
-            ec2Client =
-                new AmazonEC2Client(new ClientConfiguration().withProxyHost(awsParamsDto.getHttpProxyHost()).withProxyPort(awsParamsDto.getHttpProxyPort()));
-        }
-        // Create an EC2 client with no proxy information
-        else
-        {
-            ec2Client = new AmazonEC2Client();
+            clientConfiguration.withProxyHost(awsParamsDto.getHttpProxyHost()).withProxyPort(awsParamsDto.getHttpProxyPort());
         }
 
         // Return the client.
-        return ec2Client;
+        return new AmazonEC2Client(clientConfiguration);
     }
 
     /**
@@ -136,12 +135,14 @@ public class Ec2DaoImpl implements Ec2Dao
      * then filters the returned list to only contain the latest spot price for each instance type.
      */
     @Override
-    public List<SpotPrice> getLatestSpotPrices(String availabilityZone, Collection<String> instanceTypes, AwsParamsDto awsParamsDto)
+    public List<SpotPrice> getLatestSpotPrices(String availabilityZone, Collection<String> instanceTypes, Collection<String> productDescriptions,
+        AwsParamsDto awsParamsDto)
     {
         AmazonEC2Client ec2Client = getEc2Client(awsParamsDto);
         DescribeSpotPriceHistoryRequest describeSpotPriceHistoryRequest = new DescribeSpotPriceHistoryRequest();
         describeSpotPriceHistoryRequest.setAvailabilityZone(availabilityZone);
         describeSpotPriceHistoryRequest.setInstanceTypes(instanceTypes);
+        describeSpotPriceHistoryRequest.setProductDescriptions(productDescriptions);
         DescribeSpotPriceHistoryResult describeSpotPriceHistoryResult = ec2Operations.describeSpotPriceHistory(ec2Client, describeSpotPriceHistoryRequest);
         List<SpotPrice> spotPrices = new ArrayList<>();
         Set<String> instanceTypesFound = new HashSet<>();
@@ -204,5 +205,25 @@ public class Ec2DaoImpl implements Ec2Dao
                 throw amazonServiceException;
             }
         }
+    }
+
+    public Ec2Operations getEc2Operations()
+    {
+        return ec2Operations;
+    }
+
+    public void setEc2Operations(Ec2Operations ec2Operations)
+    {
+        this.ec2Operations = ec2Operations;
+    }
+
+    public RetryPolicyFactory getRetryPolicyFactory()
+    {
+        return retryPolicyFactory;
+    }
+
+    public void setRetryPolicyFactory(RetryPolicyFactory retryPolicyFactory)
+    {
+        this.retryPolicyFactory = retryPolicyFactory;
     }
 }

@@ -20,11 +20,11 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
-import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.DownloadSingleInitiationResponse;
 import org.finra.herd.model.api.xml.UploadSingleCredentialExtensionResponse;
 import org.finra.herd.model.api.xml.UploadSingleInitiationResponse;
+import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 
 /**
  * This class tests various functionality within the custom DDL REST controller.
@@ -42,8 +42,8 @@ public class UploadDownloadRestControllerTest extends AbstractRestTest
             uploadDownloadRestController.initiateUploadSingle(createUploadSingleInitiationRequest());
 
         // Validate the returned object.
-        validateUploadSingleInitiationResponse(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NAMESPACE_CD_2, BOD_NAME_2,
-            FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, getNewAttributes(), FILE_NAME, FILE_SIZE_1_KB,
+        validateUploadSingleInitiationResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NAMESPACE, BDEF_NAME_2,
+            FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, getNewAttributes(), FILE_NAME, FILE_SIZE_1_KB, null,
             resultUploadSingleInitiationResponse);
     }
 

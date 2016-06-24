@@ -26,15 +26,14 @@ import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 
+import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.BusinessObjectFormatDdlRequest;
+import org.finra.herd.model.api.xml.SchemaColumn;
 import org.finra.herd.model.dto.HivePartitionDto;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.SchemaColumnEntity;
-import org.finra.herd.model.api.xml.BusinessObjectDataKey;
-import org.finra.herd.model.api.xml.BusinessObjectFormatDdlRequest;
-import org.finra.herd.model.api.xml.SchemaColumn;
 import org.finra.herd.service.AbstractServiceTest;
 
 /**
@@ -42,19 +41,13 @@ import org.finra.herd.service.AbstractServiceTest;
  */
 public class Hive13DdlGeneratorTest extends AbstractServiceTest
 {
-    @Autowired
-    private Hive13DdlGenerator hive13DdlGenerator;
-
-    @Autowired
-    private HerdDaoHelper herdDaoHelper;
-
     @Test
     public void testGetHivePartitions()
     {
         // Create a test business object data entity.
         BusinessObjectDataEntity businessObjectDataEntity =
-            createBusinessObjectDataEntity(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, DATA_VERSION,
-                true, BDATA_STATUS);
+            createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, DATA_VERSION, true,
+                BDATA_STATUS);
 
         List<SchemaColumn> autoDiscoverableSubPartitionColumns;
         List<String> storageFilePaths;
@@ -62,7 +55,7 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
         List<HivePartitionDto> resultHivePartitions;
 
         // Get business object data key.
-        BusinessObjectDataKey businessObjectDataKey = herdDaoHelper.getBusinessObjectDataKey(businessObjectDataEntity);
+        BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity);
 
         // No storage files.
         autoDiscoverableSubPartitionColumns = getPartitionColumns(Arrays.asList("Column1", "column2"));
@@ -99,8 +92,8 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
     {
         // Create a test business object data entity.
         BusinessObjectDataEntity businessObjectDataEntity =
-            createBusinessObjectDataEntity(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, DATA_VERSION,
-                true, BDATA_STATUS);
+            createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, DATA_VERSION, true,
+                BDATA_STATUS);
 
         List<SchemaColumn> autoDiscoverableSubPartitionColumns = getPartitionColumns(Arrays.asList("Column1", "column2"));
         String pattern = hive13DdlGenerator.getHivePathPattern(autoDiscoverableSubPartitionColumns).pattern();
@@ -115,7 +108,7 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
         );
 
         // Get business object data key.
-        BusinessObjectDataKey businessObjectDataKey = herdDaoHelper.getBusinessObjectDataKey(businessObjectDataEntity);
+        BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity);
 
         for (int i = 0; i < badFilePaths.size(); i++)
         {
@@ -130,8 +123,8 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
             {
                 assertEquals(String.format("Registered storage file or directory does not match the expected Hive sub-directory pattern. " +
                     "Storage: {%s}, file/directory: {%s}, business object data: {%s}, S3 key prefix: {%s}, pattern: {^%s$}", STORAGE_NAME,
-                    storageFilePaths.get(0), herdDaoHelper.businessObjectDataEntityAltKeyToString(businessObjectDataEntity), TEST_S3_KEY_PREFIX, pattern),
-                    e.getMessage());
+                    storageFilePaths.get(0), businessObjectDataHelper.businessObjectDataEntityAltKeyToString(businessObjectDataEntity), TEST_S3_KEY_PREFIX,
+                    pattern), e.getMessage());
             }
         }
     }
@@ -141,8 +134,8 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
     {
         // Create a test business object data entity.
         BusinessObjectDataEntity businessObjectDataEntity =
-            createBusinessObjectDataEntity(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, DATA_VERSION,
-                true, BDATA_STATUS);
+            createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, DATA_VERSION, true,
+                BDATA_STATUS);
 
         List<SchemaColumn> autoDiscoverableSubPartitionColumns = getPartitionColumns(Arrays.asList("Column1", "column2"));
         List<String> partitionPaths = Arrays.asList("/COLUMN1=111/COLUMN2=222", "/column1=111/COLUMN2=222");
@@ -151,16 +144,16 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
         try
         {
             hive13DdlGenerator
-                .getHivePartitions(herdDaoHelper.getBusinessObjectDataKey(businessObjectDataEntity), autoDiscoverableSubPartitionColumns, TEST_S3_KEY_PREFIX,
-                    storageFilePaths, businessObjectDataEntity, STORAGE_NAME);
+                .getHivePartitions(businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity), autoDiscoverableSubPartitionColumns,
+                    TEST_S3_KEY_PREFIX, storageFilePaths, businessObjectDataEntity, STORAGE_NAME);
             fail("Should throw an IllegalArgumentException when multiple locations exist for the same Hive partition.");
         }
         catch (IllegalArgumentException e)
         {
             assertEquals(String.format("Found two different locations for the same Hive partition. " +
                 "Storage: {%s}, business object data: {%s}, S3 key prefix: {%s}, path[1]: {%s}, path[2]: {%s}", STORAGE_NAME,
-                herdDaoHelper.businessObjectDataEntityAltKeyToString(businessObjectDataEntity), TEST_S3_KEY_PREFIX, partitionPaths.get(0), partitionPaths.get(1)),
-                e.getMessage());
+                businessObjectDataHelper.businessObjectDataEntityAltKeyToString(businessObjectDataEntity), TEST_S3_KEY_PREFIX, partitionPaths.get(0),
+                partitionPaths.get(1)), e.getMessage());
         }
     }
 
@@ -236,8 +229,9 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
     {
         BusinessObjectFormatDdlRequest businessObjectFormatDdlRequest = new BusinessObjectFormatDdlRequest();
         businessObjectFormatDdlRequest.setTableName(TABLE_NAME);
-        BusinessObjectFormatEntity businessObjectFormatEntity = createBusinessObjectFormatEntity(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE,
-            FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION, true, PARTITION_KEY);
+        BusinessObjectFormatEntity businessObjectFormatEntity =
+            createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION, true,
+                PARTITION_KEY);
         {
             SchemaColumnEntity schemaColumnEntity = new SchemaColumnEntity();
             schemaColumnEntity.setPosition(0);
@@ -256,9 +250,9 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
         }
         String actual = hive13DdlGenerator.generateReplaceColumnsStatement(businessObjectFormatDdlRequest, businessObjectFormatEntity);
 
-        String expected = "ALTER TABLE `" + businessObjectFormatDdlRequest.getTableName() + "` REPLACE COLUMNS (\n"
-            + "    `col1` VARCHAR(255) COMMENT 'lorem ipsum',\n"
-            + "    `col2` DATE);";
+        String expected =
+            "ALTER TABLE `" + businessObjectFormatDdlRequest.getTableName() + "` REPLACE COLUMNS (\n" + "    `col1` VARCHAR(255) COMMENT 'lorem ipsum',\n" +
+                "    `col2` DATE);";
 
         Assert.assertEquals("generated DDL", expected, actual);
     }
@@ -271,8 +265,9 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
     {
         BusinessObjectFormatDdlRequest businessObjectFormatDdlRequest = new BusinessObjectFormatDdlRequest();
         businessObjectFormatDdlRequest.setTableName(TABLE_NAME);
-        BusinessObjectFormatEntity businessObjectFormatEntity = createBusinessObjectFormatEntity(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE,
-            FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION, true, PARTITION_KEY);
+        BusinessObjectFormatEntity businessObjectFormatEntity =
+            createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION, true,
+                PARTITION_KEY);
 
         {
             SchemaColumnEntity schemaColumnEntity = new SchemaColumnEntity();
@@ -290,9 +285,10 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
         catch (Exception e)
         {
             Assert.assertEquals("thrown exception type", IllegalArgumentException.class, e.getClass());
-            Assert.assertEquals("thrown exception message", "No schema columns specified for business object format {namespace: \"" + NAMESPACE_CD
-                + "\", businessObjectDefinitionName: \"" + BOD_NAME + "\", businessObjectFormatUsage: \"" + FORMAT_USAGE_CODE
-                + "\", businessObjectFormatFileType: \"" + FORMAT_FILE_TYPE_CODE + "\", businessObjectFormatVersion: " + FORMAT_VERSION + "}.", e.getMessage());
+            Assert.assertEquals("thrown exception message",
+                "No schema columns specified for business object format {namespace: \"" + NAMESPACE + "\", businessObjectDefinitionName: \"" + BDEF_NAME +
+                    "\", businessObjectFormatUsage: \"" + FORMAT_USAGE_CODE + "\", businessObjectFormatFileType: \"" + FORMAT_FILE_TYPE_CODE +
+                    "\", businessObjectFormatVersion: " + FORMAT_VERSION + "}.", e.getMessage());
         }
     }
 

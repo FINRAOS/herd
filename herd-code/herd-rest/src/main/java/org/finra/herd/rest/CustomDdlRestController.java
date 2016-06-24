@@ -49,6 +49,7 @@ public class CustomDdlRestController extends HerdBaseController
 
     /**
      * Creates a new custom DDL.
+     * <p>Requires WRITE permission on namespace</p>
      *
      * @param request the information needed to create a custom DDL
      *
@@ -63,6 +64,7 @@ public class CustomDdlRestController extends HerdBaseController
 
     /**
      * Gets an existing custom DDL.
+     * <p>Requires READ permission on namespace</p>
      *
      * @param namespace the namespace
      * @param businessObjectDefinitionName the business object definition name
@@ -90,6 +92,7 @@ public class CustomDdlRestController extends HerdBaseController
 
     /**
      * Updates an existing custom DDL.
+     * <p>Requires WRITE permission on namespace</p>
      *
      * @param namespace the namespace
      * @param businessObjectDefinitionName the business object definition name
@@ -120,6 +123,7 @@ public class CustomDdlRestController extends HerdBaseController
 
     /**
      * Deletes an existing custom DDL.
+     * <p>Requires WRITE permission on namespace</p>
      *
      * @param namespace the namespace
      * @param businessObjectDefinitionName the business object definition name
@@ -147,6 +151,7 @@ public class CustomDdlRestController extends HerdBaseController
 
     /**
      * Gets a list of keys for all existing custom DDLs for a specific business object format.
+     * <p>Requires READ permission on namespace</p>
      *
      * @param namespace the namespace
      * @param businessObjectDefinitionName the business object definition name

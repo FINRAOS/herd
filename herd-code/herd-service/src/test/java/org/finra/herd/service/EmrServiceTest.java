@@ -21,6 +21,11 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
@@ -42,8 +47,11 @@ import org.apache.oozie.client.WorkflowJob;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.test.util.ReflectionTestUtils;
 
+import org.finra.herd.dao.EmrDao;
 import org.finra.herd.dao.EmrOperations;
+import org.finra.herd.dao.helper.EmrHelper;
 import org.finra.herd.dao.impl.MockAwsOperationsHelper;
 import org.finra.herd.dao.impl.MockEc2OperationsImpl;
 import org.finra.herd.dao.impl.MockEmrOperationsImpl;
@@ -74,11 +82,16 @@ import org.finra.herd.model.api.xml.OozieWorkflowJob;
 import org.finra.herd.model.api.xml.Parameter;
 import org.finra.herd.model.api.xml.RunOozieWorkflowRequest;
 import org.finra.herd.model.api.xml.ScriptDefinition;
+import org.finra.herd.model.dto.AwsParamsDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.EmrClusterAlternateKeyDto;
 import org.finra.herd.model.jpa.EmrClusterCreationLogEntity;
+import org.finra.herd.model.jpa.EmrClusterDefinitionEntity;
 import org.finra.herd.model.jpa.NamespaceEntity;
+import org.finra.herd.service.helper.EmrClusterDefinitionDaoHelper;
 import org.finra.herd.service.helper.EmrStepHelper;
+import org.finra.herd.service.helper.NamespaceDaoHelper;
+import org.finra.herd.service.impl.EmrServiceImpl;
 
 /**
  * This class tests functionality within the EmrService.
@@ -90,7 +103,7 @@ public class EmrServiceTest extends AbstractServiceTest
     private EmrService emrServiceImpl;
 
     @Autowired
-    EmrOperations emrOperations;
+    private EmrOperations emrOperations;
 
     /**
      * This method tests the happy path scenario for adding security groups
@@ -99,7 +112,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testAddSecurityGroup() throws Exception
     {
         // Create the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
@@ -125,7 +138,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testAddSecurityGroupClusterDoesNotExist() throws Exception
     {
         // Create the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
@@ -142,7 +155,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testAddSecurityGroupEC2InstanceNotProvisioned() throws Exception
     {
         // Create the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
@@ -163,7 +176,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testAddSecurityGroupAmazonException() throws Exception
     {
         // Create the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
@@ -185,7 +198,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testAddSecurityGroupNoneSpecified() throws Exception
     {
         // Create the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
@@ -206,7 +219,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testCreateEmrCluster() throws Exception
     {
         // Create the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
         EmrClusterDefinition expectedEmrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
@@ -237,7 +250,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testCreateEmrClusterStartupSteps() throws Exception
     {
         // Create the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
         EmrClusterDefinition expectedEmrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
@@ -329,7 +342,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testCreateEmrClusterMultipleBootstrap() throws Exception
     {
         // Create the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
         EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
@@ -368,7 +381,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testCreateEmrClusterBlankParams() throws Exception
     {
         // Create the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
 
@@ -400,7 +413,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testCreateEmrClusterServiceRole() throws Exception
     {
         // Create the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
 
@@ -423,7 +436,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testCreateEmrClusterSupportedProduct() throws Exception
     {
         // Create the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream());
 
@@ -447,7 +460,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testCreateEmrClusterAdditionalInfo() throws Exception
     {
         // Create the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream());
 
@@ -473,7 +486,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testCreateEmrClusterAmazonBadRequest() throws Exception
     {
         // Create the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream());
 
@@ -496,7 +509,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testCreateEmrClusterInstanceNotDefined() throws Exception
     {
         // Create the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         // Create the test EMR cluster definition entity with missing instance definitions.
         String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream());
@@ -525,7 +538,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testCreateEmrClusterAmazonObjectNotFound() throws Exception
     {
         // Create the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream());
 
@@ -548,7 +561,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testCreateEmrClusterAmazonOtherException() throws Exception
     {
         // Create the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream());
 
@@ -571,7 +584,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testCreateEmrClusterWrongInstanceConfigs() throws Exception
     {
         // Create the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream()));
@@ -610,7 +623,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testGetEmrClusterIdByNameForBlank() throws Exception
     {
         // Create the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream()));
@@ -627,7 +640,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testCreateEmrClusterInvalidDefinition() throws Exception
     {
         // Create the namespace entity.
-        createNamespaceEntity(NAMESPACE_CD);
+        createNamespaceEntity(NAMESPACE);
 
         // Create the emr cluster request without registering the namespace entity - ${TEST_ACTIVITI_NAMESPACE_CD}
         EmrClusterCreateRequest request = getNewEmrClusterCreateRequest();
@@ -643,7 +656,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testCreateEmrClusterWithTaskInstances() throws Exception
     {
         // Create the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
 
@@ -677,7 +690,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testCreateEmrClusterMandatoryTagsNull() throws Exception
     {
         // Create the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
@@ -705,7 +718,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testCreateEmrClusterDryRunFalseNoOverride() throws Exception
     {
         // Create the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
         EmrClusterDefinition expectedEmrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
@@ -738,7 +751,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testCreateEmrClusterDryRunTrueNoOverride() throws Exception
     {
         // Create the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
         EmrClusterDefinition expectedEmrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
@@ -771,7 +784,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testCreateEmrClusterOverrideAllNull() throws Exception
     {
         // Create the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
         EmrClusterDefinition expectedEmrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
@@ -803,7 +816,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testCreateEmrClusterOverrideScalar() throws Exception
     {
         // Create the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
         String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
         EmrClusterDefinition expectedEmrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
         createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME, definitionXml);
@@ -868,7 +881,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testCreateEmrClusterOverrideList() throws Exception
     {
         // Create the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
         EmrClusterDefinition expectedEmrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
@@ -892,6 +905,10 @@ public class EmrServiceTest extends AbstractServiceTest
         expectedEmrClusterDefinition.setHadoopConfigurations(emrClusterDefinitionOverride.getHadoopConfigurations());
         emrClusterDefinitionOverride.setHadoopJarSteps(Collections.<HadoopJarStep>emptyList());
         expectedEmrClusterDefinition.setHadoopJarSteps(emrClusterDefinitionOverride.getHadoopJarSteps());
+        emrClusterDefinitionOverride.setAdditionalMasterSecurityGroups(Collections.emptyList());
+        expectedEmrClusterDefinition.setAdditionalMasterSecurityGroups(emrClusterDefinitionOverride.getAdditionalMasterSecurityGroups());
+        emrClusterDefinitionOverride.setAdditionalSlaveSecurityGroups(Collections.emptyList());
+        expectedEmrClusterDefinition.setAdditionalSlaveSecurityGroups(emrClusterDefinitionOverride.getAdditionalSlaveSecurityGroups());
         List<NodeTag> nodeTags = expectedEmrClusterDefinition.getNodeTags();
         nodeTags.add(new NodeTag("testTag", "test"));
         emrClusterDefinitionOverride.setNodeTags(nodeTags);
@@ -918,7 +935,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testCreateEmrClusterOverrideHadoopConfigurations() throws Exception
     {
         // Create the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
         EmrClusterDefinition expectedEmrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
@@ -955,7 +972,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testCreateEmrClusterOverrideObject() throws Exception
     {
         // Create the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
         EmrClusterDefinition expectedEmrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
@@ -988,10 +1005,86 @@ public class EmrServiceTest extends AbstractServiceTest
     }
 
     @Test
+    public void testCreateEmrClusterOverrideExistingCoreInstanceTo0InstanceCountAssertSuccess() throws Exception
+    {
+        // Create the namespace entity.
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
+
+        String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
+        EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
+        emrClusterDefinition.getInstanceDefinitions().getCoreInstances().setInstanceCount(1);
+        createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME, xmlHelper.objectToXml(emrClusterDefinition));
+
+        // Create a new EMR cluster create request
+        EmrClusterCreateRequest request = getNewEmrClusterCreateRequest();
+
+        EmrClusterDefinition emrClusterDefinitionOverride = new EmrClusterDefinition();
+        emrClusterDefinitionOverride.setInstanceDefinitions(emrClusterDefinition.getInstanceDefinitions());
+        emrClusterDefinitionOverride.getInstanceDefinitions().getCoreInstances().setInstanceCount(0);
+        request.setEmrClusterDefinitionOverride(emrClusterDefinitionOverride);
+
+        EmrCluster emrClusterCreateResponse = emrService.createCluster(request);
+        assertNull(emrClusterCreateResponse.getEmrClusterDefinition().getInstanceDefinitions().getCoreInstances());
+    }
+
+    @Test
+    public void testCreateEmrClusterOverrideExistingCoreInstanceToNegativeInstanceCountAssertException() throws Exception
+    {
+        // Create the namespace entity.
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
+
+        String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
+        EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
+        emrClusterDefinition.getInstanceDefinitions().getCoreInstances().setInstanceCount(1);
+        createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME, xmlHelper.objectToXml(emrClusterDefinition));
+
+        // Create a new EMR cluster create request
+        EmrClusterCreateRequest request = getNewEmrClusterCreateRequest();
+
+        EmrClusterDefinition emrClusterDefinitionOverride = new EmrClusterDefinition();
+        emrClusterDefinitionOverride.setInstanceDefinitions(emrClusterDefinition.getInstanceDefinitions());
+        emrClusterDefinitionOverride.getInstanceDefinitions().getCoreInstances().setInstanceCount(-1);
+        request.setEmrClusterDefinitionOverride(emrClusterDefinitionOverride);
+
+        try
+        {
+            emrService.createCluster(request);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("At least 0 core instance must be specified.", e.getMessage());
+        }
+    }
+
+    @Test
+    public void testCreateEmrClusterOverrideExistingCoreInstanceToNullAssertSuccess() throws Exception
+    {
+        // Create the namespace entity.
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
+
+        String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
+        EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
+        emrClusterDefinition.getInstanceDefinitions().getCoreInstances().setInstanceCount(1);
+        createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME, xmlHelper.objectToXml(emrClusterDefinition));
+
+        // Create a new EMR cluster create request
+        EmrClusterCreateRequest request = getNewEmrClusterCreateRequest();
+
+        EmrClusterDefinition emrClusterDefinitionOverride = new EmrClusterDefinition();
+        emrClusterDefinitionOverride.setInstanceDefinitions(emrClusterDefinition.getInstanceDefinitions());
+        emrClusterDefinitionOverride.getInstanceDefinitions().setCoreInstances(null);
+        request.setEmrClusterDefinitionOverride(emrClusterDefinitionOverride);
+
+        EmrCluster emrClusterCreateResponse = emrService.createCluster(request);
+        assertNull(emrClusterCreateResponse.getEmrClusterDefinition().getInstanceDefinitions().getCoreInstances());
+    }
+
+    @Test
     public void testCreateEmrClusterDuplicate() throws Exception
     {
         // Create the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
         EmrClusterDefinition expectedEmrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
@@ -1025,7 +1118,7 @@ public class EmrServiceTest extends AbstractServiceTest
         EmrClusterCreateRequest request = new EmrClusterCreateRequest();
 
         // Fill in the parameters.
-        request.setNamespace(NAMESPACE_CD);
+        request.setNamespace(NAMESPACE);
         request.setEmrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME);
         request.setEmrClusterName("UT_EMR_CLUSTER-" + Math.random());
 
@@ -1039,7 +1132,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testGetEmrClusterById() throws Exception
     {
         // Create the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream());
 
@@ -1055,7 +1148,7 @@ public class EmrServiceTest extends AbstractServiceTest
         EmrCluster emrCluster = emrService.createCluster(request);
 
         EmrClusterAlternateKeyDto emrClusterAlternateKeyDto =
-            EmrClusterAlternateKeyDto.builder().namespace(NAMESPACE_CD).emrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME)
+            EmrClusterAlternateKeyDto.builder().namespace(NAMESPACE).emrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME)
                 .emrClusterName(request.getEmrClusterName()).build();
 
         EmrCluster emrClusterGet = emrService.getCluster(emrClusterAlternateKeyDto, emrCluster.getId(), null, true, true);
@@ -1092,7 +1185,7 @@ public class EmrServiceTest extends AbstractServiceTest
         assertTrue(50 == clientNotRunningCount);
 
         // Terminate the cluster and validate.
-        emrService.terminateCluster(emrClusterAlternateKeyDto, true);
+        emrService.terminateCluster(emrClusterAlternateKeyDto, true, null);
 
         emrClusterGet = emrService.getCluster(emrClusterAlternateKeyDto, emrCluster.getId(), null, true, true);
 
@@ -1112,13 +1205,13 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testGetEmrClusterByIdDoesNotExist() throws Exception
     {
         // Create the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
 
         EmrClusterAlternateKeyDto emrClusterAlternateKeyDto =
-            EmrClusterAlternateKeyDto.builder().namespace(NAMESPACE_CD).emrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME)
+            EmrClusterAlternateKeyDto.builder().namespace(NAMESPACE).emrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME)
                 .emrClusterName("cluster_does_not_exist").build();
 
         emrService.getCluster(emrClusterAlternateKeyDto, "cluster_does_not_exist", null, true, true);
@@ -1133,7 +1226,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testGetEmrClusterByIdDoesNotExistForNamespace() throws Exception
     {
         // Create the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
@@ -1142,18 +1235,18 @@ public class EmrServiceTest extends AbstractServiceTest
         EmrClusterCreateRequest request = getNewEmrClusterCreateRequest();
         EmrCluster emrCluster = emrService.createCluster(request);
 
-        //        EmrClusterAlternateKeyDto emrClusterAlternateKeyDto = EmrClusterAlternateKeyDto.builder().namespace(NAMESPACE_CD)
+        //        EmrClusterAlternateKeyDto emrClusterAlternateKeyDto = EmrClusterAlternateKeyDto.builder().namespace(NAMESPACE)
         //                .emrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME).emrClusterName(request.getEmrClusterName()).build();
 
 
         // Create the second namespace entity.
-        NamespaceEntity namespaceEntity_2 = createNamespaceEntity(NAMESPACE_CD_2);
+        NamespaceEntity namespaceEntity_2 = createNamespaceEntity(NAMESPACE_2);
 
         createEmrClusterDefinitionEntity(namespaceEntity_2, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
 
         EmrClusterAlternateKeyDto emrClusterAlternateKeyDto_2 =
-            EmrClusterAlternateKeyDto.builder().namespace(NAMESPACE_CD_2).emrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME)
+            EmrClusterAlternateKeyDto.builder().namespace(NAMESPACE_2).emrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME)
                 .emrClusterName(request.getEmrClusterName()).build();
 
         emrService.getCluster(emrClusterAlternateKeyDto_2, emrCluster.getId(), null, true, true);
@@ -1168,13 +1261,13 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testGetEmrClusterByIdAmazonException() throws Exception
     {
         // Create the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
 
         EmrClusterAlternateKeyDto emrClusterAlternateKeyDto =
-            EmrClusterAlternateKeyDto.builder().namespace(NAMESPACE_CD).emrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME).emrClusterName("test").build();
+            EmrClusterAlternateKeyDto.builder().namespace(NAMESPACE).emrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME).emrClusterName("test").build();
 
         emrService.getCluster(emrClusterAlternateKeyDto, MockAwsOperationsHelper.AMAZON_SERVICE_EXCEPTION, null, true, true);
 
@@ -1188,7 +1281,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testGetEmrClusterByName() throws Exception
     {
         // Create the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
@@ -1198,7 +1291,7 @@ public class EmrServiceTest extends AbstractServiceTest
         EmrCluster emrCluster = emrService.createCluster(request);
 
         EmrClusterAlternateKeyDto emrClusterAlternateKeyDto =
-            EmrClusterAlternateKeyDto.builder().namespace(NAMESPACE_CD).emrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME)
+            EmrClusterAlternateKeyDto.builder().namespace(NAMESPACE).emrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME)
                 .emrClusterName(request.getEmrClusterName()).build();
 
         EmrCluster emrClusterGet = emrService.getCluster(emrClusterAlternateKeyDto, null, null, true, true);
@@ -1218,7 +1311,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testGetEmrClusterByIdWithStepId() throws Exception
     {
         // Create the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
@@ -1236,7 +1329,7 @@ public class EmrServiceTest extends AbstractServiceTest
         String stepId = emrShellStep.getId();
 
         EmrClusterAlternateKeyDto emrClusterAlternateKeyDto =
-            EmrClusterAlternateKeyDto.builder().namespace(NAMESPACE_CD).emrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME)
+            EmrClusterAlternateKeyDto.builder().namespace(NAMESPACE).emrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME)
                 .emrClusterName(request.getEmrClusterName()).build();
 
         EmrCluster emrClusterGet = emrService.getCluster(emrClusterAlternateKeyDto, emrCluster.getId(), stepId, true, true);
@@ -1272,7 +1365,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testTerminateEmrCluster() throws Exception
     {
         // Create the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
@@ -1282,10 +1375,10 @@ public class EmrServiceTest extends AbstractServiceTest
         EmrCluster emrCluster = emrService.createCluster(request);
 
         EmrClusterAlternateKeyDto emrClusterAlternateKeyDto =
-            EmrClusterAlternateKeyDto.builder().namespace(NAMESPACE_CD).emrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME)
+            EmrClusterAlternateKeyDto.builder().namespace(NAMESPACE).emrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME)
                 .emrClusterName(request.getEmrClusterName()).build();
 
-        EmrCluster emrClusterTerminated = emrService.terminateCluster(emrClusterAlternateKeyDto, true);
+        EmrCluster emrClusterTerminated = emrService.terminateCluster(emrClusterAlternateKeyDto, true, null);
 
         // Validate the returned object against the input.
         assertNotNull(emrCluster);
@@ -1302,16 +1395,16 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testTerminateEmrClusterNoCluster() throws Exception
     {
         // Create the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
 
         EmrClusterAlternateKeyDto emrClusterAlternateKeyDto =
-            EmrClusterAlternateKeyDto.builder().namespace(NAMESPACE_CD).emrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME)
-                .emrClusterName("cluster_not_found").build();
+            EmrClusterAlternateKeyDto.builder().namespace(NAMESPACE).emrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME).emrClusterName("cluster_not_found")
+                .build();
 
-        emrService.terminateCluster(emrClusterAlternateKeyDto, true);
+        emrService.terminateCluster(emrClusterAlternateKeyDto, true, null);
     }
 
     /**
@@ -1321,7 +1414,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testTerminateEmrClusterAmazonException() throws Exception
     {
         // Create the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
@@ -1331,10 +1424,69 @@ public class EmrServiceTest extends AbstractServiceTest
         emrService.createCluster(request);
 
         EmrClusterAlternateKeyDto emrClusterAlternateKeyDto =
-            EmrClusterAlternateKeyDto.builder().namespace(NAMESPACE_CD).emrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME)
+            EmrClusterAlternateKeyDto.builder().namespace(NAMESPACE).emrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME)
                 .emrClusterName(request.getEmrClusterName()).build();
 
-        emrService.terminateCluster(emrClusterAlternateKeyDto, true);
+        emrService.terminateCluster(emrClusterAlternateKeyDto, true, null);
+    }
+
+    @Test
+    public void testTerminateEmrClusterWithClusterId() throws Exception
+    {
+        EmrService emrService = new EmrServiceImpl();
+
+        EmrHelper mockEmrHelper = mock(EmrHelper.class);
+        ReflectionTestUtils.setField(emrService, "emrHelper", mockEmrHelper);
+
+        EmrDao mockEmrDao = mock(EmrDao.class);
+        ReflectionTestUtils.setField(emrService, "emrDao", mockEmrDao);
+
+        NamespaceDaoHelper mockNamespaceDaoHelper = mock(NamespaceDaoHelper.class);
+        ReflectionTestUtils.setField(emrService, "namespaceDaoHelper", mockNamespaceDaoHelper);
+
+        EmrClusterDefinitionDaoHelper mockEmrClusterDefinitionDaoHelper = mock(EmrClusterDefinitionDaoHelper.class);
+        ReflectionTestUtils.setField(emrService, "emrClusterDefinitionDaoHelper", mockEmrClusterDefinitionDaoHelper);
+
+        String namespace = "namespace";
+        String emrClusterDefinitionName = "emrClusterDefinitionName";
+        String emrClusterName = "emrClusterName";
+        boolean overrideTerminationProtection = false;
+        String emrClusterId = "emrClusterId";
+
+        EmrClusterAlternateKeyDto emrClusterAlternateKeyDto = new EmrClusterAlternateKeyDto();
+        emrClusterAlternateKeyDto.setNamespace(namespace);
+        emrClusterAlternateKeyDto.setEmrClusterDefinitionName(emrClusterDefinitionName);
+        emrClusterAlternateKeyDto.setEmrClusterName(emrClusterName);
+
+        AwsParamsDto awsParamsDto = new AwsParamsDto();
+        when(mockEmrHelper.getAwsParamsDto()).thenReturn(awsParamsDto);
+
+        NamespaceEntity namespaceEntity = new NamespaceEntity();
+        when(mockNamespaceDaoHelper.getNamespaceEntity(any())).thenReturn(namespaceEntity);
+
+        EmrClusterDefinitionEntity emrClusterDefinitionEntity = new EmrClusterDefinitionEntity();
+        when(mockEmrClusterDefinitionDaoHelper.getEmrClusterDefinitionEntity(any(), any())).thenReturn(emrClusterDefinitionEntity);
+
+        String buildEmrClusterNameResult = "buildEmrClusterNameResult";
+        when(mockEmrHelper.buildEmrClusterName(any(), any(), any())).thenReturn(buildEmrClusterNameResult);
+
+        when(mockEmrHelper.getActiveEmrClusterId(any(), any())).thenReturn(buildEmrClusterNameResult);
+
+        when(mockEmrDao.getEmrClusterStatusById(any(), any())).thenReturn(buildEmrClusterNameResult);
+
+        emrService.terminateCluster(emrClusterAlternateKeyDto, overrideTerminationProtection, emrClusterId);
+
+        verify(mockEmrHelper).getAwsParamsDto();
+        verify(mockEmrHelper).validateEmrClusterKey(emrClusterAlternateKeyDto);
+        verify(mockNamespaceDaoHelper).getNamespaceEntity(emrClusterAlternateKeyDto.getNamespace());
+        verify(mockEmrClusterDefinitionDaoHelper)
+            .getEmrClusterDefinitionEntity(emrClusterAlternateKeyDto.getNamespace(), emrClusterAlternateKeyDto.getEmrClusterDefinitionName());
+        verify(mockEmrHelper)
+            .buildEmrClusterName(namespaceEntity.getCode(), emrClusterDefinitionEntity.getName(), emrClusterAlternateKeyDto.getEmrClusterName());
+        verify(mockEmrHelper).getActiveEmrClusterId(emrClusterId, buildEmrClusterNameResult);
+        verify(mockEmrDao).terminateEmrCluster(buildEmrClusterNameResult, overrideTerminationProtection, awsParamsDto);
+        verify(mockEmrDao).getEmrClusterStatusById(buildEmrClusterNameResult, awsParamsDto);
+        verifyNoMoreInteractions(mockEmrHelper, mockNamespaceDaoHelper, mockEmrClusterDefinitionDaoHelper, mockEmrDao);
     }
 
     /**
@@ -1344,7 +1496,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testEmrAddStepsAllTypes() throws Exception
     {
         // Create the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
@@ -1411,7 +1563,7 @@ public class EmrServiceTest extends AbstractServiceTest
         for (Object emrStepAddRequest : emrSteps)
         {
             stepHelper = emrStepHelperFactory.getStepHelper(emrStepAddRequest.getClass().getName());
-            stepHelper.setRequestNamespace(emrStepAddRequest, NAMESPACE_CD);
+            stepHelper.setRequestNamespace(emrStepAddRequest, NAMESPACE);
             stepHelper.setRequestEmrClusterDefinitionName(emrStepAddRequest, EMR_CLUSTER_DEFINITION_NAME);
             stepHelper.setRequestEmrClusterName(emrStepAddRequest, request.getEmrClusterName());
 
@@ -1439,7 +1591,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testEmrAddStepsHadoopNoMainClass() throws Exception
     {
         // Create the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
@@ -1471,7 +1623,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testEmrAddStepsInvalidCluster() throws Exception
     {
         // Create the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
@@ -1492,7 +1644,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testEmrAddSteps() throws Exception
     {
         // Create the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
@@ -1518,7 +1670,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testEmrAddStepsAmazonBadRequest() throws Exception
     {
         // Create the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
@@ -1539,7 +1691,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testEmrAddStepsAmazonObjectNotFound() throws Exception
     {
         // Create the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
@@ -1560,7 +1712,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testEmrAddStepsAmazonOtherException() throws Exception
     {
         // Create the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
@@ -1581,7 +1733,7 @@ public class EmrServiceTest extends AbstractServiceTest
     public void testRunOozieJob() throws Exception
     {
         // Create the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
         String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream());
 
@@ -1597,7 +1749,8 @@ public class EmrServiceTest extends AbstractServiceTest
 
         // Create the Run Oozie Job.
         RunOozieWorkflowRequest runOozieRequest =
-            new RunOozieWorkflowRequest(namespaceEntity.getCode(), EMR_CLUSTER_DEFINITION_NAME, emrCluster.getEmrClusterName(), OOZIE_WORKFLOW_LOCATION, null);
+            new RunOozieWorkflowRequest(namespaceEntity.getCode(), EMR_CLUSTER_DEFINITION_NAME, emrCluster.getEmrClusterName(), OOZIE_WORKFLOW_LOCATION, null,
+                null);
         OozieWorkflowJob oozieWorkflowJob = emrService.runOozieWorkflow(runOozieRequest);
 
         // Validate the returned object against the input.
@@ -1615,7 +1768,7 @@ public class EmrServiceTest extends AbstractServiceTest
         try
         {
             RunOozieWorkflowRequest runOozieRequest =
-                new RunOozieWorkflowRequest(BLANK_TEXT, EMR_CLUSTER_DEFINITION_NAME, "test_cluster", OOZIE_WORKFLOW_LOCATION, null);
+                new RunOozieWorkflowRequest(BLANK_TEXT, EMR_CLUSTER_DEFINITION_NAME, "test_cluster", OOZIE_WORKFLOW_LOCATION, null, null);
             emrService.runOozieWorkflow(runOozieRequest);
             fail("Should throw an IllegalArgumentException when namespace is not specified.");
         }
@@ -1627,7 +1780,7 @@ public class EmrServiceTest extends AbstractServiceTest
         // Try to run oozie job when cluster definition name is not specified.
         try
         {
-            RunOozieWorkflowRequest runOozieRequest = new RunOozieWorkflowRequest(NAMESPACE_CD, BLANK_TEXT, "test_cluster", OOZIE_WORKFLOW_LOCATION, null);
+            RunOozieWorkflowRequest runOozieRequest = new RunOozieWorkflowRequest(NAMESPACE, BLANK_TEXT, "test_cluster", OOZIE_WORKFLOW_LOCATION, null, null);
             emrService.runOozieWorkflow(runOozieRequest);
             fail("Should throw an IllegalArgumentException when cluster definition name is not specified.");
         }
@@ -1640,7 +1793,7 @@ public class EmrServiceTest extends AbstractServiceTest
         try
         {
             RunOozieWorkflowRequest runOozieRequest =
-                new RunOozieWorkflowRequest(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME, BLANK_TEXT, OOZIE_WORKFLOW_LOCATION, null);
+                new RunOozieWorkflowRequest(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, BLANK_TEXT, OOZIE_WORKFLOW_LOCATION, null, null);
             emrService.runOozieWorkflow(runOozieRequest);
             fail("Should throw an IllegalArgumentException when cluster name is not specified.");
         }
@@ -1652,7 +1805,8 @@ public class EmrServiceTest extends AbstractServiceTest
         // Try to run oozie job when workflow location is not specified.
         try
         {
-            RunOozieWorkflowRequest runOozieRequest = new RunOozieWorkflowRequest(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME, "test_cluster", BLANK_TEXT, null);
+            RunOozieWorkflowRequest runOozieRequest =
+                new RunOozieWorkflowRequest(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, "test_cluster", BLANK_TEXT, null, null);
             emrService.runOozieWorkflow(runOozieRequest);
             fail("Should throw an IllegalArgumentException when workflow location is not specified.");
         }
@@ -1669,29 +1823,28 @@ public class EmrServiceTest extends AbstractServiceTest
         try
         {
             RunOozieWorkflowRequest runOozieRequest =
-                new RunOozieWorkflowRequest(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME, "test_cluster", OOZIE_WORKFLOW_LOCATION, null);
+                new RunOozieWorkflowRequest(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, "test_cluster", OOZIE_WORKFLOW_LOCATION, null, null);
             emrService.runOozieWorkflow(runOozieRequest);
             fail("Should throw an ObjectNotFoundException when specified namespace does not exist.");
         }
         catch (ObjectNotFoundException ex)
         {
-            assertEquals(String.format("Namespace \"%s\" doesn't exist.", NAMESPACE_CD), ex.getMessage());
+            assertEquals(String.format("Namespace \"%s\" doesn't exist.", NAMESPACE), ex.getMessage());
         }
 
         // Try to run oozie job when cluster definition does not exist.
         try
         {
-            createNamespaceEntity(NAMESPACE_CD);
+            createNamespaceEntity(NAMESPACE);
 
             RunOozieWorkflowRequest runOozieRequest =
-                new RunOozieWorkflowRequest(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME, "test_cluster", OOZIE_WORKFLOW_LOCATION, null);
+                new RunOozieWorkflowRequest(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, "test_cluster", OOZIE_WORKFLOW_LOCATION, null, null);
             emrService.runOozieWorkflow(runOozieRequest);
             fail("Should throw an ObjectNotFoundException when specified cluster definition does not exist.");
         }
         catch (ObjectNotFoundException ex)
         {
-            assertEquals(
-                String.format("EMR cluster definition with name \"%s\" doesn't exist for namespace \"%s\".", EMR_CLUSTER_DEFINITION_NAME, NAMESPACE_CD),
+            assertEquals(String.format("EMR cluster definition with name \"%s\" doesn't exist for namespace \"%s\".", EMR_CLUSTER_DEFINITION_NAME, NAMESPACE),
                 ex.getMessage());
         }
 
@@ -1703,7 +1856,7 @@ public class EmrServiceTest extends AbstractServiceTest
             parameters.add(new Parameter("PARAM_NAME", ""));
 
             RunOozieWorkflowRequest runOozieRequest =
-                new RunOozieWorkflowRequest(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME, "test_cluster", OOZIE_WORKFLOW_LOCATION, parameters);
+                new RunOozieWorkflowRequest(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, "test_cluster", OOZIE_WORKFLOW_LOCATION, parameters, null);
             emrService.runOozieWorkflow(runOozieRequest);
             fail("Should throw an IllegalArgumentException when duplicate parameters are specified.");
         }
@@ -1719,20 +1872,20 @@ public class EmrServiceTest extends AbstractServiceTest
         // Try to run oozie job when cluster does not exist.
         try
         {
-            NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE_CD);
+            NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
 
             createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
                 IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
 
             RunOozieWorkflowRequest runOozieRequest =
-                new RunOozieWorkflowRequest(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME, "test_cluster", OOZIE_WORKFLOW_LOCATION, null);
+                new RunOozieWorkflowRequest(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, "test_cluster", OOZIE_WORKFLOW_LOCATION, null, null);
             emrService.runOozieWorkflow(runOozieRequest);
             fail("Should throw an ObjectNotFoundException when specified cluster does not exist.");
         }
         catch (ObjectNotFoundException ex)
         {
             assertEquals(String.format("Either the cluster \"%s\" does not exist or not in RUNNING or WAITING state.",
-                emrHelper.buildEmrClusterName(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME, "test_cluster")), ex.getMessage());
+                emrHelper.buildEmrClusterName(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, "test_cluster")), ex.getMessage());
         }
 
         // Try to run oozie job when cluster is not in running or waiting.
@@ -1743,14 +1896,14 @@ public class EmrServiceTest extends AbstractServiceTest
             emrCluster = emrService.createCluster(request);
 
             RunOozieWorkflowRequest runOozieRequest =
-                new RunOozieWorkflowRequest(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME, emrCluster.getEmrClusterName(), OOZIE_WORKFLOW_LOCATION, null);
+                new RunOozieWorkflowRequest(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, emrCluster.getEmrClusterName(), OOZIE_WORKFLOW_LOCATION, null, null);
             emrService.runOozieWorkflow(runOozieRequest);
             fail("Should throw an ObjectNotFoundException when specified cluster is not in running or waiting state.");
         }
         catch (ObjectNotFoundException ex)
         {
             assertEquals(String.format("Either the cluster \"%s\" does not exist or not in RUNNING or WAITING state.",
-                emrHelper.buildEmrClusterName(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME, emrCluster.getEmrClusterName())), ex.getMessage());
+                emrHelper.buildEmrClusterName(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, emrCluster.getEmrClusterName())), ex.getMessage());
         }
     }
 
@@ -1768,7 +1921,7 @@ public class EmrServiceTest extends AbstractServiceTest
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals("Namespace \"" + NAMESPACE_CD + "\" doesn't exist.", e.getMessage());
+            assertEquals("Namespace \"" + NAMESPACE + "\" doesn't exist.", e.getMessage());
         }
 
         try
@@ -1779,7 +1932,7 @@ public class EmrServiceTest extends AbstractServiceTest
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals("Namespace \"" + NAMESPACE_CD + "\" doesn't exist.", e.getMessage());
+            assertEquals("Namespace \"" + NAMESPACE + "\" doesn't exist.", e.getMessage());
         }
 
         try
@@ -1790,55 +1943,55 @@ public class EmrServiceTest extends AbstractServiceTest
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals("Namespace \"" + NAMESPACE_CD + "\" doesn't exist.", e.getMessage());
+            assertEquals("Namespace \"" + NAMESPACE + "\" doesn't exist.", e.getMessage());
         }
 
         try
         {
             EmrClusterAlternateKeyDto emrClusterAlternateKeyDto =
-                EmrClusterAlternateKeyDto.builder().namespace(NAMESPACE_CD).emrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME).emrClusterName("test_cluster")
+                EmrClusterAlternateKeyDto.builder().namespace(NAMESPACE).emrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME).emrClusterName("test_cluster")
                     .build();
             emrServiceImpl.getCluster(emrClusterAlternateKeyDto, null, null, false, false);
             fail("Should throw a ObjectNotFoundException.");
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals("Namespace \"" + NAMESPACE_CD + "\" doesn't exist.", e.getMessage());
+            assertEquals("Namespace \"" + NAMESPACE + "\" doesn't exist.", e.getMessage());
         }
 
         try
         {
             EmrClusterAlternateKeyDto emrClusterAlternateKeyDto =
-                EmrClusterAlternateKeyDto.builder().namespace(NAMESPACE_CD).emrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME).emrClusterName("test_cluster")
+                EmrClusterAlternateKeyDto.builder().namespace(NAMESPACE).emrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME).emrClusterName("test_cluster")
                     .build();
-            emrServiceImpl.terminateCluster(emrClusterAlternateKeyDto, false);
+            emrServiceImpl.terminateCluster(emrClusterAlternateKeyDto, false, null);
             fail("Should throw a ObjectNotFoundException.");
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals("Namespace \"" + NAMESPACE_CD + "\" doesn't exist.", e.getMessage());
+            assertEquals("Namespace \"" + NAMESPACE + "\" doesn't exist.", e.getMessage());
         }
 
         try
         {
             RunOozieWorkflowRequest runOozieWorkflowRequest =
-                new RunOozieWorkflowRequest(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME, "test_cluster", OOZIE_WORKFLOW_LOCATION, null);
+                new RunOozieWorkflowRequest(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, "test_cluster", OOZIE_WORKFLOW_LOCATION, null, null);
             emrServiceImpl.runOozieWorkflow(runOozieWorkflowRequest);
             fail("Should throw a ObjectNotFoundException.");
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals("Namespace \"" + NAMESPACE_CD + "\" doesn't exist.", e.getMessage());
+            assertEquals("Namespace \"" + NAMESPACE + "\" doesn't exist.", e.getMessage());
         }
 
         try
         {
-            emrServiceImpl.getEmrOozieWorkflowJob(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME, "test_cluster", "test_oozie_id", false);
+            emrServiceImpl.getEmrOozieWorkflowJob(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, "test_cluster", "test_oozie_id", false, null);
             fail("Should throw a ObjectNotFoundException.");
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals("Namespace \"" + NAMESPACE_CD + "\" doesn't exist.", e.getMessage());
+            assertEquals("Namespace \"" + NAMESPACE + "\" doesn't exist.", e.getMessage());
         }
     }
 
@@ -1851,7 +2004,7 @@ public class EmrServiceTest extends AbstractServiceTest
         EmrShellStepAddRequest request = new EmrShellStepAddRequest();
 
         // Fill in the parameters.
-        request.setNamespace(NAMESPACE_CD);
+        request.setNamespace(NAMESPACE);
         request.setEmrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME);
         request.setEmrClusterName(clusterName);
 
@@ -1875,7 +2028,7 @@ public class EmrServiceTest extends AbstractServiceTest
         EmrMasterSecurityGroupAddRequest request = new EmrMasterSecurityGroupAddRequest();
 
         // Fill in the parameters.
-        request.setNamespace(NAMESPACE_CD);
+        request.setNamespace(NAMESPACE);
         request.setEmrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME);
         request.setEmrClusterName(clusterName);
 
@@ -1891,21 +2044,14 @@ public class EmrServiceTest extends AbstractServiceTest
      * A test case to validate that the XSD restrictions are loose enough to allow empty elements for nested elements.
      */
     @Test
-    public void testUnmarshallXmlWithNestedElements()
+    public void testUnmarshallXmlWithNestedElements() throws JAXBException
     {
-        String xml = "<emrClusterCreateRequest>" + "<namespace>" + NAMESPACE_CD + "</namespace>" + "<emrClusterDefinitionName>" + EMR_CLUSTER_DEFINITION_NAME +
+        String xml = "<emrClusterCreateRequest>" + "<namespace>" + NAMESPACE + "</namespace>" + "<emrClusterDefinitionName>" + EMR_CLUSTER_DEFINITION_NAME +
             "</emrClusterDefinitionName>" + "<emrClusterName>cluster1</emrClusterName>" + "<dryRun>true</dryRun>" + "<emrClusterDefinitionOverride>" +
             "<customBootstrapActionMaster/>" + "<customBootstrapActionAll/>" + "<instanceDefinitions/>" + "<nodeTags/>" + "<daemonConfigurations/>" +
             "<hadoopConfigurations/>" + "</emrClusterDefinitionOverride>" + "</emrClusterCreateRequest>";
-        try
-        {
-            xmlHelper.unmarshallXmlToObject(EmrClusterCreateRequest.class, xml);
-        }
-        catch (JAXBException e)
-        {
-            e.printStackTrace();
-            fail("Failed to unmarshall XML");
-        }
+
+        xmlHelper.unmarshallXmlToObject(EmrClusterCreateRequest.class, xml);
     }
 
     /**
@@ -1919,27 +2065,19 @@ public class EmrServiceTest extends AbstractServiceTest
     {
         String oozieWorkflowJobId = MockOozieOperationsImpl.CASE_1_JOB_ID;
         Boolean verbose = null;
-        EmrCluster emrCluster = createEmrClusterInWaitingState(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME);
+        EmrCluster emrCluster = createEmrClusterInWaitingState(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME);
 
-        try
-        {
-            OozieWorkflowJob oozieWorkflowJob = emrService
-                .getEmrOozieWorkflowJob(emrCluster.getNamespace(), emrCluster.getEmrClusterDefinitionName(), emrCluster.getEmrClusterName(), oozieWorkflowJobId,
-                    verbose);
+        OozieWorkflowJob oozieWorkflowJob = emrService
+            .getEmrOozieWorkflowJob(emrCluster.getNamespace(), emrCluster.getEmrClusterDefinitionName(), emrCluster.getEmrClusterName(), oozieWorkflowJobId,
+                verbose, null);
 
-            assertEquals("job ID", MockOozieOperationsImpl.CASE_1_JOB_ID, oozieWorkflowJob.getId());
-            assertEquals("namespace", emrCluster.getNamespace(), oozieWorkflowJob.getNamespace());
-            assertEquals("EMR cluster definition name", emrCluster.getEmrClusterDefinitionName(), oozieWorkflowJob.getEmrClusterDefinitionName());
-            assertEquals("EMR cluster name", emrCluster.getEmrClusterName(), oozieWorkflowJob.getEmrClusterName());
-            assertNotNull("job start time is null", oozieWorkflowJob.getStartTime());
-            assertNull("job end time is not null", oozieWorkflowJob.getEndTime());
-            assertNull("actions is not null", oozieWorkflowJob.getWorkflowActions());
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-            fail("unexpected exception: " + e);
-        }
+        assertEquals("job ID", MockOozieOperationsImpl.CASE_1_JOB_ID, oozieWorkflowJob.getId());
+        assertEquals("namespace", emrCluster.getNamespace(), oozieWorkflowJob.getNamespace());
+        assertEquals("EMR cluster definition name", emrCluster.getEmrClusterDefinitionName(), oozieWorkflowJob.getEmrClusterDefinitionName());
+        assertEquals("EMR cluster name", emrCluster.getEmrClusterName(), oozieWorkflowJob.getEmrClusterName());
+        assertNotNull("job start time is null", oozieWorkflowJob.getStartTime());
+        assertNull("job end time is not null", oozieWorkflowJob.getEndTime());
+        assertNull("actions is not null", oozieWorkflowJob.getWorkflowActions());
     }
 
     /**
@@ -1952,57 +2090,49 @@ public class EmrServiceTest extends AbstractServiceTest
     {
         String oozieWorkflowJobId = MockOozieOperationsImpl.CASE_1_JOB_ID;
         Boolean verbose = true;
-        EmrCluster emrCluster = createEmrClusterInWaitingState(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME);
+        EmrCluster emrCluster = createEmrClusterInWaitingState(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME);
 
-        try
+        OozieWorkflowJob oozieWorkflowJob = emrService
+            .getEmrOozieWorkflowJob(emrCluster.getNamespace(), emrCluster.getEmrClusterDefinitionName(), emrCluster.getEmrClusterName(), oozieWorkflowJobId,
+                verbose, null);
+
+        assertEquals("job ID", MockOozieOperationsImpl.CASE_1_JOB_ID, oozieWorkflowJob.getId());
+        assertEquals("namespace", emrCluster.getNamespace(), oozieWorkflowJob.getNamespace());
+        assertEquals("EMR cluster definition name", emrCluster.getEmrClusterDefinitionName(), oozieWorkflowJob.getEmrClusterDefinitionName());
+        assertEquals("EMR cluster name", emrCluster.getEmrClusterName(), oozieWorkflowJob.getEmrClusterName());
+        assertNotNull("job start time is null", oozieWorkflowJob.getStartTime());
+        assertNull("job end time is not null", oozieWorkflowJob.getEndTime());
+        assertNotNull("actions is null", oozieWorkflowJob.getWorkflowActions());
+        assertEquals("actions size", 3, oozieWorkflowJob.getWorkflowActions().size());
         {
-            OozieWorkflowJob oozieWorkflowJob = emrService
-                .getEmrOozieWorkflowJob(emrCluster.getNamespace(), emrCluster.getEmrClusterDefinitionName(), emrCluster.getEmrClusterName(), oozieWorkflowJobId,
-                    verbose);
-
-            assertEquals("job ID", MockOozieOperationsImpl.CASE_1_JOB_ID, oozieWorkflowJob.getId());
-            assertEquals("namespace", emrCluster.getNamespace(), oozieWorkflowJob.getNamespace());
-            assertEquals("EMR cluster definition name", emrCluster.getEmrClusterDefinitionName(), oozieWorkflowJob.getEmrClusterDefinitionName());
-            assertEquals("EMR cluster name", emrCluster.getEmrClusterName(), oozieWorkflowJob.getEmrClusterName());
-            assertNotNull("job start time is null", oozieWorkflowJob.getStartTime());
-            assertNull("job end time is not null", oozieWorkflowJob.getEndTime());
-            assertNotNull("actions is null", oozieWorkflowJob.getWorkflowActions());
-            assertEquals("actions size", 3, oozieWorkflowJob.getWorkflowActions().size());
-            {
-                OozieWorkflowAction oozieWorkflowAction = oozieWorkflowJob.getWorkflowActions().get(0);
-                assertEquals("action[0] id", "action1", oozieWorkflowAction.getId());
-                assertEquals("action[0] name", "action1", oozieWorkflowAction.getName());
-                assertEquals("action[0] status", WorkflowAction.Status.DONE.name(), oozieWorkflowAction.getStatus());
-                assertNotNull("action[0] start time is null", oozieWorkflowAction.getStartTime());
-                assertNotNull("action[0] end time is null", oozieWorkflowAction.getEndTime());
-                assertNull("action[0] error code is not null", oozieWorkflowAction.getErrorCode());
-                assertNull("action[0] error message is not null", oozieWorkflowAction.getErrorMessage());
-            }
-            {
-                OozieWorkflowAction oozieWorkflowAction = oozieWorkflowJob.getWorkflowActions().get(1);
-                assertEquals("action[1] id", "action2", oozieWorkflowAction.getId());
-                assertEquals("action[1] name", "action2", oozieWorkflowAction.getName());
-                assertEquals("action[1] status", WorkflowAction.Status.RUNNING.name(), oozieWorkflowAction.getStatus());
-                assertNotNull("action[1] start time is null", oozieWorkflowAction.getStartTime());
-                assertNull("action[1] end time is not null", oozieWorkflowAction.getEndTime());
-                assertNull("action[1] error code is not null", oozieWorkflowAction.getErrorCode());
-                assertNull("action[1] error message is not null", oozieWorkflowAction.getErrorMessage());
-            }
-            {
-                OozieWorkflowAction oozieWorkflowAction = oozieWorkflowJob.getWorkflowActions().get(2);
-                assertEquals("action[2] id", "action3", oozieWorkflowAction.getId());
-                assertEquals("action[2] name", "action3", oozieWorkflowAction.getName());
-                assertEquals("action[2] status", WorkflowAction.Status.ERROR.name(), oozieWorkflowAction.getStatus());
-                assertNotNull("action[2] start time is null", oozieWorkflowAction.getStartTime());
-                assertNotNull("action[2] end time is null", oozieWorkflowAction.getEndTime());
-                assertEquals("action[2] error code", "testErrorCode", oozieWorkflowAction.getErrorCode());
-                assertEquals("action[2] error message", "testErrorMessage", oozieWorkflowAction.getErrorMessage());
-            }
+            OozieWorkflowAction oozieWorkflowAction = oozieWorkflowJob.getWorkflowActions().get(0);
+            assertEquals("action[0] id", "action1", oozieWorkflowAction.getId());
+            assertEquals("action[0] name", "action1", oozieWorkflowAction.getName());
+            assertEquals("action[0] status", WorkflowAction.Status.DONE.name(), oozieWorkflowAction.getStatus());
+            assertNotNull("action[0] start time is null", oozieWorkflowAction.getStartTime());
+            assertNotNull("action[0] end time is null", oozieWorkflowAction.getEndTime());
+            assertNull("action[0] error code is not null", oozieWorkflowAction.getErrorCode());
+            assertNull("action[0] error message is not null", oozieWorkflowAction.getErrorMessage());
         }
-        catch (Exception e)
         {
-            e.printStackTrace();
-            fail("unexpected exception: " + e);
+            OozieWorkflowAction oozieWorkflowAction = oozieWorkflowJob.getWorkflowActions().get(1);
+            assertEquals("action[1] id", "action2", oozieWorkflowAction.getId());
+            assertEquals("action[1] name", "action2", oozieWorkflowAction.getName());
+            assertEquals("action[1] status", WorkflowAction.Status.RUNNING.name(), oozieWorkflowAction.getStatus());
+            assertNotNull("action[1] start time is null", oozieWorkflowAction.getStartTime());
+            assertNull("action[1] end time is not null", oozieWorkflowAction.getEndTime());
+            assertNull("action[1] error code is not null", oozieWorkflowAction.getErrorCode());
+            assertNull("action[1] error message is not null", oozieWorkflowAction.getErrorMessage());
+        }
+        {
+            OozieWorkflowAction oozieWorkflowAction = oozieWorkflowJob.getWorkflowActions().get(2);
+            assertEquals("action[2] id", "action3", oozieWorkflowAction.getId());
+            assertEquals("action[2] name", "action3", oozieWorkflowAction.getName());
+            assertEquals("action[2] status", WorkflowAction.Status.ERROR.name(), oozieWorkflowAction.getStatus());
+            assertNotNull("action[2] start time is null", oozieWorkflowAction.getStartTime());
+            assertNotNull("action[2] end time is null", oozieWorkflowAction.getEndTime());
+            assertEquals("action[2] error code", "testErrorCode", oozieWorkflowAction.getErrorCode());
+            assertEquals("action[2] error message", "testErrorMessage", oozieWorkflowAction.getErrorMessage());
         }
     }
 
@@ -2010,46 +2140,30 @@ public class EmrServiceTest extends AbstractServiceTest
      * GetEmrOozieWorkflowJob only works if the specified EMR cluster is in either WAITING or RUNNING state.
      */
     @Test
-    public void testGetEmrOozieWorkflowJobClusterWaitingState()
+    public void testGetEmrOozieWorkflowJobClusterWaitingState() throws Exception
     {
         String oozieWorkflowJobId = MockOozieOperationsImpl.CASE_1_JOB_ID;
         Boolean verbose = null;
-        EmrCluster emrCluster = createEmrClusterInWaitingState(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME);
+        EmrCluster emrCluster = createEmrClusterInWaitingState(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME);
 
-        try
-        {
-            emrService
-                .getEmrOozieWorkflowJob(emrCluster.getNamespace(), emrCluster.getEmrClusterDefinitionName(), emrCluster.getEmrClusterName(), oozieWorkflowJobId,
-                    verbose);
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-            fail("unexpected exception: " + e);
-        }
+        emrService
+            .getEmrOozieWorkflowJob(emrCluster.getNamespace(), emrCluster.getEmrClusterDefinitionName(), emrCluster.getEmrClusterName(), oozieWorkflowJobId,
+                verbose, null);
     }
 
     /**
      * GetEmrOozieWorkflowJob only works if the specified EMR cluster is in either WAITING or RUNNING state.
      */
     @Test
-    public void testGetEmrOozieWorkflowJobClusterRunningState()
+    public void testGetEmrOozieWorkflowJobClusterRunningState() throws Exception
     {
         String oozieWorkflowJobId = MockOozieOperationsImpl.CASE_1_JOB_ID;
         Boolean verbose = null;
-        EmrCluster emrCluster = createEmrClusterInRunningState(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME);
+        EmrCluster emrCluster = createEmrClusterInRunningState(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME);
 
-        try
-        {
-            emrService
-                .getEmrOozieWorkflowJob(emrCluster.getNamespace(), emrCluster.getEmrClusterDefinitionName(), emrCluster.getEmrClusterName(), oozieWorkflowJobId,
-                    verbose);
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-            fail("unexpected exception: " + e);
-        }
+        emrService
+            .getEmrOozieWorkflowJob(emrCluster.getNamespace(), emrCluster.getEmrClusterDefinitionName(), emrCluster.getEmrClusterName(), oozieWorkflowJobId,
+                verbose, null);
     }
 
     /**
@@ -2061,13 +2175,13 @@ public class EmrServiceTest extends AbstractServiceTest
     {
         String oozieWorkflowJobId = MockOozieOperationsImpl.CASE_1_JOB_ID;
         Boolean verbose = false;
-        EmrCluster emrCluster = createEmrClusterInBootstrappingState(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME);
+        EmrCluster emrCluster = createEmrClusterInBootstrappingState(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME);
 
         try
         {
             emrService
                 .getEmrOozieWorkflowJob(emrCluster.getNamespace(), emrCluster.getEmrClusterDefinitionName(), emrCluster.getEmrClusterName(), oozieWorkflowJobId,
-                    verbose);
+                    verbose, null);
             fail("expected a ObjectNotFoundException, but not exception was thrown");
         }
         catch (Exception e)
@@ -2087,11 +2201,11 @@ public class EmrServiceTest extends AbstractServiceTest
     {
         String oozieWorkflowJobId = MockOozieOperationsImpl.CASE_1_JOB_ID;
         Boolean verbose = false;
-        EmrCluster emrCluster = createEmrClusterInBootstrappingState(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME);
+        EmrCluster emrCluster = createEmrClusterInBootstrappingState(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME);
 
         try
         {
-            emrService.getEmrOozieWorkflowJob(emrCluster.getNamespace(), "DOES_NOT_EXIST", "DOES_NOT_EXIST", oozieWorkflowJobId, verbose);
+            emrService.getEmrOozieWorkflowJob(emrCluster.getNamespace(), "DOES_NOT_EXIST", "DOES_NOT_EXIST", oozieWorkflowJobId, verbose, null);
             fail("expected a ObjectNotFoundException, but not exception was thrown");
         }
         catch (Exception e)
@@ -2110,28 +2224,20 @@ public class EmrServiceTest extends AbstractServiceTest
     {
         String oozieWorkflowJobId = MockOozieOperationsImpl.CASE_4_JOB_ID;
         Boolean verbose = null;
-        EmrCluster emrCluster = createEmrClusterInWaitingState(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME);
+        EmrCluster emrCluster = createEmrClusterInWaitingState(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME);
 
-        try
-        {
-            OozieWorkflowJob oozieWorkflowJob = emrService
-                .getEmrOozieWorkflowJob(emrCluster.getNamespace(), emrCluster.getEmrClusterDefinitionName(), emrCluster.getEmrClusterName(), oozieWorkflowJobId,
-                    verbose);
+        OozieWorkflowJob oozieWorkflowJob = emrService
+            .getEmrOozieWorkflowJob(emrCluster.getNamespace(), emrCluster.getEmrClusterDefinitionName(), emrCluster.getEmrClusterName(), oozieWorkflowJobId,
+                verbose, null);
 
-            assertEquals("job ID", MockOozieOperationsImpl.CASE_4_JOB_ID, oozieWorkflowJob.getId());
-            assertEquals("namespace", emrCluster.getNamespace(), oozieWorkflowJob.getNamespace());
-            assertEquals("EMR cluster definition name", emrCluster.getEmrClusterDefinitionName(), oozieWorkflowJob.getEmrClusterDefinitionName());
-            assertEquals("EMR cluster name", emrCluster.getEmrClusterName(), oozieWorkflowJob.getEmrClusterName());
-            assertEquals("EMR status", OozieDaoImpl.OOZIE_WORKFLOW_JOB_STATUS_DM_PREP, oozieWorkflowJob.getStatus());
-            assertNull("job start time is not null", oozieWorkflowJob.getStartTime());
-            assertNull("job end time is not null", oozieWorkflowJob.getEndTime());
-            assertNull("actions is not null", oozieWorkflowJob.getWorkflowActions());
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-            fail("unexpected exception: " + e);
-        }
+        assertEquals("job ID", MockOozieOperationsImpl.CASE_4_JOB_ID, oozieWorkflowJob.getId());
+        assertEquals("namespace", emrCluster.getNamespace(), oozieWorkflowJob.getNamespace());
+        assertEquals("EMR cluster definition name", emrCluster.getEmrClusterDefinitionName(), oozieWorkflowJob.getEmrClusterDefinitionName());
+        assertEquals("EMR cluster name", emrCluster.getEmrClusterName(), oozieWorkflowJob.getEmrClusterName());
+        assertEquals("EMR status", OozieDaoImpl.OOZIE_WORKFLOW_JOB_STATUS_DM_PREP, oozieWorkflowJob.getStatus());
+        assertNull("job start time is not null", oozieWorkflowJob.getStartTime());
+        assertNull("job end time is not null", oozieWorkflowJob.getEndTime());
+        assertNull("actions is not null", oozieWorkflowJob.getWorkflowActions());
     }
 
     /**
@@ -2142,28 +2248,40 @@ public class EmrServiceTest extends AbstractServiceTest
     {
         String oozieWorkflowJobId = MockOozieOperationsImpl.CASE_6_JOB_ID;
         Boolean verbose = null;
-        EmrCluster emrCluster = createEmrClusterInWaitingState(NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME);
+        EmrCluster emrCluster = createEmrClusterInWaitingState(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME);
 
-        try
-        {
-            OozieWorkflowJob oozieWorkflowJob = emrService
-                .getEmrOozieWorkflowJob(emrCluster.getNamespace(), emrCluster.getEmrClusterDefinitionName(), emrCluster.getEmrClusterName(), oozieWorkflowJobId,
-                    verbose);
+        OozieWorkflowJob oozieWorkflowJob = emrService
+            .getEmrOozieWorkflowJob(emrCluster.getNamespace(), emrCluster.getEmrClusterDefinitionName(), emrCluster.getEmrClusterName(), oozieWorkflowJobId,
+                verbose, null);
 
-            assertEquals("job ID", MockOozieOperationsImpl.CASE_6_JOB_ID, oozieWorkflowJob.getId());
-            assertEquals("namespace", emrCluster.getNamespace(), oozieWorkflowJob.getNamespace());
-            assertEquals("EMR cluster definition name", emrCluster.getEmrClusterDefinitionName(), oozieWorkflowJob.getEmrClusterDefinitionName());
-            assertEquals("EMR cluster name", emrCluster.getEmrClusterName(), oozieWorkflowJob.getEmrClusterName());
-            assertEquals("EMR status", OozieDaoImpl.OOZIE_WORKFLOW_JOB_STATUS_DM_FAILED, oozieWorkflowJob.getStatus());
-            assertNull("job start time is not null", oozieWorkflowJob.getStartTime());
-            assertNull("job end time is not null", oozieWorkflowJob.getEndTime());
-            assertNull("actions is not null", oozieWorkflowJob.getWorkflowActions());
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-            fail("unexpected exception: " + e);
-        }
+        assertEquals("job ID", MockOozieOperationsImpl.CASE_6_JOB_ID, oozieWorkflowJob.getId());
+        assertEquals("namespace", emrCluster.getNamespace(), oozieWorkflowJob.getNamespace());
+        assertEquals("EMR cluster definition name", emrCluster.getEmrClusterDefinitionName(), oozieWorkflowJob.getEmrClusterDefinitionName());
+        assertEquals("EMR cluster name", emrCluster.getEmrClusterName(), oozieWorkflowJob.getEmrClusterName());
+        assertEquals("EMR status", OozieDaoImpl.OOZIE_WORKFLOW_JOB_STATUS_DM_FAILED, oozieWorkflowJob.getStatus());
+        assertNull("job start time is not null", oozieWorkflowJob.getStartTime());
+        assertNull("job end time is not null", oozieWorkflowJob.getEndTime());
+        assertNull("actions is not null", oozieWorkflowJob.getWorkflowActions());
+    }
+
+    @Test
+    public void testGetEmrOozieWorkflowJobWithClusterId() throws Exception
+    {
+        String oozieWorkflowJobId = MockOozieOperationsImpl.CASE_1_JOB_ID;
+        Boolean verbose = null;
+        EmrCluster emrCluster = createEmrClusterInWaitingState(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME);
+
+        OozieWorkflowJob oozieWorkflowJob = emrService
+            .getEmrOozieWorkflowJob(emrCluster.getNamespace(), emrCluster.getEmrClusterDefinitionName(), emrCluster.getEmrClusterName(), oozieWorkflowJobId,
+                verbose, emrCluster.getId());
+
+        assertEquals("job ID", MockOozieOperationsImpl.CASE_1_JOB_ID, oozieWorkflowJob.getId());
+        assertEquals("namespace", emrCluster.getNamespace(), oozieWorkflowJob.getNamespace());
+        assertEquals("EMR cluster definition name", emrCluster.getEmrClusterDefinitionName(), oozieWorkflowJob.getEmrClusterDefinitionName());
+        assertEquals("EMR cluster name", emrCluster.getEmrClusterName(), oozieWorkflowJob.getEmrClusterName());
+        assertNotNull("job start time is null", oozieWorkflowJob.getStartTime());
+        assertNull("job end time is not null", oozieWorkflowJob.getEndTime());
+        assertNull("actions is not null", oozieWorkflowJob.getWorkflowActions());
     }
 
     /**

@@ -81,10 +81,4 @@ public class Ec2PriceDto
     {
         this.bidPrice = bidPrice;
     }
-
-    @Override
-    public String toString()
-    {
-        return "[instancePrice=" + instancePrice + ", isSpot=" + isSpot + ", bidPrice=" + bidPrice + "]";
-    }
 }

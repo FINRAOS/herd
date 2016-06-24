@@ -50,7 +50,7 @@ import org.finra.herd.model.api.xml.S3PropertiesLocation;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.service.JdbcService;
-import org.finra.herd.service.helper.StorageDaoHelper;
+import org.finra.herd.service.helper.StorageHelper;
 import org.finra.herd.service.helper.VelocityHelper;
 
 /**
@@ -64,19 +64,19 @@ public class JdbcServiceImpl implements JdbcService
     public static final String DRIVER_ORACLE = "oracle.jdbc.OracleDriver";
 
     @Autowired
-    private JdbcDao jdbcDao;
+    private ConfigurationHelper configurationHelper;
 
     @Autowired
-    private VelocityHelper velocityHelper;
+    private JdbcDao jdbcDao;
 
     @Autowired
     private S3Dao s3Dao;
 
     @Autowired
-    private ConfigurationHelper configurationHelper;
+    private StorageHelper storageHelper;
 
     @Autowired
-    private StorageDaoHelper storageDaoHelper;
+    private VelocityHelper velocityHelper;
 
     /**
      * This implementation uses a {@link DriverManagerDataSource} and {@link DefaultTransactionDefinition}. It suspends the existing transaction and purposely
@@ -152,7 +152,7 @@ public class JdbcServiceImpl implements JdbcService
     {
         String s3BucketName = s3PropertiesLocation.getBucketName().trim();
         String s3ObjectKey = s3PropertiesLocation.getKey().trim();
-        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = storageDaoHelper.getS3FileTransferRequestParamsDto();
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = storageHelper.getS3FileTransferRequestParamsDto();
         return s3Dao.getProperties(s3BucketName, s3ObjectKey, s3FileTransferRequestParamsDto);
     }
 

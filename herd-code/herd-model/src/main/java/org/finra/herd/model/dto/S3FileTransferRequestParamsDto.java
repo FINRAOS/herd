@@ -29,6 +29,12 @@ import java.util.List;
  *     .builder().s3BucketName(&quot;myBucket&quot;).s3KeyPrefix(&quot;myS3KeyPrefix&quot;).build();
  * </pre>
  */
+/*
+ * Need to suppress this warning because PMD complains there are too many public methods in this class.
+ * In reality, they are just getters and setters, and there is a similar builder inner class which contributes to the public count.
+ * These public methods do not contribute to the complexity of this class.
+ */
+@SuppressWarnings("PMD.ExcessivePublicCount")
 public class S3FileTransferRequestParamsDto extends AwsParamsDto
 {
     /**
@@ -99,6 +105,11 @@ public class S3FileTransferRequestParamsDto extends AwsParamsDto
      * Overriding this value to anything other that specified may adversely affect the S3 operation.
      */
     private String signerOverride;
+
+    /**
+     * The socket timeout in milliseconds. 0 means no timeout.
+     */
+    private Integer socketTimeout;
 
     /**
      * Any additional AWS credentials providers the S3 operation should use to get credentials.
@@ -225,6 +236,16 @@ public class S3FileTransferRequestParamsDto extends AwsParamsDto
         this.signerOverride = signerOverride;
     }
 
+    public Integer getSocketTimeout()
+    {
+        return socketTimeout;
+    }
+
+    public void setSocketTimeout(Integer socketTimeout)
+    {
+        this.socketTimeout = socketTimeout;
+    }
+
     public List<HerdAWSCredentialsProvider> getAdditionalAwsCredentialsProviders()
     {
         return additionalAwsCredentialsProviders;
@@ -333,6 +354,12 @@ public class S3FileTransferRequestParamsDto extends AwsParamsDto
         public Builder signerOverride(String signerOverride)
         {
             params.setSignerOverride(signerOverride);
+            return this;
+        }
+
+        public Builder socketTimeout(Integer socketTimeout)
+        {
+            params.setSocketTimeout(socketTimeout);
             return this;
         }
 

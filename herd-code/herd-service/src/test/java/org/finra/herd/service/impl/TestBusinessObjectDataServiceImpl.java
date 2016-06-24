@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
+import org.finra.herd.model.annotation.PublishJmsMessages;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataAvailability;
 import org.finra.herd.model.api.xml.BusinessObjectDataAvailabilityCollectionRequest;
@@ -34,9 +35,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDataDdlRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
-import org.finra.herd.model.api.xml.S3KeyPrefixInformation;
-import org.finra.herd.service.BusinessObjectDataService;
-import org.finra.herd.service.helper.BusinessObjectDataHelper;
+import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
 
 /**
  * This is a Business Object Data service implementation for testing.
@@ -44,19 +43,27 @@ import org.finra.herd.service.helper.BusinessObjectDataHelper;
 @Service
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 @Primary
-public class TestBusinessObjectDataServiceImpl extends BusinessObjectDataServiceImpl implements BusinessObjectDataService
+public class TestBusinessObjectDataServiceImpl extends BusinessObjectDataServiceImpl
 {
     @Autowired
-    private BusinessObjectDataHelper businessObjectDataHelper;
+    private BusinessObjectDataDaoHelper businessObjectDataDaoHelper;
 
-    // Overwrite the base class method to change transactional attributes.
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * This implementation keeps the current transaction context.
+     */
     @Override
     public BusinessObjectDataAvailability checkBusinessObjectDataAvailability(BusinessObjectDataAvailabilityRequest request)
     {
         return checkBusinessObjectDataAvailabilityImpl(request);
     }
 
-    // Overwrite the base class method to change transactional attributes.
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * This implementation keeps the current transaction context.
+     */
     @Override
     public BusinessObjectDataAvailabilityCollectionResponse checkBusinessObjectDataAvailabilityCollection(
         BusinessObjectDataAvailabilityCollectionRequest request)
@@ -64,41 +71,73 @@ public class TestBusinessObjectDataServiceImpl extends BusinessObjectDataService
         return checkBusinessObjectDataAvailabilityCollectionImpl(request);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * This implementation keeps the current transaction context.
+     */
+    @PublishJmsMessages
     @Override
     public BusinessObjectData createBusinessObjectData(BusinessObjectDataCreateRequest request)
     {
-        return businessObjectDataHelper.createBusinessObjectData(request);
+        return businessObjectDataDaoHelper.createBusinessObjectData(request);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * This implementation keeps the current transaction context.
+     */
     @Override
-    public BusinessObjectData getBusinessObjectData(BusinessObjectDataKey businessObjectDataKey, String businessObjectFormatPartitionKey)
+    public BusinessObjectData getBusinessObjectData(BusinessObjectDataKey businessObjectDataKey, String businessObjectFormatPartitionKey,
+        String businessObjectDataStatus)
     {
-        return getBusinessObjectDataImpl(businessObjectDataKey, businessObjectFormatPartitionKey);
+        return getBusinessObjectDataImpl(businessObjectDataKey, businessObjectFormatPartitionKey, businessObjectDataStatus);
     }
 
-    @Override
-    public S3KeyPrefixInformation getS3KeyPrefix(BusinessObjectDataKey businessObjectDataKey, String businessObjectFormatPartitionKey, Boolean createNewVersion)
-    {
-        return getS3KeyPrefixImpl(businessObjectDataKey, businessObjectFormatPartitionKey, createNewVersion);
-    }
-
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * This implementation keeps the current transaction context.
+     */
     @Override
     public BusinessObjectDataDdl generateBusinessObjectDataDdl(BusinessObjectDataDdlRequest request)
     {
         return generateBusinessObjectDataDdlImpl(request, false);
     }
 
-    // Overwrite the base class method to change transactional attributes.
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * This implementation keeps the current transaction context.
+     */
     @Override
     public BusinessObjectDataDdlCollectionResponse generateBusinessObjectDataDdlCollection(BusinessObjectDataDdlCollectionRequest request)
     {
         return generateBusinessObjectDataDdlCollectionImpl(request);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * This implementation keeps the current transaction context.
+     */
+    @PublishJmsMessages
     @Override
     public BusinessObjectDataInvalidateUnregisteredResponse invalidateUnregisteredBusinessObjectData(
         BusinessObjectDataInvalidateUnregisteredRequest businessObjectDataInvalidateUnregisteredRequest)
     {
         return invalidateUnregisteredBusinessObjectDataImpl(businessObjectDataInvalidateUnregisteredRequest);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * This implementation keeps the current transaction context.
+     */
+    @Override
+    public BusinessObjectData restoreBusinessObjectData(BusinessObjectDataKey businessObjectDataKey)
+    {
+        return restoreBusinessObjectDataImpl(businessObjectDataKey);
     }
 }

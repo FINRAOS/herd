@@ -18,21 +18,42 @@ package org.finra.herd.tools.downloader;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.argThat;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import java.io.IOException;
+import java.net.URI;
 import java.util.Arrays;
 
+import com.google.common.base.Objects;
+import org.apache.http.HttpVersion;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.message.BasicStatusLine;
 import org.junit.Assert;
 import org.junit.Test;
+import org.mockito.ArgumentMatcher;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import org.finra.herd.core.Command;
-import org.finra.herd.model.dto.RegServerAccessParamsDto;
-import org.finra.herd.model.dto.DownloaderInputManifestDto;
-import org.finra.herd.model.dto.UploaderInputManifestDto;
-import org.finra.herd.model.jpa.StorageEntity;
+import org.finra.herd.dao.HttpClientOperations;
 import org.finra.herd.model.api.xml.AwsCredential;
 import org.finra.herd.model.api.xml.BusinessObjectData;
-import org.finra.herd.model.api.xml.BusinessObjectDataDownloadCredential;
 import org.finra.herd.model.api.xml.S3KeyPrefixInformation;
+import org.finra.herd.model.api.xml.Storage;
+import org.finra.herd.model.api.xml.StorageUnit;
+import org.finra.herd.model.api.xml.StorageUnitDownloadCredential;
+import org.finra.herd.model.dto.DownloaderInputManifestDto;
+import org.finra.herd.model.dto.RegServerAccessParamsDto;
+import org.finra.herd.model.dto.UploaderInputManifestDto;
+import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.tools.common.databridge.DataBridgeWebClient;
 
 /**
@@ -135,14 +156,15 @@ public class DownloaderWebClientTest extends AbstractDownloaderTest
         manifest.setSubPartitionValues(Arrays.asList("test7", "test8"));
         manifest.setBusinessObjectDataVersion("test9");
         String storageName = "test10";
-        BusinessObjectDataDownloadCredential businessObjectDataDownloadCredential = downloaderWebClient.getBusinessObjectDataDownloadCredential(manifest,
-            storageName);
-        Assert.assertNotNull(businessObjectDataDownloadCredential);
-        AwsCredential awsCredential = businessObjectDataDownloadCredential.getAwsCredential();
+        StorageUnitDownloadCredential storageUnitDownloadCredential = downloaderWebClient.getStorageUnitDownloadCredential(manifest, storageName);
+        Assert.assertNotNull(storageUnitDownloadCredential);
+        AwsCredential awsCredential = storageUnitDownloadCredential.getAwsCredential();
         Assert.assertNotNull(awsCredential);
-        Assert.assertEquals("https://testWebServiceHostname:1234/herd-app/rest/businessObjectData/download/credential/namespaces/test1"
-            + "/businessObjectDefinitionNames/test2/businessObjectFormatUsages/test3/businessObjectFormatFileTypes/test4/businessObjectFormatVersions/test5"
-            + "/partitionValues/test6/businessObjectDataVersions/test9?storageName=test10&subPartitionValues=test7%7Ctest8", awsCredential.getAwsAccessKey());
+        Assert.assertEquals(
+            "https://testWebServiceHostname:1234/herd-app/rest/storageUnits/download/credential/namespaces/test1"
+                + "/businessObjectDefinitionNames/test2/businessObjectFormatUsages/test3/businessObjectFormatFileTypes/test4/businessObjectFormatVersions/test5"
+                + "/partitionValues/test6/businessObjectDataVersions/test9/storageNames/test10?subPartitionValues=test7%7Ctest8",
+            awsCredential.getAwsAccessKey());
     }
 
     @Test
@@ -158,14 +180,214 @@ public class DownloaderWebClientTest extends AbstractDownloaderTest
         manifest.setBusinessObjectDataVersion("test9");
         String storageName = "test10";
         downloaderWebClient.getRegServerAccessParamsDto().setUseSsl(true);
-        BusinessObjectDataDownloadCredential businessObjectDataDownloadCredential = downloaderWebClient.getBusinessObjectDataDownloadCredential(manifest,
-            storageName);
-        Assert.assertNotNull(businessObjectDataDownloadCredential);
-        AwsCredential awsCredential = businessObjectDataDownloadCredential.getAwsCredential();
+        StorageUnitDownloadCredential storageUnitDownloadCredential = downloaderWebClient.getStorageUnitDownloadCredential(manifest, storageName);
+        Assert.assertNotNull(storageUnitDownloadCredential);
+        AwsCredential awsCredential = storageUnitDownloadCredential.getAwsCredential();
         Assert.assertNotNull(awsCredential);
-        Assert.assertEquals("https://testWebServiceHostname:1234/herd-app/rest/businessObjectData/download/credential/namespaces/test1"
+        Assert.assertEquals("https://testWebServiceHostname:1234/herd-app/rest/storageUnits/download/credential/namespaces/test1"
             + "/businessObjectDefinitionNames/test2/businessObjectFormatUsages/test3/businessObjectFormatFileTypes/test4/businessObjectFormatVersions/test5"
-            + "/partitionValues/test6/businessObjectDataVersions/test9?storageName=test10", awsCredential.getAwsAccessKey());
+            + "/partitionValues/test6/businessObjectDataVersions/test9/storageNames/test10", awsCredential.getAwsAccessKey());
+    }
+
+    @Test
+    public void testGetBusinessObjectDataAssertNamespaceOptional() throws Exception
+    {
+        HttpClientOperations mockHttpClientOperations = mock(HttpClientOperations.class);
+        HttpClientOperations originalHttpClientOperations = (HttpClientOperations) ReflectionTestUtils.getField(downloaderWebClient, "httpClientOperations");
+        ReflectionTestUtils.setField(downloaderWebClient, "httpClientOperations", mockHttpClientOperations);
+
+        try
+        {
+            String expectedHttpMethod = "GET";
+            String expectedUri = "https://testWebServiceHostname:1234/herd-app/rest/businessObjectData"
+                + "/businessObjectDefinitionNames/businessObjectDefinitionName/businessObjectFormatUsages/businessObjectFormatUsage"
+                + "/businessObjectFormatFileTypes/businessObjectFormatFileType?partitionKey=partitionKey&partitionValue=partitionValue&"
+                + "businessObjectFormatVersion=0&businessObjectDataVersion=1";
+
+            CloseableHttpResponse closeableHttpResponse = mock(CloseableHttpResponse.class);
+            when(mockHttpClientOperations.execute(any(), any())).thenReturn(closeableHttpResponse);
+
+            when(closeableHttpResponse.getStatusLine()).thenReturn(new BasicStatusLine(HttpVersion.HTTP_1_1, 200, "OK"));
+            BusinessObjectData expectedBusinessObjectData = new BusinessObjectData();
+            expectedBusinessObjectData.setId(1234);
+            StringEntity httpEntity = new StringEntity(xmlHelper.objectToXml(expectedBusinessObjectData));
+            when(closeableHttpResponse.getEntity()).thenReturn(httpEntity);
+
+            DownloaderInputManifestDto manifest = new DownloaderInputManifestDto();
+            manifest.setBusinessObjectDefinitionName("businessObjectDefinitionName");
+            manifest.setBusinessObjectFormatUsage("businessObjectFormatUsage");
+            manifest.setBusinessObjectFormatFileType("businessObjectFormatFileType");
+            manifest.setBusinessObjectFormatVersion("0");
+            manifest.setPartitionKey("partitionKey");
+            manifest.setPartitionValue("partitionValue");
+            manifest.setBusinessObjectDataVersion("1");
+            assertEquals(expectedBusinessObjectData.getId(), downloaderWebClient.getBusinessObjectData(manifest).getId());
+
+            verify(mockHttpClientOperations).execute(any(), argThat(new ArgumentMatcher<HttpUriRequest>()
+            {
+                @Override
+                public boolean matches(Object argument)
+                {
+                    HttpUriRequest httpUriRequest = (HttpUriRequest) argument;
+                    URI uri = httpUriRequest.getURI();
+                    return Objects.equal(expectedHttpMethod, httpUriRequest.getMethod()) && Objects.equal(expectedUri, uri.toString());
+                }
+            }));
+        }
+        finally
+        {
+            ReflectionTestUtils.setField(downloaderWebClient, "httpClientOperations", originalHttpClientOperations);
+        }
+    }
+
+    @Test
+    public void testGetBusinessObjectDataAssertNoAuthorizationHeaderWhenNoSsl() throws Exception
+    {
+        HttpClientOperations mockHttpClientOperations = mock(HttpClientOperations.class);
+        HttpClientOperations originalHttpClientOperations = (HttpClientOperations) ReflectionTestUtils.getField(downloaderWebClient, "httpClientOperations");
+        ReflectionTestUtils.setField(downloaderWebClient, "httpClientOperations", mockHttpClientOperations);
+
+        try
+        {
+            CloseableHttpResponse closeableHttpResponse = mock(CloseableHttpResponse.class);
+            when(mockHttpClientOperations.execute(any(), any())).thenReturn(closeableHttpResponse);
+
+            when(closeableHttpResponse.getStatusLine()).thenReturn(new BasicStatusLine(HttpVersion.HTTP_1_1, 200, "OK"));
+
+            DownloaderInputManifestDto manifest = new DownloaderInputManifestDto();
+            downloaderWebClient.getRegServerAccessParamsDto().setUseSsl(false);
+            downloaderWebClient.getBusinessObjectData(manifest);
+
+            verify(mockHttpClientOperations).execute(any(), argThat(new ArgumentMatcher<HttpUriRequest>()
+            {
+                @Override
+                public boolean matches(Object argument)
+                {
+                    HttpUriRequest httpUriRequest = (HttpUriRequest) argument;
+                    return httpUriRequest.getFirstHeader("Authorization") == null;
+                }
+            }));
+        }
+        finally
+        {
+            ReflectionTestUtils.setField(downloaderWebClient, "httpClientOperations", originalHttpClientOperations);
+        }
+    }
+
+    @Test
+    public void testGetBusinessObjectDataDownloadCredentialAssertNoAuthorizationHeaderWhenNoSsl() throws Exception
+    {
+        HttpClientOperations mockHttpClientOperations = mock(HttpClientOperations.class);
+        HttpClientOperations originalHttpClientOperations = (HttpClientOperations) ReflectionTestUtils.getField(downloaderWebClient, "httpClientOperations");
+        ReflectionTestUtils.setField(downloaderWebClient, "httpClientOperations", mockHttpClientOperations);
+
+        try
+        {
+            CloseableHttpResponse closeableHttpResponse = mock(CloseableHttpResponse.class);
+            when(mockHttpClientOperations.execute(any(), any())).thenReturn(closeableHttpResponse);
+
+            when(closeableHttpResponse.getStatusLine()).thenReturn(new BasicStatusLine(HttpVersion.HTTP_1_1, 200, "SUCCESS"));
+            when(closeableHttpResponse.getEntity()).thenReturn(new StringEntity(xmlHelper.objectToXml(new StorageUnitDownloadCredential())));
+
+            DownloaderInputManifestDto downloaderInputManifestDto = new DownloaderInputManifestDto();
+            String storageName = "storageName";
+            boolean useSsl = false;
+
+            downloaderWebClient.getRegServerAccessParamsDto().setUseSsl(useSsl);
+            downloaderWebClient.getStorageUnitDownloadCredential(downloaderInputManifestDto, storageName);
+
+            verify(mockHttpClientOperations).execute(any(), argThat(new ArgumentMatcher<HttpUriRequest>()
+            {
+                @Override
+                public boolean matches(Object argument)
+                {
+                    return ((HttpUriRequest) argument).getFirstHeader("Authorization") == null;
+                }
+            }));
+        }
+        finally
+        {
+            ReflectionTestUtils.setField(downloaderWebClient, "httpClientOperations", originalHttpClientOperations);
+        }
+    }
+
+    /**
+     * Asserts that the http client is closed and if an exception is thrown during closing of the http client, the same exception is bubbled up.
+     */
+    @Test
+    public void testGetBusinessObjectDataDownloadCredentialAssertThrowIOExceptionWhenClosingHttpClientThrowsIOException() throws Exception
+    {
+        HttpClientOperations mockHttpClientOperations = mock(HttpClientOperations.class);
+        HttpClientOperations originalHttpClientOperations = (HttpClientOperations) ReflectionTestUtils.getField(downloaderWebClient, "httpClientOperations");
+        ReflectionTestUtils.setField(downloaderWebClient, "httpClientOperations", mockHttpClientOperations);
+
+        try
+        {
+            CloseableHttpClient closeableHttpClient = mock(CloseableHttpClient.class);
+            when(mockHttpClientOperations.createHttpClient()).thenReturn(closeableHttpClient);
+
+            doThrow(IOException.class).when(closeableHttpClient).close();
+
+            CloseableHttpResponse closeableHttpResponse = mock(CloseableHttpResponse.class);
+            when(mockHttpClientOperations.execute(any(), any())).thenReturn(closeableHttpResponse);
+
+            when(closeableHttpResponse.getStatusLine()).thenReturn(new BasicStatusLine(HttpVersion.HTTP_1_1, 200, "SUCCESS"));
+            when(closeableHttpResponse.getEntity()).thenReturn(new StringEntity(xmlHelper.objectToXml(new StorageUnitDownloadCredential())));
+
+            DownloaderInputManifestDto downloaderInputManifestDto = new DownloaderInputManifestDto();
+            String storageName = "storageName";
+
+            try
+            {
+                downloaderWebClient.getStorageUnitDownloadCredential(downloaderInputManifestDto, storageName);
+                verify(closeableHttpClient).close();
+                fail();
+            }
+            catch (Exception e)
+            {
+                assertEquals(IOException.class, e.getClass());
+            }
+        }
+        finally
+        {
+            ReflectionTestUtils.setField(downloaderWebClient, "httpClientOperations", originalHttpClientOperations);
+        }
+    }
+
+    @Test
+    public void testGetBusinessObjectDataDownloadCredentialAssertHttpClientClosedWhenIOException() throws Exception
+    {
+        HttpClientOperations mockHttpClientOperations = mock(HttpClientOperations.class);
+        HttpClientOperations originalHttpClientOperations = (HttpClientOperations) ReflectionTestUtils.getField(downloaderWebClient, "httpClientOperations");
+        ReflectionTestUtils.setField(downloaderWebClient, "httpClientOperations", mockHttpClientOperations);
+
+        try
+        {
+            IOException expectedException = new IOException();
+
+            CloseableHttpClient closeableHttpClient = mock(CloseableHttpClient.class);
+            when(mockHttpClientOperations.createHttpClient()).thenReturn(closeableHttpClient);
+
+            when(mockHttpClientOperations.execute(any(), any())).thenThrow(expectedException);
+
+            DownloaderInputManifestDto downloaderInputManifestDto = new DownloaderInputManifestDto();
+            String storageName = "storageName";
+
+            try
+            {
+                downloaderWebClient.getStorageUnitDownloadCredential(downloaderInputManifestDto, storageName);
+                verify(closeableHttpClient).close();
+                fail();
+            }
+            catch (Exception e)
+            {
+                assertEquals(expectedException, e);
+            }
+        }
+        finally
+        {
+            ReflectionTestUtils.setField(downloaderWebClient, "httpClientOperations", originalHttpClientOperations);
+        }
     }
 
     private BusinessObjectData toBusinessObjectData(final UploaderInputManifestDto uploaderInputManifestDto)
@@ -180,6 +402,7 @@ public class DownloaderWebClientTest extends AbstractDownloaderTest
         businessObjectData.setPartitionValue(uploaderInputManifestDto.getPartitionValue());
         businessObjectData.setSubPartitionValues(uploaderInputManifestDto.getSubPartitionValues());
         businessObjectData.setVersion(TEST_DATA_VERSION_V0);
+        businessObjectData.setStorageUnits(Arrays.asList(new StorageUnit(new Storage(StorageEntity.MANAGED_STORAGE, null, null), null, null, null)));
         return businessObjectData;
     }
 }

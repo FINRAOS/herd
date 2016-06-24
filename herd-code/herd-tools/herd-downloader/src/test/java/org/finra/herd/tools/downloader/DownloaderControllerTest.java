@@ -18,23 +18,54 @@ package org.finra.herd.tools.downloader;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.StringWriter;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
+import javax.xml.datatype.DatatypeFactory;
+
+import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.apache.log4j.PatternLayout;
+import org.apache.log4j.WriterAppender;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import org.finra.herd.dao.impl.MockHttpClientOperationsImpl;
-import org.finra.herd.model.dto.RegServerAccessParamsDto;
+import org.finra.herd.model.api.xml.Attribute;
+import org.finra.herd.model.api.xml.AwsCredential;
+import org.finra.herd.model.api.xml.BusinessObjectData;
+import org.finra.herd.model.api.xml.S3KeyPrefixInformation;
+import org.finra.herd.model.api.xml.Storage;
+import org.finra.herd.model.api.xml.StorageUnit;
+import org.finra.herd.model.api.xml.StorageUnitDownloadCredential;
 import org.finra.herd.model.dto.DownloaderInputManifestDto;
+import org.finra.herd.model.dto.DownloaderOutputManifestDto;
+import org.finra.herd.model.dto.HerdAWSCredentialsProvider;
+import org.finra.herd.model.dto.RegServerAccessParamsDto;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
+import org.finra.herd.model.dto.S3FileTransferResultsDto;
 import org.finra.herd.model.dto.UploaderInputManifestDto;
+import org.finra.herd.model.jpa.StorageUnitStatusEntity;
+import org.finra.herd.service.S3Service;
+import org.finra.herd.service.helper.BusinessObjectDataHelper;
+import org.finra.herd.service.helper.StorageFileHelper;
+import org.finra.herd.service.helper.StorageHelper;
 import org.finra.herd.tools.common.databridge.DataBridgeWebClient;
 
 /**
@@ -213,6 +244,357 @@ public class DownloaderControllerTest extends AbstractDownloaderTest
         DownloaderInputManifestDto testDownloaderInputManifestDto = getTestDownloaderInputManifestDto();
         testDownloaderInputManifestDto.setStorageName("S3_MANAGED");
         runDownload(testDownloaderInputManifestDto, LOCAL_TEMP_PATH_OUTPUT.toString(), DownloaderController.MIN_THREADS, null);
+    }
+
+    /**
+     * Asserts that the target directory is cleared (ie. all files under the directory is removed recursively) when there is an error during download.
+     */
+    @Test
+    public void testPerformDownloadAssertCleanTargetDirectoryWhenError() throws Exception
+    {
+        /*
+         * Create and inject mock objects
+         */
+        DownloaderWebClient mockDownloaderWebClient = mock(DownloaderWebClient.class);
+        DownloaderWebClient originalDownloaderWebClient = (DownloaderWebClient) ReflectionTestUtils.getField(downloaderController, "downloaderWebClient");
+        ReflectionTestUtils.setField(downloaderController, "downloaderWebClient", mockDownloaderWebClient);
+
+        DownloaderManifestReader mockDownloaderManifestReader = mock(DownloaderManifestReader.class);
+        DownloaderManifestReader originalDownloaderManifestReader =
+            (DownloaderManifestReader) ReflectionTestUtils.getField(downloaderController, "manifestReader");
+        ReflectionTestUtils.setField(downloaderController, "manifestReader", mockDownloaderManifestReader);
+
+        BusinessObjectDataHelper mockBusinessObjectDataHelper = mock(BusinessObjectDataHelper.class);
+        BusinessObjectDataHelper originalBusinessObjectDataHelper =
+            (BusinessObjectDataHelper) ReflectionTestUtils.getField(downloaderController, "businessObjectDataHelper");
+        ReflectionTestUtils.setField(downloaderController, "businessObjectDataHelper", mockBusinessObjectDataHelper);
+
+        S3Service mockS3Service = mock(S3Service.class);
+        S3Service originalS3Service = (S3Service) ReflectionTestUtils.getField(downloaderController, "s3Service");
+        ReflectionTestUtils.setField(downloaderController, "s3Service", mockS3Service);
+
+        StorageFileHelper mockStorageFileHelper = mock(StorageFileHelper.class);
+        StorageFileHelper originalStorageFileHelper = (StorageFileHelper) ReflectionTestUtils.getField(downloaderController, "storageFileHelper");
+        ReflectionTestUtils.setField(downloaderController, "storageFileHelper", mockStorageFileHelper);
+
+        StorageHelper mockStorageHelper = mock(StorageHelper.class);
+        StorageHelper originalStorageHelper = (StorageHelper) ReflectionTestUtils.getField(downloaderController, "storageHelper");
+        ReflectionTestUtils.setField(downloaderController, "storageHelper", mockStorageHelper);
+
+        /*
+         * Start test
+         */
+        Path localPath = Files.createTempDirectory(null);
+        try
+        {
+            String s3KeyPrefix = "s3KeyPrefix";
+            String storageName = "storageName";
+            IOException expectedException = new IOException();
+            Path targetDirectoryPath = localPath.resolve(s3KeyPrefix);
+
+            DownloaderInputManifestDto downloaderInputManifestDto = new DownloaderInputManifestDto();
+            BusinessObjectData businessObjectData = new BusinessObjectData();
+            StorageUnit storageUnit = new StorageUnit(new Storage(storageName, null, null), null, null, StorageUnitStatusEntity.ENABLED);
+            S3KeyPrefixInformation s3KeyPrefixInformation = new S3KeyPrefixInformation();
+            s3KeyPrefixInformation.setS3KeyPrefix(s3KeyPrefix);
+
+            /*
+             * Mock operations on mocked dependencies
+             */
+            when(mockDownloaderManifestReader.readJsonManifest(any())).thenReturn(downloaderInputManifestDto);
+            when(mockDownloaderWebClient.getBusinessObjectData(any())).thenReturn(businessObjectData);
+            when(mockBusinessObjectDataHelper.getStorageUnitByStorageName(any(), any())).thenReturn(storageUnit);
+            when(mockDownloaderWebClient.getS3KeyPrefix(any())).thenReturn(s3KeyPrefixInformation);
+            when(mockS3Service.downloadDirectory(any())).then(new Answer<S3FileTransferResultsDto>()
+            {
+                @Override
+                public S3FileTransferResultsDto answer(InvocationOnMock invocation) throws Throwable
+                {
+                    Files.createFile(targetDirectoryPath.resolve("file"));
+                    throw expectedException;
+                }
+            });
+
+            /*
+             * Make the call to the method under test
+             */
+            RegServerAccessParamsDto regServerAccessParamsDto = null;
+            File manifestPath = null;
+            S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+            s3FileTransferRequestParamsDto.setLocalPath(localPath.toString());
+            s3FileTransferRequestParamsDto.setMaxThreads(1);
+
+            try
+            {
+                downloaderController.performDownload(regServerAccessParamsDto, manifestPath, s3FileTransferRequestParamsDto);
+                // Expect an exception, fail if no exception
+                fail();
+            }
+            catch (Exception e)
+            {
+                // Assert that the exception thrown by the mock is what is actually thrown
+                assertEquals(expectedException, e);
+                // Assert that the target directory is cleaned
+                assertEquals(0, targetDirectoryPath.toFile().list().length);
+            }
+        }
+        finally
+        {
+            /*
+             * Restore mocked dependencies to their original implementation
+             */
+            ReflectionTestUtils.setField(downloaderController, "downloaderWebClient", originalDownloaderWebClient);
+            ReflectionTestUtils.setField(downloaderController, "manifestReader", originalDownloaderManifestReader);
+            ReflectionTestUtils.setField(downloaderController, "businessObjectDataHelper", originalBusinessObjectDataHelper);
+            ReflectionTestUtils.setField(downloaderController, "s3Service", originalS3Service);
+            ReflectionTestUtils.setField(downloaderController, "storageFileHelper", originalStorageFileHelper);
+            ReflectionTestUtils.setField(downloaderController, "storageHelper", originalStorageHelper);
+
+            // Clean up any temporary files
+            FileUtils.deleteDirectory(localPath.toFile());
+        }
+    }
+
+    @Test
+    public void testCreateDownloaderOutputManifestDtoAssertOutputFilesEmptyWhenStorageFilesNull()
+    {
+        BusinessObjectData businessObjectData = new BusinessObjectData();
+        StorageUnit storageUnit = new StorageUnit(new Storage("storageName", null, null), null, null, StorageUnitStatusEntity.ENABLED);
+        String s3KeyPrefix = "s3KeyPrefix";
+        DownloaderOutputManifestDto actual = downloaderController.createDownloaderOutputManifestDto(businessObjectData, storageUnit, s3KeyPrefix);
+        assertEquals(0, actual.getManifestFiles().size());
+    }
+
+    @Test
+    public void testCreateDownloaderOutputManifestDtoAssertOutputAttributesSetWhenBdataAttributesSet()
+    {
+        BusinessObjectData businessObjectData = new BusinessObjectData();
+        businessObjectData.setAttributes(new ArrayList<>());
+        businessObjectData.getAttributes().add(new Attribute("name", "value"));
+        StorageUnit storageUnit = new StorageUnit(new Storage("storageName", null, null), null, null, StorageUnitStatusEntity.ENABLED);
+        String s3KeyPrefix = "s3KeyPrefix";
+        DownloaderOutputManifestDto actual = downloaderController.createDownloaderOutputManifestDto(businessObjectData, storageUnit, s3KeyPrefix);
+        assertEquals(1, actual.getAttributes().size());
+        assertEquals("value", actual.getAttributes().get("name"));
+    }
+
+    @Test
+    public void testLogLocalDirectoryContents() throws Exception
+    {
+        /*
+         * Hijack the logger to force it to be INFO level and add an additional appender which writes to a StringWriter
+         * The original values will be replaced at the end of the test case
+         */
+        Logger logger = Logger.getLogger(DownloaderController.class);
+        StringWriter writer = new StringWriter();
+        WriterAppender stringWriterAppender = new WriterAppender(new PatternLayout("%m%n"), writer);
+        logger.addAppender(stringWriterAppender);
+        Level originalLevel = logger.getLevel();
+        logger.setLevel(Level.INFO);
+
+        /*
+         * Create and inject mock objects
+         */
+        DownloaderWebClient mockDownloaderWebClient = mock(DownloaderWebClient.class);
+        DownloaderWebClient originalDownloaderWebClient = (DownloaderWebClient) ReflectionTestUtils.getField(downloaderController, "downloaderWebClient");
+        ReflectionTestUtils.setField(downloaderController, "downloaderWebClient", mockDownloaderWebClient);
+
+        DownloaderManifestReader mockDownloaderManifestReader = mock(DownloaderManifestReader.class);
+        DownloaderManifestReader originalDownloaderManifestReader =
+            (DownloaderManifestReader) ReflectionTestUtils.getField(downloaderController, "manifestReader");
+        ReflectionTestUtils.setField(downloaderController, "manifestReader", mockDownloaderManifestReader);
+
+        BusinessObjectDataHelper mockBusinessObjectDataHelper = mock(BusinessObjectDataHelper.class);
+        BusinessObjectDataHelper originalBusinessObjectDataHelper =
+            (BusinessObjectDataHelper) ReflectionTestUtils.getField(downloaderController, "businessObjectDataHelper");
+        ReflectionTestUtils.setField(downloaderController, "businessObjectDataHelper", mockBusinessObjectDataHelper);
+
+        S3Service mockS3Service = mock(S3Service.class);
+        S3Service originalS3Service = (S3Service) ReflectionTestUtils.getField(downloaderController, "s3Service");
+        ReflectionTestUtils.setField(downloaderController, "s3Service", mockS3Service);
+
+        StorageFileHelper mockStorageFileHelper = mock(StorageFileHelper.class);
+        StorageFileHelper originalStorageFileHelper = (StorageFileHelper) ReflectionTestUtils.getField(downloaderController, "storageFileHelper");
+        ReflectionTestUtils.setField(downloaderController, "storageFileHelper", mockStorageFileHelper);
+
+        StorageHelper mockStorageHelper = mock(StorageHelper.class);
+        StorageHelper originalStorageHelper = (StorageHelper) ReflectionTestUtils.getField(downloaderController, "storageHelper");
+        ReflectionTestUtils.setField(downloaderController, "storageHelper", mockStorageHelper);
+
+        /*
+         * Start test
+         */
+        Path localPath = Files.createTempDirectory(null);
+        try
+        {
+            String s3KeyPrefix = "s3KeyPrefix";
+            String storageName = "storageName";
+            Path targetDirectoryPath = localPath.resolve(s3KeyPrefix);
+            Path targetFilePath = targetDirectoryPath.resolve("file");
+
+            DownloaderInputManifestDto downloaderInputManifestDto = new DownloaderInputManifestDto();
+            BusinessObjectData businessObjectData = new BusinessObjectData();
+            StorageUnit storageUnit = new StorageUnit(new Storage(storageName, null, null), null, null, StorageUnitStatusEntity.ENABLED);
+            S3KeyPrefixInformation s3KeyPrefixInformation = new S3KeyPrefixInformation();
+            s3KeyPrefixInformation.setS3KeyPrefix(s3KeyPrefix);
+
+            /*
+             * Mock operations on mocked dependencies
+             */
+            when(mockDownloaderManifestReader.readJsonManifest(any())).thenReturn(downloaderInputManifestDto);
+            when(mockDownloaderWebClient.getBusinessObjectData(any())).thenReturn(businessObjectData);
+            when(mockBusinessObjectDataHelper.getStorageUnitByStorageName(any(), any())).thenReturn(storageUnit);
+            when(mockDownloaderWebClient.getS3KeyPrefix(any())).thenReturn(s3KeyPrefixInformation);
+            when(mockS3Service.downloadDirectory(any())).then(new Answer<S3FileTransferResultsDto>()
+            {
+                @Override
+                public S3FileTransferResultsDto answer(InvocationOnMock invocation) throws Throwable
+                {
+                    Files.createFile(targetFilePath);
+                    return null;
+                }
+            });
+
+            /*
+             * Make the call to the method under test
+             */
+            RegServerAccessParamsDto regServerAccessParamsDto = null;
+            File manifestPath = null;
+            S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+            s3FileTransferRequestParamsDto.setLocalPath(localPath.toString());
+            s3FileTransferRequestParamsDto.setMaxThreads(1);
+
+            downloaderController.performDownload(regServerAccessParamsDto, manifestPath, s3FileTransferRequestParamsDto);
+
+            assertEquals(String.format("Found 1 files in \"%s\" target local directory:%n    %s%n", targetDirectoryPath, targetFilePath), writer.toString());
+        }
+        finally
+        {
+            logger.setLevel(originalLevel);
+            logger.removeAppender(stringWriterAppender);
+
+            /*
+             * Restore mocked dependencies to their original implementation
+             */
+            ReflectionTestUtils.setField(downloaderController, "downloaderWebClient", originalDownloaderWebClient);
+            ReflectionTestUtils.setField(downloaderController, "manifestReader", originalDownloaderManifestReader);
+            ReflectionTestUtils.setField(downloaderController, "businessObjectDataHelper", originalBusinessObjectDataHelper);
+            ReflectionTestUtils.setField(downloaderController, "s3Service", originalS3Service);
+            ReflectionTestUtils.setField(downloaderController, "storageFileHelper", originalStorageFileHelper);
+            ReflectionTestUtils.setField(downloaderController, "storageHelper", originalStorageHelper);
+
+            // Clean up any temporary files
+            FileUtils.deleteDirectory(localPath.toFile());
+        }
+    }
+
+    /**
+     * Asserts that the controller is sending the proper implementation of credentials provider when calling S3.
+     */
+    @Test
+    public void testPerformDownloadAssertCredentialsRetrieved() throws Exception
+    {
+        /*
+         * Create and inject mock objects
+         */
+        DownloaderWebClient mockDownloaderWebClient = mock(DownloaderWebClient.class);
+        DownloaderWebClient originalDownloaderWebClient = (DownloaderWebClient) ReflectionTestUtils.getField(downloaderController, "downloaderWebClient");
+        ReflectionTestUtils.setField(downloaderController, "downloaderWebClient", mockDownloaderWebClient);
+
+        DownloaderManifestReader mockDownloaderManifestReader = mock(DownloaderManifestReader.class);
+        DownloaderManifestReader originalDownloaderManifestReader =
+            (DownloaderManifestReader) ReflectionTestUtils.getField(downloaderController, "manifestReader");
+        ReflectionTestUtils.setField(downloaderController, "manifestReader", mockDownloaderManifestReader);
+
+        BusinessObjectDataHelper mockBusinessObjectDataHelper = mock(BusinessObjectDataHelper.class);
+        BusinessObjectDataHelper originalBusinessObjectDataHelper =
+            (BusinessObjectDataHelper) ReflectionTestUtils.getField(downloaderController, "businessObjectDataHelper");
+        ReflectionTestUtils.setField(downloaderController, "businessObjectDataHelper", mockBusinessObjectDataHelper);
+
+        S3Service mockS3Service = mock(S3Service.class);
+        S3Service originalS3Service = (S3Service) ReflectionTestUtils.getField(downloaderController, "s3Service");
+        ReflectionTestUtils.setField(downloaderController, "s3Service", mockS3Service);
+
+        StorageFileHelper mockStorageFileHelper = mock(StorageFileHelper.class);
+        StorageFileHelper originalStorageFileHelper = (StorageFileHelper) ReflectionTestUtils.getField(downloaderController, "storageFileHelper");
+        ReflectionTestUtils.setField(downloaderController, "storageFileHelper", mockStorageFileHelper);
+
+        StorageHelper mockStorageHelper = mock(StorageHelper.class);
+        StorageHelper originalStorageHelper = (StorageHelper) ReflectionTestUtils.getField(downloaderController, "storageHelper");
+        ReflectionTestUtils.setField(downloaderController, "storageHelper", mockStorageHelper);
+
+        /*
+         * Start test
+         */
+        Path localPath = Files.createTempDirectory(null);
+        try
+        {
+            String s3KeyPrefix = "s3KeyPrefix";
+            String storageName = "storageName";
+
+            DownloaderInputManifestDto downloaderInputManifestDto = new DownloaderInputManifestDto();
+            downloaderInputManifestDto.setStorageName(storageName);
+            BusinessObjectData businessObjectData = new BusinessObjectData();
+            StorageUnit storageUnit = new StorageUnit(new Storage(storageName, null, null), null, null, StorageUnitStatusEntity.ENABLED);
+            S3KeyPrefixInformation s3KeyPrefixInformation = new S3KeyPrefixInformation();
+            s3KeyPrefixInformation.setS3KeyPrefix(s3KeyPrefix);
+
+            /*
+             * Mock operations on mocked dependencies
+             */
+            when(mockDownloaderManifestReader.readJsonManifest(any())).thenReturn(downloaderInputManifestDto);
+            when(mockDownloaderWebClient.getBusinessObjectData(any())).thenReturn(businessObjectData);
+            when(mockBusinessObjectDataHelper.getStorageUnitByStorageName(any(), any())).thenReturn(storageUnit);
+            when(mockDownloaderWebClient.getS3KeyPrefix(any())).thenReturn(s3KeyPrefixInformation);
+            when(mockDownloaderWebClient.getStorageUnitDownloadCredential(any(), any())).thenReturn(new StorageUnitDownloadCredential(
+                new AwsCredential("awsAccessKey", "awsSecretKey", "awsSessionToken", DatatypeFactory.newInstance().newXMLGregorianCalendar())));
+            when(mockS3Service.downloadDirectory(any())).then(new Answer<S3FileTransferResultsDto>()
+            {
+                @Override
+                public S3FileTransferResultsDto answer(InvocationOnMock invocation) throws Throwable
+                {
+                    /*
+                     * Call the providers' getAwsCredentials(), just like real implementation would.
+                     */
+                    S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = invocation.getArgumentAt(0, S3FileTransferRequestParamsDto.class);
+                    List<HerdAWSCredentialsProvider> additionalAwsCredentialsProviders = s3FileTransferRequestParamsDto.getAdditionalAwsCredentialsProviders();
+                    for (HerdAWSCredentialsProvider herdAWSCredentialsProvider : additionalAwsCredentialsProviders)
+                    {
+                        herdAWSCredentialsProvider.getAwsCredential();
+                    }
+                    return null;
+                }
+            });
+
+            /*
+             * Make the call to the method under test
+             */
+            RegServerAccessParamsDto regServerAccessParamsDto = null;
+            File manifestPath = null;
+            S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+            s3FileTransferRequestParamsDto.setLocalPath(localPath.toString());
+            s3FileTransferRequestParamsDto.setMaxThreads(1);
+
+            downloaderController.performDownload(regServerAccessParamsDto, manifestPath, s3FileTransferRequestParamsDto);
+
+            // Assert that the proper delegate method is called with the expected params to retrieve credentials
+            verify(mockDownloaderWebClient).getStorageUnitDownloadCredential(downloaderInputManifestDto, storageName);
+        }
+        finally
+        {
+            /*
+             * Restore mocked dependencies to their original implementation
+             */
+            ReflectionTestUtils.setField(downloaderController, "downloaderWebClient", originalDownloaderWebClient);
+            ReflectionTestUtils.setField(downloaderController, "manifestReader", originalDownloaderManifestReader);
+            ReflectionTestUtils.setField(downloaderController, "businessObjectDataHelper", originalBusinessObjectDataHelper);
+            ReflectionTestUtils.setField(downloaderController, "s3Service", originalS3Service);
+            ReflectionTestUtils.setField(downloaderController, "storageFileHelper", originalStorageFileHelper);
+            ReflectionTestUtils.setField(downloaderController, "storageHelper", originalStorageHelper);
+
+            // Clean up any temporary files
+            FileUtils.deleteDirectory(localPath.toFile());
+        }
     }
 
     /**

@@ -47,6 +47,8 @@ public abstract class BaseAddEmrStep extends BaseJavaDelegate
     protected Expression scriptLocation;
     protected Expression scriptArguments;
 
+    protected Expression emrClusterId;
+
     /**
      * Adds the Step to EMR cluster, and sets the step id as workflow variable.
      *
@@ -156,6 +158,17 @@ public abstract class BaseAddEmrStep extends BaseJavaDelegate
     }
 
     /**
+     * Gets the EMR cluster ID
+     * 
+     * @param execution The delegate execution
+     * @return The EMR cluster ID
+     */
+    protected String getEmrClusterId(DelegateExecution execution)
+    {
+        return activitiHelper.getExpressionVariableAsString(emrClusterId, execution);
+    }
+
+    /**
      * Populates common parameters.
      *
      * @param request the request.
@@ -170,5 +183,6 @@ public abstract class BaseAddEmrStep extends BaseJavaDelegate
         stepHelper.setRequestNamespace(request, getNamespace(execution));
         stepHelper.setRequestEmrClusterDefinitionName(request, getEmrClusterDefinitionName(execution));
         stepHelper.setRequestEmrClusterName(request, getEmrClusterName(execution));
+        stepHelper.setRequestEmrClusterId(request, getEmrClusterId(execution));
     }
 }

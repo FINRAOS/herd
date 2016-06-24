@@ -24,8 +24,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
-import org.finra.herd.dao.HerdDao;
+import org.finra.herd.dao.BusinessObjectDataDao;
+import org.finra.herd.dao.BusinessObjectDataStatusDao;
 import org.finra.herd.dao.S3Dao;
+import org.finra.herd.dao.StorageUnitStatusDao;
 import org.finra.herd.dao.helper.HerdCollectionHelper;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.BusinessObjectData;
@@ -49,28 +51,40 @@ public class BusinessObjectDataInvalidateUnregisteredHelper
     public static final String UNREGISTERED_STATUS = BusinessObjectDataStatusEntity.INVALID;
 
     @Autowired
-    private HerdDao herdDao;
+    private BusinessObjectDataDao businessObjectDataDao;
 
     @Autowired
     private BusinessObjectDataHelper businessObjectDataHelper;
 
     @Autowired
-    private S3Dao s3Dao;
+    private BusinessObjectDataStatusDao businessObjectDataStatusDao;
 
     @Autowired
-    private HerdDaoHelper herdDaoHelper;
+    private BusinessObjectFormatDaoHelper businessObjectFormatDaoHelper;
 
     @Autowired
     private HerdCollectionHelper herdCollectionHelper;
 
     @Autowired
+    private S3Dao s3Dao;
+
+    @Autowired
+    private S3KeyPrefixHelper s3KeyPrefixHelper;
+
+    @Autowired
     private SqsNotificationEventService sqsNotificationEventService;
+
+    @Autowired
+    private StorageDaoHelper storageDaoHelper;
 
     @Autowired
     private StorageFileHelper storageFileHelper;
 
     @Autowired
-    private StorageDaoHelper storageDaoHelper;
+    private StorageHelper storageHelper;
+
+    @Autowired
+    private StorageUnitStatusDao storageUnitStatusDao;
 
     /**
      * Compares objects registered vs what exists in S3. Registers objects in INVALID status for data that are not registered but exist in S3. S3 objects are
@@ -101,7 +115,7 @@ public class BusinessObjectDataInvalidateUnregisteredHelper
         // Validate that storage platform is S3
         if (!StoragePlatformEntity.S3.equals(storageEntity.getStoragePlatform().getName()))
         {
-            throw new IllegalArgumentException("The specified storage '" + storageName + "' is not a S3 storage platform.");
+            throw new IllegalArgumentException("The specified storage '" + storageName + "' is not an S3 storage platform.");
         }
 
         // Get data with latest version
@@ -125,25 +139,51 @@ public class BusinessObjectDataInvalidateUnregisteredHelper
     }
 
     /**
-     * Fires business object data status changed notifications.
+     * Constructs the response from the given request and the list of objects that have been registered.
      *
-     * @param businessObjectDataEntities list of business object data that were created.
+     * @param request the original request
+     * @param registeredBusinessObjectDataEntities list of {@link BusinessObjectDataEntity} that have been newly created.
+     *
+     * @return {@link BusinessObjectDataInvalidateUnregisteredResponse}
      */
-    private void processBusinessObjectDataStatusChangeNotificationEvents(List<BusinessObjectDataEntity> businessObjectDataEntities)
+    private BusinessObjectDataInvalidateUnregisteredResponse getBusinessObjectDataInvalidateUnregisteredResponse(
+        BusinessObjectDataInvalidateUnregisteredRequest request, List<BusinessObjectDataEntity> registeredBusinessObjectDataEntities)
     {
-        // Convert entities to key object
-        List<BusinessObjectDataKey> registeredBusinessObjectDataKeys = new ArrayList<>();
-        for (BusinessObjectDataEntity businessObjectDataEntity : businessObjectDataEntities)
-        {
-            BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.createBusinessObjectDataKeyFromEntity(businessObjectDataEntity);
-            registeredBusinessObjectDataKeys.add(businessObjectDataKey);
-        }
+        BusinessObjectDataInvalidateUnregisteredResponse response = new BusinessObjectDataInvalidateUnregisteredResponse();
+        response.setNamespace(request.getNamespace());
+        response.setBusinessObjectDefinitionName(request.getBusinessObjectDefinitionName());
+        response.setBusinessObjectFormatUsage(request.getBusinessObjectFormatUsage());
+        response.setBusinessObjectFormatFileType(request.getBusinessObjectFormatFileType());
+        response.setBusinessObjectFormatVersion(request.getBusinessObjectFormatVersion());
+        response.setPartitionValue(request.getPartitionValue());
+        response.setSubPartitionValues(request.getSubPartitionValues());
+        response.setStorageName(request.getStorageName());
+        response.setRegisteredBusinessObjectDataList(getResponseBusinessObjectDatas(registeredBusinessObjectDataEntities));
+        return response;
+    }
 
-        // Fire notifications on the keys
-        for (BusinessObjectDataKey businessObjectDataKey : registeredBusinessObjectDataKeys)
+    /**
+     * Constructs a {@link BusinessObjectDataKey} from the given request. The returned key does not contain a data version.
+     *
+     * @param businessObjectDataInvalidateUnregisteredRequest the request with key information
+     *
+     * @return {@link BusinessObjectDataKey}
+     */
+    private BusinessObjectDataKey getBusinessObjectDataKey(BusinessObjectDataInvalidateUnregisteredRequest businessObjectDataInvalidateUnregisteredRequest)
+    {
+        BusinessObjectDataKey businessObjectDataKey = new BusinessObjectDataKey();
+        businessObjectDataKey.setNamespace(businessObjectDataInvalidateUnregisteredRequest.getNamespace());
+        businessObjectDataKey.setBusinessObjectDefinitionName(businessObjectDataInvalidateUnregisteredRequest.getBusinessObjectDefinitionName());
+        businessObjectDataKey.setBusinessObjectFormatUsage(businessObjectDataInvalidateUnregisteredRequest.getBusinessObjectFormatUsage());
+        businessObjectDataKey.setBusinessObjectFormatFileType(businessObjectDataInvalidateUnregisteredRequest.getBusinessObjectFormatFileType());
+        businessObjectDataKey.setBusinessObjectFormatVersion(businessObjectDataInvalidateUnregisteredRequest.getBusinessObjectFormatVersion());
+        businessObjectDataKey.setPartitionValue(businessObjectDataInvalidateUnregisteredRequest.getPartitionValue());
+        businessObjectDataKey.setSubPartitionValues(businessObjectDataInvalidateUnregisteredRequest.getSubPartitionValues());
+        if (businessObjectDataInvalidateUnregisteredRequest.getSubPartitionValues() == null)
         {
-            sqsNotificationEventService.processBusinessObjectDataStatusChangeNotificationEvent(businessObjectDataKey, UNREGISTERED_STATUS, null);
+            businessObjectDataKey.setSubPartitionValues(new ArrayList<String>());
         }
+        return businessObjectDataKey;
     }
 
     /**
@@ -180,89 +220,22 @@ public class BusinessObjectDataInvalidateUnregisteredHelper
         businessObjectFormatKey.setBusinessObjectFormatFileType(request.getBusinessObjectFormatFileType());
         businessObjectFormatKey.setBusinessObjectFormatVersion(request.getBusinessObjectFormatVersion());
 
-        return herdDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey);
+        return businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey);
     }
 
     /**
-     * Trims any relevant string values in the request.
+     * Returns the latest version of the business object data registered. Returns null if no data is registered.
      *
-     * @param businessObjectDataInvalidateUnregisteredRequest request to trim
+     * @param businessObjectDataInvalidateUnregisteredRequest request containing business object data key
+     *
+     * @return {@link BusinessObjectDataEntity} or null
      */
-    private void trimRequest(BusinessObjectDataInvalidateUnregisteredRequest businessObjectDataInvalidateUnregisteredRequest)
+    private BusinessObjectDataEntity getLatestBusinessObjectDataEntity(
+        BusinessObjectDataInvalidateUnregisteredRequest businessObjectDataInvalidateUnregisteredRequest)
     {
-        businessObjectDataInvalidateUnregisteredRequest.setNamespace(businessObjectDataInvalidateUnregisteredRequest.getNamespace().trim());
-        businessObjectDataInvalidateUnregisteredRequest
-            .setBusinessObjectDefinitionName(businessObjectDataInvalidateUnregisteredRequest.getBusinessObjectDefinitionName().trim());
-        businessObjectDataInvalidateUnregisteredRequest
-            .setBusinessObjectFormatUsage(businessObjectDataInvalidateUnregisteredRequest.getBusinessObjectFormatUsage().trim());
-        businessObjectDataInvalidateUnregisteredRequest
-            .setBusinessObjectFormatFileType(businessObjectDataInvalidateUnregisteredRequest.getBusinessObjectFormatFileType().trim());
-        businessObjectDataInvalidateUnregisteredRequest.setPartitionValue(businessObjectDataInvalidateUnregisteredRequest.getPartitionValue().trim());
-        businessObjectDataInvalidateUnregisteredRequest.setStorageName(businessObjectDataInvalidateUnregisteredRequest.getStorageName().trim());
-        if (businessObjectDataInvalidateUnregisteredRequest.getSubPartitionValues() != null)
-        {
-            List<String> trimmedSubPartitionValues = new ArrayList<>();
-            for (String subPartitionValue : businessObjectDataInvalidateUnregisteredRequest.getSubPartitionValues())
-            {
-                trimmedSubPartitionValues.add(subPartitionValue.trim());
-            }
-        }
-    }
-
-    /**
-     * Validates that the required parameters are specified and are within acceptable range.
-     *
-     * @param businessObjectDataInvalidateUnregisteredRequest request to validate
-     *
-     * @throws IllegalArgumentException when any of the parameter fails valdiation
-     */
-    private void validateRequest(BusinessObjectDataInvalidateUnregisteredRequest businessObjectDataInvalidateUnregisteredRequest)
-    {
-        Assert.notNull(businessObjectDataInvalidateUnregisteredRequest, "The request is required");
-        Assert.isTrue(StringUtils.isNotBlank(businessObjectDataInvalidateUnregisteredRequest.getNamespace()), "The namespace is required");
-        Assert.isTrue(StringUtils.isNotBlank(businessObjectDataInvalidateUnregisteredRequest.getBusinessObjectDefinitionName()),
-            "The business object definition name is required");
-        Assert.isTrue(StringUtils.isNotBlank(businessObjectDataInvalidateUnregisteredRequest.getBusinessObjectFormatUsage()),
-            "The business object format usage is required");
-        Assert.isTrue(StringUtils.isNotBlank(businessObjectDataInvalidateUnregisteredRequest.getBusinessObjectFormatFileType()),
-            "The business object format file type is required");
-        Assert.notNull(businessObjectDataInvalidateUnregisteredRequest.getBusinessObjectFormatVersion(), "The business object format version is required");
-        Assert.isTrue(businessObjectDataInvalidateUnregisteredRequest.getBusinessObjectFormatVersion() >= 0,
-            "The business object format version must be greater than or equal to 0");
-        Assert.isTrue(StringUtils.isNotBlank(businessObjectDataInvalidateUnregisteredRequest.getPartitionValue()), "The partition value is required");
-        Assert.isTrue(StringUtils.isNotBlank(businessObjectDataInvalidateUnregisteredRequest.getStorageName()), "The storage name is required");
-        if (businessObjectDataInvalidateUnregisteredRequest.getSubPartitionValues() != null)
-        {
-            for (int i = 0; i < businessObjectDataInvalidateUnregisteredRequest.getSubPartitionValues().size(); i++)
-            {
-                String subPartitionValue = businessObjectDataInvalidateUnregisteredRequest.getSubPartitionValues().get(i);
-                Assert.isTrue(StringUtils.isNotBlank(subPartitionValue), "The sub-partition value [" + i + "] must not be blank");
-            }
-        }
-    }
-
-    /**
-     * Constructs the response from the given request and the list of objects that have been registered.
-     *
-     * @param request the original request
-     * @param registeredBusinessObjectDataEntities list of {@link BusinessObjectDataEntity} that have been newly created.
-     *
-     * @return {@link BusinessObjectDataInvalidateUnregisteredResponse}
-     */
-    private BusinessObjectDataInvalidateUnregisteredResponse getBusinessObjectDataInvalidateUnregisteredResponse(
-        BusinessObjectDataInvalidateUnregisteredRequest request, List<BusinessObjectDataEntity> registeredBusinessObjectDataEntities)
-    {
-        BusinessObjectDataInvalidateUnregisteredResponse response = new BusinessObjectDataInvalidateUnregisteredResponse();
-        response.setNamespace(request.getNamespace());
-        response.setBusinessObjectDefinitionName(request.getBusinessObjectDefinitionName());
-        response.setBusinessObjectFormatUsage(request.getBusinessObjectFormatUsage());
-        response.setBusinessObjectFormatFileType(request.getBusinessObjectFormatFileType());
-        response.setBusinessObjectFormatVersion(request.getBusinessObjectFormatVersion());
-        response.setPartitionValue(request.getPartitionValue());
-        response.setSubPartitionValues(request.getSubPartitionValues());
-        response.setStorageName(request.getStorageName());
-        response.setRegisteredBusinessObjectDataList(getResponseBusinessObjectDatas(registeredBusinessObjectDataEntities));
-        return response;
+        BusinessObjectDataKey businessObjectDataKey = getBusinessObjectDataKey(businessObjectDataInvalidateUnregisteredRequest);
+        businessObjectDataKey.setBusinessObjectDataVersion(null);
+        return businessObjectDataDao.getBusinessObjectDataByAltKey(businessObjectDataKey);
     }
 
     /**
@@ -284,70 +257,24 @@ public class BusinessObjectDataInvalidateUnregisteredHelper
     }
 
     /**
-     * Registers a business object data specified by the given business object data keys. The registered data will have a single storage unit with a directory
-     * with the S3 key prefix of the data key. The registered data will be set to status INVALID. If any registration actually occurs, the specified
-     * latestBusinessObjectDataEntity latestVersion will be set to false.
-     * <p/>
-     * The list of data keys must be in ordered by the data version in ascending order.
+     * Returns a list of S3 object keys associated with the given format, data key, and storage. The keys are found by matching the prefix. The result may be
+     * empty if there are not matching keys found.
      *
-     * @param latestBusinessObjectDataEntity the latest data at the time of the registration
-     * @param businessObjectDataKeys the list of data to register, ordered by version
-     * @param storageEntity the storage to register
+     * @param businessObjectFormatEntity {@link BusinessObjectFormatEntity}
+     * @param businessObjectDataKey {@link BusinessObjectDataKey}
+     * @param storageEntity {@link StorageEntity}
      *
-     * @return list of {@link BusinessObjectDataEntity} that have been registered
+     * @return list of S3 object keys
      */
-    private List<BusinessObjectDataEntity> registerInvalidBusinessObjectDatas(BusinessObjectDataEntity latestBusinessObjectDataEntity,
-        BusinessObjectFormatEntity businessObjectFormatEntity, List<BusinessObjectDataKey> businessObjectDataKeys, StorageEntity storageEntity)
+    private List<String> getS3ObjectKeys(BusinessObjectFormatEntity businessObjectFormatEntity, BusinessObjectDataKey businessObjectDataKey,
+        StorageEntity storageEntity)
     {
-        List<BusinessObjectDataEntity> createdBusinessObjectDataEntities = new ArrayList<>();
+        String s3KeyPrefix = s3KeyPrefixHelper.buildS3KeyPrefix(storageEntity, businessObjectFormatEntity, businessObjectDataKey);
 
-        if (!businessObjectDataKeys.isEmpty())
-        {
-            if (latestBusinessObjectDataEntity != null)
-            {
-                // Set the latestVersion flag to false for the latest data. This data should no longer be marked as latest.
-                latestBusinessObjectDataEntity.setLatestVersion(false);
-            }
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = storageHelper.getS3BucketAccessParams(storageEntity);
+        s3FileTransferRequestParamsDto.setS3KeyPrefix(s3KeyPrefix + '/');
 
-            // Get business object data status entity for the UNREGISTERED_STATUS.
-            BusinessObjectDataStatusEntity businessObjectDataStatusEntity = herdDao.getBusinessObjectDataStatusByCode(UNREGISTERED_STATUS);
-
-            // Get storage unit status entity for the ENABLED status.
-            StorageUnitStatusEntity storageUnitStatusEntity = herdDao.getStorageUnitStatusByCode(StorageUnitStatusEntity.ENABLED);
-
-            Iterator<BusinessObjectDataKey> unregisteredBusinessObjectDataKeysIterator = businessObjectDataKeys.iterator();
-            while (unregisteredBusinessObjectDataKeysIterator.hasNext())
-            {
-                BusinessObjectDataKey unregisteredBusinessObjectDataKey = unregisteredBusinessObjectDataKeysIterator.next();
-                BusinessObjectDataEntity businessObjectDataEntity = new BusinessObjectDataEntity();
-                businessObjectDataEntity.setBusinessObjectFormat(businessObjectFormatEntity);
-                businessObjectDataEntity.setPartitionValue(unregisteredBusinessObjectDataKey.getPartitionValue());
-                businessObjectDataEntity.setPartitionValue2(herdCollectionHelper.safeGet(unregisteredBusinessObjectDataKey.getSubPartitionValues(), 0));
-                businessObjectDataEntity.setPartitionValue3(herdCollectionHelper.safeGet(unregisteredBusinessObjectDataKey.getSubPartitionValues(), 1));
-                businessObjectDataEntity.setPartitionValue4(herdCollectionHelper.safeGet(unregisteredBusinessObjectDataKey.getSubPartitionValues(), 2));
-                businessObjectDataEntity.setPartitionValue5(herdCollectionHelper.safeGet(unregisteredBusinessObjectDataKey.getSubPartitionValues(), 3));
-                businessObjectDataEntity.setVersion(unregisteredBusinessObjectDataKey.getBusinessObjectDataVersion());
-                List<StorageUnitEntity> storageUnitEntities = new ArrayList<>();
-                StorageUnitEntity storageUnitEntity = new StorageUnitEntity();
-                storageUnitEntity.setStorage(storageEntity);
-                storageUnitEntity.setBusinessObjectData(businessObjectDataEntity);
-                String s3KeyPrefix = businessObjectDataHelper.buildS3KeyPrefix(businessObjectFormatEntity, unregisteredBusinessObjectDataKey);
-                storageUnitEntity.setDirectoryPath(s3KeyPrefix);
-                storageUnitEntity.setStatus(storageUnitStatusEntity);
-                storageUnitEntities.add(storageUnitEntity);
-                businessObjectDataEntity.setStorageUnits(storageUnitEntities);
-                businessObjectDataEntity.setStatus(businessObjectDataStatusEntity);
-
-                // Set this data as latest version if this is the end of the loop
-                businessObjectDataEntity.setLatestVersion(!unregisteredBusinessObjectDataKeysIterator.hasNext());
-
-                herdDao.saveAndRefresh(businessObjectDataEntity);
-
-                createdBusinessObjectDataEntities.add(businessObjectDataEntity);
-            }
-        }
-
-        return createdBusinessObjectDataEntities;
+        return storageFileHelper.getFilePathsFromS3ObjectSummaries(s3Dao.listDirectory(s3FileTransferRequestParamsDto));
     }
 
     /**
@@ -399,62 +326,150 @@ public class BusinessObjectDataInvalidateUnregisteredHelper
     }
 
     /**
-     * Returns a list of S3 object keys associated with the given format, data key, and storage. The keys are found by matching the prefix. The result may be
-     * empty if there are not matching keys found.
+     * Fires business object data status changed notifications.
      *
-     * @param businessObjectFormatEntity {@link BusinessObjectFormatEntity}
-     * @param businessObjectDataKey {@link BusinessObjectDataKey}
-     * @param storageEntity {@link StorageEntity}
-     *
-     * @return list of S3 object keys
+     * @param businessObjectDataEntities list of business object data that were created.
      */
-    private List<String> getS3ObjectKeys(BusinessObjectFormatEntity businessObjectFormatEntity, BusinessObjectDataKey businessObjectDataKey,
-        StorageEntity storageEntity)
+    private void processBusinessObjectDataStatusChangeNotificationEvents(List<BusinessObjectDataEntity> businessObjectDataEntities)
     {
-        String s3KeyPrefix = businessObjectDataHelper.buildS3KeyPrefix(businessObjectFormatEntity, businessObjectDataKey);
-
-        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = storageDaoHelper.getS3BucketAccessParams(storageEntity);
-        s3FileTransferRequestParamsDto.setS3KeyPrefix(s3KeyPrefix + '/');
-
-        return storageFileHelper.getFilePaths(s3Dao.listDirectory(s3FileTransferRequestParamsDto));
-    }
-
-    /**
-     * Returns the latest version of the business object data registered. Returns null if no data is registered.
-     *
-     * @param businessObjectDataInvalidateUnregisteredRequest request containing business object data key
-     *
-     * @return {@link BusinessObjectDataEntity} or null
-     */
-    private BusinessObjectDataEntity getLatestBusinessObjectDataEntity(
-        BusinessObjectDataInvalidateUnregisteredRequest businessObjectDataInvalidateUnregisteredRequest)
-    {
-        BusinessObjectDataKey businessObjectDataKey = getBusinessObjectDataKey(businessObjectDataInvalidateUnregisteredRequest);
-        businessObjectDataKey.setBusinessObjectDataVersion(null);
-        return herdDao.getBusinessObjectDataByAltKey(businessObjectDataKey);
-    }
-
-    /**
-     * Constructs a {@link BusinessObjectDataKey} from the given request. The returned key does not contain a data version.
-     *
-     * @param businessObjectDataInvalidateUnregisteredRequest the request with key information
-     *
-     * @return {@link BusinessObjectDataKey}
-     */
-    private BusinessObjectDataKey getBusinessObjectDataKey(BusinessObjectDataInvalidateUnregisteredRequest businessObjectDataInvalidateUnregisteredRequest)
-    {
-        BusinessObjectDataKey businessObjectDataKey = new BusinessObjectDataKey();
-        businessObjectDataKey.setNamespace(businessObjectDataInvalidateUnregisteredRequest.getNamespace());
-        businessObjectDataKey.setBusinessObjectDefinitionName(businessObjectDataInvalidateUnregisteredRequest.getBusinessObjectDefinitionName());
-        businessObjectDataKey.setBusinessObjectFormatUsage(businessObjectDataInvalidateUnregisteredRequest.getBusinessObjectFormatUsage());
-        businessObjectDataKey.setBusinessObjectFormatFileType(businessObjectDataInvalidateUnregisteredRequest.getBusinessObjectFormatFileType());
-        businessObjectDataKey.setBusinessObjectFormatVersion(businessObjectDataInvalidateUnregisteredRequest.getBusinessObjectFormatVersion());
-        businessObjectDataKey.setPartitionValue(businessObjectDataInvalidateUnregisteredRequest.getPartitionValue());
-        businessObjectDataKey.setSubPartitionValues(businessObjectDataInvalidateUnregisteredRequest.getSubPartitionValues());
-        if (businessObjectDataInvalidateUnregisteredRequest.getSubPartitionValues() == null)
+        // Convert entities to key object
+        List<BusinessObjectDataKey> registeredBusinessObjectDataKeys = new ArrayList<>();
+        for (BusinessObjectDataEntity businessObjectDataEntity : businessObjectDataEntities)
         {
-            businessObjectDataKey.setSubPartitionValues(new ArrayList<String>());
+            BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.createBusinessObjectDataKeyFromEntity(businessObjectDataEntity);
+            registeredBusinessObjectDataKeys.add(businessObjectDataKey);
         }
-        return businessObjectDataKey;
+
+        // Fire notifications on the keys
+        for (BusinessObjectDataKey businessObjectDataKey : registeredBusinessObjectDataKeys)
+        {
+            sqsNotificationEventService.processBusinessObjectDataStatusChangeNotificationEvent(businessObjectDataKey, UNREGISTERED_STATUS, null);
+        }
+    }
+
+    /**
+     * Registers a business object data specified by the given business object data keys. The registered data will have a single storage unit with a directory
+     * with the S3 key prefix of the data key. The registered data will be set to status INVALID. If any registration actually occurs, the specified
+     * latestBusinessObjectDataEntity latestVersion will be set to false.
+     * <p/>
+     * The list of data keys must be in ordered by the data version in ascending order.
+     *
+     * @param latestBusinessObjectDataEntity the latest data at the time of the registration
+     * @param businessObjectDataKeys the list of data to register, ordered by version
+     * @param storageEntity the storage to register
+     *
+     * @return list of {@link BusinessObjectDataEntity} that have been registered
+     */
+    private List<BusinessObjectDataEntity> registerInvalidBusinessObjectDatas(BusinessObjectDataEntity latestBusinessObjectDataEntity,
+        BusinessObjectFormatEntity businessObjectFormatEntity, List<BusinessObjectDataKey> businessObjectDataKeys, StorageEntity storageEntity)
+    {
+        List<BusinessObjectDataEntity> createdBusinessObjectDataEntities = new ArrayList<>();
+
+        if (!businessObjectDataKeys.isEmpty())
+        {
+            if (latestBusinessObjectDataEntity != null)
+            {
+                // Set the latestVersion flag to false for the latest data. This data should no longer be marked as latest.
+                latestBusinessObjectDataEntity.setLatestVersion(false);
+            }
+
+            // Get business object data status entity for the UNREGISTERED_STATUS.
+            BusinessObjectDataStatusEntity businessObjectDataStatusEntity = businessObjectDataStatusDao.getBusinessObjectDataStatusByCode(UNREGISTERED_STATUS);
+
+            // Get storage unit status entity for the ENABLED status.
+            StorageUnitStatusEntity storageUnitStatusEntity = storageUnitStatusDao.getStorageUnitStatusByCode(StorageUnitStatusEntity.ENABLED);
+
+            Iterator<BusinessObjectDataKey> unregisteredBusinessObjectDataKeysIterator = businessObjectDataKeys.iterator();
+            while (unregisteredBusinessObjectDataKeysIterator.hasNext())
+            {
+                BusinessObjectDataKey unregisteredBusinessObjectDataKey = unregisteredBusinessObjectDataKeysIterator.next();
+                BusinessObjectDataEntity businessObjectDataEntity = new BusinessObjectDataEntity();
+                businessObjectDataEntity.setBusinessObjectFormat(businessObjectFormatEntity);
+                businessObjectDataEntity.setPartitionValue(unregisteredBusinessObjectDataKey.getPartitionValue());
+                businessObjectDataEntity.setPartitionValue2(herdCollectionHelper.safeGet(unregisteredBusinessObjectDataKey.getSubPartitionValues(), 0));
+                businessObjectDataEntity.setPartitionValue3(herdCollectionHelper.safeGet(unregisteredBusinessObjectDataKey.getSubPartitionValues(), 1));
+                businessObjectDataEntity.setPartitionValue4(herdCollectionHelper.safeGet(unregisteredBusinessObjectDataKey.getSubPartitionValues(), 2));
+                businessObjectDataEntity.setPartitionValue5(herdCollectionHelper.safeGet(unregisteredBusinessObjectDataKey.getSubPartitionValues(), 3));
+                businessObjectDataEntity.setVersion(unregisteredBusinessObjectDataKey.getBusinessObjectDataVersion());
+                List<StorageUnitEntity> storageUnitEntities = new ArrayList<>();
+                StorageUnitEntity storageUnitEntity = new StorageUnitEntity();
+                storageUnitEntity.setStorage(storageEntity);
+                storageUnitEntity.setBusinessObjectData(businessObjectDataEntity);
+                String s3KeyPrefix = s3KeyPrefixHelper.buildS3KeyPrefix(storageEntity, businessObjectFormatEntity, unregisteredBusinessObjectDataKey);
+                storageUnitEntity.setDirectoryPath(s3KeyPrefix);
+                storageUnitEntity.setStatus(storageUnitStatusEntity);
+                storageUnitEntities.add(storageUnitEntity);
+                businessObjectDataEntity.setStorageUnits(storageUnitEntities);
+                businessObjectDataEntity.setStatus(businessObjectDataStatusEntity);
+
+                // Set this data as latest version if this is the end of the loop
+                businessObjectDataEntity.setLatestVersion(!unregisteredBusinessObjectDataKeysIterator.hasNext());
+
+                businessObjectDataDao.saveAndRefresh(businessObjectDataEntity);
+
+                createdBusinessObjectDataEntities.add(businessObjectDataEntity);
+            }
+        }
+
+        return createdBusinessObjectDataEntities;
+    }
+
+    /**
+     * Trims any relevant string values in the request.
+     *
+     * @param businessObjectDataInvalidateUnregisteredRequest request to trim
+     */
+    private void trimRequest(BusinessObjectDataInvalidateUnregisteredRequest businessObjectDataInvalidateUnregisteredRequest)
+    {
+        businessObjectDataInvalidateUnregisteredRequest.setNamespace(businessObjectDataInvalidateUnregisteredRequest.getNamespace().trim());
+        businessObjectDataInvalidateUnregisteredRequest
+            .setBusinessObjectDefinitionName(businessObjectDataInvalidateUnregisteredRequest.getBusinessObjectDefinitionName().trim());
+        businessObjectDataInvalidateUnregisteredRequest
+            .setBusinessObjectFormatUsage(businessObjectDataInvalidateUnregisteredRequest.getBusinessObjectFormatUsage().trim());
+        businessObjectDataInvalidateUnregisteredRequest
+            .setBusinessObjectFormatFileType(businessObjectDataInvalidateUnregisteredRequest.getBusinessObjectFormatFileType().trim());
+        businessObjectDataInvalidateUnregisteredRequest.setPartitionValue(businessObjectDataInvalidateUnregisteredRequest.getPartitionValue().trim());
+        businessObjectDataInvalidateUnregisteredRequest.setStorageName(businessObjectDataInvalidateUnregisteredRequest.getStorageName().trim());
+        List<String> subPartitionValues = businessObjectDataInvalidateUnregisteredRequest.getSubPartitionValues();
+        if (subPartitionValues != null)
+        {
+            for (int i = 0; i < subPartitionValues.size(); i++)
+            {
+                String subPartitionValue = subPartitionValues.get(i);
+                subPartitionValues.set(i, subPartitionValue.trim());
+            }
+        }
+    }
+
+    /**
+     * Validates that the required parameters are specified and are within acceptable range.
+     *
+     * @param businessObjectDataInvalidateUnregisteredRequest request to validate
+     *
+     * @throws IllegalArgumentException when any of the parameter fails valdiation
+     */
+    private void validateRequest(BusinessObjectDataInvalidateUnregisteredRequest businessObjectDataInvalidateUnregisteredRequest)
+    {
+        Assert.notNull(businessObjectDataInvalidateUnregisteredRequest, "The request is required");
+        Assert.isTrue(StringUtils.isNotBlank(businessObjectDataInvalidateUnregisteredRequest.getNamespace()), "The namespace is required");
+        Assert.isTrue(StringUtils.isNotBlank(businessObjectDataInvalidateUnregisteredRequest.getBusinessObjectDefinitionName()),
+            "The business object definition name is required");
+        Assert.isTrue(StringUtils.isNotBlank(businessObjectDataInvalidateUnregisteredRequest.getBusinessObjectFormatUsage()),
+            "The business object format usage is required");
+        Assert.isTrue(StringUtils.isNotBlank(businessObjectDataInvalidateUnregisteredRequest.getBusinessObjectFormatFileType()),
+            "The business object format file type is required");
+        Assert.notNull(businessObjectDataInvalidateUnregisteredRequest.getBusinessObjectFormatVersion(), "The business object format version is required");
+        Assert.isTrue(businessObjectDataInvalidateUnregisteredRequest.getBusinessObjectFormatVersion() >= 0,
+            "The business object format version must be greater than or equal to 0");
+        Assert.isTrue(StringUtils.isNotBlank(businessObjectDataInvalidateUnregisteredRequest.getPartitionValue()), "The partition value is required");
+        Assert.isTrue(StringUtils.isNotBlank(businessObjectDataInvalidateUnregisteredRequest.getStorageName()), "The storage name is required");
+        if (businessObjectDataInvalidateUnregisteredRequest.getSubPartitionValues() != null)
+        {
+            for (int i = 0; i < businessObjectDataInvalidateUnregisteredRequest.getSubPartitionValues().size(); i++)
+            {
+                String subPartitionValue = businessObjectDataInvalidateUnregisteredRequest.getSubPartitionValues().get(i);
+                Assert.isTrue(StringUtils.isNotBlank(subPartitionValue), "The sub-partition value [" + i + "] must not be blank");
+            }
+        }
     }
 }

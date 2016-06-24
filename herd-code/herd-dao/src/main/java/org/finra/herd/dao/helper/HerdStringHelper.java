@@ -71,7 +71,7 @@ public class HerdStringHelper
         String delimiter = configurationHelper.getProperty(ConfigurationValue.FIELD_DATA_DELIMITER);
         String escapeChar = configurationHelper.getProperty(ConfigurationValue.FIELD_DATA_DELIMITER_ESCAPE_CHAR);
         List<String> splitString = new ArrayList<>();
-        if (inputString != null)
+        if (StringUtils.isNotBlank(inputString))
         {
             // Regex that is used to split, matches on delimiter but does not matches when delimiter is escaped by given escape character
             String regex = "(?<!" + Pattern.quote(escapeChar) + ")" + Pattern.quote(delimiter);
@@ -178,5 +178,30 @@ public class HerdStringHelper
             result = StringUtils.join(filteredAndEscaped, delimiter);
         }
         return result;
+    }
+
+    /**
+     * Returns a list of values from a configuration value which are delimited by the default delimited configured by FIELD_DATA_DELIMITER. Returns an empty
+     * list if the configuration value does not exist.
+     *
+     * @param configurationValue The configuration value
+     *
+     * @return List of values
+     */
+    public List<String> getDelimitedConfigurationValue(ConfigurationValue configurationValue)
+    {
+        return splitStringWithDefaultDelimiter(configurationHelper.getProperty(configurationValue));
+    }
+
+    /**
+     * Builds the string delimited by default delimiter for the input String values.
+     *
+     * @param inputStrings List of string literals
+     *
+     * @return the String delimited with the default delimiter
+     */
+    public String buildStringWithDefaultDelimiter(List<String> inputStrings)
+    {
+        return StringUtils.join(inputStrings, configurationHelper.getProperty(ConfigurationValue.FIELD_DATA_DELIMITER));
     }
 }

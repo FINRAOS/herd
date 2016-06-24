@@ -23,16 +23,12 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 import org.hibernate.annotations.Type;
 
 /**
  * A schema column associated with a business object format.
  */
-@XmlRootElement
-@XmlType
 @Table(name = SchemaColumnEntity.TABLE_NAME)
 @Entity
 public class SchemaColumnEntity extends AuditableEntity
@@ -45,7 +41,7 @@ public class SchemaColumnEntity extends AuditableEntity
     @Id
     @Column(name = TABLE_NAME + "_id")
     @GeneratedValue(generator = TABLE_NAME + "_seq")
-    @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq")
+    @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq", allocationSize = 1)
     private Integer id;
 
     @ManyToOne
@@ -86,6 +82,10 @@ public class SchemaColumnEntity extends AuditableEntity
 
     @Column(name = "clmn_ds")
     private String description;
+
+    @ManyToOne
+    @JoinColumn(name = "bus_objct_dfntn_clmn_id", referencedColumnName = "bus_objct_dfntn_clmn_id")
+    private BusinessObjectDefinitionColumnEntity businessObjectDefinitionColumn;
 
     public Integer getId()
     {
@@ -187,72 +187,13 @@ public class SchemaColumnEntity extends AuditableEntity
         this.description = description;
     }
 
-    @Override
-    public boolean equals(Object other)
+    public BusinessObjectDefinitionColumnEntity getBusinessObjectDefinitionColumn()
     {
-        if (this == other)
-        {
-            return true;
-        }
-        if (other == null || getClass() != other.getClass())
-        {
-            return false;
-        }
-
-        SchemaColumnEntity that = (SchemaColumnEntity) other;
-
-        if (defaultValue != null ? !defaultValue.equals(that.defaultValue) : that.defaultValue != null)
-        {
-            return false;
-        }
-        if (description != null ? !description.equals(that.description) : that.description != null)
-        {
-            return false;
-        }
-        if (!id.equals(that.id))
-        {
-            return false;
-        }
-        if (!name.equals(that.name))
-        {
-            return false;
-        }
-        if (position != null ? !position.equals(that.position) : that.position != null)
-        {
-            return false;
-        }
-        if (partitionLevel != null ? !partitionLevel.equals(that.partitionLevel) : that.partitionLevel != null)
-        {
-            return false;
-        }
-        if (required != null ? !required.equals(that.required) : that.required != null)
-        {
-            return false;
-        }
-        if (size != null ? !size.equals(that.size) : that.size != null)
-        {
-            return false;
-        }
-        if (!type.equals(that.type))
-        {
-            return false;
-        }
-
-        return true;
+        return businessObjectDefinitionColumn;
     }
 
-    @Override
-    public int hashCode()
+    public void setBusinessObjectDefinitionColumn(BusinessObjectDefinitionColumnEntity businessObjectDefinitionColumn)
     {
-        int result = id.hashCode();
-        result = 31 * result + name.hashCode();
-        result = 31 * result + type.hashCode();
-        result = 31 * result + (size != null ? size.hashCode() : 0);
-        result = 31 * result + (required != null ? required.hashCode() : 0);
-        result = 31 * result + (defaultValue != null ? defaultValue.hashCode() : 0);
-        result = 31 * result + (position != null ? position.hashCode() : 0);
-        result = 31 * result + (partitionLevel != null ? partitionLevel.hashCode() : 0);
-        result = 31 * result + (description != null ? description.hashCode() : 0);
-        return result;
+        this.businessObjectDefinitionColumn = businessObjectDefinitionColumn;
     }
 }

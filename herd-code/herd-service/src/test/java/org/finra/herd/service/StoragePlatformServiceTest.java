@@ -15,30 +15,27 @@
 */
 package org.finra.herd.service;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import org.apache.log4j.Logger;
 import org.junit.Test;
 
 import org.finra.herd.model.ObjectNotFoundException;
-import org.finra.herd.model.jpa.StoragePlatformEntity;
 import org.finra.herd.model.api.xml.StoragePlatform;
 import org.finra.herd.model.api.xml.StoragePlatforms;
+import org.finra.herd.model.jpa.StoragePlatformEntity;
 
 /**
  * This class tests various functionality within the storage platform REST controller.
  */
 public class StoragePlatformServiceTest extends AbstractServiceTest
 {
-    private static Logger logger = Logger.getLogger(StoragePlatformServiceTest.class);
-
     @Test
     public void testGetStoragePlatforms() throws Exception
     {
         StoragePlatforms storagePlatforms = storagePlatformService.getStoragePlatforms();
         assertNotNull(storagePlatforms);
-        logger.info("Total number of storage platforms: " + storagePlatforms.getStoragePlatforms().size());
         assertTrue(storagePlatforms.getStoragePlatforms().size() >= 1); // We should have at least 1 row of reference data present (i.e. S3).
     }
 
@@ -47,13 +44,12 @@ public class StoragePlatformServiceTest extends AbstractServiceTest
     {
         StoragePlatform storagePlatform = storagePlatformService.getStoragePlatform(StoragePlatformEntity.S3);
         assertNotNull(storagePlatform);
-        assertTrue(StoragePlatformEntity.S3.equals(storagePlatform.getName()));
-        logger.info("Storage platform name: " + storagePlatform.getName());
+        assertEquals(StoragePlatformEntity.S3, storagePlatform.getName());
     }
 
     @Test(expected = ObjectNotFoundException.class)
     public void testGetStoragePlatformInvalidName() throws Exception
     {
-        storagePlatformService.getStoragePlatform("invalid" + getRandomSuffix());
+        storagePlatformService.getStoragePlatform("I_DO_NOT_EXIST");
     }
 }

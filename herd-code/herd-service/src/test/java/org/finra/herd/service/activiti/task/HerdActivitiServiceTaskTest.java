@@ -27,8 +27,9 @@ import org.activiti.bpmn.model.FieldExtension;
 import org.activiti.bpmn.model.ServiceTask;
 import org.activiti.engine.history.HistoricProcessInstance;
 import org.activiti.engine.runtime.Execution;
-import org.apache.log4j.Logger;
 import org.junit.Assert;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.finra.herd.model.api.xml.Job;
 import org.finra.herd.model.api.xml.Parameter;
@@ -40,7 +41,7 @@ import org.finra.herd.service.activiti.ActivitiRuntimeHelper;
  */
 public abstract class HerdActivitiServiceTaskTest extends AbstractServiceTest
 {
-    private static Logger logger = Logger.getLogger(HerdActivitiServiceTaskTest.class);
+    private static Logger LOGGER = LoggerFactory.getLogger(HerdActivitiServiceTaskTest.class);
 
     private final String serviceTaskId = "testServiceTask";
 
@@ -194,7 +195,7 @@ public abstract class HerdActivitiServiceTaskTest extends AbstractServiceTest
                         builder.append(variable).append('\n');
                     }
                 }
-                logger.error(builder);
+                LOGGER.error(builder.toString());
 
                 // Fail assertion
                 Assert.fail("The test did not finished in the specified timeout (15s). See error logs for variable dump.");

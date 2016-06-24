@@ -22,7 +22,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.activiti.bpmn.model.Activity;
 import org.activiti.bpmn.model.BpmnModel;
+import org.activiti.bpmn.model.FlowElement;
+import org.activiti.bpmn.model.Process;
+import org.activiti.bpmn.model.SequenceFlow;
+import org.activiti.bpmn.model.StartEvent;
 import org.activiti.engine.RepositoryService;
 import org.activiti.engine.repository.Deployment;
 import org.activiti.engine.repository.ProcessDefinition;
@@ -34,21 +39,26 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
-import org.finra.herd.dao.HerdDao;
+import org.finra.herd.core.helper.ConfigurationHelper;
+import org.finra.herd.dao.JobDefinitionDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
-import org.finra.herd.model.jpa.JobDefinitionEntity;
-import org.finra.herd.model.jpa.JobDefinitionParameterEntity;
-import org.finra.herd.model.jpa.NamespaceEntity;
+import org.finra.herd.model.annotation.NamespacePermission;
 import org.finra.herd.model.api.xml.JobDefinition;
 import org.finra.herd.model.api.xml.JobDefinitionCreateRequest;
 import org.finra.herd.model.api.xml.JobDefinitionUpdateRequest;
+import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.api.xml.Parameter;
 import org.finra.herd.model.api.xml.S3PropertiesLocation;
+import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.model.jpa.JobDefinitionEntity;
+import org.finra.herd.model.jpa.JobDefinitionParameterEntity;
+import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.service.JobDefinitionService;
 import org.finra.herd.service.activiti.ActivitiHelper;
-import org.finra.herd.service.helper.HerdDaoHelper;
-import org.finra.herd.service.helper.HerdHelper;
+import org.finra.herd.service.helper.JobDefinitionDaoHelper;
+import org.finra.herd.service.helper.JobDefinitionHelper;
+import org.finra.herd.service.helper.NamespaceDaoHelper;
 import org.finra.herd.service.helper.S3PropertiesLocationHelper;
 
 /**
@@ -62,19 +72,25 @@ public class JobDefinitionServiceImpl implements JobDefinitionService
     private static final String ACTIVITI_DEPLOY_XML_SUFFIX = "bpmn20.xml";
 
     @Autowired
-    private HerdDao herdDao;
+    private ActivitiHelper activitiHelper;
 
     @Autowired
-    private HerdDaoHelper herdDaoHelper;
+    private ConfigurationHelper configurationHelper;
 
     @Autowired
-    private HerdHelper herdHelper;
+    private JobDefinitionDao jobDefinitionDao;
+
+    @Autowired
+    private JobDefinitionDaoHelper jobDefinitionDaoHelper;
+
+    @Autowired
+    private JobDefinitionHelper jobDefinitionHelper;
+
+    @Autowired
+    private NamespaceDaoHelper namespaceDaoHelper;
 
     @Autowired
     private RepositoryService activitiRepositoryService;
-
-    @Autowired
-    private ActivitiHelper activitiHelper;
 
     @Autowired
     private S3PropertiesLocationHelper s3PropertiesLocationHelper;
@@ -83,20 +99,27 @@ public class JobDefinitionServiceImpl implements JobDefinitionService
      * Creates a new business object definition.
      *
      * @param request the business object definition create request.
+     * @param enforceAsync True to enforce first task is async, false to ignore
      *
      * @return the created business object definition.
      */
+    @NamespacePermission(fields = "#request.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
-    public JobDefinition createJobDefinition(JobDefinitionCreateRequest request) throws Exception
+    public JobDefinition createJobDefinition(JobDefinitionCreateRequest request, boolean enforceAsync) throws Exception
     {
         // Perform the validation.
         validateJobDefinitionCreateRequest(request);
 
+        if (enforceAsync)
+        {
+            assertFirstTaskIsAsync(activitiHelper.constructBpmnModelFromXmlAndValidate(request.getActivitiJobXml()));
+        }
+
         // Get the namespace and ensure it exists.
-        NamespaceEntity namespaceEntity = herdDaoHelper.getNamespaceEntity(request.getNamespace());
+        NamespaceEntity namespaceEntity = namespaceDaoHelper.getNamespaceEntity(request.getNamespace());
 
         // Ensure a job definition with the specified name doesn't already exist.
-        JobDefinitionEntity jobDefinitionEntity = herdDao.getJobDefinitionByAltKey(request.getNamespace(), request.getJobName());
+        JobDefinitionEntity jobDefinitionEntity = jobDefinitionDao.getJobDefinitionByAltKey(request.getNamespace(), request.getJobName());
         if (jobDefinitionEntity != null)
         {
             throw new AlreadyExistsException(
@@ -113,12 +136,13 @@ public class JobDefinitionServiceImpl implements JobDefinitionService
                 request.getParameters(), request.getS3PropertiesLocation());
 
         // Persist the new entity.
-        jobDefinitionEntity = herdDao.saveAndRefresh(jobDefinitionEntity);
+        jobDefinitionEntity = jobDefinitionDao.saveAndRefresh(jobDefinitionEntity);
 
         // Create and return the job definition from the persisted entity.
         return createJobDefinitionFromEntity(jobDefinitionEntity);
     }
 
+    @NamespacePermission(fields = "#namespace", permissions = NamespacePermissionEnum.READ)
     @Override
     public JobDefinition getJobDefinition(String namespace, String jobName) throws Exception
     {
@@ -134,14 +158,15 @@ public class JobDefinitionServiceImpl implements JobDefinitionService
         jobNameLocal = jobNameLocal.trim();
 
         // Retrieve and ensure that a job definition exists.
-        JobDefinitionEntity jobDefinitionEntity = herdDaoHelper.getJobDefinitionEntity(namespaceLocal, jobNameLocal);
+        JobDefinitionEntity jobDefinitionEntity = jobDefinitionDaoHelper.getJobDefinitionEntity(namespaceLocal, jobNameLocal);
 
         // Create and return the job definition object from the persisted entity.
         return createJobDefinitionFromEntity(jobDefinitionEntity);
     }
 
+    @NamespacePermission(fields = "#namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
-    public JobDefinition updateJobDefinition(String namespace, String jobName, JobDefinitionUpdateRequest request) throws Exception
+    public JobDefinition updateJobDefinition(String namespace, String jobName, JobDefinitionUpdateRequest request, boolean enforceAsync) throws Exception
     {
         String namespaceLocal = namespace;
         String jobNameLocal = jobName;
@@ -149,16 +174,21 @@ public class JobDefinitionServiceImpl implements JobDefinitionService
         // Perform the validation.
         validateJobDefinition(namespaceLocal, jobNameLocal, request.getActivitiJobXml(), request.getParameters(), request.getS3PropertiesLocation());
 
+        if (enforceAsync)
+        {
+            assertFirstTaskIsAsync(activitiHelper.constructBpmnModelFromXmlAndValidate(request.getActivitiJobXml()));
+        }
+
         // Trim data.
         namespaceLocal = namespaceLocal.trim();
         jobNameLocal = jobNameLocal.trim();
         request.setActivitiJobXml(request.getActivitiJobXml().trim());
 
         // Get the namespace and ensure it exists.
-        NamespaceEntity namespaceEntity = herdDaoHelper.getNamespaceEntity(namespaceLocal);
+        NamespaceEntity namespaceEntity = namespaceDaoHelper.getNamespaceEntity(namespaceLocal);
 
         // Retrieve and ensure that a job definition exists.
-        JobDefinitionEntity jobDefinitionEntity = herdDaoHelper.getJobDefinitionEntity(namespaceLocal, jobNameLocal);
+        JobDefinitionEntity jobDefinitionEntity = jobDefinitionDaoHelper.getJobDefinitionEntity(namespaceLocal, jobNameLocal);
 
         // Create the new process definition.
         ProcessDefinition processDefinition = createProcessDefinition(namespaceLocal, jobNameLocal, request.getActivitiJobXml());
@@ -169,7 +199,7 @@ public class JobDefinitionServiceImpl implements JobDefinitionService
                 request.getParameters(), request.getS3PropertiesLocation());
 
         // Persist the entity.
-        jobDefinitionEntity = herdDao.saveAndRefresh(jobDefinitionEntity);
+        jobDefinitionEntity = jobDefinitionDao.saveAndRefresh(jobDefinitionEntity);
 
         // Create and return the job definition object from the persisted entity.
         return createJobDefinitionFromEntity(jobDefinitionEntity);
@@ -185,8 +215,8 @@ public class JobDefinitionServiceImpl implements JobDefinitionService
     private void validateJobDefinitionCreateRequest(JobDefinitionCreateRequest request)
     {
         // Perform the validation.
-        validateJobDefinition(request.getNamespace(), request.getJobName(), request.getActivitiJobXml(), request.getParameters(), request
-            .getS3PropertiesLocation());
+        validateJobDefinition(request.getNamespace(), request.getJobName(), request.getActivitiJobXml(), request.getParameters(),
+            request.getS3PropertiesLocation());
 
         // Remove leading and trailing spaces.
         request.setNamespace(request.getNamespace().trim());
@@ -240,7 +270,7 @@ public class JobDefinitionServiceImpl implements JobDefinitionService
         // Validate that namespaceCd.jobName matched whats in Activiti job XML Id.
         String idInsideActivitiXml = bpmnModel.getProcesses().get(0).getId();
         Assert.hasText(idInsideActivitiXml, "ID inside Activiti job XML must be specified.");
-        Assert.isTrue(idInsideActivitiXml.equalsIgnoreCase(herdHelper.buildActivitiIdString(namespaceLocal, jobNameLocal)),
+        Assert.isTrue(idInsideActivitiXml.equalsIgnoreCase(jobDefinitionHelper.buildActivitiIdString(namespaceLocal, jobNameLocal)),
             "Namespace \"" + namespaceLocal + "\" and Job Name \"" + jobNameLocal + "\" does not match the ID specified within Activiti XML \"" +
                 idInsideActivitiXml +
                 "\".");
@@ -289,13 +319,41 @@ public class JobDefinitionServiceImpl implements JobDefinitionService
     private ProcessDefinition createProcessDefinition(String namespace, String jobName, String activitiJobXml)
     {
         // Deploy Activiti XML using Activiti API.
-        String activitiIdString = herdHelper.buildActivitiIdString(namespace, jobName);
+        String activitiIdString = jobDefinitionHelper.buildActivitiIdString(namespace, jobName);
         Deployment deployment =
             activitiRepositoryService.createDeployment().name(activitiIdString).addString(activitiIdString + ACTIVITI_DEPLOY_XML_SUFFIX, activitiJobXml)
                 .deploy();
 
         // Read the created process definition.
         return activitiRepositoryService.createProcessDefinitionQuery().deploymentId(deployment.getId()).list().get(0);
+    }
+
+    /**
+     * Asserts that the first asyncable task in the given model is indeed asynchronous. Only asserts when the configuration is set to true.
+     *
+     * @param bpmnModel The BPMN model
+     */
+    private void assertFirstTaskIsAsync(BpmnModel bpmnModel)
+    {
+        if (Boolean.TRUE.equals(configurationHelper.getProperty(ConfigurationValue.ACTIVITI_JOB_DEFINITION_ASSERT_ASYNC, Boolean.class)))
+        {
+            Process process = bpmnModel.getMainProcess();
+            for (StartEvent startEvent : process.findFlowElementsOfType(StartEvent.class))
+            {
+                for (SequenceFlow sequenceFlow : startEvent.getOutgoingFlows())
+                {
+                    String targetRef = sequenceFlow.getTargetRef();
+                    FlowElement targetFlowElement = process.getFlowElement(targetRef);
+                    if (targetFlowElement instanceof Activity)
+                    {
+                        Assert.isTrue(((Activity) targetFlowElement).isAsynchronous(), "Element with id \"" + targetRef +
+                            "\" must be set to activiti:async=true. All tasks which start the workflow must be asynchronous to prevent certain undesired " +
+                            "transactional behavior, such as records of workflow not being saved on errors. Please refer to Activiti and herd documentations " +
+                            "for details.");
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -400,9 +458,12 @@ public class JobDefinitionServiceImpl implements JobDefinitionService
         for (JobDefinitionParameterEntity parameterEntity : jobDefinitionEntity.getParameters())
         {
             Parameter parameter = new Parameter(parameterEntity.getName(), parameterEntity.getValue());
-            herdHelper.maskPassword(parameter);
+            jobDefinitionHelper.maskPassword(parameter);
             parameters.add(parameter);
         }
+
+        // Populate the "last updated by" user ID.
+        jobDefinition.setLastUpdatedByUserId(jobDefinitionEntity.getUpdatedBy());
 
         return jobDefinition;
     }

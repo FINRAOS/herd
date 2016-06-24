@@ -27,6 +27,7 @@ import org.finra.herd.model.api.xml.Parameter;
 import org.finra.herd.model.api.xml.SystemJobRunRequest;
 import org.finra.herd.model.api.xml.SystemJobRunResponse;
 import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.service.systemjobs.BusinessObjectDataFinalizeRestoreJob;
 import org.finra.herd.service.systemjobs.FileUploadCleanupJob;
 import org.finra.herd.service.systemjobs.JmsPublishingJob;
 import org.finra.herd.service.systemjobs.StoragePolicySelectorJob;
@@ -392,6 +393,130 @@ public class SystemJobServiceTest extends AbstractServiceTest
         {
             assertEquals(String.format("Parameter \"%s\" specifies a non-integer value \"NOT_AN_INTEGER\".",
                 ConfigurationValue.STORAGE_POLICY_SELECTOR_JOB_MAX_BDATA_INSTANCES.getKey()), e.getMessage());
+        }
+    }
+
+    // Business object data finalize restore system job
+
+    @Test
+    public void testRunSystemJobBusinessObjectDataFinalizeRestore() throws Exception
+    {
+        // Create the system job run request.
+        SystemJobRunRequest systemJobRunRequest = new SystemJobRunRequest(BusinessObjectDataFinalizeRestoreJob.JOB_NAME,
+            Arrays.asList(new Parameter(ConfigurationValue.BDATA_FINALIZE_RESTORE_JOB_MAX_BDATA_INSTANCES.getKey(), String.valueOf(INTEGER_VALUE))));
+
+        // Request to run the system job.
+        SystemJobRunResponse resultSystemJobRunResponse = systemJobService.runSystemJob(systemJobRunRequest);
+
+        // Validate the returned object.
+        assertEquals(new SystemJobRunResponse(BusinessObjectDataFinalizeRestoreJob.JOB_NAME,
+            Arrays.asList(new Parameter(ConfigurationValue.BDATA_FINALIZE_RESTORE_JOB_MAX_BDATA_INSTANCES.getKey(), String.valueOf(INTEGER_VALUE)))),
+            resultSystemJobRunResponse);
+    }
+
+    @Test
+    public void testRunSystemJobBusinessObjectDataFinalizeRestoreMissingOptionalParameters() throws Exception
+    {
+        // Create the system job run request without parameters.
+        SystemJobRunRequest systemJobRunRequest = new SystemJobRunRequest(BusinessObjectDataFinalizeRestoreJob.JOB_NAME, null);
+
+        // Request to run the system job.
+        SystemJobRunResponse resultSystemJobRunResponse = systemJobService.runSystemJob(systemJobRunRequest);
+
+        // Validate the returned object.
+        assertEquals(new SystemJobRunResponse(BusinessObjectDataFinalizeRestoreJob.JOB_NAME, null), resultSystemJobRunResponse);
+    }
+
+    @Test
+    public void testRunSystemJobBusinessObjectDataFinalizeRestoreTrimParameters() throws Exception
+    {
+        // Create a system job run request using input parameters with leading
+        // and trailing empty spaces (except for  parameter values that do not get trimmed).
+        SystemJobRunRequest systemJobRunRequest = new SystemJobRunRequest(addWhitespace(BusinessObjectDataFinalizeRestoreJob.JOB_NAME), Arrays
+            .asList(new Parameter(addWhitespace(ConfigurationValue.BDATA_FINALIZE_RESTORE_JOB_MAX_BDATA_INSTANCES.getKey()), String.valueOf(INTEGER_VALUE))));
+
+        // Request to run the system job.
+        SystemJobRunResponse resultSystemJobRunResponse = systemJobService.runSystemJob(systemJobRunRequest);
+
+        // Validate the returned object.
+        assertEquals(new SystemJobRunResponse(BusinessObjectDataFinalizeRestoreJob.JOB_NAME,
+            Arrays.asList(new Parameter(ConfigurationValue.BDATA_FINALIZE_RESTORE_JOB_MAX_BDATA_INSTANCES.getKey(), String.valueOf(INTEGER_VALUE)))),
+            resultSystemJobRunResponse);
+    }
+
+    @Test
+    public void testRunSystemJobBusinessObjectDataFinalizeRestoreUpperCaseParameters() throws Exception
+    {
+        // Create a system job run request using upper case input parameters (except for case-sensitive job name).
+        SystemJobRunRequest systemJobRunRequest = new SystemJobRunRequest(BusinessObjectDataFinalizeRestoreJob.JOB_NAME, Arrays
+            .asList(new Parameter(ConfigurationValue.BDATA_FINALIZE_RESTORE_JOB_MAX_BDATA_INSTANCES.getKey().toUpperCase(), String.valueOf(INTEGER_VALUE))));
+
+        // Request to run the system job.
+        SystemJobRunResponse resultSystemJobRunResponse = systemJobService.runSystemJob(systemJobRunRequest);
+
+        // Validate the returned object.
+        assertEquals(new SystemJobRunResponse(BusinessObjectDataFinalizeRestoreJob.JOB_NAME, Arrays
+            .asList(new Parameter(ConfigurationValue.BDATA_FINALIZE_RESTORE_JOB_MAX_BDATA_INSTANCES.getKey().toUpperCase(), String.valueOf(INTEGER_VALUE)))),
+            resultSystemJobRunResponse);
+    }
+
+    @Test
+    public void testRunSystemJobBusinessObjectDataFinalizeRestoreLowerCaseParameters() throws Exception
+    {
+        // Create a system job run request using lower case input parameters (except for case-sensitive job name).
+        SystemJobRunRequest systemJobRunRequest = new SystemJobRunRequest(BusinessObjectDataFinalizeRestoreJob.JOB_NAME, Arrays
+            .asList(new Parameter(ConfigurationValue.BDATA_FINALIZE_RESTORE_JOB_MAX_BDATA_INSTANCES.getKey().toLowerCase(), String.valueOf(INTEGER_VALUE))));
+
+        // Request to run the system job.
+        SystemJobRunResponse resultSystemJobRunResponse = systemJobService.runSystemJob(systemJobRunRequest);
+
+        // Validate the returned object.
+        assertEquals(new SystemJobRunResponse(BusinessObjectDataFinalizeRestoreJob.JOB_NAME, Arrays
+            .asList(new Parameter(ConfigurationValue.BDATA_FINALIZE_RESTORE_JOB_MAX_BDATA_INSTANCES.getKey().toLowerCase(), String.valueOf(INTEGER_VALUE)))),
+            resultSystemJobRunResponse);
+    }
+
+    @Test
+    public void testRunSystemJobBusinessObjectDataFinalizeRestoreInvalidParameters() throws Exception
+    {
+        // Try to run a system job when too many parameters are specified.
+        try
+        {
+            systemJobService.runSystemJob(new SystemJobRunRequest(BusinessObjectDataFinalizeRestoreJob.JOB_NAME,
+                Arrays.asList(new Parameter(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1), new Parameter(ATTRIBUTE_NAME_2_MIXED_CASE, ATTRIBUTE_VALUE_2))));
+            fail("Should throw an IllegalArgumentException when too many parameters are specified.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(String.format("Too many parameters are specified for \"%s\" system job.", BusinessObjectDataFinalizeRestoreJob.JOB_NAME),
+                e.getMessage());
+        }
+
+        // Try to run a system job when invalid parameter name is specified.
+        try
+        {
+            systemJobService.runSystemJob(new SystemJobRunRequest(BusinessObjectDataFinalizeRestoreJob.JOB_NAME,
+                Arrays.asList(new Parameter(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1))));
+            fail("Should throw an IllegalArgumentException when invalid parameter name is specified.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(String
+                .format("Parameter \"%s\" is not supported by \"%s\" system job.", ATTRIBUTE_NAME_1_MIXED_CASE, BusinessObjectDataFinalizeRestoreJob.JOB_NAME),
+                e.getMessage());
+        }
+
+        // Try to run a system job when invalid parameter value is specified.
+        try
+        {
+            systemJobService.runSystemJob(new SystemJobRunRequest(BusinessObjectDataFinalizeRestoreJob.JOB_NAME,
+                Arrays.asList(new Parameter(ConfigurationValue.BDATA_FINALIZE_RESTORE_JOB_MAX_BDATA_INSTANCES.getKey(), "NOT_AN_INTEGER"))));
+            fail("Should throw an IllegalArgumentException when invalid parameter value is specified.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(String.format("Parameter \"%s\" specifies a non-integer value \"NOT_AN_INTEGER\".",
+                ConfigurationValue.BDATA_FINALIZE_RESTORE_JOB_MAX_BDATA_INSTANCES.getKey()), e.getMessage());
         }
     }
 }

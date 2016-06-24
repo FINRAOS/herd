@@ -16,28 +16,27 @@
 package org.finra.herd.service.helper;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
-import org.apache.log4j.Logger;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.After;
 import org.junit.Test;
 
+import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.SchemaColumn;
+import org.finra.herd.model.api.xml.Storage;
+import org.finra.herd.model.api.xml.StorageUnit;
+import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.service.AbstractServiceTest;
 
 public class BusinessObjectDataHelperTest extends AbstractServiceTest
 {
-    private static final String S3_KEY_PREFIX_TEMPLATE_HIGH_ENV =
-        "~namespace~/~dataProviderName~/~businessObjectFormatUsage~/~businessObjectFormatFileType~/~businessObjectDefinitionName~" +
-            "/schm-v~businessObjectFormatVersion~/data-v~businessObjectDataVersion~" + "/~businessObjectFormatPartitionKey~=~businessObjectDataPartitionValue~";
-    private static final String S3_KEY_PREFIX_TEMPLATE = "s3.key.prefix.template";
-    private static final Logger logger = Logger.getLogger(BusinessObjectDataHelperTest.class);
-
     @After
     public void cleanupEnv()
     {
@@ -52,50 +51,30 @@ public class BusinessObjectDataHelperTest extends AbstractServiceTest
     }
 
     @Test
-    public void testSubPartitions()
+    public void testGetPartitionValue()
     {
-        logger.info("testSubPartitions()");
+        // Create and persist test database entities.
+        BusinessObjectDataEntity businessObjectDataEntity =
+            createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION, true, BDATA_STATUS);
 
-        String namespace = NAMESPACE_CD;
-        String dataProvider = DATA_PROVIDER_NAME;
-        String businessObjectDefinitionName = BOD_NAME;
-        String businessObjectFormatUsage = FORMAT_USAGE_CODE;
-        String fileType = FORMAT_FILE_TYPE_CODE;
-        Integer businessObjectFormatVersion = FORMAT_VERSION;
-        String businessObjectFormatPartitionKey = PARTITION_KEY;
-        List<SchemaColumn> schemaColumns = getTestSchemaColumns();
-        List<SchemaColumn> partitionColumns = getTestPartitionColumns();
-        String partitionValue = PARTITION_VALUE;
-        List<String> subPartitionValues = SUBPARTITION_VALUES;
-        Integer businessObjectDataVersion = DATA_VERSION;
-
-        String actualS3KeyPrefix = buildS3KeyPrefix(namespace, businessObjectDefinitionName, businessObjectFormatUsage, fileType, businessObjectFormatVersion,
-            businessObjectFormatPartitionKey, schemaColumns, partitionColumns, partitionValue, subPartitionValues, businessObjectDataVersion);
-
-        String expectedS3KeyPrefix =
-            getExpectedS3KeyPrefix(namespace, dataProvider, businessObjectDefinitionName, businessObjectFormatUsage, fileType, businessObjectFormatVersion,
-                businessObjectFormatPartitionKey, partitionColumns, partitionValue, subPartitionValues, businessObjectDataVersion, "frmt-v");
-
-        logger.info("actualS3KeyPrefix = " + actualS3KeyPrefix);
-        logger.info("expectedS3KeyPrefix = " + expectedS3KeyPrefix);
-        assertEquals(expectedS3KeyPrefix, actualS3KeyPrefix);
+        // Retrieve primary and sub-partition values along with trying the "out of bounds" cases.
+        assertEquals(null, businessObjectDataHelper.getPartitionValue(businessObjectDataEntity, 0));
+        assertEquals(PARTITION_VALUE, businessObjectDataHelper.getPartitionValue(businessObjectDataEntity, 1));
+        for (int partitionColumnPosition = 2; partitionColumnPosition <= BusinessObjectDataEntity.MAX_SUBPARTITIONS + 1; partitionColumnPosition++)
+        {
+            assertEquals(SUBPARTITION_VALUES.get(partitionColumnPosition - 2),
+                businessObjectDataHelper.getPartitionValue(businessObjectDataEntity, partitionColumnPosition));
+        }
+        assertEquals(null, businessObjectDataHelper.getPartitionValue(businessObjectDataEntity, BusinessObjectDataEntity.MAX_SUBPARTITIONS + 2));
     }
 
     @Test
-    public void testSubPartitionsTemplateIsSpecified() throws Exception
+    public void testSubPartitions()
     {
-        logger.info("testSubPartitionsTemplateIsNotSpecified()");
-
-        String s3KeyPrefixTemplateOverride = S3_KEY_PREFIX_TEMPLATE_HIGH_ENV;
-        logger.info("Overriding property '" + S3_KEY_PREFIX_TEMPLATE + "' to '" + s3KeyPrefixTemplateOverride + "'");
-
-        Map<String, Object> overrideMap = new HashMap<>();
-        overrideMap.put(S3_KEY_PREFIX_TEMPLATE, s3KeyPrefixTemplateOverride);
-        modifyPropertySourceInEnvironment(overrideMap);
-
-        String namespace = NAMESPACE_CD;
+        String namespace = NAMESPACE;
         String dataProvider = DATA_PROVIDER_NAME;
-        String businessObjectDefinitionName = BOD_NAME;
+        String businessObjectDefinitionName = BDEF_NAME;
         String businessObjectFormatUsage = FORMAT_USAGE_CODE;
         String fileType = FORMAT_FILE_TYPE_CODE;
         Integer businessObjectFormatVersion = FORMAT_VERSION;
@@ -111,10 +90,8 @@ public class BusinessObjectDataHelperTest extends AbstractServiceTest
 
         String expectedS3KeyPrefix =
             getExpectedS3KeyPrefix(namespace, dataProvider, businessObjectDefinitionName, businessObjectFormatUsage, fileType, businessObjectFormatVersion,
-                businessObjectFormatPartitionKey, partitionColumns, partitionValue, subPartitionValues, businessObjectDataVersion, "schm-v");
+                businessObjectFormatPartitionKey, partitionColumns, partitionValue, subPartitionValues, businessObjectDataVersion);
 
-        logger.info("actualS3KeyPrefix = " + actualS3KeyPrefix);
-        logger.info("expectedS3KeyPrefix = " + expectedS3KeyPrefix);
         assertEquals(expectedS3KeyPrefix, actualS3KeyPrefix);
     }
 
@@ -130,12 +107,13 @@ public class BusinessObjectDataHelperTest extends AbstractServiceTest
             new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, fileType, businessObjectFormatVersion, partitionValue,
                 subPartitionValues, businessObjectDataVersion);
 
-        return businessObjectDataHelper.buildS3KeyPrefix(businessObjectFormatEntity, businessObjectDataKey);
+        return s3KeyPrefixHelper
+            .buildS3KeyPrefix(AbstractServiceTest.S3_KEY_PREFIX_VELOCITY_TEMPLATE, businessObjectFormatEntity, businessObjectDataKey, STORAGE_NAME);
     }
 
     private String getExpectedS3KeyPrefix(String namespace, String dataProvider, String businessObjectDefinitionName, String businessObjectFormatUsage,
         String fileType, Integer businessObjectFormatVersion, String businessObjectFormatPartitionKey, List<SchemaColumn> partitionColumns,
-        String partitionValue, List<String> subPartitionValues, Integer businessObjectDataVersion, String formatVersionPrefix)
+        String partitionValue, List<String> subPartitionValues, Integer businessObjectDataVersion)
     {
         partitionColumns = partitionColumns.subList(0, Math.min(partitionColumns.size(), 5));
         SchemaColumn[] subPartitionKeys = new SchemaColumn[partitionColumns.size() - 1];
@@ -145,6 +123,80 @@ public class BusinessObjectDataHelperTest extends AbstractServiceTest
         subPartitionValueArray = subPartitionValues.toArray(subPartitionValueArray);
 
         return getExpectedS3KeyPrefix(namespace, dataProvider, businessObjectDefinitionName, businessObjectFormatUsage, fileType, businessObjectFormatVersion,
-            businessObjectFormatPartitionKey, partitionValue, subPartitionKeys, subPartitionValueArray, businessObjectDataVersion, formatVersionPrefix);
+            businessObjectFormatPartitionKey, partitionValue, subPartitionKeys, subPartitionValueArray, businessObjectDataVersion);
+    }
+
+    @Test
+    public void getStorageUnitByStorageName()
+    {
+        // Create business object data with several test storage units.
+        BusinessObjectData businessObjectData = new BusinessObjectData();
+        List<String> testStorageNames = Arrays.asList("Storage_1", "storage-2", "STORAGE3");
+
+        List<StorageUnit> storageUnits = new ArrayList<>();
+        businessObjectData.setStorageUnits(storageUnits);
+        for (String testStorageName : testStorageNames)
+        {
+            StorageUnit storageUnit = new StorageUnit();
+            storageUnits.add(storageUnit);
+
+            Storage storage = new Storage();
+            storageUnit.setStorage(storage);
+            storage.setName(testStorageName);
+        }
+
+        // Validate that we can find all storage units regardless of the storage name case.
+        for (String testStorageName : testStorageNames)
+        {
+            assertEquals(testStorageName, businessObjectDataHelper.getStorageUnitByStorageName(businessObjectData, testStorageName).getStorage().getName());
+            assertEquals(testStorageName,
+                businessObjectDataHelper.getStorageUnitByStorageName(businessObjectData, testStorageName.toUpperCase()).getStorage().getName());
+            assertEquals(testStorageName,
+                businessObjectDataHelper.getStorageUnitByStorageName(businessObjectData, testStorageName.toLowerCase()).getStorage().getName());
+        }
+    }
+
+    @Test
+    public void getStorageUnitByStorageNameStorageUnitNoExists()
+    {
+        String testStorageName = "I_DO_NOT_EXIST";
+
+        // Try to get a non-existing storage unit.
+        try
+        {
+            businessObjectDataHelper.getStorageUnitByStorageName(new BusinessObjectData(), testStorageName);
+            fail("Should throw a RuntimeException when storage unit does not exist.");
+        }
+        catch (RuntimeException e)
+        {
+            String expectedErrMsg = String.format("Business object data has no storage unit with storage name \"%s\".", testStorageName);
+            assertEquals(expectedErrMsg, e.getMessage());
+        }
+    }
+
+    @Test
+    public void testBusinessObjectDataKeyToString()
+    {
+        // Create test business object data key.
+        BusinessObjectDataKey testBusinessObjectDataKey = new BusinessObjectDataKey();
+        testBusinessObjectDataKey.setNamespace(NAMESPACE);
+        testBusinessObjectDataKey.setBusinessObjectDefinitionName(BDEF_NAME);
+        testBusinessObjectDataKey.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE);
+        testBusinessObjectDataKey.setBusinessObjectFormatFileType(FORMAT_FILE_TYPE_CODE);
+        testBusinessObjectDataKey.setBusinessObjectFormatVersion(FORMAT_VERSION);
+        testBusinessObjectDataKey.setPartitionValue(PARTITION_VALUE);
+        testBusinessObjectDataKey.setSubPartitionValues(SUBPARTITION_VALUES);
+        testBusinessObjectDataKey.setBusinessObjectDataVersion(DATA_VERSION);
+
+        // Create the expected test output.
+        String expectedOutput = String.format("namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", " +
+            "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d, businessObjectDataPartitionValue: \"%s\", " +
+            "businessObjectDataSubPartitionValues: \"%s\", businessObjectDataVersion: %d", NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+            FORMAT_VERSION, PARTITION_VALUE, StringUtils.join(SUBPARTITION_VALUES, ","), DATA_VERSION);
+
+        assertEquals(expectedOutput, businessObjectDataHelper.businessObjectDataKeyToString(testBusinessObjectDataKey));
+        assertEquals(expectedOutput, businessObjectDataHelper
+            .businessObjectDataKeyToString(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION));
     }
 }

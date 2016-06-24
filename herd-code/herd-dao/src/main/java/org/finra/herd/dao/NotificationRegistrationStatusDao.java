@@ -17,7 +17,7 @@ package org.finra.herd.dao;
 
 import org.finra.herd.model.jpa.NotificationRegistrationStatusEntity;
 
-public interface NotificationRegistrationStatusDao
+public interface NotificationRegistrationStatusDao extends BaseJpaDao
 {
     /**
      * Returns the notification registration status by its code.

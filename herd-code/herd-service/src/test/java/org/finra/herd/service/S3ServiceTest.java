@@ -27,13 +27,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import com.amazonaws.services.s3.model.PutObjectRequest;
 import org.apache.commons.io.FileUtils;
+import org.fusesource.hawtbuf.ByteArrayInputStream;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import org.finra.herd.core.Command;
-import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.dto.S3FileCopyRequestParamsDto;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.dto.S3FileTransferResultsDto;
@@ -63,8 +64,18 @@ public class S3ServiceTest extends AbstractServiceTest
         // Clean up the local directory.
         FileUtils.deleteDirectory(localTempPath.toFile());
 
-        // Clean up the destination S3 folder.
-        s3Dao.deleteDirectory(getTestS3FileTransferRequestParamsDto());
+        // Delete test files from S3 storage. Since test S3 key prefix represents a directory, we add a trailing '/' character to it.
+        for (S3FileTransferRequestParamsDto params : Arrays.asList(getTestS3FileTransferRequestParamsDto(),
+            S3FileTransferRequestParamsDto.builder().s3BucketName(getS3LoadingDockBucketName()).s3KeyPrefix(TEST_S3_KEY_PREFIX + "/").build(),
+            S3FileTransferRequestParamsDto.builder().s3BucketName(getS3ExternalBucketName()).s3KeyPrefix(TEST_S3_KEY_PREFIX + "/").build()))
+        {
+            if (!s3Dao.listDirectory(params).isEmpty())
+            {
+                s3Dao.deleteDirectory(params);
+            }
+        }
+
+        s3Operations.rollback();
     }
 
     @Test
@@ -123,28 +134,23 @@ public class S3ServiceTest extends AbstractServiceTest
     @Test
     public void testCopyFile() throws InterruptedException
     {
+        // Put a 1 KB file in S3.
+        s3Operations
+            .putObject(new PutObjectRequest(getS3LoadingDockBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[(int) FILE_SIZE_1_KB]), null), null);
+
         // Copy an S3 file from source to target S3 bucket.
         S3FileCopyRequestParamsDto params = new S3FileCopyRequestParamsDto();
         params.setKmsKeyId("AWS_KMS_EXTERNAL_KEY_ID");
-        params.setSourceBucketName("S3_MANAGED_LOADING_DOCK_BUCKET_NAME");
-        params.setTargetBucketName("S3_MANAGED_EXTERNAL_BUCKET_NAME");
-        params.setS3KeyPrefix(TARGET_S3_KEY);
+        params.setSourceBucketName(getS3LoadingDockBucketName());
+        params.setTargetBucketName(getS3ExternalBucketName());
+        params.setSourceObjectKey(TARGET_S3_KEY);
+        params.setTargetObjectKey(TARGET_S3_KEY);
         S3FileTransferResultsDto results = s3Service.copyFile(params);
 
         // Validate the results.
         assertNotNull(results);
         assertEquals(Long.valueOf(1L), results.getTotalFilesTransferred());
         assertEquals(Long.valueOf(FILE_SIZE_1_KB), results.getTotalBytesTransferred());
-    }
-
-    @Test
-    public void deleteFile()
-    {
-        // Delete an S3 file from an S3 bucket.
-        S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
-        params.setS3BucketName("S3_MANAGED_LOADING_DOCK_BUCKET_NAME");
-        params.setS3KeyPrefix(TARGET_S3_KEY);
-        s3Service.deleteFile(params);
     }
 
     @Test
@@ -189,8 +195,7 @@ public class S3ServiceTest extends AbstractServiceTest
         s3Service.deleteDirectory(s3FileTransferRequestParamsDto);
 
         // Validate that S3 directory got deleted.
-        List<StorageFile> actualS3Files = s3Service.listDirectory(s3FileTransferRequestParamsDto);
-        assertTrue(actualS3Files.size() == 0);
+        assertEquals(0, s3Service.listDirectory(s3FileTransferRequestParamsDto).size());
     }
 
     @Test
@@ -205,8 +210,7 @@ public class S3ServiceTest extends AbstractServiceTest
         s3Service.deleteDirectoryIgnoreException(s3FileTransferRequestParamsDto);
 
         // Validate that S3 directory got deleted.
-        List<StorageFile> actualS3Files = s3Service.listDirectory(s3FileTransferRequestParamsDto);
-        assertTrue(actualS3Files.size() == 0);
+        assertEquals(0, s3Service.listDirectory(s3FileTransferRequestParamsDto).size());
     }
 
     @Test

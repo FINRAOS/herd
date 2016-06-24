@@ -27,11 +27,12 @@ import org.activiti.engine.delegate.Expression;
 import org.activiti.engine.impl.util.io.InputStreamSource;
 import org.apache.commons.io.Charsets;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.helpers.MessageFormatter;
 import org.springframework.stereotype.Component;
 
 /**
  * A helper bean that provides useful methods for Activiti classes (e.g. interceptors, Java delegates, etc.).
- * 
+ * <p/>
  * If you want to find common functionality related to Activiti Runtime, then use ActivitiRuntimeHelper.
  */
 @Component
@@ -46,7 +47,8 @@ public class ActivitiHelper
      */
     public String getProcessIdentifyingInformation(DelegateExecution execution)
     {
-        return "[Process Definition " + execution.getProcessDefinitionId() + ", Process Instance " + execution.getProcessInstanceId() + "]";
+        return MessageFormatter.format("[ activitiProcessDefinitionId=\"{}\" activitiProcessInstanceId=\"{}\" ]", execution.getProcessDefinitionId(),
+            execution.getProcessInstanceId()).getMessage();
     }
 
     /**
@@ -88,8 +90,7 @@ public class ActivitiHelper
      * @return the variable value.
      * @throws IllegalArgumentException if variable is not specified.
      */
-    public String getRequiredExpressionVariableAsString(Expression expression, DelegateExecution execution, String variableName)
-        throws IllegalArgumentException
+    public String getRequiredExpressionVariableAsString(Expression expression, DelegateExecution execution, String variableName) throws IllegalArgumentException
     {
         String variableString = getExpressionVariableAsString(expression, execution);
 

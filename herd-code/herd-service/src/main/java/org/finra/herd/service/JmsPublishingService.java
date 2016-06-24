@@ -15,15 +15,27 @@
 */
 package org.finra.herd.service;
 
+import org.finra.herd.model.dto.JmsMessage;
+
 /**
  * The JMS publishing service.
  */
 public interface JmsPublishingService
 {
     /**
+     * Adds a JMS message to the database queue.
+     *
+     * @param jmsQueueName the JMS queue name
+     * @param messageText the message text
+     *
+     * @return the JMS message added to the queue
+     */
+    public JmsMessage addJmsMessageToDatabaseQueue(String jmsQueueName, String messageText);
+
+    /**
      * Publishes and removes from the database queue the oldest JMS message.
      *
      * @return true if a message was sent or false if no message was sent (i.e. no message needed to be sent).
      */
-    public boolean publishOldestJmsMessage();
+    public boolean publishOldestJmsMessageFromDatabaseQueue();
 }

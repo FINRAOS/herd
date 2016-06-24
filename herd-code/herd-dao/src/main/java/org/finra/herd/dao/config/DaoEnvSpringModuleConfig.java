@@ -26,7 +26,6 @@ import org.finra.herd.core.ApplicationContextHolder;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.Ec2Operations;
 import org.finra.herd.dao.EmrOperations;
-import org.finra.herd.dao.GlacierOperations;
 import org.finra.herd.dao.HttpClientOperations;
 import org.finra.herd.dao.JdbcOperations;
 import org.finra.herd.dao.KmsOperations;
@@ -36,7 +35,6 @@ import org.finra.herd.dao.SqsOperations;
 import org.finra.herd.dao.StsOperations;
 import org.finra.herd.dao.impl.Ec2OperationsImpl;
 import org.finra.herd.dao.impl.EmrOperationsImpl;
-import org.finra.herd.dao.impl.GlacierOperationsImpl;
 import org.finra.herd.dao.impl.HttpClientOperationsImpl;
 import org.finra.herd.dao.impl.JdbcOperationsImpl;
 import org.finra.herd.dao.impl.KmsOperationsImpl;
@@ -86,12 +84,6 @@ public class DaoEnvSpringModuleConfig
     public S3Operations s3Operations()
     {
         return new S3OperationsImpl();
-    }
-
-    @Bean
-    public GlacierOperations glacierOperations()
-    {
-        return new GlacierOperationsImpl();
     }
 
     @Bean

@@ -19,7 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import org.finra.herd.dao.HerdDao;
+import org.finra.herd.dao.FileTypeDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.api.xml.FileTypeKeys;
 import org.finra.herd.service.FileTypeService;
@@ -32,16 +32,13 @@ import org.finra.herd.service.FileTypeService;
 public class FileTypeServiceImpl implements FileTypeService
 {
     @Autowired
-    private HerdDao herdDao;
+    private FileTypeDao fileTypeDao;
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public FileTypeKeys getFileTypes()
     {
         FileTypeKeys fileTypeKeys = new FileTypeKeys();
-        fileTypeKeys.getFileTypeKeys().addAll(herdDao.getFileTypes());
+        fileTypeKeys.getFileTypeKeys().addAll(fileTypeDao.getFileTypes());
         return fileTypeKeys;
     }
 }

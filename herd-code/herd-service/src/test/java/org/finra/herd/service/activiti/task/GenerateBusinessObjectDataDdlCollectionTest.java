@@ -55,8 +55,10 @@ public class GenerateBusinessObjectDataDdlCollectionTest extends HerdActivitiSer
         variableValuesToValidate
             .put(GenerateBusinessObjectDataDdlCollection.VARIABLE_DDL_COLLECTION, getExpectedBusinessObjectDataDdlCollectionResponse().getDdlCollection());
 
-        testActivitiServiceTaskSuccess(GenerateBusinessObjectDataDdlCollection.class.getCanonicalName(), fieldExtensionList, parameters,
-            variableValuesToValidate);
+        executeWithoutLogging(LogVariables.class, () -> {
+            testActivitiServiceTaskSuccess(GenerateBusinessObjectDataDdlCollection.class.getCanonicalName(), fieldExtensionList, parameters,
+                variableValuesToValidate);
+        });
     }
 
     @Test
@@ -82,8 +84,10 @@ public class GenerateBusinessObjectDataDdlCollectionTest extends HerdActivitiSer
         variableValuesToValidate
             .put(GenerateBusinessObjectDataDdlCollection.VARIABLE_DDL_COLLECTION, getExpectedBusinessObjectDataDdlCollectionResponse().getDdlCollection());
 
-        testActivitiServiceTaskSuccess(GenerateBusinessObjectDataDdlCollection.class.getCanonicalName(), fieldExtensionList, parameters,
-            variableValuesToValidate);
+        executeWithoutLogging(LogVariables.class, () -> {
+            testActivitiServiceTaskSuccess(GenerateBusinessObjectDataDdlCollection.class.getCanonicalName(), fieldExtensionList, parameters,
+                variableValuesToValidate);
+        });
     }
 
     @Test
@@ -102,8 +106,10 @@ public class GenerateBusinessObjectDataDdlCollectionTest extends HerdActivitiSer
         Map<String, Object> variableValuesToValidate = new HashMap<>();
         variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"ContentType\" must be a valid value of either \"xml\" or \"json\".");
 
-        testActivitiServiceTaskFailure(GenerateBusinessObjectDataDdlCollection.class.getCanonicalName(), fieldExtensionList, parameters,
-            variableValuesToValidate);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            testActivitiServiceTaskFailure(GenerateBusinessObjectDataDdlCollection.class.getCanonicalName(), fieldExtensionList, parameters,
+                variableValuesToValidate);
+        });
     }
 
     @Test
@@ -122,8 +128,10 @@ public class GenerateBusinessObjectDataDdlCollectionTest extends HerdActivitiSer
         Map<String, Object> variableValuesToValidate = new HashMap<>();
         variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"BusinessObjectDataDdlCollectionRequest\" must be specified.");
 
-        testActivitiServiceTaskFailure(GenerateBusinessObjectDataDdlCollection.class.getCanonicalName(), fieldExtensionList, parameters,
-            variableValuesToValidate);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            testActivitiServiceTaskFailure(GenerateBusinessObjectDataDdlCollection.class.getCanonicalName(), fieldExtensionList, parameters,
+                variableValuesToValidate);
+        });
     }
 
     @Test
@@ -142,8 +150,10 @@ public class GenerateBusinessObjectDataDdlCollectionTest extends HerdActivitiSer
         Map<String, Object> variableValuesToValidate = new HashMap<>();
         variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"BusinessObjectDataDdlCollectionRequest\" must be valid xml string.");
 
-        testActivitiServiceTaskFailure(GenerateBusinessObjectDataDdlCollection.class.getCanonicalName(), fieldExtensionList, parameters,
-            variableValuesToValidate);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            testActivitiServiceTaskFailure(GenerateBusinessObjectDataDdlCollection.class.getCanonicalName(), fieldExtensionList, parameters,
+                variableValuesToValidate);
+        });
     }
 
     @Test
@@ -162,7 +172,9 @@ public class GenerateBusinessObjectDataDdlCollectionTest extends HerdActivitiSer
         Map<String, Object> variableValuesToValidate = new HashMap<>();
         variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"BusinessObjectDataDdlCollectionRequest\" must be valid json string.");
 
-        testActivitiServiceTaskFailure(GenerateBusinessObjectDataDdlCollection.class.getCanonicalName(), fieldExtensionList, parameters,
-            variableValuesToValidate);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            testActivitiServiceTaskFailure(GenerateBusinessObjectDataDdlCollection.class.getCanonicalName(), fieldExtensionList, parameters,
+                variableValuesToValidate);
+        });
     }
 }

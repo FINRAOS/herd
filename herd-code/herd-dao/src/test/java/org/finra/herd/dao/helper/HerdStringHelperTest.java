@@ -84,9 +84,17 @@ public class HerdStringHelperTest extends AbstractDaoTest
     }
 
     @Test
-    public void testSplitStringWithDefaultDelimiterEscapedNull()
+    public void testSplitStringWithDefaultDelimiterEscapedInputIsNull()
     {
         List<String> splitString = herdStringHelper.splitStringWithDefaultDelimiterEscaped(null);
+
+        assertTrue(splitString.size() == 0);
+    }
+
+    @Test
+    public void testSplitStringWithDefaultDelimiterEscapedInputIsEmptyString()
+    {
+        List<String> splitString = herdStringHelper.splitStringWithDefaultDelimiterEscaped(EMPTY_STRING);
 
         assertTrue(splitString.size() == 0);
     }
@@ -212,5 +220,59 @@ public class HerdStringHelperTest extends AbstractDaoTest
         String result = herdStringHelper.join(list, delimiter, escapeSequence);
 
         assertNull("result", result);
+    }
+
+    @Test
+    public void testGetDelimitedConfigurationValueAssertResultIsDelimited() throws Exception
+    {
+        Map<String, Object> overrideMap = new HashMap<>();
+        overrideMap.put(ConfigurationValue.EMR_SPOT_PRICE_HISTORY_PRODUCT_DESCRIPTIONS.getKey(), "a|b|c");
+        modifyPropertySourceInEnvironment(overrideMap);
+
+        try
+        {
+            List<String> actualList = herdStringHelper.getDelimitedConfigurationValue(ConfigurationValue.EMR_SPOT_PRICE_HISTORY_PRODUCT_DESCRIPTIONS);
+            assertEquals(Arrays.asList("a", "b", "c"), actualList);
+        }
+        finally
+        {
+            restorePropertySourceInEnvironment();
+        }
+    }
+
+    @Test
+    public void testGetDelimitedConfigurationValueWhenValueIsNullAssertResultIsEmpty() throws Exception
+    {
+        Map<String, Object> overrideMap = new HashMap<>();
+        overrideMap.put(ConfigurationValue.EMR_SPOT_PRICE_HISTORY_PRODUCT_DESCRIPTIONS.getKey(), null);
+        modifyPropertySourceInEnvironment(overrideMap);
+
+        try
+        {
+            List<String> actualList = herdStringHelper.getDelimitedConfigurationValue(ConfigurationValue.EMR_SPOT_PRICE_HISTORY_PRODUCT_DESCRIPTIONS);
+            assertEquals(Arrays.asList(), actualList);
+        }
+        finally
+        {
+            restorePropertySourceInEnvironment();
+        }
+    }
+
+    @Test
+    public void testGetDelimitedConfigurationValueWhenValueIsEmptyAssertResultIsEmpty() throws Exception
+    {
+        Map<String, Object> overrideMap = new HashMap<>();
+        overrideMap.put(ConfigurationValue.EMR_SPOT_PRICE_HISTORY_PRODUCT_DESCRIPTIONS.getKey(), "");
+        modifyPropertySourceInEnvironment(overrideMap);
+
+        try
+        {
+            List<String> actualList = herdStringHelper.getDelimitedConfigurationValue(ConfigurationValue.EMR_SPOT_PRICE_HISTORY_PRODUCT_DESCRIPTIONS);
+            assertEquals(Arrays.asList(), actualList);
+        }
+        finally
+        {
+            restorePropertySourceInEnvironment();
+        }
     }
 }

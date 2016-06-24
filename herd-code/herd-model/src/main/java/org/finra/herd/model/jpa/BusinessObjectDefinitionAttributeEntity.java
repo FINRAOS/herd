@@ -23,14 +23,10 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 /**
  * Attribute associated with business object definition.
  */
-@XmlRootElement
-@XmlType
 @Table(name = BusinessObjectDefinitionAttributeEntity.TABLE_NAME)
 @Entity
 public class BusinessObjectDefinitionAttributeEntity extends AuditableEntity
@@ -43,7 +39,7 @@ public class BusinessObjectDefinitionAttributeEntity extends AuditableEntity
     @Id
     @Column(name = TABLE_NAME + "_id")
     @GeneratedValue(generator = TABLE_NAME + "_seq")
-    @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq")
+    @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq", allocationSize = 1)
     private Integer id;
 
     /**
@@ -100,44 +96,5 @@ public class BusinessObjectDefinitionAttributeEntity extends AuditableEntity
     public void setBusinessObjectDefinition(BusinessObjectDefinitionEntity businessObjectDefinition)
     {
         this.businessObjectDefinition = businessObjectDefinition;
-    }
-
-    @Override
-    public boolean equals(Object other)
-    {
-        if (this == other)
-        {
-            return true;
-        }
-        if (other == null || getClass() != other.getClass())
-        {
-            return false;
-        }
-
-        BusinessObjectDefinitionAttributeEntity that = (BusinessObjectDefinitionAttributeEntity) other;
-
-        if (id != null ? !id.equals(that.id) : that.id != null)
-        {
-            return false;
-        }
-        if (name != null ? !name.equals(that.name) : that.name != null)
-        {
-            return false;
-        }
-        if (value != null ? !value.equals(that.value) : that.value != null)
-        {
-            return false;
-        }
-
-        return true;
-    }
-
-    @Override
-    public int hashCode()
-    {
-        int result = id != null ? id.hashCode() : 0;
-        result = 31 * result + (name != null ? name.hashCode() : 0);
-        result = 31 * result + (value != null ? value.hashCode() : 0);
-        return result;
     }
 }

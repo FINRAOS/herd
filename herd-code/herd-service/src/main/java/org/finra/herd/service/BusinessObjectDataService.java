@@ -25,67 +25,99 @@ import org.finra.herd.model.api.xml.BusinessObjectDataDdl;
 import org.finra.herd.model.api.xml.BusinessObjectDataDdlCollectionRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataDdlCollectionResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDataDdlRequest;
-import org.finra.herd.model.api.xml.BusinessObjectDataDownloadCredential;
 import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
-import org.finra.herd.model.api.xml.BusinessObjectDataStatusInformation;
-import org.finra.herd.model.api.xml.BusinessObjectDataStatusUpdateRequest;
-import org.finra.herd.model.api.xml.BusinessObjectDataStatusUpdateResponse;
-import org.finra.herd.model.api.xml.BusinessObjectDataUploadCredential;
 import org.finra.herd.model.api.xml.BusinessObjectDataVersions;
-import org.finra.herd.model.api.xml.S3KeyPrefixInformation;
 
 /**
- * test for crlf The business object data service.
+ * The business object data service.
  */
 public interface BusinessObjectDataService
 {
     public final String MAX_PARTITION_VALUE_TOKEN = "${maximum.partition.value}";
     public final String MIN_PARTITION_VALUE_TOKEN = "${minimum.partition.value}";
 
-    public S3KeyPrefixInformation getS3KeyPrefix(BusinessObjectDataKey businessObjectDataKey, String businessObjectFormatPartitionKey,
-        Boolean createNewVersion);
-
+    /**
+     * Creates a new business object data from the request information. Creates its own transaction.
+     *
+     * @param businessObjectDataCreateRequest the business object data create request
+     *
+     * @return the newly created and persisted business object data.
+     */
     public BusinessObjectData createBusinessObjectData(BusinessObjectDataCreateRequest businessObjectDataCreateRequest);
 
-    public BusinessObjectData getBusinessObjectData(BusinessObjectDataKey businessObjectDataKey, String businessObjectFormatPartitionKey);
-
-    public BusinessObjectDataVersions getBusinessObjectDataVersions(BusinessObjectDataKey businessObjectDataKey);
-
-    public BusinessObjectData deleteBusinessObjectData(BusinessObjectDataKey businessObjectDataKey, Boolean deleteFiles);
-
-    public BusinessObjectDataAvailability checkBusinessObjectDataAvailability(BusinessObjectDataAvailabilityRequest businessObjectDataAvailabilityRequest);
-
-    public BusinessObjectDataAvailabilityCollectionResponse checkBusinessObjectDataAvailabilityCollection(
-        BusinessObjectDataAvailabilityCollectionRequest request);
-
-    public BusinessObjectDataDdl generateBusinessObjectDataDdl(BusinessObjectDataDdlRequest businessObjectDataDdlRequest);
-
-    public BusinessObjectDataDdlCollectionResponse generateBusinessObjectDataDdlCollection(
-        BusinessObjectDataDdlCollectionRequest businessObjectDataDdlCollectionRequest);
-
     /**
-     * Retrieves status information for an existing business object data.
+     * Retrieves existing business object data entry information. This method starts a new transaction.
      *
      * @param businessObjectDataKey the business object data key
      * @param businessObjectFormatPartitionKey the business object format partition key
+     * @param businessObjectDataStatus the business object data status, may be null
      *
-     * @return the retrieved business object data status information
+     * @return the retrieved business object data information
      */
-    public BusinessObjectDataStatusInformation getBusinessObjectDataStatus(BusinessObjectDataKey businessObjectDataKey,
-        String businessObjectFormatPartitionKey);
+    public BusinessObjectData getBusinessObjectData(BusinessObjectDataKey businessObjectDataKey, String businessObjectFormatPartitionKey,
+        String businessObjectDataStatus);
 
     /**
-     * Updates status of the business object data.
+     * Retrieves a list of existing business object data versions, if any.
+     *
+     * @param businessObjectDataKey the business object data key with possibly missing business object format and/or data version values
+     *
+     * @return the retrieved business object data versions
+     */
+    public BusinessObjectDataVersions getBusinessObjectDataVersions(BusinessObjectDataKey businessObjectDataKey);
+
+    /**
+     * Deletes an existing business object data.
      *
      * @param businessObjectDataKey the business object data key
-     * @param request the business object data status update request
+     * @param deleteFiles specifies if data files should be deleted or not
      *
-     * @return the business object data status update response
+     * @return the deleted business object data information
      */
-    public BusinessObjectDataStatusUpdateResponse updateBusinessObjectDataStatus(BusinessObjectDataKey businessObjectDataKey,
-        BusinessObjectDataStatusUpdateRequest request);
+    public BusinessObjectData deleteBusinessObjectData(BusinessObjectDataKey businessObjectDataKey, Boolean deleteFiles);
+
+    /**
+     * Performs a search and returns a list of business object data key values and relative statuses for a range of requested business object data. Creates its
+     * own transaction.
+     *
+     * @param businessObjectDataAvailabilityRequest the business object data availability request
+     *
+     * @return the business object data availability information
+     */
+    public BusinessObjectDataAvailability checkBusinessObjectDataAvailability(BusinessObjectDataAvailabilityRequest businessObjectDataAvailabilityRequest);
+
+    /**
+     * Performs an availability check for a collection of business object data.
+     *
+     * @param request the business object data availability collection request
+     *
+     * @return the business object data availability information
+     */
+    public BusinessObjectDataAvailabilityCollectionResponse checkBusinessObjectDataAvailabilityCollection(
+        BusinessObjectDataAvailabilityCollectionRequest request);
+
+    /**
+     * Retrieves the DDL to initialize the specified type of the database system to perform queries for a range of requested business object data in the
+     * specified storage. This method starts a new transaction.
+     *
+     * @param businessObjectDataDdlRequest the business object data DDL request
+     *
+     * @return the business object data DDL information
+     */
+    public BusinessObjectDataDdl generateBusinessObjectDataDdl(BusinessObjectDataDdlRequest businessObjectDataDdlRequest);
+
+    /**
+     * Retrieves the DDL to initialize the specified type of the database system to perform queries for a collection of business object data in the specified
+     * storages. This method starts a new transaction.
+     *
+     * @param businessObjectDataDdlCollectionRequest the business object data DDL collection request
+     *
+     * @return the business object data DDL information
+     */
+    public BusinessObjectDataDdlCollectionResponse generateBusinessObjectDataDdlCollection(
+        BusinessObjectDataDdlCollectionRequest businessObjectDataDdlCollectionRequest);
 
     /**
      * Creates business object data registrations in INVALID status if the S3 object exists, but no registration exists.
@@ -98,22 +130,11 @@ public interface BusinessObjectDataService
         BusinessObjectDataInvalidateUnregisteredRequest businessObjectDataInvalidateUnregisteredRequest);
 
     /**
-     * Gets the AWS credential to upload to the specified business object data and storage.
-     * 
-     * @param businessObjectDataKey The business object data key
-     * @param createNewVersion Flag to indicate whether to return the next version or not
-     * @param storageName The storage name
-     * @return AWS credential
+     * Initiates a restore request for a currently archived business object data.
+     *
+     * @param businessObjectDataKey the business object data key
+     *
+     * @return the business object data information
      */
-    public BusinessObjectDataUploadCredential getBusinessObjectDataUploadCredential(BusinessObjectDataKey businessObjectDataKey, Boolean createNewVersion,
-        String storageName);
-
-    /**
-     * Gets the AWS credential to download to the specified business object data and storage.
-     * 
-     * @param businessObjectDataKey The business object data key
-     * @param storageName The storage name
-     * @return AWS credential
-     */
-    public BusinessObjectDataDownloadCredential getBusinessObjectDataDownloadCredential(BusinessObjectDataKey businessObjectDataKey, String storageName);
+    public BusinessObjectData restoreBusinessObjectData(BusinessObjectDataKey businessObjectDataKey);
 }

@@ -44,15 +44,15 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
 
         // Create a business object definition.
         BusinessObjectDefinitionCreateRequest request =
-            createBusinessObjectDefinitionCreateRequest(NAMESPACE_CD, BOD_NAME, DATA_PROVIDER_NAME, BOD_DESCRIPTION, getNewAttributes());
+            createBusinessObjectDefinitionCreateRequest(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, getNewAttributes());
         BusinessObjectDefinition resultBusinessObjectDefinition = businessObjectDefinitionRestController.createBusinessObjectDefinition(request);
 
         // Validate the returned object.
-        validateBusinessObjectDefinition(null, NAMESPACE_CD, BOD_NAME, DATA_PROVIDER_NAME, BOD_DESCRIPTION, getNewAttributes(), resultBusinessObjectDefinition);
+        validateBusinessObjectDefinition(null, NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, getNewAttributes(), resultBusinessObjectDefinition);
 
         // Retrieve the newly created business object definition and validate the created by field.
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
-            herdDao.getBusinessObjectDefinitionByKey(new BusinessObjectDefinitionKey(NAMESPACE_CD, BOD_NAME));
+            businessObjectDefinitionDao.getBusinessObjectDefinitionByKey(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME));
 
         // Validate that the newly created entity uses system username for the relative auditable fields.
         assertEquals(Integer.valueOf(resultBusinessObjectDefinition.getId()), businessObjectDefinitionEntity.getId());
@@ -65,14 +65,14 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
     {
         // Create and persist a business object definition entity.
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
-            createBusinessObjectDefinitionEntity(NAMESPACE_CD, BOD_NAME, DATA_PROVIDER_NAME, BOD_DESCRIPTION, getNewAttributes());
+            createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, getNewAttributes());
 
         // Perform an update by changing the description and updating the attributes.
         BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionRestController
-            .updateBusinessObjectDefinition(NAMESPACE_CD, BOD_NAME, createBusinessObjectDefinitionUpdateRequest(BOD_DESCRIPTION_2, getNewAttributes2()));
+            .updateBusinessObjectDefinition(NAMESPACE, BDEF_NAME, createBusinessObjectDefinitionUpdateRequest(BDEF_DESCRIPTION_2, getNewAttributes2()));
 
         // Validate the returned object.
-        validateBusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE_CD, BOD_NAME, DATA_PROVIDER_NAME, BOD_DESCRIPTION_2,
+        validateBusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION_2,
             getNewAttributes2(), updatedBusinessObjectDefinition);
     }
 
@@ -81,14 +81,14 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
     {
         // Create and persist a business object definition entity.
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
-            createBusinessObjectDefinitionEntity(NAMESPACE_CD, BOD_NAME, DATA_PROVIDER_NAME, BOD_DESCRIPTION, getNewAttributes());
+            createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, getNewAttributes());
 
         // Perform an update without specifying any of the optional parameters (passing whitespace characters).
-        BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionRestController.updateBusinessObjectDefinition(NAMESPACE_CD, BOD_NAME,
+        BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionRestController.updateBusinessObjectDefinition(NAMESPACE, BDEF_NAME,
             createBusinessObjectDefinitionUpdateRequest(BLANK_TEXT, Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, BLANK_TEXT))));
 
         // Validate the returned object.
-        validateBusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE_CD, BOD_NAME, DATA_PROVIDER_NAME, BLANK_TEXT,
+        validateBusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BLANK_TEXT,
             Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, BLANK_TEXT)), updatedBusinessObjectDefinition);
     }
 
@@ -97,14 +97,14 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
     {
         // Create and persist a business object definition entity.
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
-            createBusinessObjectDefinitionEntity(NAMESPACE_CD, BOD_NAME, DATA_PROVIDER_NAME, BOD_DESCRIPTION, getNewAttributes());
+            createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, getNewAttributes());
 
         // Perform an update without specifying any of the optional parameters (passing null values).
-        BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionRestController.updateBusinessObjectDefinition(NAMESPACE_CD, BOD_NAME,
+        BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionRestController.updateBusinessObjectDefinition(NAMESPACE, BDEF_NAME,
             createBusinessObjectDefinitionUpdateRequest(null, Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, null))));
 
         // Validate the returned object.
-        validateBusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE_CD, BOD_NAME, DATA_PROVIDER_NAME, null,
+        validateBusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, null,
             Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, null)), updatedBusinessObjectDefinition);
     }
 
@@ -113,14 +113,14 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
     {
         // Create and persist a business object definition entity.
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
-            createBusinessObjectDefinitionEntity(NAMESPACE_CD, BOD_NAME, DATA_PROVIDER_NAME, BOD_DESCRIPTION, getNewAttributes());
+            createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, getNewAttributes());
 
         // Retrieve the business object definition.
-        BusinessObjectDefinition resultBusinessObjectDefinition = businessObjectDefinitionRestController.getBusinessObjectDefinition(NAMESPACE_CD, BOD_NAME);
+        BusinessObjectDefinition resultBusinessObjectDefinition = businessObjectDefinitionRestController.getBusinessObjectDefinition(NAMESPACE, BDEF_NAME);
 
         // Validate the returned object.
-        validateBusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE_CD, BOD_NAME, DATA_PROVIDER_NAME, BOD_DESCRIPTION,
-            getNewAttributes(), resultBusinessObjectDefinition);
+        validateBusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, getNewAttributes(),
+            resultBusinessObjectDefinition);
     }
 
     @Test
@@ -129,11 +129,11 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
         // Create and persist business object definition entities.
         for (BusinessObjectDefinitionKey key : getTestBusinessObjectDefinitionKeys())
         {
-            createBusinessObjectDefinitionEntity(key.getNamespace(), key.getBusinessObjectDefinitionName(), DATA_PROVIDER_NAME, BOD_DESCRIPTION, null);
+            createBusinessObjectDefinitionEntity(key.getNamespace(), key.getBusinessObjectDefinitionName(), DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null);
         }
 
         // Retrieve a list of business object definition keys for the specified namespace.
-        BusinessObjectDefinitionKeys resultKeys = businessObjectDefinitionRestController.getBusinessObjectDefinitions(NAMESPACE_CD);
+        BusinessObjectDefinitionKeys resultKeys = businessObjectDefinitionRestController.getBusinessObjectDefinitions(NAMESPACE);
 
         // Validate the returned object.
         assertEquals(getExpectedBusinessObjectDefinitionKeys(), resultKeys.getBusinessObjectDefinitionKeys());
@@ -144,21 +144,20 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
     {
         // Create and persist a business object definition entity.
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
-            createBusinessObjectDefinitionEntity(NAMESPACE_CD, BOD_NAME, DATA_PROVIDER_NAME, BOD_DESCRIPTION, getNewAttributes());
+            createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, getNewAttributes());
 
         // Validate that this business object definition exists.
-        BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(NAMESPACE_CD, BOD_NAME);
-        assertNotNull(herdDao.getBusinessObjectDefinitionByKey(businessObjectDefinitionKey));
+        BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME);
+        assertNotNull(businessObjectDefinitionDao.getBusinessObjectDefinitionByKey(businessObjectDefinitionKey));
 
         // Delete this business object definition.
-        BusinessObjectDefinition deletedBusinessObjectDefinition =
-            businessObjectDefinitionRestController.deleteBusinessObjectDefinition(NAMESPACE_CD, BOD_NAME);
+        BusinessObjectDefinition deletedBusinessObjectDefinition = businessObjectDefinitionRestController.deleteBusinessObjectDefinition(NAMESPACE, BDEF_NAME);
 
         // Validate the returned object.
-        validateBusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE_CD, BOD_NAME, DATA_PROVIDER_NAME, BOD_DESCRIPTION,
-            getNewAttributes(), deletedBusinessObjectDefinition);
+        validateBusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, getNewAttributes(),
+            deletedBusinessObjectDefinition);
 
         // Ensure that this business object definition is no longer there.
-        assertNull(herdDao.getBusinessObjectDefinitionByKey(businessObjectDefinitionKey));
+        assertNull(businessObjectDefinitionDao.getBusinessObjectDefinitionByKey(businessObjectDefinitionKey));
     }
 }

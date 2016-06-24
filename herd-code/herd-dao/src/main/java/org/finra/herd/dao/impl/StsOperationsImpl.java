@@ -23,9 +23,6 @@ import org.finra.herd.dao.StsOperations;
 
 public class StsOperationsImpl implements StsOperations
 {
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public AssumeRoleResult assumeRole(AWSSecurityTokenServiceClient awsSecurityTokenServiceClient, AssumeRoleRequest assumeRoleRequest)
     {

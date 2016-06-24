@@ -77,17 +77,7 @@ public class BusinessObjectDataServiceTest extends AbstractServiceTest
 
         try
         {
-            businessObjectDataServiceImpl.getBusinessObjectData(new BusinessObjectDataKey(), null);
-            fail("Should throw an IllegalArgumentException.");
-        }
-        catch (IllegalArgumentException e)
-        {
-            assertEquals("A namespace must be specified.", e.getMessage());
-        }
-
-        try
-        {
-            businessObjectDataServiceImpl.getS3KeyPrefix(new BusinessObjectDataKey(), null, null);
+            businessObjectDataServiceImpl.getBusinessObjectData(new BusinessObjectDataKey(), null, NO_BDATA_STATUS);
             fail("Should throw an IllegalArgumentException.");
         }
         catch (IllegalArgumentException e)
@@ -122,6 +112,15 @@ public class BusinessObjectDataServiceTest extends AbstractServiceTest
         catch (IllegalArgumentException e)
         {
             assertEquals("The namespace is required", e.getMessage());
+        }
+
+        try
+        {
+            businessObjectDataServiceImpl.restoreBusinessObjectData(new BusinessObjectDataKey());
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("A namespace must be specified.", e.getMessage());
         }
     }
 }

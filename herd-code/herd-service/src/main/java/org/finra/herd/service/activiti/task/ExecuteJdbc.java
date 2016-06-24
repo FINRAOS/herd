@@ -17,6 +17,8 @@ package org.finra.herd.service.activiti.task;
 
 import org.activiti.engine.delegate.DelegateExecution;
 import org.activiti.engine.delegate.Expression;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import org.finra.herd.core.helper.HerdThreadHelper;
 import org.finra.herd.model.api.xml.JdbcExecutionRequest;
@@ -24,12 +26,10 @@ import org.finra.herd.model.api.xml.JdbcExecutionResponse;
 import org.finra.herd.model.api.xml.JdbcStatement;
 import org.finra.herd.model.api.xml.JdbcStatementStatus;
 import org.finra.herd.service.JdbcService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 /**
  * The Activiti delegate task for {@link JdbcService#executeJdbc(JdbcExecutionRequest)}.
- * 
+ * <p/>
  * <pre>
  * <extensionElements>
  *    <activiti:fields name="contentType" stringValue="" />
@@ -73,11 +73,10 @@ public class ExecuteJdbc extends BaseJavaDelegate
     /**
      * Executes the task asynchronously, signaling the task with the given receiveTaskId when the asynchronous process is completed. The task's output - both
      * success and error - will be set whenever the signal occurs.
+     * <p/>
+     * TODO Find a way to move this method into BaseJavaDelegate since it really should be a generic operation TODO The expressions passed in a JavaDelegate
+     * cannot be evaluated when running on a different thread. We must find a way around this if we want to move this.
      *
-     * TODO Find a way to move this method into BaseJavaDelegate since it really should be a generic operation
-     * TODO The expressions passed in a JavaDelegate cannot be evaluated when running on a different thread. We must find a way around this if we want to move
-     * this.
-     * 
      * @param execution The current execution.
      * @param jdbcExecutionRequest The request.
      * @param receiveTaskId The ID of the task to signal when done.
@@ -119,14 +118,14 @@ public class ExecuteJdbc extends BaseJavaDelegate
     }
 
     /**
-     * Executes the task synchronously.
-     * overrideActivitiId is provided to customize the name of the variable to set during the execution of the task. This is important when the task is running
-     * asynchronously because execution.getCurrentActivitiId() will report the ID the the task that the workflow is currently in, and not the ID of the task
-     * that was originally executed.
-     * 
+     * Executes the task synchronously. overrideActivitiId is provided to customize the name of the variable to set during the execution of the task. This is
+     * important when the task is running asynchronously because execution.getCurrentActivitiId() will report the ID the task that the workflow is currently in,
+     * and not the ID of the task that was originally executed.
+     *
      * @param execution The execution.
      * @param overrideActivitiId Optionally overrides the task id which to use to generate variable names.
      * @param jdbcExecutionRequest The request.
+     *
      * @throws Exception When any exception occurs during the execution of the task.
      */
     private void executeSync(DelegateExecution execution, String overrideActivitiId, JdbcExecutionRequest jdbcExecutionRequest) throws Exception

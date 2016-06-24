@@ -36,6 +36,7 @@ import org.finra.herd.model.api.xml.Parameter;
 import org.finra.herd.model.dto.AwsParamsDto;
 import org.finra.herd.service.AbstractServiceTest;
 import org.finra.herd.service.EmrServiceTest;
+import org.finra.herd.service.activiti.ActivitiRuntimeHelper;
 
 /**
  * Tests the CreateEmrCluster class. Most of the functionalities are already tested in the {@link EmrServiceTest}. This test suite will test whether the
@@ -44,9 +45,9 @@ import org.finra.herd.service.EmrServiceTest;
 public class CreateEmrClusterTest extends AbstractServiceTest
 {
     private static final Logger LOGGER = Logger.getLogger(CreateEmrClusterTest.class);
-    
-    private Map<String, Object> createJob(String clusterName, String dryRun, String contentType, String emrClusterDefinitionOverride) throws Exception,
-        JAXBException, IOException
+
+    private Map<String, Object> createJob(String clusterName, String dryRun, String contentType, String emrClusterDefinitionOverride)
+        throws Exception, JAXBException, IOException
     {
         List<Parameter> parameters = new ArrayList<>();
         parameters.add(new Parameter("clusterName", clusterName));
@@ -59,7 +60,7 @@ public class CreateEmrClusterTest extends AbstractServiceTest
         assertNotNull(job);
 
         HistoricProcessInstance hisInstance =
-                activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(job.getId()).includeProcessVariables().singleResult();
+            activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(job.getId()).includeProcessVariables().singleResult();
         return hisInstance.getProcessVariables();
     }
 
@@ -177,9 +178,11 @@ public class CreateEmrClusterTest extends AbstractServiceTest
         String clusterName = "testCluster" + Math.random();
 
         String override = jsonHelper.objectToJson(new EmrClusterDefinition());
-        Map<String, Object> variables = createJob(clusterName, "false", null, override);
 
-        assertEquals("taskStatus", "ERROR", variables.get("createClusterServiceTask_taskStatus"));
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            Map<String, Object> variables = createJob(clusterName, "false", null, override);
+            assertEquals("taskStatus", "ERROR", variables.get("createClusterServiceTask_taskStatus"));
+        });
     }
 
     @Test
@@ -187,9 +190,10 @@ public class CreateEmrClusterTest extends AbstractServiceTest
     {
         String clusterName = "testCluster" + Math.random();
 
-        Map<String, Object> variables = createJob(clusterName, "false", "xml", null);
-
-        assertEquals("taskStatus", "ERROR", variables.get("createClusterServiceTask_taskStatus"));
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            Map<String, Object> variables = createJob(clusterName, "false", "xml", null);
+            assertEquals("taskStatus", "ERROR", variables.get("createClusterServiceTask_taskStatus"));
+        });
     }
 
     @Test
@@ -198,9 +202,11 @@ public class CreateEmrClusterTest extends AbstractServiceTest
         String clusterName = "testCluster" + Math.random();
 
         String override = jsonHelper.objectToJson(new EmrClusterDefinition());
-        Map<String, Object> variables = createJob(clusterName, "false", "invalid", override);
 
-        assertEquals("taskStatus", "ERROR", variables.get("createClusterServiceTask_taskStatus"));
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            Map<String, Object> variables = createJob(clusterName, "false", "invalid", override);
+            assertEquals("taskStatus", "ERROR", variables.get("createClusterServiceTask_taskStatus"));
+        });
     }
 
     /**
@@ -211,8 +217,10 @@ public class CreateEmrClusterTest extends AbstractServiceTest
     {
         List<Parameter> parameters = new ArrayList<>();
 
-        // Run a job with Activiti XML that will start cluster.
-        // clusterName is not set as parameter, hence error will occur but will not be re-thrown
-        createJobForCreateCluster(ACTIVITI_XML_CREATE_CLUSTER_WITH_CLASSPATH, parameters);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            // Run a job with Activiti XML that will start cluster.
+            // clusterName is not set as parameter, hence error will occur but will not be re-thrown
+            createJobForCreateCluster(ACTIVITI_XML_CREATE_CLUSTER_WITH_CLASSPATH, parameters);
+        });
     }
 }

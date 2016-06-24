@@ -15,8 +15,8 @@
 */
 package org.finra.herd.service;
 
-import org.finra.herd.model.jpa.JmsMessageEntity;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.dto.JmsMessage;
 
 public interface SqsNotificationEventService
 {
@@ -27,17 +27,17 @@ public interface SqsNotificationEventService
      * @param newBusinessObjectDataStatus the new business object data status
      * @param oldBusinessObjectDataStatus the old business object data status
      *
-     * @return the JMS message that got queued
+     * @return the JMS message that got queued for publishing
      */
-    public JmsMessageEntity processBusinessObjectDataStatusChangeNotificationEvent(BusinessObjectDataKey businessObjectDataKey,
-        String newBusinessObjectDataStatus, String oldBusinessObjectDataStatus);
+    public JmsMessage processBusinessObjectDataStatusChangeNotificationEvent(BusinessObjectDataKey businessObjectDataKey, String newBusinessObjectDataStatus,
+        String oldBusinessObjectDataStatus);
 
     /**
      * Handles the system monitor event notification.
      *
-     * @param systemMonitorRequestPayload the system monitor incoming payload.
+     * @param systemMonitorRequestPayload the system monitor incoming payload
      *
-     * @return the JMS message that got queued.
+     * @return the JMS message that got queued for publishing
      */
-    public JmsMessageEntity processSystemMonitorNotificationEvent(String systemMonitorRequestPayload);
+    public JmsMessage processSystemMonitorNotificationEvent(String systemMonitorRequestPayload);
 }

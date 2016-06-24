@@ -19,11 +19,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
@@ -33,7 +34,7 @@ import org.finra.herd.model.api.xml.Parameter;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.StoragePolicySelection;
 import org.finra.herd.service.StoragePolicySelectorService;
-import org.finra.herd.service.helper.HerdHelper;
+import org.finra.herd.service.helper.ParameterHelper;
 
 /**
  * The storage policy selector job.
@@ -42,12 +43,12 @@ import org.finra.herd.service.helper.HerdHelper;
 @DisallowConcurrentExecution
 public class StoragePolicySelectorJob extends AbstractSystemJob
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(StoragePolicySelectorJob.class);
+
     public static final String JOB_NAME = "storagePolicySelector";
 
-    private static final Logger LOGGER = Logger.getLogger(StoragePolicySelectorJob.class);
-
     @Autowired
-    protected HerdHelper herdHelper;
+    private ParameterHelper parameterHelper;
 
     @Autowired
     private StoragePolicySelectorService storagePolicySelectorService;
@@ -56,7 +57,7 @@ public class StoragePolicySelectorJob extends AbstractSystemJob
     protected void executeInternal(JobExecutionContext context) throws JobExecutionException
     {
         // Log that the system job is started.
-        LOGGER.info(String.format("Started \"%s\" system job.", JOB_NAME));
+        LOGGER.info("Started system job. systemJobName=\"{}\"", JOB_NAME);
 
         // Get the SQS queue name from the system configuration.
         String sqsQueueName = configurationHelper.getProperty(ConfigurationValue.STORAGE_POLICY_SELECTOR_JOB_SQS_QUEUE_NAME);
@@ -71,11 +72,11 @@ public class StoragePolicySelectorJob extends AbstractSystemJob
 
         // Get the parameter values.
         int maxBusinessObjectDataInstancesToSelect =
-            herdHelper.getParameterValueAsInteger(parameters, ConfigurationValue.STORAGE_POLICY_SELECTOR_JOB_MAX_BDATA_INSTANCES);
+            parameterHelper.getParameterValueAsInteger(parameters, ConfigurationValue.STORAGE_POLICY_SELECTOR_JOB_MAX_BDATA_INSTANCES);
 
         // Log the parameter values.
-        LOGGER.info(String.format("\"%s\" system job: %s=%d", JOB_NAME, ConfigurationValue.STORAGE_POLICY_SELECTOR_JOB_MAX_BDATA_INSTANCES,
-            maxBusinessObjectDataInstancesToSelect));
+        LOGGER.info("systemJobName={} {}={}", JOB_NAME, ConfigurationValue.STORAGE_POLICY_SELECTOR_JOB_MAX_BDATA_INSTANCES,
+            maxBusinessObjectDataInstancesToSelect);
 
         // Continue the storage policies processing only if the maximum number of business object data instances
         // that is allowed to be selected in a single run of this system job is greater than zero.
@@ -86,10 +87,11 @@ public class StoragePolicySelectorJob extends AbstractSystemJob
         }
 
         // Log the number of selections.
-        LOGGER.info(String.format("Selected %d business object data instances per storage policies configured in the system.", storagePolicySelections.size()));
+        LOGGER.info("Selected business object data instances per storage policies configured in the system. systemJobName=\"{}\" businessObjectDataCount={}",
+            JOB_NAME, storagePolicySelections.size());
 
         // Log that the system job is ended.
-        LOGGER.info(String.format("Completed \"%s\" system job.", JOB_NAME));
+        LOGGER.info("Completed system job. systemJobName=\"{}\"", JOB_NAME);
     }
 
     @Override
@@ -101,7 +103,7 @@ public class StoragePolicySelectorJob extends AbstractSystemJob
             Assert.isTrue(parameters.size() == 1, String.format("Too many parameters are specified for \"%s\" system job.", JOB_NAME));
             Assert.isTrue(parameters.get(0).getName().equalsIgnoreCase(ConfigurationValue.STORAGE_POLICY_SELECTOR_JOB_MAX_BDATA_INSTANCES.getKey()),
                 String.format("Parameter \"%s\" is not supported by \"%s\" system job.", parameters.get(0).getName(), StoragePolicySelectorJob.JOB_NAME));
-            herdHelper.getParameterValueAsInteger(parameters.get(0));
+            parameterHelper.getParameterValueAsInteger(parameters.get(0));
         }
     }
 

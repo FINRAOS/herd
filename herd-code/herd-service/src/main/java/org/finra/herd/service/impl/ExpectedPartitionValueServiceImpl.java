@@ -31,7 +31,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
-import org.finra.herd.dao.HerdDao;
+import org.finra.herd.dao.ExpectedPartitionValueDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.ExpectedPartitionValueInformation;
@@ -44,8 +44,9 @@ import org.finra.herd.model.api.xml.PartitionValueRange;
 import org.finra.herd.model.jpa.ExpectedPartitionValueEntity;
 import org.finra.herd.model.jpa.PartitionKeyGroupEntity;
 import org.finra.herd.service.ExpectedPartitionValueService;
-import org.finra.herd.service.helper.HerdDaoHelper;
-import org.finra.herd.service.helper.HerdHelper;
+import org.finra.herd.service.helper.ExpectedPartitionValueHelper;
+import org.finra.herd.service.helper.PartitionKeyGroupDaoHelper;
+import org.finra.herd.service.helper.PartitionKeyGroupHelper;
 
 /**
  * The partition key group service implementation.
@@ -55,13 +56,16 @@ import org.finra.herd.service.helper.HerdHelper;
 public class ExpectedPartitionValueServiceImpl implements ExpectedPartitionValueService
 {
     @Autowired
-    private HerdHelper herdHelper;
+    private ExpectedPartitionValueDao expectedPartitionValueDao;
 
     @Autowired
-    private HerdDao herdDao;
+    private ExpectedPartitionValueHelper expectedPartitionValueHelper;
 
     @Autowired
-    private HerdDaoHelper herdDaoHelper;
+    private PartitionKeyGroupDaoHelper partitionKeyGroupDaoHelper;
+
+    @Autowired
+    private PartitionKeyGroupHelper partitionKeyGroupHelper;
 
     /**
      * Creates a list of expected partition values for an existing partition key group.
@@ -78,7 +82,7 @@ public class ExpectedPartitionValueServiceImpl implements ExpectedPartitionValue
 
         // Retrieve and ensure that a partition key group exists with the specified name.
         PartitionKeyGroupEntity partitionKeyGroupEntity =
-            herdDaoHelper.getPartitionKeyGroupEntity(expectedPartitionValuesCreateRequest.getPartitionKeyGroupKey());
+            partitionKeyGroupDaoHelper.getPartitionKeyGroupEntity(expectedPartitionValuesCreateRequest.getPartitionKeyGroupKey());
 
         // Load all existing expected partition value entities into a map for quick access.
         Map<String, ExpectedPartitionValueEntity> expectedPartitionValueEntityMap =
@@ -103,9 +107,9 @@ public class ExpectedPartitionValueServiceImpl implements ExpectedPartitionValue
             createdExpectedPartitionValueEntities.add(expectedPartitionValueEntity);
             expectedPartitionValueEntity.setPartitionKeyGroup(partitionKeyGroupEntity);
             expectedPartitionValueEntity.setPartitionValue(expectedPartitionValue);
-            herdDao.saveAndRefresh(expectedPartitionValueEntity);
+            expectedPartitionValueDao.saveAndRefresh(expectedPartitionValueEntity);
         }
-        herdDao.saveAndRefresh(partitionKeyGroupEntity);
+        expectedPartitionValueDao.saveAndRefresh(partitionKeyGroupEntity);
 
         return createExpectedPartitionValuesInformationFromEntities(partitionKeyGroupEntity, createdExpectedPartitionValueEntities);
     }
@@ -136,13 +140,13 @@ public class ExpectedPartitionValueServiceImpl implements ExpectedPartitionValue
     protected ExpectedPartitionValueInformation getExpectedPartitionValueImpl(ExpectedPartitionValueKey expectedPartitionValueKey, Integer offset)
     {
         // Perform validation and trim of the input parameters.
-        herdHelper.validateExpectedPartitionValueKey(expectedPartitionValueKey);
+        expectedPartitionValueHelper.validateExpectedPartitionValueKey(expectedPartitionValueKey);
 
         // Retrieve and ensure that a partition key group exists with the specified name.
-        herdDaoHelper.getPartitionKeyGroupEntity(expectedPartitionValueKey.getPartitionKeyGroupName());
+        partitionKeyGroupDaoHelper.getPartitionKeyGroupEntity(expectedPartitionValueKey.getPartitionKeyGroupName());
 
         // Retrieve the start expected partition value by passing 0 offset value.
-        ExpectedPartitionValueEntity expectedPartitionValueEntity = herdDao.getExpectedPartitionValue(expectedPartitionValueKey, 0);
+        ExpectedPartitionValueEntity expectedPartitionValueEntity = expectedPartitionValueDao.getExpectedPartitionValue(expectedPartitionValueKey, 0);
 
         if (expectedPartitionValueEntity == null)
         {
@@ -154,7 +158,7 @@ public class ExpectedPartitionValueServiceImpl implements ExpectedPartitionValue
         // If we have a non-zero offset, retrieve the offset expected partition value.
         if (offset != null && offset != 0)
         {
-            expectedPartitionValueEntity = herdDao.getExpectedPartitionValue(expectedPartitionValueKey, offset);
+            expectedPartitionValueEntity = expectedPartitionValueDao.getExpectedPartitionValue(expectedPartitionValueKey, offset);
 
             if (expectedPartitionValueEntity == null)
             {
@@ -178,7 +182,7 @@ public class ExpectedPartitionValueServiceImpl implements ExpectedPartitionValue
     public ExpectedPartitionValuesInformation getExpectedPartitionValues(PartitionKeyGroupKey partitionKeyGroupKey, PartitionValueRange partitionValueRange)
     {
         // Perform validation and trim of the input parameters.
-        herdHelper.validatePartitionKeyGroupKey(partitionKeyGroupKey);
+        partitionKeyGroupHelper.validatePartitionKeyGroupKey(partitionKeyGroupKey);
 
         // Trim the start expected partition value for the expected partition value range.
         if (StringUtils.isNotBlank(partitionValueRange.getStartPartitionValue()))
@@ -208,11 +212,11 @@ public class ExpectedPartitionValueServiceImpl implements ExpectedPartitionValue
         }
 
         // Retrieve and ensure that a partition key group exists with the specified name.
-        PartitionKeyGroupEntity partitionKeyGroupEntity = herdDaoHelper.getPartitionKeyGroupEntity(partitionKeyGroupKey);
+        PartitionKeyGroupEntity partitionKeyGroupEntity = partitionKeyGroupDaoHelper.getPartitionKeyGroupEntity(partitionKeyGroupKey);
 
         // Retrieve a list of expected partition values.
         Collection<ExpectedPartitionValueEntity> expectedPartitionValueEntities =
-            herdDao.getExpectedPartitionValuesByGroupAndRange(partitionKeyGroupKey.getPartitionKeyGroupName(), partitionValueRange);
+            expectedPartitionValueDao.getExpectedPartitionValuesByGroupAndRange(partitionKeyGroupKey.getPartitionKeyGroupName(), partitionValueRange);
 
         return createExpectedPartitionValuesInformationFromEntities(partitionKeyGroupEntity, expectedPartitionValueEntities);
     }
@@ -232,7 +236,7 @@ public class ExpectedPartitionValueServiceImpl implements ExpectedPartitionValue
 
         // Retrieve and ensure that a partition key group exists with the specified name.
         PartitionKeyGroupEntity partitionKeyGroupEntity =
-            herdDaoHelper.getPartitionKeyGroupEntity(expectedPartitionValuesDeleteRequest.getPartitionKeyGroupKey());
+            partitionKeyGroupDaoHelper.getPartitionKeyGroupEntity(expectedPartitionValuesDeleteRequest.getPartitionKeyGroupKey());
 
         // Load all existing expected partition value entities into a map for quick access.
         Map<String, ExpectedPartitionValueEntity> expectedPartitionValueEntityMap =
@@ -261,7 +265,7 @@ public class ExpectedPartitionValueServiceImpl implements ExpectedPartitionValue
         {
             partitionKeyGroupEntity.getExpectedPartitionValues().remove(expectedPartitionValueEntity);
         }
-        herdDao.saveAndRefresh(partitionKeyGroupEntity);
+        expectedPartitionValueDao.saveAndRefresh(partitionKeyGroupEntity);
 
         return createExpectedPartitionValuesInformationFromEntities(partitionKeyGroupEntity, deletedExpectedPartitionValueEntities);
     }
@@ -277,7 +281,7 @@ public class ExpectedPartitionValueServiceImpl implements ExpectedPartitionValue
     private void validateExpectedPartitionValuesCreateRequest(ExpectedPartitionValuesCreateRequest expectedPartitionValuesCreateRequest)
     {
         // Perform validation and trim of the partition key group key.
-        herdHelper.validatePartitionKeyGroupKey(expectedPartitionValuesCreateRequest.getPartitionKeyGroupKey());
+        partitionKeyGroupHelper.validatePartitionKeyGroupKey(expectedPartitionValuesCreateRequest.getPartitionKeyGroupKey());
 
         // Perform validation and trim of the expected partition values.
         expectedPartitionValuesCreateRequest
@@ -294,7 +298,7 @@ public class ExpectedPartitionValueServiceImpl implements ExpectedPartitionValue
     private void validateExpectedPartitionValuesDeleteRequest(ExpectedPartitionValuesDeleteRequest expectedPartitionValuesDeleteRequest)
     {
         // Perform validation and trim of the partition key group key.
-        herdHelper.validatePartitionKeyGroupKey(expectedPartitionValuesDeleteRequest.getPartitionKeyGroupKey());
+        partitionKeyGroupHelper.validatePartitionKeyGroupKey(expectedPartitionValuesDeleteRequest.getPartitionKeyGroupKey());
 
         // Perform validation and trim of expected partition values.
         expectedPartitionValuesDeleteRequest

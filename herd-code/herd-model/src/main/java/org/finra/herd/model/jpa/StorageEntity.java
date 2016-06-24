@@ -29,14 +29,10 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderBy;
 import javax.persistence.Table;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 /**
  * A storage.
  */
-@XmlRootElement
-@XmlType
 @Table(name = StorageEntity.TABLE_NAME)
 @Entity
 public class StorageEntity extends AuditableEntity
@@ -107,28 +103,5 @@ public class StorageEntity extends AuditableEntity
     public void setAttributes(Collection<StorageAttributeEntity> attributes)
     {
         this.attributes = attributes;
-    }
-
-    @Override
-    public boolean equals(Object other)
-    {
-        if (this == other)
-        {
-            return true;
-        }
-        if (other == null || getClass() != other.getClass())
-        {
-            return false;
-        }
-
-        StorageEntity storage = (StorageEntity) other;
-
-        return !(name != null ? !name.equals(storage.name) : storage.name != null);
-    }
-
-    @Override
-    public int hashCode()
-    {
-        return (name != null ? name.hashCode() : 0);
     }
 }

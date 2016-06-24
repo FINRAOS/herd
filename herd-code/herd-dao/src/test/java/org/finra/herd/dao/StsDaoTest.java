@@ -54,5 +54,18 @@ public class StsDaoTest extends AbstractDaoTest
         assertEquals(MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_SESSION_TOKEN, resultCredentials.getSessionToken());
         // Using >= here just to avoid a race condition.
         assertTrue((System.currentTimeMillis() + 1000 * testAwsRoleDurationSeconds) >= resultCredentials.getExpiration().getTime());
+
+        // Retrieve the temporary security credentials without specifying HTTP proxy settings.
+        testAwsParamsDto.setHttpProxyHost(null);
+        testAwsParamsDto.setHttpProxyPort(null);
+        resultCredentials = stsDao.getTemporarySecurityCredentials(testAwsParamsDto, SESSION_NAME, AWS_ROLE_ARN, testAwsRoleDurationSeconds, testPolicy);
+
+        // Validate the results.
+        assertNotNull(resultCredentials);
+        Assert.assertEquals(MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_ACCESS_KEY, resultCredentials.getAccessKeyId());
+        assertEquals(MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_SECRET_KEY, resultCredentials.getSecretAccessKey());
+        assertEquals(MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_SESSION_TOKEN, resultCredentials.getSessionToken());
+        // Using >= here just to avoid a race condition.
+        assertTrue((System.currentTimeMillis() + 1000 * testAwsRoleDurationSeconds) >= resultCredentials.getExpiration().getTime());
     }
 }

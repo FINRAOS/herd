@@ -20,7 +20,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Level;
@@ -28,11 +30,13 @@ import org.apache.log4j.Logger;
 import org.junit.Test;
 
 import org.finra.herd.dao.helper.HerdDaoSecurityHelper;
+import org.finra.herd.model.api.xml.Attribute;
+import org.finra.herd.model.api.xml.AttributeDefinition;
+import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.model.dto.JmsMessage;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
-import org.finra.herd.model.jpa.JmsMessageEntity;
-import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.service.impl.SqsNotificationEventServiceImpl;
 
 /**
@@ -44,17 +48,19 @@ public class SqsNotificationEventServiceTest extends AbstractServiceTest
     public void testSqsBusinessObjectDataStatusChangeNotificationEvent() throws Exception
     {
         // Create a business object data entity.
-        BusinessObjectDataEntity businessObjectDataEntity = createTestValidBusinessObjectData();
-        BusinessObjectDataKey businessObjectDataKey = herdDaoHelper.getBusinessObjectDataKey(businessObjectDataEntity);
+        BusinessObjectDataEntity businessObjectDataEntity =
+            createTestValidBusinessObjectData(SUBPARTITION_VALUES, getTestAttributeDefinitions(), getNewAttributes());
+        BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity);
 
         // Trigger the notification
-        JmsMessageEntity jmsMessageEntity = sqsNotificationEventService
+        JmsMessage jmsMessage = sqsNotificationEventService
             .processBusinessObjectDataStatusChangeNotificationEvent(businessObjectDataKey, BusinessObjectDataStatusEntity.VALID,
                 BusinessObjectDataStatusEntity.INVALID);
 
         // Validate the message.
-        validateBusinessObjectDataStatusChangeMessage(jmsMessageEntity.getMessageText(), businessObjectDataKey, businessObjectDataEntity.getId(),
-            HerdDaoSecurityHelper.SYSTEM_USER, BusinessObjectDataStatusEntity.VALID, BusinessObjectDataStatusEntity.INVALID);
+        validateBusinessObjectDataStatusChangeMessage(jmsMessage.getMessageText(), businessObjectDataKey, businessObjectDataEntity.getId(),
+            HerdDaoSecurityHelper.SYSTEM_USER, BusinessObjectDataStatusEntity.VALID, BusinessObjectDataStatusEntity.INVALID,
+            Arrays.asList(new Attribute(ATTRIBUTE_NAME_3_MIXED_CASE, ATTRIBUTE_VALUE_3)));
     }
 
     @Test
@@ -62,15 +68,114 @@ public class SqsNotificationEventServiceTest extends AbstractServiceTest
     {
         // Create a business object data entity.
         BusinessObjectDataEntity businessObjectDataEntity = createTestValidBusinessObjectData();
-        BusinessObjectDataKey businessObjectDataKey = herdDaoHelper.getBusinessObjectDataKey(businessObjectDataEntity);
+        BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity);
 
         // Trigger the notification
-        JmsMessageEntity jmsMessageEntity = sqsNotificationEventService
+        JmsMessage jmsMessage = sqsNotificationEventService
             .processBusinessObjectDataStatusChangeNotificationEvent(businessObjectDataKey, BusinessObjectDataStatusEntity.VALID, null);
 
         // Validate the message.
-        validateBusinessObjectDataStatusChangeMessage(jmsMessageEntity.getMessageText(), businessObjectDataKey, businessObjectDataEntity.getId(),
-            HerdDaoSecurityHelper.SYSTEM_USER, BusinessObjectDataStatusEntity.VALID, null);
+        validateBusinessObjectDataStatusChangeMessage(jmsMessage.getMessageText(), businessObjectDataKey, businessObjectDataEntity.getId(),
+            HerdDaoSecurityHelper.SYSTEM_USER, BusinessObjectDataStatusEntity.VALID, null, NO_ATTRIBUTES);
+    }
+
+    @Test
+    public void testSqsBusinessObjectDataStatusChangeNotificationEventNoBusinessObjectDataAttributeDefinitions() throws Exception
+    {
+        // Create a business object data entity with attributes, but without any attribute definitions.
+        BusinessObjectDataEntity businessObjectDataEntity =
+            createTestValidBusinessObjectData(SUBPARTITION_VALUES, NO_ATTRIBUTE_DEFINITIONS, getNewAttributes());
+        BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity);
+
+        // Trigger the notification
+        JmsMessage jmsMessage = sqsNotificationEventService
+            .processBusinessObjectDataStatusChangeNotificationEvent(businessObjectDataKey, BusinessObjectDataStatusEntity.VALID,
+                BusinessObjectDataStatusEntity.INVALID);
+
+        // Validate the message.
+        validateBusinessObjectDataStatusChangeMessage(jmsMessage.getMessageText(), businessObjectDataKey, businessObjectDataEntity.getId(),
+            HerdDaoSecurityHelper.SYSTEM_USER, BusinessObjectDataStatusEntity.VALID, BusinessObjectDataStatusEntity.INVALID, NO_ATTRIBUTES);
+    }
+
+    @Test
+    public void testSqsBusinessObjectDataStatusChangeNotificationEventNoBusinessObjectDataAttributes() throws Exception
+    {
+        // Create a business object data entity with attribute definitions, but without any attributes.
+        BusinessObjectDataEntity businessObjectDataEntity =
+            createTestValidBusinessObjectData(SUBPARTITION_VALUES, getTestAttributeDefinitions(), NO_ATTRIBUTES);
+        BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity);
+
+        // Trigger the notification
+        JmsMessage jmsMessage = sqsNotificationEventService
+            .processBusinessObjectDataStatusChangeNotificationEvent(businessObjectDataKey, BusinessObjectDataStatusEntity.VALID,
+                BusinessObjectDataStatusEntity.INVALID);
+
+        // Validate the message.
+        validateBusinessObjectDataStatusChangeMessage(jmsMessage.getMessageText(), businessObjectDataKey, businessObjectDataEntity.getId(),
+            HerdDaoSecurityHelper.SYSTEM_USER, BusinessObjectDataStatusEntity.VALID, BusinessObjectDataStatusEntity.INVALID, NO_ATTRIBUTES);
+    }
+
+    @Test
+    public void testSqsBusinessObjectDataStatusChangeNotificationEventAttributeDefinitionCaseInsensitivity() throws Exception
+    {
+        // Create a business object data entity with a publishable attributes that have relative attribute definitions in upper and lower cases.
+        List<AttributeDefinition> testAttributeDefinitions = Arrays
+            .asList(new AttributeDefinition(ATTRIBUTE_NAME_1_MIXED_CASE.toUpperCase(), PUBLISH_ATTRIBUTE),
+                new AttributeDefinition(ATTRIBUTE_NAME_2_MIXED_CASE.toLowerCase(), PUBLISH_ATTRIBUTE));
+        List<Attribute> testAttributes = Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_NAME_1_MIXED_CASE),
+            new Attribute(ATTRIBUTE_NAME_2_MIXED_CASE, ATTRIBUTE_NAME_2_MIXED_CASE));
+        BusinessObjectDataEntity businessObjectDataEntity = createTestValidBusinessObjectData(SUBPARTITION_VALUES, testAttributeDefinitions, testAttributes);
+        BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity);
+
+        // Trigger the notification
+        JmsMessage jmsMessage = sqsNotificationEventService
+            .processBusinessObjectDataStatusChangeNotificationEvent(businessObjectDataKey, BusinessObjectDataStatusEntity.VALID,
+                BusinessObjectDataStatusEntity.INVALID);
+
+        // Validate the message.
+        validateBusinessObjectDataStatusChangeMessage(jmsMessage.getMessageText(), businessObjectDataKey, businessObjectDataEntity.getId(),
+            HerdDaoSecurityHelper.SYSTEM_USER, BusinessObjectDataStatusEntity.VALID, BusinessObjectDataStatusEntity.INVALID, testAttributes);
+    }
+
+    @Test
+    public void testSqsBusinessObjectDataStatusChangeNotificationEventBusinessObjectDataAttributeNullValue() throws Exception
+    {
+        // Create a business object data entity with a publishable attributes that has a null value.
+        BusinessObjectDataEntity businessObjectDataEntity =
+            createTestValidBusinessObjectData(SUBPARTITION_VALUES, Arrays.asList(new AttributeDefinition(ATTRIBUTE_NAME_1_MIXED_CASE, PUBLISH_ATTRIBUTE)),
+                Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, null)));
+        BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity);
+
+        // Trigger the notification
+        JmsMessage jmsMessage = sqsNotificationEventService
+            .processBusinessObjectDataStatusChangeNotificationEvent(businessObjectDataKey, BusinessObjectDataStatusEntity.VALID,
+                BusinessObjectDataStatusEntity.INVALID);
+
+        // Validate the message.
+        validateBusinessObjectDataStatusChangeMessage(jmsMessage.getMessageText(), businessObjectDataKey, businessObjectDataEntity.getId(),
+            HerdDaoSecurityHelper.SYSTEM_USER, BusinessObjectDataStatusEntity.VALID, BusinessObjectDataStatusEntity.INVALID,
+            Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, null)));
+    }
+
+    @Test
+    public void testSqsBusinessObjectDataStatusChangeNotificationEventBusinessObjectDataAttributeSpecialValues() throws Exception
+    {
+        // Create a business object data entity with a publishable attributes that have special values such as a blank text and an empty string.
+        List<Attribute> testAttributes =
+            Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, BLANK_TEXT), new Attribute(ATTRIBUTE_NAME_2_MIXED_CASE, EMPTY_STRING));
+        BusinessObjectDataEntity businessObjectDataEntity = createTestValidBusinessObjectData(SUBPARTITION_VALUES, Arrays
+            .asList(new AttributeDefinition(ATTRIBUTE_NAME_1_MIXED_CASE, PUBLISH_ATTRIBUTE),
+                new AttributeDefinition(ATTRIBUTE_NAME_2_MIXED_CASE, PUBLISH_ATTRIBUTE)), testAttributes);
+        BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity);
+
+        // Trigger the notification
+        JmsMessage jmsMessage = sqsNotificationEventService
+            .processBusinessObjectDataStatusChangeNotificationEvent(businessObjectDataKey, BusinessObjectDataStatusEntity.VALID,
+                BusinessObjectDataStatusEntity.INVALID);
+
+        // Validate the message.
+        validateBusinessObjectDataStatusChangeMessage(jmsMessage.getMessageText(), businessObjectDataKey, businessObjectDataEntity.getId(),
+            HerdDaoSecurityHelper.SYSTEM_USER, BusinessObjectDataStatusEntity.VALID, BusinessObjectDataStatusEntity.INVALID, testAttributes);
     }
 
     @Test
@@ -78,7 +183,7 @@ public class SqsNotificationEventServiceTest extends AbstractServiceTest
     {
         // Create a business object data entity.
         BusinessObjectDataEntity businessObjectDataEntity = createTestValidBusinessObjectData();
-        BusinessObjectDataKey businessObjectDataKey = herdDaoHelper.getBusinessObjectDataKey(businessObjectDataEntity);
+        BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity);
 
         // Override configuration.
         Map<String, Object> overrideMap = new HashMap<>();
@@ -106,7 +211,7 @@ public class SqsNotificationEventServiceTest extends AbstractServiceTest
 
         // Create a business object data entity.
         BusinessObjectDataEntity businessObjectDataEntity = createTestValidBusinessObjectData();
-        BusinessObjectDataKey businessObjectDataKey = herdDaoHelper.getBusinessObjectDataKey(businessObjectDataEntity);
+        BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity);
 
         // Override configuration.
         Map<String, Object> overrideMap = new HashMap<>();
@@ -136,13 +241,13 @@ public class SqsNotificationEventServiceTest extends AbstractServiceTest
     public void testProcessSystemMonitorNotificationEvent() throws Exception
     {
         // Trigger the notification
-        JmsMessageEntity jmsMessageEntity = sqsNotificationEventService.processSystemMonitorNotificationEvent(getTestSystemMonitorIncomingMessage());
+        JmsMessage jmsMessage = sqsNotificationEventService.processSystemMonitorNotificationEvent(getTestSystemMonitorIncomingMessage());
 
         // Validate message.
-        assertNotNull(jmsMessageEntity);
-        assertNotNull(jmsMessageEntity.getMessageText());
+        assertNotNull(jmsMessage);
+        assertNotNull(jmsMessage.getMessageText());
 
-        validateSystemMonitorResponse(jmsMessageEntity.getMessageText());
+        validateSystemMonitorResponse(jmsMessage.getMessageText());
     }
 
     @Test

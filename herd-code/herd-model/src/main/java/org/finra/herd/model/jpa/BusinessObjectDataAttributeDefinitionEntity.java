@@ -23,14 +23,12 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
+
+import org.hibernate.annotations.Type;
 
 /**
  * Business Object Data attribute definition associated with business object format.
  */
-@XmlRootElement
-@XmlType
 @Table(name = BusinessObjectDataAttributeDefinitionEntity.TABLE_NAME)
 @Entity
 public class BusinessObjectDataAttributeDefinitionEntity extends AuditableEntity
@@ -43,7 +41,7 @@ public class BusinessObjectDataAttributeDefinitionEntity extends AuditableEntity
     @Id
     @Column(name = TABLE_NAME + "_id")
     @GeneratedValue(generator = TABLE_NAME + "_seq")
-    @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq")
+    @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq", allocationSize = 1)
     private Integer id;
 
     /**
@@ -55,6 +53,10 @@ public class BusinessObjectDataAttributeDefinitionEntity extends AuditableEntity
     @ManyToOne
     @JoinColumn(name = "bus_objct_frmt_id", referencedColumnName = "bus_objct_frmt_id", nullable = false)
     private BusinessObjectFormatEntity businessObjectFormat;
+
+    @Column(name = "pblsh_fl")
+    @Type(type = "yes_no")
+    private Boolean publish;
 
     public Integer getId()
     {
@@ -97,37 +99,13 @@ public class BusinessObjectDataAttributeDefinitionEntity extends AuditableEntity
         this.businessObjectFormat = businessObjectFormat;
     }
 
-    @Override
-    public boolean equals(Object other)
+    public Boolean getPublish()
     {
-        if (this == other)
-        {
-            return true;
-        }
-        if (other == null || getClass() != other.getClass())
-        {
-            return false;
-        }
-
-        BusinessObjectDataAttributeDefinitionEntity that = (BusinessObjectDataAttributeDefinitionEntity) other;
-
-        if (id != null ? !id.equals(that.id) : that.id != null)
-        {
-            return false;
-        }
-        if (name != null ? !name.equals(that.name) : that.name != null)
-        {
-            return false;
-        }
-
-        return true;
+        return publish;
     }
 
-    @Override
-    public int hashCode()
+    public void setPublish(Boolean publish)
     {
-        int result = id != null ? id.hashCode() : 0;
-        result = 31 * result + (name != null ? name.hashCode() : 0);
-        return result;
+        this.publish = publish;
     }
 }

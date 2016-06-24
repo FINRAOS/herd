@@ -27,6 +27,20 @@ import org.finra.herd.model.api.xml.StoragePolicyKey;
 public class StoragePolicyHelper
 {
     /**
+     * Returns a string representation of the storage policy key along with the storage policy version.
+     *
+     * @param storagePolicyKey the storage policy key
+     * @param storagePolicyVersion the storage policy version
+     *
+     * @return the string representation of the storage policy key and version
+     */
+    public String storagePolicyKeyAndVersionToString(StoragePolicyKey storagePolicyKey, Integer storagePolicyVersion)
+    {
+        return String.format("namespace: \"%s\", storagePolicyName: \"%s\", storagePolicyVersion: \"%d\"", storagePolicyKey.getNamespace(),
+            storagePolicyKey.getStoragePolicyName(), storagePolicyVersion);
+    }
+
+    /**
      * Validates the storage policy key. This method also trims the key parameters.
      *
      * @param storagePolicyKey the storage policy key
@@ -42,17 +56,5 @@ public class StoragePolicyHelper
 
         Assert.hasText(storagePolicyKey.getStoragePolicyName(), "A storage policy name must be specified.");
         storagePolicyKey.setStoragePolicyName(storagePolicyKey.getStoragePolicyName().trim());
-    }
-
-    /**
-     * Returns a string representation of the storage policy key.
-     *
-     * @param storagePolicyKey the storage policy key
-     *
-     * @return the string representation of the storage policy key
-     */
-    public String storagePolicyKeyToString(StoragePolicyKey storagePolicyKey)
-    {
-        return String.format("namespace: \"%s\", storagePolicyName: \"%s\"", storagePolicyKey.getNamespace(), storagePolicyKey.getStoragePolicyName());
     }
 }

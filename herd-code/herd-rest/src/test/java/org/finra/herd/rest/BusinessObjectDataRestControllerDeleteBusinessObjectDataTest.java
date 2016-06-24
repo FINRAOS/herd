@@ -72,26 +72,26 @@ public class BusinessObjectDataRestControllerDeleteBusinessObjectDataTest extend
     {
         // Create an initial version of a business object data.
         BusinessObjectDataEntity businessObjectDataEntity =
-            createBusinessObjectDataEntity(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS);
+            createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                INITIAL_DATA_VERSION, true, BDATA_STATUS);
 
         // Validate that this business object data exists.
         BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+            new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 INITIAL_DATA_VERSION);
-        assertNotNull(herdDao.getBusinessObjectDataByAltKey(businessObjectDataKey));
+        assertNotNull(businessObjectDataDao.getBusinessObjectDataByAltKey(businessObjectDataKey));
 
         // Delete the business object data.
         BusinessObjectData deletedBusinessObjectData = businessObjectDataRestController
-            .deleteBusinessObjectData(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            .deleteBusinessObjectData(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2), SUBPARTITION_VALUES.get(3), INITIAL_DATA_VERSION, false);
 
         // Validate the returned object.
-        validateBusinessObjectData(businessObjectDataEntity.getId(), NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+        validateBusinessObjectData(businessObjectDataEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
             PARTITION_VALUE, SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS, deletedBusinessObjectData);
 
         // Ensure that this business object data is no longer there.
-        assertNull(herdDao.getBusinessObjectDataByAltKey(businessObjectDataKey));
+        assertNull(businessObjectDataDao.getBusinessObjectDataByAltKey(businessObjectDataKey));
     }
 
     @Test
@@ -105,14 +105,14 @@ public class BusinessObjectDataRestControllerDeleteBusinessObjectDataTest extend
 
             // Create a business object data with the relative number of subpartition values.
             BusinessObjectDataEntity businessObjectDataEntity =
-                createBusinessObjectDataEntity(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                     subPartitionValues, DATA_VERSION, true, BDATA_STATUS);
 
             // Validate that this business object data exists.
             BusinessObjectDataKey businessObjectDataKey =
-                new BusinessObjectDataKey(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, subPartitionValues,
+                new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, subPartitionValues,
                     DATA_VERSION);
-            assertNotNull(herdDao.getBusinessObjectDataByAltKey(businessObjectDataKey));
+            assertNotNull(businessObjectDataDao.getBusinessObjectDataByAltKey(businessObjectDataKey));
 
             // Delete the business object data using the relative endpoint.
             BusinessObjectData deletedBusinessObjectData = null;
@@ -120,37 +120,37 @@ public class BusinessObjectDataRestControllerDeleteBusinessObjectDataTest extend
             {
                 case 0:
                     deletedBusinessObjectData = businessObjectDataRestController
-                        .deleteBusinessObjectData(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                            DATA_VERSION, false);
+                        .deleteBusinessObjectData(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, DATA_VERSION,
+                            false);
                     break;
                 case 1:
                     deletedBusinessObjectData = businessObjectDataRestController
-                        .deleteBusinessObjectData(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                        .deleteBusinessObjectData(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                             subPartitionValues.get(0), DATA_VERSION, false);
                     break;
                 case 2:
                     deletedBusinessObjectData = businessObjectDataRestController
-                        .deleteBusinessObjectData(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                        .deleteBusinessObjectData(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                             subPartitionValues.get(0), subPartitionValues.get(1), DATA_VERSION, false);
                     break;
                 case 3:
                     deletedBusinessObjectData = businessObjectDataRestController
-                        .deleteBusinessObjectData(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                        .deleteBusinessObjectData(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                             subPartitionValues.get(0), subPartitionValues.get(1), subPartitionValues.get(2), DATA_VERSION, false);
                     break;
                 case 4:
                     deletedBusinessObjectData = businessObjectDataRestController
-                        .deleteBusinessObjectData(NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                        .deleteBusinessObjectData(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                             subPartitionValues.get(0), subPartitionValues.get(1), subPartitionValues.get(2), subPartitionValues.get(3), DATA_VERSION, false);
                     break;
             }
 
             // Validate the returned object.
-            validateBusinessObjectData(businessObjectDataEntity.getId(), NAMESPACE_CD, BOD_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+            validateBusinessObjectData(businessObjectDataEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
                 PARTITION_VALUE, subPartitionValues, DATA_VERSION, true, BDATA_STATUS, deletedBusinessObjectData);
 
             // Ensure that this business object data is no longer there.
-            assertNull(herdDao.getBusinessObjectDataByAltKey(businessObjectDataKey));
+            assertNull(businessObjectDataDao.getBusinessObjectDataByAltKey(businessObjectDataKey));
         }
     }
 }

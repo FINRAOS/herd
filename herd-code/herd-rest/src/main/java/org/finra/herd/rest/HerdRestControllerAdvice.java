@@ -17,6 +17,7 @@ package org.finra.herd.rest;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.joda.time.DateTime;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.ServletRequestDataBinder;
@@ -34,6 +35,9 @@ import org.finra.herd.service.helper.HerdErrorInformationExceptionHandler;
 public class HerdRestControllerAdvice extends HerdErrorInformationExceptionHandler implements InitializingBean
 {
     @Autowired
+    private DateTimeEditor dateTimeEditor;
+
+    @Autowired
     private DelimitedFieldValuesEditor delimitedFieldValuesEditor;
 
     @Override
@@ -48,5 +52,6 @@ public class HerdRestControllerAdvice extends HerdErrorInformationExceptionHandl
     protected void initBinder(HttpServletRequest request, ServletRequestDataBinder binder)
     {
         binder.registerCustomEditor(DelimitedFieldValues.class, delimitedFieldValuesEditor);
+        binder.registerCustomEditor(DateTime.class, dateTimeEditor);
     }
 }

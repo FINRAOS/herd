@@ -25,14 +25,10 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderBy;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 /**
  * An instance of business object data notification.
  */
-@XmlRootElement
-@XmlType
 @Entity
 @DiscriminatorValue(NotificationTypeEntity.NOTIFICATION_TYPE_BDATA)
 public class BusinessObjectDataNotificationRegistrationEntity extends NotificationRegistrationEntity

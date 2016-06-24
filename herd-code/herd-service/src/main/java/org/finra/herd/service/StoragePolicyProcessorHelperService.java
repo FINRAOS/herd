@@ -36,10 +36,8 @@ public interface StoragePolicyProcessorHelperService
      * Executes a storage policy transition as per specified storage policy selection.
      *
      * @param storagePolicyTransitionParamsDto the storage policy transition DTO that contains parameters needed to perform a storage policy transition
-     *
-     * @return the storage policy transition DTO updated with the policy transition results
      */
-    public StoragePolicyTransitionParamsDto executeStoragePolicyTransition(StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto);
+    public void executeStoragePolicyTransition(StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto);
 
     /**
      * Completes a storage policy transition as per specified storage policy selection.

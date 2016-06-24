@@ -23,9 +23,6 @@ import org.finra.herd.dao.KmsOperations;
 
 public class KmsOperationsImpl implements KmsOperations
 {
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public DecryptResult decrypt(AWSKMSClient awsKmsClient, DecryptRequest decryptRequest)
     {

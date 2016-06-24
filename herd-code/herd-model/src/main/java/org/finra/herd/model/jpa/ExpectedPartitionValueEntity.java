@@ -23,14 +23,10 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 /**
  * Expected partition values entity.
  */
-@XmlRootElement
-@XmlType
 @Table(name = ExpectedPartitionValueEntity.TABLE_NAME)
 @Entity
 public class ExpectedPartitionValueEntity extends AuditableEntity
@@ -43,7 +39,7 @@ public class ExpectedPartitionValueEntity extends AuditableEntity
     @Id
     @Column(name = TABLE_NAME + "_id")
     @GeneratedValue(generator = TABLE_NAME + "_seq")
-    @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq")
+    @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq", allocationSize = 1)
     private Integer id;
 
     /**
@@ -87,44 +83,5 @@ public class ExpectedPartitionValueEntity extends AuditableEntity
     public void setPartitionValue(String partitionValue)
     {
         this.partitionValue = partitionValue;
-    }
-
-    @Override
-    public boolean equals(Object other)
-    {
-        if (this == other)
-        {
-            return true;
-        }
-        if (other == null || getClass() != other.getClass())
-        {
-            return false;
-        }
-
-        ExpectedPartitionValueEntity that = (ExpectedPartitionValueEntity) other;
-
-        if (id != null ? !id.equals(that.id) : that.id != null)
-        {
-            return false;
-        }
-        if (partitionKeyGroup != null ? !partitionKeyGroup.equals(that.partitionKeyGroup) : that.partitionKeyGroup != null)
-        {
-            return false;
-        }
-        if (partitionValue != null ? !partitionValue.equals(that.partitionValue) : that.partitionValue != null)
-        {
-            return false;
-        }
-
-        return true;
-    }
-
-    @Override
-    public int hashCode()
-    {
-        int result = id != null ? id.hashCode() : 0;
-        result = 31 * result + (partitionKeyGroup != null ? partitionKeyGroup.hashCode() : 0);
-        result = 31 * result + (partitionValue != null ? partitionValue.hashCode() : 0);
-        return result;
     }
 }

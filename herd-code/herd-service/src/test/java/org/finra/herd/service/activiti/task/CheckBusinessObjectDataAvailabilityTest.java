@@ -50,7 +50,7 @@ public class CheckBusinessObjectDataAvailabilityTest extends HerdActivitiService
 
         parameters.add(buildParameter("businessObjectFormatVersion", FORMAT_VERSION.toString()));
         parameters.add(buildParameter("partitionKey", FIRST_PARTITION_COLUMN_NAME));
-        parameters.add(buildParameter("partitionValues", herdHelper.buildStringWithDefaultDelimiter(STORAGE_1_AVAILABLE_PARTITION_VALUES)));
+        parameters.add(buildParameter("partitionValues", herdStringHelper.buildStringWithDefaultDelimiter(STORAGE_1_AVAILABLE_PARTITION_VALUES)));
         parameters.add(buildParameter("businessObjectDataVersion", DATA_VERSION.toString()));
 
         Map<String, Object> variableValuesToValidate = new HashMap<>();
@@ -99,7 +99,10 @@ public class CheckBusinessObjectDataAvailabilityTest extends HerdActivitiService
         Map<String, Object> variableValuesToValidate = new HashMap<>();
         variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"BusinessObjectFormatVersion\" must be a valid integer value.");
 
-        testActivitiServiceTaskFailure(CheckBusinessObjectDataAvailability.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            testActivitiServiceTaskFailure(CheckBusinessObjectDataAvailability.class.getCanonicalName(), fieldExtensionList, parameters,
+                variableValuesToValidate);
+        });
     }
 
     /**
@@ -119,7 +122,10 @@ public class CheckBusinessObjectDataAvailabilityTest extends HerdActivitiService
         Map<String, Object> variableValuesToValidate = new HashMap<>();
         variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"BusinessObjectDataVersion\" must be a valid integer value.");
 
-        testActivitiServiceTaskFailure(CheckBusinessObjectDataAvailability.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            testActivitiServiceTaskFailure(CheckBusinessObjectDataAvailability.class.getCanonicalName(), fieldExtensionList, parameters,
+                variableValuesToValidate);
+        });
     }
 
     /**
@@ -149,8 +155,8 @@ public class CheckBusinessObjectDataAvailabilityTest extends HerdActivitiService
     {
         List<Parameter> parameters = new ArrayList<>();
 
-        parameters.add(buildParameter("namespace", NAMESPACE_CD));
-        parameters.add(buildParameter("businessObjectDefinitionName", BOD_NAME));
+        parameters.add(buildParameter("namespace", NAMESPACE));
+        parameters.add(buildParameter("businessObjectDefinitionName", BDEF_NAME));
         parameters.add(buildParameter("businessObjectFormatUsage", FORMAT_USAGE_CODE));
         parameters.add(buildParameter("businessObjectFormatFileType", FORMAT_FILE_TYPE_CODE));
         parameters.add(buildParameter("storageName", STORAGE_NAME));

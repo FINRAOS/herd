@@ -42,9 +42,6 @@ public class KmsDaoImpl implements KmsDao
     @Autowired
     private KmsOperations kmsOperations;
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String decrypt(AwsParamsDto awsParamsDto, String base64ciphertextBlob)
     {

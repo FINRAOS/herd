@@ -17,10 +17,11 @@ package org.finra.herd.service;
 
 import java.util.List;
 
+import com.amazonaws.services.s3.model.S3ObjectSummary;
+
 import org.finra.herd.model.dto.S3FileCopyRequestParamsDto;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.dto.S3FileTransferResultsDto;
-import org.finra.herd.model.api.xml.StorageFile;
 
 /**
  * A service for Amazon AWS S3.
@@ -41,9 +42,9 @@ public interface S3Service
      * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters. The S3 bucket name and S3 key prefix identify the S3 objects to get
      * listed.
      *
-     * @return the list of all S3 objects represented as storage files that match the prefix in the given bucket.
+     * @return the list of all S3 objects represented by S3 object summary that match the prefix in the given bucket.
      */
-    public List<StorageFile> listDirectory(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto);
+    public List<S3ObjectSummary> listDirectory(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto);
 
     /**
      * Lists all S3 objects matching the S3 key prefix in the given bucket (S3 bucket name).
@@ -52,9 +53,9 @@ public interface S3Service
      * listed.
      * @param ignoreZeroByteDirectoryMarkers specifies whether to ignore 0 byte objects that represent S3 directories.
      *
-     * @return the list of all keys represented as storage files that match the prefix in the given bucket.
+     * @return the list of all keys represented by S3 object summary that match the prefix in the given bucket.
      */
-    public List<StorageFile> listDirectory(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, boolean ignoreZeroByteDirectoryMarkers);
+    public List<S3ObjectSummary> listDirectory(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, boolean ignoreZeroByteDirectoryMarkers);
 
     /**
      * Uploads a local file into S3.
@@ -101,15 +102,26 @@ public interface S3Service
     public S3FileTransferResultsDto copyFile(S3FileCopyRequestParamsDto s3FileCopyRequestParamsDto) throws InterruptedException;
 
     /**
-     * Deletes a object from specified bucket.
+     * Requests to restore a list of keys in the specified bucket.
      *
-     * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters. The S3 bucket name and the file name identify the S3 object to be
-     * deleted.
+     * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters. The S3 bucket name and the file list identify the S3 objects to be
+     * restored
+     * @param expirationInDays the time, in days, between when an object is restored to the bucket and when it expires
      */
-    public void deleteFile(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto);
+    public void restoreObjects(final S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, int expirationInDays);
 
     /**
-     * Deletes a list of keys/objects from specified bucket.
+     * Validates that all specified Glacier storage class files are restored.
+     *
+     * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters. The S3 bucket name and the file list identify the S3 objects to be
+     * validated
+     *
+     * @throws RuntimeException if file validation fails
+     */
+    public void validateGlacierS3FilesRestored(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto) throws RuntimeException;
+
+    /**
+     * Deletes a list of keys from specified bucket.
      *
      * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters. The S3 bucket name and the file list identify the S3 objects to be
      * deleted.
@@ -117,7 +129,7 @@ public interface S3Service
     public void deleteFileList(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto);
 
     /**
-     * Deletes keys/objects from specified bucket with matching prefix.
+     * Deletes keys/key versions from specified bucket with matching prefix.
      *
      * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters. The S3 bucket name and S3 key prefix identify the S3 objects to be
      * deleted.

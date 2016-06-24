@@ -53,7 +53,9 @@ public class GenerateBusinessObjectFormatDdlTest extends HerdActivitiServiceTask
         Map<String, Object> variableValuesToValidate = new HashMap<>();
         variableValuesToValidate.put(GenerateBusinessObjectFormatDdl.VARIABLE_DDL, VARIABLE_VALUE_NOT_NULL);
 
-        testActivitiServiceTaskSuccess(GenerateBusinessObjectFormatDdl.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+        executeWithoutLogging(LogVariables.class, () -> {
+            testActivitiServiceTaskSuccess(GenerateBusinessObjectFormatDdl.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+        });
     }
 
     @Test
@@ -65,8 +67,10 @@ public class GenerateBusinessObjectFormatDdlTest extends HerdActivitiServiceTask
         Map<String, Object> variableValuesToValidate = new HashMap<>();
         variableValuesToValidate.put(GenerateBusinessObjectFormatDdl.VARIABLE_DDL, VARIABLE_VALUE_NOT_NULL);
 
-        testActivitiServiceTaskSuccess(GenerateBusinessObjectFormatDdl.class.getCanonicalName(), getMandatoryFields(), getMandatoryParameters(),
-            variableValuesToValidate);
+        executeWithoutLogging(LogVariables.class, () -> {
+            testActivitiServiceTaskSuccess(GenerateBusinessObjectFormatDdl.class.getCanonicalName(), getMandatoryFields(), getMandatoryParameters(),
+                variableValuesToValidate);
+        });
     }
 
     /**
@@ -84,7 +88,9 @@ public class GenerateBusinessObjectFormatDdlTest extends HerdActivitiServiceTask
         Map<String, Object> variableValuesToValidate = new HashMap<>();
         variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"businessObjectFormatVersion\" must be a valid integer value.");
 
-        testActivitiServiceTaskFailure(GenerateBusinessObjectFormatDdl.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            testActivitiServiceTaskFailure(GenerateBusinessObjectFormatDdl.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+        });
     }
 
     /**
@@ -103,7 +109,9 @@ public class GenerateBusinessObjectFormatDdlTest extends HerdActivitiServiceTask
         variableValuesToValidate
             .put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"includeDropTableStatement\" must be a valid boolean value of \"true\" or \"false\".");
 
-        testActivitiServiceTaskFailure(GenerateBusinessObjectFormatDdl.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            testActivitiServiceTaskFailure(GenerateBusinessObjectFormatDdl.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+        });
     }
 
     /**
@@ -122,7 +130,9 @@ public class GenerateBusinessObjectFormatDdlTest extends HerdActivitiServiceTask
         variableValuesToValidate
             .put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "\"includeIfNotExistsOption\" must be a valid boolean value of \"true\" or \"false\".");
 
-        testActivitiServiceTaskFailure(GenerateBusinessObjectFormatDdl.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            testActivitiServiceTaskFailure(GenerateBusinessObjectFormatDdl.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+        });
     }
 
     /**
@@ -138,10 +148,12 @@ public class GenerateBusinessObjectFormatDdlTest extends HerdActivitiServiceTask
         parameters.add(buildParameter("outputFormat", "INVALID_OUTPUT_FORMAT"));
 
         Map<String, Object> variableValuesToValidate = new HashMap<>();
-        variableValuesToValidate
-            .put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, "No enum constant org.finra.herd.model.api.xml.BusinessObjectDataDdlOutputFormatEnum.INVALID_OUTPUT_FORMAT");
+        variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE,
+            "No enum constant org.finra.herd.model.api.xml.BusinessObjectDataDdlOutputFormatEnum.INVALID_OUTPUT_FORMAT");
 
-        testActivitiServiceTaskFailure(GenerateBusinessObjectFormatDdl.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            testActivitiServiceTaskFailure(GenerateBusinessObjectFormatDdl.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+        });
     }
 
     /**
@@ -172,8 +184,8 @@ public class GenerateBusinessObjectFormatDdlTest extends HerdActivitiServiceTask
     {
         List<Parameter> parameters = new ArrayList<>();
 
-        parameters.add(buildParameter("namespace", NAMESPACE_CD));
-        parameters.add(buildParameter("businessObjectDefinitionName", BOD_NAME));
+        parameters.add(buildParameter("namespace", NAMESPACE));
+        parameters.add(buildParameter("businessObjectDefinitionName", BDEF_NAME));
         parameters.add(buildParameter("businessObjectFormatUsage", FORMAT_USAGE_CODE));
         parameters.add(buildParameter("businessObjectFormatFileType", FileTypeEntity.TXT_FILE_TYPE));
         parameters.add(buildParameter("outputFormat", BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL.value()));

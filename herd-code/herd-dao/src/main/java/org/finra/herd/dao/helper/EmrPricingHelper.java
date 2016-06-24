@@ -31,19 +31,23 @@ import com.amazonaws.services.ec2.model.AvailabilityZone;
 import com.amazonaws.services.ec2.model.SpotPrice;
 import com.amazonaws.services.ec2.model.Subnet;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import org.finra.herd.dao.HerdDao;
 import org.finra.herd.dao.Ec2Dao;
+import org.finra.herd.dao.OnDemandPriceDao;
 import org.finra.herd.model.ObjectNotFoundException;
-import org.finra.herd.model.dto.Ec2PriceDto;
-import org.finra.herd.model.dto.EmrClusterPriceDto;
-import org.finra.herd.model.jpa.OnDemandPriceEntity;
 import org.finra.herd.model.api.xml.EmrClusterDefinition;
 import org.finra.herd.model.api.xml.InstanceDefinition;
 import org.finra.herd.model.api.xml.MasterInstanceDefinition;
+import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.model.dto.Ec2PriceDto;
+import org.finra.herd.model.dto.EmrClusterAlternateKeyDto;
+import org.finra.herd.model.dto.EmrClusterPriceDto;
+import org.finra.herd.model.dto.EmrVpcPricingState;
+import org.finra.herd.model.jpa.OnDemandPriceEntity;
 
 /**
  * Encapsulates logic for calculating the best price for EMR cluster.
@@ -51,16 +55,22 @@ import org.finra.herd.model.api.xml.MasterInstanceDefinition;
 @Component
 public class EmrPricingHelper extends AwsHelper
 {
-    private static final Logger LOGGER = Logger.getLogger(EmrPricingHelper.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(EmrPricingHelper.class);
 
     @Autowired
     private Ec2Dao ec2Dao;
 
     @Autowired
-    private HerdDao herdDao;
+    private HerdStringHelper herdStringHelper;
 
     @Autowired
-    private HerdStringHelper herdStringHelper;
+    private JsonHelper jsonHelper;
+
+    @Autowired
+    private OnDemandPriceDao onDemandPriceDao;
+
+    @Autowired
+    private EmrVpcPricingStateFormatter emrVpcPricingStateFormatter;
 
     /**
      * Finds the best price for each master and core instances based on the subnets and master and core instance search parameters given in the definition.
@@ -73,23 +83,36 @@ public class EmrPricingHelper extends AwsHelper
      * replaced by a single subnet ID.
      * <p/>
      * The definition's instanceMaxSearchPrice and instanceOnDemandThreshold will be removed by this operation.
-     *
+     * @param emrClusterAlternateKeyDto EMR cluster alternate key
      * @param emrClusterDefinition The EMR cluster definition with search criteria, and the definition that will be updated.
      */
-    public void updateEmrClusterDefinitionWithBestPrice(EmrClusterDefinition emrClusterDefinition)
+    public void updateEmrClusterDefinitionWithBestPrice(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, EmrClusterDefinition emrClusterDefinition)
     {
+        EmrVpcPricingState emrVpcPricingState = new EmrVpcPricingState();
+
         // Get total count of instances this definition will attempt to create
         int totalInstanceCount = getTotalInstanceCount(emrClusterDefinition);
 
         // Get the subnet information
         List<Subnet> subnets = getSubnets(emrClusterDefinition);
+        for (Subnet subnet : subnets)
+        {
+            emrVpcPricingState.getSubnetAvailableIpAddressCounts().put(subnet.getSubnetId(), subnet.getAvailableIpAddressCount());
+        }
         // Filter out subnets with not enough available IPs
         removeSubnetsWithAvailableIpsLessThan(subnets, totalInstanceCount);
 
         if (subnets.isEmpty())
         {
-            throw new ObjectNotFoundException("There are no subnets in the current VPC which have sufficient IP addresses available to run your clusters. " +
-                "Try expanding the list of subnets or try again later.");
+            LOGGER.info(String.format(
+                "Insufficient IP availability. namespace=\"%s\" emrClusterDefinitionName=\"%s\" emrClusterName=\"%s\" "
+                    + "totalRequestedInstanceCount=%s emrVpcPricingState=%s",
+                emrClusterAlternateKeyDto.getNamespace(), emrClusterAlternateKeyDto.getEmrClusterDefinitionName(),
+                emrClusterAlternateKeyDto.getEmrClusterName(), totalInstanceCount, jsonHelper.objectToJson(emrVpcPricingState)));
+            throw new ObjectNotFoundException(String.format(
+                "There are no subnets in the current VPC which have sufficient IP addresses available to run your "
+                    + "clusters. Try expanding the list of subnets or try again later. requestedInstanceCount=%s%n%s",
+                totalInstanceCount, emrVpcPricingStateFormatter.format(emrVpcPricingState)));
         }
 
         // Best prices are accumulated in this list
@@ -104,8 +127,11 @@ public class EmrPricingHelper extends AwsHelper
         String masterInstanceType = masterInstanceDefinition.getInstanceType();
         requestedInstanceTypes.add(masterInstanceType);
 
-        String coreInstanceType = coreInstanceDefinition.getInstanceType();
-        requestedInstanceTypes.add(coreInstanceType);
+        if (coreInstanceDefinition != null)
+        {
+            String coreInstanceType = coreInstanceDefinition.getInstanceType();
+            requestedInstanceTypes.add(coreInstanceType);
+        }
 
         if (taskInstanceDefinition != null)
         {
@@ -114,12 +140,14 @@ public class EmrPricingHelper extends AwsHelper
         }
 
         // Get AZs for the subnets
-        List<AvailabilityZone> availabilityZones = getAvailabilityZones(subnets);
-        for (AvailabilityZone availabilityZone : availabilityZones)
+        for (AvailabilityZone availabilityZone : getAvailabilityZones(subnets))
         {
             // Create a mapping of instance types to prices for more efficient, in-memory lookup
             Map<String, BigDecimal> instanceTypeSpotPrices = getInstanceTypeSpotPrices(availabilityZone, requestedInstanceTypes);
             Map<String, BigDecimal> instanceTypeOnDemandPrices = getInstanceTypeOnDemandPrices(availabilityZone, requestedInstanceTypes);
+
+            emrVpcPricingState.getSpotPricesPerAvailabilityZone().put(availabilityZone.getZoneName(), instanceTypeSpotPrices);
+            emrVpcPricingState.getOnDemandPricesPerAvailabilityZone().put(availabilityZone.getZoneName(), instanceTypeOnDemandPrices);
 
             // Get and compare master price
             BigDecimal masterSpotPrice = instanceTypeSpotPrices.get(masterInstanceType);
@@ -127,9 +155,14 @@ public class EmrPricingHelper extends AwsHelper
             Ec2PriceDto masterPrice = getBestInstancePrice(masterSpotPrice, masterOnDemandPrice, masterInstanceDefinition);
 
             // Get and compare core price
-            BigDecimal coreSpotPrice = instanceTypeSpotPrices.get(coreInstanceType);
-            BigDecimal coreOnDemandPrice = instanceTypeOnDemandPrices.get(coreInstanceType);
-            Ec2PriceDto corePrice = getBestInstancePrice(coreSpotPrice, coreOnDemandPrice, coreInstanceDefinition);
+            Ec2PriceDto corePrice = null;
+            if (coreInstanceDefinition != null)
+            {
+                String coreInstanceType = coreInstanceDefinition.getInstanceType();
+                BigDecimal coreSpotPrice = instanceTypeSpotPrices.get(coreInstanceType);
+                BigDecimal coreOnDemandPrice = instanceTypeOnDemandPrices.get(coreInstanceType);
+                corePrice = getBestInstancePrice(coreSpotPrice, coreOnDemandPrice, coreInstanceDefinition);
+            }
 
             Ec2PriceDto taskPrice = null;
             if (taskInstanceDefinition != null)
@@ -142,8 +175,8 @@ public class EmrPricingHelper extends AwsHelper
                 taskPrice = getBestInstancePrice(taskSpotPrice, taskOnDemandPrice, taskInstanceDefinition);
             }
 
-            // If prices were found for both master and core
-            if (masterPrice != null && corePrice != null && (taskInstanceDefinition == null || taskPrice != null))
+            // If prices were found
+            if (masterPrice != null && (coreInstanceDefinition == null || corePrice != null) && (taskInstanceDefinition == null || taskPrice != null))
             {
                 // Add the pricing result to the result list
                 emrClusterPrices.add(createEmrClusterPrice(availabilityZone, masterPrice, corePrice, taskPrice));
@@ -154,8 +187,13 @@ public class EmrPricingHelper extends AwsHelper
 
         if (emrClusterPrices.isEmpty())
         {
-            throw new ObjectNotFoundException("There were no subnets which satisfied your best price search criteria. " +
-                "Try setting the max price or the on-demand threshold to a higher value.");
+            LOGGER.info(String.format(
+                "No subnets which satisfied the best price search criteria. namespace=\"%s\" emrClusterDefinitionName=\"%s\" "
+                    + "emrClusterName=\"%s\" emrVpcPricingState=%s",
+                emrClusterAlternateKeyDto.getNamespace(), emrClusterAlternateKeyDto.getEmrClusterDefinitionName(),
+                emrClusterAlternateKeyDto.getEmrClusterName(), jsonHelper.objectToJson(emrVpcPricingState)));
+            throw new ObjectNotFoundException(String.format("There were no subnets which satisfied your best price search criteria. Try setting the max price "
+                + "or the on-demand threshold to a higher value.%n%s", emrVpcPricingStateFormatter.format(emrVpcPricingState)));
         }
 
         // Find the best prices from the result list
@@ -182,7 +220,11 @@ public class EmrPricingHelper extends AwsHelper
         InstanceDefinition taskInstanceDefinition = getTaskInstanceDefinition(emrClusterDefinition);
 
         // Get total count of instances this definition will attempt to create
-        int totalInstanceCount = masterInstanceDefinition.getInstanceCount() + coreInstanceDefinition.getInstanceCount();
+        int totalInstanceCount = masterInstanceDefinition.getInstanceCount();
+        if (coreInstanceDefinition != null)
+        {
+            totalInstanceCount += coreInstanceDefinition.getInstanceCount();
+        }
         if (taskInstanceDefinition != null)
         {
             totalInstanceCount += taskInstanceDefinition.getInstanceCount();
@@ -209,9 +251,12 @@ public class EmrPricingHelper extends AwsHelper
         emrClusterDefinition.getInstanceDefinitions().getMasterInstances().setInstanceOnDemandThreshold(null);
         emrClusterDefinition.getInstanceDefinitions().getMasterInstances().setInstanceSpotPrice(getSpotBidPrice(bestEmrClusterPrice.getMasterPrice()));
 
-        emrClusterDefinition.getInstanceDefinitions().getCoreInstances().setInstanceMaxSearchPrice(null);
-        emrClusterDefinition.getInstanceDefinitions().getCoreInstances().setInstanceOnDemandThreshold(null);
-        emrClusterDefinition.getInstanceDefinitions().getCoreInstances().setInstanceSpotPrice(getSpotBidPrice(bestEmrClusterPrice.getCorePrice()));
+        if (bestEmrClusterPrice.getCorePrice() != null)
+        {
+            emrClusterDefinition.getInstanceDefinitions().getCoreInstances().setInstanceMaxSearchPrice(null);
+            emrClusterDefinition.getInstanceDefinitions().getCoreInstances().setInstanceOnDemandThreshold(null);
+            emrClusterDefinition.getInstanceDefinitions().getCoreInstances().setInstanceSpotPrice(getSpotBidPrice(bestEmrClusterPrice.getCorePrice()));
+        }
     }
 
     /**
@@ -322,8 +367,11 @@ public class EmrPricingHelper extends AwsHelper
         BigDecimal masterPrice = getTotalCost(emrClusterPrice.getMasterPrice());
         totalPrice = totalPrice.add(masterPrice);
 
-        BigDecimal corePrice = getTotalCost(emrClusterPrice.getCorePrice());
-        totalPrice = totalPrice.add(corePrice);
+        if (emrClusterPrice.getCorePrice() != null)
+        {
+            BigDecimal corePrice = getTotalCost(emrClusterPrice.getCorePrice());
+            totalPrice = totalPrice.add(corePrice);
+        }
 
         if (emrClusterPrice.getTaskPrice() != null)
         {
@@ -388,13 +436,14 @@ public class EmrPricingHelper extends AwsHelper
      */
     private Ec2PriceDto getBestInstancePrice(BigDecimal spotPrice, BigDecimal onDemandPrice, InstanceDefinition instanceDefinition)
     {
-        LOGGER.debug("start: instanceType = " + instanceDefinition.getInstanceType() + ", spotPrice = " + spotPrice + ", onDemandPrice = " + onDemandPrice);
+        LOGGER.debug("Starting... instanceType=\"{}\" instanceCount={} instanceSpotPrice={} instanceOnDemandPrice={}", instanceDefinition.getInstanceType(),
+            instanceDefinition.getInstanceCount(), spotPrice, onDemandPrice);
 
         BigDecimal spotBidPrice = instanceDefinition.getInstanceSpotPrice();
         BigDecimal maxSearchPrice = instanceDefinition.getInstanceMaxSearchPrice();
         BigDecimal onDemandThreshold = instanceDefinition.getInstanceOnDemandThreshold();
 
-        LOGGER.debug("spotBidPrice = " + spotBidPrice + ", maxSearchPrice = " + maxSearchPrice + ", onDemandThreshold = " + onDemandThreshold);
+        LOGGER.debug("instanceSpotBidPrice={} instanceMaxSearchPrice={} instanceOnDemandThreshold={}", spotBidPrice, maxSearchPrice, onDemandThreshold);
 
         Ec2PriceDto bestPrice = null;
 
@@ -453,7 +502,7 @@ public class EmrPricingHelper extends AwsHelper
             // Otherwise use on-demand
         }
 
-        LOGGER.debug("end: bestPrice = " + bestPrice);
+        LOGGER.debug("End. instanceBestPrice={}", jsonHelper.objectToJson(bestPrice));
         return bestPrice;
     }
 
@@ -466,7 +515,12 @@ public class EmrPricingHelper extends AwsHelper
      */
     private InstanceDefinition getCoreInstanceDefinition(EmrClusterDefinition emrClusterDefinition)
     {
-        return emrClusterDefinition.getInstanceDefinitions().getCoreInstances();
+        InstanceDefinition coreInstances = emrClusterDefinition.getInstanceDefinitions().getCoreInstances();
+        if (coreInstances != null && coreInstances.getInstanceCount() <= 0)
+        {
+            coreInstances = null;
+        }
+        return coreInstances;
     }
 
     /**
@@ -517,7 +571,7 @@ public class EmrPricingHelper extends AwsHelper
         Map<String, BigDecimal> instanceTypeOnDemandPrices = new HashMap<>();
         for (String instanceType : instanceTypes)
         {
-            OnDemandPriceEntity onDemandPrice = herdDao.getOnDemandPrice(availabilityZone.getRegionName(), instanceType);
+            OnDemandPriceEntity onDemandPrice = onDemandPriceDao.getOnDemandPrice(availabilityZone.getRegionName(), instanceType);
 
             if (onDemandPrice == null)
             {
@@ -544,7 +598,8 @@ public class EmrPricingHelper extends AwsHelper
      */
     private Map<String, BigDecimal> getInstanceTypeSpotPrices(AvailabilityZone availabilityZone, Set<String> instanceTypes)
     {
-        List<SpotPrice> spotPrices = ec2Dao.getLatestSpotPrices(availabilityZone.getZoneName(), instanceTypes, getAwsParamsDto());
+        List<String> productDescriptions = herdStringHelper.getDelimitedConfigurationValue(ConfigurationValue.EMR_SPOT_PRICE_HISTORY_PRODUCT_DESCRIPTIONS);
+        List<SpotPrice> spotPrices = ec2Dao.getLatestSpotPrices(availabilityZone.getZoneName(), instanceTypes, productDescriptions, getAwsParamsDto());
 
         Map<String, BigDecimal> instanceTypeSpotPrices = new HashMap<>();
         for (SpotPrice spotPrice : spotPrices)

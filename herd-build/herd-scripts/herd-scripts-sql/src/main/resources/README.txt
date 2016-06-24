@@ -15,7 +15,7 @@ limitations under the License.
 -------------------------------------------------------------------------
 
 1) Create herd tables
-	- herd.postgres.create.sql
+	- herd.postgres.X.X.X.create.sql
 
 2) Create Quartz tables. Note that this file is distributed by Quartz (v2.2.1) and is included out of convenience
 	- quartz_tables_postgres.sql
@@ -26,8 +26,11 @@ limitations under the License.
 	- activiti.postgres.create.identity.sql
 
 4) Insert reference data
-	- herd.postgres.1.0.refdata.1.0.sql
+	- herd.postgres.X.X.X.refdata.sql
 	
 5) Configure environment
-	- Open herd.postgres.1.0.cnfgn.sql
+	- Open herd.postgres.X.X.X.cnfgn.sql
 	- Add the proper values to the parameters at the start of the file, then run
+
+5) Upgrade the herd schema by running the relative herd upgrade scripts
+	- herd.postgres.X.XX.X-to-X.XX.X.upgrade.sql

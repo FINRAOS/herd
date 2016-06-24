@@ -68,7 +68,7 @@ public class PartitionKeyGroupRestControllerTest extends AbstractRestTest
         validatePartitionKeyGroup(PARTITION_KEY_GROUP, deletedPartitionKeyGroup);
 
         // Ensure that this partition key group is no longer there.
-        assertNull(herdDao.getPartitionKeyGroupByKey(createPartitionKeyGroupKey(PARTITION_KEY_GROUP)));
+        assertNull(partitionKeyGroupDao.getPartitionKeyGroupByKey(createPartitionKeyGroupKey(PARTITION_KEY_GROUP)));
     }
 
     @Test

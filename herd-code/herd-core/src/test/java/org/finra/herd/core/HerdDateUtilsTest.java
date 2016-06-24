@@ -15,10 +15,10 @@
 */
 package org.finra.herd.core;
 
-import static org.finra.herd.core.HerdDateUtils.MILLIS_IN_ONE_DAY;
-import static org.finra.herd.core.HerdDateUtils.MILLIS_IN_ONE_HOUR;
-import static org.finra.herd.core.HerdDateUtils.MILLIS_IN_ONE_MINUTE;
-import static org.finra.herd.core.HerdDateUtils.MILLIS_IN_ONE_SECOND;
+import static org.finra.herd.core.HerdDateUtils.MILLIS_PER_DAY;
+import static org.finra.herd.core.HerdDateUtils.MILLIS_PER_HOUR;
+import static org.finra.herd.core.HerdDateUtils.MILLIS_PER_MINUTE;
+import static org.finra.herd.core.HerdDateUtils.MILLIS_PER_SECOND;
 import static org.junit.Assert.assertEquals;
 
 import java.sql.Timestamp;
@@ -42,75 +42,50 @@ public class HerdDateUtilsTest extends AbstractCoreTest
     }
 
     @Test
-    public void testFormatDurationZeroSeconds()
-    {
-        String result = HerdDateUtils.formatDuration(0, false);
-        assertEquals("0 Seconds", result);
-    }
-
-    @Test
     public void testFormatDurationZeroMilliseconds()
     {
-        String result = HerdDateUtils.formatDuration(0, true);
+        String result = HerdDateUtils.formatDuration(0);
         assertEquals("0 Milliseconds", result);
     }
 
     @Test
     public void testFormatDurationDays()
     {
-        String result = HerdDateUtils.formatDuration(MILLIS_IN_ONE_DAY, false);
-        assertEquals("1 Day", result);
-
         int length = 100;
-        result = HerdDateUtils.formatDuration(MILLIS_IN_ONE_DAY * length, true);
+        String result = HerdDateUtils.formatDuration(MILLIS_PER_DAY * length);
         assertEquals(length + " Days", result);
     }
 
     @Test
     public void testFormatDurationHours()
     {
-        String result = HerdDateUtils.formatDuration(MILLIS_IN_ONE_HOUR, true);
+        String result = HerdDateUtils.formatDuration(MILLIS_PER_HOUR);
         assertEquals("1 Hour", result);
-
-        int length = 10; // Don't go above 1 day.
-        result = HerdDateUtils.formatDuration(MILLIS_IN_ONE_HOUR * length, false);
-        assertEquals(length + " Hours", result);
     }
 
     @Test
     public void testFormatDurationMinutes()
     {
-        String result = HerdDateUtils.formatDuration(MILLIS_IN_ONE_MINUTE, true);
+        String result = HerdDateUtils.formatDuration(MILLIS_PER_MINUTE);
         assertEquals("1 Minute", result);
-
-        int length = 59; // Don't go above 1 hour.
-        result = HerdDateUtils.formatDuration(MILLIS_IN_ONE_MINUTE * length, false);
-        assertEquals(length + " Minutes", result);
     }
 
     @Test
     public void testFormatDurationSeconds()
     {
-        String result = HerdDateUtils.formatDuration(MILLIS_IN_ONE_SECOND, true);
+        String result = HerdDateUtils.formatDuration(MILLIS_PER_SECOND);
         assertEquals("1 Second", result);
-
-        int length = 33; // Don't go above 1 minute.
-        result = HerdDateUtils.formatDuration(MILLIS_IN_ONE_SECOND * length, false);
-        assertEquals(length + " Seconds", result);
     }
 
     @Test
     public void testFormatDurationMilliseconds()
     {
-        String result = HerdDateUtils.formatDuration(1, true);
+        String result = HerdDateUtils.formatDuration(1);
         assertEquals("1 Millisecond", result);
 
         int length = 999; // Don't go above 1 second.
-        result = HerdDateUtils.formatDuration(length, true);
+        result = HerdDateUtils.formatDuration(length);
         assertEquals(length + " Milliseconds", result);
-
-        result = HerdDateUtils.formatDuration(length, false);
-        assertEquals("0 Seconds", result); // Rounding is not done.
     }
 
     @Test
@@ -121,13 +96,11 @@ public class HerdDateUtilsTest extends AbstractCoreTest
         long minutes = 59;
         long hours = 23;
         long days = 999;
-        long duration = millis + MILLIS_IN_ONE_SECOND * seconds + MILLIS_IN_ONE_MINUTE * minutes + MILLIS_IN_ONE_HOUR * hours + MILLIS_IN_ONE_DAY * days;
+        long duration = millis + MILLIS_PER_SECOND * seconds + MILLIS_PER_MINUTE * minutes + MILLIS_PER_HOUR * hours + MILLIS_PER_DAY * days;
 
-        String expectedResult = days + " Days, " + hours + " Hours, " + minutes + " Minutes, " + seconds + " Seconds";
-        String result = HerdDateUtils.formatDuration(duration, false);
+        String expectedResult = days + " Days, " + hours + " Hours, " + minutes + " Minutes, " + seconds + " Seconds, " + millis + " Milliseconds";
+        String result = HerdDateUtils.formatDuration(duration);
         assertEquals(expectedResult, result);
-        result = HerdDateUtils.formatDuration(duration, true);
-        assertEquals(expectedResult + ", " + millis + " Milliseconds", result);
     }
 
     @Test

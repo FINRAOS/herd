@@ -37,17 +37,17 @@ public class BusinessObjectDataNotificationRegistrationDaoHelper
      * @return the business object data notification registration entity
      * @throws ObjectNotFoundException if the entity doesn't exist
      */
-    public BusinessObjectDataNotificationRegistrationEntity getBusinessObjectDataNotificationRegistrationEntity(
-        NotificationRegistrationKey key) throws ObjectNotFoundException
+    public BusinessObjectDataNotificationRegistrationEntity getBusinessObjectDataNotificationRegistrationEntity(NotificationRegistrationKey key)
+        throws ObjectNotFoundException
     {
-        BusinessObjectDataNotificationRegistrationEntity businessObjectDataNotificationRegistrationEntity = businessObjectDataNotificationRegistrationDao
-            .getBusinessObjectDataNotificationRegistrationByAltKey(key);
+        BusinessObjectDataNotificationRegistrationEntity businessObjectDataNotificationRegistrationEntity =
+            businessObjectDataNotificationRegistrationDao.getBusinessObjectDataNotificationRegistrationByAltKey(key);
 
         if (businessObjectDataNotificationRegistrationEntity == null)
         {
-            throw new ObjectNotFoundException(String.format(
-                "Business object data notification registration with name \"%s\" does not exist for \"%s\" namespace.", key.getNotificationName(), key
-                    .getNamespace()));
+            throw new ObjectNotFoundException(String
+                .format("Business object data notification registration with name \"%s\" does not exist for \"%s\" namespace.", key.getNotificationName(),
+                    key.getNamespace()));
         }
 
         return businessObjectDataNotificationRegistrationEntity;

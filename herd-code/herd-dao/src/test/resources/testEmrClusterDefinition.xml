@@ -139,4 +139,10 @@
          </scriptArguments>
       </hadoopJarStep>
    </hadoopJarSteps>
+   <additionalMasterSecurityGroups>
+      <additionalMasterSecurityGroup>additionalMasterSecurityGroup</additionalMasterSecurityGroup>
+   </additionalMasterSecurityGroups>
+   <additionalSlaveSecurityGroups>
+      <additionalSlaveSecurityGroup>additionalSlaveSecurityGroup</additionalSlaveSecurityGroup>
+   </additionalSlaveSecurityGroups>
 </emrClusterDefinition>

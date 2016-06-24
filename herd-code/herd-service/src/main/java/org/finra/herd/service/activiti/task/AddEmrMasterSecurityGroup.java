@@ -28,7 +28,7 @@ import org.finra.herd.service.EmrService;
 /**
  * An Activiti task that adds security groups to master nodes of EMR cluster
  * <p/>
- * 
+ * <p/>
  * <pre>
  * <extensionElements>
  *   <activiti:field name="namespaceCode" stringValue="" />
@@ -71,7 +71,7 @@ public class AddEmrMasterSecurityGroup extends BaseJavaDelegate
         EmrMasterSecurityGroup emrMasterSecurityGroup = emrService.addSecurityGroupsToClusterMaster(request);
 
         // Set workflow variables based on the security groups.
-        setTaskWorkflowVariable(execution, VARIABLE_EMR_MASTER_SECURITY_GROUPS, 
-                herdHelper.buildStringWithDefaultDelimiter(emrMasterSecurityGroup.getSecurityGroupIds()));
+        setTaskWorkflowVariable(execution, VARIABLE_EMR_MASTER_SECURITY_GROUPS,
+            herdStringHelper.buildStringWithDefaultDelimiter(emrMasterSecurityGroup.getSecurityGroupIds()));
     }
 }

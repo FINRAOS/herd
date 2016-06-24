@@ -35,7 +35,7 @@ import org.finra.herd.model.dto.SecurityFunctions;
 import org.finra.herd.model.jpa.NotificationEventTypeEntity;
 import org.finra.herd.service.NotificationEventService;
 import org.finra.herd.service.UploadDownloadService;
-import org.finra.herd.service.helper.HerdHelper;
+import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.ui.constants.UiConstants;
 
 /**
@@ -47,17 +47,17 @@ import org.finra.herd.ui.constants.UiConstants;
 public class UploadDownloadRestController extends HerdBaseController
 {
     @Autowired
-    private UploadDownloadService uploadDownloadService;
-
-    @Autowired
-    private HerdHelper herdHelper;
+    private BusinessObjectDataHelper businessObjectDataHelper;
 
     @Autowired
     private NotificationEventService notificationEventService;
 
+    @Autowired
+    private UploadDownloadService uploadDownloadService;
+
     /**
      * Initiates a single file upload capability by creating the relative business object data instance in UPLOADING state and allowing write access to a
-     * specific location in S3_MANAGED_LOADING_DOCK storage.
+     * specific location in S3_MANAGED_LOADING_DOCK storage. <p>Requires WRITE permission on namespace</p>
      *
      * @param uploadSingleInitiationRequest the information needed to initiate a file upload
      *
@@ -70,8 +70,10 @@ public class UploadDownloadRestController extends HerdBaseController
         UploadSingleInitiationResponse uploadSingleInitiationResponse = uploadDownloadService.initiateUploadSingle(uploadSingleInitiationRequest);
 
         // Trigger notifications.
-        BusinessObjectDataKey sourceBusinessObjectDataKey = herdHelper.getBusinessObjectDataKey(uploadSingleInitiationResponse.getSourceBusinessObjectData());
-        BusinessObjectDataKey targetBusinessObjectDataKey = herdHelper.getBusinessObjectDataKey(uploadSingleInitiationResponse.getTargetBusinessObjectData());
+        BusinessObjectDataKey sourceBusinessObjectDataKey =
+            businessObjectDataHelper.getBusinessObjectDataKey(uploadSingleInitiationResponse.getSourceBusinessObjectData());
+        BusinessObjectDataKey targetBusinessObjectDataKey =
+            businessObjectDataHelper.getBusinessObjectDataKey(uploadSingleInitiationResponse.getTargetBusinessObjectData());
 
         // Create business object data notifications.
         for (NotificationEventTypeEntity.EventTypesBdata eventType : Arrays
@@ -89,7 +91,7 @@ public class UploadDownloadRestController extends HerdBaseController
     }
 
     /**
-     * Initiates a download of a single file.
+     * Initiates a download of a single file. <p>Requires READ permission on namespace</p>
      *
      * @param namespace the namespace.
      * @param businessObjectDefinitionName the business object definition name.
@@ -118,7 +120,7 @@ public class UploadDownloadRestController extends HerdBaseController
     }
 
     /**
-     * Extends the credentials for a previously initiated upload.
+     * Extends the credentials for a previously initiated upload. <p>Requires WRITE permission on namespace</p>
      *
      * @param namespace the namespace.
      * @param businessObjectDefinitionName the business object definition name.

@@ -21,7 +21,7 @@
    <parent>
       <groupId>org.finra.herd</groupId>
       <artifactId>herd-code</artifactId>
-      <version>0.8.0-SNAPSHOT</version>
+      <version>0.20.0-SNAPSHOT</version>
    </parent>
 
    <name>herd model</name>
@@ -48,6 +48,10 @@
          <groupId>org.hibernate</groupId>
          <artifactId>hibernate-core</artifactId>
          <scope>provided</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.springframework.security</groupId>
+         <artifactId>spring-security-web</artifactId>
       </dependency>
       <!-- Used to auto-generate JPA meta-model classes (i.e. @Entity classes with an "_" suffix). -->
       <dependency>

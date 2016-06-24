@@ -17,7 +17,6 @@ package org.finra.herd.app.security;
 
 import java.io.IOException;
 import java.util.Date;
-import java.util.Objects;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -44,6 +43,7 @@ import org.springframework.security.web.authentication.preauth.PreAuthenticatedA
 import org.springframework.web.filter.GenericFilterBean;
 
 import org.finra.herd.model.dto.ApplicationUser;
+import org.finra.herd.model.dto.SecurityUserWrapper;
 
 /**
  * A Spring pre-authentication filter that works with Http headers.
@@ -134,22 +134,12 @@ public class HttpHeaderAuthenticationFilter extends GenericFilterBean
             {
                 LOGGER.debug("Current user Id: " + applicationUserNoRoles.getUserId() + ", Session Init Time: " + applicationUserNoRoles.getSessionInitTime());
                 LOGGER.debug("User is logged in.");
-                if (SecurityContextHolder.getContext().getAuthentication() != null && isUserDifferentThanLoggedInUser(applicationUserNoRoles))
-                {
-                    // Compare the user from the current headers to the existing one Spring Security had from a previous request.
-                    // The user that is now logged in is different from the user that was previously logged in so invalidate the old user.
-                    LOGGER.debug("A previous user with user id " + getExistingUserId() + " and session init time " + getExistingSessionInitTime() +
-                        " was logged in which is different from the new returned user id and session init time so invalidating the user.");
-                    invalidateUser(servletRequest, true);
-                }
+                invalidateUser(servletRequest, false);
 
                 // If the user is logged in, but no user information is in the security context holder, then perform the authentication
                 // (which will automatically load the user information for us). This flow can be caused when a new user logs for the first time or
                 // when a different user just logged in.
-                if (SecurityContextHolder.getContext().getAuthentication() == null)
-                {
-                    authenticateUser(servletRequest);
-                }
+                authenticateUser(servletRequest);
             }
         }
 
@@ -184,21 +174,6 @@ public class HttpHeaderAuthenticationFilter extends GenericFilterBean
             // exist for the logged in user or it couldn't be retrieved).
             throw e;
         }
-    }
-
-    /**
-     * <p> Returns {@code true} if the given user is different than the user in the current session, {@code false} if equal. </p> <p> The users are considered
-     * different if: </p> <ul> <li>The user is null, or</li> <li>The user id is different, or</li> <li>The session init time is different</li> </ul>
-     *
-     * @param user the user to compare
-     *
-     * @return {@code true} or {@code false}
-     */
-    private boolean isUserDifferentThanLoggedInUser(ApplicationUser user)
-    {
-        String userId = user.getUserId();
-        Date sessionInitTime = user.getSessionInitTime();
-        return !Objects.equals(userId, getExistingUserId()) || !Objects.equals(sessionInitTime, getExistingSessionInitTime());
     }
 
     /**

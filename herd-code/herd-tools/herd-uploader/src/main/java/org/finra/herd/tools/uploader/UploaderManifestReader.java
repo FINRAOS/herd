@@ -28,7 +28,7 @@ import org.springframework.util.Assert;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.dto.ManifestFile;
 import org.finra.herd.model.dto.UploaderInputManifestDto;
-import org.finra.herd.service.helper.HerdHelper;
+import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.tools.common.databridge.DataBridgeManifestReader;
 
 /**
@@ -41,7 +41,7 @@ public class UploaderManifestReader extends DataBridgeManifestReader<UploaderInp
     public static final int MAX_ATTRIBUTE_VALUE_LENGTH = 4000;
 
     @Autowired
-    private HerdHelper herdHelper;
+    private BusinessObjectDataHelper businessObjectDataHelper;
 
     @Override
     protected UploaderInputManifestDto getManifestFromReader(Reader reader, ObjectMapper objectMapper) throws IOException
@@ -135,8 +135,8 @@ public class UploaderManifestReader extends DataBridgeManifestReader<UploaderInp
                 lowercaseKey.setBusinessObjectFormatVersion(businessObjectDataKey.getBusinessObjectFormatVersion());
                 lowercaseKey.setPartitionValue(businessObjectDataKey.getPartitionValue());
                 lowercaseKey.setBusinessObjectDataVersion(businessObjectDataKey.getBusinessObjectDataVersion());
-                Assert.isTrue(!parentValidationSet.contains(lowercaseKey), String
-                    .format("Duplicate manifest business object data parent found: {%s}", herdHelper.businessObjectDataKeyToString(businessObjectDataKey)));
+                Assert.isTrue(!parentValidationSet.contains(lowercaseKey), String.format("Duplicate manifest business object data parent found: {%s}",
+                    businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)));
                 parentValidationSet.add(lowercaseKey);
             }
         }

@@ -31,16 +31,12 @@ import javax.persistence.OneToMany;
 import javax.persistence.OrderBy;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 import org.hibernate.annotations.Type;
 
 /**
  * An instance of business object data.
  */
-@XmlRootElement
-@XmlType
 @Table(name = BusinessObjectDataEntity.TABLE_NAME)
 @Entity
 public class BusinessObjectDataEntity extends AuditableEntity
@@ -68,7 +64,7 @@ public class BusinessObjectDataEntity extends AuditableEntity
     @Id
     @Column(name = TABLE_NAME + "_id")
     @GeneratedValue(generator = TABLE_NAME + "_seq")
-    @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq")
+    @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq", allocationSize = 1)
     private Integer id;
 
     @Column(name = "prtn_value_tx")

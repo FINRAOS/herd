@@ -34,7 +34,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDataStatusUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatusUpdateResponse;
 import org.finra.herd.model.dto.SecurityFunctions;
 import org.finra.herd.model.jpa.NotificationEventTypeEntity;
-import org.finra.herd.service.BusinessObjectDataService;
+import org.finra.herd.service.BusinessObjectDataStatusService;
 import org.finra.herd.service.NotificationEventService;
 import org.finra.herd.ui.constants.UiConstants;
 
@@ -43,19 +43,19 @@ import org.finra.herd.ui.constants.UiConstants;
  */
 @RestController
 @RequestMapping(value = UiConstants.REST_URL_BASE, produces = {"application/xml", "application/json"})
-@Api(tags="Business Object Data Status")
+@Api(tags = "Business Object Data Status")
 public class BusinessObjectDataStatusRestController extends HerdBaseController
 {
     public static final String BUSINESS_OBJECT_DATA_STATUS_URI_PREFIX = "/businessObjectDataStatus";
 
     @Autowired
-    private BusinessObjectDataService businessObjectDataService;
+    private BusinessObjectDataStatusService businessObjectDataStatusService;
 
     @Autowired
     private NotificationEventService notificationEventService;
 
     /**
-     * Retrieves status information for an existing business object data.
+     * Retrieves status information for an existing business object data. <p>Requires READ permission on namespace</p>
      *
      * @param namespace the namespace
      * @param businessObjectDefinitionName the business object definition name
@@ -84,14 +84,13 @@ public class BusinessObjectDataStatusRestController extends HerdBaseController
         @RequestParam(value = "businessObjectFormatVersion", required = false) Integer businessObjectFormatVersion,
         @RequestParam(value = "businessObjectDataVersion", required = false) Integer businessObjectDataVersion)
     {
-        return businessObjectDataService.getBusinessObjectDataStatus(
+        return businessObjectDataStatusService.getBusinessObjectDataStatus(
             new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
-                businessObjectFormatVersion, partitionValue, subPartitionValues == null ? new ArrayList<String>() : subPartitionValues.getValues(),
-                businessObjectDataVersion), businessObjectFormatPartitionKey);
+                businessObjectFormatVersion, partitionValue, getList(subPartitionValues), businessObjectDataVersion), businessObjectFormatPartitionKey);
     }
 
     /**
-     * Updates status of a business object data without subpartition values.
+     * Updates status of a business object data without subpartition values. <p>Requires WRITE permission on namespace</p>
      *
      * @param namespace the namespace
      * @param businessObjectDefinitionName the business object definition name
@@ -119,7 +118,7 @@ public class BusinessObjectDataStatusRestController extends HerdBaseController
         @PathVariable("businessObjectDataVersion") Integer businessObjectDataVersion, @RequestBody BusinessObjectDataStatusUpdateRequest request)
     {
         // Update status of the business object data.
-        BusinessObjectDataStatusUpdateResponse businessObjectDataStatusUpdateResponse = businessObjectDataService.updateBusinessObjectDataStatus(
+        BusinessObjectDataStatusUpdateResponse businessObjectDataStatusUpdateResponse = businessObjectDataStatusService.updateBusinessObjectDataStatus(
             new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
                 businessObjectFormatVersion, partitionValue, new ArrayList<String>(), businessObjectDataVersion), request);
 
@@ -132,7 +131,7 @@ public class BusinessObjectDataStatusRestController extends HerdBaseController
     }
 
     /**
-     * Updates status of a business object data with 1 subpartition values.
+     * Updates status of a business object data with 1 subpartition values. <p>Requires WRITE permission on namespace</p>
      *
      * @param namespace the namespace
      * @param businessObjectDefinitionName the business object definition name
@@ -162,7 +161,7 @@ public class BusinessObjectDataStatusRestController extends HerdBaseController
         @RequestBody BusinessObjectDataStatusUpdateRequest request)
     {
         // Update status of the business object data.
-        BusinessObjectDataStatusUpdateResponse businessObjectDataStatusUpdateResponse = businessObjectDataService.updateBusinessObjectDataStatus(
+        BusinessObjectDataStatusUpdateResponse businessObjectDataStatusUpdateResponse = businessObjectDataStatusService.updateBusinessObjectDataStatus(
             new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
                 businessObjectFormatVersion, partitionValue, Arrays.asList(subPartition1Value), businessObjectDataVersion), request);
 
@@ -175,7 +174,7 @@ public class BusinessObjectDataStatusRestController extends HerdBaseController
     }
 
     /**
-     * Updates status of a business object data with 2 subpartition values.
+     * Updates status of a business object data with 2 subpartition values. <p>Requires WRITE permission on namespace</p>
      *
      * @param namespace the namespace
      * @param businessObjectDefinitionName the business object definition name
@@ -207,7 +206,7 @@ public class BusinessObjectDataStatusRestController extends HerdBaseController
         @PathVariable("businessObjectDataVersion") Integer businessObjectDataVersion, @RequestBody BusinessObjectDataStatusUpdateRequest request)
     {
         // Update status of the business object data.
-        BusinessObjectDataStatusUpdateResponse businessObjectDataStatusUpdateResponse = businessObjectDataService.updateBusinessObjectDataStatus(
+        BusinessObjectDataStatusUpdateResponse businessObjectDataStatusUpdateResponse = businessObjectDataStatusService.updateBusinessObjectDataStatus(
             new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
                 businessObjectFormatVersion, partitionValue, Arrays.asList(subPartition1Value, subPartition2Value), businessObjectDataVersion), request);
 
@@ -220,7 +219,7 @@ public class BusinessObjectDataStatusRestController extends HerdBaseController
     }
 
     /**
-     * Updates status of a business object data with 3 subpartition values.
+     * Updates status of a business object data with 3 subpartition values. <p>Requires WRITE permission on namespace</p>
      *
      * @param namespace the namespace
      * @param businessObjectDefinitionName the business object definition name
@@ -254,7 +253,7 @@ public class BusinessObjectDataStatusRestController extends HerdBaseController
         @RequestBody BusinessObjectDataStatusUpdateRequest request)
     {
         // Update status of the business object data.
-        BusinessObjectDataStatusUpdateResponse businessObjectDataStatusUpdateResponse = businessObjectDataService.updateBusinessObjectDataStatus(
+        BusinessObjectDataStatusUpdateResponse businessObjectDataStatusUpdateResponse = businessObjectDataStatusService.updateBusinessObjectDataStatus(
             new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
                 businessObjectFormatVersion, partitionValue, Arrays.asList(subPartition1Value, subPartition2Value, subPartition3Value),
                 businessObjectDataVersion), request);
@@ -268,7 +267,7 @@ public class BusinessObjectDataStatusRestController extends HerdBaseController
     }
 
     /**
-     * Updates status of a business object data with 4 subpartition values.
+     * Updates status of a business object data with 4 subpartition values. <p>Requires WRITE permission on namespace</p>
      *
      * @param namespace the namespace
      * @param businessObjectDefinitionName the business object definition name
@@ -303,7 +302,7 @@ public class BusinessObjectDataStatusRestController extends HerdBaseController
         @PathVariable("businessObjectDataVersion") Integer businessObjectDataVersion, @RequestBody BusinessObjectDataStatusUpdateRequest request)
     {
         // Update status of the business object data.
-        BusinessObjectDataStatusUpdateResponse businessObjectDataStatusUpdateResponse = businessObjectDataService.updateBusinessObjectDataStatus(
+        BusinessObjectDataStatusUpdateResponse businessObjectDataStatusUpdateResponse = businessObjectDataStatusService.updateBusinessObjectDataStatus(
             new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
                 businessObjectFormatVersion, partitionValue, Arrays.asList(subPartition1Value, subPartition2Value, subPartition3Value, subPartition4Value),
                 businessObjectDataVersion), request);

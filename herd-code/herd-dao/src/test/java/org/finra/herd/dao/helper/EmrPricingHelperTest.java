@@ -21,8 +21,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.Map;
 
 import com.amazonaws.AmazonServiceException;
 import org.apache.commons.lang3.StringUtils;
@@ -32,11 +30,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.finra.herd.dao.AbstractDaoTest;
 import org.finra.herd.dao.impl.MockEc2OperationsImpl;
 import org.finra.herd.model.ObjectNotFoundException;
-import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.api.xml.EmrClusterDefinition;
 import org.finra.herd.model.api.xml.InstanceDefinition;
 import org.finra.herd.model.api.xml.InstanceDefinitions;
 import org.finra.herd.model.api.xml.MasterInstanceDefinition;
+import org.finra.herd.model.dto.EmrClusterAlternateKeyDto;
 
 /**
  * Test cases for EMR pricing algorithm.
@@ -745,11 +743,6 @@ public class EmrPricingHelperTest extends AbstractDaoTest
     @Test
     public void testBestPriceSubnetError() throws Exception
     {
-        // Override configuration properties to limit Ec2Dao retries on AmazonServiceException to 2 seconds.
-        Map<String, Object> overrideMap = new HashMap<>();
-        overrideMap.put(ConfigurationValue.AWS_EC2_EXCEPTION_MAX_RETRY_DURATION_SECS.getKey(), 2);
-        modifyPropertySourceInEnvironment(overrideMap);
-
         String subnetId = "throw.SomeError";
 
         MasterInstanceDefinition masterInstanceDefinition = new MasterInstanceDefinition();
@@ -770,11 +763,6 @@ public class EmrPricingHelperTest extends AbstractDaoTest
         catch (Exception e)
         {
             assertEquals("thrown exception", AmazonServiceException.class, e.getClass());
-        }
-        finally
-        {
-            // Restore the property sources so we don't affect other tests.
-            restorePropertySourceInEnvironment();
         }
     }
 
@@ -812,6 +800,46 @@ public class EmrPricingHelperTest extends AbstractDaoTest
         }
 
         assertEquals("selected subnet", MockEc2OperationsImpl.SUBNET_2, emrClusterDefinition.getSubnetId());
+    }
+
+    @Test
+    public void testCoreInstanceNullSubnetInMultipleAzAssertSuccess() throws Exception
+    {
+        String subnetId = MockEc2OperationsImpl.SUBNET_1 + "," + MockEc2OperationsImpl.SUBNET_3;
+
+        MasterInstanceDefinition masterInstanceDefinition = new MasterInstanceDefinition();
+        masterInstanceDefinition.setInstanceCount(1);
+        masterInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_1);
+
+        InstanceDefinition coreInstanceDefinition = null;
+
+        InstanceDefinition taskInstanceDefinition = null;
+
+        EmrClusterDefinition emrClusterDefinition =
+            updateEmrClusterDefinitionWithBestPrice(subnetId, masterInstanceDefinition, coreInstanceDefinition, taskInstanceDefinition);
+
+        assertEquals(MockEc2OperationsImpl.SUBNET_3, emrClusterDefinition.getSubnetId());
+    }
+
+    @Test
+    public void testCoreInstanceCount0SubnetInMultipleAzAssertSuccess()
+    {
+        String subnetId = MockEc2OperationsImpl.SUBNET_1 + "," + MockEc2OperationsImpl.SUBNET_3;
+
+        MasterInstanceDefinition masterInstanceDefinition = new MasterInstanceDefinition();
+        masterInstanceDefinition.setInstanceCount(1);
+        masterInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_1);
+
+        InstanceDefinition coreInstanceDefinition = new InstanceDefinition();
+        coreInstanceDefinition.setInstanceCount(0);
+        coreInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_1);
+
+        InstanceDefinition taskInstanceDefinition = null;
+
+        EmrClusterDefinition emrClusterDefinition =
+            updateEmrClusterDefinitionWithBestPrice(subnetId, masterInstanceDefinition, coreInstanceDefinition, taskInstanceDefinition);
+
+        assertEquals(MockEc2OperationsImpl.SUBNET_3, emrClusterDefinition.getSubnetId());
     }
 
     /**
@@ -862,7 +890,7 @@ public class EmrPricingHelperTest extends AbstractDaoTest
         instanceDefinitions.setTaskInstances(taskInstanceDefinition);
         emrClusterDefinition.setInstanceDefinitions(instanceDefinitions);
 
-        emrPricingHelper.updateEmrClusterDefinitionWithBestPrice(emrClusterDefinition);
+        emrPricingHelper.updateEmrClusterDefinitionWithBestPrice(new EmrClusterAlternateKeyDto(), emrClusterDefinition);
 
         return emrClusterDefinition;
     }

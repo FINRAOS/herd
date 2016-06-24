@@ -17,6 +17,7 @@ package org.finra.herd.core.helper;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.propertyeditors.CustomBooleanEditor;
 import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
@@ -131,5 +132,52 @@ public class ConfigurationHelper
     public <T> T getProperty(ConfigurationValue configurationValue, Class<T> targetType)
     {
         return getProperty(configurationValue, targetType, environment);
+    }
+
+    /**
+     * Gets a property value as a boolean.
+     *
+     * @param configurationValue the boolean configuration value
+     *
+     * @return the boolean property value
+     */
+    public Boolean getBooleanProperty(ConfigurationValue configurationValue)
+    {
+        return getBooleanProperty(configurationValue, environment);
+    }
+
+    /**
+     * Gets a property value as a boolean.
+     *
+     * @param configurationValue the boolean configuration value
+     * @param environment the environment containing the property
+     *
+     * @return the boolean property value
+     */
+    public Boolean getBooleanProperty(ConfigurationValue configurationValue, Environment environment)
+    {
+        String booleanStringValue = getProperty(configurationValue, environment);
+
+        // Use custom boolean editor without allowed empty strings to convert the value of the argument to a boolean value.
+        CustomBooleanEditor customBooleanEditor = new CustomBooleanEditor(false);
+        try
+        {
+            customBooleanEditor.setAsText(booleanStringValue);
+        }
+        catch (IllegalArgumentException e)
+        {
+            // Create an invalid state exception.
+            IllegalStateException illegalStateException = new IllegalStateException(
+                String.format("Configuration \"%s\" has an invalid boolean value: \"%s\".", configurationValue.getKey(), booleanStringValue), e);
+
+            // Log the exception.
+            LOGGER.error(illegalStateException);
+
+            // This will produce a 500 HTTP status code error.
+            throw illegalStateException;
+        }
+
+        // Return the boolean value.
+        return (Boolean) customBooleanEditor.getValue();
     }
 }

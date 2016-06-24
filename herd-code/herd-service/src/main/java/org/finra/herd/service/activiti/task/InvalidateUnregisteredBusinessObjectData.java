@@ -27,6 +27,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.jpa.NotificationEventTypeEntity;
 import org.finra.herd.service.BusinessObjectDataService;
 import org.finra.herd.service.NotificationEventService;
+import org.finra.herd.service.helper.BusinessObjectDataHelper;
 
 /**
  * An Activiti task wrapper for {@link org.finra.herd.service.BusinessObjectDataService#invalidateUnregisteredBusinessObjectData
@@ -44,6 +45,9 @@ public class InvalidateUnregisteredBusinessObjectData extends BaseJavaDelegate
 {
     private Expression contentType;
     private Expression businessObjectDataInvalidateUnregisteredRequest;
+
+    @Autowired
+    private BusinessObjectDataHelper businessObjectDataHelper;
 
     @Autowired
     private BusinessObjectDataService businessObjectDataService;
@@ -68,10 +72,11 @@ public class InvalidateUnregisteredBusinessObjectData extends BaseJavaDelegate
         // Create business object data notifications.
         for (BusinessObjectData businessObjectData : businessObjectDataInvalidateUnregisteredResponse.getRegisteredBusinessObjectDataList())
         {
-            BusinessObjectDataKey businessObjectDataKey = herdHelper.getBusinessObjectDataKey(businessObjectData);
+            BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectData);
 
-            notificationEventService.processBusinessObjectDataNotificationEventAsync(NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_STTS_CHG,
-                businessObjectDataKey, businessObjectData.getStatus(), null);
+            notificationEventService
+                .processBusinessObjectDataNotificationEventAsync(NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_STTS_CHG, businessObjectDataKey,
+                    businessObjectData.getStatus(), null);
         }
 
         setJsonResponseAsWorkflowVariable(businessObjectDataInvalidateUnregisteredResponse, execution);

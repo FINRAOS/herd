@@ -17,6 +17,9 @@ package org.finra.herd.rest;
 
 import static org.junit.Assert.assertNotNull;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.log4j.Logger;
 import org.junit.Test;
 
@@ -37,5 +40,35 @@ public class HerdRestControllerTest extends AbstractRestTest
         assertNotNull(buildInformation);
         assertNotNull(buildInformation.getBuildDate());
         logger.info(buildInformation);
+    }
+
+    @Test
+    public void testValidateNoDuplicateQueryStringParams() throws Exception
+    {
+        // Add a key with a single value which is allowed.
+        Map<String, String[]> parameterMap = new HashMap<>();
+        String[] singleValue = new String[1];
+        singleValue[0] = "testValue"; // Single Value
+        parameterMap.put("testKey1", singleValue);
+
+        // Add a key with 2 values which which isn't normally allowed, but is not a problem because we aren't looking for it in the validate method below.
+        String[] multipleValues = new String[2];
+        multipleValues[0] = "testValue1";
+        multipleValues[1] = "testValue2";
+        parameterMap.put("testKey2", multipleValues);
+
+        // Validate the query string parameters, but only for "testKey1" and not "testKey2".
+        herdRestController.validateNoDuplicateQueryStringParams(parameterMap, "testKey1");
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testValidateNoDuplicateQueryStringParamsWithException() throws Exception
+    {
+        Map<String, String[]> parameterMap = new HashMap<>();
+        String[] values = new String[2];
+        values[0] = "testValue1"; // Duplicate Values which aren't allowed.
+        values[1] = "testValue2";
+        parameterMap.put("testKey", values);
+        herdRestController.validateNoDuplicateQueryStringParams(parameterMap, "testKey");
     }
 }

@@ -17,6 +17,7 @@ package org.finra.herd.service.impl;
 
 import java.util.List;
 
+import com.amazonaws.services.s3.model.S3ObjectSummary;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,7 +28,6 @@ import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.dto.S3FileCopyRequestParamsDto;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.dto.S3FileTransferResultsDto;
-import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.service.S3Service;
 
 /**
@@ -51,14 +51,14 @@ public class S3ServiceImpl implements S3Service
     }
 
     @Override
-    public List<StorageFile> listDirectory(S3FileTransferRequestParamsDto params)
+    public List<S3ObjectSummary> listDirectory(S3FileTransferRequestParamsDto params)
     {
         // By default, we do not ignore 0 byte objects that represent S3 directories.
         return s3Dao.listDirectory(params, false);
     }
 
     @Override
-    public List<StorageFile> listDirectory(S3FileTransferRequestParamsDto params, boolean ignoreZeroByteDirectoryMarkers)
+    public List<S3ObjectSummary> listDirectory(S3FileTransferRequestParamsDto params, boolean ignoreZeroByteDirectoryMarkers)
     {
         return s3Dao.listDirectory(params, ignoreZeroByteDirectoryMarkers);
     }
@@ -88,9 +88,15 @@ public class S3ServiceImpl implements S3Service
     }
 
     @Override
-    public void deleteFile(S3FileTransferRequestParamsDto params)
+    public void restoreObjects(final S3FileTransferRequestParamsDto params, int expirationInDays)
     {
-        s3Dao.deleteFile(params);
+        s3Dao.restoreObjects(params, expirationInDays);
+    }
+
+    @Override
+    public void validateGlacierS3FilesRestored(S3FileTransferRequestParamsDto params) throws RuntimeException
+    {
+        s3Dao.validateGlacierS3FilesRestored(params);
     }
 
     @Override

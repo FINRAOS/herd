@@ -26,8 +26,6 @@ public interface StoragePolicyProcessorService
      * Performs a storage policy transition as specified by the storage policy selection message.
      *
      * @param storagePolicySelection the storage policy selection message
-     *
-     * @throws InterruptedException if any problems were encountered
      */
-    public void processStoragePolicySelectionMessage(StoragePolicySelection storagePolicySelection) throws InterruptedException;
+    public void processStoragePolicySelectionMessage(StoragePolicySelection storagePolicySelection);
 }

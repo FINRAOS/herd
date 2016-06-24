@@ -25,7 +25,7 @@ import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.api.xml.SystemJobRunRequest;
 import org.finra.herd.model.api.xml.SystemJobRunResponse;
 import org.finra.herd.service.SystemJobService;
-import org.finra.herd.service.helper.HerdHelper;
+import org.finra.herd.service.helper.ParameterHelper;
 import org.finra.herd.service.helper.SystemJobHelper;
 
 /**
@@ -36,14 +36,11 @@ import org.finra.herd.service.helper.SystemJobHelper;
 public class SystemJobServiceImpl implements SystemJobService
 {
     @Autowired
-    private HerdHelper herdHelper;
+    private ParameterHelper parameterHelper;
 
     @Autowired
     private SystemJobHelper systemJobHelper;
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public SystemJobRunResponse runSystemJob(SystemJobRunRequest request) throws SchedulerException
     {
@@ -75,6 +72,6 @@ public class SystemJobServiceImpl implements SystemJobService
         request.setJobName(request.getJobName().trim());
 
         // Validate that parameter names are there and that there are no duplicate names.
-        herdHelper.validateParameters(request.getParameters());
+        parameterHelper.validateParameters(request.getParameters());
     }
 }

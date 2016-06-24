@@ -18,7 +18,7 @@ package org.finra.herd.service.helper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import org.finra.herd.dao.HerdDao;
+import org.finra.herd.dao.StoragePlatformDao;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.jpa.StoragePlatformEntity;
 
@@ -29,7 +29,7 @@ import org.finra.herd.model.jpa.StoragePlatformEntity;
 public class StoragePlatformHelper
 {
     @Autowired
-    private HerdDao herdDao;
+    private StoragePlatformDao storagePlatformDao;
 
     /**
      * Gets a storage platform entity by name.
@@ -42,7 +42,7 @@ public class StoragePlatformHelper
     public StoragePlatformEntity getStoragePlatformEntity(String storagePlatformName) throws ObjectNotFoundException
     {
         // Get the associated storage platform and verify that it exists.
-        StoragePlatformEntity storagePlatformEntity = herdDao.getStoragePlatformByName(storagePlatformName);
+        StoragePlatformEntity storagePlatformEntity = storagePlatformDao.getStoragePlatformByName(storagePlatformName);
         if (storagePlatformEntity == null)
         {
             throw new ObjectNotFoundException("Storage platform with name \"" + storagePlatformName + "\" doesn't exist.");

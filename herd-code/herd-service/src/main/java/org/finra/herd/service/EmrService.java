@@ -33,7 +33,8 @@ public interface EmrService
 
     public EmrCluster createCluster(EmrClusterCreateRequest request) throws Exception;
 
-    public EmrCluster terminateCluster(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, boolean overrideTerminationProtection) throws Exception;
+    public EmrCluster terminateCluster(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, boolean overrideTerminationProtection, String emrClusterId)
+        throws Exception;
 
     public Object addStepToCluster(Object emrStepAddRequest) throws Exception;
 
@@ -50,9 +51,10 @@ public interface EmrService
      * @param emrClusterName EMR cluster name
      * @param oozieWorkflowJobId Oozie workflow job ID
      * @param verbose true to retrieve more details, false otherwise. Defaults to false.
+     * @param emrClusterId The EMR cluster ID
      * @return Oozie workflow details
      * @throws Exception when an error occurs. Most user errors would be a runtime exception.
      */
     public OozieWorkflowJob getEmrOozieWorkflowJob(String namespace, String emrClusterDefinitionName, String emrClusterName, String oozieWorkflowJobId,
-        Boolean verbose) throws Exception;
+        Boolean verbose, String emrClusterId) throws Exception;
 }

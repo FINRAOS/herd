@@ -20,21 +20,23 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.oozie.client.WorkflowJob;
-
-import org.apache.oozie.client.WorkflowAction;
+import com.amazonaws.services.elasticmapreduce.model.ActionOnFailure;
+import com.amazonaws.services.elasticmapreduce.model.Cluster;
+import com.amazonaws.services.elasticmapreduce.model.ClusterSummary;
+import com.amazonaws.services.elasticmapreduce.model.HadoopJarStepConfig;
+import com.amazonaws.services.elasticmapreduce.model.StepConfig;
 import org.apache.commons.lang3.StringUtils;
-
-import org.finra.herd.dao.impl.OozieDaoImpl;
-import org.finra.herd.model.dto.ConfigurationValue;
-import org.finra.herd.model.dto.EmrClusterAlternateKeyDto;
-
+import org.apache.oozie.client.WorkflowAction;
+import org.apache.oozie.client.WorkflowJob;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
-import com.amazonaws.services.elasticmapreduce.model.ActionOnFailure;
-import com.amazonaws.services.elasticmapreduce.model.HadoopJarStepConfig;
-import com.amazonaws.services.elasticmapreduce.model.StepConfig;
+
+import org.finra.herd.dao.EmrDao;
+import org.finra.herd.dao.impl.OozieDaoImpl;
+import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.model.dto.EmrClusterAlternateKeyDto;
 
 /**
  * A helper class that provides EMR functions.
@@ -42,6 +44,9 @@ import com.amazonaws.services.elasticmapreduce.model.StepConfig;
 @Component
 public class EmrHelper extends AwsHelper
 {
+    @Autowired
+    private EmrDao emrDao;
+
     /**
      * Returns EMR cluster name constructed according to the template defined.
      *
@@ -257,5 +262,66 @@ public class EmrHelper extends AwsHelper
     {
         String emrStatesString = configurationHelper.getProperty(ConfigurationValue.EMR_VALID_STATES);
         return emrStatesString.split("\\" + configurationHelper.getProperty(ConfigurationValue.FIELD_DATA_DELIMITER));
+    }
+
+    /**
+     * Gets the ID of an active EMR cluster which matches the given criteria. If both cluster ID and cluster name is specified, the name of the actual cluster
+     * with the given ID must match the specified name. For cases where the cluster is not found (does not exists or not active), the method fails. All
+     * parameters are case-insensitive and whitespace trimmed. Blank parameters are equal to null.
+     * 
+     * @param emrClusterId EMR cluster ID
+     * @param emrClusterName EMR cluster name
+     * @return The cluster ID
+     */
+    public String getActiveEmrClusterId(String emrClusterId, String emrClusterName)
+    {
+        boolean emrClusterIdSpecified = StringUtils.isNotBlank(emrClusterId);
+        boolean emrClusterNameSpecified = StringUtils.isNotBlank(emrClusterName);
+
+        Assert.isTrue(emrClusterIdSpecified || emrClusterNameSpecified, "One of EMR cluster ID or EMR cluster name must be specified.");
+
+        // Get cluster by ID first
+        if (emrClusterIdSpecified)
+        {
+            String emrClusterIdTrimmed = emrClusterId.trim();
+
+            // Assert cluster exists
+            Cluster cluster = emrDao.getEmrClusterById(emrClusterIdTrimmed, getAwsParamsDto());
+            Assert.notNull(cluster, String.format("The cluster with ID \"%s\" does not exist.", emrClusterIdTrimmed));
+
+            // Assert the cluster's state is active
+            String emrClusterState = cluster.getStatus().getState();
+            Assert.isTrue(isActiveEmrState(emrClusterState),
+                String.format("The cluster with ID \"%s\" is not active. The cluster state must be in one of %s. Current state is \"%s\"", emrClusterIdTrimmed,
+                    Arrays.toString(getActiveEmrClusterStates()), emrClusterState));
+
+            // Assert cluster name equals if cluster name was specified
+            if (emrClusterNameSpecified)
+            {
+                String emrClusterNameTrimmed = emrClusterName.trim();
+                Assert.isTrue(cluster.getName().equalsIgnoreCase(emrClusterNameTrimmed),
+                    String.format("The cluster with ID \"%s\" does not match the expected name \"%s\". The actual name is \"%s\".", cluster.getId(),
+                        emrClusterNameTrimmed, cluster.getName()));
+            }
+
+            return cluster.getId();
+        }
+        else
+        {
+            String emrClusterNameTrimmed = emrClusterName.trim();
+            ClusterSummary clusterSummary = emrDao.getActiveEmrClusterByName(emrClusterNameTrimmed, getAwsParamsDto());
+            Assert.notNull(clusterSummary, String.format("The cluster with name \"%s\" does not exist.", emrClusterNameTrimmed));
+            return clusterSummary.getId();
+        }
+    }
+
+    public EmrDao getEmrDao()
+    {
+        return emrDao;
+    }
+
+    public void setEmrDao(EmrDao emrDao)
+    {
+        this.emrDao = emrDao;
     }
 }

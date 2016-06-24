@@ -20,20 +20,24 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
-import org.finra.herd.dao.HerdDao;
+import org.finra.herd.dao.CustomDdlDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
+import org.finra.herd.model.annotation.NamespacePermission;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.CustomDdl;
 import org.finra.herd.model.api.xml.CustomDdlCreateRequest;
 import org.finra.herd.model.api.xml.CustomDdlKey;
 import org.finra.herd.model.api.xml.CustomDdlKeys;
 import org.finra.herd.model.api.xml.CustomDdlUpdateRequest;
+import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.CustomDdlEntity;
 import org.finra.herd.service.CustomDdlService;
-import org.finra.herd.service.helper.HerdDaoHelper;
-import org.finra.herd.service.helper.HerdHelper;
+import org.finra.herd.service.helper.BusinessObjectFormatDaoHelper;
+import org.finra.herd.service.helper.BusinessObjectFormatHelper;
+import org.finra.herd.service.helper.CustomDdlDaoHelper;
+import org.finra.herd.service.helper.CustomDdlHelper;
 
 /**
  * The custom DDL service implementation.
@@ -43,13 +47,19 @@ import org.finra.herd.service.helper.HerdHelper;
 public class CustomDdlServiceImpl implements CustomDdlService
 {
     @Autowired
-    private HerdHelper herdHelper;
+    private BusinessObjectFormatDaoHelper businessObjectFormatDaoHelper;
 
     @Autowired
-    private HerdDao herdDao;
+    private BusinessObjectFormatHelper businessObjectFormatHelper;
 
     @Autowired
-    private HerdDaoHelper herdDaoHelper;
+    private CustomDdlDao customDdlDao;
+
+    @Autowired
+    private CustomDdlDaoHelper customDdlDaoHelper;
+
+    @Autowired
+    private CustomDdlHelper customDdlHelper;
 
     /**
      * Creates a new custom DDL.
@@ -58,36 +68,38 @@ public class CustomDdlServiceImpl implements CustomDdlService
      *
      * @return the newly created custom DDL information
      */
+    @NamespacePermission(fields = "#request.customDdlKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public CustomDdl createCustomDdl(CustomDdlCreateRequest request)
     {
         // Validate and trim the key.
-        herdHelper.validateCustomDdlKey(request.getCustomDdlKey());
+        customDdlHelper.validateCustomDdlKey(request.getCustomDdlKey());
 
         // Validate and trim the DDL.
         Assert.hasText(request.getDdl(), "DDL must be specified.");
         request.setDdl(request.getDdl().trim());
 
         // Get the business object format and ensure it exists.
-        BusinessObjectFormatEntity businessObjectFormatEntity = herdDaoHelper.getBusinessObjectFormatEntity(
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(
             new BusinessObjectFormatKey(request.getCustomDdlKey().getNamespace(), request.getCustomDdlKey().getBusinessObjectDefinitionName(),
                 request.getCustomDdlKey().getBusinessObjectFormatUsage(), request.getCustomDdlKey().getBusinessObjectFormatFileType(),
                 request.getCustomDdlKey().getBusinessObjectFormatVersion()));
 
         // Ensure a custom DDL with the specified name doesn't already exist for the specified business object format.
-        CustomDdlEntity customDdlEntity = herdDao.getCustomDdlByKey(request.getCustomDdlKey());
+        CustomDdlEntity customDdlEntity = customDdlDao.getCustomDdlByKey(request.getCustomDdlKey());
         if (customDdlEntity != null)
         {
             throw new AlreadyExistsException(String
-                .format("Unable to create custom DDL with name \"%s\" because it already exists for the the business object format {%s}.",
-                    request.getCustomDdlKey().getCustomDdlName(), herdDaoHelper.businessObjectFormatEntityAltKeyToString(businessObjectFormatEntity)));
+                .format("Unable to create custom DDL with name \"%s\" because it already exists for the business object format {%s}.",
+                    request.getCustomDdlKey().getCustomDdlName(),
+                    businessObjectFormatHelper.businessObjectFormatEntityAltKeyToString(businessObjectFormatEntity)));
         }
 
         // Create a custom DDL entity from the request information.
         customDdlEntity = createCustomDdlEntity(businessObjectFormatEntity, request);
 
         // Persist the new entity.
-        customDdlEntity = herdDao.saveAndRefresh(customDdlEntity);
+        customDdlEntity = customDdlDao.saveAndRefresh(customDdlEntity);
 
         // Create and return the custom DDL object from the persisted entity.
         return createCustomDdlFromEntity(customDdlEntity);
@@ -100,14 +112,15 @@ public class CustomDdlServiceImpl implements CustomDdlService
      *
      * @return the custom DDL information
      */
+    @NamespacePermission(fields = "#customDdlKey.namespace", permissions = NamespacePermissionEnum.READ)
     @Override
     public CustomDdl getCustomDdl(CustomDdlKey customDdlKey)
     {
         // Validate and trim the key.
-        herdHelper.validateCustomDdlKey(customDdlKey);
+        customDdlHelper.validateCustomDdlKey(customDdlKey);
 
         // Retrieve and ensure that a custom DDL exists with the specified key.
-        CustomDdlEntity customDdlEntity = herdDaoHelper.getCustomDdlEntity(customDdlKey);
+        CustomDdlEntity customDdlEntity = customDdlDaoHelper.getCustomDdlEntity(customDdlKey);
 
         // Create and return the custom DDL object from the persisted entity.
         return createCustomDdlFromEntity(customDdlEntity);
@@ -120,24 +133,25 @@ public class CustomDdlServiceImpl implements CustomDdlService
      *
      * @return the custom DDL information
      */
+    @NamespacePermission(fields = "#customDdlKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public CustomDdl updateCustomDdl(CustomDdlKey customDdlKey, CustomDdlUpdateRequest request)
     {
         // Validate and trim the key.
-        herdHelper.validateCustomDdlKey(customDdlKey);
+        customDdlHelper.validateCustomDdlKey(customDdlKey);
 
         // Validate and trim the DDL.
         Assert.hasText(request.getDdl(), "DDL must be specified.");
         request.setDdl(request.getDdl().trim());
 
         // Retrieve and ensure that a custom DDL exists with the specified key.
-        CustomDdlEntity customDdlEntity = herdDaoHelper.getCustomDdlEntity(customDdlKey);
+        CustomDdlEntity customDdlEntity = customDdlDaoHelper.getCustomDdlEntity(customDdlKey);
 
         // Update the entity with the new values.
         customDdlEntity.setDdl(request.getDdl());
 
         // Persist the entity.
-        customDdlEntity = herdDao.saveAndRefresh(customDdlEntity);
+        customDdlEntity = customDdlDao.saveAndRefresh(customDdlEntity);
 
         // Create and return the custom DDL object from the persisted entity.
         return createCustomDdlFromEntity(customDdlEntity);
@@ -150,17 +164,18 @@ public class CustomDdlServiceImpl implements CustomDdlService
      *
      * @return the custom DDL that got deleted
      */
+    @NamespacePermission(fields = "#customDdlKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public CustomDdl deleteCustomDdl(CustomDdlKey customDdlKey)
     {
         // Validate and trim the key.
-        herdHelper.validateCustomDdlKey(customDdlKey);
+        customDdlHelper.validateCustomDdlKey(customDdlKey);
 
         // Retrieve and ensure that a custom DDL already exists with the specified key.
-        CustomDdlEntity customDdlEntity = herdDaoHelper.getCustomDdlEntity(customDdlKey);
+        CustomDdlEntity customDdlEntity = customDdlDaoHelper.getCustomDdlEntity(customDdlKey);
 
         // Delete the custom DDL.
-        herdDao.delete(customDdlEntity);
+        customDdlDao.delete(customDdlEntity);
 
         // Create and return the custom DDL object from the deleted entity.
         return createCustomDdlFromEntity(customDdlEntity);
@@ -171,18 +186,19 @@ public class CustomDdlServiceImpl implements CustomDdlService
      *
      * @return the custom DDL keys
      */
+    @NamespacePermission(fields = "#businessObjectFormatKey.namespace", permissions = NamespacePermissionEnum.READ)
     @Override
     public CustomDdlKeys getCustomDdls(BusinessObjectFormatKey businessObjectFormatKey)
     {
         // Validate and trim the business object format key.
-        herdHelper.validateBusinessObjectFormatKey(businessObjectFormatKey);
+        businessObjectFormatHelper.validateBusinessObjectFormatKey(businessObjectFormatKey);
 
         // Ensure that the business object format exists.
-        herdDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey);
+        businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey);
 
         // Create and populate a list of custom DDL keys.
         CustomDdlKeys customDdlKeys = new CustomDdlKeys();
-        customDdlKeys.getCustomDdlKeys().addAll(herdDao.getCustomDdls(businessObjectFormatKey));
+        customDdlKeys.getCustomDdlKeys().addAll(customDdlDao.getCustomDdls(businessObjectFormatKey));
 
         return customDdlKeys;
     }

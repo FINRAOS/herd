@@ -24,9 +24,10 @@ import org.finra.herd.model.api.xml.JobDefinitionUpdateRequest;
  */
 public interface JobDefinitionService
 {
-    public JobDefinition createJobDefinition(JobDefinitionCreateRequest jobDefinitionCreateRequest) throws Exception;
+    public JobDefinition createJobDefinition(JobDefinitionCreateRequest jobDefinitionCreateRequest, boolean enforceAsync) throws Exception;
 
     public JobDefinition getJobDefinition(String namespace, String jobName) throws Exception;
 
-    public JobDefinition updateJobDefinition(String namespace, String jobName, JobDefinitionUpdateRequest jobDefinitionUpdateRequest) throws Exception;
+    public JobDefinition updateJobDefinition(String namespace, String jobName, JobDefinitionUpdateRequest jobDefinitionUpdateRequest, boolean enforceAsync)
+        throws Exception;
 }

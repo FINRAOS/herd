@@ -24,14 +24,10 @@ import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderBy;
 import javax.persistence.Table;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 /**
  * A partition key group.
  */
-@XmlRootElement
-@XmlType
 @Table(name = PartitionKeyGroupEntity.TABLE_NAME)
 @Entity
 public class PartitionKeyGroupEntity extends AuditableEntity
@@ -70,41 +66,5 @@ public class PartitionKeyGroupEntity extends AuditableEntity
     public void setExpectedPartitionValues(Collection<ExpectedPartitionValueEntity> expectedPartitionValues)
     {
         this.expectedPartitionValues = expectedPartitionValues;
-    }
-
-    /**
-     * Indicates whether some other object is "equal to" this one. The two partition key group entities are equal if they have identical partition key group
-     * values.
-     *
-     * @param other the other object
-     *
-     * @return true if this object is the same as the obj argument; false otherwise
-     */
-    @Override
-    public boolean equals(Object other)
-    {
-        if (this == other)
-        {
-            return true;
-        }
-        if (other == null || getClass() != other.getClass())
-        {
-            return false;
-        }
-
-        PartitionKeyGroupEntity that = (PartitionKeyGroupEntity) other;
-
-        if (!partitionKeyGroupName.equals(that.partitionKeyGroupName))
-        {
-            return false;
-        }
-
-        return true;
-    }
-
-    @Override
-    public int hashCode()
-    {
-        return partitionKeyGroupName.hashCode();
     }
 }

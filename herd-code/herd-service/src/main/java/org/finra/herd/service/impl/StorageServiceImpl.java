@@ -26,7 +26,8 @@ import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
 import org.finra.herd.core.HerdDateUtils;
-import org.finra.herd.dao.HerdDao;
+import org.finra.herd.dao.StorageDao;
+import org.finra.herd.dao.StorageUploadStatsDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.ObjectNotFoundException;
@@ -43,7 +44,7 @@ import org.finra.herd.model.jpa.StorageAttributeEntity;
 import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.StoragePlatformEntity;
 import org.finra.herd.service.StorageService;
-import org.finra.herd.service.helper.HerdHelper;
+import org.finra.herd.service.helper.AttributeHelper;
 import org.finra.herd.service.helper.StorageDaoHelper;
 import org.finra.herd.service.helper.StoragePlatformHelper;
 
@@ -55,16 +56,19 @@ import org.finra.herd.service.helper.StoragePlatformHelper;
 public class StorageServiceImpl implements StorageService
 {
     @Autowired
-    private StoragePlatformHelper storagePlatformHelper;
+    private AttributeHelper attributeHelper;
 
     @Autowired
-    private HerdDao herdDao;
-
-    @Autowired
-    private HerdHelper herdHelper;
+    private StorageDao storageDao;
 
     @Autowired
     private StorageDaoHelper storageDaoHelper;
+
+    @Autowired
+    private StoragePlatformHelper storagePlatformHelper;
+
+    @Autowired
+    private StorageUploadStatsDao storageUploadStatsDao;
 
     /**
      * Creates a new storage.
@@ -83,7 +87,7 @@ public class StorageServiceImpl implements StorageService
         StoragePlatformEntity storagePlatformEntity = storagePlatformHelper.getStoragePlatformEntity(storageCreateRequest.getStoragePlatformName());
 
         // See if a storage with the specified name already exists.
-        StorageEntity storageEntity = herdDao.getStorageByName(storageCreateRequest.getName());
+        StorageEntity storageEntity = storageDao.getStorageByName(storageCreateRequest.getName());
         if (storageEntity != null)
         {
             throw new AlreadyExistsException(String.format("Storage with name \"%s\" already exists.", storageCreateRequest.getName()));
@@ -109,7 +113,7 @@ public class StorageServiceImpl implements StorageService
             }
         }
 
-        storageEntity = herdDao.saveAndRefresh(storageEntity);
+        storageEntity = storageDao.saveAndRefresh(storageEntity);
 
         // Return the storage information.
         return createStorageFromEntity(storageEntity);
@@ -135,7 +139,7 @@ public class StorageServiceImpl implements StorageService
         // TODO: Add in code to update storageEntity as needed from storageUpdateRequest attributes.
 
         // Update and persist the storage entity.
-        storageEntity = herdDao.saveAndRefresh(storageEntity);
+        storageEntity = storageDao.saveAndRefresh(storageEntity);
 
         // Return the storage information.
         return createStorageFromEntity(storageEntity);
@@ -175,20 +179,17 @@ public class StorageServiceImpl implements StorageService
         StorageEntity storageEntity = storageDaoHelper.getStorageEntity(storageAlternateKey);
 
         // Delete the storage.
-        herdDao.delete(storageEntity);
+        storageDao.delete(storageEntity);
 
         // Return the storage that got deleted.
         return createStorageFromEntity(storageEntity);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public StorageKeys getStorages()
     {
         StorageKeys storageKeys = new StorageKeys();
-        storageKeys.getStorageKeys().addAll(herdDao.getStorages());
+        storageKeys.getStorageKeys().addAll(storageDao.getStorages());
         return storageKeys;
     }
 
@@ -211,7 +212,7 @@ public class StorageServiceImpl implements StorageService
         // If the upload date is not specified, retrieve upload stats for the past 7 calendar days plus today (8 days total).
         DateRangeDto dateRange = uploadDate == null ? getLastNDaysDateRange(7) : getOneDayDateRange(uploadDate);
 
-        return herdDao.getStorageUploadStats(storageAlternateKey, dateRange);
+        return storageUploadStatsDao.getStorageUploadStats(storageAlternateKey, dateRange);
     }
 
     /**
@@ -234,7 +235,7 @@ public class StorageServiceImpl implements StorageService
         // If the upload date is not specified, retrieve upload stats for the past 7 calendar days plus today (8 days total).
         DateRangeDto dateRange = uploadDate == null ? getLastNDaysDateRange(7) : getOneDayDateRange(uploadDate);
 
-        return herdDao.getStorageUploadStatsByBusinessObjectDefinition(storageAlternateKey, dateRange);
+        return storageUploadStatsDao.getStorageUploadStatsByBusinessObjectDefinition(storageAlternateKey, dateRange);
     }
 
     /**
@@ -267,7 +268,7 @@ public class StorageServiceImpl implements StorageService
         storageCreateRequest.setName(storageCreateRequest.getName().trim());
 
         // Validate attributes.
-        herdHelper.validateAttributes(storageCreateRequest.getAttributes());
+        attributeHelper.validateAttributes(storageCreateRequest.getAttributes());
     }
 
     /**

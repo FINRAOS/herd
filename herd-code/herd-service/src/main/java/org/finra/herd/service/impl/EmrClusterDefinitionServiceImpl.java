@@ -16,25 +16,32 @@
 package org.finra.herd.service.impl;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
 
-import org.finra.herd.dao.HerdDao;
+import org.finra.herd.dao.EmrClusterDefinitionDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
+import org.finra.herd.dao.helper.XmlHelper;
 import org.finra.herd.model.AlreadyExistsException;
-import org.finra.herd.model.jpa.EmrClusterDefinitionEntity;
-import org.finra.herd.model.jpa.NamespaceEntity;
+import org.finra.herd.model.annotation.NamespacePermission;
 import org.finra.herd.model.api.xml.EmrClusterDefinition;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionCreateRequest;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionInformation;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionKey;
+import org.finra.herd.model.api.xml.EmrClusterDefinitionKeys;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionUpdateRequest;
+import org.finra.herd.model.api.xml.NamespacePermissionEnum;
+import org.finra.herd.model.jpa.EmrClusterDefinitionEntity;
+import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.service.EmrClusterDefinitionService;
-import org.finra.herd.service.helper.HerdDaoHelper;
-import org.finra.herd.service.helper.HerdHelper;
-import org.finra.herd.dao.helper.XmlHelper;
+import org.finra.herd.service.helper.EmrClusterDefinitionDaoHelper;
+import org.finra.herd.service.helper.EmrClusterDefinitionHelper;
+import org.finra.herd.service.helper.NamespaceDaoHelper;
+import org.finra.herd.service.helper.NamespaceIamRoleAuthorizationHelper;
 
 /**
  * The EMR cluster definition service implementation.
@@ -44,41 +51,44 @@ import org.finra.herd.dao.helper.XmlHelper;
 @SuppressFBWarnings(value = "VA_FORMAT_STRING_USES_NEWLINE", justification = "We will use the standard carriage return character.")
 public class EmrClusterDefinitionServiceImpl implements EmrClusterDefinitionService
 {
-    private static final Logger LOGGER = Logger.getLogger(EmrClusterDefinitionServiceImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(EmrClusterDefinitionServiceImpl.class);
 
     @Autowired
-    private HerdHelper herdHelper;
+    private EmrClusterDefinitionDao emrClusterDefinitionDao;
+
+    @Autowired
+    private EmrClusterDefinitionDaoHelper emrClusterDefinitionDaoHelper;
+
+    @Autowired
+    private EmrClusterDefinitionHelper emrClusterDefinitionHelper;
+
+    @Autowired
+    private NamespaceDaoHelper namespaceDaoHelper;
+
+    @Autowired
+    private NamespaceIamRoleAuthorizationHelper namespaceIamRoleAuthorizationHelper;
 
     @Autowired
     protected XmlHelper xmlHelper;
 
-    @Autowired
-    private HerdDao herdDao;
-
-    @Autowired
-    private HerdDaoHelper herdDaoHelper;
-
-    /**
-     * Creates a new EMR cluster definition.
-     *
-     * @param request the information needed to create an EMR cluster definition
-     *
-     * @return the newly created EMR cluster definition
-     */
+    @NamespacePermission(fields = "#request?.emrClusterDefinitionKey?.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public EmrClusterDefinitionInformation createEmrClusterDefinition(EmrClusterDefinitionCreateRequest request) throws Exception
     {
         // Perform validate and trim of the EMR cluster definition key.
-        herdHelper.validateEmrClusterDefinitionKey(request.getEmrClusterDefinitionKey());
+        emrClusterDefinitionHelper.validateEmrClusterDefinitionKey(request.getEmrClusterDefinitionKey());
 
         // Validate the EMR cluster definition configuration.
-        herdHelper.validateEmrClusterDefinitionConfiguration(request.getEmrClusterDefinition());
+        emrClusterDefinitionHelper.validateEmrClusterDefinitionConfiguration(request.getEmrClusterDefinition());
 
         // Get the namespace and ensure it exists.
-        NamespaceEntity namespaceEntity = herdDaoHelper.getNamespaceEntity(request.getEmrClusterDefinitionKey().getNamespace());
+        NamespaceEntity namespaceEntity = namespaceDaoHelper.getNamespaceEntity(request.getEmrClusterDefinitionKey().getNamespace());
+
+        namespaceIamRoleAuthorizationHelper.checkPermissions(namespaceEntity, request.getEmrClusterDefinition().getServiceIamRole(),
+            request.getEmrClusterDefinition().getEc2NodeIamProfileName());
 
         // Ensure a EMR cluster definition with the specified name doesn't already exist.
-        EmrClusterDefinitionEntity emrClusterDefinitionEntity = herdDao.getEmrClusterDefinitionByAltKey(request.getEmrClusterDefinitionKey());
+        EmrClusterDefinitionEntity emrClusterDefinitionEntity = emrClusterDefinitionDao.getEmrClusterDefinitionByAltKey(request.getEmrClusterDefinitionKey());
         if (emrClusterDefinitionEntity != null)
         {
             throw new AlreadyExistsException(String
@@ -90,56 +100,46 @@ public class EmrClusterDefinitionServiceImpl implements EmrClusterDefinitionServ
         emrClusterDefinitionEntity = createEmrClusterDefinitionEntity(namespaceEntity, request);
 
         // Persist the new entity.
-        emrClusterDefinitionEntity = herdDao.saveAndRefresh(emrClusterDefinitionEntity);
+        emrClusterDefinitionEntity = emrClusterDefinitionDao.saveAndRefresh(emrClusterDefinitionEntity);
 
         // Create and return the EMR cluster definition object from the persisted entity.
         return createEmrClusterDefinitionFromEntity(emrClusterDefinitionEntity);
     }
 
-    /**
-     * Gets an existing EMR cluster definition by key.
-     *
-     * @param emrClusterDefinitionKey the EMR cluster definition key
-     *
-     * @return the EMR cluster definition
-     */
+    @NamespacePermission(fields = "#emrClusterDefinitionKey?.namespace", permissions = NamespacePermissionEnum.READ)
     @Override
     public EmrClusterDefinitionInformation getEmrClusterDefinition(EmrClusterDefinitionKey emrClusterDefinitionKey) throws Exception
     {
         // Perform validate and trim of the EMR cluster definition key.
-        herdHelper.validateEmrClusterDefinitionKey(emrClusterDefinitionKey);
+        emrClusterDefinitionHelper.validateEmrClusterDefinitionKey(emrClusterDefinitionKey);
 
         // Retrieve and ensure that a EMR cluster definition exists with the specified key.
-        EmrClusterDefinitionEntity emrClusterDefinitionEntity = herdDaoHelper.getEmrClusterDefinitionEntity(emrClusterDefinitionKey);
+        EmrClusterDefinitionEntity emrClusterDefinitionEntity = emrClusterDefinitionDaoHelper.getEmrClusterDefinitionEntity(emrClusterDefinitionKey);
 
         // Create and return the EMR cluster definition object from the persisted entity.
         return createEmrClusterDefinitionFromEntity(emrClusterDefinitionEntity);
     }
 
-    /**
-     * Updates an existing EMR cluster definition.
-     *
-     * @param emrClusterDefinitionKey the EMR cluster definition key
-     * @param request the information needed to update the EMR cluster definition
-     *
-     * @return the updated EMR cluster definition
-     */
+    @NamespacePermission(fields = "#emrClusterDefinitionKey?.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public EmrClusterDefinitionInformation updateEmrClusterDefinition(EmrClusterDefinitionKey emrClusterDefinitionKey,
         EmrClusterDefinitionUpdateRequest request) throws Exception
     {
         // Perform validate and trim of the EMR cluster definition key.
-        herdHelper.validateEmrClusterDefinitionKey(emrClusterDefinitionKey);
+        emrClusterDefinitionHelper.validateEmrClusterDefinitionKey(emrClusterDefinitionKey);
 
         // Validate the EMR cluster definition configuration.
-        herdHelper.validateEmrClusterDefinitionConfiguration(request.getEmrClusterDefinition());
+        emrClusterDefinitionHelper.validateEmrClusterDefinitionConfiguration(request.getEmrClusterDefinition());
 
         // Retrieve and ensure that a EMR cluster definition already exists with the specified name.
-        EmrClusterDefinitionEntity emrClusterDefinitionEntity = herdDaoHelper.getEmrClusterDefinitionEntity(emrClusterDefinitionKey);
+        EmrClusterDefinitionEntity emrClusterDefinitionEntity = emrClusterDefinitionDaoHelper.getEmrClusterDefinitionEntity(emrClusterDefinitionKey);
+
+        namespaceIamRoleAuthorizationHelper.checkPermissions(emrClusterDefinitionEntity.getNamespace(), request.getEmrClusterDefinition().getServiceIamRole(),
+            request.getEmrClusterDefinition().getEc2NodeIamProfileName());
 
         // Log the existing EMR cluster definition before the update.
-        LOGGER.info(String.format("EMR cluster definition before the update:\n%s",
-            xmlHelper.objectToXml(createEmrClusterDefinitionFromEntity(emrClusterDefinitionEntity), true)));
+        LOGGER.info("Logging EMR cluster definition before the update. emrClusterDefinition={}",
+            xmlHelper.objectToXml(createEmrClusterDefinitionFromEntity(emrClusterDefinitionEntity), true));
 
         // Convert EMR cluster configuration to the XML representation.
         String emrClusterConfiguration = xmlHelper.objectToXml(request.getEmrClusterDefinition());
@@ -148,37 +148,44 @@ public class EmrClusterDefinitionServiceImpl implements EmrClusterDefinitionServ
         emrClusterDefinitionEntity.setConfiguration(emrClusterConfiguration);
 
         // Persist and refresh the entity.
-        emrClusterDefinitionEntity = herdDao.saveAndRefresh(emrClusterDefinitionEntity);
+        emrClusterDefinitionEntity = emrClusterDefinitionDao.saveAndRefresh(emrClusterDefinitionEntity);
 
         // Create and return the EMR cluster definition object from the persisted entity.
         return createEmrClusterDefinitionFromEntity(emrClusterDefinitionEntity);
     }
 
-    /**
-     * Deletes an existing EMR cluster definition by key.
-     *
-     * @param emrClusterDefinitionKey the EMR cluster definition key
-     *
-     * @return the EMR cluster definition that got deleted
-     */
+    @NamespacePermission(fields = "#emrClusterDefinitionKey?.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public EmrClusterDefinitionInformation deleteEmrClusterDefinition(EmrClusterDefinitionKey emrClusterDefinitionKey) throws Exception
     {
         // Perform validate and trim of the EMR cluster definition key.
-        herdHelper.validateEmrClusterDefinitionKey(emrClusterDefinitionKey);
+        emrClusterDefinitionHelper.validateEmrClusterDefinitionKey(emrClusterDefinitionKey);
 
         // Retrieve and ensure that a EMR cluster definition already exists with the specified key.
-        EmrClusterDefinitionEntity emrClusterDefinitionEntity = herdDaoHelper.getEmrClusterDefinitionEntity(emrClusterDefinitionKey);
+        EmrClusterDefinitionEntity emrClusterDefinitionEntity = emrClusterDefinitionDaoHelper.getEmrClusterDefinitionEntity(emrClusterDefinitionKey);
 
         // Log the existing EMR cluster definition.
-        LOGGER.info(String.format("EMR cluster definition being deleted:\n%s",
-            xmlHelper.objectToXml(createEmrClusterDefinitionFromEntity(emrClusterDefinitionEntity), true)));
+        LOGGER.info("Logging EMR cluster definition being deleted. emrClusterDefinition={}",
+            xmlHelper.objectToXml(createEmrClusterDefinitionFromEntity(emrClusterDefinitionEntity), true));
 
         // Delete the EMR cluster definition.
-        herdDao.delete(emrClusterDefinitionEntity);
+        emrClusterDefinitionDao.delete(emrClusterDefinitionEntity);
 
         // Create and return the EMR cluster definition object from the deleted entity.
         return createEmrClusterDefinitionFromEntity(emrClusterDefinitionEntity);
+    }
+
+    @NamespacePermission(fields = "#namespace", permissions = NamespacePermissionEnum.READ)
+    @Override
+    public EmrClusterDefinitionKeys getEmrClusterDefinitions(String namespace)
+    {
+        // Validate the namespace.
+        Assert.hasText(namespace, "A namespace must be specified.");
+
+        // Retrieve and return the list of EMR cluster definition keys.
+        EmrClusterDefinitionKeys emrClusterDefinitionKeys = new EmrClusterDefinitionKeys();
+        emrClusterDefinitionKeys.getEmrClusterDefinitionKeys().addAll(emrClusterDefinitionDao.getEmrClusterDefinitionsByNamespace(namespace.trim()));
+        return emrClusterDefinitionKeys;
     }
 
     /**

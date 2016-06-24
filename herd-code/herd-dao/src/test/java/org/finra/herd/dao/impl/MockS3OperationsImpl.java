@@ -25,10 +25,12 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.Future;
 
 import com.amazonaws.AmazonClientException;
@@ -47,14 +49,19 @@ import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.ListMultipartUploadsRequest;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
+import com.amazonaws.services.s3.model.ListVersionsRequest;
 import com.amazonaws.services.s3.model.MultipartUpload;
 import com.amazonaws.services.s3.model.MultipartUploadListing;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.PutObjectResult;
+import com.amazonaws.services.s3.model.RestoreObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.amazonaws.services.s3.model.S3VersionSummary;
+import com.amazonaws.services.s3.model.StorageClass;
+import com.amazonaws.services.s3.model.VersionListing;
 import com.amazonaws.services.s3.transfer.Copy;
 import com.amazonaws.services.s3.transfer.Download;
 import com.amazonaws.services.s3.transfer.MultipleFileDownload;
@@ -71,11 +78,9 @@ import com.amazonaws.services.s3.transfer.internal.MultipleFileUploadImpl;
 import com.amazonaws.services.s3.transfer.internal.TransferMonitor;
 import com.amazonaws.services.s3.transfer.internal.UploadImpl;
 import org.apache.commons.io.IOUtils;
-import org.apache.http.HttpStatus;
 import org.apache.http.concurrent.BasicFuture;
 import org.apache.log4j.Logger;
 
-import org.finra.herd.core.AbstractCoreTest;
 import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.dao.S3Operations;
 
@@ -97,16 +102,6 @@ public class MockS3OperationsImpl implements S3Operations
     public static final String MOCK_S3_FILE_NAME_SERVICE_EXCEPTION = "mock_s3_file_name_service_exception";
 
     /**
-     * Suffix to hint operation to throw a 404 exception.
-     */
-    public static final String MOCK_S3_FILE_NAME_NOT_FOUND = "mock_s3_file_name_not_found";
-
-    /**
-     * Suffix to hint operation to use object content length of 0 bytes.
-     */
-    public static final String MOCK_S3_FILE_NAME_0_BYTE_SIZE = "mock_s3_file_name_0_byte_size";
-
-    /**
      * A mock KMS ID.
      */
     public static final String MOCK_KMS_ID = "mock_kms_id";
@@ -125,6 +120,11 @@ public class MockS3OperationsImpl implements S3Operations
      * A mock KMS ID that will cause a canceled transfer.
      */
     public static final String MOCK_KMS_ID_CANCELED_TRANSFER = "mock_kms_id_canceled_transfer";
+
+    /**
+     * Suffix to hint operation to treat the S3 bucket as S3 bucket with enabled versioning.
+     */
+    public static final String MOCK_S3_BUCKET_NAME_VERSIONING_ENABLED = "mock_s3_bucket_name_versioning_enabled";
 
     /**
      * Suffix to hint operation to throw a AmazonServiceException
@@ -155,99 +155,53 @@ public class MockS3OperationsImpl implements S3Operations
      */
     private Map<String, MockS3Bucket> mockS3Buckets = new HashMap<>();
 
-    /**
-     * <p>
-     * Creates and returns a new {@link ObjectMetadata} with the given parameters. Content length is defaulted to 1 bytes unless a hint is provided.
-     * </p>
-     * <p>
-     * Takes the following hints when filePath is suffixed:
-     * </p>
-     * <dl>
-     * <p/>
-     * <dt>AMAZON_THROTTLING_EXCEPTION</dt>
-     * <dd>Throws AmazonServiceException with the error code "ThrottlingException"</dd>
-     * <p/>
-     * <dt>MOCK_S3_FILE_NAME_SERVICE_EXCEPTION</dt>
-     * <dd>Throws AmazonServiceException</dd>
-     * <p/>
-     * <dt>MOCK_S3_FILE_NAME_NOT_FOUND</dt>
-     * <dd>Throws AmazonServiceException with status code SC_NOT_FOUND</dd>
-     * <p/>
-     * <dt>MOCK_S3_FILE_NAME_0_BYTE_SIZE</dt>
-     * <dd>Sets content length to 0 bytes</dd>
-     * <p/>
-     * </dl>
-     */
     @Override
     public ObjectMetadata getObjectMetadata(String sourceBucketName, String filePath, AmazonS3Client s3Client)
     {
-        ObjectMetadata objectMetadata = new ObjectMetadata();
-
         if (filePath.endsWith(MockAwsOperationsHelper.AMAZON_THROTTLING_EXCEPTION))
         {
             AmazonServiceException throttlingException = new AmazonServiceException("test throttling exception");
             throttlingException.setErrorCode("ThrottlingException");
-
             throw throttlingException;
         }
-        else if (filePath.endsWith(MOCK_S3_FILE_NAME_SERVICE_EXCEPTION))
+        else if (MOCK_S3_BUCKET_NAME_NO_SUCH_BUCKET_EXCEPTION.equals(sourceBucketName))
         {
-            throw new AmazonServiceException(null);
+            AmazonServiceException amazonServiceException = new AmazonServiceException(S3Operations.ERROR_CODE_NO_SUCH_BUCKET);
+            amazonServiceException.setStatusCode(404);
+            throw amazonServiceException;
         }
-        else if (filePath.endsWith(MOCK_S3_FILE_NAME_NOT_FOUND))
+        else if (MOCK_S3_BUCKET_NAME_ACCESS_DENIED.equals(sourceBucketName))
         {
-            AmazonServiceException exception = new AmazonServiceException(null);
-            exception.setStatusCode(HttpStatus.SC_NOT_FOUND);
-            throw exception;
+            AmazonServiceException amazonServiceException = new AmazonServiceException(S3Operations.ERROR_CODE_ACCESS_DENIED);
+            amazonServiceException.setStatusCode(403);
+            throw amazonServiceException;
         }
-        else if (filePath.endsWith(MOCK_S3_FILE_NAME_0_BYTE_SIZE))
+        else if (MOCK_S3_BUCKET_NAME_INTERNAL_ERROR.equals(sourceBucketName) || filePath.endsWith(MOCK_S3_FILE_NAME_SERVICE_EXCEPTION))
         {
-            objectMetadata.setContentLength(AbstractCoreTest.FILE_SIZE_0_BYTE);
+            throw new AmazonServiceException(S3Operations.ERROR_CODE_INTERNAL_ERROR);
         }
         else
         {
-            objectMetadata.setContentLength(AbstractCoreTest.FILE_SIZE_1_KB);
-        }
+            MockS3Bucket mockS3Bucket = getOrCreateBucket(sourceBucketName);
+            MockS3Object mockS3Object = mockS3Bucket.getObjects().get(filePath);
 
-        return objectMetadata;
+            if (mockS3Object == null)
+            {
+                AmazonServiceException amazonServiceException = new AmazonServiceException(S3Operations.ERROR_CODE_NO_SUCH_KEY);
+                amazonServiceException.setStatusCode(404);
+                throw amazonServiceException;
+            }
+
+            return mockS3Object.getObjectMetadata();
+        }
     }
 
     /**
-     * <p>
-     * Simulates a copyFile operation.
-     * </p>
-     * <p>
-     * This method does not actually copy files in-memory, but always returns a pre-defined result.
-     * </p>
-     * <p>
-     * The result {@link Copy} has the following properties:
-     * <dl>
-     * <p/>
-     * <dt>description</dt>
-     * <dd>"MockTransfer"</dd>
-     * <p/>
-     * <dt>state</dt>
-     * <dd>{@link TransferState#Completed}</dd>
-     * <p/>
-     * <dt>transferProgress.totalBytesToTransfer</dt>
-     * <dd>1024</dd>
-     * <p/>
-     * <dt>transferProgress.updateProgress</dt>
-     * <dd>1024</dd>
-     * <p/>
-     * </dl>
-     * <p/>
-     * All other properties are set as default.
-     * </p>
-     * <p>
-     * This operation takes the following hints when suffixed in copyObjectRequest.sourceKey:
-     * <dl>
-     * <p/>
-     * <dt>MOCK_S3_FILE_NAME_NOT_FOUND</dt>
-     * <dd>Throws a AmazonServiceException</dd>
-     * <p/>
-     * </dl>
-     * </p>
+     * <p> Simulates a copyFile operation. </p> <p> This method copies files in-memory. </p> <p> The result {@link Copy} has the following properties: <dl> <p/>
+     * <dt>description</dt> <dd>"MockTransfer"</dd> <p/> <dt>state</dt> <dd>{@link TransferState#Completed}</dd> <p/>
+     * <dt>transferProgress.totalBytesToTransfer</dt> <dd>1024</dd> <p/> <dt>transferProgress.updateProgress</dt> <dd>1024</dd> <p/> </dl> <p/> All other
+     * properties are set as default. </p> <p> This operation takes the following hints when suffixed in copyObjectRequest.sourceKey: <dl> <p/>
+     * <dt>MOCK_S3_FILE_NAME_SERVICE_EXCEPTION</dt> <dd>Throws a AmazonServiceException</dd> <p/> </dl> </p>
      */
     @Override
     public Copy copyFile(final CopyObjectRequest copyObjectRequest, TransferManager transferManager)
@@ -257,127 +211,158 @@ public class MockS3OperationsImpl implements S3Operations
                 copyObjectRequest.getSourceKey() + ", copyObjectRequest.getDestinationBucketName() = " + copyObjectRequest.getDestinationBucketName() +
                 ", copyObjectRequest.getDestinationKey() = " + copyObjectRequest.getDestinationKey());
 
-        if (copyObjectRequest.getSourceKey().endsWith(MOCK_S3_FILE_NAME_NOT_FOUND))
+        if (copyObjectRequest.getSourceKey().endsWith(MOCK_S3_FILE_NAME_SERVICE_EXCEPTION))
         {
             throw new AmazonServiceException(null);
         }
-        /*
-         * Does not actually copy files in memory. There is a test case S3ServiceTest.testCopyFile() which is expecting a result without staging any data.
-         * Below is implementation when needed.
-         */
-        /*
-         * String sourceBucketName = copyObjectRequest.getSourceBucketName();
-         * String sourceKey = copyObjectRequest.getSourceKey();
-         * MockS3Bucket mockSourceS3Bucket = mockS3Buckets.get(sourceBucketName);
-         * MockS3Object mockSourceS3Object = mockSourceS3Bucket.getObjects().get(sourceKey);
-         * String destinationBucketName = copyObjectRequest.getDestinationBucketName();
-         * String destinationKey = copyObjectRequest.getDestinationKey();
-         * ObjectMetadata objectMetadata = copyObjectRequest.getNewObjectMetadata();
-         * MockS3Object mockDestinationS3Object = new MockS3Object();
-         * mockDestinationS3Object.setKey(destinationKey);
-         * mockDestinationS3Object.setData(Arrays.copyOf(mockSourceS3Object.getData(), mockSourceS3Object.getData().length));
-         * mockDestinationS3Object.setObjectMetadata(objectMetadata);
-         * MockS3Bucket mockDestinationS3Bucket = getOrCreateBucket(destinationBucketName);
-         * mockDestinationS3Bucket.getObjects().put(destinationKey, mockDestinationS3Object);
-         */
+
+        String sourceBucketName = copyObjectRequest.getSourceBucketName();
+        String sourceKey = copyObjectRequest.getSourceKey();
+
+        MockS3Bucket mockSourceS3Bucket = getOrCreateBucket(sourceBucketName);
+        MockS3Object mockSourceS3Object = mockSourceS3Bucket.getObjects().get(sourceKey);
+
+        if (mockSourceS3Object == null)
+        {
+            AmazonServiceException amazonServiceException = new AmazonServiceException(S3Operations.ERROR_CODE_NO_SUCH_KEY);
+            amazonServiceException.setErrorCode(S3Operations.ERROR_CODE_NO_SUCH_KEY);
+            throw amazonServiceException;
+        }
 
         // Set the result CopyImpl and TransferProgress.
         TransferProgress transferProgress = new TransferProgress();
-        transferProgress.setTotalBytesToTransfer(AbstractCoreTest.FILE_SIZE_1_KB);
-        transferProgress.updateProgress(AbstractCoreTest.FILE_SIZE_1_KB);
+        transferProgress.setTotalBytesToTransfer(mockSourceS3Object.getObjectMetadata().getContentLength());
+        transferProgress.updateProgress(mockSourceS3Object.getObjectMetadata().getContentLength());
         CopyImpl copy = new CopyImpl(MOCK_TRANSFER_DESCRIPTION, transferProgress, null, null);
         copy.setState(TransferState.Completed);
 
         // If an invalid KMS Id was passed in, mark the transfer as failed and return an exception via the transfer monitor.
-        final String kmsId = copyObjectRequest.getSSEAwsKeyManagementParams().getAwsKmsKeyId();
-        if (kmsId.startsWith(MOCK_KMS_ID_FAILED_TRANSFER))
+        if (copyObjectRequest.getSSEAwsKeyManagementParams() != null)
         {
-            copy.setState(TransferState.Failed);
-            copy.setMonitor(new TransferMonitor()
+            final String kmsId = copyObjectRequest.getSSEAwsKeyManagementParams().getAwsKmsKeyId();
+            if (kmsId.startsWith(MOCK_KMS_ID_FAILED_TRANSFER))
             {
-                @Override
-                public Future<?> getFuture()
+                copy.setState(TransferState.Failed);
+                copy.setMonitor(new TransferMonitor()
                 {
-                    if (!kmsId.equals(MOCK_KMS_ID_FAILED_TRANSFER_NO_EXCEPTION))
+                    @Override
+                    public Future<?> getFuture()
                     {
-                        throw new AmazonServiceException("Key '" + copyObjectRequest.getSSEAwsKeyManagementParams().getAwsKmsKeyId() +
-                            "' does not exist (Service: Amazon S3; Status Code: 400; Error Code: KMS.NotFoundException; Request ID: 1234567890123456)");
+                        if (!kmsId.equals(MOCK_KMS_ID_FAILED_TRANSFER_NO_EXCEPTION))
+                        {
+                            throw new AmazonServiceException("Key '" + copyObjectRequest.getSSEAwsKeyManagementParams().getAwsKmsKeyId() +
+                                "' does not exist (Service: Amazon S3; Status Code: 400; Error Code: KMS.NotFoundException; Request ID: 1234567890123456)");
+                        }
+
+                        // We don't want an exception to be thrown so return a basic future that won't throw an exception.
+                        BasicFuture<?> future = new BasicFuture<Void>(null);
+                        future.completed(null);
+                        return future;
                     }
 
-                    // We don't want an exception to be thrown so return a basic future that won't throw an exception.
-                    BasicFuture<?> future = new BasicFuture<Void>(null);
-                    future.completed(null);
-                    return future;
-                }
-
-                @Override
-                public boolean isDone()
-                {
-                    return true;
-                }
-            });
+                    @Override
+                    public boolean isDone()
+                    {
+                        return true;
+                    }
+                });
+            }
+            else if (kmsId.startsWith(MOCK_KMS_ID_CANCELED_TRANSFER))
+            {
+                // If the KMS indicates a cancelled transfer, just update the state to canceled.
+                copy.setState(TransferState.Canceled);
+            }
         }
-        else if (kmsId.startsWith(MOCK_KMS_ID_CANCELED_TRANSFER))
+
+        // If copy operation is marked as completed, perform the actual file copy in memory.
+        if (copy.getState().equals(TransferState.Completed))
         {
-            // If the KMS indicates a cancelled transfer, just update the state to canceled.
-            copy.setState(TransferState.Canceled);
+            String destinationBucketName = copyObjectRequest.getDestinationBucketName();
+            String destinationObjectKey = copyObjectRequest.getDestinationKey();
+            String destinationObjectVersion = MOCK_S3_BUCKET_NAME_VERSIONING_ENABLED.equals(destinationBucketName) ? UUID.randomUUID().toString() : null;
+            String destinationObjectKeyVersion = destinationObjectKey + (destinationObjectVersion != null ? destinationObjectVersion : "");
+
+            ObjectMetadata objectMetadata = copyObjectRequest.getNewObjectMetadata();
+            MockS3Object mockDestinationS3Object = new MockS3Object();
+            mockDestinationS3Object.setKey(destinationObjectKey);
+            mockDestinationS3Object.setVersion(destinationObjectVersion);
+            mockDestinationS3Object.setData(Arrays.copyOf(mockSourceS3Object.getData(), mockSourceS3Object.getData().length));
+            mockDestinationS3Object.setObjectMetadata(objectMetadata);
+
+            MockS3Bucket mockDestinationS3Bucket = getOrCreateBucket(destinationBucketName);
+            mockDestinationS3Bucket.getObjects().put(destinationObjectKey, mockDestinationS3Object);
+            mockDestinationS3Bucket.getVersions().put(destinationObjectKeyVersion, mockDestinationS3Object);
         }
 
         return copy;
     }
 
-    /**
-     * <p>
-     * Deletes an object specified by the given bucket name and key. This method does nothing if the bucket does not exist.
-     * </p>
-     * <p>
-     * This operation takes the following hints when suffixed in filePath:
-     * <dl>
-     * <p/>
-     * <dt>MOCK_S3_FILE_NAME_NOT_FOUND</dt>
-     * <dd>Throws a AmazonServiceException</dd>
-     * <p/>
-     * </dl>
-     * </p>
-     */
     @Override
-    public void deleteFile(String bucketName, String key, AmazonS3Client s3Client)
+    public void restoreObject(RestoreObjectRequest requestRestore, AmazonS3Client s3Client)
     {
-        LOGGER.debug("deleteFile(): bucketName = " + bucketName + ", key = " + key);
-
-        if (key.endsWith(MOCK_S3_FILE_NAME_NOT_FOUND))
+        if (requestRestore.getKey().endsWith(MockAwsOperationsHelper.AMAZON_THROTTLING_EXCEPTION))
         {
-            throw new AmazonServiceException(null);
+            AmazonServiceException throttlingException = new AmazonServiceException("test throttling exception");
+            throttlingException.setErrorCode("ThrottlingException");
+            throw throttlingException;
         }
-
-        MockS3Bucket mockS3Bucket = mockS3Buckets.get(bucketName);
-        if (mockS3Bucket != null)
+        else if (MOCK_S3_BUCKET_NAME_NO_SUCH_BUCKET_EXCEPTION.equals(requestRestore.getBucketName()))
         {
-            mockS3Bucket.getObjects().remove(key);
+            AmazonServiceException amazonServiceException = new AmazonServiceException(S3Operations.ERROR_CODE_NO_SUCH_BUCKET);
+            amazonServiceException.setStatusCode(404);
+            throw amazonServiceException;
+        }
+        else if (MOCK_S3_BUCKET_NAME_ACCESS_DENIED.equals(requestRestore.getBucketName()))
+        {
+            AmazonServiceException amazonServiceException = new AmazonServiceException(S3Operations.ERROR_CODE_ACCESS_DENIED);
+            amazonServiceException.setStatusCode(403);
+            throw amazonServiceException;
+        }
+        else if (MOCK_S3_BUCKET_NAME_INTERNAL_ERROR.equals(requestRestore.getBucketName()) ||
+            requestRestore.getKey().endsWith(MOCK_S3_FILE_NAME_SERVICE_EXCEPTION))
+        {
+            throw new AmazonServiceException(S3Operations.ERROR_CODE_INTERNAL_ERROR);
+        }
+        else
+        {
+            MockS3Bucket mockS3Bucket = getOrCreateBucket(requestRestore.getBucketName());
+            MockS3Object mockS3Object = mockS3Bucket.getObjects().get(requestRestore.getKey());
+
+            if (mockS3Object == null)
+            {
+                AmazonServiceException amazonServiceException = new AmazonServiceException(S3Operations.ERROR_CODE_NO_SUCH_KEY);
+                amazonServiceException.setStatusCode(404);
+                throw amazonServiceException;
+            }
+
+            // Get object metadata.
+            ObjectMetadata objectMetadata = mockS3Object.getObjectMetadata();
+
+            // Fail if the object is not in Glacier.
+            if (!StorageClass.Glacier.toString().equals(objectMetadata.getStorageClass()))
+            {
+                AmazonServiceException amazonServiceException = new AmazonServiceException("object is not in Glacier");
+                throw amazonServiceException;
+            }
+
+            // Fail if the object is already being restored.
+            if (objectMetadata.getOngoingRestore())
+            {
+                AmazonServiceException amazonServiceException = new AmazonServiceException("object is already being restored");
+                throw amazonServiceException;
+            }
+
+            // Update the object metadata to indicate that there is an ongoing restore request.
+            objectMetadata.setOngoingRestore(true);
         }
     }
 
     /**
-     * <p>
-     * Returns a mock list of multipart uploads. Since a multipart upload in progress does not exist when in-memory, this method simply returns a preconfigured
-     * list.
-     * </p>
-     * <p>
-     * Returns a mock {@link MultipartUploadListing} based on the parameters and hints provided. By default returns a mock listing as defiend by
-     * {@link #getMultipartUploadListing()}.
-     * </p>
-     * <p>
-     * This operation takes the following hints when suffixed in listMultipartUploadsRequest.bucketName:
-     * <dl>
-     * <p/>
-     * <dt>MOCK_S3_BUCKET_NAME_SERVICE_EXCEPTION</dt>
-     * <dd>Throws a AmazonServiceException</dd>
-     * <p/>
-     * <dt>MOCK_S3_BUCKET_NAME_TRUNCATED_MULTIPART_LISTING</dt>
-     * <dd>Returns the listing as if it is truncated. See below for details.</dd>
-     * <p/>
-     * </dl>
-     * </p>
+     * <p> Returns a mock list of multipart uploads. Since a multipart upload in progress does not exist when in-memory, this method simply returns a
+     * preconfigured list. </p> <p> Returns a mock {@link MultipartUploadListing} based on the parameters and hints provided. By default returns a mock listing
+     * as defiend by {@link #getMultipartUploadListing()}. </p> <p> This operation takes the following hints when suffixed in
+     * listMultipartUploadsRequest.bucketName: <dl> <p/> <dt>MOCK_S3_BUCKET_NAME_SERVICE_EXCEPTION</dt> <dd>Throws a AmazonServiceException</dd> <p/>
+     * <dt>MOCK_S3_BUCKET_NAME_TRUNCATED_MULTIPART_LISTING</dt> <dd>Returns the listing as if it is truncated. See below for details.</dd> <p/> </dl> </p>
      */
     @Override
     public MultipartUploadListing listMultipartUploads(ListMultipartUploadsRequest listMultipartUploadsRequest, AmazonS3Client s3Client)
@@ -393,7 +378,8 @@ public class MockS3OperationsImpl implements S3Operations
             // If listing request does not have upload ID marker set, mark the listing as truncated - this is done to truncate the multipart listing just once.
             if (listMultipartUploadsRequest.getUploadIdMarker() == null)
             {
-                multipartUploadListing.setUploadIdMarker("TEST_UPLOAD_MARKER_ID");
+                multipartUploadListing.setNextUploadIdMarker("TEST_UPLOAD_MARKER_ID");
+                multipartUploadListing.setNextKeyMarker("TEST_KEY_MARKER_ID");
                 multipartUploadListing.setTruncated(true);
             }
 
@@ -406,27 +392,10 @@ public class MockS3OperationsImpl implements S3Operations
     }
 
     /**
-     * <p>
-     * Returns a mock {@link MultipartUploadListing}.
-     * </p>
-     * <p>
-     * The return object has the following properties.
-     * <dl>
-     * <dt>multipartUploads</dt>
-     * <dd>Length 3 list</dd>
-     * <p/>
-     * <dt>multipartUploads[0].initiated</dt>
-     * <dd>5 minutes prior to the object creation time.</dd>
-     * <p/>
-     * <dt>multipartUploads[1].initiated</dt>
-     * <dd>15 minutes prior to the object creation time.</dd>
-     * <p/>
-     * <dt>multipartUploads[2].initiated</dt>
-     * <dd>20 minutes prior to the object creation time.</dd>
-     * </dl>
-     * <p/>
-     * All other properties as set to default as defined in the by {@link MultipartUploadListing} constructor.
-     * </p>
+     * <p> Returns a mock {@link MultipartUploadListing}. </p> <p> The return object has the following properties. <dl> <dt>multipartUploads</dt> <dd>Length 3
+     * list</dd> <p/> <dt>multipartUploads[0].initiated</dt> <dd>5 minutes prior to the object creation time.</dd> <p/> <dt>multipartUploads[1].initiated</dt>
+     * <dd>15 minutes prior to the object creation time.</dd> <p/> <dt>multipartUploads[2].initiated</dt> <dd>20 minutes prior to the object creation time.</dd>
+     * </dl> <p/> All other properties as set to default as defined in the by {@link MultipartUploadListing} constructor. </p>
      *
      * @return a mock object
      */
@@ -458,12 +427,7 @@ public class MockS3OperationsImpl implements S3Operations
     }
 
     /**
-     * <p>
-     * Simulates abort multipart upload operation.
-     * </p>
-     * <p>
-     * This method does nothing.
-     * </p>
+     * <p> Simulates abort multipart upload operation. </p> <p> This method does nothing. </p>
      */
     @Override
     public void abortMultipartUpload(AbortMultipartUploadRequest abortMultipartUploadRequest, AmazonS3Client s3Client)
@@ -474,23 +438,28 @@ public class MockS3OperationsImpl implements S3Operations
      * Deletes a list of objects from a bucket.
      */
     @Override
-    public DeleteObjectsResult deleteObjects(DeleteObjectsRequest deleteObjectRequest, AmazonS3Client s3Client)
+    public DeleteObjectsResult deleteObjects(DeleteObjectsRequest deleteObjectsRequest, AmazonS3Client s3Client)
     {
-        LOGGER.debug("deleteObjects(): deleteObjectRequest.getBucketName() = " + deleteObjectRequest.getBucketName() + ", deleteObjectRequest.getKeys() = " +
-            deleteObjectRequest.getKeys());
+        LOGGER.debug("deleteObjects(): deleteObjectRequest.getBucketName() = " + deleteObjectsRequest.getBucketName() + ", deleteObjectRequest.getKeys() = " +
+            deleteObjectsRequest.getKeys());
 
         List<DeletedObject> deletedObjects = new ArrayList<>();
 
-        MockS3Bucket mockS3Bucket = mockS3Buckets.get(deleteObjectRequest.getBucketName());
+        MockS3Bucket mockS3Bucket = mockS3Buckets.get(deleteObjectsRequest.getBucketName());
 
-        for (KeyVersion keyVersion : deleteObjectRequest.getKeys())
+        for (KeyVersion keyVersion : deleteObjectsRequest.getKeys())
         {
             String s3ObjectKey = keyVersion.getKey();
+            String s3ObjectVersion = keyVersion.getVersion();
+            String s3ObjectKeyVersion = s3ObjectKey + (s3ObjectVersion != null ? s3ObjectVersion : "");
 
-            if (mockS3Bucket.getObjects().remove(s3ObjectKey) != null)
+            mockS3Bucket.getObjects().remove(s3ObjectKey);
+
+            if (mockS3Bucket.getVersions().remove(s3ObjectKeyVersion) != null)
             {
                 DeletedObject deletedObject = new DeletedObject();
                 deletedObject.setKey(s3ObjectKey);
+                deletedObject.setVersionId(s3ObjectVersion);
                 deletedObjects.add(deletedObject);
             }
         }
@@ -499,8 +468,8 @@ public class MockS3OperationsImpl implements S3Operations
     }
 
     /**
-     * Returns a list of objects. If the bucket does not exist, returns a listing with an empty list.
-     * If a prefix is specified in listObjectsRequest, only keys starting with the prefix will be returned.
+     * Returns a list of objects. If the bucket does not exist, returns a listing with an empty list. If a prefix is specified in listObjectsRequest, only keys
+     * starting with the prefix will be returned.
      */
     @Override
     public ObjectListing listObjects(ListObjectsRequest listObjectsRequest, AmazonS3Client s3Client)
@@ -531,6 +500,7 @@ public class MockS3OperationsImpl implements S3Operations
                     s3ObjectSummary.setBucketName(bucketName);
                     s3ObjectSummary.setKey(s3ObjectKey);
                     s3ObjectSummary.setSize(mockS3Object.getData().length);
+                    s3ObjectSummary.setStorageClass(mockS3Object.getObjectMetadata() != null ? mockS3Object.getObjectMetadata().getStorageClass() : null);
 
                     objectListing.getObjectSummaries().add(s3ObjectSummary);
                 }
@@ -538,6 +508,50 @@ public class MockS3OperationsImpl implements S3Operations
         }
 
         return objectListing;
+    }
+
+    /**
+     * Returns a list of versions. If the bucket does not exist, returns a listing with an empty list. If a prefix is specified in listVersionsRequest, only
+     * versions starting with the prefix will be returned.
+     */
+    @Override
+    public VersionListing listVersions(ListVersionsRequest listVersionsRequest, AmazonS3Client s3Client)
+    {
+        LOGGER.debug("listVersions(): listVersionsRequest.getBucketName() = " + listVersionsRequest.getBucketName());
+
+        String bucketName = listVersionsRequest.getBucketName();
+
+        if (MOCK_S3_BUCKET_NAME_NO_SUCH_BUCKET_EXCEPTION.equals(bucketName))
+        {
+            AmazonS3Exception amazonS3Exception = new AmazonS3Exception(MOCK_S3_BUCKET_NAME_NO_SUCH_BUCKET_EXCEPTION);
+            amazonS3Exception.setErrorCode("NoSuchBucket");
+            throw amazonS3Exception;
+        }
+
+        VersionListing versionListing = new VersionListing();
+        versionListing.setBucketName(bucketName);
+
+        MockS3Bucket mockS3Bucket = mockS3Buckets.get(bucketName);
+        if (mockS3Bucket != null)
+        {
+            for (MockS3Object mockS3Object : mockS3Bucket.getVersions().values())
+            {
+                String s3ObjectKey = mockS3Object.getKey();
+                if (listVersionsRequest.getPrefix() == null || s3ObjectKey.startsWith(listVersionsRequest.getPrefix()))
+                {
+                    S3VersionSummary s3VersionSummary = new S3VersionSummary();
+                    s3VersionSummary.setBucketName(bucketName);
+                    s3VersionSummary.setKey(s3ObjectKey);
+                    s3VersionSummary.setVersionId(mockS3Object.getVersion());
+                    s3VersionSummary.setSize(mockS3Object.getData().length);
+                    s3VersionSummary.setStorageClass(mockS3Object.getObjectMetadata() != null ? mockS3Object.getObjectMetadata().getStorageClass() : null);
+
+                    versionListing.getVersionSummaries().add(s3VersionSummary);
+                }
+            }
+        }
+
+        return versionListing;
     }
 
     /**
@@ -573,12 +587,16 @@ public class MockS3OperationsImpl implements S3Operations
                 throw new IllegalArgumentException("File not found " + file, e);
             }
         }
+
         String s3ObjectKey = putObjectRequest.getKey();
+        String s3ObjectVersion = MOCK_S3_BUCKET_NAME_VERSIONING_ENABLED.equals(putObjectRequest.getBucketName()) ? UUID.randomUUID().toString() : null;
+        String s3ObjectKeyVersion = s3ObjectKey + (s3ObjectVersion != null ? s3ObjectVersion : "");
 
         byte[] s3ObjectData;
         try
         {
             s3ObjectData = IOUtils.toByteArray(inputStream);
+            metadata.setContentLength(s3ObjectData.length);
         }
         catch (IOException e)
         {
@@ -600,10 +618,12 @@ public class MockS3OperationsImpl implements S3Operations
 
         MockS3Object mockS3Object = new MockS3Object();
         mockS3Object.setKey(s3ObjectKey);
+        mockS3Object.setVersion(s3ObjectVersion);
         mockS3Object.setData(s3ObjectData);
         mockS3Object.setObjectMetadata(metadata);
 
         mockS3Bucket.getObjects().put(s3ObjectKey, mockS3Object);
+        mockS3Bucket.getVersions().put(s3ObjectKeyVersion, mockS3Object);
 
         return new PutObjectResult();
     }
@@ -613,7 +633,7 @@ public class MockS3OperationsImpl implements S3Operations
      * <p/>
      * This method should only be used to retrieve mock bucket when a test assumes a bucket already exists.
      *
-     * @param s3BucketName - The name of thte bucket
+     * @param s3BucketName - The name of the bucket
      *
      * @return new or existing bucket
      */
@@ -686,6 +706,10 @@ public class MockS3OperationsImpl implements S3Operations
             totalFileLength += fileLength;
 
             PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName, s3ObjectKey, file);
+
+            ObjectMetadata objectMetadata = new ObjectMetadata();
+            metadataProvider.provideObjectMetadata(null, objectMetadata);
+            putObjectRequest.setMetadata(objectMetadata);
 
             putObject(putObjectRequest, (AmazonS3Client) transferManager.getAmazonS3Client());
 
@@ -844,57 +868,47 @@ public class MockS3OperationsImpl implements S3Operations
             amazonServiceException.setErrorCode(S3Operations.ERROR_CODE_NO_SUCH_BUCKET);
             throw amazonServiceException;
         }
-
-        if (MOCK_S3_BUCKET_NAME_ACCESS_DENIED.equals(bucketName))
+        else if (MOCK_S3_BUCKET_NAME_ACCESS_DENIED.equals(bucketName))
         {
             AmazonServiceException amazonServiceException = new AmazonServiceException(S3Operations.ERROR_CODE_ACCESS_DENIED);
             amazonServiceException.setErrorCode(S3Operations.ERROR_CODE_ACCESS_DENIED);
             throw amazonServiceException;
         }
-
-        if (MOCK_S3_BUCKET_NAME_INTERNAL_ERROR.equals(bucketName))
+        else if (MOCK_S3_BUCKET_NAME_INTERNAL_ERROR.equals(bucketName))
         {
             AmazonServiceException amazonServiceException = new AmazonServiceException(S3Operations.ERROR_CODE_INTERNAL_ERROR);
             amazonServiceException.setErrorCode(S3Operations.ERROR_CODE_INTERNAL_ERROR);
             throw amazonServiceException;
         }
-
-        MockS3Bucket mockS3Bucket = getOrCreateBucket(bucketName);
-        MockS3Object mockS3Object = mockS3Bucket.getObjects().get(key);
-
-        if (mockS3Object == null)
+        else
         {
-            AmazonServiceException amazonServiceException = new AmazonServiceException(S3Operations.ERROR_CODE_NO_SUCH_KEY);
-            amazonServiceException.setErrorCode(S3Operations.ERROR_CODE_NO_SUCH_KEY);
-            throw amazonServiceException;
-        }
+            MockS3Bucket mockS3Bucket = getOrCreateBucket(bucketName);
+            MockS3Object mockS3Object = mockS3Bucket.getObjects().get(key);
 
-        S3Object s3Object = new S3Object();
-        s3Object.setBucketName(bucketName);
-        s3Object.setKey(key);
-        s3Object.setObjectContent(new ByteArrayInputStream(mockS3Object.getData()));
-        s3Object.setObjectMetadata(mockS3Object.getObjectMetadata());
-        return s3Object;
+            if (mockS3Object == null)
+            {
+                AmazonServiceException amazonServiceException = new AmazonServiceException(S3Operations.ERROR_CODE_NO_SUCH_KEY);
+                amazonServiceException.setErrorCode(S3Operations.ERROR_CODE_NO_SUCH_KEY);
+                throw amazonServiceException;
+            }
+
+            S3Object s3Object = new S3Object();
+            s3Object.setBucketName(bucketName);
+            s3Object.setKey(key);
+            s3Object.setObjectContent(new ByteArrayInputStream(mockS3Object.getData()));
+            s3Object.setObjectMetadata(mockS3Object.getObjectMetadata());
+
+            return s3Object;
+        }
     }
 
     /**
-     * <p>
-     * A mock implementation which generates a URL which reflects the given request.
-     * </p>
-     * <p>
-     * The URL is composed as such:
-     * </p>
-     * 
+     * <p> A mock implementation which generates a URL which reflects the given request. </p> <p> The URL is composed as such: </p> <p/>
      * <pre>
      * https://{s3BucketName}/{s3ObjectKey}?{queryParams}
      * </pre>
-     * <p>
-     * Where {@code queryParams} is the URL encoded list of parameters given in the request.
-     * </p>
-     * <p>
-     * The query params include:
-     * </p>
-     * TODO list the query params in the result
+     * <p> Where {@code queryParams} is the URL encoded list of parameters given in the request. </p> <p> The query params include: </p> TODO list the query
+     * params in the result
      */
     @Override
     public URL generatePresignedUrl(GeneratePresignedUrlRequest generatePresignedUrlRequest, AmazonS3 s3)

@@ -24,7 +24,7 @@ import org.springframework.stereotype.Component;
 
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.S3KeyPrefixInformation;
-import org.finra.herd.service.BusinessObjectDataService;
+import org.finra.herd.service.StorageUnitService;
 
 /**
  * An Activiti task that retrieves a business object data.
@@ -59,10 +59,11 @@ public class GetS3KeyPrefix extends BaseJavaDelegate
     private Expression partitionValue;
     private Expression subPartitionValues;
     private Expression businessObjectDataVersion;
+    private Expression storageName;
     private Expression createNewVersion;
 
     @Autowired
-    private BusinessObjectDataService businessObjectDataService;
+    private StorageUnitService storageUnitService;
 
     @Override
     public void executeImpl(DelegateExecution execution) throws Exception
@@ -79,6 +80,7 @@ public class GetS3KeyPrefix extends BaseJavaDelegate
         List<String> subPartitionValues = daoHelper.splitStringWithDefaultDelimiterEscaped(subPartitionValuesString);
         Integer businessObjectDataVersion =
             activitiHelper.getExpressionVariableAsInteger(this.businessObjectDataVersion, execution, "businessObjectDataVersion", false);
+        String storageName = activitiHelper.getExpressionVariableAsString(this.storageName, execution);
         Boolean createNewVersion = activitiHelper.getExpressionVariableAsBoolean(this.createNewVersion, execution, "createNewVersion", false, false);
 
         BusinessObjectDataKey businessObjectDataKey = new BusinessObjectDataKey();
@@ -91,8 +93,7 @@ public class GetS3KeyPrefix extends BaseJavaDelegate
         businessObjectDataKey.setSubPartitionValues(subPartitionValues);
         businessObjectDataKey.setBusinessObjectDataVersion(businessObjectDataVersion);
 
-        S3KeyPrefixInformation s3KeyPrefixInformation =
-            businessObjectDataService.getS3KeyPrefix(businessObjectDataKey, partitionKey, createNewVersion);
+        S3KeyPrefixInformation s3KeyPrefixInformation = storageUnitService.getS3KeyPrefix(businessObjectDataKey, partitionKey, storageName, createNewVersion);
 
         setTaskWorkflowVariable(execution, VARIABLE_S3_KEY_PREFIX, s3KeyPrefixInformation.getS3KeyPrefix());
     }

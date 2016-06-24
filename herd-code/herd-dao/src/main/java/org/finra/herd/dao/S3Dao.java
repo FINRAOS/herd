@@ -19,12 +19,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 
-import com.amazonaws.services.s3.model.GetObjectRequest;
+import com.amazonaws.services.s3.model.DeleteObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.model.S3ObjectSummary;
 
-import org.finra.herd.model.ObjectNotFoundException;
-import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.dto.S3FileCopyRequestParamsDto;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.dto.S3FileTransferResultsDto;
@@ -43,6 +41,16 @@ public interface S3Dao
      * @return null if object key is not found, otherwise all Amazon S3 object metadata for the specified object
      */
     public ObjectMetadata getObjectMetadata(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto);
+
+    /**
+     * Validates that file exists in S3 using S3Client.getObject() method.
+     *
+     * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters. The S3 bucket name and S3 key prefix identify the S3 file
+     *
+     * @return true if the S3 file exists, false otherwise
+     * @throws RuntimeException if file existence check fails
+     */
+    public boolean s3FileExists(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto) throws RuntimeException;
 
     /**
      * Validates that file exists in S3 and has size that equals to a specified value.
@@ -68,9 +76,9 @@ public interface S3Dao
      * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters. The S3 bucket name and S3 key prefix identify the S3 objects to get
      * listed.
      *
-     * @return the list of all S3 objects represented as storage files that match the prefix in the given bucket.
+     * @return the list of all S3 objects represented by S3 object summaries that match the prefix in the given bucket.
      */
-    public List<StorageFile> listDirectory(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto);
+    public List<S3ObjectSummary> listDirectory(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto);
 
     /**
      * Lists all S3 objects matching the S3 key prefix in the given bucket (S3 bucket name).
@@ -79,9 +87,20 @@ public interface S3Dao
      * listed.
      * @param ignoreZeroByteDirectoryMarkers specifies whether to ignore 0 byte objects that represent S3 directories.
      *
-     * @return the list of all S3 objects represented as storage files that match the prefix in the given bucket.
+     * @return the list of all S3 objects represented by S3 object summaries that match the prefix in the given bucket.
      */
-    public List<StorageFile> listDirectory(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, boolean ignoreZeroByteDirectoryMarkers);
+    public List<S3ObjectSummary> listDirectory(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, boolean ignoreZeroByteDirectoryMarkers);
+
+
+    /**
+     * Lists all S3 versions matching the S3 key prefix in the given bucket (S3 bucket name). The S3 bucket name and S3 key prefix that identify the S3 versions
+     * to get listed are taken from the S3 file transfer request parameters DTO.
+     *
+     * @param params the S3 file transfer request parameters
+     *
+     * @return the list of all S3 versions that match the prefix in the given bucket
+     */
+    public List<DeleteObjectsRequest.KeyVersion> listVersions(final S3FileTransferRequestParamsDto params);
 
     /**
      * Uploads a local file into S3.
@@ -128,15 +147,26 @@ public interface S3Dao
     public S3FileTransferResultsDto copyFile(S3FileCopyRequestParamsDto s3FileCopyRequestParamsDto) throws InterruptedException;
 
     /**
-     * Deletes a object from specified bucket.
+     * Requests to restore a list of keys in the specified bucket.
      *
-     * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters. The S3 bucket name and the file name identify the S3 object to be
-     * deleted.
+     * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters. The S3 bucket name and the file list identify the S3 objects to be
+     * restored
+     * @param expirationInDays the time, in days, between when an object is restored to the bucket and when it expires
      */
-    public void deleteFile(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto);
+    public void restoreObjects(final S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, int expirationInDays);
 
     /**
-     * Deletes a list of keys/objects from specified bucket.
+     * Validates that all specified Glacier storage class files are restored.
+     *
+     * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters. The S3 bucket name and the file list identify the S3 objects to be
+     * validated
+     *
+     * @throws RuntimeException if file validation fails
+     */
+    public void validateGlacierS3FilesRestored(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto) throws RuntimeException;
+
+    /**
+     * Deletes a list of keys from specified bucket.
      *
      * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters. The S3 bucket name and the file list identify the S3 objects to be
      * deleted.
@@ -144,7 +174,7 @@ public interface S3Dao
     public void deleteFileList(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto);
 
     /**
-     * Deletes keys/objects from specified bucket with matching prefix.
+     * Deletes keys/key versions from specified bucket with matching prefix.
      *
      * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters. The S3 bucket name and S3 key prefix identify the S3 objects to be
      * deleted.
@@ -185,34 +215,25 @@ public interface S3Dao
     public int abortMultipartUploads(S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, Date thresholdDate);
 
     /**
-     * Gets an object using the specified request.
-     * 
-     * @param getObjectRequest The request
-     * @param s3FileTransferRequestParamsDto Parameters with proxy information
-     * @return {@link S3Object}
-     * @throws ObjectNotFoundException when specified bucket or key does not exist
-     * @throws IllegalStateException when access to bucket or key is denied
-     */
-    public S3Object getS3Object(GetObjectRequest getObjectRequest, S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto);
-
-    /**
      * Gets an object from S3 and parses it as a {@link Properties}.
-     * 
+     *
      * @param bucketName The S3 bucket name
      * @param key The S3 object key
      * @param s3FileTransferRequestParamsDto {@link S3FileTransferRequestParamsDto} with proxy information
+     *
      * @return {@link Properties}
      */
     public Properties getProperties(String bucketName, String key, S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto);
 
     /**
-     * Generates a GET pre-signed URL for the given object in S3 identified by its bucket name and key.
-     * Uses the proxy information and signer override specified in the given {@link S3FileTransferRequestParamsDto}.
-     * 
+     * Generates a GET pre-signed URL for the given object in S3 identified by its bucket name and key. Uses the proxy information and signer override specified
+     * in the given {@link S3FileTransferRequestParamsDto}.
+     *
      * @param bucketName The bucket name of the object
      * @param key The S3 key to the object
      * @param expiration The expiration date at which point the new pre-signed URL will no longer be accepted by Amazon S3.
      * @param s3FileTransferRequestParamsDto The parameters which contain information on how to use S3
+     *
      * @return a pre-signed URL
      */
     public String generateGetObjectPresignedUrl(String bucketName, String key, Date expiration, S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto);
