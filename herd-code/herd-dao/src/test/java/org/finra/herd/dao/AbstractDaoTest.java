@@ -473,6 +473,14 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     protected static final Integer SECOND_VERSION = 1;
 
+    protected static final String SECURITY_FUNCTION = "FN_UT_SECURITY_FUNCTION_1_" + RANDOM_SUFFIX;
+
+    protected static final String SECURITY_FUNCTION_2 = "FN_UT_SECURITY_FUNCTION_2_" + RANDOM_SUFFIX;
+
+    protected static final String SECURITY_FUNCTION_3 = "FN_UT_SECURITY_FUNCTION_3_" + RANDOM_SUFFIX;
+
+    protected static final String SECURITY_ROLE = "FN_UT_SECURITY_ROLE_1_" + RANDOM_SUFFIX;
+
     protected static final Boolean SELECT_ONLY_AVAILABLE_STORAGE_UNITS = true;
 
     protected static final String SESSION_NAME = "UT_SessionName" + RANDOM_SUFFIX;

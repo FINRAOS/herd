@@ -15,13 +15,16 @@
 */
 package org.finra.herd.dao.impl;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Path;
+import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+import javax.persistence.criteria.Subquery;
 
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Repository;
@@ -40,57 +43,86 @@ public class SecurityFunctionDaoImpl extends AbstractHerdDao implements Security
 {
     @Override
     @Cacheable(DaoSpringModuleConfig.HERD_CACHE_NAME)
-    public List<String> getSecurityFunctionsForRole(String roleCd)
-    {
-        // Create the criteria builder and a tuple style criteria query.
-        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-        // CriteriaQuery<Tuple> criteria = builder.createTupleQuery();
-        CriteriaQuery<String> criteria = builder.createQuery(String.class);
-
-        // The criteria root is the business object definition.
-        Root<SecurityRoleFunctionEntity> securityRoleFunctionEntity = criteria.from(SecurityRoleFunctionEntity.class);
-
-        // Join to the other tables we can filter on.
-        Join<SecurityRoleFunctionEntity, SecurityRoleEntity> securityRoleEntity = securityRoleFunctionEntity.join(SecurityRoleFunctionEntity_.securityRole);
-        Join<SecurityRoleFunctionEntity, SecurityFunctionEntity> securityFunctionEntity = securityRoleFunctionEntity.join(
-            SecurityRoleFunctionEntity_.securityFunction);
-
-        // Get the columns.
-        Path<String> functionCodeColumn = securityFunctionEntity.get(SecurityFunctionEntity_.code);
-
-        // Add the select clause.
-        criteria.select(functionCodeColumn);
-
-        criteria.where(builder.equal(builder.upper(securityRoleEntity.get(SecurityRoleEntity_.code)), roleCd.toUpperCase()));
-
-        // Add the order by clause.
-        criteria.orderBy(builder.asc(functionCodeColumn));
-
-        // Run the query to get a list of tuples back.
-        return entityManager.createQuery(criteria).getResultList();
-    }
-
-    @Override
-    @Cacheable(DaoSpringModuleConfig.HERD_CACHE_NAME)
     public List<String> getSecurityFunctions()
     {
-        // Create the criteria builder and a tuple style criteria query.
+        // Create the criteria builder and the criteria.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
         CriteriaQuery<String> criteria = builder.createQuery(String.class);
 
-        // The criteria root is the business object definition.
+        // The criteria root is the security role function.
         Root<SecurityFunctionEntity> securityFunctionEntity = criteria.from(SecurityFunctionEntity.class);
 
         // Get the columns.
         Path<String> functionCodeColumn = securityFunctionEntity.get(SecurityFunctionEntity_.code);
 
+        // Add the clauses for the query.
+        criteria.select(functionCodeColumn).orderBy(builder.asc(functionCodeColumn));
+
+        // Run the query to get a list of functions.
+        return entityManager.createQuery(criteria).getResultList();
+    }
+
+    @Override
+    @Cacheable(DaoSpringModuleConfig.HERD_CACHE_NAME)
+    public List<String> getSecurityFunctionsForRole(String roleCd)
+    {
+        // Create the criteria builder and the criteria.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<String> criteria = builder.createQuery(String.class);
+
+        // The criteria root is the security role function mapping.
+        Root<SecurityRoleFunctionEntity> securityRoleFunctionEntity = criteria.from(SecurityRoleFunctionEntity.class);
+
+        // Join to the other tables we can filter on.
+        Join<SecurityRoleFunctionEntity, SecurityRoleEntity> securityRoleEntity = securityRoleFunctionEntity.join(SecurityRoleFunctionEntity_.securityRole);
+        Join<SecurityRoleFunctionEntity, SecurityFunctionEntity> securityFunctionEntity =
+            securityRoleFunctionEntity.join(SecurityRoleFunctionEntity_.securityFunction);
+
+        // Get the columns.
+        Path<String> functionCodeColumn = securityFunctionEntity.get(SecurityFunctionEntity_.code);
+
         // Add the select clause.
         criteria.select(functionCodeColumn);
+
+        // Add the where clause.
+        criteria.where(builder.equal(builder.upper(securityRoleEntity.get(SecurityRoleEntity_.code)), roleCd.toUpperCase()));
 
         // Add the order by clause.
         criteria.orderBy(builder.asc(functionCodeColumn));
 
-        // Run the query to get a list of tuples back.
+        // Run the query to get a list of functions.
+        return entityManager.createQuery(criteria).getResultList();
+    }
+
+    @Override
+    @Cacheable(DaoSpringModuleConfig.HERD_CACHE_NAME)
+    public List<String> getUnrestrictedSecurityFunctions()
+    {
+        // Create the criteria builder and the criteria.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<String> criteria = builder.createQuery(String.class);
+
+        // The criteria root is the security function.
+        Root<SecurityFunctionEntity> securityFunctionEntityRoot = criteria.from(SecurityFunctionEntity.class);
+
+        // Build a subquery to eliminate security functions that are mapped to security roles.
+        Subquery<SecurityFunctionEntity> subquery = criteria.subquery(SecurityFunctionEntity.class);
+        Root<SecurityRoleFunctionEntity> subSecurityRoleFunctionEntityRoot = subquery.from(SecurityRoleFunctionEntity.class);
+        Join<SecurityRoleFunctionEntity, SecurityFunctionEntity> subSecurityFunctionEntity =
+            subSecurityRoleFunctionEntityRoot.join(SecurityRoleFunctionEntity_.securityFunction);
+        subquery.select(subSecurityFunctionEntity);
+
+        // Create the standard restrictions (i.e. the standard where clauses).
+        List<Predicate> predicates = new ArrayList<>();
+        predicates.add(builder.not(builder.exists(subquery)));
+
+        // Get the security function code column.
+        Path<String> functionCodeColumn = securityFunctionEntityRoot.get(SecurityFunctionEntity_.code);
+
+        // Add the clauses for the query.
+        criteria.select(functionCodeColumn).where(builder.and(predicates.toArray(new Predicate[predicates.size()]))).orderBy(builder.asc(functionCodeColumn));
+
+        // Run the query to get a list of functions.
         return entityManager.createQuery(criteria).getResultList();
     }
 }
