@@ -38,10 +38,10 @@ public class DateTimeEditorTest extends AbstractRestTest
         DateTime expectedDateTime = new DateTime(2015, 7, 18, 13, 32, 56, 971, DateTimeZone.forOffsetHours(-4));
 
         dateTimeEditor.setAsText(inputDateTimeAsText);
-        assertEquals(expectedDateTime.toString(), dateTimeEditor.getValue().toString());
+        assertEquals(Long.valueOf(expectedDateTime.getMillis()), Long.valueOf(((DateTime) dateTimeEditor.getValue()).getMillis()));
 
         dateTimeEditor.setAsText(addWhitespace(inputDateTimeAsText));
-        assertEquals(expectedDateTime.toString(), dateTimeEditor.getValue().toString());
+        assertEquals(Long.valueOf(expectedDateTime.getMillis()), Long.valueOf(((DateTime) dateTimeEditor.getValue()).getMillis()));
 
         dateTimeEditor.setAsText(BLANK_TEXT);
         assertNull(dateTimeEditor.getValue());
