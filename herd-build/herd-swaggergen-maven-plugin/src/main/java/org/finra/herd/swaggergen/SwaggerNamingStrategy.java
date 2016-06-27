@@ -27,6 +27,8 @@ import com.fasterxml.jackson.databind.introspect.AnnotatedMethod;
  */
 public class SwaggerNamingStrategy extends PropertyNamingStrategy
 {
+    private static final long serialVersionUID = 5638419660519839755L;
+
     @Override
     public String nameForField(MapperConfig config, AnnotatedField field, String defaultName)
     {
