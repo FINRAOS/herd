@@ -81,6 +81,7 @@ import org.finra.herd.model.jpa.BusinessObjectDataAttributeEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataNotificationRegistrationEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
+import org.finra.herd.model.jpa.BusinessObjectDataStatusHistoryEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionAttributeEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionColumnEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
@@ -1070,6 +1071,15 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
         businessObjectDataEntity.setBusinessObjectFormat(businessObjectFormatEntity);
         businessObjectDataEntity.setLatestVersion(businessObjectDataLatestVersion);
         businessObjectDataEntity.setStatus(businessObjectDataStatusEntity);
+
+        // Add an entry to the business object data status history table.
+        BusinessObjectDataStatusHistoryEntity businessObjectDataStatusHistoryEntity = new BusinessObjectDataStatusHistoryEntity();
+        businessObjectDataStatusHistoryEntity.setBusinessObjectData(businessObjectDataEntity);
+        businessObjectDataStatusHistoryEntity.setStatus(businessObjectDataStatusEntity);
+        List<BusinessObjectDataStatusHistoryEntity> businessObjectDataStatusHistoryEntities = new ArrayList<>();
+        businessObjectDataStatusHistoryEntities.add(businessObjectDataStatusHistoryEntity);
+        businessObjectDataEntity.setHistoricalStatuses(businessObjectDataStatusHistoryEntities);
+
         return herdDao.saveAndRefresh(businessObjectDataEntity);
     }
 

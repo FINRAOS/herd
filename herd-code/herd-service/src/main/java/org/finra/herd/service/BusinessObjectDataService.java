@@ -36,6 +36,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDataVersions;
 public interface BusinessObjectDataService
 {
     public final String MAX_PARTITION_VALUE_TOKEN = "${maximum.partition.value}";
+
     public final String MIN_PARTITION_VALUE_TOKEN = "${minimum.partition.value}";
 
     /**
@@ -53,11 +54,12 @@ public interface BusinessObjectDataService
      * @param businessObjectDataKey the business object data key
      * @param businessObjectFormatPartitionKey the business object format partition key
      * @param businessObjectDataStatus the business object data status, may be null
+     * @param includeBusinessObjectDataStatusHistory specifies to include business object data status history in the response
      *
      * @return the retrieved business object data information
      */
     public BusinessObjectData getBusinessObjectData(BusinessObjectDataKey businessObjectDataKey, String businessObjectFormatPartitionKey,
-        String businessObjectDataStatus);
+        String businessObjectDataStatus, Boolean includeBusinessObjectDataStatusHistory);
 
     /**
      * Retrieves a list of existing business object data versions, if any.
