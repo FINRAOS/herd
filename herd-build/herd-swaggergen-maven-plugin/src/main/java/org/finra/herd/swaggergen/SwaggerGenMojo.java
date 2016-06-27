@@ -125,7 +125,7 @@ public class SwaggerGenMojo extends AbstractMojo
     private String authType;
 
     // A list of the Swagger security scheme definitions. Each one has a "type" to identify it if necessary.
-    private static final List<SecuritySchemeDefinition> securitySchemeDefinitions =
+    private static final List<SecuritySchemeDefinition> SECURITY_SCHEME_DEFINITIONS =
         new ArrayList<>(Arrays.asList(new BasicAuthDefinition(), new OAuth2Definition(), new ApiKeyAuthDefinition()));
 
     /**
@@ -210,7 +210,7 @@ public class SwaggerGenMojo extends AbstractMojo
         {
             // Find the definition for the user specified type.
             SecuritySchemeDefinition securitySchemeDefinition = null;
-            for (SecuritySchemeDefinition possibleDefinition : securitySchemeDefinitions)
+            for (SecuritySchemeDefinition possibleDefinition : SECURITY_SCHEME_DEFINITIONS)
             {
                 if (possibleDefinition.getType().equalsIgnoreCase(authType))
                 {
