@@ -43,6 +43,7 @@ import org.finra.herd.service.BusinessObjectDataService;
  *   <activiti:field name="businessObjectFormatVersion" stringValue=""/>
  *   <activiti:field name="businessObjectDataVersion" stringValue=""/>
  *   <activiti:field name="businessObjectDataStatus" stringValue=""/>
+ *   <activiti:field name="includeBusinessObjectDataStatusHistory" stringValue=""/>
  * </extensionElements>
  * </pre>
  */
@@ -50,15 +51,26 @@ import org.finra.herd.service.BusinessObjectDataService;
 public class GetBusinessObjectData extends BaseJavaDelegate
 {
     private Expression namespace;
+
     private Expression businessObjectDefinitionName;
+
     private Expression businessObjectFormatUsage;
+
     private Expression businessObjectFormatFileType;
+
     private Expression partitionKey;
+
     private Expression partitionValue;
+
     private Expression subPartitionValues;
+
     private Expression businessObjectFormatVersion;
+
     private Expression businessObjectDataVersion;
+
     private Expression businessObjectDataStatus;
+
+    private Expression includeBusinessObjectDataStatusHistory;
 
     @Autowired
     private BusinessObjectDataService businessObjectDataService;
@@ -79,6 +91,8 @@ public class GetBusinessObjectData extends BaseJavaDelegate
         Integer businessObjectDataVersion =
             activitiHelper.getExpressionVariableAsInteger(this.businessObjectDataVersion, execution, "businessObjectDataVersion", false);
         String businessObjectDataStatus = activitiHelper.getExpressionVariableAsString(this.businessObjectDataStatus, execution);
+        Boolean includeBusinessObjectDataStatusHistory = activitiHelper
+            .getExpressionVariableAsBoolean(this.includeBusinessObjectDataStatusHistory, execution, "includeBusinessObjectDataStatusHistory", false, false);
 
         BusinessObjectDataKey businessObjectDataKey = new BusinessObjectDataKey();
         businessObjectDataKey.setNamespace(namespace);
@@ -90,8 +104,8 @@ public class GetBusinessObjectData extends BaseJavaDelegate
         businessObjectDataKey.setSubPartitionValues(subPartitionValues);
         businessObjectDataKey.setBusinessObjectDataVersion(businessObjectDataVersion);
 
-        BusinessObjectData businessObjectData =
-            businessObjectDataService.getBusinessObjectData(businessObjectDataKey, businessObjectFormatPartitionKey, businessObjectDataStatus);
+        BusinessObjectData businessObjectData = businessObjectDataService
+            .getBusinessObjectData(businessObjectDataKey, businessObjectFormatPartitionKey, businessObjectDataStatus, includeBusinessObjectDataStatusHistory);
 
         setJsonResponseAsWorkflowVariable(businessObjectData, execution);
     }

@@ -19,6 +19,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -29,10 +30,13 @@ import java.util.regex.Pattern;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.activiti.bpmn.model.FieldExtension;
 import org.activiti.engine.history.HistoricProcessInstance;
+import org.apache.commons.collections4.IterableUtils;
 import org.junit.Test;
 
+import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.BusinessObjectDataStatusChangeEvent;
 import org.finra.herd.model.api.xml.Job;
 import org.finra.herd.model.api.xml.Parameter;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
@@ -549,12 +553,84 @@ public class GetBusinessObjectDataTest extends HerdActivitiServiceTaskTest
         BusinessObjectData expectedBusinessObjectData =
             new BusinessObjectData(businessObjectDataEntity.getId(), BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
                 PARTITION_KEY, PARTITION_VALUE, NO_SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID,
-                NO_STORAGE_UNITS, NO_ATTRIBUTES, NO_BUSINESS_OBJECT_DATA_PARENTS, NO_BUSINESS_OBJECT_DATA_CHILDREN);
+                NO_STORAGE_UNITS, NO_ATTRIBUTES, NO_BUSINESS_OBJECT_DATA_PARENTS, NO_BUSINESS_OBJECT_DATA_CHILDREN, NO_BUSINESS_OBJECT_DATA_STATUS_HISTORY);
 
         // Run the activiti task and validate the returned response object.
         Map<String, Object> variableValuesToValidate = new HashMap<>();
         variableValuesToValidate.put(GetBusinessObjectDataStatus.VARIABLE_JSON_RESPONSE, jsonHelper.objectToJson(expectedBusinessObjectData));
         testActivitiServiceTaskSuccess(GetBusinessObjectData.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+    }
+
+    @Test
+    public void testGetBusinessObjectDataIncludeBusinessObjectDataStatusHistory() throws Exception
+    {
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION);
+
+        // Create a business object data entity.
+        BusinessObjectDataEntity businessObjectDataEntity =
+            createBusinessObjectDataEntity(businessObjectDataKey, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID);
+
+        List<FieldExtension> fieldExtensionList = new ArrayList<>();
+        fieldExtensionList.add(buildFieldExtension("namespace", "${namespace}"));
+        fieldExtensionList.add(buildFieldExtension("businessObjectDefinitionName", "${businessObjectDefinitionName}"));
+        fieldExtensionList.add(buildFieldExtension("businessObjectFormatUsage", "${businessObjectFormatUsage}"));
+        fieldExtensionList.add(buildFieldExtension("businessObjectFormatFileType", "${businessObjectFormatFileType}"));
+        fieldExtensionList.add(buildFieldExtension("partitionValue", "${partitionValue}"));
+        fieldExtensionList.add(buildFieldExtension("subPartitionValues", "${subPartitionValues}"));
+        fieldExtensionList.add(buildFieldExtension("businessObjectFormatVersion", "${businessObjectFormatVersion}"));
+        fieldExtensionList.add(buildFieldExtension("businessObjectDataVersion", "${businessObjectDataVersion}"));
+        fieldExtensionList.add(buildFieldExtension("businessObjectDataStatus", "${businessObjectDataStatus}"));
+        fieldExtensionList.add(buildFieldExtension("includeBusinessObjectDataStatusHistory", "${includeBusinessObjectDataStatusHistory}"));
+
+        List<Parameter> parameters = new ArrayList<>();
+        parameters.add(buildParameter("namespace", BDEF_NAMESPACE));
+        parameters.add(buildParameter("businessObjectDefinitionName", BDEF_NAME));
+        parameters.add(buildParameter("businessObjectFormatUsage", FORMAT_USAGE_CODE));
+        parameters.add(buildParameter("businessObjectFormatFileType", FORMAT_FILE_TYPE_CODE));
+        parameters.add(buildParameter("partitionValue", PARTITION_VALUE));
+        parameters.add(buildParameter("subPartitionValues", herdStringHelper.buildStringWithDefaultDelimiter(SUBPARTITION_VALUES)));
+        parameters.add(buildParameter("businessObjectFormatVersion", FORMAT_VERSION.toString()));
+        parameters.add(buildParameter("businessObjectDataVersion", DATA_VERSION.toString()));
+        parameters.add(buildParameter("businessObjectDataStatus", BusinessObjectDataStatusEntity.VALID));
+        parameters.add(buildParameter("includeBusinessObjectDataStatusHistory", INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY.toString()));
+
+        // Build the expected response object.
+        BusinessObjectData expectedBusinessObjectData =
+            new BusinessObjectData(businessObjectDataEntity.getId(), BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                PARTITION_KEY, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID,
+                NO_STORAGE_UNITS, NO_ATTRIBUTES, NO_BUSINESS_OBJECT_DATA_PARENTS, NO_BUSINESS_OBJECT_DATA_CHILDREN, Arrays.asList(
+                new BusinessObjectDataStatusChangeEvent(BusinessObjectDataStatusEntity.VALID,
+                    HerdDateUtils.getXMLGregorianCalendarValue(IterableUtils.get(businessObjectDataEntity.getHistoricalStatuses(), 0).getCreatedOn()))));
+
+        // Run the activiti task and validate the returned response object.
+        Map<String, Object> variableValuesToValidate = new HashMap<>();
+        variableValuesToValidate.put(GetBusinessObjectDataStatus.VARIABLE_JSON_RESPONSE, jsonHelper.objectToJson(expectedBusinessObjectData));
+        testActivitiServiceTaskSuccess(GetBusinessObjectData.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+    }
+
+    @Test
+    public void testGetBusinessObjectDataInvalidIncludeBusinessObjectDataStatusHistory() throws Exception
+    {
+        // Validate that activiti task fails when we pass non-boolean value for the include business object data status history flag.
+        List<FieldExtension> fieldExtensionList = new ArrayList<>();
+        fieldExtensionList.add(buildFieldExtension("businessObjectFormatVersion", "${businessObjectFormatVersion}"));
+        fieldExtensionList.add(buildFieldExtension("businessObjectDataVersion", "${businessObjectDataVersion}"));
+        fieldExtensionList.add(buildFieldExtension("includeBusinessObjectDataStatusHistory", "${includeBusinessObjectDataStatusHistory}"));
+        List<Parameter> parameters = new ArrayList<>();
+        parameters.add(buildParameter("businessObjectFormatVersion", FORMAT_VERSION.toString()));
+        parameters.add(buildParameter("businessObjectDataVersion", DATA_VERSION.toString()));
+        parameters.add(buildParameter("includeBusinessObjectDataStatusHistory", "NOT_A_BOOLEAN"));
+
+        Map<String, Object> variableValuesToValidate = new HashMap<>();
+        variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE,
+            "\"includeBusinessObjectDataStatusHistory\" must be a valid boolean value of \"true\" or \"false\".");
+
+        executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
+            testActivitiServiceTaskFailure(GetBusinessObjectData.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
+        });
     }
 
     /**

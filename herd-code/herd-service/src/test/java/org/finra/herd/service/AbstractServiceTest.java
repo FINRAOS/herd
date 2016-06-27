@@ -86,6 +86,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDataNotificationFilter;
 import org.finra.herd.model.api.xml.BusinessObjectDataNotificationRegistrationCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataNotificationRegistrationUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatus;
+import org.finra.herd.model.api.xml.BusinessObjectDataStatusChangeEvent;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatusInformation;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatusUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatusUpdateResponse;
@@ -264,6 +265,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     protected static final Boolean INCLUDE_ALL_REGISTERED_SUBPARTITIONS = true;
 
+    protected static final Boolean INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY = true;
+
     protected static final Boolean INCLUDE_DROP_PARTITIONS = true;
 
     protected static final Boolean INCLUDE_DROP_TABLE_STATEMENT = true;
@@ -286,6 +289,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     protected static final List<BusinessObjectDataStatus> NO_BUSINESS_OBJECT_DATA_STATUSES = new ArrayList<>();
 
+    protected static final List<BusinessObjectDataStatusChangeEvent> NO_BUSINESS_OBJECT_DATA_STATUS_HISTORY = null;
+
     protected static final String NO_COLUMN_DEFAULT_VALUE = null;
 
     protected static final String NO_COLUMN_DESCRIPTION = null;
@@ -303,6 +308,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     protected static final Long NO_FILE_SIZE = null;
 
     protected static final Boolean NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS = false;
+
+    protected static final Boolean NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY = false;
 
     protected static final Boolean NO_INCLUDE_DROP_PARTITIONS = false;
 

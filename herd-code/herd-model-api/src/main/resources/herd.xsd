@@ -1733,6 +1733,11 @@
                </xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="businessObjectDataStatusHistory" type="businessObjectDataStatusHistory" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Lists all business object data status change events for this business object data</xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
@@ -1939,6 +1944,29 @@
             </xs:annotation>
          </xs:element>
       </xs:all>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDataStatusHistory" type="businessObjectDataStatusHistory"/>
+   <xs:complexType name="businessObjectDataStatusHistory">
+      <xs:sequence>
+         <xs:element name="businessObjectDataStatusChangeEvent" type="businessObjectDataStatusChangeEvent" minOccurs="0"
+                     maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDataStatusChangeEvent">
+      <xs:sequence>
+         <xs:element name="status" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The status of the Business Object Data</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="eventTime" type="xs:dateTime">
+            <xs:annotation>
+               <xs:documentation>The timestamp of when the business object data status change occurred</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
    </xs:complexType>
 
    <!-- ***** Business Object Data Status ***** -->
