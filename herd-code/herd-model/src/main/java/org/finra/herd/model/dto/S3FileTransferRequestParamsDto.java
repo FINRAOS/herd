@@ -38,7 +38,8 @@ import java.util.List;
 public class S3FileTransferRequestParamsDto extends AwsParamsDto
 {
     /**
-     * The {@link #signerOverride} value to enable S3 Signature Version 4.
+     * The {@link #signerOverride} value to enable S3 Signature Version 4. This constant needs to be the same as what is defined in AmazonS3Client.S3_V4_SIGNER.
+     * Unfortunately, that one is private so we have to create our own duplicate constant here.
      */
     public static final String SIGNER_OVERRIDE_V4 = "AWSS3V4SignerType";
 
@@ -92,17 +93,16 @@ public class S3FileTransferRequestParamsDto extends AwsParamsDto
      * The maximum number of threads to use for file copying.
      */
     private Integer maxThreads;
-    
+
     /**
      * The KMS id to use for server side encryption.
      */
     private String kmsKeyId;
 
     /**
-     * The S3 signer override type.
-     * This should be used to enable SigV4 ({@link #SIGNER_OVERRIDE_V4}).
-     * This should ONLY be set when generating pre-signed URL for KMS encrypted objects, and SHOULD NOT be used for any other S3 requests.
-     * Overriding this value to anything other that specified may adversely affect the S3 operation.
+     * The S3 signer override type. This should be used to enable SigV4 ({@link #SIGNER_OVERRIDE_V4}). This should ONLY be set when generating pre-signed URL
+     * for KMS encrypted objects, and SHOULD NOT be used for any other S3 requests. Overriding this value to anything other that specified may adversely affect
+     * the S3 operation.
      */
     private String signerOverride;
 

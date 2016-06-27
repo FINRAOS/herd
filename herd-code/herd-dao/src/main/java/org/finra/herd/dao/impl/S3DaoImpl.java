@@ -423,7 +423,7 @@ public class S3DaoImpl implements S3Dao
         });
 
         LOGGER.info("Uploaded list of files from the local directory to S3. " +
-            "localDirectory=\"{}\" s3KeyPrefix=\"{}\" s3BucketName=\"{}\" s3KeyCount={} totalBytesTransferred={} transferDuration=\"{}\"",
+                "localDirectory=\"{}\" s3KeyPrefix=\"{}\" s3BucketName=\"{}\" s3KeyCount={} totalBytesTransferred={} transferDuration=\"{}\"",
             params.getLocalPath(), params.getS3KeyPrefix(), params.getS3BucketName(), results.getTotalFilesTransferred(), results.getTotalBytesTransferred(),
             HerdDateUtils.formatDuration(results.getDurationMillis()));
 
@@ -457,7 +457,7 @@ public class S3DaoImpl implements S3Dao
         });
 
         LOGGER.info("Uploaded local directory to S3. " +
-            "localDirectory=\"{}\" s3KeyPrefix=\"{}\" s3BucketName=\"{}\" s3KeyCount={} totalBytesTransferred={} transferDuration=\"{}\"",
+                "localDirectory=\"{}\" s3KeyPrefix=\"{}\" s3BucketName=\"{}\" s3KeyCount={} totalBytesTransferred={} transferDuration=\"{}\"",
             params.getLocalPath(), params.getS3KeyPrefix(), params.getS3BucketName(), results.getTotalFilesTransferred(), results.getTotalBytesTransferred(),
             HerdDateUtils.formatDuration(results.getDurationMillis()));
 
@@ -501,7 +501,7 @@ public class S3DaoImpl implements S3Dao
         });
 
         LOGGER.info("Copied S3 object. sourceS3Key=\"{}\" sourceS3BucketName=\"{}\" targetS3Key=\"{}\" targetS3BucketName=\"{}\" " +
-            "totalBytesTransferred={} transferDuration=\"{}\"", params.getSourceObjectKey(), params.getSourceBucketName(), params.getTargetObjectKey(),
+                "totalBytesTransferred={} transferDuration=\"{}\"", params.getSourceObjectKey(), params.getSourceBucketName(), params.getTargetObjectKey(),
             params.getTargetBucketName(), results.getTotalBytesTransferred(), HerdDateUtils.formatDuration(results.getDurationMillis()));
 
         logOverallTransferRate(results);
@@ -787,7 +787,7 @@ public class S3DaoImpl implements S3Dao
         });
 
         LOGGER.info("Downloaded S3 directory to the local system. " +
-            "s3KeyPrefix=\"{}\" s3BucketName=\"{}\" localDirectory=\"{}\" s3KeyCount={} totalBytesTransferred={} transferDuration=\"{}\"",
+                "s3KeyPrefix=\"{}\" s3BucketName=\"{}\" localDirectory=\"{}\" s3KeyCount={} totalBytesTransferred={} transferDuration=\"{}\"",
             params.getS3KeyPrefix(), params.getS3BucketName(), params.getLocalPath(), results.getTotalFilesTransferred(), results.getTotalBytesTransferred(),
             HerdDateUtils.formatDuration(results.getDurationMillis()));
 
@@ -826,7 +826,7 @@ public class S3DaoImpl implements S3Dao
                     {
                         // Abort the upload.
                         s3Operations.abortMultipartUpload(TransferManager
-                            .appendSingleObjectUserAgent(new AbortMultipartUploadRequest(params.getS3BucketName(), upload.getKey(), upload.getUploadId())),
+                                .appendSingleObjectUserAgent(new AbortMultipartUploadRequest(params.getS3BucketName(), upload.getKey(), upload.getUploadId())),
                             s3Client);
 
                         // Log the information about the aborted multipart upload.
@@ -939,10 +939,19 @@ public class S3DaoImpl implements S3Dao
             clientConfiguration.setProxyPort(params.getHttpProxyPort());
         }
 
-        // Creates and sets signer override if signer override is specified
-        if (StringUtils.isNotBlank(params.getSignerOverride()))
+        // Creates and sets signer override if signer override is specified.
+        String signerOverride = params.getSignerOverride();
+        if ((StringUtils.isBlank(signerOverride)) && (StringUtils.isNotBlank(params.getKmsKeyId())))
         {
-            clientConfiguration.setSignerOverride(params.getSignerOverride());
+            // If KMS is used, then V4 signing is required so set the override to ensure it gets used.
+            // AmazonS3Client.upgradeToSigV4 already has some scenarios where it will "upgrade" the signing approach to use V4 if not already present (e.g.
+            // GetObjectRequest and KMS PutObjectRequest), but overriding it here when KMS is used will ensure it isn't missed when required (e.g. copying
+            // objects between buckets).
+            signerOverride = S3FileTransferRequestParamsDto.SIGNER_OVERRIDE_V4;
+        }
+        if (StringUtils.isNotBlank(signerOverride))
+        {
+            clientConfiguration.setSignerOverride(signerOverride);
         }
 
         AWSCredentialsProvider awsCredentialsProvider = getAWSCredentialsProvider(params);
@@ -1238,7 +1247,7 @@ public class S3DaoImpl implements S3Dao
             NumberFormat formatter = new DecimalFormat("#0.00");
 
             LOGGER.info("overallTransferRateKiloBytesPerSecond={} overallTransferRateMegaBitsPerSecond={}", formatter.format(awsHelper
-                .getTransferRateInKilobytesPerSecond(s3FileTransferResultsDto.getTotalBytesTransferred(), s3FileTransferResultsDto.getDurationMillis())),
+                    .getTransferRateInKilobytesPerSecond(s3FileTransferResultsDto.getTotalBytesTransferred(), s3FileTransferResultsDto.getDurationMillis())),
                 formatter.format(awsHelper
                     .getTransferRateInMegabitsPerSecond(s3FileTransferResultsDto.getTotalBytesTransferred(), s3FileTransferResultsDto.getDurationMillis())));
         }
