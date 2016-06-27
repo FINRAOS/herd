@@ -4106,6 +4106,7 @@
          <xs:enumeration value="ORACLE"/>
          <xs:enumeration value="POSTGRES"/>
          <xs:enumeration value="REDSHIFT"/>
+         <xs:enumeration value="MYSQL"/>
       </xs:restriction>
    </xs:simpleType>
 
