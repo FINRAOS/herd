@@ -699,7 +699,7 @@ public class JobServiceTest extends AbstractServiceTest
 
     /**
      * Asserts that the deleteJob call will move the job to completion, and add a record in the history instance with the specified delete reason.
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -722,15 +722,15 @@ public class JobServiceTest extends AbstractServiceTest
         assertEquals(jobDeleteRequest.getDeleteReason(), deleteJobResponse.getDeleteReason());
 
         // Assert historic process instance
-        HistoricProcessInstance historicProcessInstance = activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(job.getId())
-            .singleResult();
+        HistoricProcessInstance historicProcessInstance =
+            activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(job.getId()).singleResult();
         assertNotNull(historicProcessInstance);
         assertEquals(jobDeleteRequest.getDeleteReason(), historicProcessInstance.getDeleteReason());
     }
 
     /**
      * Asserts that the deleteJob call will throw an error when delete reason is blank.
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -756,7 +756,7 @@ public class JobServiceTest extends AbstractServiceTest
 
     /**
      * Asserts that the deleteJob call will throw an error when specified job does not exist.
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -787,8 +787,9 @@ public class JobServiceTest extends AbstractServiceTest
         ApplicationUser applicationUser = new ApplicationUser(getClass());
         applicationUser.setUserId(username);
         applicationUser.setNamespaceAuthorizations(new HashSet<>());
-        SecurityContextHolder.getContext().setAuthentication(new TestingAuthenticationToken(new SecurityUserWrapper(username, "password", false, false, false,
-            false, Collections.emptyList(), applicationUser), null));
+        SecurityContextHolder.getContext().setAuthentication(
+            new TestingAuthenticationToken(new SecurityUserWrapper(username, "password", false, false, false, false, Collections.emptyList(), applicationUser),
+                null));
 
         try
         {
@@ -800,7 +801,9 @@ public class JobServiceTest extends AbstractServiceTest
             catch (Exception e)
             {
                 assertEquals(AccessDeniedException.class, e.getClass());
-                assertEquals("Current user does not have \"[EXECUTE]\" permission(s) to the namespace \"testNamespace\"", e.getMessage());
+                assertEquals(
+                    String.format("User \"%s\" does not have \"[EXECUTE]\" permission(s) to the namespace \"%s\"", username, TEST_ACTIVITI_NAMESPACE_CD),
+                    e.getMessage());
             }
         }
         finally
@@ -820,10 +823,11 @@ public class JobServiceTest extends AbstractServiceTest
         ApplicationUser applicationUser = new ApplicationUser(getClass());
         applicationUser.setUserId(username);
         applicationUser.setNamespaceAuthorizations(new HashSet<>());
-        applicationUser.getNamespaceAuthorizations().add(new NamespaceAuthorization(TEST_ACTIVITI_NAMESPACE_CD, Arrays.asList(
-            NamespacePermissionEnum.EXECUTE)));
-        SecurityContextHolder.getContext().setAuthentication(new TestingAuthenticationToken(new SecurityUserWrapper(username, "password", false, false, false,
-            false, Collections.emptyList(), applicationUser), null));
+        applicationUser.getNamespaceAuthorizations()
+            .add(new NamespaceAuthorization(TEST_ACTIVITI_NAMESPACE_CD, Arrays.asList(NamespacePermissionEnum.EXECUTE)));
+        SecurityContextHolder.getContext().setAuthentication(
+            new TestingAuthenticationToken(new SecurityUserWrapper(username, "password", false, false, false, false, Collections.emptyList(), applicationUser),
+                null));
 
         try
         {
@@ -852,8 +856,9 @@ public class JobServiceTest extends AbstractServiceTest
         ApplicationUser applicationUser = new ApplicationUser(getClass());
         applicationUser.setUserId(username);
         applicationUser.setNamespaceAuthorizations(new HashSet<>());
-        SecurityContextHolder.getContext().setAuthentication(new TestingAuthenticationToken(new SecurityUserWrapper(username, "password", false, false, false,
-            false, Collections.emptyList(), applicationUser), null));
+        SecurityContextHolder.getContext().setAuthentication(
+            new TestingAuthenticationToken(new SecurityUserWrapper(username, "password", false, false, false, false, Collections.emptyList(), applicationUser),
+                null));
         try
         {
             try
@@ -864,7 +869,8 @@ public class JobServiceTest extends AbstractServiceTest
             catch (Exception e)
             {
                 assertEquals(AccessDeniedException.class, e.getClass());
-                assertEquals("Current user does not have \"[READ]\" permission(s) to the namespace \"testNamespace\"", e.getMessage());
+                assertEquals(String.format("User \"%s\" does not have \"[READ]\" permission(s) to the namespace \"%s\"", username, TEST_ACTIVITI_NAMESPACE_CD),
+                    e.getMessage());
             }
         }
         finally
@@ -884,8 +890,9 @@ public class JobServiceTest extends AbstractServiceTest
         applicationUser.setUserId(username);
         applicationUser.setNamespaceAuthorizations(new HashSet<>());
         applicationUser.getNamespaceAuthorizations().add(new NamespaceAuthorization(TEST_ACTIVITI_NAMESPACE_CD, Arrays.asList(NamespacePermissionEnum.READ)));
-        SecurityContextHolder.getContext().setAuthentication(new TestingAuthenticationToken(new SecurityUserWrapper(username, "password", false, false, false,
-            false, Collections.emptyList(), applicationUser), null));
+        SecurityContextHolder.getContext().setAuthentication(
+            new TestingAuthenticationToken(new SecurityUserWrapper(username, "password", false, false, false, false, Collections.emptyList(), applicationUser),
+                null));
         try
         {
             try
@@ -913,8 +920,9 @@ public class JobServiceTest extends AbstractServiceTest
         ApplicationUser applicationUser = new ApplicationUser(getClass());
         applicationUser.setUserId(username);
         applicationUser.setNamespaceAuthorizations(new HashSet<>());
-        SecurityContextHolder.getContext().setAuthentication(new TestingAuthenticationToken(new SecurityUserWrapper(username, "password", false, false, false,
-            false, Collections.emptyList(), applicationUser), null));
+        SecurityContextHolder.getContext().setAuthentication(
+            new TestingAuthenticationToken(new SecurityUserWrapper(username, "password", false, false, false, false, Collections.emptyList(), applicationUser),
+                null));
         try
         {
             try
@@ -925,7 +933,8 @@ public class JobServiceTest extends AbstractServiceTest
             catch (Exception e)
             {
                 assertEquals(AccessDeniedException.class, e.getClass());
-                assertEquals("Current user does not have \"[READ]\" permission(s) to the namespace \"testNamespace\"", e.getMessage());
+                assertEquals(String.format("User \"%s\" does not have \"[READ]\" permission(s) to the namespace \"%s\"", username, TEST_ACTIVITI_NAMESPACE_CD),
+                    e.getMessage());
             }
         }
         finally
@@ -945,8 +954,9 @@ public class JobServiceTest extends AbstractServiceTest
         applicationUser.setUserId(username);
         applicationUser.setNamespaceAuthorizations(new HashSet<>());
         applicationUser.getNamespaceAuthorizations().add(new NamespaceAuthorization(TEST_ACTIVITI_NAMESPACE_CD, Arrays.asList(NamespacePermissionEnum.READ)));
-        SecurityContextHolder.getContext().setAuthentication(new TestingAuthenticationToken(new SecurityUserWrapper(username, "password", false, false, false,
-            false, Collections.emptyList(), applicationUser), null));
+        SecurityContextHolder.getContext().setAuthentication(
+            new TestingAuthenticationToken(new SecurityUserWrapper(username, "password", false, false, false, false, Collections.emptyList(), applicationUser),
+                null));
         try
         {
             try
