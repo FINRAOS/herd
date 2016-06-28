@@ -939,20 +939,11 @@ public class S3DaoImpl implements S3Dao
             clientConfiguration.setProxyPort(params.getHttpProxyPort());
         }
 
-        // Creates and sets signer override if signer override is specified.
-        String signerOverride = params.getSignerOverride();
-        if ((StringUtils.isBlank(signerOverride)) && (StringUtils.isNotBlank(params.getKmsKeyId())))
-        {
-            // If KMS is used, then V4 signing is required so set the override to ensure it gets used.
-            // AmazonS3Client.upgradeToSigV4 already has some scenarios where it will "upgrade" the signing approach to use V4 if not already present (e.g.
-            // GetObjectRequest and KMS PutObjectRequest), but overriding it here when KMS is used will ensure it isn't missed when required (e.g. copying
-            // objects between buckets).
-            signerOverride = S3FileTransferRequestParamsDto.SIGNER_OVERRIDE_V4;
-        }
-        if (StringUtils.isNotBlank(signerOverride))
-        {
-            clientConfiguration.setSignerOverride(signerOverride);
-        }
+        // Sign all S3 API's with V4 signing.
+        // AmazonS3Client.upgradeToSigV4 already has some scenarios where it will "upgrade" the signing approach to use V4 if not already present (e.g.
+        // GetObjectRequest and KMS PutObjectRequest), but setting it here (especially when KMS is used) will ensure it isn't missed when required (e.g.
+        // copying objects between KMS encrypted buckets). Otherwise, AWS will return a bad request error and retry which isn't desirable.
+        clientConfiguration.setSignerOverride(SIGNER_OVERRIDE_V4);
 
         AWSCredentialsProvider awsCredentialsProvider = getAWSCredentialsProvider(params);
         // Create an S3 client with HTTP proxy information.

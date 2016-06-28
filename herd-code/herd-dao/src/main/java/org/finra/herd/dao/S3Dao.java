@@ -33,6 +33,12 @@ import org.finra.herd.model.dto.S3FileTransferResultsDto;
 public interface S3Dao
 {
     /**
+     * The AWS signer type value to use when signing with Signature Version 4. This constant needs to be the same as what is defined in
+     * AmazonS3Client.S3_V4_SIGNER. Unfortunately, that one is private so we have to create our own duplicate constant here.
+     */
+    public static final String SIGNER_OVERRIDE_V4 = "AWSS3V4SignerType";
+
+    /**
      * Gets the metadata for the specified Amazon S3 object without actually fetching the object itself.
      *
      * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters.  The S3 bucket name and S3 key prefix identify the S3 object's whose

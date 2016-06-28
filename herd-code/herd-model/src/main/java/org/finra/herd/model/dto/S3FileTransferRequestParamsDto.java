@@ -38,12 +38,6 @@ import java.util.List;
 public class S3FileTransferRequestParamsDto extends AwsParamsDto
 {
     /**
-     * The {@link #signerOverride} value to enable S3 Signature Version 4. This constant needs to be the same as what is defined in AmazonS3Client.S3_V4_SIGNER.
-     * Unfortunately, that one is private so we have to create our own duplicate constant here.
-     */
-    public static final String SIGNER_OVERRIDE_V4 = "AWSS3V4SignerType";
-
-    /**
      * The optional S3 endpoint to use when making S3 service calls.
      */
     private String s3Endpoint;
@@ -98,13 +92,6 @@ public class S3FileTransferRequestParamsDto extends AwsParamsDto
      * The KMS id to use for server side encryption.
      */
     private String kmsKeyId;
-
-    /**
-     * The S3 signer override type. This should be used to enable SigV4 ({@link #SIGNER_OVERRIDE_V4}). This should ONLY be set when generating pre-signed URL
-     * for KMS encrypted objects, and SHOULD NOT be used for any other S3 requests. Overriding this value to anything other that specified may adversely affect
-     * the S3 operation.
-     */
-    private String signerOverride;
 
     /**
      * The socket timeout in milliseconds. 0 means no timeout.
@@ -226,16 +213,6 @@ public class S3FileTransferRequestParamsDto extends AwsParamsDto
         this.kmsKeyId = kmsKeyId;
     }
 
-    public String getSignerOverride()
-    {
-        return signerOverride;
-    }
-
-    public void setSignerOverride(String signerOverride)
-    {
-        this.signerOverride = signerOverride;
-    }
-
     public Integer getSocketTimeout()
     {
         return socketTimeout;
@@ -348,12 +325,6 @@ public class S3FileTransferRequestParamsDto extends AwsParamsDto
         public Builder kmsKeyId(String kmsKeyId)
         {
             params.setKmsKeyId(kmsKeyId);
-            return this;
-        }
-
-        public Builder signerOverride(String signerOverride)
-        {
-            params.setSignerOverride(signerOverride);
             return this;
         }
 

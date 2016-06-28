@@ -489,9 +489,6 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         // Generate a pre-signed URL
         Date expiration = downloaderCredentials.getExpiration();
         S3FileTransferRequestParamsDto s3BucketAccessParams = storageHelper.getS3BucketAccessParams(storageUnitEntity.getStorage());
-        // Enable S3SigV4 ONLY for this request
-        // Signature V4 is ONLY required for KMS encrypted, pre-signed URL generation and SHOULD NOT be used for any other requests.
-        s3BucketAccessParams.setSignerOverride(S3FileTransferRequestParamsDto.SIGNER_OVERRIDE_V4);
         String presignedUrl = s3Dao.generateGetObjectPresignedUrl(s3BucketName, s3ObjectKey, expiration, s3BucketAccessParams);
 
         // Construct and return the response
