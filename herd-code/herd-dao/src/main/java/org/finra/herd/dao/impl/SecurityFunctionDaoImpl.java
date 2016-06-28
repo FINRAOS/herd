@@ -15,14 +15,12 @@
 */
 package org.finra.herd.dao.impl;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Path;
-import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
 
@@ -108,21 +106,16 @@ public class SecurityFunctionDaoImpl extends AbstractHerdDao implements Security
         // Build a subquery to eliminate security functions that are mapped to security roles.
         Subquery<SecurityFunctionEntity> subquery = criteria.subquery(SecurityFunctionEntity.class);
         Root<SecurityRoleFunctionEntity> subSecurityRoleFunctionEntityRoot = subquery.from(SecurityRoleFunctionEntity.class);
-        Join<SecurityRoleFunctionEntity, SecurityFunctionEntity> subSecurityFunctionEntity =
-            subSecurityRoleFunctionEntityRoot.join(SecurityRoleFunctionEntity_.securityFunction);
-        subquery.select(subSecurityFunctionEntity);
-
-        // Create the standard restrictions (i.e. the standard where clauses).
-        List<Predicate> predicates = new ArrayList<>();
-        predicates.add(builder.not(builder.exists(subquery)));
+        subquery.select(subSecurityRoleFunctionEntityRoot.get(SecurityRoleFunctionEntity_.securityFunction))
+            .where(builder.equal(subSecurityRoleFunctionEntityRoot.get(SecurityRoleFunctionEntity_.securityFunction), securityFunctionEntityRoot));
 
         // Get the security function code column.
         Path<String> functionCodeColumn = securityFunctionEntityRoot.get(SecurityFunctionEntity_.code);
 
         // Add the clauses for the query.
-        criteria.select(functionCodeColumn).where(builder.and(predicates.toArray(new Predicate[predicates.size()]))).orderBy(builder.asc(functionCodeColumn));
+        criteria.select(functionCodeColumn).where(builder.not(builder.exists(subquery))).orderBy(builder.asc(functionCodeColumn));
 
-        // Run the query to get a list of functions.
+        // Run the query to get a list of unrestricted security functions.
         return entityManager.createQuery(criteria).getResultList();
     }
 }

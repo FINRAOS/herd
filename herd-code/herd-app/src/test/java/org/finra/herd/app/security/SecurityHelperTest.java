@@ -22,11 +22,13 @@ import java.util.Set;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.CacheManager;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 
 import org.finra.herd.app.AbstractAppTest;
+import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.jpa.SecurityFunctionEntity;
 
 /**
@@ -34,6 +36,9 @@ import org.finra.herd.model.jpa.SecurityFunctionEntity;
  */
 public class SecurityHelperTest extends AbstractAppTest
 {
+    @Autowired
+    private CacheManager cacheManager;
+
     @Autowired
     private SecurityHelper securityHelper;
 
@@ -44,6 +49,9 @@ public class SecurityHelperTest extends AbstractAppTest
         SecurityFunctionEntity securityFunctionEntity = new SecurityFunctionEntity();
         securityFunctionEntity.setCode(SECURITY_FUNCTION);
         herdDao.saveAndRefresh(securityFunctionEntity);
+
+        // Clear the cache.
+        cacheManager.getCache(DaoSpringModuleConfig.HERD_CACHE_NAME).clear();
 
         // Get unrestricted functions.
         Set<GrantedAuthority> result = securityHelper.getUnrestrictedFunctions();
