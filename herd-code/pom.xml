@@ -190,6 +190,7 @@
                      <exclude>org/finra/herd/**/config/**</exclude>
                      <exclude>org/finra/herd/dao/**/*OperationsImpl.class</exclude>
                      <exclude>org/finra/herd/service/systemjobs/**</exclude>
+                     <exclude>org/finra/herd/sdk/**</exclude>
                   </excludes>
                </instrumentation>
             </configuration>
