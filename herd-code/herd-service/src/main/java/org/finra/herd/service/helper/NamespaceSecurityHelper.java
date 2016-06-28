@@ -75,41 +75,29 @@ public class NamespaceSecurityHelper
             return;
         }
 
+        // Trim the namespace.
+        String namespaceTrimmed = namespace.trim();
+
         // Check if the current user is authorized to the given namespace and has the given permissions.
         ApplicationUser applicationUser = getApplicationUser();
-        if (applicationUser != null && applicationUser.getNamespaceAuthorizations() != null)
+        if (!isAuthorized(applicationUser, namespaceTrimmed, permissions))
         {
-            for (NamespaceAuthorization currentUserAuthorization : applicationUser.getNamespaceAuthorizations())
+            // The current user is not authorized to access the given namespace, so log a warning and throw an exception.
+            LOGGER.warn(String
+                .format("User does not have permission(s) to the namespace. %s namespace=\"%s\" permissions=\"%s\"", applicationUser, namespaceTrimmed,
+                    Arrays.asList(permissions)));
+
+            if (applicationUser != null)
             {
-                List<NamespacePermissionEnum> currentUserNamespacePermissions = currentUserAuthorization.getNamespacePermissions();
-                if (currentUserNamespacePermissions == null)
-                {
-                    currentUserNamespacePermissions = Collections.emptyList();
-                }
-
-                if (StringUtils.equalsIgnoreCase(currentUserAuthorization.getNamespace(), namespace.trim()) &&
-                    currentUserNamespacePermissions.containsAll(Arrays.asList(permissions)))
-                {
-                    return;
-                }
+                throw new AccessDeniedException(String
+                    .format("User \"%s\" does not have \"%s\" permission(s) to the namespace \"%s\"", applicationUser.getUserId(), Arrays.asList(permissions),
+                        namespaceTrimmed));
             }
-        }
-
-        // If we got here that means that the current user is not authorized to access the given namespace.
-        String namespaceTrimmed = namespace.trim();
-        LOGGER.warn(String
-            .format("User does not have permission(s) to the namespace. %s namespace=\"%s\" permissions=\"%s\"", applicationUser, namespaceTrimmed,
-                Arrays.asList(permissions)));
-        if (applicationUser != null)
-        {
-            throw new AccessDeniedException(String
-                .format("User \"%s\" does not have \"%s\" permission(s) to the namespace \"%s\"", applicationUser.getUserId(), Arrays.asList(permissions),
-                    namespaceTrimmed));
-        }
-        else
-        {
-            throw new AccessDeniedException(
-                String.format("Current user does not have \"%s\" permission(s) to the namespace \"%s\"", Arrays.asList(permissions), namespaceTrimmed));
+            else
+            {
+                throw new AccessDeniedException(
+                    String.format("Current user does not have \"%s\" permission(s) to the namespace \"%s\"", Arrays.asList(permissions), namespaceTrimmed));
+            }
         }
     }
 
@@ -155,6 +143,38 @@ public class NamespaceSecurityHelper
             }
         }
         return namespaces;
+    }
+
+    /**
+     * Returns true if the application user is authorized to the given namespace and has the given permissions.
+     *
+     * @param applicationUser the application user
+     * @param namespace the namespace
+     * @param permissions the permissions
+     *
+     * @return true if authorized, false otherwise
+     */
+    private boolean isAuthorized(ApplicationUser applicationUser, String namespace, NamespacePermissionEnum... permissions)
+    {
+        if (applicationUser != null && applicationUser.getNamespaceAuthorizations() != null)
+        {
+            for (NamespaceAuthorization currentUserAuthorization : applicationUser.getNamespaceAuthorizations())
+            {
+                List<NamespacePermissionEnum> currentUserNamespacePermissions = currentUserAuthorization.getNamespacePermissions();
+                if (currentUserNamespacePermissions == null)
+                {
+                    currentUserNamespacePermissions = Collections.emptyList();
+                }
+
+                if (StringUtils.equalsIgnoreCase(currentUserAuthorization.getNamespace(), namespace) &&
+                    currentUserNamespacePermissions.containsAll(Arrays.asList(permissions)))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     /**
