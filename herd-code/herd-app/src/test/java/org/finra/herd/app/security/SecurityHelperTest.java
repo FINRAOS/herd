@@ -15,28 +15,57 @@
 */
 package org.finra.herd.app.security;
 
-import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
-
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+import java.util.Set;
+
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.CacheManager;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 
 import org.finra.herd.app.AbstractAppTest;
+import org.finra.herd.dao.config.DaoSpringModuleConfig;
+import org.finra.herd.model.jpa.SecurityFunctionEntity;
 
 /**
  * This class tests the security helper class.
  */
 public class SecurityHelperTest extends AbstractAppTest
 {
-     @Autowired
-     private SecurityHelper securityHelper;
+    @Autowired
+    private CacheManager cacheManager;
 
-     @Test
-     public void testIsGeneratedBy() throws Exception
-     {
-         assertFalse(securityHelper.isUserGeneratedByClass(null, null));
-         
-         PreAuthenticatedAuthenticationToken authRequest = new PreAuthenticatedAuthenticationToken(null, null);
-         assertFalse(securityHelper.isUserGeneratedByClass(authRequest, null));
-     }
+    @Autowired
+    private SecurityHelper securityHelper;
+
+    @Test
+    public void testGetUnrestrictedFunctions()
+    {
+        // Create a security function not mapped to any of the security roles.
+        SecurityFunctionEntity securityFunctionEntity = new SecurityFunctionEntity();
+        securityFunctionEntity.setCode(SECURITY_FUNCTION);
+        herdDao.saveAndRefresh(securityFunctionEntity);
+
+        // Clear the cache.
+        cacheManager.getCache(DaoSpringModuleConfig.HERD_CACHE_NAME).clear();
+
+        // Get unrestricted functions.
+        Set<GrantedAuthority> result = securityHelper.getUnrestrictedFunctions();
+
+        // Validate that result list contains the test security function.
+        assertTrue(result.contains(new SimpleGrantedAuthority(SECURITY_FUNCTION)));
+    }
+
+    @Test
+    public void testIsGeneratedBy() throws Exception
+    {
+        assertFalse(securityHelper.isUserGeneratedByClass(null, null));
+
+        PreAuthenticatedAuthenticationToken authRequest = new PreAuthenticatedAuthenticationToken(null, null);
+        assertFalse(securityHelper.isUserGeneratedByClass(authRequest, null));
+    }
 }

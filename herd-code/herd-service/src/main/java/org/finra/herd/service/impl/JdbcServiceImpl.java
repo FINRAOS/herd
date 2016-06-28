@@ -62,6 +62,7 @@ public class JdbcServiceImpl implements JdbcService
     public static final String DRIVER_REDSHIFT = "com.amazon.redshift.jdbc41.Driver";
     public static final String DRIVER_POSTGRES = "org.postgresql.Driver";
     public static final String DRIVER_ORACLE = "oracle.jdbc.OracleDriver";
+    public static final String DRIVER_MYSQL = "com.mysql.jdbc.Driver";
 
     @Autowired
     private ConfigurationHelper configurationHelper;
@@ -471,6 +472,8 @@ public class JdbcServiceImpl implements JdbcService
                 return DRIVER_POSTGRES;
             case REDSHIFT:
                 return DRIVER_REDSHIFT;
+            case MYSQL:
+                return DRIVER_MYSQL;
             default:
                 throw new IllegalArgumentException("Unsupported database type '" + jdbcDatabaseType + "'");
         }
