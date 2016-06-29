@@ -111,6 +111,13 @@
                   </configuration>
                </execution>
             </executions>
+            <dependencies>
+               <dependency>
+                  <groupId>${project.groupId}</groupId>
+                  <artifactId>herd-docs-swagger</artifactId>
+                  <version>${project.version}</version>
+               </dependency>
+            </dependencies>
          </plugin>
 
          <!-- Generate the SDK files from the YAML file. -->

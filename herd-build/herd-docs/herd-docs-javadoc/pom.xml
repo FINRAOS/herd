@@ -249,8 +249,8 @@
          <artifactId>jackson-databind</artifactId>
       </dependency>
       <dependency>
-          <groupId>com.fasterxml.jackson.jaxrs</groupId>
-          <artifactId>jackson-jaxrs-json-provider</artifactId>
+         <groupId>com.fasterxml.jackson.jaxrs</groupId>
+         <artifactId>jackson-jaxrs-json-provider</artifactId>
       </dependency>
       <dependency>
          <groupId>com.fasterxml.jackson.datatype</groupId>
@@ -285,17 +285,24 @@
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-antrun-plugin</artifactId>
             <executions>
-               <!-- Copy all the sources from the various locations into a "javadoc-work" directory in our target directory. -->
                <execution>
                   <id>copy-sources</id>
                   <phase>generate-sources</phase>
                   <configuration>
                      <target>
                         <mkdir dir="${project.build.directory}/javadoc-work"/>
+                        <!-- Copy all the sources from the various locations into a "javadoc-work" directory in our target directory. -->
                         <copy todir="${project.build.directory}/javadoc-work">
                            <fileset dir="../../../herd-code">
                               <include name="**/src/main/java/**/*.java"/>
                               <include name="**/src/main/resources/**"/>
+                              <include name="**/generated-sources/herd-swaggergen/herd.swagger.yaml"/>
+                           </fileset>
+                        </copy>
+                        <!-- Copy the generated Swagger YAML file from the herd-docs-swagger project to this project in javadoc-swagger. -->
+                        <copy todir="${project.build.directory}/javadoc-swagger">
+                           <fileset dir="../herd-docs-swagger/target/generated-sources/herd-swaggergen">
+                              <include name="herd.swagger.yaml"/>
                            </fileset>
                         </copy>
                      </target>
@@ -303,6 +310,37 @@
                   <goals>
                      <goal>run</goal>
                   </goals>
+               </execution>
+            </executions>
+            <dependencies>
+               <dependency>
+                  <groupId>${project.groupId}</groupId>
+                  <artifactId>herd-docs-swagger</artifactId>
+                  <version>${project.version}</version>
+               </dependency>
+            </dependencies>
+         </plugin>
+
+         <!-- Generate the SDK files from the YAML file. -->
+         <plugin>
+            <groupId>io.swagger</groupId>
+            <artifactId>swagger-codegen-maven-plugin</artifactId>
+            <executions>
+               <execution>
+                  <goals>
+                     <goal>generate</goal>
+                  </goals>
+                  <phase>generate-resources</phase>
+                  <configuration>
+                     <inputSpec>${project.build.directory}/javadoc-swagger/herd.swagger.yaml</inputSpec>
+                     <!-- Output the generated herd-sdk source files in javadoc-swagger. -->
+                     <output>${project.build.directory}/javadoc-swagger</output>
+                     <addCompileSourceRoot>false</addCompileSourceRoot>
+                     <language>java</language>
+                     <apiPackage>org.finra.herd.sdk.api</apiPackage>
+                     <modelPackage>org.finra.herd.sdk.model</modelPackage>
+                     <invokerPackage>org.finra.herd.sdk.invoker</invokerPackage>
+                  </configuration>
                </execution>
             </executions>
          </plugin>
@@ -430,7 +468,11 @@
                      <goal>jar</goal>
                   </goals>
                   <configuration>
-                     <sourcepath>${project.build.directory}/javadoc-work</sourcepath>
+                     <!--
+                      The source directories are all the copied and generated sources file in the main javadoc-work directory as well as
+                      the herd-sdk auto-generated files in the javadoc-swagger directory.
+                      -->
+                     <sourcepath>${project.build.directory}/javadoc-work:${project.build.directory}/javadoc-swagger/src/main/java</sourcepath>
                      <notimestamp>true</notimestamp>
                   </configuration>
                </execution>
