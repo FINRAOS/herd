@@ -179,16 +179,21 @@
             </configuration>
          </plugin>
 
-         <!-- Disable the javadoc plugin which isn't needed for the SDK since there is no actual code.  -->
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-javadoc-plugin</artifactId>
             <executions>
                <execution>
                   <id>jar</id>
-                  <phase>none</phase>
+                  <goals>
+                     <goal>jar</goal>
+                  </goals>
                </execution>
             </executions>
+            <configuration>
+               <!-- Specify the location where the swagger plugin generated the sources. -->
+               <sourcepath>${project.build.directory}/generated-sources/swagger/src/main/java</sourcepath>
+            </configuration>
          </plugin>
 
          <!-- Configure the Maven compiler to use JDK 1.5 to produce the appropriate class files that can be used with JDK 1.5 and up. -->
