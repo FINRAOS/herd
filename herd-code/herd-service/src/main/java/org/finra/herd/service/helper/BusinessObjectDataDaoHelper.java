@@ -75,6 +75,9 @@ public class BusinessObjectDataDaoHelper
     private static final List<String> NULL_VALUE_LIST = Arrays.asList((String) null);
 
     @Autowired
+    private AlternateKeyHelper alternateKeyHelper;
+
+    @Autowired
     private AttributeHelper attributeHelper;
 
     @Autowired
@@ -1139,35 +1142,17 @@ public class BusinessObjectDataDaoHelper
         BusinessObjectDataStatusEntity businessObjectDataStatusEntity)
     {
         // Validate and trim the request parameters.
-        Assert.hasText(request.getNamespace(), "A namespace must be specified.");
-        request.setNamespace(request.getNamespace().trim());
-
-        Assert.hasText(request.getBusinessObjectDefinitionName(), "A business object definition name must be specified.");
-        request.setBusinessObjectDefinitionName(request.getBusinessObjectDefinitionName().trim());
-
-        Assert.hasText(request.getBusinessObjectFormatUsage(), "A business object format usage name must be specified.");
-        request.setBusinessObjectFormatUsage(request.getBusinessObjectFormatUsage().trim());
-
-        Assert.hasText(request.getBusinessObjectFormatFileType(), "A business object format file type must be specified.");
-        request.setBusinessObjectFormatFileType(request.getBusinessObjectFormatFileType().trim());
-
+        request.setNamespace(alternateKeyHelper.validateStringParameter("namespace", request.getNamespace()));
+        request.setBusinessObjectDefinitionName(
+            alternateKeyHelper.validateStringParameter("business object definition name", request.getBusinessObjectDefinitionName()));
+        request.setBusinessObjectFormatUsage(
+            alternateKeyHelper.validateStringParameter("business object format usage name", request.getBusinessObjectFormatUsage()));
+        request.setBusinessObjectFormatFileType(
+            alternateKeyHelper.validateStringParameter("business object format file type", request.getBusinessObjectFormatFileType()));
         Assert.notNull(request.getBusinessObjectFormatVersion(), "A business object format version must be specified.");
-
-        Assert.hasText(request.getPartitionKey(), "A business object format partition key must be specified.");
-        request.setPartitionKey(request.getPartitionKey().trim());
-
-        Assert.hasText(request.getPartitionValue(), "A business object data partition value must be specified.");
-        request.setPartitionValue(request.getPartitionValue().trim());
-
-        int subPartitionValuesCount = org.apache.commons.collections4.CollectionUtils.size(request.getSubPartitionValues());
-        Assert.isTrue(subPartitionValuesCount <= BusinessObjectDataEntity.MAX_SUBPARTITIONS,
-            "Exceeded maximum number of allowed subpartitions:" + BusinessObjectDataEntity.MAX_SUBPARTITIONS + ".");
-
-        for (int i = 0; i < subPartitionValuesCount; i++)
-        {
-            Assert.hasText(request.getSubPartitionValues().get(i), "A subpartition value must be specified.");
-            request.getSubPartitionValues().set(i, request.getSubPartitionValues().get(i).trim());
-        }
+        request.setPartitionKey(alternateKeyHelper.validateStringParameter("business object format partition key", request.getPartitionKey()));
+        request.setPartitionValue(alternateKeyHelper.validateStringParameter("business object data partition value", request.getPartitionValue()));
+        businessObjectDataHelper.validateSubPartitionValues(request.getSubPartitionValues());
 
         Assert.isTrue(!org.apache.commons.collections4.CollectionUtils.isEmpty(request.getStorageUnits()), "At least one storage unit must be specified.");
         for (StorageUnitCreateRequest storageUnit : request.getStorageUnits())
@@ -1231,42 +1216,35 @@ public class BusinessObjectDataDaoHelper
     /**
      * Validates the business object data keys. This will validate, trim, and make lowercase appropriate fields.
      *
-     * @param businessObjectDataKeys the keys to validate.
+     * @param keys the business object data keys to validate
      */
-    private void validateBusinessObjectDataKeys(List<BusinessObjectDataKey> businessObjectDataKeys)
+    private void validateBusinessObjectDataKeys(List<BusinessObjectDataKey> keys)
     {
         // Create a cloned business object data keys list where all keys are lowercase. This will be used for ensuring no duplicates are present in a
         // case-insensitive way.
         List<BusinessObjectDataKey> businessObjectDataLowercaseKeys = new ArrayList<>();
 
-        if (businessObjectDataKeys != null)
+        if (!CollectionUtils.isEmpty(keys))
         {
-            for (BusinessObjectDataKey businessObjectDataKey : businessObjectDataKeys)
+            for (BusinessObjectDataKey key : keys)
             {
-                // Verify that appropriate fields have text.
-                Assert.hasText(businessObjectDataKey.getNamespace(), "A namespace must be specified.");
-                Assert.hasText(businessObjectDataKey.getBusinessObjectDefinitionName(), "A business object definition name must be specified.");
-                Assert.hasText(businessObjectDataKey.getBusinessObjectFormatUsage(), "A business object format usage must be specified.");
-                Assert.hasText(businessObjectDataKey.getBusinessObjectFormatFileType(), "A business object format file type must be specified.");
-                Assert.notNull(businessObjectDataKey.getBusinessObjectFormatVersion(), "A business object format version must be specified.");
-                Assert.hasText(businessObjectDataKey.getPartitionValue(), "A business object data partition value must be specified.");
-                Assert.notNull(businessObjectDataKey.getBusinessObjectDataVersion(), "A business object data version must be specified.");
+                Assert.notNull(key, "A business object data key must be specified.");
 
-                // Remove leading and trailing spaces.
-                businessObjectDataKey.setNamespace(businessObjectDataKey.getNamespace().trim());
-                businessObjectDataKey.setBusinessObjectDefinitionName(businessObjectDataKey.getBusinessObjectDefinitionName().trim());
-                businessObjectDataKey.setBusinessObjectFormatUsage(businessObjectDataKey.getBusinessObjectFormatUsage().trim());
-                businessObjectDataKey.setBusinessObjectFormatFileType(businessObjectDataKey.getBusinessObjectFormatFileType().trim());
-                businessObjectDataKey.setPartitionValue(businessObjectDataKey.getPartitionValue().trim());
-
-                for (int i = 0; i < org.apache.commons.collections4.CollectionUtils.size(businessObjectDataKey.getSubPartitionValues()); i++)
-                {
-                    Assert.hasText(businessObjectDataKey.getSubPartitionValues().get(i), "A subpartition value must be specified.");
-                    businessObjectDataKey.getSubPartitionValues().set(i, businessObjectDataKey.getSubPartitionValues().get(i).trim());
-                }
+                // Validate and trim the alternate key parameter values.
+                key.setNamespace(alternateKeyHelper.validateStringParameter("namespace", key.getNamespace()));
+                key.setBusinessObjectDefinitionName(
+                    alternateKeyHelper.validateStringParameter("business object definition name", key.getBusinessObjectDefinitionName()));
+                key.setBusinessObjectFormatUsage(
+                    alternateKeyHelper.validateStringParameter("business object format usage", key.getBusinessObjectFormatUsage()));
+                key.setBusinessObjectFormatFileType(
+                    alternateKeyHelper.validateStringParameter("business object format file type", key.getBusinessObjectFormatFileType()));
+                Assert.notNull(key.getBusinessObjectFormatVersion(), "A business object format version must be specified.");
+                key.setPartitionValue(alternateKeyHelper.validateStringParameter("business object data partition value", key.getPartitionValue()));
+                businessObjectDataHelper.validateSubPartitionValues(key.getSubPartitionValues());
+                Assert.notNull(key.getBusinessObjectDataVersion(), "A business object data version must be specified.");
 
                 // Add a lowercase clone to the lowercase key list.
-                businessObjectDataLowercaseKeys.add(cloneToLowerCase(businessObjectDataKey));
+                businessObjectDataLowercaseKeys.add(cloneToLowerCase(key));
             }
         }
 

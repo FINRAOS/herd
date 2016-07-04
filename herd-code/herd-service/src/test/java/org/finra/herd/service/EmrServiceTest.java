@@ -88,6 +88,7 @@ import org.finra.herd.model.dto.EmrClusterAlternateKeyDto;
 import org.finra.herd.model.jpa.EmrClusterCreationLogEntity;
 import org.finra.herd.model.jpa.EmrClusterDefinitionEntity;
 import org.finra.herd.model.jpa.NamespaceEntity;
+import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.EmrClusterDefinitionDaoHelper;
 import org.finra.herd.service.helper.EmrStepHelper;
 import org.finra.herd.service.helper.NamespaceDaoHelper;
@@ -1435,6 +1436,9 @@ public class EmrServiceTest extends AbstractServiceTest
     {
         EmrService emrService = new EmrServiceImpl();
 
+        AlternateKeyHelper mockAlternateKeyHelper = mock(AlternateKeyHelper.class);
+        ReflectionTestUtils.setField(emrService, "alternateKeyHelper", mockAlternateKeyHelper);
+
         EmrHelper mockEmrHelper = mock(EmrHelper.class);
         ReflectionTestUtils.setField(emrService, "emrHelper", mockEmrHelper);
 
@@ -1477,7 +1481,9 @@ public class EmrServiceTest extends AbstractServiceTest
         emrService.terminateCluster(emrClusterAlternateKeyDto, overrideTerminationProtection, emrClusterId);
 
         verify(mockEmrHelper).getAwsParamsDto();
-        verify(mockEmrHelper).validateEmrClusterKey(emrClusterAlternateKeyDto);
+        verify(mockAlternateKeyHelper).validateStringParameter("namespace", namespace);
+        verify(mockAlternateKeyHelper).validateStringParameter("An", "EMR cluster definition name", emrClusterDefinitionName);
+        verify(mockAlternateKeyHelper).validateStringParameter("An", "EMR cluster name", emrClusterName);
         verify(mockNamespaceDaoHelper).getNamespaceEntity(emrClusterAlternateKeyDto.getNamespace());
         verify(mockEmrClusterDefinitionDaoHelper)
             .getEmrClusterDefinitionEntity(emrClusterAlternateKeyDto.getNamespace(), emrClusterAlternateKeyDto.getEmrClusterDefinitionName());

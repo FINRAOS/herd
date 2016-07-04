@@ -18,7 +18,6 @@ package org.finra.herd.service.impl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.Assert;
 
 import org.finra.herd.dao.NamespaceDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
@@ -29,6 +28,7 @@ import org.finra.herd.model.api.xml.NamespaceKey;
 import org.finra.herd.model.api.xml.NamespaceKeys;
 import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.service.NamespaceService;
+import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.NamespaceDaoHelper;
 import org.finra.herd.service.helper.NamespaceHelper;
 
@@ -39,6 +39,9 @@ import org.finra.herd.service.helper.NamespaceHelper;
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 public class NamespaceServiceImpl implements NamespaceService
 {
+    @Autowired
+    private AlternateKeyHelper alternateKeyHelper;
+
     @Autowired
     private NamespaceDao namespaceDao;
 
@@ -120,11 +123,7 @@ public class NamespaceServiceImpl implements NamespaceService
      */
     private void validateNamespaceCreateRequest(NamespaceCreateRequest request)
     {
-        // Validate.
-        Assert.hasText(request.getNamespaceCode(), "A namespace code must be specified.");
-
-        // Remove leading and trailing spaces.
-        request.setNamespaceCode(request.getNamespaceCode().trim());
+        request.setNamespaceCode(alternateKeyHelper.validateStringParameter("namespace code", request.getNamespaceCode()));
     }
 
     /**

@@ -46,7 +46,6 @@ import org.finra.herd.dao.impl.MockOozieWorkflowAction;
 import org.finra.herd.dao.impl.MockOozieWorkflowJob;
 import org.finra.herd.dao.impl.OozieDaoImpl;
 import org.finra.herd.model.dto.ConfigurationValue;
-import org.finra.herd.model.dto.EmrClusterAlternateKeyDto;
 
 /**
  * This class tests functionality within the AwsHelper class.
@@ -62,23 +61,6 @@ public class EmrHelperTest extends AbstractDaoTest
         String clusterName = emrHelper.buildEmrClusterName(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, EMR_CLUSTER_NAME);
 
         assertEquals(NAMESPACE + "." + EMR_CLUSTER_DEFINITION_NAME + "." + EMR_CLUSTER_NAME, clusterName);
-    }
-
-    @Test
-    public void testValidateEmrClusterKey() throws Exception
-    {
-        EmrClusterAlternateKeyDto emrClusterAlternateKeyDto = new EmrClusterAlternateKeyDto();
-        emrClusterAlternateKeyDto.setNamespace(NAMESPACE + " ");
-        emrClusterAlternateKeyDto.setEmrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME + " ");
-        emrClusterAlternateKeyDto.setEmrClusterName(EMR_CLUSTER_NAME + " ");
-
-
-        emrHelper.validateEmrClusterKey(emrClusterAlternateKeyDto);
-
-        // Ensure values are trimmed
-        assertEquals(NAMESPACE, emrClusterAlternateKeyDto.getNamespace());
-        assertEquals(EMR_CLUSTER_DEFINITION_NAME, emrClusterAlternateKeyDto.getEmrClusterDefinitionName());
-        assertEquals(EMR_CLUSTER_NAME, emrClusterAlternateKeyDto.getEmrClusterName());
     }
 
     @Test

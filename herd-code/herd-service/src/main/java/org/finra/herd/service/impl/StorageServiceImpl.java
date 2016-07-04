@@ -22,7 +22,6 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
 import org.finra.herd.core.HerdDateUtils;
@@ -44,6 +43,7 @@ import org.finra.herd.model.jpa.StorageAttributeEntity;
 import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.StoragePlatformEntity;
 import org.finra.herd.service.StorageService;
+import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.AttributeHelper;
 import org.finra.herd.service.helper.StorageDaoHelper;
 import org.finra.herd.service.helper.StoragePlatformHelper;
@@ -55,6 +55,9 @@ import org.finra.herd.service.helper.StoragePlatformHelper;
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 public class StorageServiceImpl implements StorageService
 {
+    @Autowired
+    private AlternateKeyHelper alternateKeyHelper;
+
     @Autowired
     private AttributeHelper attributeHelper;
 
@@ -253,36 +256,25 @@ public class StorageServiceImpl implements StorageService
     /**
      * Validates the storage create request. This method also trims request parameters.
      *
-     * @param storageCreateRequest the request.
+     * @param request the request.
      *
      * @throws IllegalArgumentException if any validation errors were found.
      */
-    private void validateStorageCreateRequest(StorageCreateRequest storageCreateRequest)
+    private void validateStorageCreateRequest(StorageCreateRequest request)
     {
-        // Validate
-        Assert.hasText(storageCreateRequest.getStoragePlatformName(), "A storage platform name must be specified.");
-        Assert.hasText(storageCreateRequest.getName(), "A storage name must be specified.");
-
-        // Remove leading and trailing spaces.
-        storageCreateRequest.setStoragePlatformName(storageCreateRequest.getStoragePlatformName().trim());
-        storageCreateRequest.setName(storageCreateRequest.getName().trim());
-
-        // Validate attributes.
-        attributeHelper.validateAttributes(storageCreateRequest.getAttributes());
+        request.setStoragePlatformName(alternateKeyHelper.validateStringParameter("storage platform name", request.getStoragePlatformName()));
+        request.setName(alternateKeyHelper.validateStringParameter("storage name", request.getName()));
+        attributeHelper.validateAttributes(request.getAttributes());
     }
 
     /**
      * Validates the storage alternate key. This method also trims the alternate key parameters.
      *
-     * @param storageAlternateKey the storage alternate key
+     * @param key the storage alternate key
      */
-    private void validateStorageAlternateKey(StorageAlternateKeyDto storageAlternateKey)
+    private void validateStorageAlternateKey(StorageAlternateKeyDto key)
     {
-        // Validate
-        Assert.hasText(storageAlternateKey.getStorageName(), "A storage name must be specified.");
-
-        // Remove leading and trailing spaces.
-        storageAlternateKey.setStorageName(storageAlternateKey.getStorageName().trim());
+        key.setStorageName(alternateKeyHelper.validateStringParameter("storage name", key.getStorageName()));
     }
 
     /**

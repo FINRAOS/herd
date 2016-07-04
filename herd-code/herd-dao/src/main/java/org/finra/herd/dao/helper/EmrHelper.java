@@ -36,7 +36,6 @@ import org.springframework.util.CollectionUtils;
 import org.finra.herd.dao.EmrDao;
 import org.finra.herd.dao.impl.OozieDaoImpl;
 import org.finra.herd.model.dto.ConfigurationValue;
-import org.finra.herd.model.dto.EmrClusterAlternateKeyDto;
 
 /**
  * A helper class that provides EMR functions.
@@ -95,35 +94,16 @@ public class EmrHelper extends AwsHelper
     }
 
     /**
-     * Validates the EMR cluster create request. This method also trims request parameters.
-     *
-     * @param emrClusterAlternateKeyDto the ERM cluster alternate key.
-     *
-     * @throws IllegalArgumentException if any validation errors were found.
-     */
-    public void validateEmrClusterKey(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto) throws IllegalArgumentException
-    {
-        // Validate required elements
-        Assert.hasText(emrClusterAlternateKeyDto.getNamespace(), "A namespace must be specified.");
-        Assert.hasText(emrClusterAlternateKeyDto.getEmrClusterDefinitionName(), "An EMR cluster definition name must be specified.");
-        Assert.hasText(emrClusterAlternateKeyDto.getEmrClusterName(), "An EMR cluster name must be specified.");
-
-        // Remove leading and trailing spaces.
-        emrClusterAlternateKeyDto.setNamespace(emrClusterAlternateKeyDto.getNamespace().trim());
-        emrClusterAlternateKeyDto.setEmrClusterDefinitionName(emrClusterAlternateKeyDto.getEmrClusterDefinitionName().trim());
-        emrClusterAlternateKeyDto.setEmrClusterName(emrClusterAlternateKeyDto.getEmrClusterName().trim());
-    }
-
-    /**
      * Get the S3_STAGING_RESOURCE full path from the bucket name as well as other details.
      *
      * @return the s3 managed location.
      */
     public String getS3StagingLocation()
     {
-        return configurationHelper.getProperty(ConfigurationValue.S3_URL_PROTOCOL) + configurationHelper.getProperty(ConfigurationValue.S3_STAGING_BUCKET_NAME)
-            + configurationHelper.getProperty(ConfigurationValue.S3_URL_PATH_DELIMITER)
-            + configurationHelper.getProperty(ConfigurationValue.S3_STAGING_RESOURCE_BASE);
+        return configurationHelper.getProperty(ConfigurationValue.S3_URL_PROTOCOL) +
+            configurationHelper.getProperty(ConfigurationValue.S3_STAGING_BUCKET_NAME) +
+            configurationHelper.getProperty(ConfigurationValue.S3_URL_PATH_DELIMITER) +
+            configurationHelper.getProperty(ConfigurationValue.S3_STAGING_RESOURCE_BASE);
     }
 
     /**
@@ -155,20 +135,20 @@ public class EmrHelper extends AwsHelper
         String s3HdfsCopyScript = configurationHelper.getProperty(ConfigurationValue.EMR_OOZIE_HERD_WRAPPER_WORKFLOW_S3_LOCATION);
         if (StringUtils.isBlank(s3HdfsCopyScript))
         {
-            throw new IllegalStateException(String.format(
-                "No herd wrapper oozie workflow S3 locaton found. Ensure the \"%s\" configuration entry is configured.",
-                ConfigurationValue.EMR_OOZIE_HERD_WRAPPER_WORKFLOW_S3_LOCATION.getKey()));
+            throw new IllegalStateException(String
+                .format("No herd wrapper oozie workflow S3 locaton found. Ensure the \"%s\" configuration entry is configured.",
+                    ConfigurationValue.EMR_OOZIE_HERD_WRAPPER_WORKFLOW_S3_LOCATION.getKey()));
         }
 
         return ConfigurationValue.EMR_OOZIE_HERD_WRAPPER_WORKFLOW_S3_LOCATION;
     }
 
     /**
-     * Retrieves the workflow action for the client workflow. This is the sub workflow with the name OozieDaoImpl.ACTION_NAME_CLIENT_WORKFLOW.
-     * Returns null if not found.
-     * 
+     * Retrieves the workflow action for the client workflow. This is the sub workflow with the name OozieDaoImpl.ACTION_NAME_CLIENT_WORKFLOW. Returns null if
+     * not found.
+     *
      * @param wrapperWorkflowJob the herd wrapper workflow job.
-     * 
+     *
      * @return the client workflow action.
      */
     public WorkflowAction getClientWorkflowAction(WorkflowJob wrapperWorkflowJob)
@@ -190,11 +170,10 @@ public class EmrHelper extends AwsHelper
     }
 
     /**
-     * Retrieves the first workflow action that is in error.
-     * Returns null if not found.
-     * 
+     * Retrieves the first workflow action that is in error. Returns null if not found.
+     *
      * @param workflowJob the oozie workflow job.
-     * 
+     *
      * @return the workflow action that has errors.
      */
     public WorkflowAction getFirstWorkflowActionInError(WorkflowJob workflowJob)
@@ -268,9 +247,10 @@ public class EmrHelper extends AwsHelper
      * Gets the ID of an active EMR cluster which matches the given criteria. If both cluster ID and cluster name is specified, the name of the actual cluster
      * with the given ID must match the specified name. For cases where the cluster is not found (does not exists or not active), the method fails. All
      * parameters are case-insensitive and whitespace trimmed. Blank parameters are equal to null.
-     * 
+     *
      * @param emrClusterId EMR cluster ID
      * @param emrClusterName EMR cluster name
+     *
      * @return The cluster ID
      */
     public String getActiveEmrClusterId(String emrClusterId, String emrClusterName)
@@ -291,16 +271,16 @@ public class EmrHelper extends AwsHelper
 
             // Assert the cluster's state is active
             String emrClusterState = cluster.getStatus().getState();
-            Assert.isTrue(isActiveEmrState(emrClusterState),
-                String.format("The cluster with ID \"%s\" is not active. The cluster state must be in one of %s. Current state is \"%s\"", emrClusterIdTrimmed,
+            Assert.isTrue(isActiveEmrState(emrClusterState), String
+                .format("The cluster with ID \"%s\" is not active. The cluster state must be in one of %s. Current state is \"%s\"", emrClusterIdTrimmed,
                     Arrays.toString(getActiveEmrClusterStates()), emrClusterState));
 
             // Assert cluster name equals if cluster name was specified
             if (emrClusterNameSpecified)
             {
                 String emrClusterNameTrimmed = emrClusterName.trim();
-                Assert.isTrue(cluster.getName().equalsIgnoreCase(emrClusterNameTrimmed),
-                    String.format("The cluster with ID \"%s\" does not match the expected name \"%s\". The actual name is \"%s\".", cluster.getId(),
+                Assert.isTrue(cluster.getName().equalsIgnoreCase(emrClusterNameTrimmed), String
+                    .format("The cluster with ID \"%s\" does not match the expected name \"%s\". The actual name is \"%s\".", cluster.getId(),
                         emrClusterNameTrimmed, cluster.getName()));
             }
 

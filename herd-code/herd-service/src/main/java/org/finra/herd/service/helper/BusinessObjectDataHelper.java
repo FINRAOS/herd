@@ -51,6 +51,9 @@ import org.finra.herd.model.jpa.StorageEntity;
 public class BusinessObjectDataHelper
 {
     @Autowired
+    private AlternateKeyHelper alternateKeyHelper;
+
+    @Autowired
     private StorageUnitHelper storageUnitHelper;
 
     /**
@@ -536,48 +539,52 @@ public class BusinessObjectDataHelper
     /**
      * Validates the business object data key. This method also trims the key parameters.
      *
-     * @param businessObjectDataKey the business object data key
+     * @param key the business object data key
      * @param businessObjectFormatVersionRequired specifies if the business object format version is required or not
      * @param businessObjectDataVersionRequired specifies if the business object data version is required or not
      *
      * @throws IllegalArgumentException if any validation errors were found
      */
-    public void validateBusinessObjectDataKey(BusinessObjectDataKey businessObjectDataKey, boolean businessObjectFormatVersionRequired,
-        boolean businessObjectDataVersionRequired) throws IllegalArgumentException
+    public void validateBusinessObjectDataKey(BusinessObjectDataKey key, boolean businessObjectFormatVersionRequired, boolean businessObjectDataVersionRequired)
+        throws IllegalArgumentException
     {
         // Validate and remove leading and trailing spaces.
-        Assert.notNull(businessObjectDataKey, "A business object data key must be specified.");
-
-        Assert.hasText(businessObjectDataKey.getNamespace(), "A namespace must be specified.");
-        businessObjectDataKey.setNamespace(businessObjectDataKey.getNamespace().trim());
-        Assert.hasText(businessObjectDataKey.getBusinessObjectDefinitionName(), "A business object definition name must be specified.");
-        businessObjectDataKey.setBusinessObjectDefinitionName(businessObjectDataKey.getBusinessObjectDefinitionName().trim());
-        Assert.hasText(businessObjectDataKey.getBusinessObjectFormatUsage(), "A business object format usage must be specified.");
-        businessObjectDataKey.setBusinessObjectFormatUsage(businessObjectDataKey.getBusinessObjectFormatUsage().trim());
-        Assert.hasText(businessObjectDataKey.getBusinessObjectFormatFileType(), "A business object format file type must be specified.");
-        businessObjectDataKey.setBusinessObjectFormatFileType(businessObjectDataKey.getBusinessObjectFormatFileType().trim());
-
+        Assert.notNull(key, "A business object data key must be specified.");
+        key.setNamespace(alternateKeyHelper.validateStringParameter("namespace", key.getNamespace()));
+        key.setBusinessObjectDefinitionName(
+            alternateKeyHelper.validateStringParameter("business object definition name", key.getBusinessObjectDefinitionName()));
+        key.setBusinessObjectFormatUsage(alternateKeyHelper.validateStringParameter("business object format usage", key.getBusinessObjectFormatUsage()));
+        key.setBusinessObjectFormatFileType(
+            alternateKeyHelper.validateStringParameter("business object format file type", key.getBusinessObjectFormatFileType()));
         if (businessObjectFormatVersionRequired)
         {
-            Assert.notNull(businessObjectDataKey.getBusinessObjectFormatVersion(), "A business object format version must be specified.");
+            Assert.notNull(key.getBusinessObjectFormatVersion(), "A business object format version must be specified.");
         }
+        key.setPartitionValue(alternateKeyHelper.validateStringParameter("partition value", key.getPartitionValue()));
+        validateSubPartitionValues(key.getSubPartitionValues());
+        if (businessObjectDataVersionRequired)
+        {
+            Assert.notNull(key.getBusinessObjectDataVersion(), "A business object data version must be specified.");
+        }
+    }
 
-        Assert.hasText(businessObjectDataKey.getPartitionValue(), "A partition value must be specified.");
-        businessObjectDataKey.setPartitionValue(businessObjectDataKey.getPartitionValue().trim());
+    /**
+     * Validates a list of sub-partition values. This method also trims the sub-partition values.
+     *
+     * @param subPartitionValues the list of sub-partition values
+     *
+     * @throws IllegalArgumentException if a sub-partition value is missing or not valid
+     */
+    public void validateSubPartitionValues(List<String> subPartitionValues) throws IllegalArgumentException
+    {
+        int subPartitionValuesCount = CollectionUtils.size(subPartitionValues);
 
-        int subPartitionValuesCount = CollectionUtils.size(businessObjectDataKey.getSubPartitionValues());
         Assert.isTrue(subPartitionValuesCount <= BusinessObjectDataEntity.MAX_SUBPARTITIONS,
             String.format("Exceeded maximum number of allowed subpartitions: %d.", BusinessObjectDataEntity.MAX_SUBPARTITIONS));
 
         for (int i = 0; i < subPartitionValuesCount; i++)
         {
-            Assert.hasText(businessObjectDataKey.getSubPartitionValues().get(i), "A subpartition value must be specified.");
-            businessObjectDataKey.getSubPartitionValues().set(i, businessObjectDataKey.getSubPartitionValues().get(i).trim());
-        }
-
-        if (businessObjectDataVersionRequired)
-        {
-            Assert.notNull(businessObjectDataKey.getBusinessObjectDataVersion(), "A business object data version must be specified.");
+            subPartitionValues.set(i, alternateKeyHelper.validateStringParameter("subpartition value", subPartitionValues.get(i)));
         }
     }
 }
