@@ -295,6 +295,34 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
     }
 
     @Test
+    public void testCreateEmrClusterDefinitionInvalidParameters() throws Exception
+    {
+        // Try to perform a create when namespace contains a slash character.
+        try
+        {
+            emrClusterDefinitionService.createEmrClusterDefinition(createEmrClusterDefinitionCreateRequest(addSlash(NAMESPACE), EMR_CLUSTER_DEFINITION_NAME,
+                getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH)));
+            fail("Should throw an IllegalArgumentException when namespace contains a slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Namespace can not contain a slash character.", e.getMessage());
+        }
+
+        // Try to perform a create when EMR cluster definition name contains a slash character.
+        try
+        {
+            emrClusterDefinitionService.createEmrClusterDefinition(createEmrClusterDefinitionCreateRequest(NAMESPACE, addSlash(EMR_CLUSTER_DEFINITION_NAME),
+                getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH)));
+            fail("Should throw an IllegalArgumentException when EMR cluster definition name contains a slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("EMR cluster definition name can not contain a slash character.", e.getMessage());
+        }
+    }
+
+    @Test
     public void testCreateEmrClusterDefinitionNamespaceNoExists() throws Exception
     {
         // Try to perform a create using a non-existing namespace.

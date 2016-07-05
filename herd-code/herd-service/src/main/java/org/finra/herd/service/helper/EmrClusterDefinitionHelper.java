@@ -139,7 +139,7 @@ public class EmrClusterDefinitionHelper
      */
     public void validateEmrClusterDefinitionKey(EmrClusterDefinitionKey key) throws IllegalArgumentException
     {
-        Assert.notNull(key, "A partition key group key must be specified.");
+        Assert.notNull(key, "An EMR cluster definition key must be specified.");
         key.setNamespace(alternateKeyHelper.validateStringParameter("namespace", key.getNamespace()));
         key.setEmrClusterDefinitionName(alternateKeyHelper.validateStringParameter("An", "EMR cluster definition name", key.getEmrClusterDefinitionName()));
     }

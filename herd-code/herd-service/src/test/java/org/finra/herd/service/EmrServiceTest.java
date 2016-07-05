@@ -650,6 +650,49 @@ public class EmrServiceTest extends AbstractServiceTest
         emrService.createCluster(request);
     }
 
+    @Test
+    public void testCreateEmrClusterInvalidParameters() throws Exception
+    {
+        // Try to perform a create when namespace contains a slash character.
+        try
+        {
+            EmrClusterCreateRequest request = getNewEmrClusterCreateRequest();
+            request.setNamespace(addSlash(request.getNamespace()));
+            emrService.createCluster(request);
+            fail("Should throw an IllegalArgumentException when namespace contains a slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Namespace can not contain a slash character.", e.getMessage());
+        }
+
+        // Try to perform a create when EMR cluster definition name contains a slash character.
+        try
+        {
+            EmrClusterCreateRequest request = getNewEmrClusterCreateRequest();
+            request.setEmrClusterDefinitionName(addSlash(request.getEmrClusterDefinitionName()));
+            emrService.createCluster(request);
+            fail("Should throw an IllegalArgumentException when EMR cluster definition name contains a slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("EMR cluster definition name can not contain a slash character.", e.getMessage());
+        }
+
+        // Try to perform a create when EMR cluster name contains a slash character.
+        try
+        {
+            EmrClusterCreateRequest request = getNewEmrClusterCreateRequest();
+            request.setEmrClusterName(addSlash(request.getEmrClusterName()));
+            emrService.createCluster(request);
+            fail("Should throw an IllegalArgumentException when EMR cluster name contains a slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("EMR cluster name can not contain a slash character.", e.getMessage());
+        }
+    }
+
     /**
      * This method tests the scenario where task instances are there
      */

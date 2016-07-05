@@ -90,6 +90,21 @@ public class NamespaceServiceTest extends AbstractServiceTest
     }
 
     @Test
+    public void testCreateNamespaceInvalidParameters()
+    {
+        // Try to create a namespace instance when namespace contains a slash character.
+        try
+        {
+            namespaceService.createNamespace(createNamespaceCreateRequest(addSlash(NAMESPACE)));
+            fail("Should throw an IllegalArgumentException when namespace contains a slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Namespace code can not contain a slash character.", e.getMessage());
+        }
+    }
+
+    @Test
     public void testCreateNamespaceAlreadyExists() throws Exception
     {
         // Create and persist a namespace.

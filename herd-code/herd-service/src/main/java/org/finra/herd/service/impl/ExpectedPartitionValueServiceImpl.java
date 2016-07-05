@@ -44,6 +44,7 @@ import org.finra.herd.model.api.xml.PartitionValueRange;
 import org.finra.herd.model.jpa.ExpectedPartitionValueEntity;
 import org.finra.herd.model.jpa.PartitionKeyGroupEntity;
 import org.finra.herd.service.ExpectedPartitionValueService;
+import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.ExpectedPartitionValueHelper;
 import org.finra.herd.service.helper.PartitionKeyGroupDaoHelper;
 import org.finra.herd.service.helper.PartitionKeyGroupHelper;
@@ -55,6 +56,9 @@ import org.finra.herd.service.helper.PartitionKeyGroupHelper;
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 public class ExpectedPartitionValueServiceImpl implements ExpectedPartitionValueService
 {
+    @Autowired
+    private AlternateKeyHelper alternateKeyHelper;
+
     @Autowired
     private ExpectedPartitionValueDao expectedPartitionValueDao;
 
@@ -321,8 +325,7 @@ public class ExpectedPartitionValueServiceImpl implements ExpectedPartitionValue
         Set<String> validatedExpectedPartitionValuesSet = new LinkedHashSet<>();
         for (String expectedPartitionValue : expectedPartitionValues)
         {
-            Assert.hasText(expectedPartitionValue, "An expected partition value must be specified.");
-            String trimmedExpectedPartitionValue = expectedPartitionValue.trim();
+            String trimmedExpectedPartitionValue = alternateKeyHelper.validateStringParameter("An", "expected partition value", expectedPartitionValue);
 
             if (validatedExpectedPartitionValuesSet.contains(trimmedExpectedPartitionValue))
             {

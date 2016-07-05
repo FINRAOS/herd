@@ -15,6 +15,7 @@
 */
 package org.finra.herd.service.helper;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
@@ -51,6 +52,7 @@ public class AlternateKeyHelper
     public String validateStringParameter(String indefiniteArticle, String parameterName, String parameterValue) throws IllegalArgumentException
     {
         Assert.hasText(parameterValue, String.format("%s %s must be specified.", indefiniteArticle, parameterName));
+        Assert.doesNotContain(parameterValue, "/", String.format("%s can not contain a slash character.", StringUtils.capitalize(parameterName)));
         return parameterValue.trim();
     }
 }

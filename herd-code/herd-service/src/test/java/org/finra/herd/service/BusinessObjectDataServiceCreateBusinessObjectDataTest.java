@@ -400,6 +400,115 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
     }
 
     @Test
+    public void testCreateBusinessObjectDataInvalidParameters()
+    {
+        // Try to create a business object data when namespace contains a slash character.
+        try
+        {
+            businessObjectDataService.createBusinessObjectData(
+                new BusinessObjectDataCreateRequest(addSlash(BDEF_NAMESPACE), BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                    PARTITION_KEY, PARTITION_VALUE, SUBPARTITION_VALUES, BusinessObjectDataStatusEntity.VALID, Arrays.asList(
+                    new StorageUnitCreateRequest(STORAGE_NAME, new StorageDirectory(STORAGE_DIRECTORY_PATH), NO_STORAGE_FILES, NO_DISCOVER_STORAGE_FILES)),
+                    NO_ATTRIBUTES, NO_BUSINESS_OBJECT_DATA_PARENTS, NO_CREATE_NEW_VERSION));
+            fail("Should throw an IllegalArgumentException when namespace contains a slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Namespace can not contain a slash character.", e.getMessage());
+        }
+
+        // Try to create a business object data when business object definition name contains a slash character.
+        try
+        {
+            businessObjectDataService.createBusinessObjectData(
+                new BusinessObjectDataCreateRequest(BDEF_NAMESPACE, addSlash(BDEF_NAME), FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                    PARTITION_KEY, PARTITION_VALUE, SUBPARTITION_VALUES, BusinessObjectDataStatusEntity.VALID, Arrays.asList(
+                    new StorageUnitCreateRequest(STORAGE_NAME, new StorageDirectory(STORAGE_DIRECTORY_PATH), NO_STORAGE_FILES, NO_DISCOVER_STORAGE_FILES)),
+                    NO_ATTRIBUTES, NO_BUSINESS_OBJECT_DATA_PARENTS, NO_CREATE_NEW_VERSION));
+            fail("Should throw an IllegalArgumentException when business object definition name contains a slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Business object definition name can not contain a slash character.", e.getMessage());
+        }
+
+        // Try to create a business object data when business object format usage contains a slash character.
+        try
+        {
+            businessObjectDataService.createBusinessObjectData(
+                new BusinessObjectDataCreateRequest(BDEF_NAMESPACE, BDEF_NAME, addSlash(FORMAT_USAGE_CODE), FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                    PARTITION_KEY, PARTITION_VALUE, SUBPARTITION_VALUES, BusinessObjectDataStatusEntity.VALID, Arrays.asList(
+                    new StorageUnitCreateRequest(STORAGE_NAME, new StorageDirectory(STORAGE_DIRECTORY_PATH), NO_STORAGE_FILES, NO_DISCOVER_STORAGE_FILES)),
+                    NO_ATTRIBUTES, NO_BUSINESS_OBJECT_DATA_PARENTS, NO_CREATE_NEW_VERSION));
+            fail("Should throw an IllegalArgumentException when business object format usage contains a slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Business object format usage name can not contain a slash character.", e.getMessage());
+        }
+
+        // Try to create a business object data when business object format file type contains a slash character.
+        try
+        {
+            businessObjectDataService.createBusinessObjectData(
+                new BusinessObjectDataCreateRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, addSlash(FORMAT_FILE_TYPE_CODE), FORMAT_VERSION,
+                    PARTITION_KEY, PARTITION_VALUE, SUBPARTITION_VALUES, BusinessObjectDataStatusEntity.VALID, Arrays.asList(
+                    new StorageUnitCreateRequest(STORAGE_NAME, new StorageDirectory(STORAGE_DIRECTORY_PATH), NO_STORAGE_FILES, NO_DISCOVER_STORAGE_FILES)),
+                    NO_ATTRIBUTES, NO_BUSINESS_OBJECT_DATA_PARENTS, NO_CREATE_NEW_VERSION));
+            fail("Should throw an IllegalArgumentException when business object format file type contains a slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Business object format file type can not contain a slash character.", e.getMessage());
+        }
+
+        // Try to create a business object data when partition key contains a slash character.
+        try
+        {
+            businessObjectDataService.createBusinessObjectData(
+                new BusinessObjectDataCreateRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                    addSlash(PARTITION_KEY), PARTITION_VALUE, SUBPARTITION_VALUES, BusinessObjectDataStatusEntity.VALID, Arrays.asList(
+                    new StorageUnitCreateRequest(STORAGE_NAME, new StorageDirectory(STORAGE_DIRECTORY_PATH), NO_STORAGE_FILES, NO_DISCOVER_STORAGE_FILES)),
+                    NO_ATTRIBUTES, NO_BUSINESS_OBJECT_DATA_PARENTS, NO_CREATE_NEW_VERSION));
+            fail("Should throw an IllegalArgumentException when partition key contains a slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Business object format partition key can not contain a slash character.", e.getMessage());
+        }
+
+        // Try to create a business object data when partition value contains a slash character.
+        try
+        {
+            businessObjectDataService.createBusinessObjectData(
+                new BusinessObjectDataCreateRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_KEY,
+                    addSlash(PARTITION_VALUE), SUBPARTITION_VALUES, BusinessObjectDataStatusEntity.VALID, Arrays.asList(
+                    new StorageUnitCreateRequest(STORAGE_NAME, new StorageDirectory(STORAGE_DIRECTORY_PATH), NO_STORAGE_FILES, NO_DISCOVER_STORAGE_FILES)),
+                    NO_ATTRIBUTES, NO_BUSINESS_OBJECT_DATA_PARENTS, NO_CREATE_NEW_VERSION));
+            fail("Should throw an IllegalArgumentException when partition value contains a slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Business object data partition value can not contain a slash character.", e.getMessage());
+        }
+
+        // Try to create a business object data when a sub-partition value contains a slash character.
+        try
+        {
+            businessObjectDataService.createBusinessObjectData(
+                new BusinessObjectDataCreateRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_KEY,
+                    PARTITION_VALUE, Arrays.asList(addSlash(PARTITION_VALUE_2)), BusinessObjectDataStatusEntity.VALID, Arrays.asList(
+                    new StorageUnitCreateRequest(STORAGE_NAME, new StorageDirectory(STORAGE_DIRECTORY_PATH), NO_STORAGE_FILES, NO_DISCOVER_STORAGE_FILES)),
+                    NO_ATTRIBUTES, NO_BUSINESS_OBJECT_DATA_PARENTS, NO_CREATE_NEW_VERSION));
+            fail("Should throw an IllegalArgumentException when sub-partition value contains a slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Subpartition value can not contain a slash character.", e.getMessage());
+        }
+    }
+
+    @Test
     public void testCreateBusinessObjectBusinessObjectStatusCodeNoExists()
     {
         // Create database entities required for testing.
