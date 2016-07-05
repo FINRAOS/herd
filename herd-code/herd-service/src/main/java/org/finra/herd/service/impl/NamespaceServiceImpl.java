@@ -123,7 +123,7 @@ public class NamespaceServiceImpl implements NamespaceService
      */
     private void validateNamespaceCreateRequest(NamespaceCreateRequest request)
     {
-        request.setNamespaceCode(alternateKeyHelper.validateStringParameter("namespace code", request.getNamespaceCode()));
+        request.setNamespaceCode(alternateKeyHelper.validateStringParameter("namespace", request.getNamespaceCode()));
     }
 
     /**

@@ -128,7 +128,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals("A business object format partition key must be specified.", e.getMessage());
+            assertEquals("A partition key must be specified.", e.getMessage());
         }
 
         // Try to create a business object format instance when attribute name is not specified.
@@ -300,7 +300,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         try
         {
             businessObjectFormatService.createBusinessObjectFormat(request);
-            fail("Should throw an ObjectNotFoundException when non-existing namespace code is used.");
+            fail("Should throw an ObjectNotFoundException when non-existing namespace is used.");
         }
         catch (ObjectNotFoundException e)
         {
@@ -400,7 +400,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals("Business object format partition key can not contain a slash character.", e.getMessage());
+            assertEquals("Partition key can not contain a slash character.", e.getMessage());
         }
 
         // Try to perform a create using invalid partition key group.
@@ -2866,7 +2866,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals("A business object format usage name must be specified.", e.getMessage());
+            assertEquals("A business object format usage must be specified.", e.getMessage());
         }
 
         // Try to retrieve business object data ddl when business object format file type parameter is not specified.

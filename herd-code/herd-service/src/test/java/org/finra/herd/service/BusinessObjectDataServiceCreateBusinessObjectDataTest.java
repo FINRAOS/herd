@@ -145,7 +145,7 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals("A business object format usage name must be specified.", e.getMessage());
+            assertEquals("A business object format usage must be specified.", e.getMessage());
         }
 
         // Try to create a business object data instance when business object format file type is not specified.
@@ -185,20 +185,20 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals("A business object format partition key must be specified.", e.getMessage());
+            assertEquals("A partition key must be specified.", e.getMessage());
         }
 
-        // Try to create a business object data instance when business object data partition value is not specified.
+        // Try to create a business object data instance when partition value is not specified.
         request = createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
             BLANK_TEXT, BusinessObjectDataStatusEntity.VALID, STORAGE_NAME, testS3KeyPrefix, getTestStorageFiles(testS3KeyPrefix, LOCAL_FILES));
         try
         {
             businessObjectDataService.createBusinessObjectData(request);
-            fail("Should throw an IllegalArgumentException when business object data partition value is not specified.");
+            fail("Should throw an IllegalArgumentException when partition value is not specified.");
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals("A business object data partition value must be specified.", e.getMessage());
+            assertEquals("A partition value must be specified.", e.getMessage());
         }
 
         // Try to create a business object data instance when request contains no storage units element.
@@ -444,7 +444,7 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals("Business object format usage name can not contain a slash character.", e.getMessage());
+            assertEquals("Business object format usage can not contain a slash character.", e.getMessage());
         }
 
         // Try to create a business object data when business object format file type contains a slash character.
@@ -474,7 +474,7 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals("Business object format partition key can not contain a slash character.", e.getMessage());
+            assertEquals("Partition key can not contain a slash character.", e.getMessage());
         }
 
         // Try to create a business object data when partition value contains a slash character.
@@ -489,7 +489,7 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals("Business object data partition value can not contain a slash character.", e.getMessage());
+            assertEquals("Partition value can not contain a slash character.", e.getMessage());
         }
 
         // Try to create a business object data when a sub-partition value contains a slash character.
@@ -1261,7 +1261,7 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals("A business object data partition value must be specified.", e.getMessage());
+            assertEquals("A partition value must be specified.", e.getMessage());
         }
     }
 

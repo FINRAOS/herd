@@ -1145,13 +1145,13 @@ public class BusinessObjectDataDaoHelper
         request.setNamespace(alternateKeyHelper.validateStringParameter("namespace", request.getNamespace()));
         request.setBusinessObjectDefinitionName(
             alternateKeyHelper.validateStringParameter("business object definition name", request.getBusinessObjectDefinitionName()));
-        request.setBusinessObjectFormatUsage(
-            alternateKeyHelper.validateStringParameter("business object format usage name", request.getBusinessObjectFormatUsage()));
+        request
+            .setBusinessObjectFormatUsage(alternateKeyHelper.validateStringParameter("business object format usage", request.getBusinessObjectFormatUsage()));
         request.setBusinessObjectFormatFileType(
             alternateKeyHelper.validateStringParameter("business object format file type", request.getBusinessObjectFormatFileType()));
         Assert.notNull(request.getBusinessObjectFormatVersion(), "A business object format version must be specified.");
-        request.setPartitionKey(alternateKeyHelper.validateStringParameter("business object format partition key", request.getPartitionKey()));
-        request.setPartitionValue(alternateKeyHelper.validateStringParameter("business object data partition value", request.getPartitionValue()));
+        request.setPartitionKey(alternateKeyHelper.validateStringParameter("partition key", request.getPartitionKey()));
+        request.setPartitionValue(alternateKeyHelper.validateStringParameter("partition value", request.getPartitionValue()));
         businessObjectDataHelper.validateSubPartitionValues(request.getSubPartitionValues());
 
         Assert.isTrue(!org.apache.commons.collections4.CollectionUtils.isEmpty(request.getStorageUnits()), "At least one storage unit must be specified.");
@@ -1239,7 +1239,7 @@ public class BusinessObjectDataDaoHelper
                 key.setBusinessObjectFormatFileType(
                     alternateKeyHelper.validateStringParameter("business object format file type", key.getBusinessObjectFormatFileType()));
                 Assert.notNull(key.getBusinessObjectFormatVersion(), "A business object format version must be specified.");
-                key.setPartitionValue(alternateKeyHelper.validateStringParameter("business object data partition value", key.getPartitionValue()));
+                key.setPartitionValue(alternateKeyHelper.validateStringParameter("partition value", key.getPartitionValue()));
                 businessObjectDataHelper.validateSubPartitionValues(key.getSubPartitionValues());
                 Assert.notNull(key.getBusinessObjectDataVersion(), "A business object data version must be specified.");
 

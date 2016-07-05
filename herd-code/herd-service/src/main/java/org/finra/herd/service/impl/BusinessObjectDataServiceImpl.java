@@ -773,7 +773,7 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         Assert.hasText(request.getBusinessObjectDefinitionName(), "A business object definition name must be specified.");
         request.setBusinessObjectDefinitionName(request.getBusinessObjectDefinitionName().trim());
 
-        Assert.hasText(request.getBusinessObjectFormatUsage(), "A business object format usage name must be specified.");
+        Assert.hasText(request.getBusinessObjectFormatUsage(), "A business object format usage must be specified.");
         request.setBusinessObjectFormatUsage(request.getBusinessObjectFormatUsage().trim());
 
         Assert.hasText(request.getBusinessObjectFormatFileType(), "A business object format file type must be specified.");
@@ -879,7 +879,7 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         Assert.hasText(request.getBusinessObjectDefinitionName(), "A business object definition name must be specified.");
         request.setBusinessObjectDefinitionName(request.getBusinessObjectDefinitionName().trim());
 
-        Assert.hasText(request.getBusinessObjectFormatUsage(), "A business object format usage name must be specified.");
+        Assert.hasText(request.getBusinessObjectFormatUsage(), "A business object format usage must be specified.");
         request.setBusinessObjectFormatUsage(request.getBusinessObjectFormatUsage().trim());
 
         Assert.hasText(request.getBusinessObjectFormatFileType(), "A business object format file type must be specified.");
