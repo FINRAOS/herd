@@ -31,6 +31,7 @@ import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.dao.helper.JavaPropertiesHelper;
 import org.finra.herd.dao.impl.S3DaoImpl;
 import org.finra.herd.service.S3Service;
+import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.service.helper.StorageFileHelper;
 import org.finra.herd.service.helper.StorageHelper;
@@ -49,6 +50,12 @@ import org.finra.herd.service.impl.S3ServiceImpl;
 @Import(DataBridgeAopSpringModuleConfig.class)
 public class DataBridgeSpringModuleConfig
 {
+    @Bean
+    public AlternateKeyHelper alternateKeyHelper()
+    {
+        return new AlternateKeyHelper();
+    }
+
     @Bean
     public AwsHelper awsHelper()
     {
