@@ -21,15 +21,18 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
+import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.BusinessObjectDataStatusChangeEvent;
 import org.finra.herd.model.api.xml.StorageDirectory;
 import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.api.xml.StorageUnit;
@@ -37,6 +40,7 @@ import org.finra.herd.model.api.xml.StorageUnitCreateRequest;
 import org.finra.herd.model.dto.StorageUnitAlternateKeyDto;
 import org.finra.herd.model.jpa.BusinessObjectDataAttributeEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
+import org.finra.herd.model.jpa.BusinessObjectDataStatusHistoryEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.StorageEntity;
 
@@ -188,6 +192,20 @@ public class BusinessObjectDataHelper
      */
     public BusinessObjectData createBusinessObjectDataFromEntity(BusinessObjectDataEntity businessObjectDataEntity)
     {
+        return createBusinessObjectDataFromEntity(businessObjectDataEntity, false);
+    }
+
+    /**
+     * Creates the business object data from the persisted entity.
+     *
+     * @param businessObjectDataEntity the newly persisted business object data entity.
+     * @param includeBusinessObjectDataStatusHistory specifies to include business object data status history in the response
+     *
+     * @return the business object data.
+     */
+    public BusinessObjectData createBusinessObjectDataFromEntity(BusinessObjectDataEntity businessObjectDataEntity,
+        Boolean includeBusinessObjectDataStatusHistory)
+    {
         // Make the business object format associated with this data easily accessible.
         BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectDataEntity.getBusinessObjectFormat();
 
@@ -238,6 +256,18 @@ public class BusinessObjectDataHelper
             businessObjectDataKeys.add(createBusinessObjectDataKeyFromEntity(parent));
         }
         Collections.sort(businessObjectDataKeys, new BusinessObjectDataKeyComparator());
+
+        // If specified, add business object data status history.
+        if (BooleanUtils.isTrue(includeBusinessObjectDataStatusHistory))
+        {
+            List<BusinessObjectDataStatusChangeEvent> businessObjectDataStatusChangeEvents = new ArrayList<>();
+            businessObjectData.setBusinessObjectDataStatusHistory(businessObjectDataStatusChangeEvents);
+            for (BusinessObjectDataStatusHistoryEntity businessObjectDataStatusHistoryEntity : businessObjectDataEntity.getHistoricalStatuses())
+            {
+                businessObjectDataStatusChangeEvents.add(new BusinessObjectDataStatusChangeEvent(businessObjectDataStatusHistoryEntity.getStatus().getCode(),
+                    HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDataStatusHistoryEntity.getCreatedOn())));
+            }
+        }
 
         return businessObjectData;
     }

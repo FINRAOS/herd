@@ -156,7 +156,7 @@ public class NamespaceSecurityAdviceTest extends AbstractServiceTest
         catch (Exception e)
         {
             assertEquals(AccessDeniedException.class, e.getClass());
-            assertEquals("Current user does not have \"[READ]\" permission(s) to the namespace \"foo\"", e.getMessage());
+            assertEquals(String.format("User \"%s\" does not have \"[READ]\" permission(s) to the namespace \"foo\"", userId), e.getMessage());
         }
     }
 
@@ -216,7 +216,7 @@ public class NamespaceSecurityAdviceTest extends AbstractServiceTest
         catch (Exception e)
         {
             assertEquals(AccessDeniedException.class, e.getClass());
-            assertEquals("Current user does not have \"[READ]\" permission(s) to the namespace \"foo\"", e.getMessage());
+            assertEquals(String.format("User \"%s\" does not have \"[READ]\" permission(s) to the namespace \"foo\"", userId), e.getMessage());
         }
     }
 
@@ -288,7 +288,7 @@ public class NamespaceSecurityAdviceTest extends AbstractServiceTest
         catch (Exception e)
         {
             assertEquals(AccessDeniedException.class, e.getClass());
-            assertEquals("Current user does not have \"[WRITE]\" permission(s) to the namespace \"bar\"", e.getMessage());
+            assertEquals(String.format("User \"%s\" does not have \"[WRITE]\" permission(s) to the namespace \"bar\"", userId), e.getMessage());
         }
     }
 
@@ -367,7 +367,7 @@ public class NamespaceSecurityAdviceTest extends AbstractServiceTest
         catch (Exception e)
         {
             assertEquals(AccessDeniedException.class, e.getClass());
-            assertEquals("Current user does not have \"[EXECUTE]\" permission(s) to the namespace \"ns4\"", e.getMessage());
+            assertEquals(String.format("User \"%s\" does not have \"[EXECUTE]\" permission(s) to the namespace \"ns4\"", userId), e.getMessage());
         }
     }
 
@@ -495,7 +495,7 @@ public class NamespaceSecurityAdviceTest extends AbstractServiceTest
         catch (Exception e)
         {
             assertEquals(AccessDeniedException.class, e.getClass());
-            assertEquals("Current user does not have \"[READ, WRITE]\" permission(s) to the namespace \"foo\"", e.getMessage());
+            assertEquals(String.format("User \"%s\" does not have \"[READ, WRITE]\" permission(s) to the namespace \"foo\"", userId), e.getMessage());
         }
     }
 
@@ -527,7 +527,7 @@ public class NamespaceSecurityAdviceTest extends AbstractServiceTest
         catch (Exception e)
         {
             assertEquals(AccessDeniedException.class, e.getClass());
-            assertEquals("Current user does not have \"[READ]\" permission(s) to the namespace \"foo\"", e.getMessage());
+            assertEquals(String.format("User \"%s\" does not have \"[READ]\" permission(s) to the namespace \"foo\"", userId), e.getMessage());
         }
     }
 
@@ -560,7 +560,7 @@ public class NamespaceSecurityAdviceTest extends AbstractServiceTest
         catch (Exception e)
         {
             assertEquals(AccessDeniedException.class, e.getClass());
-            assertEquals("Current user does not have \"[READ]\" permission(s) to the namespace \"foo\"", e.getMessage());
+            assertEquals(String.format("User \"%s\" does not have \"[READ]\" permission(s) to the namespace \"foo\"", userId), e.getMessage());
         }
     }
 
@@ -771,7 +771,7 @@ public class NamespaceSecurityAdviceTest extends AbstractServiceTest
         catch (Exception e)
         {
             assertEquals(AccessDeniedException.class, e.getClass());
-            assertEquals("Current user does not have \"[READ]\" permission(s) to the namespace \"foo\"", e.getMessage());
+            assertEquals(String.format("User \"%s\" does not have \"[READ]\" permission(s) to the namespace \"foo\"", userId), e.getMessage());
         }
     }
 
@@ -804,8 +804,8 @@ public class NamespaceSecurityAdviceTest extends AbstractServiceTest
         catch (Exception e)
         {
             assertEquals(AccessDeniedException.class, e.getClass());
-            assertEquals(String.format("Current user does not have \"[READ]\" permission(s) to the namespace \"foo\"%nCurrent user does not have \"[WRITE]\" " +
-                "permission(s) to the namespace \"bar\""), e.getMessage());
+            assertEquals(String.format("User \"%s\" does not have \"[READ]\" permission(s) to the namespace \"foo\"%n" +
+                "User \"%s\" does not have \"[WRITE]\" permission(s) to the namespace \"bar\"", userId, userId), e.getMessage());
         }
     }
 
@@ -838,8 +838,8 @@ public class NamespaceSecurityAdviceTest extends AbstractServiceTest
         catch (Exception e)
         {
             assertEquals(AccessDeniedException.class, e.getClass());
-            assertEquals(String.format("Current user does not have \"[READ]\" permission(s) to the namespace \"foo\"%nCurrent user does not have \"[READ]\" " +
-                "permission(s) to the namespace \"bar\""), e.getMessage());
+            assertEquals(String.format("User \"%s\" does not have \"[READ]\" permission(s) to the namespace \"foo\"%n" +
+                "User \"%s\" does not have \"[READ]\" permission(s) to the namespace \"bar\"", userId, userId), e.getMessage());
         }
     }
 

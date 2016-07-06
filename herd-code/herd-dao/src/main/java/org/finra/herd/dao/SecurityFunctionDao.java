@@ -20,6 +20,13 @@ import java.util.List;
 public interface SecurityFunctionDao extends BaseJpaDao
 {
     /**
+     * Gets a list of security functions.
+     *
+     * @return the list of functions
+     */
+    public List<String> getSecurityFunctions();
+
+    /**
      * Gets a list of functions for the role.
      *
      * @param roleCd the role code
@@ -29,9 +36,9 @@ public interface SecurityFunctionDao extends BaseJpaDao
     public List<String> getSecurityFunctionsForRole(String roleCd);
 
     /**
-     * Gets a list of security functions.
+     * Gets a list of security functions that have no roles mapped to them.
      *
      * @return the list of functions
      */
-    public List<String> getSecurityFunctions();
+    public List<String> getUnrestrictedSecurityFunctions();
 }

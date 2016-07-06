@@ -22,7 +22,7 @@
    <parent>
       <groupId>org.finra.herd</groupId>
       <artifactId>herd</artifactId>
-      <version>0.20.0-SNAPSHOT</version>
+      <version>0.21.0-SNAPSHOT</version>
    </parent>
 
    <name>herd code</name>
@@ -190,6 +190,7 @@
                      <exclude>org/finra/herd/**/config/**</exclude>
                      <exclude>org/finra/herd/dao/**/*OperationsImpl.class</exclude>
                      <exclude>org/finra/herd/service/systemjobs/**</exclude>
+                     <exclude>org/finra/herd/sdk/**</exclude>
                   </excludes>
                </instrumentation>
             </configuration>
@@ -259,6 +260,7 @@
       <module>herd-war</module>
       <module>herd-tools</module>
       <module>herd-web-assets</module>
+      <module>herd-sdk</module>
    </modules>
 
 </project>

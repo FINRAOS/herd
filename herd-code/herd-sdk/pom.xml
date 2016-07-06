@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Copyright 2015 herd contributors
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+   <modelVersion>4.0.0</modelVersion>
+
+   <parent>
+      <groupId>org.finra.herd</groupId>
+      <artifactId>herd-code</artifactId>
+      <version>0.21.0-SNAPSHOT</version>
+   </parent>
+
+   <name>herd sdk</name>
+
+   <!-- groupId and version are inherited from the parent and can be overridden here if needed. -->
+   <artifactId>herd-sdk</artifactId>
+
+   <description>This project contains generated Java SDK client classes that invoke the herd REST API's.
+   </description>
+   <url>http://finraos.github.io/herd/</url>
+
+   <dependencies>
+      <dependency>
+         <groupId>com.sun.jersey</groupId>
+         <artifactId>jersey-client</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>com.sun.jersey.contribs</groupId>
+         <artifactId>jersey-multipart</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>com.fasterxml.jackson.core</groupId>
+         <artifactId>jackson-core</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>com.fasterxml.jackson.core</groupId>
+         <artifactId>jackson-annotations</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>com.fasterxml.jackson.core</groupId>
+         <artifactId>jackson-databind</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>com.fasterxml.jackson.jaxrs</groupId>
+         <artifactId>jackson-jaxrs-json-provider</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>com.fasterxml.jackson.datatype</groupId>
+         <artifactId>jackson-datatype-joda</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>joda-time</groupId>
+         <artifactId>joda-time</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>com.brsanthu</groupId>
+         <artifactId>migbase64</artifactId>
+      </dependency>
+   </dependencies>
+
+   <build>
+
+      <!-- Add in the Swagger generated sources location as a resource so it can be correctly added with the maven-source-plugin. -->
+      <resources>
+         <resource>
+            <directory>target/generated-sources/swagger/src/main/java</directory>
+         </resource>
+      </resources>
+
+      <plugins>
+
+         <!--
+          Copy the generated YAML file from the herd-docs-swagger project to this one in the target directory so it can be picked up by the
+          swagger-codegen-maven-plugin.
+         -->
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-dependency-plugin</artifactId>
+            <executions>
+               <execution>
+                  <id>unpack-shared-resources</id>
+                  <goals>
+                     <goal>unpack</goal>
+                  </goals>
+                  <phase>generate-resources</phase>
+                  <configuration>
+                     <artifactItems>
+                        <artifactItem>
+                           <groupId>${project.groupId}</groupId>
+                           <artifactId>herd-docs-swagger</artifactId>
+                           <version>${project.version}</version>
+                           <type>zip</type>
+                           <outputDirectory>${project.build.directory}/generated-resources</outputDirectory>
+                           <includes>**/*.yaml</includes>
+                        </artifactItem>
+                     </artifactItems>
+                  </configuration>
+               </execution>
+            </executions>
+            <dependencies>
+               <dependency>
+                  <groupId>${project.groupId}</groupId>
+                  <artifactId>herd-docs-swagger</artifactId>
+                  <version>${project.version}</version>
+               </dependency>
+            </dependencies>
+         </plugin>
+
+         <!-- Generate the SDK files from the YAML file. -->
+         <plugin>
+            <groupId>io.swagger</groupId>
+            <artifactId>swagger-codegen-maven-plugin</artifactId>
+            <executions>
+               <execution>
+                  <goals>
+                     <goal>generate</goal>
+                  </goals>
+                  <phase>generate-resources</phase>
+                  <configuration>
+                     <inputSpec>${project.build.directory}/generated-resources/herd-docs-swagger-${project.version}/docs/rest/herd.swagger.yaml</inputSpec>
+                     <output>${project.build.directory}/generated-sources/swagger</output>
+                     <!-- Don't add the output directory to the project as a source root since we added it as a resource ourselves above. -->
+                     <addCompileSourceRoot>false</addCompileSourceRoot>
+                     <language>java</language>
+                     <apiPackage>org.finra.herd.sdk.api</apiPackage>
+                     <modelPackage>org.finra.herd.sdk.model</modelPackage>
+                     <invokerPackage>org.finra.herd.sdk.invoker</invokerPackage>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
+
+         <!-- Exclude the auto-generated java files from the main jar. -->
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-jar-plugin</artifactId>
+            <configuration>
+               <excludes>
+                  <excludes>**/*.java</excludes>
+               </excludes>
+            </configuration>
+         </plugin>
+
+         <!-- Add in the sources. -->
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-source-plugin</artifactId>
+            <executions>
+               <execution>
+                  <id>attach-sources</id>
+                  <goals>
+                     <goal>jar</goal>
+                  </goals>
+               </execution>
+            </executions>
+            <configuration>
+               <!-- Include only the java files and not the other stuff the Swagger plug-in generates. -->
+               <includes>
+                  <include>**/*.java</include>
+               </includes>
+               <!-- Exclude the 2nd set of java code that the Swagger plug-in generates. -->
+               <excludes>
+                  <excludes>swagger/src/main/java/**</excludes>
+               </excludes>
+            </configuration>
+         </plugin>
+
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <executions>
+               <execution>
+                  <id>jar</id>
+                  <goals>
+                     <goal>jar</goal>
+                  </goals>
+               </execution>
+            </executions>
+            <configuration>
+               <!-- Specify the location where the swagger plugin generated the sources. -->
+               <sourcepath>${project.build.directory}/generated-sources/swagger/src/main/java</sourcepath>
+            </configuration>
+         </plugin>
+
+         <!-- Configure the Maven compiler to use JDK 1.5 to produce the appropriate class files that can be used with JDK 1.5 and up. -->
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <configuration>
+               <source>1.5</source>
+               <target>1.5</target>
+            </configuration>
+         </plugin>
+
+      </plugins>
+
+   </build>
+
+</project>

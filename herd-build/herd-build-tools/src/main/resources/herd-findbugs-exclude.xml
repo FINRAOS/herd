@@ -44,6 +44,11 @@
       <Package name="~org.finra.herd.model.api.xml.*"/>
    </Match>
 
+   <!-- Exclude the auto-generated herd-sdk classes. -->
+   <Match>
+      <Package name="~org.finra.herd.sdk.*"/>
+   </Match>
+
    <!-- Exclude the Hibernate auto-generated entity metadata classes. -->
    <Match>
       <Class name="~org.finra.herd.model.jpa.*_"/>
