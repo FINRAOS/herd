@@ -491,7 +491,9 @@
           "psql -f activiti.postgres.create.identity.sql\n",
           "psql -f quartz_tables_postgres.sql\n",
 
+          "psql -c \"DELETE FROM cnfgn WHERE cnfgn_key_nm = 's3.managed.bucket.name';\"\n",
           "psql -c \"INSERT INTO cnfgn VALUES ('s3.managed.bucket.name','",{"Ref": "herdS3Bucket" },"', NULL);\"\n",
+          "psql -c \"DELETE FROM cnfgn WHERE cnfgn_key_nm = 'herd.notification.sqs.incoming.queue.name';\"\n",
           "psql -c \"INSERT INTO cnfgn VALUES ('herd.notification.sqs.incoming.queue.name','",{"Fn::GetAtt": ["herdQueueIn", "QueueName"]},"', NULL);\"\n",
 
           "service tomcat8 start\n",
