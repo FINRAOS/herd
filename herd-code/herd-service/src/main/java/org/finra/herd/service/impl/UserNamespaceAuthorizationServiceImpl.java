@@ -40,6 +40,7 @@ import org.finra.herd.model.api.xml.UserNamespaceAuthorizations;
 import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.model.jpa.UserNamespaceAuthorizationEntity;
 import org.finra.herd.service.UserNamespaceAuthorizationService;
+import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.NamespaceDaoHelper;
 import org.finra.herd.service.helper.UserNamespaceAuthorizationHelper;
 
@@ -50,6 +51,9 @@ import org.finra.herd.service.helper.UserNamespaceAuthorizationHelper;
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 public class UserNamespaceAuthorizationServiceImpl implements UserNamespaceAuthorizationService
 {
+    @Autowired
+    private AlternateKeyHelper alternateKeyHelper;
+
     @Autowired
     private NamespaceDaoHelper namespaceDaoHelper;
 
@@ -215,12 +219,8 @@ public class UserNamespaceAuthorizationServiceImpl implements UserNamespaceAutho
     public void validateUserNamespaceAuthorizationKey(UserNamespaceAuthorizationKey key) throws IllegalArgumentException
     {
         Assert.notNull(key, "A user namespace authorization key must be specified.");
-
-        Assert.hasText(key.getNamespace(), "A namespace must be specified.");
-        key.setNamespace(key.getNamespace().trim());
-
-        Assert.hasText(key.getUserId(), "A user id must be specified.");
-        key.setUserId(key.getUserId().trim());
+        key.setNamespace(alternateKeyHelper.validateStringParameter("namespace", key.getNamespace()));
+        key.setUserId(alternateKeyHelper.validateStringParameter("user id", key.getUserId()));
     }
 
     /**

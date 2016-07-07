@@ -55,7 +55,7 @@ public class NamespaceServiceTest extends AbstractServiceTest
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals("A namespace code must be specified.", e.getMessage());
+            assertEquals("A namespace must be specified.", e.getMessage());
         }
     }
 
@@ -87,6 +87,21 @@ public class NamespaceServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         validateNamespace(NAMESPACE.toLowerCase(), resultNamespace);
+    }
+
+    @Test
+    public void testCreateNamespaceInvalidParameters()
+    {
+        // Try to create a namespace instance when namespace contains a slash character.
+        try
+        {
+            namespaceService.createNamespace(createNamespaceCreateRequest(addSlash(NAMESPACE)));
+            fail("Should throw an IllegalArgumentException when namespace contains a slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Namespace can not contain a slash character.", e.getMessage());
+        }
     }
 
     @Test
@@ -131,7 +146,7 @@ public class NamespaceServiceTest extends AbstractServiceTest
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals("A namespace code must be specified.", e.getMessage());
+            assertEquals("A namespace must be specified.", e.getMessage());
         }
     }
 
@@ -242,7 +257,7 @@ public class NamespaceServiceTest extends AbstractServiceTest
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals("A namespace code must be specified.", e.getMessage());
+            assertEquals("A namespace must be specified.", e.getMessage());
         }
     }
 

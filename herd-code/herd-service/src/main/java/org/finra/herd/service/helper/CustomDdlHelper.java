@@ -15,6 +15,7 @@
 */
 package org.finra.herd.service.helper;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
@@ -26,29 +27,26 @@ import org.finra.herd.model.api.xml.CustomDdlKey;
 @Component
 public class CustomDdlHelper
 {
+    @Autowired
+    private AlternateKeyHelper alternateKeyHelper;
+
     /**
      * Validates the custom DDL key. This method also trims the key parameters.
      *
-     * @param customDdlKey the custom DDL key
+     * @param key the custom DDL key
      *
      * @throws IllegalArgumentException if any validation errors were found
      */
-    public void validateCustomDdlKey(CustomDdlKey customDdlKey) throws IllegalArgumentException
+    public void validateCustomDdlKey(CustomDdlKey key) throws IllegalArgumentException
     {
-        // Validate.
-        Assert.notNull(customDdlKey, "A custom DDL key must be specified.");
-        Assert.hasText(customDdlKey.getNamespace(), "A namespace must be specified.");
-        Assert.hasText(customDdlKey.getBusinessObjectDefinitionName(), "A business object definition name must be specified.");
-        Assert.hasText(customDdlKey.getBusinessObjectFormatUsage(), "A business object format usage must be specified.");
-        Assert.hasText(customDdlKey.getBusinessObjectFormatFileType(), "A business object format file type must be specified.");
-        Assert.notNull(customDdlKey.getBusinessObjectFormatVersion(), "A business object format version must be specified.");
-        Assert.hasText(customDdlKey.getCustomDdlName(), "A custom DDL name must be specified.");
-
-        // Remove leading and trailing spaces.
-        customDdlKey.setNamespace(customDdlKey.getNamespace().trim());
-        customDdlKey.setBusinessObjectDefinitionName(customDdlKey.getBusinessObjectDefinitionName().trim());
-        customDdlKey.setBusinessObjectFormatUsage(customDdlKey.getBusinessObjectFormatUsage().trim());
-        customDdlKey.setBusinessObjectFormatFileType(customDdlKey.getBusinessObjectFormatFileType().trim());
-        customDdlKey.setCustomDdlName(customDdlKey.getCustomDdlName().trim());
+        Assert.notNull(key, "A custom DDL key must be specified.");
+        key.setNamespace(alternateKeyHelper.validateStringParameter("namespace", key.getNamespace()));
+        key.setBusinessObjectDefinitionName(
+            alternateKeyHelper.validateStringParameter("business object definition name", key.getBusinessObjectDefinitionName()));
+        key.setBusinessObjectFormatUsage(alternateKeyHelper.validateStringParameter("business object format usage", key.getBusinessObjectFormatUsage()));
+        key.setBusinessObjectFormatFileType(
+            alternateKeyHelper.validateStringParameter("business object format file type", key.getBusinessObjectFormatFileType()));
+        Assert.notNull(key.getBusinessObjectFormatVersion(), "A business object format version must be specified.");
+        key.setCustomDdlName(alternateKeyHelper.validateStringParameter("custom DDL name", key.getCustomDdlName()));
     }
 }

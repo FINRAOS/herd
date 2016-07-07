@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
@@ -43,6 +44,9 @@ import org.finra.herd.model.jpa.SchemaColumnEntity;
 @Component
 public class BusinessObjectFormatHelper
 {
+    @Autowired
+    private AlternateKeyHelper alternateKeyHelper;
+
     /**
      * Returns a string representation of the alternate key values for the business object format.
      *
@@ -250,25 +254,36 @@ public class BusinessObjectFormatHelper
     /**
      * Validates the business object format key. This method also trims the key parameters.
      *
-     * @param businessObjectFormatKey the business object format key
+     * @param key the business object format key
      *
      * @throws IllegalArgumentException if any validation errors were found
      */
-    public void validateBusinessObjectFormatKey(BusinessObjectFormatKey businessObjectFormatKey) throws IllegalArgumentException
+    public void validateBusinessObjectFormatKey(BusinessObjectFormatKey key) throws IllegalArgumentException
     {
-        // Validate.
-        Assert.notNull(businessObjectFormatKey, "A business object format key must be specified.");
-        Assert.hasText(businessObjectFormatKey.getNamespace(), "A namespace must be specified.");
-        Assert.hasText(businessObjectFormatKey.getBusinessObjectDefinitionName(), "A business object definition name must be specified.");
-        Assert.hasText(businessObjectFormatKey.getBusinessObjectFormatUsage(), "A business object format usage must be specified.");
-        Assert.hasText(businessObjectFormatKey.getBusinessObjectFormatFileType(), "A business object format file type must be specified.");
-        Assert.notNull(businessObjectFormatKey.getBusinessObjectFormatVersion(), "A business object format version must be specified.");
+        validateBusinessObjectFormatKey(key, true);
+    }
 
-        // Remove leading and trailing spaces.
-        businessObjectFormatKey.setNamespace(businessObjectFormatKey.getNamespace().trim());
-        businessObjectFormatKey.setBusinessObjectDefinitionName(businessObjectFormatKey.getBusinessObjectDefinitionName().trim());
-        businessObjectFormatKey.setBusinessObjectFormatUsage(businessObjectFormatKey.getBusinessObjectFormatUsage().trim());
-        businessObjectFormatKey.setBusinessObjectFormatFileType(businessObjectFormatKey.getBusinessObjectFormatFileType().trim());
+    /**
+     * Validates the business object format key. This method also trims the key parameters.
+     *
+     * @param key the business object format key
+     * @param businessObjectFormatVersionRequired specifies if business object format version parameter is required or not
+     *
+     * @throws IllegalArgumentException if any validation errors were found
+     */
+    public void validateBusinessObjectFormatKey(BusinessObjectFormatKey key, Boolean businessObjectFormatVersionRequired) throws IllegalArgumentException
+    {
+        Assert.notNull(key, "A business object format key must be specified.");
+        key.setNamespace(alternateKeyHelper.validateStringParameter("namespace", key.getNamespace()));
+        key.setBusinessObjectDefinitionName(
+            alternateKeyHelper.validateStringParameter("business object definition name", key.getBusinessObjectDefinitionName()));
+        key.setBusinessObjectFormatUsage(alternateKeyHelper.validateStringParameter("business object format usage", key.getBusinessObjectFormatUsage()));
+        key.setBusinessObjectFormatFileType(
+            alternateKeyHelper.validateStringParameter("business object format file type", key.getBusinessObjectFormatFileType()));
+        if (businessObjectFormatVersionRequired)
+        {
+            Assert.notNull(key.getBusinessObjectFormatVersion(), "A business object format version must be specified.");
+        }
     }
 
     /**

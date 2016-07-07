@@ -111,6 +111,49 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
     }
 
     @Test
+    public void testCreateBusinessObjectDefinitionColumnInvalidParameters()
+    {
+        // Try to create a business object definition column when business object definition namespace contains a slash character.
+        try
+        {
+            businessObjectDefinitionColumnService.createBusinessObjectDefinitionColumn(
+                new BusinessObjectDefinitionColumnCreateRequest(new BusinessObjectDefinitionColumnKey(addSlash(BDEF_NAMESPACE), BDEF_NAME, BDEF_COLUMN_NAME),
+                    COLUMN_NAME, BDEF_COLUMN_DESCRIPTION));
+            fail("Should throw an IllegalArgumentException when business object definition namespace contains a slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Namespace can not contain a slash character.", e.getMessage());
+        }
+
+        // Try to create a business object definition column when business object definition name contains a slash character.
+        try
+        {
+            businessObjectDefinitionColumnService.createBusinessObjectDefinitionColumn(
+                new BusinessObjectDefinitionColumnCreateRequest(new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, addSlash(BDEF_NAME), BDEF_COLUMN_NAME),
+                    COLUMN_NAME, BDEF_COLUMN_DESCRIPTION));
+            fail("Should throw an IllegalArgumentException when business object definition name contains a slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Business object definition name can not contain a slash character.", e.getMessage());
+        }
+
+        // Try to create a business object definition column when business object definition column name contains a slash character.
+        try
+        {
+            businessObjectDefinitionColumnService.createBusinessObjectDefinitionColumn(
+                new BusinessObjectDefinitionColumnCreateRequest(new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, addSlash(BDEF_COLUMN_NAME)),
+                    COLUMN_NAME, BDEF_COLUMN_DESCRIPTION));
+            fail("Should throw an IllegalArgumentException when business object definition column name contains a slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Business object definition column name can not contain a slash character.", e.getMessage());
+        }
+    }
+
+    @Test
     public void testCreateBusinessObjectDefinitionColumnLowerCaseParameters()
     {
         // Create and persist a business object format entity.
@@ -371,31 +414,6 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
     }
 
     @Test
-    public void testDeleteBusinessObjectDefinitionColumnNoLinkedSchemaColumn()
-    {
-        // Create a business object definition column key.
-        BusinessObjectDefinitionColumnKey businessObjectDefinitionColumnKey =
-            new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME);
-
-        // Create and persist a business object definition column.
-        createBusinessObjectDefinitionColumnEntity(businessObjectDefinitionColumnKey, BDEF_COLUMN_DESCRIPTION);
-
-        // Validate that this business object definition column exists.
-        assertNotNull(businessObjectDefinitionColumnDao.getBusinessObjectDefinitionColumnByKey(businessObjectDefinitionColumnKey));
-
-        // Delete this business object definition column.
-        BusinessObjectDefinitionColumn deletedBusinessObjectDefinitionColumn =
-            businessObjectDefinitionColumnService.deleteBusinessObjectDefinitionColumn(businessObjectDefinitionColumnKey);
-
-        // Validate the returned object.
-        assertEquals(new BusinessObjectDefinitionColumn(deletedBusinessObjectDefinitionColumn.getId(), businessObjectDefinitionColumnKey, NO_COLUMN_NAME,
-            BDEF_COLUMN_DESCRIPTION), deletedBusinessObjectDefinitionColumn);
-
-        // Ensure that this business object definition column is no longer there.
-        assertNull(businessObjectDefinitionColumnDao.getBusinessObjectDefinitionColumnByKey(businessObjectDefinitionColumnKey));
-    }
-
-    @Test
     public void testDeleteBusinessObjectDefinitionColumnLowerCaseParameters()
     {
         // Create a business object definition column key.
@@ -467,6 +485,31 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
         {
             assertEquals("A business object definition column name must be specified.", e.getMessage());
         }
+    }
+
+    @Test
+    public void testDeleteBusinessObjectDefinitionColumnNoLinkedSchemaColumn()
+    {
+        // Create a business object definition column key.
+        BusinessObjectDefinitionColumnKey businessObjectDefinitionColumnKey =
+            new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME);
+
+        // Create and persist a business object definition column.
+        createBusinessObjectDefinitionColumnEntity(businessObjectDefinitionColumnKey, BDEF_COLUMN_DESCRIPTION);
+
+        // Validate that this business object definition column exists.
+        assertNotNull(businessObjectDefinitionColumnDao.getBusinessObjectDefinitionColumnByKey(businessObjectDefinitionColumnKey));
+
+        // Delete this business object definition column.
+        BusinessObjectDefinitionColumn deletedBusinessObjectDefinitionColumn =
+            businessObjectDefinitionColumnService.deleteBusinessObjectDefinitionColumn(businessObjectDefinitionColumnKey);
+
+        // Validate the returned object.
+        assertEquals(new BusinessObjectDefinitionColumn(deletedBusinessObjectDefinitionColumn.getId(), businessObjectDefinitionColumnKey, NO_COLUMN_NAME,
+            BDEF_COLUMN_DESCRIPTION), deletedBusinessObjectDefinitionColumn);
+
+        // Ensure that this business object definition column is no longer there.
+        assertNull(businessObjectDefinitionColumnDao.getBusinessObjectDefinitionColumnByKey(businessObjectDefinitionColumnKey));
     }
 
     @Test

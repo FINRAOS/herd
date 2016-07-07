@@ -56,6 +56,7 @@ import org.finra.herd.model.jpa.JobDefinitionParameterEntity;
 import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.service.JobDefinitionService;
 import org.finra.herd.service.activiti.ActivitiHelper;
+import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.JobDefinitionDaoHelper;
 import org.finra.herd.service.helper.JobDefinitionHelper;
 import org.finra.herd.service.helper.NamespaceDaoHelper;
@@ -73,6 +74,9 @@ public class JobDefinitionServiceImpl implements JobDefinitionService
 
     @Autowired
     private ActivitiHelper activitiHelper;
+
+    @Autowired
+    private AlternateKeyHelper alternateKeyHelper;
 
     @Autowired
     private ConfigurationHelper configurationHelper;
@@ -146,16 +150,9 @@ public class JobDefinitionServiceImpl implements JobDefinitionService
     @Override
     public JobDefinition getJobDefinition(String namespace, String jobName) throws Exception
     {
-        String namespaceLocal = namespace;
-        String jobNameLocal = jobName;
-
-        // Perform validation.
-        Assert.hasText(namespaceLocal, "A namespace must be specified.");
-        Assert.hasText(jobNameLocal, "A job name must be specified.");
-
-        // Trim keys.
-        namespaceLocal = namespaceLocal.trim();
-        jobNameLocal = jobNameLocal.trim();
+        // Validate the job definition alternate key.
+        String namespaceLocal = alternateKeyHelper.validateStringParameter("namespace", namespace);
+        String jobNameLocal = alternateKeyHelper.validateStringParameter("job name", jobName);
 
         // Retrieve and ensure that a job definition exists.
         JobDefinitionEntity jobDefinitionEntity = jobDefinitionDaoHelper.getJobDefinitionEntity(namespaceLocal, jobNameLocal);
@@ -168,21 +165,21 @@ public class JobDefinitionServiceImpl implements JobDefinitionService
     @Override
     public JobDefinition updateJobDefinition(String namespace, String jobName, JobDefinitionUpdateRequest request, boolean enforceAsync) throws Exception
     {
-        String namespaceLocal = namespace;
-        String jobNameLocal = jobName;
+        // Validate the job definition alternate key.
+        String namespaceLocal = alternateKeyHelper.validateStringParameter("namespace", namespace);
+        String jobNameLocal = alternateKeyHelper.validateStringParameter("job name", jobName);
 
-        // Perform the validation.
+        // Validate and trim the Activiti job XML.
+        Assert.hasText(request.getActivitiJobXml(), "An Activiti job XML must be specified.");
+        request.setActivitiJobXml(request.getActivitiJobXml().trim());
+
+        // Perform the job definition validation.
         validateJobDefinition(namespaceLocal, jobNameLocal, request.getActivitiJobXml(), request.getParameters(), request.getS3PropertiesLocation());
 
         if (enforceAsync)
         {
             assertFirstTaskIsAsync(activitiHelper.constructBpmnModelFromXmlAndValidate(request.getActivitiJobXml()));
         }
-
-        // Trim data.
-        namespaceLocal = namespaceLocal.trim();
-        jobNameLocal = jobNameLocal.trim();
-        request.setActivitiJobXml(request.getActivitiJobXml().trim());
 
         // Get the namespace and ensure it exists.
         NamespaceEntity namespaceEntity = namespaceDaoHelper.getNamespaceEntity(namespaceLocal);
@@ -214,14 +211,17 @@ public class JobDefinitionServiceImpl implements JobDefinitionService
      */
     private void validateJobDefinitionCreateRequest(JobDefinitionCreateRequest request)
     {
-        // Perform the validation.
+        // Validate the job definition alternate key.
+        request.setNamespace(alternateKeyHelper.validateStringParameter("namespace", request.getNamespace()));
+        request.setJobName(alternateKeyHelper.validateStringParameter("job name", request.getJobName()));
+
+        // Validate and trim the Activiti job XML.
+        Assert.hasText(request.getActivitiJobXml(), "An Activiti job XML must be specified.");
+        request.setActivitiJobXml(request.getActivitiJobXml().trim());
+
+        // Perform the job definition validation.
         validateJobDefinition(request.getNamespace(), request.getJobName(), request.getActivitiJobXml(), request.getParameters(),
             request.getS3PropertiesLocation());
-
-        // Remove leading and trailing spaces.
-        request.setNamespace(request.getNamespace().trim());
-        request.setJobName(request.getJobName().trim());
-        request.setActivitiJobXml(request.getActivitiJobXml().trim());
     }
 
     /**
@@ -238,29 +238,14 @@ public class JobDefinitionServiceImpl implements JobDefinitionService
     private void validateJobDefinition(String namespace, String jobName, String activitiJobXml, List<Parameter> parameters,
         S3PropertiesLocation s3PropertiesLocation)
     {
-        String namespaceLocal = namespace;
-        String jobNameLocal = jobName;
-        String activitiJobXmlLocal = activitiJobXml;
-
-        // Validate required elements.
-        Assert.hasText(namespaceLocal, "A namespace must be specified.");
-        Assert.hasText(jobNameLocal, "A job name must be specified.");
-        Assert.hasText(activitiJobXmlLocal, "An Activiti job XML must be specified.");
-
-        // Remove leading and trailing spaces for other validation below.
-        // Note that this doesn't alter the strings after they get returned so callers will need to trim the fields also before persisting to the database.
-        namespaceLocal = namespaceLocal.trim();
-        jobNameLocal = jobNameLocal.trim();
-        activitiJobXmlLocal = activitiJobXmlLocal.trim();
-
         // Ensure the Activiti XML doesn't contain a CDATA wrapper.
-        Assert.isTrue(!activitiJobXmlLocal.contains("<![CDATA["), "Activiti XML can not contain a CDATA section.");
+        Assert.isTrue(!activitiJobXml.contains("<![CDATA["), "Activiti XML can not contain a CDATA section.");
 
         // Convert Activiti XML into BpmnModel and validate.
         BpmnModel bpmnModel;
         try
         {
-            bpmnModel = activitiHelper.constructBpmnModelFromXmlAndValidate(activitiJobXmlLocal);
+            bpmnModel = activitiHelper.constructBpmnModelFromXmlAndValidate(activitiJobXml);
         }
         catch (Exception ex)
         {
@@ -270,8 +255,8 @@ public class JobDefinitionServiceImpl implements JobDefinitionService
         // Validate that namespaceCd.jobName matched whats in Activiti job XML Id.
         String idInsideActivitiXml = bpmnModel.getProcesses().get(0).getId();
         Assert.hasText(idInsideActivitiXml, "ID inside Activiti job XML must be specified.");
-        Assert.isTrue(idInsideActivitiXml.equalsIgnoreCase(jobDefinitionHelper.buildActivitiIdString(namespaceLocal, jobNameLocal)),
-            "Namespace \"" + namespaceLocal + "\" and Job Name \"" + jobNameLocal + "\" does not match the ID specified within Activiti XML \"" +
+        Assert.isTrue(idInsideActivitiXml.equalsIgnoreCase(jobDefinitionHelper.buildActivitiIdString(namespace, jobName)),
+            "Namespace \"" + namespace + "\" and Job Name \"" + jobName + "\" does not match the ID specified within Activiti XML \"" +
                 idInsideActivitiXml +
                 "\".");
 

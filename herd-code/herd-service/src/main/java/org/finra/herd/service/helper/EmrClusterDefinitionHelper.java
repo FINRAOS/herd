@@ -41,6 +41,9 @@ import org.finra.herd.model.dto.ConfigurationValue;
 public class EmrClusterDefinitionHelper
 {
     @Autowired
+    private AlternateKeyHelper alternateKeyHelper;
+
+    @Autowired
     private ConfigurationHelper configurationHelper;
 
     @Autowired
@@ -130,20 +133,15 @@ public class EmrClusterDefinitionHelper
     /**
      * Validates the EMR cluster definition key. This method also trims the key parameters.
      *
-     * @param emrClusterDefinitionKey the EMR cluster definition key
+     * @param key the EMR cluster definition key
      *
      * @throws IllegalArgumentException if any validation errors were found
      */
-    public void validateEmrClusterDefinitionKey(EmrClusterDefinitionKey emrClusterDefinitionKey) throws IllegalArgumentException
+    public void validateEmrClusterDefinitionKey(EmrClusterDefinitionKey key) throws IllegalArgumentException
     {
-        // Validate.
-        Assert.notNull(emrClusterDefinitionKey, "A partition key group key must be specified.");
-        Assert.hasText(emrClusterDefinitionKey.getNamespace(), "A namespace must be specified.");
-        Assert.hasText(emrClusterDefinitionKey.getEmrClusterDefinitionName(), "An EMR cluster definition name must be specified.");
-
-        // Remove leading and trailing spaces.
-        emrClusterDefinitionKey.setNamespace(emrClusterDefinitionKey.getNamespace().trim());
-        emrClusterDefinitionKey.setEmrClusterDefinitionName(emrClusterDefinitionKey.getEmrClusterDefinitionName().trim());
+        Assert.notNull(key, "An EMR cluster definition key must be specified.");
+        key.setNamespace(alternateKeyHelper.validateStringParameter("namespace", key.getNamespace()));
+        key.setEmrClusterDefinitionName(alternateKeyHelper.validateStringParameter("An", "EMR cluster definition name", key.getEmrClusterDefinitionName()));
     }
 
     /**

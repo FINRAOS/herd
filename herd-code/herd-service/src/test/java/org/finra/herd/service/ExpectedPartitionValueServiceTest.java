@@ -122,6 +122,37 @@ public class ExpectedPartitionValueServiceTest extends AbstractServiceTest
     }
 
     @Test
+    public void testCreateExpectedPartitionValuesInvalidParameters()
+    {
+        // Create and persist a partition key group entity.
+        createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
+
+        // Try to perform a create when partition key group name contains a slash character.
+        try
+        {
+            expectedPartitionValueService.createExpectedPartitionValues(
+                createExpectedPartitionValuesCreateRequest(addSlash(PARTITION_KEY_GROUP), getTestUnsortedExpectedPartitionValues()));
+            fail("Should throw an IllegalArgumentException when partition key group name contains a slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Partition key group name can not contain a slash character.", e.getMessage());
+        }
+
+        // Try to perform a create when expected partition value contains a slash character.
+        try
+        {
+            expectedPartitionValueService
+                .createExpectedPartitionValues(createExpectedPartitionValuesCreateRequest(PARTITION_KEY_GROUP, Arrays.asList(addSlash(PARTITION_VALUE))));
+            fail("Should throw an IllegalArgumentException when expected partition value contains a slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Expected partition value can not contain a slash character.", e.getMessage());
+        }
+    }
+
+    @Test
     public void testCreateExpectedPartitionValuesDuplicatePartitionValues()
     {
         // Try to perform a create by passing duplicate expected partition values.

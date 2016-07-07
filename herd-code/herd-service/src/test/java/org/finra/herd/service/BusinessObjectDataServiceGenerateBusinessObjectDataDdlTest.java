@@ -209,7 +209,7 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals("A business object format usage name must be specified.", e.getMessage());
+            assertEquals("A business object format usage must be specified.", e.getMessage());
         }
 
         // Try to retrieve business object data ddl when business object format file type parameter is not specified.

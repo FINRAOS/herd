@@ -15,6 +15,7 @@
 */
 package org.finra.herd.service.helper;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
@@ -27,6 +28,9 @@ import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 @Component
 public class BusinessObjectDefinitionHelper
 {
+    @Autowired
+    private AlternateKeyHelper alternateKeyHelper;
+
     /**
      * Returns a string representation of the business object definition key.
      *
@@ -56,19 +60,17 @@ public class BusinessObjectDefinitionHelper
     /**
      * Validates the business object definition key. This method also trims the key parameters.
      *
-     * @param businessObjectDefinitionKey the business object definition key
+     * @param key the business object definition key
      *
      * @throws IllegalArgumentException if any validation errors were found
      */
-    public void validateBusinessObjectDefinitionKey(BusinessObjectDefinitionKey businessObjectDefinitionKey) throws IllegalArgumentException
+    public void validateBusinessObjectDefinitionKey(BusinessObjectDefinitionKey key) throws IllegalArgumentException
     {
         // Validate.
-        Assert.notNull(businessObjectDefinitionKey, "A business object definition key must be specified.");
-        Assert.hasText(businessObjectDefinitionKey.getNamespace(), "A namespace must be specified.");
-        Assert.hasText(businessObjectDefinitionKey.getBusinessObjectDefinitionName(), "A business object definition name must be specified.");
+        Assert.notNull(key, "A business object definition key must be specified.");
 
-        // Remove leading and trailing spaces.
-        businessObjectDefinitionKey.setNamespace(businessObjectDefinitionKey.getNamespace().trim());
-        businessObjectDefinitionKey.setBusinessObjectDefinitionName(businessObjectDefinitionKey.getBusinessObjectDefinitionName().trim());
+        key.setNamespace(alternateKeyHelper.validateStringParameter("namespace", key.getNamespace()));
+        key.setBusinessObjectDefinitionName(
+            alternateKeyHelper.validateStringParameter("business object definition name", key.getBusinessObjectDefinitionName()));
     }
 }
