@@ -15,6 +15,7 @@
 */
 package org.finra.herd.app.security;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
@@ -42,7 +43,11 @@ public class HerdUserDetailsService implements AuthenticationUserDetailsService<
     {
         ApplicationUser user = (ApplicationUser) token.getPrincipal();
 
-        Set<GrantedAuthority> authorities = securityHelper.mapRolesToFunctions(user.getRoles());
+        Set<GrantedAuthority> authorities = new HashSet<>();
+        // Add all functional points per given collection of user roles.
+        authorities.addAll(securityHelper.mapRolesToFunctions(user.getRoles()));
+        // Add all function points that are not mapped to any roles in the system.
+        authorities.addAll(securityHelper.getUnrestrictedFunctions());
         SecurityUserWrapper result = new SecurityUserWrapper(user.getUserId(), "N/A", true, true, true, true, authorities, user);
 
         LOGGER.debug("Loaded User: " + result);

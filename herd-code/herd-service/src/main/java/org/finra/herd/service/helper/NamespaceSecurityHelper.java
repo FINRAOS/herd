@@ -69,14 +69,35 @@ public class NamespaceSecurityHelper
      */
     public void checkPermission(String namespace, NamespacePermissionEnum[] permissions)
     {
-        if (!isAuthorized(namespace, permissions))
+        // Skip the permission check if there is no authentication or namespace is not specified.
+        if (!isAuthenticated() || StringUtils.isBlank(namespace))
         {
-            String namespaceTrimmed = namespace.trim();
+            return;
+        }
+
+        // Trim the namespace.
+        String namespaceTrimmed = namespace.trim();
+
+        // Check if the current user is authorized to the given namespace and has the given permissions.
+        ApplicationUser applicationUser = getApplicationUser();
+        if (!isAuthorized(applicationUser, namespaceTrimmed, permissions))
+        {
+            // The current user is not authorized to access the given namespace, so log a warning and throw an exception.
             LOGGER.warn(String
-                .format("User does not have permission(s) to the namespace. %s namespace=\"%s\" permissions=\"%s\"", getApplicationUser(), namespaceTrimmed,
+                .format("User does not have permission(s) to the namespace. %s namespace=\"%s\" permissions=\"%s\"", applicationUser, namespaceTrimmed,
                     Arrays.asList(permissions)));
-            throw new AccessDeniedException(
-                "Current user does not have \"" + Arrays.asList(permissions) + "\" permission(s) to the namespace \"" + namespaceTrimmed + "\"");
+
+            if (applicationUser != null)
+            {
+                throw new AccessDeniedException(String
+                    .format("User \"%s\" does not have \"%s\" permission(s) to the namespace \"%s\"", applicationUser.getUserId(), Arrays.asList(permissions),
+                        namespaceTrimmed));
+            }
+            else
+            {
+                throw new AccessDeniedException(
+                    String.format("Current user does not have \"%s\" permission(s) to the namespace \"%s\"", Arrays.asList(permissions), namespaceTrimmed));
+            }
         }
     }
 
@@ -125,21 +146,16 @@ public class NamespaceSecurityHelper
     }
 
     /**
-     * Returns true if the current user is authorized to the given namespace and has the given permissions. Also returns true if there is no authentication.
+     * Returns true if the application user is authorized to the given namespace and has the given permissions.
      *
-     * @param namespace The namespace
-     * @param permissions The permissions
+     * @param applicationUser the application user
+     * @param namespace the namespace
+     * @param permissions the permissions
      *
      * @return true if authorized, false otherwise
      */
-    public boolean isAuthorized(String namespace, NamespacePermissionEnum... permissions)
+    private boolean isAuthorized(ApplicationUser applicationUser, String namespace, NamespacePermissionEnum... permissions)
     {
-        if (!isAuthenticated() || StringUtils.isBlank(namespace))
-        {
-            return true;
-        }
-
-        ApplicationUser applicationUser = getApplicationUser();
         if (applicationUser != null && applicationUser.getNamespaceAuthorizations() != null)
         {
             for (NamespaceAuthorization currentUserAuthorization : applicationUser.getNamespaceAuthorizations())
@@ -150,13 +166,14 @@ public class NamespaceSecurityHelper
                     currentUserNamespacePermissions = Collections.emptyList();
                 }
 
-                if (StringUtils.equalsIgnoreCase(currentUserAuthorization.getNamespace(), namespace.trim()) &&
+                if (StringUtils.equalsIgnoreCase(currentUserAuthorization.getNamespace(), namespace) &&
                     currentUserNamespacePermissions.containsAll(Arrays.asList(permissions)))
                 {
                     return true;
                 }
             }
         }
+
         return false;
     }
 

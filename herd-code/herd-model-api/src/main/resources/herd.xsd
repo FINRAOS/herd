@@ -131,10 +131,14 @@
       </xs:all>
    </xs:complexType>
 
-   <!-- There is nothing that is currently updated, but we will have something in the future. -->
    <xs:element name="storageUpdateRequest" type="storageUpdateRequest"/>
    <xs:complexType name="storageUpdateRequest">
       <xs:all>
+         <xs:element name="noData" type="xs:string" minOccurs="0" maxOccurs="0">
+            <xs:annotation>
+               <xs:documentation>There is nothing that is currently updated, but we will have something in the future.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
@@ -1045,7 +1049,7 @@
          </xs:element>
          <xs:element name="nullValue" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>The string to use for the null value (e.g. "\N"). Please note that a null value is allowed to be a whitespace character.
+                  <xs:documentation>The string to use for the null value (e.g. "\\\\N"). Please note that a null value is allowed to be a whitespace character.
                   XML escaping should be used when specifying non-ASCII characters.
                   Note: when passing in an empty String, the response XML will return a NULL value (i.e. the tag will be absent). Generate DDL calls will show
                   the correct empty String value wrapped in single-quotes.
@@ -1062,7 +1066,7 @@
          </xs:element>
          <xs:element name="escapeCharacter" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>The escape character (e.g. "\").
+               <xs:documentation>The escape character (e.g. "\\\\").
                   XML escaping should be used when specifying non-ASCII characters.
                </xs:documentation>
             </xs:annotation>
@@ -1733,6 +1737,11 @@
                </xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="businessObjectDataStatusHistory" type="businessObjectDataStatusHistory" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Lists all business object data status change events for this business object data</xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
@@ -1939,6 +1948,29 @@
             </xs:annotation>
          </xs:element>
       </xs:all>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDataStatusHistory" type="businessObjectDataStatusHistory"/>
+   <xs:complexType name="businessObjectDataStatusHistory">
+      <xs:sequence>
+         <xs:element name="businessObjectDataStatusChangeEvent" type="businessObjectDataStatusChangeEvent" minOccurs="0"
+                     maxOccurs="unbounded"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDataStatusChangeEvent">
+      <xs:sequence>
+         <xs:element name="status" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The status of the Business Object Data</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="eventTime" type="xs:dateTime">
+            <xs:annotation>
+               <xs:documentation>The timestamp of when the business object data status change occurred</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
    </xs:complexType>
 
    <!-- ***** Business Object Data Status ***** -->
@@ -4074,6 +4106,7 @@
          <xs:enumeration value="ORACLE"/>
          <xs:enumeration value="POSTGRES"/>
          <xs:enumeration value="REDSHIFT"/>
+         <xs:enumeration value="MYSQL"/>
       </xs:restriction>
    </xs:simpleType>
 

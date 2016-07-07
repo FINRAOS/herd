@@ -1383,9 +1383,8 @@ public class S3DaoTest extends AbstractDaoTest
     {
         String bucketName = "test_bucketName";
         String key = "test_key";
-        Date expiration = new Date(12345l);
+        Date expiration = new Date(12345L);
         S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
-        s3FileTransferRequestParamsDto.setSignerOverride(S3FileTransferRequestParamsDto.SIGNER_OVERRIDE_V4);
         String result = s3Dao.generateGetObjectPresignedUrl(bucketName, key, expiration, s3FileTransferRequestParamsDto);
 
         Assert.assertEquals("result", "https://" + bucketName + "/" + key + "?method=GET&expiration=" + expiration.getTime(), result);
@@ -2365,7 +2364,7 @@ public class S3DaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void testGetAmazonS3AssertSignerOverrideIsSetWhenProxyIsSet()
+    public void testGetAmazonS3AssertV4SigningAlwaysPresent()
     {
         S3Operations originalS3Operations = (S3Operations) ReflectionTestUtils.getField(s3Dao, "s3Operations");
         S3Operations mockS3Operations = mock(S3Operations.class);
@@ -2375,30 +2374,17 @@ public class S3DaoTest extends AbstractDaoTest
         {
             String s3BucketName = "s3BucketName";
             String s3KeyPrefix = "s3KeyPrefix";
-            String httpProxyHost = "httpProxyHost";
-            Integer httpProxyPort = 1234;
-            String signerOverride = S3FileTransferRequestParamsDto.SIGNER_OVERRIDE_V4;
 
             S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
             s3FileTransferRequestParamsDto.setS3BucketName(s3BucketName);
             s3FileTransferRequestParamsDto.setS3KeyPrefix(s3KeyPrefix);
-            s3FileTransferRequestParamsDto.setHttpProxyHost(httpProxyHost);
-            s3FileTransferRequestParamsDto.setHttpProxyPort(httpProxyPort);
-            s3FileTransferRequestParamsDto.setSignerOverride(signerOverride);
 
-            when(mockS3Operations.putObject(any(), any())).then(new Answer<PutObjectResult>()
-            {
-                @Override
-                public PutObjectResult answer(InvocationOnMock invocation) throws Throwable
-                {
-                    AmazonS3Client amazonS3Client = invocation.getArgumentAt(1, AmazonS3Client.class);
-                    ClientConfiguration clientConfiguration = (ClientConfiguration) ReflectionTestUtils.getField(amazonS3Client, "clientConfiguration");
-                    assertEquals(signerOverride, clientConfiguration.getSignerOverride());
-                    return new PutObjectResult();
-                }
+            when(mockS3Operations.putObject(any(), any())).then((Answer<PutObjectResult>) invocation -> {
+                AmazonS3Client amazonS3Client = invocation.getArgumentAt(1, AmazonS3Client.class);
+                ClientConfiguration clientConfiguration = (ClientConfiguration) ReflectionTestUtils.getField(amazonS3Client, "clientConfiguration");
+                assertEquals(S3Dao.SIGNER_OVERRIDE_V4, clientConfiguration.getSignerOverride());
+                return new PutObjectResult();
             });
-
-            s3Dao.createDirectory(s3FileTransferRequestParamsDto);
         }
         finally
         {

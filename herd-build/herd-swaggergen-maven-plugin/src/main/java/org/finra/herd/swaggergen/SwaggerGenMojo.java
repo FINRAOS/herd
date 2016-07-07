@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.TreeMap;
 
@@ -28,7 +29,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.swagger.models.Info;
 import io.swagger.models.Scheme;
+import io.swagger.models.SecurityRequirement;
 import io.swagger.models.Swagger;
+import io.swagger.models.auth.ApiKeyAuthDefinition;
+import io.swagger.models.auth.BasicAuthDefinition;
+import io.swagger.models.auth.OAuth2Definition;
+import io.swagger.models.auth.SecuritySchemeDefinition;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
@@ -112,6 +118,17 @@ public class SwaggerGenMojo extends AbstractMojo
     private String xsdName;
 
     /**
+     * The authorization type. Values come from SecuritySchemeDefinition types (i.e. "basic", "oauth2", and "apiKey"). If nothing is specified, no authorization
+     * will be added.
+     */
+    @org.apache.maven.plugins.annotations.Parameter(property = "authType")
+    private String authType;
+
+    // A list of the Swagger security scheme definitions. Each one has a "type" to identify it if necessary.
+    private static final List<SecuritySchemeDefinition> SECURITY_SCHEME_DEFINITIONS =
+        new ArrayList<>(Arrays.asList(new BasicAuthDefinition(), new OAuth2Definition(), new ApiKeyAuthDefinition()));
+
+    /**
      * The main execution method for this Mojo.
      *
      * @throws MojoExecutionException if any errors were encountered.
@@ -188,6 +205,36 @@ public class SwaggerGenMojo extends AbstractMojo
             swagger.setSchemes(schemes);
         }
 
+        // Add authorization support if specified.
+        if (authType != null)
+        {
+            // Find the definition for the user specified type.
+            SecuritySchemeDefinition securitySchemeDefinition = null;
+            for (SecuritySchemeDefinition possibleDefinition : SECURITY_SCHEME_DEFINITIONS)
+            {
+                if (possibleDefinition.getType().equalsIgnoreCase(authType))
+                {
+                    securitySchemeDefinition = possibleDefinition;
+                    break;
+                }
+            }
+
+            // If we found a match, set it on the swagger object.
+            if (securitySchemeDefinition != null)
+            {
+                // Come up with an authentication name for easy identification (e.g. basicAuthentication, etc.).
+                String securityName = securitySchemeDefinition.getType() + "Authentication";
+
+                // Add the security definition.
+                swagger.addSecurityDefinition(securityName, securitySchemeDefinition);
+
+                // Add the security for everything based on the name of the definition.
+                SecurityRequirement securityRequirement = new SecurityRequirement();
+                securityRequirement.requirement(securityName);
+                swagger.addSecurity(securityRequirement);
+            }
+        }
+
         // Use default paths and definitions.
         swagger.setPaths(new TreeMap<>());
         swagger.setDefinitions(new TreeMap<>());
@@ -209,6 +256,7 @@ public class SwaggerGenMojo extends AbstractMojo
             getLog().debug("Creating output YAML file \"" + yamlOutputLocation + "\"");
 
             ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
+            objectMapper.setPropertyNamingStrategy(new SwaggerNamingStrategy());
             objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
             objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
             objectMapper.writeValue(new File(yamlOutputLocation), swagger);

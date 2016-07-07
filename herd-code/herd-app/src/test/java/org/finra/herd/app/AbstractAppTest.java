@@ -15,7 +15,6 @@
 */
 package org.finra.herd.app;
 
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -167,7 +166,6 @@ public abstract class AbstractAppTest extends AbstractRestTest
         Set<String> expectedRoles, String expectedSessionInitTime, String[] expectedFunctions, Set<NamespaceAuthorization> expectedNamespaceAuthorizations)
         throws Exception
     {
-
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         assertNotNull(authentication);
 
@@ -202,7 +200,10 @@ public abstract class AbstractAppTest extends AbstractRestTest
                 functions.add(grantedAuthority.getAuthority());
             }
 
-            assertArrayEquals(expectedFunctions, functions.toArray(new String[user.getAuthorities().size()]));
+            for (String expectedFunction : expectedFunctions)
+            {
+                assertTrue(functions.contains(expectedFunction));
+            }
         }
 
         // Validate namespace authorizations.

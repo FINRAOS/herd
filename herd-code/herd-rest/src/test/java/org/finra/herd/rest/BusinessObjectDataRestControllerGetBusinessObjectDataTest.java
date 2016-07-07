@@ -52,7 +52,8 @@ public class BusinessObjectDataRestControllerGetBusinessObjectDataTest extends A
         BusinessObjectData businessObjectData = businessObjectDataRestController
             .getBusinessObjectData(request.getNamespace(), request.getBusinessObjectDefinitionName(), request.getBusinessObjectFormatUsage(),
                 request.getBusinessObjectFormatFileType(), request.getPartitionKey(), request.getPartitionValue(),
-                getDelimitedFieldValues(request.getSubPartitionValues()), request.getBusinessObjectFormatVersion(), INITIAL_DATA_VERSION, NO_BDATA_STATUS);
+                getDelimitedFieldValues(request.getSubPartitionValues()), request.getBusinessObjectFormatVersion(), INITIAL_DATA_VERSION, NO_BDATA_STATUS,
+                NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY);
 
         // Verify the results.
         assertNotNull(businessObjectData);
@@ -97,7 +98,7 @@ public class BusinessObjectDataRestControllerGetBusinessObjectDataTest extends A
                 businessObjectDataParentKey.getBusinessObjectFormatUsage(), businessObjectDataParentKey.getBusinessObjectFormatFileType(),
                 request.getPartitionKey(), businessObjectDataParentKey.getPartitionValue(),
                 getDelimitedFieldValues(businessObjectDataParentKey.getSubPartitionValues()), businessObjectDataParentKey.getBusinessObjectFormatVersion(),
-                businessObjectDataParentKey.getBusinessObjectDataVersion(), NO_BDATA_STATUS);
+                businessObjectDataParentKey.getBusinessObjectDataVersion(), NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY);
 
         // Ensure that the parent contains a single child record and that it is equal to our original business object data we created.
         assertTrue(businessObjectDataParent.getBusinessObjectDataChildren().size() == 1);
@@ -129,7 +130,8 @@ public class BusinessObjectDataRestControllerGetBusinessObjectDataTest extends A
             {
                 BusinessObjectData resultBusinessObjectData = businessObjectDataRestController
                     .getBusinessObjectData(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, PARTITION_VALUE,
-                        getDelimitedFieldValues(SUBPARTITION_VALUES), businessObjectFormatVersion, businessObjectDataVersion, NO_BDATA_STATUS);
+                        getDelimitedFieldValues(SUBPARTITION_VALUES), businessObjectFormatVersion, businessObjectDataVersion, NO_BDATA_STATUS,
+                        NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY);
 
                 // Validate the returned object.
                 validateBusinessObjectData(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, businessObjectFormatVersion, PARTITION_VALUE,
@@ -154,7 +156,8 @@ public class BusinessObjectDataRestControllerGetBusinessObjectDataTest extends A
         // Please note that we do not specify business object data version in order for the business object data status to have an effect.
         resultBusinessObjectData = businessObjectDataRestController
             .getBusinessObjectData(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, PARTITION_VALUE,
-                getDelimitedFieldValues(SUBPARTITION_VALUES), INITIAL_FORMAT_VERSION, NO_DATA_VERSION, BusinessObjectDataStatusEntity.VALID);
+                getDelimitedFieldValues(SUBPARTITION_VALUES), INITIAL_FORMAT_VERSION, NO_DATA_VERSION, BusinessObjectDataStatusEntity.VALID,
+                NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY);
 
         // Validate the returned object, it should be the latest VALID business object data version available for the initial business object format version.
         validateBusinessObjectData(businessObjectDataEntities.get(0).getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
@@ -165,7 +168,8 @@ public class BusinessObjectDataRestControllerGetBusinessObjectDataTest extends A
         // Please note that we do not specify business object data version in order for the business object data status to have an effect.
         resultBusinessObjectData = businessObjectDataRestController
             .getBusinessObjectData(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, PARTITION_VALUE,
-                getDelimitedFieldValues(SUBPARTITION_VALUES), INITIAL_FORMAT_VERSION, NO_DATA_VERSION, BDATA_STATUS);
+                getDelimitedFieldValues(SUBPARTITION_VALUES), INITIAL_FORMAT_VERSION, NO_DATA_VERSION, BDATA_STATUS,
+                NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY);
 
         // Validate the returned object, it should be the latest business object data version with
         // the test business object data status available for the initial business object format version.
@@ -190,7 +194,7 @@ public class BusinessObjectDataRestControllerGetBusinessObjectDataTest extends A
         {
             BusinessObjectData resultBusinessObjectData = businessObjectDataRestController
                 .getBusinessObjectData(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, partitionKey, PARTITION_VALUE, null, null, null,
-                    NO_BDATA_STATUS);
+                    NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY);
 
             // Validate the returned object.
             validateBusinessObjectData(businessObjectDataEntities.get(1).getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
