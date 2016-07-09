@@ -53,3 +53,4 @@ values ('FN_BUSINESS_OBJECT_DEFINITION_COLUMNS_DELETE', current_timestamp, 'SYST
 
 insert into scrty_fn_lk (scrty_fn_cd, creat_ts, creat_user_id, updt_ts, updt_user_id) 
 values ('FN_BUSINESS_OBJECT_DEFINITION_COLUMNS_ALL_GET', current_timestamp, 'SYSTEM', current_timestamp, 'SYSTEM');
+
