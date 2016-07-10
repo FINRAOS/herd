@@ -34,6 +34,7 @@ import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
@@ -49,9 +50,12 @@ import org.finra.herd.dao.helper.XmlHelper;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.AwsCredential;
 import org.finra.herd.model.api.xml.BusinessObjectData;
+import org.finra.herd.model.api.xml.BusinessObjectDataStatusUpdateResponse;
+import org.finra.herd.model.api.xml.BusinessObjectDataStorageFilesCreateResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDataUploadCredential;
 import org.finra.herd.model.api.xml.S3KeyPrefixInformation;
 import org.finra.herd.model.api.xml.Storage;
+import org.finra.herd.model.api.xml.StorageDirectory;
 import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.api.xml.StorageUnit;
 import org.finra.herd.model.api.xml.StorageUnitDownloadCredential;
@@ -69,6 +73,7 @@ public class MockHttpClientOperationsImpl implements HttpClientOperations
     private static final Logger LOGGER = Logger.getLogger(MockHttpClientOperationsImpl.class);
 
     public static final String HOSTNAME_THROW_IO_EXCEPTION_DURING_POST = "testThrowIoExceptionDuringPost";
+
     public static final String HOSTNAME_THROW_IO_EXCEPTION_DURING_GET_STORAGES = "testThrowIoExceptionDuringGetStorages";
 
     @Autowired
@@ -87,9 +92,9 @@ public class MockHttpClientOperationsImpl implements HttpClientOperations
         MockCloseableHttpResponse response = new MockCloseableHttpResponse(statusLine);
 
         // Find out which API's are being called and build an appropriate response.
+        URI uri = request.getURI();
         if (request instanceof HttpGet)
         {
-            URI uri = request.getURI();
             if (uri.getPath().startsWith("/herd-app/rest/businessObjectData/"))
             {
                 if (uri.getPath().endsWith("s3KeyPrefix"))
@@ -118,6 +123,22 @@ public class MockHttpClientOperationsImpl implements HttpClientOperations
         else if (request instanceof HttpPost)
         {
             checkHostname(request, HOSTNAME_THROW_IO_EXCEPTION_DURING_POST);
+
+            if (uri.getPath().startsWith("/herd-app/rest/businessObjectDataStorageFiles/"))
+            {
+                buildPostBusinessObjectDataStorageFilesResponse(response, uri);
+            }
+            else if (uri.getPath().equals("/herd-app/rest/businessObjectData"))
+            {
+                buildPostBusinessObjectDataResponse(response, uri);
+            }
+        }
+        else if (request instanceof HttpPut)
+        {
+            if (uri.getPath().startsWith("/herd-app/rest/businessObjectDataStatus/"))
+            {
+                buildPutBusinessObjectDataStatusResponse(response, uri);
+            }
         }
 
         LOGGER.debug("response = " + response);
@@ -272,6 +293,53 @@ public class MockHttpClientOperationsImpl implements HttpClientOperations
 
             response.setEntity(getHttpEntity(businessObjectData));
         }
+    }
+
+    /**
+     * Builds a business object data status update response.
+     *
+     * @param response the response.
+     * @param uri the URI of the incoming request.
+     *
+     * @throws JAXBException if a JAXB error occurred.
+     */
+    private void buildPutBusinessObjectDataStatusResponse(MockCloseableHttpResponse response, URI uri) throws JAXBException
+    {
+        BusinessObjectDataStatusUpdateResponse businessObjectDataStatusUpdateResponse = new BusinessObjectDataStatusUpdateResponse();
+        response.setEntity(getHttpEntity(businessObjectDataStatusUpdateResponse));
+    }
+
+    /**
+     * Builds a business object data create response.
+     *
+     * @param response the response.
+     * @param uri the URI of the incoming request.
+     *
+     * @throws JAXBException if a JAXB error occurred.
+     */
+    private void buildPostBusinessObjectDataResponse(MockCloseableHttpResponse response, URI uri) throws JAXBException
+    {
+        BusinessObjectData businessObjectData = new BusinessObjectData();
+        List<StorageUnit> storageUnits = new ArrayList<>();
+        businessObjectData.setStorageUnits(storageUnits);
+        StorageUnit storageUnit = new StorageUnit();
+        storageUnit.setStorageDirectory(new StorageDirectory("app-a/exchange-a/prc/txt/new-orders/frmt-v0/data-v0/process-date=2014-01-31"));
+        storageUnits.add(storageUnit);
+        response.setEntity(getHttpEntity(businessObjectData));
+    }
+
+    /**
+     * Builds a business object data storage files create response.
+     *
+     * @param response the response.
+     * @param uri the URI of the incoming request.
+     *
+     * @throws JAXBException if a JAXB error occurred.
+     */
+    private void buildPostBusinessObjectDataStorageFilesResponse(MockCloseableHttpResponse response, URI uri) throws JAXBException
+    {
+        BusinessObjectDataStorageFilesCreateResponse businessObjectDataStorageFilesCreateResponse = new BusinessObjectDataStorageFilesCreateResponse();
+        response.setEntity(getHttpEntity(businessObjectDataStorageFilesCreateResponse));
     }
 
     /**

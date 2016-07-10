@@ -49,8 +49,10 @@ import org.finra.herd.model.dto.ManifestFile;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.dto.S3FileTransferResultsDto;
 import org.finra.herd.model.dto.UploaderInputManifestDto;
+import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.service.S3Service;
+import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.tools.common.config.DataBridgeTestSpringModuleConfig;
 
 /**
@@ -62,50 +64,81 @@ public abstract class AbstractDataBridgeTest extends AbstractCoreTest
     private static Logger logger = Logger.getLogger(AbstractDataBridgeTest.class);
 
     protected static final String WEB_SERVICE_HOSTNAME = "testWebServiceHostname";
+
     protected static final Integer WEB_SERVICE_PORT = 80;
 
     protected static final Integer WEB_SERVICE_HTTPS_PORT = 1234;
+
     protected static final String WEB_SERVICE_HTTPS_USERNAME = "testHttpsUsername";
+
     protected static final String WEB_SERVICE_HTTPS_PASSWORD = "testHttpsPassword";
 
     public static final String HTTP_PROXY_HOST = "testProxyHostname";
+
     public static final Integer HTTP_PROXY_PORT = 80;
 
     protected static final String S3_BUCKET_NAME = "testBucket";
+
     protected static final String S3_ACCESS_KEY = "testAccessKey";
+
     protected static final String S3_SECRET_KEY = "testSecretKey";
+
     protected static final String S3_ENDPOINT_US_STANDARD = "s3.amazonaws.com";
 
     protected static final String RANDOM_SUFFIX = getRandomSuffix();
 
     protected static final String TEST_NAMESPACE = "APP_A";
+
     protected static final String TEST_BUSINESS_OBJECT_DEFINITION = "NEW_ORDERS";
+
     protected static final String TEST_BUSINESS_OBJECT_FORMAT_USAGE = "PRC";
+
     protected static final String TEST_BUSINESS_OBJECT_FORMAT_FILE_TYPE = "TXT";
+
     protected static final Integer TEST_BUSINESS_OBJECT_FORMAT_VERSION = 0;
+
     protected static final String TEST_BUSINESS_OBJECT_FORMAT_PARTITION_KEY = "PROCESS_DATE";
+
     protected static final String TEST_PARENT_PARTITION_VALUE = "2014-07-09" + RANDOM_SUFFIX;
+
     protected static final String TEST_PARTITION_VALUE = "2014-07-10" + RANDOM_SUFFIX;
+
     protected static final String TEST_SUB_PARTITION_VALUE_1 = "2014-07-11" + RANDOM_SUFFIX;
+
     protected static final String TEST_SUB_PARTITION_VALUE_2 = "2014-07-12" + RANDOM_SUFFIX;
+
     protected static final String TEST_SUB_PARTITION_VALUE_3 = "2014-07-13" + RANDOM_SUFFIX;
+
     protected static final String TEST_SUB_PARTITION_VALUE_4 = "2014-07-14" + RANDOM_SUFFIX;
+
     protected static final List<String> TEST_SUB_PARTITION_VALUES =
         Arrays.asList(TEST_SUB_PARTITION_VALUE_1, TEST_SUB_PARTITION_VALUE_2, TEST_SUB_PARTITION_VALUE_3, TEST_SUB_PARTITION_VALUE_4);
+
     protected static final Integer TEST_DATA_VERSION_V0 = 0;
+
     protected static final Integer TEST_DATA_VERSION_V1 = 1;
 
     protected static final List<String> LOCAL_FILES =
         Arrays.asList("foo1.dat", "Foo2.dat", "FOO3.DAT", "folder/foo3.dat", "folder/foo2.dat", "folder/foo1.dat");
+
     protected static final String LOCAL_FILE = "foo.dat";
+
     protected static final List<String> S3_DIRECTORY_MARKERS = Arrays.asList("", "folder");
+
     protected static final String ATTRIBUTE_NAME_1_MIXED_CASE = "Attribute Name 1";
+
     protected static final String ATTRIBUTE_VALUE_1 = "Attribute Value 1";
+
     protected static final String ATTRIBUTE_NAME_2_MIXED_CASE = "Attribute Name 2";
+
     protected static final String ATTRIBUTE_VALUE_2 = "   Attribute Value 2  ";
+
     protected static final String ATTRIBUTE_NAME_3_MIXED_CASE = "Attribute Name 3";
+
     protected static final String BLANK_TEXT = "   \n   \t\t ";
+
     protected static final String NAMESPACE_CD = "UT_Namespace" + RANDOM_SUFFIX;
+
     protected static final String STRING_VALUE = "UT_SomeText" + RANDOM_SUFFIX;
 
     protected static List<ManifestFile> testManifestFiles;
@@ -113,17 +146,21 @@ public abstract class AbstractDataBridgeTest extends AbstractCoreTest
     protected static final String S3_TEST_PARENT_PATH_V0 =
         "app-a/exchange-a/prc/txt/new-orders/frmt-v0/data-v" + TEST_DATA_VERSION_V0 + "/process-date=" + TEST_PARENT_PARTITION_VALUE + "/spk1=" +
             TEST_SUB_PARTITION_VALUE_1 + "/spk2=" + TEST_SUB_PARTITION_VALUE_2 + "/spk3=" + TEST_SUB_PARTITION_VALUE_3 + "/spk4=" + TEST_SUB_PARTITION_VALUE_4;
+
     protected static final String S3_TEST_PARENT_PATH_V1 =
         "app-a/exchange-a/prc/txt/new-orders/frmt-v0/data-v" + TEST_DATA_VERSION_V1 + "/process-date=" + TEST_PARENT_PARTITION_VALUE + "/spk1=" +
             TEST_SUB_PARTITION_VALUE_1 + "/spk2=" + TEST_SUB_PARTITION_VALUE_2 + "/spk3=" + TEST_SUB_PARTITION_VALUE_3 + "/spk4=" + TEST_SUB_PARTITION_VALUE_4;
+
     protected static final String S3_TEST_PATH_V0 =
         "app-a/exchange-a/prc/txt/new-orders/frmt-v0/data-v" + TEST_DATA_VERSION_V0 + "/process-date=" + TEST_PARTITION_VALUE + "/spk1=" +
             TEST_SUB_PARTITION_VALUE_1 +
             "/spk2=" + TEST_SUB_PARTITION_VALUE_2 + "/spk3=" + TEST_SUB_PARTITION_VALUE_3 + "/spk4=" + TEST_SUB_PARTITION_VALUE_4;
+
     protected static final String S3_TEST_PATH_V1 =
         "app-a/exchange-a/prc/txt/new-orders/frmt-v0/data-v" + TEST_DATA_VERSION_V1 + "/process-date=" + TEST_PARTITION_VALUE + "/spk1=" +
             TEST_SUB_PARTITION_VALUE_1 +
             "/spk2=" + TEST_SUB_PARTITION_VALUE_2 + "/spk3=" + TEST_SUB_PARTITION_VALUE_3 + "/spk4=" + TEST_SUB_PARTITION_VALUE_4;
+
     protected static final String S3_SIMPLE_TEST_PATH = "app-a/exchange-a/prc/txt/new-orders/frmt-v0/data-v0/process-date=2014-01-31";
 
     /**
@@ -132,10 +169,14 @@ public abstract class AbstractDataBridgeTest extends AbstractCoreTest
     protected AtomicInteger counter = new AtomicInteger(0);
 
     protected static final Path LOCAL_TEMP_PATH_INPUT = Paths.get(System.getProperty("java.io.tmpdir"), "herd-databridge-test", "input");
+
     protected static final Path LOCAL_TEMP_PATH_OUTPUT = Paths.get(System.getProperty("java.io.tmpdir"), "herd-databridge-test", "output");
 
     @Autowired
     protected ApplicationContext applicationContext;
+
+    @Autowired
+    protected BusinessObjectDataHelper businessObjectDataHelper;
 
     /**
      * Provide easy access to the S3Service for all test methods.
@@ -612,7 +653,11 @@ public abstract class AbstractDataBridgeTest extends AbstractCoreTest
         UploaderInputManifestDto uploaderInputManifestDto = getTestUploaderInputManifestDto(TEST_PARENT_PARTITION_VALUE, TEST_SUB_PARTITION_VALUES, false);
         S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = getTestS3FileTransferRequestParamsDto();
         s3FileTransferRequestParamsDto.setS3KeyPrefix(s3KeyPrefix + "/");
-        dataBridgeWebClient.registerBusinessObjectData(uploaderInputManifestDto, s3FileTransferRequestParamsDto, StorageEntity.MANAGED_STORAGE, true);
+        BusinessObjectData businessObjectData =
+            dataBridgeWebClient.preRegisterBusinessObjectData(uploaderInputManifestDto, StorageEntity.MANAGED_STORAGE, true);
+        BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectData);
+        dataBridgeWebClient.addStorageFiles(businessObjectDataKey, uploaderInputManifestDto, s3FileTransferRequestParamsDto, StorageEntity.MANAGED_STORAGE);
+        dataBridgeWebClient.updateBusinessObjectDataStatus(businessObjectDataKey, BusinessObjectDataStatusEntity.VALID);
         // Clean up the local input directory used for the test data files upload.
         FileUtils.cleanDirectory(LOCAL_TEMP_PATH_INPUT.toFile());
     }

@@ -27,6 +27,7 @@ import javax.xml.bind.JAXBException;
 
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import org.apache.commons.collections4.IterableUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,13 +37,16 @@ import org.finra.herd.core.HerdFileUtils;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.core.helper.HerdThreadHelper;
 import org.finra.herd.model.api.xml.AwsCredential;
-import org.finra.herd.model.api.xml.S3KeyPrefixInformation;
+import org.finra.herd.model.api.xml.BusinessObjectData;
+import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.Storage;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.ManifestFile;
 import org.finra.herd.model.dto.RegServerAccessParamsDto;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.dto.UploaderInputManifestDto;
+import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
+import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.service.helper.StorageHelper;
 import org.finra.herd.tools.common.databridge.AutoRefreshCredentialProvider;
 import org.finra.herd.tools.common.databridge.DataBridgeController;
@@ -56,16 +60,19 @@ public class UploaderController extends DataBridgeController
     private static final Logger LOGGER = Logger.getLogger(UploaderController.class);
 
     @Autowired
+    private BusinessObjectDataHelper businessObjectDataHelper;
+
+    @Autowired
     private ConfigurationHelper configurationHelper;
 
     @Autowired
     private HerdThreadHelper herdThreadHelper;
 
     @Autowired
-    private StorageHelper storageHelper;
+    private UploaderManifestReader manifestReader;
 
     @Autowired
-    private UploaderManifestReader manifestReader;
+    private StorageHelper storageHelper;
 
     @Autowired
     private UploaderWebClient uploaderWebClient;
@@ -81,6 +88,7 @@ public class UploaderController extends DataBridgeController
      * threads to use for file transfer to S3< <li><code>useRrs</code> specifies whether S3 reduced redundancy storage option will be used when copying to S3
      * </ul>
      * @param createNewVersion if not set, only initial version of the business object data is allowed to be created
+     * @param force if not set, an upload fails when the latest version of the business object data is in one of the pre-registration statuses
      * @param maxRetryAttempts the maximum number of the business object data registration retry attempts
      * @param retryDelaySecs the delay in seconds between the business object data registration retry attempts
      *
@@ -92,9 +100,11 @@ public class UploaderController extends DataBridgeController
     @SuppressFBWarnings(value = "BC_UNCONFIRMED_CAST_OF_RETURN_VALUE",
         justification = "manifestReader.readJsonManifest will always return an UploaderInputManifestDto object.")
     public void performUpload(RegServerAccessParamsDto regServerAccessParamsDto, File manifestPath, S3FileTransferRequestParamsDto params,
-        Boolean createNewVersion, Integer maxRetryAttempts, Integer retryDelaySecs) throws InterruptedException, JAXBException, IOException, URISyntaxException
+        Boolean createNewVersion, Boolean force, Integer maxRetryAttempts, Integer retryDelaySecs)
+        throws InterruptedException, JAXBException, IOException, URISyntaxException
     {
         boolean cleanUpS3KeyPrefixOnFailure = false;
+        BusinessObjectDataKey businessObjectDataKey = null;
 
         try
         {
@@ -125,9 +135,15 @@ public class UploaderController extends DataBridgeController
                     String.format("Manifest contains duplicate file names. Duplicates: [\"%s\"]", StringUtils.join(duplicateFiles, "\", \"")));
             }
 
-            // Get S3 key prefix from the registration server.
+            // Pre-register a new version of business object data in UPLOADING state with the registration server.
             uploaderWebClient.setRegServerAccessParamsDto(regServerAccessParamsDto);
-            S3KeyPrefixInformation s3KeyPrefixInformation = uploaderWebClient.getS3KeyPrefix(manifest, createNewVersion);
+            BusinessObjectData businessObjectData = uploaderWebClient.preRegisterBusinessObjectData(manifest, storageName, createNewVersion);
+
+            // Get business object data key.
+            businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectData);
+
+            // Get S3 key prefix from the business object data pre-registration response.
+            String s3KeyPrefix = IterableUtils.get(businessObjectData.getStorageUnits(), 0).getStorageDirectory().getDirectoryPath();
 
             // Get S3 bucket information.
             Storage storage = uploaderWebClient.getStorage(storageName);
@@ -147,7 +163,7 @@ public class UploaderController extends DataBridgeController
             // Populate several missing fields in the S3 file transfer request parameters DTO.
             params.setS3BucketName(s3BucketName);
             // Since the S3 key prefix represents a directory, we add a trailing '/' character to it.
-            params.setS3KeyPrefix(s3KeyPrefixInformation.getS3KeyPrefix() + "/");
+            params.setS3KeyPrefix(s3KeyPrefix + "/");
             params.setFiles(sourceFiles);
 
             // Check if the destination S3 key prefix is empty.
@@ -172,7 +188,11 @@ public class UploaderController extends DataBridgeController
                 logS3KeyPrefixContents(params);
             }
 
-            registerBusinessObjectDataWithRetry(params, createNewVersion, maxRetryAttempts, retryDelaySecs, manifest, storage);
+            // Add storage files to the business object data.
+            addStorageFilesWithRetry(businessObjectDataKey, manifest, params, storage.getName(), maxRetryAttempts, retryDelaySecs);
+
+            // Change status of the business object data to VALID.
+            uploaderWebClient.updateBusinessObjectDataStatus(businessObjectDataKey, BusinessObjectDataStatusEntity.VALID);
         }
         catch (InterruptedException | JAXBException | IOException | URISyntaxException e)
         {
@@ -186,26 +206,32 @@ public class UploaderController extends DataBridgeController
                 s3Service.deleteDirectoryIgnoreException(params);
             }
 
+            // If a new business object data version got pre-registered, update it's status to INVALID.
+            if (businessObjectDataKey != null)
+            {
+                uploaderWebClient.updateBusinessObjectDataStatusIgnoreException(businessObjectDataKey, BusinessObjectDataStatusEntity.INVALID);
+            }
+
             throw e;
         }
     }
 
     /**
-     * Register business object data with a retry on error.
+     * Add storage files to a business object data with a retry on error.
      *
-     * @param params S3 file transfer parameters
-     * @param createNewVersion true to create new version
+     * @param businessObjectDataKey the business object data key
+     * @param manifest the uploader input manifest
+     * @param params the S3 file transfer parameters
+     * @param storageName the name of the storage
      * @param maxRetryAttempts Maximum number of retry attempts on error
      * @param retryDelaySecs Delay in seconds between retries
-     * @param manifest The uploader input manifest
-     * @param storage The storage to register to
      *
      * @throws IOException When a IO error occurs
      * @throws JAXBException When JAXB serialization/deserialization error occurs
      * @throws URISyntaxException When request URI is invalid
      */
-    private void registerBusinessObjectDataWithRetry(S3FileTransferRequestParamsDto params, Boolean createNewVersion, Integer maxRetryAttempts,
-        Integer retryDelaySecs, UploaderInputManifestDto manifest, Storage storage) throws IOException, JAXBException, URISyntaxException
+    private void addStorageFilesWithRetry(BusinessObjectDataKey businessObjectDataKey, UploaderInputManifestDto manifest, S3FileTransferRequestParamsDto params,
+        String storageName, Integer maxRetryAttempts, Integer retryDelaySecs) throws IOException, JAXBException, URISyntaxException
     {
         // Initialize a retry count to know the number of times we re-try calling the method.
         int retryCount = 0;
@@ -216,7 +242,7 @@ public class UploaderController extends DataBridgeController
             try
             {
                 // Attempt to register data with the registration server.
-                uploaderWebClient.registerBusinessObjectData(manifest, params, storage.getName(), createNewVersion);
+                uploaderWebClient.addStorageFiles(businessObjectDataKey, manifest, params, storageName);
                 break;
             }
             catch (IOException | JAXBException | URISyntaxException e)
@@ -225,14 +251,15 @@ public class UploaderController extends DataBridgeController
                 if (retryCount >= maxRetryAttempts)
                 {
                     // We've retried enough times so rethrow the original exception.
-                    LOGGER.warn("An exception occurred when registering business object data. The maximum number of retries of " + maxRetryAttempts +
-                        " has been exceeded so the exception will now be thrown.");
+                    LOGGER.warn(
+                        "An exception occurred when adding storage files to the business object data. The maximum number of retries of " + maxRetryAttempts +
+                            " has been exceeded so the exception will now be thrown.");
                     throw e;
                 }
                 else
                 {
                     // Log a warning.
-                    LOGGER.warn("An exception occurred when registering business object data.", e);
+                    LOGGER.warn("An exception occurred when adding storage files to the business object data.", e);
                     LOGGER.warn("Will retry in " + retryDelaySecs + " second(s) and no more than " + (maxRetryAttempts - retryCount) + " more time(s).");
 
                     // We can retry again so increment a counter to keep track of the number of times we retried.
@@ -246,6 +273,33 @@ public class UploaderController extends DataBridgeController
     }
 
     /**
+     * Returns a list of all duplicate files found in the specified list of files.
+     *
+     * @param files the list of files to be checked for duplicates
+     *
+     * @return the list of duplicate files found, otherwise an empty list of files
+     */
+    private List<File> findDuplicateFiles(List<File> files)
+    {
+        HashSet<File> sourceFileSet = new HashSet<>();
+        List<File> duplicateFiles = new ArrayList<>();
+
+        for (File file : files)
+        {
+            if (!sourceFileSet.contains(file))
+            {
+                sourceFileSet.add(file);
+            }
+            else
+            {
+                duplicateFiles.add(file);
+            }
+        }
+
+        return duplicateFiles;
+    }
+
+    /**
      * Returns the list of File objects created from the specified list of local files after they are validated for existence and read access.
      *
      * @param localDir the local path to directory to be used to construct the relative absolute paths for the files to be validated
@@ -255,7 +309,7 @@ public class UploaderController extends DataBridgeController
      * @throws IllegalArgumentException if <code>localDir</code> or local files are not valid
      * @throws IOException if there is a filesystem query issue to construct a canonical form of an abstract file path
      */
-    protected List<File> getValidatedLocalFiles(String localDir, List<ManifestFile> manifestFiles) throws IllegalArgumentException, IOException
+    private List<File> getValidatedLocalFiles(String localDir, List<ManifestFile> manifestFiles) throws IllegalArgumentException, IOException
     {
         // Create a "directory" file and ensure it is valid.
         File directory = new File(localDir);
@@ -298,38 +352,11 @@ public class UploaderController extends DataBridgeController
     }
 
     /**
-     * Returns a list of all duplicate files found in the specified list of files.
-     *
-     * @param files the list of files to be checked for duplicates
-     *
-     * @return the list of duplicate files found, otherwise an empty list of files
-     */
-    protected List<File> findDuplicateFiles(List<File> files)
-    {
-        HashSet<File> sourceFileSet = new HashSet<>();
-        List<File> duplicateFiles = new ArrayList<>();
-
-        for (File file : files)
-        {
-            if (!sourceFileSet.contains(file))
-            {
-                sourceFileSet.add(file);
-            }
-            else
-            {
-                duplicateFiles.add(file);
-            }
-        }
-
-        return duplicateFiles;
-    }
-
-    /**
      * Logs all files found in the specified S3 location.
      *
      * @param params the S3 file transfer request parameters
      */
-    protected void logS3KeyPrefixContents(S3FileTransferRequestParamsDto params)
+    private void logS3KeyPrefixContents(S3FileTransferRequestParamsDto params)
     {
         List<S3ObjectSummary> s3ObjectSummaries = s3Service.listDirectory(params);
         LOGGER.info(

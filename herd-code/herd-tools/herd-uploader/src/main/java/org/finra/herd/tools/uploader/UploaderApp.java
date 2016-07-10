@@ -37,23 +37,33 @@ public class UploaderApp extends DataBridgeApp
 
     // The uploader specific command line options.
     private Option maxRetryAttemptsOpt;
+
     private Option retryDelaySecsOpt;
+
     private Option createNewVersionOpt;
+
     private Option rrsOpt;
+
+    private Option forceOpt;
 
     // Integer values for command line options that are of type "Integer".
     private Integer maxRetryAttempts;
+
     private Integer retryDelaySecs;
 
     // An argument parser for the application.
     private ArgumentParser argParser;
 
     private static final Integer MAX_RETRY_ATTEMPTS_DEFAULT = 5;    // Default number of business object data registration retry attempts.
+
     private static final Integer MAX_RETRY_ATTEMPTS_MIN = 0;        // Minimum number of business object data registration retry attempts.
+
     private static final Integer MAX_RETRY_ATTEMPTS_MAX = 10;       // Maximum number of business object data registration retry attempts.
 
     private static final Integer RETRY_DELAY_SECS_DEFAULT = 120;    // Default delay in seconds between the business object data registration retry attempts.
+
     private static final Integer RETRY_DELAY_SECS_MIN = 0;          // Minimum delay in seconds between the business object data registration retry attempts.
+
     private static final Integer RETRY_DELAY_SECS_MAX = 900;        // Maximum delay in seconds between the business object data registration retry attempts.
 
     /**
@@ -71,6 +81,8 @@ public class UploaderApp extends DataBridgeApp
             "The maximum number of the business object data registration retry attempts that uploader would perform before rolling back the upload.", false);
         retryDelaySecsOpt =
             argParser.addArgument("D", "retryDelaySecs", true, "The delay in seconds between the business object data registration retry attempts.", false);
+        forceOpt = argParser.addArgument("f", "force", false,
+            "If not set, an upload fails when the latest version of the business object data is in one of the pre-registration statuses.", false);
     }
 
     /**
@@ -143,7 +155,7 @@ public class UploaderApp extends DataBridgeApp
             RegServerAccessParamsDto.builder().regServerHost(regServerHost).regServerPort(regServerPort).useSsl(useSsl)
                 .username(argParser.getStringValue(usernameOpt)).password(argParser.getStringValue(passwordOpt)).build();
         controller.performUpload(regServerAccessParamsDto, argParser.getFileValue(manifestPathOpt), params, argParser.getBooleanValue(createNewVersionOpt),
-            maxRetryAttempts, retryDelaySecs);
+            argParser.getBooleanValue(forceOpt), maxRetryAttempts, retryDelaySecs);
 
         // No exceptions were returned so return success.
         return ReturnValue.SUCCESS;
