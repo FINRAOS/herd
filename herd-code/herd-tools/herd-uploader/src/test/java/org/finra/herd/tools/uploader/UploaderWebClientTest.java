@@ -24,7 +24,9 @@ import java.util.Arrays;
 import org.junit.Assert;
 import org.junit.Test;
 
+import org.finra.herd.dao.impl.MockHttpClientOperationsImpl;
 import org.finra.herd.model.api.xml.AwsCredential;
+import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataUploadCredential;
 import org.finra.herd.model.api.xml.S3KeyPrefixInformation;
 import org.finra.herd.model.dto.DataBridgeBaseManifestDto;
@@ -35,31 +37,6 @@ import org.finra.herd.model.dto.RegServerAccessParamsDto;
  */
 public class UploaderWebClientTest extends AbstractUploaderTest
 {
-    @Test
-    public void testWebClientRegServerAccessParamsDtoSetterAndGetter()
-    {
-        // Create and initialize an instance of RegServerAccessParamsDto.
-        RegServerAccessParamsDto regServerAccessParamsDto = new RegServerAccessParamsDto();
-        regServerAccessParamsDto.setRegServerHost(WEB_SERVICE_HOSTNAME);
-        regServerAccessParamsDto.setRegServerPort(WEB_SERVICE_HTTPS_PORT);
-        regServerAccessParamsDto.setUseSsl(true);
-        regServerAccessParamsDto.setUsername(WEB_SERVICE_HTTPS_USERNAME);
-        regServerAccessParamsDto.setPassword(WEB_SERVICE_HTTPS_PASSWORD);
-
-        // Set the DTO.
-        uploaderWebClient.setRegServerAccessParamsDto(regServerAccessParamsDto);
-
-        // Retrieve the DTO and validate the results.
-        RegServerAccessParamsDto resultRegServerAccessParamsDto = uploaderWebClient.getRegServerAccessParamsDto();
-
-        // validate the results.
-        assertEquals(WEB_SERVICE_HOSTNAME, resultRegServerAccessParamsDto.getRegServerHost());
-        assertEquals(WEB_SERVICE_HTTPS_PORT, resultRegServerAccessParamsDto.getRegServerPort());
-        assertTrue(resultRegServerAccessParamsDto.getUseSsl());
-        assertEquals(WEB_SERVICE_HTTPS_USERNAME, resultRegServerAccessParamsDto.getUsername());
-        assertEquals(WEB_SERVICE_HTTPS_PASSWORD, resultRegServerAccessParamsDto.getPassword());
-    }
-
     @Test
     public void testGetBusinessObjectDataUploadCredential1() throws Exception
     {
@@ -73,12 +50,13 @@ public class UploaderWebClientTest extends AbstractUploaderTest
         manifest.setSubPartitionValues(Arrays.asList("test7", "test8"));
         String storageName = "test8";
         Boolean createNewVersion = false;
+        uploaderWebClient.getRegServerAccessParamsDto().setUseSsl(false);
         BusinessObjectDataUploadCredential businessObjectDataUploadCredential =
             uploaderWebClient.getBusinessObjectDataUploadCredential(manifest, storageName, createNewVersion);
         Assert.assertNotNull(businessObjectDataUploadCredential);
         AwsCredential awsCredential = businessObjectDataUploadCredential.getAwsCredential();
         Assert.assertNotNull(awsCredential);
-        Assert.assertEquals("https://testWebServiceHostname:1234/herd-app/rest/businessObjectData/upload/credential/namespaces/test1" +
+        Assert.assertEquals("http://testWebServiceHostname:1234/herd-app/rest/businessObjectData/upload/credential/namespaces/test1" +
             "/businessObjectDefinitionNames/test2/businessObjectFormatUsages/test3/businessObjectFormatFileTypes/test4/businessObjectFormatVersions/test5" +
             "/partitionValues/test6?storageName=test8&subPartitionValues=test7%7Ctest8&createNewVersion=false", awsCredential.getAwsAccessKey());
     }
@@ -104,6 +82,44 @@ public class UploaderWebClientTest extends AbstractUploaderTest
         Assert.assertEquals("https://testWebServiceHostname:1234/herd-app/rest/businessObjectData/upload/credential/namespaces/test1" +
             "/businessObjectDefinitionNames/test2/businessObjectFormatUsages/test3/businessObjectFormatFileTypes/test4/businessObjectFormatVersions/test5" +
             "/partitionValues/test6?storageName=test8", awsCredential.getAwsAccessKey());
+    }
+
+    @Test
+    public void testUpdateBusinessObjectDataStatusIgnoreException() throws Exception
+    {
+        uploaderWebClient.getRegServerAccessParamsDto().setRegServerHost(MockHttpClientOperationsImpl.HOSTNAME_THROW_IO_EXCEPTION_DURING_PUT);
+
+        BusinessObjectDataKey businessObjectDataKey = new BusinessObjectDataKey();
+        String businessObjectDataStatus = "testBusinessObjectDataStatus";
+
+        executeWithoutLogging(UploaderWebClient.class, () -> {
+            uploaderWebClient.updateBusinessObjectDataStatusIgnoreException(businessObjectDataKey, businessObjectDataStatus);
+        });
+    }
+
+    @Test
+    public void testWebClientRegServerAccessParamsDtoSetterAndGetter()
+    {
+        // Create and initialize an instance of RegServerAccessParamsDto.
+        RegServerAccessParamsDto regServerAccessParamsDto = new RegServerAccessParamsDto();
+        regServerAccessParamsDto.setRegServerHost(WEB_SERVICE_HOSTNAME);
+        regServerAccessParamsDto.setRegServerPort(WEB_SERVICE_HTTPS_PORT);
+        regServerAccessParamsDto.setUseSsl(true);
+        regServerAccessParamsDto.setUsername(WEB_SERVICE_HTTPS_USERNAME);
+        regServerAccessParamsDto.setPassword(WEB_SERVICE_HTTPS_PASSWORD);
+
+        // Set the DTO.
+        uploaderWebClient.setRegServerAccessParamsDto(regServerAccessParamsDto);
+
+        // Retrieve the DTO and validate the results.
+        RegServerAccessParamsDto resultRegServerAccessParamsDto = uploaderWebClient.getRegServerAccessParamsDto();
+
+        // validate the results.
+        assertEquals(WEB_SERVICE_HOSTNAME, resultRegServerAccessParamsDto.getRegServerHost());
+        assertEquals(WEB_SERVICE_HTTPS_PORT, resultRegServerAccessParamsDto.getRegServerPort());
+        assertTrue(resultRegServerAccessParamsDto.getUseSsl());
+        assertEquals(WEB_SERVICE_HTTPS_USERNAME, resultRegServerAccessParamsDto.getUsername());
+        assertEquals(WEB_SERVICE_HTTPS_PASSWORD, resultRegServerAccessParamsDto.getPassword());
     }
 
     /**

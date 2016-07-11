@@ -76,7 +76,7 @@ public class UploaderControllerTest extends AbstractUploaderTest
     @Test(expected = IOException.class)
     public void testPerformUploadWithIoExceptionDuringGetStorages() throws Exception
     {
-        runUpload(UploaderController.MIN_THREADS, null, false, false, MockHttpClientOperationsImpl.HOSTNAME_THROW_IO_EXCEPTION_DURING_GET_STORAGES, null);
+        runUpload(UploaderController.MIN_THREADS, null, false, false, MockHttpClientOperationsImpl.HOSTNAME_THROW_IO_EXCEPTION_DURING_GET_STORAGE, null);
     }
 
     @Test

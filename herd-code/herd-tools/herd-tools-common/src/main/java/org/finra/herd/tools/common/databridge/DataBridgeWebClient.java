@@ -158,7 +158,7 @@ public abstract class DataBridgeWebClient
         try (CloseableHttpClient client = httpClientOperations.createHttpClient())
         {
             URI uri = new URIBuilder().setScheme(getUriScheme()).setHost(regServerAccessParamsDto.getRegServerHost())
-                .setPort(regServerAccessParamsDto.getRegServerPort()).setPath(HERD_APP_REST_URI_PREFIX + "/businessObjectData").build();
+                .setPort(regServerAccessParamsDto.getRegServerPort()).setPath(HERD_APP_REST_URI_PREFIX + "/businessObjectDataStorageFiles").build();
             HttpPost post = new HttpPost(uri);
 
             post.addHeader("Content-Type", DEFAULT_CONTENT_TYPE);
@@ -346,15 +346,8 @@ public abstract class DataBridgeWebClient
                 getBusinessObjectData(httpClientOperations.execute(client, post), "register business object data with the registration server");
         }
 
-        LOGGER.info("Successfully pre-registered business object data with the registration server.");
-
-        // getBusinessObjectData() might return a null. That happens when the web client gets status code 200 back from
-        // the service (data registration is a success), but it fails to retrieve or deserialize the actual HTTP response.
-        // Please note that processXmlHttpResponse() is responsible for logging the exception info as a warning.
-        if (businessObjectData != null)
-        {
-            LOGGER.info("    ID: " + businessObjectData.getId());
-        }
+        LOGGER.info(String
+            .format("Successfully pre-registered business object data with the registration server. businessObjectDataId=%s", businessObjectData.getId()));
 
         return businessObjectData;
     }

@@ -96,7 +96,7 @@ public class DownloaderControllerTest extends AbstractDownloaderTest
     public void testPerformDownloadWithIoException() throws Exception
     {
         runDownload(getTestDownloaderInputManifestDto(), LOCAL_TEMP_PATH_OUTPUT.toString(), DownloaderController.MIN_THREADS,
-            MockHttpClientOperationsImpl.HOSTNAME_THROW_IO_EXCEPTION_DURING_GET_STORAGES);
+            MockHttpClientOperationsImpl.HOSTNAME_THROW_IO_EXCEPTION_DURING_GET_STORAGE);
     }
 
     @Test
