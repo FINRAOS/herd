@@ -52,7 +52,7 @@ public class UploaderControllerTest extends AbstractUploaderTest
     {
         super.setup();
 
-        // Set the web client logger to warn level so we don't get unnecessary info level logging on the output.
+        // Set the web client logger to ERROR level so we don't get unnecessary info level logging on the output.
         Logger.getLogger(DataBridgeWebClient.class).setLevel(Level.ERROR);
         Logger.getLogger(UploaderWebClient.class).setLevel(Level.ERROR);
         Logger.getLogger(S3DaoImpl.class).setLevel(Level.ERROR);
