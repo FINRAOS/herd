@@ -87,7 +87,7 @@ public class UploaderWebClientTest extends AbstractUploaderTest
     @Test
     public void testUpdateBusinessObjectDataStatusIgnoreException() throws Exception
     {
-        uploaderWebClient.getRegServerAccessParamsDto().setRegServerHost(MockHttpClientOperationsImpl.HOSTNAME_THROW_IO_EXCEPTION_DURING_PUT);
+        uploaderWebClient.getRegServerAccessParamsDto().setRegServerHost(MockHttpClientOperationsImpl.HOSTNAME_THROW_IO_EXCEPTION_DURING_UPDATE_BDATA_STATUS);
 
         BusinessObjectDataKey businessObjectDataKey = new BusinessObjectDataKey();
         String businessObjectDataStatus = "testBusinessObjectDataStatus";

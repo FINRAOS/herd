@@ -72,11 +72,13 @@ public class MockHttpClientOperationsImpl implements HttpClientOperations
 {
     public static final String HOSTNAME_RESPOND_WITH_STATUS_CODE_200_AND_INVALID_CONTENT = "testRespondWithStatusCode200AndInvalidContent";
 
+    public static final String HOSTNAME_THROW_IO_EXCEPTION_DURING_REGISTER_BDATA = "testThrowIoExceptionDuringRegisterBdata";
+
+    public static final String HOSTNAME_THROW_IO_EXCEPTION_DURING_UPDATE_BDATA_STATUS = "testThrowIoExceptionDuringUpdateBdataStatus";
+
     public static final String HOSTNAME_THROW_IO_EXCEPTION_DURING_GET_STORAGE = "testThrowIoExceptionDuringGetStorage";
 
-    public static final String HOSTNAME_THROW_IO_EXCEPTION_DURING_POST = "testThrowIoExceptionDuringPost";
-
-    public static final String HOSTNAME_THROW_IO_EXCEPTION_DURING_PUT = "testThrowIoExceptionDuringPut";
+    public static final String HOSTNAME_THROW_IO_EXCEPTION_DURING_ADD_STORAGE_FILES = "testThrowIoExceptionDuringAddStorageFiles";
 
     private static final Logger LOGGER = Logger.getLogger(MockHttpClientOperationsImpl.class);
 
@@ -132,23 +134,22 @@ public class MockHttpClientOperationsImpl implements HttpClientOperations
         }
         else if (request instanceof HttpPost)
         {
-            checkHostname(request, HOSTNAME_THROW_IO_EXCEPTION_DURING_POST);
-
             if (uri.getPath().startsWith("/herd-app/rest/businessObjectDataStorageFiles"))
             {
+                checkHostname(request, HOSTNAME_THROW_IO_EXCEPTION_DURING_ADD_STORAGE_FILES);
                 buildPostBusinessObjectDataStorageFilesResponse(response, uri);
             }
             else if (uri.getPath().equals("/herd-app/rest/businessObjectData"))
             {
+                checkHostname(request, HOSTNAME_THROW_IO_EXCEPTION_DURING_REGISTER_BDATA);
                 buildPostBusinessObjectDataResponse(response, uri);
             }
         }
         else if (request instanceof HttpPut)
         {
-            checkHostname(request, HOSTNAME_THROW_IO_EXCEPTION_DURING_PUT);
-
             if (uri.getPath().startsWith("/herd-app/rest/businessObjectDataStatus/"))
             {
+                checkHostname(request, HOSTNAME_THROW_IO_EXCEPTION_DURING_UPDATE_BDATA_STATUS);
                 buildPutBusinessObjectDataStatusResponse(response, uri);
             }
         }

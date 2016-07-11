@@ -53,9 +53,9 @@ public class UploaderControllerTest extends AbstractUploaderTest
         super.setup();
 
         // Set the web client logger to warn level so we don't get unnecessary info level logging on the output.
-        Logger.getLogger(DataBridgeWebClient.class).setLevel(Level.WARN);
-        Logger.getLogger(UploaderWebClient.class).setLevel(Level.WARN);
-        Logger.getLogger(S3DaoImpl.class).setLevel(Level.WARN);
+        Logger.getLogger(DataBridgeWebClient.class).setLevel(Level.ERROR);
+        Logger.getLogger(UploaderWebClient.class).setLevel(Level.ERROR);
+        Logger.getLogger(S3DaoImpl.class).setLevel(Level.ERROR);
     }
 
     @Test
@@ -67,18 +67,6 @@ public class UploaderControllerTest extends AbstractUploaderTest
         runUpload(UploaderController.MIN_THREADS);
     }
 
-    @Test(expected = IOException.class)
-    public void testPerformUploadWithIoExceptionDuringPost() throws Exception
-    {
-        runUpload(UploaderController.MIN_THREADS, null, false, false, MockHttpClientOperationsImpl.HOSTNAME_THROW_IO_EXCEPTION_DURING_POST, null);
-    }
-
-    @Test(expected = IOException.class)
-    public void testPerformUploadWithIoExceptionDuringGetStorages() throws Exception
-    {
-        runUpload(UploaderController.MIN_THREADS, null, false, false, MockHttpClientOperationsImpl.HOSTNAME_THROW_IO_EXCEPTION_DURING_GET_STORAGE, null);
-    }
-
     @Test
     public void testPerformUploadCreateNewVersionTrue() throws Exception
     {
@@ -86,61 +74,6 @@ public class UploaderControllerTest extends AbstractUploaderTest
         uploadAndRegisterTestDataParents(uploaderWebClient);
 
         runUpload(UploaderController.MIN_THREADS, true, false);
-    }
-
-    @Test
-    public void testPerformUploadWithAttributes() throws Exception
-    {
-        // Upload and register business object data parents.
-        uploadAndRegisterTestDataParents(uploaderWebClient);
-
-        HashMap<String, String> attributes = new HashMap<>();
-        attributes.put("key1", "value1");
-        attributes.put("key2", "value2");
-
-        runUpload(UploaderController.MIN_THREADS, attributes);
-    }
-
-    @Test
-    public void testPerformUploadMinThreads() throws Exception
-    {
-        // Upload and register business object data parents.
-        uploadAndRegisterTestDataParents(uploaderWebClient);
-
-        // Calling to run the upload using number of threads just below the low threshold,
-        // that should result in UploaderController adjusting the number of threads to MIN_THREADS value.
-        runUpload(UploaderController.MIN_THREADS - 1);
-    }
-
-    @Test
-    public void testPerformUploadMaxThreads() throws Exception
-    {
-        // Upload and register business object data parents.
-        uploadAndRegisterTestDataParents(uploaderWebClient);
-
-        // Calling to run the upload using number of threads just above the upper threshold,
-        // that should result in UploaderController adjusting the number of threads to MAX_THREADS value.
-        runUpload(UploaderController.MAX_THREADS + 1);
-    }
-
-    @Test
-    public void testPerformUploadWithLoggerLevelSetToWarn() throws Exception
-    {
-        Logger logger = Logger.getLogger(UploaderController.class);
-        Level origLoggerLevel = logger.getEffectiveLevel();
-        logger.setLevel(Level.WARN);
-
-        try
-        {
-            // Upload and register business object data parents.
-            uploadAndRegisterTestDataParents(uploaderWebClient);
-
-            runUpload(UploaderController.MIN_THREADS);
-        }
-        finally
-        {
-            logger.setLevel(origLoggerLevel);
-        }
     }
 
     @Test
@@ -166,32 +99,6 @@ public class UploaderControllerTest extends AbstractUploaderTest
         {
             assertTrue(e.getMessage().startsWith("Invalid local base directory"));
         }
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testPerformUploadManifestFileNameDoesNotMatchActualFileName() throws Exception
-    {
-        List<ManifestFile> declaredManifestFiles = getManifestFilesFromFileNames(Arrays.asList("test-data-1.txt", "test-data-2.txt"), FILE_SIZE_1_KB);
-        List<ManifestFile> actualManifestFiles = getManifestFilesFromFileNames(Arrays.asList("test-data-1.txt", "TEST-DATA-2.TXT"), FILE_SIZE_1_KB);
-
-        // Create local data files in LOCAL_TEMP_PATH_INPUT directory
-        for (ManifestFile manifestFile : actualManifestFiles)
-        {
-            createLocalFile(LOCAL_TEMP_PATH_INPUT.toString(), manifestFile.getFileName(), FILE_SIZE_1_KB);
-        }
-
-        // Create uploader input manifest file in LOCAL_TEMP_PATH_INPUT directory.
-        UploaderInputManifestDto uploaderInputManifestDto = getTestUploaderInputManifestDto();
-        uploaderInputManifestDto.setManifestFiles(declaredManifestFiles);
-        File manifestFile = createManifestFile(LOCAL_TEMP_PATH_INPUT.toString(), uploaderInputManifestDto);
-        Assert.assertTrue(manifestFile.isFile());
-
-        // Try to upload business object data with one of the file having name that does not match to incorrect name specified.
-        RegServerAccessParamsDto regServerAccessParamsDto =
-            RegServerAccessParamsDto.builder().regServerHost(WEB_SERVICE_HOSTNAME).regServerPort(WEB_SERVICE_HTTPS_PORT).useSsl(true)
-                .username(WEB_SERVICE_HTTPS_USERNAME).password(WEB_SERVICE_HTTPS_PASSWORD).build();
-        uploaderController.performUpload(regServerAccessParamsDto, manifestFile, getTestS3FileTransferRequestParamsDto(), false, false, TEST_RETRY_ATTEMPTS,
-            TEST_RETRY_DELAY_SECS);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -221,21 +128,52 @@ public class UploaderControllerTest extends AbstractUploaderTest
             TEST_RETRY_DELAY_SECS);
     }
 
-    @Test
-    public void testPerformUploadTargetS3FolderIsNotEmpty() throws Exception
+    @Test(expected = IllegalArgumentException.class)
+    public void testPerformUploadManifestFileNameDoesNotMatchActualFileName() throws Exception
     {
-        // Upload test data files to S3 test path.
-        uploadTestDataFilesToS3(S3_TEST_PATH_V0);
+        List<ManifestFile> declaredManifestFiles = getManifestFilesFromFileNames(Arrays.asList("test-data-1.txt", "test-data-2.txt"), FILE_SIZE_1_KB);
+        List<ManifestFile> actualManifestFiles = getManifestFilesFromFileNames(Arrays.asList("test-data-1.txt", "TEST-DATA-2.TXT"), FILE_SIZE_1_KB);
 
-        // Try to run the upload task.
-        try
+        // Create local data files in LOCAL_TEMP_PATH_INPUT directory
+        for (ManifestFile manifestFile : actualManifestFiles)
         {
-            runUpload(UploaderController.MIN_THREADS);
+            createLocalFile(LOCAL_TEMP_PATH_INPUT.toString(), manifestFile.getFileName(), FILE_SIZE_1_KB);
         }
-        catch (RuntimeException e)
-        {
-            assertTrue(e.getMessage().startsWith("The destination S3 folder is not empty."));
-        }
+
+        // Create uploader input manifest file in LOCAL_TEMP_PATH_INPUT directory.
+        UploaderInputManifestDto uploaderInputManifestDto = getTestUploaderInputManifestDto();
+        uploaderInputManifestDto.setManifestFiles(declaredManifestFiles);
+        File manifestFile = createManifestFile(LOCAL_TEMP_PATH_INPUT.toString(), uploaderInputManifestDto);
+        Assert.assertTrue(manifestFile.isFile());
+
+        // Try to upload business object data with one of the file having name that does not match to incorrect name specified.
+        RegServerAccessParamsDto regServerAccessParamsDto =
+            RegServerAccessParamsDto.builder().regServerHost(WEB_SERVICE_HOSTNAME).regServerPort(WEB_SERVICE_HTTPS_PORT).useSsl(true)
+                .username(WEB_SERVICE_HTTPS_USERNAME).password(WEB_SERVICE_HTTPS_PASSWORD).build();
+        uploaderController.performUpload(regServerAccessParamsDto, manifestFile, getTestS3FileTransferRequestParamsDto(), false, false, TEST_RETRY_ATTEMPTS,
+            TEST_RETRY_DELAY_SECS);
+    }
+
+    @Test
+    public void testPerformUploadMaxThreads() throws Exception
+    {
+        // Upload and register business object data parents.
+        uploadAndRegisterTestDataParents(uploaderWebClient);
+
+        // Calling to run the upload using number of threads just above the upper threshold,
+        // that should result in UploaderController adjusting the number of threads to MAX_THREADS value.
+        runUpload(UploaderController.MAX_THREADS + 1);
+    }
+
+    @Test
+    public void testPerformUploadMinThreads() throws Exception
+    {
+        // Upload and register business object data parents.
+        uploadAndRegisterTestDataParents(uploaderWebClient);
+
+        // Calling to run the upload using number of threads just below the low threshold,
+        // that should result in UploaderController adjusting the number of threads to MIN_THREADS value.
+        runUpload(UploaderController.MIN_THREADS - 1);
     }
 
     /**
@@ -264,12 +202,82 @@ public class UploaderControllerTest extends AbstractUploaderTest
     }
 
     @Test
-    public void testPerformUploadWithStorageName() throws Exception
+    public void testPerformUploadTargetS3FolderIsNotEmpty() throws Exception
+    {
+        // Upload test data files to S3 test path.
+        uploadTestDataFilesToS3(S3_TEST_PATH_V0);
+
+        // Try to run the upload task.
+        try
+        {
+            runUpload(UploaderController.MIN_THREADS);
+        }
+        catch (RuntimeException e)
+        {
+            assertTrue(e.getMessage().startsWith("The destination S3 folder is not empty."));
+        }
+    }
+
+    @Test
+    public void testPerformUploadWithAttributes() throws Exception
     {
         // Upload and register business object data parents.
         uploadAndRegisterTestDataParents(uploaderWebClient);
 
-        runUpload(UploaderController.MIN_THREADS, null, false, false, null, "S3_MANAGED");
+        HashMap<String, String> attributes = new HashMap<>();
+        attributes.put("key1", "value1");
+        attributes.put("key2", "value2");
+
+        runUpload(UploaderController.MIN_THREADS, attributes);
+    }
+
+    @Test
+    public void testPerformUploadWithInfoLoggingEnabled() throws Exception
+    {
+        // Upload and register business object data parents.
+        uploadAndRegisterTestDataParents(uploaderWebClient);
+
+        // Get the logger and the current logger level.
+        Logger logger = Logger.getLogger(UploaderController.class);
+        Level origLogLevel = logger.getLevel();
+
+        // Set logging level to INFO.
+        logger.setLevel(Level.INFO);
+
+        // Run the upload and reset the logging level back to the original value.
+        try
+        {
+            runUpload(UploaderController.MIN_THREADS);
+        }
+        finally
+        {
+            logger.setLevel(origLogLevel);
+        }
+    }
+
+    @Test(expected = IOException.class)
+    public void testPerformUploadWithIoExceptionDuringAddStorageFiles() throws Exception
+    {
+        runUpload(UploaderController.MIN_THREADS, null, false, false, MockHttpClientOperationsImpl.HOSTNAME_THROW_IO_EXCEPTION_DURING_ADD_STORAGE_FILES, null);
+    }
+
+    @Test(expected = IOException.class)
+    public void testPerformUploadWithIoExceptionDuringGetStorage() throws Exception
+    {
+        runUpload(UploaderController.MIN_THREADS, null, false, false, MockHttpClientOperationsImpl.HOSTNAME_THROW_IO_EXCEPTION_DURING_GET_STORAGE, null);
+    }
+
+    @Test(expected = IOException.class)
+    public void testPerformUploadWithIoExceptionDuringRegisterBusinessObjectData() throws Exception
+    {
+        runUpload(UploaderController.MIN_THREADS, null, false, false, MockHttpClientOperationsImpl.HOSTNAME_THROW_IO_EXCEPTION_DURING_REGISTER_BDATA, null);
+    }
+
+    @Test(expected = IOException.class)
+    public void testPerformUploadWithIoExceptionDuringUpdateBusinessObjectDataStatus() throws Exception
+    {
+        runUpload(UploaderController.MIN_THREADS, null, false, false, MockHttpClientOperationsImpl.HOSTNAME_THROW_IO_EXCEPTION_DURING_UPDATE_BDATA_STATUS,
+            null);
     }
 
     @Test
@@ -279,6 +287,35 @@ public class UploaderControllerTest extends AbstractUploaderTest
         uploadAndRegisterTestDataParents(uploaderWebClient);
 
         runUpload(UploaderController.MIN_THREADS, null, false, false, null, "S3_MANAGED_KMS");
+    }
+
+    @Test
+    public void testPerformUploadWithLoggerLevelSetToWarn() throws Exception
+    {
+        Logger logger = Logger.getLogger(UploaderController.class);
+        Level origLoggerLevel = logger.getEffectiveLevel();
+        logger.setLevel(Level.WARN);
+
+        try
+        {
+            // Upload and register business object data parents.
+            uploadAndRegisterTestDataParents(uploaderWebClient);
+
+            runUpload(UploaderController.MIN_THREADS);
+        }
+        finally
+        {
+            logger.setLevel(origLoggerLevel);
+        }
+    }
+
+    @Test
+    public void testPerformUploadWithStorageName() throws Exception
+    {
+        // Upload and register business object data parents.
+        uploadAndRegisterTestDataParents(uploaderWebClient);
+
+        runUpload(UploaderController.MIN_THREADS, null, false, false, null, "S3_MANAGED");
     }
 
     /**
