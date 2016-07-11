@@ -114,15 +114,6 @@ public class UploaderController extends DataBridgeController
             String storageName = getStorageNameFromManifest(manifest);
             manifest.setStorageName(storageName);
 
-            params.getAdditionalAwsCredentialsProviders().add(new AutoRefreshCredentialProvider()
-            {
-                @Override
-                public AwsCredential getNewAwsCredential() throws Exception
-                {
-                    return uploaderWebClient.getBusinessObjectDataUploadCredential(manifest, storageName, createNewVersion).getAwsCredential();
-                }
-            });
-
             // Validate local files and prepare a list of source files to copy to S3.
             List<File> sourceFiles = getValidatedLocalFiles(params.getLocalPath(), manifest.getManifestFiles());
 
@@ -141,6 +132,19 @@ public class UploaderController extends DataBridgeController
 
             // Get business object data key.
             businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectData);
+
+            // Get the business object data version.
+            Integer businessObjectDataVersion = businessObjectDataKey.getBusinessObjectDataVersion();
+
+            // Add credential provider.
+            params.getAdditionalAwsCredentialsProviders().add(new AutoRefreshCredentialProvider()
+            {
+                @Override
+                public AwsCredential getNewAwsCredential() throws Exception
+                {
+                    return uploaderWebClient.getBusinessObjectDataUploadCredential(manifest, storageName, businessObjectDataVersion, null).getAwsCredential();
+                }
+            });
 
             // Get S3 key prefix from the business object data pre-registration response.
             String s3KeyPrefix = IterableUtils.get(businessObjectData.getStorageUnits(), 0).getStorageDirectory().getDirectoryPath();

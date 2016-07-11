@@ -43,9 +43,10 @@ public class UploaderWebClient extends DataBridgeWebClient
     /**
      * Gets the business object data upload credentials.
      *
-     * @param manifest The manifest
-     * @param storageName The storage name
-     * @param createNewVersion Flag to create new version
+     * @param manifest the manifest
+     * @param storageName the storage name
+     * @param businessObjectDataVersion the version of the business object data
+     * @param createNewVersion specifies to provide credentials fof the next business object data version
      *
      * @return {@link BusinessObjectDataUploadCredential}
      * @throws URISyntaxException When error occurs while URI creation
@@ -53,7 +54,7 @@ public class UploaderWebClient extends DataBridgeWebClient
      * @throws JAXBException When error occurs parsing the XML
      */
     public BusinessObjectDataUploadCredential getBusinessObjectDataUploadCredential(DataBridgeBaseManifestDto manifest, String storageName,
-        Boolean createNewVersion) throws URISyntaxException, IOException, JAXBException
+        Integer businessObjectDataVersion, Boolean createNewVersion) throws URISyntaxException, IOException, JAXBException
     {
         URIBuilder uriBuilder =
             new URIBuilder().setScheme(getUriScheme()).setHost(regServerAccessParamsDto.getRegServerHost()).setPort(regServerAccessParamsDto.getRegServerPort())
@@ -65,6 +66,10 @@ public class UploaderWebClient extends DataBridgeWebClient
         if (manifest.getSubPartitionValues() != null)
         {
             uriBuilder.setParameter("subPartitionValues", herdStringHelper.join(manifest.getSubPartitionValues(), "|", "\\"));
+        }
+        if (businessObjectDataVersion != null)
+        {
+            uriBuilder.setParameter("businessObjectDataVersion", businessObjectDataVersion.toString());
         }
         if (createNewVersion != null)
         {

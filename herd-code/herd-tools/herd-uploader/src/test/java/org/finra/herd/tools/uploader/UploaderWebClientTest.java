@@ -49,16 +49,18 @@ public class UploaderWebClientTest extends AbstractUploaderTest
         manifest.setPartitionValue("test6");
         manifest.setSubPartitionValues(Arrays.asList("test7", "test8"));
         String storageName = "test8";
+        Integer businessObjectDataVersion = 1234;
         Boolean createNewVersion = false;
         uploaderWebClient.getRegServerAccessParamsDto().setUseSsl(false);
         BusinessObjectDataUploadCredential businessObjectDataUploadCredential =
-            uploaderWebClient.getBusinessObjectDataUploadCredential(manifest, storageName, createNewVersion);
+            uploaderWebClient.getBusinessObjectDataUploadCredential(manifest, storageName, businessObjectDataVersion, createNewVersion);
         Assert.assertNotNull(businessObjectDataUploadCredential);
         AwsCredential awsCredential = businessObjectDataUploadCredential.getAwsCredential();
         Assert.assertNotNull(awsCredential);
         Assert.assertEquals("http://testWebServiceHostname:1234/herd-app/rest/businessObjectData/upload/credential/namespaces/test1" +
             "/businessObjectDefinitionNames/test2/businessObjectFormatUsages/test3/businessObjectFormatFileTypes/test4/businessObjectFormatVersions/test5" +
-            "/partitionValues/test6?storageName=test8&subPartitionValues=test7%7Ctest8&createNewVersion=false", awsCredential.getAwsAccessKey());
+            "/partitionValues/test6?storageName=test8&subPartitionValues=test7%7Ctest8&businessObjectDataVersion=1234&createNewVersion=false",
+            awsCredential.getAwsAccessKey());
     }
 
     @Test
@@ -72,16 +74,42 @@ public class UploaderWebClientTest extends AbstractUploaderTest
         manifest.setBusinessObjectFormatVersion("test5");
         manifest.setPartitionValue("test6");
         String storageName = "test8";
+        Integer businessObjectDataVersion = 1234;
         Boolean createNewVersion = null;
         uploaderWebClient.getRegServerAccessParamsDto().setUseSsl(true);
         BusinessObjectDataUploadCredential businessObjectDataUploadCredential =
-            uploaderWebClient.getBusinessObjectDataUploadCredential(manifest, storageName, createNewVersion);
+            uploaderWebClient.getBusinessObjectDataUploadCredential(manifest, storageName, businessObjectDataVersion, createNewVersion);
         Assert.assertNotNull(businessObjectDataUploadCredential);
         AwsCredential awsCredential = businessObjectDataUploadCredential.getAwsCredential();
         Assert.assertNotNull(awsCredential);
         Assert.assertEquals("https://testWebServiceHostname:1234/herd-app/rest/businessObjectData/upload/credential/namespaces/test1" +
             "/businessObjectDefinitionNames/test2/businessObjectFormatUsages/test3/businessObjectFormatFileTypes/test4/businessObjectFormatVersions/test5" +
-            "/partitionValues/test6?storageName=test8", awsCredential.getAwsAccessKey());
+            "/partitionValues/test6?storageName=test8&businessObjectDataVersion=1234", awsCredential.getAwsAccessKey());
+    }
+
+    @Test
+    public void testGetBusinessObjectDataUploadCredential3() throws Exception
+    {
+        DataBridgeBaseManifestDto manifest = new DataBridgeBaseManifestDto();
+        manifest.setNamespace("test1");
+        manifest.setBusinessObjectDefinitionName("test2");
+        manifest.setBusinessObjectFormatUsage("test3");
+        manifest.setBusinessObjectFormatFileType("test4");
+        manifest.setBusinessObjectFormatVersion("test5");
+        manifest.setPartitionValue("test6");
+        manifest.setSubPartitionValues(Arrays.asList("test7", "test8"));
+        String storageName = "test8";
+        Integer businessObjectDataVersion = null;
+        Boolean createNewVersion = true;
+        uploaderWebClient.getRegServerAccessParamsDto().setUseSsl(true);
+        BusinessObjectDataUploadCredential businessObjectDataUploadCredential =
+            uploaderWebClient.getBusinessObjectDataUploadCredential(manifest, storageName, businessObjectDataVersion, createNewVersion);
+        Assert.assertNotNull(businessObjectDataUploadCredential);
+        AwsCredential awsCredential = businessObjectDataUploadCredential.getAwsCredential();
+        Assert.assertNotNull(awsCredential);
+        Assert.assertEquals("https://testWebServiceHostname:1234/herd-app/rest/businessObjectData/upload/credential/namespaces/test1" +
+            "/businessObjectDefinitionNames/test2/businessObjectFormatUsages/test3/businessObjectFormatFileTypes/test4/businessObjectFormatVersions/test5" +
+            "/partitionValues/test6?storageName=test8&subPartitionValues=test7%7Ctest8&createNewVersion=true", awsCredential.getAwsAccessKey());
     }
 
     @Test
