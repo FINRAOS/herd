@@ -302,6 +302,14 @@ public class DataBridgeWebClientTest extends AbstractDataBridgeTest
     }
 
     @Test
+    public void testUpdateBusinessObjectDataStatusWithMoreThanMaxSubPartitions() throws Exception
+    {
+        testUpdateBusinessObjectDataStatus(
+            Arrays.asList("testSubPartitionValue1", "testSubPartitionValue2", "testSubPartitionValue3", "testSubPartitionValue4", "testSubPartitionValue4"),
+            true);
+    }
+
+    @Test
     public void testUpdateBusinessObjectDataStatusWithSubPartitions() throws Exception
     {
         testUpdateBusinessObjectDataStatus(
