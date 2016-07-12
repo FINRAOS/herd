@@ -29,6 +29,7 @@ import org.finra.herd.dao.SimpleExponentialBackoffStrategy;
 import org.finra.herd.dao.helper.AwsHelper;
 import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.dao.helper.JavaPropertiesHelper;
+import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.dao.impl.S3DaoImpl;
 import org.finra.herd.service.S3Service;
 import org.finra.herd.service.helper.AlternateKeyHelper;
@@ -92,6 +93,12 @@ public class DataBridgeSpringModuleConfig
     public JavaPropertiesHelper javaPropertiesHelper()
     {
         return new JavaPropertiesHelper();
+    }
+
+    @Bean
+    public JsonHelper jsonHelper()
+    {
+        return new JsonHelper();
     }
 
     @Bean

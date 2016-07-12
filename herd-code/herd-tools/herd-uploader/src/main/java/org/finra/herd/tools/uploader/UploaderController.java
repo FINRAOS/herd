@@ -27,6 +27,7 @@ import javax.xml.bind.JAXBException;
 
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.IterableUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
@@ -36,9 +37,12 @@ import org.springframework.stereotype.Component;
 import org.finra.herd.core.HerdFileUtils;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.core.helper.HerdThreadHelper;
+import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.api.xml.AwsCredential;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.BusinessObjectDataVersion;
+import org.finra.herd.model.api.xml.BusinessObjectDataVersions;
 import org.finra.herd.model.api.xml.Storage;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.ManifestFile;
@@ -69,6 +73,9 @@ public class UploaderController extends DataBridgeController
     private HerdThreadHelper herdThreadHelper;
 
     @Autowired
+    private JsonHelper jsonHelper;
+
+    @Autowired
     private UploaderManifestReader manifestReader;
 
     @Autowired
@@ -88,7 +95,7 @@ public class UploaderController extends DataBridgeController
      * threads to use for file transfer to S3< <li><code>useRrs</code> specifies whether S3 reduced redundancy storage option will be used when copying to S3
      * </ul>
      * @param createNewVersion if not set, only initial version of the business object data is allowed to be created
-     * @param force if not set, an upload fails when the latest version of the business object data is in one of the pre-registration statuses
+     * @param force if set, allows upload to proceed when the latest version of the business object data is in UPLOADING state by invalidating it
      * @param maxRetryAttempts the maximum number of the business object data registration retry attempts
      * @param retryDelaySecs the delay in seconds between the business object data registration retry attempts
      *
@@ -126,8 +133,13 @@ public class UploaderController extends DataBridgeController
                     String.format("Manifest contains duplicate file names. Duplicates: [\"%s\"]", StringUtils.join(duplicateFiles, "\", \"")));
             }
 
-            // Pre-register a new version of business object data in UPLOADING state with the registration server.
+            // Initialize uploader web client.
             uploaderWebClient.setRegServerAccessParamsDto(regServerAccessParamsDto);
+
+            // Handle the latest business object data version if one exists.
+            checkLatestBusinessObjectDataVersion(manifest, force);
+
+            // Pre-register a new version of business object data in UPLOADING state with the registration server.
             BusinessObjectData businessObjectData = uploaderWebClient.preRegisterBusinessObjectData(manifest, storageName, createNewVersion);
 
             // Get business object data key.
@@ -271,6 +283,55 @@ public class UploaderController extends DataBridgeController
 
                     // Sleep for the specified delay interval.
                     herdThreadHelper.sleep(retryDelaySecs * 1000L);
+                }
+            }
+        }
+    }
+
+    /**
+     * Handles the uploader logic regarding the latest business object data version if one exists.
+     *
+     * @param manifest the uploader input manifest
+     * @param force if set, allows upload to proceed when the latest version of the business object data is in UPLOADING state by invalidating it
+     *
+     * @throws JAXBException if a JAXB error was encountered.
+     * @throws IOException if an I/O error was encountered.
+     * @throws URISyntaxException if a URI syntax error was encountered.
+     */
+    private void checkLatestBusinessObjectDataVersion(UploaderInputManifestDto manifest, Boolean force) throws JAXBException, IOException, URISyntaxException
+    {
+        // Retrieve all already registered versions for this business object data.
+        BusinessObjectDataVersions businessObjectDataVersions = uploaderWebClient.getBusinessObjectDataVersions(
+            new BusinessObjectDataKey(manifest.getNamespace(), manifest.getBusinessObjectDefinitionName(), manifest.getBusinessObjectFormatUsage(),
+                manifest.getBusinessObjectFormatFileType(), Integer.valueOf(manifest.getBusinessObjectFormatVersion()), manifest.getPartitionValue(),
+                manifest.getSubPartitionValues(), null));
+
+        // Check if the latest version of the business object data.
+        if (CollectionUtils.isNotEmpty(businessObjectDataVersions.getBusinessObjectDataVersions()))
+        {
+            BusinessObjectDataVersion latestBusinessObjectDataVersion =
+                businessObjectDataVersions.getBusinessObjectDataVersions().get(businessObjectDataVersions.getBusinessObjectDataVersions().size() - 1);
+
+            // Check if the latest version of the business object data is in UPLOADING state.
+            if (BusinessObjectDataStatusEntity.UPLOADING.equals(latestBusinessObjectDataVersion.getStatus()))
+            {
+                LOGGER.info(String.format("Found the latest version of the business object data in UPLOADING state. businessObjectDataKey=%s",
+                    jsonHelper.objectToJson(latestBusinessObjectDataVersion.getBusinessObjectDataKey())));
+
+                if (force)
+                {
+                    // If the "force" flag is set, change the status of the latest business object data version to INVALID.
+                    uploaderWebClient
+                        .updateBusinessObjectDataStatus(latestBusinessObjectDataVersion.getBusinessObjectDataKey(), BusinessObjectDataStatusEntity.INVALID);
+                }
+                else
+                {
+                    // Fail the upload due to the status of the latest business object data version being UPLOADING.
+                    throw new IllegalArgumentException(String
+                        .format("Unable to register business object data because the latest business object data version is detected in UPLOADING state. " +
+                            "Please use -force option to invalidate the latest business object version and allow upload to proceed. " +
+                            "Business object data {%s}",
+                            businessObjectDataHelper.businessObjectDataKeyToString(latestBusinessObjectDataVersion.getBusinessObjectDataKey())));
                 }
             }
         }

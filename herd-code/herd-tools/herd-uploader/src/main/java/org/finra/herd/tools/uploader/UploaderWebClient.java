@@ -17,6 +17,7 @@ package org.finra.herd.tools.uploader;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.Arrays;
 
 import javax.xml.bind.JAXBException;
 
@@ -25,10 +26,13 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataUploadCredential;
+import org.finra.herd.model.api.xml.BusinessObjectDataVersions;
 import org.finra.herd.model.dto.DataBridgeBaseManifestDto;
 import org.finra.herd.tools.common.databridge.DataBridgeWebClient;
 
@@ -39,6 +43,9 @@ import org.finra.herd.tools.common.databridge.DataBridgeWebClient;
 public class UploaderWebClient extends DataBridgeWebClient
 {
     private static final Logger LOGGER = Logger.getLogger(UploaderWebClient.class);
+
+    @Autowired
+    private JsonHelper jsonHelper;
 
     /**
      * Gets the business object data upload credentials.
@@ -89,6 +96,72 @@ public class UploaderWebClient extends DataBridgeWebClient
     }
 
     /**
+     * Retrieves all versions for the specified business object data key.
+     *
+     * @param businessObjectDataKey the business object data key
+     *
+     * @return {@link org.finra.herd.model.api.xml.BusinessObjectDataVersions}
+     * @throws URISyntaxException When error occurs while URI creation
+     * @throws IOException When error occurs communicating with server
+     * @throws JAXBException When error occurs parsing the XML
+     */
+    public BusinessObjectDataVersions getBusinessObjectDataVersions(BusinessObjectDataKey businessObjectDataKey)
+        throws URISyntaxException, IOException, JAXBException
+    {
+        LOGGER.info("Retrieving business object data versions from the registration server...");
+
+        BusinessObjectDataVersions businessObjectDataVersions;
+        try (CloseableHttpClient client = httpClientOperations.createHttpClient())
+        {
+            StringBuilder uriPathBuilder = new StringBuilder(300);
+            uriPathBuilder.append(HERD_APP_REST_URI_PREFIX);
+            uriPathBuilder.append("/businessObjectData/namespaces/").append(businessObjectDataKey.getNamespace());
+            uriPathBuilder.append("/businessObjectDefinitionNames/").append(businessObjectDataKey.getBusinessObjectDefinitionName());
+            uriPathBuilder.append("/businessObjectFormatUsages/").append(businessObjectDataKey.getBusinessObjectFormatUsage());
+            uriPathBuilder.append("/businessObjectFormatFileTypes/").append(businessObjectDataKey.getBusinessObjectFormatFileType());
+            uriPathBuilder.append("/versions");
+
+            URIBuilder uriBuilder = new URIBuilder().setScheme(getUriScheme()).setHost(regServerAccessParamsDto.getRegServerHost())
+                .setPort(regServerAccessParamsDto.getRegServerPort()).setPath(uriPathBuilder.toString())
+                .setParameter("partitionValue", businessObjectDataKey.getPartitionValue());
+
+            if (businessObjectDataKey.getSubPartitionValues() != null)
+            {
+                uriBuilder.setParameter("subPartitionValues", herdStringHelper.join(businessObjectDataKey.getSubPartitionValues(), "|", "\\"));
+            }
+
+            if (businessObjectDataKey.getBusinessObjectFormatVersion() != null)
+            {
+                uriBuilder.setParameter("businessObjectFormatVersion", businessObjectDataKey.getBusinessObjectFormatVersion().toString());
+            }
+
+            if (businessObjectDataKey.getBusinessObjectDataVersion() != null)
+            {
+                uriBuilder.setParameter("businessObjectDataVersion", businessObjectDataKey.getBusinessObjectDataVersion().toString());
+            }
+
+            HttpGet httpGet = new HttpGet(uriBuilder.build());
+            httpGet.addHeader("Accepts", DEFAULT_ACCEPT);
+
+            // If SSL is enabled, set the client authentication header.
+            if (regServerAccessParamsDto.getUseSsl())
+            {
+                httpGet.addHeader(getAuthorizationHeader());
+            }
+
+            LOGGER.info(String.format("    HTTP GET URI: %s", httpGet.getURI().toString()));
+            LOGGER.info(String.format("    HTTP GET Headers: %s", Arrays.toString(httpGet.getAllHeaders())));
+
+            businessObjectDataVersions = getBusinessObjectDataVersions(httpClientOperations.execute(client, httpGet));
+        }
+
+        LOGGER.info(String.format("Successfully retrieved %d already registered version(s) for the business object data. businessObjectDataKey=%s",
+            businessObjectDataVersions.getBusinessObjectDataVersions().size(), jsonHelper.objectToJson(businessObjectDataKey)));
+
+        return businessObjectDataVersions;
+    }
+
+    /**
      * Updates the business object data status.This method does not fail in case cleaning is unsuccessful, but simply logs the exception information as a
      * warnin
      *
@@ -105,6 +178,19 @@ public class UploaderWebClient extends DataBridgeWebClient
         {
             LOGGER.warn(e.getMessage(), e);
         }
+    }
+
+    /**
+     * Extracts BusinessObjectDataVersions object from the registration server HTTP response.
+     *
+     * @param httpResponse the response received from the supported options.
+     *
+     * @return the BusinessObjectDataVersions object extracted from the registration server response.
+     */
+    protected BusinessObjectDataVersions getBusinessObjectDataVersions(CloseableHttpResponse httpResponse)
+    {
+        return (BusinessObjectDataVersions) processXmlHttpResponse(httpResponse, "retrieve business object data versions from the registration server",
+            BusinessObjectDataVersions.class);
     }
 
     /**

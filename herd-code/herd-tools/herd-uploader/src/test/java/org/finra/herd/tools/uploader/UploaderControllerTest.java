@@ -15,6 +15,7 @@
 */
 package org.finra.herd.tools.uploader;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -30,34 +31,19 @@ import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 
 import org.finra.herd.dao.impl.MockHttpClientOperationsImpl;
-import org.finra.herd.dao.impl.S3DaoImpl;
 import org.finra.herd.model.dto.ManifestFile;
 import org.finra.herd.model.dto.RegServerAccessParamsDto;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.dto.UploaderInputManifestDto;
-import org.finra.herd.tools.common.databridge.DataBridgeWebClient;
 
 /**
  * Unit tests for UploaderController class.
  */
 public class UploaderControllerTest extends AbstractUploaderTest
 {
-    @Before
-    @Override
-    public void setup() throws Exception
-    {
-        super.setup();
-
-        // Set the web client logger to ERROR level so we don't get unnecessary info level logging on the output.
-        Logger.getLogger(DataBridgeWebClient.class).setLevel(Level.ERROR);
-        Logger.getLogger(UploaderWebClient.class).setLevel(Level.ERROR);
-        Logger.getLogger(S3DaoImpl.class).setLevel(Level.ERROR);
-    }
-
     @Test
     public void testPerformUpload() throws Exception
     {
@@ -98,6 +84,33 @@ public class UploaderControllerTest extends AbstractUploaderTest
         catch (IllegalArgumentException e)
         {
             assertTrue(e.getMessage().startsWith("Invalid local base directory"));
+        }
+    }
+
+    @Test
+    public void testPerformUploadLatestBusinessObjectDataVersionExists() throws Exception
+    {
+        runUpload(UploaderController.MIN_THREADS, null, false, false, MockHttpClientOperationsImpl.HOSTNAME_LATEST_BDATA_VERSION_EXISTS, null);
+    }
+
+    @Test
+    public void testPerformUploadLatestBusinessObjectDataVersionExistsInUploadingState() throws Exception
+    {
+        try
+        {
+            runUpload(UploaderController.MIN_THREADS, null, false, false, MockHttpClientOperationsImpl.HOSTNAME_LATEST_BDATA_VERSION_EXISTS_IN_UPLOADING_STATE,
+                null);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(
+                String.format("Unable to register business object data because the latest business object data version is detected in UPLOADING state. " +
+                    "Please use -force option to invalidate the latest business object version and allow upload to proceed. Business object data {" +
+                    "namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", businessObjectFormatFileType: \"%s\", " +
+                    "businessObjectFormatVersion: 0, businessObjectDataPartitionValue: \"2014-01-31\", businessObjectDataSubPartitionValues: \"\", " +
+                    "businessObjectDataVersion: 0}", TEST_NAMESPACE, TEST_BUSINESS_OBJECT_DEFINITION, TEST_BUSINESS_OBJECT_FORMAT_USAGE,
+                    TEST_BUSINESS_OBJECT_FORMAT_FILE_TYPE), e.getMessage());
         }
     }
 
@@ -232,6 +245,13 @@ public class UploaderControllerTest extends AbstractUploaderTest
     }
 
     @Test
+    public void testPerformUploadWithForceFlagEnabled() throws Exception
+    {
+        runUpload(UploaderController.MIN_THREADS, null, false, true, MockHttpClientOperationsImpl.HOSTNAME_LATEST_BDATA_VERSION_EXISTS_IN_UPLOADING_STATE,
+            null);
+    }
+
+    @Test
     public void testPerformUploadWithInfoLoggingEnabled() throws Exception
     {
         // Upload and register business object data parents.
@@ -324,7 +344,7 @@ public class UploaderControllerTest extends AbstractUploaderTest
      * @param numOfThreads the maximum number of threads to use for file transfer to S3
      * @param attributes the attributes to be associated with the test data being uploaded
      * @param createNewVersion if not set, only initial version of the business object data is allowed to be created
-     * @param force if not set, an upload fails when the latest version of the business object data is in one of the pre-registration statuses
+     * @param force if set, allows upload to proceed when the latest version of the business object data is in UPLOADING state by invalidating it
      * @param hostname optional override of the default web service hostname.
      * @param storageName optional storage name
      */
@@ -363,7 +383,7 @@ public class UploaderControllerTest extends AbstractUploaderTest
      * @param numOfThreads the maximum number of threads to use for file transfer to S3
      * @param attributes the attributes to be associated with the test data being uploaded
      * @param createNewVersion if not set, only initial version of the business object data is allowed to be created
-     * @param force if not set, an upload fails when the latest version of the business object data is in one of the pre-registration statuses
+     * @param force if set, allows upload to proceed when the latest version of the business object data is in UPLOADING state by invalidating it
      */
     protected void runUpload(Integer numOfThreads, HashMap<String, String> attributes, Boolean createNewVersion, Boolean force) throws Exception
     {
@@ -375,7 +395,7 @@ public class UploaderControllerTest extends AbstractUploaderTest
      *
      * @param numOfThreads the maximum number of threads to use for file transfer to S3
      * @param createNewVersion if not set, only initial version of the business object data is allowed to be created
-     * @param force if not set, an upload fails when the latest version of the business object data is in one of the pre-registration statuses
+     * @param force if set, allows upload to proceed when the latest version of the business object data is in UPLOADING state by invalidating it
      */
     protected void runUpload(Integer numOfThreads, Boolean createNewVersion, Boolean force) throws Exception
     {

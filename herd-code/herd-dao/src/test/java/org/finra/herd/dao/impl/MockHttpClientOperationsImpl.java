@@ -50,9 +50,12 @@ import org.finra.herd.dao.helper.XmlHelper;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.AwsCredential;
 import org.finra.herd.model.api.xml.BusinessObjectData;
+import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatusUpdateResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageFilesCreateResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDataUploadCredential;
+import org.finra.herd.model.api.xml.BusinessObjectDataVersion;
+import org.finra.herd.model.api.xml.BusinessObjectDataVersions;
 import org.finra.herd.model.api.xml.S3KeyPrefixInformation;
 import org.finra.herd.model.api.xml.Storage;
 import org.finra.herd.model.api.xml.StorageDirectory;
@@ -70,15 +73,19 @@ import org.finra.herd.model.jpa.StorageUnitStatusEntity;
  */
 public class MockHttpClientOperationsImpl implements HttpClientOperations
 {
+    public static final String HOSTNAME_LATEST_BDATA_VERSION_EXISTS = "testLatestBdataVersionExists";
+
+    public static final String HOSTNAME_LATEST_BDATA_VERSION_EXISTS_IN_UPLOADING_STATE = "testLatestBdataVersionExistsInUploadingState";
+
     public static final String HOSTNAME_RESPOND_WITH_STATUS_CODE_200_AND_INVALID_CONTENT = "testRespondWithStatusCode200AndInvalidContent";
+
+    public static final String HOSTNAME_THROW_IO_EXCEPTION_DURING_ADD_STORAGE_FILES = "testThrowIoExceptionDuringAddStorageFiles";
+
+    public static final String HOSTNAME_THROW_IO_EXCEPTION_DURING_GET_STORAGE = "testThrowIoExceptionDuringGetStorage";
 
     public static final String HOSTNAME_THROW_IO_EXCEPTION_DURING_REGISTER_BDATA = "testThrowIoExceptionDuringRegisterBdata";
 
     public static final String HOSTNAME_THROW_IO_EXCEPTION_DURING_UPDATE_BDATA_STATUS = "testThrowIoExceptionDuringUpdateBdataStatus";
-
-    public static final String HOSTNAME_THROW_IO_EXCEPTION_DURING_GET_STORAGE = "testThrowIoExceptionDuringGetStorage";
-
-    public static final String HOSTNAME_THROW_IO_EXCEPTION_DURING_ADD_STORAGE_FILES = "testThrowIoExceptionDuringAddStorageFiles";
 
     private static final Logger LOGGER = Logger.getLogger(MockHttpClientOperationsImpl.class);
 
@@ -112,6 +119,10 @@ public class MockHttpClientOperationsImpl implements HttpClientOperations
                 if (uri.getPath().endsWith("s3KeyPrefix"))
                 {
                     buildGetS3KeyPrefixResponse(response, uri);
+                }
+                else if (uri.getPath().endsWith("versions"))
+                {
+                    buildGetBusinessObjectDataVersionsResponse(response, uri);
                 }
                 else if (uri.getPath().startsWith("/herd-app/rest/businessObjectData/upload/credential"))
                 {
@@ -225,6 +236,45 @@ public class MockHttpClientOperationsImpl implements HttpClientOperations
             businessObjectData.setVersion(0);
 
             response.setEntity(getHttpEntity(businessObjectData));
+        }
+    }
+
+    /**
+     * Builds a business object data get versions response.
+     *
+     * @param response the response.
+     * @param uri the URI of the incoming request.
+     *
+     * @throws JAXBException if a JAXB error occurred.
+     */
+    private void buildGetBusinessObjectDataVersionsResponse(MockCloseableHttpResponse response, URI uri) throws JAXBException
+    {
+        Pattern pattern = Pattern.compile("/herd-app/rest/businessObjectData(/namespaces/(?<namespace>.*?))?" +
+            "/businessObjectDefinitionNames/(?<businessObjectDefinitionName>.*?)/businessObjectFormatUsages/(?<businessObjectFormatUsage>.*?)" +
+            "/businessObjectFormatFileTypes/(?<businessObjectFormatFileType>.*?)" +
+            "/versions");
+
+        Matcher matcher = pattern.matcher(uri.getPath());
+
+        if (matcher.find())
+        {
+            BusinessObjectDataVersions businessObjectDataVersions = new BusinessObjectDataVersions();
+
+            if (HOSTNAME_LATEST_BDATA_VERSION_EXISTS.equals(uri.getHost()) || HOSTNAME_LATEST_BDATA_VERSION_EXISTS_IN_UPLOADING_STATE.equals(uri.getHost()))
+            {
+                BusinessObjectDataVersion businessObjectDataVersion = new BusinessObjectDataVersion();
+                businessObjectDataVersions.getBusinessObjectDataVersions().add(businessObjectDataVersion);
+
+                businessObjectDataVersion.setBusinessObjectDataKey(
+                    new BusinessObjectDataKey(getGroup(matcher, "namespace"), getGroup(matcher, "businessObjectDefinitionName"),
+                        getGroup(matcher, "businessObjectFormatUsage"), getGroup(matcher, "businessObjectFormatFileType"), 0, "2014-01-31", null, 0));
+
+                businessObjectDataVersion.setStatus(
+                    HOSTNAME_LATEST_BDATA_VERSION_EXISTS_IN_UPLOADING_STATE.equals(uri.getHost()) ? BusinessObjectDataStatusEntity.UPLOADING :
+                        BusinessObjectDataStatusEntity.VALID);
+            }
+
+            response.setEntity(getHttpEntity(businessObjectDataVersions));
         }
     }
 
