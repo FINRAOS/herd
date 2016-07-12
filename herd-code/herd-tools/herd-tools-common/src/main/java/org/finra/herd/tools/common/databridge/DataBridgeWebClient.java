@@ -392,7 +392,7 @@ public abstract class DataBridgeWebClient
             for (int i = 0; i < org.apache.commons.collections4.CollectionUtils.size(businessObjectDataKey.getSubPartitionValues()) &&
                 i < BusinessObjectDataEntity.MAX_SUBPARTITIONS; i++)
             {
-                uriPathBuilder.append("/subPartition").append(i + 1).append("Value/").append(businessObjectDataKey.getSubPartitionValues().get(i));
+                uriPathBuilder.append("/subPartition").append(i + 1).append("Values/").append(businessObjectDataKey.getSubPartitionValues().get(i));
             }
             uriPathBuilder.append("/businessObjectDataVersions/").append(businessObjectDataKey.getBusinessObjectDataVersion());
 
