@@ -614,7 +614,7 @@ public class MockS3OperationsImpl implements S3Operations
             }
         }
 
-        // Update the Last-Modified header value.
+        // Update the Last-Modified header value. This value not being set causes NullPointerException in S3Dao download related unit tests.
         metadata.setLastModified(new Date());
 
         MockS3Bucket mockS3Bucket = getOrCreateBucket(s3BucketName);
