@@ -184,13 +184,13 @@ public class UploadDownloadHelperServiceTest extends AbstractServiceTest
             businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataHelper.getBusinessObjectDataKey(targetBusinessObjectDataEntity));
 
         // Validate the source and target business object data statuses.
-        assertEquals(BusinessObjectDataStatusEntity.DELETED, sourceBusinessObjectDataEntity.getStatus().getCode());
-        assertEquals(BusinessObjectDataStatusEntity.INVALID, targetBusinessObjectDataEntity.getStatus().getCode());
+        assertEquals(BusinessObjectDataStatusEntity.VALID, sourceBusinessObjectDataEntity.getStatus().getCode());
+        assertEquals(BusinessObjectDataStatusEntity.UPLOADING, targetBusinessObjectDataEntity.getStatus().getCode());
 
         // Validate the updated DTO parameters.
-        assertEquals(BusinessObjectDataStatusEntity.DELETED, completeUploadSingleParamsDto.getSourceNewStatus());
+        assertNull(completeUploadSingleParamsDto.getSourceNewStatus());
         assertEquals(BusinessObjectDataStatusEntity.VALID, completeUploadSingleParamsDto.getSourceOldStatus());
-        assertEquals(BusinessObjectDataStatusEntity.INVALID, completeUploadSingleParamsDto.getTargetNewStatus());
+        assertNull(completeUploadSingleParamsDto.getTargetNewStatus());
         assertEquals(BusinessObjectDataStatusEntity.UPLOADING, completeUploadSingleParamsDto.getTargetOldStatus());
     }
 
@@ -228,13 +228,13 @@ public class UploadDownloadHelperServiceTest extends AbstractServiceTest
             businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataHelper.getBusinessObjectDataKey(targetBusinessObjectDataEntity));
 
         // Validate the source and target business object data statuses.
-        assertEquals(BusinessObjectDataStatusEntity.DELETED, sourceBusinessObjectDataEntity.getStatus().getCode());
-        assertEquals(BusinessObjectDataStatusEntity.INVALID, targetBusinessObjectDataEntity.getStatus().getCode());
+        assertEquals(BusinessObjectDataStatusEntity.UPLOADING, sourceBusinessObjectDataEntity.getStatus().getCode());
+        assertEquals(BusinessObjectDataStatusEntity.VALID, targetBusinessObjectDataEntity.getStatus().getCode());
 
         // Validate the updated DTO parameters.
-        assertEquals(BusinessObjectDataStatusEntity.DELETED, completeUploadSingleParamsDto.getSourceNewStatus());
+        assertNull(completeUploadSingleParamsDto.getSourceNewStatus());
         assertEquals(BusinessObjectDataStatusEntity.UPLOADING, completeUploadSingleParamsDto.getSourceOldStatus());
-        assertEquals(BusinessObjectDataStatusEntity.INVALID, completeUploadSingleParamsDto.getTargetNewStatus());
+        assertNull(completeUploadSingleParamsDto.getTargetNewStatus());
         assertEquals(BusinessObjectDataStatusEntity.VALID, completeUploadSingleParamsDto.getTargetOldStatus());
     }
 
