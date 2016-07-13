@@ -340,32 +340,32 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
             assertEquals(String.format("Namespace \"%s\" doesn't exist.", request.getStoragePolicyKey().getNamespace()), e.getMessage());
         }
 
-        // Try to create a storage policy when storage policy namespace contains a slash character.
+        // Try to create a storage policy when storage policy namespace contains a forward slash character.
         try
         {
             storagePolicyService.createStoragePolicy(
                 createStoragePolicyCreateRequest(new StoragePolicyKey(addSlash(STORAGE_POLICY_NAMESPACE_CD), STORAGE_POLICY_NAME), STORAGE_POLICY_RULE_TYPE,
                     STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2,
                     StoragePolicyStatusEntity.ENABLED));
-            fail("Should throw an IllegalArgumentException when storage policy namespace contains a slash character.");
+            fail("Should throw an IllegalArgumentException when storage policy namespace contains a forward slash character.");
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals("Namespace can not contain a slash character.", e.getMessage());
+            assertEquals("Namespace can not contain a forward slash character.", e.getMessage());
         }
 
-        // Try to create a storage policy when storage policy name contains a slash character.
+        // Try to create a storage policy when storage policy name contains a forward slash character.
         try
         {
             storagePolicyService.createStoragePolicy(
                 createStoragePolicyCreateRequest(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, addSlash(STORAGE_POLICY_NAME)), STORAGE_POLICY_RULE_TYPE,
                     STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2,
                     StoragePolicyStatusEntity.ENABLED));
-            fail("Should throw an IllegalArgumentException when storage policy name contains a slash character.");
+            fail("Should throw an IllegalArgumentException when storage policy name contains a forward slash character.");
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals("Storage policy name can not contain a slash character.", e.getMessage());
+            assertEquals("Storage policy name can not contain a forward slash character.", e.getMessage());
         }
 
         // Try to create a storage policy using non-existing storage policy rule type.

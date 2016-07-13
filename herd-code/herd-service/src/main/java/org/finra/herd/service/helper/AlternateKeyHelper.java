@@ -52,7 +52,7 @@ public class AlternateKeyHelper
     public String validateStringParameter(String indefiniteArticle, String parameterName, String parameterValue) throws IllegalArgumentException
     {
         Assert.hasText(parameterValue, String.format("%s %s must be specified.", indefiniteArticle, parameterName));
-        Assert.doesNotContain(parameterValue, "/", String.format("%s can not contain a slash character.", StringUtils.capitalize(parameterName)));
+        Assert.doesNotContain(parameterValue, "/", String.format("%s can not contain a forward slash character.", StringUtils.capitalize(parameterName)));
         return parameterValue.trim();
     }
 }
