@@ -162,8 +162,8 @@ public class UploaderWebClient extends DataBridgeWebClient
     }
 
     /**
-     * Updates the business object data status.This method does not fail in case cleaning is unsuccessful, but simply logs the exception information as a
-     * warnin
+     * Updates the business object data status. This method does not fail in case business object data status update is unsuccessful, but simply logs the
+     * exception information as a warning.
      *
      * @param businessObjectDataKey the business object data key
      * @param businessObjectDataStatus the status of the business object data

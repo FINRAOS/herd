@@ -95,7 +95,7 @@ public class UploaderController extends DataBridgeController
      * threads to use for file transfer to S3< <li><code>useRrs</code> specifies whether S3 reduced redundancy storage option will be used when copying to S3
      * </ul>
      * @param createNewVersion if not set, only initial version of the business object data is allowed to be created
-     * @param force if set, allows upload to proceed when the latest version of the business object data is in UPLOADING state by invalidating it
+     * @param force if set, allows upload to proceed when the latest version of the business object data has UPLOADING status by invalidating that version
      * @param maxRetryAttempts the maximum number of the business object data registration retry attempts
      * @param retryDelaySecs the delay in seconds between the business object data registration retry attempts
      *
@@ -292,7 +292,7 @@ public class UploaderController extends DataBridgeController
      * Handles the uploader logic regarding the latest business object data version if one exists.
      *
      * @param manifest the uploader input manifest
-     * @param force if set, allows upload to proceed when the latest version of the business object data is in UPLOADING state by invalidating it
+     * @param force if set, allows upload to proceed when the latest version of the business object data has UPLOADING status by invalidating that version
      *
      * @throws JAXBException if a JAXB error was encountered.
      * @throws IOException if an I/O error was encountered.

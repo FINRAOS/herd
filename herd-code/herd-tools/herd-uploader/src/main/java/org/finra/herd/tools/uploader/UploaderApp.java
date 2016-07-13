@@ -82,7 +82,7 @@ public class UploaderApp extends DataBridgeApp
         retryDelaySecsOpt =
             argParser.addArgument("D", "retryDelaySecs", true, "The delay in seconds between the business object data registration retry attempts.", false);
         forceOpt = argParser.addArgument("f", "force", false,
-            "If set, allows upload to proceed when the latest version of the business object data is in UPLOADING state by invalidating it.", false);
+            "If set, allows upload to proceed when the latest version of the business object data has UPLOADING status by invalidating that version.", false);
     }
 
     /**

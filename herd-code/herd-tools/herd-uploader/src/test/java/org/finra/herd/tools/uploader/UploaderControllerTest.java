@@ -344,7 +344,7 @@ public class UploaderControllerTest extends AbstractUploaderTest
      * @param numOfThreads the maximum number of threads to use for file transfer to S3
      * @param attributes the attributes to be associated with the test data being uploaded
      * @param createNewVersion if not set, only initial version of the business object data is allowed to be created
-     * @param force if set, allows upload to proceed when the latest version of the business object data is in UPLOADING state by invalidating it
+     * @param force if set, allows upload to proceed when the latest version of the business object data has UPLOADING status by invalidating that version
      * @param hostname optional override of the default web service hostname.
      * @param storageName optional storage name
      */
@@ -383,7 +383,7 @@ public class UploaderControllerTest extends AbstractUploaderTest
      * @param numOfThreads the maximum number of threads to use for file transfer to S3
      * @param attributes the attributes to be associated with the test data being uploaded
      * @param createNewVersion if not set, only initial version of the business object data is allowed to be created
-     * @param force if set, allows upload to proceed when the latest version of the business object data is in UPLOADING state by invalidating it
+     * @param force if set, allows upload to proceed when the latest version of the business object data has UPLOADING status by invalidating that version
      */
     protected void runUpload(Integer numOfThreads, HashMap<String, String> attributes, Boolean createNewVersion, Boolean force) throws Exception
     {
@@ -395,7 +395,7 @@ public class UploaderControllerTest extends AbstractUploaderTest
      *
      * @param numOfThreads the maximum number of threads to use for file transfer to S3
      * @param createNewVersion if not set, only initial version of the business object data is allowed to be created
-     * @param force if set, allows upload to proceed when the latest version of the business object data is in UPLOADING state by invalidating it
+     * @param force if set, allows upload to proceed when the latest version of the business object data has UPLOADING status by invalidating that version
      */
     protected void runUpload(Integer numOfThreads, Boolean createNewVersion, Boolean force) throws Exception
     {
