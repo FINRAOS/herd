@@ -71,15 +71,15 @@ public class PartitionKeyGroupServiceTest extends AbstractServiceTest
     @Test
     public void testCreatePartitionKeyGroupInvalidParameters()
     {
-        // Try to perform a create when partition key group name contains a slash character.
+        // Try to perform a create when partition key group name contains a forward slash character.
         try
         {
             createPartitionKeyGroup(addSlash(PARTITION_KEY_GROUP));
-            fail("Should throw an IllegalArgumentException when partition key group name contains a slash character.");
+            fail("Should throw an IllegalArgumentException when partition key group name contains a forward slash character.");
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals("Partition key group name can not contain a slash character.", e.getMessage());
+            assertEquals("Partition key group name can not contain a forward slash character.", e.getMessage());
         }
     }
 

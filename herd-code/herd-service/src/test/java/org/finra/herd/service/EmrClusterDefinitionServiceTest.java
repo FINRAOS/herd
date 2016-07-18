@@ -297,28 +297,28 @@ public class EmrClusterDefinitionServiceTest extends AbstractServiceTest
     @Test
     public void testCreateEmrClusterDefinitionInvalidParameters() throws Exception
     {
-        // Try to perform a create when namespace contains a slash character.
+        // Try to perform a create when namespace contains a forward slash character.
         try
         {
             emrClusterDefinitionService.createEmrClusterDefinition(createEmrClusterDefinitionCreateRequest(addSlash(NAMESPACE), EMR_CLUSTER_DEFINITION_NAME,
                 getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH)));
-            fail("Should throw an IllegalArgumentException when namespace contains a slash character.");
+            fail("Should throw an IllegalArgumentException when namespace contains a forward slash character.");
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals("Namespace can not contain a slash character.", e.getMessage());
+            assertEquals("Namespace can not contain a forward slash character.", e.getMessage());
         }
 
-        // Try to perform a create when EMR cluster definition name contains a slash character.
+        // Try to perform a create when EMR cluster definition name contains a forward slash character.
         try
         {
             emrClusterDefinitionService.createEmrClusterDefinition(createEmrClusterDefinitionCreateRequest(NAMESPACE, addSlash(EMR_CLUSTER_DEFINITION_NAME),
                 getTestEmrClusterDefinitionConfiguration(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH)));
-            fail("Should throw an IllegalArgumentException when EMR cluster definition name contains a slash character.");
+            fail("Should throw an IllegalArgumentException when EMR cluster definition name contains a forward slash character.");
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals("EMR cluster definition name can not contain a slash character.", e.getMessage());
+            assertEquals("EMR cluster definition name can not contain a forward slash character.", e.getMessage());
         }
     }
 

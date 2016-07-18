@@ -309,17 +309,17 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
                     request.getNamespace()), e.getMessage());
         }
 
-        // Try to create a business object format when namespace contains a slash character.
+        // Try to create a business object format when namespace contains a forward slash character.
         request = createBusinessObjectFormatCreateRequest(addSlash(BDEF_NAMESPACE), BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY,
             FORMAT_DESCRIPTION, getNewAttributes(), getTestAttributeDefinitions(), getTestSchema());
         try
         {
             businessObjectFormatService.createBusinessObjectFormat(request);
-            fail("Should throw an IllegalArgumentException when namespace contains a slash character.");
+            fail("Should throw an IllegalArgumentException when namespace contains a forward slash character.");
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals("Namespace can not contain a slash character.", e.getMessage());
+            assertEquals("Namespace can not contain a forward slash character.", e.getMessage());
         }
 
         // Try to perform a create using invalid business object definition name.
@@ -338,30 +338,30 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
                     request.getNamespace()), e.getMessage());
         }
 
-        // Try to create a business object format when business object definition name contains a slash character.
+        // Try to create a business object format when business object definition name contains a forward slash character.
         request = createBusinessObjectFormatCreateRequest(BDEF_NAMESPACE, addSlash(BDEF_NAME), FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY,
             FORMAT_DESCRIPTION, getNewAttributes(), getTestAttributeDefinitions(), getTestSchema());
         try
         {
             businessObjectFormatService.createBusinessObjectFormat(request);
-            fail("Should throw an IllegalArgumentException when business object definition name contains a slash character.");
+            fail("Should throw an IllegalArgumentException when business object definition name contains a forward slash character.");
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals("Business object definition name can not contain a slash character.", e.getMessage());
+            assertEquals("Business object definition name can not contain a forward slash character.", e.getMessage());
         }
 
-        // Try to create a business object format when business object format usage contains a slash character.
+        // Try to create a business object format when business object format usage contains a forward slash character.
         request = createBusinessObjectFormatCreateRequest(BDEF_NAMESPACE, BDEF_NAME, addSlash(FORMAT_USAGE_CODE), FORMAT_FILE_TYPE_CODE, PARTITION_KEY,
             FORMAT_DESCRIPTION, getNewAttributes(), getTestAttributeDefinitions(), getTestSchema());
         try
         {
             businessObjectFormatService.createBusinessObjectFormat(request);
-            fail("Should throw an IllegalArgumentException when business object format usage contains a slash character.");
+            fail("Should throw an IllegalArgumentException when business object format usage contains a forward slash character.");
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals("Business object format usage can not contain a slash character.", e.getMessage());
+            assertEquals("Business object format usage can not contain a forward slash character.", e.getMessage());
         }
 
         // Try to perform a create using invalid format file type.
@@ -377,30 +377,30 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             assertEquals(String.format("File type with code \"%s\" doesn't exist.", request.getBusinessObjectFormatFileType()), e.getMessage());
         }
 
-        // Try to create a business object format when business object format file type contains a slash character.
+        // Try to create a business object format when business object format file type contains a forward slash character.
         request = createBusinessObjectFormatCreateRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, addSlash(FORMAT_FILE_TYPE_CODE), PARTITION_KEY,
             FORMAT_DESCRIPTION, getNewAttributes(), getTestAttributeDefinitions(), getTestSchema());
         try
         {
             businessObjectFormatService.createBusinessObjectFormat(request);
-            fail("Should throw an IllegalArgumentException when business object format file type contains a slash character.");
+            fail("Should throw an IllegalArgumentException when business object format file type contains a forward slash character.");
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals("Business object format file type can not contain a slash character.", e.getMessage());
+            assertEquals("Business object format file type can not contain a forward slash character.", e.getMessage());
         }
 
-        // Try to create a business object format when partition key contains a slash character.
+        // Try to create a business object format when partition key contains a forward slash character.
         request = createBusinessObjectFormatCreateRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, addSlash(PARTITION_KEY),
             FORMAT_DESCRIPTION, getNewAttributes(), getTestAttributeDefinitions(), getTestSchema());
         try
         {
             businessObjectFormatService.createBusinessObjectFormat(request);
-            fail("Should throw an IllegalArgumentException when partition key contains a slash character.");
+            fail("Should throw an IllegalArgumentException when partition key contains a forward slash character.");
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals("Partition key can not contain a slash character.", e.getMessage());
+            assertEquals("Partition key can not contain a forward slash character.", e.getMessage());
         }
 
         // Try to perform a create using invalid partition key group.

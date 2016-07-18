@@ -17,6 +17,7 @@ package org.finra.herd.tools.uploader;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.Arrays;
 
 import javax.xml.bind.JAXBException;
 
@@ -25,12 +26,14 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import org.finra.herd.dao.helper.JsonHelper;
+import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataUploadCredential;
-import org.finra.herd.model.api.xml.S3KeyPrefixInformation;
+import org.finra.herd.model.api.xml.BusinessObjectDataVersions;
 import org.finra.herd.model.dto.DataBridgeBaseManifestDto;
-import org.finra.herd.model.dto.UploaderInputManifestDto;
 import org.finra.herd.tools.common.databridge.DataBridgeWebClient;
 
 /**
@@ -40,44 +43,40 @@ import org.finra.herd.tools.common.databridge.DataBridgeWebClient;
 public class UploaderWebClient extends DataBridgeWebClient
 {
     private static final Logger LOGGER = Logger.getLogger(UploaderWebClient.class);
-    
-    /**
-     * Retrieves S3 key prefix from the registration server.
-     *
-     * @param manifest the uploader input manifest file information
-     * @param createNewVersion if not set, only initial version of the business object data is allowed to be created
-     *
-     * @return the S3 key prefix
-     */
-    public S3KeyPrefixInformation getS3KeyPrefix(UploaderInputManifestDto manifest, Boolean createNewVersion)
-        throws IOException, JAXBException, URISyntaxException
-    {
-        return getS3KeyPrefix(manifest, null, createNewVersion);
-    }
+
+    @Autowired
+    private JsonHelper jsonHelper;
 
     /**
      * Gets the business object data upload credentials.
-     * 
-     * @param manifest The manifest
-     * @param storageName The storage name
-     * @param createNewVersion Flag to create new version
+     *
+     * @param manifest the manifest
+     * @param storageName the storage name
+     * @param businessObjectDataVersion the version of the business object data
+     * @param createNewVersion specifies to provide credentials fof the next business object data version
+     *
      * @return {@link BusinessObjectDataUploadCredential}
      * @throws URISyntaxException When error occurs while URI creation
      * @throws IOException When error occurs communicating with server
      * @throws JAXBException When error occurs parsing the XML
      */
     public BusinessObjectDataUploadCredential getBusinessObjectDataUploadCredential(DataBridgeBaseManifestDto manifest, String storageName,
-        Boolean createNewVersion) throws URISyntaxException, IOException, JAXBException
+        Integer businessObjectDataVersion, Boolean createNewVersion) throws URISyntaxException, IOException, JAXBException
     {
-        URIBuilder uriBuilder = new URIBuilder().setScheme(getUriScheme()).setHost(regServerAccessParamsDto.getRegServerHost()).setPort(regServerAccessParamsDto
-            .getRegServerPort()).setPath(String.join("/", HERD_APP_REST_URI_PREFIX, "businessObjectData", "upload", "credential", "namespaces", manifest
-                .getNamespace(), "businessObjectDefinitionNames", manifest.getBusinessObjectDefinitionName(), "businessObjectFormatUsages", manifest
-                    .getBusinessObjectFormatUsage(), "businessObjectFormatFileTypes", manifest.getBusinessObjectFormatFileType(),
-                "businessObjectFormatVersions", manifest.getBusinessObjectFormatVersion(), "partitionValues", manifest.getPartitionValue())).setParameter(
-                    "storageName", storageName);
+        URIBuilder uriBuilder =
+            new URIBuilder().setScheme(getUriScheme()).setHost(regServerAccessParamsDto.getRegServerHost()).setPort(regServerAccessParamsDto.getRegServerPort())
+                .setPath(String.join("/", HERD_APP_REST_URI_PREFIX, "businessObjectData", "upload", "credential", "namespaces", manifest.getNamespace(),
+                    "businessObjectDefinitionNames", manifest.getBusinessObjectDefinitionName(), "businessObjectFormatUsages",
+                    manifest.getBusinessObjectFormatUsage(), "businessObjectFormatFileTypes", manifest.getBusinessObjectFormatFileType(),
+                    "businessObjectFormatVersions", manifest.getBusinessObjectFormatVersion(), "partitionValues", manifest.getPartitionValue()))
+                .setParameter("storageName", storageName);
         if (manifest.getSubPartitionValues() != null)
         {
             uriBuilder.setParameter("subPartitionValues", herdStringHelper.join(manifest.getSubPartitionValues(), "|", "\\"));
+        }
+        if (businessObjectDataVersion != null)
+        {
+            uriBuilder.setParameter("businessObjectDataVersion", businessObjectDataVersion.toString());
         }
         if (createNewVersion != null)
         {
@@ -97,9 +96,108 @@ public class UploaderWebClient extends DataBridgeWebClient
     }
 
     /**
+     * Retrieves all versions for the specified business object data key.
+     *
+     * @param businessObjectDataKey the business object data key
+     *
+     * @return {@link org.finra.herd.model.api.xml.BusinessObjectDataVersions}
+     * @throws URISyntaxException When error occurs while URI creation
+     * @throws IOException When error occurs communicating with server
+     * @throws JAXBException When error occurs parsing the XML
+     */
+    public BusinessObjectDataVersions getBusinessObjectDataVersions(BusinessObjectDataKey businessObjectDataKey)
+        throws URISyntaxException, IOException, JAXBException
+    {
+        LOGGER.info("Retrieving business object data versions from the registration server...");
+
+        BusinessObjectDataVersions businessObjectDataVersions;
+        try (CloseableHttpClient client = httpClientOperations.createHttpClient())
+        {
+            StringBuilder uriPathBuilder = new StringBuilder(300);
+            uriPathBuilder.append(HERD_APP_REST_URI_PREFIX);
+            uriPathBuilder.append("/businessObjectData/namespaces/").append(businessObjectDataKey.getNamespace());
+            uriPathBuilder.append("/businessObjectDefinitionNames/").append(businessObjectDataKey.getBusinessObjectDefinitionName());
+            uriPathBuilder.append("/businessObjectFormatUsages/").append(businessObjectDataKey.getBusinessObjectFormatUsage());
+            uriPathBuilder.append("/businessObjectFormatFileTypes/").append(businessObjectDataKey.getBusinessObjectFormatFileType());
+            uriPathBuilder.append("/versions");
+
+            URIBuilder uriBuilder = new URIBuilder().setScheme(getUriScheme()).setHost(regServerAccessParamsDto.getRegServerHost())
+                .setPort(regServerAccessParamsDto.getRegServerPort()).setPath(uriPathBuilder.toString())
+                .setParameter("partitionValue", businessObjectDataKey.getPartitionValue());
+
+            if (businessObjectDataKey.getSubPartitionValues() != null)
+            {
+                uriBuilder.setParameter("subPartitionValues", herdStringHelper.join(businessObjectDataKey.getSubPartitionValues(), "|", "\\"));
+            }
+
+            if (businessObjectDataKey.getBusinessObjectFormatVersion() != null)
+            {
+                uriBuilder.setParameter("businessObjectFormatVersion", businessObjectDataKey.getBusinessObjectFormatVersion().toString());
+            }
+
+            if (businessObjectDataKey.getBusinessObjectDataVersion() != null)
+            {
+                uriBuilder.setParameter("businessObjectDataVersion", businessObjectDataKey.getBusinessObjectDataVersion().toString());
+            }
+
+            HttpGet httpGet = new HttpGet(uriBuilder.build());
+            httpGet.addHeader("Accepts", DEFAULT_ACCEPT);
+
+            // If SSL is enabled, set the client authentication header.
+            if (regServerAccessParamsDto.getUseSsl())
+            {
+                httpGet.addHeader(getAuthorizationHeader());
+            }
+
+            LOGGER.info(String.format("    HTTP GET URI: %s", httpGet.getURI().toString()));
+            LOGGER.info(String.format("    HTTP GET Headers: %s", Arrays.toString(httpGet.getAllHeaders())));
+
+            businessObjectDataVersions = getBusinessObjectDataVersions(httpClientOperations.execute(client, httpGet));
+        }
+
+        LOGGER.info(String.format("Successfully retrieved %d already registered version(s) for the business object data. businessObjectDataKey=%s",
+            businessObjectDataVersions.getBusinessObjectDataVersions().size(), jsonHelper.objectToJson(businessObjectDataKey)));
+
+        return businessObjectDataVersions;
+    }
+
+    /**
+     * Updates the business object data status. This method does not fail in case business object data status update is unsuccessful, but simply logs the
+     * exception information as a warning.
+     *
+     * @param businessObjectDataKey the business object data key
+     * @param businessObjectDataStatus the status of the business object data
+     */
+    public void updateBusinessObjectDataStatusIgnoreException(BusinessObjectDataKey businessObjectDataKey, String businessObjectDataStatus)
+    {
+        try
+        {
+            updateBusinessObjectDataStatus(businessObjectDataKey, businessObjectDataStatus);
+        }
+        catch (Exception e)
+        {
+            LOGGER.warn(e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Extracts BusinessObjectDataVersions object from the registration server HTTP response.
+     *
+     * @param httpResponse the response received from the supported options.
+     *
+     * @return the BusinessObjectDataVersions object extracted from the registration server response.
+     */
+    protected BusinessObjectDataVersions getBusinessObjectDataVersions(CloseableHttpResponse httpResponse)
+    {
+        return (BusinessObjectDataVersions) processXmlHttpResponse(httpResponse, "retrieve business object data versions from the registration server",
+            BusinessObjectDataVersions.class);
+    }
+
+    /**
      * Gets the business object data upload credentials.
-     * 
-     * @param httpResponse HTTP response
+     *
+     * @param response the HTTP response
+     *
      * @return {@link BusinessObjectDataUploadCredential}
      */
     private BusinessObjectDataUploadCredential getBusinessObjectDataUploadCredential(CloseableHttpResponse response)

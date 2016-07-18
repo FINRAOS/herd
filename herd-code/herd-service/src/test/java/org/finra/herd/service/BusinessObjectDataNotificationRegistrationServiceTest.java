@@ -340,32 +340,32 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
                 e.getMessage());
         }
 
-        // Try to create a business object data notification when namespace contains a slash character.
+        // Try to create a business object data notification when namespace contains a forward slash character.
         request = createBusinessObjectDataNotificationRegistrationCreateRequest(new NotificationRegistrationKey(addSlash(NAMESPACE), NOTIFICATION_NAME),
             NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS,
             BDATA_STATUS_2, getTestJobActions());
         try
         {
             businessObjectDataNotificationRegistrationService.createBusinessObjectDataNotificationRegistration(request);
-            fail("Should throw an IllegalArgumentException when namespace contains a slash character.");
+            fail("Should throw an IllegalArgumentException when namespace contains a forward slash character.");
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals("Namespace can not contain a slash character.", e.getMessage());
+            assertEquals("Namespace can not contain a forward slash character.", e.getMessage());
         }
 
-        // Try to create a business object data notification when notification name contains a slash character.
+        // Try to create a business object data notification when notification name contains a forward slash character.
         request = createBusinessObjectDataNotificationRegistrationCreateRequest(new NotificationRegistrationKey(NAMESPACE, addSlash(NOTIFICATION_NAME)),
             NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS,
             BDATA_STATUS_2, getTestJobActions());
         try
         {
             businessObjectDataNotificationRegistrationService.createBusinessObjectDataNotificationRegistration(request);
-            fail("Should throw an IllegalArgumentException when notification name contains a slash character.");
+            fail("Should throw an IllegalArgumentException when notification name contains a forward slash character.");
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals("Notification name can not contain a slash character.", e.getMessage());
+            assertEquals("Notification name can not contain a forward slash character.", e.getMessage());
         }
 
         // Try to create a business object data notification using non-existing notification event type.

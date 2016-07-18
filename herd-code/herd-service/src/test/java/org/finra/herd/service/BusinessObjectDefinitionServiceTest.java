@@ -228,28 +228,28 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
             assertEquals(String.format("Namespace \"%s\" doesn't exist.", request.getNamespace()), e.getMessage());
         }
 
-        // Try to create a business object definition when namespace contains a slash character.
+        // Try to create a business object definition when namespace contains a forward slash character.
         request = createBusinessObjectDefinitionCreateRequest(addSlash(BDEF_NAMESPACE), BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
         try
         {
             businessObjectDefinitionService.createBusinessObjectDefinition(request);
-            fail("Should throw an IllegalArgumentException when namespace contains a slash character");
+            fail("Should throw an IllegalArgumentException when namespace contains a forward slash character");
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals("Namespace can not contain a slash character.", e.getMessage());
+            assertEquals("Namespace can not contain a forward slash character.", e.getMessage());
         }
 
-        // Try to create a business object definition when business object definition name contains a slash character.
+        // Try to create a business object definition when business object definition name contains a forward slash character.
         request = createBusinessObjectDefinitionCreateRequest(BDEF_NAMESPACE, addSlash(BDEF_NAME), DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
         try
         {
             businessObjectDefinitionService.createBusinessObjectDefinition(request);
-            fail("Should throw an IllegalArgumentException when business object definition name contains a slash character");
+            fail("Should throw an IllegalArgumentException when business object definition name contains a forward slash character");
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals("Business object definition name can not contain a slash character.", e.getMessage());
+            assertEquals("Business object definition name can not contain a forward slash character.", e.getMessage());
         }
 
         // Try to create a business object definition using non-existing data provider.
@@ -264,16 +264,16 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
             assertEquals(String.format("Data provider with name \"%s\" doesn't exist.", request.getDataProviderName()), e.getMessage());
         }
 
-        // Try to create a business object definition when data provider name contains a slash character.
+        // Try to create a business object definition when data provider name contains a forward slash character.
         request = createBusinessObjectDefinitionCreateRequest(BDEF_NAMESPACE, BDEF_NAME, addSlash(DATA_PROVIDER_NAME), BDEF_DESCRIPTION);
         try
         {
             businessObjectDefinitionService.createBusinessObjectDefinition(request);
-            fail("Should throw an IllegalArgumentException when data provider name contains a slash character");
+            fail("Should throw an IllegalArgumentException when data provider name contains a forward slash character");
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals("Data provider name can not contain a slash character.", e.getMessage());
+            assertEquals("Data provider name can not contain a forward slash character.", e.getMessage());
         }
     }
 

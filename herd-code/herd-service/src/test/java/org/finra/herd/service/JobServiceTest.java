@@ -155,26 +155,26 @@ public class JobServiceTest extends AbstractServiceTest
     @Test
     public void testCreateJobInvalidParameters() throws Exception
     {
-        // Try to create a job when namespace contains a slash character.
+        // Try to create a job when namespace contains a forward slash character.
         try
         {
             jobService.createAndStartJob(createJobCreateRequest(addSlash(TEST_ACTIVITI_NAMESPACE_CD), TEST_ACTIVITI_JOB_NAME));
-            fail("Should throw an IllegalArgumentException when namespace contains a slash character.");
+            fail("Should throw an IllegalArgumentException when namespace contains a forward slash character.");
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals("Namespace can not contain a slash character.", e.getMessage());
+            assertEquals("Namespace can not contain a forward slash character.", e.getMessage());
         }
 
-        // Try to create a job when job name name contains a slash character.
+        // Try to create a job when job name name contains a forward slash character.
         try
         {
             jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, addSlash(TEST_ACTIVITI_JOB_NAME)));
-            fail("Should throw an IllegalArgumentException when job name contains a slash character.");
+            fail("Should throw an IllegalArgumentException when job name contains a forward slash character.");
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals("Job name can not contain a slash character.", e.getMessage());
+            assertEquals("Job name can not contain a forward slash character.", e.getMessage());
         }
     }
 

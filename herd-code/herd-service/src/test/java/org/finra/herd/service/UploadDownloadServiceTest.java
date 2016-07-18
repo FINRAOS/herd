@@ -36,6 +36,7 @@ import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.BusinessObjectDataStatusUpdateRequest;
 import org.finra.herd.model.api.xml.DownloadSingleInitiationResponse;
 import org.finra.herd.model.api.xml.UploadSingleCredentialExtensionResponse;
 import org.finra.herd.model.api.xml.UploadSingleInitiationRequest;
@@ -750,6 +751,15 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
             assertEquals(BusinessObjectDataStatusEntity.DELETED, result.getSourceNewBusinessObjectDataStatus());
             assertEquals(BusinessObjectDataStatusEntity.UPLOADING, result.getTargetOldBusinessObjectDataStatus());
             assertEquals(BusinessObjectDataStatusEntity.VALID, result.getTargetNewBusinessObjectDataStatus());
+
+            // Try to complete the upload the second time. This might happen when a duplicate S3 notification is received for the same uploaded file.
+            result = uploadDownloadService.performCompleteUploadSingleMessage(filePath);
+
+            // Validate the result object.
+            assertEquals(BusinessObjectDataStatusEntity.DELETED, result.getSourceOldBusinessObjectDataStatus());
+            assertNull(result.getSourceNewBusinessObjectDataStatus());
+            assertEquals(BusinessObjectDataStatusEntity.VALID, result.getTargetOldBusinessObjectDataStatus());
+            assertNull(result.getTargetNewBusinessObjectDataStatus());
         }
         finally
         {
@@ -797,6 +807,62 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
 
         assertEquals(BusinessObjectDataStatusEntity.UPLOADING, result.getTargetOldBusinessObjectDataStatus());
         assertEquals(BusinessObjectDataStatusEntity.INVALID, result.getTargetNewBusinessObjectDataStatus());
+    }
+
+    @Test
+    public void testPerformCompleteUploadSingleMessageSourceBusinessObjectDataStatusNotUploading()
+    {
+        createDatabaseEntitiesForUploadDownloadTesting();
+
+        UploadSingleInitiationResponse resultUploadSingleInitiationResponse = uploadDownloadService.initiateUploadSingle(
+            createUploadSingleInitiationRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NAMESPACE, BDEF_NAME_2,
+                FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, FILE_NAME));
+
+        String filePath = resultUploadSingleInitiationResponse.getTargetBusinessObjectData().getStorageUnits().get(0).getStorageFiles().get(0).getFilePath();
+
+        // Create a business object data status.
+        createBusinessObjectDataStatusEntity(BDATA_STATUS);
+
+        // Update the status of the source business object data so it would not be "UPLOADING".
+        businessObjectDataStatusService.updateBusinessObjectDataStatus(
+            businessObjectDataHelper.getBusinessObjectDataKey(resultUploadSingleInitiationResponse.getSourceBusinessObjectData()),
+            new BusinessObjectDataStatusUpdateRequest(BDATA_STATUS));
+
+        // Try to complete the upload, when source business object data status is not "UPLOADING".
+        UploadDownloadServiceImpl.CompleteUploadSingleMessageResult result = uploadDownloadService.performCompleteUploadSingleMessage(filePath);
+
+        assertEquals(BDATA_STATUS, result.getSourceOldBusinessObjectDataStatus());
+        assertNull(result.getSourceNewBusinessObjectDataStatus());
+        assertEquals(BusinessObjectDataStatusEntity.UPLOADING, result.getTargetOldBusinessObjectDataStatus());
+        assertNull(result.getTargetNewBusinessObjectDataStatus());
+    }
+
+    @Test
+    public void testPerformCompleteUploadSingleMessageTargetBusinessObjectDataStatusNotUploading()
+    {
+        createDatabaseEntitiesForUploadDownloadTesting();
+
+        UploadSingleInitiationResponse resultUploadSingleInitiationResponse = uploadDownloadService.initiateUploadSingle(
+            createUploadSingleInitiationRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NAMESPACE, BDEF_NAME_2,
+                FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, FILE_NAME));
+
+        String filePath = resultUploadSingleInitiationResponse.getTargetBusinessObjectData().getStorageUnits().get(0).getStorageFiles().get(0).getFilePath();
+
+        // Create a business object data status.
+        createBusinessObjectDataStatusEntity(BDATA_STATUS);
+
+        // Update the status of the target business object data so it would not be "UPLOADING".
+        businessObjectDataStatusService.updateBusinessObjectDataStatus(
+            businessObjectDataHelper.getBusinessObjectDataKey(resultUploadSingleInitiationResponse.getTargetBusinessObjectData()),
+            new BusinessObjectDataStatusUpdateRequest(BDATA_STATUS));
+
+        // Try to complete the upload, when target business object data status is not "UPLOADING".
+        UploadDownloadServiceImpl.CompleteUploadSingleMessageResult result = uploadDownloadService.performCompleteUploadSingleMessage(filePath);
+
+        assertEquals(BusinessObjectDataStatusEntity.UPLOADING, result.getSourceOldBusinessObjectDataStatus());
+        assertNull(result.getSourceNewBusinessObjectDataStatus());
+        assertEquals(BDATA_STATUS, result.getTargetOldBusinessObjectDataStatus());
+        assertNull(result.getTargetNewBusinessObjectDataStatus());
     }
 
     @Test

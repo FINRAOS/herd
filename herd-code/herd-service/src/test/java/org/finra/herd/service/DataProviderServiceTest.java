@@ -92,15 +92,15 @@ public class DataProviderServiceTest extends AbstractServiceTest
     @Test
     public void testCreateDataProviderInvalidParameters()
     {
-        // Try to create a data provider instance when data provider name contains a slash character.
+        // Try to create a data provider instance when data provider name contains a forward slash character.
         try
         {
             dataProviderService.createDataProvider(new DataProviderCreateRequest(addSlash(DATA_PROVIDER_NAME)));
-            fail("Should throw an IllegalArgumentException when data provider name contains a slash character.");
+            fail("Should throw an IllegalArgumentException when data provider name contains a forward slash character.");
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals("Data provider name can not contain a slash character.", e.getMessage());
+            assertEquals("Data provider name can not contain a forward slash character.", e.getMessage());
         }
     }
 

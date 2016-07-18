@@ -41,6 +41,7 @@ import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
@@ -55,10 +56,14 @@ import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataCreateRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.BusinessObjectDataStatusUpdateRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDataStatusUpdateResponse;
+import org.finra.herd.model.api.xml.BusinessObjectDataStorageFilesCreateRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDataStorageFilesCreateResponse;
 import org.finra.herd.model.api.xml.ErrorInformation;
 import org.finra.herd.model.api.xml.S3KeyPrefixInformation;
 import org.finra.herd.model.api.xml.Storage;
-import org.finra.herd.model.api.xml.StorageDirectory;
 import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.api.xml.StorageUnitCreateRequest;
 import org.finra.herd.model.dto.DataBridgeBaseManifestDto;
@@ -66,28 +71,121 @@ import org.finra.herd.model.dto.ManifestFile;
 import org.finra.herd.model.dto.RegServerAccessParamsDto;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.dto.UploaderInputManifestDto;
+import org.finra.herd.model.jpa.BusinessObjectDataEntity;
+import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 
 /**
  * A base class for the uploader and downloader web client.
  */
 public abstract class DataBridgeWebClient
 {
-    private static final Logger LOGGER = Logger.getLogger(DataBridgeWebClient.class);
-
-    protected static final String HERD_APP_REST_URI_PREFIX = "/herd-app/rest";
-    protected static final String DEFAULT_CONTENT_TYPE = ContentType.APPLICATION_XML.withCharset(StandardCharsets.UTF_8).toString();
     protected static final String DEFAULT_ACCEPT = ContentType.APPLICATION_XML.withCharset(StandardCharsets.UTF_8).toString();
 
-    /**
-     * The DTO for the parameters required to communicate with the registration server.
-     */
-    protected RegServerAccessParamsDto regServerAccessParamsDto;
+    protected static final String DEFAULT_CONTENT_TYPE = ContentType.APPLICATION_XML.withCharset(StandardCharsets.UTF_8).toString();
+
+    protected static final String HERD_APP_REST_URI_PREFIX = "/herd-app/rest";
+
+    private static final Logger LOGGER = Logger.getLogger(DataBridgeWebClient.class);
 
     @Autowired
     protected HerdStringHelper herdStringHelper;
 
     @Autowired
     protected HttpClientOperations httpClientOperations;
+
+    /**
+     * The DTO for the parameters required to communicate with the registration server.
+     */
+    protected RegServerAccessParamsDto regServerAccessParamsDto;
+
+    /**
+     * Calls the registration server to add storage files to the business object data.
+     *
+     * @param businessObjectDataKey the business object data key
+     * @param manifest the uploader input manifest file
+     * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters to be used to retrieve local path and S3 key prefix values
+     * @param storageName the storage name
+     *
+     * @return the business object data create storage files response turned by the registration server.
+     * @throws IOException if an I/O error was encountered.
+     * @throws JAXBException if a JAXB error was encountered.
+     * @throws URISyntaxException if a URI syntax error was encountered.
+     */
+    @SuppressFBWarnings(value = "VA_FORMAT_STRING_USES_NEWLINE", justification = "We will use the standard carriage return character.")
+    public BusinessObjectDataStorageFilesCreateResponse addStorageFiles(BusinessObjectDataKey businessObjectDataKey, UploaderInputManifestDto manifest,
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, String storageName) throws IOException, JAXBException, URISyntaxException
+    {
+        LOGGER.info("Adding storage files to the business object data ...");
+
+        BusinessObjectDataStorageFilesCreateRequest request = new BusinessObjectDataStorageFilesCreateRequest();
+        request.setNamespace(businessObjectDataKey.getNamespace());
+        request.setBusinessObjectDefinitionName(businessObjectDataKey.getBusinessObjectDefinitionName());
+        request.setBusinessObjectFormatUsage(businessObjectDataKey.getBusinessObjectFormatUsage());
+        request.setBusinessObjectFormatFileType(businessObjectDataKey.getBusinessObjectFormatFileType());
+        request.setBusinessObjectFormatVersion(businessObjectDataKey.getBusinessObjectFormatVersion());
+        request.setPartitionValue(businessObjectDataKey.getPartitionValue());
+        request.setSubPartitionValues(businessObjectDataKey.getSubPartitionValues());
+        request.setBusinessObjectDataVersion(businessObjectDataKey.getBusinessObjectDataVersion());
+        request.setStorageName(storageName);
+
+        List<StorageFile> storageFiles = new ArrayList<>();
+        request.setStorageFiles(storageFiles);
+
+        String localPath = s3FileTransferRequestParamsDto.getLocalPath();
+        String s3KeyPrefix = s3FileTransferRequestParamsDto.getS3KeyPrefix();
+        List<ManifestFile> localFiles = manifest.getManifestFiles();
+
+        for (ManifestFile manifestFile : localFiles)
+        {
+            StorageFile storageFile = new StorageFile();
+            storageFiles.add(storageFile);
+            // Since the S3 key prefix represents a directory it is expected to contain a trailing '/' character.
+            storageFile.setFilePath((s3KeyPrefix + manifestFile.getFileName()).replaceAll("\\\\", "/"));
+            storageFile.setFileSizeBytes(Paths.get(localPath, manifestFile.getFileName()).toFile().length());
+            storageFile.setRowCount(manifestFile.getRowCount());
+        }
+
+        // Create a JAXB context and marshaller
+        JAXBContext requestContext = JAXBContext.newInstance(BusinessObjectDataStorageFilesCreateRequest.class);
+        Marshaller requestMarshaller = requestContext.createMarshaller();
+        requestMarshaller.setProperty(Marshaller.JAXB_ENCODING, StandardCharsets.UTF_8.name());
+        requestMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+
+        StringWriter sw = new StringWriter();
+        requestMarshaller.marshal(request, sw);
+
+        BusinessObjectDataStorageFilesCreateResponse businessObjectDataStorageFilesCreateResponse;
+        try (CloseableHttpClient client = httpClientOperations.createHttpClient())
+        {
+            URI uri = new URIBuilder().setScheme(getUriScheme()).setHost(regServerAccessParamsDto.getRegServerHost())
+                .setPort(regServerAccessParamsDto.getRegServerPort()).setPath(HERD_APP_REST_URI_PREFIX + "/businessObjectDataStorageFiles").build();
+            HttpPost post = new HttpPost(uri);
+
+            post.addHeader("Content-Type", DEFAULT_CONTENT_TYPE);
+            post.addHeader("Accepts", DEFAULT_ACCEPT);
+
+            // If SSL is enabled, set the client authentication header.
+            if (regServerAccessParamsDto.getUseSsl())
+            {
+                post.addHeader(getAuthorizationHeader());
+            }
+
+            post.setEntity(new StringEntity(sw.toString()));
+
+            LOGGER.info(String.format("    HTTP POST URI: %s", post.getURI().toString()));
+            LOGGER.info(String.format("    HTTP POST Headers: %s", Arrays.toString(post.getAllHeaders())));
+            LOGGER.info(String.format("    HTTP POST Entity Content:%n%s", sw.toString()));
+
+            // getBusinessObjectDataStorageFilesCreateResponse() might return a null. That happens when the web client gets status code 200 back from
+            // the service (add storage files is a success), but it fails to retrieve or deserialize the actual HTTP response.
+            // Please note that processXmlHttpResponse() is responsible for logging the exception info as a warning.
+            businessObjectDataStorageFilesCreateResponse = getBusinessObjectDataStorageFilesCreateResponse(httpClientOperations.execute(client, post));
+        }
+
+        LOGGER.info("Successfully added storage files to the registered business object data.");
+
+        return businessObjectDataStorageFilesCreateResponse;
+    }
 
     /**
      * Returns the Registration Server Access Parameters DTO.
@@ -125,8 +223,9 @@ public abstract class DataBridgeWebClient
 
         final String URI_PATH = HERD_APP_REST_URI_PREFIX + "/storages/" + storageName;
 
-        URIBuilder uriBuilder = new URIBuilder().setScheme(getUriScheme()).setHost(regServerAccessParamsDto.getRegServerHost())
-            .setPort(regServerAccessParamsDto.getRegServerPort()).setPath(URI_PATH);
+        URIBuilder uriBuilder =
+            new URIBuilder().setScheme(getUriScheme()).setHost(regServerAccessParamsDto.getRegServerHost()).setPort(regServerAccessParamsDto.getRegServerPort())
+                .setPath(URI_PATH);
 
         Storage storage;
         try (CloseableHttpClient client = httpClientOperations.createHttpClient())
@@ -159,10 +258,9 @@ public abstract class DataBridgeWebClient
     }
 
     /**
-     * Registers business object data with the registration server.
+     * Pre-registers business object data with the registration server.
      *
      * @param manifest the uploader input manifest file
-     * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters to be used to retrieve local path and S3 key prefix values
      * @param storageName the storage name
      * @param createNewVersion if not set, only initial version of the business object data is allowed to be created
      *
@@ -172,46 +270,10 @@ public abstract class DataBridgeWebClient
      * @throws URISyntaxException if a URI syntax error was encountered.
      */
     @SuppressFBWarnings(value = "VA_FORMAT_STRING_USES_NEWLINE", justification = "We will use the standard carriage return character.")
-    public BusinessObjectData registerBusinessObjectData(UploaderInputManifestDto manifest, S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto,
-        String storageName, Boolean createNewVersion) throws IOException, JAXBException, URISyntaxException
+    public BusinessObjectData preRegisterBusinessObjectData(UploaderInputManifestDto manifest, String storageName, Boolean createNewVersion)
+        throws IOException, JAXBException, URISyntaxException
     {
-        LOGGER.info("Registering business object data with the registration server...");
-
-        StorageUnitCreateRequest storageUnit = new StorageUnitCreateRequest();
-        storageUnit.setStorageName(storageName);
-
-        /*
-         * Strips the trailing "/" from the prefix if a prefix is provided.
-         * The trailing "/" is added by UploaderController because other S3 operation seem to need it.
-         * However, a trailing "/" is disallowed when registering business object data with storage directory.
-         * Under normal flow, a S3 key prefix will always be set, but some unit tests set it to null. That's why the null check is here.
-         */
-        String storageDirectory = s3FileTransferRequestParamsDto.getS3KeyPrefix();
-        if (StringUtils.isNotBlank(storageDirectory))
-        {
-            if (storageDirectory.endsWith("/"))
-            {
-                storageDirectory = storageDirectory.substring(0, storageDirectory.length() - 1);
-            }
-            storageUnit.setStorageDirectory(new StorageDirectory(storageDirectory));
-        }
-
-        List<StorageFile> storageFiles = new ArrayList<>();
-        storageUnit.setStorageFiles(storageFiles);
-
-        String localPath = s3FileTransferRequestParamsDto.getLocalPath();
-        String s3KeyPrefix = s3FileTransferRequestParamsDto.getS3KeyPrefix();
-        List<ManifestFile> localFiles = manifest.getManifestFiles();
-
-        for (ManifestFile manifestFile : localFiles)
-        {
-            StorageFile storageFile = new StorageFile();
-            storageFiles.add(storageFile);
-            // Since the S3 key prefix represents a directory it is expected to contain a trailing '/' character.
-            storageFile.setFilePath((s3KeyPrefix + manifestFile.getFileName()).replaceAll("\\\\", "/"));
-            storageFile.setFileSizeBytes(Paths.get(localPath, manifestFile.getFileName()).toFile().length());
-            storageFile.setRowCount(manifestFile.getRowCount());
-        }
+        LOGGER.info("Pre-registering business object data with the registration server...");
 
         BusinessObjectDataCreateRequest request = new BusinessObjectDataCreateRequest();
         request.setNamespace(manifest.getNamespace());
@@ -223,10 +285,13 @@ public abstract class DataBridgeWebClient
         request.setPartitionValue(manifest.getPartitionValue());
         request.setSubPartitionValues(manifest.getSubPartitionValues());
         request.setCreateNewVersion(createNewVersion);
+        request.setStatus(BusinessObjectDataStatusEntity.UPLOADING);
 
         List<StorageUnitCreateRequest> storageUnits = new ArrayList<>();
         request.setStorageUnits(storageUnits);
+        StorageUnitCreateRequest storageUnit = new StorageUnitCreateRequest();
         storageUnits.add(storageUnit);
+        storageUnit.setStorageName(storageName);
 
         // Add business object data attributes, if any.
         if (manifest.getAttributes() != null)
@@ -275,23 +340,139 @@ public abstract class DataBridgeWebClient
 
             LOGGER.info(String.format("    HTTP POST URI: %s", post.getURI().toString()));
             LOGGER.info(String.format("    HTTP POST Headers: %s", Arrays.toString(post.getAllHeaders())));
-            LOGGER.info(String.format("    HTTP POST Entity Content:\n%s", sw.toString()));
+            LOGGER.info(String.format("    HTTP POST Entity Content:%n%s", sw.toString()));
 
             businessObjectData =
                 getBusinessObjectData(httpClientOperations.execute(client, post), "register business object data with the registration server");
         }
 
-        LOGGER.info("Successfully registered business object data with the registration server.");
-
-        // getBusinessObjectData() might return a null. That happens when the web client gets status code 200 back from
-        // the service (data registration is a success), but it fails to retrieve or deserialize the actual HTTP response.
-        // Please note that processXmlHttpResponse() is responsible for logging the exception info as a warning.
-        if (businessObjectData != null)
-        {
-            LOGGER.info("    ID: " + businessObjectData.getId());
-        }
+        LOGGER.info(String
+            .format("Successfully pre-registered business object data with the registration server. businessObjectDataId=%s", businessObjectData.getId()));
 
         return businessObjectData;
+    }
+
+    /**
+     * Updates the business object data status.
+     *
+     * @param businessObjectDataKey the business object data key
+     * @param businessObjectDataStatus the status of the business object data
+     *
+     * @return {@link org.finra.herd.model.api.xml.BusinessObjectDataStatusUpdateResponse}
+     * @throws URISyntaxException When error occurs while URI creation
+     * @throws IOException When error occurs communicating with server
+     * @throws JAXBException When error occurs parsing the XML
+     */
+    public BusinessObjectDataStatusUpdateResponse updateBusinessObjectDataStatus(BusinessObjectDataKey businessObjectDataKey, String businessObjectDataStatus)
+        throws URISyntaxException, IOException, JAXBException
+    {
+        BusinessObjectDataStatusUpdateRequest request = new BusinessObjectDataStatusUpdateRequest();
+        request.setStatus(businessObjectDataStatus);
+
+        // Create a JAXB context and marshaller
+        JAXBContext requestContext = JAXBContext.newInstance(BusinessObjectDataStatusUpdateRequest.class);
+        Marshaller requestMarshaller = requestContext.createMarshaller();
+        requestMarshaller.setProperty(Marshaller.JAXB_ENCODING, StandardCharsets.UTF_8.name());
+        requestMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+
+        StringWriter sw = new StringWriter();
+        requestMarshaller.marshal(request, sw);
+
+        BusinessObjectDataStatusUpdateResponse businessObjectDataStatusUpdateResponse;
+        try (CloseableHttpClient client = httpClientOperations.createHttpClient())
+        {
+
+            StringBuilder uriPathBuilder = new StringBuilder(300);
+            uriPathBuilder.append(HERD_APP_REST_URI_PREFIX + "/businessObjectDataStatus/namespaces/").append(businessObjectDataKey.getNamespace());
+            uriPathBuilder.append("/businessObjectDefinitionNames/").append(businessObjectDataKey.getBusinessObjectDefinitionName());
+            uriPathBuilder.append("/businessObjectFormatUsages/").append(businessObjectDataKey.getBusinessObjectFormatUsage());
+            uriPathBuilder.append("/businessObjectFormatFileTypes/").append(businessObjectDataKey.getBusinessObjectFormatFileType());
+            uriPathBuilder.append("/businessObjectFormatVersions/").append(businessObjectDataKey.getBusinessObjectFormatVersion());
+            uriPathBuilder.append("/partitionValues/").append(businessObjectDataKey.getPartitionValue());
+            for (int i = 0; i < org.apache.commons.collections4.CollectionUtils.size(businessObjectDataKey.getSubPartitionValues()) &&
+                i < BusinessObjectDataEntity.MAX_SUBPARTITIONS; i++)
+            {
+                uriPathBuilder.append("/subPartition").append(i + 1).append("Values/").append(businessObjectDataKey.getSubPartitionValues().get(i));
+            }
+            uriPathBuilder.append("/businessObjectDataVersions/").append(businessObjectDataKey.getBusinessObjectDataVersion());
+
+            URIBuilder uriBuilder = new URIBuilder().setScheme(getUriScheme()).setHost(regServerAccessParamsDto.getRegServerHost())
+                .setPort(regServerAccessParamsDto.getRegServerPort()).setPath(uriPathBuilder.toString());
+
+            HttpPut httpPut = new HttpPut(uriBuilder.build());
+            httpPut.addHeader("Content-Type", DEFAULT_CONTENT_TYPE);
+            httpPut.addHeader("Accepts", DEFAULT_ACCEPT);
+            if (regServerAccessParamsDto.getUseSsl())
+            {
+                httpPut.addHeader(getAuthorizationHeader());
+            }
+
+            httpPut.setEntity(new StringEntity(sw.toString()));
+
+            LOGGER.info(String.format("    HTTP POST URI: %s", httpPut.getURI().toString()));
+            LOGGER.info(String.format("    HTTP POST Headers: %s", Arrays.toString(httpPut.getAllHeaders())));
+            LOGGER.info(String.format("    HTTP POST Entity Content:%n%s", sw.toString()));
+
+            businessObjectDataStatusUpdateResponse = getBusinessObjectDataStatusUpdateResponse(httpClientOperations.execute(client, httpPut));
+        }
+
+        LOGGER.info("Successfully updated status of the business object data.");
+
+        return businessObjectDataStatusUpdateResponse;
+    }
+
+    /**
+     * Returns an authorization header required for HTTPS client authentication with the registration server.
+     *
+     * @return the authorization header
+     */
+    protected BasicHeader getAuthorizationHeader()
+    {
+        String combined = regServerAccessParamsDto.getUsername() + ":" + regServerAccessParamsDto.getPassword();
+        byte[] encodedBytes = Base64.encodeBase64(combined.getBytes(StandardCharsets.UTF_8));
+        return new BasicHeader("Authorization", "Basic " + new String(encodedBytes, StandardCharsets.UTF_8));
+    }
+
+    /**
+     * Extracts BusinessObjectData object from the registration server HTTP response.
+     *
+     * @param httpResponse the response received from the supported options.
+     * @param actionDescription the description of the action being performed with the registration server (to be used in an error message).
+     *
+     * @return the BusinessObjectData object extracted from the registration server response.
+     */
+    protected BusinessObjectData getBusinessObjectData(CloseableHttpResponse httpResponse, String actionDescription)
+    {
+        return (BusinessObjectData) processXmlHttpResponse(httpResponse, actionDescription, BusinessObjectData.class);
+    }
+
+    /**
+     * Extracts BusinessObjectDataStorageFilesCreateResponse object from the registration server HTTP response.
+     *
+     * @param httpResponse the response received from the supported options.
+     *
+     * @return the BusinessObjectData object extracted from the registration server response.
+     */
+    protected BusinessObjectDataStorageFilesCreateResponse getBusinessObjectDataStorageFilesCreateResponse(CloseableHttpResponse httpResponse)
+    {
+        try
+        {
+            return (BusinessObjectDataStorageFilesCreateResponse) processXmlHttpResponse(httpResponse, "add storage files",
+                BusinessObjectDataStorageFilesCreateResponse.class);
+        }
+        catch (Exception e)
+        {
+            if (httpResponse.getStatusLine().getStatusCode() == 200)
+            {
+                // We assume add files is a success when we get status code 200 back from the service.
+                // Just return a null back, since processXmlHttpResponse() is responsible for logging the exception info.
+                return null;
+            }
+            else
+            {
+                throw e;
+            }
+        }
     }
 
     /**
@@ -327,9 +508,10 @@ public abstract class DataBridgeWebClient
 
         String uriPath = uriPathBuilder.toString();
 
-        URIBuilder uriBuilder = new URIBuilder().setScheme(getUriScheme()).setHost(regServerAccessParamsDto.getRegServerHost())
-            .setPort(regServerAccessParamsDto.getRegServerPort()).setPath(uriPath).setParameter("partitionKey", manifest.getPartitionKey())
-            .setParameter("partitionValue", manifest.getPartitionValue()).setParameter("createNewVersion", createNewVersion.toString());
+        URIBuilder uriBuilder =
+            new URIBuilder().setScheme(getUriScheme()).setHost(regServerAccessParamsDto.getRegServerHost()).setPort(regServerAccessParamsDto.getRegServerPort())
+                .setPath(uriPath).setParameter("partitionKey", manifest.getPartitionKey()).setParameter("partitionValue", manifest.getPartitionValue())
+                .setParameter("createNewVersion", createNewVersion.toString());
 
         if (!CollectionUtils.isEmpty(manifest.getSubPartitionValues()))
         {
@@ -376,72 +558,6 @@ public abstract class DataBridgeWebClient
     protected String getUriScheme()
     {
         return regServerAccessParamsDto.getUseSsl() ? "https" : "http";
-    }
-
-    /**
-     * Returns an authorization header required for HTTPS client authentication with the registration server.
-     *
-     * @return the authorization header
-     */
-    protected BasicHeader getAuthorizationHeader()
-    {
-        String combined = regServerAccessParamsDto.getUsername() + ":" + regServerAccessParamsDto.getPassword();
-        byte[] encodedBytes = Base64.encodeBase64(combined.getBytes(StandardCharsets.UTF_8));
-        return new BasicHeader("Authorization", "Basic " + new String(encodedBytes, StandardCharsets.UTF_8));
-    }
-
-    /**
-     * Extracts Storage object from the registration server HTTP response.
-     *
-     * @param httpResponse the response received from the supported options
-     *
-     * @return the Storage object extracted from the registration server response
-     */
-    private Storage getStorage(CloseableHttpResponse httpResponse)
-    {
-        return (Storage) processXmlHttpResponse(httpResponse, "retrieve storage information from the registration server", Storage.class);
-    }
-
-    /**
-     * Extracts S3KeyPrefixInformation object from the registration server HTTP response.
-     *
-     * @param httpResponse the response received from the supported options.
-     *
-     * @return the S3KeyPrefixInformation object extracted from the registration server response.
-     */
-    private S3KeyPrefixInformation getS3KeyPrefixInformation(CloseableHttpResponse httpResponse)
-    {
-        return (S3KeyPrefixInformation) processXmlHttpResponse(httpResponse, "retrieve S3 key prefix from the registration server",
-            S3KeyPrefixInformation.class);
-    }
-
-    /**
-     * Extracts BusinessObjectData object from the registration server HTTP response.
-     *
-     * @param httpResponse the response received from the supported options.
-     * @param actionDescription the description of the action being performed with the registration server (to be used in an error message).
-     *
-     * @return the BusinessObjectData object extracted from the registration server response.
-     */
-    protected BusinessObjectData getBusinessObjectData(CloseableHttpResponse httpResponse, String actionDescription)
-    {
-        try
-        {
-            return (BusinessObjectData) processXmlHttpResponse(httpResponse, actionDescription, BusinessObjectData.class);
-        }
-        catch (Exception e)
-        {
-            if (httpResponse.getStatusLine().getStatusCode() == 200)
-            {
-                // We assume registration is a success when we get status code 200 back from the service.
-                // Just return a null back, since processXmlHttpResponse() is responsible for logging the exception info.
-                return null;
-            }
-            else
-            {
-                throw e;
-            }
-        }
     }
 
     /**
@@ -517,5 +633,43 @@ public abstract class DataBridgeWebClient
 
         // Return the response.
         return responseObject;
+    }
+
+    /**
+     * Gets the business object data status update response.
+     *
+     * @param response the HTTP response
+     *
+     * @return {@link BusinessObjectDataStatusUpdateResponse}
+     */
+    private BusinessObjectDataStatusUpdateResponse getBusinessObjectDataStatusUpdateResponse(CloseableHttpResponse response)
+    {
+        return (BusinessObjectDataStatusUpdateResponse) processXmlHttpResponse(response, "update business object data status",
+            BusinessObjectDataStatusUpdateResponse.class);
+    }
+
+    /**
+     * Extracts S3KeyPrefixInformation object from the registration server HTTP response.
+     *
+     * @param httpResponse the response received from the supported options.
+     *
+     * @return the S3KeyPrefixInformation object extracted from the registration server response.
+     */
+    private S3KeyPrefixInformation getS3KeyPrefixInformation(CloseableHttpResponse httpResponse)
+    {
+        return (S3KeyPrefixInformation) processXmlHttpResponse(httpResponse, "retrieve S3 key prefix from the registration server",
+            S3KeyPrefixInformation.class);
+    }
+
+    /**
+     * Extracts Storage object from the registration server HTTP response.
+     *
+     * @param httpResponse the response received from the supported options
+     *
+     * @return the Storage object extracted from the registration server response
+     */
+    private Storage getStorage(CloseableHttpResponse httpResponse)
+    {
+        return (Storage) processXmlHttpResponse(httpResponse, "retrieve storage information from the registration server", Storage.class);
     }
 }
