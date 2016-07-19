@@ -111,6 +111,32 @@ public class StorageServiceTest extends AbstractServiceTest
         storageService.createStorage(storageCreateRequest);
     }
 
+    @Test
+    public void testCreateStorageInvalidParameters()
+    {
+        // Try to create a storage instance when storage platform name contains a forward slash character.
+        try
+        {
+            storageService.createStorage(new StorageCreateRequest(STORAGE_NAME, addSlash(STORAGE_PLATFORM_CODE), NO_ATTRIBUTES));
+            fail("Should throw an IllegalArgumentException when storage platform name contains a forward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Storage platform name can not contain a forward slash character.", e.getMessage());
+        }
+
+        // Try to create a storage instance when storage name contains a forward slash character.
+        try
+        {
+            storageService.createStorage(new StorageCreateRequest(addSlash(DATA_PROVIDER_NAME), STORAGE_PLATFORM_CODE, NO_ATTRIBUTES));
+            fail("Should throw an IllegalArgumentException when storage name contains a forward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Storage name can not contain a forward slash character.", e.getMessage());
+        }
+    }
+
     @Test(expected = AlreadyExistsException.class)
     public void testCreateStorageAlreadyExists() throws Exception
     {

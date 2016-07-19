@@ -205,7 +205,7 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityTest ex
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals("A business object format usage name must be specified.", e.getMessage());
+            assertEquals("A business object format usage must be specified.", e.getMessage());
         }
 
         // Try to check business object data availability when business object format file type parameter is not specified.

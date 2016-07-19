@@ -195,6 +195,19 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
 
         UserNamespaceAuthorizationCreateRequest request;
 
+        // Try to create a user namespace authorization when user id contains a forward slash character.
+        request = new UserNamespaceAuthorizationCreateRequest(new UserNamespaceAuthorizationKey(addSlash(key.getUserId()), key.getNamespace()),
+            Arrays.asList(NamespacePermissionEnum.READ, NamespacePermissionEnum.WRITE, NamespacePermissionEnum.EXECUTE, NamespacePermissionEnum.GRANT));
+        try
+        {
+            userNamespaceAuthorizationService.createUserNamespaceAuthorization(request);
+            fail("Should throw an IllegalArgumentException when user id contains a forward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("User id can not contain a forward slash character.", e.getMessage());
+        }
+
         // Try to create a user namespace authorization using non-existing namespace.
         request = new UserNamespaceAuthorizationCreateRequest(new UserNamespaceAuthorizationKey(key.getUserId(), "I_DO_NOT_EXIST"),
             Arrays.asList(NamespacePermissionEnum.READ, NamespacePermissionEnum.WRITE, NamespacePermissionEnum.EXECUTE, NamespacePermissionEnum.GRANT));
@@ -206,6 +219,19 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
         catch (ObjectNotFoundException e)
         {
             assertEquals(String.format("Namespace \"%s\" doesn't exist.", request.getUserNamespaceAuthorizationKey().getNamespace()), e.getMessage());
+        }
+
+        // Try to create a user namespace authorization when namespace contains a forward slash character.
+        request = new UserNamespaceAuthorizationCreateRequest(new UserNamespaceAuthorizationKey(key.getUserId(), addSlash(key.getNamespace())),
+            Arrays.asList(NamespacePermissionEnum.READ, NamespacePermissionEnum.WRITE, NamespacePermissionEnum.EXECUTE, NamespacePermissionEnum.GRANT));
+        try
+        {
+            userNamespaceAuthorizationService.createUserNamespaceAuthorization(request);
+            fail("Should throw an IllegalArgumentException when namespace contains a forward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Namespace can not contain a forward slash character.", e.getMessage());
         }
     }
 

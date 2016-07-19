@@ -66,7 +66,6 @@ import org.finra.herd.service.S3Service;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.service.helper.StorageFileHelper;
 import org.finra.herd.service.helper.StorageHelper;
-import org.finra.herd.tools.common.databridge.DataBridgeWebClient;
 
 /**
  * Unit tests for DownloaderController class.
@@ -80,10 +79,6 @@ public class DownloaderControllerTest extends AbstractDownloaderTest
         super.setup();
 
         uploadAndRegisterTestData(S3_SIMPLE_TEST_PATH);
-
-        // Set the web client logger to warn level so we don't get unnecessary info level logging on the output.
-        Logger.getLogger(DataBridgeWebClient.class).setLevel(Level.WARN);
-        Logger.getLogger(DownloaderWebClient.class).setLevel(Level.WARN);
     }
 
     @Test
@@ -96,7 +91,7 @@ public class DownloaderControllerTest extends AbstractDownloaderTest
     public void testPerformDownloadWithIoException() throws Exception
     {
         runDownload(getTestDownloaderInputManifestDto(), LOCAL_TEMP_PATH_OUTPUT.toString(), DownloaderController.MIN_THREADS,
-            MockHttpClientOperationsImpl.HOSTNAME_THROW_IO_EXCEPTION_DURING_GET_STORAGES);
+            MockHttpClientOperationsImpl.HOSTNAME_THROW_IO_EXCEPTION_DURING_GET_STORAGE);
     }
 
     @Test

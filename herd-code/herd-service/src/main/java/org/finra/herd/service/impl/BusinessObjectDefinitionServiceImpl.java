@@ -44,6 +44,7 @@ import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.DataProviderEntity;
 import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.service.BusinessObjectDefinitionService;
+import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.AttributeHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionHelper;
@@ -57,6 +58,9 @@ import org.finra.herd.service.helper.NamespaceDaoHelper;
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefinitionService
 {
+    @Autowired
+    private AlternateKeyHelper alternateKeyHelper;
+
     @Autowired
     private AttributeHelper attributeHelper;
 
@@ -246,15 +250,10 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
      */
     private void validateBusinessObjectDefinitionCreateRequest(BusinessObjectDefinitionCreateRequest request)
     {
-        // Validate.
-        Assert.hasText(request.getNamespace(), "A namespace must be specified.");
-        Assert.hasText(request.getBusinessObjectDefinitionName(), "A business object definition name must be specified.");
-        Assert.hasText(request.getDataProviderName(), "A data provider name must be specified.");
-
-        // Remove leading and trailing spaces.
-        request.setNamespace(request.getNamespace().trim());
-        request.setBusinessObjectDefinitionName(request.getBusinessObjectDefinitionName().trim());
-        request.setDataProviderName(request.getDataProviderName().trim());
+        request.setNamespace(alternateKeyHelper.validateStringParameter("namespace", request.getNamespace()));
+        request.setBusinessObjectDefinitionName(
+            alternateKeyHelper.validateStringParameter("business object definition name", request.getBusinessObjectDefinitionName()));
+        request.setDataProviderName(alternateKeyHelper.validateStringParameter("data provider name", request.getDataProviderName()));
 
         // Validate attributes.
         attributeHelper.validateAttributes(request.getAttributes());

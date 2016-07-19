@@ -15,6 +15,7 @@
 */
 package org.finra.herd.service.helper;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
@@ -26,20 +27,19 @@ import org.finra.herd.model.api.xml.PartitionKeyGroupKey;
 @Component
 public class PartitionKeyGroupHelper
 {
+    @Autowired
+    private AlternateKeyHelper alternateKeyHelper;
+
     /**
      * Validates the partition key group key. This method also trims the key parameters.
      *
-     * @param partitionKeyGroupKey the partition key group key
+     * @param key the partition key group key
      *
      * @throws IllegalArgumentException if any validation errors were found
      */
-    public void validatePartitionKeyGroupKey(PartitionKeyGroupKey partitionKeyGroupKey) throws IllegalArgumentException
+    public void validatePartitionKeyGroupKey(PartitionKeyGroupKey key) throws IllegalArgumentException
     {
-        // Validate.
-        Assert.notNull(partitionKeyGroupKey, "A partition key group key must be specified.");
-        Assert.hasText(partitionKeyGroupKey.getPartitionKeyGroupName(), "A partition key group name must be specified.");
-
-        // Remove leading and trailing spaces.
-        partitionKeyGroupKey.setPartitionKeyGroupName(partitionKeyGroupKey.getPartitionKeyGroupName().trim());
+        Assert.notNull(key, "A partition key group key must be specified.");
+        key.setPartitionKeyGroupName(alternateKeyHelper.validateStringParameter("partition key group name", key.getPartitionKeyGroupName()));
     }
 }

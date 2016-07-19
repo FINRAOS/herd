@@ -37,7 +37,7 @@ public class NamespaceHelper
     {
         // Validate.
         Assert.notNull(namespaceKey, "A namespace key must be specified.");
-        Assert.hasText(namespaceKey.getNamespaceCode(), "A namespace code must be specified.");
+        Assert.hasText(namespaceKey.getNamespaceCode(), "A namespace must be specified.");
 
         // Remove leading and trailing spaces.
         namespaceKey.setNamespaceCode(namespaceKey.getNamespaceCode().trim());

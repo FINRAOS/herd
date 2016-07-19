@@ -40,6 +40,7 @@ import org.finra.herd.model.jpa.BusinessObjectDefinitionColumnEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.SchemaColumnEntity;
 import org.finra.herd.service.BusinessObjectDefinitionColumnService;
+import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionColumnDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionHelper;
@@ -51,6 +52,9 @@ import org.finra.herd.service.helper.BusinessObjectDefinitionHelper;
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObjectDefinitionColumnService
 {
+    @Autowired
+    private AlternateKeyHelper alternateKeyHelper;
+
     @Autowired
     private BusinessObjectDefinitionColumnDao businessObjectDefinitionColumnDao;
 
@@ -292,24 +296,18 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
     /**
      * Validates the business object definition column key. This method also trims the key parameters.
      *
-     * @param businessObjectDefinitionColumnKey the business object definition column key
+     * @param key the business object definition column key
      *
      * @throws IllegalArgumentException if any validation errors were found
      */
-    private void validateBusinessObjectDefinitionColumnKey(BusinessObjectDefinitionColumnKey businessObjectDefinitionColumnKey) throws IllegalArgumentException
+    private void validateBusinessObjectDefinitionColumnKey(BusinessObjectDefinitionColumnKey key) throws IllegalArgumentException
     {
-        // Validate.
-        Assert.notNull(businessObjectDefinitionColumnKey, "A business object definition column key must be specified.");
-        Assert.hasText(businessObjectDefinitionColumnKey.getNamespace(), "A namespace must be specified.");
-        Assert.hasText(businessObjectDefinitionColumnKey.getBusinessObjectDefinitionName(), "A business object definition name must be specified.");
-        Assert
-            .hasText(businessObjectDefinitionColumnKey.getBusinessObjectDefinitionColumnName(), "A business object definition column name must be specified.");
-
-        // Remove leading and trailing spaces.
-        businessObjectDefinitionColumnKey.setNamespace(businessObjectDefinitionColumnKey.getNamespace().trim());
-        businessObjectDefinitionColumnKey.setBusinessObjectDefinitionName(businessObjectDefinitionColumnKey.getBusinessObjectDefinitionName().trim());
-        businessObjectDefinitionColumnKey
-            .setBusinessObjectDefinitionColumnName(businessObjectDefinitionColumnKey.getBusinessObjectDefinitionColumnName().trim());
+        Assert.notNull(key, "A business object data attribute key must be specified.");
+        key.setNamespace(alternateKeyHelper.validateStringParameter("namespace", key.getNamespace()));
+        key.setBusinessObjectDefinitionName(
+            alternateKeyHelper.validateStringParameter("business object definition name", key.getBusinessObjectDefinitionName()));
+        key.setBusinessObjectDefinitionColumnName(
+            alternateKeyHelper.validateStringParameter("business object definition column name", key.getBusinessObjectDefinitionColumnName()));
     }
 
     /**
