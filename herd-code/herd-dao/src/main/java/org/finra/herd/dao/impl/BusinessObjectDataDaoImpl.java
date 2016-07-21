@@ -36,11 +36,13 @@ import javax.persistence.metamodel.SingularAttribute;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.CollectionUtils;
-
 import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.dao.BusinessObjectDataDao;
+import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.BusinessObjectDataSearchFilter;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
+import org.finra.herd.model.api.xml.BusinessObjectDataSearchKey;
 import org.finra.herd.model.dto.StoragePolicyPriorityLevel;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity_;
@@ -759,4 +761,83 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
         return entityManager.createQuery(query).getResultList();
     }
+
+	@Override
+	public List<BusinessObjectData> searchBusinessObjectData(
+			List<BusinessObjectDataSearchFilter> filters) {
+		
+		//assume only one filter and only on search key
+		BusinessObjectDataSearchKey businessDataSearchKey = filters.get(0).getBusinessObjectDataSearchKeys().get(0);
+
+		 // Create the criteria builder and the criteria.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Object[]> criteria = builder.createQuery( Object[].class );
+        
+        // The criteria root is the business object data.
+        Root<BusinessObjectDataEntity> businessObjectDataEntity = criteria.from(BusinessObjectDataEntity.class);
+   
+            
+        // Join to the other tables we can filter on.
+        Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> businessObjectFormatEntity =
+            businessObjectDataEntity.join(BusinessObjectDataEntity_.businessObjectFormat);
+        Join<BusinessObjectFormatEntity, FileTypeEntity> fileTypeEntity = businessObjectFormatEntity.join(BusinessObjectFormatEntity_.fileType);
+        Join<BusinessObjectFormatEntity, BusinessObjectDefinitionEntity> businessObjectDefinitionEntity =
+            businessObjectFormatEntity.join(BusinessObjectFormatEntity_.businessObjectDefinition);
+        Join<BusinessObjectDefinitionEntity, NamespaceEntity> namespaceEntity = businessObjectDefinitionEntity.join(BusinessObjectDefinitionEntity_.namespace);
+     
+        // Create the standard restrictions based on the business object format key values (i.e. the standard where clauses).
+
+        // Create a restriction on namespace code.
+        Predicate predicate = builder.equal(builder.upper(namespaceEntity.get(NamespaceEntity_.code)), businessDataSearchKey.getNamespace().toUpperCase());
+
+        // Create and append a restriction on business object definition name.
+        predicate = builder.and(predicate, builder.equal(builder.upper(businessObjectDefinitionEntity.get(BusinessObjectDefinitionEntity_.name)),
+        		businessDataSearchKey.getBusinessObjectDefinitionName().toUpperCase()));
+
+        // Create and append a restriction on business object format usage.
+        if (businessDataSearchKey.getBusinessObjectFormatUsage() != null)
+        {
+            predicate = builder.and(predicate, builder.equal(builder.upper(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.usage)),
+            		businessDataSearchKey.getBusinessObjectFormatUsage().toUpperCase()));
+        }
+
+        if (businessDataSearchKey.getBusinessObjectFormatFileType() != null)
+        {
+            // Create and append a restriction on business object format file type.
+            predicate = builder.and(predicate,
+                builder.equal(builder.upper(fileTypeEntity.get(FileTypeEntity_.code)), businessDataSearchKey.getBusinessObjectFormatFileType().toUpperCase()));
+        }
+
+        // If specified, create and append a restriction on business object format version.
+        if ( businessDataSearchKey.getBusinessObjectFormatVersion() != null)
+        {
+            predicate = builder.and(predicate, builder.equal(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.businessObjectFormatVersion),
+            		businessDataSearchKey.getBusinessObjectFormatVersion()));
+        }
+
+        
+        builder.array(namespaceEntity.get(NamespaceEntity_.code), businessObjectDefinitionEntity.get(BusinessObjectDefinitionEntity_.name),
+        		businessObjectFormatEntity.get(BusinessObjectFormatEntity_.usage), fileTypeEntity.get(FileTypeEntity_.code),
+        		businessObjectFormatEntity.get(BusinessObjectFormatEntity_.businessObjectFormatVersion));
+        
+        // Order by business object format and data versions.
+        criteria.orderBy(builder.asc(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue)));
+
+        List<BusinessObjectData> businessObjectDataList = new ArrayList<BusinessObjectData>();
+        
+        List<Object[]> valueArray = entityManager.createQuery(criteria).getResultList();
+        for ( Object[] values :  valueArray) {
+        	 BusinessObjectData bData = new BusinessObjectData();
+        	 bData.setNamespace((String) values[0]);
+        	 bData.setBusinessObjectDefinitionName((String) values[1]);
+        	 bData.setBusinessObjectFormatUsage((String) values[2]);
+        	 bData.setBusinessObjectFormatFileType((String) values[3]);
+        	 bData.setBusinessObjectFormatVersion((Integer) values[3]);
+        	
+        	 businessObjectDataList.add(bData);     
+        } 
+        
+        return businessObjectDataList;
+
+	}
 }

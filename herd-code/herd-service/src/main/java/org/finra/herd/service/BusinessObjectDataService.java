@@ -29,6 +29,8 @@ import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredRequ
 import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataVersions;
+import org.finra.herd.model.api.xml.BusinessObjectDataSearchRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDataSearchResult;
 
 /**
  * The business object data service.
@@ -139,4 +141,11 @@ public interface BusinessObjectDataService
      * @return the business object data information
      */
     public BusinessObjectData restoreBusinessObjectData(BusinessObjectDataKey businessObjectDataKey);
+
+    /**
+     * Search business object data based on the request
+     * @param request search request
+     * @return business data search result
+     */
+    public BusinessObjectDataSearchResult searchBusinessObjectData(BusinessObjectDataSearchRequest request);
 }
