@@ -71,6 +71,8 @@ import org.finra.herd.model.jpa.StorageUnitStatusEntity_;
 @Repository
 public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements BusinessObjectDataDao
 {
+	public static final int searchResultLimit = 50;
+	
     @Override
     public BusinessObjectDataEntity getBusinessObjectDataByAltKey(BusinessObjectDataKey businessObjectDataKey)
     {
@@ -775,8 +777,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         
         // The criteria root is the business object data.
         Root<BusinessObjectDataEntity> businessObjectDataEntity = criteria.from(BusinessObjectDataEntity.class);
-   
-            
+           
         // Join to the other tables we can filter on.
         Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> businessObjectFormatEntity =
             businessObjectDataEntity.join(BusinessObjectDataEntity_.businessObjectFormat);
@@ -816,23 +817,23 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         }
 
         
-        builder.array(namespaceEntity.get(NamespaceEntity_.code), businessObjectDefinitionEntity.get(BusinessObjectDefinitionEntity_.name),
+        criteria.select(builder.array(namespaceEntity.get(NamespaceEntity_.code), businessObjectDefinitionEntity.get(BusinessObjectDefinitionEntity_.name),
         		businessObjectFormatEntity.get(BusinessObjectFormatEntity_.usage), fileTypeEntity.get(FileTypeEntity_.code),
-        		businessObjectFormatEntity.get(BusinessObjectFormatEntity_.businessObjectFormatVersion));
+        		businessObjectFormatEntity.get(BusinessObjectFormatEntity_.businessObjectFormatVersion))).where(predicate);
         
         // Order by business object format and data versions.
         criteria.orderBy(builder.asc(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue)));
-
+        
         List<BusinessObjectData> businessObjectDataList = new ArrayList<BusinessObjectData>();
         
-        List<Object[]> valueArray = entityManager.createQuery(criteria).getResultList();
+        List<Object[]> valueArray = entityManager.createQuery(criteria).setMaxResults(searchResultLimit).getResultList();
         for ( Object[] values :  valueArray) {
         	 BusinessObjectData bData = new BusinessObjectData();
         	 bData.setNamespace((String) values[0]);
         	 bData.setBusinessObjectDefinitionName((String) values[1]);
         	 bData.setBusinessObjectFormatUsage((String) values[2]);
         	 bData.setBusinessObjectFormatFileType((String) values[3]);
-        	 bData.setBusinessObjectFormatVersion((Integer) values[3]);
+        	 bData.setBusinessObjectFormatVersion((Integer) values[4]);
         	
         	 businessObjectDataList.add(bData);     
         } 

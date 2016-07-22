@@ -31,6 +31,7 @@ import java.util.regex.Pattern;
 
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+
 import org.activiti.bpmn.converter.BpmnXMLConverter;
 import org.activiti.bpmn.model.BpmnModel;
 import org.activiti.engine.HistoryService;
@@ -53,7 +54,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.util.CollectionUtils;
-
 import org.finra.herd.dao.AbstractDaoTest;
 import org.finra.herd.dao.helper.AwsHelper;
 import org.finra.herd.dao.helper.EmrHelper;
@@ -177,6 +177,7 @@ import org.finra.herd.service.helper.BusinessObjectDataAttributeHelper;
 import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.service.helper.BusinessObjectDataInvalidateUnregisteredHelper;
+import org.finra.herd.service.helper.BusinessObjectDataSearchHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionColumnDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectFormatHelper;
 import org.finra.herd.service.helper.EmrClusterDefinitionHelper;
@@ -448,6 +449,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     @Autowired
     protected BusinessObjectDataHelper businessObjectDataHelper;
+    
+    @Autowired
+    protected BusinessObjectDataSearchHelper businessObjectDataSearchHelper;
 
     @Autowired
     protected BusinessObjectDataInitiateRestoreHelperService businessObjectDataInitiateRestoreHelperService;

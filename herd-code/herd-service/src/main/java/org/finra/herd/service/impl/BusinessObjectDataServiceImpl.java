@@ -66,7 +66,6 @@ import org.finra.herd.model.api.xml.LatestBeforePartitionValue;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.api.xml.PartitionValueFilter;
 import org.finra.herd.model.api.xml.PartitionValueRange;
-import org.finra.herd.model.api.xml.BusinessObjectDataSearchKey;
 import org.finra.herd.model.dto.BusinessObjectDataRestoreDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
@@ -84,6 +83,7 @@ import org.finra.herd.service.S3Service;
 import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.service.helper.BusinessObjectDataInvalidateUnregisteredHelper;
+import org.finra.herd.service.helper.BusinessObjectDataSearchHelper;
 import org.finra.herd.service.helper.BusinessObjectDataStatusDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectFormatDaoHelper;
 import org.finra.herd.service.helper.CustomDdlDaoHelper;
@@ -125,6 +125,9 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
 
     @Autowired
     private BusinessObjectDataHelper businessObjectDataHelper;
+    
+    @Autowired
+    private BusinessObjectDataSearchHelper businessObjectDataSearchHelper;
 
     @Autowired
     private BusinessObjectDataInitiateRestoreHelperService businessObjectDataInitiateRestoreHelperService;
@@ -1399,18 +1402,11 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
 	@Override
 	public BusinessObjectDataSearchResult searchBusinessObjectData(
 			BusinessObjectDataSearchRequest request) {
-		
-		Assert.isTrue(request.getBusinessObjectDataSearchFilters() != null, "BusinessObjectDataSearchFilters is required");
-		Assert.isTrue(request.getBusinessObjectDataSearchFilters().size() == 1, "BusinessObjectDataSearchFilters can only have one filter for now");
-		Assert.isTrue(request.getBusinessObjectDataSearchFilters().get(0).getBusinessObjectDataSearchKeys() != null, "BusinessObjectFormatKey is required");
-	
-		List<BusinessObjectDataSearchKey> formatKeyList = request.getBusinessObjectDataSearchFilters().get(0).getBusinessObjectDataSearchKeys();
-		Assert.isTrue(formatKeyList.size() == 1, "BusinessObjectFormatKey can only have one key for now");
-		
+		//validate search request
+		businessObjectDataSearchHelper.validBusinesObjectDataSearchRequest(request);
+		//search business object data
 		List<BusinessObjectData> objectDataList = businessObjectDataDao.searchBusinessObjectData(request.getBusinessObjectDataSearchFilters());
-	
-		BusinessObjectDataSearchResult result = new BusinessObjectDataSearchResult();
-     	
+		BusinessObjectDataSearchResult result = new BusinessObjectDataSearchResult();     	
 	    result.setBusinessObjectDataElements(objectDataList);
 		
 		return result;

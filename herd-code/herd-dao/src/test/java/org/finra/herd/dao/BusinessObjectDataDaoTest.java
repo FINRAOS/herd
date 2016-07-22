@@ -30,9 +30,11 @@ import java.util.Map;
 
 import org.apache.commons.collections4.IterableUtils;
 import org.junit.Test;
-
 import org.finra.herd.dao.impl.AbstractHerdDao;
+import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.BusinessObjectDataSearchFilter;
+import org.finra.herd.model.api.xml.BusinessObjectDataSearchKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.StoragePolicyKey;
 import org.finra.herd.model.dto.StoragePolicyPriorityLevel;
@@ -974,4 +976,120 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         List<BusinessObjectDataEntity> businessObjectDataEntities = businessObjectDataDao.getBusinessObjectDataEntitiesByPartitionValue(PARTITION_VALUE);
         assertEquals(2, businessObjectDataEntities.size());
     }
+    
+
+    @Test
+    public void testGetBusinessObjectDataSearchWithAllFields()
+    {
+    	  createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null, DATA_VERSION,
+    	            true, "VALID");
+    	  createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null, DATA_VERSION,
+    	            true, "INVALID");
+    	  
+    	  createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null, DATA_VERSION,
+  	            true, "INVALID");
+    	  
+    	  List<BusinessObjectDataSearchFilter> filters = new ArrayList<BusinessObjectDataSearchFilter>();
+    	  List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<BusinessObjectDataSearchKey>();
+    	  BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
+    	  key.setNamespace(NAMESPACE);
+    	  key.setBusinessObjectDefinitionName(BDEF_NAME);
+    	  key.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE);
+    	  key.setBusinessObjectFormatFileType(FORMAT_FILE_TYPE_CODE);
+    	  key.setBusinessObjectFormatVersion(FORMAT_VERSION);
+    	  businessObjectDataSearchKeys.add(key);
+    	  
+    	  BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
+    	  filters.add(filter);
+    	    
+    	  List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(filters);
+    	  assertEquals(2, result.size());
+    	  
+    } 
+    
+    @Test
+    public void testGetBusinessObjectDataSearchWithRequiredFieldsOnly()
+    {
+    	  createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null, DATA_VERSION,
+    	            true, "VALID");
+    	  createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME_2, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null, DATA_VERSION,
+    	            true, "INVALID");
+    	  
+    	  createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null, DATA_VERSION,
+  	            true, "INVALID");
+    	  
+    	  List<BusinessObjectDataSearchFilter> filters = new ArrayList<BusinessObjectDataSearchFilter>();
+    	  List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<BusinessObjectDataSearchKey>();
+    	  BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
+    	  key.setNamespace(NAMESPACE);
+    	  key.setBusinessObjectDefinitionName(BDEF_NAME);
+    	  businessObjectDataSearchKeys.add(key);
+    	  
+    	  BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
+    	  filters.add(filter);
+    	    
+    	  List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(filters);
+    	  assertEquals(1, result.size());
+    } 
+    
+    @Test
+    public void testGetBusinessObjectDataSearchWithSomeOptionalFields()
+    {
+    	  createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null, DATA_VERSION,
+    	            true, "VALID");
+    	  createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null, DATA_VERSION,
+    	            true, "INVALID");
+    	  
+    	  createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION_2, PARTITION_VALUE, null, DATA_VERSION,
+  	            true, "INVALID");
+    	  
+    	  createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, PARTITION_VALUE, null, DATA_VERSION,
+    	            true, "VALID");
+    	  
+    	  List<BusinessObjectDataSearchFilter> filters = new ArrayList<BusinessObjectDataSearchFilter>();
+    	  List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<BusinessObjectDataSearchKey>();
+    	  BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
+    	  key.setNamespace(NAMESPACE_2);
+    	  key.setBusinessObjectDefinitionName(BDEF_NAME_2);
+    	  key.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE_2);
+    	  businessObjectDataSearchKeys.add(key);
+    	  
+    	  BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
+    	  filters.add(filter);
+    	    
+    	  List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(filters);
+    	  assertEquals(2, result.size());
+    	  
+    	  businessObjectDataSearchKeys.clear();
+    	  
+    	  key.setBusinessObjectFormatFileType(FORMAT_FILE_TYPE_CODE_2);
+    	  businessObjectDataSearchKeys.add(key);
+    	  filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
+    	  filters.add(filter);
+    	    
+    	  result = businessObjectDataDao.searchBusinessObjectData(filters);
+    	  assertEquals(1, result.size());
+    	  
+          businessObjectDataSearchKeys.clear();
+    	  
+    	  key.setBusinessObjectFormatVersion(FORMAT_VERSION_2);
+    	  businessObjectDataSearchKeys.add(key);
+    	  filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
+    	  filters.add(filter);
+    	    
+    	  result = businessObjectDataDao.searchBusinessObjectData(filters);
+    	  assertEquals(1, result.size());
+    	  
+    	  businessObjectDataSearchKeys.clear();
+    	  
+    	  key.setBusinessObjectFormatFileType(null);
+    	  businessObjectDataSearchKeys.add(key);
+    	  filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
+    	  filters.add(filter);
+    	    
+    	  result = businessObjectDataDao.searchBusinessObjectData(filters);
+    	  assertEquals(2, result.size());
+
+    } 
+    
 }
