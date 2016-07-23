@@ -508,6 +508,22 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
         {
             assertEquals("Subpartition value can not contain a forward slash character.", e.getMessage());
         }
+
+        // Try to create a business object data when an attribute name contains a forward slash character.
+        try
+        {
+            businessObjectDataService.createBusinessObjectData(
+                new BusinessObjectDataCreateRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_KEY,
+                    PARTITION_VALUE, SUBPARTITION_VALUES, BusinessObjectDataStatusEntity.VALID, Arrays.asList(
+                    new StorageUnitCreateRequest(STORAGE_NAME, new StorageDirectory(STORAGE_DIRECTORY_PATH), NO_STORAGE_FILES, NO_DISCOVER_STORAGE_FILES)),
+                    Arrays.asList(new Attribute(addSlash(ATTRIBUTE_NAME_1_MIXED_CASE), ATTRIBUTE_VALUE_1)), NO_BUSINESS_OBJECT_DATA_PARENTS,
+                    NO_CREATE_NEW_VERSION));
+            fail("Should throw an IllegalArgumentException when attribute name contains a forward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Business object data attribute name can not contain a forward slash character.", e.getMessage());
+        }
     }
 
     @Test
