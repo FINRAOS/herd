@@ -4544,13 +4544,24 @@
    <xs:element name="businessObjectDataSearchFilter" type="businessObjectDataSearchFilter"/>
    <xs:complexType name="businessObjectDataSearchFilter">
       <xs:sequence>
-         <xs:element name="businessObjectDataSearchKey" type="businessObjectDataSearchKey" minOccurs="1" maxOccurs="unbounded">
+         <xs:element name="businessObjectDataSearchKeys" type="businessObjectDataSearchKeys">
             <xs:annotation>
-               <xs:documentation>Values that uniquely identify a Business Object Format</xs:documentation>
+               <xs:documentation>Values that identify a Business Object Search Keys</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:sequence>
    </xs:complexType>
+   
+   <xs:complexType name="businessObjectDataSearchKeys">
+      <xs:sequence>
+         <xs:element name="businessObjectDataSearchKey" type="businessObjectDataSearchKey" minOccurs="1" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>Values that identify a Business Object Data Search Key</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+   
    
    <xs:element name="businessObjectDataSearchFilters" type="businessObjectDataSearchFilters"/>
    <xs:complexType name="businessObjectDataSearchFilters">
