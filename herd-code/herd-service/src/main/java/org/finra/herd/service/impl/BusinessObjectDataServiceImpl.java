@@ -1399,7 +1399,10 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
      * @param request search request
      * @return business data search result
      */
-	@Override
+   @NamespacePermission(fields = "#request?.businessObjectDataSearchFilters?.![businessObjectDataSearchFilter].businessObjectDataSearchKeys?.![businessObjectDataSearchKey].![namespace]",
+   permissions = NamespacePermissionEnum.READ)
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
 	public BusinessObjectDataSearchResult searchBusinessObjectData(
 			BusinessObjectDataSearchRequest request) {
 		//validate search request
