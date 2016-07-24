@@ -35,9 +35,9 @@ public class UserNamespaceAuthorizationDaoTest extends AbstractDaoTest
     public void testGetUserNamespaceAuthorizationByKey()
     {
         // Create and persist the relative database entities.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
-        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity =
-            createUserNamespaceAuthorizationEntity(USER_ID, namespaceEntity, Arrays.asList(NamespacePermissionEnum.READ, NamespacePermissionEnum.WRITE));
+        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
+        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity = userNamespaceAuthorizationDaoTestHelper
+            .createUserNamespaceAuthorizationEntity(USER_ID, namespaceEntity, Arrays.asList(NamespacePermissionEnum.READ, NamespacePermissionEnum.WRITE));
 
         // Get a user namespace authorization.
         assertEquals(userNamespaceAuthorizationEntity,
@@ -66,7 +66,8 @@ public class UserNamespaceAuthorizationDaoTest extends AbstractDaoTest
         List<UserNamespaceAuthorizationEntity> userNamespaceAuthorizationEntities = new ArrayList<>();
         for (UserNamespaceAuthorizationKey key : keys)
         {
-            userNamespaceAuthorizationEntities.add(createUserNamespaceAuthorizationEntity(key, SUPPORTED_NAMESPACE_PERMISSIONS));
+            userNamespaceAuthorizationEntities
+                .add(userNamespaceAuthorizationDaoTestHelper.createUserNamespaceAuthorizationEntity(key, SUPPORTED_NAMESPACE_PERMISSIONS));
         }
 
         // Get user namespace authorizations by user id.
@@ -95,7 +96,8 @@ public class UserNamespaceAuthorizationDaoTest extends AbstractDaoTest
         List<UserNamespaceAuthorizationEntity> userNamespaceAuthorizationEntities = new ArrayList<>();
         for (UserNamespaceAuthorizationKey key : keys)
         {
-            userNamespaceAuthorizationEntities.add(createUserNamespaceAuthorizationEntity(key, SUPPORTED_NAMESPACE_PERMISSIONS));
+            userNamespaceAuthorizationEntities
+                .add(userNamespaceAuthorizationDaoTestHelper.createUserNamespaceAuthorizationEntity(key, SUPPORTED_NAMESPACE_PERMISSIONS));
         }
 
         // Get user namespace authorizations by namespace.

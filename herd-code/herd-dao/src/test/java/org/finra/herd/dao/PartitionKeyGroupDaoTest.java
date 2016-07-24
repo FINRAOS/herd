@@ -21,6 +21,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
@@ -34,7 +35,7 @@ public class PartitionKeyGroupDaoTest extends AbstractDaoTest
     public void testGetPartitionKeyGroupByKey()
     {
         // Create relative database entities.
-        createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
+        partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
 
         // Retrieve partition key group entity.
         PartitionKeyGroupEntity partitionKeyGroupEntity = partitionKeyGroupDao.getPartitionKeyGroupByKey(new PartitionKeyGroupKey(PARTITION_KEY_GROUP));
@@ -48,7 +49,7 @@ public class PartitionKeyGroupDaoTest extends AbstractDaoTest
     public void testGetPartitionKeyGroupByKeyInUpperCase()
     {
         // Create relative database entities.
-        createPartitionKeyGroupEntity(PARTITION_KEY_GROUP.toLowerCase());
+        partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP.toLowerCase());
 
         // Retrieve partition key group entity.
         PartitionKeyGroupEntity partitionKeyGroupEntity = partitionKeyGroupDao.getPartitionKeyGroupByName(PARTITION_KEY_GROUP.toUpperCase());
@@ -62,7 +63,7 @@ public class PartitionKeyGroupDaoTest extends AbstractDaoTest
     public void testGetPartitionKeyGroupByKeyInLowerCase()
     {
         // Create relative database entities.
-        createPartitionKeyGroupEntity(PARTITION_KEY_GROUP.toUpperCase());
+        partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP.toUpperCase());
 
         // Retrieve partition key group entity.
         PartitionKeyGroupEntity partitionKeyGroupEntity = partitionKeyGroupDao.getPartitionKeyGroupByName(PARTITION_KEY_GROUP.toLowerCase());
@@ -76,7 +77,7 @@ public class PartitionKeyGroupDaoTest extends AbstractDaoTest
     public void testGetPartitionKeyGroupByKeyInvalidKey()
     {
         // Create relative database entities.
-        createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
+        partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
 
         // Try to retrieve partition key group entity using an invalid name.
         assertNull(partitionKeyGroupDao.getPartitionKeyGroupByName("I_DO_NOT_EXIST"));
@@ -86,8 +87,8 @@ public class PartitionKeyGroupDaoTest extends AbstractDaoTest
     public void testGetPartitionKeyGroupByKeyMultipleRecordsFound()
     {
         // Create relative database entities.
-        createPartitionKeyGroupEntity(PARTITION_KEY_GROUP.toUpperCase());
-        createPartitionKeyGroupEntity(PARTITION_KEY_GROUP.toLowerCase());
+        partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP.toUpperCase());
+        partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP.toLowerCase());
 
         // Try to retrieve a partition key group when multiple entities exist with the same name (using case insensitive string comparison).
         try
@@ -107,7 +108,7 @@ public class PartitionKeyGroupDaoTest extends AbstractDaoTest
         // Create and persist two partition key group entities.
         for (PartitionKeyGroupKey partitionKeyGroupKey : getTestPartitionKeyGroupKeys())
         {
-            createPartitionKeyGroupEntity(partitionKeyGroupKey.getPartitionKeyGroupName());
+            partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(partitionKeyGroupKey.getPartitionKeyGroupName());
         }
 
         // Get the list of partition key groups.
@@ -116,5 +117,16 @@ public class PartitionKeyGroupDaoTest extends AbstractDaoTest
         // Validate the results.
         assertNotNull(resultPartitionKeyGroupKeys);
         assertTrue(resultPartitionKeyGroupKeys.containsAll(getTestPartitionKeyGroupKeys()));
+    }
+
+    /**
+     * Returns a list of test partition key group keys.
+     *
+     * @return the list of test partition key group keys
+     */
+    private List<PartitionKeyGroupKey> getTestPartitionKeyGroupKeys()
+    {
+        // Get a list of test file type keys.
+        return Arrays.asList(new PartitionKeyGroupKey(PARTITION_KEY_GROUP), new PartitionKeyGroupKey(PARTITION_KEY_GROUP_2));
     }
 }

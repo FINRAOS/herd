@@ -34,8 +34,8 @@ public class NamespaceIamRoleAuthorizationDaoTest extends AbstractDaoTest
     @Test
     public void getNamespaceIamRoleAuthorizationsAssertFilterByNamespaceWhenGiven()
     {
-        NamespaceEntity namespaceEntity1 = createNamespaceEntity(NAMESPACE);
-        NamespaceEntity namespaceEntity2 = createNamespaceEntity(NAMESPACE_2);
+        NamespaceEntity namespaceEntity1 = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
+        NamespaceEntity namespaceEntity2 = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE_2);
 
         {
             List<NamespaceIamRoleAuthorizationEntity> namespaceIamRoleAuthorizations =
@@ -89,7 +89,7 @@ public class NamespaceIamRoleAuthorizationDaoTest extends AbstractDaoTest
     @Test
     public void getNamespaceIamRoleAuthorizationsAssertOrderByRoleName()
     {
-        NamespaceEntity namespaceEntity1 = createNamespaceEntity();
+        NamespaceEntity namespaceEntity1 = namespaceDaoTestHelper.createNamespaceEntity();
 
         NamespaceIamRoleAuthorizationEntity namespaceIamRoleAuthorizationEntity1 = new NamespaceIamRoleAuthorizationEntity();
         namespaceIamRoleAuthorizationEntity1.setNamespace(namespaceEntity1);
@@ -129,8 +129,8 @@ public class NamespaceIamRoleAuthorizationDaoTest extends AbstractDaoTest
     @Test
     public void getNamespaceIamRoleAuthorizationsAssertGetAllWhenNamespaceIsNotGiven()
     {
-        NamespaceEntity namespaceEntity1 = createNamespaceEntity(NAMESPACE);
-        NamespaceEntity namespaceEntity2 = createNamespaceEntity(NAMESPACE_2);
+        NamespaceEntity namespaceEntity1 = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
+        NamespaceEntity namespaceEntity2 = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE_2);
 
         NamespaceIamRoleAuthorizationEntity namespaceIamRoleAuthorizationEntity1 = new NamespaceIamRoleAuthorizationEntity();
         namespaceIamRoleAuthorizationEntity1.setNamespace(namespaceEntity1);

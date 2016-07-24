@@ -30,6 +30,7 @@ import java.util.Map;
 
 import org.apache.commons.collections4.IterableUtils;
 import org.junit.Test;
+
 import org.finra.herd.dao.impl.AbstractHerdDao;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
@@ -60,8 +61,8 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         for (List<String> subPartitionValues : Arrays.asList(SUBPARTITION_VALUES, NO_SUBPARTITION_VALUES))
         {
             // Create a business object data entity.
-            BusinessObjectDataEntity businessObjectDataEntity =
-                createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
+                .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                     subPartitionValues, DATA_VERSION, true, BDATA_STATUS);
 
             // Get the business object data by key.
@@ -96,10 +97,12 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
     public void testGetBusinessObjectDataByAltKeyNoDataVersionSpecifiedMultipleRecordsFound()
     {
         // Create and persist multiple latest business object data entities for the same format version.
-        createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-            INITIAL_DATA_VERSION, true, BDATA_STATUS);
-        createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-            SECOND_DATA_VERSION, true, BDATA_STATUS);
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS);
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, SECOND_DATA_VERSION, true, BDATA_STATUS);
 
         try
         {
@@ -126,8 +129,8 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         for (List<String> subPartitionValues : Arrays.asList(SUBPARTITION_VALUES, NO_SUBPARTITION_VALUES))
         {
             // Create a business object data entity.
-            BusinessObjectDataEntity businessObjectDataEntity =
-                createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
+                .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                     subPartitionValues, DATA_VERSION, true, BDATA_STATUS);
 
             // Get the business object data by key and business object data status, but without
@@ -155,10 +158,12 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
     public void testGetBusinessObjectDataByAltKeyAndStatusOlderFormatVersionHasNewerDataVersion()
     {
         // Create two business object data instances that have newer data version in the older format version.
-        createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
-            SUBPARTITION_VALUES, SECOND_DATA_VERSION, true, BDATA_STATUS);
-        createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, SECOND_FORMAT_VERSION, PARTITION_VALUE,
-            SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS);
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, SECOND_DATA_VERSION, true, BDATA_STATUS);
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, SECOND_FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS);
 
         // Get the business object data by key using a wrong business object data status and without
         // specifying both business object format version and business object data version.
@@ -183,8 +188,9 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
             // to validate that the latest flag is not used by this method to find the latest (maximum) business object data version.
             for (Integer version : Arrays.asList(INITIAL_DATA_VERSION, SECOND_DATA_VERSION, THIRD_DATA_VERSION))
             {
-                createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                    subPartitionValues, version, version.equals(SECOND_DATA_VERSION), BDATA_STATUS);
+                businessObjectDataDaoTestHelper
+                    .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                        subPartitionValues, version, version.equals(SECOND_DATA_VERSION), BDATA_STATUS);
             }
 
             // Get the maximum business object data version for this business object data.
@@ -201,7 +207,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
     public void testGetBusinessObjectDataPartitionValue()
     {
         // Create database entities required for testing.
-        createDatabaseEntitiesForBusinessObjectDataAvailabilityTesting(null, new ArrayList<>(), new ArrayList<>(),
+        businessObjectDataAvailabilityTestHelper.createDatabaseEntitiesForBusinessObjectDataAvailabilityTesting(null, new ArrayList<>(), new ArrayList<>(),
             BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, SUBPARTITION_VALUES, ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
 
         BusinessObjectFormatKey businessObjectFormatKey =
@@ -228,8 +234,9 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
     public void testGetBusinessObjectDataMaxPartitionValueWithUpperAndLowerBounds()
     {
         // Create database entities required for testing.
-        createStorageUnitEntity(STORAGE_NAME, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE_2,
-            SUBPARTITION_VALUES, DATA_VERSION, true, BusinessObjectDataStatusEntity.VALID, STORAGE_UNIT_STATUS, NO_STORAGE_DIRECTORY_PATH);
+        storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE_2,
+                SUBPARTITION_VALUES, DATA_VERSION, true, BusinessObjectDataStatusEntity.VALID, STORAGE_UNIT_STATUS, NO_STORAGE_DIRECTORY_PATH);
 
         // Test retrieving the maximum available partition value using an upper bound partition value.
         assertNull(businessObjectDataDao.getBusinessObjectDataMaxPartitionValue(BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
@@ -265,17 +272,18 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         BusinessObjectFormatKey businessObjectFormatKey =
             new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION);
         BusinessObjectFormatEntity businessObjectFormatEntity =
-            createBusinessObjectFormatEntity(businessObjectFormatKey, FORMAT_DESCRIPTION, true, PARTITION_KEY);
+            businessObjectFormatDaoTestHelper.createBusinessObjectFormatEntity(businessObjectFormatKey, FORMAT_DESCRIPTION, true, PARTITION_KEY);
 
         // Create two versions of business object data instances with the latest version not located in the test storage.
-        List<BusinessObjectDataEntity> businessObjectDataEntities = Arrays
-            .asList(createBusinessObjectDataEntity(businessObjectFormatEntity, PARTITION_VALUE, SUBPARTITION_VALUES, INITIAL_DATA_VERSION, false, BDATA_STATUS),
-                createBusinessObjectDataEntity(businessObjectFormatEntity, PARTITION_VALUE, SUBPARTITION_VALUES, SECOND_DATA_VERSION, true, BDATA_STATUS));
+        List<BusinessObjectDataEntity> businessObjectDataEntities = Arrays.asList(businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(businessObjectFormatEntity, PARTITION_VALUE, SUBPARTITION_VALUES, INITIAL_DATA_VERSION, false, BDATA_STATUS),
+            businessObjectDataDaoTestHelper
+                .createBusinessObjectDataEntity(businessObjectFormatEntity, PARTITION_VALUE, SUBPARTITION_VALUES, SECOND_DATA_VERSION, true, BDATA_STATUS));
 
         // Create a storage instance and a storage unit for the initial business object data version only.
-        StorageEntity storageEntity = createStorageEntity(STORAGE_NAME);
-        StorageUnitStatusEntity storageUnitStatusEntity = createStorageUnitStatusEntity(STORAGE_UNIT_STATUS);
-        createStorageUnitEntity(storageEntity, businessObjectDataEntities.get(0), storageUnitStatusEntity, NO_STORAGE_DIRECTORY_PATH);
+        StorageEntity storageEntity = storageDaoTestHelper.createStorageEntity(STORAGE_NAME);
+        StorageUnitStatusEntity storageUnitStatusEntity = storageUnitStatusDaoTestHelper.createStorageUnitStatusEntity(STORAGE_UNIT_STATUS);
+        storageUnitDaoTestHelper.createStorageUnitEntity(storageEntity, businessObjectDataEntities.get(0), storageUnitStatusEntity, NO_STORAGE_DIRECTORY_PATH);
 
         // Get the maximum available partition value in the test storage without specifying business object data version.
         assertEquals(PARTITION_VALUE, businessObjectDataDao
@@ -292,14 +300,18 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
     public void testGetBusinessObjectDataPartitionValueBusinessObjectDataStatusSpecified()
     {
         // Create database entities required for testing.
-        createStorageUnitEntity(STORAGE_NAME, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-            SUBPARTITION_VALUES, INITIAL_DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS, STORAGE_UNIT_STATUS, NO_STORAGE_DIRECTORY_PATH);
-        createStorageUnitEntity(STORAGE_NAME, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE_2,
-            SUBPARTITION_VALUES, INITIAL_DATA_VERSION, NO_LATEST_VERSION_FLAG_SET, BDATA_STATUS, STORAGE_UNIT_STATUS, NO_STORAGE_DIRECTORY_PATH);
-        createStorageUnitEntity(STORAGE_NAME, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE_2,
-            SUBPARTITION_VALUES, SECOND_DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS_2, STORAGE_UNIT_STATUS, NO_STORAGE_DIRECTORY_PATH);
-        createStorageUnitEntity(STORAGE_NAME, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE_3,
-            SUBPARTITION_VALUES, INITIAL_DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS_2, STORAGE_UNIT_STATUS, NO_STORAGE_DIRECTORY_PATH);
+        storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, INITIAL_DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS, STORAGE_UNIT_STATUS, NO_STORAGE_DIRECTORY_PATH);
+        storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE_2,
+                SUBPARTITION_VALUES, INITIAL_DATA_VERSION, NO_LATEST_VERSION_FLAG_SET, BDATA_STATUS, STORAGE_UNIT_STATUS, NO_STORAGE_DIRECTORY_PATH);
+        storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE_2,
+                SUBPARTITION_VALUES, SECOND_DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS_2, STORAGE_UNIT_STATUS, NO_STORAGE_DIRECTORY_PATH);
+        storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE_3,
+                SUBPARTITION_VALUES, INITIAL_DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS_2, STORAGE_UNIT_STATUS, NO_STORAGE_DIRECTORY_PATH);
 
         // Create a business object format key.
         BusinessObjectFormatKey businessObjectFormatKey =
@@ -326,9 +338,11 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
     public void testGetBusinessObjectDataPartitionValueNoStorageSpecified()
     {
         // Create database entities required for testing.
-        StorageEntity storageEntity = createStorageEntity(STORAGE_NAME, STORAGE_PLATFORM_CODE);
-        createStorageUnitEntity(storageEntity.getName(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-            SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID, STORAGE_UNIT_STATUS, NO_STORAGE_DIRECTORY_PATH);
+        StorageEntity storageEntity = storageDaoTestHelper.createStorageEntity(STORAGE_NAME, STORAGE_PLATFORM_CODE);
+        storageUnitDaoTestHelper
+            .createStorageUnitEntity(storageEntity.getName(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID, STORAGE_UNIT_STATUS,
+                NO_STORAGE_DIRECTORY_PATH);
 
         // Create a business object format key.
         BusinessObjectFormatKey businessObjectFormatKey =
@@ -347,9 +361,11 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
     public void testGetBusinessObjectDataPartitionValueStoragePlatformTypeSpecified()
     {
         // Create database entities required for testing.
-        StorageEntity storageEntity = createStorageEntity(STORAGE_NAME, STORAGE_PLATFORM_CODE);
-        createStorageUnitEntity(storageEntity.getName(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-            SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID, STORAGE_UNIT_STATUS, NO_STORAGE_DIRECTORY_PATH);
+        StorageEntity storageEntity = storageDaoTestHelper.createStorageEntity(STORAGE_NAME, STORAGE_PLATFORM_CODE);
+        storageUnitDaoTestHelper
+            .createStorageUnitEntity(storageEntity.getName(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID, STORAGE_UNIT_STATUS,
+                NO_STORAGE_DIRECTORY_PATH);
 
         // Create a business object format key.
         BusinessObjectFormatKey businessObjectFormatKey =
@@ -392,9 +408,11 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
     public void testGetBusinessObjectDataPartitionValueExcludedStoragePlatformTypeSpecified()
     {
         // Create database entities required for testing.
-        StorageEntity storageEntity = createStorageEntity(STORAGE_NAME, STORAGE_PLATFORM_CODE);
-        createStorageUnitEntity(storageEntity.getName(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-            SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID, STORAGE_UNIT_STATUS, NO_STORAGE_DIRECTORY_PATH);
+        StorageEntity storageEntity = storageDaoTestHelper.createStorageEntity(STORAGE_NAME, STORAGE_PLATFORM_CODE);
+        storageUnitDaoTestHelper
+            .createStorageUnitEntity(storageEntity.getName(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID, STORAGE_UNIT_STATUS,
+                NO_STORAGE_DIRECTORY_PATH);
 
         // Create a business object format key.
         BusinessObjectFormatKey businessObjectFormatKey =
@@ -446,11 +464,11 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
     {
         // Create database entities required for testing.
         StorageUnitStatusEntity availableStorageUnitStatusEntity =
-            createStorageUnitStatusEntity(STORAGE_UNIT_STATUS, DESCRIPTION, STORAGE_UNIT_STATUS_AVAILABLE_FLAG_SET);
+            storageUnitStatusDaoTestHelper.createStorageUnitStatusEntity(STORAGE_UNIT_STATUS, DESCRIPTION, STORAGE_UNIT_STATUS_AVAILABLE_FLAG_SET);
         StorageUnitStatusEntity notAvailableStorageUnitStatusEntity =
-            createStorageUnitStatusEntity(STORAGE_UNIT_STATUS_2, DESCRIPTION, NO_STORAGE_UNIT_STATUS_AVAILABLE_FLAG_SET);
-        StorageUnitEntity storageUnitEntity =
-            createStorageUnitEntity(STORAGE_NAME, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            storageUnitStatusDaoTestHelper.createStorageUnitStatusEntity(STORAGE_UNIT_STATUS_2, DESCRIPTION, NO_STORAGE_UNIT_STATUS_AVAILABLE_FLAG_SET);
+        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID, availableStorageUnitStatusEntity.getCode(),
                 NO_STORAGE_DIRECTORY_PATH);
 
@@ -483,12 +501,12 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
     public void testGetBusinessObjectDataCount()
     {
         // Create a business object format.
-        BusinessObjectFormatEntity businessObjectFormatEntity =
-            createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION, true,
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION, true,
                 PARTITION_KEY, PARTITION_KEY_GROUP);
 
         // Create a business object data entity associated with the business object format.
-        createBusinessObjectDataEntity(businessObjectFormatEntity, PARTITION_VALUE, INITIAL_DATA_VERSION, true, BDATA_STATUS);
+        businessObjectDataDaoTestHelper.createBusinessObjectDataEntity(businessObjectFormatEntity, PARTITION_VALUE, INITIAL_DATA_VERSION, true, BDATA_STATUS);
 
         // Get the number of business object formats that use this partition key group.
         Long result = businessObjectDataDao
@@ -505,10 +523,10 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         for (List<String> subPartitionValues : Arrays.asList(SUBPARTITION_VALUES, NO_SUBPARTITION_VALUES))
         {
             // Create two business object data entities that differ on both format version and data version.
-            List<BusinessObjectDataEntity> businessObjectDataEntities = Arrays.asList(
-                createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
-                    subPartitionValues, SECOND_DATA_VERSION, false, BDATA_STATUS),
-                createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, SECOND_FORMAT_VERSION, PARTITION_VALUE,
+            List<BusinessObjectDataEntity> businessObjectDataEntities = Arrays.asList(businessObjectDataDaoTestHelper
+                .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+                    subPartitionValues, SECOND_DATA_VERSION, false, BDATA_STATUS), businessObjectDataDaoTestHelper
+                .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, SECOND_FORMAT_VERSION, PARTITION_VALUE,
                     subPartitionValues, THIRD_DATA_VERSION, false, BDATA_STATUS));
 
             // Retrieve the first business object data entity by specifying the entire business object data key.
@@ -536,7 +554,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
     public void testGetBusinessObjectDataEntitiesByPartitionFiltersAndStorage()
     {
         // Create database entities required for testing.
-        createDatabaseEntitiesForBusinessObjectDataAvailabilityTesting(null, new ArrayList<>(), new ArrayList<>(),
+        businessObjectDataAvailabilityTestHelper.createDatabaseEntitiesForBusinessObjectDataAvailabilityTesting(null, new ArrayList<>(), new ArrayList<>(),
             BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, SUBPARTITION_VALUES, ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
 
         // Build a list of partition values, large enough to cause executing the select queries in chunks.
@@ -607,18 +625,18 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
     public void testGetBusinessObjectDataEntitiesByPartitionFiltersAndStorageOlderFormatVersionHasNewerDataVersion()
     {
         // Create two business object data instances that have newer data version in the older format version.
-        List<BusinessObjectDataEntity> businessObjectDataEntities = Arrays.asList(
-            createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES, SECOND_DATA_VERSION, true, BDATA_STATUS),
-            createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, SECOND_FORMAT_VERSION, PARTITION_VALUE,
+        List<BusinessObjectDataEntity> businessObjectDataEntities = Arrays.asList(businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, SECOND_DATA_VERSION, true, BDATA_STATUS), businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, SECOND_FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS));
 
         // Create a storage instance and relative storage units.
-        StorageEntity storageEntity = createStorageEntity(STORAGE_NAME);
-        StorageUnitStatusEntity storageUnitStatusEntity = createStorageUnitStatusEntity(STORAGE_UNIT_STATUS);
+        StorageEntity storageEntity = storageDaoTestHelper.createStorageEntity(STORAGE_NAME);
+        StorageUnitStatusEntity storageUnitStatusEntity = storageUnitStatusDaoTestHelper.createStorageUnitStatusEntity(STORAGE_UNIT_STATUS);
         for (BusinessObjectDataEntity businessObjectDataEntity : businessObjectDataEntities)
         {
-            createStorageUnitEntity(storageEntity, businessObjectDataEntity, storageUnitStatusEntity, NO_STORAGE_DIRECTORY_PATH);
+            storageUnitDaoTestHelper.createStorageUnitEntity(storageEntity, businessObjectDataEntity, storageUnitStatusEntity, NO_STORAGE_DIRECTORY_PATH);
         }
 
         // Build a list of partition filters to select the "available" business object data.
@@ -646,20 +664,20 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
     {
         // Create several versions of business object data instances with the latest version not located in the test storage and
         // the second version having different business object data status.
-        List<BusinessObjectDataEntity> businessObjectDataEntities = Arrays.asList(
-            createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                INITIAL_DATA_VERSION, false, BDATA_STATUS),
-            createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                SECOND_DATA_VERSION, false, BDATA_STATUS_2),
-            createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                THIRD_DATA_VERSION, true, BDATA_STATUS));
+        List<BusinessObjectDataEntity> businessObjectDataEntities = Arrays.asList(businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, INITIAL_DATA_VERSION, false, BDATA_STATUS), businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, SECOND_DATA_VERSION, false, BDATA_STATUS_2), businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, THIRD_DATA_VERSION, true, BDATA_STATUS));
 
         // Create a storage instance and relative storage units for the first two business object data versions.
-        StorageEntity storageEntity = createStorageEntity(STORAGE_NAME);
-        StorageUnitStatusEntity storageUnitStatusEntity = createStorageUnitStatusEntity(STORAGE_UNIT_STATUS);
+        StorageEntity storageEntity = storageDaoTestHelper.createStorageEntity(STORAGE_NAME);
+        StorageUnitStatusEntity storageUnitStatusEntity = storageUnitStatusDaoTestHelper.createStorageUnitStatusEntity(STORAGE_UNIT_STATUS);
         for (BusinessObjectDataEntity businessObjectDataEntity : businessObjectDataEntities.subList(0, 2))
         {
-            createStorageUnitEntity(storageEntity, businessObjectDataEntity, storageUnitStatusEntity, NO_STORAGE_DIRECTORY_PATH);
+            storageUnitDaoTestHelper.createStorageUnitEntity(storageEntity, businessObjectDataEntity, storageUnitStatusEntity, NO_STORAGE_DIRECTORY_PATH);
         }
 
         // Build a list of partition filters to select the "available" business object data.
@@ -700,21 +718,22 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         List<String> storageNames = Arrays.asList(STORAGE_NAME, STORAGE_NAME_2);
         List<String> businessObjectDataStatuses = Arrays.asList(BDATA_STATUS, BDATA_STATUS_2);
         List<Integer> createdOnTimestampMinutesOffsets = Arrays.asList(5, 15, 20);
-        StorageUnitStatusEntity storageUnitStatusEntity = createStorageUnitStatusEntity(STORAGE_UNIT_STATUS);
+        StorageUnitStatusEntity storageUnitStatusEntity = storageUnitStatusDaoTestHelper.createStorageUnitStatusEntity(STORAGE_UNIT_STATUS);
         int counter = 0;
         for (String storageName : storageNames)
         {
-            StorageEntity storageEntity = createStorageEntity(storageName);
+            StorageEntity storageEntity = storageDaoTestHelper.createStorageEntity(storageName);
             for (String businessObjectDataStatus : businessObjectDataStatuses)
             {
                 for (Integer offset : createdOnTimestampMinutesOffsets)
                 {
-                    BusinessObjectDataEntity businessObjectDataEntity =
-                        createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                    BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
+                        .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
                             String.format("%s-%d", PARTITION_VALUE, counter++), SUBPARTITION_VALUES, DATA_VERSION, true, businessObjectDataStatus);
                     // Apply the offset in minutes to createdOn value.
                     businessObjectDataEntity.setCreatedOn(new Timestamp(businessObjectDataEntity.getCreatedOn().getTime() - offset * 60 * 1000));
-                    createStorageUnitEntity(storageEntity, businessObjectDataEntity, storageUnitStatusEntity, NO_STORAGE_DIRECTORY_PATH);
+                    storageUnitDaoTestHelper
+                        .createStorageUnitEntity(storageEntity, businessObjectDataEntity, storageUnitStatusEntity, NO_STORAGE_DIRECTORY_PATH);
                     herdDao.saveAndRefresh(businessObjectDataEntity);
                 }
             }
@@ -739,34 +758,34 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
     public void testBusinessObjectDataEntitiesMatchingStoragePolicies()
     {
         // Create and persist a storage unit in the storage policy filter storage.
-        StorageUnitEntity storageUnitEntity =
-            createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS, STORAGE_UNIT_STATUS, NO_STORAGE_DIRECTORY_PATH);
 
         // For all possible storage policy priority levels, create and persist a storage policy entity matching to the business object data.
         Map<StoragePolicyPriorityLevel, StoragePolicyEntity> input = new LinkedHashMap<>();
 
         // Storage policy filter has business object definition, usage, and file type specified.
-        input.put(new StoragePolicyPriorityLevel(false, false, false),
-            createStoragePolicyEntity(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME),
+        input.put(new StoragePolicyPriorityLevel(false, false, false), storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME),
                 StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
                 STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET));
 
         // Storage policy filter has only business object definition specified.
-        input.put(new StoragePolicyPriorityLevel(false, true, true),
-            createStoragePolicyEntity(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME_2),
+        input.put(new StoragePolicyPriorityLevel(false, true, true), storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME_2),
                 StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS, BDEF_NAMESPACE, BDEF_NAME, NO_FORMAT_USAGE_CODE,
                 NO_FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET));
 
         // Storage policy filter has only usage and file type specified.
-        input.put(new StoragePolicyPriorityLevel(true, false, false),
-            createStoragePolicyEntity(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD_2, STORAGE_POLICY_NAME),
+        input.put(new StoragePolicyPriorityLevel(true, false, false), storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD_2, STORAGE_POLICY_NAME),
                 StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS, NO_BDEF_NAMESPACE, NO_BDEF_NAME, FORMAT_USAGE_CODE,
                 FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET));
 
         // Storage policy filter has no fields specified.
-        input.put(new StoragePolicyPriorityLevel(true, true, true),
-            createStoragePolicyEntity(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD_2, STORAGE_POLICY_NAME_2),
+        input.put(new StoragePolicyPriorityLevel(true, true, true), storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD_2, STORAGE_POLICY_NAME_2),
                 StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS, NO_BDEF_NAMESPACE, NO_BDEF_NAME, NO_FORMAT_USAGE_CODE,
                 NO_FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET));
 
@@ -791,25 +810,26 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
     public void testBusinessObjectDataEntitiesMatchingStoragePoliciesTestingStartPositionAndMaxResult()
     {
         // Create and persist a storage policy entity.
-        StoragePolicyEntity storagePolicyEntity = createStoragePolicyEntity(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME),
-            StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-            STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+        StoragePolicyEntity storagePolicyEntity = storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME),
+                StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+                STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Create and persist a storage unit in the storage policy filter storage.
-        StorageUnitEntity storageUnitEntity1 =
-            createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+        StorageUnitEntity storageUnitEntity1 = storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS, STORAGE_UNIT_STATUS, NO_STORAGE_DIRECTORY_PATH);
 
         // Apply the offset in days to business object data "created on" value.
-        ageBusinessObjectData(storageUnitEntity1.getBusinessObjectData(), BDATA_AGE_IN_DAYS + 1);
+        businessObjectDataDaoTestHelper.ageBusinessObjectData(storageUnitEntity1.getBusinessObjectData(), BDATA_AGE_IN_DAYS + 1);
 
         // Create and persist a second storage unit in the storage policy filter storage.
-        StorageUnitEntity storageUnitEntity2 =
-            createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE_2,
+        StorageUnitEntity storageUnitEntity2 = storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE_2,
                 SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS, STORAGE_UNIT_STATUS, NO_STORAGE_DIRECTORY_PATH);
 
         // Also apply an offset to business object data "created on" value, but make this business object data older than the first.
-        ageBusinessObjectData(storageUnitEntity2.getBusinessObjectData(), BDATA_AGE_IN_DAYS + 2);
+        businessObjectDataDaoTestHelper.ageBusinessObjectData(storageUnitEntity2.getBusinessObjectData(), BDATA_AGE_IN_DAYS + 2);
 
         // Try to retrieve both business object data instances as matching to the storage policy, but with max result limit set to 1.
         Map<BusinessObjectDataEntity, StoragePolicyEntity> result = businessObjectDataDao
@@ -835,15 +855,15 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
     public void testBusinessObjectDataEntitiesMatchingStoragePoliciesMultipleStoragePoliciesMatchBusinessObjectData()
     {
         // Create and persist a storage unit in the storage policy filter storage.
-        StorageUnitEntity storageUnitEntity =
-            createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS, STORAGE_UNIT_STATUS, NO_STORAGE_DIRECTORY_PATH);
 
         // Create and persist two storage policy entities with identical storage policy filters.
-        createStoragePolicyEntity(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME),
+        storagePolicyDaoTestHelper.createStoragePolicyEntity(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME),
             StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
             STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
-        createStoragePolicyEntity(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME_2),
+        storagePolicyDaoTestHelper.createStoragePolicyEntity(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME_2),
             StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
             STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
@@ -861,13 +881,14 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
     public void testBusinessObjectDataEntitiesMatchingStoragePoliciesInvalidSourceStorage()
     {
         // Create and persist a storage policy entity.
-        createStoragePolicyEntity(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME),
+        storagePolicyDaoTestHelper.createStoragePolicyEntity(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME),
             StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
             STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Create and persist a storage unit which is not in the storage policy filter storage.
-        createStorageUnitEntity(STORAGE_NAME_3, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-            SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS, STORAGE_UNIT_STATUS, NO_STORAGE_DIRECTORY_PATH);
+        storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME_3, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS, STORAGE_UNIT_STATUS, NO_STORAGE_DIRECTORY_PATH);
 
         // Try to retrieve the business object data matching to the storage policy.
         Map<BusinessObjectDataEntity, StoragePolicyEntity> result = businessObjectDataDao
@@ -882,13 +903,14 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
     public void testBusinessObjectDataEntitiesMatchingStoragePoliciesNoStoragePolicyLatestVersion()
     {
         // Create and persist an enabled storage policy entity that has no latest version flag set.
-        createStoragePolicyEntity(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME),
+        storagePolicyDaoTestHelper.createStoragePolicyEntity(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME),
             StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
             STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, NO_LATEST_VERSION_FLAG_SET);
 
         // Create and persist a storage unit in the storage policy filter storage.
-        createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-            SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS, STORAGE_UNIT_STATUS, NO_STORAGE_DIRECTORY_PATH);
+        storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS, STORAGE_UNIT_STATUS, NO_STORAGE_DIRECTORY_PATH);
 
         // Try to retrieve the business object data matching to the storage policy.
         Map<BusinessObjectDataEntity, StoragePolicyEntity> result = businessObjectDataDao
@@ -903,13 +925,14 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
     public void testBusinessObjectDataEntitiesMatchingStoragePoliciesInvalidStoragePolicyStatus()
     {
         // Create and persist a disabled storage policy entity.
-        createStoragePolicyEntity(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME),
+        storagePolicyDaoTestHelper.createStoragePolicyEntity(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME),
             StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
             STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.DISABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Create and persist a storage unit in the storage policy filter storage.
-        createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-            SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS, STORAGE_UNIT_STATUS, NO_STORAGE_DIRECTORY_PATH);
+        storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS, STORAGE_UNIT_STATUS, NO_STORAGE_DIRECTORY_PATH);
 
         // Try to retrieve the business object data matching to the storage policy.
         Map<BusinessObjectDataEntity, StoragePolicyEntity> result = businessObjectDataDao
@@ -924,13 +947,14 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
     public void testBusinessObjectDataEntitiesMatchingStoragePoliciesInvalidBusinessObjectDataStatus()
     {
         // Create and persist a storage policy entity.
-        createStoragePolicyEntity(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME),
+        storagePolicyDaoTestHelper.createStoragePolicyEntity(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME),
             StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
             STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Create and persist a storage unit in the storage policy filter storage, but having "not supported" business object data status.
-        createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-            SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS_2, STORAGE_UNIT_STATUS, NO_STORAGE_DIRECTORY_PATH);
+        storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS_2, STORAGE_UNIT_STATUS, NO_STORAGE_DIRECTORY_PATH);
 
         // Try to retrieve the business object data matching to the storage policy.
         Map<BusinessObjectDataEntity, StoragePolicyEntity> result = businessObjectDataDao
@@ -945,17 +969,19 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
     public void testBusinessObjectDataEntitiesMatchingStoragePoliciesDestinationStorageUnitAlreadyExists()
     {
         // Create and persist a storage policy entity.
-        createStoragePolicyEntity(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME),
+        storagePolicyDaoTestHelper.createStoragePolicyEntity(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME),
             StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
             STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Create and persist a storage unit in the storage policy filter storage.
-        createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-            SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS, STORAGE_UNIT_STATUS, NO_STORAGE_DIRECTORY_PATH);
+        storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS, STORAGE_UNIT_STATUS, NO_STORAGE_DIRECTORY_PATH);
 
         // Add a storage unit for this business object data in the storage policy destination storage.
-        createStorageUnitEntity(STORAGE_NAME_2, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-            SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS, STORAGE_UNIT_STATUS, NO_STORAGE_DIRECTORY_PATH);
+        storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME_2, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS, STORAGE_UNIT_STATUS, NO_STORAGE_DIRECTORY_PATH);
 
         // Try to retrieve the business object data matching to the storage policy.
         Map<BusinessObjectDataEntity, StoragePolicyEntity> result = businessObjectDataDao
@@ -969,127 +995,139 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
     @Test
     public void testGetBusinessObjectDataEntitiesByPartitionValue()
     {
-        createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null, DATA_VERSION,
-            true, "VALID");
-        createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null, DATA_VERSION,
-            true, "VALID");
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null, DATA_VERSION,
+                true, "VALID");
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null,
+                DATA_VERSION, true, "VALID");
         List<BusinessObjectDataEntity> businessObjectDataEntities = businessObjectDataDao.getBusinessObjectDataEntitiesByPartitionValue(PARTITION_VALUE);
         assertEquals(2, businessObjectDataEntities.size());
     }
-    
+
 
     @Test
     public void testGetBusinessObjectDataSearchWithAllFields()
     {
-    	  createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null, DATA_VERSION,
-    	            true, "VALID");
-    	  createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null, DATA_VERSION,
-    	            true, "INVALID");
-    	  
-    	  createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null, DATA_VERSION,
-  	            true, "INVALID");
-    	  
-    	  List<BusinessObjectDataSearchFilter> filters = new ArrayList<BusinessObjectDataSearchFilter>();
-    	  List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<BusinessObjectDataSearchKey>();
-    	  BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
-    	  key.setNamespace(NAMESPACE);
-    	  key.setBusinessObjectDefinitionName(BDEF_NAME);
-    	  key.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE);
-    	  key.setBusinessObjectFormatFileType(FORMAT_FILE_TYPE_CODE);
-    	  key.setBusinessObjectFormatVersion(FORMAT_VERSION);
-    	  businessObjectDataSearchKeys.add(key);
-    	  
-    	  BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
-    	  filters.add(filter);
-    	    
-    	  List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(filters);
-    	  assertEquals(2, result.size());
-    	  
-    } 
-    
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null, DATA_VERSION,
+                true, "VALID");
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null, DATA_VERSION,
+                true, "INVALID");
+
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null,
+                DATA_VERSION, true, "INVALID");
+
+        List<BusinessObjectDataSearchFilter> filters = new ArrayList<BusinessObjectDataSearchFilter>();
+        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<BusinessObjectDataSearchKey>();
+        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
+        key.setNamespace(NAMESPACE);
+        key.setBusinessObjectDefinitionName(BDEF_NAME);
+        key.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE);
+        key.setBusinessObjectFormatFileType(FORMAT_FILE_TYPE_CODE);
+        key.setBusinessObjectFormatVersion(FORMAT_VERSION);
+        businessObjectDataSearchKeys.add(key);
+
+        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
+        filters.add(filter);
+
+        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(filters);
+        assertEquals(2, result.size());
+
+    }
+
     @Test
     public void testGetBusinessObjectDataSearchWithRequiredFieldsOnly()
     {
-    	  createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null, DATA_VERSION,
-    	            true, "VALID");
-    	  createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME_2, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null, DATA_VERSION,
-    	            true, "INVALID");
-    	  
-    	  createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null, DATA_VERSION,
-  	            true, "INVALID");
-    	  
-    	  List<BusinessObjectDataSearchFilter> filters = new ArrayList<BusinessObjectDataSearchFilter>();
-    	  List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<BusinessObjectDataSearchKey>();
-    	  BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
-    	  key.setNamespace(NAMESPACE);
-    	  key.setBusinessObjectDefinitionName(BDEF_NAME);
-    	  businessObjectDataSearchKeys.add(key);
-    	  
-    	  BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
-    	  filters.add(filter);
-    	    
-    	  List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(filters);
-    	  assertEquals(1, result.size());
-    } 
-    
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null, DATA_VERSION,
+                true, "VALID");
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME_2, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null,
+                DATA_VERSION, true, "INVALID");
+
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null,
+                DATA_VERSION, true, "INVALID");
+
+        List<BusinessObjectDataSearchFilter> filters = new ArrayList<BusinessObjectDataSearchFilter>();
+        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<BusinessObjectDataSearchKey>();
+        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
+        key.setNamespace(NAMESPACE);
+        key.setBusinessObjectDefinitionName(BDEF_NAME);
+        businessObjectDataSearchKeys.add(key);
+
+        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
+        filters.add(filter);
+
+        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(filters);
+        assertEquals(1, result.size());
+    }
+
     @Test
     public void testGetBusinessObjectDataSearchWithSomeOptionalFields()
     {
-    	  createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null, DATA_VERSION,
-    	            true, "VALID");
-    	  createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null, DATA_VERSION,
-    	            true, "INVALID");
-    	  
-    	  createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION_2, PARTITION_VALUE, null, DATA_VERSION,
-  	            true, "INVALID");
-    	  
-    	  createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, PARTITION_VALUE, null, DATA_VERSION,
-    	            true, "VALID");
-    	  
-    	  List<BusinessObjectDataSearchFilter> filters = new ArrayList<BusinessObjectDataSearchFilter>();
-    	  List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<BusinessObjectDataSearchKey>();
-    	  BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
-    	  key.setNamespace(NAMESPACE_2);
-    	  key.setBusinessObjectDefinitionName(BDEF_NAME_2);
-    	  key.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE_2);
-    	  businessObjectDataSearchKeys.add(key);
-    	  
-    	  BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
-    	  filters.add(filter);
-    	    
-    	  List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(filters);
-    	  assertEquals(2, result.size());
-    	  
-    	  businessObjectDataSearchKeys.clear();
-    	  
-    	  key.setBusinessObjectFormatFileType(FORMAT_FILE_TYPE_CODE_2);
-    	  businessObjectDataSearchKeys.add(key);
-    	  filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
-    	  filters.add(filter);
-    	    
-    	  result = businessObjectDataDao.searchBusinessObjectData(filters);
-    	  assertEquals(1, result.size());
-    	  
-          businessObjectDataSearchKeys.clear();
-    	  
-    	  key.setBusinessObjectFormatVersion(FORMAT_VERSION_2);
-    	  businessObjectDataSearchKeys.add(key);
-    	  filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
-    	  filters.add(filter);
-    	    
-    	  result = businessObjectDataDao.searchBusinessObjectData(filters);
-    	  assertEquals(1, result.size());
-    	  
-    	  businessObjectDataSearchKeys.clear();
-    	  
-    	  key.setBusinessObjectFormatFileType(null);
-    	  businessObjectDataSearchKeys.add(key);
-    	  filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
-    	  filters.add(filter);
-    	    
-    	  result = businessObjectDataDao.searchBusinessObjectData(filters);
-    	  assertEquals(2, result.size());
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null, DATA_VERSION,
+                true, "VALID");
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null,
+                DATA_VERSION, true, "INVALID");
 
-    } 
-    
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION_2, PARTITION_VALUE, null,
+                DATA_VERSION, true, "INVALID");
+
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, PARTITION_VALUE, null,
+                DATA_VERSION, true, "VALID");
+
+        List<BusinessObjectDataSearchFilter> filters = new ArrayList<BusinessObjectDataSearchFilter>();
+        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<BusinessObjectDataSearchKey>();
+        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
+        key.setNamespace(NAMESPACE_2);
+        key.setBusinessObjectDefinitionName(BDEF_NAME_2);
+        key.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE_2);
+        businessObjectDataSearchKeys.add(key);
+
+        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
+        filters.add(filter);
+
+        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(filters);
+        assertEquals(2, result.size());
+
+        businessObjectDataSearchKeys.clear();
+
+        key.setBusinessObjectFormatFileType(FORMAT_FILE_TYPE_CODE_2);
+        businessObjectDataSearchKeys.add(key);
+        filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
+        filters.add(filter);
+
+        result = businessObjectDataDao.searchBusinessObjectData(filters);
+        assertEquals(1, result.size());
+
+        businessObjectDataSearchKeys.clear();
+
+        key.setBusinessObjectFormatVersion(FORMAT_VERSION_2);
+        businessObjectDataSearchKeys.add(key);
+        filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
+        filters.add(filter);
+
+        result = businessObjectDataDao.searchBusinessObjectData(filters);
+        assertEquals(1, result.size());
+
+        businessObjectDataSearchKeys.clear();
+
+        key.setBusinessObjectFormatFileType(null);
+        businessObjectDataSearchKeys.add(key);
+        filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
+        filters.add(filter);
+
+        result = businessObjectDataDao.searchBusinessObjectData(filters);
+        assertEquals(2, result.size());
+
+    }
+
 }

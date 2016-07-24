@@ -32,8 +32,8 @@ public class JmsMessageDaoTest extends AbstractDaoTest
     public void testGetOldestJmsMessage() throws Exception
     {
         // Prepare database entries required for testing.
-        List<JmsMessageEntity> jmsMessageEntities = Arrays.asList(createJmsMessageEntity(JMS_QUEUE_NAME, MESSAGE_TEXT), createJmsMessageEntity(JMS_QUEUE_NAME_2,
-            MESSAGE_TEXT_2));
+        List<JmsMessageEntity> jmsMessageEntities = Arrays.asList(jmsMessageDaoTestHelper.createJmsMessageEntity(JMS_QUEUE_NAME, MESSAGE_TEXT),
+            jmsMessageDaoTestHelper.createJmsMessageEntity(JMS_QUEUE_NAME_2, MESSAGE_TEXT_2));
 
         // Retrieve the oldest JMS message.
         JmsMessageEntity oldestJmsMessageEntity = jmsMessageDao.getOldestJmsMessage();

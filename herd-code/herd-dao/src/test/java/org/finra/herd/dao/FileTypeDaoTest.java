@@ -33,7 +33,7 @@ public class FileTypeDaoTest extends AbstractDaoTest
     public void testGetFileTypeByCode()
     {
         // Create relative database entities.
-        createFileTypeEntity(FORMAT_FILE_TYPE_CODE, "Description of " + FORMAT_FILE_TYPE_CODE);
+        fileTypeDaoTestHelper.createFileTypeEntity(FORMAT_FILE_TYPE_CODE, "Description of " + FORMAT_FILE_TYPE_CODE);
 
         // Retrieve file type entity.
         FileTypeEntity fileTypeEntity = fileTypeDao.getFileTypeByCode(FORMAT_FILE_TYPE_CODE);
@@ -48,7 +48,7 @@ public class FileTypeDaoTest extends AbstractDaoTest
     public void testGetFileTypeByCodeInUpperCase()
     {
         // Create relative database entities.
-        createFileTypeEntity(FORMAT_FILE_TYPE_CODE.toLowerCase(), "Description of " + FORMAT_FILE_TYPE_CODE.toLowerCase());
+        fileTypeDaoTestHelper.createFileTypeEntity(FORMAT_FILE_TYPE_CODE.toLowerCase(), "Description of " + FORMAT_FILE_TYPE_CODE.toLowerCase());
 
         // Retrieve file type entity.
         FileTypeEntity fileTypeEntity = fileTypeDao.getFileTypeByCode(FORMAT_FILE_TYPE_CODE.toUpperCase());
@@ -63,7 +63,7 @@ public class FileTypeDaoTest extends AbstractDaoTest
     public void testGetFileTypeByCodeInLowerCase()
     {
         // Create relative database entities.
-        createFileTypeEntity(FORMAT_FILE_TYPE_CODE.toUpperCase(), "Description of " + FORMAT_FILE_TYPE_CODE.toUpperCase());
+        fileTypeDaoTestHelper.createFileTypeEntity(FORMAT_FILE_TYPE_CODE.toUpperCase(), "Description of " + FORMAT_FILE_TYPE_CODE.toUpperCase());
 
         // Retrieve file type entity.
         FileTypeEntity fileTypeEntity = fileTypeDao.getFileTypeByCode(FORMAT_FILE_TYPE_CODE.toLowerCase());
@@ -78,7 +78,7 @@ public class FileTypeDaoTest extends AbstractDaoTest
     public void testGetFileTypeByCodeInvalidCode()
     {
         // Create relative database entities.
-        createFileTypeEntity(FORMAT_FILE_TYPE_CODE, "Description of " + FORMAT_FILE_TYPE_CODE);
+        fileTypeDaoTestHelper.createFileTypeEntity(FORMAT_FILE_TYPE_CODE, "Description of " + FORMAT_FILE_TYPE_CODE);
 
         // Try to retrieve file type entity using an invalid code value.
         assertNull(fileTypeDao.getFileTypeByCode("I_DO_NOT_EXIST"));
@@ -88,8 +88,8 @@ public class FileTypeDaoTest extends AbstractDaoTest
     public void testGetFileTypeByCodeMultipleRecordsFound()
     {
         // Create relative database entities.
-        createFileTypeEntity(FORMAT_FILE_TYPE_CODE.toUpperCase(), "Description of " + FORMAT_FILE_TYPE_CODE.toUpperCase());
-        createFileTypeEntity(FORMAT_FILE_TYPE_CODE.toLowerCase(), "Description of " + FORMAT_FILE_TYPE_CODE.toLowerCase());
+        fileTypeDaoTestHelper.createFileTypeEntity(FORMAT_FILE_TYPE_CODE.toUpperCase(), "Description of " + FORMAT_FILE_TYPE_CODE.toUpperCase());
+        fileTypeDaoTestHelper.createFileTypeEntity(FORMAT_FILE_TYPE_CODE.toLowerCase(), "Description of " + FORMAT_FILE_TYPE_CODE.toLowerCase());
 
         try
         {
@@ -107,9 +107,9 @@ public class FileTypeDaoTest extends AbstractDaoTest
     public void testGetFileTypes() throws Exception
     {
         // Create and persist file type entities.
-        for (FileTypeKey key : getTestFileTypeKeys())
+        for (FileTypeKey key : fileTypeDaoTestHelper.getTestFileTypeKeys())
         {
-            createFileTypeEntity(key.getFileTypeCode());
+            fileTypeDaoTestHelper.createFileTypeEntity(key.getFileTypeCode());
         }
 
         // Retrieve a list of file type keys.
@@ -117,6 +117,6 @@ public class FileTypeDaoTest extends AbstractDaoTest
 
         // Validate the returned object.
         assertNotNull(resultFileTypeKeys);
-        assertTrue(resultFileTypeKeys.containsAll(getTestFileTypeKeys()));
+        assertTrue(resultFileTypeKeys.containsAll(fileTypeDaoTestHelper.getTestFileTypeKeys()));
     }
 }

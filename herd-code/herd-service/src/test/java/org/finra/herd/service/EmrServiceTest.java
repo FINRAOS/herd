@@ -35,6 +35,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 import javax.xml.bind.JAXBException;
 
 import com.amazonaws.AmazonServiceException;
@@ -86,8 +91,10 @@ import org.finra.herd.model.dto.AwsParamsDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.EmrClusterAlternateKeyDto;
 import org.finra.herd.model.jpa.EmrClusterCreationLogEntity;
+import org.finra.herd.model.jpa.EmrClusterCreationLogEntity_;
 import org.finra.herd.model.jpa.EmrClusterDefinitionEntity;
 import org.finra.herd.model.jpa.NamespaceEntity;
+import org.finra.herd.model.jpa.NamespaceEntity_;
 import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.EmrClusterDefinitionDaoHelper;
 import org.finra.herd.service.helper.EmrStepHelper;
@@ -2417,5 +2424,30 @@ public class EmrServiceTest extends AbstractServiceTest
             throw new IllegalArgumentException("Error staging data", e);
         }
         return emrCluster;
+    }
+
+    /**
+     * Returns a list of {@link EmrClusterCreationLogEntity} objects for the given cluster namespace, cluster definition name, and EMR cluster name. All the
+     * given parameters are case insensitive. The returned list's order is not guaranteed.
+     *
+     * @param namespace - EMR cluster namespace
+     * @param definitionName - EMR cluster definition name
+     * @param clusterName - EMR cluster name
+     *
+     * @return list of EMR cluster creation logs
+     */
+    private List<EmrClusterCreationLogEntity> getEmrClusterCreationLogEntities(String namespace, String definitionName, String clusterName)
+    {
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<EmrClusterCreationLogEntity> query = builder.createQuery(EmrClusterCreationLogEntity.class);
+        Root<EmrClusterCreationLogEntity> emrClusterCreationLogEntity = query.from(EmrClusterCreationLogEntity.class);
+        Join<?, NamespaceEntity> namespaceEntity = emrClusterCreationLogEntity.join(EmrClusterCreationLogEntity_.namespace);
+        Predicate namespacePredicate = builder.equal(builder.upper(namespaceEntity.get(NamespaceEntity_.code)), namespace.toUpperCase());
+        Predicate definitionNamePredicate =
+            builder.equal(builder.upper(emrClusterCreationLogEntity.get(EmrClusterCreationLogEntity_.emrClusterDefinitionName)), definitionName.toUpperCase());
+        Predicate clusterNamePredicate =
+            builder.equal(builder.upper(emrClusterCreationLogEntity.get(EmrClusterCreationLogEntity_.emrClusterName)), clusterName.toUpperCase());
+        query.select(emrClusterCreationLogEntity).where(builder.and(namespacePredicate, definitionNamePredicate, clusterNamePredicate));
+        return entityManager.createQuery(query).getResultList();
     }
 }

@@ -95,7 +95,7 @@ public abstract class AbstractCoreTest
     /**
      * Returns a random suffix.
      */
-    protected static String getRandomSuffix()
+    public static String getRandomSuffix()
     {
         return String.format("%.5f", Math.random()).substring(2, 7);
     }

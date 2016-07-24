@@ -31,31 +31,31 @@ public class BusinessObjectDefinitionDaoTest extends AbstractDaoTest
     {
         // Create two business object definitions having the same business object definition name.
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
-            createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
-        createBusinessObjectDefinitionEntity(NAMESPACE_2, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
+            businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
+        businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(NAMESPACE_2, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
 
         // Get the business object definition by key.
         BusinessObjectDefinitionEntity resultBusinessObjectDefinitionEntity =
             businessObjectDefinitionDao.getBusinessObjectDefinitionByKey(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME));
 
         // Validate the returned object.
-        validateBusinessObjectDefinitionEntity(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
-            resultBusinessObjectDefinitionEntity);
+        assertEquals(businessObjectDefinitionEntity, resultBusinessObjectDefinitionEntity);
     }
 
     @Test
     public void testGetBusinessObjectDefinitions() throws Exception
     {
         // Create and persist business object definition entities.
-        for (BusinessObjectDefinitionKey key : getTestBusinessObjectDefinitionKeys())
+        for (BusinessObjectDefinitionKey key : businessObjectDefinitionDaoTestHelper.getTestBusinessObjectDefinitionKeys())
         {
-            createBusinessObjectDefinitionEntity(key.getNamespace(), key.getBusinessObjectDefinitionName(), DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null);
+            businessObjectDefinitionDaoTestHelper
+                .createBusinessObjectDefinitionEntity(key.getNamespace(), key.getBusinessObjectDefinitionName(), DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null);
         }
 
         // Retrieve a list of business object definition keys for the specified namespace.
         List<BusinessObjectDefinitionKey> resultKeys = businessObjectDefinitionDao.getBusinessObjectDefinitions(NAMESPACE);
 
         // Validate the returned object.
-        assertEquals(getExpectedBusinessObjectDefinitionKeys(), resultKeys);
+        assertEquals(businessObjectDefinitionDaoTestHelper.getExpectedBusinessObjectDefinitionKeys(), resultKeys);
     }
 }
