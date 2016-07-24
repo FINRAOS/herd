@@ -84,7 +84,7 @@
       <jaxb:bindings node="//xs:complexType[@name='emrClusterDefinitionKeys']//xs:element[@name='emrClusterDefinitionKey']">
          <jaxb:property name="emrClusterDefinitionKeys"/>
       </jaxb:bindings>
-      <jaxb:bindings node="//xs:complexType[@name='businessObjectDataSearchFilter']//xs:element[@name='businessObjectDataSearchKey']">
+      <jaxb:bindings node="//xs:complexType[@name='businessObjectDataSearchKeys']//xs:element[@name='businessObjectDataSearchKey']">
          <jaxb:property name="businessObjectDataSearchKeys"/>
       </jaxb:bindings>
 

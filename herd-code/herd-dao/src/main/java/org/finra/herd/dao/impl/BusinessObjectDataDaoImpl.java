@@ -43,6 +43,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchFilter;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchKey;
+import org.finra.herd.model.api.xml.StorageUnit;
 import org.finra.herd.model.dto.StoragePolicyPriorityLevel;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity_;
@@ -817,7 +818,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         }
 
         
-        criteria.select(builder.array(namespaceEntity.get(NamespaceEntity_.code), businessObjectDefinitionEntity.get(BusinessObjectDefinitionEntity_.name),
+        criteria.select(builder.array(businessObjectDataEntity.get(BusinessObjectDataEntity_.id), namespaceEntity.get(NamespaceEntity_.code), businessObjectDefinitionEntity.get(BusinessObjectDefinitionEntity_.name),
         		businessObjectFormatEntity.get(BusinessObjectFormatEntity_.usage), fileTypeEntity.get(FileTypeEntity_.code),
         		businessObjectFormatEntity.get(BusinessObjectFormatEntity_.businessObjectFormatVersion))).where(predicate);
         
@@ -829,12 +830,18 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         List<Object[]> valueArray = entityManager.createQuery(criteria).setMaxResults(searchResultLimit).getResultList();
         for ( Object[] values :  valueArray) {
         	 BusinessObjectData bData = new BusinessObjectData();
-        	 bData.setNamespace((String) values[0]);
-        	 bData.setBusinessObjectDefinitionName((String) values[1]);
-        	 bData.setBusinessObjectFormatUsage((String) values[2]);
-        	 bData.setBusinessObjectFormatFileType((String) values[3]);
-        	 bData.setBusinessObjectFormatVersion((Integer) values[4]);
-        	
+        	 bData.setId((Integer)values[0]);
+        	 bData.setNamespace((String) values[1]);
+        	 bData.setBusinessObjectDefinitionName((String) values[2]);
+        	 bData.setBusinessObjectFormatUsage((String) values[3]);
+        	 bData.setBusinessObjectFormatFileType((String) values[4]);
+        	 bData.setBusinessObjectFormatVersion((Integer) values[5]);
+        	 
+        	 //to satisfy the required attributes of Bdata for now
+        	 bData.setPartitionKey("NA");
+        	 bData.setPartitionValue("NA");
+        	 bData.setStorageUnits(new ArrayList<StorageUnit>());
+
         	 businessObjectDataList.add(bData);     
         } 
         
