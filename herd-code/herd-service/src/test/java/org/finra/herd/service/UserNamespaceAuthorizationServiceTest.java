@@ -51,7 +51,7 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
         UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
 
         // Create and persist the relative database entities.
-        createNamespaceEntity(key.getNamespace());
+        namespaceDaoTestHelper.createNamespaceEntity(key.getNamespace());
 
         // Create a user namespace authorization.
         UserNamespaceAuthorization resultUserNamespaceAuthorization = userNamespaceAuthorizationService.createUserNamespaceAuthorization(
@@ -135,7 +135,7 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
         UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
 
         // Create and persist the relative database entities.
-        createNamespaceEntity(key.getNamespace());
+        namespaceDaoTestHelper.createNamespaceEntity(key.getNamespace());
 
         // Create a user namespace authorization using input parameters with leading and trailing empty spaces.
         UserNamespaceAuthorization resultUserNamespaceAuthorization = userNamespaceAuthorizationService.createUserNamespaceAuthorization(
@@ -154,7 +154,7 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
         UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
 
         // Create and persist the relative database entities.
-        createNamespaceEntity(key.getNamespace());
+        namespaceDaoTestHelper.createNamespaceEntity(key.getNamespace());
 
         // Create a user namespace authorization using uppercase input parameters.
         UserNamespaceAuthorization resultUserNamespaceAuthorization = userNamespaceAuthorizationService.createUserNamespaceAuthorization(
@@ -174,7 +174,7 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
         UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
 
         // Create and persist the relative database entities.
-        createNamespaceEntity(key.getNamespace());
+        namespaceDaoTestHelper.createNamespaceEntity(key.getNamespace());
 
         // Create a user namespace authorization using lowercase input parameters.
         UserNamespaceAuthorization resultUserNamespaceAuthorization = userNamespaceAuthorizationService.createUserNamespaceAuthorization(
@@ -259,7 +259,7 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
         UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
 
         // Create and persist the relative database entities.
-        createUserNamespaceAuthorizationEntity(key, SUPPORTED_NAMESPACE_PERMISSIONS);
+        userNamespaceAuthorizationDaoTestHelper.createUserNamespaceAuthorizationEntity(key, SUPPORTED_NAMESPACE_PERMISSIONS);
 
         // Try to create a user namespace authorization when it already exists.
         try
@@ -285,8 +285,8 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
         UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
 
         // Create and persist the relative database entities.
-        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity =
-            createUserNamespaceAuthorizationEntity(key, Arrays.asList(NamespacePermissionEnum.READ, NamespacePermissionEnum.WRITE));
+        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity = userNamespaceAuthorizationDaoTestHelper
+            .createUserNamespaceAuthorizationEntity(key, Arrays.asList(NamespacePermissionEnum.READ, NamespacePermissionEnum.WRITE));
 
         // Update a user namespace authorization.
         UserNamespaceAuthorization resultUserNamespaceAuthorization = userNamespaceAuthorizationService.updateUserNamespaceAuthorization(key,
@@ -377,8 +377,8 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
         UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
 
         // Create and persist the relative database entities.
-        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity =
-            createUserNamespaceAuthorizationEntity(key, Arrays.asList(NamespacePermissionEnum.READ, NamespacePermissionEnum.WRITE));
+        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity = userNamespaceAuthorizationDaoTestHelper
+            .createUserNamespaceAuthorizationEntity(key, Arrays.asList(NamespacePermissionEnum.READ, NamespacePermissionEnum.WRITE));
 
         // Update a user namespace authorization using input parameters with leading and trailing empty spaces.
         UserNamespaceAuthorization resultUserNamespaceAuthorization = userNamespaceAuthorizationService
@@ -397,8 +397,8 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
         UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
 
         // Create and persist the relative database entities.
-        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity =
-            createUserNamespaceAuthorizationEntity(key, Arrays.asList(NamespacePermissionEnum.READ, NamespacePermissionEnum.WRITE));
+        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity = userNamespaceAuthorizationDaoTestHelper
+            .createUserNamespaceAuthorizationEntity(key, Arrays.asList(NamespacePermissionEnum.READ, NamespacePermissionEnum.WRITE));
 
         // Update a user namespace authorization using uppercase input parameters.
         UserNamespaceAuthorization resultUserNamespaceAuthorization = userNamespaceAuthorizationService
@@ -417,8 +417,8 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
         UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
 
         // Create and persist the relative database entities.
-        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity =
-            createUserNamespaceAuthorizationEntity(key, Arrays.asList(NamespacePermissionEnum.READ, NamespacePermissionEnum.WRITE));
+        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity = userNamespaceAuthorizationDaoTestHelper
+            .createUserNamespaceAuthorizationEntity(key, Arrays.asList(NamespacePermissionEnum.READ, NamespacePermissionEnum.WRITE));
 
         // Update a user namespace authorization using lowercase input parameters.
         UserNamespaceAuthorization resultUserNamespaceAuthorization = userNamespaceAuthorizationService
@@ -477,7 +477,8 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
         UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
 
         // Create and persist the relative database entities.
-        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity = createUserNamespaceAuthorizationEntity(key, SUPPORTED_NAMESPACE_PERMISSIONS);
+        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity =
+            userNamespaceAuthorizationDaoTestHelper.createUserNamespaceAuthorizationEntity(key, SUPPORTED_NAMESPACE_PERMISSIONS);
 
         // Get a user namespace authorization.
         UserNamespaceAuthorization resultUserNamespaceAuthorization = userNamespaceAuthorizationService.getUserNamespaceAuthorization(key);
@@ -531,7 +532,7 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
         UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
 
         // Create and persist the relative database entities.
-        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity = createUserNamespaceAuthorizationEntity(key,
+        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity = userNamespaceAuthorizationDaoTestHelper.createUserNamespaceAuthorizationEntity(key,
             Arrays.asList(NamespacePermissionEnum.READ, NamespacePermissionEnum.WRITE, NamespacePermissionEnum.EXECUTE, NamespacePermissionEnum.GRANT));
 
         // Get a user namespace authorization using input parameters with leading and trailing empty spaces.
@@ -550,8 +551,8 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
         UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
 
         // Create and persist the relative database entities.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(key.getNamespace());
-        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity = createUserNamespaceAuthorizationEntity(key,
+        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(key.getNamespace());
+        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity = userNamespaceAuthorizationDaoTestHelper.createUserNamespaceAuthorizationEntity(key,
             Arrays.asList(NamespacePermissionEnum.READ, NamespacePermissionEnum.WRITE, NamespacePermissionEnum.EXECUTE, NamespacePermissionEnum.GRANT));
 
         // Get a user namespace authorization using uppercase input parameters.
@@ -570,8 +571,8 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
         UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
 
         // Create and persist the relative database entities.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(key.getNamespace());
-        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity = createUserNamespaceAuthorizationEntity(key,
+        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(key.getNamespace());
+        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity = userNamespaceAuthorizationDaoTestHelper.createUserNamespaceAuthorizationEntity(key,
             Arrays.asList(NamespacePermissionEnum.READ, NamespacePermissionEnum.WRITE, NamespacePermissionEnum.EXECUTE, NamespacePermissionEnum.GRANT));
 
         // Get a user namespace authorization using lowercase input parameters.
@@ -612,7 +613,8 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
         UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
 
         // Create and persist the relative database entities.
-        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity = createUserNamespaceAuthorizationEntity(key, SUPPORTED_NAMESPACE_PERMISSIONS);
+        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity =
+            userNamespaceAuthorizationDaoTestHelper.createUserNamespaceAuthorizationEntity(key, SUPPORTED_NAMESPACE_PERMISSIONS);
 
         // Validate that this user namespace authorization exists.
         assertNotNull(userNamespaceAuthorizationDao.getUserNamespaceAuthorizationByKey(key));
@@ -672,7 +674,7 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
         UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
 
         // Create and persist the relative database entities.
-        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity = createUserNamespaceAuthorizationEntity(key,
+        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity = userNamespaceAuthorizationDaoTestHelper.createUserNamespaceAuthorizationEntity(key,
             Arrays.asList(NamespacePermissionEnum.READ, NamespacePermissionEnum.WRITE, NamespacePermissionEnum.EXECUTE, NamespacePermissionEnum.GRANT));
 
         // Validate that this user namespace authorization exists.
@@ -697,7 +699,7 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
         UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
 
         // Create and persist the relative database entities.
-        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity = createUserNamespaceAuthorizationEntity(key,
+        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity = userNamespaceAuthorizationDaoTestHelper.createUserNamespaceAuthorizationEntity(key,
             Arrays.asList(NamespacePermissionEnum.READ, NamespacePermissionEnum.WRITE, NamespacePermissionEnum.EXECUTE, NamespacePermissionEnum.GRANT));
 
         // Validate that this user namespace authorization exists.
@@ -722,7 +724,7 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
         UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
 
         // Create and persist the relative database entities.
-        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity = createUserNamespaceAuthorizationEntity(key,
+        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity = userNamespaceAuthorizationDaoTestHelper.createUserNamespaceAuthorizationEntity(key,
             Arrays.asList(NamespacePermissionEnum.READ, NamespacePermissionEnum.WRITE, NamespacePermissionEnum.EXECUTE, NamespacePermissionEnum.GRANT));
 
         // Validate that this user namespace authorization exists.
@@ -773,7 +775,7 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
         // Create and persist the relative database entities.
         for (UserNamespaceAuthorizationKey key : keys)
         {
-            createUserNamespaceAuthorizationEntity(key, SUPPORTED_NAMESPACE_PERMISSIONS);
+            userNamespaceAuthorizationDaoTestHelper.createUserNamespaceAuthorizationEntity(key, SUPPORTED_NAMESPACE_PERMISSIONS);
         }
 
         // Get user namespace authorizations for the specified user id.
@@ -809,7 +811,8 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
         UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
 
         // Create and persist the relative database entities.
-        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity = createUserNamespaceAuthorizationEntity(key, SUPPORTED_NAMESPACE_PERMISSIONS);
+        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity =
+            userNamespaceAuthorizationDaoTestHelper.createUserNamespaceAuthorizationEntity(key, SUPPORTED_NAMESPACE_PERMISSIONS);
 
         // Get user namespace authorizations for the specified user id using user id value with leading and trailing empty spaces.
         UserNamespaceAuthorizations resultUserNamespaceAuthorizations =
@@ -828,7 +831,8 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
         UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
 
         // Create and persist the relative database entities.
-        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity = createUserNamespaceAuthorizationEntity(key, SUPPORTED_NAMESPACE_PERMISSIONS);
+        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity =
+            userNamespaceAuthorizationDaoTestHelper.createUserNamespaceAuthorizationEntity(key, SUPPORTED_NAMESPACE_PERMISSIONS);
 
         // Get user namespace authorizations for the specified user id using uppercase user id value.
         UserNamespaceAuthorizations resultUserNamespaceAuthorizations =
@@ -847,7 +851,8 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
         UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
 
         // Create and persist the relative database entities.
-        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity = createUserNamespaceAuthorizationEntity(key, SUPPORTED_NAMESPACE_PERMISSIONS);
+        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity =
+            userNamespaceAuthorizationDaoTestHelper.createUserNamespaceAuthorizationEntity(key, SUPPORTED_NAMESPACE_PERMISSIONS);
 
         // Get user namespace authorizations for the specified user id using lowercase user id value.
         UserNamespaceAuthorizations resultUserNamespaceAuthorizations =
@@ -883,7 +888,7 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
         // Create and persist the relative database entities.
         for (UserNamespaceAuthorizationKey key : keys)
         {
-            createUserNamespaceAuthorizationEntity(key, SUPPORTED_NAMESPACE_PERMISSIONS);
+            userNamespaceAuthorizationDaoTestHelper.createUserNamespaceAuthorizationEntity(key, SUPPORTED_NAMESPACE_PERMISSIONS);
         }
 
         // Get user namespace authorizations for the specified namespace.
@@ -919,7 +924,8 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
         UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
 
         // Create and persist the relative database entities.
-        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity = createUserNamespaceAuthorizationEntity(key, SUPPORTED_NAMESPACE_PERMISSIONS);
+        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity =
+            userNamespaceAuthorizationDaoTestHelper.createUserNamespaceAuthorizationEntity(key, SUPPORTED_NAMESPACE_PERMISSIONS);
 
         // Get user namespace authorizations for the specified namespace using namespace code with leading and trailing empty spaces.
         UserNamespaceAuthorizations resultUserNamespaceAuthorizations =
@@ -938,7 +944,8 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
         UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
 
         // Create and persist the relative database entities.
-        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity = createUserNamespaceAuthorizationEntity(key, SUPPORTED_NAMESPACE_PERMISSIONS);
+        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity =
+            userNamespaceAuthorizationDaoTestHelper.createUserNamespaceAuthorizationEntity(key, SUPPORTED_NAMESPACE_PERMISSIONS);
 
         // Get user namespace authorizations for the specified namespace using uppercase namespace code.
         UserNamespaceAuthorizations resultUserNamespaceAuthorizations =
@@ -957,7 +964,8 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
         UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
 
         // Create and persist the relative database entities.
-        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity = createUserNamespaceAuthorizationEntity(key, SUPPORTED_NAMESPACE_PERMISSIONS);
+        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity =
+            userNamespaceAuthorizationDaoTestHelper.createUserNamespaceAuthorizationEntity(key, SUPPORTED_NAMESPACE_PERMISSIONS);
 
         // Get user namespace authorizations for the specified namespace using lowercase namespace code.
         UserNamespaceAuthorizations resultUserNamespaceAuthorizations =
@@ -988,7 +996,7 @@ public class UserNamespaceAuthorizationServiceTest extends AbstractServiceTest
     public void testGetUserNamespaceAuthorizationsByNamespaceEmptyList() throws Exception
     {
         // Create and persist the relative database entities.
-        createNamespaceEntity(NAMESPACE);
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
 
         // Retrieve an empty list of user namespace authorizations.
         UserNamespaceAuthorizations resultUserNamespaceAuthorizations = userNamespaceAuthorizationService.getUserNamespaceAuthorizationsByNamespace(NAMESPACE);

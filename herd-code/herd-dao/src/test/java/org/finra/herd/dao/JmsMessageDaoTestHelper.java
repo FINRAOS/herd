@@ -34,7 +34,7 @@ public class JmsMessageDaoTestHelper
      *
      * @return the newly created JMS message entity
      */
-    protected JmsMessageEntity createJmsMessageEntity(String jmsQueueName, String messageText)
+    public JmsMessageEntity createJmsMessageEntity(String jmsQueueName, String messageText)
     {
         JmsMessageEntity jmsMessageEntity = new JmsMessageEntity();
         jmsMessageEntity.setJmsQueueName(jmsQueueName);

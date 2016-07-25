@@ -32,7 +32,7 @@ public class StorageFileDaoTestHelper
      *
      * @return the newly created storage file entity.
      */
-    protected StorageFileEntity createStorageFileEntity(StorageUnitEntity storageUnitEntity, String filePath, Long fileSizeInBytes, Long rowCount)
+    public StorageFileEntity createStorageFileEntity(StorageUnitEntity storageUnitEntity, String filePath, Long fileSizeInBytes, Long rowCount)
     {
         StorageFileEntity storageFileEntity = new StorageFileEntity();
         storageFileEntity.setStorageUnit(storageUnitEntity);

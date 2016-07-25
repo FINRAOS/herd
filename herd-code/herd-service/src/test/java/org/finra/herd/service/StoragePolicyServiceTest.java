@@ -509,7 +509,7 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         createDatabaseEntitiesForStoragePolicyTesting();
 
         // Create an S3 storage without any attributes.
-        createStorageEntity(STORAGE_NAME_3, StoragePlatformEntity.S3);
+        storageDaoTestHelper.createStorageEntity(STORAGE_NAME_3, StoragePlatformEntity.S3);
 
         StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
 
@@ -537,8 +537,9 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         createDatabaseEntitiesForStoragePolicyTesting();
 
         // Create an S3 storage with the bucket name configured, but without the S3 path prefix validation option configured.
-        createStorageEntity(STORAGE_NAME_3, StoragePlatformEntity.S3, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME),
-            S3_BUCKET_NAME);
+        storageDaoTestHelper
+            .createStorageEntity(STORAGE_NAME_3, StoragePlatformEntity.S3, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME),
+                S3_BUCKET_NAME);
 
         StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
 
@@ -569,7 +570,7 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         List<Attribute> attributes = new ArrayList<>();
         attributes.add(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), S3_BUCKET_NAME));
         attributes.add(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_PATH_PREFIX), Boolean.TRUE.toString()));
-        createStorageEntity(STORAGE_NAME_3, StoragePlatformEntity.S3, attributes);
+        storageDaoTestHelper.createStorageEntity(STORAGE_NAME_3, StoragePlatformEntity.S3, attributes);
 
         StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
 
@@ -620,7 +621,7 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         createDatabaseEntitiesForStoragePolicyTesting();
 
         // Create a Glacier storage without any attributes.
-        createStorageEntity(STORAGE_NAME_3, StoragePlatformEntity.GLACIER);
+        storageDaoTestHelper.createStorageEntity(STORAGE_NAME_3, StoragePlatformEntity.GLACIER);
 
         StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
 
@@ -647,8 +648,9 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
 
         // Create and persist a storage policy entity.
-        createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-            FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+        storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Try to create a storage policy when it already exists.
         try
@@ -676,8 +678,8 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         createDatabaseEntitiesForStoragePolicyTesting();
 
         // Create and persist a storage policy entity.
-        StoragePolicyEntity storagePolicyEntity =
-            createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE_2, STORAGE_POLICY_RULE_VALUE_2, BDEF_NAMESPACE_2, BDEF_NAME_2,
+        StoragePolicyEntity storagePolicyEntity = storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE_2, STORAGE_POLICY_RULE_VALUE_2, BDEF_NAMESPACE_2, BDEF_NAME_2,
                 FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, STORAGE_NAME_3, STORAGE_NAME_4, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION,
                 LATEST_VERSION_FLAG_SET);
 
@@ -700,8 +702,10 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
 
         // Create and persist a storage policy entity.
-        createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE_2, STORAGE_POLICY_RULE_VALUE_2, BDEF_NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2,
-            FORMAT_FILE_TYPE_CODE_2, STORAGE_NAME_3, STORAGE_NAME_4, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+        storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE_2, STORAGE_POLICY_RULE_VALUE_2, BDEF_NAMESPACE_2, BDEF_NAME_2,
+                FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, STORAGE_NAME_3, STORAGE_NAME_4, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION,
+                LATEST_VERSION_FLAG_SET);
 
         // Try to update a storage policy when storage policy namespace is not specified.
         try
@@ -856,8 +860,8 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         createDatabaseEntitiesForStoragePolicyTesting();
 
         // Create and persist a storage policy entity.
-        StoragePolicyEntity storagePolicyEntity =
-            createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE_2, STORAGE_POLICY_RULE_VALUE_2, BDEF_NAMESPACE_2, BDEF_NAME_2,
+        StoragePolicyEntity storagePolicyEntity = storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE_2, STORAGE_POLICY_RULE_VALUE_2, BDEF_NAMESPACE_2, BDEF_NAME_2,
                 FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, STORAGE_NAME_3, STORAGE_NAME_4, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION,
                 LATEST_VERSION_FLAG_SET);
 
@@ -883,8 +887,8 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         createDatabaseEntitiesForStoragePolicyTesting();
 
         // Create and persist a storage policy entity.
-        StoragePolicyEntity storagePolicyEntity =
-            createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE_2, STORAGE_POLICY_RULE_VALUE_2, BDEF_NAMESPACE_2, BDEF_NAME_2,
+        StoragePolicyEntity storagePolicyEntity = storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE_2, STORAGE_POLICY_RULE_VALUE_2, BDEF_NAMESPACE_2, BDEF_NAME_2,
                 FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, STORAGE_NAME_3, STORAGE_NAME_4, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION,
                 LATEST_VERSION_FLAG_SET);
 
@@ -910,8 +914,8 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         createDatabaseEntitiesForStoragePolicyTesting();
 
         // Create and persist a storage policy entity.
-        StoragePolicyEntity storagePolicyEntity =
-            createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE_2, STORAGE_POLICY_RULE_VALUE_2, BDEF_NAMESPACE_2, BDEF_NAME_2,
+        StoragePolicyEntity storagePolicyEntity = storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE_2, STORAGE_POLICY_RULE_VALUE_2, BDEF_NAMESPACE_2, BDEF_NAME_2,
                 FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, STORAGE_NAME_3, STORAGE_NAME_4, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION,
                 LATEST_VERSION_FLAG_SET);
 
@@ -939,8 +943,8 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         createDatabaseEntitiesForStoragePolicyTesting();
 
         // Create and persist a storage policy entity.
-        StoragePolicyEntity storagePolicyEntity =
-            createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE_2, STORAGE_POLICY_RULE_VALUE_2, BDEF_NAMESPACE_2, BDEF_NAME_2,
+        StoragePolicyEntity storagePolicyEntity = storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE_2, STORAGE_POLICY_RULE_VALUE_2, BDEF_NAMESPACE_2, BDEF_NAME_2,
                 FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, STORAGE_NAME_3, STORAGE_NAME_4, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION,
                 LATEST_VERSION_FLAG_SET);
 
@@ -968,8 +972,8 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         createDatabaseEntitiesForStoragePolicyTesting();
 
         // Create and persist a storage policy entity.
-        StoragePolicyEntity storagePolicyEntity =
-            createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE_2, STORAGE_POLICY_RULE_VALUE_2, BDEF_NAMESPACE_2, BDEF_NAME_2,
+        StoragePolicyEntity storagePolicyEntity = storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE_2, STORAGE_POLICY_RULE_VALUE_2, BDEF_NAMESPACE_2, BDEF_NAME_2,
                 FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, STORAGE_NAME_3, STORAGE_NAME_4, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION,
                 LATEST_VERSION_FLAG_SET);
 
@@ -997,8 +1001,9 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         createDatabaseEntitiesForStoragePolicyTesting();
 
         // Create and persist a storage policy entity.
-        createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-            FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+        storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         StoragePolicyUpdateRequest request;
 
@@ -1122,8 +1127,10 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         createDatabaseEntitiesForStoragePolicyTesting();
 
         // Create and persist a storage policy entity.
-        createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE_2, STORAGE_POLICY_RULE_VALUE_2, BDEF_NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2,
-            FORMAT_FILE_TYPE_CODE_2, STORAGE_NAME_3, STORAGE_NAME_4, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+        storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE_2, STORAGE_POLICY_RULE_VALUE_2, BDEF_NAMESPACE_2, BDEF_NAME_2,
+                FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, STORAGE_NAME_3, STORAGE_NAME_4, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION,
+                LATEST_VERSION_FLAG_SET);
 
         // Try to update a storage policy using storage of a non-S3 storage platform type.
         StoragePolicyUpdateRequest request =
@@ -1150,11 +1157,13 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         createDatabaseEntitiesForStoragePolicyTesting();
 
         // Create and persist a storage policy entity.
-        createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE_2, STORAGE_POLICY_RULE_VALUE_2, BDEF_NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2,
-            FORMAT_FILE_TYPE_CODE_2, STORAGE_NAME_3, STORAGE_NAME_4, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+        storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE_2, STORAGE_POLICY_RULE_VALUE_2, BDEF_NAMESPACE_2, BDEF_NAME_2,
+                FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, STORAGE_NAME_3, STORAGE_NAME_4, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION,
+                LATEST_VERSION_FLAG_SET);
 
         // Create an S3 storage without any attributes.
-        createStorageEntity(STORAGE_NAME_5, StoragePlatformEntity.S3);
+        storageDaoTestHelper.createStorageEntity(STORAGE_NAME_5, StoragePlatformEntity.S3);
 
         // Try to update a storage policy when storage policy filter storage has no S3 bucket name attribute configured.
         StoragePolicyUpdateRequest request =
@@ -1182,12 +1191,15 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         createDatabaseEntitiesForStoragePolicyTesting();
 
         // Create and persist a storage policy entity.
-        createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE_2, STORAGE_POLICY_RULE_VALUE_2, BDEF_NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2,
-            FORMAT_FILE_TYPE_CODE_2, STORAGE_NAME_3, STORAGE_NAME_4, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+        storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE_2, STORAGE_POLICY_RULE_VALUE_2, BDEF_NAMESPACE_2, BDEF_NAME_2,
+                FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, STORAGE_NAME_3, STORAGE_NAME_4, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION,
+                LATEST_VERSION_FLAG_SET);
 
         // Create an S3 storage with the bucket name configured, but without the S3 path prefix validation option configured.
-        createStorageEntity(STORAGE_NAME_5, StoragePlatformEntity.S3, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME),
-            S3_BUCKET_NAME);
+        storageDaoTestHelper
+            .createStorageEntity(STORAGE_NAME_5, StoragePlatformEntity.S3, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME),
+                S3_BUCKET_NAME);
 
         // Try to update a storage policy when storage policy filter storage has no S3 path prefix validation enabled.
         StoragePolicyUpdateRequest request =
@@ -1214,8 +1226,10 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         createDatabaseEntitiesForStoragePolicyTesting();
 
         // Create and persist a storage policy entity.
-        createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE_2, STORAGE_POLICY_RULE_VALUE_2, BDEF_NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2,
-            FORMAT_FILE_TYPE_CODE_2, STORAGE_NAME_3, STORAGE_NAME_4, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+        storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE_2, STORAGE_POLICY_RULE_VALUE_2, BDEF_NAMESPACE_2, BDEF_NAME_2,
+                FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, STORAGE_NAME_3, STORAGE_NAME_4, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION,
+                LATEST_VERSION_FLAG_SET);
 
 
         // Create an S3 storage with the bucket name configured, the S3 path prefix validation enabled, but without S3 file existence validation enabled.
@@ -1223,7 +1237,7 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         List<Attribute> attributes = new ArrayList<>();
         attributes.add(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), S3_BUCKET_NAME));
         attributes.add(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_PATH_PREFIX), Boolean.TRUE.toString()));
-        createStorageEntity(STORAGE_NAME_5, StoragePlatformEntity.S3, attributes);
+        storageDaoTestHelper.createStorageEntity(STORAGE_NAME_5, StoragePlatformEntity.S3, attributes);
 
         // Try to update a storage policy when storage policy filter storage has no S3 file existence validation enabled.
         StoragePolicyUpdateRequest request =
@@ -1250,8 +1264,10 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         createDatabaseEntitiesForStoragePolicyTesting();
 
         // Create and persist a storage policy entity.
-        createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE_2, STORAGE_POLICY_RULE_VALUE_2, BDEF_NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2,
-            FORMAT_FILE_TYPE_CODE_2, STORAGE_NAME_3, STORAGE_NAME_4, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+        storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE_2, STORAGE_POLICY_RULE_VALUE_2, BDEF_NAMESPACE_2, BDEF_NAME_2,
+                FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, STORAGE_NAME_3, STORAGE_NAME_4, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION,
+                LATEST_VERSION_FLAG_SET);
 
         // Try to update a storage policy using destination storage of a non-GLACIER storage platform type.
         StoragePolicyUpdateRequest request =
@@ -1278,11 +1294,13 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         createDatabaseEntitiesForStoragePolicyTesting();
 
         // Create and persist a storage policy entity.
-        createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE_2, STORAGE_POLICY_RULE_VALUE_2, BDEF_NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2,
-            FORMAT_FILE_TYPE_CODE_2, STORAGE_NAME_3, STORAGE_NAME_4, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+        storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE_2, STORAGE_POLICY_RULE_VALUE_2, BDEF_NAMESPACE_2, BDEF_NAME_2,
+                FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, STORAGE_NAME_3, STORAGE_NAME_4, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION,
+                LATEST_VERSION_FLAG_SET);
 
         // Create a Glacier storage without any attributes.
-        createStorageEntity(STORAGE_NAME_5, StoragePlatformEntity.GLACIER);
+        storageDaoTestHelper.createStorageEntity(STORAGE_NAME_5, StoragePlatformEntity.GLACIER);
 
         // Try to update a storage policy when destination storage has no Glacier vault name attribute configured.
         StoragePolicyUpdateRequest request =
@@ -1330,8 +1348,8 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
 
         // Create and persist a storage policy entity.
-        StoragePolicyEntity storagePolicyEntity =
-            createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+        StoragePolicyEntity storagePolicyEntity = storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
                 FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Retrieve the storage policy.
@@ -1376,8 +1394,8 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
 
         // Create and persist a storage policy entity.
-        StoragePolicyEntity storagePolicyEntity =
-            createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+        StoragePolicyEntity storagePolicyEntity = storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
                 FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Retrieve the storage policy using input parameters with leading and trailing empty spaces.
@@ -1397,8 +1415,8 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
 
         // Create and persist a storage policy entity.
-        StoragePolicyEntity storagePolicyEntity =
-            createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+        StoragePolicyEntity storagePolicyEntity = storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
                 FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Retrieve the storage policy using upper case input parameters.
@@ -1418,8 +1436,8 @@ public class StoragePolicyServiceTest extends AbstractServiceTest
         StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
 
         // Create and persist a storage policy entity.
-        StoragePolicyEntity storagePolicyEntity =
-            createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+        StoragePolicyEntity storagePolicyEntity = storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
                 FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Retrieve the storage policy using lower case input parameters.

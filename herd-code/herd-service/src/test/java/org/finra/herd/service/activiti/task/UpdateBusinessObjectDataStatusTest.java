@@ -42,10 +42,10 @@ public class UpdateBusinessObjectDataStatusTest extends HerdActivitiServiceTaskT
                 DATA_VERSION);
 
         // Create a business object data entity.
-        createBusinessObjectDataEntity(businessObjectDataKey, LATEST_VERSION_FLAG_SET, BDATA_STATUS);
+        businessObjectDataDaoTestHelper.createBusinessObjectDataEntity(businessObjectDataKey, LATEST_VERSION_FLAG_SET, BDATA_STATUS);
 
         // Create a business object data status entity.
-        createBusinessObjectDataStatusEntity(BDATA_STATUS_2);
+        businessObjectDataStatusDaoTestHelper.createBusinessObjectDataStatusEntity(BDATA_STATUS_2);
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
 
@@ -109,10 +109,10 @@ public class UpdateBusinessObjectDataStatusTest extends HerdActivitiServiceTaskT
                 NO_SUBPARTITION_VALUES, DATA_VERSION);
 
         // Create a business object data entity.
-        createBusinessObjectDataEntity(businessObjectDataKey, LATEST_VERSION_FLAG_SET, BDATA_STATUS);
+        businessObjectDataDaoTestHelper.createBusinessObjectDataEntity(businessObjectDataKey, LATEST_VERSION_FLAG_SET, BDATA_STATUS);
 
         // Create a business object data status entity.
-        createBusinessObjectDataStatusEntity(BDATA_STATUS_2);
+        businessObjectDataStatusDaoTestHelper.createBusinessObjectDataStatusEntity(BDATA_STATUS_2);
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
 
@@ -156,10 +156,10 @@ public class UpdateBusinessObjectDataStatusTest extends HerdActivitiServiceTaskT
                 NO_SUBPARTITION_VALUES, DATA_VERSION);
 
         // Create a business object data entity.
-        createBusinessObjectDataEntity(businessObjectDataKey, LATEST_VERSION_FLAG_SET, BDATA_STATUS);
+        businessObjectDataDaoTestHelper.createBusinessObjectDataEntity(businessObjectDataKey, LATEST_VERSION_FLAG_SET, BDATA_STATUS);
 
         // Create a business object data status entity.
-        createBusinessObjectDataStatusEntity(BDATA_STATUS_2);
+        businessObjectDataStatusDaoTestHelper.createBusinessObjectDataStatusEntity(BDATA_STATUS_2);
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
 

@@ -362,6 +362,9 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String OOZIE_WORKFLOW_LOCATION = "UT_Oozie_workflow_2" + RANDOM_SUFFIX;
 
+    public static final String[][] PARTITION_COLUMNS =
+        new String[][] {{"DATE", null}, {"STRING", null}, {"INT", null}, {"NUMBER", null}, {"BOOLEAN", null}, {"NUMBER", null}, {"NUMBER", null}};
+
     public static final String PARTITION_KEY = "UT_PartitionKey" + RANDOM_SUFFIX;
 
     public static final String PARTITION_KEY_GROUP = "UT_Calendar_A" + RANDOM_SUFFIX;
@@ -412,6 +415,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String SCHEMA_NULL_VALUE_BACKSLASH_N = "\\N";
 
     public static final String SCHEMA_NULL_VALUE_NULL_WORD = "NULL";
+
+    public static final String SCHEMA_PARTITION_COLUMN_NAME_PREFIX = "Prtn-Clmn-Name";
 
     public static final Integer SECOND_DATA_VERSION = 1;
 

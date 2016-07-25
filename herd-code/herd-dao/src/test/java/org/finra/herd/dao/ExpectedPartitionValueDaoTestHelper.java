@@ -142,13 +142,15 @@ public class ExpectedPartitionValueDaoTestHelper
     }
 
     /**
-     * Returns an unsorted list of test expected partition values.
+     * Returns a sorted list of test expected partition values.
      *
-     * @return the unsorted list of expected partition values
+     * @return the list of expected partition values in ascending order
      */
-    public List<String> getTestUnsortedExpectedPartitionValues()
+    public List<String> getTestSortedExpectedPartitionValues(int count)
     {
-        return Arrays.asList("2014-04-02", "2014-04-04", "2014-04-03", "2014-04-08", "2014-04-07", "2014-04-05", "2014-04-06");
+        List<String> expectedPartitionValues = getTestUnsortedExpectedPartitionValues(count);
+        Collections.sort(expectedPartitionValues);
+        return expectedPartitionValues;
     }
 
     /**
@@ -160,6 +162,33 @@ public class ExpectedPartitionValueDaoTestHelper
     {
         List<String> expectedPartitionValues = getTestUnsortedExpectedPartitionValues();
         Collections.sort(expectedPartitionValues);
+        return expectedPartitionValues;
+    }
+
+    /**
+     * Returns an unsorted list of test expected partition values.
+     *
+     * @return the unsorted list of expected partition values
+     */
+    public List<String> getTestUnsortedExpectedPartitionValues()
+    {
+        return Arrays.asList("2014-04-02", "2014-04-04", "2014-04-03", "2014-04-08", "2014-04-07", "2014-04-05", "2014-04-06");
+    }
+
+    /**
+     * Returns an unsorted list of test expected partition values.
+     *
+     * @return the unsorted list of expected partition values
+     */
+    public List<String> getTestUnsortedExpectedPartitionValues(int count)
+    {
+        List<String> expectedPartitionValues = new ArrayList<>();
+
+        for (int i = 0; i < count; i++)
+        {
+            expectedPartitionValues.add(String.format("%d%s", i, AbstractDaoTest.RANDOM_SUFFIX));
+        }
+
         return expectedPartitionValues;
     }
 }

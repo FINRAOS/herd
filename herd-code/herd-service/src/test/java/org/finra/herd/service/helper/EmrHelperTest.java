@@ -95,7 +95,7 @@ public class EmrHelperTest extends AbstractServiceTest
     public void testCreateEmrClusterBlankTags() throws Exception
     {
         // Create the namespace entity.
-        createNamespaceEntity(NAMESPACE);
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
 
         String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
 
@@ -142,9 +142,9 @@ public class EmrHelperTest extends AbstractServiceTest
     public void testEmrAddStepsAllTypesNegativeTestCase() throws Exception
     {
         // Create the namespace entity.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
+        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
 
-        createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
+        emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
 
         EmrClusterCreateRequest request = getNewEmrClusterCreateRequest();

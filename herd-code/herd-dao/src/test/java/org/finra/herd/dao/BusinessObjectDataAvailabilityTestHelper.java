@@ -43,6 +43,9 @@ public class BusinessObjectDataAvailabilityTestHelper
     private BusinessObjectFormatDaoTestHelper businessObjectFormatDaoTestHelper;
 
     @Autowired
+    private SchemaColumnDaoTestHelper schemaColumnDaoTestHelper;
+
+    @Autowired
     private StorageDao storageDao;
 
     @Autowired
@@ -62,6 +65,18 @@ public class BusinessObjectDataAvailabilityTestHelper
     {
         createDatabaseEntitiesForBusinessObjectDataAvailabilityTesting(partitionKeyGroupName, columns, partitionColumns, partitionColumnPosition,
             subPartitionValues, allowDuplicateBusinessObjectData, Arrays.asList(AbstractDaoTest.STORAGE_NAME));
+    }
+
+    /**
+     * Creates relative database entities required for the business object data availability service unit tests.
+     *
+     * @param partitionKeyGroupName the name of the partition key group
+     */
+    public void createDatabaseEntitiesForBusinessObjectDataAvailabilityTesting(String partitionKeyGroupName)
+    {
+        createDatabaseEntitiesForBusinessObjectDataAvailabilityTesting(partitionKeyGroupName, schemaColumnDaoTestHelper.getTestSchemaColumns(),
+            schemaColumnDaoTestHelper.getTestPartitionColumns(), BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+            AbstractDaoTest.NO_SUBPARTITION_VALUES, AbstractDaoTest.ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
     }
 
     /**

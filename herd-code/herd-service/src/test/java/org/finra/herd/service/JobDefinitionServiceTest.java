@@ -70,7 +70,7 @@ public class JobDefinitionServiceTest extends AbstractServiceTest
         String invalidJobName = TEST_ACTIVITI_NAMESPACE_CD;
 
         // Create the namespace entity.
-        createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
+        namespaceDaoTestHelper.createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
         JobDefinitionCreateRequest request = createJobDefinitionCreateRequest();
 
         // Enter the invalid job name.
@@ -100,7 +100,7 @@ public class JobDefinitionServiceTest extends AbstractServiceTest
     public void testCreateJobDefinitionAlreadyExists() throws Exception
     {
         // Create the namespace entity.
-        createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
+        namespaceDaoTestHelper.createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
 
         // Create and persist a valid job definition.
         JobDefinitionCreateRequest request = createJobDefinitionCreateRequest();
@@ -118,7 +118,7 @@ public class JobDefinitionServiceTest extends AbstractServiceTest
     public void testCreateJobDefinitionInvalidActivitiXml() throws Exception
     {
         // Create the namespace entity.
-        createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
+        namespaceDaoTestHelper.createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
 
         // Create and persist a valid job definition.
         JobDefinitionCreateRequest request = createJobDefinitionCreateRequest();
@@ -141,7 +141,7 @@ public class JobDefinitionServiceTest extends AbstractServiceTest
     public void testCreateJobDefinitionWithParams() throws Exception
     {
         // Create the namespace entity.
-        createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
+        namespaceDaoTestHelper.createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
 
         // Create and persist a valid job definition.
         JobDefinitionCreateRequest request = createJobDefinitionCreateRequest();
@@ -165,7 +165,7 @@ public class JobDefinitionServiceTest extends AbstractServiceTest
     public void testCreateJobDefinitionWithNoParams() throws Exception
     {
         // Create the namespace entity.
-        createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
+        namespaceDaoTestHelper.createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
 
         // Create and persist a valid job definition.
         JobDefinitionCreateRequest request = createJobDefinitionCreateRequest();
@@ -183,7 +183,7 @@ public class JobDefinitionServiceTest extends AbstractServiceTest
     public void testCreateJobDefinitionInvalidActivitiElement() throws Exception
     {
         // Create the namespace entity.
-        createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
+        namespaceDaoTestHelper.createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
 
         // Create and persist a valid job definition.
         JobDefinitionCreateRequest request = createJobDefinitionCreateRequest();
@@ -211,7 +211,7 @@ public class JobDefinitionServiceTest extends AbstractServiceTest
     {
         S3PropertiesLocation s3PropertiesLocation = getS3PropertiesLocation();
 
-        createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
+        namespaceDaoTestHelper.createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
 
         JobDefinitionCreateRequest request = createJobDefinitionCreateRequest();
         request.setS3PropertiesLocation(s3PropertiesLocation);
@@ -291,7 +291,7 @@ public class JobDefinitionServiceTest extends AbstractServiceTest
         parameters.add(parameter);
 
         // Create the namespace entity.
-        createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
+        namespaceDaoTestHelper.createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
 
         // Create the job definition in the database.
         JobDefinition jobDefinition = jobDefinitionService.createJobDefinition(createRequest, false);
@@ -334,7 +334,7 @@ public class JobDefinitionServiceTest extends AbstractServiceTest
             .replace(TEST_ACTIVITI_NAMESPACE_CD + "." + TEST_ACTIVITI_JOB_NAME, TEST_ACTIVITI_NAMESPACE_CD + "." + INVALID_NAME));
 
         // Create the namespace entity.
-        createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
+        namespaceDaoTestHelper.createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
 
         // Try to update a job definition that has a namespace that exists, but a job name that doesn't exist.
         jobDefinitionService.updateJobDefinition(TEST_ACTIVITI_NAMESPACE_CD, INVALID_NAME, updateRequest, false);
@@ -346,7 +346,7 @@ public class JobDefinitionServiceTest extends AbstractServiceTest
         S3PropertiesLocation s3PropertiesLocation = getS3PropertiesLocation();
 
         // Create the namespace entity.
-        createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
+        namespaceDaoTestHelper.createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
 
         // Create job definition create request using hard coded test values.
         JobDefinitionCreateRequest createRequest = createJobDefinitionCreateRequest();
@@ -378,7 +378,7 @@ public class JobDefinitionServiceTest extends AbstractServiceTest
         S3PropertiesLocation s3PropertiesLocation = getS3PropertiesLocation();
 
         // Create the namespace entity.
-        createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
+        namespaceDaoTestHelper.createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
 
         // Create job definition create request using hard coded test values.
         JobDefinitionCreateRequest createRequest = createJobDefinitionCreateRequest();
@@ -439,7 +439,7 @@ public class JobDefinitionServiceTest extends AbstractServiceTest
         process.addFlowElement(new SequenceFlow("script", "end"));
         bpmnModel.addProcess(process);
         String activitiJobXml = getActivitiXmlFromBpmnModel(bpmnModel);
-        createNamespaceEntity(namespace);
+        namespaceDaoTestHelper.createNamespaceEntity(namespace);
 
         jobDefinitionService.createJobDefinition(new JobDefinitionCreateRequest(namespace, jobName, null, activitiJobXml, null, null), true);
 
@@ -480,7 +480,7 @@ public class JobDefinitionServiceTest extends AbstractServiceTest
         process.addFlowElement(new SequenceFlow("script", "end"));
         bpmnModel.addProcess(process);
         String activitiJobXml = getActivitiXmlFromBpmnModel(bpmnModel);
-        createNamespaceEntity(namespace);
+        namespaceDaoTestHelper.createNamespaceEntity(namespace);
         try
         {
             jobDefinitionService.createJobDefinition(new JobDefinitionCreateRequest(namespace, jobName, null, activitiJobXml, null, null), true);
@@ -521,7 +521,7 @@ public class JobDefinitionServiceTest extends AbstractServiceTest
         process.addFlowElement(new SequenceFlow("start", "end"));
         bpmnModel.addProcess(process);
         String activitiJobXml = getActivitiXmlFromBpmnModel(bpmnModel);
-        createNamespaceEntity(namespace);
+        namespaceDaoTestHelper.createNamespaceEntity(namespace);
 
         jobDefinitionService.createJobDefinition(new JobDefinitionCreateRequest(namespace, jobName, null, activitiJobXml, null, null), true);
 
@@ -563,7 +563,7 @@ public class JobDefinitionServiceTest extends AbstractServiceTest
         process.addFlowElement(new SequenceFlow("script", "end"));
         bpmnModel.addProcess(process);
         String activitiJobXml = getActivitiXmlFromBpmnModel(bpmnModel);
-        createNamespaceEntity(namespace);
+        namespaceDaoTestHelper.createNamespaceEntity(namespace);
 
         jobDefinitionService.createJobDefinition(new JobDefinitionCreateRequest(namespace, jobName, null, activitiJobXml, null, null), true);
 
@@ -606,7 +606,7 @@ public class JobDefinitionServiceTest extends AbstractServiceTest
     private JobDefinition createJobDefinition() throws Exception
     {
         // Create the namespace entity.
-        createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
+        namespaceDaoTestHelper.createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
 
         // Create job definition create request using hard coded test values.
         JobDefinitionCreateRequest request = createJobDefinitionCreateRequest();
@@ -659,7 +659,7 @@ public class JobDefinitionServiceTest extends AbstractServiceTest
     private void testCreateJobDefinitionWithS3PropertiesLocationValidate(S3PropertiesLocation s3PropertiesLocation, Class<? extends Exception> exceptionType,
         String exceptionMessage)
     {
-        createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
+        namespaceDaoTestHelper.createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
 
         JobDefinitionCreateRequest request = createJobDefinitionCreateRequest();
         request.setS3PropertiesLocation(s3PropertiesLocation);

@@ -36,8 +36,8 @@ public class StorageUnitStatusDaoHelperTest extends AbstractServiceTest
     public void testGetStorageUnitStatusEntity()
     {
         // Create and persist database entities required for testing.
-        List<StorageUnitStatusEntity> storageUnitStatusEntity =
-            Arrays.asList(createStorageUnitStatusEntity(STORAGE_UNIT_STATUS), createStorageUnitStatusEntity(STORAGE_UNIT_STATUS_2));
+        List<StorageUnitStatusEntity> storageUnitStatusEntity = Arrays.asList(storageUnitStatusDaoTestHelper.createStorageUnitStatusEntity(STORAGE_UNIT_STATUS),
+            storageUnitStatusDaoTestHelper.createStorageUnitStatusEntity(STORAGE_UNIT_STATUS_2));
 
         // Retrieve the storage unit status entity.
         assertEquals(storageUnitStatusEntity.get(0), storageUnitStatusDaoHelper.getStorageUnitStatusEntity(STORAGE_UNIT_STATUS));
