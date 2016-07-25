@@ -42,8 +42,8 @@ public class SecurityUserWrapperTest extends AbstractAppTest
     public void testCreateBusinessObjectDefinitionWithTrustedUser() throws Exception
     {
         // Create and persist database entities required for testing.
-        createNamespaceEntity(NAMESPACE);
-        createDataProviderEntity(DATA_PROVIDER_NAME);
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
+        dataProviderDaoTestHelper.createDataProviderEntity(DATA_PROVIDER_NAME);
 
         // Override security configuration to disable the security.
         Map<String, Object> overrideMap = new HashMap<>();

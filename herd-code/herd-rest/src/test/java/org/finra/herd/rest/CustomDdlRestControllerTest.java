@@ -38,8 +38,9 @@ public class CustomDdlRestControllerTest extends AbstractRestTest
     public void testCreateCustomDdl()
     {
         // Create and persist a business object format entity.
-        createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION, true,
-            PARTITION_KEY);
+        businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION, true,
+                PARTITION_KEY);
 
         // Create a custom DDL.
         CustomDdl resultCustomDdl = customDdlRestController.createCustomDdl(
@@ -53,8 +54,8 @@ public class CustomDdlRestControllerTest extends AbstractRestTest
     public void testGetCustomDdl()
     {
         // Create and persist a custom DDL entity.
-        CustomDdlEntity customDdlEntity =
-            createCustomDdlEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME, TEST_DDL);
+        CustomDdlEntity customDdlEntity = customDdlDaoTestHelper
+            .createCustomDdlEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME, TEST_DDL);
 
         // Retrieve the custom DDL.
         CustomDdl resultCustomDdl =
@@ -74,7 +75,8 @@ public class CustomDdlRestControllerTest extends AbstractRestTest
         // Create and persist a custom DDL entities.
         for (String customDdlName : testCustomDdlNames)
         {
-            createCustomDdlEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, customDdlName, TEST_DDL);
+            customDdlDaoTestHelper
+                .createCustomDdlEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, customDdlName, TEST_DDL);
         }
 
         // Retrieve a list of custom DDL keys.
@@ -86,7 +88,7 @@ public class CustomDdlRestControllerTest extends AbstractRestTest
         assertEquals(testCustomDdlNames.size(), resultCustomDdlKeys.getCustomDdlKeys().size());
         for (int i = 0; i < testCustomDdlNames.size(); i++)
         {
-            validateCustomDdlKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, testCustomDdlNames.get(i),
+            assertEquals(new CustomDdlKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, testCustomDdlNames.get(i)),
                 resultCustomDdlKeys.getCustomDdlKeys().get(i));
         }
     }
@@ -95,8 +97,8 @@ public class CustomDdlRestControllerTest extends AbstractRestTest
     public void testUpdateCustomDdl()
     {
         // Create and persist a custom DDL entity.
-        CustomDdlEntity customDdlEntity =
-            createCustomDdlEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME, TEST_DDL);
+        CustomDdlEntity customDdlEntity = customDdlDaoTestHelper
+            .createCustomDdlEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME, TEST_DDL);
 
         // Update the custom DDL.
         CustomDdl updatedCustomDdl = customDdlRestController
@@ -112,8 +114,8 @@ public class CustomDdlRestControllerTest extends AbstractRestTest
     public void testDeleteCustomDdl()
     {
         // Create and persist a custom DDL entity.
-        CustomDdlEntity customDdlEntity =
-            createCustomDdlEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME, TEST_DDL);
+        CustomDdlEntity customDdlEntity = customDdlDaoTestHelper
+            .createCustomDdlEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME, TEST_DDL);
 
         // Validate that this custom DDL exists.
         CustomDdlKey customDdlKey = new CustomDdlKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME);

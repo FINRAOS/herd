@@ -57,7 +57,7 @@ public class BusinessObjectDataRestControllerCreateBusinessObjectDataTest extend
             FileUtils.deleteDirectory(localTempPath.toFile());
 
             // Clean up the destination S3 folder.
-            S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = getTestS3FileTransferRequestParamsDto();
+            S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = s3DaoTestHelper.getTestS3FileTransferRequestParamsDto();
             s3FileTransferRequestParamsDto.setS3KeyPrefix(testS3KeyPrefix);
             s3Dao.deleteDirectory(s3FileTransferRequestParamsDto);
         }
