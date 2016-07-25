@@ -522,7 +522,7 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals("Business object data attribute name can not contain a forward slash character.", e.getMessage());
+            assertEquals("Attribute name can not contain a forward slash character.", e.getMessage());
         }
     }
 

@@ -49,7 +49,7 @@ public class AttributeHelper
             Map<String, String> attributeNameValidationMap = new HashMap<>();
             for (Attribute attribute : attributes)
             {
-                attribute.setName(alternateKeyHelper.validateStringParameter("business object data attribute name", attribute.getName()));
+                attribute.setName(alternateKeyHelper.validateStringParameter("An", "attribute name", attribute.getName()));
 
                 // Ensure the attribute key isn't a duplicate by using a map with a "lowercase" name as the key for case insensitivity.
                 String validationMapKey = attribute.getName().toLowerCase();
