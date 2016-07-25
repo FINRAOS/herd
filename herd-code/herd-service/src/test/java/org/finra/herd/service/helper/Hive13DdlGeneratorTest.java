@@ -45,8 +45,8 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
     public void testGetHivePartitions()
     {
         // Create a test business object data entity.
-        BusinessObjectDataEntity businessObjectDataEntity =
-            createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, DATA_VERSION, true,
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, DATA_VERSION, true,
                 BDATA_STATUS);
 
         List<SchemaColumn> autoDiscoverableSubPartitionColumns;
@@ -91,8 +91,8 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
     public void testGetHivePartitionsPatternMismatch()
     {
         // Create a test business object data entity.
-        BusinessObjectDataEntity businessObjectDataEntity =
-            createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, DATA_VERSION, true,
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, DATA_VERSION, true,
                 BDATA_STATUS);
 
         List<SchemaColumn> autoDiscoverableSubPartitionColumns = getPartitionColumns(Arrays.asList("Column1", "column2"));
@@ -133,8 +133,8 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
     public void testGetHivePartitionsMultiplePathsFound()
     {
         // Create a test business object data entity.
-        BusinessObjectDataEntity businessObjectDataEntity =
-            createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, DATA_VERSION, true,
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, DATA_VERSION, true,
                 BDATA_STATUS);
 
         List<SchemaColumn> autoDiscoverableSubPartitionColumns = getPartitionColumns(Arrays.asList("Column1", "column2"));
@@ -229,8 +229,8 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
     {
         BusinessObjectFormatDdlRequest businessObjectFormatDdlRequest = new BusinessObjectFormatDdlRequest();
         businessObjectFormatDdlRequest.setTableName(TABLE_NAME);
-        BusinessObjectFormatEntity businessObjectFormatEntity =
-            createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION, true,
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION, true,
                 PARTITION_KEY);
         {
             SchemaColumnEntity schemaColumnEntity = new SchemaColumnEntity();
@@ -265,8 +265,8 @@ public class Hive13DdlGeneratorTest extends AbstractServiceTest
     {
         BusinessObjectFormatDdlRequest businessObjectFormatDdlRequest = new BusinessObjectFormatDdlRequest();
         businessObjectFormatDdlRequest.setTableName(TABLE_NAME);
-        BusinessObjectFormatEntity businessObjectFormatEntity =
-            createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION, true,
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION, true,
                 PARTITION_KEY);
 
         {

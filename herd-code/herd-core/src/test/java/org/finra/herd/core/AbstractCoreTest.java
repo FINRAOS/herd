@@ -61,21 +61,21 @@ public abstract class AbstractCoreTest
 {
     public static final String BLANK_TEXT = "      \t\t ";
 
-    protected static final long FILE_SIZE_0_BYTE = 0L;
+    public static final long FILE_SIZE_0_BYTE = 0L;
 
-    protected static final long FILE_SIZE_1_KB = 1024L;
+    public static final long FILE_SIZE_1_KB = 1024L;
 
-    protected static final long FILE_SIZE_2_KB = 2048L;
+    public static final long FILE_SIZE_2_KB = 2048L;
 
-    protected static final String INVALID_BOOLEAN_VALUE = "INVALID_BOOLEAN_VALUE";
+    public static final String INVALID_BOOLEAN_VALUE = "INVALID_BOOLEAN_VALUE";
 
-    protected static final String INVALID_INTEGER_VALUE = "INVALID_INTEGER_VALUE";
+    public static final String INVALID_INTEGER_VALUE = "INVALID_INTEGER_VALUE";
 
-    protected static final String RANDOM_SUFFIX = getRandomSuffix();
+    public static final String RANDOM_SUFFIX = getRandomSuffix();
 
-    protected static final String RANDOM_SUFFIX_2 = getRandomSuffix();
+    public static final String RANDOM_SUFFIX_2 = getRandomSuffix();
 
-    protected static final long ROW_COUNT_1000 = 1000L;
+    public static final long ROW_COUNT_1000 = 1000L;
 
     protected static Path localTempPath;
 
@@ -95,7 +95,7 @@ public abstract class AbstractCoreTest
     /**
      * Returns a random suffix.
      */
-    protected static String getRandomSuffix()
+    public static String getRandomSuffix()
     {
         return String.format("%.5f", Math.random()).substring(2, 7);
     }

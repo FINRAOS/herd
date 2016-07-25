@@ -41,13 +41,13 @@ public class StorageFileDaoTest extends AbstractDaoTest
     public void testGetStorageFileByStorageNameAndFilePath()
     {
         // Create relative database entities.
-        StorageUnitEntity storageUnitEntity =
-            createStorageUnitEntity(StorageEntity.MANAGED_STORAGE, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION,
+        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(StorageEntity.MANAGED_STORAGE, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION,
                 PARTITION_VALUE, SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS, StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
 
         for (String file : LOCAL_FILES)
         {
-            createStorageFileEntity(storageUnitEntity, file, FILE_SIZE_1_KB, ROW_COUNT_1000);
+            storageFileDaoTestHelper.createStorageFileEntity(storageUnitEntity, file, FILE_SIZE_1_KB, ROW_COUNT_1000);
         }
 
         // Retrieve the relative storage file entities and validate the results.
@@ -68,22 +68,22 @@ public class StorageFileDaoTest extends AbstractDaoTest
     public void testGetStorageFileByStorageNameAndFilePathDuplicateFiles() throws Exception
     {
         // Create relative database entities.
-        BusinessObjectDataEntity businessObjectDataEntity1 =
-            createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+        BusinessObjectDataEntity businessObjectDataEntity1 = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, INITIAL_DATA_VERSION, Boolean.TRUE, BDATA_STATUS);
-        BusinessObjectDataEntity businessObjectDataEntity2 =
-            createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+        BusinessObjectDataEntity businessObjectDataEntity2 = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, INITIAL_DATA_VERSION + 1, Boolean.TRUE, BDATA_STATUS);
 
         StorageEntity storageEntity = storageDao.getStorageByName(StorageEntity.MANAGED_STORAGE);
 
-        StorageUnitEntity storageUnitEntity1 =
-            createStorageUnitEntity(storageEntity, businessObjectDataEntity1, StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
-        StorageUnitEntity storageUnitEntity2 =
-            createStorageUnitEntity(storageEntity, businessObjectDataEntity2, StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
+        StorageUnitEntity storageUnitEntity1 = storageUnitDaoTestHelper
+            .createStorageUnitEntity(storageEntity, businessObjectDataEntity1, StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
+        StorageUnitEntity storageUnitEntity2 = storageUnitDaoTestHelper
+            .createStorageUnitEntity(storageEntity, businessObjectDataEntity2, StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
 
-        createStorageFileEntity(storageUnitEntity1, LOCAL_FILE, FILE_SIZE_1_KB, ROW_COUNT_1000);
-        createStorageFileEntity(storageUnitEntity2, LOCAL_FILE, FILE_SIZE_1_KB, ROW_COUNT_1000);
+        storageFileDaoTestHelper.createStorageFileEntity(storageUnitEntity1, LOCAL_FILE, FILE_SIZE_1_KB, ROW_COUNT_1000);
+        storageFileDaoTestHelper.createStorageFileEntity(storageUnitEntity2, LOCAL_FILE, FILE_SIZE_1_KB, ROW_COUNT_1000);
 
         try
         {
@@ -172,12 +172,12 @@ public class StorageFileDaoTest extends AbstractDaoTest
         try
         {
             // Create database entities required for testing.
-            StorageUnitEntity storageUnitEntity =
-                createStorageUnitEntity(STORAGE_NAME, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+            StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
+                .createStorageUnitEntity(STORAGE_NAME, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
                     SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS, STORAGE_UNIT_STATUS, NO_STORAGE_DIRECTORY_PATH);
             for (String file : LOCAL_FILES)
             {
-                createStorageFileEntity(storageUnitEntity, file, FILE_SIZE_1_KB, ROW_COUNT_1000);
+                storageFileDaoTestHelper.createStorageFileEntity(storageUnitEntity, file, FILE_SIZE_1_KB, ROW_COUNT_1000);
             }
 
             // Retrieve storage file paths by storage units.
@@ -196,12 +196,12 @@ public class StorageFileDaoTest extends AbstractDaoTest
     private void createDatabaseEntitiesForStorageFilesTesting()
     {
         // Create relative database entities.
-        StorageUnitEntity storageUnitEntity =
-            createStorageUnitEntity(StorageEntity.MANAGED_STORAGE, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION,
+        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(StorageEntity.MANAGED_STORAGE, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION,
                 PARTITION_VALUE, SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS, STORAGE_UNIT_STATUS, NO_STORAGE_DIRECTORY_PATH);
         for (String file : LOCAL_FILES)
         {
-            createStorageFileEntity(storageUnitEntity, file, FILE_SIZE_1_KB, ROW_COUNT_1000);
+            storageFileDaoTestHelper.createStorageFileEntity(storageUnitEntity, file, FILE_SIZE_1_KB, ROW_COUNT_1000);
         }
     }
 }

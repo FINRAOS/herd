@@ -39,8 +39,10 @@ public class BusinessObjectDataNotificationRegistrationDaoTest extends AbstractD
 
         // Create and persist a business object data notification registration entity.
         BusinessObjectDataNotificationRegistrationEntity businessObjectDataNotificationRegistrationEntity =
-            createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE,
-                BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2, getTestJobActions());
+            businessObjectDataNotificationRegistrationDaoTestHelper
+                .createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE,
+                    BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2,
+                    businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
 
         // Retrieve this business object data notification.
         BusinessObjectDataNotificationRegistrationEntity resultBusinessObjectDataNotificationEntity =
@@ -55,10 +57,13 @@ public class BusinessObjectDataNotificationRegistrationDaoTest extends AbstractD
     public void testGetBusinessObjectDataNotificationRegistrationKeysByNamespace()
     {
         // Create and persist a set of business object data notification registration entities.
-        for (NotificationRegistrationKey businessObjectDataNotificationRegistrationKey : getTestBusinessObjectDataNotificationRegistrationKeys())
+        for (NotificationRegistrationKey businessObjectDataNotificationRegistrationKey : businessObjectDataNotificationRegistrationDaoTestHelper
+            .getTestBusinessObjectDataNotificationRegistrationKeys())
         {
-            createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE,
-                BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2, getTestJobActions());
+            businessObjectDataNotificationRegistrationDaoTestHelper
+                .createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE,
+                    BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2,
+                    businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
         }
 
         // Retrieve a list of business object data notification registration keys for the specified namespace.
@@ -66,7 +71,7 @@ public class BusinessObjectDataNotificationRegistrationDaoTest extends AbstractD
             businessObjectDataNotificationRegistrationDao.getBusinessObjectDataNotificationRegistrationKeysByNamespace(NAMESPACE);
 
         // Validate the returned object.
-        assertEquals(getExpectedBusinessObjectDataNotificationRegistrationKeys(), resultKeys);
+        assertEquals(businessObjectDataNotificationRegistrationDaoTestHelper.getExpectedBusinessObjectDataNotificationRegistrationKeys(), resultKeys);
     }
 
     @Test
@@ -76,8 +81,10 @@ public class BusinessObjectDataNotificationRegistrationDaoTest extends AbstractD
         NotificationRegistrationKey notificationRegistrationKey = new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME);
 
         // Create and persist a business object data notification registration entity.
-        createBusinessObjectDataNotificationRegistrationEntity(notificationRegistrationKey, NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE, BDEF_NAME,
-            FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2, getTestJobActions());
+        businessObjectDataNotificationRegistrationDaoTestHelper
+            .createBusinessObjectDataNotificationRegistrationEntity(notificationRegistrationKey, NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE, BDEF_NAME,
+                FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2,
+                businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
 
         // Retrieve a list of business object data notification registration keys.
         assertEquals(Arrays.asList(notificationRegistrationKey), businessObjectDataNotificationRegistrationDao
@@ -130,9 +137,10 @@ public class BusinessObjectDataNotificationRegistrationDaoTest extends AbstractD
     {
         // Create and persist a business object data notification registration entity with all optional parameters specified.
         BusinessObjectDataNotificationRegistrationEntity businessObjectDataNotificationRegistrationEntity =
-            createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME), NOTIFICATION_EVENT_TYPE,
-                BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2,
-                getTestJobActions());
+            businessObjectDataNotificationRegistrationDaoTestHelper
+                .createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME), NOTIFICATION_EVENT_TYPE,
+                    BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2,
+                    businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
 
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
@@ -165,8 +173,9 @@ public class BusinessObjectDataNotificationRegistrationDaoTest extends AbstractD
     {
         // Create and persist a business object data notification registration entity with all optional filter parameters missing.
         BusinessObjectDataNotificationRegistrationEntity businessObjectDataNotificationRegistrationEntity =
-            createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME), NOTIFICATION_EVENT_TYPE,
-                BDEF_NAMESPACE, BDEF_NAME, null, null, null, null, null, null, getTestJobActions());
+            businessObjectDataNotificationRegistrationDaoTestHelper
+                .createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME), NOTIFICATION_EVENT_TYPE,
+                    BDEF_NAMESPACE, BDEF_NAME, null, null, null, null, null, null, businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
 
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
@@ -200,8 +209,10 @@ public class BusinessObjectDataNotificationRegistrationDaoTest extends AbstractD
     {
         // Create and persist a business object data notification registration entity with a missing new business object data status filter parameter.
         BusinessObjectDataNotificationRegistrationEntity businessObjectDataNotificationRegistrationEntity =
-            createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME), NOTIFICATION_EVENT_TYPE,
-                BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, null, BDATA_STATUS_2, getTestJobActions());
+            businessObjectDataNotificationRegistrationDaoTestHelper
+                .createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME), NOTIFICATION_EVENT_TYPE,
+                    BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, null, BDATA_STATUS_2,
+                    businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
 
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
@@ -242,9 +253,10 @@ public class BusinessObjectDataNotificationRegistrationDaoTest extends AbstractD
     {
         // Create and persist a business object data notification registration entity with all optional parameters specified.
         BusinessObjectDataNotificationRegistrationEntity businessObjectDataNotificationRegistrationEntity =
-            createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME), NOTIFICATION_EVENT_TYPE,
-                BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2,
-                getTestJobActions());
+            businessObjectDataNotificationRegistrationDaoTestHelper
+                .createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME), NOTIFICATION_EVENT_TYPE,
+                    BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2,
+                    businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
 
         // Retrieve the business object notification with all input parameters matching the filter criteria.
         List<BusinessObjectDataNotificationRegistrationEntity> businessObjectDataNotificationEntities = businessObjectDataNotificationRegistrationDao

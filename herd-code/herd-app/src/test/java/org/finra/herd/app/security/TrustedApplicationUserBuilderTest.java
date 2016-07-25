@@ -45,10 +45,12 @@ public class TrustedApplicationUserBuilderTest extends AbstractAppTest
         namespaceAuthorizations.add(new NamespaceAuthorization(NAMESPACE_2, SUPPORTED_NAMESPACE_PERMISSIONS));
 
         // Create and persist the relative database entities.
-        createUserNamespaceAuthorizationEntity(TrustedApplicationUserBuilder.TRUSTED_USER_ID, createNamespaceEntity(NAMESPACE),
-            SUPPORTED_NAMESPACE_PERMISSIONS);
-        createUserNamespaceAuthorizationEntity(TrustedApplicationUserBuilder.TRUSTED_USER_ID, createNamespaceEntity(NAMESPACE_2),
-            SUPPORTED_NAMESPACE_PERMISSIONS);
+        userNamespaceAuthorizationDaoTestHelper
+            .createUserNamespaceAuthorizationEntity(TrustedApplicationUserBuilder.TRUSTED_USER_ID, namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE),
+                SUPPORTED_NAMESPACE_PERMISSIONS);
+        userNamespaceAuthorizationDaoTestHelper
+            .createUserNamespaceAuthorizationEntity(TrustedApplicationUserBuilder.TRUSTED_USER_ID, namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE_2),
+                SUPPORTED_NAMESPACE_PERMISSIONS);
 
         // Build the trusted user.
         ApplicationUser applicationUser = trustedApplicationUserBuilder.buildNoRoles(new MockHttpServletRequest());

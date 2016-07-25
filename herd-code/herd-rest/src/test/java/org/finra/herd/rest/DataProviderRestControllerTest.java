@@ -45,7 +45,7 @@ public class DataProviderRestControllerTest extends AbstractRestTest
     public void testGetDataProvider() throws Exception
     {
         // Create and persist a data provider entity.
-        createDataProviderEntity(DATA_PROVIDER_NAME);
+        dataProviderDaoTestHelper.createDataProviderEntity(DATA_PROVIDER_NAME);
 
         // Retrieve the data provider.
         DataProvider resultDataProvider = dataProviderRestController.getDataProvider(DATA_PROVIDER_NAME);
@@ -61,7 +61,7 @@ public class DataProviderRestControllerTest extends AbstractRestTest
         DataProviderKey dataProviderKey = new DataProviderKey(DATA_PROVIDER_NAME);
 
         // Create and persist a data provider entity.
-        createDataProviderEntity(DATA_PROVIDER_NAME);
+        dataProviderDaoTestHelper.createDataProviderEntity(DATA_PROVIDER_NAME);
 
         // Validate that this data provider exists.
         assertNotNull(dataProviderDao.getDataProviderByKey(dataProviderKey));
@@ -82,7 +82,7 @@ public class DataProviderRestControllerTest extends AbstractRestTest
         // Create and persist data provider entities.
         for (DataProviderKey key : DATA_PROVIDER_KEYS)
         {
-            createDataProviderEntity(key.getDataProviderName());
+            dataProviderDaoTestHelper.createDataProviderEntity(key.getDataProviderName());
         }
 
         // Retrieve a list of data provider keys.

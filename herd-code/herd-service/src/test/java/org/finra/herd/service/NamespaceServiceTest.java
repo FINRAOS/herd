@@ -108,7 +108,7 @@ public class NamespaceServiceTest extends AbstractServiceTest
     public void testCreateNamespaceAlreadyExists() throws Exception
     {
         // Create and persist a namespace.
-        createNamespaceEntity(NAMESPACE);
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
 
         // Try to create a namespace when it already exists.
         try
@@ -126,7 +126,7 @@ public class NamespaceServiceTest extends AbstractServiceTest
     public void testGetNamespace() throws Exception
     {
         // Create and persist a namespace entity.
-        createNamespaceEntity(NAMESPACE);
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
 
         // Retrieve the namespace.
         Namespace resultNamespace = namespaceService.getNamespace(new NamespaceKey(NAMESPACE));
@@ -154,7 +154,7 @@ public class NamespaceServiceTest extends AbstractServiceTest
     public void testGetNamespaceTrimParameters()
     {
         // Create and persist a namespace entity.
-        createNamespaceEntity(NAMESPACE);
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
 
         // Retrieve the namespace using input parameters with leading and trailing empty spaces.
         Namespace resultNamespace = namespaceService.getNamespace(new NamespaceKey(addWhitespace(NAMESPACE)));
@@ -167,7 +167,7 @@ public class NamespaceServiceTest extends AbstractServiceTest
     public void testGetNamespaceUpperCaseParameters()
     {
         // Create and persist a namespace entity using lower case values.
-        createNamespaceEntity(NAMESPACE.toLowerCase());
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE.toLowerCase());
 
         // Retrieve the namespace using upper case input parameters.
         Namespace resultNamespace = namespaceService.getNamespace(new NamespaceKey(NAMESPACE.toUpperCase()));
@@ -180,7 +180,7 @@ public class NamespaceServiceTest extends AbstractServiceTest
     public void testGetNamespaceLowerCaseParameters()
     {
         // Create and persist a namespace entity using upper case values.
-        createNamespaceEntity(NAMESPACE.toUpperCase());
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE.toUpperCase());
 
         // Retrieve the namespace using lower case input parameters.
         Namespace resultNamespace = namespaceService.getNamespace(new NamespaceKey(NAMESPACE.toLowerCase()));
@@ -208,9 +208,9 @@ public class NamespaceServiceTest extends AbstractServiceTest
     public void testGetNamespaces() throws Exception
     {
         // Create and persist namespace entities.
-        for (NamespaceKey key : getTestNamespaceKeys())
+        for (NamespaceKey key : namespaceDaoTestHelper.getTestNamespaceKeys())
         {
-            createNamespaceEntity(key.getNamespaceCode());
+            namespaceDaoTestHelper.createNamespaceEntity(key.getNamespaceCode());
         }
 
         // Retrieve a list of namespace keys.
@@ -219,8 +219,8 @@ public class NamespaceServiceTest extends AbstractServiceTest
         // Validate the returned object.
         assertNotNull(resultNamespaceKeys);
         assertNotNull(resultNamespaceKeys.getNamespaceKeys());
-        assertTrue(resultNamespaceKeys.getNamespaceKeys().size() >= getTestNamespaceKeys().size());
-        for (NamespaceKey key : getTestNamespaceKeys())
+        assertTrue(resultNamespaceKeys.getNamespaceKeys().size() >= namespaceDaoTestHelper.getTestNamespaceKeys().size());
+        for (NamespaceKey key : namespaceDaoTestHelper.getTestNamespaceKeys())
         {
             assertTrue(resultNamespaceKeys.getNamespaceKeys().contains(key));
         }
@@ -230,7 +230,7 @@ public class NamespaceServiceTest extends AbstractServiceTest
     public void testDeleteNamespace() throws Exception
     {
         // Create and persist a namespace entity.
-        createNamespaceEntity(NAMESPACE);
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
 
         // Validate that this namespace exists.
         NamespaceKey namespaceKey = new NamespaceKey(NAMESPACE);
@@ -265,7 +265,7 @@ public class NamespaceServiceTest extends AbstractServiceTest
     public void testDeleteNamespaceTrimParameters()
     {
         // Create and persist a namespace entity.
-        createNamespaceEntity(NAMESPACE);
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
 
         // Validate that this namespace exists.
         NamespaceKey namespaceKey = new NamespaceKey(NAMESPACE);
@@ -285,7 +285,7 @@ public class NamespaceServiceTest extends AbstractServiceTest
     public void testDeleteNamespaceUpperCaseParameters()
     {
         // Create and persist a namespace entity using lower case values.
-        createNamespaceEntity(NAMESPACE.toLowerCase());
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE.toLowerCase());
 
         // Validate that this namespace exists.
         NamespaceKey namespaceKey = new NamespaceKey(NAMESPACE.toLowerCase());
@@ -305,7 +305,7 @@ public class NamespaceServiceTest extends AbstractServiceTest
     public void testDeleteNamespaceLowerCaseParameters()
     {
         // Create and persist a namespace entity using upper case values.
-        createNamespaceEntity(NAMESPACE.toUpperCase());
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE.toUpperCase());
 
         // Validate that this namespace exists.
         NamespaceKey namespaceKey = new NamespaceKey(NAMESPACE.toUpperCase());

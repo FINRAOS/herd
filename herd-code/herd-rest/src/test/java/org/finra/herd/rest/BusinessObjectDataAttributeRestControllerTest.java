@@ -41,8 +41,9 @@ public class BusinessObjectDataAttributeRestControllerTest extends AbstractRestT
     public void testCreateBusinessObjectDataAttribute()
     {
         // Create and persist a business object data entity.
-        createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-            DATA_VERSION, true, BDATA_STATUS);
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS);
 
         // Create a business object data attribute.
         BusinessObjectDataAttribute resultBusinessObjectDataAttribute = businessObjectDataAttributeRestController.createBusinessObjectDataAttribute(
@@ -58,8 +59,8 @@ public class BusinessObjectDataAttributeRestControllerTest extends AbstractRestT
     public void testGetBusinessObjectDataAttribute()
     {
         // Create and persist a business object data attribute entity.
-        BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity =
-            createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+        BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity = businessObjectDataAttributeDaoTestHelper
+            .createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1);
 
         // Retrieve the business object data attribute.
@@ -84,8 +85,8 @@ public class BusinessObjectDataAttributeRestControllerTest extends AbstractRestT
             List<String> subPartitionValues = SUBPARTITION_VALUES.subList(0, i);
 
             // Create and persist an attribute for the business object data with the relative number of subpartition values.
-            BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity =
-                createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity = businessObjectDataAttributeDaoTestHelper
+                .createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                     subPartitionValues, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1);
 
             // Retrieve the attribute of the business object data using the relative endpoint.
@@ -136,8 +137,9 @@ public class BusinessObjectDataAttributeRestControllerTest extends AbstractRestT
         // Create and persist a business object data attribute entities.
         for (String businessObjectDataAttributeName : testBusinessObjectDataAttributeNames)
         {
-            createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES, DATA_VERSION, businessObjectDataAttributeName, ATTRIBUTE_VALUE_1);
+            businessObjectDataAttributeDaoTestHelper
+                .createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    SUBPARTITION_VALUES, DATA_VERSION, businessObjectDataAttributeName, ATTRIBUTE_VALUE_1);
         }
 
         // Retrieve a list of business object data attribute keys.
@@ -172,8 +174,9 @@ public class BusinessObjectDataAttributeRestControllerTest extends AbstractRestT
             // Create and persist business object data attribute entities with the relative number of subpartition values.
             for (String businessObjectDataAttributeName : testBusinessObjectDataAttributeNames)
             {
-                createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                    subPartitionValues, DATA_VERSION, businessObjectDataAttributeName, ATTRIBUTE_VALUE_1);
+                businessObjectDataAttributeDaoTestHelper
+                    .createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                        subPartitionValues, DATA_VERSION, businessObjectDataAttributeName, ATTRIBUTE_VALUE_1);
             }
 
             // Retrieve the list of attribute keys for the business object data using the relative endpoint.
@@ -223,8 +226,8 @@ public class BusinessObjectDataAttributeRestControllerTest extends AbstractRestT
     public void testUpdateBusinessObjectDataAttribute()
     {
         // Create and persist a business object data attribute entity.
-        BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity =
-            createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+        BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity = businessObjectDataAttributeDaoTestHelper
+            .createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1);
 
         // Update the business object data attribute.
@@ -249,8 +252,8 @@ public class BusinessObjectDataAttributeRestControllerTest extends AbstractRestT
             List<String> subPartitionValues = SUBPARTITION_VALUES.subList(0, i);
 
             // Create and persist an attribute for the business object data with the relative number of subpartition values.
-            BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity =
-                createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity = businessObjectDataAttributeDaoTestHelper
+                .createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                     subPartitionValues, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1);
 
             // Update the attribute of the business object data using the relative endpoint.
@@ -299,8 +302,8 @@ public class BusinessObjectDataAttributeRestControllerTest extends AbstractRestT
     public void testDeleteBusinessObjectDataAttribute()
     {
         // Create and persist a business object data attribute entity.
-        BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity =
-            createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+        BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity = businessObjectDataAttributeDaoTestHelper
+            .createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1);
 
         // Validate that this business object data attribute exists.
@@ -349,8 +352,8 @@ public class BusinessObjectDataAttributeRestControllerTest extends AbstractRestT
             List<String> subPartitionValues = SUBPARTITION_VALUES.subList(0, i);
 
             // Create and persist a business object data attribute entity with the relative number of subpartition values.
-            BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity =
-                createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity = businessObjectDataAttributeDaoTestHelper
+                .createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                     subPartitionValues, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1);
 
             // Validate that this business object data attribute exists.

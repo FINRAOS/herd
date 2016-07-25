@@ -108,7 +108,7 @@ public class DataProviderServiceTest extends AbstractServiceTest
     public void testCreateDataProviderAlreadyExists() throws Exception
     {
         // Create and persist a data provider.
-        createDataProviderEntity(DATA_PROVIDER_NAME);
+        dataProviderDaoTestHelper.createDataProviderEntity(DATA_PROVIDER_NAME);
 
         // Try to create a data provider when it already exists.
         try
@@ -126,7 +126,7 @@ public class DataProviderServiceTest extends AbstractServiceTest
     public void testGetDataProvider() throws Exception
     {
         // Create and persist a data provider entity.
-        createDataProviderEntity(DATA_PROVIDER_NAME);
+        dataProviderDaoTestHelper.createDataProviderEntity(DATA_PROVIDER_NAME);
 
         // Retrieve the data provider.
         DataProvider resultDataProvider = dataProviderService.getDataProvider(new DataProviderKey(DATA_PROVIDER_NAME));
@@ -154,7 +154,7 @@ public class DataProviderServiceTest extends AbstractServiceTest
     public void testGetDataProviderTrimParameters()
     {
         // Create and persist a data provider entity.
-        createDataProviderEntity(DATA_PROVIDER_NAME);
+        dataProviderDaoTestHelper.createDataProviderEntity(DATA_PROVIDER_NAME);
 
         // Retrieve the data provider using input parameters with leading and trailing empty spaces.
         DataProvider resultDataProvider = dataProviderService.getDataProvider(new DataProviderKey(addWhitespace(DATA_PROVIDER_NAME)));
@@ -167,7 +167,7 @@ public class DataProviderServiceTest extends AbstractServiceTest
     public void testGetDataProviderUpperCaseParameters()
     {
         // Create and persist a data provider entity.
-        createDataProviderEntity(DATA_PROVIDER_NAME);
+        dataProviderDaoTestHelper.createDataProviderEntity(DATA_PROVIDER_NAME);
 
         // Retrieve the data provider using upper case input parameters.
         DataProvider resultDataProvider = dataProviderService.getDataProvider(new DataProviderKey(DATA_PROVIDER_NAME.toUpperCase()));
@@ -180,7 +180,7 @@ public class DataProviderServiceTest extends AbstractServiceTest
     public void testGetDataProviderLowerCaseParameters()
     {
         // Create and persist a data provider entity.
-        createDataProviderEntity(DATA_PROVIDER_NAME);
+        dataProviderDaoTestHelper.createDataProviderEntity(DATA_PROVIDER_NAME);
 
         // Retrieve the data provider using lower case input parameters.
         DataProvider resultDataProvider = dataProviderService.getDataProvider(new DataProviderKey(DATA_PROVIDER_NAME.toLowerCase()));
@@ -211,7 +211,7 @@ public class DataProviderServiceTest extends AbstractServiceTest
         DataProviderKey dataProviderKey = new DataProviderKey(DATA_PROVIDER_NAME);
 
         // Create and persist a data provider entity.
-        createDataProviderEntity(DATA_PROVIDER_NAME);
+        dataProviderDaoTestHelper.createDataProviderEntity(DATA_PROVIDER_NAME);
 
         // Validate that this data provider exists.
         assertNotNull(dataProviderDao.getDataProviderByKey(dataProviderKey));
@@ -248,7 +248,7 @@ public class DataProviderServiceTest extends AbstractServiceTest
         DataProviderKey dataProviderKey = new DataProviderKey(DATA_PROVIDER_NAME);
 
         // Create and persist a data provider entity.
-        createDataProviderEntity(DATA_PROVIDER_NAME);
+        dataProviderDaoTestHelper.createDataProviderEntity(DATA_PROVIDER_NAME);
 
         // Validate that this data provider exists.
         assertNotNull(dataProviderDao.getDataProviderByKey(dataProviderKey));
@@ -270,7 +270,7 @@ public class DataProviderServiceTest extends AbstractServiceTest
         DataProviderKey dataProviderKey = new DataProviderKey(DATA_PROVIDER_NAME);
 
         // Create and persist a data provider entity.
-        createDataProviderEntity(DATA_PROVIDER_NAME);
+        dataProviderDaoTestHelper.createDataProviderEntity(DATA_PROVIDER_NAME);
 
         // Validate that this data provider exists.
         assertNotNull(dataProviderDao.getDataProviderByKey(dataProviderKey));
@@ -292,7 +292,7 @@ public class DataProviderServiceTest extends AbstractServiceTest
         DataProviderKey dataProviderKey = new DataProviderKey(DATA_PROVIDER_NAME);
 
         // Create and persist a data provider entity.
-        createDataProviderEntity(DATA_PROVIDER_NAME);
+        dataProviderDaoTestHelper.createDataProviderEntity(DATA_PROVIDER_NAME);
 
         // Validate that this data provider exists.
         assertNotNull(dataProviderDao.getDataProviderByKey(dataProviderKey));
@@ -328,7 +328,7 @@ public class DataProviderServiceTest extends AbstractServiceTest
         // Create and persist data provider entities.
         for (DataProviderKey key : DATA_PROVIDER_KEYS)
         {
-            createDataProviderEntity(key.getDataProviderName());
+            dataProviderDaoTestHelper.createDataProviderEntity(key.getDataProviderName());
         }
 
         // Retrieve a list of data provider keys.

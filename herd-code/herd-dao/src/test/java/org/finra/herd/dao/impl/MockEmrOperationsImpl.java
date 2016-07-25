@@ -57,7 +57,7 @@ import org.finra.herd.model.dto.ConfigurationValue;
 /**
  * Mock implementation of AWS EMR operations.
  */
-public class MockEmrOperationsImpl extends AbstractDaoTest implements EmrOperations
+public class MockEmrOperationsImpl implements EmrOperations
 {
     @Autowired
     protected ConfigurationHelper configurationHelper;
@@ -291,7 +291,8 @@ public class MockEmrOperationsImpl extends AbstractDaoTest implements EmrOperati
     @Override
     public ListInstancesResult listClusterInstancesRequest(AmazonElasticMapReduceClient emrClient, ListInstancesRequest listInstancesRequest)
     {
-        MockEmrJobFlow cluster = getClusterByName(buildEmrClusterName(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, MOCK_CLUSTER_NOT_PROVISIONED_NAME));
+        MockEmrJobFlow cluster =
+            getClusterByName(buildEmrClusterName(AbstractDaoTest.NAMESPACE, AbstractDaoTest.EMR_CLUSTER_DEFINITION_NAME, MOCK_CLUSTER_NOT_PROVISIONED_NAME));
 
         if (cluster != null && listInstancesRequest.getClusterId().equals(cluster.getJobFlowId()))
         {

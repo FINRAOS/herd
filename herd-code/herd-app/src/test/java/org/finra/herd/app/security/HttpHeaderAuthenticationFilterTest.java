@@ -79,9 +79,11 @@ public class HttpHeaderAuthenticationFilterTest extends AbstractAppTest
     public void testHttpHeaderAuthenticationFilterRegularUser() throws Exception
     {
         // Create and persist the relative database entities.
-        createNamespaceEntity(NAMESPACE);
-        createUserNamespaceAuthorizationEntity(USER_ID, createNamespaceEntity(NAMESPACE_2), SUPPORTED_NAMESPACE_PERMISSIONS);
-        createUserNamespaceAuthorizationEntity(USER_ID, createNamespaceEntity(NAMESPACE_3), SUPPORTED_NAMESPACE_PERMISSIONS);
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
+        userNamespaceAuthorizationDaoTestHelper
+            .createUserNamespaceAuthorizationEntity(USER_ID, namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE_2), SUPPORTED_NAMESPACE_PERMISSIONS);
+        userNamespaceAuthorizationDaoTestHelper
+            .createUserNamespaceAuthorizationEntity(USER_ID, namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE_3), SUPPORTED_NAMESPACE_PERMISSIONS);
 
         // Create an ordered set of expected namespace authorizations.
         Set<NamespaceAuthorization> expectedNamespaceAuthorizations = new HashSet<>();
@@ -121,9 +123,9 @@ public class HttpHeaderAuthenticationFilterTest extends AbstractAppTest
     public void testHttpHeaderAuthenticationFilterAdminUser() throws Exception
     {
         // Create and persist the relative database entities.
-        createUserEntity(USER_ID, true);
-        createNamespaceEntity(NAMESPACE);
-        createNamespaceEntity(NAMESPACE_2);
+        userDaoTestHelper.createUserEntity(USER_ID, true);
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE_2);
 
         // Create an ordered set of expected namespace authorizations.
         Set<NamespaceAuthorization> expectedNamespaceAuthorizations = new HashSet<>();
@@ -162,9 +164,9 @@ public class HttpHeaderAuthenticationFilterTest extends AbstractAppTest
     public void testHttpHeaderAuthenticationFilterUserAuthorizationDisabled() throws Exception
     {
         // Create and persist the relative database entities.
-        createUserEntity(USER_ID, true);
-        createNamespaceEntity(NAMESPACE);
-        createNamespaceEntity(NAMESPACE_2);
+        userDaoTestHelper.createUserEntity(USER_ID, true);
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE_2);
 
         // Create an ordered set of expected namespace authorizations.
         Set<NamespaceAuthorization> expectedNamespaceAuthorizations = new HashSet<>();
@@ -205,9 +207,9 @@ public class HttpHeaderAuthenticationFilterTest extends AbstractAppTest
     public void testHttpHeaderAuthenticationFilterUserAuthorizationInvalidConfigurationValue() throws Exception
     {
         // Create and persist the relative database entities.
-        createUserEntity(USER_ID, true);
-        createNamespaceEntity(NAMESPACE);
-        createNamespaceEntity(NAMESPACE_2);
+        userDaoTestHelper.createUserEntity(USER_ID, true);
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE_2);
 
         // Create an ordered set of expected namespace authorizations.
         Set<NamespaceAuthorization> expectedNamespaceAuthorizations = new HashSet<>();

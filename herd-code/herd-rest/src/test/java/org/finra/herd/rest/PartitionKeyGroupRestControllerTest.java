@@ -43,7 +43,7 @@ public class PartitionKeyGroupRestControllerTest extends AbstractRestTest
     public void testGetPartitionKeyGroup()
     {
         // Create and persist a partition key group entity.
-        createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
+        partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
 
         // Retrieve the partition key group.
         PartitionKeyGroup resultPartitionKeyGroup = partitionKeyGroupRestController.getPartitionKeyGroup(PARTITION_KEY_GROUP);
@@ -56,7 +56,7 @@ public class PartitionKeyGroupRestControllerTest extends AbstractRestTest
     public void testDeletePartitionKeyGroup()
     {
         // Create and persist a partition key group entity.
-        createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
+        partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
 
         // Validate that this partition key group exists.
         partitionKeyGroupRestController.getPartitionKeyGroup(PARTITION_KEY_GROUP);
@@ -75,8 +75,8 @@ public class PartitionKeyGroupRestControllerTest extends AbstractRestTest
     public void testGetPartitionKeyGroups()
     {
         // Create and persist two partition key group entities.
-        createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
-        createPartitionKeyGroupEntity(PARTITION_KEY_GROUP_2);
+        partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
+        partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP_2);
 
         // Get the list of partition key groups.
         PartitionKeyGroupKeys partitionKeyGroupKeys = partitionKeyGroupRestController.getPartitionKeyGroups();

@@ -41,18 +41,19 @@ public class GetS3KeyPrefixTest extends HerdActivitiServiceTaskTest
     @Test
     public void testGetS3KeyPrefix() throws Exception
     {
-        List<SchemaColumn> columns = getTestSchemaColumns("Test_COLUMN", SCHEMA_COLUMNS);
+        List<SchemaColumn> columns = schemaColumnDaoTestHelper.getTestSchemaColumns("Test_COLUMN", SCHEMA_COLUMNS);
         List<SchemaColumn> partitionColumns = columns.subList(0, 5);
         List<SchemaColumn> subPartitionColumns = partitionColumns.subList(1, 5);
         String partitionKey = partitionColumns.get(0).getName();
 
         // Create a business object format entity.
-        createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
-            LATEST_VERSION_FLAG_SET, partitionKey, NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
-            SCHEMA_NULL_VALUE_BACKSLASH_N, columns, partitionColumns);
+        businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+                LATEST_VERSION_FLAG_SET, partitionKey, NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
+                SCHEMA_NULL_VALUE_BACKSLASH_N, columns, partitionColumns);
 
         // Create an S3 storage.
-        createStorageEntity(STORAGE_NAME, StoragePlatformEntity.S3);
+        storageDaoTestHelper.createStorageEntity(STORAGE_NAME, StoragePlatformEntity.S3);
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
 
@@ -144,11 +145,12 @@ public class GetS3KeyPrefixTest extends HerdActivitiServiceTaskTest
     public void testGetS3KeyPrefixMissingOptionalParameters() throws Exception
     {
         // Create a business object definition entity.
-        createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
+        businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
 
         // Create a business object format entity without a schema.
-        createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION, true,
-            PARTITION_KEY);
+        businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION, true,
+                PARTITION_KEY);
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
 
@@ -183,11 +185,12 @@ public class GetS3KeyPrefixTest extends HerdActivitiServiceTaskTest
     public void testGetS3KeyPrefixMissingOptionalParametersSubPartitionValuesAsEmptyString() throws Exception
     {
         // Create a business object definition entity.
-        createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
+        businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
 
         // Create a business object format entity without a schema.
-        createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION, true,
-            PARTITION_KEY);
+        businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION, true,
+                PARTITION_KEY);
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
 
@@ -295,8 +298,9 @@ public class GetS3KeyPrefixTest extends HerdActivitiServiceTaskTest
     public void testGetS3KeyPrefixInitialDataVersionExists() throws Exception
     {
         // Create an initial version of a business object data.
-        createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, INITIAL_DATA_VERSION,
-            true, BDATA_STATUS);
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                INITIAL_DATA_VERSION, true, BDATA_STATUS);
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
 

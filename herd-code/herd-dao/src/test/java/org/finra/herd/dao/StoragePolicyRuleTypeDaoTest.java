@@ -28,7 +28,8 @@ public class StoragePolicyRuleTypeDaoTest extends AbstractDaoTest
     public void testGetStoragePolicyRuleTypeByCode()
     {
         // Create and persist a storage policy rule type entity.
-        StoragePolicyRuleTypeEntity storagePolicyRuleTypeEntity = createStoragePolicyRuleTypeEntity(STORAGE_POLICY_RULE_TYPE, DESCRIPTION);
+        StoragePolicyRuleTypeEntity storagePolicyRuleTypeEntity =
+            storagePolicyRuleTypeDaoTestHelper.createStoragePolicyRuleTypeEntity(STORAGE_POLICY_RULE_TYPE, DESCRIPTION);
 
         // Retrieve this storage policy rule type entity by code.
         StoragePolicyRuleTypeEntity resultStoragePolicyRuleTypeEntity = storagePolicyRuleTypeDao.getStoragePolicyRuleTypeByCode(STORAGE_POLICY_RULE_TYPE);

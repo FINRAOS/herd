@@ -79,7 +79,7 @@ public class BusinessObjectDataRestControllerGenerateBusinessObjectDataDdlTest e
     {
         // Prepare test data.
         createDatabaseEntitiesForBusinessObjectDataDdlTesting();
-        createExpectedPartitionValueProcessDatesForApril2014(PARTITION_KEY_GROUP);
+        expectedPartitionValueDaoTestHelper.createExpectedPartitionValueProcessDatesForApril2014(PARTITION_KEY_GROUP);
 
         BusinessObjectDataDdlRequest request;
         BusinessObjectDataDdl resultDdl;

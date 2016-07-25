@@ -62,8 +62,8 @@ public class StoragePolicyRestControllerTest extends AbstractRestTest
         createDatabaseEntitiesForStoragePolicyTesting();
 
         // Create and persist a storage policy entity.
-        StoragePolicyEntity storagePolicyEntity =
-            createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE_2, STORAGE_POLICY_RULE_VALUE_2, BDEF_NAMESPACE_2, BDEF_NAME_2,
+        StoragePolicyEntity storagePolicyEntity = storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE_2, STORAGE_POLICY_RULE_VALUE_2, BDEF_NAMESPACE_2, BDEF_NAME_2,
                 FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, STORAGE_NAME_3, STORAGE_NAME_4, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION,
                 LATEST_VERSION_FLAG_SET);
 
@@ -86,8 +86,8 @@ public class StoragePolicyRestControllerTest extends AbstractRestTest
         StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
 
         // Create and persist a storage policy entity.
-        StoragePolicyEntity storagePolicyEntity =
-            createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+        StoragePolicyEntity storagePolicyEntity = storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
                 FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         StoragePolicy resultStoragePolicy =

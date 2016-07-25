@@ -44,7 +44,7 @@ public class UserNamespaceAuthorizationRestControllerTest extends AbstractRestTe
         UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
 
         // Create and persist the relative database entities.
-        createNamespaceEntity(key.getNamespace());
+        namespaceDaoTestHelper.createNamespaceEntity(key.getNamespace());
 
         // Create a user namespace authorization.
         UserNamespaceAuthorization resultUserNamespaceAuthorization = userNamespaceAuthorizationRestController.createUserNamespaceAuthorization(
@@ -63,8 +63,8 @@ public class UserNamespaceAuthorizationRestControllerTest extends AbstractRestTe
         UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
 
         // Create and persist the relative database entities.
-        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity =
-            createUserNamespaceAuthorizationEntity(key, Arrays.asList(NamespacePermissionEnum.READ, NamespacePermissionEnum.WRITE));
+        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity = userNamespaceAuthorizationDaoTestHelper
+            .createUserNamespaceAuthorizationEntity(key, Arrays.asList(NamespacePermissionEnum.READ, NamespacePermissionEnum.WRITE));
 
         // Update a user namespace authorization.
         UserNamespaceAuthorization resultUserNamespaceAuthorization = userNamespaceAuthorizationRestController
@@ -83,7 +83,8 @@ public class UserNamespaceAuthorizationRestControllerTest extends AbstractRestTe
         UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
 
         // Create and persist the relative database entities.
-        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity = createUserNamespaceAuthorizationEntity(key, SUPPORTED_NAMESPACE_PERMISSIONS);
+        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity =
+            userNamespaceAuthorizationDaoTestHelper.createUserNamespaceAuthorizationEntity(key, SUPPORTED_NAMESPACE_PERMISSIONS);
 
         // Get a user namespace authorization.
         UserNamespaceAuthorization resultUserNamespaceAuthorization =
@@ -101,7 +102,8 @@ public class UserNamespaceAuthorizationRestControllerTest extends AbstractRestTe
         UserNamespaceAuthorizationKey key = new UserNamespaceAuthorizationKey(USER_ID, NAMESPACE);
 
         // Create and persist the relative database entities.
-        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity = createUserNamespaceAuthorizationEntity(key, SUPPORTED_NAMESPACE_PERMISSIONS);
+        UserNamespaceAuthorizationEntity userNamespaceAuthorizationEntity =
+            userNamespaceAuthorizationDaoTestHelper.createUserNamespaceAuthorizationEntity(key, SUPPORTED_NAMESPACE_PERMISSIONS);
 
         // Validate that this user namespace authorization exists.
         assertNotNull(userNamespaceAuthorizationDao.getUserNamespaceAuthorizationByKey(key));
@@ -129,7 +131,7 @@ public class UserNamespaceAuthorizationRestControllerTest extends AbstractRestTe
         // Create and persist the relative database entities.
         for (UserNamespaceAuthorizationKey key : keys)
         {
-            createUserNamespaceAuthorizationEntity(key, SUPPORTED_NAMESPACE_PERMISSIONS);
+            userNamespaceAuthorizationDaoTestHelper.createUserNamespaceAuthorizationEntity(key, SUPPORTED_NAMESPACE_PERMISSIONS);
         }
 
         // Get user namespace authorizations for the specified user id.
@@ -158,7 +160,7 @@ public class UserNamespaceAuthorizationRestControllerTest extends AbstractRestTe
         // Create and persist the relative database entities.
         for (UserNamespaceAuthorizationKey key : keys)
         {
-            createUserNamespaceAuthorizationEntity(key, SUPPORTED_NAMESPACE_PERMISSIONS);
+            userNamespaceAuthorizationDaoTestHelper.createUserNamespaceAuthorizationEntity(key, SUPPORTED_NAMESPACE_PERMISSIONS);
         }
 
         // Get user namespace authorizations for the specified namespace.

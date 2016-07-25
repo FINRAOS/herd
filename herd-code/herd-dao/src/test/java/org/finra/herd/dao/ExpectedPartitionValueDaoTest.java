@@ -37,18 +37,19 @@ public class ExpectedPartitionValueDaoTest extends AbstractDaoTest
     public void testGetExpectedPartitionValue()
     {
         // Create and persist a partition key group entity.
-        PartitionKeyGroupEntity partitionKeyGroupEntity = createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
+        PartitionKeyGroupEntity partitionKeyGroupEntity = partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
 
         // Create and persist a list of test expected partition values.
-        createExpectedPartitionValueEntities(partitionKeyGroupEntity, getTestUnsortedExpectedPartitionValues());
+        expectedPartitionValueDaoTestHelper
+            .createExpectedPartitionValueEntities(partitionKeyGroupEntity, expectedPartitionValueDaoTestHelper.getTestUnsortedExpectedPartitionValues());
 
         // Get expected partition value for different offset values.
-        List<String> testSortedExpectedPartitionValues = getTestSortedExpectedPartitionValues();
+        List<String> testSortedExpectedPartitionValues = expectedPartitionValueDaoTestHelper.getTestSortedExpectedPartitionValues();
         int testExpectedPartitionValueIndex = 3;
         for (Integer offset : Arrays.asList(-2, 0, 2))
         {
-            ExpectedPartitionValueEntity resultExpectedPartitionValueEntity = expectedPartitionValueDao.getExpectedPartitionValue(new ExpectedPartitionValueKey(
-                PARTITION_KEY_GROUP, testSortedExpectedPartitionValues.get(testExpectedPartitionValueIndex)), offset);
+            ExpectedPartitionValueEntity resultExpectedPartitionValueEntity = expectedPartitionValueDao.getExpectedPartitionValue(
+                new ExpectedPartitionValueKey(PARTITION_KEY_GROUP, testSortedExpectedPartitionValues.get(testExpectedPartitionValueIndex)), offset);
 
             // Validate the returned object.
             resultExpectedPartitionValueEntity.getPartitionValue().equals(testSortedExpectedPartitionValues.get(testExpectedPartitionValueIndex + offset));
@@ -59,10 +60,10 @@ public class ExpectedPartitionValueDaoTest extends AbstractDaoTest
     public void testGetExpectedPartitionValueWithOffsetExpectedPartitionValueNoExists()
     {
         // Create and persist a partition key group entity.
-        PartitionKeyGroupEntity partitionKeyGroupEntity = createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
+        PartitionKeyGroupEntity partitionKeyGroupEntity = partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
 
         // Create and persist a single test expected partition value.
-        createExpectedPartitionValueEntities(partitionKeyGroupEntity, Arrays.asList(PARTITION_VALUE));
+        expectedPartitionValueDaoTestHelper.createExpectedPartitionValueEntities(partitionKeyGroupEntity, Arrays.asList(PARTITION_VALUE));
 
         // Validate that we get null back when passing an existing expected partition value but giving an invalid offset.
         for (Integer offset : Arrays.asList(-1, 1))
@@ -72,39 +73,17 @@ public class ExpectedPartitionValueDaoTest extends AbstractDaoTest
     }
 
     /**
-     * Test DAO method to retrieve expected partition values by range.
-     */
-    @Test
-    public void testGetExpectedPartitionValuesByGroupAndRange()
-    {
-        createExpectedPartitionValueProcessDatesForApril2014(PARTITION_KEY_GROUP);
-
-        PartitionValueRange partitionValueRange = new PartitionValueRange();
-        partitionValueRange.setStartPartitionValue(getDateAsString(2014, 3, 11));
-        partitionValueRange.setEndPartitionValue(getDateAsString(2014, 3, 17));
-        List<ExpectedPartitionValueEntity> expectedPartitionValueEntities = expectedPartitionValueDao.getExpectedPartitionValuesByGroupAndRange(
-            PARTITION_KEY_GROUP, partitionValueRange);
-
-        assertEquals(expectedPartitionValueEntities.size(), 5, expectedPartitionValueEntities.size());
-        assertEquals(expectedPartitionValueEntities.get(0).getPartitionValue(), getDateAsString(2014, 3, 11));
-        assertEquals(expectedPartitionValueEntities.get(1).getPartitionValue(), getDateAsString(2014, 3, 14));
-        assertEquals(expectedPartitionValueEntities.get(2).getPartitionValue(), getDateAsString(2014, 3, 15));
-        assertEquals(expectedPartitionValueEntities.get(3).getPartitionValue(), getDateAsString(2014, 3, 16));
-        assertEquals(expectedPartitionValueEntities.get(4).getPartitionValue(), getDateAsString(2014, 3, 17));
-    }
-
-    /**
      * Test DAO method to retrieve expected partition values with no range (specified 2 ways). In the month of April, 2014, the number of values (i.e.
      * non-weekend days) is 22.
      */
     @Test
     public void testGetExpectedPartitionValuesByGroupAndNoRange()
     {
-        createExpectedPartitionValueProcessDatesForApril2014(PARTITION_KEY_GROUP);
+        expectedPartitionValueDaoTestHelper.createExpectedPartitionValueProcessDatesForApril2014(PARTITION_KEY_GROUP);
 
         // Null range.
-        List<ExpectedPartitionValueEntity> expectedPartitionValueEntities = expectedPartitionValueDao.getExpectedPartitionValuesByGroupAndRange(
-            PARTITION_KEY_GROUP, null);
+        List<ExpectedPartitionValueEntity> expectedPartitionValueEntities =
+            expectedPartitionValueDao.getExpectedPartitionValuesByGroupAndRange(PARTITION_KEY_GROUP, null);
 
         assertEquals(expectedPartitionValueEntities.size(), 22, expectedPartitionValueEntities.size());
 
@@ -113,6 +92,28 @@ public class ExpectedPartitionValueDaoTest extends AbstractDaoTest
         expectedPartitionValueEntities = expectedPartitionValueDao.getExpectedPartitionValuesByGroupAndRange(PARTITION_KEY_GROUP, partitionValueRange);
 
         assertEquals(expectedPartitionValueEntities.size(), 22, expectedPartitionValueEntities.size());
+    }
+
+    /**
+     * Test DAO method to retrieve expected partition values by range.
+     */
+    @Test
+    public void testGetExpectedPartitionValuesByGroupAndRange()
+    {
+        expectedPartitionValueDaoTestHelper.createExpectedPartitionValueProcessDatesForApril2014(PARTITION_KEY_GROUP);
+
+        PartitionValueRange partitionValueRange = new PartitionValueRange();
+        partitionValueRange.setStartPartitionValue(getDateAsString(2014, 3, 11));
+        partitionValueRange.setEndPartitionValue(getDateAsString(2014, 3, 17));
+        List<ExpectedPartitionValueEntity> expectedPartitionValueEntities =
+            expectedPartitionValueDao.getExpectedPartitionValuesByGroupAndRange(PARTITION_KEY_GROUP, partitionValueRange);
+
+        assertEquals(expectedPartitionValueEntities.size(), 5, expectedPartitionValueEntities.size());
+        assertEquals(expectedPartitionValueEntities.get(0).getPartitionValue(), getDateAsString(2014, 3, 11));
+        assertEquals(expectedPartitionValueEntities.get(1).getPartitionValue(), getDateAsString(2014, 3, 14));
+        assertEquals(expectedPartitionValueEntities.get(2).getPartitionValue(), getDateAsString(2014, 3, 15));
+        assertEquals(expectedPartitionValueEntities.get(3).getPartitionValue(), getDateAsString(2014, 3, 16));
+        assertEquals(expectedPartitionValueEntities.get(4).getPartitionValue(), getDateAsString(2014, 3, 17));
     }
 
     // Helper methods.
