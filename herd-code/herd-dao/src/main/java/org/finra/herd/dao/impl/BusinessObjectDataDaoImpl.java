@@ -34,16 +34,13 @@ import javax.persistence.criteria.Subquery;
 import javax.persistence.metamodel.SingularAttribute;
 
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.stereotype.Repository;
-import org.springframework.util.CollectionUtils;
 import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.dao.BusinessObjectDataDao;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchFilter;
-import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchKey;
-import org.finra.herd.model.api.xml.StorageUnit;
+import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.dto.StoragePolicyPriorityLevel;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity_;
@@ -68,6 +65,8 @@ import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity_;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity_;
+import org.springframework.stereotype.Repository;
+import org.springframework.util.CollectionUtils;
 
 @Repository
 public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements BusinessObjectDataDao
@@ -820,7 +819,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         
         criteria.select(builder.array(businessObjectDataEntity.get(BusinessObjectDataEntity_.id), namespaceEntity.get(NamespaceEntity_.code), businessObjectDefinitionEntity.get(BusinessObjectDefinitionEntity_.name),
         		businessObjectFormatEntity.get(BusinessObjectFormatEntity_.usage), fileTypeEntity.get(FileTypeEntity_.code),
-        		businessObjectFormatEntity.get(BusinessObjectFormatEntity_.businessObjectFormatVersion))).where(predicate);
+        		businessObjectFormatEntity.get(BusinessObjectFormatEntity_.businessObjectFormatVersion), businessObjectFormatEntity.get(BusinessObjectFormatEntity_.partitionKey), businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue)) ).where(predicate);
         
         // Order by business object format and data versions.
         criteria.orderBy(builder.asc(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue)));
@@ -837,10 +836,8 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         	 bData.setBusinessObjectFormatFileType((String) values[4]);
         	 bData.setBusinessObjectFormatVersion((Integer) values[5]);
         	 
-        	 //to satisfy the required attributes of Bdata for now
-        	 bData.setPartitionKey("NA");
-        	 bData.setPartitionValue("NA");
-        	 bData.setStorageUnits(new ArrayList<StorageUnit>());
+        	 bData.setPartitionKey((String) values[6]);
+        	 bData.setPartitionValue((String) values[7]);
 
         	 businessObjectDataList.add(bData);     
         } 

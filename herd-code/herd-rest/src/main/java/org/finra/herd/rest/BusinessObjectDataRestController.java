@@ -654,7 +654,9 @@ public class BusinessObjectDataRestController extends HerdBaseController
     }
     
     /**
-     * search business object data 
+     * search business object data based on namespace, definition Name, usage, file format, and version
+     * Namespace and definition name are required
+     * <p>Requires READ permission on namespace</p>
      * @param businessObjectDataSearchRequest search request
      * @return search result
      */

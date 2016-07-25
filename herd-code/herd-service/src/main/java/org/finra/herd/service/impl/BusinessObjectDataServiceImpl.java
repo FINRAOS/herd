@@ -1399,8 +1399,8 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
      * @param request search request
      * @return business data search result
      */
-   @NamespacePermission(fields = "#request?.businessObjectDataSearchFilters?.![businessObjectDataSearchFilter].businessObjectDataSearchKeys?.![businessObjectDataSearchKey].![namespace]",
-   permissions = NamespacePermissionEnum.READ)
+   // @NamespacePermission(fields = "#request.businessObjectDataSearchFilters.![businessObjectDataSearchKey]?.![namespace]",
+    //permissions = NamespacePermissionEnum.READ)
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
 	public BusinessObjectDataSearchResult searchBusinessObjectData(
