@@ -1710,7 +1710,7 @@
                </xs:documentation>
             </xs:annotation>
          </xs:element>
-         <xs:element name="storageUnits" type="storageUnits">
+         <xs:element name="storageUnits" type="storageUnits" minOccurs="0">
             <xs:annotation>
                <xs:documentation>A container for the Storage Units associated with a Business Object Data</xs:documentation>
             </xs:annotation>
