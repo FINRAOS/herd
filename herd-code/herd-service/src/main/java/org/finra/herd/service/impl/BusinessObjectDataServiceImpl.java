@@ -34,6 +34,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
+
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.BusinessObjectDataDao;
 import org.finra.herd.dao.StorageUnitDao;
@@ -125,7 +126,7 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
 
     @Autowired
     private BusinessObjectDataHelper businessObjectDataHelper;
-    
+
     @Autowired
     private BusinessObjectDataSearchHelper businessObjectDataSearchHelper;
 
@@ -1393,25 +1394,29 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         }
     }
 
-    
+
     /**
      * Search business object data based on the request
+     *
      * @param request search request
+     *
      * @return business data search result
      */
-   @NamespacePermission(fields = "#request?.businessObjectDataSearchFilters?.![businessObjectDataSearchFilter].businessObjectDataSearchKeys?.![businessObjectDataSearchKey].![namespace]",
-   permissions = NamespacePermissionEnum.READ)
+    @NamespacePermission(
+        fields = "#request?" +
+            ".businessObjectDataSearchFilters?.![businessObjectDataSearchFilter].businessObjectDataSearchKeys?.![businessObjectDataSearchKey].![namespace]",
+        permissions = NamespacePermissionEnum.READ)
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-	public BusinessObjectDataSearchResult searchBusinessObjectData(
-			BusinessObjectDataSearchRequest request) {
-		//validate search request
-		businessObjectDataSearchHelper.validBusinesObjectDataSearchRequest(request);
-		//search business object data
-		List<BusinessObjectData> objectDataList = businessObjectDataDao.searchBusinessObjectData(request.getBusinessObjectDataSearchFilters());
-		BusinessObjectDataSearchResult result = new BusinessObjectDataSearchResult();     	
-	    result.setBusinessObjectDataElements(objectDataList);
-		
-		return result;
-	}
+    public BusinessObjectDataSearchResult searchBusinessObjectData(BusinessObjectDataSearchRequest request)
+    {
+        //validate search request
+        businessObjectDataSearchHelper.validBusinesObjectDataSearchRequest(request);
+        //search business object data
+        List<BusinessObjectData> objectDataList = businessObjectDataDao.searchBusinessObjectData(request.getBusinessObjectDataSearchFilters());
+        BusinessObjectDataSearchResult result = new BusinessObjectDataSearchResult();
+        result.setBusinessObjectDataElements(objectDataList);
+
+        return result;
+    }
 }
