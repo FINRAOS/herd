@@ -652,18 +652,19 @@ public class BusinessObjectDataRestController extends HerdBaseController
         return new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
             businessObjectFormatVersion, partitionValue, getList(subPartitionValues), businessObjectDataVersion);
     }
-    
+
     /**
-     * search business object data based on namespace, definition Name, usage, file format, and version
-     * Namespace and definition name are required
-     * <p>Requires READ permission on namespace</p>
+     * Searches business object data based on namespace, definition name, format usage, file type, and format version. <p>Namespace and definition name are
+     * required.</p> <p>Requires READ permission on namespace</p>
+     *
      * @param businessObjectDataSearchRequest search request
+     *
      * @return search result
      */
     @RequestMapping(value = "/businessObjectData/search", method = RequestMethod.POST, consumes = {"application/xml", "application/json"})
     @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_AVAILABILITY_POST)
     public BusinessObjectDataSearchResult searchBusinessObjectData(@RequestBody BusinessObjectDataSearchRequest businessObjectDataSearchRequest)
     {
-    	return businessObjectDataService.searchBusinessObjectData(businessObjectDataSearchRequest);
+        return businessObjectDataService.searchBusinessObjectData(businessObjectDataSearchRequest);
     }
 }
