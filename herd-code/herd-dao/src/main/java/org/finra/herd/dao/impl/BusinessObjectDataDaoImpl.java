@@ -44,7 +44,6 @@ import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchFilter;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
-import org.finra.herd.model.api.xml.StorageUnit;
 import org.finra.herd.model.dto.StoragePolicyPriorityLevel;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity_;
@@ -819,7 +818,8 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
         criteria.select(builder.array(businessObjectDataEntity.get(BusinessObjectDataEntity_.id), namespaceEntity.get(NamespaceEntity_.code),
             businessObjectDefinitionEntity.get(BusinessObjectDefinitionEntity_.name), businessObjectFormatEntity.get(BusinessObjectFormatEntity_.usage),
-            fileTypeEntity.get(FileTypeEntity_.code), businessObjectFormatEntity.get(BusinessObjectFormatEntity_.businessObjectFormatVersion)))
+            fileTypeEntity.get(FileTypeEntity_.code), businessObjectFormatEntity.get(BusinessObjectFormatEntity_.businessObjectFormatVersion),
+            businessObjectFormatEntity.get(BusinessObjectFormatEntity_.partitionKey), businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue)))
             .where(predicate);
 
         // Order by business object format and data versions.
@@ -838,10 +838,8 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
             businessObjectData.setBusinessObjectFormatFileType((String) values[4]);
             businessObjectData.setBusinessObjectFormatVersion((Integer) values[5]);
 
-            //to satisfy the required attributes of Bdata for now
-            businessObjectData.setPartitionKey("NA");
-            businessObjectData.setPartitionValue("NA");
-            businessObjectData.setStorageUnits(new ArrayList<StorageUnit>());
+            businessObjectData.setPartitionKey((String) values[6]);
+            businessObjectData.setPartitionValue((String) values[7]);
 
             businessObjectDataList.add(businessObjectData);
         }
