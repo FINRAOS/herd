@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <!--
   Copyright 2015 herd contributors
 
@@ -14,18 +14,16 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<!DOCTYPE log4j:configuration PUBLIC "-//APACHE//DTD LOG4J 1.2//EN" "http://logging.apache.org/log4j/1.2/apidocs/org/apache/log4j/xml/doc-files/log4j.dtd" >
-<log4j:configuration>
+<Configuration status="warn" monitorInterval="0">
+   <Appenders>
+      <Console name="Console" target="SYSTEM_OUT">
+         <PatternLayout pattern="%d{MMM-dd-yyyy HH:mm:ss.SSS} [%t] %-5p %c{5}.%M - %m%n"/>
+      </Console>
+   </Appenders>
 
-   <appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">
-      <layout class="org.apache.log4j.PatternLayout">
-         <param name="ConversionPattern" value="%d{MMM-dd-yyyy HH:mm:ss.SSS} [%t] %-5p %c{5}.%M - %m%n" />
-      </layout>
-   </appender>
-
-   <root>
-      <level value="OFF" />
-      <appender-ref ref="CONSOLE" />
-   </root>
-
-</log4j:configuration>
+   <Loggers>
+      <Root level="off">
+         <AppenderRef ref="Console"/>
+      </Root>
+   </Loggers>
+</Configuration>

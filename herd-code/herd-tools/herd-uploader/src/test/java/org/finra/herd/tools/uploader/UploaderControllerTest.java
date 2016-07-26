@@ -27,16 +27,17 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import org.finra.herd.core.helper.LogLevel;
 import org.finra.herd.dao.impl.MockHttpClientOperationsImpl;
 import org.finra.herd.dao.impl.S3DaoImpl;
-import org.finra.herd.model.dto.RegServerAccessParamsDto;
 import org.finra.herd.model.dto.ManifestFile;
+import org.finra.herd.model.dto.RegServerAccessParamsDto;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.dto.UploaderInputManifestDto;
 import org.finra.herd.tools.common.databridge.DataBridgeWebClient;
@@ -46,6 +47,8 @@ import org.finra.herd.tools.common.databridge.DataBridgeWebClient;
  */
 public class UploaderControllerTest extends AbstractUploaderTest
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(UploaderControllerTest.class);
+
     @Before
     @Override
     public void setup() throws Exception
@@ -53,9 +56,9 @@ public class UploaderControllerTest extends AbstractUploaderTest
         super.setup();
 
         // Set the web client logger to warn level so we don't get unnecessary info level logging on the output.
-        Logger.getLogger(DataBridgeWebClient.class).setLevel(Level.WARN);
-        Logger.getLogger(UploaderWebClient.class).setLevel(Level.WARN);
-        Logger.getLogger(S3DaoImpl.class).setLevel(Level.WARN);
+        setLogLevel(DataBridgeWebClient.class, LogLevel.WARN);
+        setLogLevel(UploaderWebClient.class, LogLevel.WARN);
+        setLogLevel(S3DaoImpl.class, LogLevel.WARN);
     }
 
     @Test
@@ -126,9 +129,8 @@ public class UploaderControllerTest extends AbstractUploaderTest
     @Test
     public void testPerformUploadWithLoggerLevelSetToWarn() throws Exception
     {
-        Logger logger = Logger.getLogger(UploaderController.class);
-        Level origLoggerLevel = logger.getEffectiveLevel();
-        logger.setLevel(Level.WARN);
+        LogLevel origLoggerLevel = getLogLevel(UploaderController.class);
+        setLogLevel(UploaderController.class, LogLevel.WARN);
 
         try
         {
@@ -139,7 +141,7 @@ public class UploaderControllerTest extends AbstractUploaderTest
         }
         finally
         {
-            logger.setLevel(origLoggerLevel);
+            setLogLevel(UploaderController.class, origLoggerLevel);
         }
     }
 
@@ -239,8 +241,8 @@ public class UploaderControllerTest extends AbstractUploaderTest
     }
 
     /**
-     * TODO: We need the herd web service mocking done and this test case rewritten, so it would fail right at the end of performUpload() method (on the business
-     * object data registration step) and triggered the rollbackUpload() to occur.
+     * TODO: We need the herd web service mocking done and this test case rewritten, so it would fail right at the end of performUpload() method (on the
+     * business object data registration step) and triggered the rollbackUpload() to occur.
      */
     @Test(expected = RuntimeException.class)
     public void testPerformUploadRegistrationError() throws Exception
@@ -290,7 +292,8 @@ public class UploaderControllerTest extends AbstractUploaderTest
      * @param hostname optional override of the default web service hostname.
      * @param storageName optional storage name
      */
-    protected void runUpload(Integer numOfThreads, HashMap<String, String> attributes, Boolean createNewVersion, String hostname, String storageName) throws Exception
+    protected void runUpload(Integer numOfThreads, HashMap<String, String> attributes, Boolean createNewVersion, String hostname, String storageName)
+        throws Exception
     {
         String hostnameToUse = hostname == null ? WEB_SERVICE_HOSTNAME : hostname;
 

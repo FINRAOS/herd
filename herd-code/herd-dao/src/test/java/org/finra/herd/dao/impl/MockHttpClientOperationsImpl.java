@@ -40,7 +40,8 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicStatusLine;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
@@ -66,7 +67,7 @@ import org.finra.herd.model.jpa.StorageUnitStatusEntity;
  */
 public class MockHttpClientOperationsImpl implements HttpClientOperations
 {
-    private static final Logger LOGGER = Logger.getLogger(MockHttpClientOperationsImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MockHttpClientOperationsImpl.class);
 
     public static final String HOSTNAME_THROW_IO_EXCEPTION_DURING_POST = "testThrowIoExceptionDuringPost";
     public static final String HOSTNAME_THROW_IO_EXCEPTION_DURING_GET_STORAGES = "testThrowIoExceptionDuringGetStorages";

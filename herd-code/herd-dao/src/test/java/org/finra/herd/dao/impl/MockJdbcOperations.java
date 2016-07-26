@@ -20,7 +20,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.finra.herd.dao.JdbcOperations;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.CannotGetJdbcConnectionException;
@@ -32,7 +33,7 @@ import org.springframework.jdbc.core.ResultSetExtractor;
  */
 public class MockJdbcOperations implements JdbcOperations
 {
-    private static final Logger LOGGER = Logger.getLogger(MockJdbcOperations.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MockJdbcOperations.class);
 
     /**
      * Case1:

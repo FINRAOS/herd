@@ -15,7 +15,8 @@
 */
 package org.finra.herd.core.helper;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.propertyeditors.CustomBooleanEditor;
 import org.springframework.core.convert.ConversionFailedException;
@@ -30,7 +31,7 @@ import org.finra.herd.model.dto.ConfigurationValue;
 @Component
 public class ConfigurationHelper
 {
-    private static final Logger LOGGER = Logger.getLogger(ConfigurationHelper.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ConfigurationHelper.class);
 
     @Autowired
     private Environment environment;
@@ -171,7 +172,7 @@ public class ConfigurationHelper
                 String.format("Configuration \"%s\" has an invalid boolean value: \"%s\".", configurationValue.getKey(), booleanStringValue), e);
 
             // Log the exception.
-            LOGGER.error(illegalStateException);
+            LOGGER.error(illegalStateException.getMessage(), illegalStateException);
 
             // This will produce a 500 HTTP status code error.
             throw illegalStateException;

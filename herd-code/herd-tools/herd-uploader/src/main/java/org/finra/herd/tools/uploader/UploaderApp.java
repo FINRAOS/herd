@@ -18,7 +18,8 @@ package org.finra.herd.tools.uploader;
 import java.io.FileNotFoundException;
 
 import org.apache.commons.cli.Option;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.util.Log4jConfigurer;
 
@@ -33,7 +34,7 @@ import org.finra.herd.tools.common.databridge.DataBridgeApp;
  */
 public class UploaderApp extends DataBridgeApp
 {
-    private static final Logger LOGGER = Logger.getLogger(UploaderApp.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(UploaderApp.class);
 
     // The uploader specific command line options.
     private Option maxRetryAttemptsOpt;

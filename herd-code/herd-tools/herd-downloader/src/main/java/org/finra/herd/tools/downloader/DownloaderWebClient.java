@@ -26,7 +26,8 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import org.finra.herd.model.api.xml.BusinessObjectData;
@@ -42,7 +43,7 @@ import org.finra.herd.tools.common.databridge.DataBridgeWebClient;
 @Component
 public class DownloaderWebClient extends DataBridgeWebClient
 {
-    private static final Logger LOGGER = Logger.getLogger(DownloaderWebClient.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DownloaderWebClient.class);
 
     /**
      * Retrieves S3 key prefix from the herd registration server.

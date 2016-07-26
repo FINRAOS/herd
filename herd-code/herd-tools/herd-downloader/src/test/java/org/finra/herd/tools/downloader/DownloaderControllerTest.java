@@ -36,16 +36,13 @@ import java.util.List;
 import javax.xml.datatype.DatatypeFactory;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PatternLayout;
-import org.apache.log4j.WriterAppender;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import org.finra.herd.core.helper.LogLevel;
 import org.finra.herd.dao.impl.MockHttpClientOperationsImpl;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.AwsCredential;
@@ -82,8 +79,8 @@ public class DownloaderControllerTest extends AbstractDownloaderTest
         uploadAndRegisterTestData(S3_SIMPLE_TEST_PATH);
 
         // Set the web client logger to warn level so we don't get unnecessary info level logging on the output.
-        Logger.getLogger(DataBridgeWebClient.class).setLevel(Level.WARN);
-        Logger.getLogger(DownloaderWebClient.class).setLevel(Level.WARN);
+        setLogLevel(DataBridgeWebClient.class, LogLevel.WARN);
+        setLogLevel(DownloaderWebClient.class, LogLevel.WARN);
     }
 
     @Test
@@ -154,9 +151,8 @@ public class DownloaderControllerTest extends AbstractDownloaderTest
     @Test
     public void testPerformDownloadWithLoggerLevelSetToWarn() throws Exception
     {
-        Logger logger = Logger.getLogger(DownloaderController.class);
-        Level origLoggerLevel = logger.getEffectiveLevel();
-        logger.setLevel(Level.WARN);
+        LogLevel origLoggerLevel = getLogLevel(DownloaderController.class);
+        setLogLevel(DownloaderController.class, LogLevel.WARN);
 
         try
         {
@@ -164,7 +160,7 @@ public class DownloaderControllerTest extends AbstractDownloaderTest
         }
         finally
         {
-            logger.setLevel(origLoggerLevel);
+            setLogLevel(DownloaderController.class, origLoggerLevel);
         }
     }
 
@@ -381,16 +377,10 @@ public class DownloaderControllerTest extends AbstractDownloaderTest
     @Test
     public void testLogLocalDirectoryContents() throws Exception
     {
-        /*
-         * Hijack the logger to force it to be INFO level and add an additional appender which writes to a StringWriter
-         * The original values will be replaced at the end of the test case
-         */
-        Logger logger = Logger.getLogger(DownloaderController.class);
-        StringWriter writer = new StringWriter();
-        WriterAppender stringWriterAppender = new WriterAppender(new PatternLayout("%m%n"), writer);
-        logger.addAppender(stringWriterAppender);
-        Level originalLevel = logger.getLevel();
-        logger.setLevel(Level.INFO);
+        String appenderName = "TestWriterAppender";
+        StringWriter stringWriter = addLoggingWriterAppender(appenderName);
+        LogLevel originalLevel = getLogLevel(DownloaderController.class);
+        setLogLevel(DownloaderController.class, LogLevel.INFO);
 
         /*
          * Create and inject mock objects
@@ -466,12 +456,13 @@ public class DownloaderControllerTest extends AbstractDownloaderTest
 
             downloaderController.performDownload(regServerAccessParamsDto, manifestPath, s3FileTransferRequestParamsDto);
 
-            assertEquals(String.format("Found 1 files in \"%s\" target local directory:%n    %s%n", targetDirectoryPath, targetFilePath), writer.toString());
+            assertEquals(String.format("Found 1 files in \"%s\" target local directory:%n    %s%n", targetDirectoryPath, targetFilePath),
+                stringWriter.toString());
         }
         finally
         {
-            logger.setLevel(originalLevel);
-            logger.removeAppender(stringWriterAppender);
+            setLogLevel(DownloaderController.class, originalLevel);
+            removeLoggingAppender(appenderName);
 
             /*
              * Restore mocked dependencies to their original implementation

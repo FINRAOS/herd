@@ -24,7 +24,8 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import org.finra.herd.model.api.xml.BusinessObjectDataUploadCredential;
@@ -39,7 +40,7 @@ import org.finra.herd.tools.common.databridge.DataBridgeWebClient;
 @Component
 public class UploaderWebClient extends DataBridgeWebClient
 {
-    private static final Logger LOGGER = Logger.getLogger(UploaderWebClient.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(UploaderWebClient.class);
     
     /**
      * Retrieves S3 key prefix from the registration server.

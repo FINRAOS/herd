@@ -18,7 +18,8 @@ package org.finra.herd.app.security;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.AuthenticationUserDetailsService;
@@ -33,7 +34,7 @@ import org.finra.herd.model.dto.SecurityUserWrapper;
 @Component
 public class HerdUserDetailsService implements AuthenticationUserDetailsService<PreAuthenticatedAuthenticationToken>
 {
-    private static final Logger LOGGER = Logger.getLogger(HerdUserDetailsService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(HerdUserDetailsService.class);
 
     @Autowired
     private SecurityHelper securityHelper;

@@ -14,90 +14,72 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+<!-- Refresh configuration changes every 60 seconds. If this value is changed to 0, then no more monitoring will occur. -->
+<Configuration status="warn" monitorInterval="60">
+   <Appenders>
 
-<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
+      <!-- Use a rolling file appender to roll over files at certain points. The main log file will be herd.log in the location specified by the environment variable. The rollover format will use the date and increment counter and archive automatically. -->
+      <RollingFile name="RollingFile" fileName="${env:HERD_LOG4J_OUTPUT_BASE_PATH}logs/herd.log" filePattern="${env:HERD_LOG4J_OUTPUT_BASE_PATH}logs/herd.%d{yyyy-MM-dd}-%i.log.gz" immediateFlush="true" append="true">
+         <PatternLayout pattern="%d{MMM-dd-yyyy HH:mm:ss.SSS} [%t] %-5p %c{5}.%M %X{uid} %X{activitiProcessInstanceId} - %m%n"/>
+         <Policies>
+            <!-- Roll over files when they reach 2GB in size or once a day, whichever comes first. -->
+            <SizeBasedTriggeringPolicy size="2 GB" />
+            <TimeBasedTriggeringPolicy />
+         </Policies>
+         <DefaultRolloverStrategy>
+            <!-- Each time a rollover occurs, evaluate the following to determine when files should be deleted. Evaluate/delete files in the specified directory only. -->
+            <Delete basePath="${env:HERD_LOG4J_OUTPUT_BASE_PATH}logs" maxDepth="1">
+               <!-- Only consider the previously rolled over and archived files. -->
+               <IfFileName glob="herd.*.log.gz">
+                  <!-- Delete files after 30 days or when the accumulated size of all files exceeds 3GB. -->
+                  <IfAny>
+                     <IfLastModified age="30D" />
+                     <IfAccumulatedFileSize exceeds="3 GB" />
+                  </IfAny>
+               </IfFileName>
+            </Delete>
+         </DefaultRolloverStrategy>
+      </RollingFile>
 
-   <appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">
-      <layout class="org.apache.log4j.PatternLayout">
-         <param name="ConversionPattern" value="%d{MMM-dd-yyyy HH:mm:ss.SSS} [%t] %-5p %c{5}.%M %X{uid} %X{activitiProcessInstanceId} - %m%n"/>
-      </layout>
-   </appender>
+   </Appenders>
 
-   <appender name="FILE" class="org.apache.log4j.DailyRollingFileAppender">
-      <param name="File" value="${HERD_LOG4J_OUTPUT_BASE_PATH}logs/${base.INSTANCE_NAME}/herd.log"/>
-      <param name="DatePattern" value="'.'yyyy-MM-dd"/>
-      <param name="Append" value="true"/>
-      <layout class="org.apache.log4j.PatternLayout">
-         <param name="ConversionPattern" value="%d{MMM-dd-yyyy HH:mm:ss.SSS} [%t] %-5p %c{5}.%M %X{uid} %X{activitiProcessInstanceId} - %m%n"/>
-      </layout>
-   </appender>
+   <Loggers>
+      <!-- The default logging level for herd is "info". -->
+      <Logger name="org.finra.herd" level="info" additivity="false">
+          <AppenderRef ref="RollingFile"/>
+      </Logger>
 
-   <logger name="org.springframework" additivity="false">
-      <level value="WARN"/>
-      <appender-ref ref="FILE"/>
-   </logger>
+      <!-- Enable HTTP request logging by setting this class to debug level. -->
+      <Logger name="org.finra.herd.ui.RequestLoggingFilter" level="debug" additivity="false">
+          <AppenderRef ref="RollingFile"/>
+      </Logger>
 
-   <logger name="org.apache" additivity="false">
-      <level value="WARN"/>
-      <appender-ref ref="FILE"/>
-   </logger>
+      <!-- Enable debug level for AWS request id information. -->
+      <Logger name="com.amazonaws.requestId" level="debug" additivity="false">
+          <AppenderRef ref="RollingFile"/>
+      </Logger>
 
-   <logger name="org.activiti" additivity="false">
-      <level value="WARN"/>
-      <appender-ref ref="FILE"/>
-   </logger>
+      <!--
+       Explicitly turn off logging in certain Activiti "timer" classes so background tasks don't provide unnecessary error logging for "normal" situations
+       such as user configured Activiti workflows with invalid classes specified, etc. We will handle the logging ourselves in our custom herd Activiti
+       classes wired into the Activiti process engine configuration.
+      -->
+      <Logger name="org.activiti.engine.impl.jobexecutor.TimerCatchIntermediateEventJobHandler" level="off" additivity="false">
+          <AppenderRef ref="RollingFile"/>
+      </Logger>
+      <Logger name="org.activiti.engine.impl.jobexecutor.TimerExecuteNestedActivityJobHandler" level="off" additivity="false">
+          <AppenderRef ref="RollingFile"/>
+      </Logger>
+      <Logger name="org.activiti.engine.impl.jobexecutor.TimerStartEventJobHandler" level="off" additivity="false">
+          <AppenderRef ref="RollingFile"/>
+      </Logger>
+      <Logger name="org.activiti.engine.impl.jobexecutor.ExecuteJobsRunnable" level="off" additivity="false">
+          <AppenderRef ref="RollingFile"/>
+      </Logger>
 
-   <!--
-    Explicitly turn off logging in certain Activiti "timer" classes so background tasks don't provide unnecessary error logging for "normal" situations
-    such as user configured Activiti workflows with invalid classes specified, etc. We will handle the logging ourselves in our custom herd Activiti
-    classes wired into the Activiti process engine configuration.
-   -->
-   <logger name="org.activiti.engine.impl.jobexecutor.TimerCatchIntermediateEventJobHandler" additivity="false">
-      <level value="OFF"/>
-      <appender-ref ref="FILE"/>
-   </logger>
-   <logger name="org.activiti.engine.impl.jobexecutor.TimerExecuteNestedActivityJobHandler" additivity="false">
-      <level value="OFF"/>
-      <appender-ref ref="FILE"/>
-   </logger>
-   <logger name="org.activiti.engine.impl.jobexecutor.TimerStartEventJobHandler" additivity="false">
-      <level value="OFF"/>
-      <appender-ref ref="FILE"/>
-   </logger>
-   <logger name="org.activiti.engine.impl.jobexecutor.ExecuteJobsRunnable" additivity="false">
-      <level value="OFF"/>
-      <appender-ref ref="FILE"/>
-   </logger>
-
-   <!-- Turn on SQL logging by commenting out the following. -->
-   <logger name="org.hibernate.SQL" additivity="false">
-      <level value="WARN"/>
-      <appender-ref ref="FILE"/>
-   </logger>
-
-   <logger name="org.finra.herd" additivity="false">
-      <level value="INFO"/>
-      <appender-ref ref="FILE"/>
-   </logger>
-
-   <!-- Enable HTTP request logging by setting this class to debug level. -->
-   <logger name="org.finra.herd.ui.RequestLoggingFilter" additivity="false">
-      <level value="DEBUG"/>
-      <appender-ref ref="FILE"/>
-   </logger>
-
-   <!-- Turn off the stop watch tracking by un-commenting this. -->
-   <!--
-   <logger name="org.finra.herd.core.StopWatchAdvice" additivity="false">
-      <level value="WARN"/>
-      <appender-ref ref="FILE"/>
-   </logger>
-   -->
-
-   <root>
-      <level value="WARN"/>
-      <appender-ref ref="CONSOLE"/>
-   </root>
-
-</log4j:configuration>
+      <!-- We are using "warn" as the default level which will prevent too much logging (e.g. info, debug, etc.) unless specifically configured with a separate Logger. -->
+      <Root level="warn">
+         <AppenderRef ref="RollingFile"/>
+      </Root>
+   </Loggers>
+</Configuration>

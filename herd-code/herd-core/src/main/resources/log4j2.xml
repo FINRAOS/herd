@@ -14,9 +14,8 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<!DOCTYPE log4j:configuration PUBLIC "-//APACHE//DTD LOG4J 1.2//EN" "http://logging.apache.org/log4j/1.2/apidocs/org/apache/log4j/xml/doc-files/log4j.dtd" >
-<log4j:configuration>
-
+<!-- Don't add a shutdown hook for the defaul configuration. This also helps take care of logging warnings for JUnits. -->
+<Configuration shutdownHook="disable" status="warn">
    <!--
      This is a default Log4J configuration file that will automatically get read in and used by Log4J during application startup.
      It exists to ensure any logging performed before our real herd-log4j.xml initialization occurs isn't lost and will go to the console.
@@ -25,33 +24,29 @@
      already perform their own logging. Once the herd-log4j.xml logging initialization has occurred, the initialization that occurred based on this file
      is no longer relevant since it is no longer used.
     -->
+   <Appenders>
+      <Console name="Console" target="SYSTEM_OUT">
+         <PatternLayout pattern="%d{MMM-dd-yyyy HH:mm:ss.SSS} [%t] %-5p %c{5}.%M - %m%n"/>
+      </Console>
+   </Appenders>
 
-   <appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">
-      <layout class="org.apache.log4j.PatternLayout">
-         <param name="ConversionPattern" value="%d{MMM-dd-yyyy HH:mm:ss.SSS} [%t] %-5p %c{5}.%M - %m%n"/>
-      </layout>
-   </appender>
+   <Loggers>
+      <!--
+       Turn off error logging for the schema export class which displays lots of errors (see below) during the test schema export.
+       These errors don't seem to cause problems which is why we're turning off logging for this one class.
+       ERROR org.hibernate.tool.hbm2ddl.SchemaExport.perform - HHH000389: Unsuccessful: alter table bus_objct_data drop constraint FK_lnt27okt768yeecww91gq7265
+       ERROR org.hibernate.tool.hbm2ddl.SchemaExport.perform - Table "BUS_OBJCT_DATA" not found; SQL statement:
+       ...
+      -->
+      <Logger name="org.hibernate.tool.hbm2ddl.SchemaExport" level="off" additivity="false"/>
 
-   <!--
-    Turn off error logging for the schema export class which displays lots of errors (see below) during the test schema export.
-    These errors don't seem to cause problems which is why we're turning off logging for this one class.
-    ERROR org.hibernate.tool.hbm2ddl.SchemaExport.perform - HHH000389: Unsuccessful: alter table bus_objct_data drop constraint FK_lnt27okt768yeecww91gq7265
-    ERROR org.hibernate.tool.hbm2ddl.SchemaExport.perform - Table "BUS_OBJCT_DATA" not found; SQL statement:
-    ...
-   -->
-   <logger name="org.hibernate.tool.hbm2ddl.SchemaExport" additivity="false">
-      <level value="OFF"/>
-      <appender-ref ref="CONSOLE"/>
-   </logger>
-
-   <root>
       <!--
         We are using "warn" as the default level which should prevent any logging from going to the console unless real warning or errors occur
         early during application startup (i.e. before the real herd-log4j.xml is initialized). If we want to get additional early logging such as
         Spring context initialization, etc., this can be temporarily configured to "info" or "debug" if needed.
        -->
-      <level value="WARN"/>
-      <appender-ref ref="CONSOLE"/>
-   </root>
-
-</log4j:configuration>
+      <Root level="warn">
+         <AppenderRef ref="Console"/>
+      </Root>
+   </Loggers>
+</Configuration>

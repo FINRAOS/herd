@@ -15,7 +15,8 @@
 */
 package org.finra.herd.core.helper;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
@@ -25,7 +26,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class HerdThreadHelper
 {
-    private static final Logger LOGGER = Logger.getLogger(HerdThreadHelper.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(HerdThreadHelper.class);
 
     /**
      * Sleeps specified number of milliseconds.

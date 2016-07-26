@@ -20,7 +20,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.junit.Test;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -32,7 +33,7 @@ import org.finra.herd.ui.constants.UiConstants;
  */
 public class HerdControllerTest extends AbstractUiTest
 {
-    private static Logger logger = Logger.getLogger(HerdControllerTest.class);
+    private static Logger logger = LoggerFactory.getLogger(HerdControllerTest.class);
 
     @Test
     public void testDisplayBuildInfo() throws Exception
@@ -44,7 +45,7 @@ public class HerdControllerTest extends AbstractUiTest
         BuildInformation buildInformation = (BuildInformation) modelAndView.getModel().get(UiConstants.MODEL_KEY_BUILD_INFORMATION);
         assertNotNull(buildInformation);
         assertNotNull(buildInformation.getBuildDate());
-        logger.info(buildInformation);
+        logger.info(buildInformation.toString());
     }
 
     @Test

@@ -28,7 +28,8 @@ import javax.xml.bind.JAXBException;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -53,7 +54,7 @@ import org.finra.herd.tools.common.databridge.DataBridgeController;
 @Component
 public class UploaderController extends DataBridgeController
 {
-    private static final Logger LOGGER = Logger.getLogger(UploaderController.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(UploaderController.class);
 
     @Autowired
     private ConfigurationHelper configurationHelper;

@@ -27,7 +27,8 @@ import java.util.Map;
 import javax.xml.bind.JAXBException;
 
 import org.activiti.engine.history.HistoricProcessInstance;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.junit.Test;
 
 import org.finra.herd.model.api.xml.EmrClusterDefinition;
@@ -44,7 +45,7 @@ import org.finra.herd.service.activiti.ActivitiRuntimeHelper;
  */
 public class CreateEmrClusterTest extends AbstractServiceTest
 {
-    private static final Logger LOGGER = Logger.getLogger(CreateEmrClusterTest.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(CreateEmrClusterTest.class);
 
     private Map<String, Object> createJob(String clusterName, String dryRun, String contentType, String emrClusterDefinitionOverride)
         throws Exception, JAXBException, IOException

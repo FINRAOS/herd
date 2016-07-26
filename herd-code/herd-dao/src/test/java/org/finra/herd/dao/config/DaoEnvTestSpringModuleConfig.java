@@ -136,7 +136,6 @@ public class DaoEnvTestSpringModuleConfig
         Log4jOverridableConfigurer log4jConfigurer = new Log4jOverridableConfigurer();
         log4jConfigurer.setDefaultResourceLocation(TEST_LOG4J_CONFIG_RESOURCE_LOCATION);
         log4jConfigurer.setOverrideResourceLocation("non_existent_override_location");
-        log4jConfigurer.setRefreshIntervalMillis(0);
         return log4jConfigurer;
     }
 

@@ -15,7 +15,8 @@
 */
 package org.finra.herd.tools.downloader;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.util.Log4jConfigurer;
 
@@ -30,7 +31,7 @@ import org.finra.herd.tools.common.databridge.DataBridgeApp;
  */
 public class DownloaderApp extends DataBridgeApp
 {
-    private static final Logger LOGGER = Logger.getLogger(DownloaderApp.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DownloaderApp.class);
 
     // An argument parser for the application.
     private ArgumentParser argParser;

@@ -31,7 +31,8 @@ import javax.servlet.http.HttpServletRequest;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
@@ -46,7 +47,7 @@ import org.finra.herd.service.helper.UserNamespaceAuthorizationHelper;
 @SuppressFBWarnings(value = "MS_PKGPROTECT", justification = "We will leave CALENDAR_PATTERNS as public since AbstractAppTest needs access to it.")
 public class HttpHeaderApplicationUserBuilder implements ApplicationUserBuilder
 {
-    private static final Logger LOGGER = Logger.getLogger(ApplicationUserBuilder.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationUserBuilder.class);
 
     @Autowired
     private ConfigurationHelper configurationHelper;

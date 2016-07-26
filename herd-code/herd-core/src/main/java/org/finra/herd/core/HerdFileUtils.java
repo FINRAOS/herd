@@ -18,14 +18,15 @@ package org.finra.herd.core;
 import java.io.File;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Provides additional file utilities.
  */
 public class HerdFileUtils extends FileUtils
 {
-    private static final Logger LOGGER = Logger.getLogger(HerdFileUtils.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(HerdFileUtils.class);
 
     /**
      * The number of bytes in a gigabyte.

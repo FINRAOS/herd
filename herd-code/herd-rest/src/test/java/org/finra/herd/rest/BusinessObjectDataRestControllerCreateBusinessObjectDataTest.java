@@ -19,7 +19,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -33,7 +34,7 @@ import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
  */
 public class BusinessObjectDataRestControllerCreateBusinessObjectDataTest extends AbstractRestTest
 {
-    protected static Logger logger = Logger.getLogger(BusinessObjectDataRestControllerCreateBusinessObjectDataTest.class);
+    protected static Logger logger = LoggerFactory.getLogger(BusinessObjectDataRestControllerCreateBusinessObjectDataTest.class);
 
     /**
      * Sets up the test environment.

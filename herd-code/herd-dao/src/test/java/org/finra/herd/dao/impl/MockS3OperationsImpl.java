@@ -79,7 +79,8 @@ import com.amazonaws.services.s3.transfer.internal.TransferMonitor;
 import com.amazonaws.services.s3.transfer.internal.UploadImpl;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.concurrent.BasicFuture;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.dao.S3Operations;
@@ -94,7 +95,7 @@ import org.finra.herd.dao.S3Operations;
  */
 public class MockS3OperationsImpl implements S3Operations
 {
-    private static final Logger LOGGER = Logger.getLogger(MockS3OperationsImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MockS3OperationsImpl.class);
 
     /**
      * Suffix to hint operation to throw a AmazonServiceException

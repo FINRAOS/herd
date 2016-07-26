@@ -65,7 +65,7 @@
       <jta.version>1.1</jta.version>
       -->
       <junit.version>4.12</junit.version>
-      <log4j.version>1.2.17</log4j.version>
+      <log4j.version>2.6.2</log4j.version>
       <maven.plugin.api.version>3.3.9</maven.plugin.api.version>
       <maven.plugin.annotations.version>3.4</maven.plugin.annotations.version>
       <migbase64.version>2.2</migbase64.version>
@@ -75,7 +75,7 @@
       <postgresql.driver.version>9.4-1206-jdbc42</postgresql.driver.version>
       <quartz.scheduler.version>2.2.2</quartz.scheduler.version>
       <roaster.version>2.18.2.Final</roaster.version>
-      <slf4j.version>1.7.13</slf4j.version>
+      <slf4j.version>1.7.21</slf4j.version>
       <spring.security.version>4.0.3.RELEASE</spring.security.version>
       <spring.version>4.2.4.RELEASE</spring.version>
       <sun.jersey.version>1.19.1</sun.jersey.version>
@@ -448,11 +448,6 @@
             <version>${junit.version}</version>
             <scope>test</scope>
          </dependency>
-         <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-            <version>${log4j.version}</version>
-         </dependency>
          <!-- This is needed to test JdbcDatabaseType since it needs to load a real driver and we don't want to expose H2 as a valid enum value. -->
          <dependency>
             <groupId>org.postgresql</groupId>
@@ -471,10 +466,22 @@
             <artifactId>slf4j-api</artifactId>
             <version>${slf4j.version}</version>
          </dependency>
+         <!-- Binding for Log4J -->
          <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-            <version>${slf4j.version}</version>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-slf4j-impl</artifactId>
+            <version>${log4j.version}</version>
+         </dependency>
+         <!-- Log4j API and Core implementation required for binding -->
+         <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+            <version>${log4j.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>${log4j.version}</version>
          </dependency>
          <dependency>
             <groupId>org.springframework</groupId>
@@ -573,9 +580,9 @@
             <version>${jackson.version}</version>
          </dependency>
          <dependency>
-             <groupId>com.fasterxml.jackson.jaxrs</groupId>
-             <artifactId>jackson-jaxrs-json-provider</artifactId>
-             <version>${jackson.version}</version>
+            <groupId>com.fasterxml.jackson.jaxrs</groupId>
+            <artifactId>jackson-jaxrs-json-provider</artifactId>
+            <version>${jackson.version}</version>
          </dependency>
          <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>

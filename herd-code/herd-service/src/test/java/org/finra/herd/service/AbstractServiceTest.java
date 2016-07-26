@@ -44,8 +44,6 @@ import org.activiti.engine.repository.Deployment;
 import org.activiti.spring.SpringProcessEngineConfiguration;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.fusesource.hawtbuf.ByteArrayInputStream;
 import org.joda.time.DateTime;
 import org.junit.After;
@@ -54,6 +52,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.util.CollectionUtils;
 
+import org.finra.herd.core.helper.LogLevel;
 import org.finra.herd.dao.AbstractDaoTest;
 import org.finra.herd.dao.helper.AwsHelper;
 import org.finra.herd.dao.helper.EmrHelper;
@@ -361,8 +360,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
             "/schm-v$businessObjectFormatVersion/data-v$businessObjectDataVersion/$businessObjectFormatPartitionKey=$businessObjectDataPartitionValue" +
             "#if($CollectionUtils.isNotEmpty($businessObjectDataSubPartitions.keySet()))" +
             "#foreach($subPartitionKey in $businessObjectDataSubPartitions.keySet())/$subPartitionKey=$businessObjectDataSubPartitions.get($subPartitionKey)" +
-            "#end" +
-            "#end";
+            "#end" + "#end";
 
     protected static final String SCHEMA_PARTITION_COLUMN_NAME_PREFIX = "Prtn-Clmn-Name";
 
@@ -2715,7 +2713,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
      */
     protected UploadSingleInitiationResponse createUploadedFileData(String businessObjectDataStatusCode)
     {
-        Logger.getLogger(UploadDownloadHelperServiceImpl.class).setLevel(Level.OFF);
+        setLogLevel(UploadDownloadHelperServiceImpl.class, LogLevel.OFF);
 
         // Create source and target business object formats database entities which are required to initiate an upload.
         createDatabaseEntitiesForUploadDownloadTesting();
@@ -2926,8 +2924,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         Integer businessObjectDataVersion)
     {
         return String.format("namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", " +
-            "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d, businessObjectDataPartitionValue: \"%s\", " +
-            "businessObjectDataSubPartitionValues: \"%s\", businessObjectDataVersion: %d", namespaceCode, businessObjectDefinitionName,
+                "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d, businessObjectDataPartitionValue: \"%s\", " +
+                "businessObjectDataSubPartitionValues: \"%s\", businessObjectDataVersion: %d", namespaceCode, businessObjectDefinitionName,
             businessObjectFormatUsage, businessObjectFormatFileType, businessObjectFormatVersion, partitionValue,
             CollectionUtils.isEmpty(subPartitionValues) ? "" : org.apache.commons.lang3.StringUtils.join(subPartitionValues, ","), businessObjectDataVersion);
     }
@@ -2971,7 +2969,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     }
 
     /**
-     * Returns a list of test business object data notification registration keys expected to be returned by getBusinessObjectDataNotificationRegistrationsByNamespace()
+     * Returns a list of test business object data notification registration keys expected to be returned by
+     * getBusinessObjectDataNotificationRegistrationsByNamespace()
      * method.
      *
      * @return the list of expected business object data notification registration keys
@@ -3072,7 +3071,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         String businessObjectFormatFileType, Integer businessObjectFormatVersion)
     {
         return String.format("namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", " +
-            "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d", namespaceCode, businessObjectDefinitionName, businessObjectFormatUsage,
+                "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d", namespaceCode, businessObjectDefinitionName, businessObjectFormatUsage,
             businessObjectFormatFileType, businessObjectFormatVersion);
     }
 
@@ -3091,7 +3090,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         String businessObjectFormatUsage, String businessObjectFormatFileType, Integer businessObjectFormatVersion)
     {
         return String.format("Business object format with namespace \"%s\", business object definition name \"%s\"," +
-            " format usage \"%s\", format file type \"%s\", and format version \"%d\" doesn't exist.", namespaceCode, businessObjectDefinitionName,
+                " format usage \"%s\", format file type \"%s\", and format version \"%d\" doesn't exist.", namespaceCode, businessObjectDefinitionName,
             businessObjectFormatUsage, businessObjectFormatFileType, businessObjectFormatVersion);
     }
 
@@ -3227,10 +3226,10 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
                         {
                             // No auto-discovery.
                             sb.append(String.format("ALTER TABLE `[Table Name]` ADD [If Not Exists]PARTITION (`PRTN_CLMN001`='%s', `PRTN_CLMN002`='%s', " +
-                                "`PRTN_CLMN003`='%s', `PRTN_CLMN004`='%s', `PRTN_CLMN005`='%s') " +
-                                "LOCATION 's3n://%s/ut-namespace-1-[Random Suffix]/ut-dataprovider-1-[Random Suffix]/ut-usage[Random Suffix]" +
-                                "/[Format File Type]/ut-businessobjectdefinition-name-1-[Random Suffix]/schm-v[Format Version]" +
-                                "/data-v[Data Version]/prtn-clmn001=%s/prtn-clmn002=%s/prtn-clmn003=%s/prtn-clmn004=%s/prtn-clmn005=%s';\n",
+                                    "`PRTN_CLMN003`='%s', `PRTN_CLMN004`='%s', `PRTN_CLMN005`='%s') " +
+                                    "LOCATION 's3n://%s/ut-namespace-1-[Random Suffix]/ut-dataprovider-1-[Random Suffix]/ut-usage[Random Suffix]" +
+                                    "/[Format File Type]/ut-businessobjectdefinition-name-1-[Random Suffix]/schm-v[Format Version]" +
+                                    "/data-v[Data Version]/prtn-clmn001=%s/prtn-clmn002=%s/prtn-clmn003=%s/prtn-clmn004=%s/prtn-clmn005=%s';\n",
                                 testPrimaryPartitionValue, testSubPartitionValues.get(0), testSubPartitionValues.get(1), testSubPartitionValues.get(2),
                                 testSubPartitionValues.get(3), getExpectedS3BucketName(partitionValue), testPrimaryPartitionValue,
                                 testSubPartitionValues.get(0), testSubPartitionValues.get(1), testSubPartitionValues.get(2), testSubPartitionValues.get(3)));
@@ -3241,12 +3240,12 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
                             for (String binaryString : Arrays.asList("00", "01", "10", "11"))
                             {
                                 sb.append(String.format("ALTER TABLE `[Table Name]` ADD [If Not Exists]PARTITION (`PRTN_CLMN001`='%s', `PRTN_CLMN002`='%s', " +
-                                    "`PRTN_CLMN003`='%s', `PRTN_CLMN004`='%s', `PRTN_CLMN005`='%s', `PRTN_CLMN006`='%s', `PRTN_CLMN007`='%s') " +
-                                    "LOCATION 's3n://%s/ut-namespace-1-[Random Suffix]/ut-dataprovider-1-[Random Suffix]/ut-usage[Random Suffix]" +
-                                    "/[Format File Type]/ut-businessobjectdefinition-name-1-[Random Suffix]/schm-v[Format Version]" +
-                                    "/data-v[Data Version]/prtn-clmn001=%s/prtn-clmn002=%s/prtn-clmn003=%s/prtn-clmn004=%s/prtn-clmn005=%s/" +
-                                    (replaceUnderscoresWithHyphens ? "prtn-clmn006" : "prtn_clmn006") + "=%s/" +
-                                    (replaceUnderscoresWithHyphens ? "prtn-clmn007" : "prtn_clmn007") + "=%s';\n", testPrimaryPartitionValue,
+                                        "`PRTN_CLMN003`='%s', `PRTN_CLMN004`='%s', `PRTN_CLMN005`='%s', `PRTN_CLMN006`='%s', `PRTN_CLMN007`='%s') " +
+                                        "LOCATION 's3n://%s/ut-namespace-1-[Random Suffix]/ut-dataprovider-1-[Random Suffix]/ut-usage[Random Suffix]" +
+                                        "/[Format File Type]/ut-businessobjectdefinition-name-1-[Random Suffix]/schm-v[Format Version]" +
+                                        "/data-v[Data Version]/prtn-clmn001=%s/prtn-clmn002=%s/prtn-clmn003=%s/prtn-clmn004=%s/prtn-clmn005=%s/" +
+                                        (replaceUnderscoresWithHyphens ? "prtn-clmn006" : "prtn_clmn006") + "=%s/" +
+                                        (replaceUnderscoresWithHyphens ? "prtn-clmn007" : "prtn_clmn007") + "=%s';\n", testPrimaryPartitionValue,
                                     testSubPartitionValues.get(0), testSubPartitionValues.get(1), testSubPartitionValues.get(2), testSubPartitionValues.get(3),
                                     binaryString.substring(0, 1), binaryString.substring(1, 2), getExpectedS3BucketName(partitionValue),
                                     testPrimaryPartitionValue, testSubPartitionValues.get(0), testSubPartitionValues.get(1), testSubPartitionValues.get(2),
@@ -3269,7 +3268,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         {
             // Add a location statement since the table is not partitioned and we have a non-empty list of partition values.
             sb.append(String.format("LOCATION 's3n://%s/ut-namespace-1-[Random Suffix]/ut-dataprovider-1-[Random Suffix]/ut-usage[Random Suffix]" +
-                "/txt/ut-businessobjectdefinition-name-1-[Random Suffix]/schm-v[Format Version]/data-v[Data Version]/partition=none';",
+                    "/txt/ut-businessobjectdefinition-name-1-[Random Suffix]/schm-v[Format Version]/data-v[Data Version]/partition=none';",
                 getExpectedS3BucketName(Hive13DdlGenerator.NO_PARTITIONING_PARTITION_VALUE)));
         }
         else
@@ -3388,13 +3387,14 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
             String expectedS3KeyPrefix =
                 getExpectedS3KeyPrefix(NAMESPACE, DATA_PROVIDER_NAME, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION,
                     FIRST_PARTITION_COLUMN_NAME, partition.get(0), Arrays.asList(
-                    new SchemaColumn(SECOND_PARTITION_COLUMN_NAME, "STRING", NO_COLUMN_SIZE, COLUMN_REQUIRED, NO_COLUMN_DEFAULT_VALUE, NO_COLUMN_DESCRIPTION))
-                    .toArray(new SchemaColumn[1]), Arrays.asList(partition.get(1)).toArray(new String[1]), DATA_VERSION);
+                        new SchemaColumn(SECOND_PARTITION_COLUMN_NAME, "STRING", NO_COLUMN_SIZE, COLUMN_REQUIRED, NO_COLUMN_DEFAULT_VALUE,
+                            NO_COLUMN_DESCRIPTION)).toArray(new SchemaColumn[1]), Arrays.asList(partition.get(1)).toArray(new String[1]), DATA_VERSION);
 
             // Add the alter table add partition statement.
             ddlBuilder.append("\n");
-            ddlBuilder.append("ALTER TABLE `" + TABLE_NAME + "` ADD IF NOT EXISTS PARTITION (`" + FIRST_PARTITION_COLUMN_NAME + "`='" + partition.get(0) +
-                "', `" + SECOND_PARTITION_COLUMN_NAME + "`='" + partition.get(1) + "') LOCATION 's3n://" + S3_BUCKET_NAME + "/" + expectedS3KeyPrefix + "';");
+            ddlBuilder.append(
+                "ALTER TABLE `" + TABLE_NAME + "` ADD IF NOT EXISTS PARTITION (`" + FIRST_PARTITION_COLUMN_NAME + "`='" + partition.get(0) + "', `" +
+                    SECOND_PARTITION_COLUMN_NAME + "`='" + partition.get(1) + "') LOCATION 's3n://" + S3_BUCKET_NAME + "/" + expectedS3KeyPrefix + "';");
         }
 
         String expectedDdl = ddlBuilder.toString();
@@ -3473,7 +3473,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     protected List<PartitionValueFilter> getInvalidPartitionValueFilters()
     {
         return Arrays.asList(new PartitionValueFilter(PARTITION_KEY, NO_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-            NO_LATEST_AFTER_PARTITION_VALUE),
+                NO_LATEST_AFTER_PARTITION_VALUE),
             new PartitionValueFilter(PARTITION_KEY, NO_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE, new LatestBeforePartitionValue(),
                 new LatestAfterPartitionValue()),
             new PartitionValueFilter(PARTITION_KEY, NO_PARTITION_VALUES, new PartitionValueRange(START_PARTITION_VALUE, END_PARTITION_VALUE),

@@ -25,13 +25,12 @@ import java.util.Arrays;
 
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import org.apache.commons.collections4.IterableUtils;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.fusesource.hawtbuf.ByteArrayInputStream;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
+import org.finra.herd.core.helper.LogLevel;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.BusinessObjectData;
@@ -724,7 +723,7 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
     @Test
     public void testPerformCompleteUploadSingleMessage()
     {
-        Logger.getLogger(UploadDownloadServiceImpl.class).setLevel(Level.OFF);
+        setLogLevel(UploadDownloadServiceImpl.class, LogLevel.OFF);
 
         createDatabaseEntitiesForUploadDownloadTesting();
 
@@ -763,7 +762,7 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
     @Test
     public void testPerformCompleteUploadSingleMessageStorageFileNoExists()
     {
-        Logger.getLogger(UploadDownloadServiceImpl.class).setLevel(Level.OFF);
+        setLogLevel(UploadDownloadServiceImpl.class, LogLevel.OFF);
 
         // Try to complete the upload, when storage file matching the S3 key does not exist in the database.
         UploadDownloadServiceImpl.CompleteUploadSingleMessageResult result = uploadDownloadService.performCompleteUploadSingleMessage("KEY_DOES_NOT_EXIST");
@@ -779,7 +778,7 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
     @Test
     public void testPerformCompleteUploadSingleMessageS3FileNoExists()
     {
-        Logger.getLogger(UploadDownloadServiceImpl.class).setLevel(Level.OFF);
+        setLogLevel(UploadDownloadServiceImpl.class, LogLevel.OFF);
 
         createDatabaseEntitiesForUploadDownloadTesting();
 
@@ -915,6 +914,8 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         assertNotNull(uploadSingleCredentialExtensionResponse.getAwsAccessKey());
         assertNotNull(uploadSingleCredentialExtensionResponse.getAwsSecretKey());
         assertNotNull(uploadSingleCredentialExtensionResponse.getAwsSessionToken());
+        assertNotNull(uploadSingleCredentialExtensionResponse.getAwsSessionExpirationTime());
+        assertNotNull(uploadSingleInitiationResponse.getAwsSessionExpirationTime());
 
         // Ensure the extended credentials are greater than the original set of credentials.
         assertTrue(uploadSingleCredentialExtensionResponse.getAwsSessionExpirationTime().toGregorianCalendar().getTimeInMillis() >
@@ -979,7 +980,7 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
     @Test
     public void testUploadDownloadHelperServiceMethodsNewTransactionPropagation()
     {
-        Logger.getLogger(UploadDownloadHelperServiceImpl.class).setLevel(Level.OFF);
+        setLogLevel(UploadDownloadHelperServiceImpl.class, LogLevel.OFF);
 
         uploadDownloadServiceImpl.performCompleteUploadSingleMessage("KEY_DOES_NOT_EXIST");
     }

@@ -32,7 +32,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,7 +60,7 @@ import org.finra.herd.tools.common.config.DataBridgeTestSpringModuleConfig;
 @ContextConfiguration(classes = DataBridgeTestSpringModuleConfig.class, inheritLocations = false)
 public abstract class AbstractDataBridgeTest extends AbstractCoreTest
 {
-    private static Logger logger = Logger.getLogger(AbstractDataBridgeTest.class);
+    private static Logger logger = LoggerFactory.getLogger(AbstractDataBridgeTest.class);
 
     protected static final String WEB_SERVICE_HOSTNAME = "testWebServiceHostname";
     protected static final Integer WEB_SERVICE_PORT = 80;

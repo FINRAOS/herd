@@ -78,6 +78,8 @@ public class UploadDownloadRestControllerTest extends AbstractRestTest
         assertNotNull(uploadSingleCredentialExtensionResponse.getAwsAccessKey());
         assertNotNull(uploadSingleCredentialExtensionResponse.getAwsSecretKey());
         assertNotNull(uploadSingleCredentialExtensionResponse.getAwsSessionToken());
+        assertNotNull(uploadSingleCredentialExtensionResponse.getAwsSessionExpirationTime());
+        assertNotNull(uploadSingleInitiationResponse.getAwsSessionExpirationTime());
 
         // Ensure the extended credentials are greater than the original set of credentials.
         assertTrue(uploadSingleCredentialExtensionResponse.getAwsSessionExpirationTime().toGregorianCalendar().getTimeInMillis() >
