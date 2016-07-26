@@ -32,9 +32,9 @@ public class FileTypeServiceTest extends AbstractServiceTest
     public void testGetFileTypes() throws Exception
     {
         // Create and persist file type entities.
-        for (FileTypeKey key : getTestFileTypeKeys())
+        for (FileTypeKey key : fileTypeDaoTestHelper.getTestFileTypeKeys())
         {
-            createFileTypeEntity(key.getFileTypeCode());
+            fileTypeDaoTestHelper.createFileTypeEntity(key.getFileTypeCode());
         }
 
         // Retrieve a list of file type keys.
@@ -42,6 +42,6 @@ public class FileTypeServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertNotNull(resultFileTypeKeys);
-        assertTrue(resultFileTypeKeys.getFileTypeKeys().containsAll(getTestFileTypeKeys()));
+        assertTrue(resultFileTypeKeys.getFileTypeKeys().containsAll(fileTypeDaoTestHelper.getTestFileTypeKeys()));
     }
 }

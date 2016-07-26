@@ -37,10 +37,10 @@ public class JobDefinitionDaoTest extends AbstractDaoTest
     public void testGetJobDefinitionByAltKey()
     {
         // Create namespace database entities.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
+        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
 
         // Create and persist a job definition entity.
-        createJobDefinitionEntity(namespaceEntity, JOB_NAME, JOB_DESCRIPTION, ACTIVITI_ID);
+        jobDefinitionDaoTestHelper.createJobDefinitionEntity(namespaceEntity, JOB_NAME, JOB_DESCRIPTION, ACTIVITI_ID);
 
         // Call the API to query the newly added entity by providing the app and job details
         JobDefinitionEntity jobDefinitionEntityResult = jobDefinitionDao.getJobDefinitionByAltKey(NAMESPACE, JOB_NAME);
@@ -60,33 +60,13 @@ public class JobDefinitionDaoTest extends AbstractDaoTest
     public void testGetJobDefinitionByAltKeyJobNameNoExists()
     {
         // Create namespace database entities.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
+        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
 
         // Create a job definition entity
-        createJobDefinitionEntity(namespaceEntity, JOB_NAME, JOB_DESCRIPTION, ACTIVITI_ID);
+        jobDefinitionDaoTestHelper.createJobDefinitionEntity(namespaceEntity, JOB_NAME, JOB_DESCRIPTION, ACTIVITI_ID);
 
         // Call the API to query the newly added entity by providing the app and a job name that doesn't exist.
         JobDefinitionEntity jobDefinitionEntityResult = jobDefinitionDao.getJobDefinitionByAltKey(NAMESPACE, JOB_NAME_2);
-
-        // Validate the results.
-        assertNull(jobDefinitionEntityResult);
-    }
-
-    /**
-     * Tests the scenario by providing the wrong app name.
-     */
-    @Test
-    public void testGetJobDefinitionByAltKeyNamespaceNoExists()
-    {
-        // Create namespace database entities.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
-        createNamespaceEntity(NAMESPACE_2);
-
-        // Create and persist a new job definition entity.
-        createJobDefinitionEntity(namespaceEntity, JOB_NAME, JOB_DESCRIPTION, ACTIVITI_ID);
-
-        // Call the API to query the newly added entity by providing an namespace code that doesn't exist and a job name that does exist.
-        JobDefinitionEntity jobDefinitionEntityResult = jobDefinitionDao.getJobDefinitionByAltKey(NAMESPACE_2, JOB_NAME);
 
         // Validate the results.
         assertNull(jobDefinitionEntityResult);
@@ -99,17 +79,37 @@ public class JobDefinitionDaoTest extends AbstractDaoTest
     public void testGetJobDefinitionByAltKeyMultipleRecordsFound()
     {
         // Create namespace database entities.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
+        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
 
         // Create two job definitions different.
         for (String jobName : Arrays.asList(JOB_NAME.toUpperCase(), JOB_NAME.toLowerCase()))
         {
             // Create a job definition entity. Please note that we need to pass unique activity ID value.
-            createJobDefinitionEntity(namespaceEntity, jobName, JOB_DESCRIPTION, jobName + ACTIVITI_ID);
+            jobDefinitionDaoTestHelper.createJobDefinitionEntity(namespaceEntity, jobName, JOB_DESCRIPTION, jobName + ACTIVITI_ID);
         }
 
         // Try to retrieve the the job definition.
         jobDefinitionDao.getJobDefinitionByAltKey(NAMESPACE, JOB_NAME);
+    }
+
+    /**
+     * Tests the scenario by providing the wrong app name.
+     */
+    @Test
+    public void testGetJobDefinitionByAltKeyNamespaceNoExists()
+    {
+        // Create namespace database entities.
+        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE_2);
+
+        // Create and persist a new job definition entity.
+        jobDefinitionDaoTestHelper.createJobDefinitionEntity(namespaceEntity, JOB_NAME, JOB_DESCRIPTION, ACTIVITI_ID);
+
+        // Call the API to query the newly added entity by providing an namespace code that doesn't exist and a job name that does exist.
+        JobDefinitionEntity jobDefinitionEntityResult = jobDefinitionDao.getJobDefinitionByAltKey(NAMESPACE_2, JOB_NAME);
+
+        // Validate the results.
+        assertNull(jobDefinitionEntityResult);
     }
 
     /**
@@ -119,14 +119,15 @@ public class JobDefinitionDaoTest extends AbstractDaoTest
     public void testGetJobDefinitionsByFilter()
     {
         // Create a namespace database entity.
-        List<NamespaceEntity> namespaceEntities = Arrays.asList(createNamespaceEntity(JOB_NAMESPACE), createNamespaceEntity(JOB_NAMESPACE_2));
+        List<NamespaceEntity> namespaceEntities =
+            Arrays.asList(namespaceDaoTestHelper.createNamespaceEntity(JOB_NAMESPACE), namespaceDaoTestHelper.createNamespaceEntity(JOB_NAMESPACE_2));
 
         // Create and persist job definition entities.
         List<JobDefinitionEntity> jobDefinitionEntities = Arrays
-            .asList(createJobDefinitionEntity(namespaceEntities.get(0), JOB_NAME, JOB_DESCRIPTION, ACTIVITI_ID),
-                createJobDefinitionEntity(namespaceEntities.get(0), JOB_NAME_2, JOB_DESCRIPTION, ACTIVITI_ID_2),
-                createJobDefinitionEntity(namespaceEntities.get(1), JOB_NAME, JOB_DESCRIPTION, ACTIVITI_ID_3),
-                createJobDefinitionEntity(namespaceEntities.get(1), JOB_NAME_2, JOB_DESCRIPTION, ACTIVITI_ID_4));
+            .asList(jobDefinitionDaoTestHelper.createJobDefinitionEntity(namespaceEntities.get(0), JOB_NAME, JOB_DESCRIPTION, ACTIVITI_ID),
+                jobDefinitionDaoTestHelper.createJobDefinitionEntity(namespaceEntities.get(0), JOB_NAME_2, JOB_DESCRIPTION, ACTIVITI_ID_2),
+                jobDefinitionDaoTestHelper.createJobDefinitionEntity(namespaceEntities.get(1), JOB_NAME, JOB_DESCRIPTION, ACTIVITI_ID_3),
+                jobDefinitionDaoTestHelper.createJobDefinitionEntity(namespaceEntities.get(1), JOB_NAME_2, JOB_DESCRIPTION, ACTIVITI_ID_4));
 
         List<JobDefinitionEntity> resultJobDefinitionEntities;
 
@@ -164,14 +165,15 @@ public class JobDefinitionDaoTest extends AbstractDaoTest
     public void testGetJobDefinitionsByFilterWithMultiNamespace()
     {
         // Create a namespace database entity.
-        List<NamespaceEntity> namespaceEntities = Arrays.asList(createNamespaceEntity(JOB_NAMESPACE), createNamespaceEntity(JOB_NAMESPACE_2));
+        List<NamespaceEntity> namespaceEntities =
+            Arrays.asList(namespaceDaoTestHelper.createNamespaceEntity(JOB_NAMESPACE), namespaceDaoTestHelper.createNamespaceEntity(JOB_NAMESPACE_2));
 
         // Create and persist job definition entities.
         List<JobDefinitionEntity> jobDefinitionEntities = Arrays
-            .asList(createJobDefinitionEntity(namespaceEntities.get(0), JOB_NAME, JOB_DESCRIPTION, ACTIVITI_ID),
-                createJobDefinitionEntity(namespaceEntities.get(0), JOB_NAME_2, JOB_DESCRIPTION, ACTIVITI_ID_2),
-                createJobDefinitionEntity(namespaceEntities.get(1), JOB_NAME, JOB_DESCRIPTION, ACTIVITI_ID_3),
-                createJobDefinitionEntity(namespaceEntities.get(1), JOB_NAME_2, JOB_DESCRIPTION, ACTIVITI_ID_4));
+            .asList(jobDefinitionDaoTestHelper.createJobDefinitionEntity(namespaceEntities.get(0), JOB_NAME, JOB_DESCRIPTION, ACTIVITI_ID),
+                jobDefinitionDaoTestHelper.createJobDefinitionEntity(namespaceEntities.get(0), JOB_NAME_2, JOB_DESCRIPTION, ACTIVITI_ID_2),
+                jobDefinitionDaoTestHelper.createJobDefinitionEntity(namespaceEntities.get(1), JOB_NAME, JOB_DESCRIPTION, ACTIVITI_ID_3),
+                jobDefinitionDaoTestHelper.createJobDefinitionEntity(namespaceEntities.get(1), JOB_NAME_2, JOB_DESCRIPTION, ACTIVITI_ID_4));
 
         List<JobDefinitionEntity> resultJobDefinitionEntities;
 

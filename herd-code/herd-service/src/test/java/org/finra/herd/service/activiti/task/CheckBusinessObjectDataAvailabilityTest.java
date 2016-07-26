@@ -37,7 +37,7 @@ public class CheckBusinessObjectDataAvailabilityTest extends HerdActivitiService
     @Test
     public void testAvailabilityTaskWithPartitionValues() throws Exception
     {
-        createDatabaseEntitiesForBusinessObjectDataAvailabilityTesting(null);
+        businessObjectDataAvailabilityTestHelper.createDatabaseEntitiesForBusinessObjectDataAvailabilityTesting(null);
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>(getMandatoryFields());
 
@@ -64,8 +64,8 @@ public class CheckBusinessObjectDataAvailabilityTest extends HerdActivitiService
     @Test
     public void testAvailabilityTaskWithPartitionRange() throws Exception
     {
-        createDatabaseEntitiesForBusinessObjectDataAvailabilityTesting(PARTITION_KEY_GROUP);
-        createExpectedPartitionValueProcessDatesForApril2014(PARTITION_KEY_GROUP);
+        businessObjectDataAvailabilityTestHelper.createDatabaseEntitiesForBusinessObjectDataAvailabilityTesting(PARTITION_KEY_GROUP);
+        expectedPartitionValueDaoTestHelper.createExpectedPartitionValueProcessDatesForApril2014(PARTITION_KEY_GROUP);
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>(getMandatoryFields());
 

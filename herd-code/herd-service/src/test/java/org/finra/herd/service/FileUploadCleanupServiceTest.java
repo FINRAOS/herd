@@ -56,7 +56,7 @@ public class FileUploadCleanupServiceTest extends AbstractServiceTest
     @Before
     public void before()
     {
-        s3BucketName = getS3ManagedBucketName();
+        s3BucketName = storageDaoTestHelper.getS3ManagedBucketName();
     }
 
     /**
@@ -66,7 +66,7 @@ public class FileUploadCleanupServiceTest extends AbstractServiceTest
     public void cleanEnv() throws IOException
     {
         // Clean up the destination S3 folder.
-        s3Dao.deleteDirectory(getTestS3FileTransferRequestParamsDto());
+        s3Dao.deleteDirectory(s3DaoTestHelper.getTestS3FileTransferRequestParamsDto());
 
         s3Operations.rollback();
     }
@@ -183,12 +183,13 @@ public class FileUploadCleanupServiceTest extends AbstractServiceTest
         StorageEntity storageEntity = createTestStorageEntity(storageName, bucketName);
 
         // Create a business object data entity.
-        BusinessObjectDataEntity businessObjectDataEntity = createBusinessObjectDataEntity(businessObjectDataKey, true, BDATA_STATUS);
+        BusinessObjectDataEntity businessObjectDataEntity =
+            businessObjectDataDaoTestHelper.createBusinessObjectDataEntity(businessObjectDataKey, true, BDATA_STATUS);
         // Apply the offset in minutes to createdOn value.
         businessObjectDataEntity.setCreatedOn(new Timestamp(businessObjectDataEntity.getCreatedOn().getTime() - createdOnTimestampMinutesOffset * 60 * 1000));
-        StorageUnitEntity storageUnitEntity =
-            createStorageUnitEntity(storageEntity, businessObjectDataEntity, StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
-        createStorageFileEntity(storageUnitEntity, storageFilePath, FILE_SIZE_1_KB, ROW_COUNT_1000);
+        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(storageEntity, businessObjectDataEntity, StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
+        storageFileDaoTestHelper.createStorageFileEntity(storageUnitEntity, storageFilePath, FILE_SIZE_1_KB, ROW_COUNT_1000);
         herdDao.saveAndRefresh(businessObjectDataEntity);
     }
 
@@ -202,7 +203,7 @@ public class FileUploadCleanupServiceTest extends AbstractServiceTest
             attributes.add(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), bucketName));
         }
 
-        return createStorageEntity(storageName, StoragePlatformEntity.S3, attributes);
+        return storageDaoTestHelper.createStorageEntity(storageName, StoragePlatformEntity.S3, attributes);
     }
 
     private void validateBusinessObjectDataStatus(BusinessObjectDataKey businessObjectDataKey, String expectedBusinessObjectDataStatus)

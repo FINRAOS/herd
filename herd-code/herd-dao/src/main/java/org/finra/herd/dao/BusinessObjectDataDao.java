@@ -18,8 +18,10 @@ package org.finra.herd.dao;
 import java.util.List;
 import java.util.Map;
 
+import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
+import org.finra.herd.model.api.xml.BusinessObjectDataSearchFilter;
 import org.finra.herd.model.dto.StoragePolicyPriorityLevel;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.StoragePolicyEntity;
@@ -176,4 +178,12 @@ public interface BusinessObjectDataDao extends BaseJpaDao
      * @return A list of business object data entity
      */
     public List<BusinessObjectDataEntity> getBusinessObjectDataEntitiesByPartitionValue(String partitionValue);
+    
+    
+    /**
+     *  Retrieves a list of business object data by list of filters
+     * @param filters search filters
+     * @return A list of business object data
+     */
+    public List<BusinessObjectData> searchBusinessObjectData(List<BusinessObjectDataSearchFilter> filters);
 }

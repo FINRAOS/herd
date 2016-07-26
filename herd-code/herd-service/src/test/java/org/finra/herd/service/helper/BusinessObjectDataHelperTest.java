@@ -54,9 +54,9 @@ public class BusinessObjectDataHelperTest extends AbstractServiceTest
     public void testGetPartitionValue()
     {
         // Create and persist test database entities.
-        BusinessObjectDataEntity businessObjectDataEntity =
-            createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                DATA_VERSION, true, BDATA_STATUS);
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS);
 
         // Retrieve primary and sub-partition values along with trying the "out of bounds" cases.
         assertEquals(null, businessObjectDataHelper.getPartitionValue(businessObjectDataEntity, 0));
@@ -79,8 +79,8 @@ public class BusinessObjectDataHelperTest extends AbstractServiceTest
         String fileType = FORMAT_FILE_TYPE_CODE;
         Integer businessObjectFormatVersion = FORMAT_VERSION;
         String businessObjectFormatPartitionKey = PARTITION_KEY;
-        List<SchemaColumn> schemaColumns = getTestSchemaColumns();
-        List<SchemaColumn> partitionColumns = getTestPartitionColumns();
+        List<SchemaColumn> schemaColumns = schemaColumnDaoTestHelper.getTestSchemaColumns();
+        List<SchemaColumn> partitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();
         String partitionValue = PARTITION_VALUE;
         List<String> subPartitionValues = SUBPARTITION_VALUES;
         Integer businessObjectDataVersion = DATA_VERSION;
@@ -99,8 +99,8 @@ public class BusinessObjectDataHelperTest extends AbstractServiceTest
         Integer businessObjectFormatVersion, String businessObjectFormatPartitionKey, List<SchemaColumn> schemaColumns, List<SchemaColumn> partitionColumns,
         String partitionValue, List<String> subPartitionValues, Integer businessObjectDataVersion)
     {
-        BusinessObjectFormatEntity businessObjectFormatEntity =
-            createBusinessObjectFormatEntity(namespace, businessObjectDefinitionName, businessObjectFormatUsage, fileType, businessObjectFormatVersion, null,
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(namespace, businessObjectDefinitionName, businessObjectFormatUsage, fileType, businessObjectFormatVersion, null,
                 LATEST_VERSION_FLAG_SET, businessObjectFormatPartitionKey, NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES, null, null, null, schemaColumns,
                 partitionColumns);
         BusinessObjectDataKey businessObjectDataKey =

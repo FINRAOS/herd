@@ -55,6 +55,8 @@ import org.finra.herd.model.api.xml.BusinessObjectDataDdlRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.BusinessObjectDataSearchRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDataSearchResult;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatus;
 import org.finra.herd.model.api.xml.BusinessObjectDataVersion;
 import org.finra.herd.model.api.xml.BusinessObjectDataVersions;
@@ -82,6 +84,7 @@ import org.finra.herd.service.S3Service;
 import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.service.helper.BusinessObjectDataInvalidateUnregisteredHelper;
+import org.finra.herd.service.helper.BusinessObjectDataSearchHelper;
 import org.finra.herd.service.helper.BusinessObjectDataStatusDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectFormatDaoHelper;
 import org.finra.herd.service.helper.CustomDdlDaoHelper;
@@ -123,6 +126,9 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
 
     @Autowired
     private BusinessObjectDataHelper businessObjectDataHelper;
+
+    @Autowired
+    private BusinessObjectDataSearchHelper businessObjectDataSearchHelper;
 
     @Autowired
     private BusinessObjectDataInitiateRestoreHelperService businessObjectDataInitiateRestoreHelperService;
@@ -773,7 +779,7 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         Assert.hasText(request.getBusinessObjectDefinitionName(), "A business object definition name must be specified.");
         request.setBusinessObjectDefinitionName(request.getBusinessObjectDefinitionName().trim());
 
-        Assert.hasText(request.getBusinessObjectFormatUsage(), "A business object format usage name must be specified.");
+        Assert.hasText(request.getBusinessObjectFormatUsage(), "A business object format usage must be specified.");
         request.setBusinessObjectFormatUsage(request.getBusinessObjectFormatUsage().trim());
 
         Assert.hasText(request.getBusinessObjectFormatFileType(), "A business object format file type must be specified.");
@@ -879,7 +885,7 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         Assert.hasText(request.getBusinessObjectDefinitionName(), "A business object definition name must be specified.");
         request.setBusinessObjectDefinitionName(request.getBusinessObjectDefinitionName().trim());
 
-        Assert.hasText(request.getBusinessObjectFormatUsage(), "A business object format usage name must be specified.");
+        Assert.hasText(request.getBusinessObjectFormatUsage(), "A business object format usage must be specified.");
         request.setBusinessObjectFormatUsage(request.getBusinessObjectFormatUsage().trim());
 
         Assert.hasText(request.getBusinessObjectFormatFileType(), "A business object format file type must be specified.");
@@ -1386,5 +1392,29 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
                 list.set(i, "");
             }
         }
+    }
+
+
+    /**
+     * Search business object data based on the request
+     *
+     * @param request search request
+     *
+     * @return business data search result
+     */
+    @NamespacePermission(fields = "#request.businessObjectDataSearchFilters[0].BusinessObjectDataSearchKeys[0].namespace",
+    permissions = NamespacePermissionEnum.READ)
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public BusinessObjectDataSearchResult searchBusinessObjectData(BusinessObjectDataSearchRequest request)
+    {
+        //validate search request
+        businessObjectDataSearchHelper.validBusinesObjectDataSearchRequest(request);
+        //search business object data
+        List<BusinessObjectData> objectDataList = businessObjectDataDao.searchBusinessObjectData(request.getBusinessObjectDataSearchFilters());
+        BusinessObjectDataSearchResult result = new BusinessObjectDataSearchResult();
+        result.setBusinessObjectDataElements(objectDataList);
+
+        return result;
     }
 }

@@ -65,9 +65,11 @@ public class S3ServiceTest extends AbstractServiceTest
         FileUtils.deleteDirectory(localTempPath.toFile());
 
         // Delete test files from S3 storage. Since test S3 key prefix represents a directory, we add a trailing '/' character to it.
-        for (S3FileTransferRequestParamsDto params : Arrays.asList(getTestS3FileTransferRequestParamsDto(),
-            S3FileTransferRequestParamsDto.builder().s3BucketName(getS3LoadingDockBucketName()).s3KeyPrefix(TEST_S3_KEY_PREFIX + "/").build(),
-            S3FileTransferRequestParamsDto.builder().s3BucketName(getS3ExternalBucketName()).s3KeyPrefix(TEST_S3_KEY_PREFIX + "/").build()))
+        for (S3FileTransferRequestParamsDto params : Arrays.asList(s3DaoTestHelper.getTestS3FileTransferRequestParamsDto(),
+            S3FileTransferRequestParamsDto.builder().s3BucketName(storageDaoTestHelper.getS3LoadingDockBucketName()).s3KeyPrefix(TEST_S3_KEY_PREFIX + "/")
+                .build(),
+            S3FileTransferRequestParamsDto.builder().s3BucketName(storageDaoTestHelper.getS3ExternalBucketName()).s3KeyPrefix(TEST_S3_KEY_PREFIX + "/")
+                .build()))
         {
             if (!s3Dao.listDirectory(params).isEmpty())
             {
@@ -87,7 +89,7 @@ public class S3ServiceTest extends AbstractServiceTest
         assertTrue(targetFile.length() == FILE_SIZE_1_KB);
 
         // Upload test file to S3.
-        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = getTestS3FileTransferRequestParamsDto();
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = s3DaoTestHelper.getTestS3FileTransferRequestParamsDto();
         s3FileTransferRequestParamsDto.setS3KeyPrefix(TARGET_S3_KEY);
         s3FileTransferRequestParamsDto.setLocalPath(targetFile.getPath());
         S3FileTransferResultsDto results = s3Service.uploadFile(s3FileTransferRequestParamsDto);
@@ -96,7 +98,7 @@ public class S3ServiceTest extends AbstractServiceTest
         assertTrue(results.getTotalFilesTransferred() == 1L);
 
         // Validate the file upload.
-        validateS3FileUpload(s3FileTransferRequestParamsDto, Arrays.asList(TARGET_S3_KEY));
+        s3DaoTestHelper.validateS3FileUpload(s3FileTransferRequestParamsDto, Arrays.asList(TARGET_S3_KEY));
     }
 
     @Test
@@ -118,7 +120,7 @@ public class S3ServiceTest extends AbstractServiceTest
         }
 
         // Upload test file to S3.
-        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = getTestS3FileTransferRequestParamsDto();
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = s3DaoTestHelper.getTestS3FileTransferRequestParamsDto();
         s3FileTransferRequestParamsDto.setS3KeyPrefix(TEST_S3_KEY_PREFIX);
         s3FileTransferRequestParamsDto.setLocalPath(localTempPath.toString());
         s3FileTransferRequestParamsDto.setFiles(requestFileList);
@@ -128,21 +130,22 @@ public class S3ServiceTest extends AbstractServiceTest
         assertTrue(results.getTotalFilesTransferred() == LOCAL_FILES_SUBSET.size());
 
         // Validate the upload.
-        validateS3FileUpload(s3FileTransferRequestParamsDto, expectedKeys);
+        s3DaoTestHelper.validateS3FileUpload(s3FileTransferRequestParamsDto, expectedKeys);
     }
 
     @Test
     public void testCopyFile() throws InterruptedException
     {
         // Put a 1 KB file in S3.
-        s3Operations
-            .putObject(new PutObjectRequest(getS3LoadingDockBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[(int) FILE_SIZE_1_KB]), null), null);
+        s3Operations.putObject(
+            new PutObjectRequest(storageDaoTestHelper.getS3LoadingDockBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[(int) FILE_SIZE_1_KB]),
+                null), null);
 
         // Copy an S3 file from source to target S3 bucket.
         S3FileCopyRequestParamsDto params = new S3FileCopyRequestParamsDto();
         params.setKmsKeyId("AWS_KMS_EXTERNAL_KEY_ID");
-        params.setSourceBucketName(getS3LoadingDockBucketName());
-        params.setTargetBucketName(getS3ExternalBucketName());
+        params.setSourceBucketName(storageDaoTestHelper.getS3LoadingDockBucketName());
+        params.setTargetBucketName(storageDaoTestHelper.getS3ExternalBucketName());
         params.setSourceObjectKey(TARGET_S3_KEY);
         params.setTargetObjectKey(TARGET_S3_KEY);
         S3FileTransferResultsDto results = s3Service.copyFile(params);
@@ -163,7 +166,7 @@ public class S3ServiceTest extends AbstractServiceTest
         }
 
         // Upload test file to S3.
-        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = getTestS3FileTransferRequestParamsDto();
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = s3DaoTestHelper.getTestS3FileTransferRequestParamsDto();
         s3FileTransferRequestParamsDto.setS3KeyPrefix(TEST_S3_KEY_PREFIX);
         s3FileTransferRequestParamsDto.setLocalPath(localTempPath.toString());
         s3FileTransferRequestParamsDto.setRecursive(true);
@@ -180,7 +183,7 @@ public class S3ServiceTest extends AbstractServiceTest
         }
 
         // Validate the file upload.
-        validateS3FileUpload(s3FileTransferRequestParamsDto, expectedKeys);
+        s3DaoTestHelper.validateS3FileUpload(s3FileTransferRequestParamsDto, expectedKeys);
     }
 
     @Test
@@ -190,7 +193,7 @@ public class S3ServiceTest extends AbstractServiceTest
         testUploadDirectory();
 
         // Delete directory from S3.
-        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = getTestS3FileTransferRequestParamsDto();
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = s3DaoTestHelper.getTestS3FileTransferRequestParamsDto();
         s3FileTransferRequestParamsDto.setS3KeyPrefix(TEST_S3_KEY_PREFIX + "/");
         s3Service.deleteDirectory(s3FileTransferRequestParamsDto);
 
@@ -205,7 +208,7 @@ public class S3ServiceTest extends AbstractServiceTest
         testUploadDirectory();
 
         // Delete directory from S3.
-        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = getTestS3FileTransferRequestParamsDto();
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = s3DaoTestHelper.getTestS3FileTransferRequestParamsDto();
         s3FileTransferRequestParamsDto.setS3KeyPrefix(TEST_S3_KEY_PREFIX + "/");
         s3Service.deleteDirectoryIgnoreException(s3FileTransferRequestParamsDto);
 
@@ -217,7 +220,7 @@ public class S3ServiceTest extends AbstractServiceTest
     public void testDeleteDirectoryIgnoreExceptionWithException() throws Exception
     {
         // Try to delete S3 directory using an invalid S3 bucket name.
-        final S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = getTestS3FileTransferRequestParamsDto();
+        final S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = s3DaoTestHelper.getTestS3FileTransferRequestParamsDto();
         s3FileTransferRequestParamsDto.setS3BucketName("INVALID_BUCKET_NAME");
         executeWithoutLogging(S3ServiceImpl.class, new Command()
         {
@@ -245,7 +248,7 @@ public class S3ServiceTest extends AbstractServiceTest
         File destinationLocalFile = Paths.get(localTempPath.toString(), LOCAL_FILE).toFile();
 
         // Execute download.
-        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = getTestS3FileTransferRequestParamsDto();
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = s3DaoTestHelper.getTestS3FileTransferRequestParamsDto();
         s3FileTransferRequestParamsDto.setS3KeyPrefix(TARGET_S3_KEY);
         s3FileTransferRequestParamsDto.setLocalPath(destinationLocalFile.getPath());
         S3FileTransferResultsDto results = s3Service.downloadFile(s3FileTransferRequestParamsDto);
@@ -270,7 +273,7 @@ public class S3ServiceTest extends AbstractServiceTest
         assertTrue(localTempPath.toFile().mkdir());
 
         // Execute download.
-        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = getTestS3FileTransferRequestParamsDto();
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = s3DaoTestHelper.getTestS3FileTransferRequestParamsDto();
         s3FileTransferRequestParamsDto.setS3KeyPrefix(TEST_S3_KEY_PREFIX);
         s3FileTransferRequestParamsDto.setLocalPath(localTempPath.toString());
         s3FileTransferRequestParamsDto.setRecursive(true);

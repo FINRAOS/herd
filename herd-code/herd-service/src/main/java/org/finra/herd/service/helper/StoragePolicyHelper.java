@@ -15,6 +15,7 @@
 */
 package org.finra.herd.service.helper;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
@@ -26,6 +27,9 @@ import org.finra.herd.model.api.xml.StoragePolicyKey;
 @Component
 public class StoragePolicyHelper
 {
+    @Autowired
+    private AlternateKeyHelper alternateKeyHelper;
+
     /**
      * Returns a string representation of the storage policy key along with the storage policy version.
      *
@@ -43,18 +47,14 @@ public class StoragePolicyHelper
     /**
      * Validates the storage policy key. This method also trims the key parameters.
      *
-     * @param storagePolicyKey the storage policy key
+     * @param key the storage policy key
      *
      * @throws IllegalArgumentException if any validation errors were found
      */
-    public void validateStoragePolicyKey(StoragePolicyKey storagePolicyKey) throws IllegalArgumentException
+    public void validateStoragePolicyKey(StoragePolicyKey key) throws IllegalArgumentException
     {
-        Assert.notNull(storagePolicyKey, "A storage policy key must be specified.");
-
-        Assert.hasText(storagePolicyKey.getNamespace(), "A namespace must be specified.");
-        storagePolicyKey.setNamespace(storagePolicyKey.getNamespace().trim());
-
-        Assert.hasText(storagePolicyKey.getStoragePolicyName(), "A storage policy name must be specified.");
-        storagePolicyKey.setStoragePolicyName(storagePolicyKey.getStoragePolicyName().trim());
+        Assert.notNull(key, "A storage policy key must be specified.");
+        key.setNamespace(alternateKeyHelper.validateStringParameter("namespace", key.getNamespace()));
+        key.setStoragePolicyName(alternateKeyHelper.validateStringParameter("storage policy name", key.getStoragePolicyName()));
     }
 }

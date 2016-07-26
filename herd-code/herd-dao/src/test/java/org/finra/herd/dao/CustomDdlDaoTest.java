@@ -33,8 +33,8 @@ public class CustomDdlDaoTest extends AbstractDaoTest
     public void testGetCustomDdlByKey()
     {
         // Create and persist a custom DDL entity.
-        CustomDdlEntity customDdlEntity =
-            createCustomDdlEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME, TEST_DDL);
+        CustomDdlEntity customDdlEntity = customDdlDaoTestHelper
+            .createCustomDdlEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME, TEST_DDL);
 
         // Retrieve the custom DDL.
         CustomDdlEntity resultCustomDdlEntity =
@@ -53,7 +53,8 @@ public class CustomDdlDaoTest extends AbstractDaoTest
         // Create and persist a custom DDL entities.
         for (String customDdlName : testCustomDdlNames)
         {
-            createCustomDdlEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, customDdlName, TEST_DDL);
+            customDdlDaoTestHelper
+                .createCustomDdlEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, customDdlName, TEST_DDL);
         }
 
         // Retrieve a list of custom DDL keys.
@@ -65,7 +66,7 @@ public class CustomDdlDaoTest extends AbstractDaoTest
         assertEquals(testCustomDdlNames.size(), resultCustomDdlKeys.size());
         for (int i = 0; i < testCustomDdlNames.size(); i++)
         {
-            validateCustomDdlKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, testCustomDdlNames.get(i),
+            assertEquals(new CustomDdlKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, testCustomDdlNames.get(i)),
                 resultCustomDdlKeys.get(i));
         }
     }

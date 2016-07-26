@@ -83,14 +83,16 @@ public class BusinessObjectDataRestControllerGetBusinessObjectDataVersionsTest e
     {
         for (int businessObjectFormatVersion = INITIAL_FORMAT_VERSION; businessObjectFormatVersion < NUMBER_OF_FORMAT_VERSIONS; businessObjectFormatVersion++)
         {
-            createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, businessObjectFormatVersion, FORMAT_DESCRIPTION,
-                businessObjectFormatVersion == SECOND_FORMAT_VERSION, PARTITION_KEY);
+            businessObjectFormatDaoTestHelper
+                .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, businessObjectFormatVersion,
+                    FORMAT_DESCRIPTION, businessObjectFormatVersion == SECOND_FORMAT_VERSION, PARTITION_KEY);
 
             for (int businessObjectDataVersion = INITIAL_DATA_VERSION; businessObjectDataVersion < NUMBER_OF_DATA_VERSIONS_PER_FORMAT_VERSION;
                 businessObjectDataVersion++)
             {
-                createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, businessObjectFormatVersion, PARTITION_VALUE,
-                    subPartitionValues, businessObjectDataVersion, businessObjectDataVersion == SECOND_DATA_VERSION, BDATA_STATUS);
+                businessObjectDataDaoTestHelper
+                    .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, businessObjectFormatVersion,
+                        PARTITION_VALUE, subPartitionValues, businessObjectDataVersion, businessObjectDataVersion == SECOND_DATA_VERSION, BDATA_STATUS);
             }
         }
     }

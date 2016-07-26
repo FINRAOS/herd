@@ -15,6 +15,7 @@
 */
 package org.finra.herd.service.impl;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -141,11 +142,22 @@ public class UploadDownloadHelperServiceImpl implements UploadDownloadHelperServ
             completeUploadSingleParamsDto.setTargetOldStatus(targetBusinessObjectDataEntity.getStatus().getCode());
             completeUploadSingleParamsDto.setTargetBusinessObjectDataKey(businessObjectDataHelper.getBusinessObjectDataKey(targetBusinessObjectDataEntity));
 
-            // Verify that source business object data status is "UPLOADING".
-            businessObjectDataHelper.assertBusinessObjectDataStatusEquals(BusinessObjectDataStatusEntity.UPLOADING, sourceBusinessObjectDataEntity);
+            // Verify that both source and target business object data have "UPLOADING" status. If not, log a message and exit from the method.
+            // This check effectively discards any duplicate SQS messages coming from S3 for the same uploaded file.
+            for (BusinessObjectDataEntity businessObjectDataEntity : Arrays.asList(sourceBusinessObjectDataEntity, targetBusinessObjectDataEntity))
+            {
+                if (!BusinessObjectDataStatusEntity.UPLOADING.equals(businessObjectDataEntity.getStatus().getCode()))
+                {
+                    LOGGER.info("Ignoring S3 notification since business object data status \"{}\" does not match the expected status \"{}\". " +
+                        "businessObjectDataKey={}", businessObjectDataEntity.getStatus().getCode(), BusinessObjectDataStatusEntity.UPLOADING,
+                        jsonHelper.objectToJson(businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity)));
 
-            // Verify that source business object data status is "UPLOADING".
-            businessObjectDataHelper.assertBusinessObjectDataStatusEquals(BusinessObjectDataStatusEntity.UPLOADING, targetBusinessObjectDataEntity);
+                    // Exit from the method without setting the new status values in the completeUploadSingleParamsDto to "RE-ENCRYPTING".
+                    // Please note that not having source and target new status values set to "RE-ENCRYPTING" will make the caller
+                    // method skip the rest of the steps required to complete the upload single message processing.
+                    return;
+                }
+            }
 
             // Get the S3 managed "loading dock" storage entity and make sure it exists.
             StorageEntity s3ManagedLoadingDockStorageEntity = storageDaoHelper.getStorageEntity(StorageEntity.MANAGED_LOADING_DOCK_STORAGE);

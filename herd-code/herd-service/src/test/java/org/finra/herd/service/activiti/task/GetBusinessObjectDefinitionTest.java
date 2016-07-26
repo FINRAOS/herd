@@ -38,7 +38,8 @@ public class GetBusinessObjectDefinitionTest extends HerdActivitiServiceTaskTest
     public void testGetBusinessObjectDefinition() throws Exception
     {
         // Create and persist a business object definition entity.
-        createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, getNewAttributes());
+        businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, getNewAttributes());
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
         fieldExtensionList.add(buildFieldExtension("namespace", "${namespace}"));

@@ -29,6 +29,7 @@ import org.finra.herd.model.api.xml.DataProviderKey;
 import org.finra.herd.model.api.xml.DataProviderKeys;
 import org.finra.herd.model.jpa.DataProviderEntity;
 import org.finra.herd.service.DataProviderService;
+import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.DataProviderDaoHelper;
 
 /**
@@ -38,6 +39,9 @@ import org.finra.herd.service.helper.DataProviderDaoHelper;
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 public class DataProviderServiceImpl implements DataProviderService
 {
+    @Autowired
+    private AlternateKeyHelper alternateKeyHelper;
+
     @Autowired
     private DataProviderDao dataProviderDao;
 
@@ -117,28 +121,20 @@ public class DataProviderServiceImpl implements DataProviderService
      */
     private void validateDataProviderCreateRequest(DataProviderCreateRequest request) throws IllegalArgumentException
     {
-        // Validate.
-        Assert.hasText(request.getDataProviderName(), "A data provider name must be specified.");
-
-        // Remove leading and trailing spaces.
-        request.setDataProviderName(request.getDataProviderName().trim());
+        request.setDataProviderName(alternateKeyHelper.validateStringParameter("data provider name", request.getDataProviderName()));
     }
 
     /**
      * Validates a data provider key. This method also trims the key parameters.
      *
-     * @param dataProviderKey the data provider key
+     * @param key the data provider key
      *
      * @throws IllegalArgumentException if any validation errors were found
      */
-    private void validateDataProviderKey(DataProviderKey dataProviderKey) throws IllegalArgumentException
+    private void validateDataProviderKey(DataProviderKey key) throws IllegalArgumentException
     {
-        // Validate.
-        Assert.notNull(dataProviderKey, "A data provider key must be specified.");
-        Assert.hasText(dataProviderKey.getDataProviderName(), "A data provider name must be specified.");
-
-        // Remove leading and trailing spaces.
-        dataProviderKey.setDataProviderName(dataProviderKey.getDataProviderName().trim());
+        Assert.notNull(key, "A data provider key must be specified.");
+        key.setDataProviderName(alternateKeyHelper.validateStringParameter("data provider name", key.getDataProviderName()));
     }
 
     /**

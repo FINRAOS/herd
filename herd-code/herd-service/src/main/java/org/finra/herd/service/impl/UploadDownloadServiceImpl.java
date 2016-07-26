@@ -322,8 +322,9 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         completeUploadSingleMessageResult.setTargetOldBusinessObjectDataStatus(completeUploadSingleParamsDto.getTargetOldStatus());
         completeUploadSingleMessageResult.setTargetNewBusinessObjectDataStatus(completeUploadSingleParamsDto.getTargetNewStatus());
 
-        // If the target business object data status is "RE-ENCRYPTING", continue the processing.
-        if (BusinessObjectDataStatusEntity.RE_ENCRYPTING.equals(completeUploadSingleParamsDto.getTargetNewStatus()))
+        // If both source and target business object data have RE-ENCRYPTING status, continue the processing.
+        if (BusinessObjectDataStatusEntity.RE_ENCRYPTING.equals(completeUploadSingleParamsDto.getSourceNewStatus()) &&
+            BusinessObjectDataStatusEntity.RE_ENCRYPTING.equals(completeUploadSingleParamsDto.getTargetNewStatus()))
         {
             // Move the S3 file from the source to the target bucket.
             uploadDownloadHelperService.performFileMove(completeUploadSingleParamsDto);

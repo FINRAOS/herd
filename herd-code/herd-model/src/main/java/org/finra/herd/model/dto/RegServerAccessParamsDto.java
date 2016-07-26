@@ -28,6 +28,11 @@ package org.finra.herd.model.dto;
 public class RegServerAccessParamsDto
 {
     /**
+     * The password to be used for HTTPS client authentication with the registration server.
+     */
+    private String password;
+
+    /**
      * The Registration Server hostname
      */
     private String regServerHost;
@@ -38,8 +43,8 @@ public class RegServerAccessParamsDto
     private Integer regServerPort;
 
     /**
-     * This determines if SSL must be used to communicate with the registration server. If set to true, enables SSL (HTTPS) to communicate with the
-     * registration server. Otherwise, uses HTTP.
+     * This determines if SSL must be used to communicate with the registration server. If set to true, enables SSL (HTTPS) to communicate with the registration
+     * server. Otherwise, uses HTTP.
      */
     private Boolean useSsl;
 
@@ -49,9 +54,62 @@ public class RegServerAccessParamsDto
     private String username;
 
     /**
-     * The password to be used for HTTPS client authentication with the registration server.
+     * Returns a builder that can easily build this DTO.
+     *
+     * @return the builder.
      */
-    private String password;
+    public static Builder builder()
+    {
+        return new Builder();
+    }
+
+    @Override
+    public boolean equals(Object object)
+    {
+        if (this == object)
+        {
+            return true;
+        }
+        if (!(object instanceof RegServerAccessParamsDto))
+        {
+            return false;
+        }
+
+        RegServerAccessParamsDto that = (RegServerAccessParamsDto) object;
+
+        if (password != null ? !password.equals(that.password) : that.password != null)
+        {
+            return false;
+        }
+        if (regServerHost != null ? !regServerHost.equals(that.regServerHost) : that.regServerHost != null)
+        {
+            return false;
+        }
+        if (regServerPort != null ? !regServerPort.equals(that.regServerPort) : that.regServerPort != null)
+        {
+            return false;
+        }
+        if (useSsl != null ? !useSsl.equals(that.useSsl) : that.useSsl != null)
+        {
+            return false;
+        }
+        if (username != null ? !username.equals(that.username) : that.username != null)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    public String getPassword()
+    {
+        return password;
+    }
+
+    public void setPassword(String password)
+    {
+        this.password = password;
+    }
 
     public String getRegServerHost()
     {
@@ -93,24 +151,15 @@ public class RegServerAccessParamsDto
         this.username = username;
     }
 
-    public String getPassword()
+    @Override
+    public int hashCode()
     {
-        return password;
-    }
-
-    public void setPassword(String password)
-    {
-        this.password = password;
-    }
-
-    /**
-     * Returns a builder that can easily build this DTO.
-     *
-     * @return the builder.
-     */
-    public static Builder builder()
-    {
-        return new Builder();
+        int result = regServerHost != null ? regServerHost.hashCode() : 0;
+        result = 31 * result + (regServerPort != null ? regServerPort.hashCode() : 0);
+        result = 31 * result + (useSsl != null ? useSsl.hashCode() : 0);
+        result = 31 * result + (username != null ? username.hashCode() : 0);
+        result = 31 * result + (password != null ? password.hashCode() : 0);
+        return result;
     }
 
     /**
@@ -119,6 +168,17 @@ public class RegServerAccessParamsDto
     public static class Builder
     {
         private RegServerAccessParamsDto params = new RegServerAccessParamsDto();
+
+        public RegServerAccessParamsDto build()
+        {
+            return params;
+        }
+
+        public Builder password(String password)
+        {
+            params.setPassword(password);
+            return this;
+        }
 
         public Builder regServerHost(String regServerHost)
         {
@@ -142,17 +202,6 @@ public class RegServerAccessParamsDto
         {
             params.setUsername(username);
             return this;
-        }
-
-        public Builder password(String password)
-        {
-            params.setPassword(password);
-            return this;
-        }
-
-        public RegServerAccessParamsDto build()
-        {
-            return params;
         }
     }
 }

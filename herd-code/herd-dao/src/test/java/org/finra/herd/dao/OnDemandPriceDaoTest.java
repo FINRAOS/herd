@@ -18,6 +18,8 @@ package org.finra.herd.dao;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
+import java.math.BigDecimal;
+
 import org.junit.Test;
 
 import org.finra.herd.model.jpa.OnDemandPriceEntity;
@@ -42,5 +44,23 @@ public class OnDemandPriceDaoTest extends AbstractDaoTest
         // Confirm negative results when using wrong input parameters.
         assertNull(onDemandPriceDao.getOnDemandPrice("I_DO_NOT_EXIST", EC2_INSTANCE_TYPE));
         assertNull(onDemandPriceDao.getOnDemandPrice(AWS_REGION, "I_DO_NOT_EXIST"));
+    }
+
+    /**
+     * Creates and persists a new storage unit entity.
+     *
+     * @param region the AWS region
+     * @param instanceType the EC2 instance type
+     *
+     * @return the newly created storage unit entity.
+     */
+    private OnDemandPriceEntity createOnDemandPriceEntity(String region, String instanceType)
+    {
+        OnDemandPriceEntity onDemandPriceEntity = new OnDemandPriceEntity();
+        onDemandPriceEntity.setOnDemandPriceId(LONG_VALUE);
+        onDemandPriceEntity.setRegion(region);
+        onDemandPriceEntity.setInstanceType(instanceType);
+        onDemandPriceEntity.setValue(new BigDecimal(INTEGER_VALUE));
+        return herdDao.saveAndRefresh(onDemandPriceEntity);
     }
 }

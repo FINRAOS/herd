@@ -57,13 +57,14 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
             .createBusinessObjectDataNotificationRegistration(
                 createBusinessObjectDataNotificationRegistrationCreateRequest(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE,
                     BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2,
-                    getTestJobActions()));
+                    businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions()));
 
         // Validate the returned object.
         assertEquals(new BusinessObjectDataNotificationRegistration(resultBusinessObjectDataNotificationRegistration.getId(),
             businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE,
             new BusinessObjectDataNotificationFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME,
-                BDATA_STATUS, BDATA_STATUS_2), getTestJobActions(), "ENABLED"), resultBusinessObjectDataNotificationRegistration);
+                BDATA_STATUS, BDATA_STATUS_2), businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions(), "ENABLED"),
+            resultBusinessObjectDataNotificationRegistration);
     }
 
     @Test
@@ -79,13 +80,14 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
             .createBusinessObjectDataNotificationRegistration(
                 createBusinessObjectDataNotificationRegistrationCreateRequest(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE,
                     BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2,
-                    getTestJobActions(), "DISABLED"));
+                    businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions(), "DISABLED"));
 
         // Validate the returned object.
         assertEquals(new BusinessObjectDataNotificationRegistration(resultBusinessObjectDataNotificationRegistration.getId(),
             businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE,
             new BusinessObjectDataNotificationFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME,
-                BDATA_STATUS, BDATA_STATUS_2), getTestJobActions(), "DISABLED"), resultBusinessObjectDataNotificationRegistration);
+                BDATA_STATUS, BDATA_STATUS_2), businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions(), "DISABLED"),
+            resultBusinessObjectDataNotificationRegistration);
     }
 
     @Test
@@ -99,7 +101,7 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
             businessObjectDataNotificationRegistrationService.createBusinessObjectDataNotificationRegistration(
                 createBusinessObjectDataNotificationRegistrationCreateRequest(new NotificationRegistrationKey(BLANK_TEXT, NOTIFICATION_NAME),
                     NOTIFICATION_EVENT_TYPE, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS,
-                    BDATA_STATUS_2, getTestJobActions()));
+                    BDATA_STATUS_2, businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions()));
             fail("Should throw an IllegalArgumentException when namespace is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -113,7 +115,7 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
             businessObjectDataNotificationRegistrationService.createBusinessObjectDataNotificationRegistration(
                 createBusinessObjectDataNotificationRegistrationCreateRequest(new NotificationRegistrationKey(NAMESPACE, BLANK_TEXT), NOTIFICATION_EVENT_TYPE,
                     NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2,
-                    getTestJobActions()));
+                    businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions()));
             fail("Should throw an IllegalArgumentException when notification name is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -126,7 +128,8 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
         {
             businessObjectDataNotificationRegistrationService.createBusinessObjectDataNotificationRegistration(
                 createBusinessObjectDataNotificationRegistrationCreateRequest(businessObjectDataNotificationRegistrationKey, BLANK_TEXT, NAMESPACE, BDEF_NAME,
-                    FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2, getTestJobActions()));
+                    FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2,
+                    businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions()));
             fail("Should throw an IllegalArgumentException when business object data notification event type is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -139,7 +142,8 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
         {
             businessObjectDataNotificationRegistrationService.createBusinessObjectDataNotificationRegistration(
                 createBusinessObjectDataNotificationRegistrationCreateRequest(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE, NAMESPACE,
-                    BLANK_TEXT, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2, getTestJobActions()));
+                    BLANK_TEXT, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2,
+                    businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions()));
             fail("Should throw an IllegalArgumentException when business object definition name is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -195,7 +199,7 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
         NotificationRegistrationKey businessObjectDataNotificationRegistrationKey = new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME);
 
         // Create a business object definition.
-        createBusinessObjectDefinitionEntity(BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
+        businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
 
         // Create and persist the relative database entities.
         createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting();
@@ -220,7 +224,7 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
         NotificationRegistrationKey businessObjectDataNotificationRegistrationKey = new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME);
 
         // Create a business object definition.
-        createBusinessObjectDefinitionEntity(BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
+        businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
 
         // Create and persist the relative database entities.
         createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting();
@@ -328,7 +332,7 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
         // Try to create a business object data notification using non-existing namespace.
         request = createBusinessObjectDataNotificationRegistrationCreateRequest(new NotificationRegistrationKey("I_DO_NOT_EXIST", NOTIFICATION_NAME),
             NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS,
-            BDATA_STATUS_2, getTestJobActions());
+            BDATA_STATUS_2, businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
         try
         {
             businessObjectDataNotificationRegistrationService.createBusinessObjectDataNotificationRegistration(request);
@@ -340,9 +344,38 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
                 e.getMessage());
         }
 
+        // Try to create a business object data notification when namespace contains a forward slash character.
+        request = createBusinessObjectDataNotificationRegistrationCreateRequest(new NotificationRegistrationKey(addSlash(NAMESPACE), NOTIFICATION_NAME),
+            NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS,
+            BDATA_STATUS_2, businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
+        try
+        {
+            businessObjectDataNotificationRegistrationService.createBusinessObjectDataNotificationRegistration(request);
+            fail("Should throw an IllegalArgumentException when namespace contains a forward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Namespace can not contain a forward slash character.", e.getMessage());
+        }
+
+        // Try to create a business object data notification when notification name contains a forward slash character.
+        request = createBusinessObjectDataNotificationRegistrationCreateRequest(new NotificationRegistrationKey(NAMESPACE, addSlash(NOTIFICATION_NAME)),
+            NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS,
+            BDATA_STATUS_2, businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
+        try
+        {
+            businessObjectDataNotificationRegistrationService.createBusinessObjectDataNotificationRegistration(request);
+            fail("Should throw an IllegalArgumentException when notification name contains a forward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Notification name can not contain a forward slash character.", e.getMessage());
+        }
+
         // Try to create a business object data notification using non-existing notification event type.
         request = createBusinessObjectDataNotificationRegistrationCreateRequest(businessObjectDataNotificationRegistrationKey, "I_DO_NOT_EXIST", BDEF_NAMESPACE,
-            BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2, getTestJobActions());
+            BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2,
+            businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
         try
         {
             businessObjectDataNotificationRegistrationService.createBusinessObjectDataNotificationRegistration(request);
@@ -356,7 +389,7 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
         // Try to create a business object data notification using non-existing business object definition name.
         request = createBusinessObjectDataNotificationRegistrationCreateRequest(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE,
             BDEF_NAMESPACE, "I_DO_NOT_EXIST", FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2,
-            getTestJobActions());
+            businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
         try
         {
             businessObjectDataNotificationRegistrationService.createBusinessObjectDataNotificationRegistration(request);
@@ -371,7 +404,8 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
 
         // Try to create a business object data notification using non-existing business object format file type.
         request = createBusinessObjectDataNotificationRegistrationCreateRequest(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE,
-            BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, "I_DO_NOT_EXIST", FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2, getTestJobActions());
+            BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, "I_DO_NOT_EXIST", FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2,
+            businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
         try
         {
             businessObjectDataNotificationRegistrationService.createBusinessObjectDataNotificationRegistration(request);
@@ -387,7 +421,7 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
         // Try to create a business object data notification using non-existing storage name.
         request = createBusinessObjectDataNotificationRegistrationCreateRequest(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE,
             BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, "I_DO_NOT_EXIST", BDATA_STATUS, BDATA_STATUS_2,
-            getTestJobActions());
+            businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
         try
         {
             businessObjectDataNotificationRegistrationService.createBusinessObjectDataNotificationRegistration(request);
@@ -402,7 +436,7 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
         // Try to create a business object data notification using non-existing new business object data status.
         request = createBusinessObjectDataNotificationRegistrationCreateRequest(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE,
             BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, "I_DO_NOT_EXIST", BDATA_STATUS_2,
-            getTestJobActions());
+            businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
         try
         {
             businessObjectDataNotificationRegistrationService.createBusinessObjectDataNotificationRegistration(request);
@@ -417,7 +451,7 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
         // Try to create a business object data notification using non-existing old business object data status.
         request = createBusinessObjectDataNotificationRegistrationCreateRequest(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE,
             BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, "I_DO_NOT_EXIST",
-            getTestJobActions());
+            businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
         try
         {
             businessObjectDataNotificationRegistrationService.createBusinessObjectDataNotificationRegistration(request);
@@ -432,7 +466,7 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
         // Try to create a business object data notification when using new and old business object data statuses that are the same (case-insensitive).
         request = createBusinessObjectDataNotificationRegistrationCreateRequest(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE,
             BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS.toUpperCase(),
-            BDATA_STATUS.toLowerCase(), getTestJobActions());
+            BDATA_STATUS.toLowerCase(), businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
         try
         {
             businessObjectDataNotificationRegistrationService.createBusinessObjectDataNotificationRegistration(request);
@@ -447,7 +481,7 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
         // registration notification event type with an old business object data status specified.
         request = createBusinessObjectDataNotificationRegistrationCreateRequest(businessObjectDataNotificationRegistrationKey,
             NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_RGSTN.name(), BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-            FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2, getTestJobActions());
+            FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2, businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
         try
         {
             businessObjectDataNotificationRegistrationService.createBusinessObjectDataNotificationRegistration(request);
@@ -505,15 +539,18 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
         NotificationRegistrationKey businessObjectDataNotificationRegistrationKey = new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME);
 
         // Create and persist a business object data notification registration entity.
-        createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE, NAMESPACE, BDEF_NAME,
-            FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2, getTestJobActions());
+        businessObjectDataNotificationRegistrationDaoTestHelper
+            .createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE, NAMESPACE,
+                BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2,
+                businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
 
         // Try to create a business object data notification when it already exists.
         try
         {
             businessObjectDataNotificationRegistrationService.createBusinessObjectDataNotificationRegistration(
                 createBusinessObjectDataNotificationRegistrationCreateRequest(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE, NAMESPACE,
-                    BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2, getTestJobActions()));
+                    BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2,
+                    businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions()));
             fail("Should throw an AlreadyExistsException when business object data notification already exists.");
         }
         catch (AlreadyExistsException e)
@@ -530,8 +567,10 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
         NotificationRegistrationKey businessObjectDataNotificationRegistrationKey = new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME);
 
         // Create and persist a business object data notification registration entity.
-        createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE,
-            BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2, getTestJobActions());
+        businessObjectDataNotificationRegistrationDaoTestHelper
+            .createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE,
+                BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2,
+                businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
 
         // Retrieve the business object data notification registration.
         BusinessObjectDataNotificationRegistration resultBusinessObjectDataNotificationRegistration =
@@ -541,7 +580,8 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
         assertEquals(new BusinessObjectDataNotificationRegistration(resultBusinessObjectDataNotificationRegistration.getId(),
             businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE,
             new BusinessObjectDataNotificationFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME,
-                BDATA_STATUS, BDATA_STATUS_2), getTestJobActions(), "ENABLED"), resultBusinessObjectDataNotificationRegistration);
+                BDATA_STATUS, BDATA_STATUS_2), businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions(), "ENABLED"),
+            resultBusinessObjectDataNotificationRegistration);
     }
 
     @Test
@@ -579,8 +619,10 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
 
         // Create and persist a business object data notification registration entity.
         BusinessObjectDataNotificationRegistrationEntity businessObjectDataNotificationRegistrationEntity =
-            createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE,
-                BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2, getTestJobActions());
+            businessObjectDataNotificationRegistrationDaoTestHelper
+                .createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE,
+                    BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2,
+                    businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
 
         // Retrieve the business object data notification using input parameters with leading and trailing empty spaces.
         BusinessObjectDataNotificationRegistration resultBusinessObjectDataNotificationRegistration = businessObjectDataNotificationRegistrationService
@@ -590,7 +632,8 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
         assertEquals(new BusinessObjectDataNotificationRegistration(businessObjectDataNotificationRegistrationEntity.getId(),
             businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE,
             new BusinessObjectDataNotificationFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME,
-                BDATA_STATUS, BDATA_STATUS_2), getTestJobActions(), "ENABLED"), resultBusinessObjectDataNotificationRegistration);
+                BDATA_STATUS, BDATA_STATUS_2), businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions(), "ENABLED"),
+            resultBusinessObjectDataNotificationRegistration);
     }
 
     @Test
@@ -600,8 +643,10 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
         NotificationRegistrationKey businessObjectDataNotificationRegistrationKey =
             new NotificationRegistrationKey(NAMESPACE.toLowerCase(), NOTIFICATION_NAME.toLowerCase());
         BusinessObjectDataNotificationRegistrationEntity businessObjectDataNotificationRegistrationEntity =
-            createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE,
-                BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2, getTestJobActions());
+            businessObjectDataNotificationRegistrationDaoTestHelper
+                .createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE,
+                    BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2,
+                    businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
 
         // Retrieve the business object data notification using upper case input parameters.
         BusinessObjectDataNotificationRegistration resultBusinessObjectDataNotificationRegistration = businessObjectDataNotificationRegistrationService
@@ -611,7 +656,8 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
         assertEquals(new BusinessObjectDataNotificationRegistration(businessObjectDataNotificationRegistrationEntity.getId(),
             businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE,
             new BusinessObjectDataNotificationFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME,
-                BDATA_STATUS, BDATA_STATUS_2), getTestJobActions(), "ENABLED"), resultBusinessObjectDataNotificationRegistration);
+                BDATA_STATUS, BDATA_STATUS_2), businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions(), "ENABLED"),
+            resultBusinessObjectDataNotificationRegistration);
     }
 
     @Test
@@ -621,8 +667,10 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
         NotificationRegistrationKey businessObjectDataNotificationRegistrationKey =
             new NotificationRegistrationKey(NAMESPACE.toUpperCase(), NOTIFICATION_NAME.toUpperCase());
         BusinessObjectDataNotificationRegistrationEntity businessObjectDataNotificationRegistrationEntity =
-            createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE,
-                BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2, getTestJobActions());
+            businessObjectDataNotificationRegistrationDaoTestHelper
+                .createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE,
+                    BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2,
+                    businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
 
         // Retrieve the business object data notification using lower case input parameters.
         BusinessObjectDataNotificationRegistration resultBusinessObjectDataNotificationRegistration = businessObjectDataNotificationRegistrationService
@@ -632,7 +680,8 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
         assertEquals(new BusinessObjectDataNotificationRegistration(businessObjectDataNotificationRegistrationEntity.getId(),
             businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE,
             new BusinessObjectDataNotificationFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME,
-                BDATA_STATUS, BDATA_STATUS_2), getTestJobActions(), "ENABLED"), resultBusinessObjectDataNotificationRegistration);
+                BDATA_STATUS, BDATA_STATUS_2), businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions(), "ENABLED"),
+            resultBusinessObjectDataNotificationRegistration);
     }
 
     @Test
@@ -661,23 +710,28 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
         // Create database entities required for testing.
         createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting(NAMESPACE, Arrays.asList(NOTIFICATION_EVENT_TYPE, NOTIFICATION_EVENT_TYPE_2),
             BDEF_NAMESPACE_2, BDEF_NAME_2, Arrays.asList(FORMAT_FILE_TYPE_CODE, FORMAT_FILE_TYPE_CODE_2), Arrays.asList(STORAGE_NAME, STORAGE_NAME_2),
-            Arrays.asList(BDATA_STATUS, BDATA_STATUS_2, BDATA_STATUS_3, BDATA_STATUS_4), getTestJobActions2());
+            Arrays.asList(BDATA_STATUS, BDATA_STATUS_2, BDATA_STATUS_3, BDATA_STATUS_4),
+            businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions2());
 
         // Create and persist a business object data notification registration entity.
-        createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE,
-            BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2, getTestJobActions());
+        businessObjectDataNotificationRegistrationDaoTestHelper
+            .createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE,
+                BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2,
+                businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
 
         // Update the business object data notification registration.
         BusinessObjectDataNotificationRegistration resultBusinessObjectDataNotificationRegistration = businessObjectDataNotificationRegistrationService
             .updateBusinessObjectDataNotificationRegistration(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME),
                 createBusinessObjectDataNotificationRegistrationUpdateRequest(NOTIFICATION_EVENT_TYPE_2, BDEF_NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2,
-                    FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, STORAGE_NAME_2, BDATA_STATUS_3, BDATA_STATUS_4, getTestJobActions2(), "ENABLED"));
+                    FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, STORAGE_NAME_2, BDATA_STATUS_3, BDATA_STATUS_4,
+                    businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions2(), "ENABLED"));
 
         // Validate the returned object.
         assertEquals(new BusinessObjectDataNotificationRegistration(resultBusinessObjectDataNotificationRegistration.getId(),
             businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE_2,
             new BusinessObjectDataNotificationFilter(BDEF_NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2,
-                STORAGE_NAME_2, BDATA_STATUS_3, BDATA_STATUS_4), getTestJobActions2(), "ENABLED"), resultBusinessObjectDataNotificationRegistration);
+                STORAGE_NAME_2, BDATA_STATUS_3, BDATA_STATUS_4), businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions2(), "ENABLED"),
+            resultBusinessObjectDataNotificationRegistration);
     }
 
     @Test
@@ -688,23 +742,28 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
         // Create database entities required for testing.
         createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting(NAMESPACE, Arrays.asList(NOTIFICATION_EVENT_TYPE, NOTIFICATION_EVENT_TYPE_2),
             BDEF_NAMESPACE_2, BDEF_NAME_2, Arrays.asList(FORMAT_FILE_TYPE_CODE, FORMAT_FILE_TYPE_CODE_2), Arrays.asList(STORAGE_NAME, STORAGE_NAME_2),
-            Arrays.asList(BDATA_STATUS, BDATA_STATUS_2, BDATA_STATUS_3, BDATA_STATUS_4), getTestJobActions2());
+            Arrays.asList(BDATA_STATUS, BDATA_STATUS_2, BDATA_STATUS_3, BDATA_STATUS_4),
+            businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions2());
 
         // Create and persist a business object data notification registration entity.
-        createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE,
-            BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2, getTestJobActions());
+        businessObjectDataNotificationRegistrationDaoTestHelper
+            .createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE,
+                BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2,
+                businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
 
         // Update the business object data notification registration.
         BusinessObjectDataNotificationRegistration resultBusinessObjectDataNotificationRegistration = businessObjectDataNotificationRegistrationService
             .updateBusinessObjectDataNotificationRegistration(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME),
                 createBusinessObjectDataNotificationRegistrationUpdateRequest(NOTIFICATION_EVENT_TYPE_2, BDEF_NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2,
-                    FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, STORAGE_NAME_2, BDATA_STATUS_3, BDATA_STATUS_4, getTestJobActions2(), "DISABLED"));
+                    FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, STORAGE_NAME_2, BDATA_STATUS_3, BDATA_STATUS_4,
+                    businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions2(), "DISABLED"));
 
         // Validate the returned object.
         assertEquals(new BusinessObjectDataNotificationRegistration(resultBusinessObjectDataNotificationRegistration.getId(),
             businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE_2,
             new BusinessObjectDataNotificationFilter(BDEF_NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2,
-                STORAGE_NAME_2, BDATA_STATUS_3, BDATA_STATUS_4), getTestJobActions2(), "DISABLED"), resultBusinessObjectDataNotificationRegistration);
+                STORAGE_NAME_2, BDATA_STATUS_3, BDATA_STATUS_4), businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions2(), "DISABLED"),
+            resultBusinessObjectDataNotificationRegistration);
     }
 
     @Test
@@ -716,7 +775,8 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
             businessObjectDataNotificationRegistrationService
                 .updateBusinessObjectDataNotificationRegistration(new NotificationRegistrationKey(BLANK_TEXT, NOTIFICATION_NAME),
                     createBusinessObjectDataNotificationRegistrationUpdateRequest(NOTIFICATION_EVENT_TYPE_2, BDEF_NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2,
-                        FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, STORAGE_NAME_2, BDATA_STATUS, BDATA_STATUS_2, getTestJobActions2(), "ENABLED"));
+                        FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, STORAGE_NAME_2, BDATA_STATUS, BDATA_STATUS_2,
+                        businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions2(), "ENABLED"));
             fail("Should throw an IllegalArgumentException when namespace is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -730,7 +790,8 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
             businessObjectDataNotificationRegistrationService
                 .updateBusinessObjectDataNotificationRegistration(new NotificationRegistrationKey(NAMESPACE, BLANK_TEXT),
                     createBusinessObjectDataNotificationRegistrationUpdateRequest(NOTIFICATION_EVENT_TYPE_2, BDEF_NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2,
-                        FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, STORAGE_NAME_2, BDATA_STATUS, BDATA_STATUS_2, getTestJobActions2(), "ENABLED"));
+                        FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, STORAGE_NAME_2, BDATA_STATUS, BDATA_STATUS_2,
+                        businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions2(), "ENABLED"));
             fail("Should throw an IllegalArgumentException when notification name is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -744,7 +805,8 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
             businessObjectDataNotificationRegistrationService
                 .updateBusinessObjectDataNotificationRegistration(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME),
                     createBusinessObjectDataNotificationRegistrationUpdateRequest(NOTIFICATION_EVENT_TYPE_2, BDEF_NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2,
-                        FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, STORAGE_NAME_2, BDATA_STATUS, BDATA_STATUS_2, getTestJobActions2(), null));
+                        FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, STORAGE_NAME_2, BDATA_STATUS, BDATA_STATUS_2,
+                        businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions2(), null));
             fail("Should throw an IllegalArgumentException when notification name is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -760,11 +822,14 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
 
         // Create other database entities required for testing.
         createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting(NAMESPACE, Arrays.asList(NOTIFICATION_EVENT_TYPE, NOTIFICATION_EVENT_TYPE_2),
-            BDEF_NAMESPACE_2, BDEF_NAME_2, null, null, Arrays.asList(BDATA_STATUS, BDATA_STATUS_2), getTestJobActions());
+            BDEF_NAMESPACE_2, BDEF_NAME_2, null, null, Arrays.asList(BDATA_STATUS, BDATA_STATUS_2),
+            businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
 
         // Create and persist a business object data notification registration entity.
-        createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE,
-            BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2, getTestJobActions());
+        businessObjectDataNotificationRegistrationDaoTestHelper
+            .createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE,
+                BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2,
+                businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
 
         // Update the business object data notification without specifying any of the optional parameters (passing whitespace characters).
         BusinessObjectDataNotificationRegistration resultBusinessObjectDataNotificationRegistration = businessObjectDataNotificationRegistrationService
@@ -786,11 +851,14 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
 
         // Create other database entities required for testing.
         createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting(NAMESPACE, Arrays.asList(NOTIFICATION_EVENT_TYPE, NOTIFICATION_EVENT_TYPE_2),
-            BDEF_NAMESPACE_2, BDEF_NAME_2, null, null, Arrays.asList(BDATA_STATUS, BDATA_STATUS_2), getTestJobActions());
+            BDEF_NAMESPACE_2, BDEF_NAME_2, null, null, Arrays.asList(BDATA_STATUS, BDATA_STATUS_2),
+            businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
 
         // Create and persist a business object data notification registration entity.
-        createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE,
-            BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2, getTestJobActions());
+        businessObjectDataNotificationRegistrationDaoTestHelper
+            .createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE,
+                BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2,
+                businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
 
         // Update the business object data notification without specifying any of the optional parameters (passing whitespace characters).
         BusinessObjectDataNotificationRegistration resultBusinessObjectDataNotificationRegistration = businessObjectDataNotificationRegistrationService
@@ -813,11 +881,14 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
         // Create database entities required for testing.
         createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting(NAMESPACE, Arrays.asList(NOTIFICATION_EVENT_TYPE, NOTIFICATION_EVENT_TYPE_2),
             BDEF_NAMESPACE_2, BDEF_NAME_2, Arrays.asList(FORMAT_FILE_TYPE_CODE, FORMAT_FILE_TYPE_CODE_2), Arrays.asList(STORAGE_NAME, STORAGE_NAME_2),
-            Arrays.asList(BDATA_STATUS, BDATA_STATUS_2, BDATA_STATUS_3, BDATA_STATUS_4), getTestJobActions2());
+            Arrays.asList(BDATA_STATUS, BDATA_STATUS_2, BDATA_STATUS_3, BDATA_STATUS_4),
+            businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions2());
 
         // Create and persist a business object data notification registration entity.
-        createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE,
-            BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2, getTestJobActions());
+        businessObjectDataNotificationRegistrationDaoTestHelper
+            .createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE,
+                BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2,
+                businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
 
         // Update the business object data notification using input parameters with leading and trailing empty spaces.
         BusinessObjectDataNotificationRegistration resultBusinessObjectDataNotificationRegistration = businessObjectDataNotificationRegistrationService
@@ -850,10 +921,11 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
         // Create and persist a business object data notification registration entity using lower case alternate key values.
         NotificationRegistrationKey businessObjectDataNotificationRegistrationKey =
             new NotificationRegistrationKey(NAMESPACE.toLowerCase(), NOTIFICATION_NAME.toLowerCase());
-        createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE.toLowerCase(),
-            BDEF_NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(), FORMAT_FILE_TYPE_CODE.toLowerCase(), FORMAT_VERSION,
-            STORAGE_NAME.toLowerCase(), BDATA_STATUS.toLowerCase(), BDATA_STATUS_2.toLowerCase(),
-            Arrays.asList(new JobAction(JOB_NAMESPACE.toLowerCase(), JOB_NAME.toLowerCase(), CORRELATION_DATA)));
+        businessObjectDataNotificationRegistrationDaoTestHelper
+            .createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE.toLowerCase(),
+                BDEF_NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(), FORMAT_FILE_TYPE_CODE.toLowerCase(), FORMAT_VERSION,
+                STORAGE_NAME.toLowerCase(), BDATA_STATUS.toLowerCase(), BDATA_STATUS_2.toLowerCase(),
+                Arrays.asList(new JobAction(JOB_NAMESPACE.toLowerCase(), JOB_NAME.toLowerCase(), CORRELATION_DATA)));
 
         // Update the business object data notification using upper case input parameters.
         BusinessObjectDataNotificationRegistration resultBusinessObjectDataNotificationRegistration = businessObjectDataNotificationRegistrationService
@@ -887,10 +959,11 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
         // Create and persist a business object data notification registration entity using upper case alternate key values.
         NotificationRegistrationKey businessObjectDataNotificationRegistrationKey =
             new NotificationRegistrationKey(NAMESPACE.toUpperCase(), NOTIFICATION_NAME.toUpperCase());
-        createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE.toUpperCase(),
-            BDEF_NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(), FORMAT_FILE_TYPE_CODE.toUpperCase(), FORMAT_VERSION,
-            STORAGE_NAME.toUpperCase(), BDATA_STATUS.toUpperCase(), BDATA_STATUS_2.toUpperCase(),
-            Arrays.asList(new JobAction(JOB_NAMESPACE.toUpperCase(), JOB_NAME.toUpperCase(), CORRELATION_DATA)));
+        businessObjectDataNotificationRegistrationDaoTestHelper
+            .createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE.toUpperCase(),
+                BDEF_NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(), FORMAT_FILE_TYPE_CODE.toUpperCase(), FORMAT_VERSION,
+                STORAGE_NAME.toUpperCase(), BDATA_STATUS.toUpperCase(), BDATA_STATUS_2.toUpperCase(),
+                Arrays.asList(new JobAction(JOB_NAMESPACE.toUpperCase(), JOB_NAME.toUpperCase(), CORRELATION_DATA)));
 
         // Update the business object data notification using lower case input parameters.
         BusinessObjectDataNotificationRegistration resultBusinessObjectDataNotificationRegistration = businessObjectDataNotificationRegistrationService
@@ -920,16 +993,20 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
         // Create and persist the relative database entities.
         createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting(NAMESPACE, Arrays.asList(NOTIFICATION_EVENT_TYPE, NOTIFICATION_EVENT_TYPE_2),
             BDEF_NAMESPACE_2, BDEF_NAME_2, Arrays.asList(FORMAT_FILE_TYPE_CODE, FORMAT_FILE_TYPE_CODE_2), Arrays.asList(STORAGE_NAME, STORAGE_NAME_2),
-            Arrays.asList(BDATA_STATUS, BDATA_STATUS_2, BDATA_STATUS_3, BDATA_STATUS_4), getTestJobActions2());
+            Arrays.asList(BDATA_STATUS, BDATA_STATUS_2, BDATA_STATUS_3, BDATA_STATUS_4),
+            businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions2());
 
         // Create and persist a business object data notification registration entity.
-        createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE,
-            BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2, getTestJobActions());
+        businessObjectDataNotificationRegistrationDaoTestHelper
+            .createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE,
+                BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2,
+                businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
 
         // Try to update a business object data notification using non-existing notification event type.
         request =
             createBusinessObjectDataNotificationRegistrationUpdateRequest("I_DO_NOT_EXIST", NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-                FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2, getTestJobActions(), "ENABLED");
+                FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2, businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions(),
+                "ENABLED");
         try
         {
             businessObjectDataNotificationRegistrationService
@@ -943,7 +1020,8 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
 
         // Try to update a business object data notification using non-existing business object definition name.
         request = createBusinessObjectDataNotificationRegistrationUpdateRequest(NOTIFICATION_EVENT_TYPE, NAMESPACE, "I_DO_NOT_EXIST", FORMAT_USAGE_CODE,
-            FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2, getTestJobActions(), "ENABLED");
+            FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2,
+            businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions(), "ENABLED");
         try
         {
             businessObjectDataNotificationRegistrationService
@@ -959,7 +1037,8 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
 
         // Try to update a business object data notification using non-existing business object format file type.
         request = createBusinessObjectDataNotificationRegistrationUpdateRequest(NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-            "I_DO_NOT_EXIST", FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2, getTestJobActions(), "ENABLED");
+            "I_DO_NOT_EXIST", FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2,
+            businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions(), "ENABLED");
         try
         {
             businessObjectDataNotificationRegistrationService
@@ -975,7 +1054,8 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
 
         // Try to update a business object data notification using non-existing storage name.
         request = createBusinessObjectDataNotificationRegistrationUpdateRequest(NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-            FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, "I_DO_NOT_EXIST", BDATA_STATUS, BDATA_STATUS_2, getTestJobActions(), "ENABLED");
+            FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, "I_DO_NOT_EXIST", BDATA_STATUS, BDATA_STATUS_2,
+            businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions(), "ENABLED");
         try
         {
             businessObjectDataNotificationRegistrationService
@@ -990,7 +1070,8 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
 
         // Try to update a business object data notification using non-existing new business object data status.
         request = createBusinessObjectDataNotificationRegistrationUpdateRequest(NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-            FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, "I_DO_NOT_EXIST", BDATA_STATUS_2, getTestJobActions(), "ENABLED");
+            FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, "I_DO_NOT_EXIST", BDATA_STATUS_2,
+            businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions(), "ENABLED");
         try
         {
             businessObjectDataNotificationRegistrationService
@@ -1005,7 +1086,8 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
 
         // Try to update a business object data notification using non-existing old business object data status.
         request = createBusinessObjectDataNotificationRegistrationUpdateRequest(NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-            FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, "I_DO_NOT_EXIST", getTestJobActions(), "ENABLED");
+            FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, "I_DO_NOT_EXIST",
+            businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions(), "ENABLED");
         try
         {
             businessObjectDataNotificationRegistrationService
@@ -1020,7 +1102,8 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
 
         // Try to create a business object data notification when using new and old business object data statuses that are the same (case-insensitive).
         request = createBusinessObjectDataNotificationRegistrationUpdateRequest(NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-            FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS.toUpperCase(), BDATA_STATUS.toLowerCase(), getTestJobActions(), "ENABLED");
+            FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS.toUpperCase(), BDATA_STATUS.toLowerCase(),
+            businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions(), "ENABLED");
         try
         {
             businessObjectDataNotificationRegistrationService
@@ -1036,7 +1119,7 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
         // registration notification event type with an old business object data status specified.
         request = createBusinessObjectDataNotificationRegistrationUpdateRequest(NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_RGSTN.name(),
             BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2,
-            getTestJobActions(), "ENABLED");
+            businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions(), "ENABLED");
         try
         {
             businessObjectDataNotificationRegistrationService
@@ -1075,7 +1158,8 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
             businessObjectDataNotificationRegistrationService
                 .updateBusinessObjectDataNotificationRegistration(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME),
                     createBusinessObjectDataNotificationRegistrationUpdateRequest(NOTIFICATION_EVENT_TYPE_2, BDEF_NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2,
-                        FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, STORAGE_NAME_2, BDATA_STATUS, BDATA_STATUS_2, getTestJobActions2(), "ENABLED"));
+                        FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, STORAGE_NAME_2, BDATA_STATUS, BDATA_STATUS_2,
+                        businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions2(), "ENABLED"));
             fail("Should throw an ObjectNotFoundException when trying to update a non-existing business object data notification.");
         }
         catch (ObjectNotFoundException e)
@@ -1093,8 +1177,10 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
 
         // Create and persist a business object data notification registration entity.
         BusinessObjectDataNotificationRegistrationEntity businessObjectDataNotificationRegistrationEntity =
-            createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE,
-                BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2, getTestJobActions());
+            businessObjectDataNotificationRegistrationDaoTestHelper
+                .createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE,
+                    BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2,
+                    businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
 
         // Validate that this business object data notification exists.
         assertNotNull(
@@ -1108,7 +1194,8 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
         assertEquals(new BusinessObjectDataNotificationRegistration(businessObjectDataNotificationRegistrationEntity.getId(),
             new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME), NOTIFICATION_EVENT_TYPE,
             new BusinessObjectDataNotificationFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME,
-                BDATA_STATUS, BDATA_STATUS_2), getTestJobActions(), "ENABLED"), deletedBusinessObjectDataNotificationRegistration);
+                BDATA_STATUS, BDATA_STATUS_2), businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions(), "ENABLED"),
+            deletedBusinessObjectDataNotificationRegistration);
 
         // Ensure that this business object data notification is no longer there.
         assertNull(
@@ -1150,8 +1237,10 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
 
         // Create and persist a business object data notification registration entity.
         BusinessObjectDataNotificationRegistrationEntity businessObjectDataNotificationRegistrationEntity =
-            createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE,
-                BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2, getTestJobActions());
+            businessObjectDataNotificationRegistrationDaoTestHelper
+                .createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE,
+                    BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2,
+                    businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
 
         // Validate that this business object data notification exists.
         assertNotNull(
@@ -1165,7 +1254,8 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
         assertEquals(new BusinessObjectDataNotificationRegistration(businessObjectDataNotificationRegistrationEntity.getId(),
             businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE,
             new BusinessObjectDataNotificationFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME,
-                BDATA_STATUS, BDATA_STATUS_2), getTestJobActions(), "ENABLED"), deletedBusinessObjectDataNotificationRegistration);
+                BDATA_STATUS, BDATA_STATUS_2), businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions(), "ENABLED"),
+            deletedBusinessObjectDataNotificationRegistration);
 
         // Ensure that this business object data notification is no longer there.
         assertNull(
@@ -1179,8 +1269,10 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
         NotificationRegistrationKey businessObjectDataNotificationRegistrationKey =
             new NotificationRegistrationKey(NAMESPACE.toLowerCase(), NOTIFICATION_NAME.toLowerCase());
         BusinessObjectDataNotificationRegistrationEntity businessObjectDataNotificationRegistrationEntity =
-            createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE,
-                BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2, getTestJobActions());
+            businessObjectDataNotificationRegistrationDaoTestHelper
+                .createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE,
+                    BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2,
+                    businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
 
         // Validate that this business object data notification exists.
         assertNotNull(
@@ -1194,7 +1286,8 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
         assertEquals(new BusinessObjectDataNotificationRegistration(businessObjectDataNotificationRegistrationEntity.getId(),
             businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE,
             new BusinessObjectDataNotificationFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME,
-                BDATA_STATUS, BDATA_STATUS_2), getTestJobActions(), "ENABLED"), deletedBusinessObjectDataNotificationRegistration);
+                BDATA_STATUS, BDATA_STATUS_2), businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions(), "ENABLED"),
+            deletedBusinessObjectDataNotificationRegistration);
 
         // Ensure that this business object data notification is no longer there.
         assertNull(
@@ -1208,8 +1301,10 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
         NotificationRegistrationKey businessObjectDataNotificationRegistrationKey =
             new NotificationRegistrationKey(NAMESPACE.toUpperCase(), NOTIFICATION_NAME.toUpperCase());
         BusinessObjectDataNotificationRegistrationEntity businessObjectDataNotificationRegistrationEntity =
-            createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE,
-                BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2, getTestJobActions());
+            businessObjectDataNotificationRegistrationDaoTestHelper
+                .createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE,
+                    BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2,
+                    businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
 
         // Validate that this business object data notification exists.
         assertNotNull(
@@ -1223,7 +1318,8 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
         assertEquals(new BusinessObjectDataNotificationRegistration(businessObjectDataNotificationRegistrationEntity.getId(),
             businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE,
             new BusinessObjectDataNotificationFilter(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME,
-                BDATA_STATUS, BDATA_STATUS_2), getTestJobActions(), "ENABLED"), deletedBusinessObjectDataNotificationRegistration);
+                BDATA_STATUS, BDATA_STATUS_2), businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions(), "ENABLED"),
+            deletedBusinessObjectDataNotificationRegistration);
 
         // Ensure that this business object data notification is no longer there.
         assertNull(
@@ -1254,8 +1350,10 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
         // Create and persist business object data notification entities.
         for (NotificationRegistrationKey businessObjectDataNotificationRegistrationKey : getTestBusinessObjectDataNotificationRegistrationKeys())
         {
-            createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE,
-                BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null, null, null, null, getTestJobActions());
+            businessObjectDataNotificationRegistrationDaoTestHelper
+                .createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE,
+                    BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null, null, null, null,
+                    businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
         }
 
         // Retrieve a list of business object data notification registration keys.
@@ -1287,8 +1385,10 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
         // Create and persist business object data notification entities.
         for (NotificationRegistrationKey businessObjectDataNotificationRegistrationKey : getTestBusinessObjectDataNotificationRegistrationKeys())
         {
-            createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE,
-                BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2, getTestJobActions());
+            businessObjectDataNotificationRegistrationDaoTestHelper
+                .createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE,
+                    BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2,
+                    businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
         }
 
         // Retrieve a list of business object data notification registration keys using input parameters with leading and trailing empty spaces.
@@ -1308,9 +1408,10 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
             NotificationRegistrationKey businessObjectDataNotificationRegistrationKeyLowerCase =
                 new NotificationRegistrationKey(businessObjectDataNotificationRegistrationKey.getNamespace().toLowerCase(),
                     businessObjectDataNotificationRegistrationKey.getNotificationName().toLowerCase());
-            createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKeyLowerCase, NOTIFICATION_EVENT_TYPE,
-                BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2,
-                getTestJobActions());
+            businessObjectDataNotificationRegistrationDaoTestHelper
+                .createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKeyLowerCase, NOTIFICATION_EVENT_TYPE,
+                    BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2,
+                    businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
         }
 
         // Retrieve a list of business object data notification registration keys using upper case namespace code value.
@@ -1338,9 +1439,10 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
             NotificationRegistrationKey businessObjectDataNotificationRegistrationKeyUpperCase =
                 new NotificationRegistrationKey(businessObjectDataNotificationRegistrationKey.getNamespace().toUpperCase(),
                     businessObjectDataNotificationRegistrationKey.getNotificationName().toUpperCase());
-            createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKeyUpperCase, NOTIFICATION_EVENT_TYPE,
-                BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2,
-                getTestJobActions());
+            businessObjectDataNotificationRegistrationDaoTestHelper
+                .createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKeyUpperCase, NOTIFICATION_EVENT_TYPE,
+                    BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2,
+                    businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
         }
 
         // Retrieve a list of business object data notification registration keys using lower case namespace code value.
@@ -1395,8 +1497,10 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
         NotificationRegistrationKey notificationRegistrationKey = new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME);
 
         // Create and persist a business object data notification registration entity.
-        createBusinessObjectDataNotificationRegistrationEntity(notificationRegistrationKey, NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE, BDEF_NAME,
-            FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2, getTestJobActions());
+        businessObjectDataNotificationRegistrationDaoTestHelper
+            .createBusinessObjectDataNotificationRegistrationEntity(notificationRegistrationKey, NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE, BDEF_NAME,
+                FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2,
+                businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
 
         // Retrieve a list of business object data notification registration keys.
         assertEquals(new BusinessObjectDataNotificationRegistrationKeys(Arrays.asList(notificationRegistrationKey)),
@@ -1442,8 +1546,10 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
         NotificationRegistrationKey notificationRegistrationKey = new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME);
 
         // Create and persist a business object data notification registration entity.
-        createBusinessObjectDataNotificationRegistrationEntity(notificationRegistrationKey, NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE, BDEF_NAME,
-            FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2, getTestJobActions());
+        businessObjectDataNotificationRegistrationDaoTestHelper
+            .createBusinessObjectDataNotificationRegistrationEntity(notificationRegistrationKey, NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE, BDEF_NAME,
+                FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2,
+                businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
 
         // Retrieve a list of business object data notification registration keys by not specifying optional parameters.
         assertEquals(new BusinessObjectDataNotificationRegistrationKeys(Arrays.asList(notificationRegistrationKey)),
@@ -1463,8 +1569,10 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
         NotificationRegistrationKey notificationRegistrationKey = new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME);
 
         // Create and persist a business object data notification registration entity.
-        createBusinessObjectDataNotificationRegistrationEntity(notificationRegistrationKey, NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE, BDEF_NAME,
-            FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2, getTestJobActions());
+        businessObjectDataNotificationRegistrationDaoTestHelper
+            .createBusinessObjectDataNotificationRegistrationEntity(notificationRegistrationKey, NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE, BDEF_NAME,
+                FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2,
+                businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
 
         // Retrieve a list of business object data notification registration keys using input parameters with leading and trailing empty spaces.
         assertEquals(new BusinessObjectDataNotificationRegistrationKeys(Arrays.asList(notificationRegistrationKey)),
@@ -1480,8 +1588,10 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
         NotificationRegistrationKey notificationRegistrationKey = new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME);
 
         // Create and persist a business object data notification registration entity.
-        createBusinessObjectDataNotificationRegistrationEntity(notificationRegistrationKey, NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE, BDEF_NAME,
-            FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2, getTestJobActions());
+        businessObjectDataNotificationRegistrationDaoTestHelper
+            .createBusinessObjectDataNotificationRegistrationEntity(notificationRegistrationKey, NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE, BDEF_NAME,
+                FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2,
+                businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
 
         // Retrieve a list of business object data notification registration keys using upper case input parameters.
         assertEquals(new BusinessObjectDataNotificationRegistrationKeys(Arrays.asList(notificationRegistrationKey)),
@@ -1497,8 +1607,10 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
         NotificationRegistrationKey notificationRegistrationKey = new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME);
 
         // Create and persist a business object data notification registration entity.
-        createBusinessObjectDataNotificationRegistrationEntity(notificationRegistrationKey, NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE, BDEF_NAME,
-            FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2, getTestJobActions());
+        businessObjectDataNotificationRegistrationDaoTestHelper
+            .createBusinessObjectDataNotificationRegistrationEntity(notificationRegistrationKey, NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE, BDEF_NAME,
+                FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2,
+                businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
 
         // Retrieve a list of business object data notification registration keys using lower case input parameters.
         assertEquals(new BusinessObjectDataNotificationRegistrationKeys(Arrays.asList(notificationRegistrationKey)),
@@ -1514,8 +1626,10 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
         NotificationRegistrationKey notificationRegistrationKey = new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME);
 
         // Create and persist a business object data notification registration entity.
-        createBusinessObjectDataNotificationRegistrationEntity(notificationRegistrationKey, NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE, BDEF_NAME,
-            FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2, getTestJobActions());
+        businessObjectDataNotificationRegistrationDaoTestHelper
+            .createBusinessObjectDataNotificationRegistrationEntity(notificationRegistrationKey, NOTIFICATION_EVENT_TYPE, BDEF_NAMESPACE, BDEF_NAME,
+                FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS_2,
+                businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
 
         // Retrieve a list of business object data notification registration keys.
         assertEquals(new BusinessObjectDataNotificationRegistrationKeys(Arrays.asList(notificationRegistrationKey)),

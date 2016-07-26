@@ -53,16 +53,16 @@ public class StorageUnitDaoTest extends AbstractDaoTest
                 SUBPARTITION_VALUES, DATA_VERSION));
 
         // Create database entities required for testing. Only the first two Glacier storage unit entities are expected to be selected.
-        List<BusinessObjectDataEntity> businessObjectDataEntities = Arrays.asList(
-            createBusinessObjectDataEntityInRestoringState(businessObjectDataKeys.get(0), STORAGE_NAME_ORIGIN, StorageUnitStatusEntity.RESTORING,
-                STORAGE_NAME_GLACIER, StorageUnitStatusEntity.ENABLED),
-            createBusinessObjectDataEntityInRestoringState(businessObjectDataKeys.get(1), STORAGE_NAME_ORIGIN, StorageUnitStatusEntity.RESTORING,
-                STORAGE_NAME_GLACIER, StorageUnitStatusEntity.ENABLED),
-            createBusinessObjectDataEntityInRestoringState(businessObjectDataKeys.get(2), STORAGE_NAME_ORIGIN, StorageUnitStatusEntity.RESTORING,
-                STORAGE_NAME_GLACIER, STORAGE_UNIT_STATUS),
-            createBusinessObjectDataEntityInRestoringState(businessObjectDataKeys.get(3), STORAGE_NAME_ORIGIN, STORAGE_UNIT_STATUS, STORAGE_NAME_GLACIER,
-                StorageUnitStatusEntity.ENABLED),
-            createBusinessObjectDataEntityInRestoringState(businessObjectDataKeys.get(4), STORAGE_NAME_ORIGIN, NO_STORAGE_UNIT_STATUS, STORAGE_NAME_GLACIER,
+        List<BusinessObjectDataEntity> businessObjectDataEntities = Arrays.asList(storageUnitDaoTestHelper
+            .createBusinessObjectDataEntityInRestoringState(businessObjectDataKeys.get(0), STORAGE_NAME_ORIGIN, StorageUnitStatusEntity.RESTORING,
+                STORAGE_NAME_GLACIER, StorageUnitStatusEntity.ENABLED), storageUnitDaoTestHelper
+            .createBusinessObjectDataEntityInRestoringState(businessObjectDataKeys.get(1), STORAGE_NAME_ORIGIN, StorageUnitStatusEntity.RESTORING,
+                STORAGE_NAME_GLACIER, StorageUnitStatusEntity.ENABLED), storageUnitDaoTestHelper
+            .createBusinessObjectDataEntityInRestoringState(businessObjectDataKeys.get(2), STORAGE_NAME_ORIGIN, StorageUnitStatusEntity.RESTORING,
+                STORAGE_NAME_GLACIER, STORAGE_UNIT_STATUS), storageUnitDaoTestHelper
+            .createBusinessObjectDataEntityInRestoringState(businessObjectDataKeys.get(3), STORAGE_NAME_ORIGIN, STORAGE_UNIT_STATUS, STORAGE_NAME_GLACIER,
+                StorageUnitStatusEntity.ENABLED), storageUnitDaoTestHelper
+            .createBusinessObjectDataEntityInRestoringState(businessObjectDataKeys.get(4), STORAGE_NAME_ORIGIN, NO_STORAGE_UNIT_STATUS, STORAGE_NAME_GLACIER,
                 StorageUnitStatusEntity.ENABLED));
 
         // Get the list of expected Glacier storage unit entities.
@@ -85,8 +85,8 @@ public class StorageUnitDaoTest extends AbstractDaoTest
     public void testGetStorageUnitByStorageNameAndDirectoryPath()
     {
         // Create database entities required for testing.
-        StorageUnitEntity storageUnitEntity =
-            createStorageUnitEntity(STORAGE_NAME, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS, STORAGE_UNIT_STATUS, STORAGE_DIRECTORY_PATH);
 
         // Retrieve the relative storage file entities and validate the results.
@@ -108,8 +108,8 @@ public class StorageUnitDaoTest extends AbstractDaoTest
     @Test
     public void testGetStorageUnitByBusinessObjectDataAndStorageName()
     {
-        StorageUnitEntity storageUnitEntity =
-            createStorageUnitEntity(STORAGE_NAME, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS, STORAGE_UNIT_STATUS, STORAGE_DIRECTORY_PATH);
         BusinessObjectDataEntity businessObjectDataEntity = storageUnitEntity.getBusinessObjectData();
 
@@ -128,8 +128,8 @@ public class StorageUnitDaoTest extends AbstractDaoTest
     public void testGetStorageUnitsByStorageAndBusinessObjectData()
     {
         // Create database entities required for testing.
-        StorageUnitEntity storageUnitEntity =
-            createStorageUnitEntity(STORAGE_NAME, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS, STORAGE_UNIT_STATUS, TEST_S3_KEY_PREFIX);
 
         // Retrieve storage unit entities by storage and business object data.
@@ -151,13 +151,16 @@ public class StorageUnitDaoTest extends AbstractDaoTest
                 DATA_VERSION);
 
         // Create and persist a business object data entity.
-        BusinessObjectDataEntity businessObjectDataEntity = createBusinessObjectDataEntity(businessObjectDataKey, LATEST_VERSION_FLAG_SET, BDATA_STATUS);
+        BusinessObjectDataEntity businessObjectDataEntity =
+            businessObjectDataDaoTestHelper.createBusinessObjectDataEntity(businessObjectDataKey, LATEST_VERSION_FLAG_SET, BDATA_STATUS);
 
         // Create database entities required for testing.
-        List<StorageUnitEntity> storageUnitEntities = Arrays
-            .asList(createStorageUnitEntity(STORAGE_NAME_2, STORAGE_PLATFORM_CODE, businessObjectDataEntity, STORAGE_UNIT_STATUS, STORAGE_DIRECTORY_PATH),
-                createStorageUnitEntity(STORAGE_NAME, STORAGE_PLATFORM_CODE, businessObjectDataEntity, STORAGE_UNIT_STATUS, STORAGE_DIRECTORY_PATH),
-                createStorageUnitEntity(STORAGE_NAME_3, STORAGE_PLATFORM_CODE_2, businessObjectDataEntity, STORAGE_UNIT_STATUS, STORAGE_DIRECTORY_PATH));
+        List<StorageUnitEntity> storageUnitEntities = Arrays.asList(storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME_2, STORAGE_PLATFORM_CODE, businessObjectDataEntity, STORAGE_UNIT_STATUS, STORAGE_DIRECTORY_PATH),
+            storageUnitDaoTestHelper
+                .createStorageUnitEntity(STORAGE_NAME, STORAGE_PLATFORM_CODE, businessObjectDataEntity, STORAGE_UNIT_STATUS, STORAGE_DIRECTORY_PATH),
+            storageUnitDaoTestHelper
+                .createStorageUnitEntity(STORAGE_NAME_3, STORAGE_PLATFORM_CODE_2, businessObjectDataEntity, STORAGE_UNIT_STATUS, STORAGE_DIRECTORY_PATH));
 
         // Retrieve storage unit entities by storage platform and business object data.
         assertEquals(Arrays.asList(storageUnitEntities.get(1), storageUnitEntities.get(0)),
@@ -177,8 +180,8 @@ public class StorageUnitDaoTest extends AbstractDaoTest
     public void testGetStorageUnitsByPartitionFiltersAndStorages()
     {
         // Create database entities required for testing.
-        List<StorageUnitEntity> expectedMultiStorageAvailableStorageUnits =
-            createDatabaseEntitiesForBusinessObjectDataAvailabilityTesting(null, new ArrayList<>(), new ArrayList<>(),
+        List<StorageUnitEntity> expectedMultiStorageAvailableStorageUnits = businessObjectDataAvailabilityTestHelper
+            .createDatabaseEntitiesForBusinessObjectDataAvailabilityTesting(null, new ArrayList<>(), new ArrayList<>(),
                 BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, SUBPARTITION_VALUES, ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA, STORAGE_NAMES);
 
         // Build a list of partition values, large enough to cause executing the select queries in chunks.
@@ -273,11 +276,11 @@ public class StorageUnitDaoTest extends AbstractDaoTest
     public void testGetStorageUnitsByPartitionFiltersAndStoragesNotEnabledStorageUnitStatus()
     {
         // Create enabled and disabled storage units for different partition values.
-        StorageUnitEntity enabledStorageUnitEntity =
-            createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+        StorageUnitEntity enabledStorageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 NO_SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS, StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
-        StorageUnitEntity disabledStorageUnitEntity =
-            createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE_2,
+        StorageUnitEntity disabledStorageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE_2,
                 NO_SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS, StorageUnitStatusEntity.DISABLED, NO_STORAGE_DIRECTORY_PATH);
 
         // Build a list of partition filters to select business object data.

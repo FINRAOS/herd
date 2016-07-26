@@ -15,6 +15,7 @@
 */
 package org.finra.herd.service.helper;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
@@ -23,23 +24,21 @@ import org.finra.herd.model.api.xml.NotificationRegistrationKey;
 @Component
 public class BusinessObjectDataNotificationRegistrationHelper
 {
+    @Autowired
+    private AlternateKeyHelper alternateKeyHelper;
+
     /**
      * Validates the business object data notification registration key. This method also trims the key parameters.
      *
-     * @param businessObjectDataNotificationKey the business object data notification registration key
+     * @param key the business object data notification registration key
      *
      * @throws IllegalArgumentException if any validation errors were found
      */
-    public void validateBusinessObjectDataNotificationRegistrationKey(NotificationRegistrationKey businessObjectDataNotificationKey)
-        throws IllegalArgumentException
+    public void validateBusinessObjectDataNotificationRegistrationKey(NotificationRegistrationKey key) throws IllegalArgumentException
     {
         // Validate.
-        Assert.notNull(businessObjectDataNotificationKey, "A business object data notification registration key must be specified.");
-        Assert.hasText(businessObjectDataNotificationKey.getNamespace(), "A namespace must be specified.");
-        Assert.hasText(businessObjectDataNotificationKey.getNotificationName(), "A notification name must be specified.");
-
-        // Remove leading and trailing spaces.
-        businessObjectDataNotificationKey.setNamespace(businessObjectDataNotificationKey.getNamespace().trim());
-        businessObjectDataNotificationKey.setNotificationName(businessObjectDataNotificationKey.getNotificationName().trim());
+        Assert.notNull(key, "A business object data notification registration key must be specified.");
+        key.setNamespace(alternateKeyHelper.validateStringParameter("namespace", key.getNamespace()));
+        key.setNotificationName(alternateKeyHelper.validateStringParameter("notification name", key.getNotificationName()));
     }
 }

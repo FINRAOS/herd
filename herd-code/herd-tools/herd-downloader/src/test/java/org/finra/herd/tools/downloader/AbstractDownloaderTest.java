@@ -23,11 +23,14 @@ import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import org.finra.herd.model.dto.RegServerAccessParamsDto;
+import org.finra.herd.model.api.xml.BusinessObjectData;
+import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.dto.DownloaderInputManifestDto;
 import org.finra.herd.model.dto.ManifestFile;
+import org.finra.herd.model.dto.RegServerAccessParamsDto;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.dto.UploaderInputManifestDto;
+import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.tools.common.databridge.AbstractDataBridgeTest;
 
@@ -116,7 +119,11 @@ public abstract class AbstractDownloaderTest extends AbstractDataBridgeTest
         uploaderInputManifestDto.setManifestFiles(manifestFiles);
         S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = getTestS3FileTransferRequestParamsDto();
         s3FileTransferRequestParamsDto.setS3KeyPrefix(s3KeyPrefix + "/");
-        downloaderWebClient.registerBusinessObjectData(uploaderInputManifestDto, s3FileTransferRequestParamsDto, StorageEntity.MANAGED_STORAGE, false);
+        BusinessObjectData businessObjectData =
+            downloaderWebClient.preRegisterBusinessObjectData(uploaderInputManifestDto, StorageEntity.MANAGED_STORAGE, false);
+        BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectData);
+        downloaderWebClient.addStorageFiles(businessObjectDataKey, uploaderInputManifestDto, s3FileTransferRequestParamsDto, StorageEntity.MANAGED_STORAGE);
+        downloaderWebClient.updateBusinessObjectDataStatus(businessObjectDataKey, BusinessObjectDataStatusEntity.VALID);
         // Clean up the local input directory used for the test data files upload.
         FileUtils.cleanDirectory(LOCAL_TEMP_PATH_INPUT.toFile());
     }

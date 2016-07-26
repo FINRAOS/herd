@@ -15,6 +15,7 @@
 */
 package org.finra.herd.service.helper;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
@@ -26,22 +27,21 @@ import org.finra.herd.model.api.xml.ExpectedPartitionValueKey;
 @Component
 public class ExpectedPartitionValueHelper
 {
+    @Autowired
+    private AlternateKeyHelper alternateKeyHelper;
+
     /**
      * Validates the expected partition value key. This method also trims the key parameters.
      *
-     * @param expectedPartitionValueKey the expected partition value key
+     * @param key the expected partition value key
      *
      * @throws IllegalArgumentException if any validation errors were found
      */
-    public void validateExpectedPartitionValueKey(ExpectedPartitionValueKey expectedPartitionValueKey) throws IllegalArgumentException
+    public void validateExpectedPartitionValueKey(ExpectedPartitionValueKey key) throws IllegalArgumentException
     {
-        // Validate.
-        Assert.notNull(expectedPartitionValueKey, "An expected partition value key must be specified.");
-        Assert.hasText(expectedPartitionValueKey.getPartitionKeyGroupName(), "A partition key group name must be specified.");
-        Assert.hasText(expectedPartitionValueKey.getExpectedPartitionValue(), "An expected partition value must be specified.");
-
-        // Remove leading and trailing spaces.
-        expectedPartitionValueKey.setPartitionKeyGroupName(expectedPartitionValueKey.getPartitionKeyGroupName().trim());
-        expectedPartitionValueKey.setExpectedPartitionValue(expectedPartitionValueKey.getExpectedPartitionValue().trim());
+        Assert.notNull(key, "An expected partition value key must be specified.");
+        key.setPartitionKeyGroupName(alternateKeyHelper.validateStringParameter("partition key group name", key.getPartitionKeyGroupName()));
+        Assert.hasText(key.getExpectedPartitionValue(), "An expected partition value must be specified.");
+        key.setExpectedPartitionValue(key.getExpectedPartitionValue().trim());
     }
 }

@@ -26,13 +26,20 @@ import org.apache.http.message.BasicHttpResponse;
  */
 public class MockCloseableHttpResponse extends BasicHttpResponse implements CloseableHttpResponse
 {
-    public MockCloseableHttpResponse(final StatusLine statusline)
+    private boolean throwExceptionOnClose = false;
+
+    public MockCloseableHttpResponse(final StatusLine statusline, final boolean throwExceptionOnClose)
     {
         super(statusline);
+        this.throwExceptionOnClose = throwExceptionOnClose;
     }
 
     @Override
     public void close() throws IOException
     {
+        if (throwExceptionOnClose)
+        {
+            throw new IOException("testException");
+        }
     }
 }

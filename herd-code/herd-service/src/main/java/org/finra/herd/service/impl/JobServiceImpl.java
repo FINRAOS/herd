@@ -71,6 +71,7 @@ import org.finra.herd.model.jpa.JobDefinitionParameterEntity;
 import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.service.ActivitiService;
 import org.finra.herd.service.JobService;
+import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.JobDefinitionHelper;
 import org.finra.herd.service.helper.NamespaceDaoHelper;
 import org.finra.herd.service.helper.NamespaceSecurityHelper;
@@ -89,6 +90,9 @@ public class JobServiceImpl implements JobService
 
     @Autowired
     private ActivitiService activitiService;
+
+    @Autowired
+    private AlternateKeyHelper alternateKeyHelper;
 
     @Autowired
     private HerdStringHelper herdStringHelper;
@@ -422,8 +426,8 @@ public class JobServiceImpl implements JobService
 
         int jobsMaxQueryResults = herdStringHelper.getConfigurationValueAsInteger(ConfigurationValue.JOBS_QUERY_MAX_RESULTS);
         Assert.isTrue(processInstanceCount <= jobsMaxQueryResults,
-            "Too many jobs found for the specified filter parameters. The maximum number of results allowed is " + jobsMaxQueryResults
-                + " and the number of results returned was " + processInstanceCount + ".");
+            "Too many jobs found for the specified filter parameters. The maximum number of results allowed is " + jobsMaxQueryResults +
+                " and the number of results returned was " + processInstanceCount + ".");
 
         return activitiService.getHistoricProcessInstancesByStatusAndProcessDefinitionKeys(jobStatus, processDefinitionKeys, startTime, endTime);
     }
@@ -774,9 +778,9 @@ public class JobServiceImpl implements JobService
      */
     private void validateJobCreateRequest(JobCreateRequest request)
     {
-        // Validate required elements
-        Assert.hasText(request.getNamespace(), "A namespace must be specified.");
-        Assert.hasText(request.getJobName(), "A job name must be specified.");
+        // Validate and trim the required elements.
+        request.setNamespace(alternateKeyHelper.validateStringParameter("namespace", request.getNamespace()));
+        request.setJobName(alternateKeyHelper.validateStringParameter("job name", request.getJobName()));
 
         // Validate that parameter names are there and not duplicate
         parameterHelper.validateParameters(request.getParameters());
@@ -785,10 +789,6 @@ public class JobServiceImpl implements JobService
         {
             s3PropertiesLocationHelper.validate(request.getS3PropertiesLocation());
         }
-
-        // Remove leading and trailing spaces.
-        request.setNamespace(request.getNamespace().trim());
-        request.setJobName(request.getJobName().trim());
     }
 
     /**

@@ -37,8 +37,11 @@ import org.finra.herd.service.AbstractServiceTest;
 public class StorageHelperTest extends AbstractServiceTest
 {
     private static String YEAR = "2014";
+
     private static String MONTH = "12";
+
     private static String DAY = "31";
+
     private static String DATE_STRING = String.format("%s-%s-%s", YEAR, MONTH, DAY);
 
     @Test
@@ -109,7 +112,7 @@ public class StorageHelperTest extends AbstractServiceTest
         attributes.add(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1));
         attributes.add(new Attribute(ATTRIBUTE_NAME_2_MIXED_CASE, BLANK_TEXT));
         attributes.add(new Attribute(ATTRIBUTE_NAME_3_MIXED_CASE, null));
-        StorageEntity storageEntity = createStorageEntity(STORAGE_NAME, StoragePlatformEntity.S3, attributes);
+        StorageEntity storageEntity = storageDaoTestHelper.createStorageEntity(STORAGE_NAME, StoragePlatformEntity.S3, attributes);
 
         // Retrieve optional attribute values.
         Assert.assertEquals(ATTRIBUTE_VALUE_1, storageHelper.getStorageAttributeValueByName(ATTRIBUTE_NAME_1_MIXED_CASE, storageEntity, false));
@@ -157,7 +160,7 @@ public class StorageHelperTest extends AbstractServiceTest
     {
         String attributeName = "test";
         String attributeValue = "1234";
-        StorageEntity storageEntity = createStorageEntityWithAttributes(attributeName, attributeValue);
+        StorageEntity storageEntity = storageDaoTestHelper.createStorageEntityWithAttributes(attributeName, attributeValue);
         boolean attributeRequired = false;
         boolean attributeValueRequiredIfExists = true;
         Integer value = storageHelper.getStorageAttributeIntegerValueByName(attributeName, storageEntity, attributeRequired, attributeValueRequiredIfExists);
@@ -172,7 +175,7 @@ public class StorageHelperTest extends AbstractServiceTest
     {
         String attributeName = "test";
         String attributeValue = "1234";
-        StorageEntity storageEntity = createStorageEntityWithAttributes(attributeName, attributeValue);
+        StorageEntity storageEntity = storageDaoTestHelper.createStorageEntityWithAttributes(attributeName, attributeValue);
         boolean attributeRequired = true;
         boolean attributeValueRequiredIfExists = false;
         Integer value = storageHelper.getStorageAttributeIntegerValueByName(attributeName, storageEntity, attributeRequired, attributeValueRequiredIfExists);
@@ -187,7 +190,7 @@ public class StorageHelperTest extends AbstractServiceTest
     {
         String attributeName = "test";
         String attributeValue = "1234";
-        StorageEntity storageEntity = createStorageEntityWithAttributes(attributeName, attributeValue);
+        StorageEntity storageEntity = storageDaoTestHelper.createStorageEntityWithAttributes(attributeName, attributeValue);
         boolean attributeRequired = false;
         boolean attributeValueRequiredIfExists = false;
         Integer value = storageHelper.getStorageAttributeIntegerValueByName(attributeName, storageEntity, attributeRequired, attributeValueRequiredIfExists);
@@ -202,7 +205,7 @@ public class StorageHelperTest extends AbstractServiceTest
     {
         String attributeName = "test";
         String attributeValue = "abcd";
-        StorageEntity storageEntity = createStorageEntityWithAttributes(attributeName, attributeValue);
+        StorageEntity storageEntity = storageDaoTestHelper.createStorageEntityWithAttributes(attributeName, attributeValue);
         boolean attributeRequired = false;
         boolean attributeValueRequiredIfExists = false;
         try
@@ -225,7 +228,7 @@ public class StorageHelperTest extends AbstractServiceTest
     {
         String attributeName = "test";
         String attributeValue = BLANK_TEXT;
-        StorageEntity storageEntity = createStorageEntityWithAttributes(attributeName, attributeValue);
+        StorageEntity storageEntity = storageDaoTestHelper.createStorageEntityWithAttributes(attributeName, attributeValue);
         boolean attributeRequired = false;
         boolean attributeValueRequiredIfExists = true;
         try
@@ -249,7 +252,7 @@ public class StorageHelperTest extends AbstractServiceTest
     {
         String attributeName = "test";
         String attributeValue = BLANK_TEXT;
-        StorageEntity storageEntity = createStorageEntityWithAttributes(attributeName, attributeValue);
+        StorageEntity storageEntity = storageDaoTestHelper.createStorageEntityWithAttributes(attributeName, attributeValue);
         boolean attributeRequired = true;
         boolean attributeValueRequiredIfExists = false;
         try
@@ -272,7 +275,7 @@ public class StorageHelperTest extends AbstractServiceTest
     {
         String attributeName = "test";
         String attributeValue = BLANK_TEXT;
-        StorageEntity storageEntity = createStorageEntityWithAttributes(attributeName, attributeValue);
+        StorageEntity storageEntity = storageDaoTestHelper.createStorageEntityWithAttributes(attributeName, attributeValue);
         boolean attributeRequired = false;
         boolean attributeValueRequiredIfExists = false;
         try
@@ -294,7 +297,7 @@ public class StorageHelperTest extends AbstractServiceTest
     public void testGetStorageAttributeIntegerValueByName_8()
     {
         String attributeName = "test";
-        StorageEntity storageEntity = createStorageEntity();
+        StorageEntity storageEntity = storageDaoTestHelper.createStorageEntity();
         boolean attributeRequired = false;
         boolean attributeValueRequiredIfExists = true;
         Integer value = storageHelper.getStorageAttributeIntegerValueByName(attributeName, storageEntity, attributeRequired, attributeValueRequiredIfExists);
@@ -308,7 +311,7 @@ public class StorageHelperTest extends AbstractServiceTest
     public void testGetStorageAttributeIntegerValueByName_9()
     {
         String attributeName = "test";
-        StorageEntity storageEntity = createStorageEntity();
+        StorageEntity storageEntity = storageDaoTestHelper.createStorageEntity();
         boolean attributeRequired = true;
         boolean attributeValueRequiredIfExists = false;
         try
@@ -330,7 +333,7 @@ public class StorageHelperTest extends AbstractServiceTest
     public void testGetStorageAttributeIntegerValueByName_10()
     {
         String attributeName = "test";
-        StorageEntity storageEntity = createStorageEntity();
+        StorageEntity storageEntity = storageDaoTestHelper.createStorageEntity();
         boolean attributeRequired = false;
         boolean attributeValueRequiredIfExists = true;
         Integer value = storageHelper.getStorageAttributeIntegerValueByName(attributeName, storageEntity, attributeRequired, attributeValueRequiredIfExists);
@@ -345,7 +348,7 @@ public class StorageHelperTest extends AbstractServiceTest
     {
         String attributeName = "test";
         String attributeValue = null;
-        StorageEntity storageEntity = createStorageEntityWithAttributes(attributeName, attributeValue);
+        StorageEntity storageEntity = storageDaoTestHelper.createStorageEntityWithAttributes(attributeName, attributeValue);
         boolean attributeRequired = false;
         boolean attributeValueRequiredIfExists = true;
         try
@@ -369,7 +372,7 @@ public class StorageHelperTest extends AbstractServiceTest
     {
         String attributeName = "test";
         String attributeValue = null;
-        StorageEntity storageEntity = createStorageEntityWithAttributes(attributeName, attributeValue);
+        StorageEntity storageEntity = storageDaoTestHelper.createStorageEntityWithAttributes(attributeName, attributeValue);
         boolean attributeRequired = true;
         boolean attributeValueRequiredIfExists = false;
         Integer value = storageHelper.getStorageAttributeIntegerValueByName(attributeName, storageEntity, attributeRequired, attributeValueRequiredIfExists);
@@ -384,7 +387,7 @@ public class StorageHelperTest extends AbstractServiceTest
     {
         String attributeName = "test";
         String attributeValue = null;
-        StorageEntity storageEntity = createStorageEntityWithAttributes(attributeName, attributeValue);
+        StorageEntity storageEntity = storageDaoTestHelper.createStorageEntityWithAttributes(attributeName, attributeValue);
         boolean attributeRequired = true;
         boolean attributeValueRequiredIfExists = false;
         assertEquals(attributeValue,
@@ -398,7 +401,7 @@ public class StorageHelperTest extends AbstractServiceTest
     public void testGetStorageAttributeIntegerValueByNameWithDefault_1()
     {
         String attributeName = "test";
-        StorageEntity storageEntity = createStorageEntity();
+        StorageEntity storageEntity = storageDaoTestHelper.createStorageEntity();
         Integer defaultValue = 2345;
         Integer value = storageHelper.getStorageAttributeIntegerValueByName(attributeName, storageEntity, defaultValue);
         assertEquals(defaultValue, value);
@@ -411,7 +414,7 @@ public class StorageHelperTest extends AbstractServiceTest
     public void testGetStorageAttributeIntegerValueByNameWithDefault_2()
     {
         String attributeName = "test";
-        StorageEntity storageEntity = createStorageEntity();
+        StorageEntity storageEntity = storageDaoTestHelper.createStorageEntity();
         Integer defaultValue = null;
         Integer value = storageHelper.getStorageAttributeIntegerValueByName(attributeName, storageEntity, defaultValue);
         assertEquals(defaultValue, value);
@@ -425,7 +428,7 @@ public class StorageHelperTest extends AbstractServiceTest
     {
         String attributeName = "test";
         String attributeValue = "1234";
-        StorageEntity storageEntity = createStorageEntityWithAttributes(attributeName, attributeValue);
+        StorageEntity storageEntity = storageDaoTestHelper.createStorageEntityWithAttributes(attributeName, attributeValue);
         Integer defaultValue = 2345;
         Integer value = storageHelper.getStorageAttributeIntegerValueByName(attributeName, storageEntity, defaultValue);
         assertEquals(new Integer(attributeValue), value);
@@ -439,7 +442,7 @@ public class StorageHelperTest extends AbstractServiceTest
     {
         String attributeName = "test";
         String attributeValue = "1234";
-        StorageEntity storageEntity = createStorageEntityWithAttributes(attributeName, attributeValue);
+        StorageEntity storageEntity = storageDaoTestHelper.createStorageEntityWithAttributes(attributeName, attributeValue);
         Integer defaultValue = null;
         Integer value = storageHelper.getStorageAttributeIntegerValueByName(attributeName, storageEntity, defaultValue);
         assertEquals(new Integer(attributeValue), value);
@@ -453,7 +456,7 @@ public class StorageHelperTest extends AbstractServiceTest
     {
         String attributeName = "test";
         String attributeValue = "abcd";
-        StorageEntity storageEntity = createStorageEntityWithAttributes(attributeName, attributeValue);
+        StorageEntity storageEntity = storageDaoTestHelper.createStorageEntityWithAttributes(attributeName, attributeValue);
         Integer defaultValue = 2345;
         try
         {
@@ -475,7 +478,7 @@ public class StorageHelperTest extends AbstractServiceTest
     {
         String attributeName = "test";
         String attributeValue = "abcd";
-        StorageEntity storageEntity = createStorageEntityWithAttributes(attributeName, attributeValue);
+        StorageEntity storageEntity = storageDaoTestHelper.createStorageEntityWithAttributes(attributeName, attributeValue);
         Integer defaultValue = null;
         try
         {
@@ -497,7 +500,7 @@ public class StorageHelperTest extends AbstractServiceTest
     {
         String attributeName = "test";
         String attributeValue = BLANK_TEXT;
-        StorageEntity storageEntity = createStorageEntityWithAttributes(attributeName, attributeValue);
+        StorageEntity storageEntity = storageDaoTestHelper.createStorageEntityWithAttributes(attributeName, attributeValue);
         Integer defaultValue = 2345;
         try
         {
@@ -519,7 +522,7 @@ public class StorageHelperTest extends AbstractServiceTest
     {
         String attributeName = "test";
         String attributeValue = BLANK_TEXT;
-        StorageEntity storageEntity = createStorageEntityWithAttributes(attributeName, attributeValue);
+        StorageEntity storageEntity = storageDaoTestHelper.createStorageEntityWithAttributes(attributeName, attributeValue);
         Integer defaultValue = null;
         try
         {

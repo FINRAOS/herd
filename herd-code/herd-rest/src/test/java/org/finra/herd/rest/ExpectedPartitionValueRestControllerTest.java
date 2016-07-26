@@ -22,11 +22,11 @@ import java.util.List;
 
 import org.junit.Test;
 
-import org.finra.herd.model.jpa.PartitionKeyGroupEntity;
 import org.finra.herd.model.api.xml.ExpectedPartitionValueInformation;
 import org.finra.herd.model.api.xml.ExpectedPartitionValuesCreateRequest;
 import org.finra.herd.model.api.xml.ExpectedPartitionValuesDeleteRequest;
 import org.finra.herd.model.api.xml.ExpectedPartitionValuesInformation;
+import org.finra.herd.model.jpa.PartitionKeyGroupEntity;
 
 /**
  * This class tests various functionality within the expected partition value REST controller.
@@ -37,28 +37,30 @@ public class ExpectedPartitionValueRestControllerTest extends AbstractRestTest
     public void testCreateExpectedPartitionValues()
     {
         // Create and persist a partition key group entity.
-        createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
+        partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
 
         // Add expected partition values to this partition key group.
         ExpectedPartitionValuesCreateRequest request =
-            createExpectedPartitionValuesCreateRequest(PARTITION_KEY_GROUP, getTestUnsortedExpectedPartitionValues());
+            createExpectedPartitionValuesCreateRequest(PARTITION_KEY_GROUP, expectedPartitionValueDaoTestHelper.getTestUnsortedExpectedPartitionValues());
         ExpectedPartitionValuesInformation resultPartitionValuesInformation = expectedPartitionValueRestController.createExpectedPartitionValues(request);
 
         // Validate the returned object.
-        validateExpectedPartitionValuesInformation(PARTITION_KEY_GROUP, getTestSortedExpectedPartitionValues(), resultPartitionValuesInformation);
+        validateExpectedPartitionValuesInformation(PARTITION_KEY_GROUP, expectedPartitionValueDaoTestHelper.getTestSortedExpectedPartitionValues(),
+            resultPartitionValuesInformation);
     }
 
     @Test
     public void testGetExpectedPartitionValue()
     {
         // Create and persist a partition key group entity.
-        PartitionKeyGroupEntity partitionKeyGroupEntity = createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
+        PartitionKeyGroupEntity partitionKeyGroupEntity = partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
 
         // Create and persist a list of test expected partition values.
-        createExpectedPartitionValueEntities(partitionKeyGroupEntity, getTestUnsortedExpectedPartitionValues());
+        expectedPartitionValueDaoTestHelper
+            .createExpectedPartitionValueEntities(partitionKeyGroupEntity, expectedPartitionValueDaoTestHelper.getTestUnsortedExpectedPartitionValues());
 
         // Get expected partition value for different offset values.
-        List<String> testSortedExpectedPartitionValues = getTestSortedExpectedPartitionValues();
+        List<String> testSortedExpectedPartitionValues = expectedPartitionValueDaoTestHelper.getTestSortedExpectedPartitionValues();
         int testExpectedPartitionValueIndex = 3;
         for (Integer offset : Arrays.asList(-2, 0, 2))
         {
@@ -75,13 +77,14 @@ public class ExpectedPartitionValueRestControllerTest extends AbstractRestTest
     public void testGetExpectedPartitionValues()
     {
         // Create and persist a partition key group entity.
-        PartitionKeyGroupEntity partitionKeyGroupEntity = createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
+        PartitionKeyGroupEntity partitionKeyGroupEntity = partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
 
         // Create and persist a list of test expected partition values.
-        createExpectedPartitionValueEntities(partitionKeyGroupEntity, getTestUnsortedExpectedPartitionValues());
+        expectedPartitionValueDaoTestHelper
+            .createExpectedPartitionValueEntities(partitionKeyGroupEntity, expectedPartitionValueDaoTestHelper.getTestUnsortedExpectedPartitionValues());
 
         // Get expected partition values for a range.
-        List<String> testSortedExpectedPartitionValues = getTestSortedExpectedPartitionValues();
+        List<String> testSortedExpectedPartitionValues = expectedPartitionValueDaoTestHelper.getTestSortedExpectedPartitionValues();
         int startExpectedPartitionValueIndex = 1;
         int endExpectedPartitionValueIndex = testSortedExpectedPartitionValues.size() - 2;
         ExpectedPartitionValuesInformation resultPartitionValuesInformation = expectedPartitionValueRestController
@@ -97,18 +100,20 @@ public class ExpectedPartitionValueRestControllerTest extends AbstractRestTest
     public void testDeleteExpectedPartitionValues()
     {
         // Create and persist a partition key group entity.
-        PartitionKeyGroupEntity partitionKeyGroupEntity = createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
+        PartitionKeyGroupEntity partitionKeyGroupEntity = partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
 
         // Create and persist a list of test expected partition values.
-        createExpectedPartitionValueEntities(partitionKeyGroupEntity, getTestUnsortedExpectedPartitionValues());
+        expectedPartitionValueDaoTestHelper
+            .createExpectedPartitionValueEntities(partitionKeyGroupEntity, expectedPartitionValueDaoTestHelper.getTestUnsortedExpectedPartitionValues());
 
         // Delete expected partition values from this partition key group.
         ExpectedPartitionValuesDeleteRequest request =
-            createExpectedPartitionValuesDeleteRequest(PARTITION_KEY_GROUP, getTestUnsortedExpectedPartitionValues());
+            createExpectedPartitionValuesDeleteRequest(PARTITION_KEY_GROUP, expectedPartitionValueDaoTestHelper.getTestUnsortedExpectedPartitionValues());
         ExpectedPartitionValuesInformation resultPartitionValuesInformation = expectedPartitionValueRestController.deleteExpectedPartitionValues(request);
 
         // Validate the returned object.
-        validateExpectedPartitionValuesInformation(PARTITION_KEY_GROUP, getTestSortedExpectedPartitionValues(), resultPartitionValuesInformation);
+        validateExpectedPartitionValuesInformation(PARTITION_KEY_GROUP, expectedPartitionValueDaoTestHelper.getTestSortedExpectedPartitionValues(),
+            resultPartitionValuesInformation);
 
         // Validate that the expected partition value entities got deleted.
         assertEquals(0, partitionKeyGroupEntity.getExpectedPartitionValues().size());

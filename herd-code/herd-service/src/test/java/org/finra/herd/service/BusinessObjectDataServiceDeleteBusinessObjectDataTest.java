@@ -69,7 +69,7 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
         FileUtils.deleteDirectory(localTempPath.toFile());
 
         // Clean up the destination S3 folders.
-        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = getTestS3FileTransferRequestParamsDto();
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = s3DaoTestHelper.getTestS3FileTransferRequestParamsDto();
         for (String keyPrefix : Arrays.asList(testS3KeyPrefix, TEST_S3_KEY_PREFIX))
         {
             // Since the key prefix represents a directory, we add a trailing '/' character to it.
@@ -82,9 +82,9 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
     public void testDeleteBusinessObjectData() throws Exception
     {
         // Create an initial version of a business object data.
-        BusinessObjectDataEntity businessObjectDataEntity =
-            createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                INITIAL_DATA_VERSION, true, BDATA_STATUS);
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS);
 
         // Validate that this business object data exists.
         BusinessObjectDataKey businessObjectDataKey =
@@ -262,8 +262,8 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
             List<String> subPartitionValues = SUBPARTITION_VALUES.subList(0, i);
 
             // Create a business object data with the relative number of subpartition values.
-            BusinessObjectDataEntity businessObjectDataEntity =
-                createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
+                .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                     subPartitionValues, DATA_VERSION, true, BDATA_STATUS);
 
             // Validate that this business object data exists.
@@ -316,9 +316,9 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
     public void testDeleteBusinessObjectDataTrimParameters()
     {
         // Create and persist a business object data.
-        BusinessObjectDataEntity businessObjectDataEntity =
-            createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                DATA_VERSION, true, BDATA_STATUS);
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS);
 
         // Validate that this business object data exists.
         BusinessObjectDataKey businessObjectDataKey =
@@ -343,8 +343,8 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
     public void testDeleteBusinessObjectDataUpperCaseParameters()
     {
         // Create and persist a business object data using lower case values.
-        BusinessObjectDataEntity businessObjectDataEntity =
-            createBusinessObjectDataEntity(NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(),
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(),
                 FORMAT_FILE_TYPE_CODE.toLowerCase(), FORMAT_VERSION, PARTITION_VALUE.toLowerCase(), convertListToLowerCase(SUBPARTITION_VALUES), DATA_VERSION,
                 true, BDATA_STATUS.toLowerCase());
 
@@ -372,8 +372,8 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
     public void testDeleteBusinessObjectDataLowerCaseParameters()
     {
         // Create and persist a business object data using upper case values.
-        BusinessObjectDataEntity businessObjectDataEntity =
-            createBusinessObjectDataEntity(NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(),
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(),
                 FORMAT_FILE_TYPE_CODE.toUpperCase(), FORMAT_VERSION, PARTITION_VALUE.toUpperCase(), convertListToUpperCase(SUBPARTITION_VALUES), DATA_VERSION,
                 true, BDATA_STATUS.toUpperCase());
 
@@ -401,8 +401,9 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
     public void testDeleteBusinessObjectDataInvalidParameters()
     {
         // Create and persist a valid business object data.
-        createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-            DATA_VERSION, true, BDATA_STATUS);
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS);
 
         // Validate that this business object data exists.
         BusinessObjectDataKey businessObjectDataKey =
@@ -554,13 +555,13 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
     public void testDeleteBusinessObjectDataChildrenExist()
     {
         // Create an initial version of a business object data.
-        BusinessObjectDataEntity businessObjectDataParentEntity =
-            createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                DATA_VERSION, true, BDATA_STATUS);
+        BusinessObjectDataEntity businessObjectDataParentEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS);
 
         // Create a child business object data entity.
-        BusinessObjectDataEntity businessObjectDataChildEntity =
-            createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE_2,
+        BusinessObjectDataEntity businessObjectDataChildEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE_2,
                 SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS);
 
         // Associate with each other child and parent business object data entities.
@@ -590,9 +591,9 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
     public void testDeleteBusinessObjectDataNotLatestVersion()
     {
         // Create and persist a business object data which is not marked as the latest version.
-        BusinessObjectDataEntity businessObjectDataEntity =
-            createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                DATA_VERSION, false, BDATA_STATUS);
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, false, BDATA_STATUS);
 
         // Validate that this business object data exists.
         BusinessObjectDataKey businessObjectDataKey =
@@ -617,12 +618,12 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
     public void testDeleteBusinessObjectDataLatestVersionWhenPreviousVersionExists()
     {
         // Create and persist two versions of the business object data.
-        BusinessObjectDataEntity initialVersionBusinessObjectDataEntity =
-            createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                INITIAL_DATA_VERSION, false, BDATA_STATUS);
-        BusinessObjectDataEntity latestVersionBusinessObjectDataEntity =
-            createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                SECOND_DATA_VERSION, true, BDATA_STATUS);
+        BusinessObjectDataEntity initialVersionBusinessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, INITIAL_DATA_VERSION, false, BDATA_STATUS);
+        BusinessObjectDataEntity latestVersionBusinessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, SECOND_DATA_VERSION, true, BDATA_STATUS);
 
         // Validate that the initial version does not have the latest version flag set and that second version has it set.
         assertFalse(initialVersionBusinessObjectDataEntity.getLatestVersion());
@@ -690,7 +691,7 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
             PARTITION_VALUE, NO_SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS, deletedBusinessObjectData);
 
         // Validate that data files got deleted from S3.
-        S3FileTransferRequestParamsDto params = getTestS3FileTransferRequestParamsDto();
+        S3FileTransferRequestParamsDto params = s3DaoTestHelper.getTestS3FileTransferRequestParamsDto();
         params.setS3KeyPrefix(testS3KeyPrefix);
         assertTrue(s3Dao.listDirectory(params).isEmpty());
 
@@ -723,7 +724,7 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
             PARTITION_VALUE, NO_SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS, deletedBusinessObjectData);
 
         // Validate that data files got deleted from S3.
-        S3FileTransferRequestParamsDto params = getTestS3FileTransferRequestParamsDto();
+        S3FileTransferRequestParamsDto params = s3DaoTestHelper.getTestS3FileTransferRequestParamsDto();
         params.setS3KeyPrefix(TEST_S3_KEY_PREFIX);
         assertTrue(s3Dao.listDirectory(params).isEmpty());
 
@@ -758,7 +759,7 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
             PARTITION_VALUE, NO_SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS, deletedBusinessObjectData);
 
         // Validate that data files got deleted from S3 - please note that
-        S3FileTransferRequestParamsDto params = getTestS3FileTransferRequestParamsDto();
+        S3FileTransferRequestParamsDto params = s3DaoTestHelper.getTestS3FileTransferRequestParamsDto();
         params.setS3KeyPrefix(TEST_S3_KEY_PREFIX);
         assertTrue(s3Dao.listDirectory(params).isEmpty());
 
@@ -803,25 +804,28 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
     private void createTestDatabaseEntities(String storageName, String storagePlatform, String directoryPath, List<String> localFiles) throws Exception
     {
         // Create and persist a business object data entity.
-        BusinessObjectDataEntity businessObjectDataEntity =
-            createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
                 NO_SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS);
 
         // Create an S3 storage entity if it does not exist.
         StorageEntity storageEntity = storageDao.getStorageByName(storageName);
         if (storageEntity == null)
         {
-            storageEntity = createStorageEntity(storageName, storagePlatform, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME),
-                getS3ManagedBucketName());
+            storageEntity = storageDaoTestHelper
+                .createStorageEntity(storageName, storagePlatform, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME),
+                    storageDaoTestHelper.getS3ManagedBucketName());
         }
 
         // Create a storage unit entity.
-        StorageUnitEntity storageUnitEntity = createStorageUnitEntity(storageEntity, businessObjectDataEntity, StorageUnitStatusEntity.ENABLED, directoryPath);
+        StorageUnitEntity storageUnitEntity =
+            storageUnitDaoTestHelper.createStorageUnitEntity(storageEntity, businessObjectDataEntity, StorageUnitStatusEntity.ENABLED, directoryPath);
 
         // Create relative storage file entities.
         for (String fileLocalPath : localFiles)
         {
-            createStorageFileEntity(storageUnitEntity, String.format("%s/%s", directoryPath, fileLocalPath), FILE_SIZE_1_KB, ROW_COUNT_1000);
+            storageFileDaoTestHelper
+                .createStorageFileEntity(storageUnitEntity, String.format("%s/%s", directoryPath, fileLocalPath), FILE_SIZE_1_KB, ROW_COUNT_1000);
         }
 
         herdDao.saveAndRefresh(businessObjectDataEntity);

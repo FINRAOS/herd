@@ -35,17 +35,18 @@ public class SchemaColumnDaoTest extends AbstractDaoTest
 
         // Create a business object definition entity.
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
-            createBusinessObjectDefinitionEntity(businessObjectDefinitionKey, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
+            businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(businessObjectDefinitionKey, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
 
         // Create a file type entity.
-        FileTypeEntity fileTypeEntity = createFileTypeEntity(FORMAT_FILE_TYPE_CODE);
+        FileTypeEntity fileTypeEntity = fileTypeDaoTestHelper.createFileTypeEntity(FORMAT_FILE_TYPE_CODE);
 
         // Create and persist database entities required for testing.
         for (Integer formatVersion : Arrays.asList(INITIAL_FORMAT_VERSION, SECOND_FORMAT_VERSION))
         {
-            createBusinessObjectFormatEntity(businessObjectDefinitionEntity, FORMAT_USAGE_CODE, fileTypeEntity, formatVersion, FORMAT_DESCRIPTION,
-                LATEST_VERSION_FLAG_SET, PARTITION_KEY, null, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
-                SCHEMA_NULL_VALUE_BACKSLASH_N, getTestSchemaColumns(), NO_PARTITION_COLUMNS);
+            businessObjectFormatDaoTestHelper
+                .createBusinessObjectFormatEntity(businessObjectDefinitionEntity, FORMAT_USAGE_CODE, fileTypeEntity, formatVersion, FORMAT_DESCRIPTION,
+                    LATEST_VERSION_FLAG_SET, PARTITION_KEY, null, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
+                    SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), NO_PARTITION_COLUMNS);
         }
 
         // Get a list of schema columns from the business object definition matching to the first column name.
@@ -58,8 +59,9 @@ public class SchemaColumnDaoTest extends AbstractDaoTest
         assertEquals(2, schemaColumnDao.getSchemaColumns(businessObjectDefinitionEntity, FIRST_COLUMN_NAME.toLowerCase()).size());
 
         // Try invalid values for all input parameters.
-        assertEquals(0, schemaColumnDao
-            .getSchemaColumns(createBusinessObjectDefinitionEntity(BDEF_NAMESPACE, BDEF_NAME_2, DATA_PROVIDER_NAME, DESCRIPTION), FIRST_COLUMN_NAME).size());
+        assertEquals(0, schemaColumnDao.getSchemaColumns(
+            businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(BDEF_NAMESPACE, BDEF_NAME_2, DATA_PROVIDER_NAME, DESCRIPTION),
+            FIRST_COLUMN_NAME).size());
         assertEquals(0, schemaColumnDao.getSchemaColumns(businessObjectDefinitionEntity, "I_DO_NOT_EXIST").size());
     }
 }

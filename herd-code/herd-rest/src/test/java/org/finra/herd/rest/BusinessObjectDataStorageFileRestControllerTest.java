@@ -93,7 +93,7 @@ public class BusinessObjectDataStorageFileRestControllerTest extends AbstractRes
         FileUtils.deleteDirectory(localTempPath.toFile());
 
         // Clean up the destination S3 folder.
-        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = getTestS3FileTransferRequestParamsDto();
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = s3DaoTestHelper.getTestS3FileTransferRequestParamsDto();
         s3FileTransferRequestParamsDto.setS3KeyPrefix(testS3KeyPrefix);
         s3Dao.deleteDirectory(s3FileTransferRequestParamsDto);
     }
@@ -125,11 +125,11 @@ public class BusinessObjectDataStorageFileRestControllerTest extends AbstractRes
 
     private void createDataWithSubPartitions()
     {
-        NamespaceEntity namespaceEntity = super.createNamespaceEntity(NAMESPACE);
-        DataProviderEntity dataProviderEntity = super.createDataProviderEntity(DATA_PROVIDER_NAME);
+        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
+        DataProviderEntity dataProviderEntity = dataProviderDaoTestHelper.createDataProviderEntity(DATA_PROVIDER_NAME);
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
-            super.createBusinessObjectDefinitionEntity(namespaceEntity, BDEF_NAME, dataProviderEntity, null, null);
-        FileTypeEntity fileTypeEntity = super.createFileTypeEntity(FORMAT_FILE_TYPE_CODE, FORMAT_DESCRIPTION);
+            businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(namespaceEntity, BDEF_NAME, dataProviderEntity, null, null);
+        FileTypeEntity fileTypeEntity = fileTypeDaoTestHelper.createFileTypeEntity(FORMAT_FILE_TYPE_CODE, FORMAT_DESCRIPTION);
         List<SchemaColumn> schemaColumns = new ArrayList<>();
         {
             SchemaColumn schemaColumn = new SchemaColumn();
@@ -161,19 +161,19 @@ public class BusinessObjectDataStorageFileRestControllerTest extends AbstractRes
             schemaColumn.setType("STRING");
             schemaColumns.add(schemaColumn);
         }
-        BusinessObjectFormatEntity businessObjectFormatEntity = super
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
             .createBusinessObjectFormatEntity(businessObjectDefinitionEntity, FORMAT_USAGE_CODE, fileTypeEntity, FORMAT_VERSION, null, true, PARTITION_KEY,
                 null, NO_ATTRIBUTES, null, null, null, schemaColumns, null);
         BusinessObjectDataStatusEntity businessObjectDataStatusEntity =
-            createBusinessObjectDataStatusEntity(BDATA_STATUS, DESCRIPTION, BDATA_STATUS_PRE_REGISTRATION_FLAG_SET);
-        BusinessObjectDataEntity businessObjectDataEntity =
-            createBusinessObjectDataEntity(businessObjectFormatEntity, PARTITION_VALUE, SUB_PARTITION_VALUES, DATA_VERSION, true,
+            businessObjectDataStatusDaoTestHelper.createBusinessObjectDataStatusEntity(BDATA_STATUS, DESCRIPTION, BDATA_STATUS_PRE_REGISTRATION_FLAG_SET);
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(businessObjectFormatEntity, PARTITION_VALUE, SUB_PARTITION_VALUES, DATA_VERSION, true,
                 businessObjectDataStatusEntity.getCode());
 
-        StorageEntity storageEntity = super.createStorageEntity(STORAGE_NAME);
-        StorageUnitEntity storageUnitEntity =
-            super.createStorageUnitEntity(storageEntity, businessObjectDataEntity, StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
+        StorageEntity storageEntity = storageDaoTestHelper.createStorageEntity(STORAGE_NAME);
+        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(storageEntity, businessObjectDataEntity, StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
 
-        super.createStorageFileEntity(storageUnitEntity, FILE_PATH_1, FILE_SIZE_1_KB, null);
+        storageFileDaoTestHelper.createStorageFileEntity(storageUnitEntity, FILE_PATH_1, FILE_SIZE_1_KB, null);
     }
 }

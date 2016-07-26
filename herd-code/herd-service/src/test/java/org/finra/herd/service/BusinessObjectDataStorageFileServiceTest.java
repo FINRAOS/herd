@@ -108,7 +108,7 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
         FileUtils.deleteDirectory(localTempPath.toFile());
 
         // Clean up the destination S3 folder.
-        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = getTestS3FileTransferRequestParamsDto();
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = s3DaoTestHelper.getTestS3FileTransferRequestParamsDto();
         s3FileTransferRequestParamsDto.setS3KeyPrefix(testS3KeyPrefix);
         s3Dao.deleteDirectory(s3FileTransferRequestParamsDto);
     }
@@ -281,7 +281,7 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
     public void testCreateBusinessObjectDataStorageFilesMissingOptionalParameters()
     {
         // Create and persist a business object definition.
-        createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
+        businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
 
         createData(null, false);
 
@@ -455,11 +455,12 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
     {
         // Create and persist a business object data status entity that is not flagged as "pre-registration" status.
         BusinessObjectDataStatusEntity businessObjectDataStatusEntity =
-            createBusinessObjectDataStatusEntity(BDATA_STATUS, DESCRIPTION, NO_BDATA_STATUS_PRE_REGISTRATION_FLAG_SET);
+            businessObjectDataStatusDaoTestHelper.createBusinessObjectDataStatusEntity(BDATA_STATUS, DESCRIPTION, NO_BDATA_STATUS_PRE_REGISTRATION_FLAG_SET);
 
         // Create and persist a business object data entity.
-        createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, DATA_VERSION, true,
-            businessObjectDataStatusEntity.getCode());
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, DATA_VERSION, true,
+                businessObjectDataStatusEntity.getCode());
 
         // Try to add storage files to a business object data which is not in a pre-registered state.
         try
@@ -504,16 +505,17 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
     public void testCreateBusinessObjectDataStorageFilesStorageHasValidateFileSizeEnabledWithoutValidateFileExistence()
     {
         // Create an S3 storage with file size validation enabled without file existence validation.
-        createStorageEntity(STORAGE_NAME, StoragePlatformEntity.S3, Arrays
+        storageDaoTestHelper.createStorageEntity(STORAGE_NAME, StoragePlatformEntity.S3, Arrays
             .asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), S3_BUCKET_NAME_2),
                 new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE),
                     S3_KEY_PREFIX_VELOCITY_TEMPLATE),
                 new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_FILE_SIZE), Boolean.toString(true))));
 
         // Create a storage unit.
-        createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-            SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.UPLOADING, StorageUnitStatusEntity.ENABLED,
-            NO_STORAGE_DIRECTORY_PATH);
+        storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.UPLOADING, StorageUnitStatusEntity.ENABLED,
+                NO_STORAGE_DIRECTORY_PATH);
 
         // Try to add storage files to an S3 storage with file existence validation enabled without file size validation.
         try
@@ -533,22 +535,22 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
     public void testCreateBusinessObjectDataStorageFilesPreviouslyRegisteredS3FileSizeMismatchIgnoredDueToDisabledFileSizeValidation() throws Exception
     {
         // Create an S3 storage with file existence validation enabled, but without path prefix validation and file size validation.
-        createStorageEntity(STORAGE_NAME, StoragePlatformEntity.S3, Arrays
-            .asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), getS3ManagedBucketName()),
-                new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE),
-                    S3_KEY_PREFIX_VELOCITY_TEMPLATE),
-                new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_PATH_PREFIX), Boolean.toString(false)),
-                new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_FILE_EXISTENCE), Boolean.toString(true)),
-                new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_FILE_SIZE), Boolean.toString(false))));
+        storageDaoTestHelper.createStorageEntity(STORAGE_NAME, StoragePlatformEntity.S3, Arrays.asList(
+            new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), storageDaoTestHelper.getS3ManagedBucketName()),
+            new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE), S3_KEY_PREFIX_VELOCITY_TEMPLATE),
+            new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_PATH_PREFIX), Boolean.toString(false)),
+            new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_FILE_EXISTENCE), Boolean.toString(true)),
+            new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_FILE_SIZE), Boolean.toString(false))));
 
         // Create and persist a storage unit entity without a storage directory path.
-        StorageUnitEntity storageUnitEntity =
-            createStorageUnitEntity(STORAGE_NAME, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 NO_SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.UPLOADING, StorageUnitStatusEntity.ENABLED,
                 NO_STORAGE_DIRECTORY_PATH);
 
         // Create and persist a storage file with file size that would not match S3 reported size.
-        StorageFileEntity storageFileEntity = createStorageFileEntity(storageUnitEntity, testS3KeyPrefix + "/" + FILE_PATH_1, FILE_SIZE_2_KB, ROW_COUNT_1000);
+        StorageFileEntity storageFileEntity =
+            storageFileDaoTestHelper.createStorageFileEntity(storageUnitEntity, testS3KeyPrefix + "/" + FILE_PATH_1, FILE_SIZE_2_KB, ROW_COUNT_1000);
         storageUnitEntity.getStorageFiles().add(storageFileEntity);
 
         // Create and upload to S3 managed storage two test files with 1 KB file size.
@@ -712,9 +714,8 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(String
-                .format("Previously registered storage file not found at s3://%s/%s/%s location.", getS3ManagedBucketName(), testS3KeyPrefix, FILE_PATH_1),
-                e.getMessage());
+            assertEquals(String.format("Previously registered storage file not found at s3://%s/%s/%s location.", storageDaoTestHelper.getS3ManagedBucketName(),
+                testS3KeyPrefix, FILE_PATH_1), e.getMessage());
         }
     }
 
@@ -722,13 +723,14 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
     public void testCreateBusinessObjectDataStorageFilesS3ManagedPreviouslyRegisteredS3FileSizeIsNull() throws Exception
     {
         // Create and persist a storage unit entity.
-        StorageUnitEntity storageUnitEntity =
-            createStorageUnitEntity(StorageEntity.MANAGED_STORAGE, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(StorageEntity.MANAGED_STORAGE, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
                 PARTITION_VALUE, NO_SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.UPLOADING,
                 StorageUnitStatusEntity.ENABLED, testS3KeyPrefix);
 
         // Create and persist a storage file with a null file size.
-        StorageFileEntity storageFileEntity = createStorageFileEntity(storageUnitEntity, testS3KeyPrefix + "/" + FILE_PATH_1, NO_FILE_SIZE, NO_ROW_COUNT);
+        StorageFileEntity storageFileEntity =
+            storageFileDaoTestHelper.createStorageFileEntity(storageUnitEntity, testS3KeyPrefix + "/" + FILE_PATH_1, NO_FILE_SIZE, NO_ROW_COUNT);
         storageUnitEntity.getStorageFiles().add(storageFileEntity);
 
         // Create and upload to S3 managed storage two test files with 1 KB file size.
@@ -754,13 +756,14 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
     public void testCreateBusinessObjectDataStorageFilesS3ManagedPreviouslyRegisteredS3FileSizeMismatch() throws Exception
     {
         // Create and persist a storage unit entity.
-        StorageUnitEntity storageUnitEntity =
-            createStorageUnitEntity(StorageEntity.MANAGED_STORAGE, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(StorageEntity.MANAGED_STORAGE, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
                 PARTITION_VALUE, NO_SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.UPLOADING,
                 StorageUnitStatusEntity.ENABLED, testS3KeyPrefix);
 
         // Create and persist a storage file with file size that would not match S3 reported size.
-        StorageFileEntity storageFileEntity = createStorageFileEntity(storageUnitEntity, testS3KeyPrefix + "/" + FILE_PATH_1, FILE_SIZE_2_KB, ROW_COUNT_1000);
+        StorageFileEntity storageFileEntity =
+            storageFileDaoTestHelper.createStorageFileEntity(storageUnitEntity, testS3KeyPrefix + "/" + FILE_PATH_1, FILE_SIZE_2_KB, ROW_COUNT_1000);
         storageUnitEntity.getStorageFiles().add(storageFileEntity);
 
         // Create and upload to S3 managed storage two test files with 1 KB file size.
@@ -800,7 +803,9 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(String.format("File not found at s3://%s/%s/%s location.", getS3ManagedBucketName(), testS3KeyPrefix, FILE_PATH_2), e.getMessage());
+            assertEquals(
+                String.format("File not found at s3://%s/%s/%s location.", storageDaoTestHelper.getS3ManagedBucketName(), testS3KeyPrefix, FILE_PATH_2),
+                e.getMessage());
         }
     }
 
@@ -890,13 +895,14 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
         createData(testS3KeyPrefix, true, Arrays.asList(testS3KeyPrefix + "/" + FILE_PATH_1));
 
         // Create and persist a storage unit entity for another business object data that would also have a storage file starting with the test S3 key prefix.
-        StorageUnitEntity storageUnitEntity =
-            createStorageUnitEntity(StorageEntity.MANAGED_STORAGE, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(StorageEntity.MANAGED_STORAGE, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
                 PARTITION_VALUE_2, NO_SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.UPLOADING,
                 StorageUnitStatusEntity.ENABLED, testS3KeyPrefix);
 
         // Create and persist a storage file for the second business object data that is also starting with the test S3 key prefix.
-        StorageFileEntity storageFileEntity = createStorageFileEntity(storageUnitEntity, testS3KeyPrefix + "/" + FILE_PATH_2, FILE_SIZE_1_KB, NO_ROW_COUNT);
+        StorageFileEntity storageFileEntity =
+            storageFileDaoTestHelper.createStorageFileEntity(storageUnitEntity, testS3KeyPrefix + "/" + FILE_PATH_2, FILE_SIZE_1_KB, NO_ROW_COUNT);
         storageUnitEntity.getStorageFiles().add(storageFileEntity);
 
         // Try to discover storage files when another business object data have a storage file starting with the test S3 key prefix.
@@ -934,9 +940,8 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(String
-                .format("Previously registered storage file not found at s3://%s/%s/%s location.", getS3ManagedBucketName(), testS3KeyPrefix, FILE_PATH_1),
-                e.getMessage());
+            assertEquals(String.format("Previously registered storage file not found at s3://%s/%s/%s location.", storageDaoTestHelper.getS3ManagedBucketName(),
+                testS3KeyPrefix, FILE_PATH_1), e.getMessage());
         }
     }
 
@@ -944,13 +949,14 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
     public void testCreateBusinessObjectDataStorageFilesAutoDiscoveryPreviouslyRegisteredS3FileSizeMismatch() throws Exception
     {
         // Create and persist a storage unit entity.
-        StorageUnitEntity storageUnitEntity =
-            createStorageUnitEntity(StorageEntity.MANAGED_STORAGE, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(StorageEntity.MANAGED_STORAGE, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
                 PARTITION_VALUE, NO_SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.UPLOADING,
                 StorageUnitStatusEntity.ENABLED, testS3KeyPrefix);
 
         // Create and persist a storage file with file size that would not match S3 reported size.
-        StorageFileEntity storageFileEntity = createStorageFileEntity(storageUnitEntity, testS3KeyPrefix + "/" + FILE_PATH_1, FILE_SIZE_2_KB, NO_ROW_COUNT);
+        StorageFileEntity storageFileEntity =
+            storageFileDaoTestHelper.createStorageFileEntity(storageUnitEntity, testS3KeyPrefix + "/" + FILE_PATH_1, FILE_SIZE_2_KB, NO_ROW_COUNT);
         storageUnitEntity.getStorageFiles().add(storageFileEntity);
 
         // Create and upload to S3 managed storage two test files with 1 KB file size.
@@ -991,8 +997,8 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals(String.format("No unregistered storage files were discovered at s3://%s/%s/ location.", getS3ManagedBucketName(), testS3KeyPrefix),
-                e.getMessage());
+            assertEquals(String.format("No unregistered storage files were discovered at s3://%s/%s/ location.", storageDaoTestHelper.getS3ManagedBucketName(),
+                testS3KeyPrefix), e.getMessage());
         }
     }
 
@@ -1032,11 +1038,11 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
     {
         // Create and persist a "pre-registration" business object data status entity.
         BusinessObjectDataStatusEntity businessObjectDataStatusEntity =
-            createBusinessObjectDataStatusEntity(BDATA_STATUS, DESCRIPTION, BDATA_STATUS_PRE_REGISTRATION_FLAG_SET);
+            businessObjectDataStatusDaoTestHelper.createBusinessObjectDataStatusEntity(BDATA_STATUS, DESCRIPTION, BDATA_STATUS_PRE_REGISTRATION_FLAG_SET);
 
         // Create and persist a business object data entity.
-        BusinessObjectDataEntity bod =
-            createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, DATA_VERSION, true,
+        BusinessObjectDataEntity bod = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, DATA_VERSION, true,
                 businessObjectDataStatusEntity.getCode());
 
         StorageEntity s;
@@ -1046,24 +1052,24 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
         }
         else
         {
-            s = super.createStorageEntity(STORAGE_NAME, STORAGE_PLATFORM_CODE);
+            s = super.storageDaoTestHelper.createStorageEntity(STORAGE_NAME, STORAGE_PLATFORM_CODE);
         }
 
-        StorageUnitEntity su = super.createStorageUnitEntity(s, bod, StorageUnitStatusEntity.ENABLED, storageUnitDirectory);
+        StorageUnitEntity su = super.storageUnitDaoTestHelper.createStorageUnitEntity(s, bod, StorageUnitStatusEntity.ENABLED, storageUnitDirectory);
         for (String file : files)
         {
-            StorageFileEntity f = super.createStorageFileEntity(su, file, FILE_SIZE_1_KB, ROW_COUNT_1000);
+            StorageFileEntity f = super.storageFileDaoTestHelper.createStorageFileEntity(su, file, FILE_SIZE_1_KB, ROW_COUNT_1000);
             su.getStorageFiles().add(f);
         }
     }
 
     private void createDataWithSubPartitions()
     {
-        NamespaceEntity namespaceEntity = super.createNamespaceEntity(NAMESPACE);
-        DataProviderEntity dataProviderEntity = super.createDataProviderEntity(DATA_PROVIDER_NAME);
+        NamespaceEntity namespaceEntity = super.namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
+        DataProviderEntity dataProviderEntity = super.dataProviderDaoTestHelper.createDataProviderEntity(DATA_PROVIDER_NAME);
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
-            super.createBusinessObjectDefinitionEntity(namespaceEntity, BDEF_NAME, dataProviderEntity, null, null);
-        FileTypeEntity fileTypeEntity = super.createFileTypeEntity(FORMAT_FILE_TYPE_CODE, FORMAT_DESCRIPTION);
+            super.businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(namespaceEntity, BDEF_NAME, dataProviderEntity, null, null);
+        FileTypeEntity fileTypeEntity = super.fileTypeDaoTestHelper.createFileTypeEntity(FORMAT_FILE_TYPE_CODE, FORMAT_DESCRIPTION);
         List<SchemaColumn> schemaColumns = new ArrayList<>();
         {
             SchemaColumn schemaColumn = new SchemaColumn();
@@ -1095,19 +1101,19 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
             schemaColumn.setType("STRING");
             schemaColumns.add(schemaColumn);
         }
-        BusinessObjectFormatEntity businessObjectFormatEntity = super
+        BusinessObjectFormatEntity businessObjectFormatEntity = super.businessObjectFormatDaoTestHelper
             .createBusinessObjectFormatEntity(businessObjectDefinitionEntity, FORMAT_USAGE_CODE, fileTypeEntity, FORMAT_VERSION, null, true, PARTITION_KEY,
                 null, NO_ATTRIBUTES, null, null, null, schemaColumns, null);
         BusinessObjectDataStatusEntity businessObjectDataStatusEntity =
-            createBusinessObjectDataStatusEntity(BDATA_STATUS, DESCRIPTION, BDATA_STATUS_PRE_REGISTRATION_FLAG_SET);
-        BusinessObjectDataEntity businessObjectDataEntity =
-            createBusinessObjectDataEntity(businessObjectFormatEntity, PARTITION_VALUE, SUB_PARTITION_VALUES, DATA_VERSION, true,
+            businessObjectDataStatusDaoTestHelper.createBusinessObjectDataStatusEntity(BDATA_STATUS, DESCRIPTION, BDATA_STATUS_PRE_REGISTRATION_FLAG_SET);
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(businessObjectFormatEntity, PARTITION_VALUE, SUB_PARTITION_VALUES, DATA_VERSION, true,
                 businessObjectDataStatusEntity.getCode());
 
-        StorageEntity storageEntity = super.createStorageEntity(STORAGE_NAME);
-        StorageUnitEntity storageUnitEntity =
-            super.createStorageUnitEntity(storageEntity, businessObjectDataEntity, StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
+        StorageEntity storageEntity = super.storageDaoTestHelper.createStorageEntity(STORAGE_NAME);
+        StorageUnitEntity storageUnitEntity = super.storageUnitDaoTestHelper
+            .createStorageUnitEntity(storageEntity, businessObjectDataEntity, StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
 
-        super.createStorageFileEntity(storageUnitEntity, FILE_PATH_1, FILE_SIZE_1_KB, null);
+        super.storageFileDaoTestHelper.createStorageFileEntity(storageUnitEntity, FILE_PATH_1, FILE_SIZE_1_KB, null);
     }
 }

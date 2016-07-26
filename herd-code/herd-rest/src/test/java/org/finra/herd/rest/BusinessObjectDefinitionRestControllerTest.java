@@ -64,8 +64,8 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
     public void testUpdateBusinessObjectDefinition() throws Exception
     {
         // Create and persist a business object definition entity.
-        BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
-            createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, getNewAttributes());
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, getNewAttributes());
 
         // Perform an update by changing the description and updating the attributes.
         BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionRestController
@@ -80,8 +80,8 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
     public void testUpdateBusinessObjectDefinitionMissingOptionalParametersPassedAsWhitespace()
     {
         // Create and persist a business object definition entity.
-        BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
-            createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, getNewAttributes());
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, getNewAttributes());
 
         // Perform an update without specifying any of the optional parameters (passing whitespace characters).
         BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionRestController.updateBusinessObjectDefinition(NAMESPACE, BDEF_NAME,
@@ -96,8 +96,8 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
     public void testUpdateBusinessObjectDefinitionMissingOptionalParametersPassedAsNulls()
     {
         // Create and persist a business object definition entity.
-        BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
-            createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, getNewAttributes());
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, getNewAttributes());
 
         // Perform an update without specifying any of the optional parameters (passing null values).
         BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionRestController.updateBusinessObjectDefinition(NAMESPACE, BDEF_NAME,
@@ -112,8 +112,8 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
     public void testGetBusinessObjectDefinition() throws Exception
     {
         // Create and persist a business object definition entity.
-        BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
-            createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, getNewAttributes());
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, getNewAttributes());
 
         // Retrieve the business object definition.
         BusinessObjectDefinition resultBusinessObjectDefinition = businessObjectDefinitionRestController.getBusinessObjectDefinition(NAMESPACE, BDEF_NAME);
@@ -127,24 +127,25 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
     public void testGetBusinessObjectDefinitions() throws Exception
     {
         // Create and persist business object definition entities.
-        for (BusinessObjectDefinitionKey key : getTestBusinessObjectDefinitionKeys())
+        for (BusinessObjectDefinitionKey key : businessObjectDefinitionDaoTestHelper.getTestBusinessObjectDefinitionKeys())
         {
-            createBusinessObjectDefinitionEntity(key.getNamespace(), key.getBusinessObjectDefinitionName(), DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null);
+            businessObjectDefinitionDaoTestHelper
+                .createBusinessObjectDefinitionEntity(key.getNamespace(), key.getBusinessObjectDefinitionName(), DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null);
         }
 
         // Retrieve a list of business object definition keys for the specified namespace.
         BusinessObjectDefinitionKeys resultKeys = businessObjectDefinitionRestController.getBusinessObjectDefinitions(NAMESPACE);
 
         // Validate the returned object.
-        assertEquals(getExpectedBusinessObjectDefinitionKeys(), resultKeys.getBusinessObjectDefinitionKeys());
+        assertEquals(businessObjectDefinitionDaoTestHelper.getExpectedBusinessObjectDefinitionKeys(), resultKeys.getBusinessObjectDefinitionKeys());
     }
 
     @Test
     public void testDeleteBusinessObjectDefinition() throws Exception
     {
         // Create and persist a business object definition entity.
-        BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
-            createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, getNewAttributes());
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, getNewAttributes());
 
         // Validate that this business object definition exists.
         BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME);

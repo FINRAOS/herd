@@ -43,8 +43,8 @@ public class GetBusinessObjectDataAttributeTest extends HerdActivitiServiceTaskT
                 DATA_VERSION);
 
         // Create a business object data attribute entity.
-        BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity =
-            createBusinessObjectDataAttributeEntity(businessObjectDataKey, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1);
+        BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity = businessObjectDataAttributeDaoTestHelper
+            .createBusinessObjectDataAttributeEntity(businessObjectDataKey, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1);
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
 
@@ -107,8 +107,8 @@ public class GetBusinessObjectDataAttributeTest extends HerdActivitiServiceTaskT
                 NO_SUBPARTITION_VALUES, DATA_VERSION);
 
         // Create a business object data attribute entity.
-        BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity =
-            createBusinessObjectDataAttributeEntity(businessObjectDataKey, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1);
+        BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity = businessObjectDataAttributeDaoTestHelper
+            .createBusinessObjectDataAttributeEntity(businessObjectDataKey, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1);
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
 
@@ -151,8 +151,8 @@ public class GetBusinessObjectDataAttributeTest extends HerdActivitiServiceTaskT
                 NO_SUBPARTITION_VALUES, DATA_VERSION);
 
         // Create a business object data attribute entity.
-        BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity =
-            createBusinessObjectDataAttributeEntity(businessObjectDataKey, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1);
+        BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity = businessObjectDataAttributeDaoTestHelper
+            .createBusinessObjectDataAttributeEntity(businessObjectDataKey, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1);
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
 

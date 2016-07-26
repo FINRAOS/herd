@@ -54,9 +54,11 @@ public class UploadDownloadHelperServiceTest extends AbstractServiceTest
     public void cleanEnv() throws IOException
     {
         // Clean up the source and target S3 folders. Since test S3 key prefix represents a directory, we add a trailing '/' character to it.
-        for (S3FileTransferRequestParamsDto params : Arrays
-            .asList(S3FileTransferRequestParamsDto.builder().s3BucketName(getS3LoadingDockBucketName()).s3KeyPrefix(TEST_S3_KEY_PREFIX + "/").build(),
-                S3FileTransferRequestParamsDto.builder().s3BucketName(getS3ExternalBucketName()).s3KeyPrefix(TEST_S3_KEY_PREFIX + "/").build()))
+        for (S3FileTransferRequestParamsDto params : Arrays.asList(
+            S3FileTransferRequestParamsDto.builder().s3BucketName(storageDaoTestHelper.getS3LoadingDockBucketName()).s3KeyPrefix(TEST_S3_KEY_PREFIX + "/")
+                .build(),
+            S3FileTransferRequestParamsDto.builder().s3BucketName(storageDaoTestHelper.getS3ExternalBucketName()).s3KeyPrefix(TEST_S3_KEY_PREFIX + "/")
+                .build()))
         {
             if (!s3Dao.listDirectory(params).isEmpty())
             {
@@ -71,24 +73,25 @@ public class UploadDownloadHelperServiceTest extends AbstractServiceTest
     public void testPrepareForFileMove()
     {
         // Create and persists entities required for testing.
-        BusinessObjectDataEntity sourceBusinessObjectDataEntity =
-            createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+        BusinessObjectDataEntity sourceBusinessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
                 INITIAL_DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.UPLOADING);
-        StorageUnitEntity sourceStorageUnitEntity =
-            createStorageUnitEntity(storageDaoHelper.getStorageEntity(StorageEntity.MANAGED_LOADING_DOCK_STORAGE), sourceBusinessObjectDataEntity,
+        StorageUnitEntity sourceStorageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(storageDaoHelper.getStorageEntity(StorageEntity.MANAGED_LOADING_DOCK_STORAGE), sourceBusinessObjectDataEntity,
                 StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
-        createStorageFileEntity(sourceStorageUnitEntity, TARGET_S3_KEY, FILE_SIZE_1_KB, NO_ROW_COUNT);
-        BusinessObjectDataEntity targetBusinessObjectDataEntity =
-            createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+        storageFileDaoTestHelper.createStorageFileEntity(sourceStorageUnitEntity, TARGET_S3_KEY, FILE_SIZE_1_KB, NO_ROW_COUNT);
+        BusinessObjectDataEntity targetBusinessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
                 INITIAL_DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.UPLOADING);
-        StorageUnitEntity targetStorageUnitEntity =
-            createStorageUnitEntity(storageDaoHelper.getStorageEntity(StorageEntity.MANAGED_EXTERNAL_STORAGE), targetBusinessObjectDataEntity,
+        StorageUnitEntity targetStorageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(storageDaoHelper.getStorageEntity(StorageEntity.MANAGED_EXTERNAL_STORAGE), targetBusinessObjectDataEntity,
                 StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
-        createStorageFileEntity(targetStorageUnitEntity, TARGET_S3_KEY, FILE_SIZE_1_KB, NO_ROW_COUNT);
+        storageFileDaoTestHelper.createStorageFileEntity(targetStorageUnitEntity, TARGET_S3_KEY, FILE_SIZE_1_KB, NO_ROW_COUNT);
 
         // Put a 1 KB file in S3.
         PutObjectRequest putObjectRequest =
-            new PutObjectRequest(getS3LoadingDockBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[(int) FILE_SIZE_1_KB]), null);
+            new PutObjectRequest(storageDaoTestHelper.getS3LoadingDockBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[(int) FILE_SIZE_1_KB]),
+                null);
         s3Operations.putObject(putObjectRequest, null);
 
         // Create an uninitialized DTO to hold parameters required to perform a complete upload single message processing.
@@ -118,11 +121,11 @@ public class UploadDownloadHelperServiceTest extends AbstractServiceTest
     public void testPrepareForFileMoveSourceStorageFileNoExists() throws Exception
     {
         // Create and persists entities required for testing without creating source or target storage units.
-        BusinessObjectDataEntity sourceBusinessObjectDataEntity =
-            createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+        BusinessObjectDataEntity sourceBusinessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
                 INITIAL_DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.UPLOADING);
-        BusinessObjectDataEntity targetBusinessObjectDataEntity =
-            createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+        BusinessObjectDataEntity targetBusinessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
                 INITIAL_DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.UPLOADING);
 
         // Create an uninitialized DTO to hold parameters required to perform a complete upload single message processing.
@@ -154,20 +157,20 @@ public class UploadDownloadHelperServiceTest extends AbstractServiceTest
     public void testPrepareForFileMoveSourceStatusNotUploading() throws Exception
     {
         // Create and persists entities required for testing with the source business object data not having "UPLOADING" status.
-        BusinessObjectDataEntity sourceBusinessObjectDataEntity =
-            createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+        BusinessObjectDataEntity sourceBusinessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
                 INITIAL_DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID);
-        StorageUnitEntity sourceStorageUnitEntity =
-            createStorageUnitEntity(storageDaoHelper.getStorageEntity(StorageEntity.MANAGED_LOADING_DOCK_STORAGE), sourceBusinessObjectDataEntity,
+        StorageUnitEntity sourceStorageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(storageDaoHelper.getStorageEntity(StorageEntity.MANAGED_LOADING_DOCK_STORAGE), sourceBusinessObjectDataEntity,
                 StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
-        createStorageFileEntity(sourceStorageUnitEntity, FILE_NAME, FILE_SIZE_1_KB, NO_ROW_COUNT);
-        BusinessObjectDataEntity targetBusinessObjectDataEntity =
-            createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+        storageFileDaoTestHelper.createStorageFileEntity(sourceStorageUnitEntity, FILE_NAME, FILE_SIZE_1_KB, NO_ROW_COUNT);
+        BusinessObjectDataEntity targetBusinessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
                 INITIAL_DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.UPLOADING);
-        StorageUnitEntity targetStorageUnitEntity =
-            createStorageUnitEntity(storageDaoHelper.getStorageEntity(StorageEntity.MANAGED_EXTERNAL_STORAGE), targetBusinessObjectDataEntity,
+        StorageUnitEntity targetStorageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(storageDaoHelper.getStorageEntity(StorageEntity.MANAGED_EXTERNAL_STORAGE), targetBusinessObjectDataEntity,
                 StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
-        createStorageFileEntity(targetStorageUnitEntity, FILE_NAME, FILE_SIZE_1_KB, NO_ROW_COUNT);
+        storageFileDaoTestHelper.createStorageFileEntity(targetStorageUnitEntity, FILE_NAME, FILE_SIZE_1_KB, NO_ROW_COUNT);
 
         // Create an uninitialized DTO to hold parameters required to perform a complete upload single message processing.
         CompleteUploadSingleParamsDto completeUploadSingleParamsDto = new CompleteUploadSingleParamsDto();
@@ -184,13 +187,13 @@ public class UploadDownloadHelperServiceTest extends AbstractServiceTest
             businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataHelper.getBusinessObjectDataKey(targetBusinessObjectDataEntity));
 
         // Validate the source and target business object data statuses.
-        assertEquals(BusinessObjectDataStatusEntity.DELETED, sourceBusinessObjectDataEntity.getStatus().getCode());
-        assertEquals(BusinessObjectDataStatusEntity.INVALID, targetBusinessObjectDataEntity.getStatus().getCode());
+        assertEquals(BusinessObjectDataStatusEntity.VALID, sourceBusinessObjectDataEntity.getStatus().getCode());
+        assertEquals(BusinessObjectDataStatusEntity.UPLOADING, targetBusinessObjectDataEntity.getStatus().getCode());
 
         // Validate the updated DTO parameters.
-        assertEquals(BusinessObjectDataStatusEntity.DELETED, completeUploadSingleParamsDto.getSourceNewStatus());
+        assertNull(completeUploadSingleParamsDto.getSourceNewStatus());
         assertEquals(BusinessObjectDataStatusEntity.VALID, completeUploadSingleParamsDto.getSourceOldStatus());
-        assertEquals(BusinessObjectDataStatusEntity.INVALID, completeUploadSingleParamsDto.getTargetNewStatus());
+        assertNull(completeUploadSingleParamsDto.getTargetNewStatus());
         assertEquals(BusinessObjectDataStatusEntity.UPLOADING, completeUploadSingleParamsDto.getTargetOldStatus());
     }
 
@@ -198,20 +201,20 @@ public class UploadDownloadHelperServiceTest extends AbstractServiceTest
     public void testPrepareForFileMoveTargetStatusNotUploading() throws Exception
     {
         // Create and persists entities required for testing with the target business object data not having "UPLOADING" status.
-        BusinessObjectDataEntity sourceBusinessObjectDataEntity =
-            createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+        BusinessObjectDataEntity sourceBusinessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
                 INITIAL_DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.UPLOADING);
-        StorageUnitEntity sourceStorageUnitEntity =
-            createStorageUnitEntity(storageDaoHelper.getStorageEntity(StorageEntity.MANAGED_LOADING_DOCK_STORAGE), sourceBusinessObjectDataEntity,
+        StorageUnitEntity sourceStorageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(storageDaoHelper.getStorageEntity(StorageEntity.MANAGED_LOADING_DOCK_STORAGE), sourceBusinessObjectDataEntity,
                 StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
-        createStorageFileEntity(sourceStorageUnitEntity, FILE_NAME, FILE_SIZE_1_KB, NO_ROW_COUNT);
-        BusinessObjectDataEntity targetBusinessObjectDataEntity =
-            createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+        storageFileDaoTestHelper.createStorageFileEntity(sourceStorageUnitEntity, FILE_NAME, FILE_SIZE_1_KB, NO_ROW_COUNT);
+        BusinessObjectDataEntity targetBusinessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
                 INITIAL_DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID);
-        StorageUnitEntity targetStorageUnitEntity =
-            createStorageUnitEntity(storageDaoHelper.getStorageEntity(StorageEntity.MANAGED_EXTERNAL_STORAGE), targetBusinessObjectDataEntity,
+        StorageUnitEntity targetStorageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(storageDaoHelper.getStorageEntity(StorageEntity.MANAGED_EXTERNAL_STORAGE), targetBusinessObjectDataEntity,
                 StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
-        createStorageFileEntity(targetStorageUnitEntity, FILE_NAME, FILE_SIZE_1_KB, NO_ROW_COUNT);
+        storageFileDaoTestHelper.createStorageFileEntity(targetStorageUnitEntity, FILE_NAME, FILE_SIZE_1_KB, NO_ROW_COUNT);
 
         // Create an uninitialized DTO to hold parameters required to perform a complete upload single message processing.
         CompleteUploadSingleParamsDto completeUploadSingleParamsDto = new CompleteUploadSingleParamsDto();
@@ -228,13 +231,13 @@ public class UploadDownloadHelperServiceTest extends AbstractServiceTest
             businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataHelper.getBusinessObjectDataKey(targetBusinessObjectDataEntity));
 
         // Validate the source and target business object data statuses.
-        assertEquals(BusinessObjectDataStatusEntity.DELETED, sourceBusinessObjectDataEntity.getStatus().getCode());
-        assertEquals(BusinessObjectDataStatusEntity.INVALID, targetBusinessObjectDataEntity.getStatus().getCode());
+        assertEquals(BusinessObjectDataStatusEntity.UPLOADING, sourceBusinessObjectDataEntity.getStatus().getCode());
+        assertEquals(BusinessObjectDataStatusEntity.VALID, targetBusinessObjectDataEntity.getStatus().getCode());
 
         // Validate the updated DTO parameters.
-        assertEquals(BusinessObjectDataStatusEntity.DELETED, completeUploadSingleParamsDto.getSourceNewStatus());
+        assertNull(completeUploadSingleParamsDto.getSourceNewStatus());
         assertEquals(BusinessObjectDataStatusEntity.UPLOADING, completeUploadSingleParamsDto.getSourceOldStatus());
-        assertEquals(BusinessObjectDataStatusEntity.INVALID, completeUploadSingleParamsDto.getTargetNewStatus());
+        assertNull(completeUploadSingleParamsDto.getTargetNewStatus());
         assertEquals(BusinessObjectDataStatusEntity.VALID, completeUploadSingleParamsDto.getTargetOldStatus());
     }
 
@@ -242,20 +245,20 @@ public class UploadDownloadHelperServiceTest extends AbstractServiceTest
     public void testPrepareForFileMoveSourceS3FileNoExists() throws Exception
     {
         // Create and persists entities required for testing.
-        BusinessObjectDataEntity sourceBusinessObjectDataEntity =
-            createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+        BusinessObjectDataEntity sourceBusinessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
                 INITIAL_DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.UPLOADING);
-        StorageUnitEntity sourceStorageUnitEntity =
-            createStorageUnitEntity(storageDaoHelper.getStorageEntity(StorageEntity.MANAGED_LOADING_DOCK_STORAGE), sourceBusinessObjectDataEntity,
+        StorageUnitEntity sourceStorageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(storageDaoHelper.getStorageEntity(StorageEntity.MANAGED_LOADING_DOCK_STORAGE), sourceBusinessObjectDataEntity,
                 StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
-        createStorageFileEntity(sourceStorageUnitEntity, FILE_NAME, FILE_SIZE_1_KB, NO_ROW_COUNT);
-        BusinessObjectDataEntity targetBusinessObjectDataEntity =
-            createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+        storageFileDaoTestHelper.createStorageFileEntity(sourceStorageUnitEntity, FILE_NAME, FILE_SIZE_1_KB, NO_ROW_COUNT);
+        BusinessObjectDataEntity targetBusinessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
                 INITIAL_DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.UPLOADING);
-        StorageUnitEntity targetStorageUnitEntity =
-            createStorageUnitEntity(storageDaoHelper.getStorageEntity(StorageEntity.MANAGED_EXTERNAL_STORAGE), targetBusinessObjectDataEntity,
+        StorageUnitEntity targetStorageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(storageDaoHelper.getStorageEntity(StorageEntity.MANAGED_EXTERNAL_STORAGE), targetBusinessObjectDataEntity,
                 StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
-        createStorageFileEntity(targetStorageUnitEntity, FILE_NAME, FILE_SIZE_1_KB, NO_ROW_COUNT);
+        storageFileDaoTestHelper.createStorageFileEntity(targetStorageUnitEntity, FILE_NAME, FILE_SIZE_1_KB, NO_ROW_COUNT);
 
         // Create an uninitialized DTO to hold parameters required to perform a complete upload single message processing.
         CompleteUploadSingleParamsDto completeUploadSingleParamsDto = new CompleteUploadSingleParamsDto();
@@ -286,26 +289,28 @@ public class UploadDownloadHelperServiceTest extends AbstractServiceTest
     public void testPrepareForFileMoveTargetS3FileAlreadyExists() throws Exception
     {
         // Create and persists entities required for testing.
-        BusinessObjectDataEntity sourceBusinessObjectDataEntity =
-            createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+        BusinessObjectDataEntity sourceBusinessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
                 INITIAL_DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.UPLOADING);
-        StorageUnitEntity sourceStorageUnitEntity =
-            createStorageUnitEntity(storageDaoHelper.getStorageEntity(StorageEntity.MANAGED_LOADING_DOCK_STORAGE), sourceBusinessObjectDataEntity,
+        StorageUnitEntity sourceStorageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(storageDaoHelper.getStorageEntity(StorageEntity.MANAGED_LOADING_DOCK_STORAGE), sourceBusinessObjectDataEntity,
                 StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
-        createStorageFileEntity(sourceStorageUnitEntity, TARGET_S3_KEY, FILE_SIZE_1_KB, NO_ROW_COUNT);
-        BusinessObjectDataEntity targetBusinessObjectDataEntity =
-            createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+        storageFileDaoTestHelper.createStorageFileEntity(sourceStorageUnitEntity, TARGET_S3_KEY, FILE_SIZE_1_KB, NO_ROW_COUNT);
+        BusinessObjectDataEntity targetBusinessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
                 INITIAL_DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.UPLOADING);
-        StorageUnitEntity targetStorageUnitEntity =
-            createStorageUnitEntity(storageDaoHelper.getStorageEntity(StorageEntity.MANAGED_EXTERNAL_STORAGE), targetBusinessObjectDataEntity,
+        StorageUnitEntity targetStorageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(storageDaoHelper.getStorageEntity(StorageEntity.MANAGED_EXTERNAL_STORAGE), targetBusinessObjectDataEntity,
                 StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
-        createStorageFileEntity(targetStorageUnitEntity, TARGET_S3_KEY, FILE_SIZE_1_KB, NO_ROW_COUNT);
+        storageFileDaoTestHelper.createStorageFileEntity(targetStorageUnitEntity, TARGET_S3_KEY, FILE_SIZE_1_KB, NO_ROW_COUNT);
 
         // Put a 1 KB file in both source and target S3 buckets.
-        s3Operations
-            .putObject(new PutObjectRequest(getS3LoadingDockBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[(int) FILE_SIZE_1_KB]), null), null);
-        s3Operations
-            .putObject(new PutObjectRequest(getS3ExternalBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[(int) FILE_SIZE_1_KB]), null), null);
+        s3Operations.putObject(
+            new PutObjectRequest(storageDaoTestHelper.getS3LoadingDockBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[(int) FILE_SIZE_1_KB]),
+                null), null);
+        s3Operations.putObject(
+            new PutObjectRequest(storageDaoTestHelper.getS3ExternalBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[(int) FILE_SIZE_1_KB]), null),
+            null);
 
         // Create an uninitialized DTO to hold parameters required to perform a complete upload single message processing.
         CompleteUploadSingleParamsDto completeUploadSingleParamsDto = new CompleteUploadSingleParamsDto();
@@ -336,24 +341,25 @@ public class UploadDownloadHelperServiceTest extends AbstractServiceTest
     public void testPerformFileMove()
     {
         // Create source and target business object data entities.
-        BusinessObjectDataEntity sourceBusinessObjectDataEntity =
-            createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+        BusinessObjectDataEntity sourceBusinessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
                 INITIAL_DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.RE_ENCRYPTING);
-        BusinessObjectDataEntity targetBusinessObjectDataEntity =
-            createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+        BusinessObjectDataEntity targetBusinessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
                 INITIAL_DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.RE_ENCRYPTING);
 
         // Put a 1 KB file in S3.
-        s3Operations
-            .putObject(new PutObjectRequest(getS3LoadingDockBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[(int) FILE_SIZE_1_KB]), null), null);
+        s3Operations.putObject(
+            new PutObjectRequest(storageDaoTestHelper.getS3LoadingDockBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[(int) FILE_SIZE_1_KB]),
+                null), null);
 
         // Initialize parameters required to perform a file move.
         CompleteUploadSingleParamsDto completeUploadSingleParamsDto =
-            new CompleteUploadSingleParamsDto(businessObjectDataHelper.getBusinessObjectDataKey(sourceBusinessObjectDataEntity), getS3LoadingDockBucketName(),
-                TARGET_S3_KEY, BusinessObjectDataStatusEntity.UPLOADING, BusinessObjectDataStatusEntity.RE_ENCRYPTING,
-                businessObjectDataHelper.getBusinessObjectDataKey(targetBusinessObjectDataEntity), getS3ExternalBucketName(), TARGET_S3_KEY,
-                BusinessObjectDataStatusEntity.UPLOADING, BusinessObjectDataStatusEntity.RE_ENCRYPTING, MockS3OperationsImpl.MOCK_KMS_ID,
-                emrHelper.getAwsParamsDto());
+            new CompleteUploadSingleParamsDto(businessObjectDataHelper.getBusinessObjectDataKey(sourceBusinessObjectDataEntity),
+                storageDaoTestHelper.getS3LoadingDockBucketName(), TARGET_S3_KEY, BusinessObjectDataStatusEntity.UPLOADING,
+                BusinessObjectDataStatusEntity.RE_ENCRYPTING, businessObjectDataHelper.getBusinessObjectDataKey(targetBusinessObjectDataEntity),
+                storageDaoTestHelper.getS3ExternalBucketName(), TARGET_S3_KEY, BusinessObjectDataStatusEntity.UPLOADING,
+                BusinessObjectDataStatusEntity.RE_ENCRYPTING, MockS3OperationsImpl.MOCK_KMS_ID, emrHelper.getAwsParamsDto());
 
         // Perform the file move.
         uploadDownloadHelperService.performFileMove(completeUploadSingleParamsDto);
@@ -379,11 +385,11 @@ public class UploadDownloadHelperServiceTest extends AbstractServiceTest
     public void testPerformFileMoveS3CopyFails() throws Exception
     {
         // Create source and target business object data entities.
-        BusinessObjectDataEntity sourceBusinessObjectDataEntity =
-            createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+        BusinessObjectDataEntity sourceBusinessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
                 INITIAL_DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.RE_ENCRYPTING);
-        BusinessObjectDataEntity targetBusinessObjectDataEntity =
-            createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+        BusinessObjectDataEntity targetBusinessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
                 INITIAL_DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.RE_ENCRYPTING);
 
         // Initialize parameters required to perform a file move.
@@ -421,33 +427,34 @@ public class UploadDownloadHelperServiceTest extends AbstractServiceTest
     public void testExecuteFileMoveAfterSteps()
     {
         // Create and persists entities required for testing.
-        BusinessObjectDataEntity sourceBusinessObjectDataEntity =
-            createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+        BusinessObjectDataEntity sourceBusinessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
                 INITIAL_DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.RE_ENCRYPTING);
-        StorageUnitEntity sourceStorageUnitEntity =
-            createStorageUnitEntity(storageDaoHelper.getStorageEntity(StorageEntity.MANAGED_LOADING_DOCK_STORAGE), sourceBusinessObjectDataEntity,
+        StorageUnitEntity sourceStorageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(storageDaoHelper.getStorageEntity(StorageEntity.MANAGED_LOADING_DOCK_STORAGE), sourceBusinessObjectDataEntity,
                 StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
-        createStorageFileEntity(sourceStorageUnitEntity, TARGET_S3_KEY, FILE_SIZE_1_KB, NO_ROW_COUNT);
-        BusinessObjectDataEntity targetBusinessObjectDataEntity =
-            createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+        storageFileDaoTestHelper.createStorageFileEntity(sourceStorageUnitEntity, TARGET_S3_KEY, FILE_SIZE_1_KB, NO_ROW_COUNT);
+        BusinessObjectDataEntity targetBusinessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
                 INITIAL_DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.RE_ENCRYPTING);
-        StorageUnitEntity targetStorageUnitEntity =
-            createStorageUnitEntity(storageDaoHelper.getStorageEntity(StorageEntity.MANAGED_EXTERNAL_STORAGE), targetBusinessObjectDataEntity,
+        StorageUnitEntity targetStorageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(storageDaoHelper.getStorageEntity(StorageEntity.MANAGED_EXTERNAL_STORAGE), targetBusinessObjectDataEntity,
                 StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
-        createStorageFileEntity(targetStorageUnitEntity, TARGET_S3_KEY, FILE_SIZE_1_KB, NO_ROW_COUNT);
+        storageFileDaoTestHelper.createStorageFileEntity(targetStorageUnitEntity, TARGET_S3_KEY, FILE_SIZE_1_KB, NO_ROW_COUNT);
 
         // Put a 1 KB file in S3.
         PutObjectRequest putObjectRequest =
-            new PutObjectRequest(getS3LoadingDockBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[(int) FILE_SIZE_1_KB]), null);
+            new PutObjectRequest(storageDaoTestHelper.getS3LoadingDockBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[(int) FILE_SIZE_1_KB]),
+                null);
         s3Operations.putObject(putObjectRequest, null);
 
         // Initialize parameters required to perform the file move post steps.
         CompleteUploadSingleParamsDto completeUploadSingleParamsDto =
-            new CompleteUploadSingleParamsDto(businessObjectDataHelper.getBusinessObjectDataKey(sourceBusinessObjectDataEntity), getS3LoadingDockBucketName(),
-                TARGET_S3_KEY, BusinessObjectDataStatusEntity.UPLOADING, BusinessObjectDataStatusEntity.RE_ENCRYPTING,
-                businessObjectDataHelper.getBusinessObjectDataKey(targetBusinessObjectDataEntity), getS3ExternalBucketName(), TARGET_S3_KEY,
-                BusinessObjectDataStatusEntity.RE_ENCRYPTING, BusinessObjectDataStatusEntity.VALID, MockS3OperationsImpl.MOCK_KMS_ID,
-                emrHelper.getAwsParamsDto());
+            new CompleteUploadSingleParamsDto(businessObjectDataHelper.getBusinessObjectDataKey(sourceBusinessObjectDataEntity),
+                storageDaoTestHelper.getS3LoadingDockBucketName(), TARGET_S3_KEY, BusinessObjectDataStatusEntity.UPLOADING,
+                BusinessObjectDataStatusEntity.RE_ENCRYPTING, businessObjectDataHelper.getBusinessObjectDataKey(targetBusinessObjectDataEntity),
+                storageDaoTestHelper.getS3ExternalBucketName(), TARGET_S3_KEY, BusinessObjectDataStatusEntity.RE_ENCRYPTING,
+                BusinessObjectDataStatusEntity.VALID, MockS3OperationsImpl.MOCK_KMS_ID, emrHelper.getAwsParamsDto());
 
         // Execute the file move post steps.
         uploadDownloadHelperService.executeFileMoveAfterSteps(completeUploadSingleParamsDto);
@@ -473,33 +480,34 @@ public class UploadDownloadHelperServiceTest extends AbstractServiceTest
     public void testExecuteFileMoveAfterStepsTargetStatusNotReEncrypting()
     {
         // Create and persists entities required for testing with the target business object data not having "RE-ENCRYPTING" status.
-        BusinessObjectDataEntity sourceBusinessObjectDataEntity =
-            createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+        BusinessObjectDataEntity sourceBusinessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
                 INITIAL_DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.RE_ENCRYPTING);
-        StorageUnitEntity sourceStorageUnitEntity =
-            createStorageUnitEntity(storageDaoHelper.getStorageEntity(StorageEntity.MANAGED_LOADING_DOCK_STORAGE), sourceBusinessObjectDataEntity,
+        StorageUnitEntity sourceStorageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(storageDaoHelper.getStorageEntity(StorageEntity.MANAGED_LOADING_DOCK_STORAGE), sourceBusinessObjectDataEntity,
                 StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
-        createStorageFileEntity(sourceStorageUnitEntity, TARGET_S3_KEY, FILE_SIZE_1_KB, NO_ROW_COUNT);
-        BusinessObjectDataEntity targetBusinessObjectDataEntity =
-            createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+        storageFileDaoTestHelper.createStorageFileEntity(sourceStorageUnitEntity, TARGET_S3_KEY, FILE_SIZE_1_KB, NO_ROW_COUNT);
+        BusinessObjectDataEntity targetBusinessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
                 INITIAL_DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS);
-        StorageUnitEntity targetStorageUnitEntity =
-            createStorageUnitEntity(storageDaoHelper.getStorageEntity(StorageEntity.MANAGED_EXTERNAL_STORAGE), targetBusinessObjectDataEntity,
+        StorageUnitEntity targetStorageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(storageDaoHelper.getStorageEntity(StorageEntity.MANAGED_EXTERNAL_STORAGE), targetBusinessObjectDataEntity,
                 StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
-        createStorageFileEntity(targetStorageUnitEntity, TARGET_S3_KEY, FILE_SIZE_1_KB, NO_ROW_COUNT);
+        storageFileDaoTestHelper.createStorageFileEntity(targetStorageUnitEntity, TARGET_S3_KEY, FILE_SIZE_1_KB, NO_ROW_COUNT);
 
         // Put a 1 KB file in the source S3 bucket.
         PutObjectRequest putObjectRequest =
-            new PutObjectRequest(getS3LoadingDockBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[(int) FILE_SIZE_1_KB]), null);
+            new PutObjectRequest(storageDaoTestHelper.getS3LoadingDockBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[(int) FILE_SIZE_1_KB]),
+                null);
         s3Operations.putObject(putObjectRequest, null);
 
         // Initialize parameters required to perform the file move post steps.
         CompleteUploadSingleParamsDto completeUploadSingleParamsDto =
-            new CompleteUploadSingleParamsDto(businessObjectDataHelper.getBusinessObjectDataKey(sourceBusinessObjectDataEntity), getS3LoadingDockBucketName(),
-                TARGET_S3_KEY, BusinessObjectDataStatusEntity.UPLOADING, BusinessObjectDataStatusEntity.RE_ENCRYPTING,
-                businessObjectDataHelper.getBusinessObjectDataKey(targetBusinessObjectDataEntity), getS3ExternalBucketName(), TARGET_S3_KEY,
-                BusinessObjectDataStatusEntity.RE_ENCRYPTING, BusinessObjectDataStatusEntity.VALID, MockS3OperationsImpl.MOCK_KMS_ID,
-                emrHelper.getAwsParamsDto());
+            new CompleteUploadSingleParamsDto(businessObjectDataHelper.getBusinessObjectDataKey(sourceBusinessObjectDataEntity),
+                storageDaoTestHelper.getS3LoadingDockBucketName(), TARGET_S3_KEY, BusinessObjectDataStatusEntity.UPLOADING,
+                BusinessObjectDataStatusEntity.RE_ENCRYPTING, businessObjectDataHelper.getBusinessObjectDataKey(targetBusinessObjectDataEntity),
+                storageDaoTestHelper.getS3ExternalBucketName(), TARGET_S3_KEY, BusinessObjectDataStatusEntity.RE_ENCRYPTING,
+                BusinessObjectDataStatusEntity.VALID, MockS3OperationsImpl.MOCK_KMS_ID, emrHelper.getAwsParamsDto());
 
         // Try to execute the file move post steps when the target business object data does not have "RE-ENCRYPTING" status.
         uploadDownloadHelperService.executeFileMoveAfterSteps(completeUploadSingleParamsDto);
@@ -525,33 +533,34 @@ public class UploadDownloadHelperServiceTest extends AbstractServiceTest
     public void testExecuteFileMoveAfterStepsNewTargetStatusNotValid()
     {
         // Create and persists entities required for testing.
-        BusinessObjectDataEntity sourceBusinessObjectDataEntity =
-            createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+        BusinessObjectDataEntity sourceBusinessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
                 INITIAL_DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.RE_ENCRYPTING);
-        StorageUnitEntity sourceStorageUnitEntity =
-            createStorageUnitEntity(storageDaoHelper.getStorageEntity(StorageEntity.MANAGED_LOADING_DOCK_STORAGE), sourceBusinessObjectDataEntity,
+        StorageUnitEntity sourceStorageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(storageDaoHelper.getStorageEntity(StorageEntity.MANAGED_LOADING_DOCK_STORAGE), sourceBusinessObjectDataEntity,
                 StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
-        createStorageFileEntity(sourceStorageUnitEntity, TARGET_S3_KEY, FILE_SIZE_1_KB, NO_ROW_COUNT);
-        BusinessObjectDataEntity targetBusinessObjectDataEntity =
-            createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+        storageFileDaoTestHelper.createStorageFileEntity(sourceStorageUnitEntity, TARGET_S3_KEY, FILE_SIZE_1_KB, NO_ROW_COUNT);
+        BusinessObjectDataEntity targetBusinessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
                 INITIAL_DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.RE_ENCRYPTING);
-        StorageUnitEntity targetStorageUnitEntity =
-            createStorageUnitEntity(storageDaoHelper.getStorageEntity(StorageEntity.MANAGED_EXTERNAL_STORAGE), targetBusinessObjectDataEntity,
+        StorageUnitEntity targetStorageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(storageDaoHelper.getStorageEntity(StorageEntity.MANAGED_EXTERNAL_STORAGE), targetBusinessObjectDataEntity,
                 StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
-        createStorageFileEntity(targetStorageUnitEntity, TARGET_S3_KEY, FILE_SIZE_1_KB, NO_ROW_COUNT);
+        storageFileDaoTestHelper.createStorageFileEntity(targetStorageUnitEntity, TARGET_S3_KEY, FILE_SIZE_1_KB, NO_ROW_COUNT);
 
         // Put a 1 KB file in the source S3 bucket.
         PutObjectRequest putObjectRequest =
-            new PutObjectRequest(getS3LoadingDockBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[(int) FILE_SIZE_1_KB]), null);
+            new PutObjectRequest(storageDaoTestHelper.getS3LoadingDockBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[(int) FILE_SIZE_1_KB]),
+                null);
         s3Operations.putObject(putObjectRequest, null);
 
         // Initialize parameters required to perform the file move post steps with new target status not being set to "VALID".
         CompleteUploadSingleParamsDto completeUploadSingleParamsDto =
-            new CompleteUploadSingleParamsDto(businessObjectDataHelper.getBusinessObjectDataKey(sourceBusinessObjectDataEntity), getS3LoadingDockBucketName(),
-                TARGET_S3_KEY, BusinessObjectDataStatusEntity.UPLOADING, BusinessObjectDataStatusEntity.RE_ENCRYPTING,
-                businessObjectDataHelper.getBusinessObjectDataKey(targetBusinessObjectDataEntity), getS3ExternalBucketName(), TARGET_S3_KEY,
-                BusinessObjectDataStatusEntity.RE_ENCRYPTING, BusinessObjectDataStatusEntity.INVALID, MockS3OperationsImpl.MOCK_KMS_ID,
-                emrHelper.getAwsParamsDto());
+            new CompleteUploadSingleParamsDto(businessObjectDataHelper.getBusinessObjectDataKey(sourceBusinessObjectDataEntity),
+                storageDaoTestHelper.getS3LoadingDockBucketName(), TARGET_S3_KEY, BusinessObjectDataStatusEntity.UPLOADING,
+                BusinessObjectDataStatusEntity.RE_ENCRYPTING, businessObjectDataHelper.getBusinessObjectDataKey(targetBusinessObjectDataEntity),
+                storageDaoTestHelper.getS3ExternalBucketName(), TARGET_S3_KEY, BusinessObjectDataStatusEntity.RE_ENCRYPTING,
+                BusinessObjectDataStatusEntity.INVALID, MockS3OperationsImpl.MOCK_KMS_ID, emrHelper.getAwsParamsDto());
 
         // Try to execute the file move post steps when new target business object data status is not set to "VALID".
         uploadDownloadHelperService.executeFileMoveAfterSteps(completeUploadSingleParamsDto);
