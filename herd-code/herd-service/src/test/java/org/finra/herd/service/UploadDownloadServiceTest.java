@@ -18,7 +18,6 @@ package org.finra.herd.service;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.Arrays;
@@ -967,13 +966,16 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
     }
 
     @Test
-    public void testExtendUploadSingleCredentials()
+    public void testExtendUploadSingleCredentials() throws InterruptedException
     {
         // Create source and target business object formats database entities which are required to initiate an upload.
         createDatabaseEntitiesForUploadDownloadTesting();
 
         // Initiate a file upload.
         UploadSingleInitiationResponse uploadSingleInitiationResponse = uploadDownloadService.initiateUploadSingle(createUploadSingleInitiationRequest());
+
+        // Sleep a short amount of time to ensure the extended credentials don't return the same expiration as the initial credentials.
+        Thread.sleep(10);
 
         // Initiate the download against the uploaded data (i.e. the target business object data).
         UploadSingleCredentialExtensionResponse uploadSingleCredentialExtensionResponse =
@@ -987,8 +989,14 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         assertNotNull(uploadSingleInitiationResponse.getAwsSessionExpirationTime());
 
         // Ensure the extended credentials are greater than the original set of credentials.
-        assertTrue(uploadSingleCredentialExtensionResponse.getAwsSessionExpirationTime().toGregorianCalendar().getTimeInMillis() >
-            uploadSingleInitiationResponse.getAwsSessionExpirationTime().toGregorianCalendar().getTimeInMillis());
+        // We are displaying the values in case there is a problem because this test was acting flaky.
+        if (uploadSingleCredentialExtensionResponse.getAwsSessionExpirationTime().toGregorianCalendar().getTimeInMillis() <=
+            uploadSingleInitiationResponse.getAwsSessionExpirationTime().toGregorianCalendar().getTimeInMillis())
+        {
+            fail("Initial expiration time \"" + uploadSingleInitiationResponse.getAwsSessionExpirationTime().toGregorianCalendar().getTimeInMillis() +
+                "\" is not > extended expiration time \"" +
+                uploadSingleCredentialExtensionResponse.getAwsSessionExpirationTime().toGregorianCalendar().getTimeInMillis() + "\".");
+        }
     }
 
     @Test

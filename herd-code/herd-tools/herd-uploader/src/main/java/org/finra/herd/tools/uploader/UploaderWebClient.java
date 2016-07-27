@@ -49,20 +49,6 @@ public class UploaderWebClient extends DataBridgeWebClient
     private JsonHelper jsonHelper;
 
     /**
-     * Retrieves S3 key prefix from the registration server.
-     *
-     * @param manifest the uploader input manifest file information
-     * @param createNewVersion if not set, only initial version of the business object data is allowed to be created
-     *
-     * @return the S3 key prefix
-     */
-    public S3KeyPrefixInformation getS3KeyPrefix(UploaderInputManifestDto manifest, Boolean createNewVersion)
-        throws IOException, JAXBException, URISyntaxException
-    {
-        return getS3KeyPrefix(manifest, null, createNewVersion);
-    }
-
-    /**
      * Gets the business object data upload credentials.
      *
      * @param manifest the manifest

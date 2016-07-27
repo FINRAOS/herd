@@ -82,15 +82,11 @@ public abstract class DataBridgeWebClient
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataBridgeWebClient.class);
 
-    protected static final String HERD_APP_REST_URI_PREFIX = "/herd-app/rest";
-    protected static final String DEFAULT_CONTENT_TYPE = ContentType.APPLICATION_XML.withCharset(StandardCharsets.UTF_8).toString();
     protected static final String DEFAULT_ACCEPT = ContentType.APPLICATION_XML.withCharset(StandardCharsets.UTF_8).toString();
 
     protected static final String DEFAULT_CONTENT_TYPE = ContentType.APPLICATION_XML.withCharset(StandardCharsets.UTF_8).toString();
 
     protected static final String HERD_APP_REST_URI_PREFIX = "/herd-app/rest";
-
-    private static final Logger LOGGER = Logger.getLogger(DataBridgeWebClient.class);
 
     @Autowired
     protected HerdStringHelper herdStringHelper;

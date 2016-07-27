@@ -36,16 +36,13 @@ import java.util.List;
 import javax.xml.datatype.DatatypeFactory;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PatternLayout;
-import org.apache.log4j.WriterAppender;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import org.finra.herd.core.helper.LogLevel;
 import org.finra.herd.dao.impl.MockHttpClientOperationsImpl;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.AwsCredential;
@@ -66,6 +63,7 @@ import org.finra.herd.service.S3Service;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.service.helper.StorageFileHelper;
 import org.finra.herd.service.helper.StorageHelper;
+import org.finra.herd.tools.common.databridge.DataBridgeWebClient;
 
 /**
  * Unit tests for DownloaderController class.
