@@ -1696,7 +1696,7 @@
                </xs:documentation>
             </xs:annotation>
          </xs:element>
-         <xs:element name="latestVersion" type="xs:boolean">
+         <xs:element name="latestVersion" type="xs:boolean" minOccurs="0">
             <xs:annotation>
                <xs:documentation>*No longer in use* A boolean flag that shows whether this instance of data is the latest or not. Once a new version of data is
                   registered, any previous versions will no longer be the latest
