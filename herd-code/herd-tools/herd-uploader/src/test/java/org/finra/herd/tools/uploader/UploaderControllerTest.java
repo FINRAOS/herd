@@ -313,8 +313,18 @@ public class UploaderControllerTest extends AbstractUploaderTest
     @Test(expected = IOException.class)
     public void testPerformUploadWithIoExceptionDuringUpdateBusinessObjectDataStatus() throws Exception
     {
-        runUpload(UploaderController.MIN_THREADS, null, false, false, MockHttpClientOperationsImpl.HOSTNAME_THROW_IO_EXCEPTION_DURING_UPDATE_BDATA_STATUS,
-            null);
+        // Turn off logging since this test will log a stack trace as a warning.
+        LogLevel originalLogLevel = getLogLevel(UploaderWebClient.class);
+        setLogLevel(UploaderWebClient.class, LogLevel.OFF);
+        try
+        {
+            runUpload(UploaderController.MIN_THREADS, null, false, false, MockHttpClientOperationsImpl.HOSTNAME_THROW_IO_EXCEPTION_DURING_UPDATE_BDATA_STATUS,
+                null);
+        }
+        finally
+        {
+            setLogLevel(UploaderWebClient.class, originalLogLevel);
+        }
     }
 
     @Test
