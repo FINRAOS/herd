@@ -70,12 +70,12 @@ public class UploadDownloadRestControllerTest extends AbstractRestTest
         UploadSingleInitiationResponse uploadSingleInitiationResponse =
             uploadDownloadRestController.initiateUploadSingle(createUploadSingleInitiationRequest());
 
+        // Sleep a short amount of time to ensure the extended credentials don't return the same expiration as the initial credentials.
+        Thread.sleep(10);
+
         // Initiate the download against the uploaded data (i.e. the target business object data).
         UploadSingleCredentialExtensionResponse uploadSingleCredentialExtensionResponse =
             extendUploadSingleCredentials(uploadSingleInitiationResponse.getSourceBusinessObjectData());
-
-        // Sleep a short amount of time to ensure the extended credentials don't return the same expiration as the initial credentials.
-        Thread.sleep(10);
 
         // Validate the returned object.
         assertNotNull(uploadSingleCredentialExtensionResponse.getAwsAccessKey());

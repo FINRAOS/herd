@@ -261,6 +261,7 @@
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-core</artifactId>
             <version>${aws.sdk.version}</version>
+            <!-- We are using jcl-over-slf4j so commons-logging isn't needed. -->
             <exclusions>
                <exclusion>
                   <groupId>commons-logging</groupId>
@@ -344,7 +345,7 @@
             <groupId>commons-configuration</groupId>
             <artifactId>commons-configuration</artifactId>
             <version>${commons.configuration.version}</version>
-            <!-- Commons Configuration has dependencies on an old version of commons-logging we don't want. -->
+            <!-- We are using jcl-over-slf4j so commons-logging isn't needed. -->
             <exclusions>
                <exclusion>
                   <artifactId>commons-logging</artifactId>
@@ -413,15 +414,6 @@
             <artifactId>hibernate-validator-annotation-processor</artifactId>
             <version>${hibernate.validator.version}</version>
          </dependency>
-         <!--
-         TODO: This explicit dependency will be needed when we migrate to Hibernate 5.
-         However, we should consider using the new transaction manager (Artifact Id: javax.transaction-api, Version: 1.2) instead.
-         <dependency>
-            <groupId>javax.transaction</groupId>
-            <artifactId>jta</artifactId>
-            <version>${jta.version}</version>
-         </dependency>
-         -->
          <dependency>
             <groupId>org.codehaus.jackson</groupId>
             <artifactId>jackson-mapper-asl</artifactId>
@@ -468,18 +460,25 @@
             <version>${h2db.version}</version>
             <scope>test</scope>
          </dependency>
+         <!-- This is the main SLF4J logging API that is used by the code base when we want to log. -->
          <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <version>${slf4j.version}</version>
          </dependency>
-         <!-- Binding for Log4J -->
+         <!-- Ensure any 3rd party frameworks using Jakarta Commons Logging (JCL) get bridged to SLF4J. -->
+         <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl-over-slf4j</artifactId>
+            <version>${slf4j.version}</version>
+         </dependency>
+         <!-- SLF4J binding that allows Log4J2 to be used as the implementation. -->
          <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-slf4j-impl</artifactId>
             <version>${log4j.version}</version>
          </dependency>
-         <!-- Log4j API and Core implementation required for binding -->
+         <!-- Log4J2 API and core implementation required for binding. -->
          <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>
@@ -514,6 +513,13 @@
             <groupId>org.springframework</groupId>
             <artifactId>spring-core</artifactId>
             <version>${spring.version}</version>
+            <!-- We are using jcl-over-slf4j so commons-logging isn't needed. -->
+            <exclusions>
+               <exclusion>
+                  <artifactId>commons-logging</artifactId>
+                  <groupId>commons-logging</groupId>
+               </exclusion>
+            </exclusions>
          </dependency>
          <dependency>
             <groupId>org.springframework</groupId>
@@ -626,6 +632,13 @@
             <artifactId>commons-dbcp2</artifactId>
             <version>${commons-dbcp2.version}</version>
             <scope>test</scope>
+            <!-- We are using jcl-over-slf4j so commons-logging isn't needed. -->
+            <exclusions>
+               <exclusion>
+                  <groupId>commons-logging</groupId>
+                  <artifactId>commons-logging</artifactId>
+               </exclusion>
+            </exclusions>
          </dependency>
          <dependency>
             <groupId>com.google.code.findbugs</groupId>
