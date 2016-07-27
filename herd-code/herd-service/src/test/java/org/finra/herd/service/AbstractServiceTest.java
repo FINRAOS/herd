@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.service;
 
 import static org.junit.Assert.assertEquals;
@@ -204,19 +204,19 @@ import org.finra.herd.service.impl.UploadDownloadHelperServiceImpl;
 public abstract class AbstractServiceTest extends AbstractDaoTest
 {
     protected static final String ACTIVITI_XML_ADD_EMR_MASTER_SECURITY_GROUPS_WITH_CLASSPATH =
-        "classpath:org/finra/herd/service/activitiWorkflowAddEmrMasterSecurityGroup.bpmn20.xml";
+            "classpath:org/finra/herd/service/activitiWorkflowAddEmrMasterSecurityGroup.bpmn20.xml";
 
     protected static final String ACTIVITI_XML_ADD_EMR_STEPS_WITH_CLASSPATH = "classpath:org/finra/herd/service/activitiWorkflowAddEmrStep.bpmn20.xml";
 
     protected static final String ACTIVITI_XML_CHECK_CLUSTER_WITH_CLASSPATH = "classpath:org/finra/herd/service/activitiWorkflowCheckEmrCluster.bpmn20.xml";
 
     protected static final String ACTIVITI_XML_CHECK_OOZIE_WORKFLOW_WITH_CLASSPATH =
-        "classpath:org/finra/herd/service/activitiWorkflowCheckOozieJob.bpmn20.xml";
+            "classpath:org/finra/herd/service/activitiWorkflowCheckOozieJob.bpmn20.xml";
 
     protected static final String ACTIVITI_XML_CREATE_CLUSTER_WITH_CLASSPATH = "classpath:org/finra/herd/service/activitiWorkflowCreateEmrCluster.bpmn20.xml";
 
     protected static final String ACTIVITI_XML_HERD_INTERMEDIATE_TIMER_WITH_CLASSPATH =
-        "classpath:org/finra/herd/service/testHerdIntermediateTimerWorkflow.bpmn20.xml";
+            "classpath:org/finra/herd/service/testHerdIntermediateTimerWorkflow.bpmn20.xml";
 
     protected static final String ACTIVITI_XML_HERD_TIMER = "org/finra/herd/service/testHerdTimerWorkflow.bpmn20.xml";
 
@@ -228,7 +228,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     protected static final String ACTIVITI_XML_HERD_WORKFLOW_WITH_CLASSPATH = "classpath:" + ACTIVITI_XML_HERD_WORKFLOW;
 
     protected static final String ACTIVITI_XML_LOG_VARIABLES_NO_REGEX_WITH_CLASSPATH =
-        "classpath:org/finra/herd/service/activitiWorkflowLogVariablesNoRegex.bpmn20.xml";
+            "classpath:org/finra/herd/service/activitiWorkflowLogVariablesNoRegex.bpmn20.xml";
 
     protected static final String ACTIVITI_XML_LOG_VARIABLES_WITH_CLASSPATH = "classpath:org/finra/herd/service/activitiWorkflowLogVariables.bpmn20.xml";
 
@@ -237,7 +237,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     protected static final String ACTIVITI_XML_RUN_OOZIE_WORKFLOW_WITH_CLASSPATH = "classpath:org/finra/herd/service/activitiWorkflowRunOozieJob.bpmn20.xml";
 
     protected static final String ACTIVITI_XML_TERMINATE_CLUSTER_WITH_CLASSPATH =
-        "classpath:org/finra/herd/service/activitiWorkflowTerminateEmrCluster.bpmn20.xml";
+            "classpath:org/finra/herd/service/activitiWorkflowTerminateEmrCluster.bpmn20.xml";
 
     protected static final String ACTIVITI_XML_TEST_RECEIVE_TASK_WITH_CLASSPATH = "classpath:org/finra/herd/service/testHerdReceiveTaskWorkflow.bpmn20.xml";
 
@@ -354,12 +354,16 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     protected static final String ROW_FORMAT = "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' ESCAPED BY '\\\\' NULL DEFINED AS '\\N'";
 
     protected static final String S3_KEY_PREFIX_VELOCITY_TEMPLATE =
-        "$namespace/$dataProviderName/$businessObjectFormatUsage/$businessObjectFormatFileType/$businessObjectDefinitionName" +
-            "/schm-v$businessObjectFormatVersion/data-v$businessObjectDataVersion/$businessObjectFormatPartitionKey=$businessObjectDataPartitionValue" +
-            "#if($CollectionUtils.isNotEmpty($businessObjectDataSubPartitions.keySet()))" +
-            "#foreach($subPartitionKey in $businessObjectDataSubPartitions.keySet())/$subPartitionKey=$businessObjectDataSubPartitions.get($subPartitionKey)" +
-            "#end" +
-            "#end";
+            "$namespace/$dataProviderName/$businessObjectFormatUsage/$businessObjectFormatFileType/$businessObjectDefinitionName"
+                    +
+                    "/schm-v$businessObjectFormatVersion/data-v$businessObjectDataVersion/$businessObjectFormatPartitionKey=$businessObjectDataPartitionValue"
+                    +
+                    "#if($CollectionUtils.isNotEmpty($businessObjectDataSubPartitions.keySet()))"
+                    +
+                    "#foreach($subPartitionKey in $businessObjectDataSubPartitions.keySet())/$subPartitionKey=$businessObjectDataSubPartitions.get($subPartitionKey)"
+                    +
+                    "#end" +
+                    "#end";
 
     protected static final String SECOND_PARTITION_COLUMN_NAME = "PRTN_CLMN002";
 
@@ -393,8 +397,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     protected final String START_PARTITION_VALUE = PROCESS_DATE_PARTITION_VALUES.get(0);
 
     protected final String testS3KeyPrefix =
-        getExpectedS3KeyPrefix(NAMESPACE, DATA_PROVIDER_NAME, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
-            PARTITION_VALUE, null, null, INITIAL_DATA_VERSION);
+            getExpectedS3KeyPrefix(NAMESPACE, DATA_PROVIDER_NAME, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
+                    PARTITION_VALUE, null, null, INITIAL_DATA_VERSION);
 
     @Autowired
     protected SpringProcessEngineConfiguration activitiConfiguration;
@@ -680,8 +684,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
         // Validate the returned object against the input.
         assertEquals(new JobDefinition(jobDefinition.getId(), jobDefinitionCreateRequest.getNamespace(), jobDefinitionCreateRequest.getJobName(),
-            jobDefinitionCreateRequest.getDescription(), jobDefinitionCreateRequest.getActivitiJobXml(), jobDefinitionCreateRequest.getParameters(),
-            jobDefinitionCreateRequest.getS3PropertiesLocation(), HerdDaoSecurityHelper.SYSTEM_USER), jobDefinition);
+                jobDefinitionCreateRequest.getDescription(), jobDefinitionCreateRequest.getActivitiJobXml(), jobDefinitionCreateRequest.getParameters(),
+                jobDefinitionCreateRequest.getS3PropertiesLocation(), HerdDaoSecurityHelper.SYSTEM_USER), jobDefinition);
 
         return jobDefinition;
     }
@@ -749,7 +753,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         configXml = xmlHelper.objectToXml(emrClusterDefinition);
 
         EmrClusterDefinitionEntity emrClusterDefinitionEntity =
-            emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME, configXml);
+                emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME, configXml);
 
         Parameter parameter = new Parameter("emrClusterDefinitionName", emrClusterDefinitionEntity.getName());
         parameters.add(parameter);
@@ -775,8 +779,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
         NamespaceEntity namespaceEntity = namespaceDao.getNamespaceByCd(TEST_ACTIVITI_NAMESPACE_CD);
         EmrClusterDefinitionEntity emrClusterDefinitionEntity = emrClusterDefinitionDaoTestHelper
-            .createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
-                IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
+                .createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
+                        IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
 
         Parameter parameter = new Parameter("namespace", namespaceEntity.getCode());
         parameters.add(parameter);
@@ -927,7 +931,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
      *
      * @return the newly created business object data attribute create request
      */
-    protected BusinessObjectDataAttributeCreateRequest createBusinessObjectDataAttributeCreateRequest(String namespaceCode, String businessObjectDefinitionName,
+    protected BusinessObjectDataAttributeCreateRequest createBusinessObjectDataAttributeCreateRequest(String namespaceCode,
+        String businessObjectDefinitionName,
         String businessObjectFormatUsage, String businessObjectFormatFileType, Integer businessObjectFormatVersion, String businessObjectDataPartitionValue,
         List<String> businessObjectDataSubPartitionValues, Integer businessObjectDataVersion, String businessObjectDataAttributeName,
         String businessObjectDataAttributeValue)
@@ -935,9 +940,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         BusinessObjectDataAttributeCreateRequest request = new BusinessObjectDataAttributeCreateRequest();
 
         request.setBusinessObjectDataAttributeKey(
-            new BusinessObjectDataAttributeKey(namespaceCode, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
-                businessObjectFormatVersion, businessObjectDataPartitionValue, businessObjectDataSubPartitionValues, businessObjectDataVersion,
-                businessObjectDataAttributeName));
+                new BusinessObjectDataAttributeKey(namespaceCode, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
+                        businessObjectFormatVersion, businessObjectDataPartitionValue, businessObjectDataSubPartitionValues, businessObjectDataVersion,
+                        businessObjectDataAttributeName));
         request.setBusinessObjectDataAttributeValue(businessObjectDataAttributeValue);
 
         return request;
@@ -1028,8 +1033,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         String storageName, String newBusinessObjectDataStatus, String oldBusinessObjectDataStatus, List<JobAction> jobActions)
     {
         return createBusinessObjectDataNotificationRegistrationCreateRequest(businessObjectDataNotificationRegistrationKey, notificationEventType,
-            businessObjectDefinitionNamespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
-            businessObjectFormatVersion, storageName, newBusinessObjectDataStatus, oldBusinessObjectDataStatus, jobActions, null);
+                businessObjectDefinitionNamespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
+                businessObjectFormatVersion, storageName, newBusinessObjectDataStatus, oldBusinessObjectDataStatus, jobActions, null);
     }
 
     /**
@@ -1167,7 +1172,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         String dataProviderName, String businessObjectDefinitionDescription)
     {
         return createBusinessObjectDefinitionCreateRequest(namespaceCode, businessObjectDefinitionName, dataProviderName, businessObjectDefinitionDescription,
-            null);
+                null);
     }
 
     /**
@@ -1226,7 +1231,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
         // Create business object definition
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoTestHelper
-            .createBusinessObjectDefinitionEntity(namespaceEntity, request.getBusinessObjectDefinitionName(), dataProviderEntity, null, null);
+                .createBusinessObjectDefinitionEntity(namespaceEntity, request.getBusinessObjectDefinitionName(), dataProviderEntity, null, null);
 
         // Create file type
         FileTypeEntity fileTypeEntity = fileTypeDaoTestHelper.createFileTypeEntity(request.getBusinessObjectFormatFileType());
@@ -1330,8 +1335,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     {
         CustomDdlCreateRequest request = new CustomDdlCreateRequest();
         request.setCustomDdlKey(
-            new CustomDdlKey(namespaceCode, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType, businessObjectFormatVersion,
-                customDdlName));
+                new CustomDdlKey(namespaceCode, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
+                        businessObjectFormatVersion,
+                        customDdlName));
         request.setDdl(ddl);
         return request;
     }
@@ -1355,8 +1361,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     {
         // Create a storage unit entity.
         storageUnitDaoTestHelper
-            .createStorageUnitEntity(STORAGE_NAME, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES, DATA_VERSION, true, BusinessObjectDataStatusEntity.VALID, StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
+                .createStorageUnitEntity(STORAGE_NAME, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                        SUBPARTITION_VALUES, DATA_VERSION, true, BusinessObjectDataStatusEntity.VALID, StorageUnitStatusEntity.ENABLED,
+                        NO_STORAGE_DIRECTORY_PATH);
     }
 
     /**
@@ -1373,28 +1380,32 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     protected void createDatabaseEntitiesForBusinessObjectDataDdlTesting()
     {
         createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, FIRST_PARTITION_COLUMN_NAME, PARTITION_KEY_GROUP,
-            BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, UNSORTED_PARTITION_VALUES, SUBPARTITION_VALUES, SCHEMA_DELIMITER_PIPE,
-            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(),
-            schemaColumnDaoTestHelper.getTestPartitionColumns(), false, CUSTOM_DDL_NAME, true, ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
+                BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, UNSORTED_PARTITION_VALUES, SUBPARTITION_VALUES, SCHEMA_DELIMITER_PIPE,
+                SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(),
+                schemaColumnDaoTestHelper.getTestPartitionColumns(), false, CUSTOM_DDL_NAME, true, ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
     }
 
     /**
      * Creates relative database entities required for the unit tests.
      */
-    protected void createDatabaseEntitiesForBusinessObjectDataDdlTesting(String businessObjectFormatFileType, String partitionKey, String partitionKeyGroupName,
+    protected void createDatabaseEntitiesForBusinessObjectDataDdlTesting(String businessObjectFormatFileType, String partitionKey,
+        String partitionKeyGroupName,
         int partitionColumnPosition, List<String> partitionValues, List<String> subPartitionValues, String schemaDelimiterCharacter,
         String schemaEscapeCharacter, String schemaNullValue, List<SchemaColumn> schemaColumns, List<SchemaColumn> partitionColumns,
         boolean replaceUnderscoresWithHyphens, String customDdlName, boolean generateStorageFileEntities, boolean allowDuplicateBusinessObjectData)
     {
         // Create a business object format entity if it does not exist.
         BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDao.getBusinessObjectFormatByAltKey(
-            new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, businessObjectFormatFileType, FORMAT_VERSION));
+                new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, businessObjectFormatFileType, FORMAT_VERSION));
         if (businessObjectFormatEntity == null)
         {
-            businessObjectFormatEntity = businessObjectFormatDaoTestHelper
-                .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, businessObjectFormatFileType, FORMAT_VERSION, FORMAT_DESCRIPTION,
-                    LATEST_VERSION_FLAG_SET, partitionKey, partitionKeyGroupName, NO_ATTRIBUTES, schemaDelimiterCharacter, schemaEscapeCharacter,
-                    schemaNullValue, schemaColumns, partitionColumns);
+            businessObjectFormatEntity =
+                    businessObjectFormatDaoTestHelper
+                            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, businessObjectFormatFileType, FORMAT_VERSION,
+                                    FORMAT_DESCRIPTION,
+                                    LATEST_VERSION_FLAG_SET, partitionKey, partitionKeyGroupName, NO_ATTRIBUTES, schemaDelimiterCharacter,
+                                    schemaEscapeCharacter,
+                                    schemaNullValue, schemaColumns, partitionColumns);
         }
 
         if (StringUtils.isNotBlank(customDdlName))
@@ -1408,17 +1419,17 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         if (storageEntity1 == null)
         {
             storageEntity1 = storageDaoTestHelper.createStorageEntity(STORAGE_NAME, StoragePlatformEntity.S3, Arrays
-                .asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), S3_BUCKET_NAME),
-                    new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE),
-                        S3_KEY_PREFIX_VELOCITY_TEMPLATE)));
+                    .asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), S3_BUCKET_NAME),
+                            new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE),
+                                    S3_KEY_PREFIX_VELOCITY_TEMPLATE)));
         }
         StorageEntity storageEntity2 = storageDao.getStorageByName(STORAGE_NAME_2);
         if (storageEntity2 == null)
         {
             storageEntity2 = storageDaoTestHelper.createStorageEntity(STORAGE_NAME_2, StoragePlatformEntity.S3, Arrays
-                .asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), S3_BUCKET_NAME_2),
-                    new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE),
-                        S3_KEY_PREFIX_VELOCITY_TEMPLATE)));
+                    .asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), S3_BUCKET_NAME_2),
+                            new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE),
+                                    S3_KEY_PREFIX_VELOCITY_TEMPLATE)));
         }
 
         // Create business object data for each partition value.
@@ -1430,8 +1441,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
             if (partitionColumnPosition == BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION)
             {
                 businessObjectDataEntity = businessObjectDataDaoTestHelper
-                    .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, businessObjectFormatFileType, FORMAT_VERSION, partitionValue,
-                        subPartitionValues, DATA_VERSION, true, BusinessObjectDataStatusEntity.VALID);
+                        .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, businessObjectFormatFileType, FORMAT_VERSION, partitionValue,
+                                subPartitionValues, DATA_VERSION, true, BusinessObjectDataStatusEntity.VALID);
             }
             else
             {
@@ -1439,19 +1450,19 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
                 // Please note that the second partition column is located at index 0.
                 testSubPartitionValues.set(partitionColumnPosition - 2, partitionValue);
                 businessObjectDataEntity = businessObjectDataDaoTestHelper
-                    .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, businessObjectFormatFileType, FORMAT_VERSION, PARTITION_VALUE,
-                        testSubPartitionValues, DATA_VERSION, true, BusinessObjectDataStatusEntity.VALID);
+                        .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, businessObjectFormatFileType, FORMAT_VERSION, PARTITION_VALUE,
+                                testSubPartitionValues, DATA_VERSION, true, BusinessObjectDataStatusEntity.VALID);
             }
 
             // Get the expected S3 key prefix.
             String s3KeyPrefix = s3KeyPrefixHelper.buildS3KeyPrefix(S3_KEY_PREFIX_VELOCITY_TEMPLATE, businessObjectFormatEntity,
-                businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity), STORAGE_NAME);
+                    businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity), STORAGE_NAME);
 
             // Check if we need to create the relative storage units.
             if (STORAGE_1_AVAILABLE_PARTITION_VALUES.contains(partitionValue) || Hive13DdlGenerator.NO_PARTITIONING_PARTITION_VALUE.equals(partitionValue))
             {
                 StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
-                    .createStorageUnitEntity(storageEntity1, businessObjectDataEntity, StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
+                        .createStorageUnitEntity(storageEntity1, businessObjectDataEntity, StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
 
                 // If flag is set, create one storage file for each "auto-discoverable" partition.
                 // Please note that is n! - thus we want to keep the number of partition levels small.
@@ -1467,10 +1478,10 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
             }
 
             if (STORAGE_2_AVAILABLE_PARTITION_VALUES.contains(partitionValue) &&
-                (allowDuplicateBusinessObjectData || !STORAGE_1_AVAILABLE_PARTITION_VALUES.contains(partitionValue)))
+                    (allowDuplicateBusinessObjectData || !STORAGE_1_AVAILABLE_PARTITION_VALUES.contains(partitionValue)))
             {
                 StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
-                    .createStorageUnitEntity(storageEntity2, businessObjectDataEntity, StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
+                        .createStorageUnitEntity(storageEntity2, businessObjectDataEntity, StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
 
                 // If flag is set, create one storage file for each "auto-discoverable" partition.
                 // Please note that is n! - thus we want to keep the number of partition levels small.
@@ -1496,8 +1507,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         {
             // Build an S3 key prefix according to the herd S3 naming convention.
             String s3KeyPrefix =
-                getExpectedS3KeyPrefix(NAMESPACE, DATA_PROVIDER_NAME, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION,
-                    FIRST_PARTITION_COLUMN_NAME, partitionValue, null, null, DATA_VERSION);
+                    getExpectedS3KeyPrefix(NAMESPACE, DATA_PROVIDER_NAME, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION,
+                            FIRST_PARTITION_COLUMN_NAME, partitionValue, null, null, DATA_VERSION);
 
             // Creates and persists database entities required for generating business object data ddl testing.
             return createDatabaseEntitiesForBusinessObjectDataDdlTesting(partitionValue, s3KeyPrefix);
@@ -1517,7 +1528,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         // Build a list of schema columns.
         List<SchemaColumn> schemaColumns = new ArrayList<>();
         schemaColumns
-            .add(new SchemaColumn(FIRST_PARTITION_COLUMN_NAME, "DATE", NO_COLUMN_SIZE, COLUMN_REQUIRED, NO_COLUMN_DEFAULT_VALUE, NO_COLUMN_DESCRIPTION));
+                .add(new SchemaColumn(FIRST_PARTITION_COLUMN_NAME, "DATE", NO_COLUMN_SIZE, COLUMN_REQUIRED, NO_COLUMN_DEFAULT_VALUE, NO_COLUMN_DESCRIPTION));
         schemaColumns.add(new SchemaColumn(COLUMN_NAME, "NUMBER", COLUMN_SIZE, NO_COLUMN_REQUIRED, COLUMN_DEFAULT_VALUE, COLUMN_DESCRIPTION));
 
         // Use the first column as a partition column.
@@ -1525,22 +1536,22 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
         // Create a business object format entity with the schema.
         BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
-            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION, FORMAT_DESCRIPTION,
-                LATEST_VERSION_FLAG_SET, FIRST_PARTITION_COLUMN_NAME, NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE,
-                SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumns, partitionColumns);
+                .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+                        LATEST_VERSION_FLAG_SET, FIRST_PARTITION_COLUMN_NAME, NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE,
+                        SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumns, partitionColumns);
 
         if (partitionValue != null)
         {
             // Create a business object data entity.
             BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
-                .createBusinessObjectDataEntity(businessObjectFormatEntity, partitionValue, NO_SUBPARTITION_VALUES, DATA_VERSION, true,
-                    BusinessObjectDataStatusEntity.VALID);
+                    .createBusinessObjectDataEntity(businessObjectFormatEntity, partitionValue, NO_SUBPARTITION_VALUES, DATA_VERSION, true,
+                            BusinessObjectDataStatusEntity.VALID);
 
             // Create an S3 storage entity.
             StorageEntity storageEntity = storageDaoTestHelper.createStorageEntity(STORAGE_NAME, StoragePlatformEntity.S3, Arrays
-                .asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), S3_BUCKET_NAME),
-                    new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE),
-                        S3_KEY_PREFIX_VELOCITY_TEMPLATE)));
+                    .asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), S3_BUCKET_NAME),
+                            new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE),
+                                    S3_KEY_PREFIX_VELOCITY_TEMPLATE)));
 
             // Create a storage unit with a storage directory path.
             return storageUnitDaoTestHelper.createStorageUnitEntity(storageEntity, businessObjectDataEntity, StorageUnitStatusEntity.ENABLED, s3KeyPrefix);
@@ -1564,9 +1575,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         // Build a list of schema columns.
         List<SchemaColumn> schemaColumns = new ArrayList<>();
         schemaColumns
-            .add(new SchemaColumn(FIRST_PARTITION_COLUMN_NAME, "DATE", NO_COLUMN_SIZE, COLUMN_REQUIRED, NO_COLUMN_DEFAULT_VALUE, NO_COLUMN_DESCRIPTION));
+                .add(new SchemaColumn(FIRST_PARTITION_COLUMN_NAME, "DATE", NO_COLUMN_SIZE, COLUMN_REQUIRED, NO_COLUMN_DEFAULT_VALUE, NO_COLUMN_DESCRIPTION));
         schemaColumns
-            .add(new SchemaColumn(SECOND_PARTITION_COLUMN_NAME, "STRING", NO_COLUMN_SIZE, COLUMN_REQUIRED, NO_COLUMN_DEFAULT_VALUE, NO_COLUMN_DESCRIPTION));
+                .add(new SchemaColumn(SECOND_PARTITION_COLUMN_NAME, "STRING", NO_COLUMN_SIZE, COLUMN_REQUIRED, NO_COLUMN_DEFAULT_VALUE, NO_COLUMN_DESCRIPTION));
         schemaColumns.add(new SchemaColumn(COLUMN_NAME, "NUMBER", COLUMN_SIZE, NO_COLUMN_REQUIRED, COLUMN_DEFAULT_VALUE, COLUMN_DESCRIPTION));
 
         // Use the first two columns as partition columns.
@@ -1574,28 +1585,28 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
         // Create a business object format entity with the schema.
         BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
-            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION, FORMAT_DESCRIPTION,
-                LATEST_VERSION_FLAG_SET, FIRST_PARTITION_COLUMN_NAME, NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE,
-                SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumns, partitionColumns);
+                .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+                        LATEST_VERSION_FLAG_SET, FIRST_PARTITION_COLUMN_NAME, NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE,
+                        SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumns, partitionColumns);
 
         // Create an S3 storage entity.
         StorageEntity storageEntity = storageDaoTestHelper.createStorageEntity(STORAGE_NAME, StoragePlatformEntity.S3, Arrays
-            .asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), S3_BUCKET_NAME),
-                new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE),
-                    S3_KEY_PREFIX_VELOCITY_TEMPLATE)));
+                .asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), S3_BUCKET_NAME),
+                        new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE),
+                                S3_KEY_PREFIX_VELOCITY_TEMPLATE)));
 
         for (List<String> partition : partitions)
         {
             // Build an S3 key prefix according to the herd S3 naming convention.
             String s3KeyPrefix =
-                getExpectedS3KeyPrefix(NAMESPACE, DATA_PROVIDER_NAME, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION,
-                    FIRST_PARTITION_COLUMN_NAME, partition.get(0), partitionColumns.subList(1, 2).toArray(new SchemaColumn[1]),
-                    Arrays.asList(partition.get(1)).toArray(new String[1]), DATA_VERSION);
+                    getExpectedS3KeyPrefix(NAMESPACE, DATA_PROVIDER_NAME, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION,
+                            FIRST_PARTITION_COLUMN_NAME, partition.get(0), partitionColumns.subList(1, 2).toArray(new SchemaColumn[1]),
+                            Arrays.asList(partition.get(1)).toArray(new String[1]), DATA_VERSION);
 
             // Create a business object data entity.
             BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
-                .createBusinessObjectDataEntity(businessObjectFormatEntity, partition.get(0), Arrays.asList(partition.get(1)), DATA_VERSION,
-                    LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID);
+                    .createBusinessObjectDataEntity(businessObjectFormatEntity, partition.get(0), Arrays.asList(partition.get(1)), DATA_VERSION,
+                            LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID);
 
             // Create an "available" storage unit with a storage directory path.
             result.add(storageUnitDaoTestHelper.createStorageUnitEntity(storageEntity, businessObjectDataEntity, StorageUnitStatusEntity.ENABLED, s3KeyPrefix));
@@ -1609,9 +1620,10 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
      */
     protected void createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting()
     {
-        createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting(NAMESPACE, Arrays.asList(NOTIFICATION_EVENT_TYPE), BDEF_NAMESPACE, BDEF_NAME,
-            Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(BDATA_STATUS, BDATA_STATUS_2),
-            businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
+        createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting(NAMESPACE, Arrays.asList(NOTIFICATION_EVENT_TYPE), BDEF_NAMESPACE,
+                BDEF_NAME,
+                Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(BDATA_STATUS, BDATA_STATUS_2),
+                businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
     }
 
     /**
@@ -1648,12 +1660,12 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
         // Create specified business object definition, if not exists.
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDao
-            .getBusinessObjectDefinitionByKey(new BusinessObjectDefinitionKey(businessObjectDefinitionNamespace, businessObjectDefinitionName));
+                .getBusinessObjectDefinitionByKey(new BusinessObjectDefinitionKey(businessObjectDefinitionNamespace, businessObjectDefinitionName));
         if (businessObjectDefinitionEntity == null)
         {
             // Create and persist a business object definition entity.
             businessObjectDefinitionDaoTestHelper
-                .createBusinessObjectDefinitionEntity(businessObjectDefinitionNamespace, businessObjectDefinitionName, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
+                    .createBusinessObjectDefinitionEntity(businessObjectDefinitionNamespace, businessObjectDefinitionName, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
         }
 
         // Create specified file type entities, if not exist.
@@ -1680,7 +1692,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
             for (String businessObjectDataStatus : businessObjectDataStatuses)
             {
                 BusinessObjectDataStatusEntity businessObjectDataStatusEntity =
-                    businessObjectDataStatusDao.getBusinessObjectDataStatusByCode(businessObjectDataStatus);
+                        businessObjectDataStatusDao.getBusinessObjectDataStatusByCode(businessObjectDataStatus);
                 if (businessObjectDataStatusEntity == null)
                 {
                     businessObjectDataStatusDaoTestHelper.createBusinessObjectDataStatusEntity(businessObjectDataStatus);
@@ -1694,8 +1706,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
             for (JobAction jobAction : jobActions)
             {
                 jobDefinitionDaoTestHelper.createJobDefinitionEntity(jobAction.getNamespace(), jobAction.getJobName(),
-                    String.format("Description of \"%s.%s\" job definition.", jobAction.getNamespace(), jobAction.getJobName()),
-                    String.format("%s.%s.%s", jobAction.getNamespace(), jobAction.getJobName(), ACTIVITI_ID));
+                        String.format("Description of \"%s.%s\" job definition.", jobAction.getNamespace(), jobAction.getJobName()),
+                        String.format("%s.%s.%s", jobAction.getNamespace(), jobAction.getJobName(), ACTIVITI_ID));
             }
         }
     }
@@ -1737,8 +1749,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     protected void createDatabaseEntitiesForBusinessObjectFormatDdlTesting()
     {
         createDatabaseEntitiesForBusinessObjectFormatDdlTesting(FileTypeEntity.TXT_FILE_TYPE, FIRST_PARTITION_COLUMN_NAME, SCHEMA_DELIMITER_PIPE,
-            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(),
-            schemaColumnDaoTestHelper.getTestPartitionColumns(), CUSTOM_DDL_NAME);
+                SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(),
+                schemaColumnDaoTestHelper.getTestPartitionColumns(), CUSTOM_DDL_NAME);
     }
 
     /**
@@ -1750,13 +1762,16 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     {
         // Create a business object format entity if it does not exist.
         BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDao.getBusinessObjectFormatByAltKey(
-            new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, businessObjectFormatFileType, FORMAT_VERSION));
+                new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, businessObjectFormatFileType, FORMAT_VERSION));
         if (businessObjectFormatEntity == null)
         {
-            businessObjectFormatEntity = businessObjectFormatDaoTestHelper
-                .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, businessObjectFormatFileType, FORMAT_VERSION, FORMAT_DESCRIPTION,
-                    LATEST_VERSION_FLAG_SET, partitionKey, NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES, schemaDelimiterCharacter, schemaEscapeCharacter,
-                    schemaNullValue, schemaColumns, partitionColumns);
+            businessObjectFormatEntity =
+                    businessObjectFormatDaoTestHelper
+                            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, businessObjectFormatFileType, FORMAT_VERSION,
+                                    FORMAT_DESCRIPTION,
+                                    LATEST_VERSION_FLAG_SET, partitionKey, NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES, schemaDelimiterCharacter,
+                                    schemaEscapeCharacter,
+                                    schemaNullValue, schemaColumns, partitionColumns);
         }
 
         if (StringUtils.isNotBlank(customDdlName))
@@ -1776,8 +1791,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     protected BusinessObjectDataEntity createDatabaseEntitiesForFinalizeRestoreTesting(BusinessObjectDataKey businessObjectDataKey)
     {
         return createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN,
-            StorageUnitStatusEntity.RESTORING, STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER, StorageUnitStatusEntity.ENABLED,
-            S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX);
+                StorageUnitStatusEntity.RESTORING, STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER, StorageUnitStatusEntity.ENABLED,
+                S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX);
     }
 
     /**
@@ -1800,14 +1815,14 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     {
         // Create and persist a business object data entity.
         BusinessObjectDataEntity businessObjectDataEntity =
-            businessObjectDataDaoTestHelper.createBusinessObjectDataEntity(businessObjectDataKey, LATEST_VERSION_FLAG_SET, BDATA_STATUS);
+                businessObjectDataDaoTestHelper.createBusinessObjectDataEntity(businessObjectDataKey, LATEST_VERSION_FLAG_SET, BDATA_STATUS);
 
         // Create and persist an origin S3 storage entity.
         StorageEntity originStorageEntity;
         if (originBucketName != null)
         {
             originStorageEntity = storageDaoTestHelper.createStorageEntity(originStorageName, StoragePlatformEntity.S3,
-                configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), originBucketName);
+                    configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), originBucketName);
         }
         else
         {
@@ -1819,7 +1834,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         if (glacierStorageBucketName != null)
         {
             glacierStorageEntity = storageDaoTestHelper.createStorageEntity(glacierStorageName, StoragePlatformEntity.GLACIER,
-                configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), glacierStorageBucketName);
+                    configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), glacierStorageBucketName);
         }
         else
         {
@@ -1828,11 +1843,12 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
         // Create and persist an S3 storage unit entity.
         StorageUnitEntity originStorageUnitEntity =
-            storageUnitDaoTestHelper.createStorageUnitEntity(originStorageEntity, businessObjectDataEntity, originStorageUnitStatus, NO_STORAGE_DIRECTORY_PATH);
+                storageUnitDaoTestHelper.createStorageUnitEntity(originStorageEntity, businessObjectDataEntity, originStorageUnitStatus,
+                        NO_STORAGE_DIRECTORY_PATH);
 
         // Create and persist a Glacier storage unit entity.
         StorageUnitEntity glacierStorageUnitEntity = storageUnitDaoTestHelper
-            .createStorageUnitEntity(glacierStorageEntity, businessObjectDataEntity, glacierStorageUnitStatus, glacierStorageDirectoryPath);
+                .createStorageUnitEntity(glacierStorageEntity, businessObjectDataEntity, glacierStorageUnitStatus, glacierStorageDirectoryPath);
 
         // Set a parent storage unit for the Glacier storage unit.
         glacierStorageUnitEntity.setParentStorageUnit(originStorageUnitEntity);
@@ -1841,7 +1857,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         for (String relativeFilePath : LOCAL_FILES)
         {
             storageFileDaoTestHelper
-                .createStorageFileEntity(originStorageUnitEntity, String.format("%s/%s", TEST_S3_KEY_PREFIX, relativeFilePath), FILE_SIZE_1_KB, ROW_COUNT);
+                    .createStorageFileEntity(originStorageUnitEntity, String.format("%s/%s", TEST_S3_KEY_PREFIX, relativeFilePath), FILE_SIZE_1_KB, ROW_COUNT);
         }
 
         // Return the business object data entity.
@@ -1861,19 +1877,19 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
         // Create and persist a business object format entity.
         BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
-            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
-                LATEST_VERSION_FLAG_SET, partitionKey, NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
-                SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns);
+                .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+                        LATEST_VERSION_FLAG_SET, partitionKey, NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
+                        SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns);
 
         // Create and persist an S3 storage with the S3 key prefix velocity template attribute.
         storageDaoTestHelper.createStorageEntity(STORAGE_NAME, StoragePlatformEntity.S3,
-            configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE), S3_KEY_PREFIX_VELOCITY_TEMPLATE);
+                configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE), S3_KEY_PREFIX_VELOCITY_TEMPLATE);
 
         // If requested, create and persist a business object data entity.
         if (createBusinessObjectDataEntity)
         {
             businessObjectDataDaoTestHelper
-                .createBusinessObjectDataEntity(businessObjectFormatEntity, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS);
+                    .createBusinessObjectDataEntity(businessObjectFormatEntity, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS);
         }
     }
 
@@ -1887,8 +1903,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     protected BusinessObjectDataEntity createDatabaseEntitiesForInitiateRestoreTesting(BusinessObjectDataKey businessObjectDataKey)
     {
         return createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN,
-            StorageUnitStatusEntity.DISABLED, STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER, StorageUnitStatusEntity.ENABLED,
-            S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX);
+                StorageUnitStatusEntity.DISABLED, STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER, StorageUnitStatusEntity.ENABLED,
+                S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX);
     }
 
     /**
@@ -1911,14 +1927,14 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     {
         // Create and persist a business object data entity.
         BusinessObjectDataEntity businessObjectDataEntity =
-            businessObjectDataDaoTestHelper.createBusinessObjectDataEntity(businessObjectDataKey, LATEST_VERSION_FLAG_SET, BDATA_STATUS);
+                businessObjectDataDaoTestHelper.createBusinessObjectDataEntity(businessObjectDataKey, LATEST_VERSION_FLAG_SET, BDATA_STATUS);
 
         // Create and persist an origin S3 storage entity.
         StorageEntity originStorageEntity;
         if (originBucketName != null)
         {
             originStorageEntity = storageDaoTestHelper.createStorageEntity(originStorageName, StoragePlatformEntity.S3,
-                configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), originBucketName);
+                    configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), originBucketName);
         }
         else
         {
@@ -1930,7 +1946,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         if (glacierStorageBucketName != null)
         {
             glacierStorageEntity = storageDaoTestHelper.createStorageEntity(glacierStorageName, StoragePlatformEntity.GLACIER,
-                configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), glacierStorageBucketName);
+                    configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), glacierStorageBucketName);
         }
         else
         {
@@ -1939,11 +1955,12 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
         // Create and persist an S3 storage unit entity.
         StorageUnitEntity originStorageUnitEntity =
-            storageUnitDaoTestHelper.createStorageUnitEntity(originStorageEntity, businessObjectDataEntity, originStorageUnitStatus, NO_STORAGE_DIRECTORY_PATH);
+                storageUnitDaoTestHelper.createStorageUnitEntity(originStorageEntity, businessObjectDataEntity, originStorageUnitStatus,
+                        NO_STORAGE_DIRECTORY_PATH);
 
         // Create and persist a Glacier storage unit entity.
         StorageUnitEntity glacierStorageUnitEntity = storageUnitDaoTestHelper
-            .createStorageUnitEntity(glacierStorageEntity, businessObjectDataEntity, glacierStorageUnitStatus, glacierStorageDirectoryPath);
+                .createStorageUnitEntity(glacierStorageEntity, businessObjectDataEntity, glacierStorageUnitStatus, glacierStorageDirectoryPath);
 
         // Set a parent storage unit for the Glacier storage unit.
         glacierStorageUnitEntity.setParentStorageUnit(originStorageUnitEntity);
@@ -1952,7 +1969,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         for (String relativeFilePath : LOCAL_FILES)
         {
             storageFileDaoTestHelper
-                .createStorageFileEntity(originStorageUnitEntity, String.format("%s/%s", TEST_S3_KEY_PREFIX, relativeFilePath), FILE_SIZE_1_KB, ROW_COUNT);
+                    .createStorageFileEntity(originStorageUnitEntity, String.format("%s/%s", TEST_S3_KEY_PREFIX, relativeFilePath), FILE_SIZE_1_KB, ROW_COUNT);
         }
 
         // Return the business object data entity.
@@ -1965,7 +1982,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     protected void createDatabaseEntitiesForStoragePolicyTesting()
     {
         createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
-            Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
+                Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
     }
 
     /**
@@ -2007,13 +2024,13 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         if (StringUtils.isNotBlank(businessObjectDefinitionName))
         {
             businessObjectDefinitionEntity = businessObjectDefinitionDao
-                .getBusinessObjectDefinitionByKey(new BusinessObjectDefinitionKey(businessObjectDefinitionNamespace, businessObjectDefinitionName));
+                    .getBusinessObjectDefinitionByKey(new BusinessObjectDefinitionKey(businessObjectDefinitionNamespace, businessObjectDefinitionName));
             if (businessObjectDefinitionEntity == null)
             {
                 // Create a business object definition.
                 businessObjectDefinitionDaoTestHelper
-                    .createBusinessObjectDefinitionEntity(businessObjectDefinitionNamespace, businessObjectDefinitionName, DATA_PROVIDER_NAME,
-                        BDEF_DESCRIPTION);
+                        .createBusinessObjectDefinitionEntity(businessObjectDefinitionNamespace, businessObjectDefinitionName, DATA_PROVIDER_NAME,
+                                BDEF_DESCRIPTION);
             }
         }
 
@@ -2035,12 +2052,13 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
                 {
                     // Create S3 storage with the relative attributes.
                     storageDaoTestHelper.createStorageEntity(storageName, StoragePlatformEntity.S3, Arrays
-                        .asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), S3_BUCKET_NAME),
-                            new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE),
-                                S3_KEY_PREFIX_VELOCITY_TEMPLATE),
-                            new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_PATH_PREFIX), Boolean.TRUE.toString()),
-                            new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_FILE_EXISTENCE),
-                                Boolean.TRUE.toString())));
+                            .asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), S3_BUCKET_NAME),
+                                    new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE),
+                                            S3_KEY_PREFIX_VELOCITY_TEMPLATE),
+                                    new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_PATH_PREFIX), Boolean.TRUE
+                                            .toString()),
+                                    new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_FILE_EXISTENCE),
+                                            Boolean.TRUE.toString())));
                 }
             }
         }
@@ -2054,7 +2072,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
                 {
                     // Create Glacier storage with configured S3 bucket name attribute for the "archive" S3 bucket.
                     storageDaoTestHelper.createStorageEntity(destinationStorageName, StoragePlatformEntity.GLACIER,
-                        configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), S3_BUCKET_NAME_2);
+                            configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), S3_BUCKET_NAME_2);
                 }
             }
         }
@@ -2082,8 +2100,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     {
         // Create a business object format entity.
         businessObjectFormatDaoTestHelper
-            .createBusinessObjectFormatEntity(namespaceCode, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
-                businessObjectFormatVersion, FORMAT_DESCRIPTION, true, PARTITION_KEY);
+                .createBusinessObjectFormatEntity(namespaceCode, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
+                        businessObjectFormatVersion, FORMAT_DESCRIPTION, true, PARTITION_KEY);
     }
 
     /**
@@ -2262,7 +2280,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
      * Creates a new job definition create request based on fixed parameters and a specified XML resource location.
      *
      * @param activitiXmlClasspathResourceName the classpath resource location to the Activiti XML. If null is specified, then the default
-     * ACTIVITI_XML_HERD_WORKFLOW_WITH_CLASSPATH will be used.
+     *            ACTIVITI_XML_HERD_WORKFLOW_WITH_CLASSPATH will be used.
      */
     protected JobDefinitionCreateRequest createJobDefinitionCreateRequest(String activitiXmlClasspathResourceName)
     {
@@ -2278,7 +2296,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         try
         {
             return createJobDefinitionCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME, JOB_DESCRIPTION,
-                IOUtils.toString(resourceLoader.getResource(activitiXmlClasspathResourceName).getInputStream()), parameters);
+                    IOUtils.toString(resourceLoader.getResource(activitiXmlClasspathResourceName).getInputStream()), parameters);
         }
         catch (IOException ex)
         {
@@ -2397,7 +2415,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         businessObjectDataKey.setBusinessObjectDataVersion(businessObjectDataVersion);
 
         String s3KeyPrefix =
-            s3KeyPrefixHelper.buildS3KeyPrefix(S3_KEY_PREFIX_VELOCITY_TEMPLATE, businessObjectFormatEntity, businessObjectDataKey, storageEntity.getName());
+                s3KeyPrefixHelper.buildS3KeyPrefix(S3_KEY_PREFIX_VELOCITY_TEMPLATE, businessObjectFormatEntity, businessObjectDataKey, storageEntity.getName());
         String s3ObjectKey = s3KeyPrefix + "/test";
         PutObjectRequest putObjectRequest = new PutObjectRequest(s3BucketName, s3ObjectKey, new ByteArrayInputStream(new byte[1]), new ObjectMetadata());
         s3Operations.putObject(putObjectRequest, null);
@@ -2425,8 +2443,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
             }
             // Create a storage file entity.
             storageFileDaoTestHelper
-                .createStorageFileEntity(storageUnitEntity, String.format("%s%s/data.dat", s3KeyPrefix, subDirectory.toString()), FILE_SIZE_1_KB,
-                    ROW_COUNT_1000);
+                    .createStorageFileEntity(storageUnitEntity, String.format("%s%s/data.dat", s3KeyPrefix, subDirectory.toString()), FILE_SIZE_1_KB,
+                            ROW_COUNT_1000);
         }
     }
 
@@ -2577,8 +2595,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
         // Create an initial version of the business object format.
         BusinessObjectFormatCreateRequest request =
-            createBusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, FORMAT_DESCRIPTION,
-                attributes, getTestAttributeDefinitions(), getTestSchema());
+                createBusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, FORMAT_DESCRIPTION,
+                        attributes, getTestAttributeDefinitions(), getTestSchema());
 
         return businessObjectFormatService.createBusinessObjectFormat(request);
     }
@@ -2604,7 +2622,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         String businessObjectFormatFileType, String partitionKeyGroupName)
     {
         businessObjectDefinitionDaoTestHelper
-            .createBusinessObjectDefinitionEntity(namespaceCode, businessObjectDefinitionName, dataProviderName, BDEF_DESCRIPTION);
+                .createBusinessObjectDefinitionEntity(namespaceCode, businessObjectDefinitionName, dataProviderName, BDEF_DESCRIPTION);
         fileTypeDaoTestHelper.createFileTypeEntity(businessObjectFormatFileType, FORMAT_FILE_TYPE_DESCRIPTION);
         partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(partitionKeyGroupName);
     }
@@ -2630,9 +2648,11 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         List<Attribute> attributes)
     {
         // Create a persisted business object data entity.
-        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
-            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, subPartitionValues,
-                DATA_VERSION, true, BusinessObjectDataStatusEntity.VALID);
+        BusinessObjectDataEntity businessObjectDataEntity =
+                businessObjectDataDaoTestHelper
+                        .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                                subPartitionValues,
+                                DATA_VERSION, true, BusinessObjectDataStatusEntity.VALID);
 
         // If specified, add business object data attribute definitions to the business object format.
         if (!CollectionUtils.isEmpty(attributeDefinitions))
@@ -2640,8 +2660,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
             for (AttributeDefinition attributeDefinition : attributeDefinitions)
             {
                 businessObjectFormatDaoTestHelper
-                    .createBusinessObjectDataAttributeDefinitionEntity(businessObjectDataEntity.getBusinessObjectFormat(), attributeDefinition.getName(),
-                        attributeDefinition.isPublish());
+                        .createBusinessObjectDataAttributeDefinitionEntity(businessObjectDataEntity.getBusinessObjectFormat(), attributeDefinition.getName(),
+                                attributeDefinition.isPublish());
             }
         }
 
@@ -2651,7 +2671,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
             for (Attribute attribute : attributes)
             {
                 businessObjectDataAttributeDaoTestHelper
-                    .createBusinessObjectDataAttributeEntity(businessObjectDataEntity, attribute.getName(), attribute.getValue());
+                        .createBusinessObjectDataAttributeEntity(businessObjectDataEntity, attribute.getName(), attribute.getValue());
             }
         }
 
@@ -2661,7 +2681,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     protected UploadSingleInitiationRequest createUploadSingleInitiationRequest()
     {
         return createUploadSingleInitiationRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NAMESPACE, BDEF_NAME_2,
-            FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, FILE_NAME);
+                FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, FILE_NAME);
     }
 
     /**
@@ -2686,8 +2706,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         String targetBusinessObjectFormatFileType, Integer targetBusinessObjectFormatVersion)
     {
         return createUploadSingleInitiationRequest(sourceNamespaceCode, sourceBusinessObjectDefinitionName, sourceBusinessObjectFormatUsage,
-            sourceBusinessObjectFormatFileType, sourceBusinessObjectFormatVersion, targetNamespaceCode, targetBusinessObjectDefinitionName,
-            targetBusinessObjectFormatUsage, targetBusinessObjectFormatFileType, targetBusinessObjectFormatVersion, FILE_NAME);
+                sourceBusinessObjectFormatFileType, sourceBusinessObjectFormatVersion, targetNamespaceCode, targetBusinessObjectDefinitionName,
+                targetBusinessObjectFormatUsage, targetBusinessObjectFormatFileType, targetBusinessObjectFormatVersion, FILE_NAME);
     }
 
     /**
@@ -2715,11 +2735,11 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         UploadSingleInitiationRequest request = new UploadSingleInitiationRequest();
 
         request.setSourceBusinessObjectFormatKey(
-            new BusinessObjectFormatKey(sourceNamespaceCode, sourceBusinessObjectDefinitionName, sourceBusinessObjectFormatUsage,
-                sourceBusinessObjectFormatFileType, sourceBusinessObjectFormatVersion));
+                new BusinessObjectFormatKey(sourceNamespaceCode, sourceBusinessObjectDefinitionName, sourceBusinessObjectFormatUsage,
+                        sourceBusinessObjectFormatFileType, sourceBusinessObjectFormatVersion));
         request.setTargetBusinessObjectFormatKey(
-            new BusinessObjectFormatKey(targetNamespaceCode, targetBusinessObjectDefinitionName, targetBusinessObjectFormatUsage,
-                targetBusinessObjectFormatFileType, targetBusinessObjectFormatVersion));
+                new BusinessObjectFormatKey(targetNamespaceCode, targetBusinessObjectDefinitionName, targetBusinessObjectFormatUsage,
+                        targetBusinessObjectFormatFileType, targetBusinessObjectFormatVersion));
         request.setBusinessObjectDataAttributes(getNewAttributes());
         request.setFile(new File(fileName, FILE_SIZE_1_KB));
 
@@ -2745,13 +2765,13 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
         // Complete the upload.
         uploadDownloadService.performCompleteUploadSingleMessage(
-            resultUploadSingleInitiationResponse.getSourceBusinessObjectData().getStorageUnits().get(0).getStorageFiles().get(0).getFilePath());
+                resultUploadSingleInitiationResponse.getSourceBusinessObjectData().getStorageUnits().get(0).getStorageFiles().get(0).getFilePath());
 
         // Update the target business object data status to valid. Normally this would happen as part of the completion request, but since the status update
         // happens asynchronously, this will not happen within a unit test context which is why we are setting it explicitly.
         businessObjectDataDao.getBusinessObjectDataByAltKey(
-            businessObjectDataHelper.getBusinessObjectDataKey(resultUploadSingleInitiationResponse.getTargetBusinessObjectData()))
-            .setStatus(businessObjectDataStatusDao.getBusinessObjectDataStatusByCode(businessObjectDataStatusCode));
+                businessObjectDataHelper.getBusinessObjectDataKey(resultUploadSingleInitiationResponse.getTargetBusinessObjectData()))
+                .setStatus(businessObjectDataStatusDao.getBusinessObjectDataStatusByCode(businessObjectDataStatusCode));
         resultUploadSingleInitiationResponse.getTargetBusinessObjectData().setStatus(businessObjectDataStatusCode);
 
         // Return the initiate upload single response.
@@ -2826,7 +2846,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     protected String getBusinessObjectFormatExpectedDdl()
     {
         return getExpectedDdl(PARTITION_COLUMNS.length, FIRST_COLUMN_NAME, FIRST_COLUMN_DATA_TYPE, ROW_FORMAT, Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT,
-            FileTypeEntity.TXT_FILE_TYPE, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, null, null, false, true, true);
+                FileTypeEntity.TXT_FILE_TYPE, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, null, null, false, true, true);
     }
 
     /**
@@ -2856,7 +2876,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     {
         // Prepare a check availability collection response using hard coded test values.
         BusinessObjectDataAvailabilityCollectionResponse businessObjectDataAvailabilityCollectionResponse =
-            new BusinessObjectDataAvailabilityCollectionResponse();
+                new BusinessObjectDataAvailabilityCollectionResponse();
 
         // Create a list of check business object data availability responses.
         List<BusinessObjectDataAvailability> businessObjectDataAvailabilityResponses = new ArrayList<>();
@@ -2864,11 +2884,12 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
         // Create a business object data availability response.
         BusinessObjectDataAvailability businessObjectDataAvailability =
-            new BusinessObjectDataAvailability(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
-                new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                    NO_LATEST_AFTER_PARTITION_VALUE)), null, DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME, Arrays
-                .asList(new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID)),
-                new ArrayList<BusinessObjectDataStatus>());
+                new BusinessObjectDataAvailability(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
+                        new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
+                                NO_LATEST_AFTER_PARTITION_VALUE)), null, DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME, Arrays
+                        .asList(new BusinessObjectDataStatus(FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION,
+                                BusinessObjectDataStatusEntity.VALID)),
+                        new ArrayList<BusinessObjectDataStatus>());
         businessObjectDataAvailabilityResponses.add(businessObjectDataAvailability);
 
         // Set the expected values for the flags.
@@ -2897,10 +2918,11 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
         // Create a business object data ddl response.
         BusinessObjectDataDdl expectedBusinessObjectDataDdl =
-            new BusinessObjectDataDdl(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION, Arrays.asList(
-                new PartitionValueFilter(FIRST_PARTITION_COLUMN_NAME, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE,
-                    NO_LATEST_BEFORE_PARTITION_VALUE, NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, DATA_VERSION, NO_STORAGE_NAMES,
-                STORAGE_NAME, BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, TABLE_NAME, NO_CUSTOM_DDL_NAME, expectedDdl);
+                new BusinessObjectDataDdl(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION, Arrays.asList(
+                        new PartitionValueFilter(FIRST_PARTITION_COLUMN_NAME, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE,
+                                NO_LATEST_BEFORE_PARTITION_VALUE, NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, DATA_VERSION,
+                        NO_STORAGE_NAMES,
+                        STORAGE_NAME, BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, TABLE_NAME, NO_CUSTOM_DDL_NAME, expectedDdl);
 
         // Add two business object ddl responses to the collection response.
         businessObjectDataDdlResponses.add(expectedBusinessObjectDataDdl);
@@ -2922,9 +2944,10 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     protected String getExpectedBusinessObjectDataKeyAsString(BusinessObjectDataKey businessObjectDataKey)
     {
         return getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey.getNamespace(), businessObjectDataKey.getBusinessObjectDefinitionName(),
-            businessObjectDataKey.getBusinessObjectFormatUsage(), businessObjectDataKey.getBusinessObjectFormatFileType(),
-            businessObjectDataKey.getBusinessObjectFormatVersion(), businessObjectDataKey.getPartitionValue(), businessObjectDataKey.getSubPartitionValues(),
-            businessObjectDataKey.getBusinessObjectDataVersion());
+                businessObjectDataKey.getBusinessObjectFormatUsage(), businessObjectDataKey.getBusinessObjectFormatFileType(),
+                businessObjectDataKey.getBusinessObjectFormatVersion(), businessObjectDataKey.getPartitionValue(), businessObjectDataKey
+                        .getSubPartitionValues(),
+                businessObjectDataKey.getBusinessObjectDataVersion());
     }
 
     /**
@@ -2946,10 +2969,11 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         Integer businessObjectDataVersion)
     {
         return String.format("namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", " +
-            "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d, businessObjectDataPartitionValue: \"%s\", " +
-            "businessObjectDataSubPartitionValues: \"%s\", businessObjectDataVersion: %d", namespaceCode, businessObjectDefinitionName,
-            businessObjectFormatUsage, businessObjectFormatFileType, businessObjectFormatVersion, partitionValue,
-            CollectionUtils.isEmpty(subPartitionValues) ? "" : org.apache.commons.lang3.StringUtils.join(subPartitionValues, ","), businessObjectDataVersion);
+                "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d, businessObjectDataPartitionValue: \"%s\", " +
+                "businessObjectDataSubPartitionValues: \"%s\", businessObjectDataVersion: %d", namespaceCode, businessObjectDefinitionName,
+                businessObjectFormatUsage, businessObjectFormatFileType, businessObjectFormatVersion, partitionValue,
+                CollectionUtils.isEmpty(subPartitionValues) ? "" : org.apache.commons.lang3.StringUtils.join(subPartitionValues, ","),
+                businessObjectDataVersion);
     }
 
     /**
@@ -2963,7 +2987,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     protected String getExpectedBusinessObjectDataNotFoundErrorMessage(BusinessObjectDataKey businessObjectDataKey, String businessObjectDataStatus)
     {
         return String.format("Business object data {%s, businessObjectDataStatus: \"%s\"} doesn't exist.",
-            getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey), businessObjectDataStatus);
+                getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey), businessObjectDataStatus);
     }
 
     /**
@@ -2986,12 +3010,13 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         List<String> subPartitionValues, Integer businessObjectDataVersion, String businessObjectDataStatus)
     {
         return getExpectedBusinessObjectDataNotFoundErrorMessage(
-            new BusinessObjectDataKey(namespaceCode, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
-                businessObjectFormatVersion, partitionValue, subPartitionValues, businessObjectDataVersion), businessObjectDataStatus);
+                new BusinessObjectDataKey(namespaceCode, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
+                        businessObjectFormatVersion, partitionValue, subPartitionValues, businessObjectDataVersion), businessObjectDataStatus);
     }
 
     /**
-     * Returns a list of test business object data notification registration keys expected to be returned by getBusinessObjectDataNotificationRegistrationsByNamespace()
+     * Returns a list of test business object data notification registration keys expected to be returned by
+     * getBusinessObjectDataNotificationRegistrationsByNamespace()
      * method.
      *
      * @return the list of expected business object data notification registration keys
@@ -3016,7 +3041,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     protected String getExpectedBusinessObjectDefinitionKeyAsString(BusinessObjectDefinitionKey businessObjectDefinitionKey)
     {
         return getExpectedBusinessObjectDefinitionKeyAsString(businessObjectDefinitionKey.getNamespace(),
-            businessObjectDefinitionKey.getBusinessObjectDefinitionName());
+                businessObjectDefinitionKey.getBusinessObjectDefinitionName());
     }
 
     /**
@@ -3064,8 +3089,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
         // Create a business object data ddl response.
         BusinessObjectFormatDdl expectedBusinessObjectFormatDdl =
-            new BusinessObjectFormatDdl(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION,
-                BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, TABLE_NAME, NO_CUSTOM_DDL_NAME, expectedDdl);
+                new BusinessObjectFormatDdl(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION,
+                        BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, TABLE_NAME, NO_CUSTOM_DDL_NAME, expectedDdl);
 
         // Add two business object ddl responses to the collection response.
         businessObjectFormatDdlResponses.add(expectedBusinessObjectFormatDdl);
@@ -3092,8 +3117,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         String businessObjectFormatFileType, Integer businessObjectFormatVersion)
     {
         return String.format("namespace: \"%s\", businessObjectDefinitionName: \"%s\", businessObjectFormatUsage: \"%s\", " +
-            "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d", namespaceCode, businessObjectDefinitionName, businessObjectFormatUsage,
-            businessObjectFormatFileType, businessObjectFormatVersion);
+                "businessObjectFormatFileType: \"%s\", businessObjectFormatVersion: %d", namespaceCode, businessObjectDefinitionName,
+                businessObjectFormatUsage,
+                businessObjectFormatFileType, businessObjectFormatVersion);
     }
 
     /**
@@ -3111,8 +3137,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         String businessObjectFormatUsage, String businessObjectFormatFileType, Integer businessObjectFormatVersion)
     {
         return String.format("Business object format with namespace \"%s\", business object definition name \"%s\"," +
-            " format usage \"%s\", format file type \"%s\", and format version \"%d\" doesn't exist.", namespaceCode, businessObjectDefinitionName,
-            businessObjectFormatUsage, businessObjectFormatFileType, businessObjectFormatVersion);
+                " format usage \"%s\", format file type \"%s\", and format version \"%d\" doesn't exist.", namespaceCode, businessObjectDefinitionName,
+                businessObjectFormatUsage, businessObjectFormatFileType, businessObjectFormatVersion);
     }
 
     /**
@@ -3123,8 +3149,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     protected String getExpectedDdl()
     {
         return getExpectedDdl(PARTITION_COLUMNS.length, FIRST_COLUMN_NAME, FIRST_COLUMN_DATA_TYPE, ROW_FORMAT, Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT,
-            FileTypeEntity.TXT_FILE_TYPE, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, STORAGE_1_AVAILABLE_PARTITION_VALUES, SUBPARTITION_VALUES,
-            false, true, true);
+                FileTypeEntity.TXT_FILE_TYPE, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, STORAGE_1_AVAILABLE_PARTITION_VALUES,
+                SUBPARTITION_VALUES,
+                false, true, true);
     }
 
     /**
@@ -3137,8 +3164,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         boolean replaceUnderscoresWithHyphens, boolean isDropStatementIncluded, boolean isIfNotExistsOptionIncluded)
     {
         return getExpectedDdl(partitionLevels, firstColumnName, firstColumnDataType, hiveRowFormat, hiveFileFormat, businessObjectFormatFileType,
-            partitionColumnPosition, partitionValues, subPartitionValues, replaceUnderscoresWithHyphens, isDropStatementIncluded, isIfNotExistsOptionIncluded,
-            NO_INCLUDE_DROP_PARTITIONS);
+                partitionColumnPosition, partitionValues, subPartitionValues, replaceUnderscoresWithHyphens, isDropStatementIncluded,
+                isIfNotExistsOptionIncluded,
+                NO_INCLUDE_DROP_PARTITIONS);
     }
 
     /**
@@ -3154,7 +3182,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
      * @param partitionValues the list of partition values
      * @param subPartitionValues the list of subpartition values
      * @param replaceUnderscoresWithHyphens specifies if we need to replace underscores with hyphens in subpartition key values when building subpartition
-     * location path
+     *            location path
      * @param isDropStatementIncluded specifies if expected DDL should include a drop table statement
      * @param isDropPartitionsStatementsIncluded specifies if expected DDL should include the relative drop partition statements
      *
@@ -3198,7 +3226,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
             {
                 // Multiple level partitioning.
                 sb.append("PARTITIONED BY (`PRTN_CLMN001` DATE, `PRTN_CLMN002` STRING, `PRTN_CLMN003` INT, `PRTN_CLMN004` DECIMAL, " +
-                    "`PRTN_CLMN005` BOOLEAN, `PRTN_CLMN006` DECIMAL, `PRTN_CLMN007` DECIMAL)\n");
+                        "`PRTN_CLMN005` BOOLEAN, `PRTN_CLMN006` DECIMAL, `PRTN_CLMN007` DECIMAL)\n");
             }
             else
             {
@@ -3223,7 +3251,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
                     for (String partitionValue : partitionValues)
                     {
                         sb.append(String
-                            .format("ALTER TABLE `[Table Name]` DROP IF EXISTS PARTITION (`PRTN_CLMN00%d`='%s');\n", partitionColumnPosition, partitionValue));
+                                .format("ALTER TABLE `[Table Name]` DROP IF EXISTS PARTITION (`PRTN_CLMN00%d`='%s');\n", partitionColumnPosition,
+                                        partitionValue));
                     }
                 }
 
@@ -3235,7 +3264,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
                     {
                         // Adjust expected partition values based on the partition column position.
                         String testPrimaryPartitionValue =
-                            partitionColumnPosition == BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION ? partitionValue : PARTITION_VALUE;
+                                partitionColumnPosition == BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION ? partitionValue : PARTITION_VALUE;
                         List<String> testSubPartitionValues = new ArrayList<>(subPartitionValues);
                         if (partitionColumnPosition > BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION)
                         {
@@ -3247,13 +3276,13 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
                         {
                             // No auto-discovery.
                             sb.append(String.format("ALTER TABLE `[Table Name]` ADD [If Not Exists]PARTITION (`PRTN_CLMN001`='%s', `PRTN_CLMN002`='%s', " +
-                                "`PRTN_CLMN003`='%s', `PRTN_CLMN004`='%s', `PRTN_CLMN005`='%s') " +
-                                "LOCATION 's3n://%s/ut-namespace-1-[Random Suffix]/ut-dataprovider-1-[Random Suffix]/ut-usage[Random Suffix]" +
-                                "/[Format File Type]/ut-businessobjectdefinition-name-1-[Random Suffix]/schm-v[Format Version]" +
-                                "/data-v[Data Version]/prtn-clmn001=%s/prtn-clmn002=%s/prtn-clmn003=%s/prtn-clmn004=%s/prtn-clmn005=%s';\n",
-                                testPrimaryPartitionValue, testSubPartitionValues.get(0), testSubPartitionValues.get(1), testSubPartitionValues.get(2),
-                                testSubPartitionValues.get(3), getExpectedS3BucketName(partitionValue), testPrimaryPartitionValue,
-                                testSubPartitionValues.get(0), testSubPartitionValues.get(1), testSubPartitionValues.get(2), testSubPartitionValues.get(3)));
+                                    "`PRTN_CLMN003`='%s', `PRTN_CLMN004`='%s', `PRTN_CLMN005`='%s') " +
+                                    "LOCATION 's3n://%s/ut-namespace-1-[Random Suffix]/ut-dataprovider-1-[Random Suffix]/ut-usage[Random Suffix]" +
+                                    "/[Format File Type]/ut-businessobjectdefinition-name-1-[Random Suffix]/schm-v[Format Version]" +
+                                    "/data-v[Data Version]/prtn-clmn001=%s/prtn-clmn002=%s/prtn-clmn003=%s/prtn-clmn004=%s/prtn-clmn005=%s';\n",
+                                    testPrimaryPartitionValue, testSubPartitionValues.get(0), testSubPartitionValues.get(1), testSubPartitionValues.get(2),
+                                    testSubPartitionValues.get(3), getExpectedS3BucketName(partitionValue), testPrimaryPartitionValue,
+                                    testSubPartitionValues.get(0), testSubPartitionValues.get(1), testSubPartitionValues.get(2), testSubPartitionValues.get(3)));
                         }
                         else
                         {
@@ -3261,16 +3290,17 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
                             for (String binaryString : Arrays.asList("00", "01", "10", "11"))
                             {
                                 sb.append(String.format("ALTER TABLE `[Table Name]` ADD [If Not Exists]PARTITION (`PRTN_CLMN001`='%s', `PRTN_CLMN002`='%s', " +
-                                    "`PRTN_CLMN003`='%s', `PRTN_CLMN004`='%s', `PRTN_CLMN005`='%s', `PRTN_CLMN006`='%s', `PRTN_CLMN007`='%s') " +
-                                    "LOCATION 's3n://%s/ut-namespace-1-[Random Suffix]/ut-dataprovider-1-[Random Suffix]/ut-usage[Random Suffix]" +
-                                    "/[Format File Type]/ut-businessobjectdefinition-name-1-[Random Suffix]/schm-v[Format Version]" +
-                                    "/data-v[Data Version]/prtn-clmn001=%s/prtn-clmn002=%s/prtn-clmn003=%s/prtn-clmn004=%s/prtn-clmn005=%s/" +
-                                    (replaceUnderscoresWithHyphens ? "prtn-clmn006" : "prtn_clmn006") + "=%s/" +
-                                    (replaceUnderscoresWithHyphens ? "prtn-clmn007" : "prtn_clmn007") + "=%s';\n", testPrimaryPartitionValue,
-                                    testSubPartitionValues.get(0), testSubPartitionValues.get(1), testSubPartitionValues.get(2), testSubPartitionValues.get(3),
-                                    binaryString.substring(0, 1), binaryString.substring(1, 2), getExpectedS3BucketName(partitionValue),
-                                    testPrimaryPartitionValue, testSubPartitionValues.get(0), testSubPartitionValues.get(1), testSubPartitionValues.get(2),
-                                    testSubPartitionValues.get(3), binaryString.substring(0, 1), binaryString.substring(1, 2)));
+                                        "`PRTN_CLMN003`='%s', `PRTN_CLMN004`='%s', `PRTN_CLMN005`='%s', `PRTN_CLMN006`='%s', `PRTN_CLMN007`='%s') " +
+                                        "LOCATION 's3n://%s/ut-namespace-1-[Random Suffix]/ut-dataprovider-1-[Random Suffix]/ut-usage[Random Suffix]" +
+                                        "/[Format File Type]/ut-businessobjectdefinition-name-1-[Random Suffix]/schm-v[Format Version]" +
+                                        "/data-v[Data Version]/prtn-clmn001=%s/prtn-clmn002=%s/prtn-clmn003=%s/prtn-clmn004=%s/prtn-clmn005=%s/" +
+                                        (replaceUnderscoresWithHyphens ? "prtn-clmn006" : "prtn_clmn006") + "=%s/" +
+                                        (replaceUnderscoresWithHyphens ? "prtn-clmn007" : "prtn_clmn007") + "=%s';\n", testPrimaryPartitionValue,
+                                        testSubPartitionValues.get(0), testSubPartitionValues.get(1), testSubPartitionValues.get(2), testSubPartitionValues
+                                                .get(3),
+                                        binaryString.substring(0, 1), binaryString.substring(1, 2), getExpectedS3BucketName(partitionValue),
+                                        testPrimaryPartitionValue, testSubPartitionValues.get(0), testSubPartitionValues.get(1), testSubPartitionValues.get(2),
+                                        testSubPartitionValues.get(3), binaryString.substring(0, 1), binaryString.substring(1, 2)));
                             }
                         }
                     }
@@ -3278,9 +3308,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
                     {
                         // Single level partitioning.
                         sb.append(String.format("ALTER TABLE `[Table Name]` ADD [If Not Exists]PARTITION (`PRTN_CLMN001`='%s') " +
-                            "LOCATION 's3n://%s/ut-namespace-1-[Random Suffix]/ut-dataprovider-1-[Random Suffix]/ut-usage[Random Suffix]" +
-                            "/[Format File Type]/ut-businessobjectdefinition-name-1-[Random Suffix]/schm-v[Format Version]" +
-                            "/data-v[Data Version]/prtn-clmn001=%s';\n", partitionValue, getExpectedS3BucketName(partitionValue), partitionValue));
+                                "LOCATION 's3n://%s/ut-namespace-1-[Random Suffix]/ut-dataprovider-1-[Random Suffix]/ut-usage[Random Suffix]" +
+                                "/[Format File Type]/ut-businessobjectdefinition-name-1-[Random Suffix]/schm-v[Format Version]" +
+                                "/data-v[Data Version]/prtn-clmn001=%s';\n", partitionValue, getExpectedS3BucketName(partitionValue), partitionValue));
                     }
                 }
             }
@@ -3289,8 +3319,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         {
             // Add a location statement since the table is not partitioned and we have a non-empty list of partition values.
             sb.append(String.format("LOCATION 's3n://%s/ut-namespace-1-[Random Suffix]/ut-dataprovider-1-[Random Suffix]/ut-usage[Random Suffix]" +
-                "/txt/ut-businessobjectdefinition-name-1-[Random Suffix]/schm-v[Format Version]/data-v[Data Version]/partition=none';",
-                getExpectedS3BucketName(Hive13DdlGenerator.NO_PARTITIONING_PARTITION_VALUE)));
+                    "/txt/ut-businessobjectdefinition-name-1-[Random Suffix]/schm-v[Format Version]/data-v[Data Version]/partition=none';",
+                    getExpectedS3BucketName(Hive13DdlGenerator.NO_PARTITIONING_PARTITION_VALUE)));
         }
         else
         {
@@ -3361,13 +3391,13 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
             // Build an expected S3 key prefix.
             String expectedS3KeyPrefix =
-                getExpectedS3KeyPrefix(NAMESPACE, DATA_PROVIDER_NAME, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION,
-                    FIRST_PARTITION_COLUMN_NAME, partitionValue, null, null, DATA_VERSION);
+                    getExpectedS3KeyPrefix(NAMESPACE, DATA_PROVIDER_NAME, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION,
+                            FIRST_PARTITION_COLUMN_NAME, partitionValue, null, null, DATA_VERSION);
 
             // Add the alter table add partition statement.
             ddlBuilder.append("\n\n");
             ddlBuilder.append("ALTER TABLE `" + TABLE_NAME + "` ADD IF NOT EXISTS PARTITION (`" + FIRST_PARTITION_COLUMN_NAME + "`='" + partitionValue +
-                "') LOCATION 's3n://" + S3_BUCKET_NAME + "/" + expectedS3KeyPrefix + "';");
+                    "') LOCATION 's3n://" + S3_BUCKET_NAME + "/" + expectedS3KeyPrefix + "';");
         }
 
         String expectedDdl = ddlBuilder.toString();
@@ -3399,22 +3429,24 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         // Add the alter table drop partition statement.
         ddlBuilder.append("\n\n");
         ddlBuilder
-            .append("ALTER TABLE `" + TABLE_NAME + "` DROP IF EXISTS PARTITION (`" + FIRST_PARTITION_COLUMN_NAME + "`='" + partitions.get(0).get(0) + "');");
+                .append("ALTER TABLE `" + TABLE_NAME + "` DROP IF EXISTS PARTITION (`" + FIRST_PARTITION_COLUMN_NAME + "`='" + partitions.get(0).get(0) + "');");
         ddlBuilder.append("\n");
 
         for (List<String> partition : partitions)
         {
             // Build an expected S3 key prefix.
             String expectedS3KeyPrefix =
-                getExpectedS3KeyPrefix(NAMESPACE, DATA_PROVIDER_NAME, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION,
-                    FIRST_PARTITION_COLUMN_NAME, partition.get(0), Arrays.asList(
-                    new SchemaColumn(SECOND_PARTITION_COLUMN_NAME, "STRING", NO_COLUMN_SIZE, COLUMN_REQUIRED, NO_COLUMN_DEFAULT_VALUE, NO_COLUMN_DESCRIPTION))
-                    .toArray(new SchemaColumn[1]), Arrays.asList(partition.get(1)).toArray(new String[1]), DATA_VERSION);
+                    getExpectedS3KeyPrefix(NAMESPACE, DATA_PROVIDER_NAME, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION,
+                            FIRST_PARTITION_COLUMN_NAME, partition.get(0), Arrays.asList(
+                                    new SchemaColumn(SECOND_PARTITION_COLUMN_NAME, "STRING", NO_COLUMN_SIZE, COLUMN_REQUIRED, NO_COLUMN_DEFAULT_VALUE,
+                                            NO_COLUMN_DESCRIPTION))
+                                    .toArray(new SchemaColumn[1]), Arrays.asList(partition.get(1)).toArray(new String[1]), DATA_VERSION);
 
             // Add the alter table add partition statement.
             ddlBuilder.append("\n");
             ddlBuilder.append("ALTER TABLE `" + TABLE_NAME + "` ADD IF NOT EXISTS PARTITION (`" + FIRST_PARTITION_COLUMN_NAME + "`='" + partition.get(0) +
-                "', `" + SECOND_PARTITION_COLUMN_NAME + "`='" + partition.get(1) + "') LOCATION 's3n://" + S3_BUCKET_NAME + "/" + expectedS3KeyPrefix + "';");
+                    "', `" + SECOND_PARTITION_COLUMN_NAME + "`='" + partition.get(1) + "') LOCATION 's3n://" + S3_BUCKET_NAME + "/" + expectedS3KeyPrefix
+                    + "';");
         }
 
         String expectedDdl = ddlBuilder.toString();
@@ -3456,10 +3488,10 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         String[] subPartitionValues, Integer businessObjectDataVersion)
     {
         StringBuilder s3KeyPrefix = new StringBuilder(String
-            .format("%s/%s/%s/%s/%s/schm-v%d/data-v%d/%s=%s", namespaceCd.trim().toLowerCase().replace('_', '-'),
-                dataProviderName.trim().toLowerCase().replace('_', '-'), formatUsage.trim().toLowerCase().replace('_', '-'),
-                formatFileType.trim().toLowerCase().replace('_', '-'), businessObjectDefinitionName.trim().toLowerCase().replace('_', '-'),
-                businessObjectFormatVersion, businessObjectDataVersion, partitionKey.trim().toLowerCase().replace('_', '-'), partitionValue.trim()));
+                .format("%s/%s/%s/%s/%s/schm-v%d/data-v%d/%s=%s", namespaceCd.trim().toLowerCase().replace('_', '-'),
+                        dataProviderName.trim().toLowerCase().replace('_', '-'), formatUsage.trim().toLowerCase().replace('_', '-'),
+                        formatFileType.trim().toLowerCase().replace('_', '-'), businessObjectDefinitionName.trim().toLowerCase().replace('_', '-'),
+                        businessObjectFormatVersion, businessObjectDataVersion, partitionKey.trim().toLowerCase().replace('_', '-'), partitionValue.trim()));
 
         if (subPartitionKeys != null)
         {
@@ -3483,7 +3515,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     protected String getExpectedStoragePolicyKeyAndVersionAsString(StoragePolicyKey storagePolicyKey, Integer storagePolicyVersion)
     {
         return String.format("namespace: \"%s\", storagePolicyName: \"%s\", storagePolicyVersion: \"%d\"", storagePolicyKey.getNamespace(),
-            storagePolicyKey.getStoragePolicyName(), storagePolicyVersion);
+                storagePolicyKey.getStoragePolicyName(), storagePolicyVersion);
     }
 
     /**
@@ -3493,29 +3525,29 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     protected List<PartitionValueFilter> getInvalidPartitionValueFilters()
     {
         return Arrays.asList(new PartitionValueFilter(PARTITION_KEY, NO_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-            NO_LATEST_AFTER_PARTITION_VALUE),
-            new PartitionValueFilter(PARTITION_KEY, NO_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE, new LatestBeforePartitionValue(),
-                new LatestAfterPartitionValue()),
-            new PartitionValueFilter(PARTITION_KEY, NO_PARTITION_VALUES, new PartitionValueRange(START_PARTITION_VALUE, END_PARTITION_VALUE),
-                NO_LATEST_BEFORE_PARTITION_VALUE, new LatestAfterPartitionValue()),
-            new PartitionValueFilter(PARTITION_KEY, NO_PARTITION_VALUES, new PartitionValueRange(START_PARTITION_VALUE, END_PARTITION_VALUE),
-                new LatestBeforePartitionValue(), NO_LATEST_AFTER_PARTITION_VALUE),
-            new PartitionValueFilter(PARTITION_KEY, NO_PARTITION_VALUES, new PartitionValueRange(START_PARTITION_VALUE, END_PARTITION_VALUE),
-                new LatestBeforePartitionValue(), new LatestAfterPartitionValue()),
-            new PartitionValueFilter(PARTITION_KEY, UNSORTED_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                new LatestAfterPartitionValue()),
-            new PartitionValueFilter(PARTITION_KEY, UNSORTED_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE, new LatestBeforePartitionValue(),
                 NO_LATEST_AFTER_PARTITION_VALUE),
-            new PartitionValueFilter(PARTITION_KEY, UNSORTED_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE, new LatestBeforePartitionValue(),
-                new LatestAfterPartitionValue()),
-            new PartitionValueFilter(PARTITION_KEY, UNSORTED_PARTITION_VALUES, new PartitionValueRange(START_PARTITION_VALUE, END_PARTITION_VALUE),
-                NO_LATEST_BEFORE_PARTITION_VALUE, NO_LATEST_AFTER_PARTITION_VALUE),
-            new PartitionValueFilter(PARTITION_KEY, UNSORTED_PARTITION_VALUES, new PartitionValueRange(START_PARTITION_VALUE, END_PARTITION_VALUE),
-                NO_LATEST_BEFORE_PARTITION_VALUE, new LatestAfterPartitionValue()),
-            new PartitionValueFilter(PARTITION_KEY, UNSORTED_PARTITION_VALUES, new PartitionValueRange(START_PARTITION_VALUE, END_PARTITION_VALUE),
-                new LatestBeforePartitionValue(), NO_LATEST_AFTER_PARTITION_VALUE),
-            new PartitionValueFilter(PARTITION_KEY, UNSORTED_PARTITION_VALUES, new PartitionValueRange(START_PARTITION_VALUE, END_PARTITION_VALUE),
-                new LatestBeforePartitionValue(), new LatestAfterPartitionValue()));
+                new PartitionValueFilter(PARTITION_KEY, NO_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE, new LatestBeforePartitionValue(),
+                        new LatestAfterPartitionValue()),
+                new PartitionValueFilter(PARTITION_KEY, NO_PARTITION_VALUES, new PartitionValueRange(START_PARTITION_VALUE, END_PARTITION_VALUE),
+                        NO_LATEST_BEFORE_PARTITION_VALUE, new LatestAfterPartitionValue()),
+                new PartitionValueFilter(PARTITION_KEY, NO_PARTITION_VALUES, new PartitionValueRange(START_PARTITION_VALUE, END_PARTITION_VALUE),
+                        new LatestBeforePartitionValue(), NO_LATEST_AFTER_PARTITION_VALUE),
+                new PartitionValueFilter(PARTITION_KEY, NO_PARTITION_VALUES, new PartitionValueRange(START_PARTITION_VALUE, END_PARTITION_VALUE),
+                        new LatestBeforePartitionValue(), new LatestAfterPartitionValue()),
+                new PartitionValueFilter(PARTITION_KEY, UNSORTED_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
+                        new LatestAfterPartitionValue()),
+                new PartitionValueFilter(PARTITION_KEY, UNSORTED_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE, new LatestBeforePartitionValue(),
+                        NO_LATEST_AFTER_PARTITION_VALUE),
+                new PartitionValueFilter(PARTITION_KEY, UNSORTED_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE, new LatestBeforePartitionValue(),
+                        new LatestAfterPartitionValue()),
+                new PartitionValueFilter(PARTITION_KEY, UNSORTED_PARTITION_VALUES, new PartitionValueRange(START_PARTITION_VALUE, END_PARTITION_VALUE),
+                        NO_LATEST_BEFORE_PARTITION_VALUE, NO_LATEST_AFTER_PARTITION_VALUE),
+                new PartitionValueFilter(PARTITION_KEY, UNSORTED_PARTITION_VALUES, new PartitionValueRange(START_PARTITION_VALUE, END_PARTITION_VALUE),
+                        NO_LATEST_BEFORE_PARTITION_VALUE, new LatestAfterPartitionValue()),
+                new PartitionValueFilter(PARTITION_KEY, UNSORTED_PARTITION_VALUES, new PartitionValueRange(START_PARTITION_VALUE, END_PARTITION_VALUE),
+                        new LatestBeforePartitionValue(), NO_LATEST_AFTER_PARTITION_VALUE),
+                new PartitionValueFilter(PARTITION_KEY, UNSORTED_PARTITION_VALUES, new PartitionValueRange(START_PARTITION_VALUE, END_PARTITION_VALUE),
+                        new LatestBeforePartitionValue(), new LatestAfterPartitionValue()));
     }
 
     /**
@@ -3639,7 +3671,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
             BusinessObjectDataKey businessObjectDataKey = new BusinessObjectDataKey();
             businessObjectDataKey.setNamespace(parentBusinessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectDefinition().getNamespace().getCode());
             businessObjectDataKey
-                .setBusinessObjectDefinitionName(parentBusinessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectDefinition().getName());
+                    .setBusinessObjectDefinitionName(parentBusinessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectDefinition().getName());
             businessObjectDataKey.setBusinessObjectFormatUsage(parentBusinessObjectDataEntity.getBusinessObjectFormat().getUsage());
             businessObjectDataKey.setBusinessObjectFormatFileType(parentBusinessObjectDataEntity.getBusinessObjectFormat().getFileType().getCode());
             businessObjectDataKey.setBusinessObjectFormatVersion(parentBusinessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectFormatVersion());
@@ -3658,9 +3690,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         // Crete a test business object format (and associated data).
         BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper.createBusinessObjectFormatEntity(false);
         BusinessObjectDataStatusEntity businessObjectDataStatusEntity =
-            businessObjectDataStatusDaoTestHelper.createBusinessObjectDataStatusEntity(BDATA_STATUS, DESCRIPTION, BDATA_STATUS_PRE_REGISTRATION_FLAG_SET);
+                businessObjectDataStatusDaoTestHelper.createBusinessObjectDataStatusEntity(BDATA_STATUS, DESCRIPTION, BDATA_STATUS_PRE_REGISTRATION_FLAG_SET);
         BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
-            .createBusinessObjectDataEntity(businessObjectFormatEntity, PARTITION_VALUE, DATA_VERSION, true, businessObjectDataStatusEntity.getCode());
+                .createBusinessObjectDataEntity(businessObjectFormatEntity, PARTITION_VALUE, DATA_VERSION, true, businessObjectDataStatusEntity.getCode());
         StorageEntity storageEntity = storageDaoTestHelper.createStorageEntity();
         storageUnitDaoTestHelper.createStorageUnitEntity(storageEntity, businessObjectDataEntity, StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
 
@@ -3732,9 +3764,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
         // Create a business object data availability request.
         BusinessObjectDataAvailabilityRequest businessObjectDataAvailabilityRequest =
-            new BusinessObjectDataAvailabilityRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
-                new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
-                    NO_LATEST_AFTER_PARTITION_VALUE)), null, DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME, NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS);
+                new BusinessObjectDataAvailabilityRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, Arrays.asList(
+                        new PartitionValueFilter(PARTITION_KEY, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
+                                NO_LATEST_AFTER_PARTITION_VALUE)), null, DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME, NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS);
         businessObjectDataAvailabilityRequests.add(businessObjectDataAvailabilityRequest);
 
         return businessObjectDataAvailabilityCollectionRequest;
@@ -3839,11 +3871,12 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
         // Create a generate business object data ddl request.
         BusinessObjectDataDdlRequest businessObjectDataDdlRequest =
-            new BusinessObjectDataDdlRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION, Arrays.asList(
-                new PartitionValueFilter(FIRST_PARTITION_COLUMN_NAME, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE,
-                    NO_LATEST_BEFORE_PARTITION_VALUE, NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, DATA_VERSION, NO_STORAGE_NAMES,
-                STORAGE_NAME, BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, TABLE_NAME, NO_CUSTOM_DDL_NAME, INCLUDE_DROP_TABLE_STATEMENT,
-                INCLUDE_IF_NOT_EXISTS_OPTION, INCLUDE_DROP_PARTITIONS, NO_ALLOW_MISSING_DATA, NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS);
+                new BusinessObjectDataDdlRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION, Arrays.asList(
+                        new PartitionValueFilter(FIRST_PARTITION_COLUMN_NAME, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE,
+                                NO_LATEST_BEFORE_PARTITION_VALUE, NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, DATA_VERSION,
+                        NO_STORAGE_NAMES,
+                        STORAGE_NAME, BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, TABLE_NAME, NO_CUSTOM_DDL_NAME, INCLUDE_DROP_TABLE_STATEMENT,
+                        INCLUDE_IF_NOT_EXISTS_OPTION, INCLUDE_DROP_PARTITIONS, NO_ALLOW_MISSING_DATA, NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS);
 
         // Add two business object ddl requests to the collection request.
         businessObjectDataDdlRequests.add(businessObjectDataDdlRequest);
@@ -4062,9 +4095,10 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
         // Create a generate business object format ddl request.
         BusinessObjectFormatDdlRequest businessObjectFormatDdlRequest =
-            new BusinessObjectFormatDdlRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION,
-                BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, TABLE_NAME, NO_CUSTOM_DDL_NAME, INCLUDE_DROP_TABLE_STATEMENT, INCLUDE_IF_NOT_EXISTS_OPTION,
-                null);
+                new BusinessObjectFormatDdlRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION,
+                        BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, TABLE_NAME, NO_CUSTOM_DDL_NAME, INCLUDE_DROP_TABLE_STATEMENT,
+                        INCLUDE_IF_NOT_EXISTS_OPTION,
+                        null);
 
         // Add two business object ddl requests to the collection request.
         businessObjectFormatDdlRequests.add(businessObjectFormatDdlRequest);
@@ -4134,7 +4168,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         if (partitioned)
         {
             sb.append("PARTITIONED BY (`PRTN_CLMN001` DATE, `PRTN_CLMN002` STRING, `PRTN_CLMN003` INT, `PRTN_CLMN004` DECIMAL, " +
-                "`PRTN_CLMN005` BOOLEAN, `PRTN_CLMN006` DECIMAL, `PRTN_CLMN007` DECIMAL)\n");
+                    "`PRTN_CLMN005` BOOLEAN, `PRTN_CLMN006` DECIMAL, `PRTN_CLMN007` DECIMAL)\n");
         }
 
         sb.append("ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' ESCAPED BY '\\\\' NULL DEFINED AS '\\N'\n");
@@ -4243,7 +4277,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     {
         StringBuilder builder = new StringBuilder();
         builder.append("<datamgt:monitor xmlns:datamgt=\"http://testDomain/system-monitor\" " + "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" " +
-            "xsi:schemaLocation=\"http://testDomain/system-monitor.xsd\">\n");
+                "xsi:schemaLocation=\"http://testDomain/system-monitor.xsd\">\n");
         builder.append("   <header>\n");
         builder.append("      <producer>\n");
         builder.append("         <name>testName</name>\n");
@@ -4383,35 +4417,36 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
      * @param expectedLatestVersion the expected business
      * @param actualBusinessObjectData the business object data availability object instance to be validated
      */
-    protected void validateBusinessObjectData(BusinessObjectDataCreateRequest request, Integer expectedBusinessObjectDataVersion, Boolean expectedLatestVersion,
+    protected void validateBusinessObjectData(BusinessObjectDataCreateRequest request, Integer expectedBusinessObjectDataVersion,
+        Boolean expectedLatestVersion,
         BusinessObjectData actualBusinessObjectData)
     {
         BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDao.getBusinessObjectFormatByAltKey(
-            new BusinessObjectFormatKey(org.apache.commons.lang3.StringUtils.isNotBlank(request.getNamespace()) ? request.getNamespace() : NAMESPACE,
-                request.getBusinessObjectDefinitionName(), request.getBusinessObjectFormatUsage(), request.getBusinessObjectFormatFileType(),
-                request.getBusinessObjectFormatVersion()));
+                new BusinessObjectFormatKey(org.apache.commons.lang3.StringUtils.isNotBlank(request.getNamespace()) ? request.getNamespace() : NAMESPACE,
+                        request.getBusinessObjectDefinitionName(), request.getBusinessObjectFormatUsage(), request.getBusinessObjectFormatFileType(),
+                        request.getBusinessObjectFormatVersion()));
 
         List<String> expectedSubPartitionValues =
-            CollectionUtils.isEmpty(request.getSubPartitionValues()) ? new ArrayList<String>() : request.getSubPartitionValues();
+                CollectionUtils.isEmpty(request.getSubPartitionValues()) ? new ArrayList<String>() : request.getSubPartitionValues();
 
         String expectedStatusCode =
-            org.apache.commons.lang3.StringUtils.isNotBlank(request.getStatus()) ? request.getStatus() : BusinessObjectDataStatusEntity.VALID;
+                org.apache.commons.lang3.StringUtils.isNotBlank(request.getStatus()) ? request.getStatus() : BusinessObjectDataStatusEntity.VALID;
 
         StorageUnitCreateRequest storageUnitCreateRequest = request.getStorageUnits().get(0);
 
         StorageEntity storageEntity = storageDao.getStorageByName(storageUnitCreateRequest.getStorageName());
 
         String expectedStorageDirectoryPath =
-            storageUnitCreateRequest.getStorageDirectory() != null ? storageUnitCreateRequest.getStorageDirectory().getDirectoryPath() : null;
+                storageUnitCreateRequest.getStorageDirectory() != null ? storageUnitCreateRequest.getStorageDirectory().getDirectoryPath() : null;
 
         List<StorageFile> expectedStorageFiles =
-            CollectionUtils.isEmpty(storageUnitCreateRequest.getStorageFiles()) ? null : storageUnitCreateRequest.getStorageFiles();
+                CollectionUtils.isEmpty(storageUnitCreateRequest.getStorageFiles()) ? null : storageUnitCreateRequest.getStorageFiles();
 
         List<Attribute> expectedAttributes = CollectionUtils.isEmpty(request.getAttributes()) ? new ArrayList<Attribute>() : request.getAttributes();
 
         validateBusinessObjectData(businessObjectFormatEntity, request.getPartitionValue(), expectedSubPartitionValues, expectedBusinessObjectDataVersion,
-            expectedLatestVersion, expectedStatusCode, storageEntity.getName(), expectedStorageDirectoryPath, expectedStorageFiles, expectedAttributes,
-            actualBusinessObjectData);
+                expectedLatestVersion, expectedStatusCode, storageEntity.getName(), expectedStorageDirectoryPath, expectedStorageFiles, expectedAttributes,
+                actualBusinessObjectData);
     }
 
     /**
@@ -4435,10 +4470,11 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         List<Attribute> expectedAttributes, BusinessObjectData actualBusinessObjectData)
     {
         validateBusinessObjectData(null, businessObjectFormatEntity.getBusinessObjectDefinition().getNamespace().getCode(),
-            businessObjectFormatEntity.getBusinessObjectDefinition().getName(), businessObjectFormatEntity.getUsage(),
-            businessObjectFormatEntity.getFileType().getCode(), businessObjectFormatEntity.getBusinessObjectFormatVersion(),
-            expectedBusinessObjectDataPartitionValue, expectedBusinessObjectDataSubPartitionValues, expectedBusinessObjectDataVersion, expectedLatestVersion,
-            expectedStatusCode, expectedStorageName, expectedStorageDirectoryPath, expectedStorageFiles, expectedAttributes, actualBusinessObjectData);
+                businessObjectFormatEntity.getBusinessObjectDefinition().getName(), businessObjectFormatEntity.getUsage(),
+                businessObjectFormatEntity.getFileType().getCode(), businessObjectFormatEntity.getBusinessObjectFormatVersion(),
+                expectedBusinessObjectDataPartitionValue, expectedBusinessObjectDataSubPartitionValues, expectedBusinessObjectDataVersion,
+                expectedLatestVersion,
+                expectedStatusCode, expectedStorageName, expectedStorageDirectoryPath, expectedStorageFiles, expectedAttributes, actualBusinessObjectData);
     }
 
     /**
@@ -4467,9 +4503,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         List<StorageFile> expectedStorageFiles, List<Attribute> expectedAttributes, BusinessObjectData actualBusinessObjectData)
     {
         validateBusinessObjectData(expectedBusinessObjectDataId, expectedNamespace, expectedBusinessObjectDefinitionName, expectedBusinessObjectFormatUsage,
-            expectedBusinessObjectFormatFileType, expectedBusinessObjectFormatVersion, expectedBusinessObjectDataPartitionValue,
-            expectedBusinessObjectDataSubPartitionValues, expectedBusinessObjectDataVersion, expectedLatestVersion, expectedStatusCode,
-            actualBusinessObjectData);
+                expectedBusinessObjectFormatFileType, expectedBusinessObjectFormatVersion, expectedBusinessObjectDataPartitionValue,
+                expectedBusinessObjectDataSubPartitionValues, expectedBusinessObjectDataVersion, expectedLatestVersion, expectedStatusCode,
+                actualBusinessObjectData);
 
         // We expected test business object data to contain a single storage unit.
         assertEquals(1, actualBusinessObjectData.getStorageUnits().size());
@@ -4477,7 +4513,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
         assertEquals(expectedStorageName, actualStorageUnit.getStorage().getName());
         assertEquals(expectedStorageDirectoryPath,
-            actualStorageUnit.getStorageDirectory() != null ? actualStorageUnit.getStorageDirectory().getDirectoryPath() : null);
+                actualStorageUnit.getStorageDirectory() != null ? actualStorageUnit.getStorageDirectory().getDirectoryPath() : null);
         assertEqualsIgnoreOrder("storage files", expectedStorageFiles, actualStorageUnit.getStorageFiles());
 
         assertEquals(expectedAttributes, actualBusinessObjectData.getAttributes());
@@ -4496,10 +4532,10 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         Boolean expectedLatestVersion, String expectedStatusCode, BusinessObjectData actualBusinessObjectData)
     {
         validateBusinessObjectData(expectedBusinessObjectDataId, expectedBusinessObjectDataKey.getNamespace(),
-            expectedBusinessObjectDataKey.getBusinessObjectDefinitionName(), expectedBusinessObjectDataKey.getBusinessObjectFormatUsage(),
-            expectedBusinessObjectDataKey.getBusinessObjectFormatFileType(), expectedBusinessObjectDataKey.getBusinessObjectFormatVersion(),
-            expectedBusinessObjectDataKey.getPartitionValue(), expectedBusinessObjectDataKey.getSubPartitionValues(),
-            expectedBusinessObjectDataKey.getBusinessObjectDataVersion(), expectedLatestVersion, expectedStatusCode, actualBusinessObjectData);
+                expectedBusinessObjectDataKey.getBusinessObjectDefinitionName(), expectedBusinessObjectDataKey.getBusinessObjectFormatUsage(),
+                expectedBusinessObjectDataKey.getBusinessObjectFormatFileType(), expectedBusinessObjectDataKey.getBusinessObjectFormatVersion(),
+                expectedBusinessObjectDataKey.getPartitionValue(), expectedBusinessObjectDataKey.getSubPartitionValues(),
+                expectedBusinessObjectDataKey.getBusinessObjectDataVersion(), expectedLatestVersion, expectedStatusCode, actualBusinessObjectData);
     }
 
     /**
@@ -4573,8 +4609,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         StorageUnit storageUnit = businessObjectData.getStorageUnits().get(0);
         assertEquals(expectedStorageName, storageUnit.getStorage().getName());
         String expectedStorageDirectoryPath = String
-            .format("%s/%s/%s", ENVIRONMENT_NAME.trim().toLowerCase().replace('_', '-'), expectedNamespaceCode.trim().toLowerCase().replace('_', '-'),
-                businessObjectData.getPartitionValue());
+                .format("%s/%s/%s", ENVIRONMENT_NAME.trim().toLowerCase().replace('_', '-'), expectedNamespaceCode.trim().toLowerCase().replace('_', '-'),
+                        businessObjectData.getPartitionValue());
         assertEquals(expectedStorageDirectoryPath, storageUnit.getStorageDirectory().getDirectoryPath());
         assertEquals(1, storageUnit.getStorageFiles().size());
         StorageFile storageFile = storageUnit.getStorageFiles().get(0);
@@ -4602,7 +4638,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
      */
     protected void validateBusinessObjectDataAttribute(Integer businessObjectDataAttributeId, String expectedNamespace,
         String expectedBusinessObjectDefinitionName, String expectedBusinessObjectFormatUsage, String expectedBusinessObjectFormatFileType,
-        Integer expectedBusinessObjectFormatVersion, String expectedBusinessObjectDataPartitionValue, List<String> expectedBusinessObjectDataSubPartitionValues,
+        Integer expectedBusinessObjectFormatVersion, String expectedBusinessObjectDataPartitionValue,
+        List<String> expectedBusinessObjectDataSubPartitionValues,
         Integer expectedBusinessObjectDataVersion, String expectedBusinessObjectDataAttributeName, String expectedBusinessObjectDataAttributeValue,
         BusinessObjectDataAttribute actualBusinessObjectDataAttribute)
     {
@@ -4612,9 +4649,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
             assertEquals(businessObjectDataAttributeId, Integer.valueOf(actualBusinessObjectDataAttribute.getId()));
         }
         validateBusinessObjectDataAttributeKey(expectedNamespace, expectedBusinessObjectDefinitionName, expectedBusinessObjectFormatUsage,
-            expectedBusinessObjectFormatFileType, expectedBusinessObjectFormatVersion, expectedBusinessObjectDataPartitionValue,
-            expectedBusinessObjectDataSubPartitionValues, expectedBusinessObjectDataVersion, expectedBusinessObjectDataAttributeName,
-            actualBusinessObjectDataAttribute.getBusinessObjectDataAttributeKey());
+                expectedBusinessObjectFormatFileType, expectedBusinessObjectFormatVersion, expectedBusinessObjectDataPartitionValue,
+                expectedBusinessObjectDataSubPartitionValues, expectedBusinessObjectDataVersion, expectedBusinessObjectDataAttributeName,
+                actualBusinessObjectDataAttribute.getBusinessObjectDataAttributeKey());
         assertEquals(expectedBusinessObjectDataAttributeValue, actualBusinessObjectDataAttribute.getBusinessObjectDataAttributeValue());
     }
 
@@ -5046,7 +5083,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     protected void validateBusinessObjectFormatDdl(String expectedCustomDdlName, String expectedDdl, BusinessObjectFormatDdl actualBusinessObjectFormatDdl)
     {
         validateBusinessObjectFormatDdl(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION,
-            BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, TABLE_NAME, expectedCustomDdlName, expectedDdl, actualBusinessObjectFormatDdl);
+                BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, TABLE_NAME, expectedCustomDdlName, expectedDdl, actualBusinessObjectFormatDdl);
     }
 
     /**
@@ -5103,8 +5140,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
             assertEquals(customDdlId, Integer.valueOf(actualCustomDdl.getId()));
         }
         assertEquals(
-            new CustomDdlKey(expectedNamespace, expectedBusinessObjectDefinitionName, expectedBusinessObjectFormatUsage, expectedBusinessObjectFormatFileType,
-                expectedBusinessObjectFormatVersion, expectedCustomDdlName), actualCustomDdl.getCustomDdlKey());
+                new CustomDdlKey(expectedNamespace, expectedBusinessObjectDefinitionName, expectedBusinessObjectFormatUsage,
+                        expectedBusinessObjectFormatFileType,
+                        expectedBusinessObjectFormatVersion, expectedCustomDdlName), actualCustomDdl.getCustomDdlKey());
         assertEquals(expectedDdl, actualCustomDdl.getDdl());
     }
 
@@ -5120,9 +5158,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         BusinessObjectData targetBusinessObjectData = uploadSingleInitiationResponse.getTargetBusinessObjectData();
 
         validateDownloadSingleInitiationResponse(targetBusinessObjectData.getNamespace(), targetBusinessObjectData.getBusinessObjectDefinitionName(),
-            targetBusinessObjectData.getBusinessObjectFormatUsage(), targetBusinessObjectData.getBusinessObjectFormatFileType(),
-            targetBusinessObjectData.getBusinessObjectFormatVersion(), targetBusinessObjectData.getAttributes(),
-            targetBusinessObjectData.getStorageUnits().get(0).getStorageFiles().get(0).getFileSizeBytes(), downloadSingleInitiationResponse);
+                targetBusinessObjectData.getBusinessObjectFormatUsage(), targetBusinessObjectData.getBusinessObjectFormatFileType(),
+                targetBusinessObjectData.getBusinessObjectFormatVersion(), targetBusinessObjectData.getAttributes(),
+                targetBusinessObjectData.getStorageUnits().get(0).getStorageFiles().get(0).getFileSizeBytes(), downloadSingleInitiationResponse);
     }
 
     protected void validateDownloadSingleInitiationResponse(String expectedNamespaceCode, String expectedBusinessObjectDefinitionName,
@@ -5132,8 +5170,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         assertNotNull(actualDownloadSingleInitiationResponse);
 
         validateBusinessObjectData(expectedNamespaceCode, expectedBusinessObjectDefinitionName, expectedBusinessObjectFormatUsage,
-            expectedBusinessObjectFormatFileType, expectedBusinessObjectFormatVersion, BusinessObjectDataStatusEntity.VALID, expectedAttributes,
-            StorageEntity.MANAGED_EXTERNAL_STORAGE, FILE_NAME, expectedFileSizeBytes, actualDownloadSingleInitiationResponse.getBusinessObjectData());
+                expectedBusinessObjectFormatFileType, expectedBusinessObjectFormatVersion, BusinessObjectDataStatusEntity.VALID, expectedAttributes,
+                StorageEntity.MANAGED_EXTERNAL_STORAGE, FILE_NAME, expectedFileSizeBytes, actualDownloadSingleInitiationResponse.getBusinessObjectData());
 
         assertNotNull("aws access key", actualDownloadSingleInitiationResponse.getAwsAccessKey());
         assertNotNull("aws secret key", actualDownloadSingleInitiationResponse.getAwsSecretKey());
@@ -5245,9 +5283,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     {
         // Validate the message.
         assertTrue("Correlation Id \"" + TEST_SQS_MESSAGE_CORRELATION_ID + "\" expected, but not found.",
-            systemMonitorResponseMessage.contains("<correlation-id>" + TEST_SQS_MESSAGE_CORRELATION_ID + "</correlation-id>"));
+                systemMonitorResponseMessage.contains("<correlation-id>" + TEST_SQS_MESSAGE_CORRELATION_ID + "</correlation-id>"));
         assertTrue("Context Message Type \"" + TEST_SQS_CONTEXT_MESSAGE_TYPE_TO_PUBLISH + "\" expected, but not found.",
-            systemMonitorResponseMessage.contains("<context-message-type>" + TEST_SQS_CONTEXT_MESSAGE_TYPE_TO_PUBLISH + "</context-message-type>"));
+                systemMonitorResponseMessage.contains("<context-message-type>" + TEST_SQS_CONTEXT_MESSAGE_TYPE_TO_PUBLISH + "</context-message-type>"));
 
         // Note that we don't response with the environment that was specified in the request message. Instead, we respond with the environment configured
         // in our configuration table.
@@ -5270,8 +5308,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
      * @param expectedAttributes the expected business object data attributes
      * @param expectedFileName the expected file name
      * @param expectedFileSizeBytes the expected file size in bytes
-     * @param expectedTargetStorageName The expected target storage name. Optional. Defaults to configured {@link
-     * ConfigurationValue#S3_EXTERNAL_STORAGE_NAME_DEFAULT}
+     * @param expectedTargetStorageName The expected target storage name. Optional. Defaults to configured
+     *            {@link ConfigurationValue#S3_EXTERNAL_STORAGE_NAME_DEFAULT}
      * @param actualUploadSingleInitiationResponse the upload single initiation response to be validated
      */
     protected void validateUploadSingleInitiationResponse(String expectedSourceNamespaceCode, String expectedSourceBusinessObjectDefinitionName,
@@ -5290,14 +5328,16 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
         // Validate source business object data.
         validateBusinessObjectData(expectedSourceNamespaceCode, expectedSourceBusinessObjectDefinitionName, expectedSourceBusinessObjectFormatUsage,
-            expectedSourceBusinessObjectFormatFileType, expectedSourceBusinessObjectFormatVersion, BusinessObjectDataStatusEntity.UPLOADING, expectedAttributes,
-            StorageEntity.MANAGED_LOADING_DOCK_STORAGE, expectedFileName, expectedFileSizeBytes,
-            actualUploadSingleInitiationResponse.getSourceBusinessObjectData());
+                expectedSourceBusinessObjectFormatFileType, expectedSourceBusinessObjectFormatVersion, BusinessObjectDataStatusEntity.UPLOADING,
+                expectedAttributes,
+                StorageEntity.MANAGED_LOADING_DOCK_STORAGE, expectedFileName, expectedFileSizeBytes,
+                actualUploadSingleInitiationResponse.getSourceBusinessObjectData());
 
         // Validate target business object data.
         validateBusinessObjectData(expectedTargetNamespaceCode, expectedTargetBusinessObjectDefinitionName, expectedTargetBusinessObjectFormatUsage,
-            expectedTargetBusinessObjectFormatFileType, expectedTargetBusinessObjectFormatVersion, BusinessObjectDataStatusEntity.UPLOADING, expectedAttributes,
-            expectedTargetStorageName, expectedFileName, expectedFileSizeBytes, actualUploadSingleInitiationResponse.getTargetBusinessObjectData());
+                expectedTargetBusinessObjectFormatFileType, expectedTargetBusinessObjectFormatVersion, BusinessObjectDataStatusEntity.UPLOADING,
+                expectedAttributes,
+                expectedTargetStorageName, expectedFileName, expectedFileSizeBytes, actualUploadSingleInitiationResponse.getTargetBusinessObjectData());
 
         // Validate the file element.
         assertNotNull(actualUploadSingleInitiationResponse.getFile());
@@ -5319,7 +5359,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
         // Validate KMS Key ID.
         assertEquals(storageHelper.getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KMS_KEY_ID),
-            storageDaoHelper.getStorageEntity(expectedTargetStorageName), true), actualUploadSingleInitiationResponse.getAwsKmsKeyId());
+                storageDaoHelper.getStorageEntity(expectedTargetStorageName), true), actualUploadSingleInitiationResponse.getAwsKmsKeyId());
     }
 
     /**
@@ -5342,7 +5382,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         return businessObjectDataKey;
     }
 
-    /**
+/**
      * Validates that a specified XML opening and closing set of tags are not present in the message.
      *
      * @param message the XML message.
@@ -5356,7 +5396,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         }
     }
 
-    /**
+/**
      * Validates that a specified XML opening and closing set of tags are present in the message.
      *
      * @param message the XML message.
@@ -5370,7 +5410,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         }
     }
 
-    /**
+/**
      * Validates that a specified XML tag and value are present in the message.
      *
      * @param message the XML message.
@@ -5380,10 +5420,10 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     private void validateXmlFieldPresent(String message, String xmlTagName, Object value)
     {
         assertTrue(xmlTagName + " \"" + value + "\" expected, but not found.",
-            message.contains("<" + xmlTagName + ">" + (value == null ? null : value.toString()) + "</" + xmlTagName + ">"));
+                message.contains("<" + xmlTagName + ">" + (value == null ? null : value.toString()) + "</" + xmlTagName + ">"));
     }
 
-    /**
+/**
      * Validates that the specified XML tag with the specified tag attribute and tag value is present in the message.
      *
      * @param message the XML message.
@@ -5395,7 +5435,30 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     private void validateXmlFieldPresent(String message, String xmlTagName, String xmlTagAttributeName, String xmlTagAttributeValue, Object xmlTagValue)
     {
         assertTrue(String.format("<%s> is expected, but not found or does not match expected attribute and/or value.", xmlTagName), message.contains(String
-            .format("<%s %s=\"%s\">%s</%s>", xmlTagName, xmlTagAttributeName, xmlTagAttributeValue, xmlTagValue == null ? null : xmlTagValue.toString(),
-                xmlTagName)));
+                .format("<%s %s=\"%s\">%s</%s>", xmlTagName, xmlTagAttributeName, xmlTagAttributeValue, xmlTagValue == null ? null : xmlTagValue.toString(),
+                        xmlTagName)));
+    }
+
+    /**
+     * create database enttities for business object search testing
+     */
+    public void createDatabaseEntitiesForBusinessObjectDataSearchTesting()
+    {
+        businessObjectDataDaoTestHelper
+                .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null,
+                        DATA_VERSION,
+                        true, "VALID");
+        businessObjectDataDaoTestHelper
+                .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null,
+                        DATA_VERSION, true, "INVALID");
+
+        businessObjectDataDaoTestHelper
+                .createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION_2, PARTITION_VALUE, null,
+                        DATA_VERSION, true, "INVALID");
+
+        businessObjectDataDaoTestHelper
+                .createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, PARTITION_VALUE,
+                        null,
+                        DATA_VERSION, true, "VALID");
     }
 }
