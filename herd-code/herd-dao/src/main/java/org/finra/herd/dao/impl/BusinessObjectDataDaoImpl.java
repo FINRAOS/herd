@@ -357,8 +357,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
             // Get a sub-list for the current chunk of partition filters.
             List<BusinessObjectDataEntity> chunkBusinessObjectDataEntities =
                     getBusinessObjectDataEntities(businessObjectFormatKey, partitionFilters, businessObjectDataVersion, businessObjectDataStatus, storageName,
-                            i,
-                            (i + MAX_PARTITION_FILTERS_PER_REQUEST) > partitionFilters.size() ? partitionFilters.size() - i : MAX_PARTITION_FILTERS_PER_REQUEST);
+                            i, (i + MAX_PARTITION_FILTERS_PER_REQUEST) > partitionFilters.size() ? partitionFilters.size() - i : MAX_PARTITION_FILTERS_PER_REQUEST);
 
             // Add the sub-list to the result.
             resultBusinessObjectDataEntities.addAll(chunkBusinessObjectDataEntities);
@@ -852,12 +851,12 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         for (Object[] values : valueArray)
         {
             BusinessObjectData businessObjectData = new BusinessObjectData();
-            BusinessObjectDataEntity bDataEntity = (BusinessObjectDataEntity) values[0];
+            BusinessObjectDataEntity dataEntity = (BusinessObjectDataEntity) values[0];
 
-            businessObjectData.setId(bDataEntity.getId());
-            businessObjectData.setPartitionValue(bDataEntity.getPartitionValue());
-            businessObjectData.setVersion(bDataEntity.getVersion());
-            businessObjectData.setLatestVersion(bDataEntity.getLatestVersion());
+            businessObjectData.setId(dataEntity.getId());
+            businessObjectData.setPartitionValue(dataEntity.getPartitionValue());
+            businessObjectData.setVersion(dataEntity.getVersion());
+            businessObjectData.setLatestVersion(dataEntity.getLatestVersion());
 
             businessObjectData.setNamespace((String) values[1]);
             businessObjectData.setBusinessObjectDefinitionName((String) values[2]);
@@ -867,21 +866,21 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
             businessObjectData.setPartitionKey((String) values[6]);
 
             List<String> subpartitions = new ArrayList<String>();
-            if (bDataEntity.getPartitionValue2() != null)
+            if (dataEntity.getPartitionValue2() != null)
             {
-                subpartitions.add(bDataEntity.getPartitionValue2());
+                subpartitions.add(dataEntity.getPartitionValue2());
             }
-            if (bDataEntity.getPartitionValue3() != null)
+            if (dataEntity.getPartitionValue3() != null)
             {
-                subpartitions.add(bDataEntity.getPartitionValue3());
+                subpartitions.add(dataEntity.getPartitionValue3());
             }
-            if (bDataEntity.getPartitionValue4() != null)
+            if (dataEntity.getPartitionValue4() != null)
             {
-                subpartitions.add(bDataEntity.getPartitionValue4());
+                subpartitions.add(dataEntity.getPartitionValue4());
             }
-            if (bDataEntity.getPartitionValue5() != null)
+            if (dataEntity.getPartitionValue5() != null)
             {
-                subpartitions.add(bDataEntity.getPartitionValue5());
+                subpartitions.add(dataEntity.getPartitionValue5());
             }
             if (subpartitions.size() > 0)
             {
