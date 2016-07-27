@@ -4,11 +4,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Test;
+import org.springframework.util.Assert;
 
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchFilter;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDataSearchResult;
 
+/**
+ * Test Business Object Rest controller Search Bussiness Object Data
+ * 
+ * @author k22201
+ *
+ */
 public class BusinessObjectDataRestControllerSearchBussineObjectDataTest extends AbstractRestTest
 {
     @Test
@@ -29,7 +37,8 @@ public class BusinessObjectDataRestControllerSearchBussineObjectDataTest extends
 
         request.setBusinessObjectDataSearchFilters(filters);
 
-        businessObjectDataRestController.searchBusinessObjectData(request);
-        // will assert result later
+        BusinessObjectDataSearchResult result = businessObjectDataRestController.searchBusinessObjectData(request);
+
+        Assert.isTrue(result.getBusinessObjectDataElements().size() == 2);
     }
 }
