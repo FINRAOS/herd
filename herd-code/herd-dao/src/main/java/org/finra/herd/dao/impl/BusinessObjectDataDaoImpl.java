@@ -787,7 +787,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
     @Override
     public List<BusinessObjectData> searchBusinessObjectData(List<BusinessObjectDataSearchFilter> filters)
     {
-        // assume only one filter and only on search key
+        // assume only one filter and only on search key, the validation should be passed by now
         BusinessObjectDataSearchKey businessDataSearchKey = filters.get(0).getBusinessObjectDataSearchKeys().get(0);
 
         // Create the criteria builder and the criteria.
@@ -843,7 +843,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
                 businessObjectFormatEntity.get(BusinessObjectFormatEntity_.partitionKey)))
                 .where(predicate);
 
-        // Order by business object format and data versions.
+        // Order by business object partition values
         criteria.orderBy(builder.asc(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue)));
 
         List<BusinessObjectData> businessObjectDataList = new ArrayList<BusinessObjectData>();
