@@ -357,7 +357,8 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
             // Get a sub-list for the current chunk of partition filters.
             List<BusinessObjectDataEntity> chunkBusinessObjectDataEntities =
                     getBusinessObjectDataEntities(businessObjectFormatKey, partitionFilters, businessObjectDataVersion, businessObjectDataStatus, storageName,
-                            i, (i + MAX_PARTITION_FILTERS_PER_REQUEST) > partitionFilters.size() ? partitionFilters.size() - i : MAX_PARTITION_FILTERS_PER_REQUEST);
+                            i, (i + MAX_PARTITION_FILTERS_PER_REQUEST) > partitionFilters.size() ? partitionFilters.size() - i
+                                    : MAX_PARTITION_FILTERS_PER_REQUEST);
 
             // Add the sub-list to the result.
             resultBusinessObjectDataEntities.addAll(chunkBusinessObjectDataEntities);
