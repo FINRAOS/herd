@@ -588,7 +588,8 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         if (businessObjectDataVersion != null)
         {
             mainQueryRestriction =
-                    builder.and(mainQueryRestriction, builder.equal(businessObjectDataEntity.get(BusinessObjectDataEntity_.version), businessObjectDataVersion));
+                    builder.and(mainQueryRestriction, builder.equal(businessObjectDataEntity.get(BusinessObjectDataEntity_.version), 
+                            businessObjectDataVersion));
         }
         // Business object data version is not specified, so get the latest one as per specified business object data status in the specified storage.
         else
@@ -737,7 +738,8 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         if (businessObjectDataVersion != null)
         {
             mainQueryRestriction =
-                    builder.and(mainQueryRestriction, builder.equal(businessObjectDataEntity.get(BusinessObjectDataEntity_.version), businessObjectDataVersion));
+                    builder.and(mainQueryRestriction, builder.equal(businessObjectDataEntity.get(BusinessObjectDataEntity_.version), 
+                            businessObjectDataVersion));
         }
         else
         {
