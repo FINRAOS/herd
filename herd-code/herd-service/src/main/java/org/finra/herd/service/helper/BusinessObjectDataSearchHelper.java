@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
+import org.finra.herd.model.api.xml.BusinessObjectDataSearchFilter;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchRequest;
 
@@ -36,21 +37,23 @@ public class BusinessObjectDataSearchHelper
     /**
      * validate business object search request
      *
-     * @param request business object data search key
+     * @param business object DATA search request
      *
      * @throws IllegalArgumentException when business object data search request is not valid
      */
-    public void validBusinesObjectDataSearchRequest(BusinessObjectDataSearchRequest request) throws IllegalArgumentException
+    public void validateBusinesObjectDataSearchRequest(BusinessObjectDataSearchRequest request) throws IllegalArgumentException
     {
-        Assert.isTrue(request != null, "BusinessObjectDataSearchRequest should not be null");
-        Assert.isTrue(request.getBusinessObjectDataSearchFilters() != null, "BusinessObjectDataSearchFilters is required");
-        Assert.isTrue(request.getBusinessObjectDataSearchFilters().size() == 1, "BusinessObjectDataSearchFilters can only have one filter for now");
-        Assert.isTrue(request.getBusinessObjectDataSearchFilters().get(0).getBusinessObjectDataSearchKeys() != null, "BusinessObject Search Key is required");
+        Assert.notNull(request, "A BusinessObjectDataSearchRequest must be specified");
+        List<BusinessObjectDataSearchFilter> businessObjectDataSearchFilters = request.getBusinessObjectDataSearchFilters();
+        Assert.isTrue(businessObjectDataSearchFilters!= null, "BusinessObjectDataSearchFilters must be specified");
+        Assert.isTrue(businessObjectDataSearchFilters.size() == 1, "BusinessObjectDataSearchFilters can only have one filter");
+        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = request.getBusinessObjectDataSearchFilters().get(0).getBusinessObjectDataSearchKeys();
 
-        List<BusinessObjectDataSearchKey> searchKeyList = request.getBusinessObjectDataSearchFilters().get(0).getBusinessObjectDataSearchKeys();
-        Assert.isTrue(searchKeyList.size() == 1, "BusinessObject Search Key can only have one for now");
+        Assert.isTrue(businessObjectDataSearchKeys != null, "A BusinessObject Search Key must be specified");
 
-        for (BusinessObjectDataSearchKey key : searchKeyList)
+        Assert.isTrue(businessObjectDataSearchKeys.size() == 1, "A BusinessObject Search Key can only have one");
+
+        for (BusinessObjectDataSearchKey key : businessObjectDataSearchKeys)
         {
             validateBusinessObjectDataKey(key);
         }
@@ -59,7 +62,7 @@ public class BusinessObjectDataSearchHelper
     /**
      * validate business search key
      *
-     * @param key business data search key
+     * @param key business object data search key
      *
      * @throws IllegalArgumentException when business object data search key is not valid
      */

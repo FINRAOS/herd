@@ -6,6 +6,7 @@ import java.util.List;
 import org.junit.Test;
 import org.springframework.util.Assert;
 
+import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchFilter;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchRequest;
@@ -13,9 +14,6 @@ import org.finra.herd.model.api.xml.BusinessObjectDataSearchResult;
 
 /**
  * Test Business Object Data Search service
- * 
- * @author k22201
- *
  */
 public class BusinessObjectDataSearchServiceTest extends AbstractServiceTest
 {
@@ -26,8 +24,8 @@ public class BusinessObjectDataSearchServiceTest extends AbstractServiceTest
         createDatabaseEntitiesForBusinessObjectDataSearchTesting();
 
         BusinessObjectDataSearchRequest request = new BusinessObjectDataSearchRequest();
-        List<BusinessObjectDataSearchFilter> filters = new ArrayList<BusinessObjectDataSearchFilter>();
-        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<BusinessObjectDataSearchKey>();
+        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
+        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
         BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
         key.setNamespace(NAMESPACE);
         key.setBusinessObjectDefinitionName(BDEF_NAME);
@@ -40,6 +38,12 @@ public class BusinessObjectDataSearchServiceTest extends AbstractServiceTest
         BusinessObjectDataSearchResult result = this.businessObjectDataService.searchBusinessObjectData(request);
 
         Assert.isTrue(result.getBusinessObjectDataElements().size() == 2);
+        
+        for(BusinessObjectData data : result.getBusinessObjectDataElements())
+        {
+            Assert.isTrue(NAMESPACE.equals(data.getNamespace()));
+            Assert.isTrue(BDEF_NAME.equals(data.getBusinessObjectDefinitionName()));
+        }
 
     }
 

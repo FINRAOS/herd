@@ -1413,11 +1413,11 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
     public BusinessObjectDataSearchResult searchBusinessObjectData(BusinessObjectDataSearchRequest request)
     {
         // validate search request
-        businessObjectDataSearchHelper.validBusinesObjectDataSearchRequest(request);
+        businessObjectDataSearchHelper.validateBusinesObjectDataSearchRequest(request);
         // search business object data
-        List<BusinessObjectData> objectDataList = businessObjectDataDao.searchBusinessObjectData(request.getBusinessObjectDataSearchFilters());
+        List<BusinessObjectData> businessObjectDataList = businessObjectDataDao.searchBusinessObjectData(request.getBusinessObjectDataSearchFilters());
         BusinessObjectDataSearchResult result = new BusinessObjectDataSearchResult();
-        result.setBusinessObjectDataElements(objectDataList);
+        result.setBusinessObjectDataElements(businessObjectDataList);
 
         return result;
     }

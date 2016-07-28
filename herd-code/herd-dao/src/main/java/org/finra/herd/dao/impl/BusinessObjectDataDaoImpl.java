@@ -794,7 +794,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
         // Create the criteria builder and the criteria.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-        CriteriaQuery<Object[]> criteria = builder.createQuery(Object[].class);
+        CriteriaQuery<BusinessObjectDataEntity> criteria = builder.createQuery(BusinessObjectDataEntity.class);
 
         // The criteria root is the business object data.
         Root<BusinessObjectDataEntity> businessObjectDataEntity = criteria.from(BusinessObjectDataEntity.class);
@@ -807,7 +807,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
                 businessObjectFormatEntity.join(BusinessObjectFormatEntity_.businessObjectDefinition);
         Join<BusinessObjectDefinitionEntity, NamespaceEntity> namespaceEntity = businessObjectDefinitionEntity.join(BusinessObjectDefinitionEntity_.namespace);
 
-        // Create the standard restrictions based on the business object format key values (i.e. the standard where clauses).
+        // Create the standard restrictions based on the business object search key values (i.e. the standard where clauses).
 
         // Create a restriction on namespace code.
         Predicate predicate = builder.equal(builder.upper(namespaceEntity.get(NamespaceEntity_.code)), businessDataSearchKey.getNamespace().toUpperCase());
@@ -817,13 +817,13 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
                 businessDataSearchKey.getBusinessObjectDefinitionName().toUpperCase()));
 
         // Create and append a restriction on business object format usage.
-        if (businessDataSearchKey.getBusinessObjectFormatUsage() != null)
+        if (!StringUtils.isEmpty(businessDataSearchKey.getBusinessObjectFormatUsage()))
         {
             predicate = builder.and(predicate, builder.equal(builder.upper(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.usage)),
                     businessDataSearchKey.getBusinessObjectFormatUsage().toUpperCase()));
         }
 
-        if (businessDataSearchKey.getBusinessObjectFormatFileType() != null)
+        if (!StringUtils.isEmpty(businessDataSearchKey.getBusinessObjectFormatFileType()))
         {
             // Create and append a restriction on business object format file type.
             predicate =
@@ -839,34 +839,28 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
                     businessDataSearchKey.getBusinessObjectFormatVersion()));
         }
 
-        criteria.select(builder.array(businessObjectDataEntity, namespaceEntity.get(NamespaceEntity_.code),
-                businessObjectDefinitionEntity.get(BusinessObjectDefinitionEntity_.name), businessObjectFormatEntity.get(BusinessObjectFormatEntity_.usage),
-                fileTypeEntity.get(FileTypeEntity_.code), businessObjectFormatEntity.get(BusinessObjectFormatEntity_.businessObjectFormatVersion),
-                businessObjectFormatEntity.get(BusinessObjectFormatEntity_.partitionKey)))
-                .where(predicate);
+        criteria.select(businessObjectDataEntity).where(predicate);
 
         // Order by business object partition values
         criteria.orderBy(builder.asc(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue)));
 
-        List<BusinessObjectData> businessObjectDataList = new ArrayList<BusinessObjectData>();
+        List<BusinessObjectData> businessObjectDataList = new ArrayList<>();
 
-        List<Object[]> valueArray = entityManager.createQuery(criteria).setMaxResults(SEARCH_RESULT_LIMIT).getResultList();
-        for (Object[] values : valueArray)
+        List<BusinessObjectDataEntity> entitityArray = entityManager.createQuery(criteria).setMaxResults(SEARCH_RESULT_LIMIT).getResultList();
+        for (BusinessObjectDataEntity dataEntity : entitityArray)
         {
             BusinessObjectData businessObjectData = new BusinessObjectData();
-            BusinessObjectDataEntity dataEntity = (BusinessObjectDataEntity) values[0];
-
             businessObjectData.setId(dataEntity.getId());
             businessObjectData.setPartitionValue(dataEntity.getPartitionValue());
             businessObjectData.setVersion(dataEntity.getVersion());
             businessObjectData.setLatestVersion(dataEntity.getLatestVersion());
-
-            businessObjectData.setNamespace((String) values[1]);
-            businessObjectData.setBusinessObjectDefinitionName((String) values[2]);
-            businessObjectData.setBusinessObjectFormatUsage((String) values[3]);
-            businessObjectData.setBusinessObjectFormatFileType((String) values[4]);
-            businessObjectData.setBusinessObjectFormatVersion((Integer) values[5]);
-            businessObjectData.setPartitionKey((String) values[6]);
+            BusinessObjectFormatEntity formatEntity = dataEntity.getBusinessObjectFormat();
+            businessObjectData.setNamespace(formatEntity.getBusinessObjectDefinition().getNamespace().getCode());
+            businessObjectData.setBusinessObjectDefinitionName(formatEntity.getBusinessObjectDefinition().getName());
+            businessObjectData.setBusinessObjectFormatUsage(formatEntity.getUsage());
+            businessObjectData.setBusinessObjectFormatFileType(formatEntity.getFileType().getCode());
+            businessObjectData.setBusinessObjectFormatVersion(formatEntity.getBusinessObjectFormatVersion());
+            businessObjectData.setPartitionKey(dataEntity.getPartitionValue());
 
             List<String> subpartitions = new ArrayList<String>();
             if (dataEntity.getPartitionValue2() != null)

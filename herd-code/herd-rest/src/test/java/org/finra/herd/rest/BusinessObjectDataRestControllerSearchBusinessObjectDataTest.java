@@ -6,18 +6,19 @@ import java.util.List;
 import org.junit.Test;
 import org.springframework.util.Assert;
 
+import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchFilter;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchResult;
 
 /**
- * Test Business Object Rest controller Search Bussiness Object Data
+ * Test Business Object Rest controller Search Business Object Data
  * 
  * @author k22201
  *
  */
-public class BusinessObjectDataRestControllerSearchBussineObjectDataTest extends AbstractRestTest
+public class BusinessObjectDataRestControllerSearchBusinessObjectDataTest extends AbstractRestTest
 {
     @Test
     public void testSearchBussinessObjectDataRest()
@@ -25,8 +26,8 @@ public class BusinessObjectDataRestControllerSearchBussineObjectDataTest extends
         createDatabaseEntitiesForBusinessObjectDataSearchTesting();
 
         BusinessObjectDataSearchRequest request = new BusinessObjectDataSearchRequest();
-        List<BusinessObjectDataSearchFilter> filters = new ArrayList<BusinessObjectDataSearchFilter>();
-        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<BusinessObjectDataSearchKey>();
+        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
+        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
         BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
         key.setNamespace(NAMESPACE);
         key.setBusinessObjectDefinitionName(BDEF_NAME);
@@ -40,5 +41,12 @@ public class BusinessObjectDataRestControllerSearchBussineObjectDataTest extends
         BusinessObjectDataSearchResult result = businessObjectDataRestController.searchBusinessObjectData(request);
 
         Assert.isTrue(result.getBusinessObjectDataElements().size() == 2);
+        
+        for(BusinessObjectData data : result.getBusinessObjectDataElements())
+        {
+            Assert.isTrue(NAMESPACE.equals(data.getNamespace()));
+            Assert.isTrue(BDEF_NAME.equals(data.getBusinessObjectDefinitionName()));
+        }
+
     }
 }

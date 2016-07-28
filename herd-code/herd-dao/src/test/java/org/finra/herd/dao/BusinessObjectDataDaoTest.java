@@ -30,6 +30,7 @@ import java.util.Map;
 
 import org.apache.commons.collections4.IterableUtils;
 import org.junit.Test;
+import org.springframework.util.Assert;
 
 import org.finra.herd.dao.impl.AbstractHerdDao;
 import org.finra.herd.model.api.xml.BusinessObjectData;
@@ -1042,7 +1043,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void testBusinessObjectDataSearchWithAllFields()
+    public void testBusinessObjectDataSearchWithAllSearchKeyFields()
     {
         businessObjectDataDaoTestHelper
                 .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null,
@@ -1073,10 +1074,18 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(filters);
         assertEquals(2, result.size());
 
+        for(BusinessObjectData data : result)
+        {
+            Assert.isTrue(NAMESPACE.equals(data.getNamespace()));
+            Assert.isTrue(BDEF_NAME.equals(data.getBusinessObjectDefinitionName()));
+            Assert.isTrue(FORMAT_USAGE_CODE.equals(data.getBusinessObjectFormatUsage()));
+            Assert.isTrue(FORMAT_FILE_TYPE_CODE.equals(data.getBusinessObjectFormatFileType()));
+            Assert.isTrue(FORMAT_VERSION == data.getBusinessObjectFormatVersion());
+        }
     }
 
     @Test
-    public void testBusinessObjectDataSearchWithRequiredFieldsOnly()
+    public void testBusinessObjectDataSearchWithSearchWithBdefKey()
     {
         businessObjectDataDaoTestHelper
                 .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null,
@@ -1102,10 +1111,16 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
 
         List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(filters);
         assertEquals(1, result.size());
+        
+        for(BusinessObjectData data : result)
+        {
+            Assert.isTrue(NAMESPACE.equals(data.getNamespace()));
+            Assert.isTrue(BDEF_NAME.equals(data.getBusinessObjectDefinitionName()));
+        }
     }
 
     @Test
-    public void testBusinessObjectDataSearchWithSomeOptionalFields()
+    public void testBusinessObjectDataSearchWithAltSearchKeyFields()
     {
         businessObjectDataDaoTestHelper
                 .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null,
