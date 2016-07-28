@@ -36,9 +36,7 @@ public class BusinessObjectDataSearchHelper
 
     /**
      * validate business object search request
-     *
-     * @param business object DATA search request
-     *
+     * @param request business object DATA search request
      * @throws IllegalArgumentException when business object data search request is not valid
      */
     public void validateBusinesObjectDataSearchRequest(BusinessObjectDataSearchRequest request) throws IllegalArgumentException
