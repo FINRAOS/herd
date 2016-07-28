@@ -18,45 +18,22 @@
 <Configuration status="warn" monitorInterval="60">
    <Appenders>
 
-      <!-- Use a rolling file appender to roll over files at certain points. The main log file will be herd.log in the location specified by the environment variable. The rollover format will use the date and increment counter and archive automatically. -->
-      <RollingFile name="RollingFile" fileName="${env:HERD_LOG4J_OUTPUT_BASE_PATH}logs/herd.log" filePattern="${env:HERD_LOG4J_OUTPUT_BASE_PATH}logs/herd.%d{yyyy-MM-dd}-%i.log.gz" immediateFlush="true" append="true">
+      <!-- A simple console appender to use by default. -->
+      <Console name="Console" target="SYSTEM_OUT">
          <PatternLayout pattern="%d{MMM-dd-yyyy HH:mm:ss.SSS} [%t] %-5p %c{5}.%M %X{uid} %X{activitiProcessInstanceId} - %m%n"/>
-         <Policies>
-            <!-- Roll over files when they reach 2GB in size or once a day, whichever comes first. -->
-            <SizeBasedTriggeringPolicy size="2 GB" />
-            <TimeBasedTriggeringPolicy />
-         </Policies>
-         <DefaultRolloverStrategy>
-            <!-- Each time a rollover occurs, evaluate the following to determine when files should be deleted. Evaluate/delete files in the specified directory only. -->
-            <Delete basePath="${env:HERD_LOG4J_OUTPUT_BASE_PATH}logs" maxDepth="1">
-               <!-- Only consider the previously rolled over and archived files. -->
-               <IfFileName glob="herd.*.log.gz">
-                  <!-- Delete files after 30 days or when the accumulated size of all files exceeds 3GB. -->
-                  <IfAny>
-                     <IfLastModified age="30D" />
-                     <IfAccumulatedFileSize exceeds="3 GB" />
-                  </IfAny>
-               </IfFileName>
-            </Delete>
-         </DefaultRolloverStrategy>
-      </RollingFile>
+      </Console>
 
    </Appenders>
 
    <Loggers>
       <!-- The default logging level for herd is "info". -->
       <Logger name="org.finra.herd" level="info" additivity="false">
-          <AppenderRef ref="RollingFile"/>
+          <AppenderRef ref="Console"/>
       </Logger>
 
       <!-- Enable HTTP request logging by setting this class to debug level. -->
       <Logger name="org.finra.herd.ui.RequestLoggingFilter" level="debug" additivity="false">
-          <AppenderRef ref="RollingFile"/>
-      </Logger>
-
-      <!-- Enable debug level for AWS request id information. -->
-      <Logger name="com.amazonaws.requestId" level="debug" additivity="false">
-          <AppenderRef ref="RollingFile"/>
+          <AppenderRef ref="Console"/>
       </Logger>
 
       <!--
@@ -65,21 +42,21 @@
        classes wired into the Activiti process engine configuration.
       -->
       <Logger name="org.activiti.engine.impl.jobexecutor.TimerCatchIntermediateEventJobHandler" level="off" additivity="false">
-          <AppenderRef ref="RollingFile"/>
+          <AppenderRef ref="Console"/>
       </Logger>
       <Logger name="org.activiti.engine.impl.jobexecutor.TimerExecuteNestedActivityJobHandler" level="off" additivity="false">
-          <AppenderRef ref="RollingFile"/>
+          <AppenderRef ref="Console"/>
       </Logger>
       <Logger name="org.activiti.engine.impl.jobexecutor.TimerStartEventJobHandler" level="off" additivity="false">
-          <AppenderRef ref="RollingFile"/>
+          <AppenderRef ref="Console"/>
       </Logger>
       <Logger name="org.activiti.engine.impl.jobexecutor.ExecuteJobsRunnable" level="off" additivity="false">
-          <AppenderRef ref="RollingFile"/>
+          <AppenderRef ref="Console"/>
       </Logger>
 
       <!-- We are using "warn" as the default level which will prevent too much logging (e.g. info, debug, etc.) unless specifically configured with a separate Logger. -->
       <Root level="warn">
-         <AppenderRef ref="RollingFile"/>
+         <AppenderRef ref="Console"/>
       </Root>
    </Loggers>
 </Configuration>
