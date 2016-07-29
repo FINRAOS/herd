@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  Copyright 2015 herd contributors
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<!-- Don't add a shutdown hook for the default configuration. This also helps take care of logging warnings for JUnits. -->
+<Configuration shutdownHook="disable" status="warn">
+   <!--
+     This is a simple Log4J2 configuration file that logs to the console. It is here so Cobertura can depend on it and have a configuration file present.
+     We configured Cobertura to use Log4J2 instead of its default logback-classic so some configuration file is needed or else an error will be displayed
+     on the console when JUnit tests are run.
+    -->
+   <Appenders>
+      <Console name="Console" target="SYSTEM_OUT">
+         <PatternLayout pattern="%d{MMM-dd-yyyy HH:mm:ss.SSS} [%t] %-5p %c{5}.%M - %m%n"/>
+      </Console>
+   </Appenders>
+
+   <Loggers>
+      <Root level="warn">
+         <AppenderRef ref="Console"/>
+      </Root>
+   </Loggers>
+</Configuration>

@@ -14,7 +14,7 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<!-- Don't add a shutdown hook for the defaul configuration. This also helps take care of logging warnings for JUnits. -->
+<!-- Don't add a shutdown hook for the default configuration. This also helps take care of logging warnings for JUnits. -->
 <Configuration shutdownHook="disable" status="warn">
    <!--
      This is a default Log4J configuration file that will automatically get read in and used by Log4J during application startup.
