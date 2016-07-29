@@ -64,7 +64,7 @@ public class BusinessObjectDataSearchHelper
      *
      * @throws IllegalArgumentException when business object data search key is not valid
      */
-    void validateBusinessObjectDataKey(BusinessObjectDataSearchKey key) throws IllegalArgumentException
+    public void validateBusinessObjectDataKey(BusinessObjectDataSearchKey key) throws IllegalArgumentException
     {
         Assert.notNull(key, "A business object data key must be specified.");
         key.setNamespace(alternateKeyHelper.validateStringParameter("namespace", key.getNamespace()));
