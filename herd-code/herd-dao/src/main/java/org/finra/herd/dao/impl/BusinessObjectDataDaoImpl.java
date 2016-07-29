@@ -868,7 +868,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
             businessObjectData.setBusinessObjectFormatVersion(formatEntity.getBusinessObjectFormatVersion());
             businessObjectData.setPartitionKey(dataEntity.getPartitionValue());
 
-            List<String> subpartitions = new ArrayList<String>();
+            List<String> subpartitions = new ArrayList<>();
             if (dataEntity.getPartitionValue2() != null)
             {
                 subpartitions.add(dataEntity.getPartitionValue2());
