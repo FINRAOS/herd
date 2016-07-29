@@ -1412,6 +1412,7 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
     @Override
     public BusinessObjectDataSearchResult searchBusinessObjectData(BusinessObjectDataSearchRequest request)
     {
+        //TO DO check name space permission for all entries in the request.
         // validate search request
         businessObjectDataSearchHelper.validateBusinesObjectDataSearchRequest(request);
         // search business object data

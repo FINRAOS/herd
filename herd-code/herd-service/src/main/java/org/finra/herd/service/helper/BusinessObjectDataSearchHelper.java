@@ -41,10 +41,10 @@ public class BusinessObjectDataSearchHelper
      */
     public void validateBusinesObjectDataSearchRequest(BusinessObjectDataSearchRequest request) throws IllegalArgumentException
     {
-        Assert.notNull(request, "A BusinessObjectDataSearchRequest must be specified");
+        Assert.notNull(request, "A Business Object Data SearchRequest must be specified");
         List<BusinessObjectDataSearchFilter> businessObjectDataSearchFilters = request.getBusinessObjectDataSearchFilters();
-        Assert.isTrue(businessObjectDataSearchFilters!= null, "BusinessObjectDataSearchFilters must be specified");
-        Assert.isTrue(businessObjectDataSearchFilters.size() == 1, "BusinessObjectDataSearchFilters can only have one filter");
+        Assert.isTrue(businessObjectDataSearchFilters!= null, "Business Object Data Search Filters must be specified");
+        Assert.isTrue(businessObjectDataSearchFilters.size() == 1, "Business Object Data Search Filters can only have one filter");
         List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = request.getBusinessObjectDataSearchFilters().get(0).getBusinessObjectDataSearchKeys();
 
         Assert.isTrue(businessObjectDataSearchKeys != null, "A BusinessObject Search Key must be specified");
@@ -64,7 +64,7 @@ public class BusinessObjectDataSearchHelper
      *
      * @throws IllegalArgumentException when business object data search key is not valid
      */
-    public void validateBusinessObjectDataKey(BusinessObjectDataSearchKey key) throws IllegalArgumentException
+    void validateBusinessObjectDataKey(BusinessObjectDataSearchKey key) throws IllegalArgumentException
     {
         Assert.notNull(key, "A business object data key must be specified.");
         key.setNamespace(alternateKeyHelper.validateStringParameter("namespace", key.getNamespace()));
