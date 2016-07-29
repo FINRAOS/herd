@@ -73,8 +73,6 @@ import org.finra.herd.model.jpa.StorageUnitStatusEntity_;
 @Repository
 public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements BusinessObjectDataDao
 {
-    public static final int SEARCH_RESULT_LIMIT = 50;
-
     @Override
     public BusinessObjectDataEntity getBusinessObjectDataByAltKey(BusinessObjectDataKey businessObjectDataKey)
     {
