@@ -44,6 +44,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchFilter;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
+import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.StoragePolicyPriorityLevel;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity_;
@@ -789,6 +790,10 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
     @Override
     public List<BusinessObjectData> searchBusinessObjectData(List<BusinessObjectDataSearchFilter> filters)
     {
+        Integer businessObjectDataSearchMaxResultsPerPage =
+                configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULTS_PER_PAGE,
+                        Integer.class);
+  
         // assume only one filter and only on search key, the validation should be passed by now
         BusinessObjectDataSearchKey businessDataSearchKey = filters.get(0).getBusinessObjectDataSearchKeys().get(0);
 
@@ -846,7 +851,8 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
         List<BusinessObjectData> businessObjectDataList = new ArrayList<>();
 
-        List<BusinessObjectDataEntity> entitityArray = entityManager.createQuery(criteria).setMaxResults(SEARCH_RESULT_LIMIT).getResultList();
+        List<BusinessObjectDataEntity> entitityArray =
+                entityManager.createQuery(criteria).setMaxResults(businessObjectDataSearchMaxResultsPerPage).getResultList();
         for (BusinessObjectDataEntity dataEntity : entitityArray)
         {
             BusinessObjectData businessObjectData = new BusinessObjectData();
