@@ -1,5 +1,7 @@
 package org.finra.herd.service.helper;
 
+import static org.junit.Assert.fail;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -92,7 +94,7 @@ public class BusinessObjectDataSearchHelperTest extends AbstractServiceTest
         catch (IllegalArgumentException ex)
         {
             // catch Exception as expected
-            Assert.isTrue(true, "No exception should be thrown, should not be in here. No exception should be thrown");
+            fail("No exception should be thrown, but got " + ex.getMessage());
         }
     }
 
@@ -112,14 +114,13 @@ public class BusinessObjectDataSearchHelperTest extends AbstractServiceTest
         catch (IllegalArgumentException ex)
         {
             // catch Exception as expected
-            Assert.isTrue(true, "No exception should be thrown, should not be in here. No exception should be thrown");
+            fail("No exception should be thrown, but got " + ex.getMessage());
         }
     }
 
     @Test
     public void testValidateBusinessObjectDataSearchRequestPositive()
     {
-        List<BusinessObjectDataSearchFilter> businessObjectDataSearchFilters = new ArrayList<>();
         BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
         key.setNamespace("NAMESPACE");
         key.setBusinessObjectDefinitionName("DEF");
@@ -133,7 +134,7 @@ public class BusinessObjectDataSearchHelperTest extends AbstractServiceTest
         List<BusinessObjectDataSearchFilter> filterList = new ArrayList<>();
         filterList.add(filter);
         BusinessObjectDataSearchRequest request = new BusinessObjectDataSearchRequest(filterList);
-        request.setBusinessObjectDataSearchFilters(businessObjectDataSearchFilters);
+        request.setBusinessObjectDataSearchFilters(filterList);
 
         try
         {
@@ -142,7 +143,7 @@ public class BusinessObjectDataSearchHelperTest extends AbstractServiceTest
         catch (IllegalArgumentException ex)
         {
             // catch Exception as expected
-            Assert.isTrue(true, "No exception should be thrown, should not be in here. No exception should be thrown");
+            fail("No exception should be thrown, but got " + ex.getMessage());
         }
     }
 
