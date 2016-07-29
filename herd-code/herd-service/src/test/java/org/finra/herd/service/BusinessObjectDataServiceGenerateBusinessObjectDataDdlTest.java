@@ -103,7 +103,7 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
     {
         // Prepare test data.
         createDatabaseEntitiesForBusinessObjectDataDdlTesting();
-        createExpectedPartitionValueProcessDatesForApril2014(PARTITION_KEY_GROUP);
+        expectedPartitionValueDaoTestHelper.createExpectedPartitionValueProcessDatesForApril2014(PARTITION_KEY_GROUP);
 
         BusinessObjectDataDdlRequest request;
         BusinessObjectDataDdl resultDdl;
@@ -379,8 +379,8 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         // Prepare test data without custom ddl.
         createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, FIRST_PARTITION_COLUMN_NAME, PARTITION_KEY_GROUP,
             BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, UNSORTED_PARTITION_VALUES, SUBPARTITION_VALUES, SCHEMA_DELIMITER_PIPE,
-            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, getTestSchemaColumns(), getTestPartitionColumns(), false, CUSTOM_DDL_NAME, true,
-            NO_ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
+            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(),
+            schemaColumnDaoTestHelper.getTestPartitionColumns(), false, CUSTOM_DDL_NAME, true, NO_ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
 
         // Retrieve business object data ddl request without optional parameters.
         BusinessObjectDataDdlRequest request = getTestBusinessObjectDataDdlRequest(STORAGE_1_AVAILABLE_PARTITION_VALUES);
@@ -407,8 +407,8 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         // Prepare test data without custom ddl.
         createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, FIRST_PARTITION_COLUMN_NAME, PARTITION_KEY_GROUP,
             BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, UNSORTED_PARTITION_VALUES, SUBPARTITION_VALUES, SCHEMA_DELIMITER_PIPE,
-            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, getTestSchemaColumns(), getTestPartitionColumns(), false, CUSTOM_DDL_NAME, true,
-            NO_ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
+            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(),
+            schemaColumnDaoTestHelper.getTestPartitionColumns(), false, CUSTOM_DDL_NAME, true, NO_ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
 
         // Retrieve business object data ddl using request with a standalone partition value filter and without optional parameters.
         BusinessObjectDataDdlRequest request = getTestBusinessObjectDataDdlRequest(STORAGE_1_AVAILABLE_PARTITION_VALUES);
@@ -438,9 +438,9 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         // Prepare test data without custom ddl.
         createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, FIRST_PARTITION_COLUMN_NAME, PARTITION_KEY_GROUP,
             BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, UNSORTED_PARTITION_VALUES, SUBPARTITION_VALUES, SCHEMA_DELIMITER_PIPE,
-            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, getTestSchemaColumns(), getTestPartitionColumns(), false, CUSTOM_DDL_NAME, true,
-            NO_ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
-        createExpectedPartitionValueProcessDatesForApril2014(PARTITION_KEY_GROUP);
+            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(),
+            schemaColumnDaoTestHelper.getTestPartitionColumns(), false, CUSTOM_DDL_NAME, true, NO_ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
+        expectedPartitionValueDaoTestHelper.createExpectedPartitionValueProcessDatesForApril2014(PARTITION_KEY_GROUP);
 
         // Retrieve business object data ddl request without optional parameters.
         BusinessObjectDataDdlRequest request = getTestBusinessObjectDataDdlRequest(START_PARTITION_VALUE, END_PARTITION_VALUE);
@@ -542,7 +542,7 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
     {
         // Prepare test data.
         createDatabaseEntitiesForBusinessObjectDataDdlTesting();
-        createExpectedPartitionValueProcessDatesForApril2014(PARTITION_KEY_GROUP);
+        expectedPartitionValueDaoTestHelper.createExpectedPartitionValueProcessDatesForApril2014(PARTITION_KEY_GROUP);
 
         // Retrieve business object data ddl request with all string values requiring trimming.
         BusinessObjectDataDdlRequest request =
@@ -932,8 +932,8 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
     public void testGenerateBusinessObjectDataDdlNoCustomDdlPartitionColumnIsAlsoRegularColumn()
     {
         // Prepare test data without custom ddl.
-        List<SchemaColumn> schemaColumns = getTestSchemaColumns();
-        List<SchemaColumn> partitionColumns = getTestPartitionColumns();
+        List<SchemaColumn> schemaColumns = schemaColumnDaoTestHelper.getTestSchemaColumns();
+        List<SchemaColumn> partitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();
         // Override the first schema column to be a partition column.
         schemaColumns.set(0, partitionColumns.get(0));
         createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, FIRST_PARTITION_COLUMN_NAME, null,
@@ -958,8 +958,8 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         // Prepare test data with business object format having no partition key group value specified.
         createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, FIRST_PARTITION_COLUMN_NAME, null,
             BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, UNSORTED_PARTITION_VALUES, SUBPARTITION_VALUES, SCHEMA_DELIMITER_PIPE,
-            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, getTestSchemaColumns(), getTestPartitionColumns(), false, CUSTOM_DDL_NAME, true,
-            ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
+            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(),
+            schemaColumnDaoTestHelper.getTestPartitionColumns(), false, CUSTOM_DDL_NAME, true, ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
 
         // Try to generate business object data ddl using partition value range when business object format has no partition key group.
         BusinessObjectDataDdlRequest request = getTestBusinessObjectDataDdlRequest(START_PARTITION_VALUE, END_PARTITION_VALUE, CUSTOM_DDL_NAME);
@@ -986,7 +986,7 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         createDatabaseEntitiesForBusinessObjectDataDdlTesting();
         String startPartitionValue = BusinessObjectDataService.MAX_PARTITION_VALUE_TOKEN.replace("maximum", "a");
         String endPartitionValue = BusinessObjectDataService.MAX_PARTITION_VALUE_TOKEN.replace("maximum", "z");
-        createExpectedPartitionValueEntities(PARTITION_KEY_GROUP,
+        expectedPartitionValueDaoTestHelper.createExpectedPartitionValueEntities(PARTITION_KEY_GROUP,
             Arrays.asList(startPartitionValue, BusinessObjectDataService.MAX_PARTITION_VALUE_TOKEN, endPartitionValue));
 
         // Try to generate business object data ddl when expected partition value matches to the maximum partition value token.
@@ -1009,7 +1009,7 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         createDatabaseEntitiesForBusinessObjectDataDdlTesting();
         String startPartitionValue = BusinessObjectDataService.MIN_PARTITION_VALUE_TOKEN.replace("minimum", "a");
         String endPartitionValue = BusinessObjectDataService.MIN_PARTITION_VALUE_TOKEN.replace("minimum", "z");
-        createExpectedPartitionValueEntities(PARTITION_KEY_GROUP,
+        expectedPartitionValueDaoTestHelper.createExpectedPartitionValueEntities(PARTITION_KEY_GROUP,
             Arrays.asList(startPartitionValue, BusinessObjectDataService.MIN_PARTITION_VALUE_TOKEN, endPartitionValue));
 
         // Try to generate business object data ddl when expected partition value matches to the maximum partition value token.
@@ -1029,12 +1029,12 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
     public void testGenerateBusinessObjectDataDdlNoCustomDdlSingleLevelPartitioningPartitionValueList()
     {
         // Prepare test data without custom ddl.
-        List<SchemaColumn> partitionColumns = getTestPartitionColumns().subList(0, 1);
+        List<SchemaColumn> partitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns().subList(0, 1);
         String partitionKey = partitionColumns.get(0).getName();
         createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, partitionKey, null,
             BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, UNSORTED_PARTITION_VALUES, NO_SUBPARTITION_VALUES, SCHEMA_DELIMITER_PIPE,
-            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, getTestSchemaColumns(), partitionColumns, false, null, true,
-            ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
+            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns, false, null,
+            true, ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
 
         // Retrieve business object data ddl without specifying custom ddl name.
         BusinessObjectDataDdlRequest request = getTestBusinessObjectDataDdlRequest(UNSORTED_PARTITION_VALUES);
@@ -1060,14 +1060,14 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
     public void testGenerateBusinessObjectDataDdlNoCustomDdlSingleLevelPartitioningPartitionValueRange()
     {
         // Prepare test data without custom ddl and with partition key using NO_PARTITIONING_PARTITION_KEY.
-        List<SchemaColumn> partitionColumns = getTestPartitionColumns().subList(0, 1);
+        List<SchemaColumn> partitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns().subList(0, 1);
         String partitionKey = Hive13DdlGenerator.NO_PARTITIONING_PARTITION_KEY;
         partitionColumns.get(0).setName(partitionKey);
         createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, partitionKey, PARTITION_KEY_GROUP,
             BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, UNSORTED_PARTITION_VALUES, NO_SUBPARTITION_VALUES, SCHEMA_DELIMITER_PIPE,
-            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, getTestSchemaColumns(), partitionColumns, false, null, true,
-            ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
-        createExpectedPartitionValueProcessDatesForApril2014(PARTITION_KEY_GROUP);
+            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns, false, null,
+            true, ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
+        expectedPartitionValueDaoTestHelper.createExpectedPartitionValueProcessDatesForApril2014(PARTITION_KEY_GROUP);
 
         // Retrieve business object data ddl without specifying custom ddl name.
         BusinessObjectDataDdlRequest request = getTestBusinessObjectDataDdlRequest(START_PARTITION_VALUE, END_PARTITION_VALUE);
@@ -1087,8 +1087,8 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         List<String> partitionValues = Arrays.asList(Hive13DdlGenerator.NO_PARTITIONING_PARTITION_VALUE);
         createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, Hive13DdlGenerator.NO_PARTITIONING_PARTITION_KEY, null,
             BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, partitionValues, NO_SUBPARTITION_VALUES, SCHEMA_DELIMITER_PIPE,
-            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, getTestSchemaColumns(), null, false, CUSTOM_DDL_NAME, true,
-            ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
+            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), null, false, CUSTOM_DDL_NAME,
+            true, ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
 
         // Retrieve business object data ddl for a non-partitioned table.
         BusinessObjectDataDdlRequest request = getTestBusinessObjectDataDdlRequest(UNSORTED_PARTITION_VALUES, CUSTOM_DDL_NAME);
@@ -1110,7 +1110,7 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         List<String> partitionValues = Arrays.asList(Hive13DdlGenerator.NO_PARTITIONING_PARTITION_VALUE);
         createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, Hive13DdlGenerator.NO_PARTITIONING_PARTITION_KEY, null,
             BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, partitionValues, NO_SUBPARTITION_VALUES, SCHEMA_DELIMITER_PIPE,
-            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, getTestSchemaColumns(), null, false, null, true,
+            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), null, false, null, true,
             ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
 
         // Retrieve business object data ddl for a non-partitioned table and without specifying custom ddl name.
@@ -1130,12 +1130,12 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
     public void testGenerateBusinessObjectDataDdlSubpartitionKeysHaveHyphens()
     {
         // Prepare test data with subpartition using key values with hyphens instead of underscores.
-        List<SchemaColumn> partitionColumns = getTestPartitionColumns();
+        List<SchemaColumn> partitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();
         String partitionKey = partitionColumns.get(0).getName();
         createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, partitionKey, PARTITION_KEY_GROUP,
             BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, UNSORTED_PARTITION_VALUES, SUBPARTITION_VALUES, SCHEMA_DELIMITER_PIPE,
-            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, getTestSchemaColumns(), partitionColumns, true, CUSTOM_DDL_NAME, true,
-            ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
+            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns, true,
+            CUSTOM_DDL_NAME, true, ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
 
         // Retrieve business object data ddl.
         BusinessObjectDataDdlRequest request = getTestBusinessObjectDataDdlRequest(UNSORTED_PARTITION_VALUES, CUSTOM_DDL_NAME);
@@ -1153,11 +1153,12 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
     public void testGenerateBusinessObjectDataDdlNoCustomDdlMissingSchemaDelimiterCharacter()
     {
         // Prepare test data.
-        List<SchemaColumn> partitionColumns = getTestPartitionColumns();
+        List<SchemaColumn> partitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();
         String partitionKey = partitionColumns.get(0).getName();
         createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, partitionKey, null,
             BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, UNSORTED_PARTITION_VALUES, SUBPARTITION_VALUES, null, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
-            SCHEMA_NULL_VALUE_BACKSLASH_N, getTestSchemaColumns(), partitionColumns, false, null, true, ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
+            SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns, false, null, true,
+            ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
 
         // Retrieve business object data ddl.
         BusinessObjectDataDdlRequest request = getTestBusinessObjectDataDdlRequest(UNSORTED_PARTITION_VALUES);
@@ -1176,11 +1177,12 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
     public void testGenerateBusinessObjectDataDdlNoCustomDdlMissingSchemaEscapeCharacter()
     {
         // Prepare test data without custom ddl.
-        List<SchemaColumn> partitionColumns = getTestPartitionColumns();
+        List<SchemaColumn> partitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();
         String partitionKey = partitionColumns.get(0).getName();
         createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, partitionKey, null,
             BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, UNSORTED_PARTITION_VALUES, SUBPARTITION_VALUES, SCHEMA_DELIMITER_PIPE, null,
-            SCHEMA_NULL_VALUE_BACKSLASH_N, getTestSchemaColumns(), partitionColumns, false, null, true, ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
+            SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns, false, null, true,
+            ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
 
         // Retrieve business object data ddl.
         BusinessObjectDataDdlRequest request = getTestBusinessObjectDataDdlRequest(UNSORTED_PARTITION_VALUES);
@@ -1199,11 +1201,12 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
     public void testGenerateBusinessObjectDataDdlNoCustomDdlMissingSchemaNullValue()
     {
         // Prepare test data without custom ddl.
-        List<SchemaColumn> partitionColumns = getTestPartitionColumns();
+        List<SchemaColumn> partitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();
         String partitionKey = partitionColumns.get(0).getName();
         createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, partitionKey, null,
             BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, UNSORTED_PARTITION_VALUES, SUBPARTITION_VALUES, SCHEMA_DELIMITER_PIPE,
-            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null, getTestSchemaColumns(), partitionColumns, false, null, true, ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
+            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null, schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns, false, null, true,
+            ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
 
         // Retrieve business object data ddl.
         BusinessObjectDataDdlRequest request = getTestBusinessObjectDataDdlRequest(UNSORTED_PARTITION_VALUES);
@@ -1222,11 +1225,11 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
     public void testGenerateBusinessObjectDataDdlNoCustomDdlEscapeSingleQuoteInRowFormat()
     {
         // Prepare test data without custom ddl.
-        List<SchemaColumn> partitionColumns = getTestPartitionColumns();
+        List<SchemaColumn> partitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();
         String partitionKey = partitionColumns.get(0).getName();
         createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, partitionKey, null,
             BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, UNSORTED_PARTITION_VALUES, SUBPARTITION_VALUES, SINGLE_QUOTE, SINGLE_QUOTE, SINGLE_QUOTE,
-            getTestSchemaColumns(), partitionColumns, false, null, true, ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
+            schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns, false, null, true, ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
 
         // Retrieve business object data ddl.
         BusinessObjectDataDdlRequest request = getTestBusinessObjectDataDdlRequest(UNSORTED_PARTITION_VALUES);
@@ -1245,11 +1248,11 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
     public void testGenerateBusinessObjectDataDdlNoCustomDdlEscapeBackslashInRowFormat()
     {
         // Prepare test data without custom ddl.
-        List<SchemaColumn> partitionColumns = getTestPartitionColumns();
+        List<SchemaColumn> partitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();
         String partitionKey = partitionColumns.get(0).getName();
         createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, partitionKey, null,
             BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, UNSORTED_PARTITION_VALUES, SUBPARTITION_VALUES, BACKSLASH, BACKSLASH, BACKSLASH,
-            getTestSchemaColumns(), partitionColumns, false, null, true, ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
+            schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns, false, null, true, ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
 
         // Retrieve business object data ddl.
         BusinessObjectDataDdlRequest request = getTestBusinessObjectDataDdlRequest(UNSORTED_PARTITION_VALUES);
@@ -1268,12 +1271,12 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
     public void testGenerateBusinessObjectDataDdlNoCustomDdlUnprintableCharactersInRowFormat()
     {
         // Prepare test data without custom ddl.
-        List<SchemaColumn> partitionColumns = getTestPartitionColumns();
+        List<SchemaColumn> partitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();
         String partitionKey = partitionColumns.get(0).getName();
         // Set schemaDelimiterCharacter to char(1), schemaEscapeCharacter to char(10), and schemaNullValue to char(128).
         createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, partitionKey, null,
             BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, UNSORTED_PARTITION_VALUES, SUBPARTITION_VALUES, String.valueOf((char) 1),
-            String.valueOf((char) 10), String.valueOf((char) 128), getTestSchemaColumns(), partitionColumns, false, null, true,
+            String.valueOf((char) 10), String.valueOf((char) 128), schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns, false, null, true,
             ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
 
         // Retrieve business object data ddl request without business object format and data versions.
@@ -1293,11 +1296,11 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
     public void testGenerateBusinessObjectDataDdlMissingBusinessObjectDataDoNotAllowMissingData()
     {
         // Prepare test data.
-        List<SchemaColumn> partitionColumns = getTestPartitionColumns();
+        List<SchemaColumn> partitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();
         createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, FIRST_PARTITION_COLUMN_NAME, PARTITION_KEY_GROUP,
             BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, UNSORTED_PARTITION_VALUES, SUBPARTITION_VALUES, SCHEMA_DELIMITER_PIPE,
-            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, getTestSchemaColumns(), partitionColumns, false, CUSTOM_DDL_NAME, true,
-            ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
+            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns, false,
+            CUSTOM_DDL_NAME, true, ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
 
         // Try to retrieve business object data ddl for the non-existing business object data with "allow missing data" flag set to "false".
         BusinessObjectDataDdlRequest request = getTestBusinessObjectDataDdlRequest(UNSORTED_PARTITION_VALUES, CUSTOM_DDL_NAME);
@@ -1339,7 +1342,8 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
             BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, TABLE_NAME, NO_CUSTOM_DDL_NAME, getExpectedHiveDdl(PARTITION_VALUE)), result);
 
         // Update the storage unit status to a non-available one.
-        storageUnitEntity.setStatus(createStorageUnitStatusEntity(STORAGE_UNIT_STATUS, DESCRIPTION, NO_STORAGE_UNIT_STATUS_AVAILABLE_FLAG_SET));
+        storageUnitEntity.setStatus(
+            storageUnitStatusDaoTestHelper.createStorageUnitStatusEntity(STORAGE_UNIT_STATUS, DESCRIPTION, NO_STORAGE_UNIT_STATUS_AVAILABLE_FLAG_SET));
         herdDao.saveAndRefresh(storageUnitEntity);
 
         // Try to retrieve business object data ddl when storage unit has a non-available status and with "allow missing data" flag set to "false".
@@ -1364,11 +1368,11 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
     public void testGenerateBusinessObjectDataDdlMissingBusinessObjectDataAllowMissingDataSomeDataNoExists()
     {
         // Prepare test data.
-        List<SchemaColumn> partitionColumns = getTestPartitionColumns();
+        List<SchemaColumn> partitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();
         createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, FIRST_PARTITION_COLUMN_NAME, PARTITION_KEY_GROUP,
             BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, UNSORTED_PARTITION_VALUES, SUBPARTITION_VALUES, SCHEMA_DELIMITER_PIPE,
-            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, getTestSchemaColumns(), partitionColumns, false, CUSTOM_DDL_NAME, true,
-            ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
+            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns, false,
+            CUSTOM_DDL_NAME, true, ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
 
         // Retrieve business object data ddl when some of the business object data is not available and "allow missing data" flag is set to "true".
         BusinessObjectDataDdlRequest request = getTestBusinessObjectDataDdlRequest(UNSORTED_PARTITION_VALUES, CUSTOM_DDL_NAME);
@@ -1384,11 +1388,11 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
     public void testGenerateBusinessObjectDataDdlMissingBusinessObjectDataAllowMissingDataAllDataNoExists()
     {
         // Prepare test data.
-        List<SchemaColumn> partitionColumns = getTestPartitionColumns();
+        List<SchemaColumn> partitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();
         createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, FIRST_PARTITION_COLUMN_NAME, PARTITION_KEY_GROUP,
             BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, UNSORTED_PARTITION_VALUES, SUBPARTITION_VALUES, SCHEMA_DELIMITER_PIPE,
-            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, getTestSchemaColumns(), partitionColumns, false, CUSTOM_DDL_NAME, true,
-            ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
+            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns, false,
+            CUSTOM_DDL_NAME, true, ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
 
         // Retrieve business object data ddl when all of the business object data is not available and "allow missing data" flag is set to "true".
         BusinessObjectDataDdlRequest request = getTestBusinessObjectDataDdlRequest(Arrays.asList("I_DO_NOT_EXIST"), CUSTOM_DDL_NAME);
@@ -1409,7 +1413,7 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         // business object data instance, so we can use that special value and find no data once we send a generate DDL request.
         createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, Hive13DdlGenerator.NO_PARTITIONING_PARTITION_KEY, null,
             BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, Arrays.asList(PARTITION_VALUE), NO_SUBPARTITION_VALUES, SCHEMA_DELIMITER_PIPE,
-            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, getTestSchemaColumns(), null, false, null, true,
+            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), null, false, null, true,
             ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
 
         // Retrieve business object data ddl for a non-partitioned table for a missing business object data instance and without specifying custom ddl name.
@@ -1431,12 +1435,12 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
     {
         // Prepare test data without custom ddl.
         String invalidPartitionColumnName = "INVALID_/_PRTN_CLMN";
-        List<SchemaColumn> partitionColumns = getTestPartitionColumns();
+        List<SchemaColumn> partitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();
         partitionColumns.get(0).setName(invalidPartitionColumnName);
         createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, PARTITION_KEY, null,
             BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, UNSORTED_PARTITION_VALUES, SUBPARTITION_VALUES, SCHEMA_DELIMITER_PIPE,
-            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, getTestSchemaColumns(), partitionColumns, false, null, true,
-            ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
+            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns, false, null,
+            true, ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
 
         // Try to retrieve business object data ddl for the format that uses unsupported schema column data type.
         BusinessObjectDataDdlRequest request = getTestBusinessObjectDataDdlRequest(UNSORTED_PARTITION_VALUES);
@@ -1460,7 +1464,7 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
     public void testGenerateBusinessObjectDataDdlNoCustomDdlNotSupportedSchemaColumnDataType()
     {
         // Prepare test data without custom ddl.
-        List<SchemaColumn> schemaColumns = getTestSchemaColumns();
+        List<SchemaColumn> schemaColumns = schemaColumnDaoTestHelper.getTestSchemaColumns();
         SchemaColumn schemaColumn = new SchemaColumn();
         schemaColumns.add(schemaColumn);
         schemaColumn.setName("COLUMN");
@@ -1468,8 +1472,8 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         String partitionKey = schemaColumns.get(0).getName();
         createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, partitionKey, null,
             BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, UNSORTED_PARTITION_VALUES, SUBPARTITION_VALUES, SCHEMA_DELIMITER_PIPE,
-            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumns, getTestPartitionColumns(), false, null, true,
-            ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
+            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumns, schemaColumnDaoTestHelper.getTestPartitionColumns(), false, null,
+            true, ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
 
         // Try to retrieve business object data ddl for the format that uses unsupported schema column data type.
         BusinessObjectDataDdlRequest request = getTestBusinessObjectDataDdlRequest(UNSORTED_PARTITION_VALUES);
@@ -1492,7 +1496,7 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
     public void testGenerateBusinessObjectDataDdlNoCustomDdlAllKnownFileTypes()
     {
         // Create an S3 storage entity with the relative attributes.
-        StorageEntity storageEntity = createStorageEntity(STORAGE_NAME, StoragePlatformEntity.S3, Arrays
+        StorageEntity storageEntity = storageDaoTestHelper.createStorageEntity(STORAGE_NAME, StoragePlatformEntity.S3, Arrays
             .asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), S3_BUCKET_NAME),
                 new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE),
                     S3_KEY_PREFIX_VELOCITY_TEMPLATE)));
@@ -1508,27 +1512,28 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         for (String businessObjectFormatFileType : businessObjectFormatFileTypeMap.keySet())
         {
             // Prepare test data for the respective business object format file type.
-            List<SchemaColumn> partitionColumns = getTestPartitionColumns().subList(0, 1);
+            List<SchemaColumn> partitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns().subList(0, 1);
             String partitionKey = partitionColumns.get(0).getName();
-            BusinessObjectFormatEntity businessObjectFormatEntity =
-                createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, businessObjectFormatFileType, FORMAT_VERSION, FORMAT_DESCRIPTION,
+            BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+                .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, businessObjectFormatFileType, FORMAT_VERSION, FORMAT_DESCRIPTION,
                     LATEST_VERSION_FLAG_SET, partitionKey, NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
-                    SCHEMA_NULL_VALUE_BACKSLASH_N, getTestSchemaColumns(), partitionColumns);
+                    SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns);
 
             for (String partitionValue : STORAGE_1_AVAILABLE_PARTITION_VALUES)
             {
-                BusinessObjectDataEntity businessObjectDataEntity =
-                    createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, businessObjectFormatFileType, FORMAT_VERSION, partitionValue,
+                BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
+                    .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, businessObjectFormatFileType, FORMAT_VERSION, partitionValue,
                         NO_SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS);
                 String s3KeyPrefix = s3KeyPrefixHelper.buildS3KeyPrefix(S3_KEY_PREFIX_VELOCITY_TEMPLATE, businessObjectFormatEntity,
                     businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity), STORAGE_NAME);
-                StorageUnitEntity storageUnitEntity =
-                    createStorageUnitEntity(storageEntity, businessObjectDataEntity, StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
+                StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
+                    .createStorageUnitEntity(storageEntity, businessObjectDataEntity, StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
 
                 // Create two storage files.
                 for (int i = 0; i < 2; i++)
                 {
-                    createStorageFileEntity(storageUnitEntity, String.format("%s/data%d.dat", s3KeyPrefix, i), FILE_SIZE_1_KB, ROW_COUNT_1000);
+                    storageFileDaoTestHelper
+                        .createStorageFileEntity(storageUnitEntity, String.format("%s/data%d.dat", s3KeyPrefix, i), FILE_SIZE_1_KB, ROW_COUNT_1000);
                 }
 
                 herdDao.saveAndRefresh(storageUnitEntity);
@@ -1556,8 +1561,8 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         String businessObjectFileType = "UNKNOWN";
         createDatabaseEntitiesForBusinessObjectDataDdlTesting(businessObjectFileType, PARTITION_KEY, null,
             BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, UNSORTED_PARTITION_VALUES, SUBPARTITION_VALUES, SCHEMA_DELIMITER_PIPE,
-            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, getTestSchemaColumns(), getTestPartitionColumns(), false, null, true,
-            ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
+            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(),
+            schemaColumnDaoTestHelper.getTestPartitionColumns(), false, null, true, ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
 
         // Try to retrieve business object data ddl for the format without custom ddl and that uses unsupported file type.
         BusinessObjectDataDdlRequest request = getTestBusinessObjectDataDdlRequest(UNSORTED_PARTITION_VALUES);
@@ -1582,8 +1587,8 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         // Prepare test data without custom ddl.
         createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, FIRST_PARTITION_COLUMN_NAME, PARTITION_KEY_GROUP,
             BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, UNSORTED_PARTITION_VALUES, SUBPARTITION_VALUES, SCHEMA_DELIMITER_PIPE,
-            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, getTestSchemaColumns(), getTestPartitionColumns(), false, CUSTOM_DDL_NAME, true,
-            ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
+            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(),
+            schemaColumnDaoTestHelper.getTestPartitionColumns(), false, CUSTOM_DDL_NAME, true, ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
 
         // Retrieve business object data ddl request without drop table statement.
         BusinessObjectDataDdlRequest request = getTestBusinessObjectDataDdlRequest(UNSORTED_PARTITION_VALUES);
@@ -1601,8 +1606,8 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
     @Test
     public void testGenerateBusinessObjectDataDdlFilterOnSubPartitionValues()
     {
-        List<SchemaColumn> columns = getTestSchemaColumns();
-        List<SchemaColumn> partitionColumns = getTestPartitionColumns();
+        List<SchemaColumn> columns = schemaColumnDaoTestHelper.getTestSchemaColumns();
+        List<SchemaColumn> partitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();
 
         // Test generate business object data ddl using primary partition and each of the available subpartition columns.
         for (int i = 0; i < Math.min(BusinessObjectDataEntity.MAX_SUBPARTITIONS + 1, PARTITION_COLUMNS.length); i++)
@@ -1632,11 +1637,11 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
     {
         // Prepare test data with storage units having no storage files, but only the relative storage directory path values.
         // For auto-discovery not to occur, number of partition columns is equal to the number of partition values.
-        List<SchemaColumn> partitionColumns = getTestPartitionColumns().subList(0, 1 + SUBPARTITION_VALUES.size());
+        List<SchemaColumn> partitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns().subList(0, 1 + SUBPARTITION_VALUES.size());
         createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, FIRST_PARTITION_COLUMN_NAME, PARTITION_KEY_GROUP,
             BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, UNSORTED_PARTITION_VALUES, SUBPARTITION_VALUES, SCHEMA_DELIMITER_PIPE,
-            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, getTestSchemaColumns(), partitionColumns, false, CUSTOM_DDL_NAME, false,
-            ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
+            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns, false,
+            CUSTOM_DDL_NAME, false, ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
 
         BusinessObjectDataDdlRequest request;
         BusinessObjectDataDdl resultDdl;
@@ -1717,23 +1722,23 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
     public void testGenerateBusinessObjectDataDdlLatestFormatVersionDataNotAvailableInStorage()
     {
         // Create database entities for two versions of a business object format.
-        List<SchemaColumn> partitionColumns = getTestPartitionColumns().subList(0, 1 + SUBPARTITION_VALUES.size());
-        BusinessObjectFormatEntity businessObjectFormatV0Entity =
-            createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION,
+        List<SchemaColumn> partitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns().subList(0, 1 + SUBPARTITION_VALUES.size());
+        BusinessObjectFormatEntity businessObjectFormatV0Entity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION,
                 NO_LATEST_VERSION_FLAG_SET, FIRST_PARTITION_COLUMN_NAME, PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE,
-                SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, getTestSchemaColumns(), partitionColumns);
-        BusinessObjectFormatEntity businessObjectFormatV1Entity =
-            createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, SECOND_FORMAT_VERSION, FORMAT_DESCRIPTION,
+                SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns);
+        BusinessObjectFormatEntity businessObjectFormatV1Entity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, SECOND_FORMAT_VERSION, FORMAT_DESCRIPTION,
                 LATEST_VERSION_FLAG_SET, FIRST_PARTITION_COLUMN_NAME, PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE,
-                SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, getTestSchemaColumns(), partitionColumns);
+                SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns);
 
         // Create two storage entities.
         StorageEntity storage1Entity = storageDao.getStorageByName(StorageEntity.MANAGED_STORAGE);
-        StorageEntity storage2Entity = createStorageEntity(STORAGE_NAME_2);
+        StorageEntity storage2Entity = storageDaoTestHelper.createStorageEntity(STORAGE_NAME_2);
 
         // Register initial version of the business object data for initial format version in both storages.
-        BusinessObjectDataEntity businessObjectDataV0V0Entity =
-            createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+        BusinessObjectDataEntity businessObjectDataV0V0Entity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS);
 
         String s3KeyPrefix = s3KeyPrefixHelper.buildS3KeyPrefix(S3_KEY_PREFIX_VELOCITY_TEMPLATE, businessObjectFormatV0Entity,
@@ -1741,23 +1746,23 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
 
         for (StorageEntity storageEntity : Arrays.asList(storage1Entity, storage2Entity))
         {
-            StorageUnitEntity storageUnitEntity =
-                createStorageUnitEntity(storageEntity, businessObjectDataV0V0Entity, StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
+            StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
+                .createStorageUnitEntity(storageEntity, businessObjectDataV0V0Entity, StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
             storageUnitEntity.setDirectoryPath(s3KeyPrefix);
             herdDao.saveAndRefresh(storageUnitEntity);
         }
         herdDao.saveAndRefresh(businessObjectDataV0V0Entity);
 
         // Register initial version of the business object data for second format version, but only in the second storage.
-        BusinessObjectDataEntity businessObjectDataV1V0Entity =
-            createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, SECOND_FORMAT_VERSION, PARTITION_VALUE,
+        BusinessObjectDataEntity businessObjectDataV1V0Entity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, SECOND_FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS);
 
         s3KeyPrefix = s3KeyPrefixHelper.buildS3KeyPrefix(S3_KEY_PREFIX_VELOCITY_TEMPLATE, businessObjectFormatV1Entity,
             businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataV1V0Entity), storage2Entity.getName());
 
-        StorageUnitEntity storageUnitEntity =
-            createStorageUnitEntity(storage2Entity, businessObjectDataV1V0Entity, StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
+        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(storage2Entity, businessObjectDataV1V0Entity, StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
         storageUnitEntity.setDirectoryPath(s3KeyPrefix);
         herdDao.saveAndRefresh(storageUnitEntity);
         herdDao.saveAndRefresh(businessObjectDataV1V0Entity);
@@ -1842,14 +1847,14 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         List<SchemaColumn> partitionColumns = schemaColumns.subList(0, 2);
 
         // Create a business object format entity with the schema.
-        BusinessObjectFormatEntity businessObjectFormatEntity =
-            createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION, FORMAT_DESCRIPTION,
                 LATEST_VERSION_FLAG_SET, PARTITION_KEY, NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
                 SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumns, partitionColumns);
 
         // Create an S3 storage entity.
-        StorageEntity storageEntity =
-            createStorageEntity(STORAGE_NAME, StoragePlatformEntity.S3, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME),
+        StorageEntity storageEntity = storageDaoTestHelper
+            .createStorageEntity(STORAGE_NAME, StoragePlatformEntity.S3, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME),
                 S3_BUCKET_NAME);
 
         // Create relative business object data, storage unit, and storage file entities.
@@ -1860,8 +1865,8 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
             partitionValues.add(partitionValue);
 
             // Create a business object data entity.
-            BusinessObjectDataEntity businessObjectDataEntity =
-                createBusinessObjectDataEntity(businessObjectFormatEntity, partitionValue, NO_SUBPARTITION_VALUES, DATA_VERSION, true,
+            BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
+                .createBusinessObjectDataEntity(businessObjectFormatEntity, partitionValue, NO_SUBPARTITION_VALUES, DATA_VERSION, true,
                     BusinessObjectDataStatusEntity.VALID);
 
             // Build an S3 key prefix according to the herd S3 naming convention.
@@ -1871,7 +1876,7 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
 
             // Create a storage unit with a storage directory path.
             StorageUnitEntity storageUnitEntity =
-                createStorageUnitEntity(storageEntity, businessObjectDataEntity, StorageUnitStatusEntity.ENABLED, s3KeyPrefix);
+                storageUnitDaoTestHelper.createStorageUnitEntity(storageEntity, businessObjectDataEntity, StorageUnitStatusEntity.ENABLED, s3KeyPrefix);
 
             // Create storage file entities.
             for (int j = 0; j < SECOND_LEVEL_PARTITION_VALUES_PER_BUSINESS_OBJECT_DATA; j++)
@@ -1882,7 +1887,7 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
                 for (int k = 0; k < STORAGE_FILES_PER_PARTITION; k++)
                 {
                     String storageFilePath = String.format("%s/%03d.data", storageFileDirectoryPath, k);
-                    createStorageFileEntity(storageUnitEntity, storageFilePath, FILE_SIZE_1_KB, ROW_COUNT_1000);
+                    storageFileDaoTestHelper.createStorageFileEntity(storageUnitEntity, storageFilePath, FILE_SIZE_1_KB, ROW_COUNT_1000);
                 }
             }
 
@@ -1964,8 +1969,8 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         // Prepare database entities required for testing.
         createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, FIRST_PARTITION_COLUMN_NAME, PARTITION_KEY_GROUP,
             BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, UNSORTED_PARTITION_VALUES, SUBPARTITION_VALUES, SCHEMA_DELIMITER_PIPE,
-            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, getTestSchemaColumns(), getTestPartitionColumns(), false, CUSTOM_DDL_NAME, true,
-            ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
+            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(),
+            schemaColumnDaoTestHelper.getTestPartitionColumns(), false, CUSTOM_DDL_NAME, true, ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
 
         // Retrieve business object data ddl for data located in multiple storages.
         BusinessObjectDataDdl resultBusinessObjectDataDdl = businessObjectDataService.generateBusinessObjectDataDdl(
@@ -1992,8 +1997,8 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         // Prepare database entities required for testing.
         createDatabaseEntitiesForBusinessObjectDataDdlTesting(FileTypeEntity.TXT_FILE_TYPE, FIRST_PARTITION_COLUMN_NAME, PARTITION_KEY_GROUP,
             BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, UNSORTED_PARTITION_VALUES, SUBPARTITION_VALUES, SCHEMA_DELIMITER_PIPE,
-            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, getTestSchemaColumns(), getTestPartitionColumns(), false, CUSTOM_DDL_NAME, true,
-            ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
+            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(),
+            schemaColumnDaoTestHelper.getTestPartitionColumns(), false, CUSTOM_DDL_NAME, true, ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA);
 
         // Try to retrieve business object data ddl when storage names are not specified
         // and the same business object data is registered in multiple storages.
@@ -2032,28 +2037,29 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         List<SchemaColumn> partitionColumns2 = schemaColumns.subList(0, 1);
 
         // Create an initial version of business object format with the schema having two partition columns.
-        BusinessObjectFormatEntity businessObjectFormatEntity1 =
-            createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION,
+        BusinessObjectFormatEntity businessObjectFormatEntity1 = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION,
                 NO_LATEST_VERSION_FLAG_SET, PARTITION_KEY, NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
                 SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumns, partitionColumns1);
 
         // Create a second version of business object format with the schema having only one partition column.
-        createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, SECOND_FORMAT_VERSION, FORMAT_DESCRIPTION,
-            LATEST_VERSION_FLAG_SET, PARTITION_KEY, NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
-            SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumns, partitionColumns2);
+        businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, SECOND_FORMAT_VERSION, FORMAT_DESCRIPTION,
+                LATEST_VERSION_FLAG_SET, PARTITION_KEY, NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
+                SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumns, partitionColumns2);
 
         // Provide sub-partition column name and value.
         List<SchemaColumn> subPartitionColumns = partitionColumns1.subList(1, 2);
         List<String> subPartitionValues = Arrays.asList(SUBPARTITION_VALUES.get(0));
 
         // Create a business object data entity.
-        BusinessObjectDataEntity businessObjectDataEntity =
-            createBusinessObjectDataEntity(businessObjectFormatEntity1, PARTITION_VALUE, subPartitionValues, DATA_VERSION, true,
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(businessObjectFormatEntity1, PARTITION_VALUE, subPartitionValues, DATA_VERSION, true,
                 BusinessObjectDataStatusEntity.VALID);
 
         // Create an S3 storage entity.
         // Add the "bucket name" attribute to the storage along with the key prefix velocity template.
-        StorageEntity storageEntity = createStorageEntity(STORAGE_NAME, StoragePlatformEntity.S3, Arrays
+        StorageEntity storageEntity = storageDaoTestHelper.createStorageEntity(STORAGE_NAME, StoragePlatformEntity.S3, Arrays
             .asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), S3_BUCKET_NAME),
                 new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE),
                     S3_KEY_PREFIX_VELOCITY_TEMPLATE)));
@@ -2065,7 +2071,7 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
                 subPartitionValues.toArray(new String[subPartitionValues.size()]), DATA_VERSION);
 
         // Create a storage unit with a storage directory path.
-        createStorageUnitEntity(storageEntity, businessObjectDataEntity, StorageUnitStatusEntity.ENABLED, s3KeyPrefix);
+        storageUnitDaoTestHelper.createStorageUnitEntity(storageEntity, businessObjectDataEntity, StorageUnitStatusEntity.ENABLED, s3KeyPrefix);
 
         // Try to retrieve business object data DDL when business object data has more
         // or equal sub-partition values then the latest business object format version.
@@ -2219,10 +2225,10 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         storageUnitEntities.get(1).setStatus(storageUnitStatusDao.getStorageUnitStatusByCode(StorageUnitStatusEntity.DISABLED));
 
         // Create a Glacier storage.
-        StorageEntity glacierStorageEntity = createStorageEntity(STORAGE_NAME_2, StoragePlatformEntity.GLACIER);
+        StorageEntity glacierStorageEntity = storageDaoTestHelper.createStorageEntity(STORAGE_NAME_2, StoragePlatformEntity.GLACIER);
 
         // Add an "available" storage unit for the second sub-partition to the Glacier storage.
-        createStorageUnitEntity(glacierStorageEntity, storageUnitEntities.get(1).getBusinessObjectData(),
+        storageUnitDaoTestHelper.createStorageUnitEntity(glacierStorageEntity, storageUnitEntities.get(1).getBusinessObjectData(),
             storageUnitStatusDao.getStorageUnitStatusByCode(StorageUnitStatusEntity.ENABLED), NO_STORAGE_DIRECTORY_PATH);
 
         // Try to retrieve business object data DDL with "IncludeAllRegisteredSubPartitions" option enabled.
@@ -2258,10 +2264,10 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
             .setStatus(businessObjectDataStatusDao.getBusinessObjectDataStatusByCode(BusinessObjectDataStatusEntity.INVALID));
 
         // Create a Glacier storage.
-        StorageEntity glacierStorageEntity = createStorageEntity(STORAGE_NAME_2, StoragePlatformEntity.GLACIER);
+        StorageEntity glacierStorageEntity = storageDaoTestHelper.createStorageEntity(STORAGE_NAME_2, StoragePlatformEntity.GLACIER);
 
         // Add an "available" storage unit for the second sub-partition to the Glacier storage.
-        createStorageUnitEntity(glacierStorageEntity, storageUnitEntities.get(1).getBusinessObjectData(),
+        storageUnitDaoTestHelper.createStorageUnitEntity(glacierStorageEntity, storageUnitEntities.get(1).getBusinessObjectData(),
             storageUnitStatusDao.getStorageUnitStatusByCode(StorageUnitStatusEntity.ENABLED), NO_STORAGE_DIRECTORY_PATH);
 
         // Try to retrieve business object data DDL with "IncludeAllRegisteredSubPartitions" option enabled.
@@ -2300,10 +2306,10 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         storageUnitEntities.get(1).setStatus(storageUnitStatusDao.getStorageUnitStatusByCode(StorageUnitStatusEntity.DISABLED));
 
         // Create a Glacier storage.
-        StorageEntity glacierStorageEntity = createStorageEntity(STORAGE_NAME_2, StoragePlatformEntity.GLACIER);
+        StorageEntity glacierStorageEntity = storageDaoTestHelper.createStorageEntity(STORAGE_NAME_2, StoragePlatformEntity.GLACIER);
 
         // Add an "available" storage unit for the second sub-partition to the Glacier storage.
-        createStorageUnitEntity(glacierStorageEntity, storageUnitEntities.get(1).getBusinessObjectData(),
+        storageUnitDaoTestHelper.createStorageUnitEntity(glacierStorageEntity, storageUnitEntities.get(1).getBusinessObjectData(),
             storageUnitStatusDao.getStorageUnitStatusByCode(StorageUnitStatusEntity.ENABLED), NO_STORAGE_DIRECTORY_PATH);
 
         // Try to retrieve business object data DDL with "IncludeAllRegisteredSubPartitions" option enabled.
@@ -2339,10 +2345,10 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
             .setStatus(businessObjectDataStatusDao.getBusinessObjectDataStatusByCode(BusinessObjectDataStatusEntity.DELETED));
 
         // Create a Glacier storage.
-        StorageEntity glacierStorageEntity = createStorageEntity(STORAGE_NAME_2, StoragePlatformEntity.GLACIER);
+        StorageEntity glacierStorageEntity = storageDaoTestHelper.createStorageEntity(STORAGE_NAME_2, StoragePlatformEntity.GLACIER);
 
         // Add an "available" storage unit for the second sub-partition to the Glacier storage.
-        createStorageUnitEntity(glacierStorageEntity, storageUnitEntities.get(1).getBusinessObjectData(),
+        storageUnitDaoTestHelper.createStorageUnitEntity(glacierStorageEntity, storageUnitEntities.get(1).getBusinessObjectData(),
             storageUnitStatusDao.getStorageUnitStatusByCode(StorageUnitStatusEntity.ENABLED), NO_STORAGE_DIRECTORY_PATH);
 
         // Retrieve business object data DDL with "IncludeAllRegisteredSubPartitions" option enabled.
@@ -2376,10 +2382,10 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         storageUnitEntities.get(1).setStatus(storageUnitStatusDao.getStorageUnitStatusByCode(StorageUnitStatusEntity.DISABLED));
 
         // Create a Glacier storage.
-        StorageEntity glacierStorageEntity = createStorageEntity(STORAGE_NAME_2, StoragePlatformEntity.GLACIER);
+        StorageEntity glacierStorageEntity = storageDaoTestHelper.createStorageEntity(STORAGE_NAME_2, StoragePlatformEntity.GLACIER);
 
         // Add an "available" storage unit for the second sub-partition to the Glacier storage.
-        createStorageUnitEntity(glacierStorageEntity, storageUnitEntities.get(1).getBusinessObjectData(),
+        storageUnitDaoTestHelper.createStorageUnitEntity(glacierStorageEntity, storageUnitEntities.get(1).getBusinessObjectData(),
             storageUnitStatusDao.getStorageUnitStatusByCode(StorageUnitStatusEntity.ENABLED), NO_STORAGE_DIRECTORY_PATH);
 
         // Retrieve business object data DDL with "IncludeAllRegisteredSubPartitions" option enabled.

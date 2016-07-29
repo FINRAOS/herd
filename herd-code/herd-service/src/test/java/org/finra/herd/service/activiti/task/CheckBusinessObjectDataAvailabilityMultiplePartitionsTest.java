@@ -36,7 +36,7 @@ public class CheckBusinessObjectDataAvailabilityMultiplePartitionsTest extends H
     public void testCheckBusinessObjectDataAvailabilityMultiplePartitionsXml() throws Exception
     {
         // Prepare test data.
-        createDatabaseEntitiesForBusinessObjectDataAvailabilityTesting(null);
+        businessObjectDataAvailabilityTestHelper.createDatabaseEntitiesForBusinessObjectDataAvailabilityTesting(null);
 
         // Prepare a check business object data availability request.
         BusinessObjectDataAvailabilityRequest businessObjectDataAvailabilityRequest = getTestBusinessObjectDataAvailabilityRequest(UNSORTED_PARTITION_VALUES);
@@ -63,7 +63,7 @@ public class CheckBusinessObjectDataAvailabilityMultiplePartitionsTest extends H
     public void testCheckBusinessObjectDataAvailabilityMultiplePartitionsJson() throws Exception
     {
         // Prepare test data.
-        createDatabaseEntitiesForBusinessObjectDataAvailabilityTesting(null);
+        businessObjectDataAvailabilityTestHelper.createDatabaseEntitiesForBusinessObjectDataAvailabilityTesting(null);
 
         // Prepare a check business object data availability request.
         BusinessObjectDataAvailabilityRequest businessObjectDataAvailabilityRequest = getTestBusinessObjectDataAvailabilityRequest(UNSORTED_PARTITION_VALUES);

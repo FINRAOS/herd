@@ -44,7 +44,7 @@ public class NamespaceRestControllerTest extends AbstractRestTest
     public void testGetNamespace() throws Exception
     {
         // Create and persist a namespace entity.
-        createNamespaceEntity(NAMESPACE);
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
 
         // Retrieve the namespace.
         Namespace resultNamespace = namespaceRestController.getNamespace(NAMESPACE);
@@ -57,9 +57,9 @@ public class NamespaceRestControllerTest extends AbstractRestTest
     public void testGetNamespaces() throws Exception
     {
         // Create and persist namespace entities.
-        for (NamespaceKey key : getTestNamespaceKeys())
+        for (NamespaceKey key : namespaceDaoTestHelper.getTestNamespaceKeys())
         {
-            createNamespaceEntity(key.getNamespaceCode());
+            namespaceDaoTestHelper.createNamespaceEntity(key.getNamespaceCode());
         }
 
         // Retrieve a list of namespace keys.
@@ -68,8 +68,8 @@ public class NamespaceRestControllerTest extends AbstractRestTest
         // Validate the returned object.
         assertNotNull(resultNamespaceKeys);
         assertNotNull(resultNamespaceKeys.getNamespaceKeys());
-        assertTrue(resultNamespaceKeys.getNamespaceKeys().size() >= getTestNamespaceKeys().size());
-        for (NamespaceKey key : getTestNamespaceKeys())
+        assertTrue(resultNamespaceKeys.getNamespaceKeys().size() >= namespaceDaoTestHelper.getTestNamespaceKeys().size());
+        for (NamespaceKey key : namespaceDaoTestHelper.getTestNamespaceKeys())
         {
             assertTrue(resultNamespaceKeys.getNamespaceKeys().contains(key));
         }
@@ -79,7 +79,7 @@ public class NamespaceRestControllerTest extends AbstractRestTest
     public void testDeleteNamespace() throws Exception
     {
         // Create and persist a namespace entity.
-        createNamespaceEntity(NAMESPACE);
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
 
         // Validate that this namespace exists.
         NamespaceKey namespaceKey = new NamespaceKey(NAMESPACE);
@@ -94,5 +94,4 @@ public class NamespaceRestControllerTest extends AbstractRestTest
         // Ensure that this namespace is no longer there.
         assertNull(namespaceDao.getNamespaceByKey(namespaceKey));
     }
-
 }

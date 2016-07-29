@@ -1,18 +1,18 @@
 /*
-* Copyright 2015 herd contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 herd contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.finra.herd.rest;
 
 import java.util.ArrayList;
@@ -45,6 +45,8 @@ import org.finra.herd.model.api.xml.BusinessObjectDataDownloadCredential;
 import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.BusinessObjectDataSearchRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDataSearchResult;
 import org.finra.herd.model.api.xml.BusinessObjectDataUploadCredential;
 import org.finra.herd.model.api.xml.BusinessObjectDataVersions;
 import org.finra.herd.model.api.xml.S3KeyPrefixInformation;
@@ -79,8 +81,15 @@ public class BusinessObjectDataRestController extends HerdBaseController
     private StorageUnitService storageUnitService;
 
     /**
-     * <p> Gets the S3 key prefix for writing or accessing business object data. </p> <p> This endpoint requires a namespace. </p> <p>Requires READ permission
-     * on namespace</p>
+     * <p>
+     * Gets the S3 key prefix for writing or accessing business object data.
+     * </p>
+     * <p>
+     * This endpoint requires a namespace.
+     * </p>
+     * <p>
+     * Requires READ permission on namespace
+     * </p>
      *
      * @param namespace the namespace
      * @param businessObjectDefinitionName the business object definition name
@@ -98,10 +107,10 @@ public class BusinessObjectDataRestController extends HerdBaseController
      * @return the S3 key prefix
      */
     @RequestMapping(
-        value = "/businessObjectData/namespaces/{namespace}/businessObjectDefinitionNames/{businessObjectDefinitionName}/businessObjectFormatUsages" +
-            "/{businessObjectFormatUsage}/businessObjectFormatFileTypes/{businessObjectFormatFileType}" +
-            "/businessObjectFormatVersions/{businessObjectFormatVersion}/s3KeyPrefix",
-        method = RequestMethod.GET)
+            value = "/businessObjectData/namespaces/{namespace}/businessObjectDefinitionNames/{businessObjectDefinitionName}/businessObjectFormatUsages" +
+                    "/{businessObjectFormatUsage}/businessObjectFormatFileTypes/{businessObjectFormatFileType}" +
+                    "/businessObjectFormatVersions/{businessObjectFormatVersion}/s3KeyPrefix",
+            method = RequestMethod.GET)
     @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_S3_KEY_PREFIX_GET)
     @ApiOperation(value = "Gets the S3 key prefix information for a specified namespace")
     public S3KeyPrefixInformation getS3KeyPrefix(@PathVariable("namespace") String namespace,
@@ -116,14 +125,17 @@ public class BusinessObjectDataRestController extends HerdBaseController
         @RequestParam(value = "createNewVersion", required = false, defaultValue = "false") Boolean createNewVersion, ServletRequest servletRequest)
     {
         return storageUnitService.getS3KeyPrefix(
-            validateRequestAndCreateBusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
-                businessObjectFormatVersion, partitionValue, subPartitionValues, businessObjectDataVersion, servletRequest), partitionKey, storageName,
-            createNewVersion);
+                validateRequestAndCreateBusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
+                        businessObjectFormatVersion, partitionValue, subPartitionValues, businessObjectDataVersion, servletRequest), partitionKey, storageName,
+                createNewVersion);
     }
 
     /**
      * Creates (i.e. registers) business object data. You may pre-register business object data by setting the status to one of the pre-registration statuses
-     * (UPLOADING, PENDING_VALID, and PROCESSING). <p>Requires WRITE permission on namespace</p>
+     * (UPLOADING, PENDING_VALID, and PROCESSING).
+     * <p>
+     * Requires WRITE permission on namespace
+     * </p>
      *
      * @param businessObjectDataCreateRequest the information needed to create the business object data
      *
@@ -138,10 +150,10 @@ public class BusinessObjectDataRestController extends HerdBaseController
         // TODO This should be enhanced such that the notification events are captured by probably as an advice, and these calls are not specified everywhere
         // in the code.
 
-        // The calls to notifications is being done in REST layer so that the event transaction (e.g. in this case: create business object data) is committed 
+        // The calls to notifications is being done in REST layer so that the event transaction (e.g. in this case: create business object data) is committed
         // and the event data is available for when notification is processed.
 
-        // With proposed designed, when we go to event publish mode(e.g. create a database record for the event that will be picked up by notification 
+        // With proposed designed, when we go to event publish mode(e.g. create a database record for the event that will be picked up by notification
         // processing engine), We would want the event transaction to also rollback if event publishing failed. These calls will be moved to service layer.
 
         // Trigger notifications.
@@ -149,7 +161,7 @@ public class BusinessObjectDataRestController extends HerdBaseController
 
         // Create business object data notifications.
         for (NotificationEventTypeEntity.EventTypesBdata eventType : Arrays
-            .asList(NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_RGSTN, NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_STTS_CHG))
+                .asList(NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_RGSTN, NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_STTS_CHG))
         {
             notificationEventService.processBusinessObjectDataNotificationEventAsync(eventType, businessObjectDataKey, businessObjectData.getStatus(), null);
         }
@@ -158,35 +170,44 @@ public class BusinessObjectDataRestController extends HerdBaseController
     }
 
     /**
-     * Retrieves existing business object data entry information. <p/> NOTE: When both business object format version and business object data version are not
-     * specified, the business object format version has the precedence. The latest business object format version is determined by a sub-query, which does the
-     * following: <p><ul> <li>selects all available data for the specified business object format (disregarding business object format version), partition
-     * values, and business object data status (default is "VALID") <li>gets the latest business object format version from the records selected in the previous
-     * step</ul><p> <p>Requires READ permission on namespace</p>
+     * Retrieves existing business object data entry information.
+     * <p/>
+     * NOTE: When both business object format version and business object data version are not specified, the business object format version has the precedence.
+     * The latest business object format version is determined by a sub-query, which does the following:
+     * <p>
+     * <ul>
+     * <li>selects all available data for the specified business object format (disregarding business object format version), partition values, and business
+     * object data status (default is "VALID")
+     * <li>gets the latest business object format version from the records selected in the previous step
+     * </ul>
+     * <p>
+     * <p>
+     * Requires READ permission on namespace
+     * </p>
      *
      * @param namespace the namespace
      * @param businessObjectDefinitionName the business object definition name
      * @param businessObjectFormatUsage the business object format usage
      * @param businessObjectFormatFileType the business object format file type
      * @param businessObjectFormatPartitionKey the partition key of the business object format. When specified, the partition key is validated against the
-     * partition key associated with the relative business object format
+     *            partition key associated with the relative business object format
      * @param partitionValue the partition value of the business object data
      * @param subPartitionValues the list of sub-partition values delimited by "|" (delimiter can be escaped by "\")
      * @param businessObjectFormatVersion the version of the business object format. When the business object format version is not specified, the business
-     * object data with the latest business format version available for the specified partition values is returned
+     *            object data with the latest business format version available for the specified partition values is returned
      * @param businessObjectDataVersion the version of the business object data. When business object data version is not specified, the latest version of
-     * business object data of the specified business object data status is returned
+     *            business object data of the specified business object data status is returned
      * @param businessObjectDataStatus the status of the business object data. When business object data version is specified, this parameter is ignored.
-     * Default value is "VALID"
+     *            Default value is "VALID"
      * @param includeBusinessObjectDataStatusHistory specifies to include business object data status history in the response
      *
      * @return the retrieved business object data information
      */
     @RequestMapping(
-        value = "/businessObjectData/namespaces/{namespace}" +
-            "/businessObjectDefinitionNames/{businessObjectDefinitionName}/businessObjectFormatUsages/{businessObjectFormatUsage}" +
-            "/businessObjectFormatFileTypes/{businessObjectFormatFileType}",
-        method = RequestMethod.GET)
+            value = "/businessObjectData/namespaces/{namespace}" +
+                    "/businessObjectDefinitionNames/{businessObjectDefinitionName}/businessObjectFormatUsages/{businessObjectFormatUsage}" +
+                    "/businessObjectFormatFileTypes/{businessObjectFormatFileType}",
+            method = RequestMethod.GET)
     @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_GET)
     public BusinessObjectData getBusinessObjectData(@PathVariable("namespace") String namespace,
         @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
@@ -200,13 +221,16 @@ public class BusinessObjectDataRestController extends HerdBaseController
         @RequestParam(value = "includeBusinessObjectDataStatusHistory", required = false) Boolean includeBusinessObjectDataStatusHistory)
     {
         return businessObjectDataService.getBusinessObjectData(
-            new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
-                businessObjectFormatVersion, partitionValue, getList(subPartitionValues), businessObjectDataVersion), businessObjectFormatPartitionKey,
-            businessObjectDataStatus, includeBusinessObjectDataStatusHistory);
+                new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
+                        businessObjectFormatVersion, partitionValue, getList(subPartitionValues), businessObjectDataVersion), businessObjectFormatPartitionKey,
+                businessObjectDataStatus, includeBusinessObjectDataStatusHistory);
     }
 
     /**
-     * Retrieves a list of existing business object data versions. <p>Requires READ permission on namespace</p>
+     * Retrieves a list of existing business object data versions.
+     * <p>
+     * Requires READ permission on namespace
+     * </p>
      *
      * @param namespace the namespace
      * @param businessObjectDefinitionName the business object definition name
@@ -220,10 +244,10 @@ public class BusinessObjectDataRestController extends HerdBaseController
      * @return the retrieved business object data versions
      */
     @RequestMapping(
-        value = "/businessObjectData/namespaces/{namespace}" +
-            "/businessObjectDefinitionNames/{businessObjectDefinitionName}/businessObjectFormatUsages/{businessObjectFormatUsage}" +
-            "/businessObjectFormatFileTypes/{businessObjectFormatFileType}/versions",
-        method = RequestMethod.GET)
+            value = "/businessObjectData/namespaces/{namespace}" +
+                    "/businessObjectDefinitionNames/{businessObjectDefinitionName}/businessObjectFormatUsages/{businessObjectFormatUsage}" +
+                    "/businessObjectFormatFileTypes/{businessObjectFormatFileType}/versions",
+            method = RequestMethod.GET)
     @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_VERSIONS_GET)
     public BusinessObjectDataVersions getBusinessObjectDataVersions(@PathVariable("namespace") String namespace,
         @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
@@ -234,12 +258,15 @@ public class BusinessObjectDataRestController extends HerdBaseController
         @RequestParam(value = "businessObjectDataVersion", required = false) Integer businessObjectDataVersion)
     {
         return businessObjectDataService.getBusinessObjectDataVersions(
-            new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
-                businessObjectFormatVersion, partitionValue, getList(subPartitionValues), businessObjectDataVersion));
+                new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
+                        businessObjectFormatVersion, partitionValue, getList(subPartitionValues), businessObjectDataVersion));
     }
 
     /**
-     * Deletes an existing business object data without subpartition values with namespace. <p>Requires WRITE permission on namespace</p>
+     * Deletes an existing business object data without subpartition values with namespace.
+     * <p>
+     * Requires WRITE permission on namespace
+     * </p>
      *
      * @param namespace the namespace
      * @param businessObjectDefinitionName the business object definition name
@@ -253,11 +280,11 @@ public class BusinessObjectDataRestController extends HerdBaseController
      * @return the deleted business object data information
      */
     @RequestMapping(
-        value = "/businessObjectData/namespaces/{namespace}" +
-            "/businessObjectDefinitionNames/{businessObjectDefinitionName}/businessObjectFormatUsages/{businessObjectFormatUsage}" +
-            "/businessObjectFormatFileTypes/{businessObjectFormatFileType}/businessObjectFormatVersions/{businessObjectFormatVersion}" +
-            "/partitionValues/{partitionValue}/businessObjectDataVersions/{businessObjectDataVersion}",
-        method = RequestMethod.DELETE)
+            value = "/businessObjectData/namespaces/{namespace}" +
+                    "/businessObjectDefinitionNames/{businessObjectDefinitionName}/businessObjectFormatUsages/{businessObjectFormatUsage}" +
+                    "/businessObjectFormatFileTypes/{businessObjectFormatFileType}/businessObjectFormatVersions/{businessObjectFormatVersion}" +
+                    "/partitionValues/{partitionValue}/businessObjectDataVersions/{businessObjectDataVersion}",
+            method = RequestMethod.DELETE)
     @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_DELETE)
     public BusinessObjectData deleteBusinessObjectData(@PathVariable("namespace") String namespace,
         @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
@@ -267,12 +294,15 @@ public class BusinessObjectDataRestController extends HerdBaseController
         @PathVariable("businessObjectDataVersion") Integer businessObjectDataVersion, @RequestParam("deleteFiles") Boolean deleteFiles)
     {
         return businessObjectDataService.deleteBusinessObjectData(
-            new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
-                businessObjectFormatVersion, partitionValue, new ArrayList<String>(), businessObjectDataVersion), deleteFiles);
+                new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
+                        businessObjectFormatVersion, partitionValue, new ArrayList<String>(), businessObjectDataVersion), deleteFiles);
     }
 
     /**
-     * Deletes an existing business object data with 1 subpartition value with namespace. <p>Requires WRITE permission on namespace</p>
+     * Deletes an existing business object data with 1 subpartition value with namespace.
+     * <p>
+     * Requires WRITE permission on namespace
+     * </p>
      *
      * @param namespace the namespace.
      * @param businessObjectDefinitionName the business object definition name
@@ -287,11 +317,11 @@ public class BusinessObjectDataRestController extends HerdBaseController
      * @return the deleted business object data information
      */
     @RequestMapping(
-        value = "/businessObjectData/namespaces/{namespace}" +
-            "/businessObjectDefinitionNames/{businessObjectDefinitionName}/businessObjectFormatUsages/{businessObjectFormatUsage}" +
-            "/businessObjectFormatFileTypes/{businessObjectFormatFileType}/businessObjectFormatVersions/{businessObjectFormatVersion}" +
-            "/partitionValues/{partitionValue}/subPartition1Values/{subPartition1Value}/businessObjectDataVersions/{businessObjectDataVersion}",
-        method = RequestMethod.DELETE)
+            value = "/businessObjectData/namespaces/{namespace}" +
+                    "/businessObjectDefinitionNames/{businessObjectDefinitionName}/businessObjectFormatUsages/{businessObjectFormatUsage}" +
+                    "/businessObjectFormatFileTypes/{businessObjectFormatFileType}/businessObjectFormatVersions/{businessObjectFormatVersion}" +
+                    "/partitionValues/{partitionValue}/subPartition1Values/{subPartition1Value}/businessObjectDataVersions/{businessObjectDataVersion}",
+            method = RequestMethod.DELETE)
     @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_DELETE)
     public BusinessObjectData deleteBusinessObjectData(@PathVariable("namespace") String namespace,
         @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
@@ -302,12 +332,15 @@ public class BusinessObjectDataRestController extends HerdBaseController
         @RequestParam("deleteFiles") Boolean deleteFiles)
     {
         return businessObjectDataService.deleteBusinessObjectData(
-            new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
-                businessObjectFormatVersion, partitionValue, Arrays.asList(subPartition1Value), businessObjectDataVersion), deleteFiles);
+                new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
+                        businessObjectFormatVersion, partitionValue, Arrays.asList(subPartition1Value), businessObjectDataVersion), deleteFiles);
     }
 
     /**
-     * Deletes an existing business object data with 2 subpartition values with namespace. <p>Requires WRITE permission on namespace</p>
+     * Deletes an existing business object data with 2 subpartition values with namespace.
+     * <p>
+     * Requires WRITE permission on namespace
+     * </p>
      *
      * @param namespace the namespace
      * @param businessObjectDefinitionName the business object definition name
@@ -323,12 +356,12 @@ public class BusinessObjectDataRestController extends HerdBaseController
      * @return the deleted business object data information
      */
     @RequestMapping(
-        value = "/businessObjectData/namespaces/{namespace}" +
-            "/businessObjectDefinitionNames/{businessObjectDefinitionName}/businessObjectFormatUsages/{businessObjectFormatUsage}" +
-            "/businessObjectFormatFileTypes/{businessObjectFormatFileType}/businessObjectFormatVersions/{businessObjectFormatVersion}" +
-            "/partitionValues/{partitionValue}/subPartition1Values/{subPartition1Value}/subPartition2Values/{subPartition2Value}" +
-            "/businessObjectDataVersions/{businessObjectDataVersion}",
-        method = RequestMethod.DELETE)
+            value = "/businessObjectData/namespaces/{namespace}" +
+                    "/businessObjectDefinitionNames/{businessObjectDefinitionName}/businessObjectFormatUsages/{businessObjectFormatUsage}" +
+                    "/businessObjectFormatFileTypes/{businessObjectFormatFileType}/businessObjectFormatVersions/{businessObjectFormatVersion}" +
+                    "/partitionValues/{partitionValue}/subPartition1Values/{subPartition1Value}/subPartition2Values/{subPartition2Value}" +
+                    "/businessObjectDataVersions/{businessObjectDataVersion}",
+            method = RequestMethod.DELETE)
     @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_DELETE)
     public BusinessObjectData deleteBusinessObjectData(@PathVariable("namespace") String namespace,
         @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
@@ -339,12 +372,16 @@ public class BusinessObjectDataRestController extends HerdBaseController
         @PathVariable("businessObjectDataVersion") Integer businessObjectDataVersion, @RequestParam("deleteFiles") Boolean deleteFiles)
     {
         return businessObjectDataService.deleteBusinessObjectData(
-            new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
-                businessObjectFormatVersion, partitionValue, Arrays.asList(subPartition1Value, subPartition2Value), businessObjectDataVersion), deleteFiles);
+                new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
+                        businessObjectFormatVersion, partitionValue, Arrays.asList(subPartition1Value, subPartition2Value), businessObjectDataVersion),
+                deleteFiles);
     }
 
     /**
-     * Deletes an existing business object data with 3 subpartition values with namespace <p>Requires WRITE permission on namespace</p>
+     * Deletes an existing business object data with 3 subpartition values with namespace
+     * <p>
+     * Requires WRITE permission on namespace
+     * </p>
      *
      * @param namespace the namespace.
      * @param businessObjectDefinitionName the business object definition name
@@ -361,12 +398,12 @@ public class BusinessObjectDataRestController extends HerdBaseController
      * @return the deleted business object data information
      */
     @RequestMapping(
-        value = "/businessObjectData/namespaces/{namespace}" +
-            "/businessObjectDefinitionNames/{businessObjectDefinitionName}/businessObjectFormatUsages/{businessObjectFormatUsage}" +
-            "/businessObjectFormatFileTypes/{businessObjectFormatFileType}/businessObjectFormatVersions/{businessObjectFormatVersion}" +
-            "/partitionValues/{partitionValue}/subPartition1Values/{subPartition1Value}/subPartition2Values/{subPartition2Value}" +
-            "/subPartition3Values/{subPartition3Value}/businessObjectDataVersions/{businessObjectDataVersion}",
-        method = RequestMethod.DELETE)
+            value = "/businessObjectData/namespaces/{namespace}" +
+                    "/businessObjectDefinitionNames/{businessObjectDefinitionName}/businessObjectFormatUsages/{businessObjectFormatUsage}" +
+                    "/businessObjectFormatFileTypes/{businessObjectFormatFileType}/businessObjectFormatVersions/{businessObjectFormatVersion}" +
+                    "/partitionValues/{partitionValue}/subPartition1Values/{subPartition1Value}/subPartition2Values/{subPartition2Value}" +
+                    "/subPartition3Values/{subPartition3Value}/businessObjectDataVersions/{businessObjectDataVersion}",
+            method = RequestMethod.DELETE)
     @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_DELETE)
     public BusinessObjectData deleteBusinessObjectData(@PathVariable("namespace") String namespace,
         @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
@@ -378,13 +415,16 @@ public class BusinessObjectDataRestController extends HerdBaseController
         @RequestParam("deleteFiles") Boolean deleteFiles)
     {
         return businessObjectDataService.deleteBusinessObjectData(
-            new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
-                businessObjectFormatVersion, partitionValue, Arrays.asList(subPartition1Value, subPartition2Value, subPartition3Value),
-                businessObjectDataVersion), deleteFiles);
+                new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
+                        businessObjectFormatVersion, partitionValue, Arrays.asList(subPartition1Value, subPartition2Value, subPartition3Value),
+                        businessObjectDataVersion), deleteFiles);
     }
 
     /**
-     * Deletes an existing business object data with 4 subpartition values with namespace. <p>Requires WRITE permission on namespace</p>
+     * Deletes an existing business object data with 4 subpartition values with namespace.
+     * <p>
+     * Requires WRITE permission on namespace
+     * </p>
      *
      * @param namespace the namespace
      * @param businessObjectDefinitionName the business object definition name
@@ -402,12 +442,12 @@ public class BusinessObjectDataRestController extends HerdBaseController
      * @return the deleted business object data information
      */
     @RequestMapping(
-        value = "/businessObjectData/namespaces/{namespace}" +
-            "/businessObjectDefinitionNames/{businessObjectDefinitionName}/businessObjectFormatUsages/{businessObjectFormatUsage}" +
-            "/businessObjectFormatFileTypes/{businessObjectFormatFileType}/businessObjectFormatVersions/{businessObjectFormatVersion}" +
-            "/partitionValues/{partitionValue}/subPartition1Values/{subPartition1Value}/subPartition2Values/{subPartition2Value}" +
-            "/subPartition3Values/{subPartition3Value}/subPartition4Values/{subPartition4Value}/businessObjectDataVersions/{businessObjectDataVersion}",
-        method = RequestMethod.DELETE)
+            value = "/businessObjectData/namespaces/{namespace}" +
+                    "/businessObjectDefinitionNames/{businessObjectDefinitionName}/businessObjectFormatUsages/{businessObjectFormatUsage}" +
+                    "/businessObjectFormatFileTypes/{businessObjectFormatFileType}/businessObjectFormatVersions/{businessObjectFormatVersion}" +
+                    "/partitionValues/{partitionValue}/subPartition1Values/{subPartition1Value}/subPartition2Values/{subPartition2Value}" +
+                    "/subPartition3Values/{subPartition3Value}/subPartition4Values/{subPartition4Value}/businessObjectDataVersions/{businessObjectDataVersion}",
+            method = RequestMethod.DELETE)
     @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_DELETE)
     public BusinessObjectData deleteBusinessObjectData(@PathVariable("namespace") String namespace,
         @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
@@ -419,14 +459,17 @@ public class BusinessObjectDataRestController extends HerdBaseController
         @PathVariable("businessObjectDataVersion") Integer businessObjectDataVersion, @RequestParam("deleteFiles") Boolean deleteFiles)
     {
         return businessObjectDataService.deleteBusinessObjectData(
-            new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
-                businessObjectFormatVersion, partitionValue, Arrays.asList(subPartition1Value, subPartition2Value, subPartition3Value, subPartition4Value),
-                businessObjectDataVersion), deleteFiles);
+                new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
+                        businessObjectFormatVersion, partitionValue, Arrays.asList(subPartition1Value, subPartition2Value, subPartition3Value,
+                                subPartition4Value),
+                        businessObjectDataVersion), deleteFiles);
     }
 
     /**
-     * Performs a search and returns a list of business object data key values and relative statuses for a range of requested business object data. <p>Requires
-     * READ permission on namespace</p>
+     * Performs a search and returns a list of business object data key values and relative statuses for a range of requested business object data.
+     * <p>
+     * Requires READ permission on namespace
+     * </p>
      *
      * @param businessObjectDataAvailabilityRequest the business object data availability request
      *
@@ -441,7 +484,10 @@ public class BusinessObjectDataRestController extends HerdBaseController
     }
 
     /**
-     * Performs an availability check for a collection of business object data. <p>Requires READ permission on ALL namespaces</p>
+     * Performs an availability check for a collection of business object data.
+     * <p>
+     * Requires READ permission on ALL namespaces
+     * </p>
      *
      * @param businessObjectDataAvailabilityCollectionRequest the business object data availability collection request
      *
@@ -457,7 +503,10 @@ public class BusinessObjectDataRestController extends HerdBaseController
 
     /**
      * Retrieves the DDL to initialize the specified type of the database system to perform queries for a range of requested business object data in the
-     * specified storage. <p>Requires READ permission on namespace</p>
+     * specified storage.
+     * <p>
+     * Requires READ permission on namespace
+     * </p>
      *
      * @param businessObjectDataDdlRequest the business object data DDL request
      *
@@ -472,7 +521,10 @@ public class BusinessObjectDataRestController extends HerdBaseController
 
     /**
      * Retrieves the DDL to initialize the specified type of the database system to perform queries for a collection of business object data in the specified
-     * storage. <p>Requires READ permission on ALL namespaces</p>
+     * storage.
+     * <p>
+     * Requires READ permission on ALL namespaces
+     * </p>
      *
      * @param businessObjectDataDdlCollectionRequest the business object data DDL collection request
      *
@@ -487,7 +539,10 @@ public class BusinessObjectDataRestController extends HerdBaseController
     }
 
     /**
-     * Registers data as INVALID for objects which exist in S3 but are not registered in herd. <p>Requires WRITE permission on namespace</p>
+     * Registers data as INVALID for objects which exist in S3 but are not registered in herd.
+     * <p>
+     * Requires WRITE permission on namespace
+     * </p>
      *
      * @param businessObjectDataInvalidateUnregisteredRequest the business object data invalidate un-register request
      *
@@ -499,7 +554,7 @@ public class BusinessObjectDataRestController extends HerdBaseController
         @RequestBody BusinessObjectDataInvalidateUnregisteredRequest businessObjectDataInvalidateUnregisteredRequest)
     {
         BusinessObjectDataInvalidateUnregisteredResponse businessObjectDataInvalidateUnregisteredResponse =
-            businessObjectDataService.invalidateUnregisteredBusinessObjectData(businessObjectDataInvalidateUnregisteredRequest);
+                businessObjectDataService.invalidateUnregisteredBusinessObjectData(businessObjectDataInvalidateUnregisteredRequest);
 
         // Create business object data notifications.
         for (BusinessObjectData businessObjectData : businessObjectDataInvalidateUnregisteredResponse.getRegisteredBusinessObjectDataList())
@@ -507,15 +562,19 @@ public class BusinessObjectDataRestController extends HerdBaseController
             BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectData);
 
             notificationEventService
-                .processBusinessObjectDataNotificationEventAsync(NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_STTS_CHG, businessObjectDataKey,
-                    businessObjectData.getStatus(), null);
+                    .processBusinessObjectDataNotificationEventAsync(NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_STTS_CHG,
+                            businessObjectDataKey,
+                            businessObjectData.getStatus(), null);
         }
 
         return businessObjectDataInvalidateUnregisteredResponse;
     }
 
     /**
-     * Gets the AWS credential to upload to the specified business object data and storage. <p>Requires WRITE permission on namespace</p>
+     * Gets the AWS credential to upload to the specified business object data and storage.
+     * <p>
+     * Requires WRITE permission on namespace
+     * </p>
      *
      * @param namespace the namespace
      * @param businessObjectDefinitionName the business object definition name
@@ -531,9 +590,9 @@ public class BusinessObjectDataRestController extends HerdBaseController
      * @return AWS credential
      */
     @RequestMapping(value = "/businessObjectData/upload/credential/namespaces/{namespace}" +
-        "/businessObjectDefinitionNames/{businessObjectDefinitionName}/businessObjectFormatUsages/{businessObjectFormatUsage}" +
-        "/businessObjectFormatFileTypes/{businessObjectFormatFileType}/businessObjectFormatVersions/{businessObjectFormatVersion}" +
-        "/partitionValues/{partitionValue}", method = RequestMethod.GET)
+            "/businessObjectDefinitionNames/{businessObjectDefinitionName}/businessObjectFormatUsages/{businessObjectFormatUsage}" +
+            "/businessObjectFormatFileTypes/{businessObjectFormatFileType}/businessObjectFormatVersions/{businessObjectFormatVersion}" +
+            "/partitionValues/{partitionValue}", method = RequestMethod.GET)
     @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_UPLOAD_CREDENTIAL_GET)
     @ApiOperation(value = "Gets Business Object Data Upload Credentials. This is not meant for public consumption.", hidden = true)
     public BusinessObjectDataUploadCredential getBusinessObjectDataUploadCredential(@PathVariable("namespace") String namespace,
@@ -547,14 +606,17 @@ public class BusinessObjectDataRestController extends HerdBaseController
         @RequestParam(value = "subPartitionValues", required = false) DelimitedFieldValues subPartitionValues)
     {
         StorageUnitUploadCredential storageUnitUploadCredential = storageUnitService.getStorageUnitUploadCredential(
-            new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
-                businessObjectFormatVersion, partitionValue, getList(subPartitionValues), businessObjectDataVersion), createNewVersion, storageName);
+                new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
+                        businessObjectFormatVersion, partitionValue, getList(subPartitionValues), businessObjectDataVersion), createNewVersion, storageName);
 
         return new BusinessObjectDataUploadCredential(storageUnitUploadCredential.getAwsCredential(), storageUnitUploadCredential.getAwsKmsKeyId());
     }
 
     /**
-     * Gets the AWS credential to download to the specified business object data and storage. <p>Requires READ permission on namespace</p>
+     * Gets the AWS credential to download to the specified business object data and storage.
+     * <p>
+     * Requires READ permission on namespace
+     * </p>
      *
      * @param namespace the namespace
      * @param businessObjectDefinitionName the business object definition name
@@ -569,9 +631,9 @@ public class BusinessObjectDataRestController extends HerdBaseController
      * @return AWS credential
      */
     @RequestMapping(value = "/businessObjectData/download/credential/namespaces/{namespace}" +
-        "/businessObjectDefinitionNames/{businessObjectDefinitionName}/businessObjectFormatUsages/{businessObjectFormatUsage}" +
-        "/businessObjectFormatFileTypes/{businessObjectFormatFileType}/businessObjectFormatVersions/{businessObjectFormatVersion}" +
-        "/partitionValues/{partitionValue}/businessObjectDataVersions/{businessObjectDataVersion}", method = RequestMethod.GET)
+            "/businessObjectDefinitionNames/{businessObjectDefinitionName}/businessObjectFormatUsages/{businessObjectFormatUsage}" +
+            "/businessObjectFormatFileTypes/{businessObjectFormatFileType}/businessObjectFormatVersions/{businessObjectFormatVersion}" +
+            "/partitionValues/{partitionValue}/businessObjectDataVersions/{businessObjectDataVersion}", method = RequestMethod.GET)
     @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_DOWNLOAD_CREDENTIAL_GET)
     @ApiOperation(value = "Gets Business Object Data Download Credentials. This is not meant for public consumption.", hidden = true)
     public BusinessObjectDataDownloadCredential getBusinessObjectDataDownloadCredential(@PathVariable("namespace") String namespace,
@@ -583,8 +645,8 @@ public class BusinessObjectDataRestController extends HerdBaseController
         @RequestParam(value = "subPartitionValues", required = false) DelimitedFieldValues subPartitionValues)
     {
         StorageUnitDownloadCredential storageUnitDownloadCredential = storageUnitService.getStorageUnitDownloadCredential(
-            new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
-                businessObjectFormatVersion, partitionValue, getList(subPartitionValues), businessObjectDataVersion), storageName);
+                new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
+                        businessObjectFormatVersion, partitionValue, getList(subPartitionValues), businessObjectDataVersion), storageName);
 
         return new BusinessObjectDataDownloadCredential(storageUnitDownloadCredential.getAwsCredential());
     }
@@ -604,11 +666,11 @@ public class BusinessObjectDataRestController extends HerdBaseController
      * @return the business object data information
      */
     @RequestMapping(
-        value = "/businessObjectData/restore/namespaces/{namespace}/businessObjectDefinitionNames/{businessObjectDefinitionName}" +
-            "/businessObjectFormatUsages/{businessObjectFormatUsage}/businessObjectFormatFileTypes/{businessObjectFormatFileType}" +
-            "/businessObjectFormatVersions/{businessObjectFormatVersion}/partitionValues/{partitionValue}" +
-            "/businessObjectDataVersions/{businessObjectDataVersion}",
-        method = RequestMethod.POST, consumes = {"application/xml", "application/json"})
+            value = "/businessObjectData/restore/namespaces/{namespace}/businessObjectDefinitionNames/{businessObjectDefinitionName}" +
+                    "/businessObjectFormatUsages/{businessObjectFormatUsage}/businessObjectFormatFileTypes/{businessObjectFormatFileType}" +
+                    "/businessObjectFormatVersions/{businessObjectFormatVersion}/partitionValues/{partitionValue}" +
+                    "/businessObjectDataVersions/{businessObjectDataVersion}",
+            method = RequestMethod.POST, consumes = {"application/xml", "application/json"})
     @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_RESTORE_POST)
     public BusinessObjectData restoreBusinessObjectData(@PathVariable("namespace") String namespace,
         @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
@@ -619,8 +681,8 @@ public class BusinessObjectDataRestController extends HerdBaseController
         @RequestParam(value = "subPartitionValues", required = false) DelimitedFieldValues subPartitionValues)
     {
         return businessObjectDataService.restoreBusinessObjectData(
-            new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
-                businessObjectFormatVersion, partitionValue, getList(subPartitionValues), businessObjectDataVersion));
+                new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
+                        businessObjectFormatVersion, partitionValue, getList(subPartitionValues), businessObjectDataVersion));
     }
 
     /**
@@ -648,6 +710,26 @@ public class BusinessObjectDataRestController extends HerdBaseController
 
         // Invoke the service.
         return new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
-            businessObjectFormatVersion, partitionValue, getList(subPartitionValues), businessObjectDataVersion);
+                businessObjectFormatVersion, partitionValue, getList(subPartitionValues), businessObjectDataVersion);
+    }
+
+    /**
+     * Searches business object data based on namespace, definition name, format usage, file type, and format version.
+     * <p>
+     * Namespace and definition name are required.
+     * </p>
+     * <p>
+     * Requires READ permission on namespace
+     * </p>
+     *
+     * @param businessObjectDataSearchRequest search request
+     *
+     * @return search result
+     */
+    @RequestMapping(value = "/businessObjectData/search", method = RequestMethod.POST, consumes = {"application/xml", "application/json"})
+    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_SEARCH_POST)
+    public BusinessObjectDataSearchResult searchBusinessObjectData(@RequestBody BusinessObjectDataSearchRequest businessObjectDataSearchRequest)
+    {
+        return businessObjectDataService.searchBusinessObjectData(businessObjectDataSearchRequest);
     }
 }

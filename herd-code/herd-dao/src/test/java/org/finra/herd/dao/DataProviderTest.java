@@ -28,7 +28,7 @@ public class DataProviderTest extends AbstractDaoTest
     public void testGetDataProviderByKey()
     {
         // Create a data provider entity.
-        DataProviderEntity dataProviderEntity = createDataProviderEntity(DATA_PROVIDER_NAME);
+        DataProviderEntity dataProviderEntity = dataProviderDaoTestHelper.createDataProviderEntity(DATA_PROVIDER_NAME);
 
         // Retrieve the data provider entity.
         assertEquals(dataProviderEntity, dataProviderDao.getDataProviderByKey(new DataProviderKey(DATA_PROVIDER_NAME)));
@@ -42,7 +42,7 @@ public class DataProviderTest extends AbstractDaoTest
     public void testGetDataProviderByName()
     {
         // Create a data provider entity.
-        DataProviderEntity dataProviderEntity = createDataProviderEntity(DATA_PROVIDER_NAME);
+        DataProviderEntity dataProviderEntity = dataProviderDaoTestHelper.createDataProviderEntity(DATA_PROVIDER_NAME);
 
         // Retrieve the data provider entity.
         assertEquals(dataProviderEntity, dataProviderDao.getDataProviderByName(DATA_PROVIDER_NAME));
@@ -58,7 +58,7 @@ public class DataProviderTest extends AbstractDaoTest
         // Create and persist data provider entities.
         for (DataProviderKey key : DATA_PROVIDER_KEYS)
         {
-            createDataProviderEntity(key.getDataProviderName());
+            dataProviderDaoTestHelper.createDataProviderEntity(key.getDataProviderName());
         }
 
         // Retrieve a list of data provider keys and validate the returned object.

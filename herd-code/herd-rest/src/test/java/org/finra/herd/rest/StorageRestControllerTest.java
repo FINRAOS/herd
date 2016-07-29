@@ -139,7 +139,7 @@ public class StorageRestControllerTest extends AbstractRestTest
         // Create and persist storage entities.
         for (StorageKey key : testStorageKeys)
         {
-            createStorageEntity(key.getStorageName());
+            storageDaoTestHelper.createStorageEntity(key.getStorageName());
         }
 
         // Retrieve a list of storage keys.
@@ -368,30 +368,31 @@ public class StorageRestControllerTest extends AbstractRestTest
     private void prepareUploadStatsTestData()
     {
         // Create relative database entities.
-        StorageEntity storageEntity = createStorageEntity(STORAGE_NAME);
-        createNamespaceEntity(NAMESPACE);
-        createDataProviderEntity(DATA_PROVIDER_NAME);
+        StorageEntity storageEntity = storageDaoTestHelper.createStorageEntity(STORAGE_NAME);
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
+        dataProviderDaoTestHelper.createDataProviderEntity(DATA_PROVIDER_NAME);
 
         // Create test business object format file types.
         for (int i = 0; i < FORMATS_PER_BDEF; i++)
         {
             String formatFileTypeCode = String.format("%s_%d", FORMAT_FILE_TYPE_CODE, i);
-            createFileTypeEntity(formatFileTypeCode, "Description of " + formatFileTypeCode);
+            fileTypeDaoTestHelper.createFileTypeEntity(formatFileTypeCode, "Description of " + formatFileTypeCode);
         }
 
         // Create test business object definitions.
         for (int x = 0; x < BDEFS_PER_DAY; x++)
         {
             String bdefName = String.format("%s_%d", BDEF_NAME, x);
-            createBusinessObjectDefinitionEntity(NAMESPACE, bdefName, DATA_PROVIDER_NAME, "Description of " + bdefName);
+            businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(NAMESPACE, bdefName, DATA_PROVIDER_NAME, "Description of " + bdefName);
 
             // Create relative business object formats for each of the business object definitions.
             for (int y = 0; y < FORMATS_PER_BDEF; y++)
             {
                 String formatUsageCode = String.format("%s_%d", FORMAT_USAGE_CODE, y);
                 String formatFileTypeCode = String.format("%s_%d", FORMAT_FILE_TYPE_CODE, y);
-                createBusinessObjectFormatEntity(NAMESPACE, bdefName, formatUsageCode, formatFileTypeCode, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION,
-                    Boolean.FALSE, PARTITION_KEY);
+                businessObjectFormatDaoTestHelper
+                    .createBusinessObjectFormatEntity(NAMESPACE, bdefName, formatUsageCode, formatFileTypeCode, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION,
+                        Boolean.FALSE, PARTITION_KEY);
 
                 // For each format, iterate over (ADDITIONAL_UPLOAD_DATE + PAST_UPLOAD_DATES_TO_REPORT_ON +
                 // TODAY_UPLOAD_DATE + ADDITIONAL_UPLOAD_DATE) number of days...
@@ -403,11 +404,11 @@ public class StorageRestControllerTest extends AbstractRestTest
                 for (Date date = startDate; !date.after(endDate); date = HerdDateUtils.addDays(date, 1))
                 {
                     String partitionValue = sdf.format(date);
-                    BusinessObjectDataEntity bode =
-                        createBusinessObjectDataEntity(NAMESPACE, bdefName, formatUsageCode, formatFileTypeCode, INITIAL_FORMAT_VERSION, partitionValue,
+                    BusinessObjectDataEntity bode = businessObjectDataDaoTestHelper
+                        .createBusinessObjectDataEntity(NAMESPACE, bdefName, formatUsageCode, formatFileTypeCode, INITIAL_FORMAT_VERSION, partitionValue,
                             INITIAL_DATA_VERSION, Boolean.FALSE, BDATA_STATUS);
                     StorageUnitEntity storageUnitEntity =
-                        createStorageUnitEntity(storageEntity, bode, StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
+                        storageUnitDaoTestHelper.createStorageUnitEntity(storageEntity, bode, StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
 
                     // For each day and format, create database entries for the relative storage files.
                     for (int z = 0; z < FILES_PER_FORMAT; z++)
@@ -416,7 +417,8 @@ public class StorageRestControllerTest extends AbstractRestTest
                             getExpectedS3KeyPrefix(NAMESPACE, DATA_PROVIDER_NAME, bdefName, formatUsageCode, formatFileTypeCode, INITIAL_FORMAT_VERSION,
                                 PARTITION_KEY, partitionValue, null, null, INITIAL_DATA_VERSION), z + 1, LOCAL_FILE);
 
-                        StorageFileEntity storageFileEntity = createStorageFileEntity(storageUnitEntity, s3FilePath, FILE_SIZE_1_KB, ROW_COUNT_1000);
+                        StorageFileEntity storageFileEntity =
+                            storageFileDaoTestHelper.createStorageFileEntity(storageUnitEntity, s3FilePath, FILE_SIZE_1_KB, ROW_COUNT_1000);
                         // For the storage upload stats unit tests, we need storageFileEntity.createdOn value
                         // to be set to match the relative partition value instead of defaulting to Oracle's SYSDATE.
                         storageFileEntity.setCreatedOn(new Timestamp(date.getTime()));

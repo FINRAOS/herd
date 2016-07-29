@@ -20,8 +20,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.util.Assert;
 
 import org.finra.herd.model.api.xml.Attribute;
 
@@ -31,6 +31,9 @@ import org.finra.herd.model.api.xml.Attribute;
 @Component
 public class AttributeHelper
 {
+    @Autowired
+    private AlternateKeyHelper alternateKeyHelper;
+
     /**
      * Validates the attributes.
      *
@@ -46,8 +49,7 @@ public class AttributeHelper
             Map<String, String> attributeNameValidationMap = new HashMap<>();
             for (Attribute attribute : attributes)
             {
-                Assert.hasText(attribute.getName(), "An attribute name must be specified.");
-                attribute.setName(attribute.getName().trim());
+                attribute.setName(alternateKeyHelper.validateStringParameter("An", "attribute name", attribute.getName()));
 
                 // Ensure the attribute key isn't a duplicate by using a map with a "lowercase" name as the key for case insensitivity.
                 String validationMapKey = attribute.getName().toLowerCase();

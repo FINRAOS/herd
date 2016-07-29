@@ -28,7 +28,7 @@ public class UserDaoTest extends AbstractDaoTest
     public void testGetUserByUserId()
     {
         // Create and persist the relative database entities.
-        UserEntity userEntity = createUserEntity(USER_ID, true);
+        UserEntity userEntity = userDaoTestHelper.createUserEntity(USER_ID, true);
 
         // Get a user.
         assertEquals(userEntity, userDao.getUserByUserId(USER_ID));

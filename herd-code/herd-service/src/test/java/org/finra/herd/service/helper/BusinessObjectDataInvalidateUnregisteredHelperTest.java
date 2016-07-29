@@ -737,7 +737,7 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
         // Given a business object format
         try
         {
-            createStorageEntity(request.getStorageName(), "NOT_S3");
+            storageDaoTestHelper.createStorageEntity(request.getStorageName(), "NOT_S3");
             createBusinessObjectFormat(request);
         }
         catch (Exception e)

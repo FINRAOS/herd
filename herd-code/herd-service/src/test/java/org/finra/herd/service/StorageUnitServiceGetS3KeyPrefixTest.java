@@ -48,7 +48,7 @@ public class StorageUnitServiceGetS3KeyPrefixTest extends AbstractServiceTest
         createDatabaseEntitiesForGetS3KeyPrefixTesting(false);
 
         // Get the test partition columns.
-        List<SchemaColumn> testPartitionColumns = getTestPartitionColumns();
+        List<SchemaColumn> testPartitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();
         String testPartitionKey = testPartitionColumns.get(0).getName();
         List<SchemaColumn> testSubPartitionColumns = testPartitionColumns.subList(1, SUBPARTITION_VALUES.size() + 1);
 
@@ -141,7 +141,7 @@ public class StorageUnitServiceGetS3KeyPrefixTest extends AbstractServiceTest
     public void testGetS3KeyPrefixMissingOptionalParameters()
     {
         // Create a business object definition.
-        createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
+        businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
 
         // Create database entities required for testing. Please note that we are not passing the flag to create a business object data entity.
         createDatabaseEntitiesForGetS3KeyPrefixTesting(false);
@@ -154,7 +154,7 @@ public class StorageUnitServiceGetS3KeyPrefixTest extends AbstractServiceTest
             List<String> subPartitionValues = SUBPARTITION_VALUES.subList(0, i);
 
             // Get the test partition columns.
-            List<SchemaColumn> testPartitionColumns = getTestPartitionColumns();
+            List<SchemaColumn> testPartitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();
             String testPartitionKey = testPartitionColumns.get(0).getName();
             List<SchemaColumn> testSubPartitionColumns = testPartitionColumns.subList(1, subPartitionValues.size() + 1);
 
@@ -178,13 +178,13 @@ public class StorageUnitServiceGetS3KeyPrefixTest extends AbstractServiceTest
     public void testGetS3KeyPrefixMissingOptionalParametersPassedAsNulls()
     {
         // Create a business object definition.
-        createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
+        businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
 
         // Create database entities required for testing. Please note that we are not passing the flag to create a business object data entity.
         createDatabaseEntitiesForGetS3KeyPrefixTesting(false);
 
         // Get the test partition columns.
-        List<SchemaColumn> testPartitionColumns = getTestPartitionColumns();
+        List<SchemaColumn> testPartitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();
         String testPartitionKey = testPartitionColumns.get(0).getName();
 
         // Get an S3 key prefix by passing null values for the namespace and partition key.
@@ -208,7 +208,7 @@ public class StorageUnitServiceGetS3KeyPrefixTest extends AbstractServiceTest
         createDatabaseEntitiesForGetS3KeyPrefixTesting(false);
 
         // Get the test partition columns.
-        List<SchemaColumn> testPartitionColumns = getTestPartitionColumns();
+        List<SchemaColumn> testPartitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();
         String testPartitionKey = testPartitionColumns.get(0).getName();
         List<SchemaColumn> testSubPartitionColumns = testPartitionColumns.subList(1, SUBPARTITION_VALUES.size() + 1);
 
@@ -235,7 +235,7 @@ public class StorageUnitServiceGetS3KeyPrefixTest extends AbstractServiceTest
         createDatabaseEntitiesForGetS3KeyPrefixTesting(false);
 
         // Get the test partition columns.
-        List<SchemaColumn> testPartitionColumns = getTestPartitionColumns();
+        List<SchemaColumn> testPartitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();
         String testPartitionKey = testPartitionColumns.get(0).getName();
         List<SchemaColumn> testSubPartitionColumns = testPartitionColumns.subList(1, SUBPARTITION_VALUES.size() + 1);
 
@@ -261,7 +261,7 @@ public class StorageUnitServiceGetS3KeyPrefixTest extends AbstractServiceTest
         createDatabaseEntitiesForGetS3KeyPrefixTesting(false);
 
         // Get the test partition columns.
-        List<SchemaColumn> testPartitionColumns = getTestPartitionColumns();
+        List<SchemaColumn> testPartitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();
         String testPartitionKey = testPartitionColumns.get(0).getName();
         List<SchemaColumn> testSubPartitionColumns = testPartitionColumns.subList(1, SUBPARTITION_VALUES.size() + 1);
 
@@ -287,7 +287,7 @@ public class StorageUnitServiceGetS3KeyPrefixTest extends AbstractServiceTest
         createDatabaseEntitiesForGetS3KeyPrefixTesting(false);
 
         // Get the test partition columns.
-        List<SchemaColumn> testPartitionColumns = getTestPartitionColumns();
+        List<SchemaColumn> testPartitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();
         String testPartitionKey = testPartitionColumns.get(0).getName();
 
         // Try to get an S3 key prefix using invalid namespace.
@@ -414,11 +414,11 @@ public class StorageUnitServiceGetS3KeyPrefixTest extends AbstractServiceTest
         createDatabaseEntitiesForGetS3KeyPrefixTesting(true);
 
         // Get the test partition columns.
-        List<SchemaColumn> testPartitionColumns = getTestPartitionColumns();
+        List<SchemaColumn> testPartitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();
         String testPartitionKey = testPartitionColumns.get(0).getName();
 
         // Create a non-S3 storage.
-        createStorageEntity(STORAGE_NAME_2, STORAGE_PLATFORM_CODE);
+        storageDaoTestHelper.createStorageEntity(STORAGE_NAME_2, STORAGE_PLATFORM_CODE);
 
         // Try to get an S3 key prefix specifying non-S3 storage.
         try
@@ -441,11 +441,11 @@ public class StorageUnitServiceGetS3KeyPrefixTest extends AbstractServiceTest
         createDatabaseEntitiesForGetS3KeyPrefixTesting(true);
 
         // Get the test partition columns.
-        List<SchemaColumn> testPartitionColumns = getTestPartitionColumns();
+        List<SchemaColumn> testPartitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();
         String testPartitionKey = testPartitionColumns.get(0).getName();
 
         // Create an S3 storage entity without the S3 key prefix template configured.
-        createStorageEntity(STORAGE_NAME_2, StoragePlatformEntity.S3);
+        storageDaoTestHelper.createStorageEntity(STORAGE_NAME_2, StoragePlatformEntity.S3);
 
         // Try to get an S3 key prefix specifying an S3 storage without the S3 key prefix velocity template configured.
         try
@@ -461,7 +461,7 @@ public class StorageUnitServiceGetS3KeyPrefixTest extends AbstractServiceTest
         }
 
         // Create an S3 storage entity with the S3 key prefix template configured to a blank string.
-        createStorageEntity(STORAGE_NAME_3, StoragePlatformEntity.S3,
+        storageDaoTestHelper.createStorageEntity(STORAGE_NAME_3, StoragePlatformEntity.S3,
             Arrays.asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE), BLANK_TEXT)));
 
         // Try to get an S3 key prefix specifying an S3 storage with the S3 key prefix velocity template being a blank string.
@@ -485,13 +485,13 @@ public class StorageUnitServiceGetS3KeyPrefixTest extends AbstractServiceTest
         createDatabaseEntitiesForGetS3KeyPrefixTesting(true);
 
         // Get the test partition columns.
-        List<SchemaColumn> testPartitionColumns = getTestPartitionColumns();
+        List<SchemaColumn> testPartitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();
         String testPartitionKey = testPartitionColumns.get(0).getName();
 
         final String testS3KeyPrefixVelocityTemplate = "#if($CollectionUtils.isNotEmpty($businessObjectDataSubPartitions.keySet()))#end";
 
         // Create an S3 storage entity with the S3 key prefix template that would result in a blank S3 key prefix value.
-        createStorageEntity(STORAGE_NAME_2, StoragePlatformEntity.S3, Arrays.asList(
+        storageDaoTestHelper.createStorageEntity(STORAGE_NAME_2, StoragePlatformEntity.S3, Arrays.asList(
             new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE),
                 testS3KeyPrefixVelocityTemplate)));
 
@@ -518,14 +518,14 @@ public class StorageUnitServiceGetS3KeyPrefixTest extends AbstractServiceTest
         createDatabaseEntitiesForGetS3KeyPrefixTesting(true);
 
         // Get the test partition columns.
-        List<SchemaColumn> testPartitionColumns = getTestPartitionColumns();
+        List<SchemaColumn> testPartitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();
         String testPartitionKey = testPartitionColumns.get(0).getName();
 
         // Create an undefined velocity variable.
         String undefinedVelocityVariable = "$UNDEFINED_VARIABLE";
 
         // Create an S3 storage entity with the S3 key prefix template containing an undefined variable.
-        createStorageEntity(STORAGE_NAME_2, StoragePlatformEntity.S3, Arrays.asList(
+        storageDaoTestHelper.createStorageEntity(STORAGE_NAME_2, StoragePlatformEntity.S3, Arrays.asList(
             new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE), undefinedVelocityVariable)));
 
         // Try to get an S3 key prefix when the S3 key prefix velocity template contains an undefined variable.
@@ -557,7 +557,7 @@ public class StorageUnitServiceGetS3KeyPrefixTest extends AbstractServiceTest
         createDatabaseEntitiesForGetS3KeyPrefixTesting(false);
 
         // Get the test partition columns.
-        List<SchemaColumn> testPartitionColumns = getTestPartitionColumns();
+        List<SchemaColumn> testPartitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();
         String testPartitionKey = testPartitionColumns.get(0).getName();
         List<SchemaColumn> testSubPartitionColumns = testPartitionColumns.subList(1, SUBPARTITION_VALUES.size() + 1);
 
@@ -586,7 +586,7 @@ public class StorageUnitServiceGetS3KeyPrefixTest extends AbstractServiceTest
         createDatabaseEntitiesForGetS3KeyPrefixTesting(true);
 
         // Get the test partition columns.
-        List<SchemaColumn> testPartitionColumns = getTestPartitionColumns();
+        List<SchemaColumn> testPartitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();
         String testPartitionKey = testPartitionColumns.get(0).getName();
         List<SchemaColumn> testSubPartitionColumns = testPartitionColumns.subList(1, SUBPARTITION_VALUES.size() + 1);
 
@@ -612,7 +612,7 @@ public class StorageUnitServiceGetS3KeyPrefixTest extends AbstractServiceTest
         createDatabaseEntitiesForGetS3KeyPrefixTesting(true);
 
         // Get the test partition columns.
-        List<SchemaColumn> testPartitionColumns = getTestPartitionColumns();
+        List<SchemaColumn> testPartitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();
         String testPartitionKey = testPartitionColumns.get(0).getName();
 
         // Try to get an S3 key prefix for the next business object data with the create new version flag not set to "true".
@@ -632,17 +632,17 @@ public class StorageUnitServiceGetS3KeyPrefixTest extends AbstractServiceTest
     public void testGetS3PrefixWhenSchemaWithoutPartitionColumns()
     {
         // Get a list of test schema partition columns and use the first column name as the partition key.
-        List<SchemaColumn> partitionColumns = getTestPartitionColumns();
+        List<SchemaColumn> partitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();
         String partitionKey = partitionColumns.get(0).getName();
 
         // Create and persist a business object format entity without partitions
-        BusinessObjectFormatEntity businessObjectFormatEntity =
-            createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
                 LATEST_VERSION_FLAG_SET, partitionKey, NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
-                SCHEMA_NULL_VALUE_BACKSLASH_N, getTestSchemaColumns(), null);
+                SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), null);
 
         // Create and persist an S3 storage with the S3 key prefix velocity template attribute.
-        createStorageEntity(STORAGE_NAME, StoragePlatformEntity.S3,
+        storageDaoTestHelper.createStorageEntity(STORAGE_NAME, StoragePlatformEntity.S3,
             configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE), S3_KEY_PREFIX_VELOCITY_TEMPLATE);
 
         // getS3Prefix request should fail with an appropriate message.

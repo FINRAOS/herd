@@ -55,7 +55,7 @@ public class StorageUnitServiceGetCredentialTest extends AbstractServiceTest
         attributes.add(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), "testBucket"));
         attributes.add(
             new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE), S3_KEY_PREFIX_VELOCITY_TEMPLATE));
-        createStorageEntity(storageName, StoragePlatformEntity.S3, attributes);
+        storageDaoTestHelper.createStorageEntity(storageName, StoragePlatformEntity.S3, attributes);
 
         StorageUnitUploadCredential storageUnitUploadCredential =
             storageUnitService.getStorageUnitUploadCredential(businessObjectDataKey, createNewVersion, storageName);
@@ -89,7 +89,7 @@ public class StorageUnitServiceGetCredentialTest extends AbstractServiceTest
         attributes.add(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), "testBucket"));
         attributes.add(
             new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE), S3_KEY_PREFIX_VELOCITY_TEMPLATE));
-        createStorageEntity(storageName, StoragePlatformEntity.S3, attributes);
+        storageDaoTestHelper.createStorageEntity(storageName, StoragePlatformEntity.S3, attributes);
 
         StorageUnitUploadCredential storageUnitUploadCredential =
             storageUnitService.getStorageUnitUploadCredential(businessObjectDataKey, createNewVersion, storageName);
@@ -125,7 +125,7 @@ public class StorageUnitServiceGetCredentialTest extends AbstractServiceTest
         attributes.add(
             new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE), S3_KEY_PREFIX_VELOCITY_TEMPLATE));
         attributes.add(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_UPLOAD_SESSION_DURATION_SECS), "12345"));
-        createStorageEntity(storageName, StoragePlatformEntity.S3, attributes);
+        storageDaoTestHelper.createStorageEntity(storageName, StoragePlatformEntity.S3, attributes);
 
         StorageUnitUploadCredential storageUnitUploadCredential =
             storageUnitService.getStorageUnitUploadCredential(businessObjectDataKey, createNewVersion, storageName);
@@ -158,7 +158,7 @@ public class StorageUnitServiceGetCredentialTest extends AbstractServiceTest
         List<Attribute> attributes = new ArrayList<>();
         attributes.add(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_UPLOAD_ROLE_ARN), "testRole"));
         attributes.add(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), "testBucket"));
-        createStorageEntity(storageName, StoragePlatformEntity.S3, attributes);
+        storageDaoTestHelper.createStorageEntity(storageName, StoragePlatformEntity.S3, attributes);
 
         try
         {
@@ -192,7 +192,7 @@ public class StorageUnitServiceGetCredentialTest extends AbstractServiceTest
         List<Attribute> attributes = new ArrayList<>();
         attributes.add(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_UPLOAD_ROLE_ARN), "testRole"));
         attributes.add(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), "testBucket"));
-        createStorageEntity(storageName, StoragePlatformEntity.S3, attributes);
+        storageDaoTestHelper.createStorageEntity(storageName, StoragePlatformEntity.S3, attributes);
 
         try
         {
@@ -227,7 +227,7 @@ public class StorageUnitServiceGetCredentialTest extends AbstractServiceTest
         attributes.add(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), "testBucket"));
         attributes.add(
             new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE), S3_KEY_PREFIX_VELOCITY_TEMPLATE));
-        createStorageEntity(storageName, StoragePlatformEntity.S3, attributes);
+        storageDaoTestHelper.createStorageEntity(storageName, StoragePlatformEntity.S3, attributes);
 
         StorageUnitDownloadCredential storageUnitDownloadCredential = storageUnitService.getStorageUnitDownloadCredential(businessObjectDataKey, storageName);
 
@@ -260,7 +260,7 @@ public class StorageUnitServiceGetCredentialTest extends AbstractServiceTest
         attributes.add(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_UPLOAD_ROLE_ARN), "testRole"));
         attributes.add(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), "testBucket"));
         attributes.add(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_UPLOAD_SESSION_DURATION_SECS), "notAValidInteger"));
-        createStorageEntity(storageName, StoragePlatformEntity.S3, attributes);
+        storageDaoTestHelper.createStorageEntity(storageName, StoragePlatformEntity.S3, attributes);
 
         try
         {
@@ -296,7 +296,7 @@ public class StorageUnitServiceGetCredentialTest extends AbstractServiceTest
         attributes.add(
             new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE), S3_KEY_PREFIX_VELOCITY_TEMPLATE));
         attributes.add(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KMS_KEY_ID), "test"));
-        createStorageEntity(storageName, StoragePlatformEntity.S3, attributes);
+        storageDaoTestHelper.createStorageEntity(storageName, StoragePlatformEntity.S3, attributes);
 
         StorageUnitUploadCredential storageUnitUploadCredential =
             storageUnitService.getStorageUnitUploadCredential(businessObjectDataKey, createNewVersion, storageName);
@@ -331,7 +331,7 @@ public class StorageUnitServiceGetCredentialTest extends AbstractServiceTest
         attributes.add(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), "testBucket"));
         attributes.add(
             new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE), S3_KEY_PREFIX_VELOCITY_TEMPLATE));
-        createStorageEntity(storageName, StoragePlatformEntity.S3, attributes);
+        storageDaoTestHelper.createStorageEntity(storageName, StoragePlatformEntity.S3, attributes);
 
         StorageUnitUploadCredential storageUnitUploadCredential =
             storageUnitService.getStorageUnitUploadCredential(businessObjectDataKey, createNewVersion, BLANK_TEXT + storageName + BLANK_TEXT);
@@ -346,8 +346,9 @@ public class StorageUnitServiceGetCredentialTest extends AbstractServiceTest
 
     private void createBusinessObjectFormatEntity(BusinessObjectDataKey businessObjectDataKey)
     {
-        createBusinessObjectFormatEntity(businessObjectDataKey.getNamespace(), businessObjectDataKey.getBusinessObjectDefinitionName(),
-            businessObjectDataKey.getBusinessObjectFormatUsage(), businessObjectDataKey.getBusinessObjectFormatFileType(),
-            businessObjectDataKey.getBusinessObjectFormatVersion(), null, true, PARTITION_KEY, null, null, null, null, null, null, null);
+        businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(businessObjectDataKey.getNamespace(), businessObjectDataKey.getBusinessObjectDefinitionName(),
+                businessObjectDataKey.getBusinessObjectFormatUsage(), businessObjectDataKey.getBusinessObjectFormatFileType(),
+                businessObjectDataKey.getBusinessObjectFormatVersion(), null, true, PARTITION_KEY, null, null, null, null, null, null, null);
     }
 }

@@ -33,8 +33,9 @@ public class BusinessObjectDataStatusRestControllerTest extends AbstractRestTest
     public void testGetBusinessObjectDataStatus()
     {
         // Create and persist database entities required for testing.
-        createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-            DATA_VERSION, true, BDATA_STATUS);
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS);
 
         // Get the business object data status information.
         BusinessObjectDataStatusInformation resultBusinessObjectDataStatusInformation = businessObjectDataStatusRestController
@@ -58,8 +59,9 @@ public class BusinessObjectDataStatusRestControllerTest extends AbstractRestTest
             List<String> subPartitionValues = SUBPARTITION_VALUES.subList(0, i);
 
             // Create and persist a business object data entity.
-            createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, subPartitionValues,
-                DATA_VERSION, true, BDATA_STATUS);
+            businessObjectDataDaoTestHelper
+                .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    subPartitionValues, DATA_VERSION, true, BDATA_STATUS);
 
             // Get the business object data status information without specifying optional parameters.
             BusinessObjectDataStatusInformation resultBusinessObjectDataStatusInformation = businessObjectDataStatusRestController
@@ -77,8 +79,9 @@ public class BusinessObjectDataStatusRestControllerTest extends AbstractRestTest
     public void testGetBusinessObjectDataStatusMissingOptionalParametersPassedAsNulls()
     {
         // Create and persist a business object data entity without sub-partition values.
-        createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, NO_SUBPARTITION_VALUES,
-            DATA_VERSION, true, BDATA_STATUS);
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS);
 
         // Get the business object data status by passing null values for the partition key and the list of sub-partition values.
         BusinessObjectDataStatusInformation resultBusinessObjectDataStatusInformation = businessObjectDataStatusRestController
@@ -94,9 +97,10 @@ public class BusinessObjectDataStatusRestControllerTest extends AbstractRestTest
     public void testUpdateBusinessObjectDataStatus()
     {
         // Create and persist relative test entities.
-        createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-            DATA_VERSION, true, BDATA_STATUS);
-        createBusinessObjectDataStatusEntity(BDATA_STATUS_2);
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS);
+        businessObjectDataStatusDaoTestHelper.createBusinessObjectDataStatusEntity(BDATA_STATUS_2);
 
         // Update the business object data status.
         BusinessObjectDataStatusUpdateResponse response = businessObjectDataStatusRestController
@@ -114,7 +118,7 @@ public class BusinessObjectDataStatusRestControllerTest extends AbstractRestTest
     public void testUpdateBusinessObjectDataStatusMissingOptionalParameters()
     {
         // Create and persist a business object data status entity.
-        createBusinessObjectDataStatusEntity(BDATA_STATUS_2);
+        businessObjectDataStatusDaoTestHelper.createBusinessObjectDataStatusEntity(BDATA_STATUS_2);
 
         // Test if we can retrieve an attribute for the business object data with any allowed number of subpartition values (from 0 to MAX_SUBPARTITIONS).
         for (int i = 0; i <= BusinessObjectDataEntity.MAX_SUBPARTITIONS; i++)
@@ -123,8 +127,9 @@ public class BusinessObjectDataStatusRestControllerTest extends AbstractRestTest
             List<String> subPartitionValues = SUBPARTITION_VALUES.subList(0, i);
 
             // Create and persist a business object data entity.
-            createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, subPartitionValues,
-                DATA_VERSION, true, BDATA_STATUS);
+            businessObjectDataDaoTestHelper
+                .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    subPartitionValues, DATA_VERSION, true, BDATA_STATUS);
 
             // Update the business object data status using the relative endpoint.
             BusinessObjectDataStatusUpdateResponse response = null;
