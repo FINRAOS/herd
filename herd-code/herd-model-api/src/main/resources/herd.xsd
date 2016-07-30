@@ -1049,7 +1049,7 @@
          </xs:element>
          <xs:element name="nullValue" type="xs:string" minOccurs="0">
             <xs:annotation>
-                  <xs:documentation>The string to use for the null value (e.g. "\\\\N"). Please note that a null value is allowed to be a whitespace character.
+               <xs:documentation>The string to use for the null value (e.g. "\\\\N"). Please note that a null value is allowed to be a whitespace character.
                   XML escaping should be used when specifying non-ASCII characters.
                   Note: when passing in an empty String, the response XML will return a NULL value (i.e. the tag will be absent). Generate DDL calls will show
                   the correct empty String value wrapped in single-quotes.
@@ -1968,6 +1968,11 @@
          <xs:element name="eventTime" type="xs:dateTime">
             <xs:annotation>
                <xs:documentation>The timestamp of when the business object data status change occurred</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="userId" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The User ID of the user who performed status update or registration of the Business Object Data</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:sequence>
@@ -4539,8 +4544,6 @@
       </xs:all>
    </xs:complexType>
 
-
-
    <xs:element name="businessObjectDataSearchFilter" type="businessObjectDataSearchFilter"/>
    <xs:complexType name="businessObjectDataSearchFilter">
       <xs:sequence>
@@ -4551,7 +4554,7 @@
          </xs:element>
       </xs:sequence>
    </xs:complexType>
-   
+
    <xs:complexType name="businessObjectDataSearchKeys">
       <xs:sequence>
          <xs:element name="businessObjectDataSearchKey" type="businessObjectDataSearchKey" minOccurs="1" maxOccurs="unbounded">
@@ -4561,8 +4564,7 @@
          </xs:element>
       </xs:sequence>
    </xs:complexType>
-   
-   
+
    <xs:element name="businessObjectDataSearchFilters" type="businessObjectDataSearchFilters"/>
    <xs:complexType name="businessObjectDataSearchFilters">
       <xs:sequence>
@@ -4573,32 +4575,32 @@
          </xs:element>
       </xs:sequence>
    </xs:complexType>
-   
+
    <xs:element name="businessObjectDataSearchRequest" type="businessObjectDataSearchRequest"/>
    <xs:complexType name="businessObjectDataSearchRequest">
-         <xs:sequence>
-           <xs:element name="businessObjectDataSearchFilters" type="businessObjectDataSearchFilters">
-           </xs:element>
-         </xs:sequence>
+      <xs:sequence>
+         <xs:element name="businessObjectDataSearchFilters" type="businessObjectDataSearchFilters">
+         </xs:element>
+      </xs:sequence>
    </xs:complexType>
-   
+
    <xs:element name="businessObjectDataElements" type="businessObjectDataElements"/>
    <xs:complexType name="businessObjectDataElements">
-         <xs:sequence>
-           <xs:element name="businessObjectData" type="businessObjectData" minOccurs="0" maxOccurs="unbounded">
-               <xs:annotation>
-                 <xs:documentation>Values that identify a Business Object Search Result</xs:documentation>
-               </xs:annotation>
-           </xs:element>
-         </xs:sequence>
+      <xs:sequence>
+         <xs:element name="businessObjectData" type="businessObjectData" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>Values that identify a Business Object Search Result</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
    </xs:complexType>
-   
+
    <xs:element name="businessObjectDataSearchResult" type="businessObjectDataSearchResult"/>
    <xs:complexType name="businessObjectDataSearchResult">
-         <xs:sequence>
-           <xs:element name="businessObjectDataElements" type="businessObjectDataElements">
-           </xs:element>
-         </xs:sequence>
+      <xs:sequence>
+         <xs:element name="businessObjectDataElements" type="businessObjectDataElements">
+         </xs:element>
+      </xs:sequence>
    </xs:complexType>
 
 </xs:schema>

@@ -268,7 +268,8 @@ public class BusinessObjectDataHelper
             for (BusinessObjectDataStatusHistoryEntity businessObjectDataStatusHistoryEntity : businessObjectDataEntity.getHistoricalStatuses())
             {
                 businessObjectDataStatusChangeEvents.add(new BusinessObjectDataStatusChangeEvent(businessObjectDataStatusHistoryEntity.getStatus().getCode(),
-                    HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDataStatusHistoryEntity.getCreatedOn())));
+                    HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDataStatusHistoryEntity.getCreatedOn()),
+                    businessObjectDataStatusHistoryEntity.getCreatedBy()));
             }
         }
 
