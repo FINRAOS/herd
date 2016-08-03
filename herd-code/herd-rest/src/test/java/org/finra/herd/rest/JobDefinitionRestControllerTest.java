@@ -40,7 +40,7 @@ public class JobDefinitionRestControllerTest extends AbstractRestTest
         String namespace = NAMESPACE;
         String jobName = JOB_NAME;
         String activitiJobXml = getActivitiJobXml(namespace, jobName);
-        createNamespaceEntity(namespace);
+        namespaceDaoTestHelper.createNamespaceEntity(namespace);
         JobDefinition jobDefinition =
             jobDefinitionRestController.createJobDefinition(new JobDefinitionCreateRequest(namespace, jobName, null, activitiJobXml, null, null));
         assertNotNull(jobDefinition);
@@ -54,7 +54,7 @@ public class JobDefinitionRestControllerTest extends AbstractRestTest
         String namespace = NAMESPACE;
         String jobName = JOB_NAME;
         String activitiJobXml = getActivitiJobXml(namespace, jobName);
-        createNamespaceEntity(namespace);
+        namespaceDaoTestHelper.createNamespaceEntity(namespace);
         jobDefinitionRestController.createJobDefinition(new JobDefinitionCreateRequest(namespace, jobName, null, activitiJobXml, null, null));
         JobDefinition jobDefinition = jobDefinitionRestController.getJobDefinition(namespace, jobName);
         assertNotNull(jobDefinition);
@@ -68,7 +68,7 @@ public class JobDefinitionRestControllerTest extends AbstractRestTest
         String namespace = NAMESPACE;
         String jobName = JOB_NAME;
         String activitiJobXml = getActivitiJobXml(namespace, jobName);
-        createNamespaceEntity(namespace);
+        namespaceDaoTestHelper.createNamespaceEntity(namespace);
         jobDefinitionRestController.createJobDefinition(new JobDefinitionCreateRequest(namespace, jobName, null, activitiJobXml, null, null));
 
         JobDefinition jobDefinition =

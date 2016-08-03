@@ -45,12 +45,12 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
     public void testCreateBusinessObjectDefinitionColumn()
     {
         // Create and persist a business object format entity.
-        BusinessObjectFormatEntity businessObjectFormatEntity =
-            createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
                 LATEST_VERSION_FLAG_SET, PARTITION_KEY);
 
         // Create and persist a schema column for this business object format.
-        SchemaColumnEntity schemaColumnEntity = createSchemaColumnEntity(businessObjectFormatEntity, COLUMN_NAME);
+        SchemaColumnEntity schemaColumnEntity = schemaColumnDaoTestHelper.createSchemaColumnEntity(businessObjectFormatEntity, COLUMN_NAME);
 
         // Create a business object definition column key.
         BusinessObjectDefinitionColumnKey businessObjectDefinitionColumnKey =
@@ -72,7 +72,9 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
     public void testCreateBusinessObjectDefinitionColumnBusinessObjectDefinitionColumnAlreadyExists()
     {
         // Create and persist a business object definition column entity.
-        createBusinessObjectDefinitionColumnEntity(new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME), BDEF_COLUMN_DESCRIPTION);
+        businessObjectDefinitionColumnDaoTestHelper
+            .createBusinessObjectDefinitionColumnEntity(new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME),
+                BDEF_COLUMN_DESCRIPTION);
 
         // Try to add a duplicate business object definition column.
         for (String businessObjectDefinitionColumnName : Arrays.asList(BDEF_COLUMN_NAME, BDEF_COLUMN_NAME.toUpperCase(), BDEF_COLUMN_NAME.toLowerCase()))
@@ -157,12 +159,12 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
     public void testCreateBusinessObjectDefinitionColumnLowerCaseParameters()
     {
         // Create and persist a business object format entity.
-        BusinessObjectFormatEntity businessObjectFormatEntity =
-            createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
                 LATEST_VERSION_FLAG_SET, PARTITION_KEY);
 
         // Create and persist a schema column for this business object format.
-        createSchemaColumnEntity(businessObjectFormatEntity, COLUMN_NAME);
+        schemaColumnDaoTestHelper.createSchemaColumnEntity(businessObjectFormatEntity, COLUMN_NAME);
 
         // Create a business object definition column using lower case parameter values.
         BusinessObjectDefinitionColumn resultBusinessObjectDefinitionColumn = businessObjectDefinitionColumnService.createBusinessObjectDefinitionColumn(
@@ -180,12 +182,12 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
     public void testCreateBusinessObjectDefinitionColumnMissingOptionalParameters()
     {
         // Create and persist a business object format entity.
-        BusinessObjectFormatEntity businessObjectFormatEntity =
-            createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
                 LATEST_VERSION_FLAG_SET, PARTITION_KEY);
 
         // Create and persist a schema column for this business object format.
-        createSchemaColumnEntity(businessObjectFormatEntity, COLUMN_NAME);
+        schemaColumnDaoTestHelper.createSchemaColumnEntity(businessObjectFormatEntity, COLUMN_NAME);
 
         // Create a business object definition column key.
         BusinessObjectDefinitionColumnKey businessObjectDefinitionColumnKey =
@@ -260,17 +262,17 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
     public void testCreateBusinessObjectDefinitionColumnSchemaColumnAlreadyLinked()
     {
         // Create and persist a business object definition column.
-        BusinessObjectDefinitionColumnEntity businessObjectDefinitionColumnEntity =
-            createBusinessObjectDefinitionColumnEntity(new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME),
+        BusinessObjectDefinitionColumnEntity businessObjectDefinitionColumnEntity = businessObjectDefinitionColumnDaoTestHelper
+            .createBusinessObjectDefinitionColumnEntity(new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME),
                 BDEF_COLUMN_DESCRIPTION);
 
         // Create and persist a business object format entity.
-        BusinessObjectFormatEntity businessObjectFormatEntity =
-            createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
                 LATEST_VERSION_FLAG_SET, PARTITION_KEY);
 
         // Create and persist a schema column for this business object format that is linked with the business object definition column.
-        createSchemaColumnEntity(businessObjectFormatEntity, COLUMN_NAME, businessObjectDefinitionColumnEntity);
+        schemaColumnDaoTestHelper.createSchemaColumnEntity(businessObjectFormatEntity, COLUMN_NAME, businessObjectDefinitionColumnEntity);
 
         // Try to create another business object definition column that references the already linked schema column.
         for (String schemaColumnName : Arrays.asList(COLUMN_NAME.toUpperCase(), COLUMN_NAME.toLowerCase()))
@@ -295,7 +297,7 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
     public void testCreateBusinessObjectDefinitionColumnSchemaColumnNoExists()
     {
         // Create and persist a business object definition entity.
-        createBusinessObjectDefinitionEntity(BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
+        businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
 
         // Try to create a business object definition column when there are no matching schema columns.
         try
@@ -317,12 +319,12 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
     public void testCreateBusinessObjectDefinitionColumnTrimParameters()
     {
         // Create and persist a business object format entity.
-        BusinessObjectFormatEntity businessObjectFormatEntity =
-            createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
                 LATEST_VERSION_FLAG_SET, PARTITION_KEY);
 
         // Create and persist a schema column for this business object format.
-        createSchemaColumnEntity(businessObjectFormatEntity, COLUMN_NAME);
+        schemaColumnDaoTestHelper.createSchemaColumnEntity(businessObjectFormatEntity, COLUMN_NAME);
 
         // Create a business object definition column key.
         BusinessObjectDefinitionColumnKey businessObjectDefinitionColumnKey =
@@ -343,12 +345,12 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
     public void testCreateBusinessObjectDefinitionColumnUpperCaseParameters()
     {
         // Create and persist a business object format entity.
-        BusinessObjectFormatEntity businessObjectFormatEntity =
-            createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
                 LATEST_VERSION_FLAG_SET, PARTITION_KEY);
 
         // Create and persist a schema column for this business object format.
-        createSchemaColumnEntity(businessObjectFormatEntity, COLUMN_NAME);
+        schemaColumnDaoTestHelper.createSchemaColumnEntity(businessObjectFormatEntity, COLUMN_NAME);
 
         // Create a business object definition column using upper case parameter values.
         BusinessObjectDefinitionColumn resultBusinessObjectDefinitionColumn = businessObjectDefinitionColumnService.createBusinessObjectDefinitionColumn(
@@ -371,15 +373,15 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
 
         // Create and persist a business object definition column.
         BusinessObjectDefinitionColumnEntity businessObjectDefinitionColumnEntity =
-            createBusinessObjectDefinitionColumnEntity(businessObjectDefinitionColumnKey, BDEF_COLUMN_DESCRIPTION);
+            businessObjectDefinitionColumnDaoTestHelper.createBusinessObjectDefinitionColumnEntity(businessObjectDefinitionColumnKey, BDEF_COLUMN_DESCRIPTION);
 
         // Create and persist a business object format entity.
-        BusinessObjectFormatEntity businessObjectFormatEntity =
-            createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
                 LATEST_VERSION_FLAG_SET, PARTITION_KEY);
 
         // Create and persist a schema column for this business object format that is linked with the business object definition column.
-        createSchemaColumnEntity(businessObjectFormatEntity, COLUMN_NAME, businessObjectDefinitionColumnEntity);
+        schemaColumnDaoTestHelper.createSchemaColumnEntity(businessObjectFormatEntity, COLUMN_NAME, businessObjectDefinitionColumnEntity);
 
         // Validate that this business object definition column exists.
         assertNotNull(businessObjectDefinitionColumnDao.getBusinessObjectDefinitionColumnByKey(businessObjectDefinitionColumnKey));
@@ -422,15 +424,15 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
 
         // Create and persist a business object definition column.
         BusinessObjectDefinitionColumnEntity businessObjectDefinitionColumnEntity =
-            createBusinessObjectDefinitionColumnEntity(businessObjectDefinitionColumnKey, BDEF_COLUMN_DESCRIPTION);
+            businessObjectDefinitionColumnDaoTestHelper.createBusinessObjectDefinitionColumnEntity(businessObjectDefinitionColumnKey, BDEF_COLUMN_DESCRIPTION);
 
         // Create and persist a business object format entity.
-        BusinessObjectFormatEntity businessObjectFormatEntity =
-            createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
                 LATEST_VERSION_FLAG_SET, PARTITION_KEY);
 
         // Create and persist a schema column for this business object format that is linked with the business object definition column.
-        createSchemaColumnEntity(businessObjectFormatEntity, COLUMN_NAME, businessObjectDefinitionColumnEntity);
+        schemaColumnDaoTestHelper.createSchemaColumnEntity(businessObjectFormatEntity, COLUMN_NAME, businessObjectDefinitionColumnEntity);
 
         // Validate that this business object definition column exists.
         assertNotNull(businessObjectDefinitionColumnDao.getBusinessObjectDefinitionColumnByKey(businessObjectDefinitionColumnKey));
@@ -495,7 +497,7 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
             new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME);
 
         // Create and persist a business object definition column.
-        createBusinessObjectDefinitionColumnEntity(businessObjectDefinitionColumnKey, BDEF_COLUMN_DESCRIPTION);
+        businessObjectDefinitionColumnDaoTestHelper.createBusinessObjectDefinitionColumnEntity(businessObjectDefinitionColumnKey, BDEF_COLUMN_DESCRIPTION);
 
         // Validate that this business object definition column exists.
         assertNotNull(businessObjectDefinitionColumnDao.getBusinessObjectDefinitionColumnByKey(businessObjectDefinitionColumnKey));
@@ -521,15 +523,15 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
 
         // Create and persist a business object definition column.
         BusinessObjectDefinitionColumnEntity businessObjectDefinitionColumnEntity =
-            createBusinessObjectDefinitionColumnEntity(businessObjectDefinitionColumnKey, BDEF_COLUMN_DESCRIPTION);
+            businessObjectDefinitionColumnDaoTestHelper.createBusinessObjectDefinitionColumnEntity(businessObjectDefinitionColumnKey, BDEF_COLUMN_DESCRIPTION);
 
         // Create and persist a business object format entity.
-        BusinessObjectFormatEntity businessObjectFormatEntity =
-            createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
                 LATEST_VERSION_FLAG_SET, PARTITION_KEY);
 
         // Create and persist a schema column for this business object format that is linked with the business object definition column.
-        createSchemaColumnEntity(businessObjectFormatEntity, COLUMN_NAME, businessObjectDefinitionColumnEntity);
+        schemaColumnDaoTestHelper.createSchemaColumnEntity(businessObjectFormatEntity, COLUMN_NAME, businessObjectDefinitionColumnEntity);
 
         // Validate that this business object definition column exists.
         assertNotNull(businessObjectDefinitionColumnDao.getBusinessObjectDefinitionColumnByKey(businessObjectDefinitionColumnKey));
@@ -555,15 +557,15 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
 
         // Create and persist a business object definition column.
         BusinessObjectDefinitionColumnEntity businessObjectDefinitionColumnEntity =
-            createBusinessObjectDefinitionColumnEntity(businessObjectDefinitionColumnKey, BDEF_COLUMN_DESCRIPTION);
+            businessObjectDefinitionColumnDaoTestHelper.createBusinessObjectDefinitionColumnEntity(businessObjectDefinitionColumnKey, BDEF_COLUMN_DESCRIPTION);
 
         // Create and persist a business object format entity.
-        BusinessObjectFormatEntity businessObjectFormatEntity =
-            createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
                 LATEST_VERSION_FLAG_SET, PARTITION_KEY);
 
         // Create and persist a schema column for this business object format that is linked with the business object definition column.
-        createSchemaColumnEntity(businessObjectFormatEntity, COLUMN_NAME, businessObjectDefinitionColumnEntity);
+        schemaColumnDaoTestHelper.createSchemaColumnEntity(businessObjectFormatEntity, COLUMN_NAME, businessObjectDefinitionColumnEntity);
 
         // Validate that this business object definition column exists.
         assertNotNull(businessObjectDefinitionColumnDao.getBusinessObjectDefinitionColumnByKey(businessObjectDefinitionColumnKey));
@@ -589,15 +591,15 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
 
         // Create and persist a business object definition column.
         BusinessObjectDefinitionColumnEntity businessObjectDefinitionColumnEntity =
-            createBusinessObjectDefinitionColumnEntity(businessObjectDefinitionColumnKey, BDEF_COLUMN_DESCRIPTION);
+            businessObjectDefinitionColumnDaoTestHelper.createBusinessObjectDefinitionColumnEntity(businessObjectDefinitionColumnKey, BDEF_COLUMN_DESCRIPTION);
 
         // Create and persist a business object format entity.
-        BusinessObjectFormatEntity businessObjectFormatEntity =
-            createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
                 LATEST_VERSION_FLAG_SET, PARTITION_KEY);
 
         // Create and persist a schema column for this business object format that is linked with the business object definition column.
-        createSchemaColumnEntity(businessObjectFormatEntity, COLUMN_NAME, businessObjectDefinitionColumnEntity);
+        schemaColumnDaoTestHelper.createSchemaColumnEntity(businessObjectFormatEntity, COLUMN_NAME, businessObjectDefinitionColumnEntity);
 
         // Get the business object definition column.
         BusinessObjectDefinitionColumn resultBusinessObjectDefinitionColumn =
@@ -634,15 +636,15 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
 
         // Create and persist a business object definition column.
         BusinessObjectDefinitionColumnEntity businessObjectDefinitionColumnEntity =
-            createBusinessObjectDefinitionColumnEntity(businessObjectDefinitionColumnKey, BDEF_COLUMN_DESCRIPTION);
+            businessObjectDefinitionColumnDaoTestHelper.createBusinessObjectDefinitionColumnEntity(businessObjectDefinitionColumnKey, BDEF_COLUMN_DESCRIPTION);
 
         // Create and persist a business object format entity.
-        BusinessObjectFormatEntity businessObjectFormatEntity =
-            createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
                 LATEST_VERSION_FLAG_SET, PARTITION_KEY);
 
         // Create and persist a schema column for this business object format that is linked with the business object definition column.
-        createSchemaColumnEntity(businessObjectFormatEntity, COLUMN_NAME, businessObjectDefinitionColumnEntity);
+        schemaColumnDaoTestHelper.createSchemaColumnEntity(businessObjectFormatEntity, COLUMN_NAME, businessObjectDefinitionColumnEntity);
 
         // Get this business object definition column using lower case parameter values.
         BusinessObjectDefinitionColumn resultBusinessObjectDefinitionColumn = businessObjectDefinitionColumnService.getBusinessObjectDefinitionColumn(
@@ -702,15 +704,15 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
 
         // Create and persist a business object definition column.
         BusinessObjectDefinitionColumnEntity businessObjectDefinitionColumnEntity =
-            createBusinessObjectDefinitionColumnEntity(businessObjectDefinitionColumnKey, BDEF_COLUMN_DESCRIPTION);
+            businessObjectDefinitionColumnDaoTestHelper.createBusinessObjectDefinitionColumnEntity(businessObjectDefinitionColumnKey, BDEF_COLUMN_DESCRIPTION);
 
         // Create and persist a business object format entity.
-        BusinessObjectFormatEntity businessObjectFormatEntity =
-            createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
                 LATEST_VERSION_FLAG_SET, PARTITION_KEY);
 
         // Create and persist a schema column for this business object format that is linked with the business object definition column.
-        createSchemaColumnEntity(businessObjectFormatEntity, COLUMN_NAME, businessObjectDefinitionColumnEntity);
+        schemaColumnDaoTestHelper.createSchemaColumnEntity(businessObjectFormatEntity, COLUMN_NAME, businessObjectDefinitionColumnEntity);
 
         // Get this business object definition column using input parameters with leading and trailing empty spaces.
         BusinessObjectDefinitionColumn resultBusinessObjectDefinitionColumn = businessObjectDefinitionColumnService.getBusinessObjectDefinitionColumn(
@@ -730,15 +732,15 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
 
         // Create and persist a business object definition column.
         BusinessObjectDefinitionColumnEntity businessObjectDefinitionColumnEntity =
-            createBusinessObjectDefinitionColumnEntity(businessObjectDefinitionColumnKey, BDEF_COLUMN_DESCRIPTION);
+            businessObjectDefinitionColumnDaoTestHelper.createBusinessObjectDefinitionColumnEntity(businessObjectDefinitionColumnKey, BDEF_COLUMN_DESCRIPTION);
 
         // Create and persist a business object format entity.
-        BusinessObjectFormatEntity businessObjectFormatEntity =
-            createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
                 LATEST_VERSION_FLAG_SET, PARTITION_KEY);
 
         // Create and persist a schema column for this business object format that is linked with the business object definition column.
-        createSchemaColumnEntity(businessObjectFormatEntity, COLUMN_NAME, businessObjectDefinitionColumnEntity);
+        schemaColumnDaoTestHelper.createSchemaColumnEntity(businessObjectFormatEntity, COLUMN_NAME, businessObjectDefinitionColumnEntity);
 
         // Get this business object definition column using upper case parameter values.
         BusinessObjectDefinitionColumn resultBusinessObjectDefinitionColumn = businessObjectDefinitionColumnService.getBusinessObjectDefinitionColumn(
@@ -753,8 +755,10 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
     public void testGetBusinessObjectDefinitionColumns()
     {
         // Create and persist business object definition column entities.
-        createBusinessObjectDefinitionColumnEntity(new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME_2), DESCRIPTION_2);
-        createBusinessObjectDefinitionColumnEntity(new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME), DESCRIPTION);
+        businessObjectDefinitionColumnDaoTestHelper
+            .createBusinessObjectDefinitionColumnEntity(new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME_2), DESCRIPTION_2);
+        businessObjectDefinitionColumnDaoTestHelper
+            .createBusinessObjectDefinitionColumnEntity(new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME), DESCRIPTION);
 
         // Get a list of business object definition column keys.
         BusinessObjectDefinitionColumnKeys resultBusinessObjectDefinitionColumnKeys =
@@ -769,7 +773,7 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
     public void testGetBusinessObjectDefinitionColumnsBusinessObjectDefinitionColumnsNoExist()
     {
         // Create and persist a business object definition entity.
-        createBusinessObjectDefinitionEntity(BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
+        businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
 
         // Try to get a list of business object definition column keys when business object definition columns do not exist.
         assertEquals(0, businessObjectDefinitionColumnService.getBusinessObjectDefinitionColumns(new BusinessObjectDefinitionKey(BDEF_NAMESPACE, BDEF_NAME))
@@ -795,8 +799,10 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
     public void testGetBusinessObjectDefinitionColumnsLowerCaseParameters()
     {
         // Create and persist business object definition column entities.
-        createBusinessObjectDefinitionColumnEntity(new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME_2), DESCRIPTION_2);
-        createBusinessObjectDefinitionColumnEntity(new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME), DESCRIPTION);
+        businessObjectDefinitionColumnDaoTestHelper
+            .createBusinessObjectDefinitionColumnEntity(new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME_2), DESCRIPTION_2);
+        businessObjectDefinitionColumnDaoTestHelper
+            .createBusinessObjectDefinitionColumnEntity(new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME), DESCRIPTION);
 
         // Get a list of business object definition column keys using lower case parameter values.
         BusinessObjectDefinitionColumnKeys resultBusinessObjectDefinitionColumnKeys = businessObjectDefinitionColumnService
@@ -837,8 +843,10 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
     public void testGetBusinessObjectDefinitionColumnsTrimParameters()
     {
         // Create and persist business object definition column entities.
-        createBusinessObjectDefinitionColumnEntity(new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME_2), DESCRIPTION_2);
-        createBusinessObjectDefinitionColumnEntity(new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME), DESCRIPTION);
+        businessObjectDefinitionColumnDaoTestHelper
+            .createBusinessObjectDefinitionColumnEntity(new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME_2), DESCRIPTION_2);
+        businessObjectDefinitionColumnDaoTestHelper
+            .createBusinessObjectDefinitionColumnEntity(new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME), DESCRIPTION);
 
         // Get a list of business object definition column keys using input parameters with leading and trailing empty spaces.
         BusinessObjectDefinitionColumnKeys resultBusinessObjectDefinitionColumnKeys = businessObjectDefinitionColumnService
@@ -853,8 +861,10 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
     public void testGetBusinessObjectDefinitionColumnsUpperCaseParameters()
     {
         // Create and persist business object definition column entities.
-        createBusinessObjectDefinitionColumnEntity(new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME_2), DESCRIPTION_2);
-        createBusinessObjectDefinitionColumnEntity(new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME), DESCRIPTION);
+        businessObjectDefinitionColumnDaoTestHelper
+            .createBusinessObjectDefinitionColumnEntity(new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME_2), DESCRIPTION_2);
+        businessObjectDefinitionColumnDaoTestHelper
+            .createBusinessObjectDefinitionColumnEntity(new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME), DESCRIPTION);
 
         // Get a list of business object definition column keys using upper case parameter values.
         BusinessObjectDefinitionColumnKeys resultBusinessObjectDefinitionColumnKeys = businessObjectDefinitionColumnService
@@ -874,15 +884,15 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
 
         // Create and persist a business object definition column.
         BusinessObjectDefinitionColumnEntity businessObjectDefinitionColumnEntity =
-            createBusinessObjectDefinitionColumnEntity(businessObjectDefinitionColumnKey, BDEF_COLUMN_DESCRIPTION);
+            businessObjectDefinitionColumnDaoTestHelper.createBusinessObjectDefinitionColumnEntity(businessObjectDefinitionColumnKey, BDEF_COLUMN_DESCRIPTION);
 
         // Create and persist a business object format entity.
-        BusinessObjectFormatEntity businessObjectFormatEntity =
-            createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
                 LATEST_VERSION_FLAG_SET, PARTITION_KEY);
 
         // Create and persist a schema column for this business object format that is linked with the business object definition column.
-        createSchemaColumnEntity(businessObjectFormatEntity, COLUMN_NAME, businessObjectDefinitionColumnEntity);
+        schemaColumnDaoTestHelper.createSchemaColumnEntity(businessObjectFormatEntity, COLUMN_NAME, businessObjectDefinitionColumnEntity);
 
         // Update the business object definition column.
         BusinessObjectDefinitionColumn updatedBusinessObjectDefinitionColumn = businessObjectDefinitionColumnService
@@ -921,15 +931,15 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
 
         // Create and persist a business object definition column.
         BusinessObjectDefinitionColumnEntity businessObjectDefinitionColumnEntity =
-            createBusinessObjectDefinitionColumnEntity(businessObjectDefinitionColumnKey, BDEF_COLUMN_DESCRIPTION);
+            businessObjectDefinitionColumnDaoTestHelper.createBusinessObjectDefinitionColumnEntity(businessObjectDefinitionColumnKey, BDEF_COLUMN_DESCRIPTION);
 
         // Create and persist a business object format entity.
-        BusinessObjectFormatEntity businessObjectFormatEntity =
-            createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
                 LATEST_VERSION_FLAG_SET, PARTITION_KEY);
 
         // Create and persist a schema column for this business object format that is linked with the business object definition column.
-        createSchemaColumnEntity(businessObjectFormatEntity, COLUMN_NAME, businessObjectDefinitionColumnEntity);
+        schemaColumnDaoTestHelper.createSchemaColumnEntity(businessObjectFormatEntity, COLUMN_NAME, businessObjectDefinitionColumnEntity);
 
         // Update the business object definition column using lower case parameter values.
         BusinessObjectDefinitionColumn updatedBusinessObjectDefinitionColumn = businessObjectDefinitionColumnService.updateBusinessObjectDefinitionColumn(
@@ -950,15 +960,15 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
 
         // Create and persist a business object definition column.
         BusinessObjectDefinitionColumnEntity businessObjectDefinitionColumnEntity =
-            createBusinessObjectDefinitionColumnEntity(businessObjectDefinitionColumnKey, BDEF_COLUMN_DESCRIPTION);
+            businessObjectDefinitionColumnDaoTestHelper.createBusinessObjectDefinitionColumnEntity(businessObjectDefinitionColumnKey, BDEF_COLUMN_DESCRIPTION);
 
         // Create and persist a business object format entity.
-        BusinessObjectFormatEntity businessObjectFormatEntity =
-            createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
                 LATEST_VERSION_FLAG_SET, PARTITION_KEY);
 
         // Create and persist a schema column for this business object format that is linked with the business object definition column.
-        createSchemaColumnEntity(businessObjectFormatEntity, COLUMN_NAME, businessObjectDefinitionColumnEntity);
+        schemaColumnDaoTestHelper.createSchemaColumnEntity(businessObjectFormatEntity, COLUMN_NAME, businessObjectDefinitionColumnEntity);
 
         // Update the business object definition column without passing optional parameters.
         BusinessObjectDefinitionColumn updatedBusinessObjectDefinitionColumn = businessObjectDefinitionColumnService
@@ -1022,15 +1032,15 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
 
         // Create and persist a business object definition column.
         BusinessObjectDefinitionColumnEntity businessObjectDefinitionColumnEntity =
-            createBusinessObjectDefinitionColumnEntity(businessObjectDefinitionColumnKey, BDEF_COLUMN_DESCRIPTION);
+            businessObjectDefinitionColumnDaoTestHelper.createBusinessObjectDefinitionColumnEntity(businessObjectDefinitionColumnKey, BDEF_COLUMN_DESCRIPTION);
 
         // Create and persist a business object format entity.
-        BusinessObjectFormatEntity businessObjectFormatEntity =
-            createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
                 LATEST_VERSION_FLAG_SET, PARTITION_KEY);
 
         // Create and persist a schema column for this business object format that is linked with the business object definition column.
-        createSchemaColumnEntity(businessObjectFormatEntity, COLUMN_NAME, businessObjectDefinitionColumnEntity);
+        schemaColumnDaoTestHelper.createSchemaColumnEntity(businessObjectFormatEntity, COLUMN_NAME, businessObjectDefinitionColumnEntity);
 
         // Update the business object definition column using input parameters with leading and trailing empty spaces.
         BusinessObjectDefinitionColumn updatedBusinessObjectDefinitionColumn = businessObjectDefinitionColumnService.updateBusinessObjectDefinitionColumn(
@@ -1051,15 +1061,15 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
 
         // Create and persist a business object definition column.
         BusinessObjectDefinitionColumnEntity businessObjectDefinitionColumnEntity =
-            createBusinessObjectDefinitionColumnEntity(businessObjectDefinitionColumnKey, BDEF_COLUMN_DESCRIPTION);
+            businessObjectDefinitionColumnDaoTestHelper.createBusinessObjectDefinitionColumnEntity(businessObjectDefinitionColumnKey, BDEF_COLUMN_DESCRIPTION);
 
         // Create and persist a business object format entity.
-        BusinessObjectFormatEntity businessObjectFormatEntity =
-            createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
                 LATEST_VERSION_FLAG_SET, PARTITION_KEY);
 
         // Create and persist a schema column for this business object format that is linked with the business object definition column.
-        createSchemaColumnEntity(businessObjectFormatEntity, COLUMN_NAME, businessObjectDefinitionColumnEntity);
+        schemaColumnDaoTestHelper.createSchemaColumnEntity(businessObjectFormatEntity, COLUMN_NAME, businessObjectDefinitionColumnEntity);
 
         // Update the business object definition column using upper case parameter values.
         BusinessObjectDefinitionColumn updatedBusinessObjectDefinitionColumn = businessObjectDefinitionColumnService.updateBusinessObjectDefinitionColumn(

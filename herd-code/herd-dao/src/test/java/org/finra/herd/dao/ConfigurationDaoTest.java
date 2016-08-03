@@ -29,23 +29,6 @@ import org.finra.herd.model.jpa.ConfigurationEntity;
 public class ConfigurationDaoTest extends AbstractDaoTest
 {
     @Test
-    public void testGetConfigurationByKey() throws Exception
-    {
-        // Create relative database entities.
-        ConfigurationEntity configurationEntity = createConfigurationEntity(CONFIGURATION_KEY, CONFIGURATION_VALUE);
-
-        // Retrieve the configuration entity by its key.
-        assertEquals(configurationEntity, configurationDao.getConfigurationByKey(CONFIGURATION_KEY));
-
-        // Try to retrieve the configuration entity using its key in upper and lower case.
-        assertNull(configurationDao.getConfigurationByKey(CONFIGURATION_KEY.toUpperCase()));
-        assertNull(configurationDao.getConfigurationByKey(CONFIGURATION_KEY.toLowerCase()));
-
-        // Try to retrieve a configuration using an invalid key.
-        assertNull(configurationDao.getConfigurationByKey("I_DO_NOT_EXIST"));
-    }
-
-    @Test
     public void testGetAllConfigurations() throws Exception
     {
         // Create relative database entities.
@@ -63,5 +46,38 @@ public class ConfigurationDaoTest extends AbstractDaoTest
             }
         }
         fail("A configuration with key \"" + CONFIGURATION_KEY + "\" and value \"" + CONFIGURATION_VALUE + "\" was expected, but not found.");
+    }
+
+    @Test
+    public void testGetConfigurationByKey() throws Exception
+    {
+        // Create relative database entities.
+        ConfigurationEntity configurationEntity = createConfigurationEntity(CONFIGURATION_KEY, CONFIGURATION_VALUE);
+
+        // Retrieve the configuration entity by its key.
+        assertEquals(configurationEntity, configurationDao.getConfigurationByKey(CONFIGURATION_KEY));
+
+        // Try to retrieve the configuration entity using its key in upper and lower case.
+        assertNull(configurationDao.getConfigurationByKey(CONFIGURATION_KEY.toUpperCase()));
+        assertNull(configurationDao.getConfigurationByKey(CONFIGURATION_KEY.toLowerCase()));
+
+        // Try to retrieve a configuration using an invalid key.
+        assertNull(configurationDao.getConfigurationByKey("I_DO_NOT_EXIST"));
+    }
+
+    /**
+     * Creates and persists a new configuration entity.
+     *
+     * @param key the configuration key
+     * @param value the configuration value
+     *
+     * @return the newly created configuration entity
+     */
+    private ConfigurationEntity createConfigurationEntity(String key, String value)
+    {
+        ConfigurationEntity configurationEntity = new ConfigurationEntity();
+        configurationEntity.setKey(key);
+        configurationEntity.setValue(value);
+        return configurationDao.saveAndRefresh(configurationEntity);
     }
 }

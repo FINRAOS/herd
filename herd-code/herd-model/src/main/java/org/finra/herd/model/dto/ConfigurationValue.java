@@ -589,8 +589,13 @@ public enum ConfigurationValue
     /**
      * The maximum number of rows returned in the result of a statement execution of the JDBC service.
      */
-    JDBC_RESULT_MAX_ROWS("jdbc.result.max.rows", null);
+    JDBC_RESULT_MAX_ROWS("jdbc.result.max.rows", null),
 
+    /**
+     * The maximum number of records per page returned in business object data search results
+     */
+    BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULTS_PER_PAGE("business.object.data.search.max.results.per.page", 50);
+    
     // Properties
     private String key;
     private Object defaultValue;

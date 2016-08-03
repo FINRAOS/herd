@@ -420,4 +420,19 @@ public class StorageFileHelperTest extends AbstractServiceTest
             assertEquals(expectedErrMsg, e.getMessage());
         }
     }
+
+    /**
+     * Creates test files of the specified size relative to the base directory.
+     *
+     * @param baseDirectory the local parent directory path, relative to which we want our file to be created
+     * @param size the file size in bytes
+     */
+    private void createLocalFiles(String baseDirectory, long size) throws IOException
+    {
+        // Create local test files.
+        for (String file : LOCAL_FILES)
+        {
+            createLocalFile(baseDirectory, file, size);
+        }
+    }
 }

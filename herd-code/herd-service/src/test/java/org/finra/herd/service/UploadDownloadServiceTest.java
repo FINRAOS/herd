@@ -547,8 +547,9 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         createDatabaseEntitiesForUploadDownloadTesting();
 
         // Create and persist a business object data attribute definition entity.
-        createBusinessObjectDataAttributeDefinitionEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-            ATTRIBUTE_NAME_1_MIXED_CASE);
+        businessObjectFormatDaoTestHelper
+            .createBusinessObjectDataAttributeDefinitionEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                ATTRIBUTE_NAME_1_MIXED_CASE);
 
         // Initiate a file upload.
         UploadSingleInitiationResponse resultUploadSingleInitiationResponse = uploadDownloadService.initiateUploadSingle(createUploadSingleInitiationRequest());
@@ -566,8 +567,9 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         createDatabaseEntitiesForUploadDownloadTesting();
 
         // Create and persist a business object data attribute definition entity.
-        createBusinessObjectDataAttributeDefinitionEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-            ATTRIBUTE_NAME_1_MIXED_CASE);
+        businessObjectFormatDaoTestHelper
+            .createBusinessObjectDataAttributeDefinitionEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                ATTRIBUTE_NAME_1_MIXED_CASE);
 
         // Try to initiate a single file upload when a required attribute value is not specified.
         UploadSingleInitiationRequest request = createUploadSingleInitiationRequest();
@@ -592,14 +594,14 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
     {
         // Create database entities required for testing.
         createDatabaseEntitiesForUploadDownloadTesting();
-        StorageEntity storageEntity = createStorageEntity(STORAGE_NAME_3);
-        storageEntity.getAttributes().add(
-            createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), "testBucketName"));
-        storageEntity.getAttributes().add(
-            createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE),
+        StorageEntity storageEntity = storageDaoTestHelper.createStorageEntity(STORAGE_NAME_3);
+        storageEntity.getAttributes().add(storageDaoTestHelper
+            .createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), "testBucketName"));
+        storageEntity.getAttributes().add(storageDaoTestHelper
+            .createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE),
                 "$environment/$namespace/$businessObjectDataPartitionValue"));
-        storageEntity.getAttributes().add(
-            createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KMS_KEY_ID),
+        storageEntity.getAttributes().add(storageDaoTestHelper
+            .createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KMS_KEY_ID),
                 "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012"));
 
         // Initiate a file upload.
@@ -634,12 +636,12 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
     {
         // Create database entities required for testing.
         createDatabaseEntitiesForUploadDownloadTesting();
-        StorageEntity storageEntity = createStorageEntity(STORAGE_NAME_3);
-        storageEntity.getAttributes().add(
-            createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE),
+        StorageEntity storageEntity = storageDaoTestHelper.createStorageEntity(STORAGE_NAME_3);
+        storageEntity.getAttributes().add(storageDaoTestHelper
+            .createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE),
                 "$environment/$namespace/$businessObjectDataPartitionValue"));
-        storageEntity.getAttributes().add(
-            createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KMS_KEY_ID),
+        storageEntity.getAttributes().add(storageDaoTestHelper
+            .createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KMS_KEY_ID),
                 "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012"));
 
         // Initiate a file upload.
@@ -667,11 +669,11 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
     {
         // Create database entities required for testing.
         createDatabaseEntitiesForUploadDownloadTesting();
-        StorageEntity storageEntity = createStorageEntity(STORAGE_NAME_3);
-        storageEntity.getAttributes().add(
-            createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), "testBucketName"));
-        storageEntity.getAttributes().add(
-            createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE),
+        StorageEntity storageEntity = storageDaoTestHelper.createStorageEntity(STORAGE_NAME_3);
+        storageEntity.getAttributes().add(storageDaoTestHelper
+            .createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), "testBucketName"));
+        storageEntity.getAttributes().add(storageDaoTestHelper
+            .createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE),
                 "$environment/$namespace/$businessObjectDataPartitionValue"));
 
         // Initiate a file upload.
@@ -699,11 +701,11 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
     {
         // Create database entities required for testing.
         createDatabaseEntitiesForUploadDownloadTesting();
-        StorageEntity storageEntity = createStorageEntity(STORAGE_NAME_3);
-        storageEntity.getAttributes().add(
-            createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), "testBucketName"));
-        storageEntity.getAttributes().add(
-            createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KMS_KEY_ID),
+        StorageEntity storageEntity = storageDaoTestHelper.createStorageEntity(STORAGE_NAME_3);
+        storageEntity.getAttributes().add(storageDaoTestHelper
+            .createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), "testBucketName"));
+        storageEntity.getAttributes().add(storageDaoTestHelper
+            .createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KMS_KEY_ID),
                 "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012"));
 
         // Initiate a file upload.
@@ -738,7 +740,7 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
 
         // Put a 1 KB file in the S3 "loading dock" bucket.
         PutObjectRequest putObjectRequest =
-            new PutObjectRequest(getS3LoadingDockBucketName(), filePath, new ByteArrayInputStream(new byte[(int) FILE_SIZE_1_KB]), null);
+            new PutObjectRequest(storageDaoTestHelper.getS3LoadingDockBucketName(), filePath, new ByteArrayInputStream(new byte[(int) FILE_SIZE_1_KB]), null);
         s3Operations.putObject(putObjectRequest, null);
 
         try
@@ -764,7 +766,8 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         finally
         {
             // Clean up the S3.
-            s3Dao.deleteDirectory(S3FileTransferRequestParamsDto.builder().s3BucketName(getS3LoadingDockBucketName()).s3KeyPrefix(filePath).build());
+            s3Dao.deleteDirectory(
+                S3FileTransferRequestParamsDto.builder().s3BucketName(storageDaoTestHelper.getS3LoadingDockBucketName()).s3KeyPrefix(filePath).build());
 
             s3Operations.rollback();
         }
@@ -821,7 +824,7 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         String filePath = resultUploadSingleInitiationResponse.getTargetBusinessObjectData().getStorageUnits().get(0).getStorageFiles().get(0).getFilePath();
 
         // Create a business object data status.
-        createBusinessObjectDataStatusEntity(BDATA_STATUS);
+        businessObjectDataStatusDaoTestHelper.createBusinessObjectDataStatusEntity(BDATA_STATUS);
 
         // Update the status of the source business object data so it would not be "UPLOADING".
         businessObjectDataStatusService.updateBusinessObjectDataStatus(
@@ -849,7 +852,7 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         String filePath = resultUploadSingleInitiationResponse.getTargetBusinessObjectData().getStorageUnits().get(0).getStorageFiles().get(0).getFilePath();
 
         // Create a business object data status.
-        createBusinessObjectDataStatusEntity(BDATA_STATUS);
+        businessObjectDataStatusDaoTestHelper.createBusinessObjectDataStatusEntity(BDATA_STATUS);
 
         // Update the status of the target business object data so it would not be "UPLOADING".
         businessObjectDataStatusService.updateBusinessObjectDataStatus(
@@ -921,7 +924,7 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         StorageUnitEntity targetStorageUnitEntity = IterableUtils.get(targetBusinessObjectDataEntity.getStorageUnits(), 0);
 
         // Add a second storage file to the target business object data storage unit.
-        createStorageFileEntity(targetStorageUnitEntity, FILE_NAME_2, FILE_SIZE_1_KB, ROW_COUNT_1000);
+        storageFileDaoTestHelper.createStorageFileEntity(targetStorageUnitEntity, FILE_NAME_2, FILE_SIZE_1_KB, ROW_COUNT_1000);
 
         // Try to initiate a single file download when business object data has more than one storage file.
         try

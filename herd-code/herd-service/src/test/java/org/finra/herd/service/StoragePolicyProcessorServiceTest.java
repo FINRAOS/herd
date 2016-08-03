@@ -76,14 +76,14 @@ public class StoragePolicyProcessorServiceTest extends AbstractServiceTest
                 NO_SUBPARTITION_VALUES, DATA_VERSION);
 
         // Create and persist a storage unit in the source storage.
-        StorageUnitEntity sourceStorageUnitEntity =
-            createStorageUnitEntity(STORAGE_NAME, businessObjectDataKey, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID,
+        StorageUnitEntity sourceStorageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, businessObjectDataKey, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID,
                 StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
 
         // Add storage files to the source storage unit.
         for (String filePath : LOCAL_FILES)
         {
-            createStorageFileEntity(sourceStorageUnitEntity, s3KeyPrefix + "/" + filePath, FILE_SIZE_1_KB, ROW_COUNT_1000);
+            storageFileDaoTestHelper.createStorageFileEntity(sourceStorageUnitEntity, s3KeyPrefix + "/" + filePath, FILE_SIZE_1_KB, ROW_COUNT_1000);
         }
 
         // Get the source storage files.
@@ -93,8 +93,9 @@ public class StoragePolicyProcessorServiceTest extends AbstractServiceTest
         StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
 
         // Create and persist a storage policy entity.
-        createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-            FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+        storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         try
         {

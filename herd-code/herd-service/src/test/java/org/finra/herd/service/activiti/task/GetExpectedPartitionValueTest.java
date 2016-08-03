@@ -34,6 +34,7 @@ import org.finra.herd.service.activiti.ActivitiRuntimeHelper;
 public class GetExpectedPartitionValueTest extends HerdActivitiServiceTaskTest
 {
     private static final Integer TEST_EXPECTED_PARTITION_VALUE_INDEX = 3;
+
     private static final Integer TEST_OFFSET = -2;
 
     /**
@@ -43,13 +44,14 @@ public class GetExpectedPartitionValueTest extends HerdActivitiServiceTaskTest
     public void testGetExpectedPartitionValue() throws Exception
     {
         // Create and persist a partition key group entity.
-        PartitionKeyGroupEntity partitionKeyGroupEntity = createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
+        PartitionKeyGroupEntity partitionKeyGroupEntity = partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
 
         // Create and persist a list of expected partition values.
-        createExpectedPartitionValueEntities(partitionKeyGroupEntity, getTestUnsortedExpectedPartitionValues());
+        expectedPartitionValueDaoTestHelper
+            .createExpectedPartitionValueEntities(partitionKeyGroupEntity, expectedPartitionValueDaoTestHelper.getTestUnsortedExpectedPartitionValues());
 
         // Get a sorted list of expected partition values.
-        List<String> testSortedExpectedPartitionValues = getTestSortedExpectedPartitionValues();
+        List<String> testSortedExpectedPartitionValues = expectedPartitionValueDaoTestHelper.getTestSortedExpectedPartitionValues();
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
         fieldExtensionList.add(buildFieldExtension(GetExpectedPartitionValue.VARIABLE_PARTITION_KEY_GROUP_NAME, "${partitionKeyGroupName}"));
@@ -77,13 +79,14 @@ public class GetExpectedPartitionValueTest extends HerdActivitiServiceTaskTest
     public void testGetExpectedPartitionValueMissingOptionalParameters() throws Exception
     {
         // Create and persist a partition key group entity.
-        PartitionKeyGroupEntity partitionKeyGroupEntity = createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
+        PartitionKeyGroupEntity partitionKeyGroupEntity = partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
 
         // Create and persist a list of expected partition values.
-        createExpectedPartitionValueEntities(partitionKeyGroupEntity, getTestUnsortedExpectedPartitionValues());
+        expectedPartitionValueDaoTestHelper
+            .createExpectedPartitionValueEntities(partitionKeyGroupEntity, expectedPartitionValueDaoTestHelper.getTestUnsortedExpectedPartitionValues());
 
         // Get a sorted list of expected partition values.
-        List<String> testSortedExpectedPartitionValues = getTestSortedExpectedPartitionValues();
+        List<String> testSortedExpectedPartitionValues = expectedPartitionValueDaoTestHelper.getTestSortedExpectedPartitionValues();
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
         fieldExtensionList.add(buildFieldExtension(GetExpectedPartitionValue.VARIABLE_PARTITION_KEY_GROUP_NAME, "${partitionKeyGroupName}"));
@@ -171,7 +174,7 @@ public class GetExpectedPartitionValueTest extends HerdActivitiServiceTaskTest
     public void testGetExpectedPartitionValueExpectedPartitionValueNoExists() throws Exception
     {
         // Create and persist a partition key group entity.
-        createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
+        partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
         fieldExtensionList.add(buildFieldExtension(GetExpectedPartitionValue.VARIABLE_PARTITION_KEY_GROUP_NAME, "${partitionKeyGroupName}"));

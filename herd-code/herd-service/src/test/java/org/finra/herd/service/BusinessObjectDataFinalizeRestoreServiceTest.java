@@ -63,8 +63,9 @@ public class BusinessObjectDataFinalizeRestoreServiceTest extends AbstractServic
         // Create database entities required for testing.
         for (BusinessObjectDataKey businessObjectDataKey : businessObjectDataKeys)
         {
-            createBusinessObjectDataEntityInRestoringState(businessObjectDataKey, STORAGE_NAME_ORIGIN, StorageUnitStatusEntity.RESTORING, STORAGE_NAME_GLACIER,
-                StorageUnitStatusEntity.ENABLED);
+            storageUnitDaoTestHelper
+                .createBusinessObjectDataEntityInRestoringState(businessObjectDataKey, STORAGE_NAME_ORIGIN, StorageUnitStatusEntity.RESTORING,
+                    STORAGE_NAME_GLACIER, StorageUnitStatusEntity.ENABLED);
         }
 
         // Select the RESTORING Glacier storage units.
@@ -168,8 +169,8 @@ public class BusinessObjectDataFinalizeRestoreServiceTest extends AbstractServic
         StorageUnitEntity originStorageUnitEntity = storageUnitDaoHelper.getStorageUnitEntity(STORAGE_NAME_ORIGIN, businessObjectDataEntity);
 
         // Add a mocked S3 file name to the origin storage unit that would trigger an Amazon service exception when we try to get metadata for the object.
-        createStorageFileEntity(originStorageUnitEntity, String.format("%s/%s", TEST_S3_KEY_PREFIX, MockS3OperationsImpl.MOCK_S3_FILE_NAME_SERVICE_EXCEPTION),
-            FILE_SIZE_1_KB, ROW_COUNT);
+        storageFileDaoTestHelper.createStorageFileEntity(originStorageUnitEntity,
+            String.format("%s/%s", TEST_S3_KEY_PREFIX, MockS3OperationsImpl.MOCK_S3_FILE_NAME_SERVICE_EXCEPTION), FILE_SIZE_1_KB, ROW_COUNT);
 
         // Create a Glacier storage unit key.
         StorageUnitAlternateKeyDto glacierStorageUnitKey = storageUnitHelper.createStorageUnitKey(businessObjectDataKey, STORAGE_NAME_GLACIER);

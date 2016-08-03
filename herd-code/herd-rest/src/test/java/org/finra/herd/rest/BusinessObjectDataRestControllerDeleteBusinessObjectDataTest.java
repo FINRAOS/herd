@@ -58,7 +58,7 @@ public class BusinessObjectDataRestControllerDeleteBusinessObjectDataTest extend
         FileUtils.deleteDirectory(localTempPath.toFile());
 
         // Clean up the destination S3 folders.
-        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = getTestS3FileTransferRequestParamsDto();
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = s3DaoTestHelper.getTestS3FileTransferRequestParamsDto();
         for (String keyPrefix : Arrays.asList(testS3KeyPrefix, TEST_S3_KEY_PREFIX))
         {
             // Since the key prefix represents a directory, we add a trailing '/' character to it.
@@ -71,9 +71,9 @@ public class BusinessObjectDataRestControllerDeleteBusinessObjectDataTest extend
     public void testDeleteBusinessObjectData() throws Exception
     {
         // Create an initial version of a business object data.
-        BusinessObjectDataEntity businessObjectDataEntity =
-            createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                INITIAL_DATA_VERSION, true, BDATA_STATUS);
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS);
 
         // Validate that this business object data exists.
         BusinessObjectDataKey businessObjectDataKey =
@@ -104,8 +104,8 @@ public class BusinessObjectDataRestControllerDeleteBusinessObjectDataTest extend
             List<String> subPartitionValues = SUBPARTITION_VALUES.subList(0, i);
 
             // Create a business object data with the relative number of subpartition values.
-            BusinessObjectDataEntity businessObjectDataEntity =
-                createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
+                .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                     subPartitionValues, DATA_VERSION, true, BDATA_STATUS);
 
             // Validate that this business object data exists.

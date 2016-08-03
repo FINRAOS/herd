@@ -30,9 +30,9 @@ public class StorageDaoTest extends AbstractDaoTest
     public void testGetStorages()
     {
         // Create and persist storage entities.
-        for (StorageKey key : getTestStorageKeys())
+        for (StorageKey key : storageDaoTestHelper.getTestStorageKeys())
         {
-            createStorageEntity(key.getStorageName());
+            storageDaoTestHelper.createStorageEntity(key.getStorageName());
         }
 
         // Retrieve a list of storage keys.
@@ -40,6 +40,6 @@ public class StorageDaoTest extends AbstractDaoTest
 
         // Validate the returned object.
         assertNotNull(resultStorageKeys);
-        assertTrue(resultStorageKeys.containsAll(getTestStorageKeys()));
+        assertTrue(resultStorageKeys.containsAll(storageDaoTestHelper.getTestStorageKeys()));
     }
 }

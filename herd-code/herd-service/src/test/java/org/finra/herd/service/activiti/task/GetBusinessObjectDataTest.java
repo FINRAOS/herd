@@ -528,8 +528,8 @@ public class GetBusinessObjectDataTest extends HerdActivitiServiceTaskTest
                 NO_SUBPARTITION_VALUES, DATA_VERSION);
 
         // Create a business object data entity.
-        BusinessObjectDataEntity businessObjectDataEntity =
-            createBusinessObjectDataEntity(businessObjectDataKey, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID);
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(businessObjectDataKey, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID);
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
 
@@ -570,8 +570,8 @@ public class GetBusinessObjectDataTest extends HerdActivitiServiceTaskTest
                 DATA_VERSION);
 
         // Create a business object data entity.
-        BusinessObjectDataEntity businessObjectDataEntity =
-            createBusinessObjectDataEntity(businessObjectDataKey, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID);
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(businessObjectDataKey, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID);
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
         fieldExtensionList.add(buildFieldExtension("namespace", "${namespace}"));

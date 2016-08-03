@@ -447,9 +447,10 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
     public void testCreateBusinessObjectFormatCreateSecondVersionNoPartitioningColumns()
     {
         // Create and persist an initial version of a business object format with schema without any partitioning columns.
-        createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION,
-            LATEST_VERSION_FLAG_SET, PARTITION_KEY, PARTITION_KEY_GROUP, getNewAttributes(), SCHEMA_DELIMITER_PIPE, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
-            SCHEMA_NULL_VALUE_BACKSLASH_N, getTestSchemaColumns(RANDOM_SUFFIX), null);
+        businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION,
+                LATEST_VERSION_FLAG_SET, PARTITION_KEY, PARTITION_KEY_GROUP, getNewAttributes(), SCHEMA_DELIMITER_PIPE, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
+                SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(RANDOM_SUFFIX), null);
 
         // Create a second version of the business object format without partitioning columns.
         Schema testSchema = getTestSchema();
@@ -481,8 +482,9 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         createTestDatabaseEntitiesForBusinessObjectFormatTesting();
 
         // Create a first version of the format with the latest flag set to false.
-        createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION, false,
-            PARTITION_KEY);
+        businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION, false,
+                PARTITION_KEY);
 
         try
         {
@@ -1584,7 +1586,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         BusinessObjectFormat originalBusinessObjectFormat = createTestBusinessObjectFormat(getNewAttributes());
 
         // Create a new partition key group for the update request.
-        createPartitionKeyGroupEntity(PARTITION_KEY_GROUP_2);
+        partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP_2);
 
         // Perform an update by changing the description and schema.
         BusinessObjectFormatUpdateRequest request = createBusinessObjectFormatUpdateRequest(FORMAT_DESCRIPTION_2, getNewAttributes2(), getTestSchema2());
@@ -1673,16 +1675,16 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
     public void testUpdateBusinessObjectFormatMissingOptionalParameters()
     {
         // Create and persist a business object definition.
-        createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
+        businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
 
         // Create and persist a valid business object format without description and with schema without any partitioning columns.
-        BusinessObjectFormatEntity originalBusinessObjectFormatEntity =
-            createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION,
+        BusinessObjectFormatEntity originalBusinessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION,
                 LATEST_VERSION_FLAG_SET, PARTITION_KEY, PARTITION_KEY_GROUP, getNewAttributes(), SCHEMA_DELIMITER_COMMA, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
-                SCHEMA_NULL_VALUE_BACKSLASH_N, getTestSchemaColumns(), null);
+                SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), null);
 
         // Create a new partition key group for the update request.
-        createPartitionKeyGroupEntity(PARTITION_KEY_GROUP_2);
+        partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP_2);
 
         // Perform an update by changing the description to a blank text, replacing attributes with
         // an attribute with a blank text value, and replacing schema with a new schema not having partition columns.
@@ -1760,7 +1762,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         BusinessObjectFormat originalBusinessObjectFormat = createTestBusinessObjectFormat(getNewAttributes());
 
         // Create a new partition key group for the update request.
-        createPartitionKeyGroupEntity(PARTITION_KEY_GROUP_2);
+        partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP_2);
 
         // Perform an update by changing the description and using input parameters with leading and trailing empty spaces.
         BusinessObjectFormatUpdateRequest request = createBusinessObjectFormatUpdateRequest(addWhitespace(FORMAT_DESCRIPTION_2),
@@ -1780,14 +1782,14 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
     public void testUpdateBusinessObjectFormatUpperCaseParameters()
     {
         // Create an initial version of the format using lower case input parameters.
-        BusinessObjectFormatEntity businessObjectFormatEntity =
-            createBusinessObjectFormatEntity(NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(),
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(),
                 FORMAT_FILE_TYPE_CODE.toLowerCase(), INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION.toLowerCase(), LATEST_VERSION_FLAG_SET,
                 PARTITION_KEY.toLowerCase(), NO_PARTITION_KEY_GROUP,
                 Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE.toLowerCase(), ATTRIBUTE_VALUE_1.toLowerCase())));
 
         // Create a new partition key group for the update request.
-        createPartitionKeyGroupEntity(PARTITION_KEY_GROUP_2.toLowerCase());
+        partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP_2.toLowerCase());
 
         // Perform an update by changing the format description and schema.
         Schema testSchema = getTestSchema2();
@@ -1811,13 +1813,13 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
     public void testUpdateBusinessObjectFormatLowerCaseParameters()
     {
         // Create an initial version of the format using upper case input parameters.
-        BusinessObjectFormatEntity businessObjectFormatEntity =
-            createBusinessObjectFormatEntity(NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(),
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(),
                 FORMAT_FILE_TYPE_CODE.toUpperCase(), INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION, LATEST_VERSION_FLAG_SET, PARTITION_KEY.toUpperCase(),
                 NO_PARTITION_KEY_GROUP, Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE.toUpperCase(), ATTRIBUTE_VALUE_1.toUpperCase())));
 
         // Create a new partition key group for the update request.
-        createPartitionKeyGroupEntity(PARTITION_KEY_GROUP_2.toUpperCase());
+        partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP_2.toUpperCase());
 
         // Perform an update by changing the format description and schema.
         Schema testSchema = getTestSchema2();
@@ -1841,15 +1843,15 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
     public void testUpdateBusinessObjectFormatInvalidParameters()
     {
         // Create and persist a valid business object format.
-        BusinessObjectFormatEntity businessObjectFormatEntity =
-            createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION, true,
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION, true,
                 PARTITION_KEY);
 
         // Create a business object format update request.
         BusinessObjectFormatUpdateRequest request = createBusinessObjectFormatUpdateRequest(FORMAT_DESCRIPTION_2, getNewAttributes2(), getTestSchema2());
 
         // Create a new partition key group for the update request.
-        createPartitionKeyGroupEntity(PARTITION_KEY_GROUP_2);
+        partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP_2);
 
         // Perform an update on our business object format.
         BusinessObjectFormat businessObjectFormat = businessObjectFormatService
@@ -1968,10 +1970,11 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
     public void testUpdateBusinessObjectFormatAlreadyExistingDuplicateAttributes()
     {
         // Create and persist a business object format with duplicate attributes.
-        createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
-            LATEST_VERSION_FLAG_SET, PARTITION_KEY, NO_PARTITION_KEY_GROUP, Arrays
-            .asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE.toLowerCase(), ATTRIBUTE_VALUE_1),
-                new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE.toUpperCase(), ATTRIBUTE_VALUE_2)));
+        businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+                LATEST_VERSION_FLAG_SET, PARTITION_KEY, NO_PARTITION_KEY_GROUP, Arrays
+                .asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE.toLowerCase(), ATTRIBUTE_VALUE_1),
+                    new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE.toUpperCase(), ATTRIBUTE_VALUE_2)));
 
         // Try to update a business object format instance that already has duplicate attributes.
         try
@@ -1993,11 +1996,12 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
     public void testUpdateBusinessObjectFormatNoInitialDescriptionAndSchema()
     {
         // Create an initial version of a business object format without description and schema.
-        BusinessObjectFormatEntity businessObjectFormatEntity =
-            createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, null, true, PARTITION_KEY);
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, null, true,
+                PARTITION_KEY);
 
         // Create a new partition key group for the update request.
-        createPartitionKeyGroupEntity(PARTITION_KEY_GROUP_2);
+        partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP_2);
 
         // Perform an update by changing the description and schema.
         BusinessObjectFormatUpdateRequest request = createBusinessObjectFormatUpdateRequest(FORMAT_DESCRIPTION_2, getNewAttributes2(), getTestSchema2());
@@ -2040,10 +2044,10 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION));
 
         // Create a new partition key group for the update request.
-        createPartitionKeyGroupEntity(PARTITION_KEY_GROUP_2);
+        partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP_2);
 
         // Create a business object data entity associated with the business object format.
-        createBusinessObjectDataEntity(businessObjectFormatEntity, PARTITION_VALUE, INITIAL_DATA_VERSION, true, BDATA_STATUS);
+        businessObjectDataDaoTestHelper.createBusinessObjectDataEntity(businessObjectFormatEntity, PARTITION_VALUE, INITIAL_DATA_VERSION, true, BDATA_STATUS);
 
         // Perform an update by changing the schema.
         BusinessObjectFormatUpdateRequest request = createBusinessObjectFormatUpdateRequest(FORMAT_DESCRIPTION, getNewAttributes2(), getTestSchema2());
@@ -2133,11 +2137,11 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
     public void testGetBusinessObjectFormatMissingOptionalParameters()
     {
         // Create and persist a business object definition.
-        createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
+        businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
 
         // Create and persist a valid business object format.
-        BusinessObjectFormatEntity businessObjectFormatEntity =
-            createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION,
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION,
                 LATEST_VERSION_FLAG_SET, PARTITION_KEY);
 
         // Perform a get without specifying business object format version (passed as a null value) and namespace code.
@@ -2155,8 +2159,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
     public void testGetBusinessObjectFormatTrimParameters()
     {
         // Create and persist a valid business object format.
-        BusinessObjectFormatEntity businessObjectFormatEntity =
-            createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION, true,
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION, true,
                 PARTITION_KEY);
 
         // Perform a get using input parameters with leading and trailing empty spaces.
@@ -2173,8 +2177,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
     public void testGetBusinessObjectFormatUpperCaseParameters()
     {
         // Create and persist a valid business object format.
-        BusinessObjectFormatEntity businessObjectFormatEntity =
-            createBusinessObjectFormatEntity(NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(),
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(),
                 FORMAT_FILE_TYPE_CODE.toLowerCase(), INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION.toLowerCase(), LATEST_VERSION_FLAG_SET,
                 PARTITION_KEY.toLowerCase());
 
@@ -2193,8 +2197,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
     public void testGetBusinessObjectFormatLowerCaseParameters()
     {
         // Create and persist a valid business object format.
-        BusinessObjectFormatEntity businessObjectFormatEntity =
-            createBusinessObjectFormatEntity(NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(),
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(),
                 FORMAT_FILE_TYPE_CODE.toUpperCase(), INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION.toUpperCase(), LATEST_VERSION_FLAG_SET,
                 PARTITION_KEY.toUpperCase());
 
@@ -2213,8 +2217,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
     public void testGetBusinessObjectFormatInvalidParameters()
     {
         // Create and persist a valid business object format.
-        BusinessObjectFormatEntity businessObjectFormatEntity =
-            createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION,
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION,
                 LATEST_VERSION_FLAG_SET, PARTITION_KEY);
 
         // Validate that we can perform a get on our business object format.
@@ -2296,16 +2300,17 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
     public void testGetBusinessObjectFormats()
     {
         // Create and persist the relative business object definitions.
-        createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null);
-        createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME_2, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null);
-        createBusinessObjectDefinitionEntity(NAMESPACE_2, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null);
-        createBusinessObjectDefinitionEntity(NAMESPACE_2, BDEF_NAME_2, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null);
+        businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null);
+        businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME_2, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null);
+        businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(NAMESPACE_2, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null);
+        businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(NAMESPACE_2, BDEF_NAME_2, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null);
 
         // Create and persist business object format entities.
-        for (BusinessObjectFormatKey key : getTestBusinessObjectFormatKeys())
+        for (BusinessObjectFormatKey key : businessObjectFormatDaoTestHelper.getTestBusinessObjectFormatKeys())
         {
-            createBusinessObjectFormatEntity(key.getNamespace(), key.getBusinessObjectDefinitionName(), key.getBusinessObjectFormatUsage(),
-                key.getBusinessObjectFormatFileType(), key.getBusinessObjectFormatVersion(), FORMAT_DESCRIPTION, false, PARTITION_KEY);
+            businessObjectFormatDaoTestHelper
+                .createBusinessObjectFormatEntity(key.getNamespace(), key.getBusinessObjectDefinitionName(), key.getBusinessObjectFormatUsage(),
+                    key.getBusinessObjectFormatFileType(), key.getBusinessObjectFormatVersion(), FORMAT_DESCRIPTION, false, PARTITION_KEY);
         }
 
         // Retrieve a list of business object format keys for the specified business object definition.
@@ -2313,13 +2318,13 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             businessObjectFormatService.getBusinessObjectFormats(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME), false);
 
         // Validate the returned object.
-        assertEquals(getExpectedBusinessObjectFormatKeys(), resultKeys.getBusinessObjectFormatKeys());
+        assertEquals(businessObjectFormatDaoTestHelper.getExpectedBusinessObjectFormatKeys(), resultKeys.getBusinessObjectFormatKeys());
 
         // Retrieve a list of the latest version business object format keys for the specified business object definition.
         resultKeys = businessObjectFormatService.getBusinessObjectFormats(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME), true);
 
         // Validate the returned object.
-        assertEquals(getExpectedBusinessObjectFormatLatestVersionKeys(), resultKeys.getBusinessObjectFormatKeys());
+        assertEquals(businessObjectFormatDaoTestHelper.getExpectedBusinessObjectFormatLatestVersionKeys(), resultKeys.getBusinessObjectFormatKeys());
     }
 
     @Test
@@ -2341,16 +2346,17 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
     public void testGetBusinessObjectFormatsMissingOptionalParameters()
     {
         // Create and persist the relative business object definitions.
-        createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null);
-        createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME_2, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null);
-        createBusinessObjectDefinitionEntity(NAMESPACE_2, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null);
-        createBusinessObjectDefinitionEntity(NAMESPACE_2, BDEF_NAME_2, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null);
+        businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null);
+        businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME_2, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null);
+        businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(NAMESPACE_2, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null);
+        businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(NAMESPACE_2, BDEF_NAME_2, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null);
 
         // Create and persist business object format entities.
-        for (BusinessObjectFormatKey key : getTestBusinessObjectFormatKeys())
+        for (BusinessObjectFormatKey key : businessObjectFormatDaoTestHelper.getTestBusinessObjectFormatKeys())
         {
-            createBusinessObjectFormatEntity(key.getNamespace(), key.getBusinessObjectDefinitionName(), key.getBusinessObjectFormatUsage(),
-                key.getBusinessObjectFormatFileType(), key.getBusinessObjectFormatVersion(), FORMAT_DESCRIPTION, false, PARTITION_KEY);
+            businessObjectFormatDaoTestHelper
+                .createBusinessObjectFormatEntity(key.getNamespace(), key.getBusinessObjectDefinitionName(), key.getBusinessObjectFormatUsage(),
+                    key.getBusinessObjectFormatFileType(), key.getBusinessObjectFormatVersion(), FORMAT_DESCRIPTION, false, PARTITION_KEY);
         }
 
         // Retrieve a list of business object format keys for the specified business object
@@ -2359,23 +2365,24 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             businessObjectFormatService.getBusinessObjectFormats(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME), false);
 
         // Validate the returned object.
-        assertEquals(getExpectedBusinessObjectFormatKeys(), resultKeys.getBusinessObjectFormatKeys());
+        assertEquals(businessObjectFormatDaoTestHelper.getExpectedBusinessObjectFormatKeys(), resultKeys.getBusinessObjectFormatKeys());
     }
 
     @Test
     public void testGetBusinessObjectFormatsTrimParameters()
     {
         // Create and persist the relative business object definitions.
-        createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null);
-        createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME_2, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null);
-        createBusinessObjectDefinitionEntity(NAMESPACE_2, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null);
-        createBusinessObjectDefinitionEntity(NAMESPACE_2, BDEF_NAME_2, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null);
+        businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null);
+        businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME_2, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null);
+        businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(NAMESPACE_2, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null);
+        businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(NAMESPACE_2, BDEF_NAME_2, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null);
 
         // Create and persist business object format entities.
-        for (BusinessObjectFormatKey key : getTestBusinessObjectFormatKeys())
+        for (BusinessObjectFormatKey key : businessObjectFormatDaoTestHelper.getTestBusinessObjectFormatKeys())
         {
-            createBusinessObjectFormatEntity(key.getNamespace(), key.getBusinessObjectDefinitionName(), key.getBusinessObjectFormatUsage(),
-                key.getBusinessObjectFormatFileType(), key.getBusinessObjectFormatVersion(), FORMAT_DESCRIPTION, false, PARTITION_KEY);
+            businessObjectFormatDaoTestHelper
+                .createBusinessObjectFormatEntity(key.getNamespace(), key.getBusinessObjectDefinitionName(), key.getBusinessObjectFormatUsage(),
+                    key.getBusinessObjectFormatFileType(), key.getBusinessObjectFormatVersion(), FORMAT_DESCRIPTION, false, PARTITION_KEY);
         }
 
         // Retrieve a list of business object format keys for the specified business object definition using input parameters with leading and trailing empty spaces.
@@ -2383,23 +2390,24 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             businessObjectFormatService.getBusinessObjectFormats(new BusinessObjectDefinitionKey(addWhitespace(NAMESPACE), addWhitespace(BDEF_NAME)), false);
 
         // Validate the returned object.
-        assertEquals(getExpectedBusinessObjectFormatKeys(), resultKeys.getBusinessObjectFormatKeys());
+        assertEquals(businessObjectFormatDaoTestHelper.getExpectedBusinessObjectFormatKeys(), resultKeys.getBusinessObjectFormatKeys());
     }
 
     @Test
     public void testGetBusinessObjectFormatsUpperCaseParameters()
     {
         // Create and persist the relative business object definitions.
-        createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null);
-        createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME_2, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null);
-        createBusinessObjectDefinitionEntity(NAMESPACE_2, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null);
-        createBusinessObjectDefinitionEntity(NAMESPACE_2, BDEF_NAME_2, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null);
+        businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null);
+        businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME_2, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null);
+        businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(NAMESPACE_2, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null);
+        businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(NAMESPACE_2, BDEF_NAME_2, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null);
 
         // Create and persist business object format entities.
-        for (BusinessObjectFormatKey key : getTestBusinessObjectFormatKeys())
+        for (BusinessObjectFormatKey key : businessObjectFormatDaoTestHelper.getTestBusinessObjectFormatKeys())
         {
-            createBusinessObjectFormatEntity(key.getNamespace(), key.getBusinessObjectDefinitionName(), key.getBusinessObjectFormatUsage(),
-                key.getBusinessObjectFormatFileType(), key.getBusinessObjectFormatVersion(), FORMAT_DESCRIPTION, false, PARTITION_KEY);
+            businessObjectFormatDaoTestHelper
+                .createBusinessObjectFormatEntity(key.getNamespace(), key.getBusinessObjectDefinitionName(), key.getBusinessObjectFormatUsage(),
+                    key.getBusinessObjectFormatFileType(), key.getBusinessObjectFormatVersion(), FORMAT_DESCRIPTION, false, PARTITION_KEY);
         }
 
         // Retrieve a list of business object format keys for the specified business object definition using upper case input parameters
@@ -2407,23 +2415,24 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             businessObjectFormatService.getBusinessObjectFormats(new BusinessObjectDefinitionKey(NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase()), false);
 
         // Validate the returned object.
-        assertEquals(getExpectedBusinessObjectFormatKeys(), resultKeys.getBusinessObjectFormatKeys());
+        assertEquals(businessObjectFormatDaoTestHelper.getExpectedBusinessObjectFormatKeys(), resultKeys.getBusinessObjectFormatKeys());
     }
 
     @Test
     public void testGetBusinessObjectFormatsLowerCaseParameters()
     {
         // Create and persist the relative business object definitions.
-        createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null);
-        createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME_2, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null);
-        createBusinessObjectDefinitionEntity(NAMESPACE_2, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null);
-        createBusinessObjectDefinitionEntity(NAMESPACE_2, BDEF_NAME_2, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null);
+        businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null);
+        businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME_2, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null);
+        businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(NAMESPACE_2, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null);
+        businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(NAMESPACE_2, BDEF_NAME_2, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null);
 
         // Create and persist business object format entities.
-        for (BusinessObjectFormatKey key : getTestBusinessObjectFormatKeys())
+        for (BusinessObjectFormatKey key : businessObjectFormatDaoTestHelper.getTestBusinessObjectFormatKeys())
         {
-            createBusinessObjectFormatEntity(key.getNamespace(), key.getBusinessObjectDefinitionName(), key.getBusinessObjectFormatUsage(),
-                key.getBusinessObjectFormatFileType(), key.getBusinessObjectFormatVersion(), FORMAT_DESCRIPTION, false, PARTITION_KEY);
+            businessObjectFormatDaoTestHelper
+                .createBusinessObjectFormatEntity(key.getNamespace(), key.getBusinessObjectDefinitionName(), key.getBusinessObjectFormatUsage(),
+                    key.getBusinessObjectFormatFileType(), key.getBusinessObjectFormatVersion(), FORMAT_DESCRIPTION, false, PARTITION_KEY);
         }
 
         // Retrieve a list of business object format keys for the specified business object definition using lower case input parameters.
@@ -2431,7 +2440,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             businessObjectFormatService.getBusinessObjectFormats(new BusinessObjectDefinitionKey(NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase()), false);
 
         // Validate the returned object.
-        assertEquals(getExpectedBusinessObjectFormatKeys(), resultKeys.getBusinessObjectFormatKeys());
+        assertEquals(businessObjectFormatDaoTestHelper.getExpectedBusinessObjectFormatKeys(), resultKeys.getBusinessObjectFormatKeys());
     }
 
     @Test
@@ -2542,11 +2551,11 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
     public void testDeleteBusinessObjectFormatMissingOptionalParameters() throws Exception
     {
         // Create and persist a business object definition.
-        createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
+        businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
 
         // Create and persist a valid business object format.
-        BusinessObjectFormatEntity businessObjectFormatEntity =
-            createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION, true,
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION, true,
                 PARTITION_KEY);
 
         // Delete the business object format without specifying namespace code.
@@ -2565,8 +2574,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
     public void testDeleteBusinessObjectFormatTrimParameters()
     {
         // Create and persist a business object format.
-        BusinessObjectFormatEntity businessObjectFormatEntity =
-            createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION, true,
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION, true,
                 PARTITION_KEY);
 
         // Ensure that this business object format exists.
@@ -2591,8 +2600,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
     public void testDeleteBusinessObjectFormatUpperCaseParameters()
     {
         // Create and persist a business object format.
-        BusinessObjectFormatEntity businessObjectFormatEntity =
-            createBusinessObjectFormatEntity(NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(),
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(),
                 FORMAT_FILE_TYPE_CODE.toLowerCase(), INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION.toLowerCase(), LATEST_VERSION_FLAG_SET,
                 PARTITION_KEY.toLowerCase());
 
@@ -2619,8 +2628,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
     public void testDeleteBusinessObjectFormatLowerCaseParameters()
     {
         // Create and persist a business object format.
-        BusinessObjectFormatEntity businessObjectFormatEntity =
-            createBusinessObjectFormatEntity(NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(),
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(),
                 FORMAT_FILE_TYPE_CODE.toUpperCase(), INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION.toUpperCase(), LATEST_VERSION_FLAG_SET,
                 PARTITION_KEY.toUpperCase());
 
@@ -2647,8 +2656,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
     public void testDeleteBusinessObjectFormatInvalidParameters()
     {
         // Create and persist a valid business object format.
-        BusinessObjectFormatEntity businessObjectFormatEntity =
-            createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION, true,
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION, true,
                 PARTITION_KEY);
 
         // Validate that we can perform a get on our business object format.
@@ -2730,8 +2739,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
     public void testDeleteBusinessObjectFormatNotLatestVersion()
     {
         // Create and persist a business object format which is not marked as the latest version.
-        BusinessObjectFormatEntity businessObjectFormatEntity =
-            createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION, false,
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION, false,
                 PARTITION_KEY);
 
         // Delete the business object format.
@@ -2751,11 +2760,11 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
     public void testDeleteBusinessObjectFormatLatestVersionWhenPreviousVersionExists()
     {
         // Create and persist two versions of the business object format.
-        BusinessObjectFormatEntity initialVersionBusinessObjectFormatEntity =
-            createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION, false,
+        BusinessObjectFormatEntity initialVersionBusinessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION, false,
                 PARTITION_KEY);
-        BusinessObjectFormatEntity latestVersionBusinessObjectFormatEntity =
-            createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, SECOND_FORMAT_VERSION, FORMAT_DESCRIPTION, true,
+        BusinessObjectFormatEntity latestVersionBusinessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, SECOND_FORMAT_VERSION, FORMAT_DESCRIPTION, true,
                 PARTITION_KEY);
 
         // Validate that the initial version does not have the latest version flag set and that second version has it set.
@@ -2794,7 +2803,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION));
 
         // Create a business object data entity associated with the business object format.
-        createBusinessObjectDataEntity(businessObjectFormatEntity, PARTITION_VALUE, INITIAL_DATA_VERSION, true, BDATA_STATUS);
+        businessObjectDataDaoTestHelper.createBusinessObjectDataEntity(businessObjectFormatEntity, PARTITION_VALUE, INITIAL_DATA_VERSION, true, BDATA_STATUS);
 
         // Try to delete the business object format.
         try
@@ -2914,7 +2923,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
     {
         // Prepare test data without custom ddl.
         createDatabaseEntitiesForBusinessObjectFormatDdlTesting(FileTypeEntity.TXT_FILE_TYPE, FIRST_PARTITION_COLUMN_NAME, SCHEMA_DELIMITER_PIPE,
-            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, getTestSchemaColumns(), getTestPartitionColumns(), CUSTOM_DDL_NAME);
+            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(),
+            schemaColumnDaoTestHelper.getTestPartitionColumns(), CUSTOM_DDL_NAME);
 
         // Retrieve business object data ddl request without optional parameters.
         BusinessObjectFormatDdlRequest request = getTestBusinessObjectFormatDdlRequest(BLANK_TEXT);
@@ -3030,8 +3040,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
     public void testGenerateBusinessObjectFormatDdlNoCustomDdlPartitionColumnIsAlsoRegularColumn()
     {
         // Prepare test data without custom ddl.
-        List<SchemaColumn> schemaColumns = getTestSchemaColumns();
-        List<SchemaColumn> partitionColumns = getTestPartitionColumns();
+        List<SchemaColumn> schemaColumns = schemaColumnDaoTestHelper.getTestSchemaColumns();
+        List<SchemaColumn> partitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();
         // Override the first schema column to be a partition column.
         schemaColumns.set(0, partitionColumns.get(0));
         createDatabaseEntitiesForBusinessObjectFormatDdlTesting(FileTypeEntity.TXT_FILE_TYPE, FIRST_PARTITION_COLUMN_NAME, SCHEMA_DELIMITER_PIPE,
@@ -3051,10 +3061,10 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
     public void testGenerateBusinessObjectFormatDdlNoCustomDdlSingleLevelPartitioning()
     {
         // Prepare test data without custom ddl.
-        List<SchemaColumn> partitionColumns = getTestPartitionColumns().subList(0, 1);
+        List<SchemaColumn> partitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns().subList(0, 1);
         String partitionKey = partitionColumns.get(0).getName();
         createDatabaseEntitiesForBusinessObjectFormatDdlTesting(FileTypeEntity.TXT_FILE_TYPE, partitionKey, SCHEMA_DELIMITER_PIPE,
-            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, getTestSchemaColumns(), partitionColumns, null);
+            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns, null);
 
         // Retrieve business object data ddl without specifying custom ddl name.
         BusinessObjectFormatDdlRequest request = getTestBusinessObjectFormatDdlRequest(null);
@@ -3072,7 +3082,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
     {
         // Prepare non-partitioned test business object data with custom ddl.
         createDatabaseEntitiesForBusinessObjectFormatDdlTesting(FileTypeEntity.TXT_FILE_TYPE, Hive13DdlGenerator.NO_PARTITIONING_PARTITION_KEY,
-            SCHEMA_DELIMITER_PIPE, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, getTestSchemaColumns(), null, CUSTOM_DDL_NAME);
+            SCHEMA_DELIMITER_PIPE, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), null,
+            CUSTOM_DDL_NAME);
 
         // Retrieve business object data ddl for a non-partitioned table.
         BusinessObjectFormatDdlRequest request = getTestBusinessObjectFormatDdlRequest(CUSTOM_DDL_NAME);
@@ -3090,7 +3101,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
     {
         // Prepare test data without custom ddl.
         createDatabaseEntitiesForBusinessObjectFormatDdlTesting(FileTypeEntity.TXT_FILE_TYPE, Hive13DdlGenerator.NO_PARTITIONING_PARTITION_KEY,
-            SCHEMA_DELIMITER_PIPE, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, getTestSchemaColumns(), null, null);
+            SCHEMA_DELIMITER_PIPE, SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), null,
+            null);
 
         // Retrieve business object data ddl for a non-partitioned table and without specifying custom ddl name.
         BusinessObjectFormatDdlRequest request = getTestBusinessObjectFormatDdlRequest(null);
@@ -3107,10 +3119,11 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
     public void testGenerateBusinessObjectFormatDdlSubpartitionKeysHaveHyphens()
     {
         // Prepare test data with subpartition using key values with hyphens instead of underscores.
-        List<SchemaColumn> partitionColumns = getTestPartitionColumns();
+        List<SchemaColumn> partitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();
         String partitionKey = partitionColumns.get(0).getName();
         createDatabaseEntitiesForBusinessObjectFormatDdlTesting(FileTypeEntity.TXT_FILE_TYPE, partitionKey, SCHEMA_DELIMITER_PIPE,
-            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, getTestSchemaColumns(), partitionColumns, CUSTOM_DDL_NAME);
+            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns,
+            CUSTOM_DDL_NAME);
 
         // Retrieve business object data ddl.
         BusinessObjectFormatDdlRequest request = getTestBusinessObjectFormatDdlRequest(CUSTOM_DDL_NAME);
@@ -3127,10 +3140,10 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
     public void testGenerateBusinessObjectFormatDdlNoCustomDdlMissingSchemaDelimiterCharacter()
     {
         // Prepare test data.
-        List<SchemaColumn> partitionColumns = getTestPartitionColumns();
+        List<SchemaColumn> partitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();
         String partitionKey = partitionColumns.get(0).getName();
         createDatabaseEntitiesForBusinessObjectFormatDdlTesting(FileTypeEntity.TXT_FILE_TYPE, partitionKey, null, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
-            SCHEMA_NULL_VALUE_BACKSLASH_N, getTestSchemaColumns(), partitionColumns, null);
+            SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns, null);
 
         // Retrieve business object data ddl.
         BusinessObjectFormatDdlRequest request = getTestBusinessObjectFormatDdlRequest(null);
@@ -3148,10 +3161,10 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
     public void testGenerateBusinessObjectFormatDdlNoCustomDdlMissingSchemaEscapeCharacter()
     {
         // Prepare test data without custom ddl.
-        List<SchemaColumn> partitionColumns = getTestPartitionColumns();
+        List<SchemaColumn> partitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();
         String partitionKey = partitionColumns.get(0).getName();
         createDatabaseEntitiesForBusinessObjectFormatDdlTesting(FileTypeEntity.TXT_FILE_TYPE, partitionKey, SCHEMA_DELIMITER_PIPE, null,
-            SCHEMA_NULL_VALUE_BACKSLASH_N, getTestSchemaColumns(), partitionColumns, null);
+            SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns, null);
 
         // Retrieve business object data ddl.
         BusinessObjectFormatDdlRequest request = getTestBusinessObjectFormatDdlRequest(null);
@@ -3169,10 +3182,10 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
     public void testGenerateBusinessObjectFormatDdlNoCustomDdlMissingSchemaNullValue()
     {
         // Prepare test data without custom ddl.
-        List<SchemaColumn> partitionColumns = getTestPartitionColumns();
+        List<SchemaColumn> partitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();
         String partitionKey = partitionColumns.get(0).getName();
         createDatabaseEntitiesForBusinessObjectFormatDdlTesting(FileTypeEntity.TXT_FILE_TYPE, partitionKey, SCHEMA_DELIMITER_PIPE,
-            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null, getTestSchemaColumns(), partitionColumns, null);
+            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, null, schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns, null);
 
         // Retrieve business object data ddl.
         BusinessObjectFormatDdlRequest request = getTestBusinessObjectFormatDdlRequest(null);
@@ -3190,10 +3203,10 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
     public void testGenerateBusinessObjectFormatDdlNoCustomDdlEscapeSingleQuoteInRowFormat()
     {
         // Prepare test data without custom ddl.
-        List<SchemaColumn> partitionColumns = getTestPartitionColumns();
+        List<SchemaColumn> partitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();
         String partitionKey = partitionColumns.get(0).getName();
         createDatabaseEntitiesForBusinessObjectFormatDdlTesting(FileTypeEntity.TXT_FILE_TYPE, partitionKey, SINGLE_QUOTE, SINGLE_QUOTE, SINGLE_QUOTE,
-            getTestSchemaColumns(), partitionColumns, null);
+            schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns, null);
 
         // Retrieve business object data ddl.
         BusinessObjectFormatDdlRequest request = getTestBusinessObjectFormatDdlRequest(null);
@@ -3211,10 +3224,10 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
     public void testGenerateBusinessObjectFormatDdlNoCustomDdlEscapeBackslashInRowFormat()
     {
         // Prepare test data without custom ddl.
-        List<SchemaColumn> partitionColumns = getTestPartitionColumns();
+        List<SchemaColumn> partitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();
         String partitionKey = partitionColumns.get(0).getName();
         createDatabaseEntitiesForBusinessObjectFormatDdlTesting(FileTypeEntity.TXT_FILE_TYPE, partitionKey, BACKSLASH, BACKSLASH, BACKSLASH,
-            getTestSchemaColumns(), partitionColumns, null);
+            schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns, null);
 
         // Retrieve business object data ddl.
         BusinessObjectFormatDdlRequest request = getTestBusinessObjectFormatDdlRequest(null);
@@ -3232,11 +3245,11 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
     public void testGenerateBusinessObjectFormatDdlNoCustomDdlUnprintableCharactersInRowFormat()
     {
         // Prepare test data without custom ddl.
-        List<SchemaColumn> partitionColumns = getTestPartitionColumns();
+        List<SchemaColumn> partitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();
         String partitionKey = partitionColumns.get(0).getName();
         // Set schemaDelimiterCharacter to char(1), schemaEscapeCharacter to char(10), and schemaNullValue to char(128).
         createDatabaseEntitiesForBusinessObjectFormatDdlTesting(FileTypeEntity.TXT_FILE_TYPE, partitionKey, String.valueOf((char) 1), String.valueOf((char) 10),
-            String.valueOf((char) 128), getTestSchemaColumns(), partitionColumns, null);
+            String.valueOf((char) 128), schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns, null);
 
         // Retrieve business object data ddl request without business object format and data versions.
         BusinessObjectFormatDdlRequest request = getTestBusinessObjectFormatDdlRequest(null);
@@ -3255,10 +3268,10 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
     {
         // Prepare test data without custom ddl.
         String invalidPartitionColumnName = "INVALID_/_PRTN_CLMN";
-        List<SchemaColumn> partitionColumns = getTestPartitionColumns();
+        List<SchemaColumn> partitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();
         partitionColumns.get(0).setName(invalidPartitionColumnName);
         createDatabaseEntitiesForBusinessObjectFormatDdlTesting(FileTypeEntity.TXT_FILE_TYPE, PARTITION_KEY, SCHEMA_DELIMITER_PIPE,
-            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, getTestSchemaColumns(), partitionColumns, null);
+            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns, null);
 
         // Try to retrieve business object data ddl for the format that uses unsupported schema column data type.
         BusinessObjectFormatDdlRequest request = getTestBusinessObjectFormatDdlRequest(null);
@@ -3281,14 +3294,14 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
     public void testGenerateBusinessObjectFormatDdlNoCustomDdlNotSupportedSchemaColumnDataType()
     {
         // Prepare test data without custom ddl.
-        List<SchemaColumn> schemaColumns = getTestSchemaColumns();
+        List<SchemaColumn> schemaColumns = schemaColumnDaoTestHelper.getTestSchemaColumns();
         SchemaColumn schemaColumn = new SchemaColumn();
         schemaColumns.add(schemaColumn);
         schemaColumn.setName("COLUMN");
         schemaColumn.setType("UNKNOWN");
         String partitionKey = schemaColumns.get(0).getName();
         createDatabaseEntitiesForBusinessObjectFormatDdlTesting(FileTypeEntity.TXT_FILE_TYPE, partitionKey, SCHEMA_DELIMITER_PIPE,
-            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumns, getTestPartitionColumns(), null);
+            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumns, schemaColumnDaoTestHelper.getTestPartitionColumns(), null);
 
         // Try to retrieve business object data ddl for the format that uses unsupported schema column data type.
         BusinessObjectFormatDdlRequest request = getTestBusinessObjectFormatDdlRequest(null);
@@ -3324,27 +3337,28 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         for (String businessObjectFormatFileType : businessObjectFormatFileTypeMap.keySet())
         {
             // Prepare test data for the respective business object format file type.
-            List<SchemaColumn> partitionColumns = getTestPartitionColumns().subList(0, 1);
+            List<SchemaColumn> partitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns().subList(0, 1);
             String partitionKey = partitionColumns.get(0).getName();
-            BusinessObjectFormatEntity businessObjectFormatEntity =
-                createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, businessObjectFormatFileType, FORMAT_VERSION, FORMAT_DESCRIPTION,
+            BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+                .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, businessObjectFormatFileType, FORMAT_VERSION, FORMAT_DESCRIPTION,
                     LATEST_VERSION_FLAG_SET, partitionKey, NO_PARTITION_KEY_GROUP, getNewAttributes(), SCHEMA_DELIMITER_PIPE, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
-                    SCHEMA_NULL_VALUE_BACKSLASH_N, getTestSchemaColumns(), partitionColumns);
+                    SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), partitionColumns);
 
             for (String partitionValue : UNSORTED_PARTITION_VALUES)
             {
-                BusinessObjectDataEntity businessObjectDataEntity =
-                    createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, businessObjectFormatFileType, FORMAT_VERSION, partitionValue,
+                BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
+                    .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, businessObjectFormatFileType, FORMAT_VERSION, partitionValue,
                         NO_SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS);
                 String s3KeyPrefix = s3KeyPrefixHelper.buildS3KeyPrefix(S3_KEY_PREFIX_VELOCITY_TEMPLATE, businessObjectFormatEntity,
                     businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity), storageEntity.getName());
-                StorageUnitEntity storageUnitEntity =
-                    createStorageUnitEntity(storageEntity, businessObjectDataEntity, StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
+                StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
+                    .createStorageUnitEntity(storageEntity, businessObjectDataEntity, StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
 
                 // Create two storage files.
                 for (int i = 0; i < 2; i++)
                 {
-                    createStorageFileEntity(storageUnitEntity, String.format("%s/data%d.dat", s3KeyPrefix, i), FILE_SIZE_1_KB, ROW_COUNT_1000);
+                    storageFileDaoTestHelper
+                        .createStorageFileEntity(storageUnitEntity, String.format("%s/data%d.dat", s3KeyPrefix, i), FILE_SIZE_1_KB, ROW_COUNT_1000);
                 }
 
                 herdDao.saveAndRefresh(storageUnitEntity);
@@ -3371,7 +3385,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         // Prepare test data without custom ddl.
         String businessObjectFileType = "UNKNOWN";
         createDatabaseEntitiesForBusinessObjectFormatDdlTesting(businessObjectFileType, PARTITION_KEY, SCHEMA_DELIMITER_PIPE, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
-            SCHEMA_NULL_VALUE_BACKSLASH_N, getTestSchemaColumns(), getTestPartitionColumns(), null);
+            SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), schemaColumnDaoTestHelper.getTestPartitionColumns(), null);
 
         // Try to retrieve business object data ddl for the format without custom ddl and that uses unsupported file type.
         BusinessObjectFormatDdlRequest request = getTestBusinessObjectFormatDdlRequest(null);
@@ -3395,7 +3409,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
     {
         // Prepare test data without custom ddl.
         createDatabaseEntitiesForBusinessObjectFormatDdlTesting(FileTypeEntity.TXT_FILE_TYPE, FIRST_PARTITION_COLUMN_NAME, SCHEMA_DELIMITER_PIPE,
-            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, getTestSchemaColumns(), getTestPartitionColumns(), CUSTOM_DDL_NAME);
+            SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(),
+            schemaColumnDaoTestHelper.getTestPartitionColumns(), CUSTOM_DDL_NAME);
 
         // Retrieve business object data ddl request without drop table statement.
         BusinessObjectFormatDdlRequest request = getTestBusinessObjectFormatDdlRequest(CUSTOM_DDL_NAME);

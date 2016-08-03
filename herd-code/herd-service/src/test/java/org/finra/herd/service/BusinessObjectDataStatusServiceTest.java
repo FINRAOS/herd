@@ -47,8 +47,9 @@ public class BusinessObjectDataStatusServiceTest extends AbstractServiceTest
     public void testGetBusinessObjectDataStatus()
     {
         // Create and persist database entities required for testing.
-        createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-            DATA_VERSION, true, BDATA_STATUS);
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS);
 
         // Get the business object data status information.
         BusinessObjectDataStatusInformation resultBusinessObjectDataStatusInformation = businessObjectDataStatusService.getBusinessObjectDataStatus(
@@ -65,8 +66,9 @@ public class BusinessObjectDataStatusServiceTest extends AbstractServiceTest
     public void testGetBusinessObjectDataStatusMissingRequiredParameters()
     {
         // Create and persist database entities required for testing.
-        createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-            DATA_VERSION, true, BDATA_STATUS);
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS);
 
         // Try to get the business object data status when namespace is not specified.
         try
@@ -158,8 +160,9 @@ public class BusinessObjectDataStatusServiceTest extends AbstractServiceTest
             List<String> subPartitionValues = SUBPARTITION_VALUES.subList(0, i);
 
             // Create and persist a business object data entity.
-            createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, subPartitionValues,
-                DATA_VERSION, true, BDATA_STATUS);
+            businessObjectDataDaoTestHelper
+                .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    subPartitionValues, DATA_VERSION, true, BDATA_STATUS);
 
             // Get the business object data status information without specifying optional parameters.
             BusinessObjectDataStatusInformation resultBusinessObjectDataStatusInformation = businessObjectDataStatusService.getBusinessObjectDataStatus(
@@ -177,8 +180,9 @@ public class BusinessObjectDataStatusServiceTest extends AbstractServiceTest
     public void testGetBusinessObjectDataStatusMissingOptionalParametersPassedAsNulls()
     {
         // Create and persist a business object data entity without sub-partition values.
-        createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, NO_SUBPARTITION_VALUES,
-            DATA_VERSION, true, BDATA_STATUS);
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS);
 
         // Get the business object data status by passing null value for the partition key.
         BusinessObjectDataStatusInformation resultBusinessObjectDataStatusInformation = businessObjectDataStatusService.getBusinessObjectDataStatus(
@@ -195,8 +199,9 @@ public class BusinessObjectDataStatusServiceTest extends AbstractServiceTest
     public void testGetBusinessObjectDataStatusTrimParameters()
     {
         // Create and persist database entities required for testing.
-        createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-            DATA_VERSION, true, BDATA_STATUS);
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS);
 
         // Get the business object data status information using input parameters with leading and trailing empty spaces.
         BusinessObjectDataStatusInformation resultBusinessObjectDataStatusInformation = businessObjectDataStatusService.getBusinessObjectDataStatus(
@@ -214,8 +219,9 @@ public class BusinessObjectDataStatusServiceTest extends AbstractServiceTest
     public void testGetBusinessObjectDataStatusUpperCaseParameters()
     {
         // Create and persist database entities required for testing.
-        createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-            DATA_VERSION, true, BDATA_STATUS);
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS);
 
         // Get the business object data status using upper case input parameters (except for case-sensitive partition values).
         BusinessObjectDataStatusInformation resultBusinessObjectDataStatusInformation = businessObjectDataStatusService.getBusinessObjectDataStatus(
@@ -232,8 +238,9 @@ public class BusinessObjectDataStatusServiceTest extends AbstractServiceTest
     public void testGetBusinessObjectDataStatusLowerCaseParameters()
     {
         // Create and persist database entities required for testing.
-        createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-            DATA_VERSION, true, BDATA_STATUS);
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS);
 
         // Get the business object data status using lower case input parameters (except for case-sensitive partition values).
         BusinessObjectDataStatusInformation resultBusinessObjectDataStatusInformation = businessObjectDataStatusService.getBusinessObjectDataStatus(
@@ -250,8 +257,9 @@ public class BusinessObjectDataStatusServiceTest extends AbstractServiceTest
     public void testGetBusinessObjectDataStatusInvalidParameters()
     {
         // Create and persist a valid business object data.
-        createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-            DATA_VERSION, true, BDATA_STATUS);
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS);
 
         // Get the business object data status information.
         BusinessObjectDataStatusInformation resultBusinessObjectDataStatusInformation = businessObjectDataStatusService.getBusinessObjectDataStatus(
@@ -424,9 +432,10 @@ public class BusinessObjectDataStatusServiceTest extends AbstractServiceTest
     public void testUpdateBusinessObjectDataStatus()
     {
         // Create and persist relative test entities.
-        createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-            DATA_VERSION, true, BDATA_STATUS);
-        createBusinessObjectDataStatusEntity(BDATA_STATUS_2);
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS);
+        businessObjectDataStatusDaoTestHelper.createBusinessObjectDataStatusEntity(BDATA_STATUS_2);
 
         // Update the business object data status.
         BusinessObjectDataStatusUpdateResponse response = businessObjectDataStatusService.updateBusinessObjectDataStatus(
@@ -581,7 +590,7 @@ public class BusinessObjectDataStatusServiceTest extends AbstractServiceTest
     public void testUpdateBusinessObjectDataStatusMissingOptionalParameters()
     {
         // Create and persist a business object data status entity.
-        createBusinessObjectDataStatusEntity(BDATA_STATUS_2);
+        businessObjectDataStatusDaoTestHelper.createBusinessObjectDataStatusEntity(BDATA_STATUS_2);
 
         // Test if we can retrieve an attribute for the business object data with any allowed number of subpartition values (from 0 to MAX_SUBPARTITIONS).
         for (int i = 0; i <= BusinessObjectDataEntity.MAX_SUBPARTITIONS; i++)
@@ -590,8 +599,9 @@ public class BusinessObjectDataStatusServiceTest extends AbstractServiceTest
             List<String> subPartitionValues = SUBPARTITION_VALUES.subList(0, i);
 
             // Create and persist a business object data entity.
-            createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, subPartitionValues,
-                DATA_VERSION, true, BDATA_STATUS);
+            businessObjectDataDaoTestHelper
+                .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    subPartitionValues, DATA_VERSION, true, BDATA_STATUS);
 
             // Update the business object data status using the relative endpoint.
             BusinessObjectDataStatusUpdateResponse response = null;
@@ -638,9 +648,10 @@ public class BusinessObjectDataStatusServiceTest extends AbstractServiceTest
     public void testUpdateBusinessObjectDataStatusTrimParameters()
     {
         // Create and persist relative test entities.
-        createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-            DATA_VERSION, true, BDATA_STATUS);
-        createBusinessObjectDataStatusEntity(BDATA_STATUS_2);
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS);
+        businessObjectDataStatusDaoTestHelper.createBusinessObjectDataStatusEntity(BDATA_STATUS_2);
 
         // Update the business object data status.
         BusinessObjectDataStatusUpdateResponse response = businessObjectDataStatusService.updateBusinessObjectDataStatus(
@@ -658,9 +669,9 @@ public class BusinessObjectDataStatusServiceTest extends AbstractServiceTest
     public void testUpdateBusinessObjectDataStatusUpperCaseParameters()
     {
         // Create and persist relative test entities.
-        createBusinessObjectDataEntity(NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(), FORMAT_FILE_TYPE_CODE.toLowerCase(),
-            FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS.toLowerCase());
-        createBusinessObjectDataStatusEntity(BDATA_STATUS_2.toLowerCase());
+        businessObjectDataDaoTestHelper.createBusinessObjectDataEntity(NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(),
+            FORMAT_FILE_TYPE_CODE.toLowerCase(), FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS.toLowerCase());
+        businessObjectDataStatusDaoTestHelper.createBusinessObjectDataStatusEntity(BDATA_STATUS_2.toLowerCase());
 
         // Update the business object data status using upper case input parameters (except for case-sensitive partition values).
         BusinessObjectDataStatusUpdateResponse response = businessObjectDataStatusService.updateBusinessObjectDataStatus(
@@ -677,9 +688,9 @@ public class BusinessObjectDataStatusServiceTest extends AbstractServiceTest
     public void testUpdateBusinessObjectDataStatusLowerCaseParameters()
     {
         // Create and persist relative test entities.
-        createBusinessObjectDataEntity(NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(), FORMAT_FILE_TYPE_CODE.toUpperCase(),
-            FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS.toUpperCase());
-        createBusinessObjectDataStatusEntity(BDATA_STATUS_2.toUpperCase());
+        businessObjectDataDaoTestHelper.createBusinessObjectDataEntity(NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(),
+            FORMAT_FILE_TYPE_CODE.toUpperCase(), FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS.toUpperCase());
+        businessObjectDataStatusDaoTestHelper.createBusinessObjectDataStatusEntity(BDATA_STATUS_2.toUpperCase());
 
         // Update the business object data status using lower case input parameters (except for case-sensitive partition values).
         BusinessObjectDataStatusUpdateResponse response = businessObjectDataStatusService.updateBusinessObjectDataStatus(
@@ -696,7 +707,7 @@ public class BusinessObjectDataStatusServiceTest extends AbstractServiceTest
     public void testUpdateBusinessObjectDataStatusBusinessObjectDataNoExists()
     {
         // Try to update a business object data status using non-existing business object data.
-        createBusinessObjectDataStatusEntity(BDATA_STATUS);
+        businessObjectDataStatusDaoTestHelper.createBusinessObjectDataStatusEntity(BDATA_STATUS);
         try
         {
             businessObjectDataStatusService.updateBusinessObjectDataStatus(
@@ -716,8 +727,9 @@ public class BusinessObjectDataStatusServiceTest extends AbstractServiceTest
     public void testUpdateBusinessObjectDataStatusNoStatusChange()
     {
         // Create and persist relative test entities.
-        createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-            DATA_VERSION, true, BDATA_STATUS);
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS);
 
         // Update the business object data status.
         BusinessObjectDataStatusUpdateResponse response = businessObjectDataStatusService.updateBusinessObjectDataStatus(
@@ -734,8 +746,9 @@ public class BusinessObjectDataStatusServiceTest extends AbstractServiceTest
     public void testUpdateBusinessObjectDataStatusStatusNoExists()
     {
         // Create a business object data entity.
-        createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-            DATA_VERSION, true, BDATA_STATUS);
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS);
 
         // Try to update a business object data status using non-existing business status.
         try

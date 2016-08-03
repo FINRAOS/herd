@@ -29,8 +29,10 @@ public class NotificationRegistrationStatusRestControllerTest extends AbstractRe
     @Test
     public void testUpdateNotificationRegistrationStatusAssertSuccess()
     {
-        createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME), NOTIFICATION_EVENT_TYPE,
-            NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS, getTestJobActions());
+        businessObjectDataNotificationRegistrationDaoTestHelper
+            .createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME), NOTIFICATION_EVENT_TYPE,
+                NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS,
+                businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
         NotificationRegistrationStatusUpdateRequest notificationRegistrationStatusUpdateRequest = new NotificationRegistrationStatusUpdateRequest();
         notificationRegistrationStatusUpdateRequest.setNotificationRegistrationStatus("DISABLED");
         NotificationRegistrationStatusUpdateResponse response = notificationRegistrationStatusRestController

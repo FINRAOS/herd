@@ -26,8 +26,8 @@ public class StorageUnitStatusDaoTest extends AbstractDaoTest
     public void testGetStorageUnitStatusByCode()
     {
         // Create database entities required for testing.
-        createStorageUnitStatusEntity(STORAGE_UNIT_STATUS, DESCRIPTION, STORAGE_UNIT_STATUS_AVAILABLE_FLAG_SET);
-        createStorageUnitStatusEntity(STORAGE_UNIT_STATUS_2, DESCRIPTION_2, NO_STORAGE_UNIT_STATUS_AVAILABLE_FLAG_SET);
+        storageUnitStatusDaoTestHelper.createStorageUnitStatusEntity(STORAGE_UNIT_STATUS, DESCRIPTION, STORAGE_UNIT_STATUS_AVAILABLE_FLAG_SET);
+        storageUnitStatusDaoTestHelper.createStorageUnitStatusEntity(STORAGE_UNIT_STATUS_2, DESCRIPTION_2, NO_STORAGE_UNIT_STATUS_AVAILABLE_FLAG_SET);
 
         // Retrieve the relative storage unit status entities and validate the results.
         assertEquals(STORAGE_UNIT_STATUS, storageUnitStatusDao.getStorageUnitStatusByCode(STORAGE_UNIT_STATUS).getCode());

@@ -31,9 +31,9 @@ public class BusinessObjectDataStatusDaoTest extends AbstractDaoTest
     public void testGetBusinessObjectDataStatusByCode()
     {
         // Create database entities required for testing.
-        List<BusinessObjectDataStatusEntity> businessObjectDataStatusEntities = Arrays
-            .asList(createBusinessObjectDataStatusEntity(BDATA_STATUS, DESCRIPTION, NO_BDATA_STATUS_PRE_REGISTRATION_FLAG_SET),
-                createBusinessObjectDataStatusEntity(BDATA_STATUS_2, DESCRIPTION_2, BDATA_STATUS_PRE_REGISTRATION_FLAG_SET));
+        List<BusinessObjectDataStatusEntity> businessObjectDataStatusEntities = Arrays.asList(
+            businessObjectDataStatusDaoTestHelper.createBusinessObjectDataStatusEntity(BDATA_STATUS, DESCRIPTION, NO_BDATA_STATUS_PRE_REGISTRATION_FLAG_SET),
+            businessObjectDataStatusDaoTestHelper.createBusinessObjectDataStatusEntity(BDATA_STATUS_2, DESCRIPTION_2, BDATA_STATUS_PRE_REGISTRATION_FLAG_SET));
 
         // Retrieve the relative business object data status entities and validate the results.
         assertEquals(businessObjectDataStatusEntities.get(0), businessObjectDataStatusDao.getBusinessObjectDataStatusByCode(BDATA_STATUS));

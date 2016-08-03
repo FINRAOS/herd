@@ -119,7 +119,7 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
                 DATA_VERSION);
 
         // Create database entities required for testing.
-        createBusinessObjectDataEntity(businessObjectDataKey, LATEST_VERSION_FLAG_SET, BDATA_STATUS);
+        businessObjectDataDaoTestHelper.createBusinessObjectDataEntity(businessObjectDataKey, LATEST_VERSION_FLAG_SET, BDATA_STATUS);
 
         // Validate that this business object data exists.
         assertNotNull(businessObjectDataDao.getBusinessObjectDataByAltKey(businessObjectDataKey));
@@ -288,7 +288,7 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
                 DATA_VERSION);
 
         // Create a business object data entity without a Glacier storage unit.
-        createBusinessObjectDataEntity(businessObjectDataKey, LATEST_VERSION_FLAG_SET, BDATA_STATUS);
+        businessObjectDataDaoTestHelper.createBusinessObjectDataEntity(businessObjectDataKey, LATEST_VERSION_FLAG_SET, BDATA_STATUS);
 
         // Create a Glacier storage unit key.
         StorageUnitAlternateKeyDto glacierStorageUnitKey = storageUnitHelper.createStorageUnitKey(businessObjectDataKey, STORAGE_NAME_GLACIER);
@@ -315,8 +315,9 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
                 DATA_VERSION);
 
         // Create a non-enabled Glacier storage unit along with other database entities required for testing.
-        createStorageUnitEntity(STORAGE_NAME_GLACIER, StoragePlatformEntity.GLACIER, businessObjectDataKey, LATEST_VERSION_FLAG_SET, BDATA_STATUS,
-            STORAGE_UNIT_STATUS, NO_STORAGE_DIRECTORY_PATH);
+        storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME_GLACIER, StoragePlatformEntity.GLACIER, businessObjectDataKey, LATEST_VERSION_FLAG_SET, BDATA_STATUS,
+                STORAGE_UNIT_STATUS, NO_STORAGE_DIRECTORY_PATH);
 
         // Create a Glacier storage unit key.
         StorageUnitAlternateKeyDto glacierStorageUnitKey = storageUnitHelper.createStorageUnitKey(businessObjectDataKey, STORAGE_NAME_GLACIER);
@@ -344,8 +345,9 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
                 DATA_VERSION);
 
         // Create a non-enabled Glacier storage unit along with other database entities required for testing.
-        createStorageUnitEntity(STORAGE_NAME_GLACIER, StoragePlatformEntity.GLACIER, businessObjectDataKey, LATEST_VERSION_FLAG_SET, BDATA_STATUS,
-            StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
+        storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME_GLACIER, StoragePlatformEntity.GLACIER, businessObjectDataKey, LATEST_VERSION_FLAG_SET, BDATA_STATUS,
+                StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
 
         // Create a Glacier storage unit key.
         StorageUnitAlternateKeyDto glacierStorageUnitKey = storageUnitHelper.createStorageUnitKey(businessObjectDataKey, STORAGE_NAME_GLACIER);
@@ -445,8 +447,8 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
                 STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER, StorageUnitStatusEntity.ENABLED, S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX);
 
         // Create a non-S3 storage unit for this business object data.
-        StorageUnitEntity storageUnitEntity =
-            createStorageUnitEntity(STORAGE_NAME, STORAGE_PLATFORM_CODE, businessObjectDataEntity, StorageUnitStatusEntity.ENABLED, TEST_S3_KEY_PREFIX);
+        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, STORAGE_PLATFORM_CODE, businessObjectDataEntity, StorageUnitStatusEntity.ENABLED, TEST_S3_KEY_PREFIX);
 
         // Get the Glacier storage unit entity.
         StorageUnitEntity glacierStorageUnitEntity = storageUnitDaoHelper.getStorageUnitEntity(STORAGE_NAME_GLACIER, businessObjectDataEntity);

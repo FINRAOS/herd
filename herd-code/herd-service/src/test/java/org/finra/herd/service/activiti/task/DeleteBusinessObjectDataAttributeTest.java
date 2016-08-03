@@ -51,8 +51,8 @@ public class DeleteBusinessObjectDataAttributeTest extends HerdActivitiServiceTa
             businessObjectDataAttributeHelper.getBusinessObjectDataAttributeKey(businessObjectDataKey, ATTRIBUTE_NAME_1_MIXED_CASE);
 
         // Create a business object data attribute entity.
-        BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity =
-            createBusinessObjectDataAttributeEntity(businessObjectDataKey, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1);
+        BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity = businessObjectDataAttributeDaoTestHelper
+            .createBusinessObjectDataAttributeEntity(businessObjectDataKey, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1);
 
         // Validate that the business object data attribute is created.
         assertNotNull(businessObjectDataAttributeDao.getBusinessObjectDataAttributeByKey(businessObjectDataAttributeKey));
@@ -126,8 +126,8 @@ public class DeleteBusinessObjectDataAttributeTest extends HerdActivitiServiceTa
             businessObjectDataAttributeHelper.getBusinessObjectDataAttributeKey(businessObjectDataKey, ATTRIBUTE_NAME_1_MIXED_CASE);
 
         // Create a business object data attribute entity.
-        BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity =
-            createBusinessObjectDataAttributeEntity(businessObjectDataKey, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1);
+        BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity = businessObjectDataAttributeDaoTestHelper
+            .createBusinessObjectDataAttributeEntity(businessObjectDataKey, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1);
 
         // Validate that the business object data attribute is created.
         assertNotNull(businessObjectDataAttributeDao.getBusinessObjectDataAttributeByKey(businessObjectDataAttributeKey));
@@ -180,8 +180,8 @@ public class DeleteBusinessObjectDataAttributeTest extends HerdActivitiServiceTa
             businessObjectDataAttributeHelper.getBusinessObjectDataAttributeKey(businessObjectDataKey, ATTRIBUTE_NAME_1_MIXED_CASE);
 
         // Create a business object data attribute entity.
-        BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity =
-            createBusinessObjectDataAttributeEntity(businessObjectDataKey, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1);
+        BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity = businessObjectDataAttributeDaoTestHelper
+            .createBusinessObjectDataAttributeEntity(businessObjectDataKey, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1);
 
         // Validate that the business object data attribute is created.
         assertNotNull(businessObjectDataAttributeDao.getBusinessObjectDataAttributeByKey(businessObjectDataAttributeKey));

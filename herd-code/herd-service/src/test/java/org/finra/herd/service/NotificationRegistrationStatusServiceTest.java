@@ -32,9 +32,10 @@ public class NotificationRegistrationStatusServiceTest extends AbstractServiceTe
     @Test
     public void testUpdateNotificationRegistrationStatusAssertUpdateSuccess()
     {
-        BusinessObjectDataNotificationRegistrationEntity notificationRegistrationEntity =
-            createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME), NOTIFICATION_EVENT_TYPE,
-                NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS, getTestJobActions());
+        BusinessObjectDataNotificationRegistrationEntity notificationRegistrationEntity = businessObjectDataNotificationRegistrationDaoTestHelper
+            .createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME), NOTIFICATION_EVENT_TYPE,
+                NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS,
+                businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
         notificationRegistrationEntity.setNotificationRegistrationStatus(notificationRegistrationStatusDaoHelper.getNotificationRegistrationStatus("ENABLED"));
 
         NotificationRegistrationStatusUpdateRequest notificationRegistrationStatusUpdateRequest = new NotificationRegistrationStatusUpdateRequest("DISABLED");
@@ -51,9 +52,10 @@ public class NotificationRegistrationStatusServiceTest extends AbstractServiceTe
     @Test
     public void testUpdateNotificationRegistrationStatusAssertUpdateSuccessCaseInsensitive()
     {
-        BusinessObjectDataNotificationRegistrationEntity notificationRegistrationEntity =
-            createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME), NOTIFICATION_EVENT_TYPE,
-                NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS, getTestJobActions());
+        BusinessObjectDataNotificationRegistrationEntity notificationRegistrationEntity = businessObjectDataNotificationRegistrationDaoTestHelper
+            .createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME), NOTIFICATION_EVENT_TYPE,
+                NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS,
+                businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
         notificationRegistrationEntity.setNotificationRegistrationStatus(notificationRegistrationStatusDaoHelper.getNotificationRegistrationStatus("ENABLED"));
 
         NotificationRegistrationStatusUpdateRequest notificationRegistrationStatusUpdateRequest = new NotificationRegistrationStatusUpdateRequest("disabled");
@@ -70,9 +72,10 @@ public class NotificationRegistrationStatusServiceTest extends AbstractServiceTe
     @Test
     public void testUpdateNotificationRegistrationStatusAssertUpdateSuccessTrim()
     {
-        BusinessObjectDataNotificationRegistrationEntity notificationRegistrationEntity =
-            createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME), NOTIFICATION_EVENT_TYPE,
-                NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS, getTestJobActions());
+        BusinessObjectDataNotificationRegistrationEntity notificationRegistrationEntity = businessObjectDataNotificationRegistrationDaoTestHelper
+            .createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME), NOTIFICATION_EVENT_TYPE,
+                NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS,
+                businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
         notificationRegistrationEntity.setNotificationRegistrationStatus(notificationRegistrationStatusDaoHelper.getNotificationRegistrationStatus("ENABLED"));
 
         NotificationRegistrationStatusUpdateRequest notificationRegistrationStatusUpdateRequest =
@@ -91,9 +94,10 @@ public class NotificationRegistrationStatusServiceTest extends AbstractServiceTe
     @Test
     public void testUpdateNotificationRegistrationStatusAssertThrowWhenNamespaceNull()
     {
-        BusinessObjectDataNotificationRegistrationEntity notificationRegistrationEntity =
-            createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME), NOTIFICATION_EVENT_TYPE,
-                NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS, getTestJobActions());
+        BusinessObjectDataNotificationRegistrationEntity notificationRegistrationEntity = businessObjectDataNotificationRegistrationDaoTestHelper
+            .createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME), NOTIFICATION_EVENT_TYPE,
+                NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS,
+                businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
         notificationRegistrationEntity.setNotificationRegistrationStatus(notificationRegistrationStatusDaoHelper.getNotificationRegistrationStatus("ENABLED"));
 
         NotificationRegistrationStatusUpdateRequest notificationRegistrationStatusUpdateRequest = new NotificationRegistrationStatusUpdateRequest("DISABLED");
@@ -112,9 +116,10 @@ public class NotificationRegistrationStatusServiceTest extends AbstractServiceTe
     @Test
     public void testUpdateNotificationRegistrationStatusAssertThrowWhenNamespaceBlank()
     {
-        BusinessObjectDataNotificationRegistrationEntity notificationRegistrationEntity =
-            createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME), NOTIFICATION_EVENT_TYPE,
-                NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS, getTestJobActions());
+        BusinessObjectDataNotificationRegistrationEntity notificationRegistrationEntity = businessObjectDataNotificationRegistrationDaoTestHelper
+            .createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME), NOTIFICATION_EVENT_TYPE,
+                NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS,
+                businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
         notificationRegistrationEntity.setNotificationRegistrationStatus(notificationRegistrationStatusDaoHelper.getNotificationRegistrationStatus("ENABLED"));
 
         NotificationRegistrationStatusUpdateRequest notificationRegistrationStatusUpdateRequest = new NotificationRegistrationStatusUpdateRequest("DISABLED");
@@ -134,9 +139,10 @@ public class NotificationRegistrationStatusServiceTest extends AbstractServiceTe
     @Test
     public void testUpdateNotificationRegistrationStatusAssertThrowWhenNameNull()
     {
-        BusinessObjectDataNotificationRegistrationEntity notificationRegistrationEntity =
-            createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME), NOTIFICATION_EVENT_TYPE,
-                NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS, getTestJobActions());
+        BusinessObjectDataNotificationRegistrationEntity notificationRegistrationEntity = businessObjectDataNotificationRegistrationDaoTestHelper
+            .createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME), NOTIFICATION_EVENT_TYPE,
+                NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS,
+                businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
         notificationRegistrationEntity.setNotificationRegistrationStatus(notificationRegistrationStatusDaoHelper.getNotificationRegistrationStatus("ENABLED"));
 
         NotificationRegistrationStatusUpdateRequest notificationRegistrationStatusUpdateRequest = new NotificationRegistrationStatusUpdateRequest("DISABLED");
@@ -155,9 +161,10 @@ public class NotificationRegistrationStatusServiceTest extends AbstractServiceTe
     @Test
     public void testUpdateNotificationRegistrationStatusAssertThrowWhenNameBlank()
     {
-        BusinessObjectDataNotificationRegistrationEntity notificationRegistrationEntity =
-            createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME), NOTIFICATION_EVENT_TYPE,
-                NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS, getTestJobActions());
+        BusinessObjectDataNotificationRegistrationEntity notificationRegistrationEntity = businessObjectDataNotificationRegistrationDaoTestHelper
+            .createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME), NOTIFICATION_EVENT_TYPE,
+                NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS,
+                businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
         notificationRegistrationEntity.setNotificationRegistrationStatus(notificationRegistrationStatusDaoHelper.getNotificationRegistrationStatus("ENABLED"));
 
         NotificationRegistrationStatusUpdateRequest notificationRegistrationStatusUpdateRequest = new NotificationRegistrationStatusUpdateRequest("DISABLED");
@@ -176,9 +183,10 @@ public class NotificationRegistrationStatusServiceTest extends AbstractServiceTe
     @Test
     public void testUpdateNotificationRegistrationStatusAssertThrowWhenStatusNull()
     {
-        BusinessObjectDataNotificationRegistrationEntity notificationRegistrationEntity =
-            createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME), NOTIFICATION_EVENT_TYPE,
-                NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS, getTestJobActions());
+        BusinessObjectDataNotificationRegistrationEntity notificationRegistrationEntity = businessObjectDataNotificationRegistrationDaoTestHelper
+            .createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME), NOTIFICATION_EVENT_TYPE,
+                NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS,
+                businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
         notificationRegistrationEntity.setNotificationRegistrationStatus(notificationRegistrationStatusDaoHelper.getNotificationRegistrationStatus("ENABLED"));
 
         NotificationRegistrationStatusUpdateRequest notificationRegistrationStatusUpdateRequest = new NotificationRegistrationStatusUpdateRequest(null);
@@ -198,9 +206,10 @@ public class NotificationRegistrationStatusServiceTest extends AbstractServiceTe
     @Test
     public void testUpdateNotificationRegistrationStatusAssertThrowWhenStatusBlank()
     {
-        BusinessObjectDataNotificationRegistrationEntity notificationRegistrationEntity =
-            createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME), NOTIFICATION_EVENT_TYPE,
-                NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS, getTestJobActions());
+        BusinessObjectDataNotificationRegistrationEntity notificationRegistrationEntity = businessObjectDataNotificationRegistrationDaoTestHelper
+            .createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME), NOTIFICATION_EVENT_TYPE,
+                NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS,
+                businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
         notificationRegistrationEntity.setNotificationRegistrationStatus(notificationRegistrationStatusDaoHelper.getNotificationRegistrationStatus("ENABLED"));
 
         NotificationRegistrationStatusUpdateRequest notificationRegistrationStatusUpdateRequest = new NotificationRegistrationStatusUpdateRequest(BLANK_TEXT);
@@ -220,9 +229,10 @@ public class NotificationRegistrationStatusServiceTest extends AbstractServiceTe
     @Test
     public void testUpdateNotificationRegistrationStatusAssertThrowNotificationNotFound()
     {
-        BusinessObjectDataNotificationRegistrationEntity notificationRegistrationEntity =
-            createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME), NOTIFICATION_EVENT_TYPE,
-                NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS, getTestJobActions());
+        BusinessObjectDataNotificationRegistrationEntity notificationRegistrationEntity = businessObjectDataNotificationRegistrationDaoTestHelper
+            .createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME), NOTIFICATION_EVENT_TYPE,
+                NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS,
+                businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
         notificationRegistrationEntity.setNotificationRegistrationStatus(notificationRegistrationStatusDaoHelper.getNotificationRegistrationStatus("ENABLED"));
 
         NotificationRegistrationStatusUpdateRequest notificationRegistrationStatusUpdateRequest = new NotificationRegistrationStatusUpdateRequest("DISABLED");

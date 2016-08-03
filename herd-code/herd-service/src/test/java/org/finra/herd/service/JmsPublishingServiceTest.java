@@ -42,7 +42,7 @@ public class JmsPublishingServiceTest extends AbstractServiceTest
     public void testPublishOldestJmsMessageFromDatabaseQueue() throws Exception
     {
         // Create only 1 message to be sent in the database.
-        createJmsMessageEntity(JMS_QUEUE_NAME, MESSAGE_TEXT);
+        jmsMessageDaoTestHelper.createJmsMessageEntity(JMS_QUEUE_NAME, MESSAGE_TEXT);
 
         // Validate the results by ensuring there is only 1 message that got published (i.e. true for the first message and false for the second one since
         // only 1 exists).
@@ -54,7 +54,7 @@ public class JmsPublishingServiceTest extends AbstractServiceTest
     public void testPublishOldestJmsMessageFromDatabaseQueueAwsServiceException() throws Exception
     {
         // Prepare database entries required for testing.
-        createJmsMessageEntity(MockSqsOperationsImpl.MOCK_SQS_QUEUE_NOT_FOUND_NAME, MESSAGE_TEXT);
+        jmsMessageDaoTestHelper.createJmsMessageEntity(MockSqsOperationsImpl.MOCK_SQS_QUEUE_NOT_FOUND_NAME, MESSAGE_TEXT);
 
         // Try to publish a JMS message which should fail since the database message has an invalid queue name.
         try

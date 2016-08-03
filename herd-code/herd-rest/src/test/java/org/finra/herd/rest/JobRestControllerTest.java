@@ -58,7 +58,7 @@ public class JobRestControllerTest extends AbstractRestTest
     public void testCreateJob() throws Exception
     {
         // Create the namespace entity.
-        createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
+        namespaceDaoTestHelper.createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
 
         // Create a job definition create request using hard coded test values.
         JobDefinitionCreateRequest jobDefinitionCreateRequest = createJobDefinitionCreateRequest();
@@ -114,7 +114,7 @@ public class JobRestControllerTest extends AbstractRestTest
     public void testCreateJobJobNameNoExists() throws Exception
     {
         // Create the namespace entity.
-        createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
+        namespaceDaoTestHelper.createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
 
         // Try to create a job using non-existing job definition name.
         jobRestController.createJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, "I_DO_NOT_EXIST"));
@@ -138,7 +138,7 @@ public class JobRestControllerTest extends AbstractRestTest
     public void testCreateJobNoParams() throws Exception
     {
         // Create the namespace entity.
-        createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
+        namespaceDaoTestHelper.createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
 
         // Create a job definition create request using hard coded test values.
         JobDefinitionCreateRequest jobDefinitionCreateRequest = createJobDefinitionCreateRequest();

@@ -36,8 +36,8 @@ public class StorageUnitDaoHelperTest extends AbstractServiceTest
     public void testGetStorageUnitEntity()
     {
         // Create and persist test database entities.
-        StorageUnitEntity storageUnitEntity =
-            createStorageUnitEntity(STORAGE_NAME, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 NO_SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS, STORAGE_UNIT_STATUS, NO_STORAGE_DIRECTORY_PATH);
         BusinessObjectDataEntity businessObjectDataEntity = storageUnitEntity.getBusinessObjectData();
 
@@ -65,12 +65,12 @@ public class StorageUnitDaoHelperTest extends AbstractServiceTest
     public void testUpdateStorageUnitStatus()
     {
         // Create and persist a storage unit entity.
-        StorageUnitEntity storageUnitEntity =
-            createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS, STORAGE_UNIT_STATUS, NO_STORAGE_DIRECTORY_PATH);
 
         // Create and persist a storage status entity.
-        createStorageUnitStatusEntity(STORAGE_UNIT_STATUS_2);
+        storageUnitStatusDaoTestHelper.createStorageUnitStatusEntity(STORAGE_UNIT_STATUS_2);
 
         // Update the storage unit status.
         storageUnitDaoHelper.updateStorageUnitStatus(storageUnitEntity, STORAGE_UNIT_STATUS_2, REASON);
