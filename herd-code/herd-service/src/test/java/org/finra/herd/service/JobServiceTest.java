@@ -66,7 +66,7 @@ public class JobServiceTest extends AbstractServiceTest
     public void testCreateJob() throws Exception
     {
         // Create the namespace entity.
-        createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
+        namespaceDaoTestHelper.createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
 
         // Create a job definition create request using hard coded test values.
         JobDefinitionCreateRequest jobDefinitionCreateRequest = createJobDefinitionCreateRequest();
@@ -99,7 +99,7 @@ public class JobServiceTest extends AbstractServiceTest
     public void testCreateJobNoParams() throws Exception
     {
         // Create the namespace entity.
-        createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
+        namespaceDaoTestHelper.createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
 
         // Create a job definition create request using hard coded test values.
         JobDefinitionCreateRequest jobDefinitionCreateRequest = createJobDefinitionCreateRequest();
@@ -152,6 +152,32 @@ public class JobServiceTest extends AbstractServiceTest
         jobService.createAndStartJob(jobCreateRequest);
     }
 
+    @Test
+    public void testCreateJobInvalidParameters() throws Exception
+    {
+        // Try to create a job when namespace contains a forward slash character.
+        try
+        {
+            jobService.createAndStartJob(createJobCreateRequest(addSlash(TEST_ACTIVITI_NAMESPACE_CD), TEST_ACTIVITI_JOB_NAME));
+            fail("Should throw an IllegalArgumentException when namespace contains a forward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Namespace can not contain a forward slash character.", e.getMessage());
+        }
+
+        // Try to create a job when job name name contains a forward slash character.
+        try
+        {
+            jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, addSlash(TEST_ACTIVITI_JOB_NAME)));
+            fail("Should throw an IllegalArgumentException when job name contains a forward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Job name can not contain a forward slash character.", e.getMessage());
+        }
+    }
+
     @Test(expected = IllegalArgumentException.class)
     public void testCreateJobDuplicateParameterName() throws Exception
     {
@@ -179,7 +205,7 @@ public class JobServiceTest extends AbstractServiceTest
     public void testCreateJobJobNameNoExists() throws Exception
     {
         // Create the namespace entity.
-        createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
+        namespaceDaoTestHelper.createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
 
         // Try to create a job using non-existing job definition name.
         jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, "I_DO_NOT_EXIST"));
@@ -673,7 +699,7 @@ public class JobServiceTest extends AbstractServiceTest
     public void testCreateJobWithS3PropertiesJobDefinitionWrongDatafixSafety() throws Exception
     {
         // Create the namespace entity.
-        createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
+        namespaceDaoTestHelper.createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
 
         // Create a job definition create request using hard coded test values.
         JobDefinitionCreateRequest jobDefinitionCreateRequest = createJobDefinitionCreateRequest();
@@ -1008,7 +1034,7 @@ public class JobServiceTest extends AbstractServiceTest
         S3PropertiesLocation jobCreateRequestS3PropertiesLocation, List<Parameter> jobCreateRequestParameters) throws Exception
     {
         // Create the namespace entity.
-        createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
+        namespaceDaoTestHelper.createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
 
         // Create a job definition create request using hard coded test values.
         JobDefinitionCreateRequest jobDefinitionCreateRequest = createJobDefinitionCreateRequest();

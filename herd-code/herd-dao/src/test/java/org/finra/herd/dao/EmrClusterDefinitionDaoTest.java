@@ -39,7 +39,7 @@ public class EmrClusterDefinitionDaoTest extends AbstractDaoTest
     public void testGetEmrClusterDefinitionByAltKey() throws IOException
     {
         // Create and persist an EMR cluster definition entity.
-        createEmrClusterDefinitionEntity(createNamespaceEntity(NAMESPACE), EMR_CLUSTER_DEFINITION_NAME,
+        emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE), EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
 
         // Call the API to query the newly added entity by providing the app and EMT cluster definition details
@@ -59,7 +59,7 @@ public class EmrClusterDefinitionDaoTest extends AbstractDaoTest
     public void testGetEmrClusterDefinitionByAltKeyDefinitionNameNoExists() throws IOException
     {
         // Create and persist an EMR Cluster definition entity.
-        createEmrClusterDefinitionEntity(createNamespaceEntity(NAMESPACE), EMR_CLUSTER_DEFINITION_NAME,
+        emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE), EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
 
         // Call the API to query the newly added entity by providing the app and a definition name that doesn't exist.
@@ -77,11 +77,11 @@ public class EmrClusterDefinitionDaoTest extends AbstractDaoTest
     public void testGetEmrClusterDefinitionByAltKeyNamespaceNoExists() throws IOException
     {
         // Create namespace database entities.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
-        createNamespaceEntity(NAMESPACE_2);
+        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE_2);
 
         // Create a EMR Cluster definition entity
-        createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
+        emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
 
         // Call the API to query the newly added entity by providing the app and a definition name that doesn't exist.
@@ -99,13 +99,13 @@ public class EmrClusterDefinitionDaoTest extends AbstractDaoTest
     public void testGetEmrClusterDefinitionByAltKeyMultipleRecordsFound() throws IOException
     {
         // Create namespace database entities.
-        NamespaceEntity namespaceEntity = createNamespaceEntity(NAMESPACE);
+        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
 
         // Create two EMR cluster definitions different.
         for (String definitionName : Arrays.asList(EMR_CLUSTER_DEFINITION_NAME.toUpperCase(), EMR_CLUSTER_DEFINITION_NAME.toLowerCase()))
         {
             // Create a EMR cluster definition entity.
-            createEmrClusterDefinitionEntity(namespaceEntity, definitionName,
+            emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, definitionName,
                 IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
         }
 
@@ -117,7 +117,7 @@ public class EmrClusterDefinitionDaoTest extends AbstractDaoTest
     public void testGetEmrClusterDefinitionsByNamespace() throws IOException
     {
         // Create and persist an EMR cluster definition entity.
-        createEmrClusterDefinitionEntity(createNamespaceEntity(NAMESPACE), EMR_CLUSTER_DEFINITION_NAME,
+        emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE), EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
 
         // Create an EMR cluster definition key.

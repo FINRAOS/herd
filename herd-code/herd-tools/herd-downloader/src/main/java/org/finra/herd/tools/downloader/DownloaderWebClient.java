@@ -169,7 +169,7 @@ public class DownloaderWebClient extends DataBridgeWebClient
     /**
      * Gets the storage unit download credentials.
      *
-     * @param httpResponse HTTP response
+     * @param response the HTTP response
      *
      * @return StorageUnitDownloadCredential
      */

@@ -32,13 +32,15 @@ public class BusinessObjectDataAttributeHelperTest extends AbstractServiceTest
     public void testIsBusinessObjectDataAttributeRequired()
     {
         // Create and persist test database entities required for testing.
-        BusinessObjectFormatEntity businessObjectFormatEntity =
-            createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION, true,
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION, true,
                 PARTITION_KEY);
-        createBusinessObjectDataAttributeDefinitionEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-            ATTRIBUTE_NAME_1_MIXED_CASE);
-        createBusinessObjectDataAttributeDefinitionEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-            ATTRIBUTE_NAME_2_MIXED_CASE);
+        businessObjectFormatDaoTestHelper
+            .createBusinessObjectDataAttributeDefinitionEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                ATTRIBUTE_NAME_1_MIXED_CASE);
+        businessObjectFormatDaoTestHelper
+            .createBusinessObjectDataAttributeDefinitionEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                ATTRIBUTE_NAME_2_MIXED_CASE);
 
         // Validate the functionality.
         assertTrue(businessObjectDataAttributeHelper.isBusinessObjectDataAttributeRequired(ATTRIBUTE_NAME_1_MIXED_CASE, businessObjectFormatEntity));

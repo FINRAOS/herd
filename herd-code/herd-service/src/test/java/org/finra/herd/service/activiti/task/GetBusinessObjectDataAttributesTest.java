@@ -48,7 +48,7 @@ public class GetBusinessObjectDataAttributesTest extends HerdActivitiServiceTask
         // Create a business object data attribute entities.
         for (Attribute attribute : testAttributes)
         {
-            createBusinessObjectDataAttributeEntity(businessObjectDataKey, attribute.getName(), attribute.getValue());
+            businessObjectDataAttributeDaoTestHelper.createBusinessObjectDataAttributeEntity(businessObjectDataKey, attribute.getName(), attribute.getValue());
         }
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
@@ -119,7 +119,7 @@ public class GetBusinessObjectDataAttributesTest extends HerdActivitiServiceTask
         // Create a business object data attribute entities.
         for (Attribute attribute : testAttributes)
         {
-            createBusinessObjectDataAttributeEntity(businessObjectDataKey, attribute.getName(), attribute.getValue());
+            businessObjectDataAttributeDaoTestHelper.createBusinessObjectDataAttributeEntity(businessObjectDataKey, attribute.getName(), attribute.getValue());
         }
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
@@ -170,7 +170,7 @@ public class GetBusinessObjectDataAttributesTest extends HerdActivitiServiceTask
         // Create a business object data attribute entities.
         for (Attribute attribute : testAttributes)
         {
-            createBusinessObjectDataAttributeEntity(businessObjectDataKey, attribute.getName(), attribute.getValue());
+            businessObjectDataAttributeDaoTestHelper.createBusinessObjectDataAttributeEntity(businessObjectDataKey, attribute.getName(), attribute.getValue());
         }
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>();

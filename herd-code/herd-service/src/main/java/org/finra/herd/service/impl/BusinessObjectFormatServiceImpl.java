@@ -65,6 +65,7 @@ import org.finra.herd.model.jpa.FileTypeEntity;
 import org.finra.herd.model.jpa.PartitionKeyGroupEntity;
 import org.finra.herd.model.jpa.SchemaColumnEntity;
 import org.finra.herd.service.BusinessObjectFormatService;
+import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.AttributeHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionHelper;
@@ -88,6 +89,9 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
      */
     public static final Set<String> SCHEMA_COLUMN_DATA_TYPES_WITH_ALLOWED_SIZE_INCREASE =
         Collections.unmodifiableSet(new HashSet<>(Arrays.asList("CHAR", "VARCHAR", "VARCHAR2")));
+
+    @Autowired
+    private AlternateKeyHelper alternateKeyHelper;
 
     @Autowired
     private AttributeHelper attributeHelper;
@@ -190,7 +194,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
     public BusinessObjectFormat updateBusinessObjectFormat(BusinessObjectFormatKey businessObjectFormatKey, BusinessObjectFormatUpdateRequest request)
     {
         // Perform validation and trim the alternate key parameters.
-        validateBusinessObjectFormatKey(businessObjectFormatKey, true);
+        businessObjectFormatHelper.validateBusinessObjectFormatKey(businessObjectFormatKey);
 
         // Validate optional attributes. This is also going to trim the attribute names.
         attributeHelper.validateAttributes(request.getAttributes());
@@ -327,7 +331,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
     protected BusinessObjectFormat getBusinessObjectFormatImpl(BusinessObjectFormatKey businessObjectFormatKey)
     {
         // Perform validation and trim the alternate key parameters.
-        validateBusinessObjectFormatKey(businessObjectFormatKey, false);
+        businessObjectFormatHelper.validateBusinessObjectFormatKey(businessObjectFormatKey, false);
 
         // Retrieve and ensure that a business object format exists.
         BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey);
@@ -348,7 +352,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
     public BusinessObjectFormat deleteBusinessObjectFormat(BusinessObjectFormatKey businessObjectFormatKey)
     {
         // Perform validation and trim the alternate key parameters.
-        validateBusinessObjectFormatKey(businessObjectFormatKey, true);
+        businessObjectFormatHelper.validateBusinessObjectFormatKey(businessObjectFormatKey);
 
         // Retrieve and ensure that a business object format exists.
         BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey);
@@ -557,16 +561,13 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         BusinessObjectFormatKey businessObjectFormatKey = getBusinessObjectFormatKey(request);
 
         // Perform validation and trim the business object format key parameters, except for a business object format version.
-        validateBusinessObjectFormatKey(businessObjectFormatKey, false);
+        businessObjectFormatHelper.validateBusinessObjectFormatKey(businessObjectFormatKey, false);
 
         // Update the request object instance with the alternate key parameters.
         updateBusinessObjectFormatAlternateKeyOnCreateRequest(request, businessObjectFormatKey);
 
-        // Perform validation.
-        Assert.hasText(request.getPartitionKey(), "A business object format partition key must be specified.");
-
-        // Remove leading and trailing spaces.
-        request.setPartitionKey(request.getPartitionKey().trim());
+        // Perform validation of the partition key. This method also trims the partition key value.
+        request.setPartitionKey(alternateKeyHelper.validateStringParameter("partition key", request.getPartitionKey()));
 
         // Validate attributes.
         attributeHelper.validateAttributes(request.getAttributes());
@@ -592,31 +593,6 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
 
         // Validate optional schema information.
         validateBusinessObjectFormatSchema(request.getSchema(), request.getPartitionKey());
-    }
-
-    /**
-     * Validates the business object format key. This method also trims the alternate key parameters.
-     *
-     * @param businessObjectFormatKey the business object format key
-     * @param businessObjectFormatVersionRequired specifies if business object format version parameter is required or not
-     */
-    private void validateBusinessObjectFormatKey(BusinessObjectFormatKey businessObjectFormatKey, Boolean businessObjectFormatVersionRequired)
-    {
-        // Perform validation.
-        Assert.hasText(businessObjectFormatKey.getNamespace(), "A namespace must be specified.");
-        Assert.hasText(businessObjectFormatKey.getBusinessObjectDefinitionName(), "A business object definition name must be specified.");
-        Assert.hasText(businessObjectFormatKey.getBusinessObjectFormatUsage(), "A business object format usage must be specified.");
-        Assert.hasText(businessObjectFormatKey.getBusinessObjectFormatFileType(), "A business object format file type must be specified.");
-        if (businessObjectFormatVersionRequired)
-        {
-            Assert.notNull(businessObjectFormatKey.getBusinessObjectFormatVersion(), "A business object format version must be specified.");
-        }
-
-        // Remove leading and trailing spaces.
-        businessObjectFormatKey.setNamespace(businessObjectFormatKey.getNamespace().trim());
-        businessObjectFormatKey.setBusinessObjectDefinitionName(businessObjectFormatKey.getBusinessObjectDefinitionName().trim());
-        businessObjectFormatKey.setBusinessObjectFormatUsage(businessObjectFormatKey.getBusinessObjectFormatUsage().trim());
-        businessObjectFormatKey.setBusinessObjectFormatFileType(businessObjectFormatKey.getBusinessObjectFormatFileType().trim());
     }
 
     /**
@@ -850,7 +826,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         Assert.hasText(request.getBusinessObjectDefinitionName(), "A business object definition name must be specified.");
         request.setBusinessObjectDefinitionName(request.getBusinessObjectDefinitionName().trim());
 
-        Assert.hasText(request.getBusinessObjectFormatUsage(), "A business object format usage name must be specified.");
+        Assert.hasText(request.getBusinessObjectFormatUsage(), "A business object format usage must be specified.");
         request.setBusinessObjectFormatUsage(request.getBusinessObjectFormatUsage().trim());
 
         Assert.hasText(request.getBusinessObjectFormatFileType(), "A business object format file type must be specified.");

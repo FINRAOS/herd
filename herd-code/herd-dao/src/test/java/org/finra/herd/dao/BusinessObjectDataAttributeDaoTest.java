@@ -39,8 +39,8 @@ public class BusinessObjectDataAttributeDaoTest extends AbstractDaoTest
                 DATA_VERSION);
 
         // Create a business object data attribute entity.
-        BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity =
-            createBusinessObjectDataAttributeEntity(businessObjectDataKey, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1);
+        BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity = businessObjectDataAttributeDaoTestHelper
+            .createBusinessObjectDataAttributeEntity(businessObjectDataKey, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1);
 
         // Get business object data attribute.
         assertEquals(businessObjectDataAttributeEntity, businessObjectDataAttributeDao.getBusinessObjectDataAttributeByKey(
@@ -111,8 +111,10 @@ public class BusinessObjectDataAttributeDaoTest extends AbstractDaoTest
                 DATA_VERSION);
 
         // Create duplicate business object data attributes.
-        createBusinessObjectDataAttributeEntity(businessObjectDataKey, ATTRIBUTE_NAME_1_MIXED_CASE.toUpperCase(), ATTRIBUTE_VALUE_1);
-        createBusinessObjectDataAttributeEntity(businessObjectDataKey, ATTRIBUTE_NAME_1_MIXED_CASE.toLowerCase(), ATTRIBUTE_VALUE_2);
+        businessObjectDataAttributeDaoTestHelper
+            .createBusinessObjectDataAttributeEntity(businessObjectDataKey, ATTRIBUTE_NAME_1_MIXED_CASE.toUpperCase(), ATTRIBUTE_VALUE_1);
+        businessObjectDataAttributeDaoTestHelper
+            .createBusinessObjectDataAttributeEntity(businessObjectDataKey, ATTRIBUTE_NAME_1_MIXED_CASE.toLowerCase(), ATTRIBUTE_VALUE_2);
 
         // Try to get business object data attribute when business object data has duplicate attributes.
         try

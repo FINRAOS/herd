@@ -46,6 +46,7 @@ import org.finra.herd.core.Command;
 import org.finra.herd.dao.HttpClientOperations;
 import org.finra.herd.model.api.xml.AwsCredential;
 import org.finra.herd.model.api.xml.BusinessObjectData;
+import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.S3KeyPrefixInformation;
 import org.finra.herd.model.api.xml.Storage;
 import org.finra.herd.model.api.xml.StorageUnit;
@@ -53,6 +54,7 @@ import org.finra.herd.model.api.xml.StorageUnitDownloadCredential;
 import org.finra.herd.model.dto.DownloaderInputManifestDto;
 import org.finra.herd.model.dto.RegServerAccessParamsDto;
 import org.finra.herd.model.dto.UploaderInputManifestDto;
+import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.tools.common.databridge.DataBridgeWebClient;
 
@@ -101,8 +103,13 @@ public class DownloaderWebClientTest extends AbstractDownloaderTest
             @Override
             public void execute() throws Exception
             {
-                downloaderWebClient.registerBusinessObjectData(uploaderInputManifestDto, getTestS3FileTransferRequestParamsDto(S3_TEST_PATH_V0 + "/"),
-                    StorageEntity.MANAGED_STORAGE, false);
+                BusinessObjectData businessObjectData =
+                    downloaderWebClient.preRegisterBusinessObjectData(uploaderInputManifestDto, StorageEntity.MANAGED_STORAGE, false);
+                BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectData);
+                downloaderWebClient
+                    .addStorageFiles(businessObjectDataKey, uploaderInputManifestDto, getTestS3FileTransferRequestParamsDto(S3_TEST_PATH_V0 + "/"),
+                        StorageEntity.MANAGED_STORAGE);
+                downloaderWebClient.updateBusinessObjectDataStatus(businessObjectDataKey, BusinessObjectDataStatusEntity.VALID);
             }
         });
 
@@ -130,8 +137,13 @@ public class DownloaderWebClientTest extends AbstractDownloaderTest
             @Override
             public void execute() throws Exception
             {
-                downloaderWebClient.registerBusinessObjectData(uploaderInputManifestDto, getTestS3FileTransferRequestParamsDto(S3_TEST_PATH_V0 + "/"),
-                    StorageEntity.MANAGED_STORAGE, false);
+                BusinessObjectData businessObjectData =
+                    downloaderWebClient.preRegisterBusinessObjectData(uploaderInputManifestDto, StorageEntity.MANAGED_STORAGE, false);
+                BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectData);
+                downloaderWebClient
+                    .addStorageFiles(businessObjectDataKey, uploaderInputManifestDto, getTestS3FileTransferRequestParamsDto(S3_TEST_PATH_V0 + "/"),
+                        StorageEntity.MANAGED_STORAGE);
+                downloaderWebClient.updateBusinessObjectDataStatus(businessObjectDataKey, BusinessObjectDataStatusEntity.VALID);
             }
         });
 
@@ -160,11 +172,9 @@ public class DownloaderWebClientTest extends AbstractDownloaderTest
         Assert.assertNotNull(storageUnitDownloadCredential);
         AwsCredential awsCredential = storageUnitDownloadCredential.getAwsCredential();
         Assert.assertNotNull(awsCredential);
-        Assert.assertEquals(
-            "https://testWebServiceHostname:1234/herd-app/rest/storageUnits/download/credential/namespaces/test1"
-                + "/businessObjectDefinitionNames/test2/businessObjectFormatUsages/test3/businessObjectFormatFileTypes/test4/businessObjectFormatVersions/test5"
-                + "/partitionValues/test6/businessObjectDataVersions/test9/storageNames/test10?subPartitionValues=test7%7Ctest8",
-            awsCredential.getAwsAccessKey());
+        Assert.assertEquals("https://testWebServiceHostname:1234/herd-app/rest/storageUnits/download/credential/namespaces/test1" +
+            "/businessObjectDefinitionNames/test2/businessObjectFormatUsages/test3/businessObjectFormatFileTypes/test4/businessObjectFormatVersions/test5" +
+            "/partitionValues/test6/businessObjectDataVersions/test9/storageNames/test10?subPartitionValues=test7%7Ctest8", awsCredential.getAwsAccessKey());
     }
 
     @Test
@@ -184,9 +194,9 @@ public class DownloaderWebClientTest extends AbstractDownloaderTest
         Assert.assertNotNull(storageUnitDownloadCredential);
         AwsCredential awsCredential = storageUnitDownloadCredential.getAwsCredential();
         Assert.assertNotNull(awsCredential);
-        Assert.assertEquals("https://testWebServiceHostname:1234/herd-app/rest/storageUnits/download/credential/namespaces/test1"
-            + "/businessObjectDefinitionNames/test2/businessObjectFormatUsages/test3/businessObjectFormatFileTypes/test4/businessObjectFormatVersions/test5"
-            + "/partitionValues/test6/businessObjectDataVersions/test9/storageNames/test10", awsCredential.getAwsAccessKey());
+        Assert.assertEquals("https://testWebServiceHostname:1234/herd-app/rest/storageUnits/download/credential/namespaces/test1" +
+            "/businessObjectDefinitionNames/test2/businessObjectFormatUsages/test3/businessObjectFormatFileTypes/test4/businessObjectFormatVersions/test5" +
+            "/partitionValues/test6/businessObjectDataVersions/test9/storageNames/test10", awsCredential.getAwsAccessKey());
     }
 
     @Test
@@ -199,10 +209,10 @@ public class DownloaderWebClientTest extends AbstractDownloaderTest
         try
         {
             String expectedHttpMethod = "GET";
-            String expectedUri = "https://testWebServiceHostname:1234/herd-app/rest/businessObjectData"
-                + "/businessObjectDefinitionNames/businessObjectDefinitionName/businessObjectFormatUsages/businessObjectFormatUsage"
-                + "/businessObjectFormatFileTypes/businessObjectFormatFileType?partitionKey=partitionKey&partitionValue=partitionValue&"
-                + "businessObjectFormatVersion=0&businessObjectDataVersion=1";
+            String expectedUri = "https://testWebServiceHostname:1234/herd-app/rest/businessObjectData" +
+                "/businessObjectDefinitionNames/businessObjectDefinitionName/businessObjectFormatUsages/businessObjectFormatUsage" +
+                "/businessObjectFormatFileTypes/businessObjectFormatFileType?partitionKey=partitionKey&partitionValue=partitionValue&" +
+                "businessObjectFormatVersion=0&businessObjectDataVersion=1";
 
             CloseableHttpResponse closeableHttpResponse = mock(CloseableHttpResponse.class);
             when(mockHttpClientOperations.execute(any(), any())).thenReturn(closeableHttpResponse);
@@ -253,6 +263,7 @@ public class DownloaderWebClientTest extends AbstractDownloaderTest
             when(mockHttpClientOperations.execute(any(), any())).thenReturn(closeableHttpResponse);
 
             when(closeableHttpResponse.getStatusLine()).thenReturn(new BasicStatusLine(HttpVersion.HTTP_1_1, 200, "OK"));
+            when(closeableHttpResponse.getEntity()).thenReturn(new StringEntity(xmlHelper.objectToXml(new BusinessObjectData())));
 
             DownloaderInputManifestDto manifest = new DownloaderInputManifestDto();
             downloaderWebClient.getRegServerAccessParamsDto().setUseSsl(false);

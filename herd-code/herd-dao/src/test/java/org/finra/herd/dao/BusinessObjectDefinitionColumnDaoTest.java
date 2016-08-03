@@ -36,7 +36,7 @@ public class BusinessObjectDefinitionColumnDaoTest extends AbstractDaoTest
 
         // Create a business object definition column entity.
         BusinessObjectDefinitionColumnEntity businessObjectDefinitionColumnEntity =
-            createBusinessObjectDefinitionColumnEntity(businessObjectDefinitionColumnKey, BDEF_COLUMN_DESCRIPTION);
+            businessObjectDefinitionColumnDaoTestHelper.createBusinessObjectDefinitionColumnEntity(businessObjectDefinitionColumnKey, BDEF_COLUMN_DESCRIPTION);
 
         // Get the business object definition entity.
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionColumnEntity.getBusinessObjectDefinition();
@@ -55,7 +55,8 @@ public class BusinessObjectDefinitionColumnDaoTest extends AbstractDaoTest
 
         // Try invalid values for all input parameters.
         assertNull(businessObjectDefinitionColumnDao.getBusinessObjectDefinitionColumnByBusinessObjectDefinitionColumnName(
-            createBusinessObjectDefinitionEntity(BDEF_NAMESPACE, BDEF_NAME_2, DATA_PROVIDER_NAME, DESCRIPTION), BDEF_COLUMN_NAME));
+            businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(BDEF_NAMESPACE, BDEF_NAME_2, DATA_PROVIDER_NAME, DESCRIPTION),
+            BDEF_COLUMN_NAME));
         assertNull(businessObjectDefinitionColumnDao
             .getBusinessObjectDefinitionColumnByBusinessObjectDefinitionColumnName(businessObjectDefinitionEntity, "I_DO_NOT_EXIST"));
     }
@@ -65,11 +66,13 @@ public class BusinessObjectDefinitionColumnDaoTest extends AbstractDaoTest
     {
         // Create a business object definition entity.
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
-            createBusinessObjectDefinitionEntity(BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
+            businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
 
         // Create duplicate business object definition columns.
-        createBusinessObjectDefinitionColumnEntity(businessObjectDefinitionEntity, BDEF_COLUMN_NAME.toUpperCase(), DESCRIPTION);
-        createBusinessObjectDefinitionColumnEntity(businessObjectDefinitionEntity, BDEF_COLUMN_NAME.toLowerCase(), DESCRIPTION_2);
+        businessObjectDefinitionColumnDaoTestHelper
+            .createBusinessObjectDefinitionColumnEntity(businessObjectDefinitionEntity, BDEF_COLUMN_NAME.toUpperCase(), DESCRIPTION);
+        businessObjectDefinitionColumnDaoTestHelper
+            .createBusinessObjectDefinitionColumnEntity(businessObjectDefinitionEntity, BDEF_COLUMN_NAME.toLowerCase(), DESCRIPTION_2);
 
         // Try to get business object definition column when business object definition has duplicate columns.
         try
@@ -95,7 +98,7 @@ public class BusinessObjectDefinitionColumnDaoTest extends AbstractDaoTest
 
         // Create a business object definition column entity.
         BusinessObjectDefinitionColumnEntity businessObjectDefinitionColumnEntity =
-            createBusinessObjectDefinitionColumnEntity(businessObjectDefinitionColumnKey, BDEF_COLUMN_DESCRIPTION);
+            businessObjectDefinitionColumnDaoTestHelper.createBusinessObjectDefinitionColumnEntity(businessObjectDefinitionColumnKey, BDEF_COLUMN_DESCRIPTION);
 
         // Get business object definition column.
         assertEquals(businessObjectDefinitionColumnEntity,
@@ -123,11 +126,13 @@ public class BusinessObjectDefinitionColumnDaoTest extends AbstractDaoTest
     {
         // Create a business object definition entity.
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
-            createBusinessObjectDefinitionEntity(BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
+            businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
 
         // Create duplicate business object definition columns.
-        createBusinessObjectDefinitionColumnEntity(businessObjectDefinitionEntity, BDEF_COLUMN_NAME.toUpperCase(), DESCRIPTION);
-        createBusinessObjectDefinitionColumnEntity(businessObjectDefinitionEntity, BDEF_COLUMN_NAME.toLowerCase(), DESCRIPTION_2);
+        businessObjectDefinitionColumnDaoTestHelper
+            .createBusinessObjectDefinitionColumnEntity(businessObjectDefinitionEntity, BDEF_COLUMN_NAME.toUpperCase(), DESCRIPTION);
+        businessObjectDefinitionColumnDaoTestHelper
+            .createBusinessObjectDefinitionColumnEntity(businessObjectDefinitionEntity, BDEF_COLUMN_NAME.toLowerCase(), DESCRIPTION_2);
 
         // Try to get business object definition column when business object definition has duplicate columns.
         try

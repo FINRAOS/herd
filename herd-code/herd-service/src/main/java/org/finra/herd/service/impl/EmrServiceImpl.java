@@ -66,6 +66,7 @@ import org.finra.herd.model.jpa.EmrClusterCreationLogEntity;
 import org.finra.herd.model.jpa.EmrClusterDefinitionEntity;
 import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.service.EmrService;
+import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.EmrClusterDefinitionDaoHelper;
 import org.finra.herd.service.helper.EmrClusterDefinitionHelper;
 import org.finra.herd.service.helper.EmrStepHelper;
@@ -81,6 +82,9 @@ import org.finra.herd.service.helper.ParameterHelper;
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 public class EmrServiceImpl implements EmrService
 {
+    @Autowired
+    private AlternateKeyHelper alternateKeyHelper;
+
     @Autowired
     private ConfigurationHelper configurationHelper;
 
@@ -160,7 +164,7 @@ public class EmrServiceImpl implements EmrService
         boolean retrieveOozieJobs) throws Exception
     {
         // Perform the request validation.
-        emrHelper.validateEmrClusterKey(emrClusterAlternateKeyDto);
+        validateEmrClusterKey(emrClusterAlternateKeyDto);
 
         // Get the namespace and ensure it exists.
         NamespaceEntity namespaceEntity = namespaceDaoHelper.getNamespaceEntity(emrClusterAlternateKeyDto.getNamespace());
@@ -398,7 +402,7 @@ public class EmrServiceImpl implements EmrService
         EmrClusterAlternateKeyDto emrClusterAlternateKeyDto = getEmrClusterAlternateKey(request);
 
         // Perform the request validation.
-        emrHelper.validateEmrClusterKey(emrClusterAlternateKeyDto);
+        validateEmrClusterKey(emrClusterAlternateKeyDto);
 
         // Get the namespace and ensure it exists.
         NamespaceEntity namespaceEntity = namespaceDaoHelper.getNamespaceEntity(emrClusterAlternateKeyDto.getNamespace());
@@ -647,7 +651,7 @@ public class EmrServiceImpl implements EmrService
         AwsParamsDto awsParamsDto = emrHelper.getAwsParamsDto();
 
         // Perform the request validation.
-        emrHelper.validateEmrClusterKey(emrClusterAlternateKeyDto);
+        validateEmrClusterKey(emrClusterAlternateKeyDto);
 
         // Get the namespace and ensure it exists.
         NamespaceEntity namespaceEntity = namespaceDaoHelper.getNamespaceEntity(emrClusterAlternateKeyDto.getNamespace());
@@ -1247,5 +1251,20 @@ public class EmrServiceImpl implements EmrService
             throw new ObjectNotFoundException(message + " Reason: " + ex.getMessage(), ex);
         }
         throw ex;
+    }
+
+    /**
+     * Validates the EMR cluster create request. This method also trims request parameters.
+     *
+     * @param key the ERM cluster alternate key
+     *
+     * @throws IllegalArgumentException if any validation errors were found
+     */
+    private void validateEmrClusterKey(EmrClusterAlternateKeyDto key) throws IllegalArgumentException
+    {
+        Assert.notNull(key, "An EMR cluster key must be specified.");
+        key.setNamespace(alternateKeyHelper.validateStringParameter("namespace", key.getNamespace()));
+        key.setEmrClusterDefinitionName(alternateKeyHelper.validateStringParameter("An", "EMR cluster definition name", key.getEmrClusterDefinitionName()));
+        key.setEmrClusterName(alternateKeyHelper.validateStringParameter("An", "EMR cluster name", key.getEmrClusterName()));
     }
 }

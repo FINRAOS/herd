@@ -36,7 +36,7 @@ public class BusinessObjectDataRestControllerCheckBusinessObjectDataAvailability
     public void testCheckBusinessObjectDataAvailabilityPartitionValueList()
     {
         // Prepare test data and execute the check business object data availability request.
-        createDatabaseEntitiesForBusinessObjectDataAvailabilityTesting(null);
+        businessObjectDataAvailabilityTestHelper.createDatabaseEntitiesForBusinessObjectDataAvailabilityTesting(null);
         BusinessObjectDataAvailabilityRequest request = getTestBusinessObjectDataAvailabilityRequest(UNSORTED_PARTITION_VALUES);
         BusinessObjectDataAvailability resultAvailability = businessObjectDataRestController.checkBusinessObjectDataAvailability(request);
 
@@ -54,7 +54,7 @@ public class BusinessObjectDataRestControllerCheckBusinessObjectDataAvailability
     public void testCheckBusinessObjectDataAvailabilityPartitionValueListStandalonePartitionValueFilter()
     {
         // Prepare test data and execute the check business object data availability request with a standalone partition value filter.
-        createDatabaseEntitiesForBusinessObjectDataAvailabilityTesting(null);
+        businessObjectDataAvailabilityTestHelper.createDatabaseEntitiesForBusinessObjectDataAvailabilityTesting(null);
         BusinessObjectDataAvailabilityRequest request = getTestBusinessObjectDataAvailabilityRequest(UNSORTED_PARTITION_VALUES);
         request.setPartitionValueFilter(request.getPartitionValueFilters().get(0));
         request.setPartitionValueFilters(null);
@@ -74,8 +74,8 @@ public class BusinessObjectDataRestControllerCheckBusinessObjectDataAvailability
     public void testCheckBusinessObjectDataAvailabilityPartitionValueRange()
     {
         // Prepare test data.
-        createDatabaseEntitiesForBusinessObjectDataAvailabilityTesting(PARTITION_KEY_GROUP);
-        createExpectedPartitionValueProcessDatesForApril2014(PARTITION_KEY_GROUP);
+        businessObjectDataAvailabilityTestHelper.createDatabaseEntitiesForBusinessObjectDataAvailabilityTesting(PARTITION_KEY_GROUP);
+        expectedPartitionValueDaoTestHelper.createExpectedPartitionValueProcessDatesForApril2014(PARTITION_KEY_GROUP);
 
         BusinessObjectDataAvailabilityRequest request;
         BusinessObjectDataAvailability resultAvailability;

@@ -49,15 +49,16 @@ public class ExpectedPartitionValueServiceTest extends AbstractServiceTest
     public void testCreateExpectedPartitionValues()
     {
         // Create and persist a partition key group entity.
-        createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
+        partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
 
         // Add expected partition values to this partition key group.
         ExpectedPartitionValuesCreateRequest request =
-            createExpectedPartitionValuesCreateRequest(PARTITION_KEY_GROUP, getTestUnsortedExpectedPartitionValues());
+            createExpectedPartitionValuesCreateRequest(PARTITION_KEY_GROUP, expectedPartitionValueDaoTestHelper.getTestUnsortedExpectedPartitionValues());
         ExpectedPartitionValuesInformation resultPartitionValuesInformation = expectedPartitionValueService.createExpectedPartitionValues(request);
 
         // Validate the returned object.
-        validateExpectedPartitionValuesInformation(PARTITION_KEY_GROUP, getTestSortedExpectedPartitionValues(), resultPartitionValuesInformation);
+        validateExpectedPartitionValuesInformation(PARTITION_KEY_GROUP, expectedPartitionValueDaoTestHelper.getTestSortedExpectedPartitionValues(),
+            resultPartitionValuesInformation);
     }
 
     @Test
@@ -66,7 +67,7 @@ public class ExpectedPartitionValueServiceTest extends AbstractServiceTest
         ExpectedPartitionValuesCreateRequest request;
 
         // Try to perform a create without specifying partition key group name.
-        request = createExpectedPartitionValuesCreateRequest(BLANK_TEXT, getTestUnsortedExpectedPartitionValues());
+        request = createExpectedPartitionValuesCreateRequest(BLANK_TEXT, expectedPartitionValueDaoTestHelper.getTestUnsortedExpectedPartitionValues());
         try
         {
             expectedPartitionValueService.createExpectedPartitionValues(request);
@@ -106,11 +107,11 @@ public class ExpectedPartitionValueServiceTest extends AbstractServiceTest
     public void testCreateExpectedPartitionValuesTrimParameters()
     {
         // Create and persist a partition key group entity.
-        createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
+        partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
 
         // Add expected partition values to this partition key group with request parameters padded with whitespace characters.
-        ExpectedPartitionValuesCreateRequest request =
-            createExpectedPartitionValuesCreateRequest(addWhitespace(PARTITION_KEY_GROUP), getTestUnsortedExpectedPartitionValues());
+        ExpectedPartitionValuesCreateRequest request = createExpectedPartitionValuesCreateRequest(addWhitespace(PARTITION_KEY_GROUP),
+            expectedPartitionValueDaoTestHelper.getTestUnsortedExpectedPartitionValues());
         for (int i = 0; i < request.getExpectedPartitionValues().size(); i++)
         {
             request.getExpectedPartitionValues().set(i, addWhitespace(request.getExpectedPartitionValues().get(i)));
@@ -118,7 +119,39 @@ public class ExpectedPartitionValueServiceTest extends AbstractServiceTest
         ExpectedPartitionValuesInformation resultPartitionValuesInformation = expectedPartitionValueService.createExpectedPartitionValues(request);
 
         // Validate the returned object.
-        validateExpectedPartitionValuesInformation(PARTITION_KEY_GROUP, getTestSortedExpectedPartitionValues(), resultPartitionValuesInformation);
+        validateExpectedPartitionValuesInformation(PARTITION_KEY_GROUP, expectedPartitionValueDaoTestHelper.getTestSortedExpectedPartitionValues(),
+            resultPartitionValuesInformation);
+    }
+
+    @Test
+    public void testCreateExpectedPartitionValuesInvalidParameters()
+    {
+        // Create and persist a partition key group entity.
+        partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
+
+        // Try to perform a create when partition key group name contains a forward slash character.
+        try
+        {
+            expectedPartitionValueService.createExpectedPartitionValues(createExpectedPartitionValuesCreateRequest(addSlash(PARTITION_KEY_GROUP),
+                expectedPartitionValueDaoTestHelper.getTestUnsortedExpectedPartitionValues()));
+            fail("Should throw an IllegalArgumentException when partition key group name contains a forward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Partition key group name can not contain a forward slash character.", e.getMessage());
+        }
+
+        // Try to perform a create when expected partition value contains a forward slash character.
+        try
+        {
+            expectedPartitionValueService
+                .createExpectedPartitionValues(createExpectedPartitionValuesCreateRequest(PARTITION_KEY_GROUP, Arrays.asList(addSlash(PARTITION_VALUE))));
+            fail("Should throw an IllegalArgumentException when expected partition value contains a forward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Expected partition value can not contain a forward slash character.", e.getMessage());
+        }
     }
 
     @Test
@@ -142,7 +175,8 @@ public class ExpectedPartitionValueServiceTest extends AbstractServiceTest
     public void testCreateExpectedPartitionValuesPartitionKeyGroupNoExists()
     {
         // Try to perform a create using a non-existing partition key group name.
-        ExpectedPartitionValuesCreateRequest request = createExpectedPartitionValuesCreateRequest("I_DO_NOT_EXIST", getTestUnsortedExpectedPartitionValues());
+        ExpectedPartitionValuesCreateRequest request =
+            createExpectedPartitionValuesCreateRequest("I_DO_NOT_EXIST", expectedPartitionValueDaoTestHelper.getTestUnsortedExpectedPartitionValues());
         try
         {
             expectedPartitionValueService.createExpectedPartitionValues(request);
@@ -159,10 +193,10 @@ public class ExpectedPartitionValueServiceTest extends AbstractServiceTest
     public void testCreateExpectedPartitionValuesExpectedPartitionValueAlreadyExists()
     {
         // Create and persist a partition key group entity.
-        PartitionKeyGroupEntity partitionKeyGroupEntity = createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
+        PartitionKeyGroupEntity partitionKeyGroupEntity = partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
 
         // Create and persist a single test expected partition value.
-        createExpectedPartitionValueEntities(partitionKeyGroupEntity, Arrays.asList(PARTITION_VALUE));
+        expectedPartitionValueDaoTestHelper.createExpectedPartitionValueEntities(partitionKeyGroupEntity, Arrays.asList(PARTITION_VALUE));
 
         // Try to perform a create using an already existing expected partition value.
         ExpectedPartitionValuesCreateRequest request = createExpectedPartitionValuesCreateRequest(PARTITION_KEY_GROUP, Arrays.asList(PARTITION_VALUE));
@@ -182,13 +216,14 @@ public class ExpectedPartitionValueServiceTest extends AbstractServiceTest
     public void testGetExpectedPartitionValue()
     {
         // Create and persist a partition key group entity.
-        PartitionKeyGroupEntity partitionKeyGroupEntity = createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
+        PartitionKeyGroupEntity partitionKeyGroupEntity = partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
 
         // Create and persist a list of test expected partition values.
-        createExpectedPartitionValueEntities(partitionKeyGroupEntity, getTestUnsortedExpectedPartitionValues());
+        expectedPartitionValueDaoTestHelper
+            .createExpectedPartitionValueEntities(partitionKeyGroupEntity, expectedPartitionValueDaoTestHelper.getTestUnsortedExpectedPartitionValues());
 
         // Get expected partition value for different offset values.
-        List<String> testSortedExpectedPartitionValues = getTestSortedExpectedPartitionValues();
+        List<String> testSortedExpectedPartitionValues = expectedPartitionValueDaoTestHelper.getTestSortedExpectedPartitionValues();
         int testExpectedPartitionValueIndex = 3;
         for (Integer offset : Arrays.asList(-2, 0, 2))
         {
@@ -231,13 +266,14 @@ public class ExpectedPartitionValueServiceTest extends AbstractServiceTest
     public void testGetExpectedPartitionValueMissingOptionalParameters()
     {
         // Create and persist a partition key group entity.
-        PartitionKeyGroupEntity partitionKeyGroupEntity = createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
+        PartitionKeyGroupEntity partitionKeyGroupEntity = partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
 
         // Create and persist a list of test expected partition values.
-        createExpectedPartitionValueEntities(partitionKeyGroupEntity, getTestUnsortedExpectedPartitionValues());
+        expectedPartitionValueDaoTestHelper
+            .createExpectedPartitionValueEntities(partitionKeyGroupEntity, expectedPartitionValueDaoTestHelper.getTestUnsortedExpectedPartitionValues());
 
         // Get expected partition value without specifying the offset.
-        List<String> testSortedExpectedPartitionValues = getTestSortedExpectedPartitionValues();
+        List<String> testSortedExpectedPartitionValues = expectedPartitionValueDaoTestHelper.getTestSortedExpectedPartitionValues();
         int testExpectedPartitionValueIndex = 3;
         ExpectedPartitionValueInformation resultPartitionValueInformation = expectedPartitionValueService.getExpectedPartitionValue(
             new ExpectedPartitionValueKey(PARTITION_KEY_GROUP, testSortedExpectedPartitionValues.get(testExpectedPartitionValueIndex)), null);
@@ -251,13 +287,14 @@ public class ExpectedPartitionValueServiceTest extends AbstractServiceTest
     public void testGetExpectedPartitionValueTrimParameters()
     {
         // Create and persist a partition key group entity.
-        PartitionKeyGroupEntity partitionKeyGroupEntity = createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
+        PartitionKeyGroupEntity partitionKeyGroupEntity = partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
 
         // Create and persist a list of test expected partition values.
-        createExpectedPartitionValueEntities(partitionKeyGroupEntity, getTestUnsortedExpectedPartitionValues());
+        expectedPartitionValueDaoTestHelper
+            .createExpectedPartitionValueEntities(partitionKeyGroupEntity, expectedPartitionValueDaoTestHelper.getTestUnsortedExpectedPartitionValues());
 
         // Get expected partition value with offset set to 0 and with request parameters padded with whitespace characters.
-        List<String> testSortedExpectedPartitionValues = getTestSortedExpectedPartitionValues();
+        List<String> testSortedExpectedPartitionValues = expectedPartitionValueDaoTestHelper.getTestSortedExpectedPartitionValues();
         int testExpectedPartitionValueIndex = 3;
         ExpectedPartitionValueInformation resultPartitionValueInformation = expectedPartitionValueService.getExpectedPartitionValue(
             new ExpectedPartitionValueKey(addWhitespace(PARTITION_KEY_GROUP),
@@ -272,10 +309,10 @@ public class ExpectedPartitionValueServiceTest extends AbstractServiceTest
     public void testGetExpectedPartitionValueUpperCaseParameters()
     {
         // Create and persist a partition key group entity.
-        PartitionKeyGroupEntity partitionKeyGroupEntity = createPartitionKeyGroupEntity(PARTITION_KEY_GROUP.toLowerCase());
+        PartitionKeyGroupEntity partitionKeyGroupEntity = partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP.toLowerCase());
 
         // Create and persist a single test expected partition value.
-        createExpectedPartitionValueEntities(partitionKeyGroupEntity, Arrays.asList(PARTITION_VALUE.toLowerCase()));
+        expectedPartitionValueDaoTestHelper.createExpectedPartitionValueEntities(partitionKeyGroupEntity, Arrays.asList(PARTITION_VALUE.toLowerCase()));
 
         // Get expected partition value with offset set to null using relative input parameters in upper case.
         ExpectedPartitionValueInformation resultPartitionValueInformation = expectedPartitionValueService
@@ -289,10 +326,10 @@ public class ExpectedPartitionValueServiceTest extends AbstractServiceTest
     public void testGetExpectedPartitionValueLowerCaseParameters()
     {
         // Create and persist a partition key group entity.
-        PartitionKeyGroupEntity partitionKeyGroupEntity = createPartitionKeyGroupEntity(PARTITION_KEY_GROUP.toUpperCase());
+        PartitionKeyGroupEntity partitionKeyGroupEntity = partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP.toUpperCase());
 
         // Create and persist a single test expected partition value.
-        createExpectedPartitionValueEntities(partitionKeyGroupEntity, Arrays.asList(PARTITION_VALUE.toUpperCase()));
+        expectedPartitionValueDaoTestHelper.createExpectedPartitionValueEntities(partitionKeyGroupEntity, Arrays.asList(PARTITION_VALUE.toUpperCase()));
 
         // Get expected partition value with offset set to null using relative input parameters in lower case.
         ExpectedPartitionValueInformation resultPartitionValueInformation = expectedPartitionValueService
@@ -322,7 +359,7 @@ public class ExpectedPartitionValueServiceTest extends AbstractServiceTest
     public void testGetExpectedPartitionValueStartExpectedPartitionValueNoExists()
     {
         // Create and persist a partition key group entity.
-        createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
+        partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
 
         // Try to get an expected partition value by passing non-existing expected partition value with or without an offset.
         String testExpectedPartitionValue = "I_DO_NOT_EXIST";
@@ -346,10 +383,10 @@ public class ExpectedPartitionValueServiceTest extends AbstractServiceTest
     public void testGetExpectedPartitionValueOffsetExpectedPartitionValueNoExists()
     {
         // Create and persist a partition key group entity.
-        PartitionKeyGroupEntity partitionKeyGroupEntity = createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
+        PartitionKeyGroupEntity partitionKeyGroupEntity = partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
 
         // Create and persist a single test expected partition value.
-        createExpectedPartitionValueEntities(partitionKeyGroupEntity, Arrays.asList(PARTITION_VALUE));
+        expectedPartitionValueDaoTestHelper.createExpectedPartitionValueEntities(partitionKeyGroupEntity, Arrays.asList(PARTITION_VALUE));
 
         // Try to get a non-existing expected partition value by passing an existing expected partition value but giving an invalid offset.
         for (Integer offset : Arrays.asList(-1, 1))
@@ -372,13 +409,14 @@ public class ExpectedPartitionValueServiceTest extends AbstractServiceTest
     public void testGetExpectedPartitionValues()
     {
         // Create and persist a partition key group entity.
-        PartitionKeyGroupEntity partitionKeyGroupEntity = createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
+        PartitionKeyGroupEntity partitionKeyGroupEntity = partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
 
         // Create and persist a list of test expected partition values.
-        createExpectedPartitionValueEntities(partitionKeyGroupEntity, getTestUnsortedExpectedPartitionValues());
+        expectedPartitionValueDaoTestHelper
+            .createExpectedPartitionValueEntities(partitionKeyGroupEntity, expectedPartitionValueDaoTestHelper.getTestUnsortedExpectedPartitionValues());
 
         // Get expected partition values for a range.
-        List<String> testSortedExpectedPartitionValues = getTestSortedExpectedPartitionValues();
+        List<String> testSortedExpectedPartitionValues = expectedPartitionValueDaoTestHelper.getTestSortedExpectedPartitionValues();
         int startExpectedPartitionValueIndex = 1;
         int endExpectedPartitionValueIndex = testSortedExpectedPartitionValues.size() - 2;
         ExpectedPartitionValuesInformation resultPartitionValuesInformation = expectedPartitionValueService
@@ -423,13 +461,14 @@ public class ExpectedPartitionValueServiceTest extends AbstractServiceTest
     public void testGetExpectedPartitionValuesMissingOptionalParameters()
     {
         // Create and persist a partition key group entity.
-        PartitionKeyGroupEntity partitionKeyGroupEntity = createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
+        PartitionKeyGroupEntity partitionKeyGroupEntity = partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
 
         // Create and persist a list of test expected partition values.
-        createExpectedPartitionValueEntities(partitionKeyGroupEntity, getTestUnsortedExpectedPartitionValues());
+        expectedPartitionValueDaoTestHelper
+            .createExpectedPartitionValueEntities(partitionKeyGroupEntity, expectedPartitionValueDaoTestHelper.getTestUnsortedExpectedPartitionValues());
 
         // Get the sorted list of test expected partition values.
-        List<String> testSortedExpectedPartitionValues = getTestSortedExpectedPartitionValues();
+        List<String> testSortedExpectedPartitionValues = expectedPartitionValueDaoTestHelper.getTestSortedExpectedPartitionValues();
         int startExpectedPartitionValueIndex = 1;
         int endExpectedPartitionValueIndex = testSortedExpectedPartitionValues.size() - 2;
 
@@ -440,8 +479,8 @@ public class ExpectedPartitionValueServiceTest extends AbstractServiceTest
             new PartitionValueRange(testSortedExpectedPartitionValues.get(startExpectedPartitionValueIndex), BLANK_TEXT));
 
         // Validate the returned object.
-        validateExpectedPartitionValuesInformation(PARTITION_KEY_GROUP,
-            testSortedExpectedPartitionValues.subList(startExpectedPartitionValueIndex, getTestSortedExpectedPartitionValues().size()),
+        validateExpectedPartitionValuesInformation(PARTITION_KEY_GROUP, testSortedExpectedPartitionValues
+            .subList(startExpectedPartitionValueIndex, expectedPartitionValueDaoTestHelper.getTestSortedExpectedPartitionValues().size()),
             resultPartitionValuesInformation);
 
         // Get expected partition values for a range without specifying the start expected partition value.
@@ -457,13 +496,14 @@ public class ExpectedPartitionValueServiceTest extends AbstractServiceTest
     public void testGetExpectedPartitionValuesTrimParameters()
     {
         // Create and persist a partition key group entity.
-        PartitionKeyGroupEntity partitionKeyGroupEntity = createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
+        PartitionKeyGroupEntity partitionKeyGroupEntity = partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
 
         // Create and persist a list of test expected partition values.
-        createExpectedPartitionValueEntities(partitionKeyGroupEntity, getTestUnsortedExpectedPartitionValues());
+        expectedPartitionValueDaoTestHelper
+            .createExpectedPartitionValueEntities(partitionKeyGroupEntity, expectedPartitionValueDaoTestHelper.getTestUnsortedExpectedPartitionValues());
 
         // Get expected partition values for a range with request parameters padded with whitespace characters.
-        List<String> testSortedExpectedPartitionValues = getTestSortedExpectedPartitionValues();
+        List<String> testSortedExpectedPartitionValues = expectedPartitionValueDaoTestHelper.getTestSortedExpectedPartitionValues();
         ExpectedPartitionValuesInformation resultPartitionValuesInformation = expectedPartitionValueService
             .getExpectedPartitionValues(new PartitionKeyGroupKey(addWhitespace(PARTITION_KEY_GROUP)),
                 new PartitionValueRange(addWhitespace(testSortedExpectedPartitionValues.get(0)),
@@ -477,10 +517,10 @@ public class ExpectedPartitionValueServiceTest extends AbstractServiceTest
     public void testGetExpectedPartitionValuesUpperCaseParameters()
     {
         // Create and persist a partition key group entity.
-        PartitionKeyGroupEntity partitionKeyGroupEntity = createPartitionKeyGroupEntity(PARTITION_KEY_GROUP.toLowerCase());
+        PartitionKeyGroupEntity partitionKeyGroupEntity = partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP.toLowerCase());
 
         // Create and persist a single test expected partition value.
-        createExpectedPartitionValueEntities(partitionKeyGroupEntity, Arrays.asList(PARTITION_VALUE.toLowerCase()));
+        expectedPartitionValueDaoTestHelper.createExpectedPartitionValueEntities(partitionKeyGroupEntity, Arrays.asList(PARTITION_VALUE.toLowerCase()));
 
         // Get expected partition values for a range using relative input parameters in upper case.
         ExpectedPartitionValuesInformation resultPartitionValuesInformation = expectedPartitionValueService
@@ -496,10 +536,10 @@ public class ExpectedPartitionValueServiceTest extends AbstractServiceTest
     public void testGetExpectedPartitionValuesLowerCaseParameters()
     {
         // Create and persist a partition key group entity.
-        PartitionKeyGroupEntity partitionKeyGroupEntity = createPartitionKeyGroupEntity(PARTITION_KEY_GROUP.toUpperCase());
+        PartitionKeyGroupEntity partitionKeyGroupEntity = partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP.toUpperCase());
 
         // Create and persist a single test expected partition value.
-        createExpectedPartitionValueEntities(partitionKeyGroupEntity, Arrays.asList(PARTITION_VALUE.toUpperCase()));
+        expectedPartitionValueDaoTestHelper.createExpectedPartitionValueEntities(partitionKeyGroupEntity, Arrays.asList(PARTITION_VALUE.toUpperCase()));
 
         // Get expected partition values for a range using relative input parameters in lower case.
         ExpectedPartitionValuesInformation resultPartitionValuesInformation = expectedPartitionValueService
@@ -550,7 +590,7 @@ public class ExpectedPartitionValueServiceTest extends AbstractServiceTest
     public void testGetExpectedPartitionValuesExpectedPartitionValuesNoExist()
     {
         // Create and persist a partition key group entity.
-        createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
+        partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
 
         // Get a range of non-existing expected partition values.
         ExpectedPartitionValuesInformation resultPartitionValuesInformation = expectedPartitionValueService
@@ -564,18 +604,20 @@ public class ExpectedPartitionValueServiceTest extends AbstractServiceTest
     public void testDeleteExpectedPartitionValues()
     {
         // Create and persist a partition key group entity.
-        PartitionKeyGroupEntity partitionKeyGroupEntity = createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
+        PartitionKeyGroupEntity partitionKeyGroupEntity = partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
 
         // Create and persist a list of test expected partition values.
-        createExpectedPartitionValueEntities(partitionKeyGroupEntity, getTestUnsortedExpectedPartitionValues());
+        expectedPartitionValueDaoTestHelper
+            .createExpectedPartitionValueEntities(partitionKeyGroupEntity, expectedPartitionValueDaoTestHelper.getTestUnsortedExpectedPartitionValues());
 
         // Delete expected partition values from this partition key group.
         ExpectedPartitionValuesDeleteRequest request =
-            createExpectedPartitionValuesDeleteRequest(PARTITION_KEY_GROUP, getTestUnsortedExpectedPartitionValues());
+            createExpectedPartitionValuesDeleteRequest(PARTITION_KEY_GROUP, expectedPartitionValueDaoTestHelper.getTestUnsortedExpectedPartitionValues());
         ExpectedPartitionValuesInformation resultPartitionValuesInformation = expectedPartitionValueService.deleteExpectedPartitionValues(request);
 
         // Validate the returned object.
-        validateExpectedPartitionValuesInformation(PARTITION_KEY_GROUP, getTestSortedExpectedPartitionValues(), resultPartitionValuesInformation);
+        validateExpectedPartitionValuesInformation(PARTITION_KEY_GROUP, expectedPartitionValueDaoTestHelper.getTestSortedExpectedPartitionValues(),
+            resultPartitionValuesInformation);
 
         // Validate that the expected partition value entities got deleted.
         assertEquals(0, partitionKeyGroupEntity.getExpectedPartitionValues().size());
@@ -587,7 +629,7 @@ public class ExpectedPartitionValueServiceTest extends AbstractServiceTest
         ExpectedPartitionValuesDeleteRequest request;
 
         // Try to perform a delete without specifying partition key group name.
-        request = createExpectedPartitionValuesDeleteRequest(BLANK_TEXT, getTestUnsortedExpectedPartitionValues());
+        request = createExpectedPartitionValuesDeleteRequest(BLANK_TEXT, expectedPartitionValueDaoTestHelper.getTestUnsortedExpectedPartitionValues());
         try
         {
             expectedPartitionValueService.deleteExpectedPartitionValues(request);
@@ -627,14 +669,15 @@ public class ExpectedPartitionValueServiceTest extends AbstractServiceTest
     public void testDeleteExpectedPartitionValuesTrimParameters()
     {
         // Create and persist a partition key group entity.
-        PartitionKeyGroupEntity partitionKeyGroupEntity = createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
+        PartitionKeyGroupEntity partitionKeyGroupEntity = partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
 
         // Create and persist a list of test expected partition values.
-        createExpectedPartitionValueEntities(partitionKeyGroupEntity, getTestUnsortedExpectedPartitionValues());
+        expectedPartitionValueDaoTestHelper
+            .createExpectedPartitionValueEntities(partitionKeyGroupEntity, expectedPartitionValueDaoTestHelper.getTestUnsortedExpectedPartitionValues());
 
         // Delete expected partition values from this partition key group with request parameters padded with whitespace characters.
-        ExpectedPartitionValuesDeleteRequest request =
-            createExpectedPartitionValuesDeleteRequest(addWhitespace(PARTITION_KEY_GROUP), getTestUnsortedExpectedPartitionValues());
+        ExpectedPartitionValuesDeleteRequest request = createExpectedPartitionValuesDeleteRequest(addWhitespace(PARTITION_KEY_GROUP),
+            expectedPartitionValueDaoTestHelper.getTestUnsortedExpectedPartitionValues());
         for (int i = 0; i < request.getExpectedPartitionValues().size(); i++)
         {
             request.getExpectedPartitionValues().set(i, addWhitespace(request.getExpectedPartitionValues().get(i)));
@@ -642,7 +685,8 @@ public class ExpectedPartitionValueServiceTest extends AbstractServiceTest
         ExpectedPartitionValuesInformation resultPartitionValuesInformation = expectedPartitionValueService.deleteExpectedPartitionValues(request);
 
         // Validate the returned object.
-        validateExpectedPartitionValuesInformation(PARTITION_KEY_GROUP, getTestSortedExpectedPartitionValues(), resultPartitionValuesInformation);
+        validateExpectedPartitionValuesInformation(PARTITION_KEY_GROUP, expectedPartitionValueDaoTestHelper.getTestSortedExpectedPartitionValues(),
+            resultPartitionValuesInformation);
 
         // Validate that the expected partition value entities got deleted.
         assertEquals(0, partitionKeyGroupEntity.getExpectedPartitionValues().size());
@@ -669,7 +713,8 @@ public class ExpectedPartitionValueServiceTest extends AbstractServiceTest
     public void testDeleteExpectedPartitionValuesPartitionKeyGroupNoExists()
     {
         // Try to perform a delete using a non-existing partition key group name.
-        ExpectedPartitionValuesDeleteRequest request = createExpectedPartitionValuesDeleteRequest("I_DO_NOT_EXIST", getTestUnsortedExpectedPartitionValues());
+        ExpectedPartitionValuesDeleteRequest request =
+            createExpectedPartitionValuesDeleteRequest("I_DO_NOT_EXIST", expectedPartitionValueDaoTestHelper.getTestUnsortedExpectedPartitionValues());
         try
         {
             expectedPartitionValueService.deleteExpectedPartitionValues(request);
@@ -686,7 +731,7 @@ public class ExpectedPartitionValueServiceTest extends AbstractServiceTest
     public void testDeleteExpectedPartitionValuesExpectedPartitionValueNoExists()
     {
         // Create and persist a partition key group entity.
-        createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
+        partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
 
         // Try to delete a non-existing expected partition value.
         ExpectedPartitionValuesDeleteRequest request = createExpectedPartitionValuesDeleteRequest(PARTITION_KEY_GROUP, Arrays.asList("I_DO_NOT_EXIST"));
@@ -711,11 +756,11 @@ public class ExpectedPartitionValueServiceTest extends AbstractServiceTest
         final int LAST_ELEMENT_INDEX = MAX_PARTITION_VALUES - 1;
 
         // Create and persist a partition key group entity.
-        PartitionKeyGroupEntity partitionKeyGroupEntity = createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
+        PartitionKeyGroupEntity partitionKeyGroupEntity = partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
 
         // Add expected partition values to this partition key group.
-        List<String> testUnsortedExpectedPartitionValues = getTestUnsortedExpectedPartitionValues(MAX_PARTITION_VALUES);
-        List<String> testSortedExpectedPartitionValues = getTestSortedExpectedPartitionValues(MAX_PARTITION_VALUES);
+        List<String> testUnsortedExpectedPartitionValues = expectedPartitionValueDaoTestHelper.getTestUnsortedExpectedPartitionValues(MAX_PARTITION_VALUES);
+        List<String> testSortedExpectedPartitionValues = expectedPartitionValueDaoTestHelper.getTestSortedExpectedPartitionValues(MAX_PARTITION_VALUES);
         ExpectedPartitionValuesCreateRequest createRequest =
             createExpectedPartitionValuesCreateRequest(PARTITION_KEY_GROUP, testUnsortedExpectedPartitionValues);
         ExpectedPartitionValuesInformation resultPartitionValuesInformation = expectedPartitionValueService.createExpectedPartitionValues(createRequest);

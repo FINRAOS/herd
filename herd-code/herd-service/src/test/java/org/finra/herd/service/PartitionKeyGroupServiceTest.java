@@ -69,10 +69,25 @@ public class PartitionKeyGroupServiceTest extends AbstractServiceTest
     }
 
     @Test
+    public void testCreatePartitionKeyGroupInvalidParameters()
+    {
+        // Try to perform a create when partition key group name contains a forward slash character.
+        try
+        {
+            createPartitionKeyGroup(addSlash(PARTITION_KEY_GROUP));
+            fail("Should throw an IllegalArgumentException when partition key group name contains a forward slash character.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Partition key group name can not contain a forward slash character.", e.getMessage());
+        }
+    }
+
+    @Test
     public void testCreatePartitionKeyGroupEntityAlreadyExists()
     {
         // Create and persist a partition key group entity.
-        createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
+        partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
 
         // Try to create a partition key group with the same partition key group name.
         try
@@ -90,7 +105,7 @@ public class PartitionKeyGroupServiceTest extends AbstractServiceTest
     public void testGetPartitionKeyGroup()
     {
         // Create and persist a partition key group entity.
-        createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
+        partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
 
         // Retrieve the partition key group.
         PartitionKeyGroup resultPartitionKeyGroup = partitionKeyGroupService.getPartitionKeyGroup(new PartitionKeyGroupKey(PARTITION_KEY_GROUP));
@@ -118,7 +133,7 @@ public class PartitionKeyGroupServiceTest extends AbstractServiceTest
     public void testGetPartitionKeyGroupTrimParameters()
     {
         // Create and persist a partition key group entity.
-        createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
+        partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
 
         // Retrieve the partition key group by passing partition key group name with leading and trailing whitespace characters.
         PartitionKeyGroup resultPartitionKeyGroup = partitionKeyGroupService.getPartitionKeyGroup(new PartitionKeyGroupKey(addWhitespace(PARTITION_KEY_GROUP)));
@@ -131,7 +146,7 @@ public class PartitionKeyGroupServiceTest extends AbstractServiceTest
     public void testGetPartitionKeyGroupUpperCaseParameters()
     {
         // Create and persist a partition key group entity with a lowercase name.
-        createPartitionKeyGroupEntity(PARTITION_KEY_GROUP.toLowerCase());
+        partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP.toLowerCase());
 
         // Retrieve the partition key group by passing partition key group name in upper case.
         PartitionKeyGroup resultPartitionKeyGroup = partitionKeyGroupService.getPartitionKeyGroup(new PartitionKeyGroupKey(PARTITION_KEY_GROUP.toUpperCase()));
@@ -144,7 +159,7 @@ public class PartitionKeyGroupServiceTest extends AbstractServiceTest
     public void testGetPartitionKeyGroupLowerCaseParameters()
     {
         // Create and persist a partition key group with an uppercase name.
-        createPartitionKeyGroupEntity(PARTITION_KEY_GROUP.toUpperCase());
+        partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP.toUpperCase());
 
         // Retrieve the partition key group by passing partition key group name in lower case.
         PartitionKeyGroup resultPartitionKeyGroup = partitionKeyGroupService.getPartitionKeyGroup(new PartitionKeyGroupKey(PARTITION_KEY_GROUP.toLowerCase()));
@@ -157,7 +172,7 @@ public class PartitionKeyGroupServiceTest extends AbstractServiceTest
     public void testDeletePartitionKeyGroup()
     {
         // Create and persist a partition key group entity.
-        createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
+        partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
 
         // Validate that this partition key group exists.
         partitionKeyGroupService.getPartitionKeyGroup(new PartitionKeyGroupKey(PARTITION_KEY_GROUP));
@@ -191,7 +206,7 @@ public class PartitionKeyGroupServiceTest extends AbstractServiceTest
     public void testDeletePartitionKeyGroupTrimParameters()
     {
         // Create and persist a partition key group entity.
-        createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
+        partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
 
         // Validate that this partition key group exists.
         partitionKeyGroupService.getPartitionKeyGroup(new PartitionKeyGroupKey(PARTITION_KEY_GROUP));
@@ -211,7 +226,7 @@ public class PartitionKeyGroupServiceTest extends AbstractServiceTest
     public void testDeletePartitionKeyGroupUpperCaseParameters()
     {
         // Create and persist a partition key group entity with a lowercase name.
-        createPartitionKeyGroupEntity(PARTITION_KEY_GROUP.toLowerCase());
+        partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP.toLowerCase());
 
         // Delete this partition key group by passing partition key group name in upper case.
         PartitionKeyGroup deletedPartitionKeyGroup =
@@ -228,7 +243,7 @@ public class PartitionKeyGroupServiceTest extends AbstractServiceTest
     public void testDeletePartitionKeyGroupLowerCaseParameters()
     {
         // Create and persist a partition key group entity with an uppercase name.
-        createPartitionKeyGroupEntity(PARTITION_KEY_GROUP.toUpperCase());
+        partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP.toUpperCase());
 
         // Validate that this partition key group exists.
         partitionKeyGroupService.getPartitionKeyGroup(new PartitionKeyGroupKey(PARTITION_KEY_GROUP.toUpperCase()));
@@ -248,10 +263,10 @@ public class PartitionKeyGroupServiceTest extends AbstractServiceTest
     public void testDeletePartitionKeyGroupExpectedPartitionValuesPresent()
     {
         // Create and persist a partition key group entity.
-        PartitionKeyGroupEntity partitionKeyGroupEntity = createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
+        PartitionKeyGroupEntity partitionKeyGroupEntity = partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
 
         // Add expected partition values to this partition key group.
-        createExpectedPartitionValueProcessDatesForApril2014(PARTITION_KEY_GROUP);
+        expectedPartitionValueDaoTestHelper.createExpectedPartitionValueProcessDatesForApril2014(PARTITION_KEY_GROUP);
         herdDao.saveAndRefresh(partitionKeyGroupEntity);
 
         // Delete this partition key group.
@@ -268,11 +283,12 @@ public class PartitionKeyGroupServiceTest extends AbstractServiceTest
     public void testDeletePartitionKeyGroupUsedByFormat()
     {
         // Create a partition key group.
-        createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
+        partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
 
         // Create a business object format that uses this partition key group.
-        createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION, true,
-            PARTITION_KEY, PARTITION_KEY_GROUP);
+        businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION, true,
+                PARTITION_KEY, PARTITION_KEY_GROUP);
 
         // Try to delete this partition key group.
         try
@@ -291,8 +307,8 @@ public class PartitionKeyGroupServiceTest extends AbstractServiceTest
     public void testGetPartitionKeyGroups()
     {
         // Create and persist two partition key group entities.
-        createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
-        createPartitionKeyGroupEntity(PARTITION_KEY_GROUP_2);
+        partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP);
+        partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP_2);
 
         // Get the list of partition key groups.
         PartitionKeyGroupKeys partitionKeyGroupKeys = partitionKeyGroupService.getPartitionKeyGroups();

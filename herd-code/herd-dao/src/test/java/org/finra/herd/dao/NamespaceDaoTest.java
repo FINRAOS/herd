@@ -32,7 +32,7 @@ public class NamespaceDaoTest extends AbstractDaoTest
     public void testGetNamespaceByKey()
     {
         // Create a namespace entity.
-        createNamespaceEntity(NAMESPACE);
+        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
 
         // Retrieve the namespace entity.
         NamespaceEntity resultNamespaceEntity = namespaceDao.getNamespaceByKey(new NamespaceKey(NAMESPACE));
@@ -45,9 +45,9 @@ public class NamespaceDaoTest extends AbstractDaoTest
     public void testGetNamespaces()
     {
         // Create and persist namespace entities.
-        for (NamespaceKey key : getTestNamespaceKeys())
+        for (NamespaceKey key : namespaceDaoTestHelper.getTestNamespaceKeys())
         {
-            createNamespaceEntity(key.getNamespaceCode());
+            namespaceDaoTestHelper.createNamespaceEntity(key.getNamespaceCode());
         }
 
         // Retrieve a list of namespace keys.
@@ -55,6 +55,6 @@ public class NamespaceDaoTest extends AbstractDaoTest
 
         // Validate the returned object.
         assertNotNull(resultNamespaceKeys);
-        assertTrue(resultNamespaceKeys.containsAll(getTestNamespaceKeys()));
+        assertTrue(resultNamespaceKeys.containsAll(namespaceDaoTestHelper.getTestNamespaceKeys()));
     }
 }

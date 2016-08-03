@@ -40,7 +40,7 @@ public class BusinessObjectDataRestControllerGetS3KeyPrefixTest extends Abstract
         createDatabaseEntitiesForGetS3KeyPrefixTesting(false);
 
         // Get the test partition columns.
-        List<SchemaColumn> testPartitionColumns = getTestPartitionColumns();
+        List<SchemaColumn> testPartitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();
         String testPartitionKey = testPartitionColumns.get(0).getName();
         List<SchemaColumn> testSubPartitionColumns = testPartitionColumns.subList(1, SUBPARTITION_VALUES.size() + 1);
 

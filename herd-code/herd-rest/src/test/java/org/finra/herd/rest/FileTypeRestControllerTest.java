@@ -40,7 +40,7 @@ public class FileTypeRestControllerTest extends AbstractRestTest
         // Create and persist file type entities.
         for (FileTypeKey key : testFileTypeKeys)
         {
-            createFileTypeEntity(key.getFileTypeCode());
+            fileTypeDaoTestHelper.createFileTypeEntity(key.getFileTypeCode());
         }
 
         // Retrieve a list of file type keys.

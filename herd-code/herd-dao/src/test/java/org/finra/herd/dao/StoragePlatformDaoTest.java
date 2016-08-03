@@ -29,7 +29,7 @@ public class StoragePlatformDaoTest extends AbstractDaoTest
     public void testGetStoragePlatformByName()
     {
         // Create relative database entities.
-        StoragePlatformEntity storagePlatformEntity = createStoragePlatformEntity(STORAGE_PLATFORM_CODE);
+        StoragePlatformEntity storagePlatformEntity = storagePlatformDaoTestHelper.createStoragePlatformEntity(STORAGE_PLATFORM_CODE);
 
         // Retrieve the storage platform entity by its name.
         assertEquals(storagePlatformEntity, storagePlatformDao.getStoragePlatformByName(STORAGE_PLATFORM_CODE));
@@ -46,8 +46,8 @@ public class StoragePlatformDaoTest extends AbstractDaoTest
     public void testGetStoragePlatformByNameMultipleRecordsFound()
     {
         // Create relative database entities.
-        createStoragePlatformEntity(STORAGE_PLATFORM_CODE.toUpperCase());
-        createStoragePlatformEntity(STORAGE_PLATFORM_CODE.toLowerCase());
+        storagePlatformDaoTestHelper.createStoragePlatformEntity(STORAGE_PLATFORM_CODE.toUpperCase());
+        storagePlatformDaoTestHelper.createStoragePlatformEntity(STORAGE_PLATFORM_CODE.toLowerCase());
 
         // Try to retrieve a storage platform when multiple entities exist with the same name (using case insensitive string comparison).
         try
