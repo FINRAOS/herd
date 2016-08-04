@@ -29,6 +29,7 @@ import org.apache.commons.collections4.IterableUtils;
 import org.junit.Test;
 
 import org.finra.herd.core.HerdDateUtils;
+import org.finra.herd.dao.helper.HerdDaoSecurityHelper;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataCreateRequest;
@@ -601,13 +602,14 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
             new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION), PARTITION_KEY, BusinessObjectDataStatusEntity.VALID, INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY);
 
-        // Build the expected response object.
+        // Build the expected response object. The business object data history record is expected to have system username for the createdBy auditable field.
         BusinessObjectData expectedBusinessObjectData =
             new BusinessObjectData(businessObjectDataEntity.getId(), BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
                 PARTITION_KEY, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID,
                 NO_STORAGE_UNITS, NO_ATTRIBUTES, NO_BUSINESS_OBJECT_DATA_PARENTS, NO_BUSINESS_OBJECT_DATA_CHILDREN, Arrays.asList(
                 new BusinessObjectDataStatusChangeEvent(BusinessObjectDataStatusEntity.VALID,
-                    HerdDateUtils.getXMLGregorianCalendarValue(IterableUtils.get(businessObjectDataEntity.getHistoricalStatuses(), 0).getCreatedOn()))));
+                    HerdDateUtils.getXMLGregorianCalendarValue(IterableUtils.get(businessObjectDataEntity.getHistoricalStatuses(), 0).getCreatedOn()),
+                    HerdDaoSecurityHelper.SYSTEM_USER)));
 
         // Validate the returned response object.
         assertEquals(expectedBusinessObjectData, resultBusinessObjectData);
