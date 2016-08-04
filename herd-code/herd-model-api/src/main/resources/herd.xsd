@@ -3369,6 +3369,8 @@
          <xs:element ref="status" minOccurs="0"/>
          <xs:element name="namespace" type="xs:string" minOccurs="0"/>
          <xs:element name="jobName" type="xs:string" minOccurs="0"/>
+         <xs:element name="startTime" type="xs:dateTime" minOccurs="0"/>
+         <xs:element name="endTime" type="xs:dateTime" minOccurs="0"/>
          <xs:element name="currentWorkflowStep" type="workflowStep" minOccurs="0"/>
          <xs:element name="completedWorkflowSteps" type="workflowSteps" minOccurs="0"/>
          <xs:element name="parameters" type="parameters" minOccurs="0"/>
@@ -3401,8 +3403,8 @@
       <xs:all>
          <xs:element name="id" type="xs:string"/>
          <xs:element name="name" type="xs:string" minOccurs="0"/>
-         <xs:element name="startTime" type="xs:date" minOccurs="0"/>
-         <xs:element name="endTime" type="xs:date" minOccurs="0"/>
+         <xs:element name="startTime" type="xs:dateTime" minOccurs="0"/>
+         <xs:element name="endTime" type="xs:dateTime" minOccurs="0"/>
       </xs:all>
    </xs:complexType>
 
