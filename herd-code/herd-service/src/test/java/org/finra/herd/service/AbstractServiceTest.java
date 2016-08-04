@@ -5439,7 +5439,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     }
 
     /**
-     * create database enttities for business object search testing
+     * create database entities for business object search testing
      */
     public void createDatabaseEntitiesForBusinessObjectDataSearchTesting()
     {

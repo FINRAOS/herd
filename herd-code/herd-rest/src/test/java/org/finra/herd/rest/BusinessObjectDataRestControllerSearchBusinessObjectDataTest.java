@@ -1,4 +1,4 @@
-package org.finra.herd.service;
+package org.finra.herd.rest;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,13 +13,15 @@ import org.finra.herd.model.api.xml.BusinessObjectDataSearchRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchResult;
 
 /**
- * Test Business Object Data Search service
+ * Test Business Object Rest controller Search Business Object Data
+ * 
+ * @author k22201
+ *
  */
-public class BusinessObjectDataSearchServiceTest extends AbstractServiceTest
+public class BusinessObjectDataRestControllerSearchBusinessObjectDataTest extends AbstractRestTest
 {
-
     @Test
-    public void testSearchBusinessObjectData()
+    public void testSearchBussinessObjectDataRest()
     {
         createDatabaseEntitiesForBusinessObjectDataSearchTesting();
 
@@ -33,9 +35,10 @@ public class BusinessObjectDataSearchServiceTest extends AbstractServiceTest
 
         BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
         filters.add(filter);
+
         request.setBusinessObjectDataSearchFilters(filters);
 
-        BusinessObjectDataSearchResult result = this.businessObjectDataService.searchBusinessObjectData(request);
+        BusinessObjectDataSearchResult result = businessObjectDataRestController.searchBusinessObjectData(request);
 
         Assert.isTrue(result.getBusinessObjectDataElements().size() == 2);
         
@@ -46,5 +49,4 @@ public class BusinessObjectDataSearchServiceTest extends AbstractServiceTest
         }
 
     }
-
 }

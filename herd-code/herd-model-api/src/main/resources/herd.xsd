@@ -1049,7 +1049,7 @@
          </xs:element>
          <xs:element name="nullValue" type="xs:string" minOccurs="0">
             <xs:annotation>
-                  <xs:documentation>The string to use for the null value (e.g. "\\\\N"). Please note that a null value is allowed to be a whitespace character.
+               <xs:documentation>The string to use for the null value (e.g. "\\\\N"). Please note that a null value is allowed to be a whitespace character.
                   XML escaping should be used when specifying non-ASCII characters.
                   Note: when passing in an empty String, the response XML will return a NULL value (i.e. the tag will be absent). Generate DDL calls will show
                   the correct empty String value wrapped in single-quotes.
@@ -1969,6 +1969,110 @@
             <xs:annotation>
                <xs:documentation>The timestamp of when the business object data status change occurred</xs:documentation>
             </xs:annotation>
+         </xs:element>
+         <xs:element name="userId" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The User ID of the user who performed status update or registration of the Business Object Data</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDataSearchKey">
+      <xs:all>
+         <xs:element name="namespace" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The Namespace to which a Business Object Format is related</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectDefinitionName" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The name of the Business Object Definition to which a Business Object Format is related</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectFormatUsage" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The Usage of this Business Object Format - a string describing how this format is used. Often used as a label for the Business
+                  Object Format. Does not have to be unique in the system, the Usage string is frequently shared across formats for multiple Business Object
+                  Definitions
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectFormatFileType" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A File Type known to the system that describes the file type of data stored under a Business Object Format</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <!--
+           This is required, but is left as optional here so the auto-generated object becomes "Integer" and not "int".
+           That way, JSON objects that deserialize into the auto-generated object don't use the default int value of "0" and instead will leave
+           the field as null. The validation that this field is required is handled via the service layer validation.
+           -->
+         <xs:element name="businessObjectFormatVersion" type="xs:int" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The numeric version of a Business Object Format. Each time a format is registered, the new version will be the previous version
+                  + 1
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDataSearchFilter" type="businessObjectDataSearchFilter"/>
+   <xs:complexType name="businessObjectDataSearchFilter">
+      <xs:sequence>
+         <xs:element name="businessObjectDataSearchKeys" type="businessObjectDataSearchKeys">
+            <xs:annotation>
+               <xs:documentation>Values that identify a Business Object Search Keys</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDataSearchKeys">
+      <xs:sequence>
+         <xs:element name="businessObjectDataSearchKey" type="businessObjectDataSearchKey" minOccurs="1" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>Values that identify a Business Object Data Search Key</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDataSearchFilters" type="businessObjectDataSearchFilters"/>
+   <xs:complexType name="businessObjectDataSearchFilters">
+      <xs:sequence>
+         <xs:element name="businessObjectDataSearchFilter" type="businessObjectDataSearchFilter" minOccurs="1" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>Values that identify a Business Object Search Filter</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDataSearchRequest" type="businessObjectDataSearchRequest"/>
+   <xs:complexType name="businessObjectDataSearchRequest">
+      <xs:sequence>
+         <xs:element name="businessObjectDataSearchFilters" type="businessObjectDataSearchFilters">
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDataElements" type="businessObjectDataElements"/>
+   <xs:complexType name="businessObjectDataElements">
+      <xs:sequence>
+         <xs:element name="businessObjectData" type="businessObjectData" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>Values that identify a Business Object Search Result</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDataSearchResult" type="businessObjectDataSearchResult"/>
+   <xs:complexType name="businessObjectDataSearchResult">
+      <xs:sequence>
+         <xs:element name="businessObjectDataElements" type="businessObjectDataElements">
          </xs:element>
       </xs:sequence>
    </xs:complexType>
@@ -3265,6 +3369,8 @@
          <xs:element ref="status" minOccurs="0"/>
          <xs:element name="namespace" type="xs:string" minOccurs="0"/>
          <xs:element name="jobName" type="xs:string" minOccurs="0"/>
+         <xs:element name="startTime" type="xs:dateTime" minOccurs="0"/>
+         <xs:element name="endTime" type="xs:dateTime" minOccurs="0"/>
          <xs:element name="currentWorkflowStep" type="workflowStep" minOccurs="0"/>
          <xs:element name="completedWorkflowSteps" type="workflowSteps" minOccurs="0"/>
          <xs:element name="parameters" type="parameters" minOccurs="0"/>
@@ -3297,8 +3403,8 @@
       <xs:all>
          <xs:element name="id" type="xs:string"/>
          <xs:element name="name" type="xs:string" minOccurs="0"/>
-         <xs:element name="startTime" type="xs:date" minOccurs="0"/>
-         <xs:element name="endTime" type="xs:date" minOccurs="0"/>
+         <xs:element name="startTime" type="xs:dateTime" minOccurs="0"/>
+         <xs:element name="endTime" type="xs:dateTime" minOccurs="0"/>
       </xs:all>
    </xs:complexType>
 
@@ -4497,108 +4603,6 @@
             </xs:annotation>
          </xs:element>
       </xs:sequence>
-   </xs:complexType>
-
-   <xs:complexType name="businessObjectDataSearchKey">
-      <xs:all>
-         <xs:element name="namespace" type="xs:string" minOccurs="0">
-            <xs:annotation>
-               <xs:documentation>The Namespace to which a Business Object Format is related</xs:documentation>
-            </xs:annotation>
-         </xs:element>
-         <xs:element name="businessObjectDefinitionName" type="xs:string" minOccurs="0">
-            <xs:annotation>
-               <xs:documentation>The name of the Business Object Definition to which a Business Object Format is related</xs:documentation>
-            </xs:annotation>
-         </xs:element>
-         <xs:element name="businessObjectFormatUsage" type="xs:string" minOccurs="0">
-            <xs:annotation>
-               <xs:documentation>The Usage of this Business Object Format - a string describing how this format is used. Often used as a label for the Business
-                  Object Format. Does not have to be unique in the system, the Usage string is frequently shared across formats for multiple Business Object
-                  Definitions
-               </xs:documentation>
-            </xs:annotation>
-         </xs:element>
-         <xs:element name="businessObjectFormatFileType" type="xs:string" minOccurs="0">
-            <xs:annotation>
-               <xs:documentation>A File Type known to the system that describes the file type of data stored under a Business Object Format</xs:documentation>
-            </xs:annotation>
-         </xs:element>
-         <!--
-           This is required, but is left as optional here so the auto-generated object becomes "Integer" and not "int".
-           That way, JSON objects that deserialize into the auto-generated object don't use the default int value of "0" and instead will leave
-           the field as null. The validation that this field is required is handled via the service layer validation.
-           -->
-         <xs:element name="businessObjectFormatVersion" type="xs:int" minOccurs="0">
-            <xs:annotation>
-               <xs:documentation>The numeric version of a Business Object Format. Each time a format is registered, the new version will be the previous version
-                  + 1
-               </xs:documentation>
-            </xs:annotation>
-         </xs:element>
-      </xs:all>
-   </xs:complexType>
-
-
-
-   <xs:element name="businessObjectDataSearchFilter" type="businessObjectDataSearchFilter"/>
-   <xs:complexType name="businessObjectDataSearchFilter">
-      <xs:sequence>
-         <xs:element name="businessObjectDataSearchKeys" type="businessObjectDataSearchKeys">
-            <xs:annotation>
-               <xs:documentation>Values that identify a Business Object Search Keys</xs:documentation>
-            </xs:annotation>
-         </xs:element>
-      </xs:sequence>
-   </xs:complexType>
-   
-   <xs:complexType name="businessObjectDataSearchKeys">
-      <xs:sequence>
-         <xs:element name="businessObjectDataSearchKey" type="businessObjectDataSearchKey" minOccurs="1" maxOccurs="unbounded">
-            <xs:annotation>
-               <xs:documentation>Values that identify a Business Object Data Search Key</xs:documentation>
-            </xs:annotation>
-         </xs:element>
-      </xs:sequence>
-   </xs:complexType>
-   
-   
-   <xs:element name="businessObjectDataSearchFilters" type="businessObjectDataSearchFilters"/>
-   <xs:complexType name="businessObjectDataSearchFilters">
-      <xs:sequence>
-         <xs:element name="businessObjectDataSearchFilter" type="businessObjectDataSearchFilter" minOccurs="1" maxOccurs="unbounded">
-            <xs:annotation>
-               <xs:documentation>Values that identify a Business Object Search Filter</xs:documentation>
-            </xs:annotation>
-         </xs:element>
-      </xs:sequence>
-   </xs:complexType>
-   
-   <xs:element name="businessObjectDataSearchRequest" type="businessObjectDataSearchRequest"/>
-   <xs:complexType name="businessObjectDataSearchRequest">
-         <xs:sequence>
-           <xs:element name="businessObjectDataSearchFilters" type="businessObjectDataSearchFilters">
-           </xs:element>
-         </xs:sequence>
-   </xs:complexType>
-   
-   <xs:element name="businessObjectDataElements" type="businessObjectDataElements"/>
-   <xs:complexType name="businessObjectDataElements">
-         <xs:sequence>
-           <xs:element name="businessObjectData" type="businessObjectData" minOccurs="0" maxOccurs="unbounded">
-               <xs:annotation>
-                 <xs:documentation>Values that identify a Business Object Search Result</xs:documentation>
-               </xs:annotation>
-           </xs:element>
-         </xs:sequence>
-   </xs:complexType>
-   
-   <xs:element name="businessObjectDataSearchResult" type="businessObjectDataSearchResult"/>
-   <xs:complexType name="businessObjectDataSearchResult">
-         <xs:sequence>
-           <xs:element name="businessObjectDataElements" type="businessObjectDataElements">
-           </xs:element>
-         </xs:sequence>
    </xs:complexType>
 
 </xs:schema>

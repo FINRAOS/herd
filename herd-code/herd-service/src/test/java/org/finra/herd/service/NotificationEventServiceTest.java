@@ -88,7 +88,7 @@ public class NotificationEventServiceTest extends AbstractServiceTest
 
         // Validate the result job.
         Job job = (Job) notificationActions.get(0);
-        assertEquals(new Job(job.getId(), null, TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME, null, null, Arrays
+        assertEquals(new Job(job.getId(), null, TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME, null, null, null, null, Arrays
             .asList(new Parameter("notification_businessObjectDefinitionName", BDEF_NAME),
                 new Parameter("notification_partitionValues", PARTITION_VALUE + "|" + StringUtils.join(SUBPARTITION_VALUES, "|")),
                 new Parameter("notification_namespace", NAMESPACE), new Parameter("notification_businessObjectData",
@@ -142,7 +142,7 @@ public class NotificationEventServiceTest extends AbstractServiceTest
 
         // Validate the result job.
         Job job = (Job) notificationActions.get(0);
-        assertEquals(new Job(job.getId(), null, TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME, null, null, Arrays
+        assertEquals(new Job(job.getId(), null, TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME, null, null, null, null, Arrays
             .asList(new Parameter("notification_businessObjectDefinitionName", BDEF_NAME),
                 new Parameter("notification_partitionValues", PARTITION_VALUE + "|" + StringUtils.join(SUBPARTITION_VALUES, "|")),
                 new Parameter("notification_namespace", NAMESPACE), new Parameter("notification_businessObjectData",

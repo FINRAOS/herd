@@ -63,7 +63,7 @@ public class JobRestController extends HerdBaseController
     }
 
     /**
-     * <p>Gets a list of job executions based on the specified filter parameters. This currently only retrieves running jobs.</p> <p>Jobs' namespace to which
+     * <p>Gets a list of job executions based on the specified filter parameters.</p> <p>Jobs' namespace to which
      * you do not have READ permissions to will be omitted from the result.</p>
      *
      * @param namespace an optional namespace filter
