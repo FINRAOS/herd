@@ -2028,7 +2028,7 @@
          </xs:element>
       </xs:sequence>
    </xs:complexType>
-   
+
    <xs:complexType name="businessObjectDataSearchKeys">
       <xs:sequence>
          <xs:element name="businessObjectDataSearchKey" type="businessObjectDataSearchKey" minOccurs="1" maxOccurs="unbounded">
@@ -2038,7 +2038,7 @@
          </xs:element>
       </xs:sequence>
    </xs:complexType>
-   
+
    <xs:element name="businessObjectDataSearchFilters" type="businessObjectDataSearchFilters"/>
    <xs:complexType name="businessObjectDataSearchFilters">
       <xs:sequence>
@@ -2049,32 +2049,32 @@
          </xs:element>
       </xs:sequence>
    </xs:complexType>
-   
+
    <xs:element name="businessObjectDataSearchRequest" type="businessObjectDataSearchRequest"/>
    <xs:complexType name="businessObjectDataSearchRequest">
-         <xs:sequence>
-           <xs:element name="businessObjectDataSearchFilters" type="businessObjectDataSearchFilters">
-           </xs:element>
-         </xs:sequence>
+      <xs:sequence>
+         <xs:element name="businessObjectDataSearchFilters" type="businessObjectDataSearchFilters">
+         </xs:element>
+      </xs:sequence>
    </xs:complexType>
-   
+
    <xs:element name="businessObjectDataElements" type="businessObjectDataElements"/>
    <xs:complexType name="businessObjectDataElements">
-         <xs:sequence>
-           <xs:element name="businessObjectData" type="businessObjectData" minOccurs="0" maxOccurs="unbounded">
-               <xs:annotation>
-                 <xs:documentation>Values that identify a Business Object Search Result</xs:documentation>
-               </xs:annotation>
-           </xs:element>
-         </xs:sequence>
+      <xs:sequence>
+         <xs:element name="businessObjectData" type="businessObjectData" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>Values that identify a Business Object Search Result</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
    </xs:complexType>
-   
+
    <xs:element name="businessObjectDataSearchResult" type="businessObjectDataSearchResult"/>
    <xs:complexType name="businessObjectDataSearchResult">
-         <xs:sequence>
-           <xs:element name="businessObjectDataElements" type="businessObjectDataElements">
-           </xs:element>
-         </xs:sequence>
+      <xs:sequence>
+         <xs:element name="businessObjectDataElements" type="businessObjectDataElements">
+         </xs:element>
+      </xs:sequence>
    </xs:complexType>
 
    <!-- ***** Business Object Data Status ***** -->
