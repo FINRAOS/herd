@@ -3315,35 +3315,140 @@
    <xs:element name="jobDefinitionCreateRequest" type="jobDefinitionCreateRequest"/>
    <xs:complexType name="jobDefinitionCreateRequest">
       <xs:all>
-         <xs:element name="namespace" type="xs:string"/>
-         <xs:element name="jobName" type="xs:string"/>
-         <xs:element name="description" type="xs:string" minOccurs="0"/>
-         <xs:element name="activitiJobXml" type="xs:string"/>
-         <xs:element name="parameters" type="parameters" minOccurs="0"/>
-         <xs:element name="s3PropertiesLocation" type="s3PropertiesLocation" minOccurs="0"/>
+         <xs:element name="namespace" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>
+                  The name of a valid namespace known by the system
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="jobName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>
+                  The name of the job definition
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="description" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>
+                  An optional description of the job definition
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="activitiJobXml" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>
+                  Activiti workflow XML related to the job. Id should be named as "{applicationName}.{jobName}". Activiti XML can not contain a CDATA section
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="parameters" type="parameters" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>
+                  Default list of key/value pairs that will be made available to the job when it is executed. These values can be overridden by parameters
+                  specified during the job execution
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="s3PropertiesLocation" type="s3PropertiesLocation" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>
+                  The location to the Java properties file in S3
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
    <xs:element name="jobDefinitionUpdateRequest" type="jobDefinitionUpdateRequest"/>
    <xs:complexType name="jobDefinitionUpdateRequest">
       <xs:all>
-         <xs:element name="description" type="xs:string" minOccurs="0"/>
-         <xs:element name="activitiJobXml" type="xs:string"/>
-         <xs:element name="parameters" type="parameters" minOccurs="0"/>
-         <xs:element name="s3PropertiesLocation" type="s3PropertiesLocation" minOccurs="0"/>
+         <xs:element name="description" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>
+                  An optional description of the job definition
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="activitiJobXml" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>
+                  Activiti workflow XML related to the job. Id should be named as "{applicationName}.{jobName}". Activiti XML can not contain a CDATA section
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="parameters" type="parameters" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>
+                  Default list of key/value pairs that will be made available to the job when it is executed. These values can be overridden by parameters
+                  specified during the job execution
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="s3PropertiesLocation" type="s3PropertiesLocation" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>
+                  The location to the Java properties file in S3
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
    <xs:element name="jobDefinition" type="jobDefinition"/>
    <xs:complexType name="jobDefinition">
       <xs:all>
-         <xs:element name="id" type="xs:int"/>
-         <xs:element name="namespace" type="xs:string"/>
-         <xs:element name="jobName" type="xs:string"/>
-         <xs:element name="description" type="xs:string" minOccurs="0"/>
-         <xs:element name="activitiJobXml" type="xs:string"/>
-         <xs:element name="parameters" type="parameters" minOccurs="0"/>
-         <xs:element name="s3PropertiesLocation" type="s3PropertiesLocation" minOccurs="0"/>
+         <xs:element name="id" type="xs:int">
+            <xs:annotation>
+               <xs:documentation>
+                  The internal identifier that uniquely references a job definition
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="namespace" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>
+                  The namespace of the job definition
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="jobName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>
+                  The name of the job definition
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="description" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>
+                  Description of the job definition
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="activitiJobXml" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>
+                  Activiti workflow XML related to the job
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="parameters" type="parameters" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>
+                  Default list of key/value pairs that will be made available to the job when it is executed. These values can be overridden by parameters
+                  specified during the job execution
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="s3PropertiesLocation" type="s3PropertiesLocation" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>
+                  The location to the Java properties file in S3
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
          <xs:element name="lastUpdatedByUserId" type="xs:string" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The user ID under whose authorization context the workflow runs</xs:documentation>
@@ -3355,70 +3460,231 @@
    <xs:element name="jobCreateRequest" type="jobCreateRequest"/>
    <xs:complexType name="jobCreateRequest">
       <xs:all>
-         <xs:element name="namespace" type="xs:string"/>
-         <xs:element name="jobName" type="xs:string"/>
-         <xs:element name="parameters" type="parameters" minOccurs="0"/>
-         <xs:element name="s3PropertiesLocation" type="s3PropertiesLocation" minOccurs="0"/>
+         <xs:element name="namespace" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The namespace of the job</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="jobName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The name of the job</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="parameters" type="parameters" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>
+                  List of key/value pairs that will be made available to the job when it is executed. These parameters will override any parameters defined as
+                  part of the job definition
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="s3PropertiesLocation" type="s3PropertiesLocation" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The location to the Java properties file in S3</xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
    <xs:element name="job" type="job"/>
    <xs:complexType name="job">
       <xs:all>
-         <xs:element name="id" type="xs:string"/>
-         <xs:element ref="status" minOccurs="0"/>
-         <xs:element name="namespace" type="xs:string" minOccurs="0"/>
-         <xs:element name="jobName" type="xs:string" minOccurs="0"/>
-         <xs:element name="startTime" type="xs:dateTime" minOccurs="0"/>
-         <xs:element name="endTime" type="xs:dateTime" minOccurs="0"/>
-         <xs:element name="currentWorkflowStep" type="workflowStep" minOccurs="0"/>
-         <xs:element name="completedWorkflowSteps" type="workflowSteps" minOccurs="0"/>
-         <xs:element name="parameters" type="parameters" minOccurs="0"/>
-         <xs:element name="activitiJobXml" type="xs:string" minOccurs="0"/>
-         <xs:element name="workflowErrors" type="workflowErrors" minOccurs="0"/>
-         <xs:element name="deleteReason" type="xs:string" minOccurs="0"/>
+         <xs:element name="id" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>
+                  The internal identifier that uniquely references a job
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element ref="status" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>
+                  The status of the job. One of the following values: RUNNING, COMPLETED
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="namespace" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The namespace of the job</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="jobName" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The name of the job</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="startTime" type="xs:dateTime" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>
+                  The start time of the job
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="endTime" type="xs:dateTime" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>
+                  The end time of the job. It is not returned for a job in RUNNING state
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="currentWorkflowStep" type="workflowStep" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>
+                  The step where the workflow currently is. It is returned for a job in RUNNING state
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="completedWorkflowSteps" type="workflowSteps" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>
+                  The steps that have been completed. For a job in RUNNING state, steps up to the last Async task will be returned. For a job in
+                  COMPLETED state, all executed steps will be returned
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="parameters" type="parameters" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>
+                  Current workflow variables and values
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="activitiJobXml" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>
+                  Activiti workflow XML related to the job
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="workflowErrors" type="workflowErrors" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>
+                  The workflow errors
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="deleteReason" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>
+                  A reason this job has been deleted. It is returned if the job has been deleted
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
    <xs:complexType name="parameters">
       <xs:sequence>
-         <xs:element name="parameter" type="parameter" minOccurs="0" maxOccurs="unbounded"/>
+         <xs:element name="parameter" type="parameter" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>
+                  An individual parameter (a key/value pair)
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:sequence>
    </xs:complexType>
 
    <xs:complexType name="parameter">
       <xs:all>
-         <xs:element name="name" type="xs:string"/>
-         <xs:element name="value" type="xs:string" minOccurs="0"/>
+         <xs:element name="name" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>
+                  Name of the parameter
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="value" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>
+                  Value of the parameter. If the name of the parameter contains the word "password," this value will be masked before being logged into the
+                  application logs
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
    <xs:complexType name="workflowSteps">
       <xs:sequence>
-         <xs:element name="workflowStep" type="workflowStep" minOccurs="0" maxOccurs="unbounded"/>
+         <xs:element name="workflowStep" type="workflowStep" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>
+                  An individual step of the job
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:sequence>
    </xs:complexType>
 
    <xs:complexType name="workflowStep">
       <xs:all>
-         <xs:element name="id" type="xs:string"/>
-         <xs:element name="name" type="xs:string" minOccurs="0"/>
-         <xs:element name="startTime" type="xs:dateTime" minOccurs="0"/>
-         <xs:element name="endTime" type="xs:dateTime" minOccurs="0"/>
+         <xs:element name="id" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>
+                  The internal identifier that uniquely references a step
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="name" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>
+                  The name of the step
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="startTime" type="xs:dateTime" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>
+                  The start time of the step
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="endTime" type="xs:dateTime" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>
+                  The end time of the step
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
    <xs:complexType name="workflowErrors">
       <xs:sequence>
-         <xs:element name="workflowError" type="workflowError" minOccurs="0" maxOccurs="unbounded"/>
+         <xs:element name="workflowError" type="workflowError" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>
+                  An individual workflow error
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:sequence>
    </xs:complexType>
 
    <xs:complexType name="workflowError">
       <xs:all>
-         <xs:element name="errorMessage" type="xs:string"/>
-         <xs:element name="retriesLeft" type="xs:int"/>
-         <xs:element name="errorStackTrace" type="xs:string" minOccurs="0"/>
+         <xs:element name="errorMessage" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>
+                  Error message
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="retriesLeft" type="xs:int">
+            <xs:annotation>
+               <xs:documentation>
+                  Number of retries left
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="errorStackTrace" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>
+                  The error stack trace
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
@@ -3434,33 +3700,105 @@
    <xs:element name="jobSummaries" type="jobSummaries"/>
    <xs:complexType name="jobSummaries">
       <xs:sequence>
-         <xs:element name="jobSummary" type="jobSummary" minOccurs="0" maxOccurs="unbounded"/>
+         <xs:element name="jobSummary" type="jobSummary" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>
+                  An individual job summary
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:sequence>
    </xs:complexType>
 
    <xs:complexType name="jobSummary">
       <xs:all>
-         <xs:element name="id" type="xs:string"/>
+         <xs:element name="id" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>
+                  The job id that uniquely identifies the previously submitted job
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
          <!--
            Although namespace should typically be present, we are leaving it as optional
            in case somebody runs an Activiti job outside of the herd infrastructure.
          -->
-         <xs:element name="namespace" type="xs:string" minOccurs="0"/>
-         <xs:element name="jobName" type="xs:string"/>
-         <xs:element name="startTime" type="xs:dateTime"/>
-         <xs:element name="endTime" type="xs:dateTime" minOccurs="0"/>
-         <xs:element ref="status" minOccurs="0"/>
-         <xs:element name="totalExceptions" type="xs:long"/>
+         <xs:element name="namespace" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>
+                  The namespace of the job
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="jobName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>
+                  The name of the job
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="startTime" type="xs:dateTime">
+            <xs:annotation>
+               <xs:documentation>
+                  The start time of the job
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="endTime" type="xs:dateTime" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>
+                  The end time of the job. It is not returned for a job in RUNNING state
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element ref="status" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>
+                  The status of the job. One of the following values: RUNNING, COMPLETED
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="totalExceptions" type="xs:long">
+            <xs:annotation>
+               <xs:documentation>
+                  The number of exceptions
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
    <xs:element name="jobSignalRequest" type="jobSignalRequest"/>
    <xs:complexType name="jobSignalRequest">
       <xs:all>
-         <xs:element name="id" type="xs:string"/>
-         <xs:element name="receiveTaskId" type="xs:string"/>
-         <xs:element name="parameters" type="parameters" minOccurs="0"/>
-         <xs:element name="s3PropertiesLocation" type="s3PropertiesLocation" minOccurs="0"/>
+         <xs:element name="id" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>
+                  The job id that uniquely identifies the previously submitted job
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="receiveTaskId" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>
+                  The task Id of the receive task in the job workflow to signal. The job must be waiting on this task at the time of this call
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="parameters" type="parameters" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>
+                  List of key/value pairs that will be made available to the job
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="s3PropertiesLocation" type="s3PropertiesLocation" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>
+                  The location to the Java properties file in S3
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
@@ -4127,8 +4465,20 @@
 
    <xs:complexType name="s3PropertiesLocation">
       <xs:sequence>
-         <xs:element name="bucketName" type="xs:string"/>
-         <xs:element name="key" type="xs:string"/>
+         <xs:element name="bucketName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>
+                  The S3 bucket name
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="key" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>
+                  The S3 object key
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:sequence>
    </xs:complexType>
 
