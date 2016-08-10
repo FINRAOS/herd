@@ -79,13 +79,13 @@ import org.springframework.core.io.Resource;
  * <p/>
  * To use the default Log4J configuration, specify an internally bundled defaultResourceLocation (e.g. classpath:herd-log4j.xml).
  * <p/>
- * Given the difficulty of initializing Log4J from a non-URI such as the database, the approach taken is to read the configuration from the database and copy
- * it to a temporary file on the file system and initializes Log4J from there. Then the database watchdog thread will re-read the configuration as specified
- * in the configuration itself and will update the temporary file. Since the interval for the local file being updated and the interval when Log4J monitors
- * the file for changes are different, the actual changes may be slightly delayed, but no longer than double the configured interval.
+ * Given the difficulty of initializing Log4J from a non-URI such as the database, the approach taken is to read the configuration from the database and copy it
+ * to a temporary file on the file system and initializes Log4J from there. Then the database watchdog thread will re-read the configuration as specified in the
+ * configuration itself and will update the temporary file. Since the interval for the local file being updated and the interval when Log4J monitors the file
+ * for changes are different, the actual changes may be slightly delayed, but no longer than double the configured interval.
  */
-@SuppressFBWarnings(value = "SQL_PREPARED_STATEMENT_GENERATED_FROM_NONCONSTANT_STRING", justification =
-    "The SQL used within this class is self-contained and only varies based on the Spring configuration so there is no risk of SQL " + "injection.")
+@SuppressFBWarnings(value = "SQL_PREPARED_STATEMENT_GENERATED_FROM_NONCONSTANT_STRING",
+    justification = "The SQL used within this class is self-contained and only varies based on the Spring configuration so there is no risk of SQL injection.")
 public class Log4jOverridableConfigurer implements BeanPostProcessor, PriorityOrdered, ApplicationContextAware
 {
     // Only use this once logging has been initialized.
@@ -96,16 +96,25 @@ public class Log4jOverridableConfigurer implements BeanPostProcessor, PriorityOr
 
     // Configurable properties
     private String overrideResourceLocation;
+
     private String defaultResourceLocation;
+
     private String tableName;
+
     private String selectColumn;
+
     private String whereColumn;
+
     private String whereValue;
+
     private DataSource dataSource;
 
     private boolean loggingInitialized;
+
     private String existingDbLog4JConfiguration;
+
     private Path tempFile = null;
+
     private Log4jDbWatchdog watchdog;
 
     @Override
@@ -764,8 +773,8 @@ public class Log4jOverridableConfigurer implements BeanPostProcessor, PriorityOr
         }
 
         /**
-         * Sets the refresh interval in seconds. Note that this is the time we will monitor for DB changes and not the time that Log4J will check for
-         * temporary file updates so an additional delay will be present before the DB changes will be applied.
+         * Sets the refresh interval in seconds. Note that this is the time we will monitor for DB changes and not the time that Log4J will check for temporary
+         * file updates so an additional delay will be present before the DB changes will be applied.
          *
          * @param refreshIntervalSeconds the refresh interval.
          */
