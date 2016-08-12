@@ -18,10 +18,11 @@ package org.finra.herd.tools.uploader;
 import java.io.FileNotFoundException;
 
 import org.apache.commons.cli.Option;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
-import org.springframework.util.Log4jConfigurer;
 
 import org.finra.herd.core.ArgumentParser;
 import org.finra.herd.model.dto.RegServerAccessParamsDto;
@@ -181,7 +182,15 @@ public class UploaderApp extends DataBridgeApp
         ReturnValue returnValue;
         try
         {
-            Log4jConfigurer.initLogging(ToolsCommonConstants.LOG4J_CONFIG_LOCATION);
+            // Initialize Log4J with the resource. The configuration itself can use "monitorInterval" to have it refresh if it came from a file.
+            LoggerContext loggerContext = Configurator.initialize(null, ToolsCommonConstants.LOG4J_CONFIG_LOCATION);
+
+            // For some initialization errors, a null context will be returned.
+            if (loggerContext == null)
+            {
+                // We shouldn't get here since we already checked if the location existed previously.
+                throw new IllegalArgumentException("Invalid configuration found at resource location: \"" + ToolsCommonConstants.LOG4J_CONFIG_LOCATION + "\".");
+            }
 
             UploaderApp uploaderApp = new UploaderApp();
             returnValue = uploaderApp.go(args);

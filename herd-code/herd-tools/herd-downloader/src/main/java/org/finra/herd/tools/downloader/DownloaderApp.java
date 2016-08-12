@@ -15,10 +15,11 @@
 */
 package org.finra.herd.tools.downloader;
 
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
-import org.springframework.util.Log4jConfigurer;
 
 import org.finra.herd.core.ArgumentParser;
 import org.finra.herd.model.dto.RegServerAccessParamsDto;
@@ -66,10 +67,11 @@ public class DownloaderApp extends DataBridgeApp
         }
 
         // Create an instance of S3 file transfer request parameters DTO.
-        S3FileTransferRequestParamsDto params = S3FileTransferRequestParamsDto.builder().localPath(argParser.getStringValue(localPathOpt))
-            .s3AccessKey(argParser.getStringValue(s3AccessKeyOpt)).s3SecretKey(argParser.getStringValue(s3SecretKeyOpt))
-            .s3Endpoint(argParser.getStringValue(s3EndpointOpt)).maxThreads(maxThreads).httpProxyHost(argParser.getStringValue(httpProxyHostOpt))
-            .httpProxyPort(httpProxyPort).socketTimeout(argParser.getIntegerValue(socketTimeoutOpt)).build();
+        S3FileTransferRequestParamsDto params =
+            S3FileTransferRequestParamsDto.builder().localPath(argParser.getStringValue(localPathOpt)).s3AccessKey(argParser.getStringValue(s3AccessKeyOpt))
+                .s3SecretKey(argParser.getStringValue(s3SecretKeyOpt)).s3Endpoint(argParser.getStringValue(s3EndpointOpt)).maxThreads(maxThreads)
+                .httpProxyHost(argParser.getStringValue(httpProxyHostOpt)).httpProxyPort(httpProxyPort)
+                .socketTimeout(argParser.getIntegerValue(socketTimeoutOpt)).build();
 
         // Call the controller with the user specified parameters to perform the download.
         DownloaderController controller = applicationContext.getBean(DownloaderController.class);
@@ -99,7 +101,15 @@ public class DownloaderApp extends DataBridgeApp
         ReturnValue returnValue;
         try
         {
-            Log4jConfigurer.initLogging(ToolsCommonConstants.LOG4J_CONFIG_LOCATION);
+            // Initialize Log4J with the resource. The configuration itself can use "monitorInterval" to have it refresh if it came from a file.
+            LoggerContext loggerContext = Configurator.initialize(null, ToolsCommonConstants.LOG4J_CONFIG_LOCATION);
+
+            // For some initialization errors, a null context will be returned.
+            if (loggerContext == null)
+            {
+                // We shouldn't get here since we already checked if the location existed previously.
+                throw new IllegalArgumentException("Invalid configuration found at resource location: \"" + ToolsCommonConstants.LOG4J_CONFIG_LOCATION + "\".");
+            }
 
             DownloaderApp downloaderApp = new DownloaderApp();
             returnValue = downloaderApp.go(args);
