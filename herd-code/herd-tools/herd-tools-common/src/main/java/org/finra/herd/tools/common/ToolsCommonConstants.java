@@ -23,7 +23,7 @@ public final class ToolsCommonConstants
     /**
      * The location of Log4J configuration.
      */
-    public static final String LOG4J_CONFIG_LOCATION = "classpath:log4j2.xml";
+    public static final String LOG4J_CONFIG_LOCATION = "classpath:herd-console-info-log4j2.xml";
 
     /**
      * Default number of threads to be used by the Amazon S3 TransferManager.
