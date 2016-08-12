@@ -116,7 +116,7 @@ public class DownloaderApp extends DataBridgeApp
         }
         catch (Exception e)
         {
-            LOGGER.error("Error running herd downloader.", e);
+            LOGGER.error("Error running herd downloader. {}", e.toString(), e);
             returnValue = ReturnValue.FAILURE;
         }
 

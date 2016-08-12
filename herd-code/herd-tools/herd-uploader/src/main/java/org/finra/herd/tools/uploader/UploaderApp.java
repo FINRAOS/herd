@@ -197,7 +197,7 @@ public class UploaderApp extends DataBridgeApp
         }
         catch (Exception e)
         {
-            LOGGER.error("Error running herd uploader.", e);
+            LOGGER.error("Error running herd uploader. {}", e.toString(), e);
             returnValue = ReturnValue.FAILURE;
         }
 
