@@ -40,7 +40,7 @@ public abstract class AutoRefreshCredentialProvider implements HerdAWSCredential
 
     /**
      * Gets a new set of AWS credentials.
-     * 
+     *
      * @return AWS credentials
      * @throws Exception when any exception occurs
      */
@@ -60,7 +60,7 @@ public abstract class AutoRefreshCredentialProvider implements HerdAWSCredential
             }
             catch (Exception e)
             {
-                LOGGER.warn("Error retrieving new credentials", e);
+                LOGGER.warn("Error retrieving new credentials. {}", e.toString(), e);
                 throw new IllegalStateException(e);
             }
             sessionExpirationTime = currentAwsCredentials.getAwsSessionExpirationTime().toGregorianCalendar().getTimeInMillis();
