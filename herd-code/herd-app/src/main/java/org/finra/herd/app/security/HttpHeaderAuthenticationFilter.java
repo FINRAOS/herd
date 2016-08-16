@@ -27,7 +27,8 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationDetailsSource;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -50,7 +51,7 @@ import org.finra.herd.model.dto.SecurityUserWrapper;
  */
 public class HttpHeaderAuthenticationFilter extends GenericFilterBean
 {
-    private static final Logger LOGGER = Logger.getLogger(HttpHeaderAuthenticationFilter.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(HttpHeaderAuthenticationFilter.class);
 
     @Autowired
     private SecurityHelper securityHelper;

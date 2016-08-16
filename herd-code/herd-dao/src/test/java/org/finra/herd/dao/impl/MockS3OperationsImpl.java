@@ -79,7 +79,8 @@ import com.amazonaws.services.s3.transfer.internal.TransferMonitor;
 import com.amazonaws.services.s3.transfer.internal.UploadImpl;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.concurrent.BasicFuture;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.dao.S3Operations;
@@ -94,7 +95,7 @@ import org.finra.herd.dao.S3Operations;
  */
 public class MockS3OperationsImpl implements S3Operations
 {
-    private static final Logger LOGGER = Logger.getLogger(MockS3OperationsImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MockS3OperationsImpl.class);
 
     /**
      * Suffix to hint operation to throw a AmazonServiceException
@@ -614,6 +615,9 @@ public class MockS3OperationsImpl implements S3Operations
             }
         }
 
+        // Update the Last-Modified header value. This value not being set causes NullPointerException in S3Dao download related unit tests.
+        metadata.setLastModified(new Date());
+
         MockS3Bucket mockS3Bucket = getOrCreateBucket(s3BucketName);
 
         MockS3Object mockS3Object = new MockS3Object();
@@ -779,7 +783,8 @@ public class MockS3OperationsImpl implements S3Operations
                         LOGGER.debug("downloadDirectory(): Writing file " + file);
                         fileOutputStream.write(mockS3Object.getData());
                         totalBytes += mockS3Object.getData().length;
-                        downloads.add(new DownloadImpl(null, null, null, null, null, new GetObjectRequest(bucketName, mockS3Object.getKey()), file));
+                        downloads.add(new DownloadImpl(null, null, null, null, null, new GetObjectRequest(bucketName, mockS3Object.getKey()), file,
+                            mockS3Object.getObjectMetadata(), false));
                     }
                     catch (IOException e)
                     {
@@ -841,7 +846,8 @@ public class MockS3OperationsImpl implements S3Operations
         progress.setTotalBytesToTransfer(mockS3Object.getData().length);
         progress.updateProgress(mockS3Object.getData().length);
 
-        DownloadImpl download = new DownloadImpl(null, progress, null, null, null, new GetObjectRequest(bucket, key), file);
+        DownloadImpl download =
+            new DownloadImpl(null, progress, null, null, null, new GetObjectRequest(bucket, key), file, mockS3Object.getObjectMetadata(), false);
         download.setState(TransferState.Completed);
 
         return download;

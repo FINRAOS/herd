@@ -19,11 +19,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.util.Enumeration;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Properties;
 
 import org.apache.commons.configuration.BaseConfiguration;
@@ -32,12 +28,14 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.FileConfiguration;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.configuration.reloading.ReloadingStrategy;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import org.finra.herd.core.helper.LogLevel;
 
 /**
  * Test the reloadable properties source class. This JUnit uses a PropertiesConfiguration as opposed to a DatabaseConfiguration like the real application does
@@ -47,7 +45,7 @@ import org.junit.Test;
  */
 public class ReloadablePropertySourceTest extends AbstractDaoTest
 {
-    private static Logger logger = Logger.getLogger(ReloadablePropertySourceTest.class);
+    private static Logger logger = LoggerFactory.getLogger(ReloadablePropertySourceTest.class);
 
     public static final String TEST_KEY = "testKey";
     public static final String TEST_VALUE_1 = "testValue1";
@@ -72,8 +70,9 @@ public class ReloadablePropertySourceTest extends AbstractDaoTest
         super.setup();
 
         // Set the logger to debug level so JUnit coverage will hit all debug only logging.
-        Logger.getLogger(ReloadablePropertySource.class).setLevel(Level.DEBUG);
-        logger.info("This test driver outputs debug level logging for Clover coverage.");
+        setLogLevel(ReloadablePropertySource.class, LogLevel.DEBUG);
+
+        logger.info("This test driver outputs debug level logging for code coverage.");
 
         // Create the base properties used for each test.
         properties = new Properties();
@@ -285,8 +284,9 @@ public class ReloadablePropertySourceTest extends AbstractDaoTest
      */
     private ReloadablePropertySource getNewReloadablePropertiesSource(Long refreshIntervalSecs, Configuration configuration)
     {
-        return (refreshIntervalSecs == null ? new ReloadablePropertySource(ReloadablePropertySource.class.getName(), cloneProperties(properties), configuration)
-            : new ReloadablePropertySource(ReloadablePropertySource.class.getName(), cloneProperties(properties), configuration, refreshIntervalSecs));
+        return (refreshIntervalSecs == null ?
+            new ReloadablePropertySource(ReloadablePropertySource.class.getName(), cloneProperties(properties), configuration) :
+            new ReloadablePropertySource(ReloadablePropertySource.class.getName(), cloneProperties(properties), configuration, refreshIntervalSecs));
     }
 
     /**

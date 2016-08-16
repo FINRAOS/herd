@@ -32,7 +32,8 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.WebUtils;
@@ -43,7 +44,7 @@ import org.springframework.web.util.WebUtils;
  */
 public class RequestLoggingFilter extends OncePerRequestFilter
 {
-    private static final Logger LOGGER = Logger.getLogger(RequestLoggingFilter.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(RequestLoggingFilter.class);
 
     public static final String DEFAULT_LOG_MESSAGE_PREFIX = "HTTP Request [";
     public static final String DEFAULT_LOG_MESSAGE_SUFFIX = "]";

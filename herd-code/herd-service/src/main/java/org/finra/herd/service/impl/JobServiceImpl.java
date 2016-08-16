@@ -35,7 +35,8 @@ import org.activiti.engine.runtime.Execution;
 import org.activiti.engine.runtime.ProcessInstance;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -85,7 +86,7 @@ import org.finra.herd.service.helper.StorageHelper;
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 public class JobServiceImpl implements JobService
 {
-    private static final Logger LOGGER = Logger.getLogger(JobServiceImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(JobServiceImpl.class);
 
     @Autowired
     private ActivitiService activitiService;
@@ -453,23 +454,8 @@ public class JobServiceImpl implements JobService
         // Get process instance from Activiti runtime.
         ProcessInstance processInstance = activitiService.getProcessInstanceById(jobIdLocal);
 
-        HistoricProcessInstance historicProcessInstance = null;
-        List<HistoricActivityInstance> historicActivitiTasks = null;
-
-        Job job = new Job();
-        job.setId(jobIdLocal);
-
-        // Get historic process instance if process not found or need verbose response
-        if (processInstance == null || verbose)
-        {
-            historicProcessInstance = activitiService.getHistoricProcessInstanceByProcessInstanceId(jobIdLocal);
-
-            // Get completed historic tasks if verbose
-            if (historicProcessInstance != null && verbose)
-            {
-                historicActivitiTasks = activitiService.getHistoricActivityInstancesByProcessInstanceId(jobIdLocal);
-            }
-        }
+        // Get historic process instance.
+        HistoricProcessInstance historicProcessInstance = activitiService.getHistoricProcessInstanceByProcessInstanceId(jobIdLocal);
 
         /*
          * Check permissions against namespace of the job.
@@ -492,6 +478,9 @@ public class JobServiceImpl implements JobService
                 checkPermissions(processDefinitionKey, new NamespacePermissionEnum[] {NamespacePermissionEnum.READ});
             }
         }
+
+        Job job = new Job();
+        job.setId(jobIdLocal);
 
         if (processInstance == null && historicProcessInstance == null)
         {
@@ -533,14 +522,9 @@ public class JobServiceImpl implements JobService
             // Set the workflow variables.
             populateWorkflowParameters(job, processInstance.getProcessVariables());
 
-            if (verbose && historicProcessInstance != null)
-            {
-                // Set completed steps
-                populateCompletedActivitiSteps(job, historicActivitiTasks);
-            }
+            // If verbose, set activiti workflow xml.
             if (verbose)
             {
-                // Set activiti workflow xml
                 populateActivitiXml(job, processInstance.getProcessDefinitionId());
             }
         }
@@ -554,13 +538,28 @@ public class JobServiceImpl implements JobService
 
             job.setDeleteReason(historicProcessInstance.getDeleteReason());
 
+            // If verbose, set activiti workflow xml.
             if (verbose)
             {
-                // Set completed steps
-                populateCompletedActivitiSteps(job, historicActivitiTasks);
-
-                // Set activiti workflow xml
                 populateActivitiXml(job, historicProcessInstance.getProcessDefinitionId());
+            }
+        }
+
+        if (historicProcessInstance != null)
+        {
+            // If verbose, set completed steps.
+            if (verbose)
+            {
+                populateCompletedActivitiSteps(job, activitiService.getHistoricActivityInstancesByProcessInstanceId(jobIdLocal));
+            }
+
+            // Set the start time always since all jobs will have a start time.
+            job.setStartTime(HerdDateUtils.getXMLGregorianCalendarValue(historicProcessInstance.getStartTime()));
+
+            // Set the end time if the historic process instance has it set (the job is completed).
+            if (historicProcessInstance.getEndTime() != null)
+            {
+                job.setEndTime(HerdDateUtils.getXMLGregorianCalendarValue(historicProcessInstance.getEndTime()));
             }
         }
 

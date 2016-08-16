@@ -15,7 +15,8 @@
 */
 package org.finra.herd.tools.common.databridge;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.finra.herd.model.api.xml.AwsCredential;
 import org.finra.herd.model.dto.HerdAWSCredentialsProvider;
@@ -25,7 +26,7 @@ import org.finra.herd.model.dto.HerdAWSCredentialsProvider;
  */
 public abstract class AutoRefreshCredentialProvider implements HerdAWSCredentialsProvider
 {
-    private static final Logger LOGGER = Logger.getLogger(AutoRefreshCredentialProvider.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AutoRefreshCredentialProvider.class);
 
     /**
      * The session expiration time in milliseconds for the current AWS credentials.
@@ -39,7 +40,7 @@ public abstract class AutoRefreshCredentialProvider implements HerdAWSCredential
 
     /**
      * Gets a new set of AWS credentials.
-     * 
+     *
      * @return AWS credentials
      * @throws Exception when any exception occurs
      */
@@ -59,7 +60,7 @@ public abstract class AutoRefreshCredentialProvider implements HerdAWSCredential
             }
             catch (Exception e)
             {
-                LOGGER.warn("Error retrieving new credentials", e);
+                LOGGER.warn("Error retrieving new credentials. {}", e.toString(), e);
                 throw new IllegalStateException(e);
             }
             sessionExpirationTime = currentAwsCredentials.getAwsSessionExpirationTime().toGregorianCalendar().getTimeInMillis();

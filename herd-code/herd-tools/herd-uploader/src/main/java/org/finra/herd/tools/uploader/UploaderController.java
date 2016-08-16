@@ -30,7 +30,8 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.IterableUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -61,7 +62,7 @@ import org.finra.herd.tools.common.databridge.DataBridgeController;
 @Component
 public class UploaderController extends DataBridgeController
 {
-    private static final Logger LOGGER = Logger.getLogger(UploaderController.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(UploaderController.class);
 
     @Autowired
     private BusinessObjectDataHelper businessObjectDataHelper;
@@ -275,7 +276,7 @@ public class UploaderController extends DataBridgeController
                 else
                 {
                     // Log a warning.
-                    LOGGER.warn("An exception occurred when adding storage files to the business object data.", e);
+                    LOGGER.warn("An exception occurred when adding storage files to the business object data. {}", e.toString(), e);
                     LOGGER.warn("Will retry in " + retryDelaySecs + " second(s) and no more than " + (maxRetryAttempts - retryCount) + " more time(s).");
 
                     // We can retry again so increment a counter to keep track of the number of times we retried.

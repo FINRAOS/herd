@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <!--
   Copyright 2015 herd contributors
 
@@ -15,12 +15,13 @@
   limitations under the License.
 -->
 <!-- Keep this file small so it fits in the CNFG.CNFGN_VALUE_DS column -->
-<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
-   <appender name="FILE" class="org.apache.log4j.DailyRollingFileAppender">
-      <param name="File" value="~log4jFileLocation~"/>
-   </appender>
-   <root>
-      <level value="INFO"/>
-      <appender-ref ref="FILE"/>
-   </root>
-</log4j:configuration>
+<Configuration>
+   <Appenders>
+      <File name="File" fileName="~log4jFileLocation~" append="true"/>
+   </Appenders>
+   <Loggers>
+      <Root level="info">
+         <AppenderRef ref="File"/>
+      </Root>
+   </Loggers>
+</Configuration>

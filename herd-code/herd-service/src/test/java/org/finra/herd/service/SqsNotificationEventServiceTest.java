@@ -25,10 +25,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.junit.Test;
 
+import org.finra.herd.core.helper.LogLevel;
 import org.finra.herd.dao.helper.HerdDaoSecurityHelper;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.AttributeDefinition;
@@ -207,7 +206,7 @@ public class SqsNotificationEventServiceTest extends AbstractServiceTest
     @Test
     public void testSqsBusinessObjectDataStatusChangeNotificationEventSqsQueueNotDefined() throws Exception
     {
-        Logger.getLogger(SqsNotificationEventServiceImpl.class).setLevel(Level.OFF);
+        setLogLevel(SqsNotificationEventServiceImpl.class, LogLevel.OFF);
 
         // Create a business object data entity.
         BusinessObjectDataEntity businessObjectDataEntity = createTestValidBusinessObjectData();
@@ -273,7 +272,7 @@ public class SqsNotificationEventServiceTest extends AbstractServiceTest
     @Test
     public void testProcessSystemMonitorNotificationEventSqsQueueNotDefined() throws Exception
     {
-        Logger.getLogger(SqsNotificationEventServiceImpl.class).setLevel(Level.OFF);
+        setLogLevel(SqsNotificationEventServiceImpl.class, LogLevel.OFF);
 
         // Override configuration.
         Map<String, Object> overrideMap = new HashMap<>();

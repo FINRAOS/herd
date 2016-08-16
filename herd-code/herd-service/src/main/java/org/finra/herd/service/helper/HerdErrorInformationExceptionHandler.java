@@ -31,7 +31,8 @@ import org.activiti.engine.ActivitiException;
 import org.activiti.engine.impl.javax.el.ELException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.exception.ConstraintViolationException;
 import org.quartz.ObjectAlreadyExistsException;
 import org.springframework.beans.TypeMismatchException;
@@ -84,7 +85,7 @@ public class HerdErrorInformationExceptionHandler
      */
     public static final String POSTGRES_SQL_STATE_CODE_TRUNCATION_ERROR = "22001";
 
-    private static final Logger LOGGER = Logger.getLogger(HerdErrorInformationExceptionHandler.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(HerdErrorInformationExceptionHandler.class);
 
     // A flag that determines whether this class will log errors or not.
     // When using the isReportableError method of this class, we typically don't want to enable logging which is why we're defaulting it to false.

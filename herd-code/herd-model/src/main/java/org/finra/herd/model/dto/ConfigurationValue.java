@@ -444,12 +444,6 @@ public enum ConfigurationValue
     LOG4J_OVERRIDE_RESOURCE_LOCATION("log4j.override.resource.location", null),
 
     /**
-     * The Log4J refresh interval in milliseconds. The default is 60000 milliseconds (i.e. 60 seconds). If 0, the read configuration will be static and not
-     * refreshed.
-     */
-    LOG4J_REFRESH_INTERVAL_MILLIS("log4j.refresh.interval.millis", 60000L),
-
-    /**
      * The herd endpoints that are not allowed.
      */
     NOT_ALLOWED_HERD_ENDPOINTS("not.allowed.herd.endpoints", null),

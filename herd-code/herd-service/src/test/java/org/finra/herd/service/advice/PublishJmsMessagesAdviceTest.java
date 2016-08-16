@@ -24,13 +24,12 @@ import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Method;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import org.finra.herd.core.helper.LogLevel;
 import org.finra.herd.dao.impl.MockSqsOperationsImpl;
 import org.finra.herd.model.annotation.PublishJmsMessages;
 import org.finra.herd.model.dto.JmsMessage;
@@ -80,13 +79,12 @@ public class PublishJmsMessagesAdviceTest extends AbstractServiceTest
     @Test
     public void testPublishJmsMessagesDebugEnabled() throws Throwable
     {
-        Logger logger = Logger.getLogger(PublishJmsMessagesAdvice.class);
-        Level originalLevel = logger.getLevel();
+        LogLevel originalLevel = getLogLevel(PublishJmsMessagesAdvice.class);
 
         try
         {
             // Set the logger level to debug.
-            logger.setLevel(Level.DEBUG);
+            setLogLevel(PublishJmsMessagesAdvice.class, LogLevel.DEBUG);
 
             // Execute the happy path unit test with DEBUG logging level enabled.
             testPublishJmsMessages();
@@ -94,7 +92,7 @@ public class PublishJmsMessagesAdviceTest extends AbstractServiceTest
         finally
         {
             // Restore logger level to the original value.
-            logger.setLevel(originalLevel);
+            setLogLevel(PublishJmsMessagesAdvice.class, originalLevel);
         }
     }
 

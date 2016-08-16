@@ -19,7 +19,8 @@ import java.io.IOException;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -35,7 +36,7 @@ import org.finra.herd.ui.constants.UiConstants;
 @ControllerAdvice("org.finra.herd.ui.controller") // Only handle UI exceptions and not REST exceptions in a different base package.
 public class HerdUiControllerAdvice
 {
-    private static final Logger LOGGER = Logger.getLogger(HerdUiControllerAdvice.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(HerdUiControllerAdvice.class);
 
     /**
      * Handle all user exceptions by returning to a general error page while displaying the exception message to the user. A "message" model is returned.

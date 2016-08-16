@@ -32,9 +32,10 @@ import javax.sql.DataSource;
 import org.apache.commons.io.IOUtils;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.springframework.util.Log4jConfigurer;
 
 import org.finra.herd.dao.config.DaoEnvTestSpringModuleConfig;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
@@ -53,6 +54,8 @@ public class Log4jOverridableConfigurerTest extends AbstractDaoTest
 
     private static final String LOG4J_FILENAME_TOKEN = "~log4jFileLocation~";
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(Log4jOverridableConfigurerTest.class);
+
     @Autowired
     private ApplicationContext applicationContext;
 
@@ -69,7 +72,10 @@ public class Log4jOverridableConfigurerTest extends AbstractDaoTest
             configKey = ConfigurationValue.LOG4J_OVERRIDE_CONFIGURATION.getKey() + UUID.randomUUID().toString().substring(0, 5);
 
             // Insert the Log4J configuration into the database using the CLOB column.
-            insertDbLog4JConfigurationFromResourceLocation(LOG4J_CONFIG_FILENAME, outputPath, ConfigurationEntity.COLUMN_VALUE_CLOB, configKey);
+            insertDbLog4JConfigurationFromResourceLocation(LOG4J_CONFIG_FILENAME, 0, outputPath, ConfigurationEntity.COLUMN_VALUE_CLOB, configKey);
+
+            // Shutdown the previously configured logging so we can reinitialize it below.
+            loggingHelper.shutdownLogging();
 
             // Setup the Log4J overridable configurer to use the database location - using the standard CLOB column.
             Log4jOverridableConfigurer log4jConfigurer = getLog4jOverridableConfigurerForDb(configKey);
@@ -98,7 +104,10 @@ public class Log4jOverridableConfigurerTest extends AbstractDaoTest
             configKey = ConfigurationValue.LOG4J_OVERRIDE_CONFIGURATION.getKey() + UUID.randomUUID().toString().substring(0, 5);
 
             // Insert the Log4J configuration into the database using the non-CLOB column.
-            insertDbLog4JConfigurationFromResourceLocation(LOG4J_CONFIG_NO_CLOB_FILENAME, outputPath, ConfigurationEntity.COLUMN_VALUE, configKey);
+            insertDbLog4JConfigurationFromResourceLocation(LOG4J_CONFIG_NO_CLOB_FILENAME, 0, outputPath, ConfigurationEntity.COLUMN_VALUE, configKey);
+
+            // Shutdown the previously configured logging so we can reinitialize it below.
+            loggingHelper.shutdownLogging();
 
             // Setup the Log4J overridable configurer to use the database location, but override the select column to use the non-CLOB column.
             Log4jOverridableConfigurer log4jConfigurer = getLog4jOverridableConfigurerForDb(configKey);
@@ -128,12 +137,15 @@ public class Log4jOverridableConfigurerTest extends AbstractDaoTest
             configKey = ConfigurationValue.LOG4J_OVERRIDE_CONFIGURATION.getKey() + UUID.randomUUID().toString().substring(0, 5);
 
             // Insert the standard JUnit Log4J configuration that won't create an output file into the database using the CLOB column.
-            insertDbLog4JConfigurationFromResourceLocation(DaoEnvTestSpringModuleConfig.TEST_LOG4J_CONFIG_RESOURCE_LOCATION, outputPath,
+            // We will use a monitoring interval of 1 second to ensure the watch dog thread gets executed.
+            insertDbLog4JConfigurationFromResourceLocation(DaoEnvTestSpringModuleConfig.TEST_LOG4J_CONFIG_RESOURCE_LOCATION, 1, outputPath,
                 ConfigurationEntity.COLUMN_VALUE_CLOB, configKey);
+
+            // Shutdown the previously configured logging so we can reinitialize it below.
+            loggingHelper.shutdownLogging();
 
             // Initialize Log4J with a refresh interval of 1/2 second. This will cause Log4J to check for configuration updates every second.
             Log4jOverridableConfigurer log4jConfigurer = getLog4jOverridableConfigurerForDb(configKey);
-            log4jConfigurer.setRefreshIntervalMillis(500);
             log4jConfigurer.postProcessBeforeInitialization(null, null);
 
             // First ensure that the Log4J output file doesn't exist.
@@ -142,8 +154,8 @@ public class Log4jOverridableConfigurerTest extends AbstractDaoTest
             // Update the Log4J configuration with one that will create a log file.
             updateDbLog4JConfigurationFromResourceLocation(LOG4J_CONFIG_FILENAME, outputPath, ConfigurationEntity.COLUMN_VALUE_CLOB, configKey);
 
-            // Sleep one second which will give Log4J a chance to read the new configuration file which should create an output file.
-            Thread.sleep(1000);
+            // Sleep 3 seconds which will give our watch dog thread and Log4J a chance to read the new configuration file which should create an output file.
+            Thread.sleep(3000);
 
             // Ensure that the Log4J output file now exists.
             assertTrue("Log4J output file doesn't exist, but should.", Files.exists(outputPath));
@@ -164,13 +176,12 @@ public class Log4jOverridableConfigurerTest extends AbstractDaoTest
         try
         {
             // Write a Log4J configuration file that will create a random output file.
-            writeFileFromResourceLocation(LOG4J_CONFIG_FILENAME, configPath, outputPath);
+            writeFileFromResourceLocation(LOG4J_CONFIG_FILENAME, configPath, outputPath, 0);
 
             Log4jOverridableConfigurer log4jConfigurer = new Log4jOverridableConfigurer();
             log4jConfigurer.setApplicationContext(applicationContext);
             log4jConfigurer.setDefaultResourceLocation(DaoEnvTestSpringModuleConfig.TEST_LOG4J_CONFIG_RESOURCE_LOCATION);
             log4jConfigurer.setOverrideResourceLocation("non_existent_override_location");
-            log4jConfigurer.setRefreshIntervalMillis(0);
             log4jConfigurer.postProcessBeforeInitialization(null, null);
 
             // Since an override location doesn't exist, the default location which doesn't create a log file will get used and the override log file won't get
@@ -192,13 +203,14 @@ public class Log4jOverridableConfigurerTest extends AbstractDaoTest
         try
         {
             // Write a Log4J configuration file that will create a random output file.
-            writeFileFromResourceLocation(LOG4J_CONFIG_FILENAME, configPath, outputPath);
+            writeFileFromResourceLocation(LOG4J_CONFIG_FILENAME, configPath, outputPath, 1);
+
+            loggingHelper.shutdownLogging();
 
             Log4jOverridableConfigurer log4jConfigurer = new Log4jOverridableConfigurer();
             log4jConfigurer.setApplicationContext(applicationContext);
             log4jConfigurer.setDefaultResourceLocation(DaoEnvTestSpringModuleConfig.TEST_LOG4J_CONFIG_RESOURCE_LOCATION);
             log4jConfigurer.setOverrideResourceLocation(configPath.toAbsolutePath().toUri().toURL().toString());
-            log4jConfigurer.setRefreshIntervalMillis(1000);
             log4jConfigurer.postProcessBeforeInitialization(null, null);
 
             // The override location does exist and should create a log file.
@@ -219,7 +231,7 @@ public class Log4jOverridableConfigurerTest extends AbstractDaoTest
         try
         {
             // Write a Log4J configuration file that will create a random output file.
-            writeFileFromResourceLocation(LOG4J_CONFIG_FILENAME, configPath, outputPath);
+            writeFileFromResourceLocation(LOG4J_CONFIG_FILENAME, configPath, outputPath, 0);
 
             Log4jOverridableConfigurer log4jConfigurer = new Log4jOverridableConfigurer();
             log4jConfigurer.setApplicationContext(applicationContext);
@@ -244,7 +256,7 @@ public class Log4jOverridableConfigurerTest extends AbstractDaoTest
         try
         {
             // Write a Log4J configuration file that will create a random output file.
-            writeFileFromResourceLocation(LOG4J_CONFIG_FILENAME, configPath, outputPath);
+            writeFileFromResourceLocation(LOG4J_CONFIG_FILENAME, configPath, outputPath, 0);
 
             Log4jOverridableConfigurer log4jConfigurer = new Log4jOverridableConfigurer();
             log4jConfigurer.setApplicationContext(applicationContext);
@@ -271,7 +283,7 @@ public class Log4jOverridableConfigurerTest extends AbstractDaoTest
         try
         {
             // Write a Log4J configuration file that will create a random output file.
-            writeFileFromResourceLocation(LOG4J_CONFIG_FILENAME, configPath, outputPath);
+            writeFileFromResourceLocation(LOG4J_CONFIG_FILENAME, configPath, outputPath, 0);
 
             Log4jOverridableConfigurer log4jConfigurer = new Log4jOverridableConfigurer();
             log4jConfigurer.setApplicationContext(applicationContext);
@@ -298,24 +310,23 @@ public class Log4jOverridableConfigurerTest extends AbstractDaoTest
         try
         {
             // Write the standard JUnit Log4J configuration that won't create an output file.
-            writeFileFromResourceLocation(DaoEnvTestSpringModuleConfig.TEST_LOG4J_CONFIG_RESOURCE_LOCATION, configPath, outputPath);
+            writeFileFromResourceLocation(DaoEnvTestSpringModuleConfig.TEST_LOG4J_CONFIG_RESOURCE_LOCATION, configPath, outputPath, 1);
 
             // Initialize Log4J with a refresh interval of 1/2 second. This will cause Log4J to check for configuration updates every second.
             Log4jOverridableConfigurer log4jConfigurer = new Log4jOverridableConfigurer();
             log4jConfigurer.setApplicationContext(applicationContext);
             log4jConfigurer.setDefaultResourceLocation(DaoEnvTestSpringModuleConfig.TEST_LOG4J_CONFIG_RESOURCE_LOCATION);
             log4jConfigurer.setOverrideResourceLocation(configPath.toAbsolutePath().toUri().toURL().toString());
-            log4jConfigurer.setRefreshIntervalMillis(500);
             log4jConfigurer.postProcessBeforeInitialization(null, null);
 
             // First ensure that the Log4J output file doesn't exist.
             assertTrue("Log4J output file exists, but shouldn't.", Files.notExists(outputPath));
 
             // Replace the Log4J configuration file with the one that will create an output file.
-            writeFileFromResourceLocation(LOG4J_CONFIG_FILENAME, configPath, outputPath);
+            writeFileFromResourceLocation(LOG4J_CONFIG_FILENAME, configPath, outputPath, 1);
 
             // Sleep one second which will give Log4J a chance to read the new configuration file which should create an output file.
-            Thread.sleep(1000);
+            Thread.sleep(3000);
 
             // Ensure that the Log4J output file now exists.
             assertTrue("Log4J output file doesn't exist, but should.", Files.exists(outputPath));
@@ -355,16 +366,20 @@ public class Log4jOverridableConfigurerTest extends AbstractDaoTest
      * @param resourceLocation the resource location of the Log4J configuration.
      * @param configPath the Log4J configuration path.
      * @param outputPath the Log4J output path.
+     * @param refreshInterval the refresh interval in seconds.
      *
      * @throws Exception if the file couldn't be written.
      */
-    private void writeFileFromResourceLocation(String resourceLocation, Path configPath, Path outputPath) throws Exception
+    private void writeFileFromResourceLocation(String resourceLocation, Path configPath, Path outputPath, int refreshInterval) throws Exception
     {
         // Get the Log4J configuration contents from the classpath file.
         String log4JFileContents = IOUtils.toString(resourceLoader.getResource(resourceLocation).getInputStream());
 
         // Change the tokenized output filename (if it exists) and replace it with a random filename to support multiple invocations of the JUnit.
         log4JFileContents = log4JFileContents.replace(LOG4J_FILENAME_TOKEN, outputPath.toAbsolutePath().toString().replace("\\", "/"));
+
+        // Update the refresh interval to 1 second.
+        log4JFileContents = log4JFileContents.replace("monitorInterval=\"0\"", "monitorInterval=\"" + refreshInterval + "\"");
 
         // Write the Log4J configuration to the temporary file.
         try (FileOutputStream fileOutputStream = new FileOutputStream(configPath.toAbsolutePath().toString()))
@@ -377,13 +392,14 @@ public class Log4jOverridableConfigurerTest extends AbstractDaoTest
      * Reads the contents of the resource location, substitutes the filename token (if it exists), and inserts the contents of the resource to the database.
      *
      * @param resourceLocation the resource location of the Log4J configuration.
+     * @param monitorInterval the monitor interval in seconds to use when writing the configuration file to the database.
      * @param outputPath the Log4J output path.
      * @param log4jConfigurationColumn the column name for the Log4J configuration column
      * @param configEntityKey the configuration entity key.
      *
      * @throws Exception if the file contents couldn't be read or the database record couldn't be inserted.
      */
-    private void insertDbLog4JConfigurationFromResourceLocation(String resourceLocation, Path outputPath, String log4jConfigurationColumn,
+    private void insertDbLog4JConfigurationFromResourceLocation(String resourceLocation, int monitorInterval, Path outputPath, String log4jConfigurationColumn,
         String configEntityKey) throws Exception
     {
         // Get the Log4J configuration contents from the classpath file.
@@ -391,6 +407,9 @@ public class Log4jOverridableConfigurerTest extends AbstractDaoTest
 
         // Change the tokenized output filename (if it exists) and replace it with a random filename to support multiple invocations of the JUnit.
         log4JFileContents = log4JFileContents.replace(LOG4J_FILENAME_TOKEN, outputPath.toAbsolutePath().toString().replace("\\", "/"));
+
+        // Change the monitor interval.
+        log4JFileContents = log4JFileContents.replace("monitorInterval=\"0\"", "monitorInterval=\"" + String.valueOf(monitorInterval) + "\"");
 
         // Insert the data.
         String sql =
@@ -413,6 +432,9 @@ public class Log4jOverridableConfigurerTest extends AbstractDaoTest
     {
         // Get the Log4J configuration contents from the classpath file.
         String log4JFileContents = IOUtils.toString(resourceLoader.getResource(resourceLocation).getInputStream());
+
+        // Update the refresh interval to 1 second.
+        log4JFileContents = log4JFileContents.replace("monitorInterval=\"0\"", "monitorInterval=\"1\"");
 
         // Change the tokenized output filename (if it exists) and replace it with a random filename to support multiple invocations of the JUnit.
         log4JFileContents = log4JFileContents.replace(LOG4J_FILENAME_TOKEN, outputPath.toAbsolutePath().toString().replace("\\", "/"));
@@ -490,7 +512,6 @@ public class Log4jOverridableConfigurerTest extends AbstractDaoTest
         log4jConfigurer.setWhereValue(configKey);
         log4jConfigurer.setDataSource(DaoSpringModuleConfig.getHerdDataSource());
         log4jConfigurer.setApplicationContext(applicationContext);
-        log4jConfigurer.setRefreshIntervalMillis(0);
         return log4jConfigurer;
     }
 
@@ -505,7 +526,7 @@ public class Log4jOverridableConfigurerTest extends AbstractDaoTest
     private void cleanup(Path configPath, Path outputPath) throws IOException
     {
         // Shutdown the logging which will release the lock on the output file.
-        Log4jConfigurer.shutdownLogging();
+        loggingHelper.shutdownLogging();
 
         // Delete the Log4J configuration we created in the setup.
         if (Files.exists(configPath))

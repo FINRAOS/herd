@@ -116,7 +116,7 @@ public class BusinessObjectDataEntity extends AuditableEntity
     private BusinessObjectDataStatusEntity status;
 
     @OneToMany(mappedBy = "businessObjectData", orphanRemoval = true, cascade = {CascadeType.ALL})
-    @OrderBy("createdOn")
+    @OrderBy("createdOn DESC")
     private Collection<BusinessObjectDataStatusHistoryEntity> historicalStatuses;
 
     public Integer getId()

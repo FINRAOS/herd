@@ -15,8 +15,12 @@
 */
 package org.finra.herd.dao;
 
-import java.io.FileNotFoundException;
-import java.io.StringReader;
+import java.io.ByteArrayInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -27,10 +31,14 @@ import java.sql.Statement;
 import javax.sql.DataSource;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
-import org.apache.log4j.xml.DOMConfigurator;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.ConfigurationSource;
+import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.logging.log4j.core.config.xml.XmlConfiguration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -38,12 +46,11 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.PriorityOrdered;
 import org.springframework.core.io.Resource;
-import org.springframework.util.Log4jConfigurer;
 
 /**
- * Configure Log4J based on a possible resource override location, a possible database override location, and a default resource location, in that order. An
- * optional refresh interval can also be specified if the Log4J configuration should be monitored for changes at every "refresh interval" and re-initialized if
- * changes are found.
+ * Configure Log4J based on a possible resource override location, a possible database override location, and a default resource location, in that order. The
+ * Log4J configuration itself can include an optional "monitorInterval" attribute that allows the Log4J configuration to be monitored for changes and
+ * re-initialized if changes are found.
  * <p/>
  * This class will write to System.out and System.err for output before the logging is successfully initialized. Once the logging is initialized, logging will
  * go to where the logger is configured. Note that it is important to use valid Log4J configuration files for Log4J to work properly. If an invalid
@@ -71,33 +78,44 @@ import org.springframework.util.Log4jConfigurer;
  * To use an externally specified Log4J override configuration, configure the overrideResourceLocation (e.g. file:///tmp/myOverride.xml).
  * <p/>
  * To use the default Log4J configuration, specify an internally bundled defaultResourceLocation (e.g. classpath:herd-log4j.xml).
+ * <p/>
+ * Given the difficulty of initializing Log4J from a non-URI such as the database, the approach taken is to read the configuration from the database and copy it
+ * to a temporary file on the file system and initializes Log4J from there. Then the database watchdog thread will re-read the configuration as specified in the
+ * configuration itself and will update the temporary file. Since the interval for the local file being updated and the interval when Log4J monitors the file
+ * for changes are different, the actual changes may be slightly delayed, but no longer than double the configured interval.
  */
 @SuppressFBWarnings(value = "SQL_PREPARED_STATEMENT_GENERATED_FROM_NONCONSTANT_STRING",
-    justification = "The SQL used within this class is self-contained and only varies based on the Spring configuration so there is no risk of SQL " +
-        "injection.")
+    justification = "The SQL used within this class is self-contained and only varies based on the Spring configuration so there is no risk of SQL injection.")
 public class Log4jOverridableConfigurer implements BeanPostProcessor, PriorityOrdered, ApplicationContextAware
 {
     // Only use this once logging has been initialized.
-    private static final Logger LOGGER = Logger.getLogger(Log4jOverridableConfigurer.class);
-
-    // The name of the environment variable to specify the base path for logging.
-    private static final String HERD_LOG4J_OUTPUT_BASE_PATH_ENVIRONMENT_VARIABLE = "HERD_LOG4J_OUTPUT_BASE_PATH";
+    private static final Logger LOGGER = LoggerFactory.getLogger(Log4jOverridableConfigurer.class);
 
     @Autowired
     private ApplicationContext applicationContext;
 
     // Configurable properties
     private String overrideResourceLocation;
-    private long refreshIntervalMillis;
+
     private String defaultResourceLocation;
+
     private String tableName;
+
     private String selectColumn;
+
     private String whereColumn;
+
     private String whereValue;
+
     private DataSource dataSource;
 
     private boolean loggingInitialized;
+
     private String existingDbLog4JConfiguration;
+
+    private Path tempFile = null;
+
+    private Log4jDbWatchdog watchdog;
 
     @Override
     public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException
@@ -128,15 +146,6 @@ public class Log4jOverridableConfigurer implements BeanPostProcessor, PriorityOr
     @SuppressWarnings("PMD.SystemPrintln")
     private void initLogging()
     {
-        // TODO: Remove setting system property below once we upgrade to log4j 2.X and switch to using environment variables directly in the XML
-        // configuration using ${env:<VAR_NAME>} notation. For now, we need to explicitly set the system property from the environment variable.
-        // Set the relative system property to specify the base path for logging.
-        String value = System.getenv(HERD_LOG4J_OUTPUT_BASE_PATH_ENVIRONMENT_VARIABLE);
-        if (StringUtils.isNotBlank(value))
-        {
-            System.setProperty(HERD_LOG4J_OUTPUT_BASE_PATH_ENVIRONMENT_VARIABLE, value);
-        }
-
         // First try the override resource location. This gives the local machine a chance to override the configuration. This could be useful
         // for local developers who want to create a local override configuration file.
         boolean initialized = initializeLog4jFromResourceLocation(overrideResourceLocation);
@@ -159,8 +168,7 @@ public class Log4jOverridableConfigurer implements BeanPostProcessor, PriorityOr
         {
             // We shouldn't typically get here if a valid Log4J configuration file was bundled with the WAR.
             System.err.println("Unable to find a valid Log4J configuration using database query \"" + getLog4JConfigurationRetrievalQuery(true) +
-                "\" or the override resource location \"" + overrideResourceLocation + "\" or the default resource location \"" +
-                defaultResourceLocation +
+                "\" or the override resource location \"" + overrideResourceLocation + "\" or the default resource location \"" + defaultResourceLocation +
                 "\".");
         }
     }
@@ -172,6 +180,7 @@ public class Log4jOverridableConfigurer implements BeanPostProcessor, PriorityOr
      *
      * @return true if Log4J was initialized or false if not.
      */
+    // Using System.out and System.err is okay here because we need a place to output information before logging is initialized.
     @SuppressWarnings("PMD.SystemPrintln")
     private boolean initializeLog4jFromResourceLocation(String resourceLocation)
     {
@@ -190,32 +199,24 @@ public class Log4jOverridableConfigurer implements BeanPostProcessor, PriorityOr
             {
                 // Initialize Log4J from the resource location.
                 // Write the "good" parameters to System.out since logging hasn't been initialized yet.
-                System.out
-                    .println("Using Log4J configuration location \"" + resourceLocationTrimmed + "\" and refresh interval \"" + refreshIntervalMillis + "\".");
+                System.out.println("Using Log4J configuration location \"" + resourceLocationTrimmed + "\".");
 
-                try
-                {
-                    if (refreshIntervalMillis != 0)
-                    {
-                        // Initialize with refresh interval (i.e. with Log4J's watchdog thread checking the file in the background).
-                        Log4jConfigurer.initLogging(resourceLocationTrimmed, refreshIntervalMillis);
-                    }
-                    else
-                    {
-                        // Initialize without refresh check (i.e. without Log4J's watchdog thread).
-                        Log4jConfigurer.initLogging(resourceLocationTrimmed);
-                    }
+                // Initialize Log4J with the resource. The configuration itself can use "monitorInterval" to have it refresh if it came from a file.
+                LoggerContext loggerContext = Configurator.initialize(null, resourceLocationTrimmed);
 
-                    // Now that Logging has been initialized, log something so we know it's working.
-                    LOGGER.info("Logging successfully initialized.");
-                }
-                catch (FileNotFoundException ex)
+                // For some initialization errors, a null context will be returned.
+                if (loggerContext == null)
                 {
                     // We shouldn't get here since we already checked if the location existed previously.
-                    throw new IllegalArgumentException("Invalid location configuration: \"" + resourceLocationTrimmed + "\".", ex);
+                    throw new IllegalArgumentException("Invalid configuration found at resource location: \"" + resourceLocationTrimmed + "\".");
                 }
 
-                // Mark that we successfully initialized Log4J.
+                // Now that Logging has been initialized, log something so we know it's working.
+                // Note that it is possible that Log4J didn't initialize properly and didn't let us know. In this case, an error will be displayed on the
+                // console by Log4J and the default logging level will be "error". As such, the below logging message won't be displayed.
+                LOGGER.info("Logging successfully initialized.");
+
+                // Mark that we successfully initialized Log4J - as much as we're able to.
                 isInitSuccessful = true;
             }
         }
@@ -229,6 +230,7 @@ public class Log4jOverridableConfigurer implements BeanPostProcessor, PriorityOr
      *
      * @return true if Log4J was initialized or false if not.
      */
+    // Using System.out and System.err is okay here because we need a place to output information before logging is initialized.
     @SuppressWarnings("PMD.SystemPrintln")
     private boolean initializeLog4jFromDatabase()
     {
@@ -245,18 +247,10 @@ public class Log4jOverridableConfigurer implements BeanPostProcessor, PriorityOr
         if (StringUtils.isNotBlank(existingDbLog4JConfiguration))
         {
             // Write the "good" parameters to System.out since logging hasn't been initialized yet.
-            System.out.println(
-                "Using Log4J configuration from the database using query \"" + getLog4JConfigurationRetrievalQuery(true) + "\" and refresh interval \"" +
-                    refreshIntervalMillis + "\".");
+            System.out.println("Using Log4J configuration from the database using query \"" + getLog4JConfigurationRetrievalQuery(true) + "\".");
 
             // Proceed with the initial Log4J initialization based on the retrieved database configuration.
-            new DOMConfigurator().doConfigure(new StringReader(existingDbLog4JConfiguration), LogManager.getLoggerRepository());
-
-            // If we have a refresh interval, start a Log4J database watchdog which will keep monitoring the database for changes to the configuration.
-            if (refreshIntervalMillis != 0)
-            {
-                new Log4jDbWatchdog().start();
-            }
+            initializeConfiguration(existingDbLog4JConfiguration);
 
             // Now that Logging has been initialized, log something so we know it's working.
             LOGGER.info("Logging successfully initialized.");
@@ -431,17 +425,6 @@ public class Log4jOverridableConfigurer implements BeanPostProcessor, PriorityOr
     }
 
     /**
-     * The Log4J refresh interview in milliseconds. This is the amount of time that will pass before the configuration is re-read to obtain any potential
-     * changes made to the configuration.
-     *
-     * @param refreshIntervalMillis the refresh interval.
-     */
-    public void setRefreshIntervalMillis(long refreshIntervalMillis)
-    {
-        this.refreshIntervalMillis = refreshIntervalMillis;
-    }
-
-    /**
      * Sets the table name that contains the Log4J database override configuration.
      *
      * @param tableName the table name.
@@ -491,6 +474,80 @@ public class Log4jOverridableConfigurer implements BeanPostProcessor, PriorityOr
     public void setDataSource(DataSource dataSource)
     {
         this.dataSource = dataSource;
+    }
+
+    /**
+     * Initializes a Log4J configuration based on the specified configuration string.
+     *
+     * @param xmlConfigurationString the configuration string.
+     */
+    // Using System.out and System.err is okay here because we need a place to output information before logging is initialized.
+    @SuppressWarnings("PMD.SystemPrintln")
+    private void initializeConfiguration(String xmlConfigurationString)
+    {
+        try
+        {
+            // Note whether this is the first time we are creating the configuration based on whether we already created a temp configuration file or not.
+            boolean initialConfiguration = tempFile == null;
+
+            // If this is the initial configuration, create a temp file and add a shutdown hook so it will get cleaned up upon JVM exit.
+            if (initialConfiguration)
+            {
+                tempFile = Files.createTempFile("log4jTempConfig", ".xml");
+                System.out.println("Created temporary logging configuration file: \"" + tempFile.toString() + "\".");
+                Runtime.getRuntime().addShutdownHook(new ShutdownHook(tempFile));
+            }
+
+            // Write the Log4J configuration to the temporary file every time.
+            try (FileOutputStream fileOutputStream = new FileOutputStream(tempFile.toAbsolutePath().toString()))
+            {
+                IOUtils.write(xmlConfigurationString, fileOutputStream);
+            }
+
+            // Get the refresh interval from the configuration.
+            int refreshIntervalSeconds = getRefreshIntervalSeconds(xmlConfigurationString);
+
+            if (initialConfiguration)
+            {
+                System.out.println("Initial logging refresh interval: " + refreshIntervalSeconds + " second(s).");
+
+                // This is the initial configuration so tell Log4J to do the initialization based on the temporary file we just created.
+                // The configuration file itself can use "monitorInterval" to have it refresh if it came from a file. We will let
+                // Log4J do it's auto-refresh from the temporary file, but we will update that file ourselves using our watchdog.
+                Configurator.initialize(tempFile.toString(), null, tempFile.toUri());
+
+                // Create and start a watchdog thread to monitor the DB configuration and when a change is found, it will call this method again
+                // to overwrite the temporary file with the new configuration.
+                watchdog = new Log4jDbWatchdog(refreshIntervalSeconds);
+                watchdog.start();
+            }
+            else
+            {
+                // If this isn't the initial configuration, update the refresh interval (or set it the same value). That way, if a new refresh interval
+                // was specified in the configuration file, we will grab it and adjust the watchdog interval.
+                watchdog.setRefreshIntervalSeconds(refreshIntervalSeconds);
+            }
+        }
+        catch (IOException ex)
+        {
+            throw new IllegalStateException("Unable to initialize Log4J with configuration: \"" + xmlConfigurationString + "\".", ex);
+        }
+    }
+
+    /**
+     * Gets the refresh interval in seconds from the Log4J XML configuration.
+     *
+     * @param xmlConfigurationString the XML configuration.
+     *
+     * @return the refresh interval in seconds.
+     * @throws IOException if there were any errors parsing the configuration file.
+     */
+    private int getRefreshIntervalSeconds(String xmlConfigurationString) throws IOException
+    {
+        // Create the Log4J configuration object from the configuration string and get the refresh interval in seconds from the configuration.
+        XmlConfiguration xmlConfiguration =
+            new XmlConfiguration(new ConfigurationSource(new ByteArrayInputStream(xmlConfigurationString.getBytes(StandardCharsets.UTF_8))));
+        return xmlConfiguration.getWatchManager().getIntervalSeconds();
     }
 
     /**
@@ -669,26 +726,87 @@ public class Log4jOverridableConfigurer implements BeanPostProcessor, PriorityOr
     }
 
     /**
+     * A shutdown hook that will delete the temporary logging configuration file when the JVM exits.
+     */
+    // Using System.out and System.err is okay here because we need a place to output information before logging is initialized.
+    // We are printing a stack trace because logging may not have been initialized.
+    @SuppressWarnings({"PMD.SystemPrintln", "PMD.AvoidPrintStackTrace"})
+    private static class ShutdownHook extends Thread
+    {
+        private Path tempFile = null;
+
+        public ShutdownHook(Path tempFile)
+        {
+            this.tempFile = tempFile;
+        }
+
+        @Override
+        public void run()
+        {
+            try
+            {
+                System.out.println("Deleting temporary logging configuration file: \"" + tempFile.toString() + "\".");
+                Files.delete(tempFile);
+            }
+            catch (IOException e)
+            {
+                // Print a stack trace since logging may not have been initialized.
+                System.err.println("Unable to delete temporary Log4J configuration file: \"" + tempFile.toString() + "\".");
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
      * An internally used watchdog thread that keeps querying the database to retrieve the Log4J configuration each time it wakes up. Each time it queries the
      * configuration, it compares it to the previously read configuration and if any changes are present, the Log4J configuration is re-initialized. This is
-     * similar to the org.apache.log4j.helpers.FileWatchdog class. Note that this thread will first sleep before it does anything so it is important that the
-     * caller first initializes Log4J before this thread is started.
+     * similar to what Log4J provides out of the box for configurations in files. Note that this thread will first sleep before it does anything so it is
+     * important that the caller first initializes Log4J before this thread is started.
      */
     protected class Log4jDbWatchdog extends Thread
     {
+        private long refreshIntervalSeconds;
+
+        public Log4jDbWatchdog(long refreshIntervalSeconds)
+        {
+            this.refreshIntervalSeconds = refreshIntervalSeconds;
+        }
+
+        /**
+         * Sets the refresh interval in seconds. Note that this is the time we will monitor for DB changes and not the time that Log4J will check for temporary
+         * file updates so an additional delay will be present before the DB changes will be applied.
+         *
+         * @param refreshIntervalSeconds the refresh interval.
+         */
+        public void setRefreshIntervalSeconds(long refreshIntervalSeconds)
+        {
+            if (refreshIntervalSeconds != this.refreshIntervalSeconds)
+            {
+                LOGGER.info("Logging refresh interval changed from " + this.refreshIntervalSeconds + " to " + refreshIntervalSeconds + " second(s).");
+            }
+            this.refreshIntervalSeconds = refreshIntervalSeconds;
+        }
+
         /**
          * The main "run" method which gets invoked when this thread gets started.
          */
         @Override
         public void run()
         {
-            // Keep running until the JVM exits.
+            // Keep running until the JVM exits or until we explicitly break out of the loop.
             while (true)
             {
+                // Once the refresh is turned off, exit the loop which will stop the watchdog.
+                if (refreshIntervalSeconds <= 0)
+                {
+                    LOGGER.info("Logging refresh interval is <= 0 so no more monitoring will occur.");
+                    break;
+                }
+
                 try
                 {
                     // Sleep for the refresh interval.
-                    Thread.sleep(refreshIntervalMillis);
+                    Thread.sleep(refreshIntervalSeconds * 1000);
                 }
                 catch (InterruptedException ex)
                 {
@@ -701,9 +819,9 @@ public class Log4jOverridableConfigurer implements BeanPostProcessor, PriorityOr
                 String latestLog4JConfiguration = getLog4JConfigurationFromDatabase();
                 if ((StringUtils.isNotBlank(latestLog4JConfiguration)) && (!(latestLog4JConfiguration.equals(existingDbLog4JConfiguration))))
                 {
-                    LOGGER.info("Log4J configuration change found in database so Log4J is being re-initialized.");
+                    LOGGER.info("Log4J configuration change found in database so Log4J will be re-initialized.");
                     existingDbLog4JConfiguration = latestLog4JConfiguration;
-                    new DOMConfigurator().doConfigure(new StringReader(existingDbLog4JConfiguration), LogManager.getLoggerRepository());
+                    initializeConfiguration(existingDbLog4JConfiguration);
                 }
             }
         }

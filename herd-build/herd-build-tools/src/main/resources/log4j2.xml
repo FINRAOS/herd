@@ -14,7 +14,13 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<Configuration status="warn" monitorInterval="0">
+<!-- Don't add a shutdown hook for the default configuration. This also helps take care of logging warnings for JUnits. -->
+<Configuration shutdownHook="disable" status="warn">
+   <!--
+     This is a simple Log4J2 configuration file that logs to the console. It is here so Cobertura can depend on it and have a configuration file present.
+     We configured Cobertura to use Log4J2 instead of its default logback-classic so some configuration file is needed or else an error will be displayed
+     on the console when JUnit tests are run.
+    -->
    <Appenders>
       <Console name="Console" target="SYSTEM_OUT">
          <PatternLayout pattern="%d{MMM-dd-yyyy HH:mm:ss.SSS} [%t] %-5p %c{5}.%M - %m%n"/>
@@ -22,7 +28,7 @@
    </Appenders>
 
    <Loggers>
-      <Root level="off">
+      <Root level="warn">
          <AppenderRef ref="Console"/>
       </Root>
    </Loggers>

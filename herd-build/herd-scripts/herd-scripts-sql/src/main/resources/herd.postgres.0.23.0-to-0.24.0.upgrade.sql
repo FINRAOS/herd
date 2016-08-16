@@ -13,25 +13,4 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package org.finra.herd.tools.common;
 
-/**
- * Common constants for all tools.
- */
-public final class ToolsCommonConstants
-{
-    /**
-     * The location of Log4J configuration.
-     */
-    public static final String LOG4J_CONFIG_LOCATION = "classpath:herd-console-info-log4j2.xml";
-
-    /**
-     * Default number of threads to be used by the Amazon S3 TransferManager.
-     */
-    public static final Integer DEFAULT_THREADS = 10;
-
-    private ToolsCommonConstants()
-    {
-        // Prevent classes from instantiating.
-    }
-}

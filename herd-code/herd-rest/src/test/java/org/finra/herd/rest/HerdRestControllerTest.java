@@ -20,7 +20,8 @@ import static org.junit.Assert.assertNotNull;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.junit.Test;
 
 import org.finra.herd.model.api.xml.BuildInformation;
@@ -30,7 +31,7 @@ import org.finra.herd.model.api.xml.BuildInformation;
  */
 public class HerdRestControllerTest extends AbstractRestTest
 {
-    private static Logger logger = Logger.getLogger(HerdRestControllerTest.class);
+    private static Logger logger = LoggerFactory.getLogger(HerdRestControllerTest.class);
 
     @Test
     public void testGetBuildInfo() throws Exception
@@ -39,7 +40,7 @@ public class HerdRestControllerTest extends AbstractRestTest
         BuildInformation buildInformation = herdRestController.getBuildInfo();
         assertNotNull(buildInformation);
         assertNotNull(buildInformation.getBuildDate());
-        logger.info(buildInformation);
+        logger.info(buildInformation.toString());
     }
 
     @Test
