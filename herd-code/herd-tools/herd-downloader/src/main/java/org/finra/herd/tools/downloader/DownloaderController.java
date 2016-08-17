@@ -28,7 +28,8 @@ import javax.xml.bind.JAXBException;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.io.filefilter.TrueFileFilter;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
@@ -60,7 +61,7 @@ import org.finra.herd.tools.common.databridge.DataBridgeController;
 @Component
 public class DownloaderController extends DataBridgeController
 {
-    private static final Logger LOGGER = Logger.getLogger(DownloaderController.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DownloaderController.class);
 
     @Autowired
     private BusinessObjectDataHelper businessObjectDataHelper;

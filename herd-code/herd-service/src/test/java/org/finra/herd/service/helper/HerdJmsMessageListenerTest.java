@@ -22,11 +22,10 @@ import com.amazonaws.services.s3.event.S3EventNotification;
 import com.amazonaws.services.s3.event.S3EventNotification.S3Entity;
 import com.amazonaws.services.s3.event.S3EventNotification.S3EventNotificationRecord;
 import com.amazonaws.services.s3.event.S3EventNotification.S3ObjectEntity;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import org.finra.herd.core.helper.LogLevel;
 import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.api.xml.UploadSingleInitiationResponse;
 import org.finra.herd.service.AbstractServiceTest;
@@ -51,7 +50,8 @@ public class HerdJmsMessageListenerTest extends AbstractServiceTest
     @Test
     public void testSystemMonitorMessage() throws Exception
     {
-        executeWithoutLogging(HerdJmsMessageListener.class, () -> {
+        executeWithoutLogging(HerdJmsMessageListener.class, () ->
+        {
             herdJmsMessageListener.processMessage(getTestSystemMonitorIncomingMessage(), null);
         });
     }
@@ -59,7 +59,7 @@ public class HerdJmsMessageListenerTest extends AbstractServiceTest
     @Test
     public void testS3Message() throws Exception
     {
-        Logger.getLogger(UploadDownloadHelperServiceImpl.class).setLevel(Level.OFF);
+        setLogLevel(UploadDownloadHelperServiceImpl.class, LogLevel.OFF);
 
         createDatabaseEntitiesForUploadDownloadTesting();
 
@@ -74,8 +74,8 @@ public class HerdJmsMessageListenerTest extends AbstractServiceTest
 
         S3EventNotification s3EventNotification = new S3EventNotification(records);
 
-        Logger.getLogger(UploadDownloadServiceImpl.class).setLevel(Level.OFF);
-        Logger.getLogger(HerdJmsMessageListener.class).setLevel(Level.OFF);
+        setLogLevel(UploadDownloadServiceImpl.class, LogLevel.OFF);
+        setLogLevel(HerdJmsMessageListener.class, LogLevel.OFF);
 
         herdJmsMessageListener.processMessage(jsonHelper.objectToJson(s3EventNotification), null);
     }
@@ -83,7 +83,7 @@ public class HerdJmsMessageListenerTest extends AbstractServiceTest
     @Test
     public void testS3MessageS3FileNoExists() throws Exception
     {
-        Logger.getLogger(UploadDownloadHelperServiceImpl.class).setLevel(Level.OFF);
+        setLogLevel(UploadDownloadHelperServiceImpl.class, LogLevel.OFF);
 
         createDatabaseEntitiesForUploadDownloadTesting();
 
@@ -100,8 +100,8 @@ public class HerdJmsMessageListenerTest extends AbstractServiceTest
 
         S3EventNotification s3EventNotification = new S3EventNotification(records);
 
-        Logger.getLogger(UploadDownloadServiceImpl.class).setLevel(Level.OFF);
-        Logger.getLogger(HerdJmsMessageListener.class).setLevel(Level.OFF);
+        setLogLevel(UploadDownloadServiceImpl.class, LogLevel.OFF);
+        setLogLevel(HerdJmsMessageListener.class, LogLevel.OFF);
 
         // Try to process an S3 JMS message, when source S3 file does not exist.
         herdJmsMessageListener.processMessage(jsonHelper.objectToJson(s3EventNotification), null);
@@ -116,8 +116,8 @@ public class HerdJmsMessageListenerTest extends AbstractServiceTest
 
         S3EventNotification s3EventNotification = new S3EventNotification(records);
 
-        Logger.getLogger(UploadDownloadServiceImpl.class).setLevel(Level.OFF);
-        Logger.getLogger(HerdJmsMessageListener.class).setLevel(Level.OFF);
+        setLogLevel(UploadDownloadServiceImpl.class, LogLevel.OFF);
+        setLogLevel(HerdJmsMessageListener.class, LogLevel.OFF);
 
         herdJmsMessageListener.processMessage(jsonHelper.objectToJson(s3EventNotification), null);
     }
@@ -125,8 +125,8 @@ public class HerdJmsMessageListenerTest extends AbstractServiceTest
     @Test
     public void testS3MessageWrongMessage() throws Exception
     {
-        Logger.getLogger(UploadDownloadServiceImpl.class).setLevel(Level.OFF);
-        Logger.getLogger(HerdJmsMessageListener.class).setLevel(Level.OFF);
+        setLogLevel(UploadDownloadServiceImpl.class, LogLevel.OFF);
+        setLogLevel(HerdJmsMessageListener.class, LogLevel.OFF);
 
         herdJmsMessageListener.processMessage("WRONG_MESSAGE", null);
     }

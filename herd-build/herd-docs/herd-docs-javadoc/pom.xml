@@ -21,7 +21,7 @@
    <parent>
       <groupId>org.finra.herd</groupId>
       <artifactId>herd-docs</artifactId>
-      <version>0.23.0-SNAPSHOT</version>
+      <version>0.24.0-SNAPSHOT</version>
    </parent>
 
    <name>herd docs javadoc</name>
@@ -35,6 +35,14 @@
       <dependency>
          <groupId>javax.servlet</groupId>
          <artifactId>javax.servlet-api</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.apache.logging.log4j</groupId>
+         <artifactId>log4j-api</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.apache.logging.log4j</groupId>
+         <artifactId>log4j-core</artifactId>
       </dependency>
       <dependency>
          <groupId>org.springframework</groupId>
@@ -95,10 +103,6 @@
       <dependency>
          <groupId>org.springframework.security</groupId>
          <artifactId>spring-security-config</artifactId>
-      </dependency>
-      <dependency>
-         <groupId>log4j</groupId>
-         <artifactId>log4j</artifactId>
       </dependency>
       <dependency>
          <groupId>com.google.code.findbugs</groupId>

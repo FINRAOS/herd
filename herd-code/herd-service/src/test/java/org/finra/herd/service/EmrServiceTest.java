@@ -319,8 +319,6 @@ public class EmrServiceTest extends AbstractServiceTest
         String emrClusterDefinitionName = emrCluster.getEmrClusterDefinitionName();
         String emrClusterName = emrCluster.getEmrClusterName();
 
-        System.out.println(String.format("%s, %s, %s", namespace, emrClusterDefinitionName, emrClusterName));
-
         List<EmrClusterCreationLogEntity> list = getEmrClusterCreationLogEntities(namespace, emrClusterDefinitionName, emrClusterName);
         assertEquals("EMR cluster creation log size", 1, list.size());
         EmrClusterCreationLogEntity log = list.get(0);

@@ -246,6 +246,8 @@ public class JobServiceTest extends AbstractServiceTest
         // Completed job with verbose
         jobGet = jobService.getJob(job.getId(), true);
         assertEquals(JobStatusEnum.COMPLETED, jobGet.getStatus());
+        assertNotNull(jobGet.getStartTime());
+        assertNotNull(jobGet.getEndTime());
         assertNotNull(jobGet.getActivitiJobXml());
         assertEquals(activitiXml, jobGet.getActivitiJobXml());
         assertTrue(jobGet.getCompletedWorkflowSteps().size() > 0);
@@ -254,6 +256,8 @@ public class JobServiceTest extends AbstractServiceTest
         // Completed job with non verbose
         jobGet = jobService.getJob(job.getId(), false);
         assertEquals(JobStatusEnum.COMPLETED, jobGet.getStatus());
+        assertNotNull(jobGet.getStartTime());
+        assertNotNull(jobGet.getEndTime());
         assertNull(jobGet.getActivitiJobXml());
         assertTrue(CollectionUtils.isEmpty(jobGet.getCompletedWorkflowSteps()));
         assertNull(jobGet.getCurrentWorkflowStep());

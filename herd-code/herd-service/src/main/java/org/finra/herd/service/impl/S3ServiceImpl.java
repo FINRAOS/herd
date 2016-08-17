@@ -18,7 +18,8 @@ package org.finra.herd.service.impl;
 import java.util.List;
 
 import com.amazonaws.services.s3.model.S3ObjectSummary;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,7 +40,7 @@ import org.finra.herd.service.S3Service;
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 public class S3ServiceImpl implements S3Service
 {
-    private static final Logger LOGGER = Logger.getLogger(S3ServiceImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(S3ServiceImpl.class);
 
     @Autowired
     private S3Dao s3Dao;

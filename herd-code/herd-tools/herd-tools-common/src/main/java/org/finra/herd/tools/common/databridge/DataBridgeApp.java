@@ -19,7 +19,8 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
@@ -40,7 +41,7 @@ public abstract class DataBridgeApp
 {
     public static final String BUILD_INFO_STRING_FORMAT = "buildDate: %s\nbuildNumber: %s\nbuildOS: %s\nbuildUser: %s";
 
-    private static final Logger LOGGER = Logger.getLogger(DataBridgeApp.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DataBridgeApp.class);
 
     // The common command line options.
     protected Option s3AccessKeyOpt;

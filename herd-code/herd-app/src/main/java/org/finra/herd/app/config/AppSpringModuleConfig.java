@@ -106,9 +106,6 @@ public class AppSpringModuleConfig extends GlobalMethodSecurityConfiguration
         // project's JAR will result in the resource not being found as a "file".
         log4jConfigurer.setDefaultResourceLocation("classpath:herd-log4j.xml");
 
-        // Regardless of which configuration is found, check for an updated configuration at this interval.
-        log4jConfigurer.setRefreshIntervalMillis(ConfigurationHelper.getProperty(ConfigurationValue.LOG4J_REFRESH_INTERVAL_MILLIS, Long.class, environment));
-
         // Return the Log4J configurer.
         return log4jConfigurer;
     }

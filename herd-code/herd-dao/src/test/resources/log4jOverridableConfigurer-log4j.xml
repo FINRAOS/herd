@@ -14,27 +14,20 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+<Configuration status="warn" monitorInterval="0">
+   <Appenders>
+      <File name="File" fileName="~log4jFileLocation~" append="true">
+         <PatternLayout pattern="%d{MMM-dd-yyyy HH:mm:ss.SSS} [%t] %-5p %c{5}.%M - %m%n"/>
+      </File>
+   </Appenders>
 
-<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
+   <Loggers>
+      <Logger name="org.finra.herd" level="info" additivity="false">
+          <AppenderRef ref="File"/>
+      </Logger>
 
-   <appender name="FILE" class="org.apache.log4j.DailyRollingFileAppender">
-      <param name="File" value="~log4jFileLocation~"/>
-      <param name="DatePattern" value="'.'yyyy-MM-dd"/>
-      <param name="Append" value="true"/>
-      <layout class="org.apache.log4j.PatternLayout">
-         <param name="ConversionPattern" value="%d{MMM-dd-yyyy HH:mm:ss.SSS} [%t] %-5p %c{5}.%M - %m%n"/>
-      </layout>
-   </appender>
-
-   <logger name="org.finra.herd" additivity="false">
-      <level value="INFO"/>
-      <appender-ref ref="FILE"/>
-   </logger>
-
-   <root>
-      <level value="WARN"/>
-      <appender-ref ref="FILE"/>
-   </root>
-
-</log4j:configuration>
+      <Root level="warn">
+         <AppenderRef ref="File"/>
+      </Root>
+   </Loggers>
+</Configuration>

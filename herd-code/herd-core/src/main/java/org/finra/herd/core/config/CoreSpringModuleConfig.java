@@ -18,7 +18,8 @@ package org.finra.herd.core.config;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler;
 import org.springframework.aop.interceptor.SimpleAsyncUncaughtExceptionHandler;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,7 +53,7 @@ import org.finra.herd.model.dto.ConfigurationValue;
 @EnableAspectJAutoProxy(proxyTargetClass = true)
 public class CoreSpringModuleConfig implements AsyncConfigurer
 {
-    private static final Logger LOGGER = Logger.getLogger(CoreSpringModuleConfig.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(CoreSpringModuleConfig.class);
 
     @Autowired
     private Environment environment;

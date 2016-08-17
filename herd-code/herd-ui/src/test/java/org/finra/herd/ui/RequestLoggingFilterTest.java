@@ -27,8 +27,6 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.mock.web.MockFilterChain;
@@ -36,6 +34,8 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.web.util.WebUtils;
+
+import org.finra.herd.core.helper.LogLevel;
 
 /**
  * Test driver for the RequestLoggingFilter class. Since the filter's main functionality logs messages which is difficult to test, the majority of test cases
@@ -50,8 +50,7 @@ public class RequestLoggingFilterTest extends AbstractUiTest
     public void setup() throws Exception
     {
         // Turn on debug logging which is what enables the logging by the filter.
-        Logger logger = Logger.getLogger(RequestLoggingFilter.class);
-        logger.setLevel(Level.DEBUG);
+        setLogLevel(RequestLoggingFilter.class, LogLevel.DEBUG);
 
         super.setup();
     }
@@ -67,8 +66,7 @@ public class RequestLoggingFilterTest extends AbstractUiTest
     public void testDoFilterNoDebug() throws Exception
     {
         // Turn on info logging which will disable the core functionality of the filter (i.e. no logging).
-        Logger logger = Logger.getLogger(RequestLoggingFilter.class);
-        logger.setLevel(Level.INFO);
+        setLogLevel(RequestLoggingFilter.class, LogLevel.INFO);
 
         // Run the filter.
         createFilter().doFilter(createServletRequest(), createServletResponse(), createFilterChain());
@@ -145,8 +143,7 @@ public class RequestLoggingFilterTest extends AbstractUiTest
     public void testDoFilterReadInputStreamFromFilterChainWithNoPayloadNoDebugLevel() throws Exception
     {
         // Turn on info logging which will disable the core functionality of the filter (i.e. no logging).
-        Logger logger = Logger.getLogger(RequestLoggingFilter.class);
-        logger.setLevel(Level.INFO);
+        setLogLevel(RequestLoggingFilter.class, LogLevel.INFO);
 
         FilterChain filterChain = new MockFilterChain()
         {

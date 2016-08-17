@@ -20,19 +20,15 @@ import static org.junit.Assert.assertEquals;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.io.StringWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.runner.RunWith;
@@ -49,6 +45,8 @@ import org.springframework.test.context.transaction.TransactionConfiguration;
 
 import org.finra.herd.core.config.CoreTestSpringModuleConfig;
 import org.finra.herd.core.helper.ConfigurationHelper;
+import org.finra.herd.core.helper.LogLevel;
+import org.finra.herd.core.helper.LoggingHelper;
 
 /**
  * Base class for all core and extending tests. We need to use a customized "loader" that stores the application context in an application context holder so
@@ -84,6 +82,9 @@ public abstract class AbstractCoreTest
 
     @Autowired
     protected ConfigurationHelper configurationHelper;
+
+    @Autowired
+    protected LoggingHelper loggingHelper;
 
     // The Spring environment.
     @Autowired
@@ -190,65 +191,6 @@ public abstract class AbstractCoreTest
     }
 
     /**
-     * Executes a command without logging. The logging will be temporarily turned off during the execution of the command and then restored once the command has
-     * finished executing.
-     *
-     * @param loggingClass the logging class to turn off. If null is specified, the command will be executed with no logging changes
-     * @param command the command to execute
-     *
-     * @throws Exception if any errors were encountered.
-     */
-    protected void executeWithoutLogging(Class<?> loggingClass, Command command) throws Exception
-    {
-        List<Class<?>> loggingClasses = new ArrayList<>();
-        loggingClasses.add(loggingClass);
-        executeWithoutLogging(loggingClasses, command);
-    }
-
-    /**
-     * Executes a command without logging. The logging will be temporarily turned off during the execution of the command and then restored once the command has
-     * finished executing.
-     *
-     * @param loggingClasses the list of logging classes to turn off
-     * @param command the command to execute
-     *
-     * @throws Exception if any errors were encountered
-     */
-    protected void executeWithoutLogging(List<Class<?>> loggingClasses, Command command) throws Exception
-    {
-        // Temporarily turn off logging.
-        Map<Logger, Level> loggerToOriginalLevel = new HashMap<>();
-        for (Class<?> loggingClass : loggingClasses)
-        {
-            Logger logger = loggingClass == null ? null : Logger.getLogger(loggingClass.getName());
-            Level originalLevel = logger == null ? null : logger.getEffectiveLevel();
-
-            if (logger != null)
-            {
-                logger.setLevel(Level.OFF);
-                loggerToOriginalLevel.put(logger, originalLevel);
-            }
-        }
-
-        try
-        {
-            // Execute the command.
-            command.execute();
-        }
-        finally
-        {
-            for (Map.Entry<Logger, Level> entry : loggerToOriginalLevel.entrySet())
-            {
-                Logger logger = entry.getKey();
-                Level originalLevel = entry.getValue();
-
-                // Turn the original logging back on.
-                logger.setLevel(originalLevel);
-            }
-        }
-    }
-
-    /**
      * Gets the mutable property sources object from the environment.
      *
      * @return the mutable property sources.
@@ -265,5 +207,97 @@ public abstract class AbstractCoreTest
         // Return the property sources from the configurable environment.
         ConfigurableEnvironment configurableEnvironment = (ConfigurableEnvironment) environment;
         return configurableEnvironment.getPropertySources();
+    }
+
+    /**
+     * Executes a command without logging. The logging will be temporarily turned off during the execution of the command and then restored once the command has
+     * finished executing.
+     *
+     * @param loggingClass the logging class to turn off. If null is specified, the command will be executed with no logging changes
+     * @param command the command to execute
+     *
+     * @throws Exception if any errors were encountered.
+     */
+    protected void executeWithoutLogging(Class<?> loggingClass, Command command) throws Exception
+    {
+        loggingHelper.executeWithoutLogging(loggingClass, command);
+    }
+
+    /**
+     * Executes a command without logging. The logging will be temporarily turned off during the execution of the command and then restored once the command has
+     * finished executing.
+     *
+     * @param loggingClasses the list of logging classes to turn off
+     * @param command the command to execute
+     *
+     * @throws Exception if any errors were encountered
+     */
+    protected void executeWithoutLogging(List<Class<?>> loggingClasses, Command command) throws Exception
+    {
+        loggingHelper.executeWithoutLogging(loggingClasses, command);
+    }
+
+    /**
+     * Adds a test appender.
+     *
+     * @param appenderName the appender name to add.
+     *
+     * @return the string writer associated with the writer appender.
+     */
+    protected StringWriter addLoggingWriterAppender(String appenderName)
+    {
+        return loggingHelper.addLoggingWriterAppender(appenderName);
+    }
+
+    /**
+     * Removes a logging appender.
+     *
+     * @param appenderName the appender name.
+     */
+    protected void removeLoggingAppender(String appenderName)
+    {
+        loggingHelper.removeLoggingAppender(appenderName);
+    }
+
+    /**
+     * Gets the log level for the specified logger.
+     *
+     * @param clazz the class for the logger.
+     */
+    protected LogLevel getLogLevel(Class clazz)
+    {
+        return loggingHelper.getLogLevel(clazz);
+    }
+
+    /**
+     * Gets the log level for the specified logger.
+     *
+     * @param loggerName the logger name to get the level for.
+     */
+    protected LogLevel getLogLevel(String loggerName)
+    {
+        return loggingHelper.getLogLevel(loggerName);
+    }
+
+    /**
+     * Sets the log level.
+     *
+     * @param clazz the class for the logger.
+     * @param logLevel the log level to set.
+     */
+    protected void setLogLevel(Class clazz, LogLevel logLevel)
+    {
+        loggingHelper.setLogLevel(clazz, logLevel);
+    }
+
+    /**
+     * Sets the log level.
+     *
+     * @param loggerName the logger name (e.g. Myclass.class.getName()).
+     * @param logLevel the log level to set.
+     */
+    protected void setLogLevel(String loggerName, LogLevel logLevel)
+    {
+        loggingHelper.setLogLevel(loggerName, logLevel);
     }
 }

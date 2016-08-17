@@ -18,7 +18,8 @@ package org.finra.herd.rest;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.junit.Test;
 
 import org.finra.herd.model.ObjectNotFoundException;
@@ -31,7 +32,7 @@ import org.finra.herd.model.api.xml.StoragePlatforms;
  */
 public class StoragePlatformRestControllerTest extends AbstractRestTest
 {
-    private static Logger logger = Logger.getLogger(StoragePlatformRestControllerTest.class);
+    private static Logger logger = LoggerFactory.getLogger(StoragePlatformRestControllerTest.class);
 
     @Test
     public void testGetStoragePlatforms() throws Exception
