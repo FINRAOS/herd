@@ -37,6 +37,7 @@ import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.NotificationEventTypeEntity;
+import org.finra.herd.model.jpa.NotificationRegistrationStatusEntity;
 import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.StoragePlatformEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
@@ -69,16 +70,16 @@ public class NotificationEventServiceTest extends AbstractServiceTest
         storageUnitDaoTestHelper.createStorageUnitEntity(storageEntity, businessObjectDataEntity, StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
 
         // Create and persist a business object data notification registration entity.
-        businessObjectDataNotificationRegistrationDaoTestHelper
+        notificationRegistrationDaoTestHelper
             .createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME),
                 NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_RGSTN.name(), BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-                FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, null, jobActions);
+                FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, null, jobActions, NotificationRegistrationStatusEntity.ENABLED);
 
         // Create and persist a business object data notification registration entity.
-        businessObjectDataNotificationRegistrationDaoTestHelper
+        notificationRegistrationDaoTestHelper
             .createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME_2),
                 NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_RGSTN.name(), BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-                FORMAT_VERSION, STORAGE_NAME_2, BDATA_STATUS, null, jobActions);
+                FORMAT_VERSION, STORAGE_NAME_2, BDATA_STATUS, null, jobActions, NotificationRegistrationStatusEntity.ENABLED);
 
         // Trigger the notification
         List<Object> notificationActions = notificationEventService
@@ -129,10 +130,10 @@ public class NotificationEventServiceTest extends AbstractServiceTest
         storageUnitDaoTestHelper.createStorageUnitEntity(storageEntity, businessObjectDataEntity, StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
 
         // Create and persist a business object data notification registration entity.
-        businessObjectDataNotificationRegistrationDaoTestHelper
+        notificationRegistrationDaoTestHelper
             .createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME),
                 NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_STTS_CHG.name(), BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-                FORMAT_VERSION, STORAGE_NAME, BusinessObjectDataStatusEntity.VALID, BusinessObjectDataStatusEntity.UPLOADING, jobActions);
+                FORMAT_VERSION, STORAGE_NAME, BusinessObjectDataStatusEntity.VALID, BusinessObjectDataStatusEntity.UPLOADING, jobActions, NotificationRegistrationStatusEntity.ENABLED);
 
         // Trigger the notification.
         List<Object> notificationActions = notificationEventService
@@ -175,10 +176,10 @@ public class NotificationEventServiceTest extends AbstractServiceTest
                 SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS);
 
         // Create and persist a business object data notification registration entity.
-        businessObjectDataNotificationRegistrationDaoTestHelper
+        notificationRegistrationDaoTestHelper
             .createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME),
                 NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_RGSTN.name(), BDEF_NAMESPACE, BDEF_NAME, null, null, null, null, null, null,
-                jobActions);
+                jobActions, NotificationRegistrationStatusEntity.ENABLED);
 
         BusinessObjectDataKey businessObjectDataKey =
             new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
@@ -244,15 +245,15 @@ public class NotificationEventServiceTest extends AbstractServiceTest
         storageUnitDaoTestHelper.createStorageUnitEntity(storageEntity, businessObjectDataEntity, StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
 
         // Create and persist a business object data notification registration entity.
-        businessObjectDataNotificationRegistrationDaoTestHelper
+        notificationRegistrationDaoTestHelper
             .createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME),
                 NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_RGSTN.name(), BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-                FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, null, jobActions);
+                FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, null, jobActions, NotificationRegistrationStatusEntity.ENABLED);
 
-        businessObjectDataNotificationRegistrationDaoTestHelper
+        notificationRegistrationDaoTestHelper
             .createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME_2),
                 NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_RGSTN.name(), BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-                FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, null, jobActions);
+                FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, null, jobActions, NotificationRegistrationStatusEntity.ENABLED);
 
         BusinessObjectDataKey businessObjectDataKey =
             new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
@@ -310,16 +311,16 @@ public class NotificationEventServiceTest extends AbstractServiceTest
         storageUnitDaoTestHelper.createStorageUnitEntity(storageEntity, businessObjectDataEntity, StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
 
         // Create and persist a business object data notification registration entity that is enabled.
-        businessObjectDataNotificationRegistrationDaoTestHelper
+        notificationRegistrationDaoTestHelper
             .createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME),
                 NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_RGSTN.name(), BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-                FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, null, jobActions1, "ENABLED");
+                FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, null, jobActions1, NotificationRegistrationStatusEntity.ENABLED);
 
         // Create and persist a business object data notification registration entity that is disabled.
-        businessObjectDataNotificationRegistrationDaoTestHelper
+        notificationRegistrationDaoTestHelper
             .createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME_2),
                 NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_RGSTN.name(), BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-                FORMAT_VERSION, STORAGE_NAME_2, BDATA_STATUS, null, jobActions2, "DISABLED");
+                FORMAT_VERSION, STORAGE_NAME_2, BDATA_STATUS, null, jobActions2, NotificationRegistrationStatusEntity.DISABLED);
 
         // Trigger the notification
         List<Object> notificationActions = notificationEventService
@@ -369,16 +370,16 @@ public class NotificationEventServiceTest extends AbstractServiceTest
         storageUnitDaoTestHelper.createStorageUnitEntity(storageEntity, businessObjectDataEntity, StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
 
         // Create and persist a business object data notification registration entity that is enabled.
-        businessObjectDataNotificationRegistrationDaoTestHelper
+        notificationRegistrationDaoTestHelper
             .createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME),
                 NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_RGSTN.name(), BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-                FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, null, jobActions1, "DISABLED");
+                FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, null, jobActions1, NotificationRegistrationStatusEntity.DISABLED);
 
         // Create and persist a business object data notification registration entity that is disabled.
-        businessObjectDataNotificationRegistrationDaoTestHelper
+        notificationRegistrationDaoTestHelper
             .createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME_2),
                 NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_RGSTN.name(), BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-                FORMAT_VERSION, STORAGE_NAME_2, BDATA_STATUS, null, jobActions2, "DISABLED");
+                FORMAT_VERSION, STORAGE_NAME_2, BDATA_STATUS, null, jobActions2, NotificationRegistrationStatusEntity.DISABLED);
 
         // Trigger the notification
         List<Object> notificationActions = notificationEventService

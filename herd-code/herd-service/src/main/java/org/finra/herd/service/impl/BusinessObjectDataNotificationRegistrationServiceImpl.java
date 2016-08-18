@@ -49,10 +49,11 @@ import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.model.jpa.NotificationActionEntity;
 import org.finra.herd.model.jpa.NotificationEventTypeEntity;
 import org.finra.herd.model.jpa.NotificationJobActionEntity;
+import org.finra.herd.model.jpa.NotificationRegistrationStatusEntity;
 import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.service.BusinessObjectDataNotificationRegistrationService;
+import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.BusinessObjectDataNotificationRegistrationDaoHelper;
-import org.finra.herd.service.helper.BusinessObjectDataNotificationRegistrationHelper;
 import org.finra.herd.service.helper.BusinessObjectDataStatusDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionDaoHelper;
 import org.finra.herd.service.helper.FileTypeDaoHelper;
@@ -70,13 +71,13 @@ import org.finra.herd.service.helper.StorageDaoHelper;
 public class BusinessObjectDataNotificationRegistrationServiceImpl implements BusinessObjectDataNotificationRegistrationService
 {
     @Autowired
+    private AlternateKeyHelper alternateKeyHelper;
+
+    @Autowired
     private BusinessObjectDataNotificationRegistrationDao businessObjectDataNotificationRegistrationDao;
 
     @Autowired
     private BusinessObjectDataNotificationRegistrationDaoHelper businessObjectDataNotificationRegistrationDaoHelper;
-
-    @Autowired
-    private BusinessObjectDataNotificationRegistrationHelper businessObjectDataNotificationRegistrationHelper;
 
     @Autowired
     private BusinessObjectDataStatusDaoHelper businessObjectDataStatusDaoHelper;
@@ -119,9 +120,8 @@ public class BusinessObjectDataNotificationRegistrationServiceImpl implements Bu
         // Retrieve and ensure that namespace exists with the specified namespace code.
         NamespaceEntity namespaceEntity = namespaceDaoHelper.getNamespaceEntity(key.getNamespace());
 
-        // Retrieve and ensure that notification event type exists.
-        NotificationEventTypeEntity notificationEventTypeEntity =
-            notificationEventTypeDaoHelper.getNotificationEventTypeEntity(request.getBusinessObjectDataEventType());
+        // Retrieve and validate the notification event type entity.
+        NotificationEventTypeEntity notificationEventTypeEntity = getAndValidateNotificationEventTypeEntity(request.getBusinessObjectDataEventType());
 
         // Get the business object data notification filter.
         BusinessObjectDataNotificationFilter filter = request.getBusinessObjectDataNotificationFilter();
@@ -158,6 +158,20 @@ public class BusinessObjectDataNotificationRegistrationServiceImpl implements Bu
             oldBusinessObjectDataStatus = businessObjectDataStatusDaoHelper.getBusinessObjectDataStatusEntity(filter.getOldBusinessObjectDataStatus());
         }
 
+        // Validate the existence of job definitions.
+        // TODO: We need to add a null/empty list check here, if/when list of job actions will become optional (due to addition of other action types).
+        for (JobAction jobAction : request.getJobActions())
+        {
+            // Ensure that job definition exists.
+            jobDefinitionDaoHelper.getJobDefinitionEntity(jobAction.getNamespace(), jobAction.getJobName());
+        }
+
+        // If specified, retrieve and validate the notification registration status entity. Otherwise, default it to ENABLED.
+        NotificationRegistrationStatusEntity notificationRegistrationStatusEntity = notificationRegistrationStatusDaoHelper
+            .getNotificationRegistrationStatusEntity(
+                StringUtils.isNotBlank(request.getNotificationRegistrationStatus()) ? request.getNotificationRegistrationStatus() :
+                    NotificationRegistrationStatusEntity.ENABLED);
+
         // Ensure a business object data notification with the specified name doesn't already exist for the specified namespace.
         BusinessObjectDataNotificationRegistrationEntity businessObjectDataNotificationRegistrationEntity =
             businessObjectDataNotificationRegistrationDao.getBusinessObjectDataNotificationRegistrationByAltKey(key);
@@ -168,16 +182,11 @@ public class BusinessObjectDataNotificationRegistrationServiceImpl implements Bu
                     key.getNotificationName(), key.getNamespace()));
         }
 
-        if (request.getNotificationRegistrationStatus() == null)
-        {
-            request.setNotificationRegistrationStatus("ENABLED");
-        }
-
         // Create a business object data notification registration entity from the request information.
         businessObjectDataNotificationRegistrationEntity =
             createBusinessObjectDataNotificationEntity(namespaceEntity, notificationEventTypeEntity, businessObjectDefinitionEntity, fileTypeEntity,
                 storageEntity, newBusinessObjectDataStatus, oldBusinessObjectDataStatus, request.getBusinessObjectDataNotificationRegistrationKey(),
-                request.getBusinessObjectDataNotificationFilter(), request.getJobActions(), request.getNotificationRegistrationStatus());
+                request.getBusinessObjectDataNotificationFilter(), request.getJobActions(), notificationRegistrationStatusEntity);
 
         // Persist the new entity.
         businessObjectDataNotificationRegistrationEntity =
@@ -192,7 +201,7 @@ public class BusinessObjectDataNotificationRegistrationServiceImpl implements Bu
     public BusinessObjectDataNotificationRegistration getBusinessObjectDataNotificationRegistration(NotificationRegistrationKey key)
     {
         // Validate and trim the key.
-        businessObjectDataNotificationRegistrationHelper.validateBusinessObjectDataNotificationRegistrationKey(key);
+        validateBusinessObjectDataNotificationRegistrationKey(key);
 
         // Retrieve and ensure that a business object data notification exists with the specified key.
         BusinessObjectDataNotificationRegistrationEntity businessObjectDataNotificationRegistrationEntity =
@@ -210,7 +219,7 @@ public class BusinessObjectDataNotificationRegistrationServiceImpl implements Bu
         BusinessObjectDataNotificationRegistrationUpdateRequest request)
     {
         // Validate and trim the key.
-        businessObjectDataNotificationRegistrationHelper.validateBusinessObjectDataNotificationRegistrationKey(key);
+        validateBusinessObjectDataNotificationRegistrationKey(key);
 
         // Validate and trim the request parameters.
         validateBusinessObjectDataNotificationRegistrationUpdateRequest(request);
@@ -223,9 +232,8 @@ public class BusinessObjectDataNotificationRegistrationServiceImpl implements Bu
         // Retrieve the namespace with the specified namespace code.
         NamespaceEntity namespaceEntity = namespaceDaoHelper.getNamespaceEntity(key.getNamespace());
 
-        // Retrieve and ensure that notification event type exists.
-        NotificationEventTypeEntity notificationEventTypeEntity =
-            notificationEventTypeDaoHelper.getNotificationEventTypeEntity(request.getBusinessObjectDataEventType());
+        // Retrieve and validate the notification event type entity.
+        NotificationEventTypeEntity notificationEventTypeEntity = getAndValidateNotificationEventTypeEntity(request.getBusinessObjectDataEventType());
 
         // Get the business object data notification filter.
         BusinessObjectDataNotificationFilter filter = request.getBusinessObjectDataNotificationFilter();
@@ -262,6 +270,18 @@ public class BusinessObjectDataNotificationRegistrationServiceImpl implements Bu
             oldBusinessObjectDataStatus = businessObjectDataStatusDaoHelper.getBusinessObjectDataStatusEntity(filter.getOldBusinessObjectDataStatus());
         }
 
+        // Validate the existence of job definitions.
+        // TODO: We need to add a null/empty list check here, if/when list of job actions will become optional (due to addition of other action types).
+        for (JobAction jobAction : request.getJobActions())
+        {
+            // Ensure that job definition exists.
+            jobDefinitionDaoHelper.getJobDefinitionEntity(jobAction.getNamespace(), jobAction.getJobName());
+        }
+
+        // Retrieve and validate the notification registration status entity.
+        NotificationRegistrationStatusEntity notificationRegistrationStatusEntity =
+            notificationRegistrationStatusDaoHelper.getNotificationRegistrationStatusEntity(request.getNotificationRegistrationStatus());
+
         // Delete the business object data notification.
         businessObjectDataNotificationRegistrationDao.delete(oldBusinessObjectDataNotificationRegistrationEntity);
 
@@ -270,7 +290,7 @@ public class BusinessObjectDataNotificationRegistrationServiceImpl implements Bu
             createBusinessObjectDataNotificationEntity(namespaceEntity, notificationEventTypeEntity, businessObjectDefinitionEntity, fileTypeEntity,
                 storageEntity, newBusinessObjectDataStatus, oldBusinessObjectDataStatus,
                 new NotificationRegistrationKey(namespaceEntity.getCode(), oldBusinessObjectDataNotificationRegistrationName),
-                request.getBusinessObjectDataNotificationFilter(), request.getJobActions(), request.getNotificationRegistrationStatus());
+                request.getBusinessObjectDataNotificationFilter(), request.getJobActions(), notificationRegistrationStatusEntity);
 
         // Persist the new entity.
         newBusinessObjectDataNotificationRegistrationEntity =
@@ -285,7 +305,7 @@ public class BusinessObjectDataNotificationRegistrationServiceImpl implements Bu
     public BusinessObjectDataNotificationRegistration deleteBusinessObjectDataNotificationRegistration(NotificationRegistrationKey key)
     {
         // Validate and trim the key.
-        businessObjectDataNotificationRegistrationHelper.validateBusinessObjectDataNotificationRegistrationKey(key);
+        validateBusinessObjectDataNotificationRegistrationKey(key);
 
         // Retrieve and ensure that a business object data notification exists with the specified key.
         BusinessObjectDataNotificationRegistrationEntity businessObjectDataNotificationRegistrationEntity =
@@ -336,6 +356,24 @@ public class BusinessObjectDataNotificationRegistrationServiceImpl implements Bu
     }
 
     /**
+     * Retrieves and validate notification event type entity.
+     *
+     * @param notificationEventType the notification event type
+     */
+    private NotificationEventTypeEntity getAndValidateNotificationEventTypeEntity(String notificationEventType)
+    {
+        // Retrieve and ensure that notification event type exists.
+        NotificationEventTypeEntity notificationEventTypeEntity = notificationEventTypeDaoHelper.getNotificationEventTypeEntity(notificationEventType);
+
+        // Validate the notification event type.
+        Assert.isTrue(NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_RGSTN.name().equalsIgnoreCase(notificationEventType) ||
+            NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_STTS_CHG.name().equalsIgnoreCase(notificationEventType),
+            String.format("Notification event type \"%s\" is not supported for business object data notification registration.", notificationEventType));
+
+        return notificationEventTypeEntity;
+    }
+
+    /**
      * Validates the business object data notification create request. This method also trims the request parameters.
      *
      * @param request the business object data notification create request
@@ -344,14 +382,18 @@ public class BusinessObjectDataNotificationRegistrationServiceImpl implements Bu
     {
         Assert.notNull(request, "A business object data notification create request must be specified.");
 
-        businessObjectDataNotificationRegistrationHelper
-            .validateBusinessObjectDataNotificationRegistrationKey(request.getBusinessObjectDataNotificationRegistrationKey());
+        validateBusinessObjectDataNotificationRegistrationKey(request.getBusinessObjectDataNotificationRegistrationKey());
 
         Assert.hasText(request.getBusinessObjectDataEventType(), "A business object data event type must be specified.");
         request.setBusinessObjectDataEventType(request.getBusinessObjectDataEventType().trim());
 
         validateBusinessObjectDataNotificationFilter(request.getBusinessObjectDataNotificationFilter(), request.getBusinessObjectDataEventType());
         validateNotificationActions(request.getJobActions());
+
+        if (request.getNotificationRegistrationStatus() != null)
+        {
+            request.setNotificationRegistrationStatus(request.getNotificationRegistrationStatus().trim());
+        }
     }
 
     /**
@@ -367,9 +409,25 @@ public class BusinessObjectDataNotificationRegistrationServiceImpl implements Bu
         request.setBusinessObjectDataEventType(request.getBusinessObjectDataEventType().trim());
 
         Assert.hasText(request.getNotificationRegistrationStatus(), "A notification registration status must be specified.");
+        request.setNotificationRegistrationStatus(request.getNotificationRegistrationStatus().trim());
 
         validateBusinessObjectDataNotificationFilter(request.getBusinessObjectDataNotificationFilter(), request.getBusinessObjectDataEventType());
         validateNotificationActions(request.getJobActions());
+    }
+
+    /**
+     * Validates the storage unit notification registration key. This method also trims the key parameters.
+     *
+     * @param notificationRegistrationKey the storage unit notification registration key
+     *
+     * @throws IllegalArgumentException if any validation errors were found
+     */
+    private void validateBusinessObjectDataNotificationRegistrationKey(NotificationRegistrationKey notificationRegistrationKey) throws IllegalArgumentException
+    {
+        Assert.notNull(notificationRegistrationKey, "A business object data notification registration key must be specified.");
+        notificationRegistrationKey.setNamespace(alternateKeyHelper.validateStringParameter("namespace", notificationRegistrationKey.getNamespace()));
+        notificationRegistrationKey
+            .setNotificationName(alternateKeyHelper.validateStringParameter("notification name", notificationRegistrationKey.getNotificationName()));
     }
 
     /**
@@ -495,6 +553,7 @@ public class BusinessObjectDataNotificationRegistrationServiceImpl implements Bu
      * @param key the business object data notification registration key
      * @param businessObjectDataNotificationFilter the business object data notification filter
      * @param jobActions the list of notification job actions
+     * @param notificationRegistrationStatusEntity the notification registration status entity
      *
      * @return the newly created business object data notification registration entity
      */
@@ -502,7 +561,8 @@ public class BusinessObjectDataNotificationRegistrationServiceImpl implements Bu
         NotificationEventTypeEntity notificationEventTypeEntity, BusinessObjectDefinitionEntity businessObjectDefinitionEntity, FileTypeEntity fileTypeEntity,
         StorageEntity storageEntity, BusinessObjectDataStatusEntity newBusinessObjectDataStatusEntity,
         BusinessObjectDataStatusEntity oldBusinessObjectDataStatusEntity, NotificationRegistrationKey key,
-        BusinessObjectDataNotificationFilter businessObjectDataNotificationFilter, List<JobAction> jobActions, String notificationRegistrationStatus)
+        BusinessObjectDataNotificationFilter businessObjectDataNotificationFilter, List<JobAction> jobActions,
+        NotificationRegistrationStatusEntity notificationRegistrationStatusEntity)
     {
         // Create a new entity.
         BusinessObjectDataNotificationRegistrationEntity businessObjectDataNotificationRegistrationEntity =
@@ -521,8 +581,7 @@ public class BusinessObjectDataNotificationRegistrationServiceImpl implements Bu
         businessObjectDataNotificationRegistrationEntity.setStorage(storageEntity);
         businessObjectDataNotificationRegistrationEntity.setNewBusinessObjectDataStatus(newBusinessObjectDataStatusEntity);
         businessObjectDataNotificationRegistrationEntity.setOldBusinessObjectDataStatus(oldBusinessObjectDataStatusEntity);
-        businessObjectDataNotificationRegistrationEntity.setNotificationRegistrationStatus(
-            notificationRegistrationStatusDaoHelper.getNotificationRegistrationStatus(notificationRegistrationStatus.trim()));
+        businessObjectDataNotificationRegistrationEntity.setNotificationRegistrationStatus(notificationRegistrationStatusEntity);
 
         // Create the relative entities for job actions.
         // TODO: We need to add a null/empty list check here, if/when list of job actions will become optional (due to addition of other action types).

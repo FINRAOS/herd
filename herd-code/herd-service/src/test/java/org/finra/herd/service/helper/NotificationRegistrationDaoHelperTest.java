@@ -23,7 +23,9 @@ import org.junit.Test;
 
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.NotificationRegistrationKey;
+import org.finra.herd.model.jpa.NotificationEventTypeEntity;
 import org.finra.herd.model.jpa.NotificationRegistrationEntity;
+import org.finra.herd.model.jpa.NotificationRegistrationStatusEntity;
 import org.finra.herd.service.AbstractServiceTest;
 
 public class NotificationRegistrationDaoHelperTest extends AbstractServiceTest
@@ -32,10 +34,10 @@ public class NotificationRegistrationDaoHelperTest extends AbstractServiceTest
     public void testGetNotificationRegistrationAssertReturnEntityWhenEntityExists()
     {
         NotificationRegistrationKey businessObjectDataNotificationRegistrationKey = new NotificationRegistrationKey(NAMESPACE, BDEF_NAME);
-        businessObjectDataNotificationRegistrationDaoTestHelper
-            .createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE, NAMESPACE,
-                BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS,
-                businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
+        notificationRegistrationDaoTestHelper.createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey,
+            NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_STTS_CHG.name(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+            FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS, notificationRegistrationDaoTestHelper.getTestJobActions(),
+            NotificationRegistrationStatusEntity.ENABLED);
         NotificationRegistrationEntity notificationRegistrationEntity = notificationRegistrationDaoHelper.getNotificationRegistration(NAMESPACE, BDEF_NAME);
         assertNotNull(notificationRegistrationEntity);
         assertEquals(NAMESPACE, notificationRegistrationEntity.getNamespace().getCode());
@@ -46,10 +48,10 @@ public class NotificationRegistrationDaoHelperTest extends AbstractServiceTest
     public void testGetNotificationRegistrationAssertThrowWhenEntityNotExist()
     {
         NotificationRegistrationKey businessObjectDataNotificationRegistrationKey = new NotificationRegistrationKey(NAMESPACE, BDEF_NAME);
-        businessObjectDataNotificationRegistrationDaoTestHelper
-            .createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE, NAMESPACE,
-                BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS,
-                businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
+        notificationRegistrationDaoTestHelper.createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey,
+            NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_STTS_CHG.name(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+            FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS, notificationRegistrationDaoTestHelper.getTestJobActions(),
+            NotificationRegistrationStatusEntity.ENABLED);
         try
         {
             notificationRegistrationDaoHelper.getNotificationRegistration(NAMESPACE, "DOES_NOT_EXIST");

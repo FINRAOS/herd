@@ -32,6 +32,7 @@ import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataNotificationRegistrationEntity;
 import org.finra.herd.model.jpa.NotificationEventTypeEntity;
 import org.finra.herd.model.jpa.NotificationJobActionEntity;
+import org.finra.herd.model.jpa.NotificationRegistrationStatusEntity;
 import org.finra.herd.model.jpa.NotificationTypeEntity;
 import org.finra.herd.service.AbstractServiceTest;
 import org.finra.herd.service.NotificationActionService;
@@ -55,10 +56,10 @@ public class BusinessObjectDataNotificationJobActionHandlerTest extends Abstract
 
         // Create and persist a business object data notification registration entity.
         BusinessObjectDataNotificationRegistrationEntity businessObjectDataNotificationRegistrationEntity =
-            businessObjectDataNotificationRegistrationDaoTestHelper
+            notificationRegistrationDaoTestHelper
                 .createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME),
                     NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_RGSTN.name(), BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-                    FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, null, null, jobActions);
+                    FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, null, null, jobActions, NotificationRegistrationStatusEntity.ENABLED);
 
         BusinessObjectDataKey businessObjectDataKey =
             new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
