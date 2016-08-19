@@ -19,12 +19,14 @@ import java.util.Arrays;
 
 import org.activiti.engine.delegate.DelegateExecution;
 import org.activiti.engine.delegate.Expression;
+import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.StorageUnit;
 import org.finra.herd.model.jpa.NotificationEventTypeEntity;
 import org.finra.herd.service.BusinessObjectDataService;
 import org.finra.herd.service.NotificationEventService;
@@ -46,10 +48,13 @@ import org.finra.herd.service.helper.BusinessObjectDataHelper;
 public class RegisterBusinessObjectData extends BaseJavaDelegate
 {
     public static final String VARIABLE_ID = "id";
+
     public static final String VARIABLE_VERSION = "version";
+
     public static final String VARIABLE_LATEST_VERSION = "isLatestVersion";
 
     private Expression contentType;
+
     private Expression businessObjectDataCreateRequest;
 
     @Autowired
@@ -81,6 +86,17 @@ public class RegisterBusinessObjectData extends BaseJavaDelegate
             .asList(NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_RGSTN, NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_STTS_CHG))
         {
             notificationEventService.processBusinessObjectDataNotificationEventAsync(eventType, businessObjectDataKey, businessObjectData.getStatus(), null);
+        }
+
+        // Create storage unit notifications.
+        if (!CollectionUtils.isEmpty(businessObjectData.getStorageUnits()))
+        {
+            for (StorageUnit storageUnit : businessObjectData.getStorageUnits())
+            {
+                notificationEventService
+                    .processStorageUnitNotificationEventAsync(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG, businessObjectDataKey,
+                        storageUnit.getStorage().getName(), storageUnit.getStorageUnitStatus(), null);
+            }
         }
 
         // Set the JSON response as a workflow variable.

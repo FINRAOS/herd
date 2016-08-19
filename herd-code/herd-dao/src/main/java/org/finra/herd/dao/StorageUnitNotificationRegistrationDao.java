@@ -17,6 +17,7 @@ package org.finra.herd.dao;
 
 import java.util.List;
 
+import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.NotificationRegistrationKey;
 import org.finra.herd.model.api.xml.StorageUnitNotificationFilter;
 import org.finra.herd.model.jpa.StorageUnitNotificationRegistrationEntity;
@@ -53,4 +54,20 @@ public interface StorageUnitNotificationRegistrationDao extends BaseJpaDao
      */
     public List<NotificationRegistrationKey> getStorageUnitNotificationRegistrationKeysByNotificationFilter(
         StorageUnitNotificationFilter storageUnitNotificationFilter);
+
+    /**
+     * Retrieves a list of storage unit notification registration entities that match given input parameters.
+     *
+     * @param notificationEventTypeCode the notification event type code (case-insensitive)
+     * @param businessObjectDataKey the business object data key (case-insensitive)
+     * @param storageName the name of the storage (case-insensitive)
+     * @param newStorageUnitStatus the new storage unit status (case-insensitive)
+     * @param oldStorageUnitStatus the old (previous) storage unit status (case-insensitive). This parameter will be null for storage unit creation
+     * @param notificationRegistrationStatus the status of the notification registration (case-insensitive)
+     *
+     * @return the list of storage unit notification registration entities
+     */
+    public List<StorageUnitNotificationRegistrationEntity> getStorageUnitNotificationRegistrations(String notificationEventTypeCode,
+        BusinessObjectDataKey businessObjectDataKey, String storageName, String newStorageUnitStatus, String oldStorageUnitStatus,
+        String notificationRegistrationStatus);
 }

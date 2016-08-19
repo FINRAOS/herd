@@ -997,8 +997,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
             // Execute a storage policy transition.
             storagePolicyProcessorHelperService.executeStoragePolicyTransition(new StoragePolicyTransitionParamsDto(
                 new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                    NO_SUBPARTITION_VALUES, DATA_VERSION), STORAGE_NAME, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, sourceStorageFiles, STORAGE_NAME_2,
-                S3_BUCKET_NAME_2, S3_BUCKET_NAME));
+                    NO_SUBPARTITION_VALUES, DATA_VERSION), STORAGE_NAME, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS, NO_STORAGE_UNIT_STATUS,
+                sourceStorageFiles, STORAGE_NAME_2, S3_BUCKET_NAME_2, S3_BUCKET_NAME, NO_STORAGE_UNIT_STATUS, NO_STORAGE_UNIT_STATUS));
 
             // Validate that we still have our source S3 files in the source S3 bucket.
             assertEquals(sourceStorageFiles.size(), s3Dao.listDirectory(sourceS3FileTransferRequestParamsDto).size());
@@ -1049,8 +1049,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
             // Try to execute a storage policy transition when destination S3 key prefix is not empty.
             storagePolicyProcessorHelperService.executeStoragePolicyTransition(new StoragePolicyTransitionParamsDto(
                 new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                    NO_SUBPARTITION_VALUES, DATA_VERSION), STORAGE_NAME, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, sourceStorageFiles, STORAGE_NAME_2,
-                S3_BUCKET_NAME_2, S3_BUCKET_NAME));
+                    NO_SUBPARTITION_VALUES, DATA_VERSION), STORAGE_NAME, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS, NO_STORAGE_UNIT_STATUS,
+                sourceStorageFiles, STORAGE_NAME_2, S3_BUCKET_NAME_2, S3_BUCKET_NAME, NO_STORAGE_UNIT_STATUS, NO_STORAGE_UNIT_STATUS));
             fail("Should throw an IllegalStateException when destination S3 key prefix is not empty.");
         }
         catch (IllegalStateException e)
@@ -1109,8 +1109,9 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
 
             // Try to execute a storage policy transition when S3 file copy operation fails with an Amazon service exception.
             storagePolicyProcessorHelperService.executeStoragePolicyTransition(
-                new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, sourceStorageFiles,
-                    STORAGE_NAME_2, S3_BUCKET_NAME_2, S3_BUCKET_NAME));
+                new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
+                    NO_STORAGE_UNIT_STATUS, sourceStorageFiles, STORAGE_NAME_2, S3_BUCKET_NAME_2, S3_BUCKET_NAME, NO_STORAGE_UNIT_STATUS,
+                    NO_STORAGE_UNIT_STATUS));
             fail("Should throw an IllegalStateException when an S3 file copy fails.");
         }
         catch (IllegalStateException e)
@@ -1165,8 +1166,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
 
         // Complete a storage policy transition.
         StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto =
-            new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, NO_STORAGE_FILES, STORAGE_NAME_2,
-                S3_BUCKET_NAME_2, S3_BUCKET_NAME);
+            new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
+                NO_STORAGE_UNIT_STATUS, NO_STORAGE_FILES, STORAGE_NAME_2, S3_BUCKET_NAME_2, S3_BUCKET_NAME, NO_STORAGE_UNIT_STATUS, NO_STORAGE_UNIT_STATUS);
         storagePolicyProcessorHelperService.completeStoragePolicyTransition(storagePolicyTransitionParamsDto);
 
         // Validate the results.
@@ -1185,8 +1186,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
 
         // Try to complete a storage policy transition when business object data does not exist.
         StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto =
-            new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, NO_STORAGE_FILES, STORAGE_NAME_2,
-                S3_BUCKET_NAME_2, S3_BUCKET_NAME);
+            new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
+                NO_STORAGE_UNIT_STATUS, NO_STORAGE_FILES, STORAGE_NAME_2, S3_BUCKET_NAME_2, S3_BUCKET_NAME, NO_STORAGE_UNIT_STATUS, NO_STORAGE_UNIT_STATUS);
         try
         {
             storagePolicyProcessorHelperService.completeStoragePolicyTransition(storagePolicyTransitionParamsDto);
@@ -1211,8 +1212,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
 
         // Try to complete a storage policy transition when business object data status is not supported by the storage policy feature.
         StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto =
-            new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, NO_STORAGE_FILES, STORAGE_NAME_2,
-                S3_BUCKET_NAME_2, S3_BUCKET_NAME);
+            new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
+                NO_STORAGE_UNIT_STATUS, NO_STORAGE_FILES, STORAGE_NAME_2, S3_BUCKET_NAME_2, S3_BUCKET_NAME, NO_STORAGE_UNIT_STATUS, NO_STORAGE_UNIT_STATUS);
         try
         {
             storagePolicyProcessorHelperService.completeStoragePolicyTransition(storagePolicyTransitionParamsDto);
@@ -1243,8 +1244,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
 
         // Try to complete a storage policy transition when source storage unit does not exist.
         StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto =
-            new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, NO_STORAGE_FILES, STORAGE_NAME_2,
-                S3_BUCKET_NAME_2, S3_BUCKET_NAME);
+            new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
+                NO_STORAGE_UNIT_STATUS, NO_STORAGE_FILES, STORAGE_NAME_2, S3_BUCKET_NAME_2, S3_BUCKET_NAME, NO_STORAGE_UNIT_STATUS, NO_STORAGE_UNIT_STATUS);
         try
         {
             storagePolicyProcessorHelperService.completeStoragePolicyTransition(storagePolicyTransitionParamsDto);
@@ -1276,8 +1277,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
 
         // Try to complete a storage policy transition when source storage unit does not have ENABLED status.
         StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto =
-            new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, NO_STORAGE_FILES, STORAGE_NAME_2,
-                S3_BUCKET_NAME_2, S3_BUCKET_NAME);
+            new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
+                NO_STORAGE_UNIT_STATUS, NO_STORAGE_FILES, STORAGE_NAME_2, S3_BUCKET_NAME_2, S3_BUCKET_NAME, NO_STORAGE_UNIT_STATUS, NO_STORAGE_UNIT_STATUS);
         try
         {
             storagePolicyProcessorHelperService.completeStoragePolicyTransition(storagePolicyTransitionParamsDto);
@@ -1309,8 +1310,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
 
         // Try to complete a storage policy transition when destination storage unit does not exist.
         StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto =
-            new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, NO_STORAGE_FILES, STORAGE_NAME_2,
-                S3_BUCKET_NAME_2, S3_BUCKET_NAME);
+            new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
+                NO_STORAGE_UNIT_STATUS, NO_STORAGE_FILES, STORAGE_NAME_2, S3_BUCKET_NAME_2, S3_BUCKET_NAME, NO_STORAGE_UNIT_STATUS, NO_STORAGE_UNIT_STATUS);
         try
         {
             storagePolicyProcessorHelperService.completeStoragePolicyTransition(storagePolicyTransitionParamsDto);
@@ -1347,8 +1348,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
 
         // Try to complete a storage policy transition when destination storage unit does not have ARCHIVING status.
         StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto =
-            new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, NO_STORAGE_FILES, STORAGE_NAME_2,
-                S3_BUCKET_NAME_2, S3_BUCKET_NAME);
+            new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
+                NO_STORAGE_UNIT_STATUS, NO_STORAGE_FILES, STORAGE_NAME_2, S3_BUCKET_NAME_2, S3_BUCKET_NAME, NO_STORAGE_UNIT_STATUS, NO_STORAGE_UNIT_STATUS);
         try
         {
             storagePolicyProcessorHelperService.completeStoragePolicyTransition(storagePolicyTransitionParamsDto);

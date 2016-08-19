@@ -18,6 +18,7 @@ package org.finra.herd.rest;
 import java.util.Arrays;
 
 import io.swagger.annotations.Api;
+import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,8 +27,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.DownloadSingleInitiationResponse;
+import org.finra.herd.model.api.xml.StorageUnit;
 import org.finra.herd.model.api.xml.UploadSingleCredentialExtensionResponse;
 import org.finra.herd.model.api.xml.UploadSingleInitiationRequest;
 import org.finra.herd.model.api.xml.UploadSingleInitiationResponse;
@@ -70,21 +73,29 @@ public class UploadDownloadRestController extends HerdBaseController
         UploadSingleInitiationResponse uploadSingleInitiationResponse = uploadDownloadService.initiateUploadSingle(uploadSingleInitiationRequest);
 
         // Trigger notifications.
-        BusinessObjectDataKey sourceBusinessObjectDataKey =
-            businessObjectDataHelper.getBusinessObjectDataKey(uploadSingleInitiationResponse.getSourceBusinessObjectData());
-        BusinessObjectDataKey targetBusinessObjectDataKey =
-            businessObjectDataHelper.getBusinessObjectDataKey(uploadSingleInitiationResponse.getTargetBusinessObjectData());
-
-        // Create business object data notifications.
-        for (NotificationEventTypeEntity.EventTypesBdata eventType : Arrays
-            .asList(NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_RGSTN, NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_STTS_CHG))
+        for (BusinessObjectData businessObjectData : Arrays
+            .asList(uploadSingleInitiationResponse.getSourceBusinessObjectData(), uploadSingleInitiationResponse.getTargetBusinessObjectData()))
         {
-            notificationEventService.processBusinessObjectDataNotificationEventAsync(eventType, sourceBusinessObjectDataKey,
-                uploadSingleInitiationResponse.getSourceBusinessObjectData().getStatus(), null);
+            BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectData);
 
-            // Create business object data notification.
-            notificationEventService.processBusinessObjectDataNotificationEventAsync(eventType, targetBusinessObjectDataKey,
-                uploadSingleInitiationResponse.getTargetBusinessObjectData().getStatus(), null);
+            // Create business object data notifications.
+            for (NotificationEventTypeEntity.EventTypesBdata eventType : Arrays
+                .asList(NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_RGSTN, NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_STTS_CHG))
+            {
+                notificationEventService
+                    .processBusinessObjectDataNotificationEventAsync(eventType, businessObjectDataKey, businessObjectData.getStatus(), null);
+            }
+
+            // Create storage unit notifications.
+            if (!CollectionUtils.isEmpty(businessObjectData.getStorageUnits()))
+            {
+                for (StorageUnit storageUnit : businessObjectData.getStorageUnits())
+                {
+                    notificationEventService
+                        .processStorageUnitNotificationEventAsync(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG, businessObjectDataKey,
+                            storageUnit.getStorage().getName(), storageUnit.getStorageUnitStatus(), null);
+                }
+            }
         }
 
         return uploadSingleInitiationResponse;

@@ -23,6 +23,7 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
@@ -31,6 +32,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Repository;
 
 import org.finra.herd.dao.StorageUnitNotificationRegistrationDao;
+import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.NotificationRegistrationKey;
 import org.finra.herd.model.api.xml.StorageUnitNotificationFilter;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
@@ -39,8 +41,16 @@ import org.finra.herd.model.jpa.FileTypeEntity;
 import org.finra.herd.model.jpa.FileTypeEntity_;
 import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.model.jpa.NamespaceEntity_;
+import org.finra.herd.model.jpa.NotificationEventTypeEntity;
+import org.finra.herd.model.jpa.NotificationEventTypeEntity_;
+import org.finra.herd.model.jpa.NotificationRegistrationStatusEntity;
+import org.finra.herd.model.jpa.NotificationRegistrationStatusEntity_;
+import org.finra.herd.model.jpa.StorageEntity;
+import org.finra.herd.model.jpa.StorageEntity_;
 import org.finra.herd.model.jpa.StorageUnitNotificationRegistrationEntity;
 import org.finra.herd.model.jpa.StorageUnitNotificationRegistrationEntity_;
+import org.finra.herd.model.jpa.StorageUnitStatusEntity;
+import org.finra.herd.model.jpa.StorageUnitStatusEntity_;
 
 @Repository
 public class StorageUnitNotificationRegistrationDaoImpl extends AbstractHerdDao implements StorageUnitNotificationRegistrationDao
@@ -184,5 +194,80 @@ public class StorageUnitNotificationRegistrationDaoImpl extends AbstractHerdDao 
         }
 
         return notificationRegistrationKeys;
+    }
+
+    @Override
+    public List<StorageUnitNotificationRegistrationEntity> getStorageUnitNotificationRegistrations(String notificationEventTypeCode,
+        BusinessObjectDataKey businessObjectDataKey, String storageName, String newStorageUnitStatus, String oldStorageUnitStatus,
+        String notificationRegistrationStatus)
+    {
+        // Create the criteria builder and the criteria.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<StorageUnitNotificationRegistrationEntity> criteria = builder.createQuery(StorageUnitNotificationRegistrationEntity.class);
+
+        // The criteria root is the storage unit notification registration entity.
+        Root<StorageUnitNotificationRegistrationEntity> storageUnitNotificationRegistrationEntityRoot =
+            criteria.from(StorageUnitNotificationRegistrationEntity.class);
+
+        // Join to the other tables we can filter on.
+        Join<StorageUnitNotificationRegistrationEntity, NamespaceEntity> namespaceEntityJoin =
+            storageUnitNotificationRegistrationEntityRoot.join(StorageUnitNotificationRegistrationEntity_.namespace);
+        Join<StorageUnitNotificationRegistrationEntity, NotificationEventTypeEntity> notificationEventTypeEntityJoin =
+            storageUnitNotificationRegistrationEntityRoot.join(StorageUnitNotificationRegistrationEntity_.notificationEventType);
+        Join<StorageUnitNotificationRegistrationEntity, BusinessObjectDefinitionEntity> businessObjectDefinitionEntityJoin =
+            storageUnitNotificationRegistrationEntityRoot.join(StorageUnitNotificationRegistrationEntity_.businessObjectDefinition);
+        Join<BusinessObjectDefinitionEntity, NamespaceEntity> businessObjectDefinitionNamespaceEntityJoin =
+            businessObjectDefinitionEntityJoin.join(BusinessObjectDefinitionEntity_.namespace);
+        Join<StorageUnitNotificationRegistrationEntity, StorageEntity> storageEntityJoin =
+            storageUnitNotificationRegistrationEntityRoot.join(StorageUnitNotificationRegistrationEntity_.storage);
+        Join<StorageUnitNotificationRegistrationEntity, FileTypeEntity> fileTypeEntityJoin =
+            storageUnitNotificationRegistrationEntityRoot.join(StorageUnitNotificationRegistrationEntity_.fileType, JoinType.LEFT);
+        Join<StorageUnitNotificationRegistrationEntity, StorageUnitStatusEntity> newStorageUnitStatusEntityJoin =
+            storageUnitNotificationRegistrationEntityRoot.join(StorageUnitNotificationRegistrationEntity_.newStorageUnitStatus, JoinType.LEFT);
+        Join<StorageUnitNotificationRegistrationEntity, StorageUnitStatusEntity> oldStorageUnitStatusEntityJoin =
+            storageUnitNotificationRegistrationEntityRoot.join(StorageUnitNotificationRegistrationEntity_.oldStorageUnitStatus, JoinType.LEFT);
+        Join<StorageUnitNotificationRegistrationEntity, NotificationRegistrationStatusEntity> notificationRegistrationStatusEntityJoin =
+            storageUnitNotificationRegistrationEntityRoot.join(StorageUnitNotificationRegistrationEntity_.notificationRegistrationStatus);
+
+        // Create the standard restrictions (i.e. the standard where clauses).
+        List<Predicate> predicates = new ArrayList<>();
+        predicates
+            .add(builder.equal(builder.upper(notificationEventTypeEntityJoin.get(NotificationEventTypeEntity_.code)), notificationEventTypeCode.toUpperCase()));
+        predicates.add(builder
+            .equal(builder.upper(businessObjectDefinitionNamespaceEntityJoin.get(NamespaceEntity_.code)), businessObjectDataKey.getNamespace().toUpperCase()));
+        predicates.add(builder.equal(builder.upper(businessObjectDefinitionEntityJoin.get(BusinessObjectDefinitionEntity_.name)),
+            businessObjectDataKey.getBusinessObjectDefinitionName().toUpperCase()));
+        predicates.add(builder.equal(builder.upper(storageEntityJoin.get(StorageEntity_.name)), storageName.toUpperCase()));
+        predicates.add(builder.or(builder.isNull(storageUnitNotificationRegistrationEntityRoot.get(StorageUnitNotificationRegistrationEntity_.usage)), builder
+            .equal(builder.upper(storageUnitNotificationRegistrationEntityRoot.get(StorageUnitNotificationRegistrationEntity_.usage)),
+                businessObjectDataKey.getBusinessObjectFormatUsage().toUpperCase())));
+        predicates.add(builder.or(builder.isNull(storageUnitNotificationRegistrationEntityRoot.get(StorageUnitNotificationRegistrationEntity_.fileType)),
+            builder.equal(builder.upper(fileTypeEntityJoin.get(FileTypeEntity_.code)), businessObjectDataKey.getBusinessObjectFormatFileType().toUpperCase())));
+        predicates.add(builder
+            .or(builder.isNull(storageUnitNotificationRegistrationEntityRoot.get(StorageUnitNotificationRegistrationEntity_.businessObjectFormatVersion)),
+                builder.equal(storageUnitNotificationRegistrationEntityRoot.get(StorageUnitNotificationRegistrationEntity_.businessObjectFormatVersion),
+                    businessObjectDataKey.getBusinessObjectFormatVersion())));
+        predicates.add(builder
+            .or(builder.isNull(storageUnitNotificationRegistrationEntityRoot.get(StorageUnitNotificationRegistrationEntity_.newStorageUnitStatus)),
+                builder.equal(builder.upper(newStorageUnitStatusEntityJoin.get(StorageUnitStatusEntity_.code)), newStorageUnitStatus.toUpperCase())));
+        // Please note that old business object data status parameter value is null for a business object data registration event.
+        predicates.add(builder
+            .or(builder.isNull(storageUnitNotificationRegistrationEntityRoot.get(StorageUnitNotificationRegistrationEntity_.oldStorageUnitStatus)), builder
+                .equal(builder.upper(oldStorageUnitStatusEntityJoin.get(StorageUnitStatusEntity_.code)),
+                    oldStorageUnitStatus == null ? null : oldStorageUnitStatus.toUpperCase())));
+        predicates.add(builder.equal(builder.upper(notificationRegistrationStatusEntityJoin.get(NotificationRegistrationStatusEntity_.code)),
+            notificationRegistrationStatus.toUpperCase()));
+
+        // Order the results by namespace and notification name.
+        List<Order> orderBy = new ArrayList<>();
+        orderBy.add(builder.asc(namespaceEntityJoin.get(NamespaceEntity_.code)));
+        orderBy.add(builder.asc(storageUnitNotificationRegistrationEntityRoot.get(StorageUnitNotificationRegistrationEntity_.name)));
+
+        // Add the clauses for the query.
+        criteria.select(storageUnitNotificationRegistrationEntityRoot).where(builder.and(predicates.toArray(new Predicate[predicates.size()])))
+            .orderBy(orderBy);
+
+        // Execute the query and return the results.
+        return entityManager.createQuery(criteria).getResultList();
     }
 }

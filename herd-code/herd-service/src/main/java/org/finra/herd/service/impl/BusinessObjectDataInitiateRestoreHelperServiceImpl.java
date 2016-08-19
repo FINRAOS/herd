@@ -158,6 +158,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImpl implements Busin
         StorageUnitStatusEntity storageUnitStatusEntity = storageUnitStatusDaoHelper.getStorageUnitStatusEntity(StorageUnitStatusEntity.RESTORING);
 
         // Update the origin S3 storage unit status to RESTORING.
+        String oldOriginStorageUnitStatus = originStorageUnitEntity.getStatus().getCode();
         storageUnitDaoHelper.updateStorageUnitStatus(originStorageUnitEntity, storageUnitStatusEntity, StorageUnitStatusEntity.RESTORING);
 
         // Build the storage policy transition parameters DTO.
@@ -167,6 +168,8 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImpl implements Busin
         businessObjectDataRestoreDto.setOriginBucketName(originBucketName);
         businessObjectDataRestoreDto.setOriginS3KeyPrefix(originS3KeyPrefix);
         businessObjectDataRestoreDto.setOriginStorageFiles(originStorageFiles);
+        businessObjectDataRestoreDto.setOldOriginStorageUnitStatus(oldOriginStorageUnitStatus);
+        businessObjectDataRestoreDto.setNewOriginStorageUnitStatus(originStorageUnitEntity.getStatus().getCode());
         businessObjectDataRestoreDto.setGlacierStorageName(glacierStorageUnitEntity.getStorage().getName());
         businessObjectDataRestoreDto.setGlacierBucketName(glacierBucketName);
         businessObjectDataRestoreDto.setGlacierS3KeyBasePrefix(originBucketName);
@@ -371,7 +374,9 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImpl implements Busin
             StorageUnitStatusEntity storageUnitStatusEntity = storageUnitStatusDaoHelper.getStorageUnitStatusEntity(StorageUnitStatusEntity.DISABLED);
 
             // Update the origin S3 storage unit status to DISABLED.
+            businessObjectDataRestoreDto.setOldOriginStorageUnitStatus(originStorageUnitEntity.getStatus().getCode());
             storageUnitDaoHelper.updateStorageUnitStatus(originStorageUnitEntity, storageUnitStatusEntity, StorageUnitStatusEntity.DISABLED);
+            businessObjectDataRestoreDto.setNewOriginStorageUnitStatus(originStorageUnitEntity.getStatus().getCode());
         }
 
         // Create and return the business object data object from the entity.

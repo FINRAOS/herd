@@ -220,7 +220,8 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
         // Retrieve and ensure the ARCHIVING storage unit status entity exists.
         StorageUnitStatusEntity storageUnitStatusEntity = storageUnitStatusDaoHelper.getStorageUnitStatusEntity(StorageUnitStatusEntity.ARCHIVING);
 
-        // If not exists, create the destination storage unit. Otherwise, update the already existing storage unit.
+        // If not exists, create the destination storage unit.
+        String oldDestinationStorageUnitStatus = null;
         if (destinationStorageUnitEntity == null)
         {
             // Create the destination storage unit.
@@ -231,6 +232,10 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
             destinationStorageUnitEntity.setStatus(storageUnitStatusEntity);
             storageUnitDao.saveAndRefresh(destinationStorageUnitEntity);
         }
+        else
+        {
+            oldDestinationStorageUnitStatus = destinationStorageUnitEntity.getStatus().getCode();
+        }
 
         // Set the storage directory path for the destination storage unit.
         // The directory path is constructed  by concatenating the source S3 bucket name with the source S3 key prefix.
@@ -240,9 +245,10 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
         // Set the source storage unit as a parent for the destination storage unit.
         destinationStorageUnitEntity.setParentStorageUnit(sourceStorageUnitEntity);
 
-        // Update the storage unit status. We make this call even for the newly created storage unit,
+        // Update the destination storage unit status. We make this call even for the newly created storage unit,
         // since this call also adds an entry to the storage unit status history table.
         storageUnitDaoHelper.updateStorageUnitStatus(destinationStorageUnitEntity, storageUnitStatusEntity, StorageUnitStatusEntity.ARCHIVING);
+        String newDestinationStorageUnitStatus = destinationStorageUnitEntity.getStatus().getCode();
 
         // Build the storage policy transition parameters DTO.
         StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto = new StoragePolicyTransitionParamsDto();
@@ -250,10 +256,14 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
         storagePolicyTransitionParamsDto.setSourceStorageName(sourceStorageName);
         storagePolicyTransitionParamsDto.setSourceBucketName(sourceBucketName);
         storagePolicyTransitionParamsDto.setSourceS3KeyPrefix(sourceS3KeyPrefix);
+        storagePolicyTransitionParamsDto.setOldSourceStorageUnitStatus(sourceStorageUnitEntity.getStatus().getCode());
+        storagePolicyTransitionParamsDto.setNewSourceStorageUnitStatus(sourceStorageUnitEntity.getStatus().getCode());
         storagePolicyTransitionParamsDto.setSourceStorageFiles(storageFiles);
         storagePolicyTransitionParamsDto.setDestinationStorageName(destinationStorageName);
         storagePolicyTransitionParamsDto.setDestinationBucketName(destinationBucketName);
         storagePolicyTransitionParamsDto.setDestinationS3KeyBasePrefix(destinationS3KeyBasePrefix);
+        storagePolicyTransitionParamsDto.setOldDestinationStorageUnitStatus(oldDestinationStorageUnitStatus);
+        storagePolicyTransitionParamsDto.setNewDestinationStorageUnitStatus(newDestinationStorageUnitStatus);
 
         return storagePolicyTransitionParamsDto;
     }
@@ -580,10 +590,14 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
 
         // Change the destination storage unit status to ENABLED.
         String reason = StorageUnitStatusEntity.ARCHIVING;
+        storagePolicyTransitionParamsDto.setOldDestinationStorageUnitStatus(destinationStorageUnitEntity.getStatus().getCode());
         storageUnitDaoHelper.updateStorageUnitStatus(destinationStorageUnitEntity, StorageUnitStatusEntity.ENABLED, reason);
+        storagePolicyTransitionParamsDto.setNewDestinationStorageUnitStatus(destinationStorageUnitEntity.getStatus().getCode());
 
         // Change the source storage unit status to DISABLED.
+        storagePolicyTransitionParamsDto.setOldSourceStorageUnitStatus(sourceStorageUnitEntity.getStatus().getCode());
         storageUnitDaoHelper.updateStorageUnitStatus(sourceStorageUnitEntity, StorageUnitStatusEntity.DISABLED, reason);
+        storagePolicyTransitionParamsDto.setNewSourceStorageUnitStatus(sourceStorageUnitEntity.getStatus().getCode());
     }
 
     @Override

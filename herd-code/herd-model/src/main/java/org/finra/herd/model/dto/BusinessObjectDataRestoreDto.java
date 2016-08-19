@@ -40,6 +40,8 @@ public class BusinessObjectDataRestoreDto
      * @param originStorageName the origin storage name
      * @param originBucketName the origin S3 bucket name
      * @param originS3KeyPrefix the origin S3 key prefix
+     * @param oldOriginStorageUnitStatus the old (previous) status of the origin storage unit
+     * @param newOriginStorageUnitStatus the new status of the origin storage unit
      * @param originStorageFiles the list of origin storage files
      * @param glacierStorageName the Glacier storage name
      * @param glacierBucketName the Glacier S3 bucket name
@@ -48,13 +50,16 @@ public class BusinessObjectDataRestoreDto
      * @param exception the exception
      */
     public BusinessObjectDataRestoreDto(final BusinessObjectDataKey businessObjectDataKey, final String originStorageName, final String originBucketName,
-        final String originS3KeyPrefix, final List<StorageFile> originStorageFiles, final String glacierStorageName, final String glacierBucketName,
-        final String glacierS3KeyBasePrefix, final String glacierS3KeyPrefix, final Exception exception)
+        final String originS3KeyPrefix, final String oldOriginStorageUnitStatus, final String newOriginStorageUnitStatus,
+        final List<StorageFile> originStorageFiles, final String glacierStorageName, final String glacierBucketName, final String glacierS3KeyBasePrefix,
+        final String glacierS3KeyPrefix, final Exception exception)
     {
         this.businessObjectDataKey = businessObjectDataKey;
         this.originStorageName = originStorageName;
         this.originBucketName = originBucketName;
         this.originS3KeyPrefix = originS3KeyPrefix;
+        this.oldOriginStorageUnitStatus = oldOriginStorageUnitStatus;
+        this.newOriginStorageUnitStatus = newOriginStorageUnitStatus;
         this.originStorageFiles = originStorageFiles;
         this.glacierStorageName = glacierStorageName;
         this.glacierBucketName = glacierBucketName;
@@ -82,6 +87,16 @@ public class BusinessObjectDataRestoreDto
      * The origin S3 key prefix.
      */
     private String originS3KeyPrefix;
+
+    /**
+     * The old status of the origin storage unit.
+     */
+    private String oldOriginStorageUnitStatus;
+
+    /**
+     * The new status of the origin storage unit.
+     */
+    private String newOriginStorageUnitStatus;
 
     /**
      * The origin storage files.
@@ -152,6 +167,26 @@ public class BusinessObjectDataRestoreDto
     public void setOriginS3KeyPrefix(String originS3KeyPrefix)
     {
         this.originS3KeyPrefix = originS3KeyPrefix;
+    }
+
+    public String getOldOriginStorageUnitStatus()
+    {
+        return oldOriginStorageUnitStatus;
+    }
+
+    public void setOldOriginStorageUnitStatus(String oldOriginStorageUnitStatus)
+    {
+        this.oldOriginStorageUnitStatus = oldOriginStorageUnitStatus;
+    }
+
+    public String getNewOriginStorageUnitStatus()
+    {
+        return newOriginStorageUnitStatus;
+    }
+
+    public void setNewOriginStorageUnitStatus(String newOriginStorageUnitStatus)
+    {
+        this.newOriginStorageUnitStatus = newOriginStorageUnitStatus;
     }
 
     public List<StorageFile> getOriginStorageFiles()

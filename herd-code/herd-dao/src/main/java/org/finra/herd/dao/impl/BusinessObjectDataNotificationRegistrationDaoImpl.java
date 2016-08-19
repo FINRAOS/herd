@@ -198,14 +198,6 @@ public class BusinessObjectDataNotificationRegistrationDaoImpl extends AbstractH
 
     @Override
     public List<BusinessObjectDataNotificationRegistrationEntity> getBusinessObjectDataNotificationRegistrations(String notificationEventTypeCode,
-        BusinessObjectDataKey businessObjectDataKey, String newBusinessObjectDataStatus, String oldBusinessObjectDataStatus)
-    {
-        return getBusinessObjectDataNotificationRegistrations(notificationEventTypeCode, businessObjectDataKey, newBusinessObjectDataStatus,
-            oldBusinessObjectDataStatus, "ENABLED");
-    }
-
-    @Override
-    public List<BusinessObjectDataNotificationRegistrationEntity> getBusinessObjectDataNotificationRegistrations(String notificationEventTypeCode,
         BusinessObjectDataKey businessObjectDataKey, String newBusinessObjectDataStatus, String oldBusinessObjectDataStatus,
         String notificationRegistrationStatus)
     {
@@ -214,68 +206,63 @@ public class BusinessObjectDataNotificationRegistrationDaoImpl extends AbstractH
         CriteriaQuery<BusinessObjectDataNotificationRegistrationEntity> criteria = builder.createQuery(BusinessObjectDataNotificationRegistrationEntity.class);
 
         // The criteria root is the business object data notification registration entity.
-        Root<BusinessObjectDataNotificationRegistrationEntity> businessObjectDataNotificationEntity =
+        Root<BusinessObjectDataNotificationRegistrationEntity> businessObjectDataNotificationEntityRoot =
             criteria.from(BusinessObjectDataNotificationRegistrationEntity.class);
 
         // Join to the other tables we can filter on.
-        Join<BusinessObjectDataNotificationRegistrationEntity, NamespaceEntity> namespaceEntity =
-            businessObjectDataNotificationEntity.join(BusinessObjectDataNotificationRegistrationEntity_.namespace);
-        Join<BusinessObjectDataNotificationRegistrationEntity, NotificationEventTypeEntity> notificationEventTypeEntity =
-            businessObjectDataNotificationEntity.join(BusinessObjectDataNotificationRegistrationEntity_.notificationEventType);
-        Join<BusinessObjectDataNotificationRegistrationEntity, BusinessObjectDefinitionEntity> businessObjectDefinitionEntity =
-            businessObjectDataNotificationEntity.join(BusinessObjectDataNotificationRegistrationEntity_.businessObjectDefinition);
-        Join<BusinessObjectDefinitionEntity, NamespaceEntity> businessObjectDefinitionNamespaceEntity =
-            businessObjectDefinitionEntity.join(BusinessObjectDefinitionEntity_.namespace);
-        Join<BusinessObjectDataNotificationRegistrationEntity, FileTypeEntity> fileTypeEntity =
-            businessObjectDataNotificationEntity.join(BusinessObjectDataNotificationRegistrationEntity_.fileType, JoinType.LEFT);
-        Join<BusinessObjectDataNotificationRegistrationEntity, BusinessObjectDataStatusEntity> newBusinessObjectDataStatusEntity =
-            businessObjectDataNotificationEntity.join(BusinessObjectDataNotificationRegistrationEntity_.newBusinessObjectDataStatus, JoinType.LEFT);
-        Join<BusinessObjectDataNotificationRegistrationEntity, BusinessObjectDataStatusEntity> oldBusinessObjectDataStatusEntity =
-            businessObjectDataNotificationEntity.join(BusinessObjectDataNotificationRegistrationEntity_.oldBusinessObjectDataStatus, JoinType.LEFT);
-        Join<BusinessObjectDataNotificationRegistrationEntity, NotificationRegistrationStatusEntity> notificationRegistrationStatusEntity =
-            businessObjectDataNotificationEntity.join(BusinessObjectDataNotificationRegistrationEntity_.notificationRegistrationStatus);
+        Join<BusinessObjectDataNotificationRegistrationEntity, NamespaceEntity> namespaceEntityJoin =
+            businessObjectDataNotificationEntityRoot.join(BusinessObjectDataNotificationRegistrationEntity_.namespace);
+        Join<BusinessObjectDataNotificationRegistrationEntity, NotificationEventTypeEntity> notificationEventTypeEntityJoin =
+            businessObjectDataNotificationEntityRoot.join(BusinessObjectDataNotificationRegistrationEntity_.notificationEventType);
+        Join<BusinessObjectDataNotificationRegistrationEntity, BusinessObjectDefinitionEntity> businessObjectDefinitionEntityJoin =
+            businessObjectDataNotificationEntityRoot.join(BusinessObjectDataNotificationRegistrationEntity_.businessObjectDefinition);
+        Join<BusinessObjectDefinitionEntity, NamespaceEntity> businessObjectDefinitionNamespaceEntityJoin =
+            businessObjectDefinitionEntityJoin.join(BusinessObjectDefinitionEntity_.namespace);
+        Join<BusinessObjectDataNotificationRegistrationEntity, FileTypeEntity> fileTypeEntityJoin =
+            businessObjectDataNotificationEntityRoot.join(BusinessObjectDataNotificationRegistrationEntity_.fileType, JoinType.LEFT);
+        Join<BusinessObjectDataNotificationRegistrationEntity, BusinessObjectDataStatusEntity> newBusinessObjectDataStatusEntityJoin =
+            businessObjectDataNotificationEntityRoot.join(BusinessObjectDataNotificationRegistrationEntity_.newBusinessObjectDataStatus, JoinType.LEFT);
+        Join<BusinessObjectDataNotificationRegistrationEntity, BusinessObjectDataStatusEntity> oldBusinessObjectDataStatusEntityJoin =
+            businessObjectDataNotificationEntityRoot.join(BusinessObjectDataNotificationRegistrationEntity_.oldBusinessObjectDataStatus, JoinType.LEFT);
+        Join<BusinessObjectDataNotificationRegistrationEntity, NotificationRegistrationStatusEntity> notificationRegistrationStatusEntityJoin =
+            businessObjectDataNotificationEntityRoot.join(BusinessObjectDataNotificationRegistrationEntity_.notificationRegistrationStatus);
 
         // Create the standard restrictions (i.e. the standard where clauses).
-        Predicate queryRestriction =
-            builder.equal(builder.upper(notificationEventTypeEntity.get(NotificationEventTypeEntity_.code)), notificationEventTypeCode.toUpperCase());
-        queryRestriction = builder.and(queryRestriction, builder
-            .equal(builder.upper(businessObjectDefinitionNamespaceEntity.get(NamespaceEntity_.code)), businessObjectDataKey.getNamespace().toUpperCase()));
-        queryRestriction = builder.and(queryRestriction, builder.equal(builder.upper(businessObjectDefinitionEntity.get(BusinessObjectDefinitionEntity_.name)),
+        List<Predicate> predicates = new ArrayList<>();
+        predicates
+            .add(builder.equal(builder.upper(notificationEventTypeEntityJoin.get(NotificationEventTypeEntity_.code)), notificationEventTypeCode.toUpperCase()));
+        predicates.add(builder
+            .equal(builder.upper(businessObjectDefinitionNamespaceEntityJoin.get(NamespaceEntity_.code)), businessObjectDataKey.getNamespace().toUpperCase()));
+        predicates.add(builder.equal(builder.upper(businessObjectDefinitionEntityJoin.get(BusinessObjectDefinitionEntity_.name)),
             businessObjectDataKey.getBusinessObjectDefinitionName().toUpperCase()));
-        queryRestriction = builder.and(queryRestriction, builder
-            .or(builder.isNull(businessObjectDataNotificationEntity.get(BusinessObjectDataNotificationRegistrationEntity_.usage)), builder
-                .equal(builder.upper(businessObjectDataNotificationEntity.get(BusinessObjectDataNotificationRegistrationEntity_.usage)),
-                    businessObjectDataKey.getBusinessObjectFormatUsage().toUpperCase())));
-        queryRestriction = builder.and(queryRestriction, builder
-            .or(builder.isNull(businessObjectDataNotificationEntity.get(BusinessObjectDataNotificationRegistrationEntity_.fileType)),
-                builder.equal(builder.upper(fileTypeEntity.get(FileTypeEntity_.code)), businessObjectDataKey.getBusinessObjectFormatFileType().toUpperCase())));
-        queryRestriction = builder.and(queryRestriction, builder
-            .or(builder.isNull(businessObjectDataNotificationEntity.get(BusinessObjectDataNotificationRegistrationEntity_.businessObjectFormatVersion)), builder
-                .equal(businessObjectDataNotificationEntity.get(BusinessObjectDataNotificationRegistrationEntity_.businessObjectFormatVersion),
+        predicates.add(builder.or(builder.isNull(businessObjectDataNotificationEntityRoot.get(BusinessObjectDataNotificationRegistrationEntity_.usage)), builder
+            .equal(builder.upper(businessObjectDataNotificationEntityRoot.get(BusinessObjectDataNotificationRegistrationEntity_.usage)),
+                businessObjectDataKey.getBusinessObjectFormatUsage().toUpperCase())));
+        predicates.add(builder.or(builder.isNull(businessObjectDataNotificationEntityRoot.get(BusinessObjectDataNotificationRegistrationEntity_.fileType)),
+            builder.equal(builder.upper(fileTypeEntityJoin.get(FileTypeEntity_.code)), businessObjectDataKey.getBusinessObjectFormatFileType().toUpperCase())));
+        predicates.add(builder
+            .or(builder.isNull(businessObjectDataNotificationEntityRoot.get(BusinessObjectDataNotificationRegistrationEntity_.businessObjectFormatVersion)),
+                builder.equal(businessObjectDataNotificationEntityRoot.get(BusinessObjectDataNotificationRegistrationEntity_.businessObjectFormatVersion),
                     businessObjectDataKey.getBusinessObjectFormatVersion())));
-        queryRestriction = builder.and(queryRestriction, builder
-            .or(builder.isNull(businessObjectDataNotificationEntity.get(BusinessObjectDataNotificationRegistrationEntity_.newBusinessObjectDataStatus)), builder
-                .equal(builder.upper(newBusinessObjectDataStatusEntity.get(BusinessObjectDataStatusEntity_.code)), newBusinessObjectDataStatus.toUpperCase())));
+        predicates.add(builder
+            .or(builder.isNull(businessObjectDataNotificationEntityRoot.get(BusinessObjectDataNotificationRegistrationEntity_.newBusinessObjectDataStatus)),
+                builder.equal(builder.upper(newBusinessObjectDataStatusEntityJoin.get(BusinessObjectDataStatusEntity_.code)),
+                    newBusinessObjectDataStatus.toUpperCase())));
         // Please note that old business object data status parameter value is null for a business object data registration event.
-        queryRestriction = builder.and(queryRestriction, builder
-            .or(builder.isNull(businessObjectDataNotificationEntity.get(BusinessObjectDataNotificationRegistrationEntity_.oldBusinessObjectDataStatus)), builder
-                .equal(builder.upper(oldBusinessObjectDataStatusEntity.get(BusinessObjectDataStatusEntity_.code)),
+        predicates.add(builder
+            .or(builder.isNull(businessObjectDataNotificationEntityRoot.get(BusinessObjectDataNotificationRegistrationEntity_.oldBusinessObjectDataStatus)),
+                builder.equal(builder.upper(oldBusinessObjectDataStatusEntityJoin.get(BusinessObjectDataStatusEntity_.code)),
                     oldBusinessObjectDataStatus == null ? null : oldBusinessObjectDataStatus.toUpperCase())));
-
-        if (notificationRegistrationStatus != null)
-        {
-            queryRestriction = builder.and(queryRestriction, builder
-                .equal(builder.upper(notificationRegistrationStatusEntity.get(NotificationRegistrationStatusEntity_.code)),
-                    notificationRegistrationStatus.toUpperCase()));
-        }
+        predicates.add(builder.equal(builder.upper(notificationRegistrationStatusEntityJoin.get(NotificationRegistrationStatusEntity_.code)),
+            notificationRegistrationStatus.toUpperCase()));
 
         // Order the results by namespace and notification name.
         List<Order> orderBy = new ArrayList<>();
-        orderBy.add(builder.asc(namespaceEntity.get(NamespaceEntity_.code)));
-        orderBy.add(builder.asc(businessObjectDataNotificationEntity.get(BusinessObjectDataNotificationRegistrationEntity_.name)));
+        orderBy.add(builder.asc(namespaceEntityJoin.get(NamespaceEntity_.code)));
+        orderBy.add(builder.asc(businessObjectDataNotificationEntityRoot.get(BusinessObjectDataNotificationRegistrationEntity_.name)));
 
         // Add the clauses for the query.
-        criteria.select(businessObjectDataNotificationEntity).where(queryRestriction).orderBy(orderBy);
+        criteria.select(businessObjectDataNotificationEntityRoot).where(builder.and(predicates.toArray(new Predicate[predicates.size()]))).orderBy(orderBy);
 
         // Execute the query and return the results.
         return entityManager.createQuery(criteria).getResultList();
