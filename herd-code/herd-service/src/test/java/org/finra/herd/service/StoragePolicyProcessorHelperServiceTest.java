@@ -32,6 +32,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
+import org.finra.herd.core.helper.LogLevel;
 import org.finra.herd.dao.impl.MockS3OperationsImpl;
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.ObjectNotFoundException;
@@ -49,6 +50,7 @@ import org.finra.herd.model.jpa.StoragePlatformEntity;
 import org.finra.herd.model.jpa.StoragePolicyStatusEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
+import org.finra.herd.service.impl.StoragePolicyProcessorHelperServiceImpl;
 
 public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
 {
@@ -969,6 +971,31 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
 
     @Test
     public void testExecuteStoragePolicyTransition()
+    {
+        runExecuteStoragePolicyTransitionTest();
+    }
+
+    @Test
+    public void testExecuteStoragePolicyTransitionWithInfoLoggingEnabled()
+    {
+        // Get the logger and the current logger level.
+        LogLevel origLogLevel = getLogLevel(StoragePolicyProcessorHelperServiceImpl.class);
+
+        // Set logging level to INFO.
+        setLogLevel(StoragePolicyProcessorHelperServiceImpl.class, LogLevel.INFO);
+
+        // Run the upload and reset the logging level back to the original value.
+        try
+        {
+            runExecuteStoragePolicyTransitionTest();
+        }
+        finally
+        {
+            setLogLevel(StoragePolicyProcessorHelperServiceImpl.class, origLogLevel);
+        }
+    }
+
+    private void runExecuteStoragePolicyTransitionTest()
     {
         // Create S3FileTransferRequestParamsDto to access the source and destination S3 bucket locations.
         // Since test S3 key prefix represents a directory, we add a trailing '/' character to it.

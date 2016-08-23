@@ -48,26 +48,6 @@ public abstract class BusinessObjectDataNotificationJobActionServiceImpl extends
 
     private static final String PARAM_BUSINESS_OBJECT_DATA_EVENT_TYPE = "notification_businessObjectDataEventType";
 
-    private static final String PARAM_CORRELATION_DATA = "notification_correlationData";
-
-    private static final String PARAM_BUSINESS_OBJECT_DATA = "notification_businessObjectData";
-
-    private static final String PARAM_BUSINESS_OBJECT_DEFINITION_NAMESPACE = "notification_businessObjectDefinitionNamespace";
-
-    private static final String PARAM_BUSINESS_OBJECT_DEFINITION_NAME = "notification_businessObjectDefinitionName";
-
-    private static final String PARAM_BUSINESS_OBJECT_FORMAT_USAGE = "notification_businessObjectFormatUsage";
-
-    private static final String PARAM_BUSINESS_OBJECT_FORMAT_FILE_TYPE = "notification_businessObjectFormatFileType";
-
-    private static final String PARAM_BUSINESS_OBJECT_FORMAT_VERSION = "notification_businessObjectFormatVersion";
-
-    private static final String PARAM_PARTITION_COLUMN_NAMES = "notification_partitionColumnNames";
-
-    private static final String PARAM_PARTITION_VALUES = "notification_partitionValues";
-
-    private static final String PARAM_BUSINESS_OBJECT_DATA_VERSION = "notification_businessObjectDataVersion";
-
     private static final String PARAM_NEW_BUSINESS_OBJECT_DATA_STATUS = "notification_newBusinessObjectDataStatus";
 
     private static final String PARAM_OLD_BUSINESS_OBJECT_DATA_STATUS = "notification_oldBusinessObjectDataStatus";
@@ -90,15 +70,36 @@ public abstract class BusinessObjectDataNotificationJobActionServiceImpl extends
     }
 
     @Override
-    public String getNotificationType()
+    public String getIdentifyingInformation(NotificationEventParamsDto notificationEventParams, BusinessObjectDataHelper businessObjectDataHelper)
     {
-        return NotificationTypeEntity.NOTIFICATION_TYPE_BDATA;
+        if (notificationEventParams instanceof BusinessObjectDataNotificationEventParamsDto)
+        {
+            BusinessObjectDataNotificationEventParamsDto businessObjectDataNotificationEventParams =
+                (BusinessObjectDataNotificationEventParamsDto) notificationEventParams;
+
+            return String.format("namespace: \"%s\", actionId: \"%s\" with " +
+                businessObjectDataHelper.businessObjectDataKeyToString(
+                    businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataNotificationEventParams.getBusinessObjectData())) +
+                ", storageName: \"%s\"", businessObjectDataNotificationEventParams.getBusinessObjectDataNotificationRegistration().getNamespace().getCode(),
+                businessObjectDataNotificationEventParams.getNotificationJobAction().getId(), businessObjectDataNotificationEventParams.getStorageName());
+        }
+        else
+        {
+            throw new IllegalStateException(
+                "Notification event parameters DTO passed to the method must be an instance of BusinessObjectDataNotificationEventParamsDto.");
+        }
     }
 
     @Override
     public String getNotificationActionType()
     {
         return NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_RGSTN.name();
+    }
+
+    @Override
+    public String getNotificationType()
+    {
+        return NotificationTypeEntity.NOTIFICATION_TYPE_BDATA;
     }
 
     @Override
@@ -130,27 +131,6 @@ public abstract class BusinessObjectDataNotificationJobActionServiceImpl extends
             }
 
             return jobService.createAndStartJob(request);
-        }
-        else
-        {
-            throw new IllegalStateException(
-                "Notification event parameters DTO passed to the method must be an instance of BusinessObjectDataNotificationEventParamsDto.");
-        }
-    }
-
-    @Override
-    public String getIdentifyingInformation(NotificationEventParamsDto notificationEventParams, BusinessObjectDataHelper businessObjectDataHelper)
-    {
-        if (notificationEventParams instanceof BusinessObjectDataNotificationEventParamsDto)
-        {
-            BusinessObjectDataNotificationEventParamsDto businessObjectDataNotificationEventParams =
-                (BusinessObjectDataNotificationEventParamsDto) notificationEventParams;
-
-            return String.format("namespace: \"%s\", actionId: \"%s\" with " +
-                businessObjectDataHelper.businessObjectDataKeyToString(
-                    businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataNotificationEventParams.getBusinessObjectData())) +
-                ", storageName: \"%s\"", businessObjectDataNotificationEventParams.getBusinessObjectDataNotificationRegistration().getNamespace().getCode(),
-                businessObjectDataNotificationEventParams.getNotificationJobAction().getId(), businessObjectDataNotificationEventParams.getStorageName());
         }
         else
         {

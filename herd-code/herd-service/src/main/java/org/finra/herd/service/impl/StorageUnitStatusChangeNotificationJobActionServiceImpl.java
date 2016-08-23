@@ -51,33 +51,13 @@ public class StorageUnitStatusChangeNotificationJobActionServiceImpl extends Not
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(StorageUnitStatusChangeNotificationJobActionServiceImpl.class);
 
-    private static final String PARAM_BUSINESS_OBJECT_DATA = "notification_businessObjectData";
-
-    private static final String PARAM_STORAGE_UNIT_EVENT_TYPE = "notification_storageUnitEventType";
-
-    private static final String PARAM_BUSINESS_OBJECT_DATA_VERSION = "notification_businessObjectDataVersion";
-
-    private static final String PARAM_BUSINESS_OBJECT_DEFINITION_NAME = "notification_businessObjectDefinitionName";
-
-    private static final String PARAM_BUSINESS_OBJECT_DEFINITION_NAMESPACE = "notification_businessObjectDefinitionNamespace";
-
-    private static final String PARAM_BUSINESS_OBJECT_FORMAT_FILE_TYPE = "notification_businessObjectFormatFileType";
-
-    private static final String PARAM_BUSINESS_OBJECT_FORMAT_USAGE = "notification_businessObjectFormatUsage";
-
-    private static final String PARAM_BUSINESS_OBJECT_FORMAT_VERSION = "notification_businessObjectFormatVersion";
-
-    private static final String PARAM_CORRELATION_DATA = "notification_correlationData";
-
     private static final String PARAM_NEW_STORAGE_UNIT_STATUS = "notification_newStorageUnitStatus";
 
     private static final String PARAM_OLD_STORAGE_UNIT_STATUS = "notification_oldStorageUnitStatus";
 
-    private static final String PARAM_PARTITION_COLUMN_NAMES = "notification_partitionColumnNames";
-
-    private static final String PARAM_PARTITION_VALUES = "notification_partitionValues";
-
     private static final String PARAM_STORAGE_NAME = "notification_storageName";
+
+    private static final String PARAM_STORAGE_UNIT_EVENT_TYPE = "notification_storageUnitEventType";
 
     @Autowired
     private HerdStringHelper herdStringHelper;

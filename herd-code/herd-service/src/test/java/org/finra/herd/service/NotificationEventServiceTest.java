@@ -107,187 +107,6 @@ public class NotificationEventServiceTest extends AbstractServiceTest
     }
 
     @Test
-    public void testProcessBusinessObjectDataStatusChangeNotificationEventSync() throws Exception
-    {
-        // Create job definition
-        JobDefinition jobDefinition = createJobDefinition(ACTIVITI_XML_LOG_VARIABLES_NO_REGEX_WITH_CLASSPATH);
-
-        List<JobAction> jobActions = new ArrayList<>();
-        jobActions.add(new JobAction(jobDefinition.getNamespace(), jobDefinition.getJobName(), CORRELATION_DATA));
-
-        // Create a business object format with a schema.
-        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
-            .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
-                LATEST_VERSION_FLAG_SET, FIRST_PARTITION_COLUMN_NAME, NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE,
-                SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(),
-                schemaColumnDaoTestHelper.getTestPartitionColumns());
-
-        // Create business object data with a storage unit.
-        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
-            .createBusinessObjectDataEntity(businessObjectFormatEntity, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET,
-                BusinessObjectDataStatusEntity.UPLOADING);
-        StorageEntity storageEntity = storageDaoTestHelper.createStorageEntity(STORAGE_NAME, StoragePlatformEntity.S3);
-        storageUnitDaoTestHelper.createStorageUnitEntity(storageEntity, businessObjectDataEntity, StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
-
-        // Create and persist a business object data notification registration entity.
-        notificationRegistrationDaoTestHelper
-            .createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME),
-                NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_STTS_CHG.name(), BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-                FORMAT_VERSION, STORAGE_NAME, BusinessObjectDataStatusEntity.VALID, BusinessObjectDataStatusEntity.UPLOADING, jobActions, NotificationRegistrationStatusEntity.ENABLED);
-
-        // Trigger the notification.
-        List<Object> notificationActions = notificationEventService
-            .processBusinessObjectDataNotificationEventSync(NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_STTS_CHG,
-                new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                    SUBPARTITION_VALUES, DATA_VERSION), BusinessObjectDataStatusEntity.VALID, BusinessObjectDataStatusEntity.UPLOADING);
-
-        // Validate the result job.
-        Job job = (Job) notificationActions.get(0);
-        assertEquals(new Job(job.getId(), null, TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME, null, null, null, null, Arrays
-            .asList(new Parameter("notification_businessObjectDefinitionName", BDEF_NAME),
-                new Parameter("notification_partitionValues", PARTITION_VALUE + "|" + StringUtils.join(SUBPARTITION_VALUES, "|")),
-                new Parameter("notification_namespace", NAMESPACE), new Parameter("notification_businessObjectData",
-                jsonHelper.objectToJson(businessObjectDataHelper.createBusinessObjectDataFromEntity(businessObjectDataEntity))),
-                new Parameter("notification_businessObjectFormatUsage", FORMAT_USAGE_CODE),
-                new Parameter("notification_businessObjectDefinitionNamespace", BDEF_NAMESPACE),
-                new Parameter("notification_newBusinessObjectDataStatus", BusinessObjectDataStatusEntity.VALID),
-                new Parameter(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1), new Parameter("notification_businessObjectDataVersion", DATA_VERSION.toString()),
-                new Parameter("notification_name", NOTIFICATION_NAME),
-                new Parameter("notification_oldBusinessObjectDataStatus", BusinessObjectDataStatusEntity.UPLOADING),
-                new Parameter("notification_partitionColumnNames", "PRTN_CLMN001|PRTN_CLMN002|PRTN_CLMN003|PRTN_CLMN004|PRTN_CLMN005"),
-                new Parameter("notification_businessObjectDataEventType", NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_STTS_CHG.name()),
-                new Parameter("notification_businessObjectFormatVersion", FORMAT_VERSION.toString()),
-                new Parameter("notification_businessObjectFormatFileType", FORMAT_FILE_TYPE_CODE),
-                new Parameter("notification_correlationData", CORRELATION_DATA)), null, null, null), job);
-    }
-
-    @Test
-    public void testProcessBusinessObjectDataRegistrationNotificationEventSyncMissingOptional() throws Exception
-    {
-        // Create job definition
-        JobDefinition jobDefinition = createJobDefinition(ACTIVITI_XML_LOG_VARIABLES_NO_REGEX_WITH_CLASSPATH);
-
-        List<JobAction> jobActions = new ArrayList<>();
-        jobActions.add(new JobAction(jobDefinition.getNamespace(), jobDefinition.getJobName(), CORRELATION_DATA));
-
-        // Create business object data without storage units.
-        businessObjectDataDaoTestHelper
-            .createBusinessObjectDataEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS);
-
-        // Create and persist a business object data notification registration entity.
-        notificationRegistrationDaoTestHelper
-            .createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME),
-                NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_RGSTN.name(), BDEF_NAMESPACE, BDEF_NAME, null, null, null, null, null, null,
-                jobActions, NotificationRegistrationStatusEntity.ENABLED);
-
-        BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                DATA_VERSION);
-
-        // Trigger the notification
-        List<Object> notificationActions = notificationEventService
-            .processBusinessObjectDataNotificationEventSync(NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_RGSTN, businessObjectDataKey,
-                BDATA_STATUS, null);
-
-        Job job = (Job) notificationActions.get(0);
-        assertNotNull(job);
-        assertEquals(TEST_ACTIVITI_NAMESPACE_CD, job.getNamespace());
-        assertEquals(TEST_ACTIVITI_JOB_NAME, job.getJobName());
-
-        Parameter parameter = null;
-        for (Parameter param : job.getParameters())
-        {
-            if (param.getName().equals("notification_correlationData"))
-            {
-                parameter = param;
-                break;
-            }
-        }
-        assertNotNull(parameter);
-        assertEquals(CORRELATION_DATA, parameter.getValue());
-    }
-
-    @Test
-    public void testProcessBusinessObjectDataRegistrationNotificationEventSyncNoNotification() throws Exception
-    {
-        BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                DATA_VERSION);
-
-        // Create a business object data entity required for testing.
-        businessObjectDataDaoTestHelper
-            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS);
-
-        // Trigger the notification
-        List<Object> notificationActions = notificationEventService
-            .processBusinessObjectDataNotificationEventSync(NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_RGSTN, businessObjectDataKey,
-                BDATA_STATUS, null);
-
-        assertTrue(CollectionUtils.isEmpty(notificationActions));
-    }
-
-    @Test
-    public void testProcessBusinessObjectDataRegistrationNotificationEventSyncMultipleNotifications() throws Exception
-    {
-        // Create job definition
-        JobDefinition jobDefinition = createJobDefinition(ACTIVITI_XML_LOG_VARIABLES_NO_REGEX_WITH_CLASSPATH);
-
-        List<JobAction> jobActions = new ArrayList<>();
-        jobActions.add(new JobAction(jobDefinition.getNamespace(), jobDefinition.getJobName(), CORRELATION_DATA));
-
-        // Create business object data with storage units.
-        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
-            .createBusinessObjectDataEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS);
-        StorageEntity storageEntity = storageDaoTestHelper.createStorageEntity(STORAGE_NAME, StoragePlatformEntity.S3);
-        storageUnitDaoTestHelper.createStorageUnitEntity(storageEntity, businessObjectDataEntity, StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
-
-        // Create and persist a business object data notification registration entity.
-        notificationRegistrationDaoTestHelper
-            .createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME),
-                NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_RGSTN.name(), BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-                FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, null, jobActions, NotificationRegistrationStatusEntity.ENABLED);
-
-        notificationRegistrationDaoTestHelper
-            .createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME_2),
-                NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_RGSTN.name(), BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-                FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, null, jobActions, NotificationRegistrationStatusEntity.ENABLED);
-
-        BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                DATA_VERSION);
-
-        // Trigger the notification
-        List<Object> notificationActions = notificationEventService
-            .processBusinessObjectDataNotificationEventSync(NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_RGSTN, businessObjectDataKey,
-                BDATA_STATUS, null);
-
-        assertTrue(notificationActions.size() == 2);
-
-        for (Object notificationAction : notificationActions)
-        {
-            Job job = (Job) notificationAction;
-            assertNotNull(job);
-            assertEquals(TEST_ACTIVITI_NAMESPACE_CD, job.getNamespace());
-            assertEquals(TEST_ACTIVITI_JOB_NAME, job.getJobName());
-
-            Parameter parameter = null;
-            for (Parameter param : job.getParameters())
-            {
-                if (param.getName().equals("notification_correlationData"))
-                {
-                    parameter = param;
-                    break;
-                }
-            }
-            assertNotNull(parameter);
-            assertEquals(CORRELATION_DATA, parameter.getValue());
-        }
-    }
-
-    @Test
     public void testProcessBusinessObjectDataRegistrationNotificationEventSyncAssertFireEnabledOnly() throws Exception
     {
         // Create job definition
@@ -388,5 +207,242 @@ public class NotificationEventServiceTest extends AbstractServiceTest
                     SUBPARTITION_VALUES, DATA_VERSION), BDATA_STATUS, null);
 
         assertEquals(0, notificationActions.size());
+    }
+
+    @Test
+    public void testProcessBusinessObjectDataRegistrationNotificationEventSyncMissingOptional() throws Exception
+    {
+        // Create job definition
+        JobDefinition jobDefinition = createJobDefinition(ACTIVITI_XML_LOG_VARIABLES_NO_REGEX_WITH_CLASSPATH);
+
+        List<JobAction> jobActions = new ArrayList<>();
+        jobActions.add(new JobAction(jobDefinition.getNamespace(), jobDefinition.getJobName(), CORRELATION_DATA));
+
+        // Create business object data without storage units.
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS);
+
+        // Create and persist a business object data notification registration entity.
+        notificationRegistrationDaoTestHelper
+            .createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME),
+                NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_RGSTN.name(), BDEF_NAMESPACE, BDEF_NAME, null, null, null, null, null, null,
+                jobActions, NotificationRegistrationStatusEntity.ENABLED);
+
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION);
+
+        // Trigger the notification
+        List<Object> notificationActions = notificationEventService
+            .processBusinessObjectDataNotificationEventSync(NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_RGSTN, businessObjectDataKey,
+                BDATA_STATUS, null);
+
+        Job job = (Job) notificationActions.get(0);
+        assertNotNull(job);
+        assertEquals(TEST_ACTIVITI_NAMESPACE_CD, job.getNamespace());
+        assertEquals(TEST_ACTIVITI_JOB_NAME, job.getJobName());
+
+        Parameter parameter = null;
+        for (Parameter param : job.getParameters())
+        {
+            if (param.getName().equals("notification_correlationData"))
+            {
+                parameter = param;
+                break;
+            }
+        }
+        assertNotNull(parameter);
+        assertEquals(CORRELATION_DATA, parameter.getValue());
+    }
+
+    @Test
+    public void testProcessBusinessObjectDataRegistrationNotificationEventSyncMultipleNotifications() throws Exception
+    {
+        // Create job definition
+        JobDefinition jobDefinition = createJobDefinition(ACTIVITI_XML_LOG_VARIABLES_NO_REGEX_WITH_CLASSPATH);
+
+        List<JobAction> jobActions = new ArrayList<>();
+        jobActions.add(new JobAction(jobDefinition.getNamespace(), jobDefinition.getJobName(), CORRELATION_DATA));
+
+        // Create business object data with storage units.
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS);
+        StorageEntity storageEntity = storageDaoTestHelper.createStorageEntity(STORAGE_NAME, StoragePlatformEntity.S3);
+        storageUnitDaoTestHelper.createStorageUnitEntity(storageEntity, businessObjectDataEntity, StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
+
+        // Create and persist a business object data notification registration entity.
+        notificationRegistrationDaoTestHelper
+            .createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME),
+                NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_RGSTN.name(), BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+                FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, null, jobActions, NotificationRegistrationStatusEntity.ENABLED);
+
+        notificationRegistrationDaoTestHelper
+            .createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME_2),
+                NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_RGSTN.name(), BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+                FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, null, jobActions, NotificationRegistrationStatusEntity.ENABLED);
+
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION);
+
+        // Trigger the notification
+        List<Object> notificationActions = notificationEventService
+            .processBusinessObjectDataNotificationEventSync(NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_RGSTN, businessObjectDataKey,
+                BDATA_STATUS, null);
+
+        assertTrue(notificationActions.size() == 2);
+
+        for (Object notificationAction : notificationActions)
+        {
+            Job job = (Job) notificationAction;
+            assertNotNull(job);
+            assertEquals(TEST_ACTIVITI_NAMESPACE_CD, job.getNamespace());
+            assertEquals(TEST_ACTIVITI_JOB_NAME, job.getJobName());
+
+            Parameter parameter = null;
+            for (Parameter param : job.getParameters())
+            {
+                if (param.getName().equals("notification_correlationData"))
+                {
+                    parameter = param;
+                    break;
+                }
+            }
+            assertNotNull(parameter);
+            assertEquals(CORRELATION_DATA, parameter.getValue());
+        }
+    }
+
+    @Test
+    public void testProcessBusinessObjectDataRegistrationNotificationEventSyncNoNotification() throws Exception
+    {
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION);
+
+        // Create a business object data entity required for testing.
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS);
+
+        // Trigger the notification
+        List<Object> notificationActions = notificationEventService
+            .processBusinessObjectDataNotificationEventSync(NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_RGSTN, businessObjectDataKey,
+                BDATA_STATUS, null);
+
+        assertTrue(CollectionUtils.isEmpty(notificationActions));
+    }
+
+    @Test
+    public void testProcessBusinessObjectDataStatusChangeNotificationEventSync() throws Exception
+    {
+        // Create a job definition.
+        JobDefinition jobDefinition = createJobDefinition(ACTIVITI_XML_LOG_VARIABLES_NO_REGEX_WITH_CLASSPATH);
+
+        List<JobAction> jobActions = new ArrayList<>();
+        jobActions.add(new JobAction(jobDefinition.getNamespace(), jobDefinition.getJobName(), CORRELATION_DATA));
+
+        // Create a business object format with a schema.
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+                LATEST_VERSION_FLAG_SET, FIRST_PARTITION_COLUMN_NAME, NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE,
+                SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(),
+                schemaColumnDaoTestHelper.getTestPartitionColumns());
+
+        // Create business object data with a storage unit.
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(businessObjectFormatEntity, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET,
+                BusinessObjectDataStatusEntity.UPLOADING);
+        StorageEntity storageEntity = storageDaoTestHelper.createStorageEntity(STORAGE_NAME, StoragePlatformEntity.S3);
+        storageUnitDaoTestHelper.createStorageUnitEntity(storageEntity, businessObjectDataEntity, StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
+
+        // Create and persist a business object data notification registration entity.
+        notificationRegistrationDaoTestHelper
+            .createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME),
+                NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_STTS_CHG.name(), BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+                FORMAT_VERSION, STORAGE_NAME, BusinessObjectDataStatusEntity.VALID, BusinessObjectDataStatusEntity.UPLOADING, jobActions,
+                NotificationRegistrationStatusEntity.ENABLED);
+
+        // Trigger the notification.
+        List<Object> notificationActions = notificationEventService
+            .processBusinessObjectDataNotificationEventSync(NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_STTS_CHG,
+                new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    SUBPARTITION_VALUES, DATA_VERSION), BusinessObjectDataStatusEntity.VALID, BusinessObjectDataStatusEntity.UPLOADING);
+
+        // Validate the result job.
+        Job job = (Job) notificationActions.get(0);
+        assertEquals(new Job(job.getId(), null, TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME, null, null, null, null, Arrays
+            .asList(new Parameter("notification_businessObjectDefinitionName", BDEF_NAME),
+                new Parameter("notification_partitionValues", PARTITION_VALUE + "|" + StringUtils.join(SUBPARTITION_VALUES, "|")),
+                new Parameter("notification_namespace", NAMESPACE), new Parameter("notification_businessObjectData",
+                jsonHelper.objectToJson(businessObjectDataHelper.createBusinessObjectDataFromEntity(businessObjectDataEntity))),
+                new Parameter("notification_businessObjectFormatUsage", FORMAT_USAGE_CODE),
+                new Parameter("notification_businessObjectDefinitionNamespace", BDEF_NAMESPACE),
+                new Parameter("notification_newBusinessObjectDataStatus", BusinessObjectDataStatusEntity.VALID),
+                new Parameter(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1), new Parameter("notification_businessObjectDataVersion", DATA_VERSION.toString()),
+                new Parameter("notification_name", NOTIFICATION_NAME),
+                new Parameter("notification_oldBusinessObjectDataStatus", BusinessObjectDataStatusEntity.UPLOADING),
+                new Parameter("notification_partitionColumnNames", "PRTN_CLMN001|PRTN_CLMN002|PRTN_CLMN003|PRTN_CLMN004|PRTN_CLMN005"),
+                new Parameter("notification_businessObjectDataEventType", NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_STTS_CHG.name()),
+                new Parameter("notification_businessObjectFormatVersion", FORMAT_VERSION.toString()),
+                new Parameter("notification_businessObjectFormatFileType", FORMAT_FILE_TYPE_CODE),
+                new Parameter("notification_correlationData", CORRELATION_DATA)), null, null, null), job);
+    }
+
+    @Test
+    public void testProcessStorageUnitStatusChangeNotificationEventSync() throws Exception
+    {
+        // Create a job definition.
+        JobDefinition jobDefinition = createJobDefinition(ACTIVITI_XML_LOG_VARIABLES_NO_REGEX_WITH_CLASSPATH);
+
+        // Create a job action.
+        List<JobAction> jobActions = new ArrayList<>();
+        jobActions.add(new JobAction(jobDefinition.getNamespace(), jobDefinition.getJobName(), CORRELATION_DATA));
+
+        // Create a business object format with a schema.
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+                LATEST_VERSION_FLAG_SET, FIRST_PARTITION_COLUMN_NAME, NO_PARTITION_KEY_GROUP, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE,
+                SCHEMA_ESCAPE_CHARACTER_BACKSLASH, SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(),
+                schemaColumnDaoTestHelper.getTestPartitionColumns());
+
+        // Create a business object data with a storage unit having a DISABLED status.
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(businessObjectFormatEntity, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET,
+                BusinessObjectDataStatusEntity.VALID);
+        StorageEntity storageEntity = storageDaoTestHelper.createStorageEntity(STORAGE_NAME, StoragePlatformEntity.S3);
+        storageUnitDaoTestHelper.createStorageUnitEntity(storageEntity, businessObjectDataEntity, StorageUnitStatusEntity.DISABLED, NO_STORAGE_DIRECTORY_PATH);
+
+        // Create and persist a storage unit notification registration entity.
+        notificationRegistrationDaoTestHelper.createStorageUnitNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME),
+            NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG.name(), BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+            FORMAT_VERSION, STORAGE_NAME, StorageUnitStatusEntity.ENABLED, StorageUnitStatusEntity.DISABLED, jobActions,
+            NotificationRegistrationStatusEntity.ENABLED);
+
+        // Trigger the notification.
+        List<Object> notificationActions = notificationEventService
+            .processStorageUnitNotificationEventSync(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG,
+                new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    SUBPARTITION_VALUES, DATA_VERSION), STORAGE_NAME, StorageUnitStatusEntity.ENABLED, StorageUnitStatusEntity.DISABLED);
+
+        // Validate the result job.
+        Job job = (Job) notificationActions.get(0);
+        assertEquals(new Job(job.getId(), null, TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME, null, null, null, null, Arrays
+            .asList(new Parameter("notification_businessObjectDefinitionName", BDEF_NAME),
+                new Parameter("notification_partitionValues", PARTITION_VALUE + "|" + StringUtils.join(SUBPARTITION_VALUES, "|")),
+                new Parameter("notification_namespace", NAMESPACE), new Parameter("notification_businessObjectData",
+                jsonHelper.objectToJson(businessObjectDataHelper.createBusinessObjectDataFromEntity(businessObjectDataEntity))),
+                new Parameter("notification_businessObjectFormatUsage", FORMAT_USAGE_CODE),
+                new Parameter("notification_businessObjectDefinitionNamespace", BDEF_NAMESPACE), new Parameter(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1),
+                new Parameter("notification_storageUnitEventType", NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG.name()),
+                new Parameter("notification_oldStorageUnitStatus", StorageUnitStatusEntity.DISABLED),
+                new Parameter("notification_businessObjectDataVersion", DATA_VERSION.toString()), new Parameter("notification_name", NOTIFICATION_NAME),
+                new Parameter("notification_partitionColumnNames", "PRTN_CLMN001|PRTN_CLMN002|PRTN_CLMN003|PRTN_CLMN004|PRTN_CLMN005"),
+                new Parameter("notification_businessObjectFormatVersion", FORMAT_VERSION.toString()),
+                new Parameter("notification_businessObjectFormatFileType", FORMAT_FILE_TYPE_CODE), new Parameter("notification_storageName", STORAGE_NAME),
+                new Parameter("notification_newStorageUnitStatus", StorageUnitStatusEntity.ENABLED),
+                new Parameter("notification_correlationData", CORRELATION_DATA)), null, null, null), job);
     }
 }
