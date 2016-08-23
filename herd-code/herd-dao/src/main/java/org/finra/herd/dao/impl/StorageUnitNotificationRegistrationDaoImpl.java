@@ -53,7 +53,7 @@ import org.finra.herd.model.jpa.StorageUnitStatusEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity_;
 
 @Repository
-public class StorageUnitNotificationRegistrationDaoImpl extends AbstractHerdDao implements StorageUnitNotificationRegistrationDao
+public class StorageUnitNotificationRegistrationDaoImpl extends AbstractNotificationRegistrationDao implements StorageUnitNotificationRegistrationDao
 {
     @Override
     public StorageUnitNotificationRegistrationEntity getStorageUnitNotificationRegistrationByAltKey(NotificationRegistrationKey key)
@@ -116,17 +116,8 @@ public class StorageUnitNotificationRegistrationDaoImpl extends AbstractHerdDao 
         // Run the query to get a list of tuples back.
         List<Tuple> tuples = entityManager.createQuery(criteria).getResultList();
 
-        // Populate the "keys" objects from the returned tuples (i.e. 1 tuple for each row).
-        List<NotificationRegistrationKey> notificationRegistrationKeys = new ArrayList<>();
-        for (Tuple tuple : tuples)
-        {
-            NotificationRegistrationKey notificationRegistrationKey = new NotificationRegistrationKey();
-            notificationRegistrationKeys.add(notificationRegistrationKey);
-            notificationRegistrationKey.setNamespace(tuple.get(notificationRegistrationNamespaceColumn));
-            notificationRegistrationKey.setNotificationName(tuple.get(notificationRegistrationNameColumn));
-        }
-
-        return notificationRegistrationKeys;
+        // Populate the list of keys from the returned tuples.
+        return getNotificationRegistrationKeys(tuples, notificationRegistrationNamespaceColumn, notificationRegistrationNameColumn);
     }
 
     @Override
@@ -183,17 +174,8 @@ public class StorageUnitNotificationRegistrationDaoImpl extends AbstractHerdDao 
         // Run the query to get a list of tuples back.
         List<Tuple> tuples = entityManager.createQuery(criteria).getResultList();
 
-        // Populate the "keys" objects from the returned tuples (i.e. 1 tuple for each row).
-        List<NotificationRegistrationKey> notificationRegistrationKeys = new ArrayList<>();
-        for (Tuple tuple : tuples)
-        {
-            NotificationRegistrationKey notificationRegistrationKey = new NotificationRegistrationKey();
-            notificationRegistrationKeys.add(notificationRegistrationKey);
-            notificationRegistrationKey.setNamespace(tuple.get(notificationRegistrationNamespaceColumn));
-            notificationRegistrationKey.setNotificationName(tuple.get(notificationRegistrationNameColumn));
-        }
-
-        return notificationRegistrationKeys;
+        // Populate the list of keys from the returned tuples.
+        return getNotificationRegistrationKeys(tuples, notificationRegistrationNamespaceColumn, notificationRegistrationNameColumn);
     }
 
     @Override

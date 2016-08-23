@@ -51,7 +51,8 @@ import org.finra.herd.model.jpa.NotificationRegistrationStatusEntity;
 import org.finra.herd.model.jpa.NotificationRegistrationStatusEntity_;
 
 @Repository
-public class BusinessObjectDataNotificationRegistrationDaoImpl extends AbstractHerdDao implements BusinessObjectDataNotificationRegistrationDao
+public class BusinessObjectDataNotificationRegistrationDaoImpl extends AbstractNotificationRegistrationDao
+    implements BusinessObjectDataNotificationRegistrationDao
 {
     @Override
     public BusinessObjectDataNotificationRegistrationEntity getBusinessObjectDataNotificationRegistrationByAltKey(NotificationRegistrationKey key)
@@ -97,35 +98,26 @@ public class BusinessObjectDataNotificationRegistrationDaoImpl extends AbstractH
             businessObjectDataNotificationEntity.join(BusinessObjectDataNotificationRegistrationEntity_.namespace);
 
         // Get the columns.
-        Path<String> namespaceCodeColumn = namespaceEntity.get(NamespaceEntity_.code);
-        Path<String> notificationNameColumn = businessObjectDataNotificationEntity.get(BusinessObjectDataNotificationRegistrationEntity_.name);
+        Path<String> notificationRegistrationNamespaceColumn = namespaceEntity.get(NamespaceEntity_.code);
+        Path<String> notificationRegistrationNameColumn = businessObjectDataNotificationEntity.get(BusinessObjectDataNotificationRegistrationEntity_.name);
 
         // Create the standard restrictions (i.e. the standard where clauses).
         Predicate queryRestriction = builder.equal(builder.upper(namespaceEntity.get(NamespaceEntity_.code)), namespace.toUpperCase());
 
         // Add the select clause.
-        criteria.multiselect(namespaceCodeColumn, notificationNameColumn);
+        criteria.multiselect(notificationRegistrationNamespaceColumn, notificationRegistrationNameColumn);
 
         // Add the where clause.
         criteria.where(queryRestriction);
 
         // Add the order by clause.
-        criteria.orderBy(builder.asc(notificationNameColumn));
+        criteria.orderBy(builder.asc(notificationRegistrationNameColumn));
 
         // Run the query to get a list of tuples back.
         List<Tuple> tuples = entityManager.createQuery(criteria).getResultList();
 
-        // Populate the "keys" objects from the returned tuples (i.e. 1 tuple for each row).
-        List<NotificationRegistrationKey> businessObjectDataNotificationKeys = new ArrayList<>();
-        for (Tuple tuple : tuples)
-        {
-            NotificationRegistrationKey businessObjectDataNotificationKey = new NotificationRegistrationKey();
-            businessObjectDataNotificationKeys.add(businessObjectDataNotificationKey);
-            businessObjectDataNotificationKey.setNamespace(tuple.get(namespaceCodeColumn));
-            businessObjectDataNotificationKey.setNotificationName(tuple.get(notificationNameColumn));
-        }
-
-        return businessObjectDataNotificationKeys;
+        // Populate the list of keys from the returned tuples.
+        return getNotificationRegistrationKeys(tuples, notificationRegistrationNamespaceColumn, notificationRegistrationNameColumn);
     }
 
     @Override
@@ -183,17 +175,8 @@ public class BusinessObjectDataNotificationRegistrationDaoImpl extends AbstractH
         // Run the query to get a list of tuples back.
         List<Tuple> tuples = entityManager.createQuery(criteria).getResultList();
 
-        // Populate the "keys" objects from the returned tuples (i.e. 1 tuple for each row).
-        List<NotificationRegistrationKey> businessObjectDataNotificationKeys = new ArrayList<>();
-        for (Tuple tuple : tuples)
-        {
-            NotificationRegistrationKey businessObjectDataNotificationKey = new NotificationRegistrationKey();
-            businessObjectDataNotificationKeys.add(businessObjectDataNotificationKey);
-            businessObjectDataNotificationKey.setNamespace(tuple.get(notificationRegistrationNamespaceColumn));
-            businessObjectDataNotificationKey.setNotificationName(tuple.get(notificationRegistrationNameColumn));
-        }
-
-        return businessObjectDataNotificationKeys;
+        // Populate the list of keys from the returned tuples.
+        return getNotificationRegistrationKeys(tuples, notificationRegistrationNamespaceColumn, notificationRegistrationNameColumn);
     }
 
     @Override
