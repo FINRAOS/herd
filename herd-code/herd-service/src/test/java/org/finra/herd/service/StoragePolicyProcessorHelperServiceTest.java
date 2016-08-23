@@ -984,7 +984,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         // Set logging level to INFO.
         setLogLevel(StoragePolicyProcessorHelperServiceImpl.class, LogLevel.INFO);
 
-        // Run the upload and reset the logging level back to the original value.
+        // Run the test and reset the logging level back to the original value.
         try
         {
             runExecuteStoragePolicyTransitionTest();

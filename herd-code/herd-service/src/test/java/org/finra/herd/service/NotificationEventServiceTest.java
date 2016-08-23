@@ -27,6 +27,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 import org.springframework.util.CollectionUtils;
 
+import org.finra.herd.core.helper.LogLevel;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.Job;
 import org.finra.herd.model.api.xml.JobAction;
@@ -41,6 +42,8 @@ import org.finra.herd.model.jpa.NotificationRegistrationStatusEntity;
 import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.StoragePlatformEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
+import org.finra.herd.service.impl.BusinessObjectDataNotificationJobActionServiceImpl;
+import org.finra.herd.service.impl.StorageUnitStatusChangeNotificationJobActionServiceImpl;
 
 /**
  * This class tests functionality within the notification event service.
@@ -338,6 +341,57 @@ public class NotificationEventServiceTest extends AbstractServiceTest
     @Test
     public void testProcessBusinessObjectDataStatusChangeNotificationEventSync() throws Exception
     {
+        runProcessBusinessObjectDataStatusChangeNotificationEventSyncTest();
+    }
+
+    @Test
+    public void testProcessBusinessObjectDataStatusChangeNotificationEventSyncWithInfoLoggingEnabled() throws Exception
+    {
+        // Get the logger and the current logger level.
+        LogLevel origLogLevel = getLogLevel(BusinessObjectDataNotificationJobActionServiceImpl.class);
+
+        // Set logging level to INFO.
+        setLogLevel(BusinessObjectDataNotificationJobActionServiceImpl.class, LogLevel.INFO);
+
+        // Run the test and reset the logging level back to the original value.
+        try
+        {
+            runProcessBusinessObjectDataStatusChangeNotificationEventSyncTest();
+        }
+        finally
+        {
+            setLogLevel(BusinessObjectDataNotificationJobActionServiceImpl.class, origLogLevel);
+        }
+    }
+
+    @Test
+    public void testProcessStorageUnitStatusChangeNotificationEventSync() throws Exception
+    {
+        runProcessStorageUnitStatusChangeNotificationEventSyncTest();
+    }
+
+    @Test
+    public void testProcessStorageUnitStatusChangeNotificationEventSyncWithInfoLoggingEnabled() throws Exception
+    {
+        // Get the logger and the current logger level.
+        LogLevel origLogLevel = getLogLevel(StorageUnitStatusChangeNotificationJobActionServiceImpl.class);
+
+        // Set logging level to INFO.
+        setLogLevel(StorageUnitStatusChangeNotificationJobActionServiceImpl.class, LogLevel.INFO);
+
+        // Run the test and reset the logging level back to the original value.
+        try
+        {
+            runProcessStorageUnitStatusChangeNotificationEventSyncTest();
+        }
+        finally
+        {
+            setLogLevel(StorageUnitStatusChangeNotificationJobActionServiceImpl.class, origLogLevel);
+        }
+    }
+
+    private void runProcessBusinessObjectDataStatusChangeNotificationEventSyncTest() throws Exception
+    {
         // Create a job definition.
         JobDefinition jobDefinition = createJobDefinition(ACTIVITI_XML_LOG_VARIABLES_NO_REGEX_WITH_CLASSPATH);
 
@@ -391,8 +445,7 @@ public class NotificationEventServiceTest extends AbstractServiceTest
                 new Parameter("notification_correlationData", CORRELATION_DATA)), null, null, null), job);
     }
 
-    @Test
-    public void testProcessStorageUnitStatusChangeNotificationEventSync() throws Exception
+    private void runProcessStorageUnitStatusChangeNotificationEventSyncTest() throws Exception
     {
         // Create a job definition.
         JobDefinition jobDefinition = createJobDefinition(ACTIVITI_XML_LOG_VARIABLES_NO_REGEX_WITH_CLASSPATH);
