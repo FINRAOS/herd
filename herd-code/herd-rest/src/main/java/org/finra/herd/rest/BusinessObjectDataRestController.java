@@ -22,7 +22,6 @@ import javax.servlet.ServletRequest;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -159,14 +158,11 @@ public class BusinessObjectDataRestController extends HerdBaseController
         }
 
         // Create storage unit notifications.
-        if (!CollectionUtils.isEmpty(businessObjectData.getStorageUnits()))
+        for (StorageUnit storageUnit : businessObjectData.getStorageUnits())
         {
-            for (StorageUnit storageUnit : businessObjectData.getStorageUnits())
-            {
-                notificationEventService
-                    .processStorageUnitNotificationEventAsync(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG, businessObjectDataKey,
-                        storageUnit.getStorage().getName(), storageUnit.getStorageUnitStatus(), null);
-            }
+            notificationEventService
+                .processStorageUnitNotificationEventAsync(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG, businessObjectDataKey,
+                    storageUnit.getStorage().getName(), storageUnit.getStorageUnitStatus(), null);
         }
 
         return businessObjectData;

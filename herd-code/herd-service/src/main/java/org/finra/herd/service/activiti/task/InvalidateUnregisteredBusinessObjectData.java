@@ -17,7 +17,6 @@ package org.finra.herd.service.activiti.task;
 
 import org.activiti.engine.delegate.DelegateExecution;
 import org.activiti.engine.delegate.Expression;
-import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -83,14 +82,11 @@ public class InvalidateUnregisteredBusinessObjectData extends BaseJavaDelegate
                     businessObjectData.getStatus(), null);
 
             // Create storage unit notifications.
-            if (!CollectionUtils.isEmpty(businessObjectData.getStorageUnits()))
+            for (StorageUnit storageUnit : businessObjectData.getStorageUnits())
             {
-                for (StorageUnit storageUnit : businessObjectData.getStorageUnits())
-                {
-                    notificationEventService
-                        .processStorageUnitNotificationEventAsync(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG, businessObjectDataKey,
-                            storageUnit.getStorage().getName(), storageUnit.getStorageUnitStatus(), null);
-                }
+                notificationEventService
+                    .processStorageUnitNotificationEventAsync(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG, businessObjectDataKey,
+                        storageUnit.getStorage().getName(), storageUnit.getStorageUnitStatus(), null);
             }
         }
 

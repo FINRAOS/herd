@@ -484,15 +484,12 @@ public class BusinessObjectDataHelper
         StorageUnit resultStorageUnit = null;
 
         // Find a storage unit that belongs to the specified storage.
-        if (!CollectionUtils.isEmpty(businessObjectData.getStorageUnits()))
+        for (StorageUnit storageUnit : businessObjectData.getStorageUnits())
         {
-            for (StorageUnit storageUnit : businessObjectData.getStorageUnits())
+            if (storageUnit.getStorage().getName().equalsIgnoreCase(storageName))
             {
-                if (storageUnit.getStorage().getName().equalsIgnoreCase(storageName))
-                {
-                    resultStorageUnit = storageUnit;
-                    break;
-                }
+                resultStorageUnit = storageUnit;
+                break;
             }
         }
 

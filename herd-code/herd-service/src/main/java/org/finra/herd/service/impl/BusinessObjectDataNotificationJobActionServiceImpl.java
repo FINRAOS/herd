@@ -32,7 +32,6 @@ import org.finra.herd.model.dto.BusinessObjectDataNotificationEventParamsDto;
 import org.finra.herd.model.dto.NotificationEventParamsDto;
 import org.finra.herd.model.jpa.BusinessObjectDataNotificationRegistrationEntity;
 import org.finra.herd.model.jpa.JobDefinitionEntity;
-import org.finra.herd.model.jpa.NotificationEventTypeEntity;
 import org.finra.herd.model.jpa.NotificationJobActionEntity;
 import org.finra.herd.model.jpa.NotificationTypeEntity;
 import org.finra.herd.service.JobService;
@@ -88,12 +87,6 @@ public abstract class BusinessObjectDataNotificationJobActionServiceImpl extends
             throw new IllegalStateException(
                 "Notification event parameters DTO passed to the method must be an instance of BusinessObjectDataNotificationEventParamsDto.");
         }
-    }
-
-    @Override
-    public String getNotificationActionType()
-    {
-        return NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_RGSTN.name();
     }
 
     @Override
