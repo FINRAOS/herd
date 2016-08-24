@@ -30,6 +30,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -58,6 +59,7 @@ import org.finra.herd.model.dto.RegServerAccessParamsDto;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.dto.S3FileTransferResultsDto;
 import org.finra.herd.model.dto.UploaderInputManifestDto;
+import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
 import org.finra.herd.service.S3Service;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
@@ -349,6 +351,40 @@ public class DownloaderControllerTest extends AbstractDownloaderTest
             // Clean up any temporary files
             FileUtils.deleteDirectory(localPath.toFile());
         }
+    }
+
+    @Test
+    public void testCreateDownloaderOutputManifestDto()
+    {
+        // Initiate input parameters.
+        List<String> subPartitionValues = Arrays.asList("subPartitionValue1", "subPartitionValue2", "subPartitionValue3", "subPartitionValue4");
+        String s3KeyPrefix = "s3KeyPrefix";
+        StorageUnit storageUnit = new StorageUnit(new Storage("storageName", s3KeyPrefix, null), null, null, StorageUnitStatusEntity.ENABLED);
+        Attribute attribute = new Attribute("name", "value");
+        BusinessObjectData businessObjectData =
+            new BusinessObjectData(1234, "businessObjectDefinitionNamespace", "businessObjectDefinitionName", "formatUsage", "formatFileType", 2345,
+                "partitionKey", "partitionValue", subPartitionValues, 3456, true, BusinessObjectDataStatusEntity.VALID, Arrays.asList(storageUnit),
+                Arrays.asList(attribute), new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
+
+        // Create a downloader output manifest DTO.
+        DownloaderOutputManifestDto resultDto = downloaderController.createDownloaderOutputManifestDto(businessObjectData, storageUnit, s3KeyPrefix);
+
+        // Validate the result DTO.
+        assertEquals("businessObjectDefinitionNamespace", resultDto.getNamespace());
+        assertEquals("businessObjectDefinitionName", resultDto.getBusinessObjectDefinitionName());
+        assertEquals("formatUsage", resultDto.getBusinessObjectFormatUsage());
+        assertEquals("formatFileType", resultDto.getBusinessObjectFormatFileType());
+        assertEquals("2345", resultDto.getBusinessObjectFormatVersion());
+        assertEquals("partitionKey", resultDto.getPartitionKey());
+        assertEquals("partitionValue", resultDto.getPartitionValue());
+        assertEquals(subPartitionValues, resultDto.getSubPartitionValues());
+        assertEquals("3456", resultDto.getBusinessObjectDataVersion());
+        assertEquals("storageName", resultDto.getStorageName());
+        HashMap<String, String> expectedAttributes = new HashMap<>();
+        expectedAttributes.put(attribute.getName(), attribute.getValue());
+        assertEquals(expectedAttributes, resultDto.getAttributes());
+        assertEquals(new ArrayList<>(), resultDto.getBusinessObjectDataParents());
+        assertEquals(new ArrayList<>(), resultDto.getBusinessObjectDataChildren());
     }
 
     @Test
