@@ -24,6 +24,7 @@ import org.springframework.util.Assert;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchFilter;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchRequest;
+import org.finra.herd.model.api.xml.PartitionValueFilter;
 
 /*
  * a helper class Business Object Data Search 
@@ -33,6 +34,9 @@ public class BusinessObjectDataSearchHelper
 {
     @Autowired
     private AlternateKeyHelper alternateKeyHelper;
+    
+    @Autowired
+    private BusinessObjectDataHelper businessObjectDataHelper;
 
     /**
      * validate business object search request
@@ -81,5 +85,12 @@ public class BusinessObjectDataSearchHelper
             key.setBusinessObjectFormatFileType(
                 alternateKeyHelper.validateStringParameter("business object format file type", key.getBusinessObjectFormatFileType()));
         }
+        
+        List<PartitionValueFilter> partitionValueFilters = key.getPartitionValueFilters();
+        if ( partitionValueFilters != null && !partitionValueFilters.isEmpty())
+        {
+          businessObjectDataHelper.validatePartitionValueFilters(partitionValueFilters, null, false);
+        }
+
     }
 }

@@ -33,6 +33,10 @@ import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatusChangeEvent;
+import org.finra.herd.model.api.xml.LatestAfterPartitionValue;
+import org.finra.herd.model.api.xml.LatestBeforePartitionValue;
+import org.finra.herd.model.api.xml.PartitionValueFilter;
+import org.finra.herd.model.api.xml.PartitionValueRange;
 import org.finra.herd.model.api.xml.StorageDirectory;
 import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.api.xml.StorageUnit;
@@ -43,6 +47,7 @@ import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusHistoryEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.StorageEntity;
+import org.finra.herd.service.BusinessObjectDataService;
 
 /**
  * A helper class for BusinessObjectDataService related code.
@@ -586,6 +591,130 @@ public class BusinessObjectDataHelper
         for (int i = 0; i < subPartitionValuesCount; i++)
         {
             subPartitionValues.set(i, alternateKeyHelper.validateStringParameter("subpartition value", subPartitionValues.get(i)));
+        }
+    }
+    
+    /**
+     * Validates a list of partition value filters or a standalone partition filter. This method makes sure that a partition value filter contains exactly one
+     * partition value range or a non-empty partition value list. This method also makes sure that there is no more than one partition value range specified
+     * across all partition value filters.
+     *
+     * @param partitionValueFilters the list of partition value filters to validate
+     * @param standalonePartitionValueFilter the standalone partition value filter to validate
+     * @param allowPartitionValueTokens specifies whether the partition value filter is allowed to contain partition value tokens
+     */
+    public void validatePartitionValueFilters(List<PartitionValueFilter> partitionValueFilters, PartitionValueFilter standalonePartitionValueFilter,
+        boolean allowPartitionValueTokens)
+    {
+        // Make sure that request does not contain both a list of partition value filters and a standalone partition value filter.
+        Assert.isTrue(partitionValueFilters == null || standalonePartitionValueFilter == null,
+                "A list of partition value filters and a standalone partition value filter cannot be both specified.");
+
+        List<PartitionValueFilter> partitionValueFiltersToValidate = new ArrayList<>();
+
+        if (partitionValueFilters != null)
+        {
+            partitionValueFiltersToValidate.addAll(partitionValueFilters);
+        }
+
+        if (standalonePartitionValueFilter != null)
+        {
+            partitionValueFiltersToValidate.add(standalonePartitionValueFilter);
+        }
+
+        // Make sure that at least one partition value filter is specified.
+        Assert.notEmpty(partitionValueFiltersToValidate, "At least one partition value filter must be specified.");
+
+        // Validate and trim partition value filters.
+        int partitionValueRangesCount = 0;
+        for (PartitionValueFilter partitionValueFilter : partitionValueFiltersToValidate)
+        {
+            // Partition key is required when request contains a partition value filter list.
+            if (partitionValueFilters != null)
+            {
+                Assert.hasText(partitionValueFilter.getPartitionKey(), "A partition key must be specified.");
+            }
+
+            // Trim partition key value.
+            if (StringUtils.isNotBlank(partitionValueFilter.getPartitionKey()))
+            {
+                partitionValueFilter.setPartitionKey(partitionValueFilter.getPartitionKey().trim());
+            }
+
+            PartitionValueRange partitionValueRange = partitionValueFilter.getPartitionValueRange();
+            List<String> partitionValues = partitionValueFilter.getPartitionValues();
+            LatestBeforePartitionValue latestBeforePartitionValue = partitionValueFilter.getLatestBeforePartitionValue();
+            LatestAfterPartitionValue latestAfterPartitionValue = partitionValueFilter.getLatestAfterPartitionValue();
+
+            // Validate that we have exactly one partition filter option specified.
+            List<Boolean> partitionFilterOptions =
+                    Arrays.asList(partitionValueRange != null, partitionValues != null, latestBeforePartitionValue != null, latestAfterPartitionValue != null);
+            Assert.isTrue(Collections.frequency(partitionFilterOptions, Boolean.TRUE) == 1, "Exactly one partition value filter option must be specified.");
+
+            if (partitionValueRange != null)
+            {
+                // A "partition value range" filter option is specified.
+
+                // Only one partition value range is allowed across all partition value filters.
+                partitionValueRangesCount++;
+                Assert.isTrue(partitionValueRangesCount < 2, "Cannot specify more than one partition value range.");
+
+                // Validate start partition value for the partition value range.
+                Assert.hasText(partitionValueRange.getStartPartitionValue(), "A start partition value for the partition value range must be specified.");
+                partitionValueRange.setStartPartitionValue(partitionValueRange.getStartPartitionValue().trim());
+
+                // Validate end partition value for the partition value range.
+                Assert.hasText(partitionValueRange.getEndPartitionValue(), "An end partition value for the partition value range must be specified.");
+                partitionValueRange.setEndPartitionValue(partitionValueRange.getEndPartitionValue().trim());
+
+                // Validate that partition value tokens are not specified as start and end partition values.
+                // This check is required, regardless if partition value tokens are allowed or not.
+                Assert.isTrue(!partitionValueRange.getStartPartitionValue().equals(BusinessObjectDataService.MAX_PARTITION_VALUE_TOKEN) &&
+                        !partitionValueRange.getStartPartitionValue().equals(BusinessObjectDataService.MIN_PARTITION_VALUE_TOKEN) &&
+                        !partitionValueRange.getEndPartitionValue().equals(BusinessObjectDataService.MAX_PARTITION_VALUE_TOKEN) &&
+                        !partitionValueRange.getEndPartitionValue().equals(BusinessObjectDataService.MIN_PARTITION_VALUE_TOKEN),
+                        "A partition value token cannot be specified with a partition value range.");
+
+                // Using string compare, validate that start partition value is less than or equal to end partition value.
+                Assert.isTrue(partitionValueRange.getStartPartitionValue().compareTo(partitionValueRange.getEndPartitionValue()) <= 0, String
+                        .format("The start partition value \"%s\" cannot be greater than the end partition value \"%s\".",
+                                partitionValueRange.getStartPartitionValue(), partitionValueRange.getEndPartitionValue()));
+            }
+            else if (partitionValues != null)
+            {
+                // A "partition value list" filter option is specified.
+
+                // Validate that the list contains at least one partition value.
+                Assert.isTrue(!partitionValues.isEmpty(), "At least one partition value must be specified.");
+
+                for (int i = 0; i < partitionValues.size(); i++)
+                {
+                    String partitionValue = partitionValues.get(i);
+                    Assert.hasText(partitionValue, "A partition value must be specified.");
+                    partitionValue = partitionValue.trim();
+
+                    // When partition value tokens are not allowed, validate that they are not specified as one of partition values.
+                    if (!allowPartitionValueTokens)
+                    {
+                        Assert.isTrue(!partitionValue.equals(BusinessObjectDataService.MAX_PARTITION_VALUE_TOKEN) && !partitionValue.equals(BusinessObjectDataService.MIN_PARTITION_VALUE_TOKEN),
+                                "A partition value token cannot be specified as one of partition values.");
+                    }
+
+                    partitionValues.set(i, partitionValue);
+                }
+            }
+            else if (latestBeforePartitionValue != null)
+            {
+                // A "latest before partition value" filter option is specified.
+                Assert.hasText(latestBeforePartitionValue.getPartitionValue(), "A partition value must be specified.");
+                latestBeforePartitionValue.setPartitionValue(latestBeforePartitionValue.getPartitionValue().trim());
+            }
+            else
+            {
+                // A "latest after partition value" filter option is specified.
+                Assert.hasText(latestAfterPartitionValue.getPartitionValue(), "A partition value must be specified.");
+                latestAfterPartitionValue.setPartitionValue(latestAfterPartitionValue.getPartitionValue().trim());
+            }
         }
     }
 }

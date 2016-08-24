@@ -2015,6 +2015,11 @@
                </xs:documentation>
             </xs:annotation>
          </xs:element>
+            <xs:element name="partitionValueFilters" type="partitionValueFilters" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A container for Partition Value Filters</xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
