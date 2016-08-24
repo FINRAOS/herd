@@ -846,47 +846,9 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
             predicate = builder.and(predicate, builder.equal(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.businessObjectFormatVersion),
                     businessDataSearchKey.getBusinessObjectFormatVersion()));
         }
-
-        
-        if (businessDataSearchKey.getPartitionValueFilters() != null && !businessDataSearchKey.getPartitionValueFilters().isEmpty())
-        {
-            for (PartitionValueFilter partitionFilter : businessDataSearchKey.getPartitionValueFilters() )   
-            {
-                Join<BusinessObjectFormatEntity, SchemaColumnEntity> schemaEntity = businessObjectFormatEntity.join(BusinessObjectFormatEntity_.schemaColumns);
-            
-                List<String> partitionValues = partitionFilter.getPartitionValues();
-                
-                predicate = builder.and(predicate, builder.equal(schemaEntity.get(SchemaColumnEntity_.name), partitionFilter.getPartitionKey()));
-                
-                predicate = builder.and(predicate, builder.isNotNull(schemaEntity.get(SchemaColumnEntity_.partitionLevel)));
-            
-                if (partitionValues != null && !partitionValues.isEmpty())
-                {
-                    predicate = builder.and(predicate, builder.or(
-                            builder.and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 1), businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue).in(partitionValues)),
-                            builder.and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 2), businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue2).in(partitionValues)),
-                            builder.and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 3), businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue3).in(partitionValues)),
-                            builder.and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 4), businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue4).in(partitionValues)),
-                            builder.and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 5), businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue5).in(partitionValues)) 
-                                    )); 
-                }
-                else if (partitionFilter.getPartitionValueRange() != null)
-                {
-                    PartitionValueRange partitionRange = partitionFilter.getPartitionValueRange();
-                    String startPartitionValue = partitionRange.getStartPartitionValue();
-                    String endPartitionValue = partitionRange.getEndPartitionValue();
-                    
-                    predicate = builder.and(predicate, builder.or(
-                            builder.and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 1), builder.greaterThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue), startPartitionValue), builder.lessThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue), endPartitionValue)),
-                            builder.and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 2), builder.greaterThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue2), startPartitionValue), builder.lessThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue2), endPartitionValue)),
-                            builder.and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 3), builder.greaterThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue3), startPartitionValue), builder.lessThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue3), endPartitionValue)),
-                            builder.and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 4), builder.greaterThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue4), startPartitionValue), builder.lessThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue4), endPartitionValue)),
-                            builder.and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 5), builder.greaterThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue5), startPartitionValue),builder.lessThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue5), endPartitionValue)) 
-                                    )); 
-                }       
-            }              
-        }
-               
+      
+        predicate = createPartitionValueFilters(businessDataSearchKey, businessObjectDataEntity, businessObjectFormatEntity, builder, predicate);
+           
         criteria.select(businessObjectDataEntity).where(predicate);
 
         // Order by business object partition values
@@ -937,5 +899,71 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         }
 
         return businessObjectDataList;
+    }
+    
+    /**
+     * Helper method to create partition value filters
+     * @param businessDataSearchKey businessDataSearchKey
+     * @param businessObjectDataEntity businessObjectDataEntity
+     * @param businessObjectFormatEntity businessObjectFormatEntity
+     * @param builder builder
+     * @param predicatePram predicate paramter
+     * @return predicate value
+     */
+    private Predicate createPartitionValueFilters(BusinessObjectDataSearchKey businessDataSearchKey, Root<BusinessObjectDataEntity> businessObjectDataEntity,
+        Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> businessObjectFormatEntity, CriteriaBuilder builder, Predicate predicatePram)
+    {
+        Predicate predicate = predicatePram;
+        
+        if (businessDataSearchKey.getPartitionValueFilters() != null && !businessDataSearchKey.getPartitionValueFilters().isEmpty())
+        {
+            for (PartitionValueFilter partitionFilter : businessDataSearchKey.getPartitionValueFilters() )   
+            {
+                Join<BusinessObjectFormatEntity, SchemaColumnEntity> schemaEntity = businessObjectFormatEntity.join(BusinessObjectFormatEntity_.schemaColumns);
+            
+                List<String> partitionValues = partitionFilter.getPartitionValues();
+
+                predicate = builder.and(predicate, builder.equal(schemaEntity.get(SchemaColumnEntity_.name), partitionFilter.getPartitionKey()));
+                predicate = builder.and(predicate, builder.isNotNull(schemaEntity.get(SchemaColumnEntity_.partitionLevel)));
+
+                if (partitionValues != null && !partitionValues.isEmpty())
+                {
+                    predicate = builder.and(predicate, builder.or(builder.and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 1),
+                        businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue).in(partitionValues)), builder
+                        .and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 2),
+                            businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue2).in(partitionValues)), builder
+                        .and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 3),
+                            businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue3).in(partitionValues)), builder
+                        .and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 4),
+                            businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue4).in(partitionValues)), builder
+                        .and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 5),
+                            businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue5).in(partitionValues))));
+                }
+                else if (partitionFilter.getPartitionValueRange() != null)
+                {
+                    PartitionValueRange partitionRange = partitionFilter.getPartitionValueRange();
+                    String startPartitionValue = partitionRange.getStartPartitionValue();
+                    String endPartitionValue = partitionRange.getEndPartitionValue();
+
+                    predicate = builder.and(predicate, builder.or(builder.and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 1),
+                        builder.greaterThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue), startPartitionValue),
+                        builder.lessThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue), endPartitionValue)), builder
+                        .and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 2),
+                            builder.greaterThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue2), startPartitionValue),
+                            builder.lessThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue2), endPartitionValue)), builder
+                        .and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 3),
+                            builder.greaterThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue3), startPartitionValue),
+                            builder.lessThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue3), endPartitionValue)), builder
+                        .and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 4),
+                            builder.greaterThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue4), startPartitionValue),
+                            builder.lessThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue4), endPartitionValue)), builder
+                        .and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 5),
+                            builder.greaterThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue5), startPartitionValue),
+                            builder.lessThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue5), endPartitionValue))));
+                }
+            }
+        }
+        
+        return predicate;
     }
 }

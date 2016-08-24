@@ -693,8 +693,9 @@ public class BusinessObjectDataHelper
                     // When partition value tokens are not allowed, validate that they are not specified as one of partition values.
                     if (!allowPartitionValueTokens)
                     {
-                        Assert.isTrue(!partitionValue.equals(BusinessObjectDataService.MAX_PARTITION_VALUE_TOKEN) && !partitionValue.equals(BusinessObjectDataService.MIN_PARTITION_VALUE_TOKEN),
-                                "A partition value token cannot be specified as one of partition values.");
+                        Assert.isTrue(!partitionValue.equals(BusinessObjectDataService.MAX_PARTITION_VALUE_TOKEN) &&
+                            !partitionValue.equals(BusinessObjectDataService.MIN_PARTITION_VALUE_TOKEN),
+                            "A partition value token cannot be specified as one of partition values.");
                     }
 
                     partitionValues.set(i, partitionValue);
