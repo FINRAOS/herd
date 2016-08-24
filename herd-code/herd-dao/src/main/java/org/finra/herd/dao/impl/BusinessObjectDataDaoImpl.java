@@ -907,7 +907,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
      * @param businessObjectDataEntity businessObjectDataEntity
      * @param businessObjectFormatEntity businessObjectFormatEntity
      * @param builder builder
-     * @param predicatePram predicate paramter
+     * @param predicatePram predicate parameter
      * @return predicate value
      */
     private Predicate createPartitionValueFilters(BusinessObjectDataSearchKey businessDataSearchKey, Root<BusinessObjectDataEntity> businessObjectDataEntity,
