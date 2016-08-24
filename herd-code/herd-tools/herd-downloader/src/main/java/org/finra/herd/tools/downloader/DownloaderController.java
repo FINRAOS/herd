@@ -247,6 +247,7 @@ public class DownloaderController extends DataBridgeController
         downloaderOutputManifestDto.setBusinessObjectFormatVersion(String.valueOf(businessObjectData.getBusinessObjectFormatVersion()));
         downloaderOutputManifestDto.setPartitionKey(businessObjectData.getPartitionKey());
         downloaderOutputManifestDto.setPartitionValue(businessObjectData.getPartitionValue());
+        downloaderOutputManifestDto.setSubPartitionValues(businessObjectData.getSubPartitionValues());
         downloaderOutputManifestDto.setBusinessObjectDataVersion(String.valueOf(businessObjectData.getVersion()));
         downloaderOutputManifestDto.setStorageName(storageUnit.getStorage().getName());
 
