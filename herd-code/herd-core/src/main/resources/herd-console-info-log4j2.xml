@@ -15,6 +15,7 @@
   limitations under the License.
 -->
 <Configuration>
+
    <Appenders>
       <Console name="Console" target="SYSTEM_OUT">
          <PatternLayout pattern="%d{MMM-dd-yyyy HH:mm:ss.SSS} [%t] %-5p %c{5}.%M - %m%n"/>
@@ -26,4 +27,5 @@
          <AppenderRef ref="Console"/>
       </Root>
    </Loggers>
+
 </Configuration>

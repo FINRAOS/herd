@@ -80,9 +80,6 @@ import org.finra.herd.model.api.xml.BusinessObjectDataDdlOutputFormatEnum;
 import org.finra.herd.model.api.xml.BusinessObjectDataDdlRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
-import org.finra.herd.model.api.xml.BusinessObjectDataNotificationFilter;
-import org.finra.herd.model.api.xml.BusinessObjectDataNotificationRegistrationCreateRequest;
-import org.finra.herd.model.api.xml.BusinessObjectDataNotificationRegistrationUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatus;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatusChangeEvent;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatusInformation;
@@ -163,6 +160,7 @@ import org.finra.herd.model.jpa.DataProviderEntity;
 import org.finra.herd.model.jpa.EmrClusterDefinitionEntity;
 import org.finra.herd.model.jpa.FileTypeEntity;
 import org.finra.herd.model.jpa.NamespaceEntity;
+import org.finra.herd.model.jpa.NotificationEventTypeEntity;
 import org.finra.herd.model.jpa.SchemaColumnEntity;
 import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.StoragePlatformEntity;
@@ -181,6 +179,7 @@ import org.finra.herd.service.helper.BusinessObjectFormatHelper;
 import org.finra.herd.service.helper.EmrClusterDefinitionHelper;
 import org.finra.herd.service.helper.EmrStepHelperFactory;
 import org.finra.herd.service.helper.Hive13DdlGenerator;
+import org.finra.herd.service.helper.NotificationActionFactory;
 import org.finra.herd.service.helper.NotificationRegistrationDaoHelper;
 import org.finra.herd.service.helper.NotificationRegistrationStatusDaoHelper;
 import org.finra.herd.service.helper.S3KeyPrefixHelper;
@@ -537,6 +536,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     protected NamespaceService namespaceService;
 
     @Autowired
+    protected NotificationActionFactory notificationActionFactory;
+
+    @Autowired
     protected NotificationEventService notificationEventService;
 
     @Autowired
@@ -600,6 +602,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     protected StorageUnitHelper storageUnitHelper;
 
     @Autowired
+    protected StorageUnitNotificationRegistrationService storageUnitNotificationRegistrationService;
+
+    @Autowired
     protected StorageUnitService storageUnitService;
 
     @Autowired
@@ -627,6 +632,27 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public void after()
     {
         SecurityContextHolder.clearContext();
+    }
+
+    /**
+     * create database entities for business object search testing
+     */
+    public void createDatabaseEntitiesForBusinessObjectDataSearchTesting()
+    {
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null, DATA_VERSION,
+                true, "VALID");
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null,
+                DATA_VERSION, true, "INVALID");
+
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION_2, PARTITION_VALUE, null,
+                DATA_VERSION, true, "INVALID");
+
+        businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, PARTITION_VALUE, null,
+                DATA_VERSION, true, "VALID");
     }
 
     /**
@@ -1002,122 +1028,6 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         storageUnit.setStorageFiles(storageFiles);
 
         return businessObjectDataCreateRequest;
-    }
-
-    /**
-     * Creates a business object data notification create request. Sets status to null.
-     *
-     * @param businessObjectDataNotificationRegistrationKey the business object data notification registration key
-     * @param notificationEventType the notification event type
-     * @param businessObjectDefinitionNamespace the business object definition namespace
-     * @param businessObjectDefinitionName the business object definition name
-     * @param businessObjectFormatUsage the business object usage
-     * @param businessObjectFormatFileType the business object format file type
-     * @param businessObjectFormatVersion the business object format version
-     * @param storageName the storage name
-     * @param newBusinessObjectDataStatus the new business object data status
-     * @param oldBusinessObjectDataStatus the old business object data status
-     * @param jobActions the list of job actions
-     *
-     * @return the newly created business object data notification create request
-     */
-    protected BusinessObjectDataNotificationRegistrationCreateRequest createBusinessObjectDataNotificationRegistrationCreateRequest(
-        NotificationRegistrationKey businessObjectDataNotificationRegistrationKey, String notificationEventType, String businessObjectDefinitionNamespace,
-        String businessObjectDefinitionName, String businessObjectFormatUsage, String businessObjectFormatFileType, Integer businessObjectFormatVersion,
-        String storageName, String newBusinessObjectDataStatus, String oldBusinessObjectDataStatus, List<JobAction> jobActions)
-    {
-        return createBusinessObjectDataNotificationRegistrationCreateRequest(businessObjectDataNotificationRegistrationKey, notificationEventType,
-            businessObjectDefinitionNamespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
-            businessObjectFormatVersion, storageName, newBusinessObjectDataStatus, oldBusinessObjectDataStatus, jobActions, null);
-    }
-
-    /**
-     * Creates a business object data notification create request.
-     *
-     * @param businessObjectDataNotificationRegistrationKey the business object data notification registration key
-     * @param notificationEventType the notification event type
-     * @param businessObjectDefinitionNamespace the business object definition namespace
-     * @param businessObjectDefinitionName the business object definition name
-     * @param businessObjectFormatUsage the business object usage
-     * @param businessObjectFormatFileType the business object format file type
-     * @param businessObjectFormatVersion the business object format version
-     * @param storageName the storage name
-     * @param newBusinessObjectDataStatus the new business object data status
-     * @param oldBusinessObjectDataStatus the old business object data status
-     * @param jobActions the list of job actions
-     * @param notificationRegistrationStatus The notification registration status. Optional.
-     *
-     * @return the newly created business object data notification create request
-     */
-    protected BusinessObjectDataNotificationRegistrationCreateRequest createBusinessObjectDataNotificationRegistrationCreateRequest(
-        NotificationRegistrationKey businessObjectDataNotificationRegistrationKey, String notificationEventType, String businessObjectDefinitionNamespace,
-        String businessObjectDefinitionName, String businessObjectFormatUsage, String businessObjectFormatFileType, Integer businessObjectFormatVersion,
-        String storageName, String newBusinessObjectDataStatus, String oldBusinessObjectDataStatus, List<JobAction> jobActions,
-        String notificationRegistrationStatus)
-    {
-        BusinessObjectDataNotificationRegistrationCreateRequest request = new BusinessObjectDataNotificationRegistrationCreateRequest();
-
-        request.setBusinessObjectDataNotificationRegistrationKey(businessObjectDataNotificationRegistrationKey);
-        request.setBusinessObjectDataEventType(notificationEventType);
-
-        BusinessObjectDataNotificationFilter filter = new BusinessObjectDataNotificationFilter();
-        request.setBusinessObjectDataNotificationFilter(filter);
-        filter.setNamespace(businessObjectDefinitionNamespace);
-        filter.setBusinessObjectDefinitionName(businessObjectDefinitionName);
-        filter.setBusinessObjectFormatUsage(businessObjectFormatUsage);
-        filter.setBusinessObjectFormatFileType(businessObjectFormatFileType);
-        filter.setBusinessObjectFormatVersion(businessObjectFormatVersion);
-        filter.setStorageName(storageName);
-        filter.setNewBusinessObjectDataStatus(newBusinessObjectDataStatus);
-        filter.setOldBusinessObjectDataStatus(oldBusinessObjectDataStatus);
-
-        request.setJobActions(jobActions);
-        request.setNotificationRegistrationStatus(notificationRegistrationStatus);
-
-        return request;
-    }
-
-    /**
-     * Creates a business object data notification update request.
-     *
-     * @param notificationEventType the notification event type
-     * @param businessObjectDefinitionNamespace the business object definition namespace
-     * @param businessObjectDefinitionName the business object definition name
-     * @param businessObjectFormatUsage the business object usage
-     * @param businessObjectFormatFileType the business object format file type
-     * @param businessObjectFormatVersion the business object format version
-     * @param storageName the storage name
-     * @param newBusinessObjectDataStatus the new business object data status
-     * @param oldBusinessObjectDataStatus the old business object data status
-     * @param jobActions the list of job actions
-     * @param notificationRegistrationStatus The notification registration status. Optional.
-     *
-     * @return the newly created business object data notification create request
-     */
-    protected BusinessObjectDataNotificationRegistrationUpdateRequest createBusinessObjectDataNotificationRegistrationUpdateRequest(
-        String notificationEventType, String businessObjectDefinitionNamespace, String businessObjectDefinitionName, String businessObjectFormatUsage,
-        String businessObjectFormatFileType, Integer businessObjectFormatVersion, String storageName, String newBusinessObjectDataStatus,
-        String oldBusinessObjectDataStatus, List<JobAction> jobActions, String notificationRegistrationStatus)
-    {
-        BusinessObjectDataNotificationRegistrationUpdateRequest request = new BusinessObjectDataNotificationRegistrationUpdateRequest();
-
-        request.setBusinessObjectDataEventType(notificationEventType);
-
-        BusinessObjectDataNotificationFilter filter = new BusinessObjectDataNotificationFilter();
-        request.setBusinessObjectDataNotificationFilter(filter);
-        filter.setNamespace(businessObjectDefinitionNamespace);
-        filter.setBusinessObjectDefinitionName(businessObjectDefinitionName);
-        filter.setBusinessObjectFormatUsage(businessObjectFormatUsage);
-        filter.setBusinessObjectFormatFileType(businessObjectFormatFileType);
-        filter.setBusinessObjectFormatVersion(businessObjectFormatVersion);
-        filter.setStorageName(storageName);
-        filter.setNewBusinessObjectDataStatus(newBusinessObjectDataStatus);
-        filter.setOldBusinessObjectDataStatus(oldBusinessObjectDataStatus);
-
-        request.setJobActions(jobActions);
-        request.setNotificationRegistrationStatus(notificationRegistrationStatus);
-
-        return request;
     }
 
     /**
@@ -1608,40 +1518,46 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
      */
     protected void createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting()
     {
-        createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting(NAMESPACE, Arrays.asList(NOTIFICATION_EVENT_TYPE), BDEF_NAMESPACE, BDEF_NAME,
+        createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting(NAMESPACE, Arrays
+            .asList(NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_RGSTN.name(),
+                NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_STTS_CHG.name(), NOTIFICATION_EVENT_TYPE), BDEF_NAMESPACE, BDEF_NAME,
             Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(BDATA_STATUS, BDATA_STATUS_2),
-            businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
+            notificationRegistrationDaoTestHelper.getTestJobActions());
     }
 
     /**
      * Create and persist database entities required for testing.
      *
-     * @param namespaceCode the namespace code
+     * @param namespace the namespace of the business object data notification registration
      * @param notificationEventTypes the list of notification event types
-     * @param businessObjectDefinitionNamespace the business object definition namespace
-     * @param businessObjectDefinitionName the business object definition name
+     * @param businessObjectDefinitionNamespace the namespace of the business object definition
+     * @param businessObjectDefinitionName the name of the business object definition
      * @param fileTypes the list of file types
      * @param storageNames the list of storage names
      * @param businessObjectDataStatuses the list of business object data statuses
      * @param jobActions the list of job actions
      */
-    protected void createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting(String namespaceCode, List<String> notificationEventTypes,
+    protected void createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting(String namespace, List<String> notificationEventTypes,
         String businessObjectDefinitionNamespace, String businessObjectDefinitionName, List<String> fileTypes, List<String> storageNames,
         List<String> businessObjectDataStatuses, List<JobAction> jobActions)
     {
         // Create a namespace entity, if not exists.
-        NamespaceEntity namespaceEntity = namespaceDao.getNamespaceByCd(namespaceCode);
+        NamespaceEntity namespaceEntity = namespaceDao.getNamespaceByCd(namespace);
         if (namespaceEntity == null)
         {
-            namespaceDaoTestHelper.createNamespaceEntity(namespaceCode);
+            namespaceDaoTestHelper.createNamespaceEntity(namespace);
         }
 
-        // Create specified notification event types.
+        // Create specified notification event types, if not exist.
         if (!CollectionUtils.isEmpty(notificationEventTypes))
         {
             for (String notificationEventType : notificationEventTypes)
             {
-                businessObjectDataNotificationRegistrationDaoTestHelper.createNotificationEventTypeEntity(notificationEventType);
+                NotificationEventTypeEntity notificationEventTypeEntity = notificationEventTypeDao.getNotificationEventTypeByCode(notificationEventType);
+                if (notificationEventTypeEntity == null)
+                {
+                    notificationRegistrationDaoTestHelper.createNotificationEventTypeEntity(notificationEventType);
+                }
             }
         }
 
@@ -2055,6 +1971,106 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
                     storageDaoTestHelper.createStorageEntity(destinationStorageName, StoragePlatformEntity.GLACIER,
                         configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), S3_BUCKET_NAME_2);
                 }
+            }
+        }
+    }
+
+    /**
+     * Create and persist database entities required for testing.
+     */
+    protected void createDatabaseEntitiesForStorageUnitNotificationRegistrationTesting()
+    {
+        createDatabaseEntitiesForStorageUnitNotificationRegistrationTesting(NAMESPACE,
+            Arrays.asList(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG.name(), NOTIFICATION_EVENT_TYPE), BDEF_NAMESPACE, BDEF_NAME,
+            Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_UNIT_STATUS, STORAGE_UNIT_STATUS_2),
+            notificationRegistrationDaoTestHelper.getTestJobActions());
+    }
+
+    /**
+     * Create and persist database entities required for testing.
+     *
+     * @param namespace the namespace of the storage unit notification registration
+     * @param notificationEventTypes the list of notification event types
+     * @param businessObjectDefinitionNamespace the namespace of the business object definition
+     * @param businessObjectDefinitionName the name of the business object definition
+     * @param fileTypes the list of file types
+     * @param storageNames the list of storage names
+     * @param storageUnitStatuses the list of storage unit statuses
+     * @param jobActions the list of job actions
+     */
+    protected void createDatabaseEntitiesForStorageUnitNotificationRegistrationTesting(String namespace, List<String> notificationEventTypes,
+        String businessObjectDefinitionNamespace, String businessObjectDefinitionName, List<String> fileTypes, List<String> storageNames,
+        List<String> storageUnitStatuses, List<JobAction> jobActions)
+    {
+        // Create a namespace entity, if not exists.
+        NamespaceEntity namespaceEntity = namespaceDao.getNamespaceByCd(namespace);
+        if (namespaceEntity == null)
+        {
+            namespaceDaoTestHelper.createNamespaceEntity(namespace);
+        }
+
+        // Create specified notification event types, if not exist.
+        if (!CollectionUtils.isEmpty(notificationEventTypes))
+        {
+            for (String notificationEventType : notificationEventTypes)
+            {
+                NotificationEventTypeEntity notificationEventTypeEntity = notificationEventTypeDao.getNotificationEventTypeByCode(notificationEventType);
+                if (notificationEventTypeEntity == null)
+                {
+                    notificationRegistrationDaoTestHelper.createNotificationEventTypeEntity(notificationEventType);
+                }
+            }
+        }
+
+        // Create specified business object definition, if not exists.
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDao
+            .getBusinessObjectDefinitionByKey(new BusinessObjectDefinitionKey(businessObjectDefinitionNamespace, businessObjectDefinitionName));
+        if (businessObjectDefinitionEntity == null)
+        {
+            // Create and persist a business object definition entity.
+            businessObjectDefinitionDaoTestHelper
+                .createBusinessObjectDefinitionEntity(businessObjectDefinitionNamespace, businessObjectDefinitionName, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
+        }
+
+        // Create specified file type entities, if not exist.
+        if (!CollectionUtils.isEmpty(fileTypes))
+        {
+            for (String businessObjectFormatFileType : fileTypes)
+            {
+                fileTypeDaoTestHelper.createFileTypeEntity(businessObjectFormatFileType);
+            }
+        }
+
+        // Create specified storage entities, if not exist.
+        if (!CollectionUtils.isEmpty(storageNames))
+        {
+            for (String storageName : storageNames)
+            {
+                storageDaoTestHelper.createStorageEntity(storageName, StoragePlatformEntity.S3);
+            }
+        }
+
+        // Create specified business object data status entities, if not exist.
+        if (!CollectionUtils.isEmpty(storageUnitStatuses))
+        {
+            for (String storageUnitStatus : storageUnitStatuses)
+            {
+                StorageUnitStatusEntity storageUnitStatusEntity = storageUnitStatusDao.getStorageUnitStatusByCode(storageUnitStatus);
+                if (storageUnitStatusEntity == null)
+                {
+                    storageUnitStatusDaoTestHelper.createStorageUnitStatusEntity(storageUnitStatus);
+                }
+            }
+        }
+
+        // Create specified job definition entities.
+        if (!CollectionUtils.isEmpty(jobActions))
+        {
+            for (JobAction jobAction : jobActions)
+            {
+                jobDefinitionDaoTestHelper.createJobDefinitionEntity(jobAction.getNamespace(), jobAction.getJobName(),
+                    String.format("Description of \"%s.%s\" job definition.", jobAction.getNamespace(), jobAction.getJobName()),
+                    String.format("%s.%s.%s", jobAction.getNamespace(), jobAction.getJobName(), ACTIVITI_ID));
             }
         }
     }
@@ -2987,22 +3003,6 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         return getExpectedBusinessObjectDataNotFoundErrorMessage(
             new BusinessObjectDataKey(namespaceCode, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
                 businessObjectFormatVersion, partitionValue, subPartitionValues, businessObjectDataVersion), businessObjectDataStatus);
-    }
-
-    /**
-     * Returns a list of test business object data notification registration keys expected to be returned by getBusinessObjectDataNotificationRegistrationsByNamespace()
-     * method.
-     *
-     * @return the list of expected business object data notification registration keys
-     */
-    protected List<NotificationRegistrationKey> getExpectedBusinessObjectDataNotificationRegistrationKeys()
-    {
-        List<NotificationRegistrationKey> keys = new ArrayList<>();
-
-        keys.add(new NotificationRegistrationKey(NAMESPACE, JOB_NAME));
-        keys.add(new NotificationRegistrationKey(NAMESPACE, JOB_NAME_2));
-
-        return keys;
     }
 
     /**
@@ -3953,23 +3953,6 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         request.setIncludeAllRegisteredSubPartitions(NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS);
 
         return request;
-    }
-
-    /**
-     * Returns a list of test business object data notification registration keys.
-     *
-     * @return the list of test business object data notification registration keys
-     */
-    protected List<NotificationRegistrationKey> getTestBusinessObjectDataNotificationRegistrationKeys()
-    {
-        List<NotificationRegistrationKey> keys = new ArrayList<>();
-
-        keys.add(new NotificationRegistrationKey(NAMESPACE, JOB_NAME_2));
-        keys.add(new NotificationRegistrationKey(NAMESPACE_2, JOB_NAME_2));
-        keys.add(new NotificationRegistrationKey(NAMESPACE, JOB_NAME));
-        keys.add(new NotificationRegistrationKey(NAMESPACE_2, JOB_NAME));
-
-        return keys;
     }
 
     /**
@@ -5396,26 +5379,5 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         assertTrue(String.format("<%s> is expected, but not found or does not match expected attribute and/or value.", xmlTagName), message.contains(String
             .format("<%s %s=\"%s\">%s</%s>", xmlTagName, xmlTagAttributeName, xmlTagAttributeValue, xmlTagValue == null ? null : xmlTagValue.toString(),
                 xmlTagName)));
-    }
-
-    /**
-     * create database entities for business object search testing
-     */
-    public void createDatabaseEntitiesForBusinessObjectDataSearchTesting()
-    {
-        businessObjectDataDaoTestHelper
-            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null, DATA_VERSION,
-                true, "VALID");
-        businessObjectDataDaoTestHelper
-            .createBusinessObjectDataEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null,
-                DATA_VERSION, true, "INVALID");
-
-        businessObjectDataDaoTestHelper
-            .createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION_2, PARTITION_VALUE, null,
-                DATA_VERSION, true, "INVALID");
-
-        businessObjectDataDaoTestHelper
-            .createBusinessObjectDataEntity(NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, PARTITION_VALUE, null,
-                DATA_VERSION, true, "VALID");
     }
 }

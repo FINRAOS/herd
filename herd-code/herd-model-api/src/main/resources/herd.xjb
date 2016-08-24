@@ -81,6 +81,10 @@
          node="//xs:complexType[@name='businessObjectDataNotificationRegistrationKeys']//xs:element[@name='businessObjectDataNotificationRegistrationKey']">
          <jaxb:property name="businessObjectDataNotificationRegistrationKeys"/>
       </jaxb:bindings>
+      <jaxb:bindings
+         node="//xs:complexType[@name='storageUnitNotificationRegistrationKeys']//xs:element[@name='storageUnitNotificationRegistrationKey']">
+         <jaxb:property name="storageUnitNotificationRegistrationKeys"/>
+      </jaxb:bindings>
       <jaxb:bindings node="//xs:complexType[@name='emrClusterDefinitionKeys']//xs:element[@name='emrClusterDefinitionKey']">
          <jaxb:property name="emrClusterDefinitionKeys"/>
       </jaxb:bindings>

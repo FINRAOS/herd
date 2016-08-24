@@ -276,7 +276,7 @@ public class UploaderController extends DataBridgeController
                 else
                 {
                     // Log a warning.
-                    LOGGER.warn("An exception occurred when adding storage files to the business object data.", e);
+                    LOGGER.warn("An exception occurred when adding storage files to the business object data. {}", e.toString(), e);
                     LOGGER.warn("Will retry in " + retryDelaySecs + " second(s) and no more than " + (maxRetryAttempts - retryCount) + " more time(s).");
 
                     // We can retry again so increment a counter to keep track of the number of times we retried.

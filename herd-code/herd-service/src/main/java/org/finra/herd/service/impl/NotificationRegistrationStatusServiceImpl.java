@@ -51,15 +51,15 @@ public class NotificationRegistrationStatusServiceImpl implements NotificationRe
         Assert.hasText(notificationName, "The notification name must be specified");
         String notificationRegistrationStatus = notificationRegistrationStatusUpdateRequest.getNotificationRegistrationStatus();
         Assert.hasText(notificationRegistrationStatus, "The notification registration status must be specified");
-        NotificationRegistrationEntity notificationRegistration = notificationRegistrationDaoHelper.getNotificationRegistration(namespace.trim(),
-            notificationName.trim());
-        NotificationRegistrationStatusEntity notificationRegistrationStatusEntity = notificationRegistrationStatusDaoHelper.getNotificationRegistrationStatus(
-            notificationRegistrationStatus.trim());
+        NotificationRegistrationEntity notificationRegistration =
+            notificationRegistrationDaoHelper.getNotificationRegistration(namespace.trim(), notificationName.trim());
+        NotificationRegistrationStatusEntity notificationRegistrationStatusEntity =
+            notificationRegistrationStatusDaoHelper.getNotificationRegistrationStatusEntity(notificationRegistrationStatus.trim());
         notificationRegistration.setNotificationRegistrationStatus(notificationRegistrationStatusEntity);
 
         NotificationRegistrationStatusUpdateResponse notificationRegistrationStatusUpdateResponse = new NotificationRegistrationStatusUpdateResponse();
-        notificationRegistrationStatusUpdateResponse.setNotificationRegistrationKey(new NotificationRegistrationKey(notificationRegistration
-            .getNamespace().getCode(), notificationRegistration.getName()));
+        notificationRegistrationStatusUpdateResponse.setNotificationRegistrationKey(
+            new NotificationRegistrationKey(notificationRegistration.getNamespace().getCode(), notificationRegistration.getName()));
         notificationRegistrationStatusUpdateResponse.setNotificationRegistrationStatus(notificationRegistrationStatusEntity.getCode());
         return notificationRegistrationStatusUpdateResponse;
     }

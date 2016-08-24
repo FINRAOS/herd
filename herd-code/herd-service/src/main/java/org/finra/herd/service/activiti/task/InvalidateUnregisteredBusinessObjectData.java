@@ -24,6 +24,7 @@ import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.StorageUnit;
 import org.finra.herd.model.jpa.NotificationEventTypeEntity;
 import org.finra.herd.service.BusinessObjectDataService;
 import org.finra.herd.service.NotificationEventService;
@@ -44,6 +45,7 @@ import org.finra.herd.service.helper.BusinessObjectDataHelper;
 public class InvalidateUnregisteredBusinessObjectData extends BaseJavaDelegate
 {
     private Expression contentType;
+
     private Expression businessObjectDataInvalidateUnregisteredRequest;
 
     @Autowired
@@ -69,14 +71,23 @@ public class InvalidateUnregisteredBusinessObjectData extends BaseJavaDelegate
         BusinessObjectDataInvalidateUnregisteredResponse businessObjectDataInvalidateUnregisteredResponse =
             businessObjectDataService.invalidateUnregisteredBusinessObjectData(businessObjectDataInvalidateUnregisteredRequest);
 
-        // Create business object data notifications.
+        // Trigger notifications.
         for (BusinessObjectData businessObjectData : businessObjectDataInvalidateUnregisteredResponse.getRegisteredBusinessObjectDataList())
         {
             BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectData);
 
+            // Create business object data notifications.
             notificationEventService
                 .processBusinessObjectDataNotificationEventAsync(NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_STTS_CHG, businessObjectDataKey,
                     businessObjectData.getStatus(), null);
+
+            // Create storage unit notifications.
+            for (StorageUnit storageUnit : businessObjectData.getStorageUnits())
+            {
+                notificationEventService
+                    .processStorageUnitNotificationEventAsync(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG, businessObjectDataKey,
+                        storageUnit.getStorage().getName(), storageUnit.getStorageUnitStatus(), null);
+            }
         }
 
         setJsonResponseAsWorkflowVariable(businessObjectDataInvalidateUnregisteredResponse, execution);
