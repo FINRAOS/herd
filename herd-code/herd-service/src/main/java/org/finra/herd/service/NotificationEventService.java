@@ -26,26 +26,54 @@ public interface NotificationEventService
     /**
      * Asynchronously handles the notification for the business object data changes.
      *
-     * @param eventType the event type
-     * @param key the business object data key
+     * @param notificationEventType the notification event type
+     * @param businessObjectDataKey the business object data key
      * @param newBusinessObjectDataStatus the new business object data status
      * @param oldBusinessObjectDataStatus the old business object data status
      *
      * @return a future to know the asynchronous state of this method
      */
-    public Future<Void> processBusinessObjectDataNotificationEventAsync(NotificationEventTypeEntity.EventTypesBdata eventType, BusinessObjectDataKey key,
-        String newBusinessObjectDataStatus, String oldBusinessObjectDataStatus);
+    public Future<Void> processBusinessObjectDataNotificationEventAsync(NotificationEventTypeEntity.EventTypesBdata notificationEventType,
+        BusinessObjectDataKey businessObjectDataKey, String newBusinessObjectDataStatus, String oldBusinessObjectDataStatus);
 
     /**
      * Synchronously handles the notification for the business object data changes.
      *
-     * @param eventType the event type
-     * @param key the business object data key.
+     * @param notificationEventType the notification event type
+     * @param businessObjectDataKey the business object data key.
      * @param newBusinessObjectDataStatus the new business object data status
      * @param oldBusinessObjectDataStatus the old business object data status
      *
      * @return a list of actions that were performed. For example: Job for a jobAction
      */
-    public List<Object> processBusinessObjectDataNotificationEventSync(NotificationEventTypeEntity.EventTypesBdata eventType, BusinessObjectDataKey key,
-        String newBusinessObjectDataStatus, String oldBusinessObjectDataStatus);
+    public List<Object> processBusinessObjectDataNotificationEventSync(NotificationEventTypeEntity.EventTypesBdata notificationEventType,
+        BusinessObjectDataKey businessObjectDataKey, String newBusinessObjectDataStatus, String oldBusinessObjectDataStatus);
+
+    /**
+     * Asynchronously handles the notification for the storage unit changes.
+     *
+     * @param notificationEventType the notification event type
+     * @param businessObjectDataKey the business object data key
+     * @param storageName the name of the storage
+     * @param newStorageUnitStatus the new storage unit status
+     * @param oldStorageUnitStatus the old storage unit status
+     *
+     * @return a future to know the asynchronous state of this method
+     */
+    public Future<Void> processStorageUnitNotificationEventAsync(NotificationEventTypeEntity.EventTypesStorageUnit notificationEventType,
+        BusinessObjectDataKey businessObjectDataKey, String storageName, String newStorageUnitStatus, String oldStorageUnitStatus);
+
+    /**
+     * Synchronously handles the notification for the storage unit changes.
+     *
+     * @param notificationEventType the notification event type
+     * @param businessObjectDataKey the business object data key
+     * @param storageName the name of the storage
+     * @param newStorageUnitStatus the new storage unit status
+     * @param oldStorageUnitStatus the old storage unit status
+     *
+     * @return a list of actions that were performed. For example: Job for a jobAction
+     */
+    public List<Object> processStorageUnitNotificationEventSync(NotificationEventTypeEntity.EventTypesStorageUnit notificationEventType,
+        BusinessObjectDataKey businessObjectDataKey, String storageName, String newStorageUnitStatus, String oldStorageUnitStatus);
 }

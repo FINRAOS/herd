@@ -32,6 +32,7 @@ import org.finra.herd.model.api.xml.SchemaColumn;
 import org.finra.herd.model.api.xml.Storage;
 import org.finra.herd.model.api.xml.StorageUnit;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
+import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.service.AbstractServiceTest;
 
@@ -164,13 +165,15 @@ public class BusinessObjectDataHelperTest extends AbstractServiceTest
         // Try to get a non-existing storage unit.
         try
         {
-            businessObjectDataHelper.getStorageUnitByStorageName(new BusinessObjectData(), testStorageName);
-            fail("Should throw a RuntimeException when storage unit does not exist.");
+            businessObjectDataHelper.getStorageUnitByStorageName(
+                new BusinessObjectData(INTEGER_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_KEY,
+                    PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID, NO_STORAGE_UNITS,
+                    NO_ATTRIBUTES, NO_BUSINESS_OBJECT_DATA_PARENTS, NO_BUSINESS_OBJECT_DATA_CHILDREN, NO_BUSINESS_OBJECT_DATA_STATUS_HISTORY), testStorageName);
+            fail("Should throw a IllegalStateException when storage unit does not exist.");
         }
-        catch (RuntimeException e)
+        catch (IllegalStateException e)
         {
-            String expectedErrMsg = String.format("Business object data has no storage unit with storage name \"%s\".", testStorageName);
-            assertEquals(expectedErrMsg, e.getMessage());
+            assertEquals(String.format("Business object data has no storage unit with storage name \"%s\".", testStorageName), e.getMessage());
         }
     }
 

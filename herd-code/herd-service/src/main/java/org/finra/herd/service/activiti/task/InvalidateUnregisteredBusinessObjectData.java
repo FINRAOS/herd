@@ -20,14 +20,10 @@ import org.activiti.engine.delegate.Expression;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredResponse;
-import org.finra.herd.model.api.xml.BusinessObjectDataKey;
-import org.finra.herd.model.jpa.NotificationEventTypeEntity;
 import org.finra.herd.service.BusinessObjectDataService;
-import org.finra.herd.service.NotificationEventService;
-import org.finra.herd.service.helper.BusinessObjectDataHelper;
+import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
 
 /**
  * An Activiti task wrapper for {@link org.finra.herd.service.BusinessObjectDataService#invalidateUnregisteredBusinessObjectData
@@ -48,13 +44,10 @@ public class InvalidateUnregisteredBusinessObjectData extends BaseJavaDelegate
     private Expression businessObjectDataInvalidateUnregisteredRequest;
 
     @Autowired
-    private BusinessObjectDataHelper businessObjectDataHelper;
+    private BusinessObjectDataDaoHelper businessObjectDataDaoHelper;
 
     @Autowired
     private BusinessObjectDataService businessObjectDataService;
-
-    @Autowired
-    private NotificationEventService notificationEventService;
 
     @Override
     public void executeImpl(DelegateExecution execution) throws Exception
@@ -70,15 +63,8 @@ public class InvalidateUnregisteredBusinessObjectData extends BaseJavaDelegate
         BusinessObjectDataInvalidateUnregisteredResponse businessObjectDataInvalidateUnregisteredResponse =
             businessObjectDataService.invalidateUnregisteredBusinessObjectData(businessObjectDataInvalidateUnregisteredRequest);
 
-        // Create business object data notifications.
-        for (BusinessObjectData businessObjectData : businessObjectDataInvalidateUnregisteredResponse.getRegisteredBusinessObjectDataList())
-        {
-            BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectData);
-
-            notificationEventService
-                .processBusinessObjectDataNotificationEventAsync(NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_STTS_CHG, businessObjectDataKey,
-                    businessObjectData.getStatus(), null);
-        }
+        // Trigger notifications.
+        businessObjectDataDaoHelper.triggerNotificationsForInvalidateUnregisteredBusinessObjectData(businessObjectDataInvalidateUnregisteredResponse);
 
         setJsonResponseAsWorkflowVariable(businessObjectDataInvalidateUnregisteredResponse, execution);
     }

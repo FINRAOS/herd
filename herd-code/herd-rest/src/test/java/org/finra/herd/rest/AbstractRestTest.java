@@ -104,6 +104,9 @@ public abstract class AbstractRestTest extends AbstractUiTest
     protected StorageRestController storageRestController;
 
     @Autowired
+    protected StorageUnitNotificationRegistrationRestController storageUnitNotificationRegistrationRestController;
+
+    @Autowired
     protected SystemJobRestController systemJobRestController;
 
     @Autowired
