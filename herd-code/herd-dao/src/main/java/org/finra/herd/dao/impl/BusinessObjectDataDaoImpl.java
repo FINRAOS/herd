@@ -808,36 +808,34 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
         // Join to the other tables we can filter on.
         Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> businessObjectFormatEntity =
-                businessObjectDataEntity.join(BusinessObjectDataEntity_.businessObjectFormat);
-        Join<BusinessObjectFormatEntity, FileTypeEntity> fileTypeEntity = businessObjectFormatEntity.join(BusinessObjectFormatEntity_.fileType);
+            businessObjectDataEntity.join(BusinessObjectDataEntity_.businessObjectFormat);
         Join<BusinessObjectFormatEntity, BusinessObjectDefinitionEntity> businessObjectDefinitionEntity =
-                businessObjectFormatEntity.join(BusinessObjectFormatEntity_.businessObjectDefinition);
-        Join<BusinessObjectDefinitionEntity, NamespaceEntity> namespaceEntity = businessObjectDefinitionEntity.join(BusinessObjectDefinitionEntity_.namespace);
+            businessObjectFormatEntity.join(BusinessObjectFormatEntity_.businessObjectDefinition);
 
-        
         // Create the standard restrictions based on the business object search key values (i.e. the standard where clauses).
 
         // Create a restriction on namespace code.
-        Predicate predicate = builder.equal(builder.upper(namespaceEntity.get(NamespaceEntity_.code)), businessDataSearchKey.getNamespace().toUpperCase());
+        Predicate predicate = builder
+            .equal(builder.upper(businessObjectDefinitionEntity.get(BusinessObjectDefinitionEntity_.namespace).get(NamespaceEntity_.code)),
+                businessDataSearchKey.getNamespace().toUpperCase());
 
         // Create and append a restriction on business object definition name.
         predicate = builder.and(predicate, builder.equal(builder.upper(businessObjectDefinitionEntity.get(BusinessObjectDefinitionEntity_.name)),
-                businessDataSearchKey.getBusinessObjectDefinitionName().toUpperCase()));
+            businessDataSearchKey.getBusinessObjectDefinitionName().toUpperCase()));
 
         // Create and append a restriction on business object format usage.
         if (!StringUtils.isEmpty(businessDataSearchKey.getBusinessObjectFormatUsage()))
         {
             predicate = builder.and(predicate, builder.equal(builder.upper(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.usage)),
-                    businessDataSearchKey.getBusinessObjectFormatUsage().toUpperCase()));
+                businessDataSearchKey.getBusinessObjectFormatUsage().toUpperCase()));
         }
 
         if (!StringUtils.isEmpty(businessDataSearchKey.getBusinessObjectFormatFileType()))
         {
             // Create and append a restriction on business object format file type.
-            predicate =
-                    builder.and(predicate,
-                            builder.equal(builder.upper(fileTypeEntity.get(FileTypeEntity_.code)), businessDataSearchKey.getBusinessObjectFormatFileType()
-                                    .toUpperCase()));
+            predicate = builder.and(predicate, builder
+                .equal(builder.upper(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.fileType).get(FileTypeEntity_.code)),
+                    businessDataSearchKey.getBusinessObjectFormatFileType().toUpperCase()));
         }
 
         // If specified, create and append a restriction on business object format version.
