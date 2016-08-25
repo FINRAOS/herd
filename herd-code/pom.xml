@@ -93,6 +93,7 @@
                <artifactId>logback-classic</artifactId>
             </exclusion>
          </exclusions>
+         <scope>test</scope>
       </dependency>
    </dependencies>
 
