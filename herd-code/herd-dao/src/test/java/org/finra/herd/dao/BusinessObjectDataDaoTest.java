@@ -1231,7 +1231,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
     @Test
     public void testBusinessObjectDataSearchWithPartitionValueFilters()
     {    
-        BusinessObjectDataEntity businessObjectDataEntity = this.createBusinessObjectEntityForPartionFiltersTest();
+        BusinessObjectDataEntity businessObjectDataEntity = createBusinessObjectEntityForPartitionValueFilterTest();
         String namespace = businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectDefinition().getNamespace().getCode();
         String bDefName = businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectDefinition().getName();
         String usage = businessObjectDataEntity.getBusinessObjectFormat().getUsage();
@@ -1291,7 +1291,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
     @Test
     public void testBusinessObjectDataSearchWithPartitionValueRangeFilters()
     {      
-        BusinessObjectDataEntity businessObjectDataEntity = createBusinessObjectEntityForPartionFiltersTest();
+        BusinessObjectDataEntity businessObjectDataEntity = createBusinessObjectEntityForPartitionValueFilterTest();
         String namespace = businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectDefinition().getNamespace().getCode();
         String bDefName = businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectDefinition().getName();
         String usage = businessObjectDataEntity.getBusinessObjectFormat().getUsage();
@@ -1312,7 +1312,6 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         partitionValueRange.setEndPartitionValue(PARTITION_VALUE + "1");
         partitionValueFilter.setPartitionValueRange(partitionValueRange);
         
-
         key.setPartitionValueFilters(partitionValueFilters);  
         key.setNamespace(namespace);
         key.setBusinessObjectDefinitionName(bDefName);
@@ -1342,7 +1341,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
     @Test
     public void testBusinessObjectDataSearchWithPartitionValueRangeFiltersSubPartition()
     {     
-        BusinessObjectDataEntity businessObjectDataEntity = createBusinessObjectEntityForPartionFiltersTest();
+        BusinessObjectDataEntity businessObjectDataEntity = createBusinessObjectEntityForPartitionValueFilterTest();
         String namespace = businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectDefinition().getNamespace().getCode();
         String bDefName = businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectDefinition().getName();
         String usage = businessObjectDataEntity.getBusinessObjectFormat().getUsage();
@@ -1363,7 +1362,6 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         partitionValueRange.setEndPartitionValue(businessObjectDataEntity.getPartitionValue2() + "1");
         partitionValueFilter.setPartitionValueRange(partitionValueRange);
         
-
         key.setPartitionValueFilters(partitionValueFilters);  
         key.setNamespace(namespace);
         key.setBusinessObjectDefinitionName(bDefName);
@@ -1392,7 +1390,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
     @Test
     public void testBusinessObjectDataSearchWithPartitionValueRangeFiltersNegative()
     {
-        BusinessObjectDataEntity businessObjectDataEntity = createBusinessObjectEntityForPartionFiltersTest();
+        BusinessObjectDataEntity businessObjectDataEntity = createBusinessObjectEntityForPartitionValueFilterTest();
         String namespace = businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectDefinition().getNamespace().getCode();
         String bDefName = businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectDefinition().getName();
         String usage = businessObjectDataEntity.getBusinessObjectFormat().getUsage();
@@ -1426,11 +1424,9 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
 
         List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(filters);
         assertEquals(0, result.size()); 
-        
-        businessObjectDataEntity = null;
     }
     
-    private BusinessObjectDataEntity createBusinessObjectEntityForPartionFiltersTest()
+    private BusinessObjectDataEntity createBusinessObjectEntityForPartitionValueFilterTest()
     {
         List<SchemaColumn> schemaColumns = new ArrayList<>();
         {
@@ -1486,7 +1482,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
     @Test
     public void testBusinessObjectDataSearchWithPartitionValueAndRangeFilters()
     {    
-        BusinessObjectDataEntity businessObjectDataEntity = createBusinessObjectEntityForPartionFiltersTest();
+        BusinessObjectDataEntity businessObjectDataEntity = createBusinessObjectEntityForPartitionValueFilterTest();
         String namespace = businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectDefinition().getNamespace().getCode();
         String bDefName = businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectDefinition().getName();
         String usage = businessObjectDataEntity.getBusinessObjectFormat().getUsage();
