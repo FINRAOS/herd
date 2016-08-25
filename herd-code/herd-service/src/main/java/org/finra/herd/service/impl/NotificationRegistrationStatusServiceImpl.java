@@ -54,7 +54,7 @@ public class NotificationRegistrationStatusServiceImpl implements NotificationRe
         NotificationRegistrationEntity notificationRegistration =
             notificationRegistrationDaoHelper.getNotificationRegistration(namespace.trim(), notificationName.trim());
         NotificationRegistrationStatusEntity notificationRegistrationStatusEntity =
-            notificationRegistrationStatusDaoHelper.getNotificationRegistrationStatusEntity(notificationRegistrationStatus.trim());
+            notificationRegistrationStatusDaoHelper.getNotificationRegistrationStatus(notificationRegistrationStatus.trim());
         notificationRegistration.setNotificationRegistrationStatus(notificationRegistrationStatusEntity);
 
         NotificationRegistrationStatusUpdateResponse notificationRegistrationStatusUpdateResponse = new NotificationRegistrationStatusUpdateResponse();

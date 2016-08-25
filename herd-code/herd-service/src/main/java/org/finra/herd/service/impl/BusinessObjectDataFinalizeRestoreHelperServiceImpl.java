@@ -416,16 +416,9 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceImpl implements Busin
             storageUnitDaoHelper.getStorageUnitEntity(businessObjectDataRestoreDto.getOriginStorageName(), businessObjectDataEntity);
 
         // Retrieve and ensure the ENABLED storage unit status entity exists.
-        StorageUnitStatusEntity newStorageUnitStatusEntity = storageUnitStatusDaoHelper.getStorageUnitStatusEntity(StorageUnitStatusEntity.ENABLED);
-
-        // Get the old storage unit status value for the origin storage unit.
-        String oldStorageUnitStatus = originStorageUnitEntity.getStatus().getCode();
+        StorageUnitStatusEntity storageUnitStatusEntity = storageUnitStatusDaoHelper.getStorageUnitStatusEntity(StorageUnitStatusEntity.ENABLED);
 
         // Update the origin S3 storage unit status to ENABLED.
-        storageUnitDaoHelper.updateStorageUnitStatus(originStorageUnitEntity, newStorageUnitStatusEntity, StorageUnitStatusEntity.ENABLED);
-
-        // Update the new and old storage unit status values for the origin storage unit in the business object data restore DTO.
-        businessObjectDataRestoreDto.setNewOriginStorageUnitStatus(newStorageUnitStatusEntity.getCode());
-        businessObjectDataRestoreDto.setOldOriginStorageUnitStatus(oldStorageUnitStatus);
+        storageUnitDaoHelper.updateStorageUnitStatus(originStorageUnitEntity, storageUnitStatusEntity, StorageUnitStatusEntity.ENABLED);
     }
 }

@@ -24,7 +24,6 @@ import org.junit.Test;
 import org.finra.herd.model.api.xml.NotificationRegistrationKey;
 import org.finra.herd.model.jpa.BusinessObjectDataNotificationRegistrationEntity;
 import org.finra.herd.model.jpa.NotificationRegistrationEntity;
-import org.finra.herd.model.jpa.NotificationRegistrationStatusEntity;
 
 public class NotificationRegistrationDaoTest extends AbstractDaoTest
 {
@@ -32,28 +31,10 @@ public class NotificationRegistrationDaoTest extends AbstractDaoTest
     public void testGetNotificationRegistrationAssertReturnEntityWhenRegistrationExist()
     {
         NotificationRegistrationKey businessObjectDataNotificationRegistrationKey = new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME);
-        notificationRegistrationDaoTestHelper
+        businessObjectDataNotificationRegistrationDaoTestHelper
             .createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE, NAMESPACE,
                 BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS,
-                notificationRegistrationDaoTestHelper.getTestJobActions(), NotificationRegistrationStatusEntity.ENABLED);
-
-        NotificationRegistrationEntity notificationRegistration = notificationRegistrationDao
-            .getNotificationRegistration(businessObjectDataNotificationRegistrationKey.getNamespace(),
-                businessObjectDataNotificationRegistrationKey.getNotificationName());
-
-        assertNotNull(notificationRegistration);
-        assertEquals(BusinessObjectDataNotificationRegistrationEntity.class, notificationRegistration.getClass());
-    }
-
-    @Test
-    public void testGetNotificationRegistrationAssertReturnEntityWhenRegistrationExistAndDifferentCase()
-    {
-        NotificationRegistrationKey businessObjectDataNotificationRegistrationKey =
-            new NotificationRegistrationKey(NAMESPACE.toLowerCase(), NOTIFICATION_NAME.toLowerCase());
-        notificationRegistrationDaoTestHelper
-            .createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE, NAMESPACE,
-                BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS,
-                notificationRegistrationDaoTestHelper.getTestJobActions(), NotificationRegistrationStatusEntity.ENABLED);
+                businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
 
         NotificationRegistrationEntity notificationRegistration = notificationRegistrationDao
             .getNotificationRegistration(businessObjectDataNotificationRegistrationKey.getNamespace(),
@@ -67,14 +48,32 @@ public class NotificationRegistrationDaoTest extends AbstractDaoTest
     public void testGetNotificationRegistrationAssertReturnNullWhenRegistrationDoesNotExist()
     {
         NotificationRegistrationKey businessObjectDataNotificationRegistrationKey = new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME);
-        notificationRegistrationDaoTestHelper
+        businessObjectDataNotificationRegistrationDaoTestHelper
             .createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE, NAMESPACE,
                 BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS,
-                notificationRegistrationDaoTestHelper.getTestJobActions(), NotificationRegistrationStatusEntity.ENABLED);
+                businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
 
         NotificationRegistrationEntity notificationRegistration =
             notificationRegistrationDao.getNotificationRegistration(businessObjectDataNotificationRegistrationKey.getNamespace(), "DOES_NOT_EXIST");
 
         assertNull(notificationRegistration);
+    }
+
+    @Test
+    public void testGetNotificationRegistrationAssertReturnEntityWhenRegistrationExistAndDifferentCase()
+    {
+        NotificationRegistrationKey businessObjectDataNotificationRegistrationKey =
+            new NotificationRegistrationKey(NAMESPACE.toLowerCase(), NOTIFICATION_NAME.toLowerCase());
+        businessObjectDataNotificationRegistrationDaoTestHelper
+            .createBusinessObjectDataNotificationRegistrationEntity(businessObjectDataNotificationRegistrationKey, NOTIFICATION_EVENT_TYPE, NAMESPACE,
+                BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS,
+                businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
+
+        NotificationRegistrationEntity notificationRegistration = notificationRegistrationDao
+            .getNotificationRegistration(businessObjectDataNotificationRegistrationKey.getNamespace(),
+                businessObjectDataNotificationRegistrationKey.getNotificationName());
+
+        assertNotNull(notificationRegistration);
+        assertEquals(BusinessObjectDataNotificationRegistrationEntity.class, notificationRegistration.getClass());
     }
 }

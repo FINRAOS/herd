@@ -16,30 +16,31 @@
 package org.finra.herd.rest;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import org.junit.Test;
 
 import org.finra.herd.model.api.xml.NotificationRegistrationKey;
 import org.finra.herd.model.api.xml.NotificationRegistrationStatusUpdateRequest;
 import org.finra.herd.model.api.xml.NotificationRegistrationStatusUpdateResponse;
-import org.finra.herd.model.jpa.NotificationRegistrationStatusEntity;
 
 public class NotificationRegistrationStatusRestControllerTest extends AbstractRestTest
 {
     @Test
     public void testUpdateNotificationRegistrationStatusAssertSuccess()
     {
-        NotificationRegistrationKey notificationRegistrationKey = new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME);
-
-        notificationRegistrationDaoTestHelper
-            .createBusinessObjectDataNotificationRegistrationEntity(notificationRegistrationKey, NOTIFICATION_EVENT_TYPE, NAMESPACE, BDEF_NAME,
-                FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS,
-                notificationRegistrationDaoTestHelper.getTestJobActions(), NotificationRegistrationStatusEntity.ENABLED);
-
+        businessObjectDataNotificationRegistrationDaoTestHelper
+            .createBusinessObjectDataNotificationRegistrationEntity(new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME), NOTIFICATION_EVENT_TYPE,
+                NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, STORAGE_NAME, BDATA_STATUS, BDATA_STATUS,
+                businessObjectDataNotificationRegistrationDaoTestHelper.getTestJobActions());
+        NotificationRegistrationStatusUpdateRequest notificationRegistrationStatusUpdateRequest = new NotificationRegistrationStatusUpdateRequest();
+        notificationRegistrationStatusUpdateRequest.setNotificationRegistrationStatus("DISABLED");
         NotificationRegistrationStatusUpdateResponse response = notificationRegistrationStatusRestController
-            .updateNotificationRegistrationStatus(NAMESPACE, NOTIFICATION_NAME,
-                new NotificationRegistrationStatusUpdateRequest(NotificationRegistrationStatusEntity.DISABLED));
-
-        assertEquals(new NotificationRegistrationStatusUpdateResponse(notificationRegistrationKey, NotificationRegistrationStatusEntity.DISABLED), response);
+            .updateNotificationRegistrationStatus(NAMESPACE, NOTIFICATION_NAME, notificationRegistrationStatusUpdateRequest);
+        assertNotNull(response);
+        assertNotNull(response.getNotificationRegistrationKey());
+        assertEquals(NAMESPACE, response.getNotificationRegistrationKey().getNamespace());
+        assertEquals(NOTIFICATION_NAME, response.getNotificationRegistrationKey().getNotificationName());
+        assertEquals("DISABLED", response.getNotificationRegistrationStatus());
     }
 }

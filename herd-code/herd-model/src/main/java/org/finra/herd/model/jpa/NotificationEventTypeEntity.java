@@ -28,7 +28,7 @@ import javax.persistence.Table;
 public class NotificationEventTypeEntity extends AuditableEntity
 {
     /**
-     * Notification event types for business object data.
+     * Notification event type.
      */
     public static enum EventTypesBdata
     {
@@ -36,13 +36,7 @@ public class NotificationEventTypeEntity extends AuditableEntity
         BUS_OBJCT_DATA_STTS_CHG;
     }
 
-    /**
-     * Notification event types for storage unit.
-     */
-    public static enum EventTypesStorageUnit
-    {
-        STRGE_UNIT_STTS_CHG;
-    }
+    ;
 
     /**
      * The code column.

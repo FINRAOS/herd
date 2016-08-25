@@ -650,9 +650,8 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
 
         // Create a business object data restore DTO.
         BusinessObjectDataRestoreDto businessObjectDataRestoreDto =
-            new BusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN, TEST_S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
-                NO_STORAGE_UNIT_STATUS, originStorageFiles, STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER, S3_BUCKET_NAME_ORIGIN,
-                S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX, null);
+            new BusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN, TEST_S3_KEY_PREFIX, originStorageFiles,
+                STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER, S3_BUCKET_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX, null);
 
         try
         {
@@ -716,9 +715,8 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
 
         // Create a business object data restore DTO.
         BusinessObjectDataRestoreDto businessObjectDataRestoreDto =
-            new BusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN, TEST_S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
-                NO_STORAGE_UNIT_STATUS, originStorageFiles, STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER, S3_BUCKET_NAME_ORIGIN,
-                S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX, null);
+            new BusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN, TEST_S3_KEY_PREFIX, originStorageFiles,
+                STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER, S3_BUCKET_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX, null);
 
         try
         {
@@ -777,9 +775,9 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
 
         // Create a business object data restore DTO.
         BusinessObjectDataRestoreDto businessObjectDataRestoreDto =
-            new BusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN, TEST_S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
-                NO_STORAGE_UNIT_STATUS, Arrays.asList(new StorageFile(TEST_S3_KEY_PREFIX + "/" + LOCAL_FILE, FILE_SIZE_1_KB, NO_ROW_COUNT)),
-                STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER, S3_BUCKET_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX, null);
+            new BusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN, TEST_S3_KEY_PREFIX,
+                Arrays.asList(new StorageFile(TEST_S3_KEY_PREFIX + "/" + LOCAL_FILE, FILE_SIZE_1_KB, NO_ROW_COUNT)), STORAGE_NAME_GLACIER,
+                S3_BUCKET_NAME_GLACIER, S3_BUCKET_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX, null);
 
         try
         {
@@ -850,9 +848,8 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
 
         // Create a business object data restore DTO.
         BusinessObjectDataRestoreDto businessObjectDataRestoreDto =
-            new BusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN, TEST_S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
-                NO_STORAGE_UNIT_STATUS, originStorageFiles, STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER, S3_BUCKET_NAME_ORIGIN,
-                S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX, null);
+            new BusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN, TEST_S3_KEY_PREFIX, originStorageFiles,
+                STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER, S3_BUCKET_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX, null);
 
         try
         {
@@ -934,9 +931,8 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
 
         // Create a business object data restore DTO.
         BusinessObjectDataRestoreDto businessObjectDataRestoreDto =
-            new BusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN, TEST_S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
-                NO_STORAGE_UNIT_STATUS, originStorageFiles, STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER, S3_BUCKET_NAME_ORIGIN,
-                S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX, null);
+            new BusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN, TEST_S3_KEY_PREFIX, originStorageFiles,
+                STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER, S3_BUCKET_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX, null);
 
         try
         {
@@ -1006,9 +1002,9 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
 
         // Create a business object data restore DTO.
         BusinessObjectDataRestoreDto businessObjectDataRestoreDto =
-            new BusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN, TEST_S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
-                NO_STORAGE_UNIT_STATUS, Arrays.asList(new StorageFile(TEST_S3_KEY_PREFIX + "/" + LOCAL_FILE, FILE_SIZE_1_KB, NO_ROW_COUNT)),
-                STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER, S3_BUCKET_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX, null);
+            new BusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN, TEST_S3_KEY_PREFIX,
+                Arrays.asList(new StorageFile(TEST_S3_KEY_PREFIX + "/" + LOCAL_FILE, FILE_SIZE_1_KB, NO_ROW_COUNT)), STORAGE_NAME_GLACIER,
+                S3_BUCKET_NAME_GLACIER, S3_BUCKET_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX, null);
 
         // Enable origin storage unit to finalize a restore for business object data.
         businessObjectDataFinalizeRestoreHelperService.enableOriginStorageUnit(businessObjectDataRestoreDto);
@@ -1047,8 +1043,8 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
 
         // Create a business object data restore DTO.
         BusinessObjectDataRestoreDto businessObjectDataRestoreDto =
-            new BusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN, TEST_S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
-                NO_STORAGE_UNIT_STATUS, Arrays.asList(originStorageFile), STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER, S3_BUCKET_NAME_ORIGIN,
+            new BusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN, TEST_S3_KEY_PREFIX,
+                Arrays.asList(originStorageFile), STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER, S3_BUCKET_NAME_ORIGIN,
                 S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX, null);
 
         try

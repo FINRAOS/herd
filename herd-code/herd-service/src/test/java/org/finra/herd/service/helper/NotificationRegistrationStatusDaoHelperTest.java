@@ -30,8 +30,8 @@ public class NotificationRegistrationStatusDaoHelperTest extends AbstractService
     @Test
     public void testGetNotificationRegistrationStatusAssertReturnEntityWhenEntityExists()
     {
-        NotificationRegistrationStatusEntity notificationRegistrationStatus = notificationRegistrationStatusDaoHelper.getNotificationRegistrationStatusEntity(
-            "ENABLED");
+        NotificationRegistrationStatusEntity notificationRegistrationStatus =
+            notificationRegistrationStatusDaoHelper.getNotificationRegistrationStatus("ENABLED");
         assertNotNull(notificationRegistrationStatus);
         assertEquals("ENABLED", notificationRegistrationStatus.getCode());
     }
@@ -41,13 +41,13 @@ public class NotificationRegistrationStatusDaoHelperTest extends AbstractService
     {
         try
         {
-            notificationRegistrationStatusDaoHelper.getNotificationRegistrationStatusEntity("DOES_NOT_EXIST");
+            notificationRegistrationStatusDaoHelper.getNotificationRegistrationStatus("DOES_NOT_EXIST");
             fail();
         }
         catch (Exception e)
         {
             assertEquals(ObjectNotFoundException.class, e.getClass());
-            assertEquals("The notification registration status \"DOES_NOT_EXIST\" doesn't exist.", e.getMessage());
+            assertEquals("The notification registration status with code \"DOES_NOT_EXIST\" was not found.", e.getMessage());
         }
     }
 }

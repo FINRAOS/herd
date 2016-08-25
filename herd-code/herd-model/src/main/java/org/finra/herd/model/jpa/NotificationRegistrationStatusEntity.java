@@ -24,11 +24,6 @@ import javax.persistence.Table;
 @Entity
 public class NotificationRegistrationStatusEntity extends AuditableEntity
 {
-    // List of common statuses
-    public static final String ENABLED = "ENABLED";
-
-    public static final String DISABLED = "DISABLED";
-
     @Id
     @Column(name = "ntfcn_rgstn_stts_cd", length = 20)
     private String code;

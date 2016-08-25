@@ -489,12 +489,15 @@ public class BusinessObjectDataHelper
         StorageUnit resultStorageUnit = null;
 
         // Find a storage unit that belongs to the specified storage.
-        for (StorageUnit storageUnit : businessObjectData.getStorageUnits())
+        if (!CollectionUtils.isEmpty(businessObjectData.getStorageUnits()))
         {
-            if (storageUnit.getStorage().getName().equalsIgnoreCase(storageName))
+            for (StorageUnit storageUnit : businessObjectData.getStorageUnits())
             {
-                resultStorageUnit = storageUnit;
-                break;
+                if (storageUnit.getStorage().getName().equalsIgnoreCase(storageName))
+                {
+                    resultStorageUnit = storageUnit;
+                    break;
+                }
             }
         }
 
@@ -590,7 +593,7 @@ public class BusinessObjectDataHelper
             subPartitionValues.set(i, alternateKeyHelper.validateStringParameter("subpartition value", subPartitionValues.get(i)));
         }
     }
-    
+
     /**
      * Validates a list of partition value filters or a standalone partition filter. This method makes sure that a partition value filter contains exactly one
      * partition value range or a non-empty partition value list. This method also makes sure that there is no more than one partition value range specified
@@ -605,7 +608,7 @@ public class BusinessObjectDataHelper
     {
         // Make sure that request does not contain both a list of partition value filters and a standalone partition value filter.
         Assert.isTrue(partitionValueFilters == null || standalonePartitionValueFilter == null,
-                "A list of partition value filters and a standalone partition value filter cannot be both specified.");
+            "A list of partition value filters and a standalone partition value filter cannot be both specified.");
 
         List<PartitionValueFilter> partitionValueFiltersToValidate = new ArrayList<>();
 
@@ -645,7 +648,7 @@ public class BusinessObjectDataHelper
 
             // Validate that we have exactly one partition filter option specified.
             List<Boolean> partitionFilterOptions =
-                    Arrays.asList(partitionValueRange != null, partitionValues != null, latestBeforePartitionValue != null, latestAfterPartitionValue != null);
+                Arrays.asList(partitionValueRange != null, partitionValues != null, latestBeforePartitionValue != null, latestAfterPartitionValue != null);
             Assert.isTrue(Collections.frequency(partitionFilterOptions, Boolean.TRUE) == 1, "Exactly one partition value filter option must be specified.");
 
             if (partitionValueRange != null)
@@ -667,15 +670,15 @@ public class BusinessObjectDataHelper
                 // Validate that partition value tokens are not specified as start and end partition values.
                 // This check is required, regardless if partition value tokens are allowed or not.
                 Assert.isTrue(!partitionValueRange.getStartPartitionValue().equals(BusinessObjectDataService.MAX_PARTITION_VALUE_TOKEN) &&
-                        !partitionValueRange.getStartPartitionValue().equals(BusinessObjectDataService.MIN_PARTITION_VALUE_TOKEN) &&
-                        !partitionValueRange.getEndPartitionValue().equals(BusinessObjectDataService.MAX_PARTITION_VALUE_TOKEN) &&
-                        !partitionValueRange.getEndPartitionValue().equals(BusinessObjectDataService.MIN_PARTITION_VALUE_TOKEN),
-                        "A partition value token cannot be specified with a partition value range.");
+                    !partitionValueRange.getStartPartitionValue().equals(BusinessObjectDataService.MIN_PARTITION_VALUE_TOKEN) &&
+                    !partitionValueRange.getEndPartitionValue().equals(BusinessObjectDataService.MAX_PARTITION_VALUE_TOKEN) &&
+                    !partitionValueRange.getEndPartitionValue().equals(BusinessObjectDataService.MIN_PARTITION_VALUE_TOKEN),
+                    "A partition value token cannot be specified with a partition value range.");
 
                 // Using string compare, validate that start partition value is less than or equal to end partition value.
                 Assert.isTrue(partitionValueRange.getStartPartitionValue().compareTo(partitionValueRange.getEndPartitionValue()) <= 0, String
-                        .format("The start partition value \"%s\" cannot be greater than the end partition value \"%s\".",
-                                partitionValueRange.getStartPartitionValue(), partitionValueRange.getEndPartitionValue()));
+                    .format("The start partition value \"%s\" cannot be greater than the end partition value \"%s\".",
+                        partitionValueRange.getStartPartitionValue(), partitionValueRange.getEndPartitionValue()));
             }
             else if (partitionValues != null)
             {

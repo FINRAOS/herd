@@ -58,14 +58,28 @@ public interface BusinessObjectDataNotificationRegistrationDao extends BaseJpaDa
         BusinessObjectDataNotificationFilter businessObjectDataNotificationFilter);
 
     /**
-     * Retrieves a list of business object data notification registration entities that match given input parameters.
+     * Retrieves a list of business object data notification entities that match given input parameters. Gets only ENABLED notification registrations.
      *
      * @param notificationEventTypeCode the notification event type code (case-insensitive)
      * @param businessObjectDataKey the business object data key (case-insensitive)
      * @param newBusinessObjectDataStatus the new business object data status (case-insensitive)
      * @param oldBusinessObjectDataStatus the old (previous) business object data status (case-insensitive). This parameter will be null for business object
      * data registration
-     * @param notificationRegistrationStatus the status of the notification registration (case-insensitive)
+     *
+     * @return the list of business object data notification entities
+     */
+    public List<BusinessObjectDataNotificationRegistrationEntity> getBusinessObjectDataNotificationRegistrations(String notificationEventTypeCode,
+        BusinessObjectDataKey businessObjectDataKey, String newBusinessObjectDataStatus, String oldBusinessObjectDataStatus);
+
+    /**
+     * Retrieves a list of business object data notification entities that match given input parameters.
+     *
+     * @param notificationEventTypeCode the notification event type code (case-insensitive)
+     * @param businessObjectDataKey the business object data key (case-insensitive)
+     * @param newBusinessObjectDataStatus the new business object data status (case-insensitive)
+     * @param oldBusinessObjectDataStatus the old (previous) business object data status (case-insensitive). This parameter will be null for business object
+     * data registration
+     * @param notificationRegistrationStatus The status of the notification registration. Optional. Defaults to any. Case-insensitive.
      *
      * @return the list of business object data notification entities
      */

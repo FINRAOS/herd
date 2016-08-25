@@ -16,7 +16,6 @@
 -->
 <jaxb:bindings version="2.0" xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
                xmlns:xjc="http://java.sun.com/xml/ns/jaxb/xjc"
-               xmlns:xs="http://www.w3.org/2001/XMLSchema"
                xmlns:annox="http://annox.dev.java.net"
                jaxb:extensionBindingPrefixes="xjc annox">
 
@@ -80,10 +79,6 @@
       <jaxb:bindings
          node="//xs:complexType[@name='businessObjectDataNotificationRegistrationKeys']//xs:element[@name='businessObjectDataNotificationRegistrationKey']">
          <jaxb:property name="businessObjectDataNotificationRegistrationKeys"/>
-      </jaxb:bindings>
-      <jaxb:bindings
-         node="//xs:complexType[@name='storageUnitNotificationRegistrationKeys']//xs:element[@name='storageUnitNotificationRegistrationKey']">
-         <jaxb:property name="storageUnitNotificationRegistrationKeys"/>
       </jaxb:bindings>
       <jaxb:bindings node="//xs:complexType[@name='emrClusterDefinitionKeys']//xs:element[@name='emrClusterDefinitionKey']">
          <jaxb:property name="emrClusterDefinitionKeys"/>

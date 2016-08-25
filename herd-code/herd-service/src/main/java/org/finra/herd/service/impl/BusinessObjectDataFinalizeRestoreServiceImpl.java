@@ -27,11 +27,9 @@ import org.finra.herd.dao.StorageUnitDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.dto.BusinessObjectDataRestoreDto;
 import org.finra.herd.model.dto.StorageUnitAlternateKeyDto;
-import org.finra.herd.model.jpa.NotificationEventTypeEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.service.BusinessObjectDataFinalizeRestoreHelperService;
 import org.finra.herd.service.BusinessObjectDataFinalizeRestoreService;
-import org.finra.herd.service.NotificationEventService;
 import org.finra.herd.service.helper.StorageUnitHelper;
 
 /**
@@ -42,28 +40,13 @@ import org.finra.herd.service.helper.StorageUnitHelper;
 public class BusinessObjectDataFinalizeRestoreServiceImpl implements BusinessObjectDataFinalizeRestoreService
 {
     @Autowired
-    private BusinessObjectDataFinalizeRestoreHelperService businessObjectDataFinalizeRestoreHelperService;
+    protected BusinessObjectDataFinalizeRestoreHelperService businessObjectDataFinalizeRestoreHelperService;
 
     @Autowired
-    private NotificationEventService notificationEventService;
+    protected StorageUnitDao storageUnitDao;
 
     @Autowired
-    private StorageUnitDao storageUnitDao;
-
-    @Autowired
-    private StorageUnitHelper storageUnitHelper;
-
-    /**
-     * {@inheritDoc}
-     * <p/>
-     * This implementation executes non-transactionally, suspends the current transaction if one exists.
-     */
-    @Override
-    @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    public void finalizeRestore(StorageUnitAlternateKeyDto glacierStorageUnitKey)
-    {
-        finalizeRestoreImpl(glacierStorageUnitKey);
-    }
+    protected StorageUnitHelper storageUnitHelper;
 
     /**
      * {@inheritDoc}
@@ -75,29 +58,6 @@ public class BusinessObjectDataFinalizeRestoreServiceImpl implements BusinessObj
     public List<StorageUnitAlternateKeyDto> getGlacierStorageUnitsToRestore(int maxResult)
     {
         return getGlacierStorageUnitsToRestoreImpl(maxResult);
-    }
-
-    /**
-     * Finalizes restore of a Glacier storage unit.
-     *
-     * @param glacierStorageUnitKey the Glacier storage unit key
-     */
-    protected void finalizeRestoreImpl(StorageUnitAlternateKeyDto glacierStorageUnitKey)
-    {
-        // Build the business object data restore DTO.
-        BusinessObjectDataRestoreDto businessObjectDataRestoreDto =
-            businessObjectDataFinalizeRestoreHelperService.prepareToFinalizeRestore(glacierStorageUnitKey);
-
-        // Execute the S3 specific steps required to finalize the business object data restore.
-        businessObjectDataFinalizeRestoreHelperService.executeS3SpecificSteps(businessObjectDataRestoreDto);
-
-        // Execute the after step regardless if the above step failed or not. Please note that the after step returns true on success and false otherwise.
-        businessObjectDataFinalizeRestoreHelperService.enableOriginStorageUnit(businessObjectDataRestoreDto);
-
-        // Create storage unit notification for the origin storage unit.
-        notificationEventService.processStorageUnitNotificationEventAsync(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG,
-            businessObjectDataRestoreDto.getBusinessObjectDataKey(), businessObjectDataRestoreDto.getOriginStorageName(),
-            businessObjectDataRestoreDto.getNewOriginStorageUnitStatus(), businessObjectDataRestoreDto.getOldOriginStorageUnitStatus());
     }
 
     /**
@@ -120,5 +80,35 @@ public class BusinessObjectDataFinalizeRestoreServiceImpl implements BusinessObj
         }
 
         return storageUnitKeys;
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * This implementation executes non-transactionally, suspends the current transaction if one exists.
+     */
+    @Override
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public void finalizeRestore(StorageUnitAlternateKeyDto glacierStorageUnitKey)
+    {
+        finalizeRestoreImpl(glacierStorageUnitKey);
+    }
+
+    /**
+     * Finalizes restore of a Glacier storage unit.
+     *
+     * @param glacierStorageUnitKey the Glacier storage unit key
+     */
+    protected void finalizeRestoreImpl(StorageUnitAlternateKeyDto glacierStorageUnitKey)
+    {
+        // Build the business object data restore DTO.
+        BusinessObjectDataRestoreDto businessObjectDataRestoreDto =
+            businessObjectDataFinalizeRestoreHelperService.prepareToFinalizeRestore(glacierStorageUnitKey);
+
+        // Execute the S3 specific steps required to finalize the business object data restore.
+        businessObjectDataFinalizeRestoreHelperService.executeS3SpecificSteps(businessObjectDataRestoreDto);
+
+        // Execute the after step regardless if the above step failed or not. Please note that the after step returns true on success and false otherwise.
+        businessObjectDataFinalizeRestoreHelperService.enableOriginStorageUnit(businessObjectDataRestoreDto);
     }
 }

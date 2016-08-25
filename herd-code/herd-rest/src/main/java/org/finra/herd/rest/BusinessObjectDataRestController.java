@@ -53,9 +53,11 @@ import org.finra.herd.model.api.xml.S3KeyPrefixInformation;
 import org.finra.herd.model.api.xml.StorageUnitDownloadCredential;
 import org.finra.herd.model.api.xml.StorageUnitUploadCredential;
 import org.finra.herd.model.dto.SecurityFunctions;
+import org.finra.herd.model.jpa.NotificationEventTypeEntity;
 import org.finra.herd.service.BusinessObjectDataService;
+import org.finra.herd.service.NotificationEventService;
 import org.finra.herd.service.StorageUnitService;
-import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
+import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.ui.constants.UiConstants;
 
 /**
@@ -67,10 +69,13 @@ import org.finra.herd.ui.constants.UiConstants;
 public class BusinessObjectDataRestController extends HerdBaseController
 {
     @Autowired
-    private BusinessObjectDataDaoHelper businessObjectDataDaoHelper;
+    private BusinessObjectDataHelper businessObjectDataHelper;
 
     @Autowired
     private BusinessObjectDataService businessObjectDataService;
+
+    @Autowired
+    private NotificationEventService notificationEventService;
 
     @Autowired
     private StorageUnitService storageUnitService;
@@ -142,7 +147,14 @@ public class BusinessObjectDataRestController extends HerdBaseController
         // processing engine), We would want the event transaction to also rollback if event publishing failed. These calls will be moved to service layer.
 
         // Trigger notifications.
-        businessObjectDataDaoHelper.triggerNotificationsForCreateBusinessObjectData(businessObjectData);
+        BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectData);
+
+        // Create business object data notifications.
+        for (NotificationEventTypeEntity.EventTypesBdata eventType : Arrays
+            .asList(NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_RGSTN, NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_STTS_CHG))
+        {
+            notificationEventService.processBusinessObjectDataNotificationEventAsync(eventType, businessObjectDataKey, businessObjectData.getStatus(), null);
+        }
 
         return businessObjectData;
     }
@@ -491,8 +503,15 @@ public class BusinessObjectDataRestController extends HerdBaseController
         BusinessObjectDataInvalidateUnregisteredResponse businessObjectDataInvalidateUnregisteredResponse =
             businessObjectDataService.invalidateUnregisteredBusinessObjectData(businessObjectDataInvalidateUnregisteredRequest);
 
-        // Trigger notifications.
-        businessObjectDataDaoHelper.triggerNotificationsForInvalidateUnregisteredBusinessObjectData(businessObjectDataInvalidateUnregisteredResponse);
+        // Create business object data notifications.
+        for (BusinessObjectData businessObjectData : businessObjectDataInvalidateUnregisteredResponse.getRegisteredBusinessObjectDataList())
+        {
+            BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectData);
+
+            notificationEventService
+                .processBusinessObjectDataNotificationEventAsync(NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_STTS_CHG, businessObjectDataKey,
+                    businessObjectData.getStatus(), null);
+        }
 
         return businessObjectDataInvalidateUnregisteredResponse;
     }

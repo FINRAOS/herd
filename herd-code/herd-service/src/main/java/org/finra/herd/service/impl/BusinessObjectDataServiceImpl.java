@@ -68,14 +68,12 @@ import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.CustomDdlEntity;
-import org.finra.herd.model.jpa.NotificationEventTypeEntity;
 import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.StorageFileEntity;
 import org.finra.herd.model.jpa.StoragePlatformEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.service.BusinessObjectDataInitiateRestoreHelperService;
 import org.finra.herd.service.BusinessObjectDataService;
-import org.finra.herd.service.NotificationEventService;
 import org.finra.herd.service.S3Service;
 import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
@@ -167,9 +165,6 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
 
     @Autowired
     private StorageUnitHelper storageUnitHelper;
-
-    @Autowired
-    private NotificationEventService notificationEventService;
 
     @PublishJmsMessages
     @NamespacePermission(fields = "#request.namespace", permissions = NamespacePermissionEnum.WRITE)
@@ -925,7 +920,6 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         }
     }
 
-    
 
     /**
      * Creates business object data availability object instance and initialise it with the business object data availability request field values.
@@ -1235,24 +1229,14 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         BusinessObjectDataRestoreDto businessObjectDataRestoreDto =
             businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(businessObjectDataKey);
 
-        // Create storage unit notification for the origin storage unit.
-        notificationEventService.processStorageUnitNotificationEventAsync(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG,
-            businessObjectDataRestoreDto.getBusinessObjectDataKey(), businessObjectDataRestoreDto.getOriginStorageName(),
-            businessObjectDataRestoreDto.getNewOriginStorageUnitStatus(), businessObjectDataRestoreDto.getOldOriginStorageUnitStatus());
-
         // Initiate the restore request.
         businessObjectDataInitiateRestoreHelperService.executeS3SpecificSteps(businessObjectDataRestoreDto);
 
         // On failure of the above step, execute the "after" step, and re-throw the exception.
         if (businessObjectDataRestoreDto.getException() != null)
         {
-            // On failure, execute the after step that updates the origin storage unit status to DISABLED.
+            // On failure, execute the after step that updates the glacier storage unit status to DISABLED.
             businessObjectDataInitiateRestoreHelperService.executeInitiateRestoreAfterStep(businessObjectDataRestoreDto);
-
-            // Create storage unit notification for the origin storage unit.
-            notificationEventService.processStorageUnitNotificationEventAsync(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG,
-                businessObjectDataRestoreDto.getBusinessObjectDataKey(), businessObjectDataRestoreDto.getOriginStorageName(),
-                businessObjectDataRestoreDto.getNewOriginStorageUnitStatus(), businessObjectDataRestoreDto.getOldOriginStorageUnitStatus());
 
             // Re-throw the original exception.
             throw new IllegalStateException(businessObjectDataRestoreDto.getException());
@@ -1296,7 +1280,7 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         //TO DO check name space permission for all entries in the request.
         // validate search request
         businessObjectDataSearchHelper.validateBusinesObjectDataSearchRequest(request);
-        
+
         // search business object data
         List<BusinessObjectData> businessObjectDataList = businessObjectDataDao.searchBusinessObjectData(request.getBusinessObjectDataSearchFilters());
         BusinessObjectDataSearchResult result = new BusinessObjectDataSearchResult();

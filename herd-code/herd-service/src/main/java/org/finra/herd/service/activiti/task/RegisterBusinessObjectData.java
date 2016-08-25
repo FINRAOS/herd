@@ -15,6 +15,8 @@
 */
 package org.finra.herd.service.activiti.task;
 
+import java.util.Arrays;
+
 import org.activiti.engine.delegate.DelegateExecution;
 import org.activiti.engine.delegate.Expression;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,8 +24,11 @@ import org.springframework.stereotype.Component;
 
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataCreateRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.jpa.NotificationEventTypeEntity;
 import org.finra.herd.service.BusinessObjectDataService;
-import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
+import org.finra.herd.service.NotificationEventService;
+import org.finra.herd.service.helper.BusinessObjectDataHelper;
 
 /**
  * An Activiti task that registers the business object data.
@@ -51,10 +56,13 @@ public class RegisterBusinessObjectData extends BaseJavaDelegate
     private Expression businessObjectDataCreateRequest;
 
     @Autowired
-    private BusinessObjectDataDaoHelper businessObjectDataDaoHelper;
+    private BusinessObjectDataHelper businessObjectDataHelper;
 
     @Autowired
     private BusinessObjectDataService businessObjectDataService;
+
+    @Autowired
+    private NotificationEventService notificationEventService;
 
     @Override
     public void executeImpl(DelegateExecution execution) throws Exception
@@ -69,7 +77,14 @@ public class RegisterBusinessObjectData extends BaseJavaDelegate
         BusinessObjectData businessObjectData = businessObjectDataService.createBusinessObjectData(request);
 
         // Trigger notifications.
-        businessObjectDataDaoHelper.triggerNotificationsForCreateBusinessObjectData(businessObjectData);
+        BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectData);
+
+        // Create business object data notifications.
+        for (NotificationEventTypeEntity.EventTypesBdata eventType : Arrays
+            .asList(NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_RGSTN, NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_STTS_CHG))
+        {
+            notificationEventService.processBusinessObjectDataNotificationEventAsync(eventType, businessObjectDataKey, businessObjectData.getStatus(), null);
+        }
 
         // Set the JSON response as a workflow variable.
         setJsonResponseAsWorkflowVariable(businessObjectData, execution);
