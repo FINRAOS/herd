@@ -1,5 +1,7 @@
 package org.finra.herd.service;
 
+import static org.junit.Assert.fail;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,6 +13,8 @@ import org.finra.herd.model.api.xml.BusinessObjectDataSearchFilter;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchResult;
+import org.finra.herd.model.api.xml.LatestAfterPartitionValue;
+import org.finra.herd.model.api.xml.LatestBeforePartitionValue;
 import org.finra.herd.model.api.xml.PartitionValueFilter;
 
 /**
@@ -79,4 +83,39 @@ public class BusinessObjectDataSearchServiceTest extends AbstractServiceTest
         Assert.isTrue(result.getBusinessObjectDataElements().size() == 0);
     }
 
+    @Test
+    public void testSearchBusinessObjectDataWithPartitionFilterBadRequest()
+    {
+        createDatabaseEntitiesForBusinessObjectDataSearchTesting();
+
+        BusinessObjectDataSearchRequest request = new BusinessObjectDataSearchRequest();
+        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
+        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
+        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
+        key.setNamespace(NAMESPACE);
+        key.setBusinessObjectDefinitionName(BDEF_NAME);
+        
+        List<PartitionValueFilter> partitionValueFilters = new ArrayList<PartitionValueFilter>();
+        PartitionValueFilter partitionValueFilter = new PartitionValueFilter();
+        partitionValueFilters.add(partitionValueFilter);
+        partitionValueFilter.setLatestAfterPartitionValue(new LatestAfterPartitionValue("A"));
+        partitionValueFilter.setLatestBeforePartitionValue(new LatestBeforePartitionValue("B"));
+        key.setPartitionValueFilters(partitionValueFilters);
+        
+        businessObjectDataSearchKeys.add(key);
+
+        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
+        filters.add(filter);
+        request.setBusinessObjectDataSearchFilters(filters);
+
+        try
+        {
+            businessObjectDataService.searchBusinessObjectData(request);
+            fail("Should not get here, as IllegalArgumentException should be thrown");
+        }
+        catch (IllegalArgumentException ex)
+        {           
+        }
+
+    }
 }
