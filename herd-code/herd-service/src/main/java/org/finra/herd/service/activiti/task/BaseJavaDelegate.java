@@ -121,6 +121,12 @@ public abstract class BaseJavaDelegate implements JavaDelegate
     {
         try
         {
+            // TODO: Need to clear the security context here since the current thread may have been reused,
+            // which may might have left over its security context. If we do not clear the security
+            // context, any subsequent calls may be restricted by the permissions given
+            // to the previous thread's security context.
+            //SecurityContextHolder.clearContext();
+
             // Check if method is not allowed.
             configurationDaoHelper.checkNotAllowedMethod(this.getClass().getCanonicalName());
 
@@ -169,6 +175,13 @@ public abstract class BaseJavaDelegate implements JavaDelegate
             userNamespaceAuthorizationHelper.buildNamespaceAuthorizations(applicationUser);
             SecurityContextHolder.getContext().setAuthentication(new PreAuthenticatedAuthenticationToken(
                 new SecurityUserWrapper(updatedByUserId, "", true, true, true, true, Collections.emptyList(), applicationUser), null));
+        }
+        else
+        {
+            LOGGER.warn("{} Failed to locate job definition by a process definition ID. processDefinitionId=\"{}\" activitiTaskName=\"{}\" ",
+                activitiHelper.getProcessIdentifyingInformation(execution),
+                processDefinitionId,
+                getClass().getSimpleName());
         }
     }
 

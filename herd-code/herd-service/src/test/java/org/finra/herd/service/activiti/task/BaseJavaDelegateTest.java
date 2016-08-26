@@ -27,6 +27,7 @@ import org.finra.herd.dao.JobDefinitionDao;
 import org.finra.herd.model.dto.ApplicationUser;
 import org.finra.herd.model.dto.SecurityUserWrapper;
 import org.finra.herd.model.jpa.JobDefinitionEntity;
+import org.finra.herd.service.activiti.ActivitiHelper;
 import org.finra.herd.service.activiti.ActivitiRuntimeHelper;
 import org.finra.herd.service.helper.ConfigurationDaoHelper;
 import org.finra.herd.service.helper.HerdErrorInformationExceptionHandler;
@@ -49,6 +50,9 @@ public class BaseJavaDelegateTest
 
     @Mock
     private ConfigurationDaoHelper configurationDaoHelper;
+
+    @Mock
+    private ActivitiHelper activitiHelper;
 
     @Mock
     private ActivitiRuntimeHelper activitiRuntimeHelper;
@@ -99,7 +103,7 @@ public class BaseJavaDelegateTest
         // Execute test method
         baseJavaDelegate.execute(delegateExecution);
 
-        // Verify dependecies were invoked correctly
+        // Verify dependencies were invoked correctly
         InOrder inOrder = inOrder(configurationDaoHelper, activitiRuntimeHelper, jobDefinitionDao, userNamespaceAuthorizationHelper);
         inOrder.verify(configurationDaoHelper).checkNotAllowedMethod(baseJavaDelegate.getClass().getCanonicalName());
         inOrder.verify(jobDefinitionDao).getJobDefinitionByProcessDefinitionId(expectedProcessDefinitionId);
@@ -129,7 +133,7 @@ public class BaseJavaDelegateTest
         // Execute test method
         baseJavaDelegate.execute(delegateExecution);
 
-        // Verify dependecies were invoked correctly
+        // Verify dependencies were invoked correctly
         InOrder inOrder = inOrder(configurationDaoHelper, activitiRuntimeHelper, jobDefinitionDao, userNamespaceAuthorizationHelper);
         inOrder.verify(configurationDaoHelper).checkNotAllowedMethod(baseJavaDelegate.getClass().getCanonicalName());
         inOrder.verify(jobDefinitionDao).getJobDefinitionByProcessDefinitionId(expectedProcessDefinitionId);
@@ -146,10 +150,14 @@ public class BaseJavaDelegateTest
     @Test
     public void testCheckPermissionsAssertNoAccessDeniedWhenJobDefinitionEntityDoesNotExist() throws Exception
     {
+        // Set up expected values
         String expectedProcessDefinitionId = "processDefinitionId";
+
+        // Mock dependency methods
         when(delegateExecution.getProcessDefinitionId()).thenReturn(expectedProcessDefinitionId);
         when(jobDefinitionDao.getJobDefinitionByProcessDefinitionId(any())).thenReturn(null);
 
+        // Execute test method
         baseJavaDelegate.execute(delegateExecution);
 
         InOrder inOrder = inOrder(configurationDaoHelper, activitiRuntimeHelper, jobDefinitionDao);
