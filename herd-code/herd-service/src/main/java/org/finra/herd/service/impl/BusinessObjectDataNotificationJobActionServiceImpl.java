@@ -50,17 +50,29 @@ public abstract class BusinessObjectDataNotificationJobActionServiceImpl extends
      * The parameters that are sent along with the notification.
      */
     private static final String PARAM_BUSINESS_OBJECT_DATA_EVENT_TYPE = "notification_businessObjectDataEventType";
+
     private static final String PARAM_CORRELATION_DATA = "notification_correlationData";
+
     private static final String PARAM_BUSINESS_OBJECT_DATA = "notification_businessObjectData";
+
     private static final String PARAM_BUSINESS_OBJECT_DEFINITION_NAMESPACE = "notification_businessObjectDefinitionNamespace";
+
     private static final String PARAM_BUSINESS_OBJECT_DEFINITION_NAME = "notification_businessObjectDefinitionName";
+
     private static final String PARAM_BUSINESS_OBJECT_FORMAT_USAGE = "notification_businessObjectFormatUsage";
+
     private static final String PARAM_BUSINESS_OBJECT_FORMAT_FILE_TYPE = "notification_businessObjectFormatFileType";
+
     private static final String PARAM_BUSINESS_OBJECT_FORMAT_VERSION = "notification_businessObjectFormatVersion";
+
     private static final String PARAM_PARTITION_COLUMN_NAMES = "notification_partitionColumnNames";
+
     private static final String PARAM_PARTITION_VALUES = "notification_partitionValues";
+
     private static final String PARAM_BUSINESS_OBJECT_DATA_VERSION = "notification_businessObjectDataVersion";
+
     private static final String PARAM_NEW_BUSINESS_OBJECT_DATA_STATUS = "notification_newBusinessObjectDataStatus";
+
     private static final String PARAM_OLD_BUSINESS_OBJECT_DATA_STATUS = "notification_oldBusinessObjectDataStatus";
 
     @Autowired

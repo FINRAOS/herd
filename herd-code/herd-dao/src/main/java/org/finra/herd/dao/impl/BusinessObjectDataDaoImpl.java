@@ -44,6 +44,8 @@ import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchFilter;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
+import org.finra.herd.model.api.xml.PartitionValueFilter;
+import org.finra.herd.model.api.xml.PartitionValueRange;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.StoragePolicyPriorityLevel;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
@@ -58,6 +60,8 @@ import org.finra.herd.model.jpa.FileTypeEntity;
 import org.finra.herd.model.jpa.FileTypeEntity_;
 import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.model.jpa.NamespaceEntity_;
+import org.finra.herd.model.jpa.SchemaColumnEntity;
+import org.finra.herd.model.jpa.SchemaColumnEntity_;
 import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.StorageEntity_;
 import org.finra.herd.model.jpa.StoragePlatformEntity;
@@ -804,35 +808,34 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
         // Join to the other tables we can filter on.
         Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> businessObjectFormatEntity =
-                businessObjectDataEntity.join(BusinessObjectDataEntity_.businessObjectFormat);
-        Join<BusinessObjectFormatEntity, FileTypeEntity> fileTypeEntity = businessObjectFormatEntity.join(BusinessObjectFormatEntity_.fileType);
+            businessObjectDataEntity.join(BusinessObjectDataEntity_.businessObjectFormat);
         Join<BusinessObjectFormatEntity, BusinessObjectDefinitionEntity> businessObjectDefinitionEntity =
-                businessObjectFormatEntity.join(BusinessObjectFormatEntity_.businessObjectDefinition);
-        Join<BusinessObjectDefinitionEntity, NamespaceEntity> namespaceEntity = businessObjectDefinitionEntity.join(BusinessObjectDefinitionEntity_.namespace);
+            businessObjectFormatEntity.join(BusinessObjectFormatEntity_.businessObjectDefinition);
 
         // Create the standard restrictions based on the business object search key values (i.e. the standard where clauses).
 
         // Create a restriction on namespace code.
-        Predicate predicate = builder.equal(builder.upper(namespaceEntity.get(NamespaceEntity_.code)), businessDataSearchKey.getNamespace().toUpperCase());
+        Predicate predicate = builder
+            .equal(builder.upper(businessObjectDefinitionEntity.get(BusinessObjectDefinitionEntity_.namespace).get(NamespaceEntity_.code)),
+                businessDataSearchKey.getNamespace().toUpperCase());
 
         // Create and append a restriction on business object definition name.
         predicate = builder.and(predicate, builder.equal(builder.upper(businessObjectDefinitionEntity.get(BusinessObjectDefinitionEntity_.name)),
-                businessDataSearchKey.getBusinessObjectDefinitionName().toUpperCase()));
+            businessDataSearchKey.getBusinessObjectDefinitionName().toUpperCase()));
 
         // Create and append a restriction on business object format usage.
         if (!StringUtils.isEmpty(businessDataSearchKey.getBusinessObjectFormatUsage()))
         {
             predicate = builder.and(predicate, builder.equal(builder.upper(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.usage)),
-                    businessDataSearchKey.getBusinessObjectFormatUsage().toUpperCase()));
+                businessDataSearchKey.getBusinessObjectFormatUsage().toUpperCase()));
         }
 
         if (!StringUtils.isEmpty(businessDataSearchKey.getBusinessObjectFormatFileType()))
         {
             // Create and append a restriction on business object format file type.
-            predicate =
-                    builder.and(predicate,
-                            builder.equal(builder.upper(fileTypeEntity.get(FileTypeEntity_.code)), businessDataSearchKey.getBusinessObjectFormatFileType()
-                                    .toUpperCase()));
+            predicate = builder.and(predicate, builder
+                .equal(builder.upper(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.fileType).get(FileTypeEntity_.code)),
+                    businessDataSearchKey.getBusinessObjectFormatFileType().toUpperCase()));
         }
 
         // If specified, create and append a restriction on business object format version.
@@ -841,7 +844,9 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
             predicate = builder.and(predicate, builder.equal(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.businessObjectFormatVersion),
                     businessDataSearchKey.getBusinessObjectFormatVersion()));
         }
-
+      
+        predicate = createPartitionValueFilters(businessDataSearchKey, businessObjectDataEntity, businessObjectFormatEntity, builder, predicate);
+           
         criteria.select(businessObjectDataEntity).where(predicate);
 
         // Order by business object partition values
@@ -892,5 +897,71 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         }
 
         return businessObjectDataList;
+    }
+    
+    /**
+     * Helper method to create partition value filters
+     * @param businessDataSearchKey businessDataSearchKey
+     * @param businessObjectDataEntity businessObjectDataEntity
+     * @param businessObjectFormatEntity businessObjectFormatEntity
+     * @param builder builder
+     * @param predicatePram predicate parameter
+     * @return predicate value
+     */
+    private Predicate createPartitionValueFilters(BusinessObjectDataSearchKey businessDataSearchKey, Root<BusinessObjectDataEntity> businessObjectDataEntity,
+        Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> businessObjectFormatEntity, CriteriaBuilder builder, Predicate predicatePram)
+    {
+        Predicate predicate = predicatePram;
+        
+        if (businessDataSearchKey.getPartitionValueFilters() != null && !businessDataSearchKey.getPartitionValueFilters().isEmpty())
+        {
+            for (PartitionValueFilter partitionFilter : businessDataSearchKey.getPartitionValueFilters() )   
+            {
+                Join<BusinessObjectFormatEntity, SchemaColumnEntity> schemaEntity = businessObjectFormatEntity.join(BusinessObjectFormatEntity_.schemaColumns);
+            
+                List<String> partitionValues = partitionFilter.getPartitionValues();
+
+                predicate = builder.and(predicate, builder.equal(schemaEntity.get(SchemaColumnEntity_.name), partitionFilter.getPartitionKey()));
+                predicate = builder.and(predicate, builder.isNotNull(schemaEntity.get(SchemaColumnEntity_.partitionLevel)));
+
+                if (partitionValues != null && !partitionValues.isEmpty())
+                {
+                    predicate = builder.and(predicate, builder.or(builder.and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 1),
+                        businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue).in(partitionValues)), builder
+                        .and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 2),
+                            businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue2).in(partitionValues)), builder
+                        .and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 3),
+                            businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue3).in(partitionValues)), builder
+                        .and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 4),
+                            businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue4).in(partitionValues)), builder
+                        .and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 5),
+                            businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue5).in(partitionValues))));
+                }
+                else if (partitionFilter.getPartitionValueRange() != null)
+                {
+                    PartitionValueRange partitionRange = partitionFilter.getPartitionValueRange();
+                    String startPartitionValue = partitionRange.getStartPartitionValue();
+                    String endPartitionValue = partitionRange.getEndPartitionValue();
+
+                    predicate = builder.and(predicate, builder.or(builder.and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 1),
+                        builder.greaterThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue), startPartitionValue),
+                        builder.lessThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue), endPartitionValue)), builder
+                        .and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 2),
+                            builder.greaterThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue2), startPartitionValue),
+                            builder.lessThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue2), endPartitionValue)), builder
+                        .and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 3),
+                            builder.greaterThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue3), startPartitionValue),
+                            builder.lessThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue3), endPartitionValue)), builder
+                        .and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 4),
+                            builder.greaterThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue4), startPartitionValue),
+                            builder.lessThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue4), endPartitionValue)), builder
+                        .and(builder.equal(schemaEntity.get(SchemaColumnEntity_.partitionLevel), 5),
+                            builder.greaterThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue5), startPartitionValue),
+                            builder.lessThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue5), endPartitionValue))));
+                }
+            }
+        }
+        
+        return predicate;
     }
 }

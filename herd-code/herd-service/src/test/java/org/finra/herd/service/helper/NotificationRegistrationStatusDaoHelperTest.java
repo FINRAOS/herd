@@ -30,8 +30,8 @@ public class NotificationRegistrationStatusDaoHelperTest extends AbstractService
     @Test
     public void testGetNotificationRegistrationStatusAssertReturnEntityWhenEntityExists()
     {
-        NotificationRegistrationStatusEntity notificationRegistrationStatus = notificationRegistrationStatusDaoHelper.getNotificationRegistrationStatus(
-            "ENABLED");
+        NotificationRegistrationStatusEntity notificationRegistrationStatus =
+            notificationRegistrationStatusDaoHelper.getNotificationRegistrationStatus("ENABLED");
         assertNotNull(notificationRegistrationStatus);
         assertEquals("ENABLED", notificationRegistrationStatus.getCode());
     }

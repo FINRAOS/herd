@@ -46,10 +46,13 @@ import org.finra.herd.service.helper.BusinessObjectDataHelper;
 public class RegisterBusinessObjectData extends BaseJavaDelegate
 {
     public static final String VARIABLE_ID = "id";
+
     public static final String VARIABLE_VERSION = "version";
+
     public static final String VARIABLE_LATEST_VERSION = "isLatestVersion";
 
     private Expression contentType;
+
     private Expression businessObjectDataCreateRequest;
 
     @Autowired

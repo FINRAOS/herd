@@ -44,6 +44,7 @@ import org.finra.herd.service.helper.BusinessObjectDataHelper;
 public class InvalidateUnregisteredBusinessObjectData extends BaseJavaDelegate
 {
     private Expression contentType;
+
     private Expression businessObjectDataInvalidateUnregisteredRequest;
 
     @Autowired
