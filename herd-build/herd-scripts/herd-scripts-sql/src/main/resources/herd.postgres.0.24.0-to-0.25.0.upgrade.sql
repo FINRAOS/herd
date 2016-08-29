@@ -13,21 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package org.finra.herd.service.impl;
 
-import org.finra.herd.service.NotificationActionService;
+create index schm_clmn_ix2 on schm_clmn (bus_objct_dfntn_clmn_id);
 
-public abstract class NotificationActionServiceImpl implements NotificationActionService
-{
-    /**
-     * The parameters that are sent along with the notification.
-     */
-    protected static final String PARAM_NAMESPACE = "notification_namespace";
 
-    protected static final String PARAM_NOTIFICATION_NAME = "notification_name";
-
-    protected NotificationActionServiceImpl()
-    {
-        // Prevent classes from instantiating except sub-classes.
-    }
-}
