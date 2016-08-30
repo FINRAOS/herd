@@ -2,15 +2,18 @@ package org.finra.herd.service.activiti.task;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import com.google.common.base.Objects;
 import org.activiti.engine.delegate.DelegateExecution;
+import org.activiti.engine.repository.ProcessDefinition;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -18,7 +21,7 @@ import org.mockito.ArgumentMatcher;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
@@ -27,10 +30,13 @@ import org.finra.herd.dao.JobDefinitionDao;
 import org.finra.herd.model.dto.ApplicationUser;
 import org.finra.herd.model.dto.SecurityUserWrapper;
 import org.finra.herd.model.jpa.JobDefinitionEntity;
+import org.finra.herd.service.AbstractServiceTest;
+import org.finra.herd.service.ActivitiService;
 import org.finra.herd.service.activiti.ActivitiHelper;
 import org.finra.herd.service.activiti.ActivitiRuntimeHelper;
 import org.finra.herd.service.helper.ConfigurationDaoHelper;
 import org.finra.herd.service.helper.HerdErrorInformationExceptionHandler;
+import org.finra.herd.service.helper.JobDefinitionDaoHelper;
 import org.finra.herd.service.helper.UserNamespaceAuthorizationHelper;
 
 /**
@@ -40,17 +46,8 @@ import org.finra.herd.service.helper.UserNamespaceAuthorizationHelper;
  * This test suite updated Spring security context which means it EACH TEST CASE MUST BE CLEANED UP after execution. Without doing so may cause subsequent tests
  * to not execute properly.
  */
-public class BaseJavaDelegateTest
+public class BaseJavaDelegateTest extends AbstractServiceTest
 {
-    @InjectMocks
-    private BaseJavaDelegate baseJavaDelegate;
-
-    @Mock
-    private DelegateExecution delegateExecution;
-
-    @Mock
-    private ConfigurationDaoHelper configurationDaoHelper;
-
     @Mock
     private ActivitiHelper activitiHelper;
 
@@ -58,26 +55,29 @@ public class BaseJavaDelegateTest
     private ActivitiRuntimeHelper activitiRuntimeHelper;
 
     @Mock
-    private JobDefinitionDao jobDefinitionDao;
+    private ActivitiService activitiService;
+
+    @Autowired
+    @InjectMocks
+    private MockJavaDelegate baseJavaDelegate;
 
     @Mock
-    private UserNamespaceAuthorizationHelper userNamespaceAuthorizationHelper;
+    private ConfigurationDaoHelper configurationDaoHelper;
+
+    @Mock
+    private DelegateExecution delegateExecution;
 
     @Mock
     private HerdErrorInformationExceptionHandler errorInformationExceptionHandler;
 
-    @Before
-    public void before()
-    {
-        baseJavaDelegate = new BaseJavaDelegate()
-        {
-            @Override
-            public void executeImpl(DelegateExecution execution) throws Exception
-            {
-            }
-        };
-        initMocks(this);
-    }
+    @Mock
+    private JobDefinitionDao jobDefinitionDao;
+
+    @Mock
+    private JobDefinitionDaoHelper jobDefinitionDaoHelper;
+
+    @Mock
+    private UserNamespaceAuthorizationHelper userNamespaceAuthorizationHelper;
 
     @After
     public void after()
@@ -85,87 +85,81 @@ public class BaseJavaDelegateTest
         SecurityContextHolder.clearContext();
     }
 
-    @Test
-    public void testCheckPermissionsAssertSecurityContextOverwrittenWhenUserAlreadyInContext() throws Exception
+    @Before
+    public void before()
     {
-        // Set up expected values
-        String expectedProcessDefinitionId = "processDefinitionId";
-        String expectedUpdatedBy = "updatedBy";
-        JobDefinitionEntity jobDefinitionEntity = new JobDefinitionEntity();
-        jobDefinitionEntity.setUpdatedBy(expectedUpdatedBy);
-
-        // Mock dependency methods
-        when(delegateExecution.getProcessDefinitionId()).thenReturn(expectedProcessDefinitionId);
-        when(jobDefinitionDao.getJobDefinitionByProcessDefinitionId(any())).thenReturn(jobDefinitionEntity);
-
-        SecurityContextHolder.getContext().setAuthentication(new TestingAuthenticationToken("", ""));
-
-        // Execute test method
-        baseJavaDelegate.execute(delegateExecution);
-
-        // Verify dependencies were invoked correctly
-        InOrder inOrder = inOrder(configurationDaoHelper, activitiRuntimeHelper, jobDefinitionDao, userNamespaceAuthorizationHelper);
-        inOrder.verify(configurationDaoHelper).checkNotAllowedMethod(baseJavaDelegate.getClass().getCanonicalName());
-        inOrder.verify(jobDefinitionDao).getJobDefinitionByProcessDefinitionId(expectedProcessDefinitionId);
-        inOrder.verify(userNamespaceAuthorizationHelper).buildNamespaceAuthorizations(applicationUserUserIdEq(expectedUpdatedBy));
-        inOrder.verify(activitiRuntimeHelper).setTaskSuccessInWorkflow(delegateExecution);
-        inOrder.verifyNoMoreInteractions();
-        verifyNoMoreInteractions(configurationDaoHelper, activitiRuntimeHelper, jobDefinitionDao, userNamespaceAuthorizationHelper);
-
-        // Assert correct user is in the security context
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        assertAuthenticationUserIdEquals(expectedUpdatedBy, authentication);
+        initMocks(this);
     }
 
     @Test
-    public void testCheckPermissionsAssertSecurityContextUpdatedWhenJobDefinitionHasUpdatedUser() throws Exception
+    public void testExecute() throws Exception
     {
-        // Set up expected values
-        String expectedProcessDefinitionId = "processDefinitionId";
-        String expectedUpdatedBy = "updatedBy";
+        // Set up expected values.
+        String jobDefinitionNamespace = "jobDefinitionNamespace";
+        String jobDefinitionName = "jobDefinitionName";
+        String processDefinitionId = "processDefinitionId";
+        String processDefinitionKey = String.format("%s.%s", jobDefinitionNamespace, jobDefinitionName);
+        String updatedBy = "updatedBy";
         JobDefinitionEntity jobDefinitionEntity = new JobDefinitionEntity();
-        jobDefinitionEntity.setUpdatedBy(expectedUpdatedBy);
+        jobDefinitionEntity.setUpdatedBy(updatedBy);
 
-        // Mock dependency methods
-        when(delegateExecution.getProcessDefinitionId()).thenReturn(expectedProcessDefinitionId);
-        when(jobDefinitionDao.getJobDefinitionByProcessDefinitionId(any())).thenReturn(jobDefinitionEntity);
+        // Mock dependency methods.
+        when(delegateExecution.getProcessDefinitionId()).thenReturn(processDefinitionId);
+        ProcessDefinition processDefinition = mock(ProcessDefinition.class);
+        when(processDefinition.getKey()).thenReturn(processDefinitionKey);
+        when(activitiService.getProcessDefinitionById(any())).thenReturn(processDefinition);
+        when(jobDefinitionDaoHelper.getJobDefinitionEntity(any(), any())).thenReturn(jobDefinitionEntity);
 
-        // Execute test method
+        // Execute test method.
         baseJavaDelegate.execute(delegateExecution);
 
-        // Verify dependencies were invoked correctly
-        InOrder inOrder = inOrder(configurationDaoHelper, activitiRuntimeHelper, jobDefinitionDao, userNamespaceAuthorizationHelper);
+        // Verify dependencies were invoked correctly.
+        InOrder inOrder = inOrder(configurationDaoHelper, activitiService, jobDefinitionDaoHelper, userNamespaceAuthorizationHelper, activitiRuntimeHelper);
         inOrder.verify(configurationDaoHelper).checkNotAllowedMethod(baseJavaDelegate.getClass().getCanonicalName());
-        inOrder.verify(jobDefinitionDao).getJobDefinitionByProcessDefinitionId(expectedProcessDefinitionId);
-        inOrder.verify(userNamespaceAuthorizationHelper).buildNamespaceAuthorizations(applicationUserUserIdEq(expectedUpdatedBy));
+        inOrder.verify(activitiService).getProcessDefinitionById(processDefinitionId);
+        inOrder.verify(jobDefinitionDaoHelper).getJobDefinitionEntity(jobDefinitionNamespace, jobDefinitionName);
+        inOrder.verify(userNamespaceAuthorizationHelper).buildNamespaceAuthorizations(applicationUserUserIdEq(updatedBy));
         inOrder.verify(activitiRuntimeHelper).setTaskSuccessInWorkflow(delegateExecution);
         inOrder.verifyNoMoreInteractions();
-        verifyNoMoreInteractions(configurationDaoHelper, activitiRuntimeHelper, jobDefinitionDao, userNamespaceAuthorizationHelper);
+        verifyNoMoreInteractions(configurationDaoHelper, activitiService, jobDefinitionDaoHelper, userNamespaceAuthorizationHelper, activitiRuntimeHelper);
 
-        // Assert correct user is in the security context
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        assertAuthenticationUserIdEquals(expectedUpdatedBy, authentication);
+        // Assert that security context is cleared at the end of execute.
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
     }
 
     @Test
-    public void testCheckPermissionsAssertNoAccessDeniedWhenJobDefinitionEntityDoesNotExist() throws Exception
+    public void testSetSecurityContext() throws Exception
     {
-        // Set up expected values
-        String expectedProcessDefinitionId = "processDefinitionId";
+        // Set up expected values.
+        String jobDefinitionNamespace = "jobDefinitionNamespace";
+        String jobDefinitionName = "jobDefinitionName";
+        String processDefinitionId = "processDefinitionId";
+        String processDefinitionKey = String.format("%s.%s", jobDefinitionNamespace, jobDefinitionName);
+        String updatedBy = "updatedBy";
+        JobDefinitionEntity jobDefinitionEntity = new JobDefinitionEntity();
+        jobDefinitionEntity.setUpdatedBy(updatedBy);
 
-        // Mock dependency methods
-        when(delegateExecution.getProcessDefinitionId()).thenReturn(expectedProcessDefinitionId);
-        when(jobDefinitionDao.getJobDefinitionByProcessDefinitionId(any())).thenReturn(null);
+        // Mock dependency methods.
+        when(delegateExecution.getProcessDefinitionId()).thenReturn(processDefinitionId);
+        ProcessDefinition processDefinition = mock(ProcessDefinition.class);
+        when(processDefinition.getKey()).thenReturn(processDefinitionKey);
+        when(activitiService.getProcessDefinitionById(any())).thenReturn(processDefinition);
+        when(jobDefinitionDaoHelper.getJobDefinitionEntity(any(), any())).thenReturn(jobDefinitionEntity);
 
-        // Execute test method
-        baseJavaDelegate.execute(delegateExecution);
+        // Execute test method.
+        baseJavaDelegate.setSecurityContext(delegateExecution);
 
-        InOrder inOrder = inOrder(configurationDaoHelper, activitiRuntimeHelper, jobDefinitionDao);
-        inOrder.verify(configurationDaoHelper).checkNotAllowedMethod(baseJavaDelegate.getClass().getCanonicalName());
-        inOrder.verify(jobDefinitionDao).getJobDefinitionByProcessDefinitionId(expectedProcessDefinitionId);
-        inOrder.verify(activitiRuntimeHelper).setTaskSuccessInWorkflow(delegateExecution);
+        // Verify dependencies were invoked correctly.
+        InOrder inOrder = inOrder(activitiService, jobDefinitionDaoHelper, userNamespaceAuthorizationHelper);
+        inOrder.verify(activitiService).getProcessDefinitionById(processDefinitionId);
+        inOrder.verify(jobDefinitionDaoHelper).getJobDefinitionEntity(jobDefinitionNamespace, jobDefinitionName);
+        inOrder.verify(userNamespaceAuthorizationHelper).buildNamespaceAuthorizations(applicationUserUserIdEq(updatedBy));
         inOrder.verifyNoMoreInteractions();
-        verifyNoMoreInteractions(configurationDaoHelper, activitiRuntimeHelper, jobDefinitionDao);
+        verifyNoMoreInteractions(activitiService, jobDefinitionDaoHelper, userNamespaceAuthorizationHelper);
+
+        // Assert correct user is in the security context.
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        assertAuthenticationUserIdEquals(updatedBy, authentication);
     }
 
     /**

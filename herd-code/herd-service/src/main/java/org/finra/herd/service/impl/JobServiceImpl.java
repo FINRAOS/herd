@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.activiti.engine.history.HistoricActivityInstance;
@@ -64,6 +63,7 @@ import org.finra.herd.model.api.xml.S3PropertiesLocation;
 import org.finra.herd.model.api.xml.WorkflowError;
 import org.finra.herd.model.api.xml.WorkflowStep;
 import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.model.dto.JobDefinitionAlternateKeyDto;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.jpa.JobDefinitionEntity;
 import org.finra.herd.model.jpa.JobDefinitionParameterEntity;
@@ -255,7 +255,7 @@ public class JobServiceImpl implements JobService
                     getHistoricProcessInstances(processDefinitionIdToKeyMap.values(), jobStatus, startTime, endTime);
 
                 // Compile the Regex pattern.
-                Pattern pattern = getNamespaceAndJobNameRegexPattern();
+                Pattern pattern = jobDefinitionHelper.getNamespaceAndJobNameRegexPattern();
 
                 // Loop over the process instances and build a list of job summaries to return.
                 for (HistoricProcessInstance historicProcessInstance : historicProcessInstances)
@@ -266,9 +266,13 @@ public class JobServiceImpl implements JobService
                         JobSummary jobSummary = new JobSummary();
                         jobSummary.setId(historicProcessInstance.getId());
 
+                        // Get the job definition key.
+                        JobDefinitionAlternateKeyDto jobDefinitionKey =
+                            jobDefinitionHelper.getJobDefinitionKey(processDefinitionIdToKeyMap.get(historicProcessInstance.getProcessDefinitionId()), pattern);
+
                         // Set the namespace and job name on the job summary.
-                        setNamespaceAndJobNameInJobSummary(processDefinitionIdToKeyMap.get(historicProcessInstance.getProcessDefinitionId()), pattern,
-                            jobSummary);
+                        jobSummary.setNamespace(jobDefinitionKey.getNamespace());
+                        jobSummary.setJobName(jobDefinitionKey.getJobName());
 
                         // Set the start time always since all jobs will have a start time.
                         jobSummary.setStartTime(HerdDateUtils.getXMLGregorianCalendarValue(historicProcessInstance.getStartTime()));
@@ -350,22 +354,11 @@ public class JobServiceImpl implements JobService
      */
     private void checkPermissions(String processDefinitionKey, NamespacePermissionEnum[] permissions)
     {
-        Matcher matcher = getNamespaceAndJobNameRegexPattern().matcher(processDefinitionKey);
-        if (matcher.find())
-        {
-            String namespace = matcher.group("namespace");
-            namespaceSecurityHelper.checkPermission(namespace, permissions);
-        }
-        else
-        {
-            /*
-             * Under normal operation, this exception would never be thrown.
-             * The only possibility is if someone creates and executes a workflow without using our enforced definition key format. The only way to accomplish
-             * this is directly operating against the database.
-             * The check is here for robustness, but should not be expected to be covered as part of tests.
-             */
-            throw new IllegalArgumentException("Process definition key \"" + processDefinitionKey + "\" does not match the expected pattern");
-        }
+        // Get the job definition key.
+        JobDefinitionAlternateKeyDto jobDefinitionKey = jobDefinitionHelper.getJobDefinitionKey(processDefinitionKey);
+
+        // Checks the permissions against the namespace.
+        namespaceSecurityHelper.checkPermission(jobDefinitionKey.getNamespace(), permissions);
     }
 
     /**
@@ -568,24 +561,6 @@ public class JobServiceImpl implements JobService
     }
 
     /**
-     * Gets the Regex pattern to match the namespace and job name from a process definition key.
-     *
-     * @return the Regex pattern.
-     */
-    private Pattern getNamespaceAndJobNameRegexPattern()
-    {
-        // Get the job definition template (e.g. ~namespace~.~jobName~) and Regex escape all periods (e.g. ~namespace~\\.~jobName~).
-        String jobDefinitionTemplate = jobDefinitionHelper.getActivitiJobDefinitionTemplate().replaceAll("\\.", "\\\\.");
-
-        // Change the tokens to named capture groups (e.g. (?<namespace>.*)\\.(?<jobName>.*)).
-        jobDefinitionTemplate = jobDefinitionTemplate.replaceAll(jobDefinitionHelper.getNamespaceToken(), "(?<namespace>.*)");
-        jobDefinitionTemplate = jobDefinitionTemplate.replaceAll(jobDefinitionHelper.getJobNameToken(), "(?<jobName>.*)");
-
-        // Compile the Regex pattern.
-        return Pattern.compile(jobDefinitionTemplate);
-    }
-
-    /**
      * Gets the parameters from the given {@link JobDefinitionEntity} and {@link JobCreateRequest} and their respective S3 locations provided. If there are any
      * parameter conflicts, this method will automatically merge them by a predefined precedence, from least to greatest: <ol> <li>Job Definition S3
      * location</li> <li>Job Definition parameters</li> <li>Job Create Request S3 location</li> <li>Job Create Request parameters</li> </ol>
@@ -712,40 +687,6 @@ public class JobServiceImpl implements JobService
             Properties properties = s3Dao.getProperties(s3BucketName, s3ObjectKey, s3FileTransferRequestParamsDto);
             parameters.putAll(javaPropertiesHelper.toMap(properties));
         }
-    }
-
-    /**
-     * Sets the namespace and jobName on the job summary given the specified process definition Id and Regex pattern. TODO remove this method in preference to
-     * use a job definition entity to retrieve namespace and job name when we refactor this class. We should no longer assume the job definition's namespace and
-     * job name from Activiti generaeted process definition keys.
-     *
-     * @param processDefinitionKey the process definition key.
-     * @param regexPattern the Regex pattern
-     * @param jobSummary the job summary to update.
-     */
-    private void setNamespaceAndJobNameInJobSummary(String processDefinitionKey, Pattern regexPattern, JobSummary jobSummary)
-    {
-        // Default the result namespace to nothing and the job name to the full process definition Id (of the form "Namespace.JobName:1234:1234567").
-        String resultNamespace = null;
-
-        // Update the default result job name with what's left in case a namespace and jobName couldn't individually be found (perhaps with
-        // test data).
-        String resultJobName = processDefinitionKey;
-
-        if (processDefinitionKey != null)
-        {
-            // See if what's left matches our Regex for the namespace and jobName. If so, extract out the parts.
-            Matcher matcher = regexPattern.matcher(processDefinitionKey);
-            if (matcher.find())
-            {
-                resultNamespace = matcher.group("namespace");
-                resultJobName = matcher.group("jobName");
-            }
-        }
-
-        // Set the namespace and jobName in the job summary.
-        jobSummary.setNamespace(resultNamespace);
-        jobSummary.setJobName(resultJobName);
     }
 
     /**
