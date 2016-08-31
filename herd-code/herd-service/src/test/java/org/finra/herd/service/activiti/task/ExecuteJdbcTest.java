@@ -15,6 +15,9 @@
 */
 package org.finra.herd.service.activiti.task;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -26,8 +29,8 @@ import javax.xml.bind.JAXBException;
 import org.activiti.bpmn.model.FieldExtension;
 import org.activiti.engine.history.HistoricVariableInstance;
 import org.activiti.engine.runtime.ProcessInstance;
-import org.junit.Assert;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,12 +39,18 @@ import org.finra.herd.model.api.xml.JdbcExecutionRequest;
 import org.finra.herd.model.api.xml.JdbcExecutionResponse;
 import org.finra.herd.model.api.xml.JdbcStatement;
 import org.finra.herd.model.api.xml.JdbcStatementStatus;
+import org.finra.herd.model.api.xml.Job;
+import org.finra.herd.model.api.xml.JobCreateRequest;
+import org.finra.herd.model.api.xml.JobStatusEnum;
 import org.finra.herd.model.api.xml.Parameter;
 import org.finra.herd.service.activiti.ActivitiRuntimeHelper;
 
 public class ExecuteJdbcTest extends HerdActivitiServiceTaskTest
 {
     private static final String JAVA_DELEGATE_CLASS_NAME = ExecuteJdbc.class.getCanonicalName();
+
+    @Autowired
+    ExecuteJdbcTestHelper executeJdbcTestHelper;
 
     @Test
     public void testExecuteJdbcSuccess() throws Exception
@@ -126,27 +135,37 @@ public class ExecuteJdbcTest extends HerdActivitiServiceTaskTest
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public void testExecuteJdbcWithReceiveTask() throws Exception
     {
-        try
-        { // Read workflow XML from classpath and deploy it.
-            activitiRepositoryService.createDeployment()
-                .addClasspathResource("org/finra/herd/service/testActivitiWorkflowExecuteJdbcTaskWithReceiveTask.bpmn20.xml").deploy();
+        // Create a test job definition.
+        executeJdbcTestHelper.prepareHerdDatabaseForExecuteJdbcWithReceiveTaskTest();
 
+        try
+        {
+            // Create a JDBC execution request.
             JdbcExecutionRequest jdbcExecutionRequest = createDefaultUpdateJdbcExecutionRequest();
 
-            // Set workflow variables.
-            Map<String, Object> variables = new HashMap<>();
-            variables.put("contentType", "xml");
-            variables.put("jdbcExecutionRequest", xmlHelper.objectToXml(jdbcExecutionRequest));
+            // Create and initialize a list of parameters.
+            List<Parameter> parameters = new ArrayList<>();
+            parameters.add(new Parameter("contentType", "xml"));
+            parameters.add(new Parameter("jdbcExecutionRequest", xmlHelper.objectToXml(jdbcExecutionRequest)));
 
-            // Execute workflow
-            ProcessInstance processInstance = activitiRuntimeService.startProcessInstanceByKey("test", variables);
+            // Get a job create request.
+            JobCreateRequest jobCreateRequest = createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME);
+            jobCreateRequest.setParameters(parameters);
+
+            // Start the job.
+            Job jobStartResponse = jobService.createAndStartJob(jobCreateRequest);
 
             // Wait for the process to finish
             waitUntilAllProcessCompleted();
 
-            // Assert output
-            Map<String, Object> outputVariables = getProcessInstanceHistoryVariables(processInstance);
+            // Validate that the job is completed.
+            Job jobGetResponse = jobService.getJob(jobStartResponse.getId(), true);
+            assertEquals(JobStatusEnum.COMPLETED, jobGetResponse.getStatus());
 
+            // Validate the task status.
+            assertTrue(jobGetResponse.getParameters().contains(new Parameter("service_taskStatus", "SUCCESS")));
+
+            // Validate the JDBC execution response.
             JdbcExecutionResponse expectedJdbcExecutionResponse = new JdbcExecutionResponse();
             JdbcStatement originalJdbcStatement = jdbcExecutionRequest.getStatements().get(0);
             JdbcStatement expectedJdbcStatement = new JdbcStatement();
@@ -155,17 +174,15 @@ public class ExecuteJdbcTest extends HerdActivitiServiceTaskTest
             expectedJdbcStatement.setStatus(JdbcStatementStatus.SUCCESS);
             expectedJdbcStatement.setResult("1");
             expectedJdbcExecutionResponse.setStatements(Arrays.asList(expectedJdbcStatement));
-
-            String actualJdbcExecutionResponseString = (String) outputVariables.get("service_jsonResponse");
-
-            JdbcExecutionResponse actualJdbcExecutionResponse =
-                jsonHelper.unmarshallJsonToObject(JdbcExecutionResponse.class, actualJdbcExecutionResponseString);
-
-            Assert.assertEquals("service_jsonResponse", expectedJdbcExecutionResponse, actualJdbcExecutionResponse);
-            Assert.assertEquals("service_taskStatus", "SUCCESS", outputVariables.get("service_taskStatus"));
+            Parameter expectedJdbcExecutionResponseParameter = new Parameter("service_jsonResponse", jsonHelper.objectToJson(expectedJdbcExecutionResponse));
+            assertTrue(jobGetResponse.getParameters().contains(expectedJdbcExecutionResponseParameter));
         }
         finally
         {
+            // Delete the test job definition.
+            executeJdbcTestHelper.cleanUpHerdDatabaseAfterExecuteJdbcWithReceiveTaskTest();
+
+            // Clean up the Activiti.
             deleteActivitiDeployments();
         }
     }

@@ -17,7 +17,7 @@
 <!-- See org.finra.herd.service.activiti.task.ExecuteJdbcTest for the test case which consumes this file -->
 <definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:activiti="http://activiti.org/bpmn" typeLanguage="http://www.w3.org/2001/XMLSchema"
    expressionLanguage="http://www.w3.org/1999/XPath" targetNamespace="http://www.activiti.org/test">
-   <process id="test">
+   <process id="testNamespace.testHerdWorkflow">
       <startEvent id="start" />
       <serviceTask id="service" activiti:class="org.finra.herd.service.activiti.task.ExecuteJdbc">
          <extensionElements>
