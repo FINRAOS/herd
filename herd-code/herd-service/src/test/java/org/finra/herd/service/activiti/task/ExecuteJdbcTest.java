@@ -27,8 +27,6 @@ import java.util.Map;
 import javax.xml.bind.JAXBException;
 
 import org.activiti.bpmn.model.FieldExtension;
-import org.activiti.engine.history.HistoricVariableInstance;
-import org.activiti.engine.runtime.ProcessInstance;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Propagation;
@@ -135,8 +133,9 @@ public class ExecuteJdbcTest extends HerdActivitiServiceTaskTest
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public void testExecuteJdbcWithReceiveTask() throws Exception
     {
-        // Create a test job definition.
-        executeJdbcTestHelper.prepareHerdDatabaseForExecuteJdbcWithReceiveTaskTest();
+        // Create and persist a test job definition.
+        executeJdbcTestHelper.prepareHerdDatabaseForExecuteJdbcWithReceiveTaskTest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME,
+            "classpath:org/finra/herd/service/testActivitiWorkflowExecuteJdbcTaskWithReceiveTask.bpmn20.xml");
 
         try
         {
@@ -179,34 +178,12 @@ public class ExecuteJdbcTest extends HerdActivitiServiceTaskTest
         }
         finally
         {
-            // Delete the test job definition.
-            executeJdbcTestHelper.cleanUpHerdDatabaseAfterExecuteJdbcWithReceiveTaskTest();
+            // Clean up the Herd database.
+            executeJdbcTestHelper.cleanUpHerdDatabaseAfterExecuteJdbcWithReceiveTaskTest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME);
 
             // Clean up the Activiti.
             deleteActivitiDeployments();
         }
-    }
-
-    /**
-     * Retrieves the historic instance variables of the given process instance.
-     *
-     * @param processInstance The process instance which owns the history
-     *
-     * @return A map of name-value
-     */
-    private Map<String, Object> getProcessInstanceHistoryVariables(ProcessInstance processInstance)
-    {
-        Map<String, Object> outputVariables = new HashMap<>();
-        List<HistoricVariableInstance> historicVariableInstances =
-            activitiHistoryService.createHistoricVariableInstanceQuery().processInstanceId(processInstance.getId()).list();
-        for (HistoricVariableInstance historicVariableInstance : historicVariableInstances)
-        {
-            String name = historicVariableInstance.getVariableName();
-            Object value = historicVariableInstance.getValue();
-
-            outputVariables.put(name, value);
-        }
-        return outputVariables;
     }
 
     private void populateParameters(JdbcExecutionRequest jdbcExecutionRequest, List<FieldExtension> fieldExtensionList, List<Parameter> parameters)

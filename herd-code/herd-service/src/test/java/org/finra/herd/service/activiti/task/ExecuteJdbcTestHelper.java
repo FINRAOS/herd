@@ -15,42 +15,94 @@
 */
 package org.finra.herd.service.activiti.task;
 
+import org.apache.commons.io.IOUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.finra.herd.dao.JobDefinitionDao;
+import org.finra.herd.dao.NamespaceDao;
+import org.finra.herd.dao.NamespaceDaoTestHelper;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
+import org.finra.herd.model.api.xml.JobDefinitionCreateRequest;
 import org.finra.herd.model.jpa.JobDefinitionEntity;
+import org.finra.herd.model.jpa.NamespaceEntity;
+import org.finra.herd.service.JobDefinitionService;
 
 @Component
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
-public class ExecuteJdbcTestHelper extends HerdActivitiServiceTaskTest
+public class ExecuteJdbcTestHelper
 {
+    @Autowired
+    private JobDefinitionDao jobDefinitionDao;
+
+    @Autowired
+    private JobDefinitionService jobDefinitionService;
+
+    @Autowired
+    private NamespaceDao namespaceDao;
+
+    @Autowired
+    private NamespaceDaoTestHelper namespaceDaoTestHelper;
+
+    @Autowired
+    protected ResourceLoader resourceLoader;
+
     /**
-     * Cleans up Herd database after ExecuteJdbcWithReceiveTask test by deleting the test job definition entity.
+     * Cleans up Herd database after ExecuteJdbcWithReceiveTask test by deleting the test job definition related entities.\
+     *
+     * @param jobDefinitionNamespace the namespace for the job definition
+     * @param jobDefinitionName the name of the job definition
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void cleanUpHerdDatabaseAfterExecuteJdbcWithReceiveTaskTest()
+    public void cleanUpHerdDatabaseAfterExecuteJdbcWithReceiveTaskTest(String jobDefinitionNamespace, String jobDefinitionName)
     {
         // Retrieve the test job definition entity.
-        JobDefinitionEntity jobDefinitionEntity = jobDefinitionDao.getJobDefinitionByAltKey(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME);
+        JobDefinitionEntity jobDefinitionEntity = jobDefinitionDao.getJobDefinitionByAltKey(jobDefinitionNamespace, jobDefinitionName);
 
-        // Delete the job definition.
+        // Delete the test job definition entity.
         if (jobDefinitionEntity != null)
         {
             jobDefinitionDao.delete(jobDefinitionEntity);
+        }
+
+        // Retrieve the test namespace entity.
+        NamespaceEntity namespaceEntity = namespaceDao.getNamespaceByCd(jobDefinitionNamespace);
+
+        // Delete the test namespace entity.
+        if (namespaceEntity != null)
+        {
+            namespaceDao.delete(namespaceEntity);
         }
     }
 
     /**
      * Prepares Herd database for ExecuteJdbcWithReceiveTask test by creating and persisting a test job definition entity.
      *
+     * @param jobDefinitionNamespace the namespace for the job definition
+     * @param jobDefinitionName the name of the job definition
+     * @param activitiXmlClasspathResourceName the Activiti XML classpath resource location
+     *
      * @throws Exception
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void prepareHerdDatabaseForExecuteJdbcWithReceiveTaskTest() throws Exception
+    public void prepareHerdDatabaseForExecuteJdbcWithReceiveTaskTest(String jobDefinitionNamespace, String jobDefinitionName,
+        String activitiXmlClasspathResourceName) throws Exception
     {
-        // Create a test job definition.
-        createJobDefinition("classpath:org/finra/herd/service/testActivitiWorkflowExecuteJdbcTaskWithReceiveTask.bpmn20.xml");
+        // Create the test namespace entity.
+        namespaceDaoTestHelper.createNamespaceEntity(jobDefinitionNamespace);
+
+        // Create a job definition create request.
+        JobDefinitionCreateRequest jobDefinitionCreateRequest = new JobDefinitionCreateRequest();
+        jobDefinitionCreateRequest.setNamespace(jobDefinitionNamespace);
+        jobDefinitionCreateRequest.setJobName(jobDefinitionName);
+        jobDefinitionCreateRequest.setDescription("This is a test job definition.");
+        jobDefinitionCreateRequest.setActivitiJobXml(IOUtils.toString(resourceLoader.getResource(activitiXmlClasspathResourceName).getInputStream()));
+        jobDefinitionCreateRequest.setParameters(null);
+
+        // Create and persist a valid test job definition.
+        jobDefinitionService.createJobDefinition(jobDefinitionCreateRequest, false);
     }
 }
