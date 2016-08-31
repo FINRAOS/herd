@@ -19,12 +19,29 @@ import org.finra.herd.service.NotificationActionService;
 
 public abstract class NotificationActionServiceImpl implements NotificationActionService
 {
-    /**
-     * The parameters that are sent along with the notification.
-     */
+    protected static final String PARAM_BUSINESS_OBJECT_DATA = "notification_businessObjectData";
+
+    protected static final String PARAM_BUSINESS_OBJECT_DATA_VERSION = "notification_businessObjectDataVersion";
+
+    protected static final String PARAM_BUSINESS_OBJECT_DEFINITION_NAME = "notification_businessObjectDefinitionName";
+
+    protected static final String PARAM_BUSINESS_OBJECT_DEFINITION_NAMESPACE = "notification_businessObjectDefinitionNamespace";
+
+    protected static final String PARAM_BUSINESS_OBJECT_FORMAT_FILE_TYPE = "notification_businessObjectFormatFileType";
+
+    protected static final String PARAM_BUSINESS_OBJECT_FORMAT_USAGE = "notification_businessObjectFormatUsage";
+
+    protected static final String PARAM_BUSINESS_OBJECT_FORMAT_VERSION = "notification_businessObjectFormatVersion";
+
+    protected static final String PARAM_CORRELATION_DATA = "notification_correlationData";
+
     protected static final String PARAM_NAMESPACE = "notification_namespace";
 
     protected static final String PARAM_NOTIFICATION_NAME = "notification_name";
+
+    protected static final String PARAM_PARTITION_COLUMN_NAMES = "notification_partitionColumnNames";
+
+    protected static final String PARAM_PARTITION_VALUES = "notification_partitionValues";
 
     protected NotificationActionServiceImpl()
     {
