@@ -194,7 +194,7 @@ public class StorageUnitNotificationRegistrationServiceImpl implements StorageUn
         return createStorageUnitNotificationFromEntity(storageUnitNotificationRegistrationEntity);
     }
 
-    @NamespacePermission(fields = "#key?.namespace", permissions = NamespacePermissionEnum.WRITE)
+    @NamespacePermission(fields = "#notificationRegistrationKey?.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public StorageUnitNotificationRegistration deleteStorageUnitNotificationRegistration(NotificationRegistrationKey notificationRegistrationKey)
     {
@@ -212,7 +212,7 @@ public class StorageUnitNotificationRegistrationServiceImpl implements StorageUn
         return createStorageUnitNotificationFromEntity(storageUnitNotificationRegistrationEntity);
     }
 
-    @NamespacePermission(fields = "#key?.namespace", permissions = NamespacePermissionEnum.READ)
+    @NamespacePermission(fields = "#notificationRegistrationKey?.namespace", permissions = NamespacePermissionEnum.READ)
     @Override
     public StorageUnitNotificationRegistration getStorageUnitNotificationRegistration(NotificationRegistrationKey notificationRegistrationKey)
     {
@@ -264,7 +264,7 @@ public class StorageUnitNotificationRegistrationServiceImpl implements StorageUn
         return storageUnitNotificationKeys;
     }
 
-    @NamespacePermissions({@NamespacePermission(fields = "#key?.namespace", permissions = NamespacePermissionEnum.WRITE),
+    @NamespacePermissions({@NamespacePermission(fields = "#notificationRegistrationKey?.namespace", permissions = NamespacePermissionEnum.WRITE),
         @NamespacePermission(fields = "#request?.storageUnitNotificationFilter?.namespace", permissions = NamespacePermissionEnum.READ),
         @NamespacePermission(fields = "#request?.jobActions?.![namespace]", permissions = NamespacePermissionEnum.EXECUTE)})
     @Override
