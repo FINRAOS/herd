@@ -3,6 +3,7 @@ package org.finra.herd.service.activiti.task;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Mockito.inOrder;
@@ -27,6 +28,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 
 import org.finra.herd.dao.JobDefinitionDao;
+import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.dto.ApplicationUser;
 import org.finra.herd.model.dto.SecurityUserWrapper;
 import org.finra.herd.model.jpa.JobDefinitionEntity;
@@ -146,6 +148,9 @@ public class BaseJavaDelegateTest extends AbstractServiceTest
         when(activitiService.getProcessDefinitionById(any())).thenReturn(processDefinition);
         when(jobDefinitionDaoHelper.getJobDefinitionEntity(any(), any())).thenReturn(jobDefinitionEntity);
 
+        // Clear the security context.
+        SecurityContextHolder.clearContext();
+
         // Execute test method.
         baseJavaDelegate.setSecurityContext(delegateExecution);
 
@@ -160,6 +165,40 @@ public class BaseJavaDelegateTest extends AbstractServiceTest
         // Assert correct user is in the security context.
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         assertAuthenticationUserIdEquals(updatedBy, authentication);
+    }
+
+    @Test
+    public void testSetSecurityContextProcessDefinitionNoExists() throws Exception
+    {
+        // Set up expected values.
+        String processDefinitionId = "processDefinitionId";
+
+        // Mock dependency methods.
+        when(delegateExecution.getProcessDefinitionId()).thenReturn(processDefinitionId);
+        when(activitiService.getProcessDefinitionById(any())).thenReturn(null);
+
+        // Clear the security context.
+        SecurityContextHolder.clearContext();
+
+        // Try to execute the test method when process definition does not exist.
+        try
+        {
+            baseJavaDelegate.setSecurityContext(delegateExecution);
+            fail();
+        }
+        catch (ObjectNotFoundException e)
+        {
+            assertEquals(String.format("Failed to find Activiti process definition for processDefinitionId=\"%s\".", processDefinitionId), e.getMessage());
+        }
+
+        // Verify dependencies were invoked correctly.
+        InOrder inOrder = inOrder(activitiService);
+        inOrder.verify(activitiService).getProcessDefinitionById(processDefinitionId);
+        inOrder.verifyNoMoreInteractions();
+        verifyNoMoreInteractions(activitiService);
+
+        // Assert that security context is not set.
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
     }
 
     /**
