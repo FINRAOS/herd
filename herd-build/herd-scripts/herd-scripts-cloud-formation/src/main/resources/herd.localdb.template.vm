@@ -507,13 +507,15 @@
 
           "/usr/bin/curl -s -X POST --header 'Content-Type: application/json' -d '{",
           "\"attributes\": [",
-          "{\"name\": \"bucket.name\",\"value\": \"",{"Ref": "herdS3Bucket" }, "\"}",
+          "{\"name\": \"bucket.name\",\"value\": \"",{"Ref": "herdS3Bucket" }, "\"},",
+		  "{\"name\": \"key.prefix.velocity.template\",\"value\":\"$namespace/$dataProviderName/$businessObjectFormatUsage/$businessObjectFormatFileType/$businessObjectDefinitionName/schm-v$businessObjectFormatVersion/data-v$businessObjectDataVersion/$businessObjectFormatPartitionKey=$businessObjectDataPartitionValue#if($CollectionUtils.isNotEmpty($businessObjectDataSubPartitions.keySet()))#foreach($subPartitionKey in $businessObjectDataSubPartitions.keySet())/$subPartitionKey=$businessObjectDataSubPartitions.get($subPartitionKey)#end#end\"}",
           "],\"name\": \"HERD_DEMO\", \"storagePlatformName\": \"S3\"",
           "}' http://localhost:8080/herd-app/rest/storages\n",
 
           "/usr/bin/curl -s -X POST --header 'Content-Type: application/json' -d '{",
           "\"attributes\": [",
-          "{\"name\": \"bucket.name\"  ,\"value\": \"",{"Ref": "herdS3Bucket" }, "\"}",
+          "{\"name\": \"bucket.name\"  ,\"value\": \"",{"Ref": "herdS3Bucket" }, "\"},",
+		  "{\"name\": \"key.prefix.velocity.template\",\"value\":\"$namespace/$dataProviderName/$businessObjectFormatUsage/$businessObjectFormatFileType/$businessObjectDefinitionName/schm-v$businessObjectFormatVersion/data-v$businessObjectDataVersion/$businessObjectFormatPartitionKey=$businessObjectDataPartitionValue#if($CollectionUtils.isNotEmpty($businessObjectDataSubPartitions.keySet()))#foreach($subPartitionKey in $businessObjectDataSubPartitions.keySet())/$subPartitionKey=$businessObjectDataSubPartitions.get($subPartitionKey)#end#end\"}",
           "],\"name\": \"S3_MANAGED\", \"storagePlatformName\": \"S3\"",
           "}' http://localhost:8080/herd-app/rest/storages\n",
 
