@@ -42,6 +42,7 @@ import org.finra.herd.model.api.xml.JobStatusEnum;
 import org.finra.herd.model.api.xml.JobSummaries;
 import org.finra.herd.model.api.xml.JobSummary;
 import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.model.dto.JobDefinitionAlternateKeyDto;
 import org.finra.herd.model.jpa.JobDefinitionEntity;
 import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.service.helper.JobDefinitionHelper;
@@ -108,9 +109,7 @@ public class JobServiceGetJobsTest extends AbstractServiceTest
 
         when(herdStringHelper.getConfigurationValueAsInteger(ConfigurationValue.JOBS_QUERY_MAX_RESULTS)).thenReturn(1);
 
-        when(jobDefinitionHelper.getActivitiJobDefinitionTemplate()).thenReturn("~namespace~.~jobName~");
-        when(jobDefinitionHelper.getNamespaceToken()).thenReturn("~namespace~");
-        when(jobDefinitionHelper.getJobNameToken()).thenReturn("~jobName~");
+        when(jobDefinitionHelper.getJobDefinitionKey(eq("a.b"), any())).thenReturn(new JobDefinitionAlternateKeyDto("a", "b"));
     }
 
     @Test

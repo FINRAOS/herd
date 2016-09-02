@@ -180,6 +180,7 @@ import org.finra.herd.service.helper.EmrClusterDefinitionHelper;
 import org.finra.herd.service.helper.EmrStepHelperFactory;
 import org.finra.herd.service.helper.Hive13DdlGenerator;
 import org.finra.herd.service.helper.NotificationActionFactory;
+import org.finra.herd.service.helper.JobDefinitionHelper;
 import org.finra.herd.service.helper.NotificationRegistrationDaoHelper;
 import org.finra.herd.service.helper.NotificationRegistrationStatusDaoHelper;
 import org.finra.herd.service.helper.S3KeyPrefixHelper;
@@ -522,6 +523,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     @Autowired
     protected JmsPublishingService jmsPublishingService;
+
+    @Autowired
+    protected JobDefinitionHelper jobDefinitionHelper;
 
     @Autowired
     protected JobDefinitionService jobDefinitionService;
