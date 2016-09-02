@@ -145,7 +145,7 @@ public abstract class BaseJavaDelegate implements JavaDelegate
             // Check if method is not allowed.
             configurationDaoHelper.checkNotAllowedMethod(this.getClass().getCanonicalName());
 
-            // Check permissions.
+            // Set the security context per last updater of the current process instance's job definition.
             setSecurityContext(execution);
 
             // Set the MDC property for the Activiti process instance ID.
@@ -172,7 +172,7 @@ public abstract class BaseJavaDelegate implements JavaDelegate
     }
 
     /**
-     * Authenticates the last updater of the current process instance's process definition into the security context.
+     * Sets the security context per last updater of the current process instance's job definition.
      *
      * @param execution the current execution context
      */
@@ -198,7 +198,7 @@ public abstract class BaseJavaDelegate implements JavaDelegate
         // Get the job definition from the Herd repository and validate that it exists.
         JobDefinitionEntity jobDefinitionEntity = jobDefinitionDaoHelper.getJobDefinitionEntity(jobDefinitionKey.getNamespace(), jobDefinitionKey.getJobName());
 
-        // Set the security context.
+        // Set the security context per last updater of the job definition.
         String updatedByUserId = jobDefinitionEntity.getUpdatedBy();
         ApplicationUser applicationUser = new ApplicationUser(getClass());
         applicationUser.setUserId(updatedByUserId);

@@ -20,6 +20,7 @@ import static org.junit.Assert.fail;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.junit.Test;
 
@@ -73,15 +74,20 @@ public class JobDefinitionHelperTest extends AbstractServiceTest
         // Set up test values.
         String testProcessDefinitionKey = "INVALID_PROCESS_DEFINITION_KEY";
 
+        // Get the regex pattern.
+        Pattern pattern = jobDefinitionHelper.getNamespaceAndJobNameRegexPattern();
+
         // Try to get the job definition key when process definition key not match the expected pattern.
         try
         {
-            jobDefinitionHelper.getJobDefinitionKey(testProcessDefinitionKey);
+            jobDefinitionHelper.getJobDefinitionKey(testProcessDefinitionKey, pattern);
             fail();
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals(String.format("Process definition key \"%s\" does not match the expected pattern.", testProcessDefinitionKey), e.getMessage());
+            assertEquals(
+                String.format("Process definition key \"%s\" does not match the expected pattern \"%s\".", testProcessDefinitionKey, pattern.toString()),
+                e.getMessage());
         }
     }
 }

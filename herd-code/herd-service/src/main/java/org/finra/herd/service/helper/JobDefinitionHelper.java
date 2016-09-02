@@ -158,7 +158,8 @@ public class JobDefinitionHelper
             // Under normal operation, this exception would never be thrown. The only possibility is if someone creates and executes
             // a workflow without using our enforced definition key format. The only way to accomplish this is directly operating
             // against the database. The check is here for robustness, but should not be expected to be covered as part of tests.
-            throw new IllegalArgumentException(String.format("Process definition key \"%s\" does not match the expected pattern.", processDefinitionKey));
+            throw new IllegalArgumentException(
+                String.format("Process definition key \"%s\" does not match the expected pattern \"%s\".", processDefinitionKey, regexPattern.toString()));
         }
 
         return jobDefinitionKey;
