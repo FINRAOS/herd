@@ -16,7 +16,6 @@
 package org.finra.herd.service.impl;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,20 +23,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
-import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.dao.StorageDao;
-import org.finra.herd.dao.StorageUploadStatsDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
-import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.Storage;
-import org.finra.herd.model.api.xml.StorageBusinessObjectDefinitionDailyUploadStats;
 import org.finra.herd.model.api.xml.StorageCreateRequest;
-import org.finra.herd.model.api.xml.StorageDailyUploadStats;
 import org.finra.herd.model.api.xml.StorageKeys;
 import org.finra.herd.model.api.xml.StorageUpdateRequest;
-import org.finra.herd.model.dto.DateRangeDto;
 import org.finra.herd.model.dto.StorageAlternateKeyDto;
 import org.finra.herd.model.jpa.StorageAttributeEntity;
 import org.finra.herd.model.jpa.StorageEntity;
@@ -69,9 +62,6 @@ public class StorageServiceImpl implements StorageService
 
     @Autowired
     private StoragePlatformHelper storagePlatformHelper;
-
-    @Autowired
-    private StorageUploadStatsDao storageUploadStatsDao;
 
     /**
      * Creates a new storage.
@@ -197,63 +187,6 @@ public class StorageServiceImpl implements StorageService
     }
 
     /**
-     * Retrieves cumulative daily upload statistics for the storage for the specified upload date.  If the upload date is not specified, returns the upload
-     * stats for the past 7 calendar days plus today (8 days total).
-     *
-     * @param storageAlternateKey the storage alternate key (case-insensitive)
-     * @param uploadDate the upload date (optional)
-     *
-     * @return the upload statistics
-     */
-    @Override
-    public StorageDailyUploadStats getStorageUploadStats(StorageAlternateKeyDto storageAlternateKey, Date uploadDate)
-    {
-        // Perform validation and trim.
-        validateStorageAlternateKey(storageAlternateKey);
-        validateStorageEntityExists(storageAlternateKey);
-
-        // If the upload date is not specified, retrieve upload stats for the past 7 calendar days plus today (8 days total).
-        DateRangeDto dateRange = uploadDate == null ? getLastNDaysDateRange(7) : getOneDayDateRange(uploadDate);
-
-        return storageUploadStatsDao.getStorageUploadStats(storageAlternateKey, dateRange);
-    }
-
-    /**
-     * Retrieves daily upload statistics for the storage by business object definition for the specified upload date.  If the upload date is not specified,
-     * returns the upload stats for the past 7 calendar days plus today (8 days total).
-     *
-     * @param storageAlternateKey the storage alternate key (case-insensitive)
-     * @param uploadDate the upload date (optional)
-     *
-     * @return the upload statistics
-     */
-    @Override
-    public StorageBusinessObjectDefinitionDailyUploadStats getStorageUploadStatsByBusinessObjectDefinition(StorageAlternateKeyDto storageAlternateKey,
-        Date uploadDate)
-    {
-        // Perform validation and trim.
-        validateStorageAlternateKey(storageAlternateKey);
-        validateStorageEntityExists(storageAlternateKey);
-
-        // If the upload date is not specified, retrieve upload stats for the past 7 calendar days plus today (8 days total).
-        DateRangeDto dateRange = uploadDate == null ? getLastNDaysDateRange(7) : getOneDayDateRange(uploadDate);
-
-        return storageUploadStatsDao.getStorageUploadStatsByBusinessObjectDefinition(storageAlternateKey, dateRange);
-    }
-
-    /**
-     * Checks if storage exists.
-     *
-     * @param storageAlternateKey the storage alternate key (case-insensitive)
-     *
-     * @throws ObjectNotFoundException if storage with this alternate key does not exist
-     */
-    private void validateStorageEntityExists(StorageAlternateKeyDto storageAlternateKey) throws ObjectNotFoundException
-    {
-        storageDaoHelper.getStorageEntity(storageAlternateKey);
-    }
-
-    /**
      * Validates the storage create request. This method also trims request parameters.
      *
      * @param request the request.
@@ -303,33 +236,5 @@ public class StorageServiceImpl implements StorageService
         }
 
         return storage;
-    }
-
-    /**
-     * Returns a date range that contains only one day.
-     *
-     * @param date the date to be included in the date range
-     *
-     * @return the date range that contains only the specified day
-     */
-    private DateRangeDto getOneDayDateRange(Date date)
-    {
-        return DateRangeDto.builder().lowerDate(date).upperDate(date).build();
-    }
-
-    /**
-     * Returns a date range for the past N calendar days plus today.
-     *
-     * @param numberOfDays the number of past days to be included in the date range
-     *
-     * @return the date range that includes the past N days plus today
-     */
-    private DateRangeDto getLastNDaysDateRange(int numberOfDays)
-    {
-        // Get current date without a time part set.
-        Date currentDate = HerdDateUtils.getCurrentCalendarNoTime().getTime();
-
-        // Create the date range.
-        return DateRangeDto.builder().lowerDate(HerdDateUtils.addDays(currentDate, -numberOfDays)).upperDate(currentDate).build();
     }
 }

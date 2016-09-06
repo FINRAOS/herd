@@ -234,8 +234,6 @@ public class SecurityFunctions
 
     public static final String FN_STORAGES_PUT = "FN_STORAGES_PUT";
 
-    public static final String FN_STORAGES_UPLOAD_STATS_GET = "FN_STORAGES_UPLOAD_STATS_GET";
-
     public static final String FN_STORAGE_PLATFORMS_ALL_GET = "FN_STORAGE_PLATFORMS_ALL_GET";
 
     public static final String FN_STORAGE_PLATFORMS_GET = "FN_STORAGE_PLATFORMS_GET";
