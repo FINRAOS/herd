@@ -17,12 +17,10 @@ package org.finra.herd.service.helper;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.List;
 
 import org.junit.Assert;
@@ -36,42 +34,6 @@ import org.finra.herd.service.AbstractServiceTest;
 
 public class StorageHelperTest extends AbstractServiceTest
 {
-    private static String YEAR = "2014";
-
-    private static String MONTH = "12";
-
-    private static String DAY = "31";
-
-    private static String DATE_STRING = String.format("%s-%s-%s", YEAR, MONTH, DAY);
-
-    @Test
-    public void testGetDateFromString() throws Exception
-    {
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(storageHelper.getDateFromString(DATE_STRING));
-        assertTrue(calendar.get(Calendar.YEAR) == new Integer(YEAR));
-        assertTrue(calendar.get(Calendar.MONTH) == new Integer(MONTH) - 1); // Month is zero based so need to subtract one.
-        assertTrue(calendar.get(Calendar.DAY_OF_MONTH) == new Integer(DAY));
-    }
-
-    @Test
-    public void testGetDateFromStringNoDate() throws Exception
-    {
-        assertNull(storageHelper.getDateFromString(""));
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testGetDateFromStringMissingDay() throws Exception
-    {
-        storageHelper.getDateFromString(YEAR + MONTH);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testGetDateFromStringInvalidDate() throws Exception
-    {
-        storageHelper.getDateFromString(YEAR + MONTH + "32");
-    }
-
     @Test
     public void testGetStorageAttributeValueByNameFromStorage()
     {

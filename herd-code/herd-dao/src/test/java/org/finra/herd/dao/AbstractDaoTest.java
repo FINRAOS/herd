@@ -498,6 +498,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String STORAGE_UNIT_STATUS_2 = "UT_SU_Status_2_" + RANDOM_SUFFIX;
 
+    public static final String STORAGE_UNIT_STATUS_3 = "UT_SU_Status_3_" + RANDOM_SUFFIX;
+
+    public static final String STORAGE_UNIT_STATUS_4 = "UT_SU_Status_4_" + RANDOM_SUFFIX;
+
     public static final Boolean STORAGE_UNIT_STATUS_AVAILABLE_FLAG_SET = true;
 
     public static final String STRING_VALUE = "UT_SomeText" + RANDOM_SUFFIX;
@@ -570,9 +574,6 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     @Autowired
     protected BusinessObjectDataNotificationRegistrationDao businessObjectDataNotificationRegistrationDao;
-
-    @Autowired
-    protected BusinessObjectDataNotificationRegistrationDaoTestHelper businessObjectDataNotificationRegistrationDaoTestHelper;
 
     @Autowired
     protected BusinessObjectDataStatusDao businessObjectDataStatusDao;
@@ -681,6 +682,9 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     protected NotificationRegistrationDao notificationRegistrationDao;
 
     @Autowired
+    protected NotificationRegistrationDaoTestHelper notificationRegistrationDaoTestHelper;
+
+    @Autowired
     protected NotificationRegistrationStatusDao notificationRegistrationStatusDao;
 
     @Autowired
@@ -755,6 +759,9 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     @Autowired
     protected StorageUnitDaoTestHelper storageUnitDaoTestHelper;
+
+    @Autowired
+    protected StorageUnitNotificationRegistrationDao storageUnitNotificationRegistrationDao;
 
     @Autowired
     protected StorageUnitStatusDao storageUnitStatusDao;

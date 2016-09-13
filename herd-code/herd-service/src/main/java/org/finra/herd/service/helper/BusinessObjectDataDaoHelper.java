@@ -41,12 +41,14 @@ import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataCreateRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormat;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.PartitionValueFilter;
 import org.finra.herd.model.api.xml.PartitionValueRange;
 import org.finra.herd.model.api.xml.StorageFile;
+import org.finra.herd.model.api.xml.StorageUnit;
 import org.finra.herd.model.api.xml.StorageUnitCreateRequest;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
@@ -57,12 +59,14 @@ import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusHistoryEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.ExpectedPartitionValueEntity;
+import org.finra.herd.model.jpa.NotificationEventTypeEntity;
 import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.StorageFileEntity;
 import org.finra.herd.model.jpa.StoragePlatformEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
 import org.finra.herd.service.BusinessObjectDataService;
+import org.finra.herd.service.NotificationEventService;
 import org.finra.herd.service.S3Service;
 import org.finra.herd.service.SqsNotificationEventService;
 
@@ -100,6 +104,9 @@ public class BusinessObjectDataDaoHelper
 
     @Autowired
     private ExpectedPartitionValueDao expectedPartitionValueDao;
+
+    @Autowired
+    private NotificationEventService notificationEventService;
 
     @Autowired
     private S3KeyPrefixHelper s3KeyPrefixHelper;
@@ -435,6 +442,45 @@ public class BusinessObjectDataDaoHelper
 
         // Return the partition values.
         return partitionValues;
+    }
+
+    /**
+     * Trigger business object data and storage unit notification for business object data creation event.
+     *
+     * @param businessObjectData the business object data
+     */
+    public void triggerNotificationsForCreateBusinessObjectData(BusinessObjectData businessObjectData)
+    {
+        BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectData);
+
+        // Create business object data notifications.
+        for (NotificationEventTypeEntity.EventTypesBdata eventType : Arrays
+            .asList(NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_RGSTN, NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_STTS_CHG))
+        {
+            notificationEventService.processBusinessObjectDataNotificationEventAsync(eventType, businessObjectDataKey, businessObjectData.getStatus(), null);
+        }
+
+        // Create storage unit notifications.
+        for (StorageUnit storageUnit : businessObjectData.getStorageUnits())
+        {
+            notificationEventService
+                .processStorageUnitNotificationEventAsync(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG, businessObjectDataKey,
+                    storageUnit.getStorage().getName(), storageUnit.getStorageUnitStatus(), null);
+        }
+    }
+
+    /**
+     * Trigger business object data and storage unit notification for unregistered business object data invalidation event.
+     *
+     * @param businessObjectDataInvalidateUnregisteredResponse the business object data invalidate unregistered response
+     */
+    public void triggerNotificationsForInvalidateUnregisteredBusinessObjectData(
+        BusinessObjectDataInvalidateUnregisteredResponse businessObjectDataInvalidateUnregisteredResponse)
+    {
+        for (BusinessObjectData businessObjectData : businessObjectDataInvalidateUnregisteredResponse.getRegisteredBusinessObjectDataList())
+        {
+            triggerNotificationsForCreateBusinessObjectData(businessObjectData);
+        }
     }
 
     /**

@@ -28,9 +28,14 @@ import javax.persistence.Table;
 public class NotificationTypeEntity extends AuditableEntity
 {
     /**
-     * Notification type.
+     * Notification type for business object data.
      */
     public static final String NOTIFICATION_TYPE_BDATA = "BUS_OBJCT_DATA";
+
+    /**
+     * Notification type for storage unit.
+     */
+    public static final String NOTIFICATION_TYPE_STORAGE_UNIT = "STRGE_UNIT";
 
     /**
      * The code column.

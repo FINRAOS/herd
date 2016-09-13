@@ -155,7 +155,6 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
      *
      * @return the business object definition.
      */
-    @NamespacePermission(fields = "#businessObjectDefinitionKey.namespace", permissions = NamespacePermissionEnum.READ)
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public BusinessObjectDefinition getBusinessObjectDefinition(BusinessObjectDefinitionKey businessObjectDefinitionKey)
@@ -228,7 +227,6 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
      *
      * @return the business object definition keys
      */
-    @NamespacePermission(fields = "#namespaceCode", permissions = NamespacePermissionEnum.READ)
     @Override
     public BusinessObjectDefinitionKeys getBusinessObjectDefinitions(String namespaceCode)
     {
