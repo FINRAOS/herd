@@ -3672,6 +3672,19 @@
       </xs:all>
    </xs:complexType>
 
+   <xs:element name="jobUpdateRequest" type="jobUpdateRequest"/>
+   <xs:complexType name="jobUpdateRequest">
+      <xs:all>
+         <xs:element ref="action">
+            <xs:annotation>
+               <xs:documentation>
+                  The action to take for the job. One of the following values: SUSPEND, RESUME
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
    <xs:element name="job" type="job"/>
    <xs:complexType name="job">
       <xs:all>
@@ -3879,6 +3892,15 @@
          <xs:restriction base="xs:string">
             <xs:enumeration value="RUNNING"/>
             <xs:enumeration value="COMPLETED"/>
+         </xs:restriction>
+      </xs:simpleType>
+   </xs:element>
+
+   <xs:element name="action">
+      <xs:simpleType>
+         <xs:restriction base="xs:string">
+            <xs:enumeration value="SUSPEND"/>
+            <xs:enumeration value="RESUME"/>
          </xs:restriction>
       </xs:simpleType>
    </xs:element>
