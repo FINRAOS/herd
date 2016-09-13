@@ -15,8 +15,6 @@
 */
 package org.finra.herd.rest;
 
-import java.util.Date;
-
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
@@ -24,19 +22,15 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import org.finra.herd.model.api.xml.Storage;
-import org.finra.herd.model.api.xml.StorageBusinessObjectDefinitionDailyUploadStats;
 import org.finra.herd.model.api.xml.StorageCreateRequest;
-import org.finra.herd.model.api.xml.StorageDailyUploadStats;
 import org.finra.herd.model.api.xml.StorageKeys;
 import org.finra.herd.model.api.xml.StorageUpdateRequest;
 import org.finra.herd.model.dto.SecurityFunctions;
 import org.finra.herd.model.dto.StorageAlternateKeyDto;
 import org.finra.herd.service.StorageService;
-import org.finra.herd.service.helper.StorageHelper;
 import org.finra.herd.ui.constants.UiConstants;
 
 /**
@@ -48,9 +42,6 @@ import org.finra.herd.ui.constants.UiConstants;
 public class StorageRestController extends HerdBaseController
 {
     public static final String STORAGES_URI_PREFIX = "/storages";
-
-    @Autowired
-    private StorageHelper storageHelper;
 
     @Autowired
     private StorageService storageService;
@@ -125,43 +116,5 @@ public class StorageRestController extends HerdBaseController
     public StorageKeys getStorages()
     {
         return storageService.getStorages();
-    }
-
-    /**
-     * Gets cumulative daily upload statistics for the storage for the specified upload date.  If the upload date is not specified, returns the upload stats for
-     * the past 7 calendar days plus today (8 days total).
-     *
-     * @param storageName the storage name
-     * @param uploadDateString the upload date in YYYY-MM-DD format (optional)
-     *
-     * @return the upload statistics
-     */
-    @RequestMapping(value = STORAGES_URI_PREFIX + "/{storageName}/storageDailyUploadStats", method = RequestMethod.GET)
-    @Secured(SecurityFunctions.FN_STORAGES_UPLOAD_STATS_GET)
-    public StorageDailyUploadStats getStorageUploadStats(@PathVariable("storageName") String storageName,
-        @RequestParam(value = "uploadDate", required = false) String uploadDateString)
-    {
-        StorageAlternateKeyDto alternateKey = StorageAlternateKeyDto.builder().storageName(storageName).build();
-        Date uploadDate = storageHelper.getDateFromString(uploadDateString);
-        return storageService.getStorageUploadStats(alternateKey, uploadDate);
-    }
-
-    /**
-     * Retrieves daily upload statistics for the storage by business object definition for the specified upload date.  If the upload date is not specified,
-     * returns the upload stats for the past 7 calendar days plus today (8 days total).
-     *
-     * @param storageName the storage name
-     * @param uploadDateString the upload date in YYYY-MM-DD format (optional)
-     *
-     * @return the upload statistics
-     */
-    @RequestMapping(value = STORAGES_URI_PREFIX + "/{storageName}/storageDailyUploadStatsByBusinessObjectDefinition", method = RequestMethod.GET)
-    @Secured(SecurityFunctions.FN_STORAGES_UPLOAD_STATS_GET)
-    public StorageBusinessObjectDefinitionDailyUploadStats getStorageUploadStatsByBusinessObjectDefinition(@PathVariable("storageName") String storageName,
-        @RequestParam(value = "uploadDate", required = false) String uploadDateString)
-    {
-        StorageAlternateKeyDto alternateKey = StorageAlternateKeyDto.builder().storageName(storageName).build();
-        Date uploadDate = storageHelper.getDateFromString(uploadDateString);
-        return storageService.getStorageUploadStatsByBusinessObjectDefinition(alternateKey, uploadDate);
     }
 }

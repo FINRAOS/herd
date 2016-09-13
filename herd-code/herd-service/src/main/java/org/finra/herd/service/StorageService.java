@@ -15,15 +15,11 @@
 */
 package org.finra.herd.service;
 
-import java.util.Date;
-
-import org.finra.herd.model.dto.StorageAlternateKeyDto;
 import org.finra.herd.model.api.xml.Storage;
-import org.finra.herd.model.api.xml.StorageBusinessObjectDefinitionDailyUploadStats;
 import org.finra.herd.model.api.xml.StorageCreateRequest;
-import org.finra.herd.model.api.xml.StorageDailyUploadStats;
 import org.finra.herd.model.api.xml.StorageKeys;
 import org.finra.herd.model.api.xml.StorageUpdateRequest;
+import org.finra.herd.model.dto.StorageAlternateKeyDto;
 
 /**
  * The storage service.
@@ -44,9 +40,4 @@ public interface StorageService
      * @return the storage keys
      */
     public StorageKeys getStorages();
-
-    public StorageDailyUploadStats getStorageUploadStats(StorageAlternateKeyDto storageAlternateKey, Date uploadDate);
-
-    public StorageBusinessObjectDefinitionDailyUploadStats getStorageUploadStatsByBusinessObjectDefinition(StorageAlternateKeyDto storageAlternateKey,
-        Date uploadDate);
 }

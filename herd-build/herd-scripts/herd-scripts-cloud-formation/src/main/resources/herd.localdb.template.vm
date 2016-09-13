@@ -505,15 +505,18 @@
           "\"namespaceCode\": \"DEMO\"",
           "}' http://localhost:8080/herd-app/rest/namespaces\n",
 
+#set($H = '#')
           "/usr/bin/curl -s -X POST --header 'Content-Type: application/json' -d '{",
           "\"attributes\": [",
-          "{\"name\": \"bucket.name\",\"value\": \"",{"Ref": "herdS3Bucket" }, "\"}",
+          "{\"name\": \"bucket.name\",\"value\": \"",{"Ref": "herdS3Bucket" }, "\"},",
+		  "{\"name\": \"key.prefix.velocity.template\",\"value\":\"$namespace/$dataProviderName/$businessObjectFormatUsage/$businessObjectFormatFileType/$businessObjectDefinitionName/schm-v$businessObjectFormatVersion/data-v$businessObjectDataVersion/$businessObjectFormatPartitionKey=$businessObjectDataPartitionValue${H}if($CollectionUtils.isNotEmpty($businessObjectDataSubPartitions.keySet()))${H}foreach($subPartitionKey in $businessObjectDataSubPartitions.keySet())/$subPartitionKey=$businessObjectDataSubPartitions.get($subPartitionKey)${H}end${H}end\"}",
           "],\"name\": \"HERD_DEMO\", \"storagePlatformName\": \"S3\"",
           "}' http://localhost:8080/herd-app/rest/storages\n",
 
           "/usr/bin/curl -s -X POST --header 'Content-Type: application/json' -d '{",
           "\"attributes\": [",
-          "{\"name\": \"bucket.name\"  ,\"value\": \"",{"Ref": "herdS3Bucket" }, "\"}",
+          "{\"name\": \"bucket.name\"  ,\"value\": \"",{"Ref": "herdS3Bucket" }, "\"},",
+		  "{\"name\": \"key.prefix.velocity.template\",\"value\":\"$namespace/$dataProviderName/$businessObjectFormatUsage/$businessObjectFormatFileType/$businessObjectDefinitionName/schm-v$businessObjectFormatVersion/data-v$businessObjectDataVersion/$businessObjectFormatPartitionKey=$businessObjectDataPartitionValue${H}if($CollectionUtils.isNotEmpty($businessObjectDataSubPartitions.keySet()))${H}foreach($subPartitionKey in $businessObjectDataSubPartitions.keySet())/$subPartitionKey=$businessObjectDataSubPartitions.get($subPartitionKey)${H}end${H}end\"}",
           "],\"name\": \"S3_MANAGED\", \"storagePlatformName\": \"S3\"",
           "}' http://localhost:8080/herd-app/rest/storages\n",
 

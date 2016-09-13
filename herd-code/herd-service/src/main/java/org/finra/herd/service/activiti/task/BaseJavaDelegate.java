@@ -20,6 +20,7 @@ import java.util.Collections;
 import org.activiti.engine.delegate.BpmnError;
 import org.activiti.engine.delegate.DelegateExecution;
 import org.activiti.engine.delegate.JavaDelegate;
+import org.activiti.engine.repository.ProcessDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -32,13 +33,18 @@ import org.finra.herd.dao.JobDefinitionDao;
 import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.dao.helper.XmlHelper;
+import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.dto.ApplicationUser;
+import org.finra.herd.model.dto.JobDefinitionAlternateKeyDto;
 import org.finra.herd.model.dto.SecurityUserWrapper;
 import org.finra.herd.model.jpa.JobDefinitionEntity;
+import org.finra.herd.service.ActivitiService;
 import org.finra.herd.service.activiti.ActivitiHelper;
 import org.finra.herd.service.activiti.ActivitiRuntimeHelper;
 import org.finra.herd.service.helper.ConfigurationDaoHelper;
 import org.finra.herd.service.helper.HerdErrorInformationExceptionHandler;
+import org.finra.herd.service.helper.JobDefinitionDaoHelper;
+import org.finra.herd.service.helper.JobDefinitionHelper;
 import org.finra.herd.service.helper.UserNamespaceAuthorizationHelper;
 
 /**
@@ -60,6 +66,9 @@ public abstract class BaseJavaDelegate implements JavaDelegate
     private static final String ACTIVITI_PROCESS_INSTANCE_ID_KEY = "activitiProcessInstanceId";
 
     @Autowired
+    protected ActivitiService activitiService;
+
+    @Autowired
     protected ConfigurationDaoHelper configurationDaoHelper;
 
     @Autowired
@@ -70,6 +79,12 @@ public abstract class BaseJavaDelegate implements JavaDelegate
 
     @Autowired
     protected JobDefinitionDao jobDefinitionDao;
+
+    @Autowired
+    protected JobDefinitionDaoHelper jobDefinitionDaoHelper;
+
+    @Autowired
+    protected JobDefinitionHelper jobDefinitionHelper;
 
     @Autowired
     protected JsonHelper jsonHelper;
@@ -121,11 +136,17 @@ public abstract class BaseJavaDelegate implements JavaDelegate
     {
         try
         {
+            // Need to clear the security context here since the current thread may have been reused,
+            // which may might have left over its security context. If we do not clear the security
+            // context, any subsequent calls may be restricted by the permissions given
+            // to the previous thread's security context.
+            SecurityContextHolder.clearContext();
+
             // Check if method is not allowed.
             configurationDaoHelper.checkNotAllowedMethod(this.getClass().getCanonicalName());
 
-            // Check permissions.
-            checkPermissions(execution);
+            // Set the security context per last updater of the current process instance's job definition.
+            setSecurityContext(execution);
 
             // Set the MDC property for the Activiti process instance ID.
             MDC.put(ACTIVITI_PROCESS_INSTANCE_ID_KEY, "activitiProcessInstanceId=" + execution.getProcessInstanceId());
@@ -144,32 +165,46 @@ public abstract class BaseJavaDelegate implements JavaDelegate
         {
             // Remove the MDC property to ensure they don't accidentally get used by anybody else.
             MDC.remove(ACTIVITI_PROCESS_INSTANCE_ID_KEY);
+
+            // Clear up the security context.
+            SecurityContextHolder.clearContext();
         }
     }
 
     /**
-     * Authenticates the last updater of the current process instance's process definition into the security context. If a user already exists in the current
-     * context, this method does nothing.
+     * Sets the security context per last updater of the current process instance's job definition.
      *
-     * @param execution The current execution context
+     * @param execution the current execution context
      */
-    private void checkPermissions(DelegateExecution execution)
+    protected void setSecurityContext(DelegateExecution execution)
     {
         String processDefinitionId = execution.getProcessDefinitionId();
-        JobDefinitionEntity jobDefinitionEntity = jobDefinitionDao.getJobDefinitionByProcessDefinitionId(processDefinitionId);
-        /*
-         * Rare cases JobDefinitionEntity can be null if the process definition was deployed manually without using Herd. (it happens in some unit tests)
-         * For these cases, there are no users in the context.
-         */
-        if (jobDefinitionEntity != null)
+
+        // Get process definition by process definition ID from Activiti.
+        ProcessDefinition processDefinition = activitiService.getProcessDefinitionById(processDefinitionId);
+
+        // Validate that we retrieved the process definition from Activiti.
+        if (processDefinition == null)
         {
-            String updatedByUserId = jobDefinitionEntity.getUpdatedBy();
-            ApplicationUser applicationUser = new ApplicationUser(getClass());
-            applicationUser.setUserId(updatedByUserId);
-            userNamespaceAuthorizationHelper.buildNamespaceAuthorizations(applicationUser);
-            SecurityContextHolder.getContext().setAuthentication(new PreAuthenticatedAuthenticationToken(
-                new SecurityUserWrapper(updatedByUserId, "", true, true, true, true, Collections.emptyList(), applicationUser), null));
+            throw new ObjectNotFoundException(String.format("Failed to find Activiti process definition for processDefinitionId=\"%s\".", processDefinitionId));
         }
+
+        // Retrieve the process definition key.
+        String processDefinitionKey = processDefinition.getKey();
+
+        // Get the job definition key.
+        JobDefinitionAlternateKeyDto jobDefinitionKey = jobDefinitionHelper.getJobDefinitionKey(processDefinitionKey);
+
+        // Get the job definition from the Herd repository and validate that it exists.
+        JobDefinitionEntity jobDefinitionEntity = jobDefinitionDaoHelper.getJobDefinitionEntity(jobDefinitionKey.getNamespace(), jobDefinitionKey.getJobName());
+
+        // Set the security context per last updater of the job definition.
+        String updatedByUserId = jobDefinitionEntity.getUpdatedBy();
+        ApplicationUser applicationUser = new ApplicationUser(getClass());
+        applicationUser.setUserId(updatedByUserId);
+        userNamespaceAuthorizationHelper.buildNamespaceAuthorizations(applicationUser);
+        SecurityContextHolder.getContext().setAuthentication(new PreAuthenticatedAuthenticationToken(
+            new SecurityUserWrapper(updatedByUserId, "", true, true, true, true, Collections.emptyList(), applicationUser), null));
     }
 
     /**

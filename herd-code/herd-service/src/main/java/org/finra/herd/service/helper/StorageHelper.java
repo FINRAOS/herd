@@ -15,18 +15,12 @@
 */
 package org.finra.herd.service.helper;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
-
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.propertyeditors.CustomBooleanEditor;
 import org.springframework.stereotype.Component;
-import org.springframework.util.Assert;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
-import org.finra.herd.dao.impl.AbstractHerdDao;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.Storage;
 import org.finra.herd.model.dto.ConfigurationValue;
@@ -88,51 +82,6 @@ public class StorageHelper
 
         // Return the boolean value.
         return (Boolean) customBooleanEditor.getValue();
-    }
-
-    /**
-     * Gets a date in a date format from a string format or null if one wasn't specified. The format of the date should match
-     * HerdDao.DEFAULT_SINGLE_DAY_DATE_MASK.
-     *
-     * @param dateString the date as a string.
-     *
-     * @return the date as a date or null if one wasn't specified
-     * @throws IllegalArgumentException if the date isn't the correct length or isn't in the correct format
-     */
-    public Date getDateFromString(String dateString) throws IllegalArgumentException
-    {
-        String dateStringLocal = dateString;
-
-        // Default the return port value to null.
-        Date resultDate = null;
-
-        if (StringUtils.isNotBlank(dateStringLocal))
-        {
-            // Trim the date string.
-            dateStringLocal = dateStringLocal.trim();
-
-            // Verify that the date string has the required length.
-            Assert.isTrue(dateStringLocal.length() == AbstractHerdDao.DEFAULT_SINGLE_DAY_DATE_MASK.length(), String
-                .format("A date value \"%s\" must contain %d characters and be in \"%s\" format.", dateStringLocal,
-                    AbstractHerdDao.DEFAULT_SINGLE_DAY_DATE_MASK.length(), AbstractHerdDao.DEFAULT_SINGLE_DAY_DATE_MASK.toUpperCase()));
-
-            // Convert the date from a String to a Date.
-            try
-            {
-                // Use strict parsing to ensure our date is more definitive.
-                SimpleDateFormat simpleDateFormat = new SimpleDateFormat(AbstractHerdDao.DEFAULT_SINGLE_DAY_DATE_MASK, Locale.US);
-                simpleDateFormat.setLenient(false);
-                resultDate = simpleDateFormat.parse(dateStringLocal);
-            }
-            catch (Exception ex)
-            {
-                throw new IllegalArgumentException(
-                    String.format("A date value \"%s\" must be in \"%s\" format.", dateStringLocal, AbstractHerdDao.DEFAULT_SINGLE_DAY_DATE_MASK.toUpperCase()),
-                    ex);
-            }
-        }
-
-        return resultDate;
     }
 
     /**

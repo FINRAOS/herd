@@ -313,7 +313,6 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
      *
      * @return the business object format
      */
-    @NamespacePermission(fields = "#businessObjectFormatKey.namespace", permissions = NamespacePermissionEnum.READ)
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public BusinessObjectFormat getBusinessObjectFormat(BusinessObjectFormatKey businessObjectFormatKey)
@@ -401,7 +400,6 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
      *
      * @return the list of business object formats.
      */
-    @NamespacePermission(fields = "#businessObjectDefinitionKey?.namespace", permissions = NamespacePermissionEnum.READ)
     @Override
     public BusinessObjectFormatKeys getBusinessObjectFormats(BusinessObjectDefinitionKey businessObjectDefinitionKey, boolean latestBusinessObjectFormatVersion)
     {

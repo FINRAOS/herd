@@ -31,17 +31,20 @@ public class NotificationRegistrationStatusDaoHelper
     /**
      * Gets a notification registration status entity by its code, or throws an ObjectNotFoundException if not found.
      *
-     * @param code The code of the notification registration status
+     * @param code the code (case insensitive)
      *
-     * @return The notification registration status entity
+     * @return the notification registration status entity
+     * @throws ObjectNotFoundException if the notification registration status entity doesn't exist
      */
-    public NotificationRegistrationStatusEntity getNotificationRegistrationStatus(String code)
+    public NotificationRegistrationStatusEntity getNotificationRegistrationStatusEntity(String code) throws ObjectNotFoundException
     {
         NotificationRegistrationStatusEntity notificationRegistrationStatusEntity = notificationRegistrationStatusDao.getNotificationRegistrationStatus(code);
+
         if (notificationRegistrationStatusEntity == null)
         {
-            throw new ObjectNotFoundException("The notification registration status with code \"" + code + "\" was not found.");
+            throw new ObjectNotFoundException(String.format("The notification registration status \"%s\" doesn't exist.", code));
         }
+
         return notificationRegistrationStatusEntity;
     }
 }
