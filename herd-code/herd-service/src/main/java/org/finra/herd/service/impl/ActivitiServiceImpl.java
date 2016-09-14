@@ -193,9 +193,9 @@ public class ActivitiServiceImpl implements ActivitiService
         HistoricProcessInstanceQuery query =
             activitiHistoryService.createHistoricProcessInstanceQuery().processDefinitionKeyIn(new ArrayList<>(processDefinitionKeys));
 
-        if (JobStatusEnum.RUNNING.equals(jobStatus))
+        if (JobStatusEnum.RUNNING.equals(jobStatus) || JobStatusEnum.SUSPENDED.equals(jobStatus))
         {
-            // If the filter is for "running", use the "unfinished" query filter.
+            // If the filter is for "running" or "suspended", use the "unfinished" query filter.
             query.unfinished();
         }
         else if (JobStatusEnum.COMPLETED.equals(jobStatus))

@@ -273,41 +273,50 @@ public class JobServiceImpl implements JobService
                 // Loop over the process instances and build a list of job summaries to return.
                 for (HistoricProcessInstance historicProcessInstance : historicProcessInstances)
                 {
+                    // Exclude all process instances started using older versions of the process definition.
                     if (processDefinitionIdToKeyMap.containsKey(historicProcessInstance.getProcessDefinitionId()))
                     {
-                        // Create a new job summary.
-                        JobSummary jobSummary = new JobSummary();
-                        jobSummary.setId(historicProcessInstance.getId());
+                        // Set a flag if this job is SUSPENDED.
+                        boolean suspended = suspendedProcessInstanceIds.contains(historicProcessInstance.getId());
 
-                        // Get the job definition key.
-                        JobDefinitionAlternateKeyDto jobDefinitionKey =
-                            jobDefinitionHelper.getJobDefinitionKey(processDefinitionIdToKeyMap.get(historicProcessInstance.getProcessDefinitionId()), pattern);
-
-                        // Set the namespace and job name on the job summary.
-                        jobSummary.setNamespace(jobDefinitionKey.getNamespace());
-                        jobSummary.setJobName(jobDefinitionKey.getJobName());
-
-                        // Set the start time always since all jobs will have a start time.
-                        jobSummary.setStartTime(HerdDateUtils.getXMLGregorianCalendarValue(historicProcessInstance.getStartTime()));
-
-                        if (historicProcessInstance.getEndTime() == null)
+                        // If the job status filter is specified to select only RUNNING or SUSPENDED process instances,
+                        // exclude the relative process instances from the result. This check is needed, since
+                        // getHistoricProcessInstances() returns both RUNNING and SUSPENDED process instances.
+                        if (!(JobStatusEnum.SUSPENDED.equals(jobStatus) && !suspended) && !(JobStatusEnum.RUNNING.equals(jobStatus) && suspended))
                         {
-                            // Since there is no end time, the job is still running or suspended.
-                            jobSummary.setStatus(
-                                suspendedProcessInstanceIds.contains(historicProcessInstance.getId()) ? JobStatusEnum.SUSPENDED : JobStatusEnum.RUNNING);
+                            // Create a new job summary.
+                            JobSummary jobSummary = new JobSummary();
+                            jobSummary.setId(historicProcessInstance.getId());
 
-                            // If the end time is null, then determine the status based on the presence of any exceptions.
-                            jobSummary.setTotalExceptions(activitiService.getJobsWithExceptionCountByProcessInstanceId(historicProcessInstance.getId()));
-                        }
-                        else
-                        {
-                            // If the end time is set, then the job has finished so set the end time and the status to completed.
-                            jobSummary.setEndTime(HerdDateUtils.getXMLGregorianCalendarValue(historicProcessInstance.getEndTime()));
-                            jobSummary.setStatus(JobStatusEnum.COMPLETED);
-                        }
+                            // Get the job definition key.
+                            JobDefinitionAlternateKeyDto jobDefinitionKey = jobDefinitionHelper
+                                .getJobDefinitionKey(processDefinitionIdToKeyMap.get(historicProcessInstance.getProcessDefinitionId()), pattern);
 
-                        // Add the new summary to the list.
-                        jobSummaries.getJobSummaries().add(jobSummary);
+                            // Set the namespace and job name on the job summary.
+                            jobSummary.setNamespace(jobDefinitionKey.getNamespace());
+                            jobSummary.setJobName(jobDefinitionKey.getJobName());
+
+                            // Set the start time always since all jobs will have a start time.
+                            jobSummary.setStartTime(HerdDateUtils.getXMLGregorianCalendarValue(historicProcessInstance.getStartTime()));
+
+                            if (historicProcessInstance.getEndTime() == null)
+                            {
+                                // Since there is no end time, the job is running or suspended.
+                                jobSummary.setStatus(suspended ? JobStatusEnum.SUSPENDED : JobStatusEnum.RUNNING);
+
+                                // If the end time is null, then determine the status based on the presence of any exceptions.
+                                jobSummary.setTotalExceptions(activitiService.getJobsWithExceptionCountByProcessInstanceId(historicProcessInstance.getId()));
+                            }
+                            else
+                            {
+                                // If the end time is set, then the job has finished so set the end time and the status to completed.
+                                jobSummary.setEndTime(HerdDateUtils.getXMLGregorianCalendarValue(historicProcessInstance.getEndTime()));
+                                jobSummary.setStatus(JobStatusEnum.COMPLETED);
+                            }
+
+                            // Add the new summary to the list.
+                            jobSummaries.getJobSummaries().add(jobSummary);
+                        }
                     }
                 }
             }
@@ -470,7 +479,7 @@ public class JobServiceImpl implements JobService
     /**
      * Gets a list of historic process instances by the given process definition keys, job status, start time, and/or end time. If the given list of process
      * definition keys is empty or null, the result will not be filtered by the process definition keys. If the given job status is null, the result will not be
-     * filtered by the job status.
+     * filtered by the job status. When job status is RUNNING or SUSPENDED, then all "unfinished" process instances are returned.
      *
      * @param processDefinitionKeys Optional. The set of process definition keys
      * @param jobStatus an optional job status

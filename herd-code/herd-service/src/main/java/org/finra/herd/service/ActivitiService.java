@@ -38,7 +38,7 @@ public interface ActivitiService
 {
     /**
      * Gets a process definition by its ID.
-     * 
+     *
      * @param processDefinitionId The process definition ID
      * @return The process definition
      */
@@ -46,7 +46,7 @@ public interface ActivitiService
 
     /**
      * Starts a process instance of a given process definition with the given variables.
-     * 
+     *
      * @param processDefinitionId The process definition ID
      * @param variables The variables
      * @return The process instance
@@ -55,7 +55,7 @@ public interface ActivitiService
 
     /**
      * Gets a process instance by its ID.
-     * 
+     *
      * @param processInstanceId The process instance ID
      * @return The process instance
      */
@@ -70,7 +70,7 @@ public interface ActivitiService
 
     /**
      * Gets a historic process instance by its process instance ID.
-     * 
+     *
      * @param processInstanceId The process instance ID
      * @return The historic process instance
      */
@@ -78,7 +78,7 @@ public interface ActivitiService
 
     /**
      * Gets all historic activity instances by their process instance ID sorted by start time and end time.
-     * 
+     *
      * @param processInstanceId The process instance ID
      * @return List of historic activity instances
      */
@@ -86,7 +86,7 @@ public interface ActivitiService
 
     /**
      * Gets all jobs with exceptions by process instance ID.
-     * 
+     *
      * @param processInstanceId The process instance ID
      * @return List of jobs
      */
@@ -94,7 +94,7 @@ public interface ActivitiService
 
     /**
      * Gets the stacktrace of a job.
-     * 
+     *
      * @param jobId The job ID
      * @return The stacktrace
      */
@@ -102,7 +102,7 @@ public interface ActivitiService
 
     /**
      * Gets all process definitions by their IDs
-     * 
+     *
      * @param processDefinitionIds The process definition IDs
      * @return List of process definitions
      */
@@ -110,15 +110,16 @@ public interface ActivitiService
 
     /**
      * Gets the count of jobs with exceptions by their process instance ID.
-     * 
+     *
      * @param processInstanceId The process instance ID
      * @return The count
      */
     long getJobsWithExceptionCountByProcessInstanceId(String processInstanceId);
 
     /**
-     * Gets all historic process instances by their status and process definition keys.
-     * 
+     * Gets all historic process instances by their status and process definition keys. When job status is RUNNING or SUSPENDED, then all "unfinished" process
+     * instances are returned.
+     *
      * @param jobStatus The job status. Optional.
      * @param processDefinitionKeys Collection of process definition keys
      * @param startTime an optional job start time
@@ -129,8 +130,9 @@ public interface ActivitiService
         DateTime startTime, DateTime endTime);
 
     /**
-     * Gets the count of historic process instances by their status and process definition keys.
-     * 
+     * Gets the count of historic process instances by their status and process definition keys. When job status is RUNNING or SUSPENDED, then all "unfinished"
+     * process are counted.
+     *
      * @param jobStatus The job status. Optional.
      * @param processDefinitionKeys Collection of process definition keys
      * @param startTime an optional job start time
@@ -142,7 +144,7 @@ public interface ActivitiService
 
     /**
      * Gets an execution by its process instance ID and activiti ID.
-     * 
+     *
      * @param processInstanceId The process instance ID
      * @param activitiId The activiti ID
      * @return The execution
@@ -151,7 +153,7 @@ public interface ActivitiService
 
     /**
      * Signals an execution at a waiting state to continue with the given variables.
-     * 
+     *
      * @param executionId The execution ID
      * @param processVariables The process variables
      */
@@ -173,7 +175,7 @@ public interface ActivitiService
 
     /**
      * Gets the process model by the given process definition ID.
-     * 
+     *
      * @param processDefinitionId The process definition ID
      * @return The process model
      */
@@ -181,7 +183,7 @@ public interface ActivitiService
 
     /**
      * Deletes a process instance by the given process instance ID and supplies the given delete reason.
-     * 
+     *
      * @param processInstanceId The process instance ID
      * @param deleteReason The delete reason
      */
