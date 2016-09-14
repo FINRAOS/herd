@@ -23,6 +23,7 @@ import org.finra.herd.model.api.xml.JobDeleteRequest;
 import org.finra.herd.model.api.xml.JobSignalRequest;
 import org.finra.herd.model.api.xml.JobStatusEnum;
 import org.finra.herd.model.api.xml.JobSummaries;
+import org.finra.herd.model.api.xml.JobUpdateRequest;
 
 /**
  * The job service.
@@ -84,4 +85,15 @@ public interface JobService
      * @return the created job information
      */
     public Job signalJob(JobSignalRequest jobSignalRequest) throws Exception;
+
+    /**
+     * Activates or suspends a job execution.
+     *
+     * @param jobId the job id
+     * @param jobUpdateRequest the job update request
+     *
+     * @return the job
+     * @throws Exception when any exception occurs
+     */
+    public Job updateJob(String jobId, JobUpdateRequest jobUpdateRequest) throws Exception;
 }

@@ -78,6 +78,12 @@ public class ActivitiServiceImpl implements ActivitiService
     }
 
     @Override
+    public List<ProcessInstance> getSuspendedProcessInstances()
+    {
+        return activitiRuntimeService.createProcessInstanceQuery().suspended().list();
+    }
+
+    @Override
     public HistoricProcessInstance getHistoricProcessInstanceByProcessInstanceId(String processInstanceId)
     {
         return activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(processInstanceId).includeProcessVariables().singleResult();
@@ -138,6 +144,18 @@ public class ActivitiServiceImpl implements ActivitiService
     public void signal(String executionId, Map<String, Object> processVariables)
     {
         activitiRuntimeService.signal(executionId, processVariables);
+    }
+
+    @Override
+    public void suspendProcessInstance(String processInstanceId)
+    {
+        activitiRuntimeService.suspendProcessInstanceById(processInstanceId);
+    }
+
+    @Override
+    public void resumeProcessInstance(String processInstanceId)
+    {
+        activitiRuntimeService.activateProcessInstanceById(processInstanceId);
     }
 
     @Override

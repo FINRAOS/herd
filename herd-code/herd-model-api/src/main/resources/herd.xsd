@@ -3698,7 +3698,7 @@
          <xs:element ref="status" minOccurs="0">
             <xs:annotation>
                <xs:documentation>
-                  The status of the job. One of the following values: RUNNING, COMPLETED
+                  The status of the job. One of the following values: RUNNING, SUSPENDED, COMPLETED
                </xs:documentation>
             </xs:annotation>
          </xs:element>
@@ -3891,6 +3891,7 @@
       <xs:simpleType>
          <xs:restriction base="xs:string">
             <xs:enumeration value="RUNNING"/>
+            <xs:enumeration value="SUSPENDED"/>
             <xs:enumeration value="COMPLETED"/>
          </xs:restriction>
       </xs:simpleType>

@@ -62,6 +62,13 @@ public interface ActivitiService
     ProcessInstance getProcessInstanceById(String processInstanceId);
 
     /**
+     * Gets a list of all currently suspended process instances.
+     *
+     * @return the list of currently suspended process instances
+     */
+    public List<ProcessInstance> getSuspendedProcessInstances();
+
+    /**
      * Gets a historic process instance by its process instance ID.
      * 
      * @param processInstanceId The process instance ID
@@ -149,6 +156,20 @@ public interface ActivitiService
      * @param processVariables The process variables
      */
     void signal(String executionId, Map<String, Object> processVariables);
+
+    /**
+     * Suspends the process instance with the given id.
+     *
+     * @param processInstanceId the process instance id
+     */
+    void suspendProcessInstance(String processInstanceId);
+
+    /**
+     * Resumes (activates) the process instance with the given id.
+     *
+     * @param processInstanceId the process instance id
+     */
+    void resumeProcessInstance(String processInstanceId);
 
     /**
      * Gets the process model by the given process definition ID.
