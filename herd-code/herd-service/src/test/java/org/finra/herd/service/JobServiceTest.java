@@ -26,14 +26,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import org.activiti.engine.history.HistoricProcessInstance;
 import org.activiti.engine.task.Task;
 import org.apache.commons.io.IOUtils;
+import org.joda.time.DateTime;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.security.access.AccessDeniedException;
@@ -43,12 +46,16 @@ import org.springframework.util.CollectionUtils;
 
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.Job;
+import org.finra.herd.model.api.xml.JobActionEnum;
 import org.finra.herd.model.api.xml.JobCreateRequest;
 import org.finra.herd.model.api.xml.JobDefinition;
 import org.finra.herd.model.api.xml.JobDefinitionCreateRequest;
 import org.finra.herd.model.api.xml.JobDeleteRequest;
 import org.finra.herd.model.api.xml.JobSignalRequest;
 import org.finra.herd.model.api.xml.JobStatusEnum;
+import org.finra.herd.model.api.xml.JobSummaries;
+import org.finra.herd.model.api.xml.JobSummary;
+import org.finra.herd.model.api.xml.JobUpdateRequest;
 import org.finra.herd.model.api.xml.NamespaceAuthorization;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.api.xml.Parameter;
@@ -307,6 +314,352 @@ public class JobServiceTest extends AbstractServiceTest
     }
 
     @Test
+    public void testGetJobs() throws Exception
+    {
+        // Create and persist a job definition.
+        createJobDefinition(ACTIVITI_XML_TEST_USER_TASK_WITH_CLASSPATH);
+
+        // Create and start three Activiti jobs.
+        List<Job> jobs = Arrays.asList(jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME)),
+            jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME)),
+            jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME)));
+
+        // Jobs should be waiting at relative User tasks.
+
+        // Allow READ access for the current user to the job definition namespace.
+        setCurrentUserNamespaceAuthorizations(TEST_ACTIVITI_NAMESPACE_CD, Arrays.asList(NamespacePermissionEnum.READ));
+
+        JobSummaries resultJobSummaries;
+        Map<String, JobStatusEnum> expectedJobStatuses;
+
+        DateTime startTime = new DateTime().minusHours(1);
+        DateTime endTime = new DateTime().plusHours(1);
+
+        // Get all jobs for the relative job definition and expected job status.
+        resultJobSummaries = jobService.getJobs(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME, JobStatusEnum.RUNNING, startTime, NO_END_TIME);
+
+        // Validate the result job summaries.
+        expectedJobStatuses = new HashMap<String, JobStatusEnum>()
+        {{
+                put(jobs.get(0).getId(), JobStatusEnum.RUNNING);
+                put(jobs.get(1).getId(), JobStatusEnum.RUNNING);
+                put(jobs.get(2).getId(), JobStatusEnum.RUNNING);
+            }};
+        validateJobSummaries(expectedJobStatuses, resultJobSummaries);
+
+        // Query the pending tasks and complete them.
+        for (Job job : jobs)
+        {
+            List<Task> tasks = activitiTaskService.createTaskQuery().processInstanceId(job.getId()).list();
+            activitiTaskService.complete(tasks.get(0).getId());
+        }
+
+        // Jobs should have been completed.
+
+        // Get all jobs for the relative job definition and expected job status.
+        resultJobSummaries = jobService.getJobs(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME, JobStatusEnum.COMPLETED, startTime, endTime);
+
+        // Validate the result job summaries.
+        expectedJobStatuses = new HashMap<String, JobStatusEnum>()
+        {{
+                put(jobs.get(0).getId(), JobStatusEnum.COMPLETED);
+                put(jobs.get(1).getId(), JobStatusEnum.COMPLETED);
+                put(jobs.get(2).getId(), JobStatusEnum.COMPLETED);
+            }};
+        validateJobSummaries(expectedJobStatuses, resultJobSummaries);
+    }
+
+    @Test
+    public void testGetJobsTrimAndCaseInsensitivity() throws Exception
+    {
+        // Create and persist a job definition.
+        createJobDefinition(ACTIVITI_XML_TEST_USER_TASK_WITH_CLASSPATH);
+
+        // Create and start an Activiti job.
+        Job job = jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
+
+        // Job should be waiting at relative User tasks.
+
+        // Allow READ access for the current user to the job definition namespace.
+        setCurrentUserNamespaceAuthorizations(TEST_ACTIVITI_NAMESPACE_CD, Arrays.asList(NamespacePermissionEnum.READ));
+
+        // Perform the getJobs calls.
+        JobSummaries resultJobSummaries;
+        Map<String, JobStatusEnum> expectedJobStatuses;
+
+        DateTime startTime = new DateTime().minusHours(1);
+        DateTime endTime = new DateTime().plusHours(1);
+
+        // Get all jobs using input parameters with leading and trailing empty spaces.
+        resultJobSummaries = jobService.getJobs(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME, JobStatusEnum.RUNNING, startTime, NO_END_TIME);
+
+        // Validate the result job summaries.
+        expectedJobStatuses = new HashMap<String, JobStatusEnum>()
+        {{
+                put(job.getId(), JobStatusEnum.RUNNING);
+            }};
+        validateJobSummaries(expectedJobStatuses, resultJobSummaries);
+
+        // Query the pending task and complete it.
+        List<Task> tasks = activitiTaskService.createTaskQuery().processInstanceId(job.getId()).list();
+        activitiTaskService.complete(tasks.get(0).getId());
+
+        // Jobs should have been completed.
+
+        // Get all jobs using input parameters in uppercase.
+        resultJobSummaries =
+            jobService.getJobs(TEST_ACTIVITI_NAMESPACE_CD.toUpperCase(), TEST_ACTIVITI_JOB_NAME.toUpperCase(), JobStatusEnum.COMPLETED, startTime, endTime);
+
+        // Validate the result job summaries.
+        expectedJobStatuses = new HashMap<String, JobStatusEnum>()
+        {{
+                put(job.getId(), JobStatusEnum.COMPLETED);
+            }};
+        validateJobSummaries(expectedJobStatuses, resultJobSummaries);
+
+        // Get all jobs using input parameters in lowercase.
+        resultJobSummaries =
+            jobService.getJobs(TEST_ACTIVITI_NAMESPACE_CD.toLowerCase(), TEST_ACTIVITI_JOB_NAME.toLowerCase(), JobStatusEnum.COMPLETED, startTime, endTime);
+
+        // Validate the result job summaries.
+        expectedJobStatuses = new HashMap<String, JobStatusEnum>()
+        {{
+                put(job.getId(), JobStatusEnum.COMPLETED);
+            }};
+        validateJobSummaries(expectedJobStatuses, resultJobSummaries);
+    }
+
+    @Test
+    public void testGetJobsMissingOptionalParameters() throws Exception
+    {
+        // Create and persist a job definition.
+        createJobDefinition(ACTIVITI_XML_TEST_USER_TASK_WITH_CLASSPATH);
+
+        // Create and start three Activiti jobs.
+        List<Job> jobs = Arrays.asList(jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME)),
+            jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME)),
+            jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME)));
+
+        // Jobs should be waiting at relative User tasks.
+
+        // Allow READ access for the current user to the job definition namespace.
+        setCurrentUserNamespaceAuthorizations(TEST_ACTIVITI_NAMESPACE_CD, Arrays.asList(NamespacePermissionEnum.READ));
+
+        JobSummaries resultJobSummaries;
+        Map<String, JobStatusEnum> expectedJobStatuses;
+
+        // Get all jobs without specifying any of the optional parameters.
+        resultJobSummaries = jobService.getJobs(NO_NAMESPACE, NO_ACTIVITI_JOB_NAME, NO_ACTIVITI_JOB_STATUS, NO_START_TIME, NO_END_TIME);
+
+        // Validate the result job summaries.
+        expectedJobStatuses = new HashMap<String, JobStatusEnum>()
+        {{
+                put(jobs.get(0).getId(), JobStatusEnum.RUNNING);
+                put(jobs.get(1).getId(), JobStatusEnum.RUNNING);
+                put(jobs.get(2).getId(), JobStatusEnum.RUNNING);
+            }};
+        validateJobSummaries(expectedJobStatuses, resultJobSummaries);
+
+        // Query the pending tasks and complete them.
+        for (Job job : jobs)
+        {
+            List<Task> tasks = activitiTaskService.createTaskQuery().processInstanceId(job.getId()).list();
+            activitiTaskService.complete(tasks.get(0).getId());
+        }
+
+        // Jobs should have been completed.
+
+        // Get all jobs without specifying any of the optional parameters.
+        resultJobSummaries = jobService.getJobs(NO_NAMESPACE, NO_ACTIVITI_JOB_NAME, NO_ACTIVITI_JOB_STATUS, NO_START_TIME, NO_END_TIME);
+
+        // Validate the result job summaries.
+        expectedJobStatuses = new HashMap<String, JobStatusEnum>()
+        {{
+                put(jobs.get(0).getId(), JobStatusEnum.COMPLETED);
+                put(jobs.get(1).getId(), JobStatusEnum.COMPLETED);
+                put(jobs.get(2).getId(), JobStatusEnum.COMPLETED);
+            }};
+        validateJobSummaries(expectedJobStatuses, resultJobSummaries);
+    }
+
+    @Test
+    public void testGetJobsInvalidParameters() throws Exception
+    {
+        // Create and persist a job definition.
+        createJobDefinition(ACTIVITI_XML_TEST_USER_TASK_WITH_CLASSPATH);
+
+        // Create and start three Activiti jobs.
+        List<Job> jobs = Arrays.asList(jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME)),
+            jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME)),
+            jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME)));
+
+        // Jobs should be waiting at relative User tasks.
+
+        // Allow READ access for the current user to the job definition namespace.
+        setCurrentUserNamespaceAuthorizations(TEST_ACTIVITI_NAMESPACE_CD, Arrays.asList(NamespacePermissionEnum.READ));
+
+        JobSummaries resultJobSummaries;
+        Map<String, JobStatusEnum> expectedJobStatuses;
+
+        // Get all jobs for the relative job definition and expected job status.
+        resultJobSummaries = jobService.getJobs(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME, JobStatusEnum.RUNNING, NO_START_TIME, NO_END_TIME);
+
+        // Validate the result job summaries.
+        expectedJobStatuses = new HashMap<String, JobStatusEnum>()
+        {{
+                put(jobs.get(0).getId(), JobStatusEnum.RUNNING);
+                put(jobs.get(1).getId(), JobStatusEnum.RUNNING);
+                put(jobs.get(2).getId(), JobStatusEnum.RUNNING);
+            }};
+        validateJobSummaries(expectedJobStatuses, resultJobSummaries);
+
+        // Try to get jobs using invalid job definition namespace.
+        resultJobSummaries = jobService.getJobs("I_DO_NOT_EXIST", TEST_ACTIVITI_JOB_NAME, JobStatusEnum.RUNNING, NO_START_TIME, NO_END_TIME);
+        assertEquals(0, resultJobSummaries.getJobSummaries().size());
+
+        // Try to get jobs using invalid job definition name.
+        resultJobSummaries = jobService.getJobs(TEST_ACTIVITI_NAMESPACE_CD, "I_DO_NOT_EXIST", JobStatusEnum.RUNNING, NO_START_TIME, NO_END_TIME);
+        assertEquals(0, resultJobSummaries.getJobSummaries().size());
+
+        // Try to get jobs using SUSPENDED job status.
+        resultJobSummaries = jobService.getJobs(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME, JobStatusEnum.SUSPENDED, NO_START_TIME, NO_END_TIME);
+        assertEquals(0, resultJobSummaries.getJobSummaries().size());
+
+        // Try to get jobs using COMPLETED job status.
+        resultJobSummaries = jobService.getJobs(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME, JobStatusEnum.COMPLETED, NO_START_TIME, NO_END_TIME);
+        assertEquals(0, resultJobSummaries.getJobSummaries().size());
+
+        // Try to get jobs using invalid start time (current time plus one hour).
+        DateTime invalidStartTime = new DateTime().plusHours(1);
+        resultJobSummaries = jobService.getJobs(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME, JobStatusEnum.RUNNING, invalidStartTime, NO_END_TIME);
+        assertEquals(0, resultJobSummaries.getJobSummaries().size());
+
+        // Query the pending tasks and complete them.
+        for (Job job : jobs)
+        {
+            List<Task> tasks = activitiTaskService.createTaskQuery().processInstanceId(job.getId()).list();
+            activitiTaskService.complete(tasks.get(0).getId());
+        }
+
+        // Jobs should have been completed.
+
+        // Get all jobs for the relative job definition and expected job status.
+        resultJobSummaries = jobService.getJobs(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME, JobStatusEnum.COMPLETED, NO_START_TIME, NO_END_TIME);
+
+        // Validate the result job summaries.
+        expectedJobStatuses = new HashMap<String, JobStatusEnum>()
+        {{
+                put(jobs.get(0).getId(), JobStatusEnum.COMPLETED);
+                put(jobs.get(1).getId(), JobStatusEnum.COMPLETED);
+                put(jobs.get(2).getId(), JobStatusEnum.COMPLETED);
+            }};
+        validateJobSummaries(expectedJobStatuses, resultJobSummaries);
+
+        // Try to get jobs using invalid end time (current time minus one hour).
+        DateTime invalidEndTime = new DateTime().minusHours(1);
+        resultJobSummaries = jobService.getJobs(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME, JobStatusEnum.COMPLETED, NO_START_TIME, invalidEndTime);
+        assertEquals(0, resultJobSummaries.getJobSummaries().size());
+    }
+
+    @Test
+    public void testGetJobsValidateJobStatusFilter() throws Exception
+    {
+        // Create and persist a job definition.
+        createJobDefinition(ACTIVITI_XML_TEST_USER_TASK_WITH_CLASSPATH);
+
+        // Create and start two Activiti jobs.
+        List<Job> jobs = Arrays.asList(jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME)),
+            jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME)));
+
+        // Jobs should be waiting at relative User tasks.
+
+        // Allow READ and EXECUTE access for the current user to the job definition namespace.
+        setCurrentUserNamespaceAuthorizations(TEST_ACTIVITI_NAMESPACE_CD, Arrays.asList(NamespacePermissionEnum.READ, NamespacePermissionEnum.EXECUTE));
+
+        JobSummaries resultJobSummaries;
+        Map<String, JobStatusEnum> expectedJobStatuses;
+        List<Task> tasks;
+
+        // Get all jobs for the relative job definition and expected job status.
+        resultJobSummaries = jobService.getJobs(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME, JobStatusEnum.RUNNING, NO_START_TIME, NO_END_TIME);
+
+        // Validate the result job summaries.
+        expectedJobStatuses = new HashMap<String, JobStatusEnum>()
+        {{
+                put(jobs.get(0).getId(), JobStatusEnum.RUNNING);
+                put(jobs.get(1).getId(), JobStatusEnum.RUNNING);
+            }};
+        validateJobSummaries(expectedJobStatuses, resultJobSummaries);
+
+        // Suspend the first job.
+        jobService.updateJob(jobs.get(0).getId(), new JobUpdateRequest(JobActionEnum.SUSPEND));
+
+        // The second job is still RUNNING.
+
+        // Get RUNNING jobs.
+        resultJobSummaries = jobService.getJobs(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME, JobStatusEnum.RUNNING, NO_START_TIME, NO_END_TIME);
+
+        // Validate the result job summaries.
+        expectedJobStatuses = new HashMap<String, JobStatusEnum>()
+        {{
+                put(jobs.get(1).getId(), JobStatusEnum.RUNNING);
+            }};
+        validateJobSummaries(expectedJobStatuses, resultJobSummaries);
+
+        // Get SUSPENDED jobs.
+        resultJobSummaries = jobService.getJobs(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME, JobStatusEnum.SUSPENDED, NO_START_TIME, NO_END_TIME);
+
+        // Validate the result job summaries.
+        expectedJobStatuses = new HashMap<String, JobStatusEnum>()
+        {{
+                put(jobs.get(0).getId(), JobStatusEnum.SUSPENDED);
+            }};
+        validateJobSummaries(expectedJobStatuses, resultJobSummaries);
+
+        // Resume the first job.
+        jobService.updateJob(jobs.get(0).getId(), new JobUpdateRequest(JobActionEnum.RESUME));
+
+        // Complete the first job.
+        tasks = activitiTaskService.createTaskQuery().processInstanceId(jobs.get(0).getId()).list();
+        activitiTaskService.complete(tasks.get(0).getId());
+
+        // Get COMPLETED jobs.
+        resultJobSummaries = jobService.getJobs(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME, JobStatusEnum.COMPLETED, NO_START_TIME, NO_END_TIME);
+
+        // Validate the result job summaries.
+        expectedJobStatuses = new HashMap<String, JobStatusEnum>()
+        {{
+                put(jobs.get(0).getId(), JobStatusEnum.COMPLETED);
+            }};
+        validateJobSummaries(expectedJobStatuses, resultJobSummaries);
+
+        // Complete the second job.
+        tasks = activitiTaskService.createTaskQuery().processInstanceId(jobs.get(1).getId()).list();
+        activitiTaskService.complete(tasks.get(0).getId());
+
+        // All jobs now should have been completed.
+
+        // Try to get RUNNING jobs.
+        resultJobSummaries = jobService.getJobs(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME, JobStatusEnum.RUNNING, NO_START_TIME, NO_END_TIME);
+        assertEquals(0, resultJobSummaries.getJobSummaries().size());
+
+        // Try to get SUSPENDED jobs.
+        resultJobSummaries = jobService.getJobs(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME, JobStatusEnum.SUSPENDED, NO_START_TIME, NO_END_TIME);
+        assertEquals(0, resultJobSummaries.getJobSummaries().size());
+
+        // Get COMPLETED jobs.
+        resultJobSummaries = jobService.getJobs(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME, JobStatusEnum.COMPLETED, NO_START_TIME, NO_END_TIME);
+
+        // Validate the result job summaries.
+        expectedJobStatuses = new HashMap<String, JobStatusEnum>()
+        {{
+                put(jobs.get(0).getId(), JobStatusEnum.COMPLETED);
+                put(jobs.get(1).getId(), JobStatusEnum.COMPLETED);
+            }};
+        validateJobSummaries(expectedJobStatuses, resultJobSummaries);
+    }
+
+    @Test
     public void testSignalJob() throws Exception
     {
         createJobDefinition(ACTIVITI_XML_TEST_RECEIVE_TASK_WITH_CLASSPATH);
@@ -451,6 +804,252 @@ public class JobServiceTest extends AbstractServiceTest
         Job signalJob = jobService.signalJob(jobSignalRequest);
 
         assertParameterEquals(requestParameter, signalJob.getParameters());
+    }
+
+    @Test
+    public void testUpdateJob() throws Exception
+    {
+        // Create a test job definition.
+        createJobDefinition(ACTIVITI_XML_TEST_USER_TASK_WITH_CLASSPATH);
+
+        // Create and start the job.
+        Job job = jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
+
+        // Job should be waiting at User task.
+
+        // Get the running job with non verbose.
+        Job jobGet = jobService.getJob(job.getId(), false);
+        assertEquals(JobStatusEnum.RUNNING, jobGet.getStatus());
+        assertNull(jobGet.getActivitiJobXml());
+        assertTrue(CollectionUtils.isEmpty(jobGet.getCompletedWorkflowSteps()));
+        assertEquals("usertask1", jobGet.getCurrentWorkflowStep().getId());
+
+        // Suspend the job.
+        jobService.updateJob(job.getId(), new JobUpdateRequest(JobActionEnum.SUSPEND));
+
+        // Validate that the job is suspended.
+        jobGet = jobService.getJob(job.getId(), false);
+        assertEquals(JobStatusEnum.SUSPENDED, jobGet.getStatus());
+        assertNull(jobGet.getActivitiJobXml());
+        assertTrue(CollectionUtils.isEmpty(jobGet.getCompletedWorkflowSteps()));
+        assertEquals("usertask1", jobGet.getCurrentWorkflowStep().getId());
+
+        // Resume the job.
+        jobService.updateJob(job.getId(), new JobUpdateRequest(JobActionEnum.RESUME));
+
+        // Validate that the job is running.
+        jobGet = jobService.getJob(job.getId(), false);
+        assertEquals(JobStatusEnum.RUNNING, jobGet.getStatus());
+        assertNull(jobGet.getActivitiJobXml());
+        assertTrue(CollectionUtils.isEmpty(jobGet.getCompletedWorkflowSteps()));
+        assertEquals("usertask1", jobGet.getCurrentWorkflowStep().getId());
+
+        // Query the pending task and complete it
+        List<Task> tasks = activitiTaskService.createTaskQuery().processInstanceId(job.getId()).list();
+
+        activitiTaskService.complete(tasks.get(0).getId());
+
+        // Job should have been completed.
+
+        // Get the completed job with non verbose.
+        jobGet = jobService.getJob(job.getId(), false);
+        assertEquals(JobStatusEnum.COMPLETED, jobGet.getStatus());
+        assertNotNull(jobGet.getStartTime());
+        assertNotNull(jobGet.getEndTime());
+        assertNull(jobGet.getActivitiJobXml());
+        assertTrue(CollectionUtils.isEmpty(jobGet.getCompletedWorkflowSteps()));
+        assertNull(jobGet.getCurrentWorkflowStep());
+    }
+
+    @Test
+    public void testUpdateJobMissingRequiredParameters()
+    {
+        // Try to update a job when job id is not specified.
+        try
+        {
+            jobService.updateJob(BLANK_TEXT, new JobUpdateRequest(JobActionEnum.RESUME));
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("A job id must be specified.", e.getMessage());
+        }
+
+        // Try to update a job when job update request is not specified.
+        try
+        {
+            jobService.updateJob(INTEGER_VALUE.toString(), null);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("A job update request must be specified.", e.getMessage());
+        }
+
+        // Try to update a job when job update action is not specified.
+        try
+        {
+            jobService.updateJob(INTEGER_VALUE.toString(), new JobUpdateRequest(null));
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("A job update action must be specified.", e.getMessage());
+        }
+    }
+
+    @Test
+    public void testUpdateJobTrimParameters() throws Exception
+    {
+        // Create a test job definition.
+        createJobDefinition(ACTIVITI_XML_TEST_USER_TASK_WITH_CLASSPATH);
+
+        // Create and start the job.
+        Job job = jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
+
+        // Job should be waiting at User task.
+
+        // Get the running job with non verbose.
+        Job jobGet = jobService.getJob(job.getId(), false);
+        assertEquals(JobStatusEnum.RUNNING, jobGet.getStatus());
+        assertNull(jobGet.getActivitiJobXml());
+        assertTrue(CollectionUtils.isEmpty(jobGet.getCompletedWorkflowSteps()));
+        assertEquals("usertask1", jobGet.getCurrentWorkflowStep().getId());
+
+        // Suspend the job using input parameters with leading and trailing empty spaces.
+        jobService.updateJob(addWhitespace(job.getId()), new JobUpdateRequest(JobActionEnum.SUSPEND));
+
+        // Validate that the job is suspended.
+        jobGet = jobService.getJob(job.getId(), false);
+        assertEquals(JobStatusEnum.SUSPENDED, jobGet.getStatus());
+        assertNull(jobGet.getActivitiJobXml());
+        assertTrue(CollectionUtils.isEmpty(jobGet.getCompletedWorkflowSteps()));
+        assertEquals("usertask1", jobGet.getCurrentWorkflowStep().getId());
+
+        // Resume the job using input parameters with leading and trailing empty spaces.
+        jobService.updateJob(addWhitespace(job.getId()), new JobUpdateRequest(JobActionEnum.RESUME));
+
+        // Validate that the job is running.
+        jobGet = jobService.getJob(job.getId(), false);
+        assertEquals(JobStatusEnum.RUNNING, jobGet.getStatus());
+        assertNull(jobGet.getActivitiJobXml());
+        assertTrue(CollectionUtils.isEmpty(jobGet.getCompletedWorkflowSteps()));
+        assertEquals("usertask1", jobGet.getCurrentWorkflowStep().getId());
+
+        // Query the pending task and complete it
+        List<Task> tasks = activitiTaskService.createTaskQuery().processInstanceId(job.getId()).list();
+
+        activitiTaskService.complete(tasks.get(0).getId());
+
+        // Job should have been completed.
+
+        // Get the completed job with non verbose.
+        jobGet = jobService.getJob(job.getId(), false);
+        assertEquals(JobStatusEnum.COMPLETED, jobGet.getStatus());
+        assertNotNull(jobGet.getStartTime());
+        assertNotNull(jobGet.getEndTime());
+        assertNull(jobGet.getActivitiJobXml());
+        assertTrue(CollectionUtils.isEmpty(jobGet.getCompletedWorkflowSteps()));
+        assertNull(jobGet.getCurrentWorkflowStep());
+    }
+
+    @Test
+    public void testUpdateJobInvalidParameters() throws Exception
+    {
+        // Create a test job definition.
+        createJobDefinition(ACTIVITI_XML_TEST_USER_TASK_WITH_CLASSPATH);
+
+        // Create and start the job.
+        Job job = jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
+
+        // Job should be waiting at User task.
+
+        // Get the running job with non verbose.
+        Job jobGet = jobService.getJob(job.getId(), false);
+        assertEquals(JobStatusEnum.RUNNING, jobGet.getStatus());
+        assertNull(jobGet.getActivitiJobXml());
+        assertTrue(CollectionUtils.isEmpty(jobGet.getCompletedWorkflowSteps()));
+        assertEquals("usertask1", jobGet.getCurrentWorkflowStep().getId());
+
+        // Try to update a job using invalid job id.
+        try
+        {
+            jobService.updateJob("I_DO_NOT_EXIST", new JobUpdateRequest(JobActionEnum.SUSPEND));
+            fail();
+        }
+        catch (ObjectNotFoundException e)
+        {
+            assertEquals("Job with ID \"I_DO_NOT_EXIST\" does not exist or is already completed.", e.getMessage());
+        }
+
+        // Try to resume an already running job.
+        try
+        {
+            jobService.updateJob(job.getId(), new JobUpdateRequest(JobActionEnum.RESUME));
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(String.format("Job with ID \"%s\" is already in state active.", job.getId()), e.getMessage());
+        }
+
+        // Suspend the job.
+        jobService.updateJob(job.getId(), new JobUpdateRequest(JobActionEnum.SUSPEND));
+
+        // Validate that the job is suspended.
+        jobGet = jobService.getJob(job.getId(), false);
+        assertEquals(JobStatusEnum.SUSPENDED, jobGet.getStatus());
+        assertNull(jobGet.getActivitiJobXml());
+        assertTrue(CollectionUtils.isEmpty(jobGet.getCompletedWorkflowSteps()));
+        assertEquals("usertask1", jobGet.getCurrentWorkflowStep().getId());
+
+        // Try to suspend an already suspended job.
+        try
+        {
+            jobService.updateJob(job.getId(), new JobUpdateRequest(JobActionEnum.SUSPEND));
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(String.format("Job with ID \"%s\" is already in state suspended.", job.getId()), e.getMessage());
+        }
+
+        // Resume the job.
+        jobService.updateJob(job.getId(), new JobUpdateRequest(JobActionEnum.RESUME));
+
+        // Validate that the job is running.
+        jobGet = jobService.getJob(job.getId(), false);
+        assertEquals(JobStatusEnum.RUNNING, jobGet.getStatus());
+        assertNull(jobGet.getActivitiJobXml());
+        assertTrue(CollectionUtils.isEmpty(jobGet.getCompletedWorkflowSteps()));
+        assertEquals("usertask1", jobGet.getCurrentWorkflowStep().getId());
+
+        // Query the pending task and complete it
+        List<Task> tasks = activitiTaskService.createTaskQuery().processInstanceId(job.getId()).list();
+
+        activitiTaskService.complete(tasks.get(0).getId());
+
+        // Job should have been completed.
+
+        // Get the completed job with non verbose.
+        jobGet = jobService.getJob(job.getId(), false);
+        assertEquals(JobStatusEnum.COMPLETED, jobGet.getStatus());
+        assertNotNull(jobGet.getStartTime());
+        assertNotNull(jobGet.getEndTime());
+        assertNull(jobGet.getActivitiJobXml());
+        assertTrue(CollectionUtils.isEmpty(jobGet.getCompletedWorkflowSteps()));
+        assertNull(jobGet.getCurrentWorkflowStep());
+
+        // Try to update a completed job.
+        try
+        {
+            jobService.updateJob(job.getId(), new JobUpdateRequest(JobActionEnum.SUSPEND));
+            fail();
+        }
+        catch (ObjectNotFoundException e)
+        {
+            assertEquals(String.format("Job with ID \"%s\" does not exist or is already completed.", job.getId()), e.getMessage());
+        }
     }
 
     /**
@@ -823,22 +1422,14 @@ public class JobServiceTest extends AbstractServiceTest
 
         try
         {
-            try
-            {
-                jobService.deleteJob(job.getId(), new JobDeleteRequest("test delete reason"));
-                fail();
-            }
-            catch (Exception e)
-            {
-                assertEquals(AccessDeniedException.class, e.getClass());
-                assertEquals(
-                    String.format("User \"%s\" does not have \"[EXECUTE]\" permission(s) to the namespace \"%s\"", username, TEST_ACTIVITI_NAMESPACE_CD),
-                    e.getMessage());
-            }
+            jobService.deleteJob(job.getId(), new JobDeleteRequest("test delete reason"));
+            fail();
         }
-        finally
+        catch (Exception e)
         {
-            SecurityContextHolder.clearContext();
+            assertEquals(AccessDeniedException.class, e.getClass());
+            assertEquals(String.format("User \"%s\" does not have \"[EXECUTE]\" permission(s) to the namespace \"%s\"", username, TEST_ACTIVITI_NAMESPACE_CD),
+                e.getMessage());
         }
     }
 
@@ -861,18 +1452,11 @@ public class JobServiceTest extends AbstractServiceTest
 
         try
         {
-            try
-            {
-                jobService.deleteJob(job.getId(), new JobDeleteRequest("test delete reason"));
-            }
-            catch (AccessDeniedException e)
-            {
-                fail();
-            }
+            jobService.deleteJob(job.getId(), new JobDeleteRequest("test delete reason"));
         }
-        finally
+        catch (AccessDeniedException e)
         {
-            SecurityContextHolder.clearContext();
+            fail();
         }
     }
 
@@ -889,23 +1473,17 @@ public class JobServiceTest extends AbstractServiceTest
         SecurityContextHolder.getContext().setAuthentication(
             new TestingAuthenticationToken(new SecurityUserWrapper(username, "password", false, false, false, false, Collections.emptyList(), applicationUser),
                 null));
+
         try
         {
-            try
-            {
-                jobService.getJob(job.getId(), false);
-                fail();
-            }
-            catch (Exception e)
-            {
-                assertEquals(AccessDeniedException.class, e.getClass());
-                assertEquals(String.format("User \"%s\" does not have \"[READ]\" permission(s) to the namespace \"%s\"", username, TEST_ACTIVITI_NAMESPACE_CD),
-                    e.getMessage());
-            }
+            jobService.getJob(job.getId(), false);
+            fail();
         }
-        finally
+        catch (Exception e)
         {
-            SecurityContextHolder.clearContext();
+            assertEquals(AccessDeniedException.class, e.getClass());
+            assertEquals(String.format("User \"%s\" does not have \"[READ]\" permission(s) to the namespace \"%s\"", username, TEST_ACTIVITI_NAMESPACE_CD),
+                e.getMessage());
         }
     }
 
@@ -923,20 +1501,14 @@ public class JobServiceTest extends AbstractServiceTest
         SecurityContextHolder.getContext().setAuthentication(
             new TestingAuthenticationToken(new SecurityUserWrapper(username, "password", false, false, false, false, Collections.emptyList(), applicationUser),
                 null));
+
         try
         {
-            try
-            {
-                jobService.getJob(job.getId(), false);
-            }
-            catch (AccessDeniedException e)
-            {
-                fail();
-            }
+            jobService.getJob(job.getId(), false);
         }
-        finally
+        catch (AccessDeniedException e)
         {
-            SecurityContextHolder.clearContext();
+            fail();
         }
     }
 
@@ -953,23 +1525,17 @@ public class JobServiceTest extends AbstractServiceTest
         SecurityContextHolder.getContext().setAuthentication(
             new TestingAuthenticationToken(new SecurityUserWrapper(username, "password", false, false, false, false, Collections.emptyList(), applicationUser),
                 null));
+
         try
         {
-            try
-            {
-                jobService.getJob(job.getId(), false);
-                fail();
-            }
-            catch (Exception e)
-            {
-                assertEquals(AccessDeniedException.class, e.getClass());
-                assertEquals(String.format("User \"%s\" does not have \"[READ]\" permission(s) to the namespace \"%s\"", username, TEST_ACTIVITI_NAMESPACE_CD),
-                    e.getMessage());
-            }
+            jobService.getJob(job.getId(), false);
+            fail();
         }
-        finally
+        catch (Exception e)
         {
-            SecurityContextHolder.clearContext();
+            assertEquals(AccessDeniedException.class, e.getClass());
+            assertEquals(String.format("User \"%s\" does not have \"[READ]\" permission(s) to the namespace \"%s\"", username, TEST_ACTIVITI_NAMESPACE_CD),
+                e.getMessage());
         }
     }
 
@@ -987,31 +1553,25 @@ public class JobServiceTest extends AbstractServiceTest
         SecurityContextHolder.getContext().setAuthentication(
             new TestingAuthenticationToken(new SecurityUserWrapper(username, "password", false, false, false, false, Collections.emptyList(), applicationUser),
                 null));
+
         try
         {
-            try
-            {
-                jobService.getJob(job.getId(), false);
-            }
-            catch (AccessDeniedException e)
-            {
-                fail();
-            }
+            jobService.getJob(job.getId(), false);
         }
-        finally
+        catch (AccessDeniedException e)
         {
-            SecurityContextHolder.clearContext();
+            fail();
         }
     }
 
     /**
      * Puts a Java properties into S3 where the key-value is the given parameter. Returns a {@link S3PropertiesLocation} with the S3 info.
      *
-     * @param s3BucketName
-     * @param s3ObjectKey
-     * @param parameter
+     * @param s3BucketName the S3 bucket name
+     * @param s3ObjectKey the S3 object key
+     * @param parameter the parameter
      *
-     * @return
+     * @return the S3 properties location
      */
     private S3PropertiesLocation getS3PropertiesLocation(String s3BucketName, String s3ObjectKey, Parameter parameter)
     {
@@ -1026,12 +1586,12 @@ public class JobServiceTest extends AbstractServiceTest
     /**
      * Creates a new job definition, and a job using the default values and given parameters configurations.
      *
-     * @param jobDefinitionS3PropertiesLocation
-     * @param jobDefinitionParameters
-     * @param jobCreateRequestS3PropertiesLocation
-     * @param jobCreateRequestParameters
+     * @param jobDefinitionS3PropertiesLocation the S3 properties location for the job definition
+     * @param jobDefinitionParameters the job definition parameters
+     * @param jobCreateRequestS3PropertiesLocation the S3 properties location for the job create request
+     * @param jobCreateRequestParameters the job create request parameters
      *
-     * @return
+     * @return the job
      * @throws Exception
      */
     private Job createJobWithParameters(S3PropertiesLocation jobDefinitionS3PropertiesLocation, List<Parameter> jobDefinitionParameters,
@@ -1060,8 +1620,8 @@ public class JobServiceTest extends AbstractServiceTest
     /**
      * Asserts that the given expected parameter exists and value matches from the given collection of parameters.
      *
-     * @param expectedParameter
-     * @param actualParameters
+     * @param expectedParameter the expected parameter
+     * @param actualParameters the actual parameter
      */
     private void assertParameterEquals(Parameter expectedParameter, List<Parameter> actualParameters)
     {
@@ -1074,9 +1634,9 @@ public class JobServiceTest extends AbstractServiceTest
     /**
      * Puts a Java properties file content into S3. The Properties contains a single key-value defined by the given parameter object.
      *
-     * @param s3BucketName
-     * @param s3ObjectKey
-     * @param parameter
+     * @param s3BucketName the S3 bucket name
+     * @param s3ObjectKey the S3 object key
+     * @param parameter the parameter
      */
     private void putParameterIntoS3(String s3BucketName, String s3ObjectKey, Parameter parameter)
     {
@@ -1094,10 +1654,10 @@ public class JobServiceTest extends AbstractServiceTest
     /**
      * Gets a parameter by name from the give collection of parameters. Returns null if the parameter does not exist.
      *
-     * @param name
-     * @param parameters
+     * @param name the name of the parameter
+     * @param parameters the collection of the parameters
      *
-     * @return
+     * @return the parameter with the specified name or null is not found
      */
     private Parameter getParameter(String name, Collection<Parameter> parameters)
     {
@@ -1109,5 +1669,24 @@ public class JobServiceTest extends AbstractServiceTest
             }
         }
         return null;
+    }
+
+    /**
+     * Validates the job summaries per specified map of expected job ids to their relative statuses.
+     *
+     * @param expectedJobStatuses the map of expected job ids to their relative statuses
+     * @param actualJobSummaries the job summaries to be validated
+     */
+    private void validateJobSummaries(Map<String, JobStatusEnum> expectedJobStatuses, JobSummaries actualJobSummaries)
+    {
+        // Build the mapping of the actual job ids to job statuses.
+        Map<String, JobStatusEnum> actualJobStatuses = new HashMap<>();
+        for (JobSummary actualJobSummary : actualJobSummaries.getJobSummaries())
+        {
+            actualJobStatuses.put(actualJobSummary.getId(), actualJobSummary.getStatus());
+        }
+
+        // Compare the expected and actual mappings.
+        assertEquals(expectedJobStatuses, actualJobStatuses);
     }
 }

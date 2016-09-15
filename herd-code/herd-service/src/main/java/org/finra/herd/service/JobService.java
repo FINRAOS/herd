@@ -93,7 +93,6 @@ public interface JobService
      * @param jobUpdateRequest the job update request
      *
      * @return the job
-     * @throws Exception when any exception occurs
      */
-    public Job updateJob(String jobId, JobUpdateRequest jobUpdateRequest) throws Exception;
+    public Job updateJob(String jobId, JobUpdateRequest jobUpdateRequest);
 }

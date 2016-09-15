@@ -36,6 +36,7 @@ import org.springframework.util.CollectionUtils;
 
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.Job;
+import org.finra.herd.model.api.xml.JobActionEnum;
 import org.finra.herd.model.api.xml.JobCreateRequest;
 import org.finra.herd.model.api.xml.JobDefinitionCreateRequest;
 import org.finra.herd.model.api.xml.JobDeleteRequest;
@@ -43,6 +44,7 @@ import org.finra.herd.model.api.xml.JobSignalRequest;
 import org.finra.herd.model.api.xml.JobStatusEnum;
 import org.finra.herd.model.api.xml.JobSummaries;
 import org.finra.herd.model.api.xml.JobSummary;
+import org.finra.herd.model.api.xml.JobUpdateRequest;
 import org.finra.herd.model.api.xml.NamespaceAuthorization;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.api.xml.Parameter;
@@ -414,5 +416,59 @@ public class JobRestControllerTest extends AbstractRestTest
         // Job should have been completed.
         jobGet = jobRestController.getJob(job.getId(), true);
         assertEquals(JobStatusEnum.COMPLETED, jobGet.getStatus());
+    }
+
+    @Test
+    public void testUpdateJob() throws Exception
+    {
+        // Create a test job definition.
+        createJobDefinition(ACTIVITI_XML_TEST_USER_TASK_WITH_CLASSPATH);
+
+        // Create and start the job.
+        Job job = jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
+
+        // Job should be waiting at User task.
+
+        // Get the running job with non verbose.
+        Job jobGet = jobRestController.getJob(job.getId(), false);
+        assertEquals(JobStatusEnum.RUNNING, jobGet.getStatus());
+        assertNull(jobGet.getActivitiJobXml());
+        assertTrue(CollectionUtils.isEmpty(jobGet.getCompletedWorkflowSteps()));
+        assertEquals("usertask1", jobGet.getCurrentWorkflowStep().getId());
+
+        // Suspend the job.
+        jobRestController.updateJob(job.getId(), new JobUpdateRequest(JobActionEnum.SUSPEND));
+
+        // Validate that the job is suspended.
+        jobGet = jobRestController.getJob(job.getId(), false);
+        assertEquals(JobStatusEnum.SUSPENDED, jobGet.getStatus());
+        assertNull(jobGet.getActivitiJobXml());
+        assertTrue(CollectionUtils.isEmpty(jobGet.getCompletedWorkflowSteps()));
+        assertEquals("usertask1", jobGet.getCurrentWorkflowStep().getId());
+
+        // Resume the job.
+        jobRestController.updateJob(job.getId(), new JobUpdateRequest(JobActionEnum.RESUME));
+
+        // Validate that the job is running.
+        jobGet = jobRestController.getJob(job.getId(), false);
+        assertEquals(JobStatusEnum.RUNNING, jobGet.getStatus());
+        assertNull(jobGet.getActivitiJobXml());
+        assertTrue(CollectionUtils.isEmpty(jobGet.getCompletedWorkflowSteps()));
+        assertEquals("usertask1", jobGet.getCurrentWorkflowStep().getId());
+
+        // Query the pending task and complete it
+        List<Task> tasks = activitiTaskService.createTaskQuery().processInstanceId(job.getId()).list();
+        activitiTaskService.complete(tasks.get(0).getId());
+
+        // Job should have been completed.
+
+        // Get the completed job with non verbose.
+        jobGet = jobRestController.getJob(job.getId(), false);
+        assertEquals(JobStatusEnum.COMPLETED, jobGet.getStatus());
+        assertNotNull(jobGet.getStartTime());
+        assertNotNull(jobGet.getEndTime());
+        assertNull(jobGet.getActivitiJobXml());
+        assertTrue(CollectionUtils.isEmpty(jobGet.getCompletedWorkflowSteps()));
+        assertNull(jobGet.getCurrentWorkflowStep());
     }
 }

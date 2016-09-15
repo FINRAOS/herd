@@ -15,7 +15,6 @@
 */
 package org.finra.herd.service.impl;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -257,15 +256,8 @@ public class JobServiceImpl implements JobService
                 List<HistoricProcessInstance> historicProcessInstances =
                     getHistoricProcessInstances(processDefinitionIdToKeyMap.values(), jobStatus, startTime, endTime);
 
-                // Unless filter specifies to return only COMPLETED jobs, get a list of all runtime suspended process instance ids.
-                Set<String> suspendedProcessInstanceIds = new HashSet<>();
-                if (!JobStatusEnum.COMPLETED.equals(jobStatus))
-                {
-                    for (ProcessInstance suspendedProcessInstance : activitiService.getSuspendedProcessInstances())
-                    {
-                        suspendedProcessInstanceIds.add(suspendedProcessInstance.getId());
-                    }
-                }
+                // Get a set of all runtime suspended process instance ids.
+                Set<String> suspendedProcessInstanceIds = getSuspendedProcessInstanceIds();
 
                 // Compile the Regex pattern.
                 Pattern pattern = jobDefinitionHelper.getNamespaceAndJobNameRegexPattern();
@@ -370,7 +362,7 @@ public class JobServiceImpl implements JobService
     }
 
     @Override
-    public Job updateJob(String jobId, JobUpdateRequest jobUpdateRequest) throws Exception
+    public Job updateJob(String jobId, JobUpdateRequest jobUpdateRequest)
     {
         // Validate the input parameters.
         Assert.hasText(jobId, "A job id must be specified.");
@@ -402,7 +394,7 @@ public class JobServiceImpl implements JobService
                     throw new IllegalArgumentException(String.format("Job with ID \"%s\" is already in state suspended.", localJobId));
                 }
             }
-            else if (JobActionEnum.RESUME.equals(jobUpdateRequest.getAction()))
+            else // The job update action is RESUME.
             {
                 if (processInstance.isSuspended())
                 {
@@ -413,10 +405,6 @@ public class JobServiceImpl implements JobService
                 {
                     throw new IllegalArgumentException(String.format("Job with ID \"%s\" is already in state active.", localJobId));
                 }
-            }
-            else
-            {
-                throw new IllegalArgumentException(String.format("Specified job update action \"%s\" is not supported.", jobUpdateRequest.getAction().value()));
             }
         }
         else
@@ -514,9 +502,8 @@ public class JobServiceImpl implements JobService
      * @param checkNamespacePermissions specifies whether to check namespace permissions or not
      *
      * @return the job information
-     * @throws Exception if any problems were encountered
      */
-    private Job getJob(String jobId, boolean verbose, boolean checkNamespacePermissions) throws Exception
+    private Job getJob(String jobId, boolean verbose, boolean checkNamespacePermissions)
     {
         String jobIdLocal = jobId;
 
@@ -704,10 +691,8 @@ public class JobServiceImpl implements JobService
      *
      * @param job, the Job object
      * @param processDefinitionId, the process definition Id.
-     *
-     * @throws IOException in case of errors.
      */
-    private void populateActivitiXml(Job job, String processDefinitionId) throws IOException
+    private void populateActivitiXml(Job job, String processDefinitionId)
     {
         job.setActivitiJobXml(activitiService.getProcessModel(processDefinitionId));
     }
@@ -834,5 +819,22 @@ public class JobServiceImpl implements JobService
         // Remove leading and trailing spaces.
         request.setId(request.getId().trim());
         request.setReceiveTaskId(request.getReceiveTaskId().trim());
+    }
+
+    /**
+     * Gets a set of all currently suspended runtime process instance ids.
+     *
+     * @return the set of currently suspended process instance ids
+     */
+    private Set<String> getSuspendedProcessInstanceIds()
+    {
+        Set<String> suspendedProcessInstanceIds = new HashSet<>();
+
+        for (ProcessInstance suspendedProcessInstance : activitiService.getSuspendedProcessInstances())
+        {
+            suspendedProcessInstanceIds.add(suspendedProcessInstance.getId());
+        }
+
+        return suspendedProcessInstanceIds;
     }
 }
