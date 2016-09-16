@@ -1496,7 +1496,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         List<PartitionValueFilter> partitionValueFilters = new ArrayList<PartitionValueFilter>();
         PartitionValueFilter partitionValueFilter = new PartitionValueFilter();
         partitionValueFilters.add(partitionValueFilter);
-        partitionValueFilter.setPartitionKey(PARTITION_KEY);
+        partitionValueFilter.setPartitionKey(PARTITION_KEY.toLowerCase());
         List<String> values = new ArrayList<String>();
         values.add(PARTITION_VALUE);
         partitionValueFilter.setPartitionValues(values);   
