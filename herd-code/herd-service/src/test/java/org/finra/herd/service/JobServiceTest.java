@@ -990,7 +990,7 @@ public class JobServiceTest extends AbstractServiceTest
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals(String.format("Job with ID \"%s\" is already in state active.", job.getId()), e.getMessage());
+            assertEquals(String.format("Job with ID \"%s\" is already in an active state.", job.getId()), e.getMessage());
         }
 
         // Suspend the job.
@@ -1011,7 +1011,7 @@ public class JobServiceTest extends AbstractServiceTest
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals(String.format("Job with ID \"%s\" is already in state suspended.", job.getId()), e.getMessage());
+            assertEquals(String.format("Job with ID \"%s\" is already in a suspended state.", job.getId()), e.getMessage());
         }
 
         // Resume the job.

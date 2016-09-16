@@ -391,7 +391,7 @@ public class JobServiceImpl implements JobService
                 }
                 else
                 {
-                    throw new IllegalArgumentException(String.format("Job with ID \"%s\" is already in state suspended.", localJobId));
+                    throw new IllegalArgumentException(String.format("Job with ID \"%s\" is already in a suspended state.", localJobId));
                 }
             }
             else // The job update action is RESUME.
@@ -403,7 +403,7 @@ public class JobServiceImpl implements JobService
                 }
                 else
                 {
-                    throw new IllegalArgumentException(String.format("Job with ID \"%s\" is already in state active.", localJobId));
+                    throw new IllegalArgumentException(String.format("Job with ID \"%s\" is already in an active state.", localJobId));
                 }
             }
         }
