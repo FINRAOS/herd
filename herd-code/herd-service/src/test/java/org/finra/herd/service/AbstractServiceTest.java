@@ -23,8 +23,11 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -47,6 +50,7 @@ import org.fusesource.hawtbuf.ByteArrayInputStream;
 import org.joda.time.DateTime;
 import org.junit.After;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.util.CollectionUtils;
@@ -124,7 +128,9 @@ import org.finra.herd.model.api.xml.JobStatusEnum;
 import org.finra.herd.model.api.xml.LatestAfterPartitionValue;
 import org.finra.herd.model.api.xml.LatestBeforePartitionValue;
 import org.finra.herd.model.api.xml.Namespace;
+import org.finra.herd.model.api.xml.NamespaceAuthorization;
 import org.finra.herd.model.api.xml.NamespaceCreateRequest;
+import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.api.xml.NotificationRegistrationKey;
 import org.finra.herd.model.api.xml.Parameter;
 import org.finra.herd.model.api.xml.PartitionKeyGroup;
@@ -147,10 +153,12 @@ import org.finra.herd.model.api.xml.StorageUnit;
 import org.finra.herd.model.api.xml.StorageUnitCreateRequest;
 import org.finra.herd.model.api.xml.UploadSingleInitiationRequest;
 import org.finra.herd.model.api.xml.UploadSingleInitiationResponse;
+import org.finra.herd.model.dto.ApplicationUser;
 import org.finra.herd.model.dto.BusinessObjectDataRestoreDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.dto.S3FileTransferResultsDto;
+import org.finra.herd.model.dto.SecurityUserWrapper;
 import org.finra.herd.model.dto.StorageUnitAlternateKeyDto;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
@@ -179,8 +187,8 @@ import org.finra.herd.service.helper.BusinessObjectFormatHelper;
 import org.finra.herd.service.helper.EmrClusterDefinitionHelper;
 import org.finra.herd.service.helper.EmrStepHelperFactory;
 import org.finra.herd.service.helper.Hive13DdlGenerator;
-import org.finra.herd.service.helper.NotificationActionFactory;
 import org.finra.herd.service.helper.JobDefinitionHelper;
+import org.finra.herd.service.helper.NotificationActionFactory;
 import org.finra.herd.service.helper.NotificationRegistrationDaoHelper;
 import org.finra.herd.service.helper.NotificationRegistrationStatusDaoHelper;
 import org.finra.herd.service.helper.S3KeyPrefixHelper;
@@ -4341,6 +4349,25 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         // Validate the uploaded S3 files and created directory markers, if any.
         s3FileTransferRequestParamsDto.setS3KeyPrefix(s3KeyPrefix);
         assertEquals(localFilePaths.size() + directoryPaths.size(), s3Service.listDirectory(s3FileTransferRequestParamsDto).size());
+    }
+
+    /**
+     * Sets specified namespace authorizations for the current user by updating the security context.
+     *
+     * @param namespace the namespace
+     * @param namespacePermissions the list of namespace permissions
+     */
+    protected void setCurrentUserNamespaceAuthorizations(String namespace, List<NamespacePermissionEnum> namespacePermissions)
+    {
+        String username = USER_ID;
+        ApplicationUser applicationUser = new ApplicationUser(getClass());
+        applicationUser.setUserId(username);
+        Set<NamespaceAuthorization> namespaceAuthorizations = new LinkedHashSet<>();
+        namespaceAuthorizations.add(new NamespaceAuthorization(namespace, namespacePermissions));
+        applicationUser.setNamespaceAuthorizations(namespaceAuthorizations);
+        SecurityContextHolder.getContext().setAuthentication(
+            new TestingAuthenticationToken(new SecurityUserWrapper(username, "password", false, false, false, false, Collections.emptyList(), applicationUser),
+                null));
     }
 
     /**

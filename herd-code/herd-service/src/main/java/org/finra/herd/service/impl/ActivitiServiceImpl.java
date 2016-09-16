@@ -78,6 +78,12 @@ public class ActivitiServiceImpl implements ActivitiService
     }
 
     @Override
+    public List<ProcessInstance> getSuspendedProcessInstances()
+    {
+        return activitiRuntimeService.createProcessInstanceQuery().suspended().list();
+    }
+
+    @Override
     public HistoricProcessInstance getHistoricProcessInstanceByProcessInstanceId(String processInstanceId)
     {
         return activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(processInstanceId).includeProcessVariables().singleResult();
@@ -141,6 +147,18 @@ public class ActivitiServiceImpl implements ActivitiService
     }
 
     @Override
+    public void suspendProcessInstance(String processInstanceId)
+    {
+        activitiRuntimeService.suspendProcessInstanceById(processInstanceId);
+    }
+
+    @Override
+    public void resumeProcessInstance(String processInstanceId)
+    {
+        activitiRuntimeService.activateProcessInstanceById(processInstanceId);
+    }
+
+    @Override
     public String getProcessModel(String processDefinitionId)
     {
         try
@@ -175,9 +193,9 @@ public class ActivitiServiceImpl implements ActivitiService
         HistoricProcessInstanceQuery query =
             activitiHistoryService.createHistoricProcessInstanceQuery().processDefinitionKeyIn(new ArrayList<>(processDefinitionKeys));
 
-        if (JobStatusEnum.RUNNING.equals(jobStatus))
+        if (JobStatusEnum.RUNNING.equals(jobStatus) || JobStatusEnum.SUSPENDED.equals(jobStatus))
         {
-            // If the filter is for "running", use the "unfinished" query filter.
+            // If the filter is for "running" or "suspended", use the "unfinished" query filter.
             query.unfinished();
         }
         else if (JobStatusEnum.COMPLETED.equals(jobStatus))
