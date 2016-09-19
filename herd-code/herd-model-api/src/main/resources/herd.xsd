@@ -2641,6 +2641,13 @@
                </xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="includeArchivedBusinessObjectData" type="xs:boolean" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Specifies to treat archived business object data as non-archived and generate business object data DDL as usual. It is
+                  effectively makes the system to disregard archived business object data status
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
