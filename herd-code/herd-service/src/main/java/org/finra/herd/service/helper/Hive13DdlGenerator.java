@@ -186,6 +186,7 @@ public class Hive13DdlGenerator extends DdlGenerator
         generateDdlRequest.includeDropPartitions = request.isIncludeDropPartitions();
         generateDdlRequest.allowMissingData = request.isAllowMissingData();
         generateDdlRequest.includeAllRegisteredSubPartitions = request.isIncludeAllRegisteredSubPartitions();
+        generateDdlRequest.includeArchivedBusinessObjectData = request.isIncludeArchivedBusinessObjectData();
         generateDdlRequest.partitionFilters = partitionFilters;
         generateDdlRequest.businessObjectFormatVersion = request.getBusinessObjectFormatVersion();
         generateDdlRequest.businessObjectDataVersion = request.getBusinessObjectDataVersion();
@@ -696,12 +697,12 @@ public class Hive13DdlGenerator extends DdlGenerator
         // Retrieve a list of storage unit entities for the specified list of partition filters. The entities will be sorted by partition values and storages.
         // For a non-partitioned table, there should only exist a single business object data entity (with partitionValue equals to "none").
         // We do validate that all specified storages are of "S3" storage platform type, so we specify S3 storage platform type in the herdDao
-        // call below, so we select storage units only from all S3 storages, when the specified list of storages is empty.
-        // We want to select only "available" storage units, so we pass "true" for selectOnlyAvailableStorageUnits parameter.
+        // call below, so we select storage units only from all S3 storages, when the specified list of storages is empty. We specify to select
+        // only "available" storage units unless we asked to include archived business object data (we disregard storage unit status in this case).
         List<StorageUnitEntity> storageUnitEntities = storageUnitDao
             .getStorageUnitsByPartitionFiltersAndStorages(businessObjectFormatKey, generateDdlRequest.partitionFilters,
                 generateDdlRequest.businessObjectDataVersion, BusinessObjectDataStatusEntity.VALID, generateDdlRequest.storageNames, StoragePlatformEntity.S3,
-                null, true);
+                null, !BooleanUtils.isTrue(generateDdlRequest.includeArchivedBusinessObjectData));
 
         // Exclude duplicate business object data per specified list of storage names.
         // If storage names are not specified, fail on business object data instances registered with multiple storages.
@@ -945,6 +946,8 @@ public class Hive13DdlGenerator extends DdlGenerator
         private CustomDdlEntity customDdlEntity;
 
         private Boolean includeAllRegisteredSubPartitions;
+
+        private Boolean includeArchivedBusinessObjectData;
 
         private Boolean includeDropPartitions;
 

@@ -272,6 +272,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     protected static final Boolean INCLUDE_ALL_REGISTERED_SUBPARTITIONS = true;
 
+    protected static final Boolean INCLUDE_ARCHIVED_BUSINESS_OBJECT_DATA = true;
+
     protected static final Boolean INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY = true;
 
     protected static final Boolean INCLUDE_DROP_PARTITIONS = true;
@@ -315,6 +317,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     protected static final Long NO_FILE_SIZE = null;
 
     protected static final Boolean NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS = false;
+
+    protected static final Boolean NO_INCLUDE_ARCHIVED_BUSINESS_OBJECT_DATA = false;
 
     protected static final Boolean NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY = false;
 
@@ -3854,7 +3858,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
                 new PartitionValueFilter(FIRST_PARTITION_COLUMN_NAME, Arrays.asList(PARTITION_VALUE), NO_PARTITION_VALUE_RANGE,
                     NO_LATEST_BEFORE_PARTITION_VALUE, NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, DATA_VERSION, NO_STORAGE_NAMES,
                 STORAGE_NAME, BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, TABLE_NAME, NO_CUSTOM_DDL_NAME, INCLUDE_DROP_TABLE_STATEMENT,
-                INCLUDE_IF_NOT_EXISTS_OPTION, INCLUDE_DROP_PARTITIONS, NO_ALLOW_MISSING_DATA, NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS);
+                INCLUDE_IF_NOT_EXISTS_OPTION, INCLUDE_DROP_PARTITIONS, NO_ALLOW_MISSING_DATA, NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS,
+                NO_INCLUDE_ARCHIVED_BUSINESS_OBJECT_DATA);
 
         // Add two business object ddl requests to the collection request.
         businessObjectDataDdlRequests.add(businessObjectDataDdlRequest);
@@ -3963,6 +3968,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
         request.setIncludeIfNotExistsOption(true);
         request.setAllowMissingData(true);
         request.setIncludeAllRegisteredSubPartitions(NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS);
+        request.setIncludeArchivedBusinessObjectData(NO_INCLUDE_ARCHIVED_BUSINESS_OBJECT_DATA);
 
         return request;
     }
