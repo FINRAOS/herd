@@ -849,9 +849,18 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
            
         criteria.select(businessObjectDataEntity).where(predicate);
 
-        // Order by business object partition values
-        criteria.orderBy(builder.asc(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue)));
-
+        //order by
+        criteria.orderBy(builder.asc(businessObjectDefinitionEntity.get(BusinessObjectDefinitionEntity_.namespace)));
+        criteria.orderBy(builder.asc(businessObjectDefinitionEntity.get(BusinessObjectDefinitionEntity_.name)));
+        criteria.orderBy(builder.asc(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.usage)));
+        criteria.orderBy(builder.asc(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.fileType)));
+        criteria.orderBy(builder.desc(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.businessObjectFormatVersion)));       
+        criteria.orderBy(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue)));
+        criteria.orderBy(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue2)));
+        criteria.orderBy(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue3)));
+        criteria.orderBy(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue4)));
+        criteria.orderBy(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.version)));
+        
         List<BusinessObjectData> businessObjectDataList = new ArrayList<>();
 
         List<BusinessObjectDataEntity> entitityArray =
