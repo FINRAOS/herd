@@ -921,8 +921,9 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
             
                 List<String> partitionValues = partitionFilter.getPartitionValues();
 
-                predicate = builder.and(predicate, builder.equal(builder.upper(schemaEntity.get(SchemaColumnEntity_.name)), partitionFilter.getPartitionKey().toUpperCase()));
-                predicate = builder.and(predicate, builder.isNotNull(schemaEntity.get(SchemaColumnEntity_.partitionLevel)));
+                predicate = builder
+                    .and(predicate, builder.equal(builder.upper(schemaEntity.get(SchemaColumnEntity_.name)), partitionFilter.getPartitionKey().toUpperCase()));
+               predicate = builder.and(predicate, builder.isNotNull(schemaEntity.get(SchemaColumnEntity_.partitionLevel)));
 
                 if (partitionValues != null && !partitionValues.isEmpty())
                 {
