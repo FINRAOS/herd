@@ -859,6 +859,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         criteria.orderBy(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue2)));
         criteria.orderBy(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue3)));
         criteria.orderBy(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue4)));
+        criteria.orderBy(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue5)));
         criteria.orderBy(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.version)));
         
         List<BusinessObjectData> businessObjectDataList = new ArrayList<>();
