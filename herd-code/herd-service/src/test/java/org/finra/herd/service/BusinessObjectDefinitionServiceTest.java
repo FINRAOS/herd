@@ -311,7 +311,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         catch (AlreadyExistsException e)
         {
             assertEquals(String
-                .format("Unable to create business object definition with name \"%s\" because it already exists for namespace \"%s\".", BDEF_NAME, NAMESPACE),
+                    .format("Unable to create business object definition with name \"%s\" because it already exists for namespace \"%s\".", BDEF_NAME, NAMESPACE),
                 e.getMessage());
         }
     }
@@ -512,6 +512,159 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
                     ATTRIBUTE_NAME_1_MIXED_CASE.toLowerCase(), NAMESPACE, BDEF_NAME), e.getMessage());
         }
     }
+
+    @Test
+    public void testUpdateBusinessObjectDefinitionAlt() throws Exception
+    {
+        // Create and persist a business object definition entity.
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntityAlt(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_ALIAS);
+
+        // Perform an update by changing the description and updating the attributes.
+        BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionService
+            .updateBusinessObjectDefinitionAlt(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME),
+                createBusinessObjectDefinitionAltUpdateRequest(BDEF_DESCRIPTION_2, BDEF_ALIAS_2));
+
+        // Validate the returned object.
+        assertEquals(
+            new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION_2, BDEF_ALIAS_2,
+                NO_ATTRIBUTES), updatedBusinessObjectDefinition);
+    }
+
+    @Test
+    public void testUpdateBusinessObjectDefinitionAltMissingRequiredParameters()
+    {
+        // Try to update a business object definition instance when business object definition namespace is not specified.
+        try
+        {
+            businessObjectDefinitionService.updateBusinessObjectDefinitionAlt(new BusinessObjectDefinitionKey(BLANK_TEXT, BDEF_NAME),
+                createBusinessObjectDefinitionAltUpdateRequest(BDEF_DESCRIPTION_2, BDEF_ALIAS_2));
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("A namespace must be specified.", e.getMessage());
+        }
+
+        // Try to update a business object definition instance when business object definition name is not specified.
+        try
+        {
+            businessObjectDefinitionService.updateBusinessObjectDefinitionAlt(new BusinessObjectDefinitionKey(NAMESPACE, BLANK_TEXT),
+                createBusinessObjectDefinitionAltUpdateRequest(BDEF_DESCRIPTION_2, BDEF_ALIAS_2));
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("A business object definition name must be specified.", e.getMessage());
+        }
+    }
+
+    @Test
+    public void testUpdateBusinessObjectDefinitionAltOptionalParametersPassedAsWhitespace()
+    {
+        // Create and persist a business object definition entity.
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntityAlt(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_ALIAS);
+
+        // Perform an update using input parameters with leading and trailing empty spaces.
+        BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionService
+            .updateBusinessObjectDefinitionAlt(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME),
+                createBusinessObjectDefinitionAltUpdateRequest(BLANK_TEXT, BLANK_TEXT));
+
+        // Validate the returned object.
+        assertEquals(
+            new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BLANK_TEXT, BLANK_TEXT.trim(),
+                NO_ATTRIBUTES), updatedBusinessObjectDefinition);
+    }
+
+    @Test
+    public void testUpdateBusinessObjectDefinitionAltOptionalParametersPassedAsNulls()
+    {
+        // Create and persist a business object definition entity.
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntityAlt(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_ALIAS);
+
+        // Perform an update using input parameters with leading and trailing empty spaces.
+        BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionService
+            .updateBusinessObjectDefinitionAlt(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME),
+                createBusinessObjectDefinitionAltUpdateRequest(null, null));
+
+        // Validate the returned object.
+        assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, null, null, NO_ATTRIBUTES),
+            updatedBusinessObjectDefinition);
+    }
+
+    @Test
+    public void testUpdateBusinessObjectDefinitionAltTrimParameters()
+    {
+        // Create and persist a business object definition entity.
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntityAlt(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_ALIAS);
+
+        // Perform an update using input parameters with leading and trailing empty spaces.
+        BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionService
+            .updateBusinessObjectDefinitionAlt(new BusinessObjectDefinitionKey(addWhitespace(NAMESPACE), addWhitespace(BDEF_NAME)),
+                createBusinessObjectDefinitionAltUpdateRequest(addWhitespace(BDEF_DESCRIPTION_2), addWhitespace(BDEF_ALIAS_2)));
+
+        // Validate the returned object.
+        assertEquals(
+            new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, addWhitespace(BDEF_DESCRIPTION_2),
+                BDEF_ALIAS_2, NO_ATTRIBUTES), updatedBusinessObjectDefinition);
+    }
+
+    @Test
+    public void testUpdateBusinessObjectDefinitionAltUpperCaseParameters()
+    {
+        // Create and persist a business object definition entity using lower case values.
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntityAlt(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_ALIAS);
+
+        // Perform an update using upper case input parameters.
+        BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionService
+            .updateBusinessObjectDefinitionAlt(new BusinessObjectDefinitionKey(NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase()),
+                createBusinessObjectDefinitionAltUpdateRequest(BDEF_DESCRIPTION_2, BDEF_ALIAS_2));
+
+        // Validate the returned object.
+        assertEquals(
+            new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION_2, BDEF_ALIAS_2,
+                NO_ATTRIBUTES), updatedBusinessObjectDefinition);
+    }
+
+    @Test
+    public void testUpdateBusinessObjectDefinitionAltLowerCaseParameters()
+    {
+        // Create and persist a business object definition entity using lower case values.
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntityAlt(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_ALIAS);
+
+        // Perform an update using lower case input parameters.
+        BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionService
+            .updateBusinessObjectDefinitionAlt(new BusinessObjectDefinitionKey(NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase()),
+                createBusinessObjectDefinitionAltUpdateRequest(BDEF_DESCRIPTION_2, BDEF_ALIAS_2));
+
+        // Validate the returned object.
+        assertEquals(
+            new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION_2, BDEF_ALIAS_2,
+                NO_ATTRIBUTES), updatedBusinessObjectDefinition);
+    }
+
+    @Test
+    public void testUpdateBusinessObjectDefinitionAltBusinessObjectDefinitionNoExists() throws Exception
+    {
+        // Try to update a non-existing business object definition.
+        try
+        {
+            businessObjectDefinitionService.updateBusinessObjectDefinitionAlt(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME),
+                createBusinessObjectDefinitionAltUpdateRequest(BDEF_DESCRIPTION_2, BDEF_ALIAS_2));
+            fail("Should throw an ObjectNotFoundException when business object definition doesn't exist.");
+        }
+        catch (ObjectNotFoundException e)
+        {
+            assertEquals(String.format("Business object definition with name \"%s\" doesn't exist for namespace \"%s\".", BDEF_NAME, NAMESPACE),
+                e.getMessage());
+        }
+    }
+
 
     @Test
     public void testGetBusinessObjectDefinition() throws Exception

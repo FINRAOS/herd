@@ -521,6 +521,22 @@
       </xs:all>
    </xs:complexType>
 
+   <xs:element name="businessObjectDefinitionAltUpdateRequest" type="businessObjectDefinitionAltUpdateRequest"/>
+   <xs:complexType name="businessObjectDefinitionAltUpdateRequest">
+      <xs:all>
+         <xs:element name="description" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An optional description</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="alias" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An optional alias name for business object definition</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
    <xs:element name="businessObjectDefinition" type="businessObjectDefinition"/>
    <xs:complexType name="businessObjectDefinition">
       <xs:all>
@@ -547,6 +563,11 @@
          <xs:element name="description" type="xs:string" minOccurs="0">
             <xs:annotation>
                <xs:documentation>An optional description</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="alias" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An optional alias name</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="attributes" type="attributes" minOccurs="0">

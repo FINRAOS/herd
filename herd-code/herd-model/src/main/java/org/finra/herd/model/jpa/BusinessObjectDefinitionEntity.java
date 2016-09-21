@@ -53,6 +53,9 @@ public class BusinessObjectDefinitionEntity extends AuditableEntity
     @Column(name = "name_tx")
     private String name;
 
+    @Column(name = "alias_tx")
+    private String alias;
+
     @Column(name = "desc_tx", length = 500)
     private String description;
 
@@ -93,6 +96,16 @@ public class BusinessObjectDefinitionEntity extends AuditableEntity
     public void setName(String name)
     {
         this.name = name;
+    }
+
+    public String getAlias()
+    {
+        return alias;
+    }
+
+    public void setAlias(String alias)
+    {
+        this.alias = alias;
     }
 
     public String getDescription()

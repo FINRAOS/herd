@@ -16,6 +16,7 @@
 package org.finra.herd.service;
 
 import org.finra.herd.model.api.xml.BusinessObjectDefinition;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionAltUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKeys;
@@ -30,6 +31,9 @@ public interface BusinessObjectDefinitionService
 
     public BusinessObjectDefinition updateBusinessObjectDefinition(BusinessObjectDefinitionKey businessObjectDefinitionKey,
         BusinessObjectDefinitionUpdateRequest businessObjectDefinitionUpdateRequest);
+
+    public BusinessObjectDefinition updateBusinessObjectDefinitionAlt(BusinessObjectDefinitionKey businessObjectDefinitionKey,
+        BusinessObjectDefinitionAltUpdateRequest businessObjectDefinitionAltUpdateRequest);
 
     public BusinessObjectDefinition getBusinessObjectDefinition(BusinessObjectDefinitionKey businessObjectDefinitionKey);
 
