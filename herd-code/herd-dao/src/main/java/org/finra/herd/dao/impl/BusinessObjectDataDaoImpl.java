@@ -850,18 +850,21 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         criteria.select(businessObjectDataEntity).where(predicate);
 
         //order by
-        criteria.orderBy(builder.asc(businessObjectDefinitionEntity.get(BusinessObjectDefinitionEntity_.namespace)));
-        criteria.orderBy(builder.asc(businessObjectDefinitionEntity.get(BusinessObjectDefinitionEntity_.name)));
-        criteria.orderBy(builder.asc(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.usage)));
-        criteria.orderBy(builder.asc(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.fileType)));
-        criteria.orderBy(builder.desc(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.businessObjectFormatVersion)));       
-        criteria.orderBy(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue)));
-        criteria.orderBy(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue2)));
-        criteria.orderBy(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue3)));
-        criteria.orderBy(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue4)));
-        criteria.orderBy(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue5)));
-        criteria.orderBy(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.version)));
+        List<Order> orderList = new ArrayList<>();
+        orderList.add(builder.asc(businessObjectDefinitionEntity.get(BusinessObjectDefinitionEntity_.namespace)));
+        orderList.add(builder.asc(businessObjectDefinitionEntity.get(BusinessObjectDefinitionEntity_.name)));
+        orderList.add(builder.asc(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.usage)));
+        orderList.add(builder.asc(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.fileType)));
+        orderList.add(builder.desc(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.businessObjectFormatVersion)));
+        orderList.add(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue)));
+        orderList.add(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue2)));
+        orderList.add(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue3)));
+        orderList.add(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue4)));
+        orderList.add(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue5)));
+        orderList.add(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.version)));
         
+        criteria.orderBy(orderList);
+     
         List<BusinessObjectData> businessObjectDataList = new ArrayList<>();
 
         List<BusinessObjectDataEntity> entitityArray =
