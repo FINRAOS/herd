@@ -25,10 +25,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jms.annotation.JmsListener;
+import org.springframework.jms.config.JmsListenerEndpointRegistry;
+import org.springframework.jms.listener.MessageListenerContainer;
 import org.springframework.messaging.handler.annotation.Headers;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import org.finra.herd.core.ApplicationContextHolder;
+import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.helper.JsonHelper;
+import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.service.SqsNotificationEventService;
 import org.finra.herd.service.UploadDownloadService;
 import org.finra.herd.service.impl.UploadDownloadServiceImpl.CompleteUploadSingleMessageResult;
@@ -49,7 +55,55 @@ public class HerdJmsMessageListener
 
     @Autowired
     private UploadDownloadService uploadDownloadService;
+    
+    @Autowired
+    private ConfigurationHelper configurationHelper;
 
+    
+    /**
+     * Periodically check the configuration and apply the action to the herd JMS message listener service, if needed.
+     */
+    @Scheduled(fixedDelay = 60000)
+    public void controlHerdJmsMessageListener()
+    {
+        try
+        {
+            // Get the configuration setting.
+            Boolean jmsMessageListenerEnabled =
+                Boolean.valueOf(configurationHelper.getProperty(ConfigurationValue.JMS_LISTENER_ENABLED));
+
+            // Get the registry bean.
+            JmsListenerEndpointRegistry registry = ApplicationContextHolder.getApplicationContext()
+                .getBean("org.springframework.jms.config.internalJmsListenerEndpointRegistry", JmsListenerEndpointRegistry.class);
+
+            // Get the herd JMS message listener container.
+            MessageListenerContainer jmsMessageListenerContainer =
+                registry.getListenerContainer(HerdJmsDestinationResolver.SQS_DESTINATION_HERD_INCOMING);
+
+            // Get the current JMS message listener status and the configuration value.
+            LOGGER.debug("controlHerdJmsMessageListener(): {}={} jmsMessageListenerContainer.isRunning()={}",
+                ConfigurationValue.JMS_LISTENER_ENABLED.getKey(), jmsMessageListenerEnabled, jmsMessageListenerContainer.isRunning());
+
+            // Apply the relative action if needed.
+            if (!jmsMessageListenerEnabled && jmsMessageListenerContainer.isRunning())
+            {
+                LOGGER.info("controlHerdJmsMessageListener(): Stopping the herd JMS message listener ...");
+                jmsMessageListenerContainer.stop();
+                LOGGER.info("controlHerdJmsMessageListener(): Done");
+            }
+            else if (jmsMessageListenerEnabled && !jmsMessageListenerContainer.isRunning())
+            {
+                LOGGER.info("controlHerdJmsMessageListener(): Starting the herd JMS message listener ...");
+                jmsMessageListenerContainer.start();
+                LOGGER.info("controlHerdJmsMessageListener(): Done");
+            }
+        }
+        catch (Exception e)
+        {
+            LOGGER.error("controlHerdJmsMessageListener(): Failed to control the herd Jms message listener service.", e);
+        }
+    }
+    
     /**
      * Processes a JMS message.
      *

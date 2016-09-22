@@ -32,6 +32,7 @@ import org.finra.herd.model.api.xml.JobDeleteRequest;
 import org.finra.herd.model.api.xml.JobSignalRequest;
 import org.finra.herd.model.api.xml.JobStatusEnum;
 import org.finra.herd.model.api.xml.JobSummaries;
+import org.finra.herd.model.api.xml.JobUpdateRequest;
 import org.finra.herd.model.dto.SecurityFunctions;
 import org.finra.herd.service.JobService;
 import org.finra.herd.ui.constants.UiConstants;
@@ -113,6 +114,22 @@ public class JobRestController extends HerdBaseController
     {
         // Create and return a new job.
         return jobService.signalJob(request);
+    }
+
+    /**
+     * Activates or suspends a job execution. <p>Requires EXECUTE permission on namespace</p>
+     *
+     * @param id the job id
+     * @param jobUpdateRequest the job update request
+     *
+     * @return the job
+     * @throws Exception when any exception occurs
+     */
+    @RequestMapping(value = "/jobs/ids/{id}", method = RequestMethod.PUT)
+    @Secured(SecurityFunctions.FN_JOBS_PUT)
+    public Job updateJob(@PathVariable("id") String id, @RequestBody JobUpdateRequest jobUpdateRequest) throws Exception
+    {
+        return jobService.updateJob(id, jobUpdateRequest);
     }
 
     /**

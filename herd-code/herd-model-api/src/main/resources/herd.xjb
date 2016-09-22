@@ -45,6 +45,9 @@
       <jaxb:bindings node="//xs:element[@name='status']/xs:simpleType">
          <jaxb:typesafeEnumClass name="JobStatusEnum"/>
       </jaxb:bindings>
+      <jaxb:bindings node="//xs:element[@name='action']/xs:simpleType">
+         <jaxb:typesafeEnumClass name="JobActionEnum"/>
+      </jaxb:bindings>
 
       <!-- This will ensure the generated Java classes have the correct plural property and method names (e.g. "keys" instead of "keies"). -->
       <jaxb:bindings node="//xs:complexType[@name='storageKeys']//xs:element[@name='storageKey']">
