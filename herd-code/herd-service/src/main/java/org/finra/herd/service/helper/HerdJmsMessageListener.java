@@ -70,7 +70,7 @@ public class HerdJmsMessageListener
         {
             // Get the configuration setting.
             Boolean jmsMessageListenerEnabled =
-                Boolean.valueOf(configurationHelper.getProperty(ConfigurationValue.HERD_JMS_LISTENER_ENABLED));
+                Boolean.valueOf(configurationHelper.getProperty(ConfigurationValue.JMS_LISTENER_ENABLED));
 
             // Get the registry bean.
             JmsListenerEndpointRegistry registry = ApplicationContextHolder.getApplicationContext()
@@ -82,7 +82,7 @@ public class HerdJmsMessageListener
 
             // Get the current JMS message listener status and the configuration value.
             LOGGER.debug("controlHerdJmsMessageListener(): {}={} jmsMessageListenerContainer.isRunning()={}",
-                ConfigurationValue.HERD_JMS_LISTENER_ENABLED.getKey(), jmsMessageListenerEnabled, jmsMessageListenerContainer.isRunning());
+                ConfigurationValue.JMS_LISTENER_ENABLED.getKey(), jmsMessageListenerEnabled, jmsMessageListenerContainer.isRunning());
 
             // Apply the relative action if needed.
             if (!jmsMessageListenerEnabled && jmsMessageListenerContainer.isRunning())

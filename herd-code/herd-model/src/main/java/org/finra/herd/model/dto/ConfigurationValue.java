@@ -417,9 +417,9 @@ public enum ConfigurationValue
     STORAGE_POLICY_PROCESSOR_JMS_LISTENER_ENABLED("storage.policy.processor.jms.listener.enabled", "true"),
 
     /**
-     * Indicates whether the Herd JMS message listener service is enabled or not. The default is "true" (enabled).
+     * Indicates whether the JMS message listener service is enabled or not. The default is "true" (enabled).
      */
-    HERD_JMS_LISTENER_ENABLED("herd.jms.listener.enabled", "true"),
+    JMS_LISTENER_ENABLED("jms.listener.enabled", "true"),
     
     /**
      * JMS listener concurrency limits for the storage policy processor JMS message listener service via a "lower-upper" String, e.g. "5-10". Refer to
