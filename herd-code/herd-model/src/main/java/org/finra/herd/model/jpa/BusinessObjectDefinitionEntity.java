@@ -53,8 +53,8 @@ public class BusinessObjectDefinitionEntity extends AuditableEntity
     @Column(name = "name_tx")
     private String name;
 
-    @Column(name = "alias_tx")
-    private String alias;
+    @Column(name = "display_name_tx")
+    private String displayName;
 
     @Column(name = "desc_tx", length = 500)
     private String description;
@@ -98,16 +98,6 @@ public class BusinessObjectDefinitionEntity extends AuditableEntity
         this.name = name;
     }
 
-    public String getAlias()
-    {
-        return alias;
-    }
-
-    public void setAlias(String alias)
-    {
-        this.alias = alias;
-    }
-
     public String getDescription()
     {
         return description;
@@ -116,6 +106,16 @@ public class BusinessObjectDefinitionEntity extends AuditableEntity
     public void setDescription(String description)
     {
         this.description = description;
+    }
+
+    public String getDisplayName()
+    {
+        return displayName;
+    }
+
+    public void setDisplayName(String displayName)
+    {
+        this.displayName = displayName;
     }
 
     public DataProviderEntity getDataProvider()

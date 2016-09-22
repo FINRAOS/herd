@@ -25,8 +25,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import org.finra.herd.model.api.xml.BusinessObjectDefinition;
-import org.finra.herd.model.api.xml.BusinessObjectDefinitionAltUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionCreateRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptiveInfoUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKeys;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionUpdateRequest;
@@ -80,7 +80,7 @@ public class BusinessObjectDefinitionRestController extends HerdBaseController
     }
 
     /**
-     * Updates an existing business object definition by key. <p>Requires no Namespace level security</p>
+     * Updates an existing business object definition descriptive information by key. <p>Requires no Namespace level security</p>
      *
      * @param namespace the namespace code
      * @param businessObjectDefinitionName the name of the business object definition to update
@@ -88,15 +88,16 @@ public class BusinessObjectDefinitionRestController extends HerdBaseController
      *
      * @return the updated business object definition
      */
-    @RequestMapping(value = "businessObjectDefinitions/alt/namespaces/{namespace}/businessObjectDefinitionNames/{businessObjectDefinitionName}",
+    @RequestMapping(value = "businessObjectDefinitionDescriptiveInformation/namespaces/{namespace}/businessObjectDefinitionNames/{businessObjectDefinitionName}",
         method = RequestMethod.PUT,
         consumes = {"application/xml", "application/json"})
-    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DEFINITIONS_ALT_PUT)
-    public BusinessObjectDefinition updateBusinessObjectDefinitionAlt(@PathVariable("namespace") String namespace,
-        @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName, @RequestBody BusinessObjectDefinitionAltUpdateRequest request)
+    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DEFINITIONS_DESCRIPTIVE_INFO_PUT)
+    public BusinessObjectDefinition updateBusinessObjectDefinitionDescriptiveInfo(@PathVariable("namespace") String namespace,
+        @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
+        @RequestBody BusinessObjectDefinitionDescriptiveInfoUpdateRequest request)
     {
         BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(namespace, businessObjectDefinitionName);
-        return businessObjectDefinitionService.updateBusinessObjectDefinitionAlt(businessObjectDefinitionKey, request);
+        return businessObjectDefinitionService.updateBusinessObjectDefinitionDescriptiveInfo(businessObjectDefinitionKey, request);
     }
 
     /**

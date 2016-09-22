@@ -34,8 +34,8 @@ import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.annotation.NamespacePermission;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.BusinessObjectDefinition;
-import org.finra.herd.model.api.xml.BusinessObjectDefinitionAltUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionCreateRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptiveInfoUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKeys;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionUpdateRequest;
@@ -158,19 +158,19 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
      * @return the updated business object definition
      */
     @Override
-    public BusinessObjectDefinition updateBusinessObjectDefinitionAlt(BusinessObjectDefinitionKey businessObjectDefinitionKey,
-        BusinessObjectDefinitionAltUpdateRequest request)
+    public BusinessObjectDefinition updateBusinessObjectDefinitionDescriptiveInfo(BusinessObjectDefinitionKey businessObjectDefinitionKey,
+        BusinessObjectDefinitionDescriptiveInfoUpdateRequest request)
     {
         // Perform validation and trim.
         businessObjectDefinitionHelper.validateBusinessObjectDefinitionKey(businessObjectDefinitionKey);
-        validateBusinessObjectDefinitionAltUpdateRequest(request);
+        validateBusinessObjectDefinitionDescriptiveInfoUpdateRequest(request);
 
         // Retrieve and ensure that a business object definition already exists with the specified key.
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
             businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
 
         // Update and persist the entity.
-        updateBusinessObjectDefinitionEntityAlt(businessObjectDefinitionEntity, request);
+        updateBusinessObjectDefinitionEntityDescriptiveInfo(businessObjectDefinitionEntity, request);
 
         // Create and return the business object definition object from the persisted entity.
         return createBusinessObjectDefinitionFromEntity(businessObjectDefinitionEntity);
@@ -305,11 +305,11 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
      *
      * @throws IllegalArgumentException if any validation errors were found.
      */
-    private void validateBusinessObjectDefinitionAltUpdateRequest(BusinessObjectDefinitionAltUpdateRequest request)
+    private void validateBusinessObjectDefinitionDescriptiveInfoUpdateRequest(BusinessObjectDefinitionDescriptiveInfoUpdateRequest request)
     {
-        if (request.getAlias() != null)
+        if (request.getDisplayName() != null)
         {
-            request.setAlias(request.getAlias().trim());
+            request.setDisplayName(request.getDisplayName().trim());
         }
     }
 
@@ -426,17 +426,17 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     }
 
     /**
-     * Update and persist the business object definition alt per specified update request.
+     * Update and persist the business object definition descriptive information per specified update request.
      *
      * @param businessObjectDefinitionEntity the business object definition entity
      * @param request the business object definition update request
      */
-    private void updateBusinessObjectDefinitionEntityAlt(BusinessObjectDefinitionEntity businessObjectDefinitionEntity,
-        BusinessObjectDefinitionAltUpdateRequest request)
+    private void updateBusinessObjectDefinitionEntityDescriptiveInfo(BusinessObjectDefinitionEntity businessObjectDefinitionEntity,
+        BusinessObjectDefinitionDescriptiveInfoUpdateRequest request)
     {
         // Update the entity with the new description value.
         businessObjectDefinitionEntity.setDescription(request.getDescription());
-        businessObjectDefinitionEntity.setAlias(request.getAlias());
+        businessObjectDefinitionEntity.setDisplayName(request.getDisplayName());
         businessObjectDefinitionDao.saveAndRefresh(businessObjectDefinitionEntity);
     }
 
@@ -456,7 +456,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         businessObjectDefinition.setBusinessObjectDefinitionName(businessObjectDefinitionEntity.getName());
         businessObjectDefinition.setDescription(businessObjectDefinitionEntity.getDescription());
         businessObjectDefinition.setDataProviderName(businessObjectDefinitionEntity.getDataProvider().getName());
-        businessObjectDefinition.setAlias(businessObjectDefinitionEntity.getAlias());
+        businessObjectDefinition.setDisplayName(businessObjectDefinitionEntity.getDisplayName());
 
         // Add in the attributes.
         List<Attribute> attributes = new ArrayList<>();

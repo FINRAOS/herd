@@ -92,8 +92,8 @@ import org.finra.herd.model.api.xml.BusinessObjectDataStatusUpdateResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageFilesCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataStorageFilesCreateResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDefinition;
-import org.finra.herd.model.api.xml.BusinessObjectDefinitionAltUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionCreateRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptiveInfoUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectFormat;
@@ -1142,12 +1142,12 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
      *
      * @return the newly created business object definition update request
      */
-    protected BusinessObjectDefinitionAltUpdateRequest createBusinessObjectDefinitionAltUpdateRequest(String businessObjectDefinitionDescription,
-        String businessObjectDefinitionAlias)
+    protected BusinessObjectDefinitionDescriptiveInfoUpdateRequest createBusinessObjectDefinitionDescriptiveInfoUpdateRequest(
+        String businessObjectDefinitionDescription, String displayName)
     {
-        BusinessObjectDefinitionAltUpdateRequest request = new BusinessObjectDefinitionAltUpdateRequest();
+        BusinessObjectDefinitionDescriptiveInfoUpdateRequest request = new BusinessObjectDefinitionDescriptiveInfoUpdateRequest();
         request.setDescription(businessObjectDefinitionDescription);
-        request.setAlias(businessObjectDefinitionAlias);
+        request.setDisplayName(displayName);
         return request;
     }
 
