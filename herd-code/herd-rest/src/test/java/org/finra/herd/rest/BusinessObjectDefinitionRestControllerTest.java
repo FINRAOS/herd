@@ -44,7 +44,7 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
 
         // Create a business object definition.
         BusinessObjectDefinitionCreateRequest request =
-            createBusinessObjectDefinitionCreateRequest(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, getNewAttributes());
+            createBusinessObjectDefinitionCreateRequest(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME, getNewAttributes());
         BusinessObjectDefinition resultBusinessObjectDefinition = businessObjectDefinitionRestController.createBusinessObjectDefinition(request);
 
         // Validate the returned object.
@@ -68,12 +68,14 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
             .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, getNewAttributes());
 
         // Perform an update by changing the description and updating the attributes.
-        BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionRestController
-            .updateBusinessObjectDefinition(NAMESPACE, BDEF_NAME, createBusinessObjectDefinitionUpdateRequest(BDEF_DESCRIPTION_2, getNewAttributes2()));
+        BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionRestController.updateBusinessObjectDefinition(NAMESPACE, BDEF_NAME,
+            createBusinessObjectDefinitionUpdateRequest(BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2, getNewAttributes2()));
 
         // Validate the returned object.
-        validateBusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION_2,
-            getNewAttributes2(), updatedBusinessObjectDefinition);
+        assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION_2,
+            BDEF_DISPLAY_NAME_2, getNewAttributes2()), updatedBusinessObjectDefinition);
+
+
     }
 
     @Test
@@ -85,11 +87,12 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
 
         // Perform an update without specifying any of the optional parameters (passing whitespace characters).
         BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionRestController.updateBusinessObjectDefinition(NAMESPACE, BDEF_NAME,
-            createBusinessObjectDefinitionUpdateRequest(BLANK_TEXT, Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, BLANK_TEXT))));
+            createBusinessObjectDefinitionUpdateRequest(BLANK_TEXT, BLANK_TEXT, Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, BLANK_TEXT))));
 
         // Validate the returned object.
-        validateBusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BLANK_TEXT,
-            Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, BLANK_TEXT)), updatedBusinessObjectDefinition);
+        assertEquals(
+            new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BLANK_TEXT, BLANK_TEXT.trim(),
+                Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, BLANK_TEXT))), updatedBusinessObjectDefinition);
     }
 
     @Test
@@ -101,11 +104,11 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
 
         // Perform an update without specifying any of the optional parameters (passing null values).
         BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionRestController.updateBusinessObjectDefinition(NAMESPACE, BDEF_NAME,
-            createBusinessObjectDefinitionUpdateRequest(null, Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, null))));
+            createBusinessObjectDefinitionUpdateRequest(null, null, Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, null))));
 
         // Validate the returned object.
-        validateBusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, null,
-            Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, null)), updatedBusinessObjectDefinition);
+        assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, null, null,
+            Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, null))), updatedBusinessObjectDefinition);
     }
 
     @Test
@@ -137,8 +140,10 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
         BusinessObjectDefinition resultBusinessObjectDefinition = businessObjectDefinitionRestController.getBusinessObjectDefinition(NAMESPACE, BDEF_NAME);
 
         // Validate the returned object.
-        validateBusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, getNewAttributes(),
-            resultBusinessObjectDefinition);
+        assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null,
+            getNewAttributes()), resultBusinessObjectDefinition);
+
+
     }
 
     @Test
@@ -173,8 +178,8 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
         BusinessObjectDefinition deletedBusinessObjectDefinition = businessObjectDefinitionRestController.deleteBusinessObjectDefinition(NAMESPACE, BDEF_NAME);
 
         // Validate the returned object.
-        validateBusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, getNewAttributes(),
-            deletedBusinessObjectDefinition);
+        assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null,
+            getNewAttributes()), deletedBusinessObjectDefinition);
 
         // Ensure that this business object definition is no longer there.
         assertNull(businessObjectDefinitionDao.getBusinessObjectDefinitionByKey(businessObjectDefinitionKey));

@@ -296,6 +296,11 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     {
         // Validate attributes.
         attributeHelper.validateAttributes(request.getAttributes());
+
+        if (request.getDisplayName() != null)
+        {
+            request.setDisplayName(request.getDisplayName().trim());
+        }
     }
 
     /**
@@ -331,6 +336,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         businessObjectDefinitionEntity.setName(request.getBusinessObjectDefinitionName());
         businessObjectDefinitionEntity.setDescription(request.getDescription());
         businessObjectDefinitionEntity.setDataProvider(dataProviderEntity);
+        businessObjectDefinitionEntity.setDisplayName(request.getDisplayName());
 
         // Create the attributes if they are specified.
         if (!CollectionUtils.isEmpty(request.getAttributes()))
@@ -362,6 +368,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     {
         // Update the entity with the new description value.
         businessObjectDefinitionEntity.setDescription(request.getDescription());
+        businessObjectDefinitionEntity.setDisplayName(request.getDisplayName());
 
         // Update the attributes.
         // Load all existing attribute entities in a map with a "lowercase" attribute name as the key for case insensitivity.

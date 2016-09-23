@@ -1090,10 +1090,10 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
      * @return the newly created business object definition create request
      */
     protected BusinessObjectDefinitionCreateRequest createBusinessObjectDefinitionCreateRequest(String namespaceCode, String businessObjectDefinitionName,
-        String dataProviderName, String businessObjectDefinitionDescription)
+        String dataProviderName, String businessObjectDefinitionDescription, String displayName)
     {
         return createBusinessObjectDefinitionCreateRequest(namespaceCode, businessObjectDefinitionName, dataProviderName, businessObjectDefinitionDescription,
-            null);
+            displayName, null);
     }
 
     /**
@@ -1107,13 +1107,14 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
      * @return the newly created business object definition create request
      */
     protected BusinessObjectDefinitionCreateRequest createBusinessObjectDefinitionCreateRequest(String namespaceCode, String businessObjectDefinitionName,
-        String dataProviderName, String businessObjectDefinitionDescription, List<Attribute> attributes)
+        String dataProviderName, String businessObjectDefinitionDescription, String displayName, List<Attribute> attributes)
     {
         BusinessObjectDefinitionCreateRequest request = new BusinessObjectDefinitionCreateRequest();
         request.setNamespace(namespaceCode);
         request.setBusinessObjectDefinitionName(businessObjectDefinitionName);
         request.setDataProviderName(dataProviderName);
         request.setDescription(businessObjectDefinitionDescription);
+        request.setDisplayName(displayName);
         request.setAttributes(attributes);
         return request;
     }
@@ -1125,11 +1126,12 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
      *
      * @return the newly created business object definition update request
      */
-    protected BusinessObjectDefinitionUpdateRequest createBusinessObjectDefinitionUpdateRequest(String businessObjectDefinitionDescription,
+    protected BusinessObjectDefinitionUpdateRequest createBusinessObjectDefinitionUpdateRequest(String businessObjectDefinitionDescription, String displayName,
         List<Attribute> attributes)
     {
         BusinessObjectDefinitionUpdateRequest request = new BusinessObjectDefinitionUpdateRequest();
         request.setDescription(businessObjectDefinitionDescription);
+        request.setDisplayName(displayName);
         request.setAttributes(attributes);
         return request;
     }
