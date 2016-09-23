@@ -110,7 +110,8 @@ public class HerdJmsMessageListener
      * @param payload the message payload.
      * @param allHeaders the JMS headers.
      */
-    @JmsListener(containerFactory = "jmsListenerContainerFactory", destination = HerdJmsDestinationResolver.SQS_DESTINATION_HERD_INCOMING)
+    @JmsListener(id = HerdJmsDestinationResolver.SQS_DESTINATION_HERD_INCOMING,
+            containerFactory = "jmsListenerContainerFactory", destination = HerdJmsDestinationResolver.SQS_DESTINATION_HERD_INCOMING)
     public void processMessage(String payload, @Headers Map<Object, Object> allHeaders)
     {
         LOGGER.info("JMS message received from the queue. jmsQueueName=\"{}\" jmsMessageHeaders=\"{}\" jmsMessagePayload={}",
