@@ -15,7 +15,6 @@
 */
 package org.finra.herd.service.impl;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -34,9 +33,9 @@ import org.activiti.engine.runtime.Execution;
 import org.activiti.engine.runtime.ProcessInstance;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -52,12 +51,14 @@ import org.finra.herd.dao.helper.JavaPropertiesHelper;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.annotation.NamespacePermission;
 import org.finra.herd.model.api.xml.Job;
+import org.finra.herd.model.api.xml.JobActionEnum;
 import org.finra.herd.model.api.xml.JobCreateRequest;
 import org.finra.herd.model.api.xml.JobDeleteRequest;
 import org.finra.herd.model.api.xml.JobSignalRequest;
 import org.finra.herd.model.api.xml.JobStatusEnum;
 import org.finra.herd.model.api.xml.JobSummaries;
 import org.finra.herd.model.api.xml.JobSummary;
+import org.finra.herd.model.api.xml.JobUpdateRequest;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.api.xml.Parameter;
 import org.finra.herd.model.api.xml.S3PropertiesLocation;
@@ -255,46 +256,59 @@ public class JobServiceImpl implements JobService
                 List<HistoricProcessInstance> historicProcessInstances =
                     getHistoricProcessInstances(processDefinitionIdToKeyMap.values(), jobStatus, startTime, endTime);
 
+                // Get a set of all runtime suspended process instance ids.
+                Set<String> suspendedProcessInstanceIds = getSuspendedProcessInstanceIds();
+
                 // Compile the Regex pattern.
                 Pattern pattern = jobDefinitionHelper.getNamespaceAndJobNameRegexPattern();
 
                 // Loop over the process instances and build a list of job summaries to return.
                 for (HistoricProcessInstance historicProcessInstance : historicProcessInstances)
                 {
+                    // Exclude all process instances started using older versions of the process definition.
                     if (processDefinitionIdToKeyMap.containsKey(historicProcessInstance.getProcessDefinitionId()))
                     {
-                        // Create a new job summary.
-                        JobSummary jobSummary = new JobSummary();
-                        jobSummary.setId(historicProcessInstance.getId());
+                        // Set a flag if this job is SUSPENDED.
+                        boolean suspended = suspendedProcessInstanceIds.contains(historicProcessInstance.getId());
 
-                        // Get the job definition key.
-                        JobDefinitionAlternateKeyDto jobDefinitionKey =
-                            jobDefinitionHelper.getJobDefinitionKey(processDefinitionIdToKeyMap.get(historicProcessInstance.getProcessDefinitionId()), pattern);
-
-                        // Set the namespace and job name on the job summary.
-                        jobSummary.setNamespace(jobDefinitionKey.getNamespace());
-                        jobSummary.setJobName(jobDefinitionKey.getJobName());
-
-                        // Set the start time always since all jobs will have a start time.
-                        jobSummary.setStartTime(HerdDateUtils.getXMLGregorianCalendarValue(historicProcessInstance.getStartTime()));
-
-                        if (historicProcessInstance.getEndTime() == null)
+                        // If the job status filter is specified to select only RUNNING or SUSPENDED process instances,
+                        // exclude the relative process instances from the result. This check is needed, since
+                        // getHistoricProcessInstances() returns both RUNNING and SUSPENDED process instances.
+                        if (!(JobStatusEnum.SUSPENDED.equals(jobStatus) && !suspended) && !(JobStatusEnum.RUNNING.equals(jobStatus) && suspended))
                         {
-                            // Since there is no end time, the job is still running.
-                            jobSummary.setStatus(JobStatusEnum.RUNNING);
+                            // Create a new job summary.
+                            JobSummary jobSummary = new JobSummary();
+                            jobSummary.setId(historicProcessInstance.getId());
 
-                            // If the end time is null, then determine the status based on the presence of any exceptions.
-                            jobSummary.setTotalExceptions(activitiService.getJobsWithExceptionCountByProcessInstanceId(historicProcessInstance.getId()));
-                        }
-                        else
-                        {
-                            // If the end time is set, then the job has finished so set the end time and the status to completed.
-                            jobSummary.setEndTime(HerdDateUtils.getXMLGregorianCalendarValue(historicProcessInstance.getEndTime()));
-                            jobSummary.setStatus(JobStatusEnum.COMPLETED);
-                        }
+                            // Get the job definition key.
+                            JobDefinitionAlternateKeyDto jobDefinitionKey = jobDefinitionHelper
+                                .getJobDefinitionKey(processDefinitionIdToKeyMap.get(historicProcessInstance.getProcessDefinitionId()), pattern);
 
-                        // Add the new summary to the list.
-                        jobSummaries.getJobSummaries().add(jobSummary);
+                            // Set the namespace and job name on the job summary.
+                            jobSummary.setNamespace(jobDefinitionKey.getNamespace());
+                            jobSummary.setJobName(jobDefinitionKey.getJobName());
+
+                            // Set the start time always since all jobs will have a start time.
+                            jobSummary.setStartTime(HerdDateUtils.getXMLGregorianCalendarValue(historicProcessInstance.getStartTime()));
+
+                            if (historicProcessInstance.getEndTime() == null)
+                            {
+                                // Since there is no end time, the job is running or suspended.
+                                jobSummary.setStatus(suspended ? JobStatusEnum.SUSPENDED : JobStatusEnum.RUNNING);
+
+                                // If the end time is null, then determine the status based on the presence of any exceptions.
+                                jobSummary.setTotalExceptions(activitiService.getJobsWithExceptionCountByProcessInstanceId(historicProcessInstance.getId()));
+                            }
+                            else
+                            {
+                                // If the end time is set, then the job has finished so set the end time and the status to completed.
+                                jobSummary.setEndTime(HerdDateUtils.getXMLGregorianCalendarValue(historicProcessInstance.getEndTime()));
+                                jobSummary.setStatus(JobStatusEnum.COMPLETED);
+                            }
+
+                            // Add the new summary to the list.
+                            jobSummaries.getJobSummaries().add(jobSummary);
+                        }
                     }
                 }
             }
@@ -345,6 +359,60 @@ public class JobServiceImpl implements JobService
         populateWorkflowParameters(job, mergedParameters);
 
         return job;
+    }
+
+    @Override
+    public Job updateJob(String jobId, JobUpdateRequest jobUpdateRequest)
+    {
+        // Validate the input parameters.
+        Assert.hasText(jobId, "A job id must be specified.");
+        Assert.notNull(jobUpdateRequest, "A job update request must be specified.");
+        Assert.notNull(jobUpdateRequest.getAction(), "A job update action must be specified.");
+
+        // Trim input parameters.
+        String localJobId = jobId.trim();
+
+        // Get process instance by id.
+        ProcessInstance processInstance = activitiService.getProcessInstanceById(localJobId);
+
+        // Perform action as per job update request.
+        if (processInstance != null)
+        {
+            // Check the namespace permissions for the current user for the given process definition key.
+            checkPermissions(processInstance.getProcessDefinitionKey(), new NamespacePermissionEnum[] {NamespacePermissionEnum.EXECUTE});
+
+            // Suspend or resume the process instance per specified job update action.
+            if (JobActionEnum.SUSPEND.equals(jobUpdateRequest.getAction()))
+            {
+                if (!processInstance.isSuspended())
+                {
+                    // Suspend the process instance.
+                    activitiService.suspendProcessInstance(localJobId);
+                }
+                else
+                {
+                    throw new IllegalArgumentException(String.format("Job with ID \"%s\" is already in a suspended state.", localJobId));
+                }
+            }
+            else // The job update action is RESUME.
+            {
+                if (processInstance.isSuspended())
+                {
+                    // Resume (activate) the process instance.
+                    activitiService.resumeProcessInstance(localJobId);
+                }
+                else
+                {
+                    throw new IllegalArgumentException(String.format("Job with ID \"%s\" is already in an active state.", localJobId));
+                }
+            }
+        }
+        else
+        {
+            throw new ObjectNotFoundException(String.format("Job with ID \"%s\" does not exist or is already completed.", localJobId));
+        }
+
+        return getJob(localJobId, false, false);
     }
 
     /**
@@ -399,7 +467,7 @@ public class JobServiceImpl implements JobService
     /**
      * Gets a list of historic process instances by the given process definition keys, job status, start time, and/or end time. If the given list of process
      * definition keys is empty or null, the result will not be filtered by the process definition keys. If the given job status is null, the result will not be
-     * filtered by the job status.
+     * filtered by the job status. When job status is RUNNING or SUSPENDED, then all "unfinished" process instances are returned.
      *
      * @param processDefinitionKeys Optional. The set of process definition keys
      * @param jobStatus an optional job status
@@ -434,9 +502,8 @@ public class JobServiceImpl implements JobService
      * @param checkNamespacePermissions specifies whether to check namespace permissions or not
      *
      * @return the job information
-     * @throws Exception if any problems were encountered
      */
-    private Job getJob(String jobId, boolean verbose, boolean checkNamespacePermissions) throws Exception
+    private Job getJob(String jobId, boolean verbose, boolean checkNamespacePermissions)
     {
         String jobIdLocal = jobId;
 
@@ -482,8 +549,8 @@ public class JobServiceImpl implements JobService
         }
         else if (processInstance != null)
         {
-            // Process is still running.
-            job.setStatus(JobStatusEnum.RUNNING);
+            // Process is still running or suspended.
+            job.setStatus(processInstance.isSuspended() ? JobStatusEnum.SUSPENDED : JobStatusEnum.RUNNING);
 
             // Check if there are errors.
             List<org.activiti.engine.runtime.Job> erroredJobs = activitiService.getJobsWithExceptionByProcessInstanceId(processInstance.getProcessInstanceId());
@@ -624,10 +691,8 @@ public class JobServiceImpl implements JobService
      *
      * @param job, the Job object
      * @param processDefinitionId, the process definition Id.
-     *
-     * @throws IOException in case of errors.
      */
-    private void populateActivitiXml(Job job, String processDefinitionId) throws IOException
+    private void populateActivitiXml(Job job, String processDefinitionId)
     {
         job.setActivitiJobXml(activitiService.getProcessModel(processDefinitionId));
     }
@@ -754,5 +819,22 @@ public class JobServiceImpl implements JobService
         // Remove leading and trailing spaces.
         request.setId(request.getId().trim());
         request.setReceiveTaskId(request.getReceiveTaskId().trim());
+    }
+
+    /**
+     * Gets a set of all currently suspended runtime process instance ids.
+     *
+     * @return the set of currently suspended process instance ids
+     */
+    private Set<String> getSuspendedProcessInstanceIds()
+    {
+        Set<String> suspendedProcessInstanceIds = new HashSet<>();
+
+        for (ProcessInstance suspendedProcessInstance : activitiService.getSuspendedProcessInstances())
+        {
+            suspendedProcessInstanceIds.add(suspendedProcessInstance.getId());
+        }
+
+        return suspendedProcessInstanceIds;
     }
 }
