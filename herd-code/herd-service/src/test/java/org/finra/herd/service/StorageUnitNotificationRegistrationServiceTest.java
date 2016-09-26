@@ -51,7 +51,7 @@ public class StorageUnitNotificationRegistrationServiceTest extends AbstractServ
         NotificationRegistrationKey notificationRegistrationKey = new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME);
 
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForStorageUnitNotificationRegistrationTesting();
+        notificationRegistrationServiceTestHelper.createDatabaseEntitiesForStorageUnitNotificationRegistrationTesting();
 
         // Create a storage unit notification registration for storage unit status change notification event with DISABLED status.
         StorageUnitNotificationRegistration result = storageUnitNotificationRegistrationService.createStorageUnitNotificationRegistration(
@@ -102,7 +102,7 @@ public class StorageUnitNotificationRegistrationServiceTest extends AbstractServ
     public void testCreateStorageUnitNotificationRegistrationDuplicateJobActions()
     {
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForStorageUnitNotificationRegistrationTesting();
+        notificationRegistrationServiceTestHelper.createDatabaseEntitiesForStorageUnitNotificationRegistrationTesting();
 
         // Try to create a storage unit notification with duplicate job actions.
         StorageUnitNotificationRegistrationCreateRequest request =
@@ -131,7 +131,7 @@ public class StorageUnitNotificationRegistrationServiceTest extends AbstractServ
         StorageUnitNotificationRegistrationCreateRequest request;
 
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForStorageUnitNotificationRegistrationTesting();
+        notificationRegistrationServiceTestHelper.createDatabaseEntitiesForStorageUnitNotificationRegistrationTesting();
 
         // Try to create a storage unit notification using non-existing namespace.
         request = new StorageUnitNotificationRegistrationCreateRequest(new NotificationRegistrationKey("I_DO_NOT_EXIST", NOTIFICATION_NAME),
@@ -352,7 +352,7 @@ public class StorageUnitNotificationRegistrationServiceTest extends AbstractServ
     public void testCreateStorageUnitNotificationRegistrationLowerCaseParameters()
     {
         // Create and persist the relative database entities using upper case values.
-        createDatabaseEntitiesForStorageUnitNotificationRegistrationTesting(NAMESPACE.toUpperCase(),
+        notificationRegistrationServiceTestHelper.createDatabaseEntitiesForStorageUnitNotificationRegistrationTesting(NAMESPACE.toUpperCase(),
             Arrays.asList(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG.name()), BDEF_NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(),
             Arrays.asList(FORMAT_FILE_TYPE_CODE.toUpperCase()), Arrays.asList(STORAGE_NAME.toUpperCase()),
             Arrays.asList(STORAGE_UNIT_STATUS.toUpperCase(), STORAGE_UNIT_STATUS_2.toUpperCase()),
@@ -389,7 +389,7 @@ public class StorageUnitNotificationRegistrationServiceTest extends AbstractServ
         businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
 
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForStorageUnitNotificationRegistrationTesting();
+        notificationRegistrationServiceTestHelper.createDatabaseEntitiesForStorageUnitNotificationRegistrationTesting();
 
         // Create a storage unit notification without specifying any of the optional parameters (passing null values).
         StorageUnitNotificationRegistration resultStorageUnitNotificationRegistration = storageUnitNotificationRegistrationService
@@ -415,7 +415,7 @@ public class StorageUnitNotificationRegistrationServiceTest extends AbstractServ
         businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
 
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForStorageUnitNotificationRegistrationTesting();
+        notificationRegistrationServiceTestHelper.createDatabaseEntitiesForStorageUnitNotificationRegistrationTesting();
 
         // Create a storage unit notification without specifying any of the optional parameters (passing whitespace characters).
         StorageUnitNotificationRegistration resultStorageUnitNotificationRegistration = storageUnitNotificationRegistrationService
@@ -568,7 +568,7 @@ public class StorageUnitNotificationRegistrationServiceTest extends AbstractServ
     public void testCreateStorageUnitNotificationRegistrationTrimParameters()
     {
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForStorageUnitNotificationRegistrationTesting();
+        notificationRegistrationServiceTestHelper.createDatabaseEntitiesForStorageUnitNotificationRegistrationTesting();
 
         // Create a storage unit notification using input parameters with leading and trailing empty spaces.
         StorageUnitNotificationRegistration resultStorageUnitNotificationRegistration = storageUnitNotificationRegistrationService
@@ -593,7 +593,7 @@ public class StorageUnitNotificationRegistrationServiceTest extends AbstractServ
     public void testCreateStorageUnitNotificationRegistrationUpperCaseParameters()
     {
         // Create and persist the relative database entities using lower case values.
-        createDatabaseEntitiesForStorageUnitNotificationRegistrationTesting(NAMESPACE.toLowerCase(),
+        notificationRegistrationServiceTestHelper.createDatabaseEntitiesForStorageUnitNotificationRegistrationTesting(NAMESPACE.toLowerCase(),
             Arrays.asList(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG.name()), BDEF_NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(),
             Arrays.asList(FORMAT_FILE_TYPE_CODE.toLowerCase()), Arrays.asList(STORAGE_NAME.toLowerCase()),
             Arrays.asList(STORAGE_UNIT_STATUS.toLowerCase(), STORAGE_UNIT_STATUS_2.toLowerCase()),
@@ -1004,7 +1004,7 @@ public class StorageUnitNotificationRegistrationServiceTest extends AbstractServ
     public void testGetStorageUnitNotificationRegistrationsByNamespaceStorageUnitNotificationsNoExist()
     {
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForStorageUnitNotificationRegistrationTesting();
+        notificationRegistrationServiceTestHelper.createDatabaseEntitiesForStorageUnitNotificationRegistrationTesting();
 
         // Retrieve an empty list of storage unit notification registration keys.
         StorageUnitNotificationRegistrationKeys resultKeys =
@@ -1233,7 +1233,7 @@ public class StorageUnitNotificationRegistrationServiceTest extends AbstractServ
         NotificationRegistrationKey notificationRegistrationKey = new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME);
 
         // Create database entities required for testing.
-        createDatabaseEntitiesForStorageUnitNotificationRegistrationTesting(NAMESPACE, Arrays
+        notificationRegistrationServiceTestHelper.createDatabaseEntitiesForStorageUnitNotificationRegistrationTesting(NAMESPACE, Arrays
             .asList(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG.name(),
                 NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG.name()), BDEF_NAMESPACE_2, BDEF_NAME_2,
             Arrays.asList(FORMAT_FILE_TYPE_CODE, FORMAT_FILE_TYPE_CODE_2), Arrays.asList(STORAGE_NAME, STORAGE_NAME_2),
@@ -1270,7 +1270,7 @@ public class StorageUnitNotificationRegistrationServiceTest extends AbstractServ
         StorageUnitNotificationRegistrationUpdateRequest request;
 
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForStorageUnitNotificationRegistrationTesting(NAMESPACE, Arrays
+        notificationRegistrationServiceTestHelper.createDatabaseEntitiesForStorageUnitNotificationRegistrationTesting(NAMESPACE, Arrays
             .asList(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG.name(),
                 NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG.name(), NOTIFICATION_EVENT_TYPE), BDEF_NAMESPACE_2, BDEF_NAME_2,
             Arrays.asList(FORMAT_FILE_TYPE_CODE, FORMAT_FILE_TYPE_CODE_2), Arrays.asList(STORAGE_NAME, STORAGE_NAME_2),
@@ -1444,7 +1444,7 @@ public class StorageUnitNotificationRegistrationServiceTest extends AbstractServ
     public void testUpdateStorageUnitNotificationRegistrationLowerCaseParameters()
     {
         // Create database entities required for testing using upper case alternate key values.
-        createDatabaseEntitiesForStorageUnitNotificationRegistrationTesting(NAMESPACE.toUpperCase(), Arrays
+        notificationRegistrationServiceTestHelper.createDatabaseEntitiesForStorageUnitNotificationRegistrationTesting(NAMESPACE.toUpperCase(), Arrays
             .asList(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG.name().toUpperCase(),
                 NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG.name().toUpperCase()), BDEF_NAMESPACE_2.toUpperCase(),
             BDEF_NAME_2.toUpperCase(), Arrays.asList(FORMAT_FILE_TYPE_CODE.toUpperCase(), FORMAT_FILE_TYPE_CODE_2.toUpperCase()),
@@ -1485,7 +1485,7 @@ public class StorageUnitNotificationRegistrationServiceTest extends AbstractServ
         NotificationRegistrationKey notificationRegistrationKey = new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME);
 
         // Create other database entities required for testing.
-        createDatabaseEntitiesForStorageUnitNotificationRegistrationTesting(NAMESPACE, Arrays
+        notificationRegistrationServiceTestHelper.createDatabaseEntitiesForStorageUnitNotificationRegistrationTesting(NAMESPACE, Arrays
             .asList(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG.name(),
                 NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG.name()), BDEF_NAMESPACE_2, BDEF_NAME_2, null, null,
             Arrays.asList(STORAGE_UNIT_STATUS, STORAGE_UNIT_STATUS_2), notificationRegistrationDaoTestHelper.getTestJobActions());
@@ -1517,7 +1517,7 @@ public class StorageUnitNotificationRegistrationServiceTest extends AbstractServ
         NotificationRegistrationKey notificationRegistrationKey = new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME);
 
         // Create other database entities required for testing.
-        createDatabaseEntitiesForStorageUnitNotificationRegistrationTesting(NAMESPACE, Arrays
+        notificationRegistrationServiceTestHelper.createDatabaseEntitiesForStorageUnitNotificationRegistrationTesting(NAMESPACE, Arrays
             .asList(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG.name(),
                 NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG.name()), BDEF_NAMESPACE_2, BDEF_NAME_2, null, null,
             Arrays.asList(STORAGE_UNIT_STATUS, STORAGE_UNIT_STATUS_2), notificationRegistrationDaoTestHelper.getTestJobActions());
@@ -1633,7 +1633,7 @@ public class StorageUnitNotificationRegistrationServiceTest extends AbstractServ
         NotificationRegistrationKey notificationRegistrationKey = new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME);
 
         // Create database entities required for testing.
-        createDatabaseEntitiesForStorageUnitNotificationRegistrationTesting(NAMESPACE, Arrays
+        notificationRegistrationServiceTestHelper.createDatabaseEntitiesForStorageUnitNotificationRegistrationTesting(NAMESPACE, Arrays
             .asList(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG.name(),
                 NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG.name()), BDEF_NAMESPACE_2, BDEF_NAME_2,
             Arrays.asList(FORMAT_FILE_TYPE_CODE, FORMAT_FILE_TYPE_CODE_2), Arrays.asList(STORAGE_NAME, STORAGE_NAME_2),
@@ -1669,7 +1669,7 @@ public class StorageUnitNotificationRegistrationServiceTest extends AbstractServ
     public void testUpdateStorageUnitNotificationRegistrationUpperCaseParameters()
     {
         // Create database entities required for testing using lower case alternate key values.
-        createDatabaseEntitiesForStorageUnitNotificationRegistrationTesting(NAMESPACE.toLowerCase(), Arrays
+        notificationRegistrationServiceTestHelper.createDatabaseEntitiesForStorageUnitNotificationRegistrationTesting(NAMESPACE.toLowerCase(), Arrays
             .asList(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG.name().toLowerCase(),
                 NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG.name().toLowerCase()), BDEF_NAMESPACE_2.toLowerCase(),
             BDEF_NAME_2.toLowerCase(), Arrays.asList(FORMAT_FILE_TYPE_CODE.toLowerCase(), FORMAT_FILE_TYPE_CODE_2.toLowerCase()),
@@ -1712,7 +1712,7 @@ public class StorageUnitNotificationRegistrationServiceTest extends AbstractServ
         NotificationRegistrationKey notificationRegistrationKey = new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME);
 
         // Create database entities required for testing.
-        createDatabaseEntitiesForStorageUnitNotificationRegistrationTesting(NAMESPACE, Arrays
+        notificationRegistrationServiceTestHelper.createDatabaseEntitiesForStorageUnitNotificationRegistrationTesting(NAMESPACE, Arrays
             .asList(NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG.name(),
                 NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG.name()), BDEF_NAMESPACE_2, BDEF_NAME_2,
             Arrays.asList(FORMAT_FILE_TYPE_CODE, FORMAT_FILE_TYPE_CODE_2), Arrays.asList(STORAGE_NAME, STORAGE_NAME_2),

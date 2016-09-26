@@ -34,7 +34,7 @@ public class GenerateBusinessObjectFormatDdlTest extends HerdActivitiServiceTask
     public void testGenerateBusinessObjectFormatDdl() throws Exception
     {
         // Prepare test data.
-        createDatabaseEntitiesForBusinessObjectFormatDdlTesting();
+        businessObjectFormatServiceTestHelper.createDatabaseEntitiesForBusinessObjectFormatDdlTesting();
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>(getMandatoryFields());
 
@@ -62,7 +62,7 @@ public class GenerateBusinessObjectFormatDdlTest extends HerdActivitiServiceTask
     public void testGenerateBusinessObjectFormatDdlMissingOptional() throws Exception
     {
         // Prepare test data.
-        createDatabaseEntitiesForBusinessObjectFormatDdlTesting();
+        businessObjectFormatServiceTestHelper.createDatabaseEntitiesForBusinessObjectFormatDdlTesting();
 
         Map<String, Object> variableValuesToValidate = new HashMap<>();
         variableValuesToValidate.put(GenerateBusinessObjectFormatDdl.VARIABLE_DDL, VARIABLE_VALUE_NOT_NULL);

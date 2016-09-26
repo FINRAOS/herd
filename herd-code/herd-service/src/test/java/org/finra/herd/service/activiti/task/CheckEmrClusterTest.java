@@ -54,7 +54,7 @@ public class CheckEmrClusterTest extends AbstractServiceTest
         fieldExtensions.add(fieldExtension);
 
         // Run a job with Activiti XML that will start cluster, check status and terminate.
-        Job job = createJobForCreateClusterForActivitiXml(getCheckClusterActivitiXml(fieldExtensions), getParameters(true, "false"));
+        Job job = jobServiceTestHelper.createJobForCreateClusterForActivitiXml(getCheckClusterActivitiXml(fieldExtensions), getParameters(true, "false"));
         assertNotNull(job);
 
         HistoricProcessInstance hisInstance =
@@ -89,7 +89,7 @@ public class CheckEmrClusterTest extends AbstractServiceTest
         fieldExtension.setExpression("${addHiveStepServiceTask_emrStepId}");
         fieldExtensions.add(fieldExtension);
 
-        Job job = createJobForCreateClusterForActivitiXml(getCheckClusterActivitiXml(fieldExtensions), getParameters(true, "true"));
+        Job job = jobServiceTestHelper.createJobForCreateClusterForActivitiXml(getCheckClusterActivitiXml(fieldExtensions), getParameters(true, "true"));
         assertNotNull(job);
 
         HistoricProcessInstance hisInstance =
@@ -121,7 +121,7 @@ public class CheckEmrClusterTest extends AbstractServiceTest
         fieldExtensions.add(fieldExtension);
 
         // Run a job with Activiti XML that will start cluster, check status and terminate.
-        Job job = createJobForCreateClusterForActivitiXml(getCheckClusterActivitiXml(fieldExtensions), getParameters(false, "false"));
+        Job job = jobServiceTestHelper.createJobForCreateClusterForActivitiXml(getCheckClusterActivitiXml(fieldExtensions), getParameters(false, "false"));
         assertNotNull(job);
 
         HistoricProcessInstance hisInstance =
@@ -139,7 +139,7 @@ public class CheckEmrClusterTest extends AbstractServiceTest
     public void testCheckCluster() throws Exception
     {
         // Run a job with Activiti XML that will start cluster, check status and terminate.
-        Job job = createJobForCreateCluster(ACTIVITI_XML_CHECK_CLUSTER_WITH_CLASSPATH, getParameters(true, ""));
+        Job job = jobServiceTestHelper.createJobForCreateCluster(ACTIVITI_XML_CHECK_CLUSTER_WITH_CLASSPATH, getParameters(true, ""));
         assertNotNull(job);
     }
 

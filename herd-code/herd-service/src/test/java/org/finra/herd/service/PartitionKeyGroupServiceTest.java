@@ -37,10 +37,10 @@ public class PartitionKeyGroupServiceTest extends AbstractServiceTest
     public void testCreatePartitionKeyGroup()
     {
         // Create a partition key group.
-        PartitionKeyGroup resultPartitionKeyGroup = createPartitionKeyGroup(PARTITION_KEY_GROUP);
+        PartitionKeyGroup resultPartitionKeyGroup = partitionKeyGroupServiceTestHelper.createPartitionKeyGroup(PARTITION_KEY_GROUP);
 
         // Validate the returned object.
-        validatePartitionKeyGroup(PARTITION_KEY_GROUP, resultPartitionKeyGroup);
+        partitionKeyGroupServiceTestHelper.validatePartitionKeyGroup(PARTITION_KEY_GROUP, resultPartitionKeyGroup);
     }
 
     @Test
@@ -49,7 +49,7 @@ public class PartitionKeyGroupServiceTest extends AbstractServiceTest
         // Try to perform a create without specifying partition key group name.
         try
         {
-            createPartitionKeyGroup(BLANK_TEXT);
+            partitionKeyGroupServiceTestHelper.createPartitionKeyGroup(BLANK_TEXT);
             fail("Should throw an IllegalArgumentException when partition key group is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -62,10 +62,10 @@ public class PartitionKeyGroupServiceTest extends AbstractServiceTest
     public void testCreatePartitionKeyGroupTrimParameters()
     {
         // Create a partition key group by passing partition key group name with leading and trailing whitespace characters.
-        PartitionKeyGroup resultPartitionKeyGroup = createPartitionKeyGroup(addWhitespace(PARTITION_KEY_GROUP));
+        PartitionKeyGroup resultPartitionKeyGroup = partitionKeyGroupServiceTestHelper.createPartitionKeyGroup(addWhitespace(PARTITION_KEY_GROUP));
 
         // Validate the returned object.
-        validatePartitionKeyGroup(PARTITION_KEY_GROUP, resultPartitionKeyGroup);
+        partitionKeyGroupServiceTestHelper.validatePartitionKeyGroup(PARTITION_KEY_GROUP, resultPartitionKeyGroup);
     }
 
     @Test
@@ -74,7 +74,7 @@ public class PartitionKeyGroupServiceTest extends AbstractServiceTest
         // Try to perform a create when partition key group name contains a forward slash character.
         try
         {
-            createPartitionKeyGroup(addSlash(PARTITION_KEY_GROUP));
+            partitionKeyGroupServiceTestHelper.createPartitionKeyGroup(addSlash(PARTITION_KEY_GROUP));
             fail("Should throw an IllegalArgumentException when partition key group name contains a forward slash character.");
         }
         catch (IllegalArgumentException e)
@@ -92,7 +92,7 @@ public class PartitionKeyGroupServiceTest extends AbstractServiceTest
         // Try to create a partition key group with the same partition key group name.
         try
         {
-            createPartitionKeyGroup(PARTITION_KEY_GROUP);
+            partitionKeyGroupServiceTestHelper.createPartitionKeyGroup(PARTITION_KEY_GROUP);
         }
         catch (AlreadyExistsException e)
         {
@@ -111,7 +111,7 @@ public class PartitionKeyGroupServiceTest extends AbstractServiceTest
         PartitionKeyGroup resultPartitionKeyGroup = partitionKeyGroupService.getPartitionKeyGroup(new PartitionKeyGroupKey(PARTITION_KEY_GROUP));
 
         // Validate the returned object.
-        validatePartitionKeyGroup(PARTITION_KEY_GROUP, resultPartitionKeyGroup);
+        partitionKeyGroupServiceTestHelper.validatePartitionKeyGroup(PARTITION_KEY_GROUP, resultPartitionKeyGroup);
     }
 
     @Test
@@ -139,7 +139,7 @@ public class PartitionKeyGroupServiceTest extends AbstractServiceTest
         PartitionKeyGroup resultPartitionKeyGroup = partitionKeyGroupService.getPartitionKeyGroup(new PartitionKeyGroupKey(addWhitespace(PARTITION_KEY_GROUP)));
 
         // Validate the returned object.
-        validatePartitionKeyGroup(PARTITION_KEY_GROUP, resultPartitionKeyGroup);
+        partitionKeyGroupServiceTestHelper.validatePartitionKeyGroup(PARTITION_KEY_GROUP, resultPartitionKeyGroup);
     }
 
     @Test
@@ -152,7 +152,7 @@ public class PartitionKeyGroupServiceTest extends AbstractServiceTest
         PartitionKeyGroup resultPartitionKeyGroup = partitionKeyGroupService.getPartitionKeyGroup(new PartitionKeyGroupKey(PARTITION_KEY_GROUP.toUpperCase()));
 
         // Validate the returned object.
-        validatePartitionKeyGroup(PARTITION_KEY_GROUP.toLowerCase(), resultPartitionKeyGroup);
+        partitionKeyGroupServiceTestHelper.validatePartitionKeyGroup(PARTITION_KEY_GROUP.toLowerCase(), resultPartitionKeyGroup);
     }
 
     @Test
@@ -165,7 +165,7 @@ public class PartitionKeyGroupServiceTest extends AbstractServiceTest
         PartitionKeyGroup resultPartitionKeyGroup = partitionKeyGroupService.getPartitionKeyGroup(new PartitionKeyGroupKey(PARTITION_KEY_GROUP.toLowerCase()));
 
         // Validate the returned object.
-        validatePartitionKeyGroup(PARTITION_KEY_GROUP.toUpperCase(), resultPartitionKeyGroup);
+        partitionKeyGroupServiceTestHelper.validatePartitionKeyGroup(PARTITION_KEY_GROUP.toUpperCase(), resultPartitionKeyGroup);
     }
 
     @Test
@@ -181,10 +181,10 @@ public class PartitionKeyGroupServiceTest extends AbstractServiceTest
         PartitionKeyGroup deletedPartitionKeyGroup = partitionKeyGroupService.deletePartitionKeyGroup(new PartitionKeyGroupKey(PARTITION_KEY_GROUP));
 
         // Validate the returned object.
-        validatePartitionKeyGroup(PARTITION_KEY_GROUP, deletedPartitionKeyGroup);
+        partitionKeyGroupServiceTestHelper.validatePartitionKeyGroup(PARTITION_KEY_GROUP, deletedPartitionKeyGroup);
 
         // Ensure that this partition key group is no longer there.
-        assertNull(partitionKeyGroupDao.getPartitionKeyGroupByKey(createPartitionKeyGroupKey(PARTITION_KEY_GROUP)));
+        assertNull(partitionKeyGroupDao.getPartitionKeyGroupByKey(partitionKeyGroupServiceTestHelper.createPartitionKeyGroupKey(PARTITION_KEY_GROUP)));
     }
 
     @Test
@@ -216,10 +216,10 @@ public class PartitionKeyGroupServiceTest extends AbstractServiceTest
             partitionKeyGroupService.deletePartitionKeyGroup(new PartitionKeyGroupKey(addWhitespace(PARTITION_KEY_GROUP)));
 
         // Validate the returned object.
-        validatePartitionKeyGroup(PARTITION_KEY_GROUP, deletedPartitionKeyGroup);
+        partitionKeyGroupServiceTestHelper.validatePartitionKeyGroup(PARTITION_KEY_GROUP, deletedPartitionKeyGroup);
 
         // Ensure that this partition key group is no longer there.
-        assertNull(partitionKeyGroupDao.getPartitionKeyGroupByKey(createPartitionKeyGroupKey(PARTITION_KEY_GROUP)));
+        assertNull(partitionKeyGroupDao.getPartitionKeyGroupByKey(partitionKeyGroupServiceTestHelper.createPartitionKeyGroupKey(PARTITION_KEY_GROUP)));
     }
 
     @Test
@@ -233,10 +233,11 @@ public class PartitionKeyGroupServiceTest extends AbstractServiceTest
             partitionKeyGroupService.deletePartitionKeyGroup(new PartitionKeyGroupKey(PARTITION_KEY_GROUP.toUpperCase()));
 
         // Validate the returned object.
-        validatePartitionKeyGroup(PARTITION_KEY_GROUP.toLowerCase(), deletedPartitionKeyGroup);
+        partitionKeyGroupServiceTestHelper.validatePartitionKeyGroup(PARTITION_KEY_GROUP.toLowerCase(), deletedPartitionKeyGroup);
 
         // Ensure that this partition key group is no longer there.
-        assertNull(partitionKeyGroupDao.getPartitionKeyGroupByKey(createPartitionKeyGroupKey(PARTITION_KEY_GROUP.toLowerCase())));
+        assertNull(
+            partitionKeyGroupDao.getPartitionKeyGroupByKey(partitionKeyGroupServiceTestHelper.createPartitionKeyGroupKey(PARTITION_KEY_GROUP.toLowerCase())));
     }
 
     @Test
@@ -253,10 +254,11 @@ public class PartitionKeyGroupServiceTest extends AbstractServiceTest
             partitionKeyGroupService.deletePartitionKeyGroup(new PartitionKeyGroupKey(PARTITION_KEY_GROUP.toLowerCase()));
 
         // Validate the returned object.
-        validatePartitionKeyGroup(PARTITION_KEY_GROUP.toUpperCase(), deletedPartitionKeyGroup);
+        partitionKeyGroupServiceTestHelper.validatePartitionKeyGroup(PARTITION_KEY_GROUP.toUpperCase(), deletedPartitionKeyGroup);
 
         // Ensure that this partition key group is no longer there.
-        assertNull(partitionKeyGroupDao.getPartitionKeyGroupByKey(createPartitionKeyGroupKey(PARTITION_KEY_GROUP.toUpperCase())));
+        assertNull(
+            partitionKeyGroupDao.getPartitionKeyGroupByKey(partitionKeyGroupServiceTestHelper.createPartitionKeyGroupKey(PARTITION_KEY_GROUP.toUpperCase())));
     }
 
     @Test
@@ -273,10 +275,10 @@ public class PartitionKeyGroupServiceTest extends AbstractServiceTest
         PartitionKeyGroup deletedPartitionKeyGroup = partitionKeyGroupService.deletePartitionKeyGroup(new PartitionKeyGroupKey(PARTITION_KEY_GROUP));
 
         // Validate the returned object.
-        validatePartitionKeyGroup(PARTITION_KEY_GROUP, deletedPartitionKeyGroup);
+        partitionKeyGroupServiceTestHelper.validatePartitionKeyGroup(PARTITION_KEY_GROUP, deletedPartitionKeyGroup);
 
         // Ensure that this partition key group is no longer there.
-        assertNull(partitionKeyGroupDao.getPartitionKeyGroupByKey(createPartitionKeyGroupKey(PARTITION_KEY_GROUP)));
+        assertNull(partitionKeyGroupDao.getPartitionKeyGroupByKey(partitionKeyGroupServiceTestHelper.createPartitionKeyGroupKey(PARTITION_KEY_GROUP)));
     }
 
     @Test
@@ -315,7 +317,9 @@ public class PartitionKeyGroupServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertTrue(partitionKeyGroupKeys.getPartitionKeyGroupKeys().size() >= 2);
-        assertTrue(partitionKeyGroupKeys.getPartitionKeyGroupKeys().contains(createPartitionKeyGroupKey(PARTITION_KEY_GROUP)));
-        assertTrue(partitionKeyGroupKeys.getPartitionKeyGroupKeys().contains(createPartitionKeyGroupKey(PARTITION_KEY_GROUP_2)));
+        assertTrue(
+            partitionKeyGroupKeys.getPartitionKeyGroupKeys().contains(partitionKeyGroupServiceTestHelper.createPartitionKeyGroupKey(PARTITION_KEY_GROUP)));
+        assertTrue(
+            partitionKeyGroupKeys.getPartitionKeyGroupKeys().contains(partitionKeyGroupServiceTestHelper.createPartitionKeyGroupKey(PARTITION_KEY_GROUP_2)));
     }
 }

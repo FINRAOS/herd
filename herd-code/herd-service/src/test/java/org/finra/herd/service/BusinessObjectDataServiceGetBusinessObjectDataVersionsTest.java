@@ -57,9 +57,10 @@ public class BusinessObjectDataServiceGetBusinessObjectDataVersionsTest extends 
                 // Validate the returned object.
                 assertNotNull(businessObjectDataVersions);
                 assertEquals(1, businessObjectDataVersions.getBusinessObjectDataVersions().size());
-                validateBusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, businessObjectFormatVersion, PARTITION_VALUE,
-                    SUBPARTITION_VALUES, businessObjectDataVersion,
-                    businessObjectDataVersions.getBusinessObjectDataVersions().get(0).getBusinessObjectDataKey());
+                businessObjectDataServiceTestHelper
+                    .validateBusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, businessObjectFormatVersion, PARTITION_VALUE,
+                        SUBPARTITION_VALUES, businessObjectDataVersion,
+                        businessObjectDataVersions.getBusinessObjectDataVersions().get(0).getBusinessObjectDataKey());
                 assertEquals(BDATA_STATUS, businessObjectDataVersions.getBusinessObjectDataVersions().get(0).getStatus());
             }
         }
