@@ -95,15 +95,15 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
         // Join to other tables that we need to filter on.
         Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> businessObjectFormatEntity =
-                businessObjectDataEntity.join(BusinessObjectDataEntity_.businessObjectFormat);
+            businessObjectDataEntity.join(BusinessObjectDataEntity_.businessObjectFormat);
         Join<BusinessObjectFormatEntity, FileTypeEntity> fileTypeEntity = businessObjectFormatEntity.join(BusinessObjectFormatEntity_.fileType);
         Join<BusinessObjectFormatEntity, BusinessObjectDefinitionEntity> businessObjectDefinitionEntity =
-                businessObjectFormatEntity.join(BusinessObjectFormatEntity_.businessObjectDefinition);
+            businessObjectFormatEntity.join(BusinessObjectFormatEntity_.businessObjectDefinition);
 
         // Create the standard restrictions (i.e. the standard where clauses).
         Predicate mainQueryRestriction =
-                getQueryRestriction(builder, businessObjectDataEntity, businessObjectFormatEntity, fileTypeEntity, businessObjectDefinitionEntity,
-                        businessObjectDataKey);
+            getQueryRestriction(builder, businessObjectDataEntity, businessObjectFormatEntity, fileTypeEntity, businessObjectDefinitionEntity,
+                businessObjectDataKey);
 
         // If a format version was specified, use the latest available for this partition value.
         if (businessObjectDataKey.getBusinessObjectFormatVersion() == null)
@@ -116,28 +116,28 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
             // Join to the other tables we can filter on.
             Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> subBusinessObjectFormatEntity =
-                    subBusinessObjectDataEntity.join(BusinessObjectDataEntity_.businessObjectFormat);
+                subBusinessObjectDataEntity.join(BusinessObjectDataEntity_.businessObjectFormat);
             Join<BusinessObjectFormatEntity, BusinessObjectDefinitionEntity> subBusinessObjectDefinitionEntity =
-                    subBusinessObjectFormatEntity.join(BusinessObjectFormatEntity_.businessObjectDefinition);
+                subBusinessObjectFormatEntity.join(BusinessObjectFormatEntity_.businessObjectDefinition);
             Join<BusinessObjectFormatEntity, FileTypeEntity> subBusinessObjectFormatFileTypeEntity =
-                    subBusinessObjectFormatEntity.join(BusinessObjectFormatEntity_.fileType);
+                subBusinessObjectFormatEntity.join(BusinessObjectFormatEntity_.fileType);
             Join<BusinessObjectDataEntity, BusinessObjectDataStatusEntity> subBusinessObjectDataStatusEntity =
-                    subBusinessObjectDataEntity.join(BusinessObjectDataEntity_.status);
+                subBusinessObjectDataEntity.join(BusinessObjectDataEntity_.status);
 
             // Create the standard restrictions (i.e. the standard where clauses).
             Predicate subQueryRestriction = builder.equal(subBusinessObjectDefinitionEntity, businessObjectDefinitionEntity);
             subQueryRestriction = builder.and(subQueryRestriction, builder.equal(subBusinessObjectFormatEntity.get(BusinessObjectFormatEntity_.usage),
-                    businessObjectFormatEntity.get(BusinessObjectFormatEntity_.usage)));
+                businessObjectFormatEntity.get(BusinessObjectFormatEntity_.usage)));
             subQueryRestriction = builder.and(subQueryRestriction, builder.equal(subBusinessObjectFormatFileTypeEntity, fileTypeEntity));
 
             // Create and add standard restrictions on primary and sub-partition values.
             subQueryRestriction =
-                    builder.and(subQueryRestriction, getQueryRestrictionOnPartitionValues(builder, subBusinessObjectDataEntity, businessObjectDataEntity));
+                builder.and(subQueryRestriction, getQueryRestrictionOnPartitionValues(builder, subBusinessObjectDataEntity, businessObjectDataEntity));
 
             // Add restrictions on business object data version and business object data status.
             Predicate subQueryRestrictionOnBusinessObjectDataVersionAndStatus =
-                    getQueryRestrictionOnBusinessObjectDataVersionAndStatus(builder, subBusinessObjectDataEntity, subBusinessObjectDataStatusEntity,
-                            businessObjectDataKey.getBusinessObjectDataVersion(), businessObjectDataStatus);
+                getQueryRestrictionOnBusinessObjectDataVersionAndStatus(builder, subBusinessObjectDataEntity, subBusinessObjectDataStatusEntity,
+                    businessObjectDataKey.getBusinessObjectDataVersion(), businessObjectDataStatus);
             if (subQueryRestrictionOnBusinessObjectDataVersionAndStatus != null)
             {
                 subQueryRestriction = builder.and(subQueryRestriction, subQueryRestrictionOnBusinessObjectDataVersionAndStatus);
@@ -145,10 +145,8 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
             subQuery.select(builder.max(subBusinessObjectFormatEntity.get(BusinessObjectFormatEntity_.businessObjectFormatVersion))).where(subQueryRestriction);
 
-            mainQueryRestriction =
-                    builder
-                            .and(mainQueryRestriction, builder.in(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.businessObjectFormatVersion))
-                                    .value(subQuery));
+            mainQueryRestriction = builder
+                .and(mainQueryRestriction, builder.in(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.businessObjectFormatVersion)).value(subQuery));
         }
 
         // If a data version was not specified, use the latest one as per specified business object data status.
@@ -165,48 +163,46 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
                 // Join to the other tables we can filter on.
                 Join<BusinessObjectDataEntity, BusinessObjectDataStatusEntity> subBusinessObjectDataStatusEntity =
-                        subBusinessObjectDataEntity.join(BusinessObjectDataEntity_.status);
+                    subBusinessObjectDataEntity.join(BusinessObjectDataEntity_.status);
                 Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> subBusinessObjectFormatEntity =
-                        subBusinessObjectDataEntity.join(BusinessObjectDataEntity_.businessObjectFormat);
+                    subBusinessObjectDataEntity.join(BusinessObjectDataEntity_.businessObjectFormat);
 
                 // Create the standard restrictions (i.e. the standard where clauses).
                 Predicate subQueryRestriction = builder.equal(subBusinessObjectFormatEntity, businessObjectFormatEntity);
 
                 // Create and add standard restrictions on primary and sub-partition values.
                 subQueryRestriction =
-                        builder.and(subQueryRestriction, getQueryRestrictionOnPartitionValues(builder, subBusinessObjectDataEntity, businessObjectDataEntity));
+                    builder.and(subQueryRestriction, getQueryRestrictionOnPartitionValues(builder, subBusinessObjectDataEntity, businessObjectDataEntity));
 
                 // Create and add standard restrictions on business object data status.
-                subQueryRestriction =
-                        builder.and(subQueryRestriction, builder
-                                .equal(builder.upper(subBusinessObjectDataStatusEntity.get(BusinessObjectDataStatusEntity_.code)), businessObjectDataStatus
-                                        .toUpperCase()));
+                subQueryRestriction = builder.and(subQueryRestriction, builder
+                    .equal(builder.upper(subBusinessObjectDataStatusEntity.get(BusinessObjectDataStatusEntity_.code)), businessObjectDataStatus.toUpperCase()));
 
                 subQuery.select(builder.max(subBusinessObjectDataEntity.get(BusinessObjectDataEntity_.version))).where(subQueryRestriction);
 
                 mainQueryRestriction =
-                        builder.and(mainQueryRestriction, builder.in(businessObjectDataEntity.get(BusinessObjectDataEntity_.version)).value(subQuery));
+                    builder.and(mainQueryRestriction, builder.in(businessObjectDataEntity.get(BusinessObjectDataEntity_.version)).value(subQuery));
             }
             else
             {
                 // Both business object data version and business object data status are not specified, so just use the latest business object data version.
                 mainQueryRestriction =
-                        builder.and(mainQueryRestriction, builder.equal(businessObjectDataEntity.get(BusinessObjectDataEntity_.latestVersion), true));
+                    builder.and(mainQueryRestriction, builder.equal(businessObjectDataEntity.get(BusinessObjectDataEntity_.latestVersion), true));
             }
         }
 
         criteria.select(businessObjectDataEntity).where(mainQueryRestriction);
 
         return executeSingleResultQuery(criteria,
-                String.format("Found more than one business object data instance with parameters {namespace=\"%s\", businessObjectDefinitionName=\"%s\"," +
-                        " businessObjectFormatUsage=\"%s\", businessObjectFormatFileType=\"%s\", businessObjectFormatVersion=\"%d\"," +
-                        " businessObjectDataPartitionValue=\"%s\", businessObjectDataSubPartitionValues=\"%s\", businessObjectDataVersion=\"%d\"," +
-                        " businessObjectDataStatus=\"%s\"}.", businessObjectDataKey.getNamespace(), businessObjectDataKey.getBusinessObjectDefinitionName(),
-                        businessObjectDataKey.getBusinessObjectFormatUsage(), businessObjectDataKey.getBusinessObjectFormatFileType(),
-                        businessObjectDataKey.getBusinessObjectFormatVersion(), businessObjectDataKey.getPartitionValue(),
-                        CollectionUtils.isEmpty(businessObjectDataKey.getSubPartitionValues()) ? "" :
-                                StringUtils.join(businessObjectDataKey.getSubPartitionValues(), ","), businessObjectDataKey.getBusinessObjectDataVersion(),
-                        businessObjectDataStatus));
+            String.format("Found more than one business object data instance with parameters {namespace=\"%s\", businessObjectDefinitionName=\"%s\"," +
+                " businessObjectFormatUsage=\"%s\", businessObjectFormatFileType=\"%s\", businessObjectFormatVersion=\"%d\"," +
+                " businessObjectDataPartitionValue=\"%s\", businessObjectDataSubPartitionValues=\"%s\", businessObjectDataVersion=\"%d\"," +
+                " businessObjectDataStatus=\"%s\"}.", businessObjectDataKey.getNamespace(), businessObjectDataKey.getBusinessObjectDefinitionName(),
+                businessObjectDataKey.getBusinessObjectFormatUsage(), businessObjectDataKey.getBusinessObjectFormatFileType(),
+                businessObjectDataKey.getBusinessObjectFormatVersion(), businessObjectDataKey.getPartitionValue(),
+                CollectionUtils.isEmpty(businessObjectDataKey.getSubPartitionValues()) ? "" :
+                    StringUtils.join(businessObjectDataKey.getSubPartitionValues(), ","), businessObjectDataKey.getBusinessObjectDataVersion(),
+                businessObjectDataStatus));
     }
 
     @Override
@@ -221,10 +217,10 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
         // Join to the other tables we can filter on.
         Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> businessObjectFormatEntity =
-                businessObjectDataEntity.join(BusinessObjectDataEntity_.businessObjectFormat);
+            businessObjectDataEntity.join(BusinessObjectDataEntity_.businessObjectFormat);
         Join<BusinessObjectFormatEntity, FileTypeEntity> fileTypeEntity = businessObjectFormatEntity.join(BusinessObjectFormatEntity_.fileType);
         Join<BusinessObjectFormatEntity, BusinessObjectDefinitionEntity> businessObjectDefinitionEntity =
-                businessObjectFormatEntity.join(BusinessObjectFormatEntity_.businessObjectDefinition);
+            businessObjectFormatEntity.join(BusinessObjectFormatEntity_.businessObjectDefinition);
         Join<BusinessObjectDefinitionEntity, NamespaceEntity> namespaceEntity = businessObjectDefinitionEntity.join(BusinessObjectDefinitionEntity_.namespace);
 
         // Create the path.
@@ -232,25 +228,23 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
         // Create the standard restrictions (i.e. the standard where clauses).
         Predicate queryRestriction =
-                builder.equal(builder.upper(namespaceEntity.get(NamespaceEntity_.code)), businessObjectDataKey.getNamespace().toUpperCase());
+            builder.equal(builder.upper(namespaceEntity.get(NamespaceEntity_.code)), businessObjectDataKey.getNamespace().toUpperCase());
         queryRestriction = builder.and(queryRestriction, builder.equal(builder.upper(businessObjectDefinitionEntity.get(BusinessObjectDefinitionEntity_.name)),
-                businessObjectDataKey.getBusinessObjectDefinitionName().toUpperCase()));
+            businessObjectDataKey.getBusinessObjectDefinitionName().toUpperCase()));
         queryRestriction = builder.and(queryRestriction, builder.equal(builder.upper(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.usage)),
-                businessObjectDataKey.getBusinessObjectFormatUsage().toUpperCase()));
+            businessObjectDataKey.getBusinessObjectFormatUsage().toUpperCase()));
         queryRestriction = builder.and(queryRestriction,
-                builder.equal(builder.upper(fileTypeEntity.get(FileTypeEntity_.code)), businessObjectDataKey.getBusinessObjectFormatFileType().toUpperCase()));
+            builder.equal(builder.upper(fileTypeEntity.get(FileTypeEntity_.code)), businessObjectDataKey.getBusinessObjectFormatFileType().toUpperCase()));
         queryRestriction = builder.and(queryRestriction, builder.equal(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.businessObjectFormatVersion),
-                businessObjectDataKey.getBusinessObjectFormatVersion()));
+            businessObjectDataKey.getBusinessObjectFormatVersion()));
         queryRestriction = builder.and(queryRestriction,
-                builder.equal(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue), businessObjectDataKey.getPartitionValue()));
+            builder.equal(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue), businessObjectDataKey.getPartitionValue()));
 
         for (int i = 0; i < BusinessObjectDataEntity.MAX_SUBPARTITIONS; i++)
         {
-            queryRestriction =
-                    builder.and(queryRestriction, i < businessObjectDataKey.getSubPartitionValues().size() ?
-                            builder.equal(businessObjectDataEntity.get(BUSINESS_OBJECT_DATA_SUBPARTITIONS.get(i)), businessObjectDataKey
-                                    .getSubPartitionValues().get(i)) :
-                            builder.isNull(businessObjectDataEntity.get(BUSINESS_OBJECT_DATA_SUBPARTITIONS.get(i))));
+            queryRestriction = builder.and(queryRestriction, i < businessObjectDataKey.getSubPartitionValues().size() ?
+                builder.equal(businessObjectDataEntity.get(BUSINESS_OBJECT_DATA_SUBPARTITIONS.get(i)), businessObjectDataKey.getSubPartitionValues().get(i)) :
+                builder.isNull(businessObjectDataEntity.get(BUSINESS_OBJECT_DATA_SUBPARTITIONS.get(i))));
         }
 
         criteria.select(maxBusinessObjectDataVersion).where(queryRestriction);
@@ -261,10 +255,11 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
     @Override
     public String getBusinessObjectDataMaxPartitionValue(int partitionColumnPosition, BusinessObjectFormatKey businessObjectFormatKey,
         Integer businessObjectDataVersion, String businessObjectDataStatus, List<String> storageNames, String storagePlatformType,
-        String excludedStoragePlatformType, String upperBoundPartitionValue, String lowerBoundPartitionValue)
+        String excludedStoragePlatformType, boolean includeArchivedBusinessObjectData, String upperBoundPartitionValue, String lowerBoundPartitionValue)
     {
         return getBusinessObjectDataPartitionValue(partitionColumnPosition, businessObjectFormatKey, businessObjectDataVersion, businessObjectDataStatus,
-                storageNames, storagePlatformType, excludedStoragePlatformType, AggregateFunction.GREATEST, upperBoundPartitionValue, lowerBoundPartitionValue);
+            storageNames, storagePlatformType, excludedStoragePlatformType, includeArchivedBusinessObjectData, AggregateFunction.GREATEST,
+            upperBoundPartitionValue, lowerBoundPartitionValue);
     }
 
     @Override
@@ -273,7 +268,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         String excludedStoragePlatformType)
     {
         return getBusinessObjectDataPartitionValue(partitionColumnPosition, businessObjectFormatKey, businessObjectDataVersion, businessObjectDataStatus,
-                storageNames, storagePlatformType, excludedStoragePlatformType, AggregateFunction.LEAST, null, null);
+            storageNames, storagePlatformType, excludedStoragePlatformType, false, AggregateFunction.LEAST, null, null);
     }
 
     @Override
@@ -288,10 +283,10 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
         // Join to the other tables we can filter on.
         Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> businessObjectFormatEntity =
-                businessObjectDataEntity.join(BusinessObjectDataEntity_.businessObjectFormat);
+            businessObjectDataEntity.join(BusinessObjectDataEntity_.businessObjectFormat);
         Join<BusinessObjectFormatEntity, FileTypeEntity> fileTypeEntity = businessObjectFormatEntity.join(BusinessObjectFormatEntity_.fileType);
         Join<BusinessObjectFormatEntity, BusinessObjectDefinitionEntity> businessObjectDefinitionEntity =
-                businessObjectFormatEntity.join(BusinessObjectFormatEntity_.businessObjectDefinition);
+            businessObjectFormatEntity.join(BusinessObjectFormatEntity_.businessObjectDefinition);
         Join<BusinessObjectDefinitionEntity, NamespaceEntity> namespaceEntity = businessObjectDefinitionEntity.join(BusinessObjectDefinitionEntity_.namespace);
 
         // Create path.
@@ -299,17 +294,15 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
         // Create the standard restrictions (i.e. the standard where clauses).
         Predicate queryRestriction =
-                builder.equal(builder.upper(namespaceEntity.get(NamespaceEntity_.code)), businessObjectFormatKey.getNamespace().toUpperCase());
+            builder.equal(builder.upper(namespaceEntity.get(NamespaceEntity_.code)), businessObjectFormatKey.getNamespace().toUpperCase());
         queryRestriction = builder.and(queryRestriction, builder.equal(builder.upper(businessObjectDefinitionEntity.get(BusinessObjectDefinitionEntity_.name)),
-                businessObjectFormatKey.getBusinessObjectDefinitionName().toUpperCase()));
+            businessObjectFormatKey.getBusinessObjectDefinitionName().toUpperCase()));
         queryRestriction = builder.and(queryRestriction, builder.equal(builder.upper(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.usage)),
-                businessObjectFormatKey.getBusinessObjectFormatUsage().toUpperCase()));
-        queryRestriction =
-                builder.and(queryRestriction,
-                        builder.equal(builder.upper(fileTypeEntity.get(FileTypeEntity_.code)), businessObjectFormatKey.getBusinessObjectFormatFileType()
-                                .toUpperCase()));
+            businessObjectFormatKey.getBusinessObjectFormatUsage().toUpperCase()));
+        queryRestriction = builder.and(queryRestriction,
+            builder.equal(builder.upper(fileTypeEntity.get(FileTypeEntity_.code)), businessObjectFormatKey.getBusinessObjectFormatFileType().toUpperCase()));
         queryRestriction = builder.and(queryRestriction, builder.equal(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.businessObjectFormatVersion),
-                businessObjectFormatKey.getBusinessObjectFormatVersion()));
+            businessObjectFormatKey.getBusinessObjectFormatVersion()));
 
         criteria.select(businessObjectDataCount).where(queryRestriction);
 
@@ -328,22 +321,22 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
         // Join to the other tables we can filter on.
         Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> businessObjectFormatEntity =
-                businessObjectDataEntity.join(BusinessObjectDataEntity_.businessObjectFormat);
+            businessObjectDataEntity.join(BusinessObjectDataEntity_.businessObjectFormat);
         Join<BusinessObjectFormatEntity, FileTypeEntity> fileTypeEntity = businessObjectFormatEntity.join(BusinessObjectFormatEntity_.fileType);
         Join<BusinessObjectFormatEntity, BusinessObjectDefinitionEntity> businessObjectDefinitionEntity =
-                businessObjectFormatEntity.join(BusinessObjectFormatEntity_.businessObjectDefinition);
+            businessObjectFormatEntity.join(BusinessObjectFormatEntity_.businessObjectDefinition);
 
         // Create the standard restrictions (i.e. the standard where clauses).
         Predicate queryRestriction =
-                getQueryRestriction(builder, businessObjectDataEntity, businessObjectFormatEntity, fileTypeEntity, businessObjectDefinitionEntity,
-                        businessObjectDataKey);
+            getQueryRestriction(builder, businessObjectDataEntity, businessObjectFormatEntity, fileTypeEntity, businessObjectDefinitionEntity,
+                businessObjectDataKey);
 
         // Add the clauses for the query.
         criteria.select(businessObjectDataEntity).where(queryRestriction);
 
         // Order by business object format and data versions.
         criteria.orderBy(builder.asc(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.businessObjectFormatVersion)),
-                builder.asc(businessObjectDataEntity.get(BusinessObjectDataEntity_.version)));
+            builder.asc(businessObjectDataEntity.get(BusinessObjectDataEntity_.version)));
 
         return entityManager.createQuery(criteria).getResultList();
     }
@@ -359,9 +352,8 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         {
             // Get a sub-list for the current chunk of partition filters.
             List<BusinessObjectDataEntity> chunkBusinessObjectDataEntities =
-                    getBusinessObjectDataEntities(businessObjectFormatKey, partitionFilters, businessObjectDataVersion, businessObjectDataStatus, storageName,
-                            i, (i + MAX_PARTITION_FILTERS_PER_REQUEST) > partitionFilters.size() ? partitionFilters.size() - i
-                                    : MAX_PARTITION_FILTERS_PER_REQUEST);
+                getBusinessObjectDataEntities(businessObjectFormatKey, partitionFilters, businessObjectDataVersion, businessObjectDataStatus, storageName, i,
+                    (i + MAX_PARTITION_FILTERS_PER_REQUEST) > partitionFilters.size() ? partitionFilters.size() - i : MAX_PARTITION_FILTERS_PER_REQUEST);
 
             // Add the sub-list to the result.
             resultBusinessObjectDataEntities.addAll(chunkBusinessObjectDataEntities);
@@ -385,7 +377,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         Join<BusinessObjectDataEntity, StorageUnitEntity> storageUnitEntity = businessObjectDataEntity.join(BusinessObjectDataEntity_.storageUnits);
         Join<StorageUnitEntity, StorageEntity> storageEntity = storageUnitEntity.join(StorageUnitEntity_.storage);
         Join<BusinessObjectDataEntity, BusinessObjectDataStatusEntity> businessObjectDataStatusEntity =
-                businessObjectDataEntity.join(BusinessObjectDataEntity_.status);
+            businessObjectDataEntity.join(BusinessObjectDataEntity_.status);
 
         // Compute threshold timestamp based on the current database timestamp and threshold minutes.
         Timestamp thresholdTimestamp = HerdDateUtils.addMinutes(getCurrentTimestamp(), -thresholdMinutes);
@@ -393,9 +385,9 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         // Create the standard restrictions (i.e. the standard where clauses).
         Predicate queryRestriction = builder.equal(builder.upper(storageEntity.get(StorageEntity_.name)), storageName.toUpperCase());
         queryRestriction = builder.and(queryRestriction,
-                builder.not(businessObjectDataStatusEntity.get(BusinessObjectDataStatusEntity_.code).in(businessObjectDataStatusesToIgnore)));
+            builder.not(businessObjectDataStatusEntity.get(BusinessObjectDataStatusEntity_.code).in(businessObjectDataStatusesToIgnore)));
         queryRestriction =
-                builder.and(queryRestriction, builder.lessThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.createdOn), thresholdTimestamp));
+            builder.and(queryRestriction, builder.lessThanOrEqualTo(businessObjectDataEntity.get(BusinessObjectDataEntity_.createdOn), thresholdTimestamp));
 
         // Order the results by file path.
         Order orderByCreatedOn = builder.asc(businessObjectDataEntity.get(BusinessObjectDataEntity_.createdOn));
@@ -421,12 +413,12 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         // Join to the other tables we can filter on.
         Join<BusinessObjectDataEntity, StorageUnitEntity> storageUnitEntity = businessObjectDataEntity.join(BusinessObjectDataEntity_.storageUnits);
         Join<BusinessObjectDataEntity, BusinessObjectDataStatusEntity> businessObjectDataStatusEntity =
-                businessObjectDataEntity.join(BusinessObjectDataEntity_.status);
+            businessObjectDataEntity.join(BusinessObjectDataEntity_.status);
         Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> businessObjectFormatEntity =
-                businessObjectDataEntity.join(BusinessObjectDataEntity_.businessObjectFormat);
+            businessObjectDataEntity.join(BusinessObjectDataEntity_.businessObjectFormat);
         Join<BusinessObjectFormatEntity, FileTypeEntity> fileTypeEntity = businessObjectFormatEntity.join(BusinessObjectFormatEntity_.fileType);
         Join<BusinessObjectFormatEntity, BusinessObjectDefinitionEntity> businessObjectDefinitionEntity =
-                businessObjectFormatEntity.join(BusinessObjectFormatEntity_.businessObjectDefinition);
+            businessObjectFormatEntity.join(BusinessObjectFormatEntity_.businessObjectDefinition);
         Join<StoragePolicyEntity, StoragePolicyStatusEntity> storagePolicyStatusEntity = storagePolicyEntity.join(StoragePolicyEntity_.status);
 
         // Create main query restrictions based on the specified parameters.
@@ -434,17 +426,17 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
         // Add a restriction on business object definition.
         mainQueryPredicates.add(storagePolicyPriorityLevel.isBusinessObjectDefinitionIsNull() ?
-                builder.isNull(storagePolicyEntity.get(StoragePolicyEntity_.businessObjectDefinition)) :
-                builder.equal(businessObjectDefinitionEntity, storagePolicyEntity.get(StoragePolicyEntity_.businessObjectDefinition)));
+            builder.isNull(storagePolicyEntity.get(StoragePolicyEntity_.businessObjectDefinition)) :
+            builder.equal(businessObjectDefinitionEntity, storagePolicyEntity.get(StoragePolicyEntity_.businessObjectDefinition)));
 
         // Add a restriction on business object format usage.
         mainQueryPredicates.add(storagePolicyPriorityLevel.isUsageIsNull() ? builder.isNull(storagePolicyEntity.get(StoragePolicyEntity_.usage)) : builder
-                .equal(builder.upper(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.usage)),
-                        builder.upper(storagePolicyEntity.get(StoragePolicyEntity_.usage))));
+            .equal(builder.upper(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.usage)),
+                builder.upper(storagePolicyEntity.get(StoragePolicyEntity_.usage))));
 
         // Add a restriction on business object format file type.
         mainQueryPredicates.add(storagePolicyPriorityLevel.isFileTypeIsNull() ? builder.isNull(storagePolicyEntity.get(StoragePolicyEntity_.fileType)) :
-                builder.equal(fileTypeEntity, storagePolicyEntity.get(StoragePolicyEntity_.fileType)));
+            builder.equal(fileTypeEntity, storagePolicyEntity.get(StoragePolicyEntity_.fileType)));
 
         // Add a restriction on storage policy filter storage.
         mainQueryPredicates.add(builder.equal(storageUnitEntity.get(StorageUnitEntity_.storage), storagePolicyEntity.get(StoragePolicyEntity_.storage)));
@@ -470,7 +462,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         List<Predicate> subQueryPredicates = new ArrayList<>();
         subQueryPredicates.add(builder.equal(subBusinessObjectDataEntity, businessObjectDataEntity));
         subQueryPredicates
-                .add(builder.equal(subStorageUnitEntity.get(StorageUnitEntity_.storage), storagePolicyEntity.get(StoragePolicyEntity_.destinationStorage)));
+            .add(builder.equal(subStorageUnitEntity.get(StorageUnitEntity_.storage), storagePolicyEntity.get(StoragePolicyEntity_.destinationStorage)));
 
         // Add all clauses to the subquery.
         subquery.select(subBusinessObjectDataEntity).where(subQueryPredicates.toArray(new Predicate[] {}));
@@ -513,14 +505,15 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
      *
      * @param partitionColumnPosition the partition column position (1-based numbering)
      * @param businessObjectFormatKey the business object format key (case-insensitive). If a business object format version isn't specified, the latest
-     *            available format version for each partition value will be used.
+     * available format version for each partition value will be used.
      * @param businessObjectDataVersion the business object data version. If a business object data version isn't specified, the latest data version based on
-     *            the specified business object data status will be used for each partition value.
+     * the specified business object data status will be used for each partition value.
      * @param businessObjectDataStatus the business object data status. This parameter is ignored when the business object data version is specified.
      * @param storageNames the optional list of storage names (case-insensitive)
      * @param storagePlatformType the optional storage platform type, e.g. S3 for Hive DDL. It is ignored when the list of storages is not empty
      * @param excludedStoragePlatformType the optional storage platform type to be excluded from search. It is ignored when the list of storages is not empty or
-     *            the storage platform type is specified
+     * the storage platform type is specified
+     * @param includeArchivedBusinessObjectData specifies to treat archived business object data as non-archived
      * @param aggregateFunction the aggregate function to use against partition values
      * @param upperBoundPartitionValue the optional inclusive upper bound for the maximum available partition value
      * @param lowerBoundPartitionValue the optional inclusive lower bound for the maximum available partition value
@@ -529,7 +522,8 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
      */
     private String getBusinessObjectDataPartitionValue(int partitionColumnPosition, BusinessObjectFormatKey businessObjectFormatKey,
         Integer businessObjectDataVersion, String businessObjectDataStatus, List<String> storageNames, String storagePlatformType,
-        String excludedStoragePlatformType, AggregateFunction aggregateFunction, String upperBoundPartitionValue, String lowerBoundPartitionValue)
+        String excludedStoragePlatformType, boolean includeArchivedBusinessObjectData, AggregateFunction aggregateFunction, String upperBoundPartitionValue,
+        String lowerBoundPartitionValue)
     {
         // Create the criteria builder and the criteria.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
@@ -540,10 +534,10 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
         // Join to the other tables we can filter on.
         Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> businessObjectFormatEntity =
-                businessObjectDataEntity.join(BusinessObjectDataEntity_.businessObjectFormat);
+            businessObjectDataEntity.join(BusinessObjectDataEntity_.businessObjectFormat);
         Join<BusinessObjectFormatEntity, FileTypeEntity> fileTypeEntity = businessObjectFormatEntity.join(BusinessObjectFormatEntity_.fileType);
         Join<BusinessObjectFormatEntity, BusinessObjectDefinitionEntity> businessObjectDefinitionEntity =
-                businessObjectFormatEntity.join(BusinessObjectFormatEntity_.businessObjectDefinition);
+            businessObjectFormatEntity.join(BusinessObjectFormatEntity_.businessObjectDefinition);
         Join<BusinessObjectDefinitionEntity, NamespaceEntity> namespaceEntity = businessObjectDefinitionEntity.join(BusinessObjectDefinitionEntity_.namespace);
         Join<BusinessObjectDataEntity, StorageUnitEntity> storageUnitEntity = businessObjectDataEntity.join(BusinessObjectDataEntity_.storageUnits);
         Join<StorageUnitEntity, StorageUnitStatusEntity> storageUnitStatusEntity = storageUnitEntity.join(StorageUnitEntity_.status);
@@ -567,66 +561,63 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
         // Create the standard restrictions (i.e. the standard where clauses).
         Predicate mainQueryRestriction =
-                builder.equal(builder.upper(namespaceEntity.get(NamespaceEntity_.code)), businessObjectFormatKey.getNamespace().toUpperCase());
+            builder.equal(builder.upper(namespaceEntity.get(NamespaceEntity_.code)), businessObjectFormatKey.getNamespace().toUpperCase());
         mainQueryRestriction = builder.and(mainQueryRestriction, builder
-                .equal(builder.upper(businessObjectDefinitionEntity.get(BusinessObjectDefinitionEntity_.name)),
-                        businessObjectFormatKey.getBusinessObjectDefinitionName().toUpperCase()));
-        mainQueryRestriction =
-                builder.and(mainQueryRestriction, builder.equal(builder.upper(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.usage)),
-                        businessObjectFormatKey.getBusinessObjectFormatUsage().toUpperCase()));
-        mainQueryRestriction =
-                builder.and(mainQueryRestriction,
-                        builder.equal(builder.upper(fileTypeEntity.get(FileTypeEntity_.code)), businessObjectFormatKey.getBusinessObjectFormatFileType()
-                                .toUpperCase()));
+            .equal(builder.upper(businessObjectDefinitionEntity.get(BusinessObjectDefinitionEntity_.name)),
+                businessObjectFormatKey.getBusinessObjectDefinitionName().toUpperCase()));
+        mainQueryRestriction = builder.and(mainQueryRestriction, builder.equal(builder.upper(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.usage)),
+            businessObjectFormatKey.getBusinessObjectFormatUsage().toUpperCase()));
+        mainQueryRestriction = builder.and(mainQueryRestriction,
+            builder.equal(builder.upper(fileTypeEntity.get(FileTypeEntity_.code)), businessObjectFormatKey.getBusinessObjectFormatFileType().toUpperCase()));
 
         // If a business object format version was specified, use it.
         if (businessObjectFormatKey.getBusinessObjectFormatVersion() != null)
         {
             mainQueryRestriction = builder.and(mainQueryRestriction, builder
-                    .equal(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.businessObjectFormatVersion),
-                            businessObjectFormatKey.getBusinessObjectFormatVersion()));
+                .equal(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.businessObjectFormatVersion),
+                    businessObjectFormatKey.getBusinessObjectFormatVersion()));
         }
 
         // If a data version was specified, use it.
         if (businessObjectDataVersion != null)
         {
             mainQueryRestriction =
-                    builder.and(mainQueryRestriction, builder.equal(businessObjectDataEntity.get(BusinessObjectDataEntity_.version), 
-                            businessObjectDataVersion));
+                builder.and(mainQueryRestriction, builder.equal(businessObjectDataEntity.get(BusinessObjectDataEntity_.version), businessObjectDataVersion));
         }
         // Business object data version is not specified, so get the latest one as per specified business object data status in the specified storage.
         else
         {
             Subquery<Integer> subQuery =
-                    getMaximumBusinessObjectDataVersionSubQuery(builder, criteria, businessObjectDataEntity, businessObjectFormatEntity,
-                            businessObjectDataStatus,
-                            storageNames, storagePlatformType, excludedStoragePlatformType, false);
+                getMaximumBusinessObjectDataVersionSubQuery(builder, criteria, businessObjectDataEntity, businessObjectFormatEntity, businessObjectDataStatus,
+                    storageNames, storagePlatformType, excludedStoragePlatformType, false);
 
             mainQueryRestriction =
-                    builder.and(mainQueryRestriction, builder.in(businessObjectDataEntity.get(BusinessObjectDataEntity_.version)).value(subQuery));
+                builder.and(mainQueryRestriction, builder.in(businessObjectDataEntity.get(BusinessObjectDataEntity_.version)).value(subQuery));
         }
 
         // Add an inclusive upper bound partition value restriction if specified.
         if (upperBoundPartitionValue != null)
         {
             mainQueryRestriction =
-                    builder.and(mainQueryRestriction, builder.lessThanOrEqualTo(businessObjectDataEntity.get(singleValuedAttribute), upperBoundPartitionValue));
+                builder.and(mainQueryRestriction, builder.lessThanOrEqualTo(businessObjectDataEntity.get(singleValuedAttribute), upperBoundPartitionValue));
         }
 
         // Add an inclusive lower bound partition value restriction if specified.
         if (lowerBoundPartitionValue != null)
         {
             mainQueryRestriction =
-                    builder.and(mainQueryRestriction, builder.greaterThanOrEqualTo(businessObjectDataEntity.get(singleValuedAttribute),
-                            lowerBoundPartitionValue));
+                builder.and(mainQueryRestriction, builder.greaterThanOrEqualTo(businessObjectDataEntity.get(singleValuedAttribute), lowerBoundPartitionValue));
         }
 
         // If specified, add restriction on storage.
         mainQueryRestriction = builder.and(mainQueryRestriction,
-                getQueryRestrictionOnStorage(builder, storageEntity, storagePlatformEntity, storageNames, storagePlatformType, excludedStoragePlatformType));
+            getQueryRestrictionOnStorage(builder, storageEntity, storagePlatformEntity, storageNames, storagePlatformType, excludedStoragePlatformType));
 
-        // We want to search across only "available" storage units, so add a restriction on storage unit status availability flag.
-        mainQueryRestriction = builder.and(mainQueryRestriction, builder.isTrue(storageUnitStatusEntity.get(StorageUnitStatusEntity_.available)));
+        // Unless flag is set to include archived business object data, search across only "available" storage units.
+        if (!includeArchivedBusinessObjectData)
+        {
+            mainQueryRestriction = builder.and(mainQueryRestriction, builder.isTrue(storageUnitStatusEntity.get(StorageUnitStatusEntity_.available)));
+        }
 
         criteria.select(partitionValue).where(mainQueryRestriction);
 
@@ -638,17 +629,15 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
      * partitionFilterSubListFromIndex and partitionFilterSubListSize parameters.
      *
      * @param businessObjectFormatKey the business object format key (case-insensitive). If a business object format version isn't specified, the latest
-     *            available format version for each partition value will be used.
+     * available format version for each partition value will be used.
      * @param partitionFilters the list of partition filter to be used to select business object data instances. Each partition filter contains a list of
-     *            primary and sub-partition values in the right order up to the maximum partition levels allowed by business object data registration - with
-     *            partition
-     *            values for the relative partitions not to be used for selection passed as nulls.
+     * primary and sub-partition values in the right order up to the maximum partition levels allowed by business object data registration - with partition
+     * values for the relative partitions not to be used for selection passed as nulls.
      * @param businessObjectDataVersion the business object data version. If a business object data version isn't specified, the latest data version based on
-     *            the specified business object data status is returned.
+     * the specified business object data status is returned.
      * @param businessObjectDataStatus the business object data status. This parameter is ignored when the business object data version is specified. When
-     *            business object data version and business object data status both are not specified, the latest data version for each set of partition values
-     *            will be
-     *            used regardless of the status.
+     * business object data version and business object data status both are not specified, the latest data version for each set of partition values will be
+     * used regardless of the status.
      * @param storageName the name of the storage where the business object data storage unit is located (case-insensitive)
      * @param partitionFilterSubListFromIndex the index of the first element in the partition filter sublist
      * @param partitionFilterSubListSize the size of the partition filter sublist
@@ -670,17 +659,17 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         Join<BusinessObjectDataEntity, StorageUnitEntity> storageUnitEntity = businessObjectDataEntity.join(BusinessObjectDataEntity_.storageUnits);
         Join<StorageUnitEntity, StorageEntity> storageEntity = storageUnitEntity.join(StorageUnitEntity_.storage);
         Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> businessObjectFormatEntity =
-                businessObjectDataEntity.join(BusinessObjectDataEntity_.businessObjectFormat);
+            businessObjectDataEntity.join(BusinessObjectDataEntity_.businessObjectFormat);
         Join<BusinessObjectFormatEntity, FileTypeEntity> fileTypeEntity = businessObjectFormatEntity.join(BusinessObjectFormatEntity_.fileType);
         Join<BusinessObjectFormatEntity, BusinessObjectDefinitionEntity> businessObjectDefinitionEntity =
-                businessObjectFormatEntity.join(BusinessObjectFormatEntity_.businessObjectDefinition);
+            businessObjectFormatEntity.join(BusinessObjectFormatEntity_.businessObjectDefinition);
 
         // Create the standard restrictions (i.e. the standard where clauses).
 
         // Create a standard restriction based on the business object format key values.
         // Please note that we specify not to ignore the business object format version.
         Predicate mainQueryRestriction =
-                getQueryRestriction(builder, businessObjectFormatEntity, fileTypeEntity, businessObjectDefinitionEntity, businessObjectFormatKey, false);
+            getQueryRestriction(builder, businessObjectFormatEntity, fileTypeEntity, businessObjectDefinitionEntity, businessObjectFormatKey, false);
 
         // If a format version was not specified, use the latest available for this set of partition values.
         if (businessObjectFormatKey.getBusinessObjectFormatVersion() == null)
@@ -695,28 +684,28 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
             Join<BusinessObjectDataEntity, StorageUnitEntity> subStorageUnitEntity = subBusinessObjectDataEntity.join(BusinessObjectDataEntity_.storageUnits);
             Join<StorageUnitEntity, StorageEntity> subStorageEntity = subStorageUnitEntity.join(StorageUnitEntity_.storage);
             Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> subBusinessObjectFormatEntity =
-                    subBusinessObjectDataEntity.join(BusinessObjectDataEntity_.businessObjectFormat);
+                subBusinessObjectDataEntity.join(BusinessObjectDataEntity_.businessObjectFormat);
             Join<BusinessObjectFormatEntity, BusinessObjectDefinitionEntity> subBusinessObjectDefinitionEntity =
-                    subBusinessObjectFormatEntity.join(BusinessObjectFormatEntity_.businessObjectDefinition);
+                subBusinessObjectFormatEntity.join(BusinessObjectFormatEntity_.businessObjectDefinition);
             Join<BusinessObjectFormatEntity, FileTypeEntity> subBusinessObjectFormatFileTypeEntity =
-                    subBusinessObjectFormatEntity.join(BusinessObjectFormatEntity_.fileType);
+                subBusinessObjectFormatEntity.join(BusinessObjectFormatEntity_.fileType);
             Join<BusinessObjectDataEntity, BusinessObjectDataStatusEntity> subBusinessObjectDataStatusEntity =
-                    subBusinessObjectDataEntity.join(BusinessObjectDataEntity_.status);
+                subBusinessObjectDataEntity.join(BusinessObjectDataEntity_.status);
 
             // Create the standard restrictions (i.e. the standard where clauses).
             Predicate subQueryRestriction = builder.equal(subBusinessObjectDefinitionEntity, businessObjectDefinitionEntity);
             subQueryRestriction = builder.and(subQueryRestriction, builder.equal(subBusinessObjectFormatEntity.get(BusinessObjectFormatEntity_.usage),
-                    businessObjectFormatEntity.get(BusinessObjectFormatEntity_.usage)));
+                businessObjectFormatEntity.get(BusinessObjectFormatEntity_.usage)));
             subQueryRestriction = builder.and(subQueryRestriction, builder.equal(subBusinessObjectFormatFileTypeEntity, fileTypeEntity));
 
             // Create and add standard restrictions on primary and sub-partition values.
             subQueryRestriction =
-                    builder.and(subQueryRestriction, getQueryRestrictionOnPartitionValues(builder, subBusinessObjectDataEntity, businessObjectDataEntity));
+                builder.and(subQueryRestriction, getQueryRestrictionOnPartitionValues(builder, subBusinessObjectDataEntity, businessObjectDataEntity));
 
             // Add restrictions on business object data version and business object data status.
             Predicate subQueryRestrictionOnBusinessObjectDataVersionAndStatus =
-                    getQueryRestrictionOnBusinessObjectDataVersionAndStatus(builder, subBusinessObjectDataEntity, subBusinessObjectDataStatusEntity,
-                            businessObjectDataVersion, businessObjectDataStatus);
+                getQueryRestrictionOnBusinessObjectDataVersionAndStatus(builder, subBusinessObjectDataEntity, subBusinessObjectDataStatusEntity,
+                    businessObjectDataVersion, businessObjectDataStatus);
             if (subQueryRestrictionOnBusinessObjectDataVersionAndStatus != null)
             {
                 subQueryRestriction = builder.and(subQueryRestriction, subQueryRestrictionOnBusinessObjectDataVersionAndStatus);
@@ -727,22 +716,19 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
             subQuery.select(builder.max(subBusinessObjectFormatEntity.get(BusinessObjectFormatEntity_.businessObjectFormatVersion))).where(subQueryRestriction);
 
-            mainQueryRestriction =
-                    builder
-                            .and(mainQueryRestriction, builder.in(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.businessObjectFormatVersion))
-                                    .value(subQuery));
+            mainQueryRestriction = builder
+                .and(mainQueryRestriction, builder.in(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.businessObjectFormatVersion)).value(subQuery));
         }
 
         // Add restriction as per specified primary and/or sub-partition values.
         mainQueryRestriction = builder.and(mainQueryRestriction, getQueryRestrictionOnPartitionValues(builder, businessObjectDataEntity,
-                partitionFilters.subList(partitionFilterSubListFromIndex, partitionFilterSubListFromIndex + partitionFilterSubListSize)));
+            partitionFilters.subList(partitionFilterSubListFromIndex, partitionFilterSubListFromIndex + partitionFilterSubListSize)));
 
         // If a data version was specified, use it. Otherwise, use the latest one as per specified business object data status.
         if (businessObjectDataVersion != null)
         {
             mainQueryRestriction =
-                    builder.and(mainQueryRestriction, builder.equal(businessObjectDataEntity.get(BusinessObjectDataEntity_.version), 
-                            businessObjectDataVersion));
+                builder.and(mainQueryRestriction, builder.equal(businessObjectDataEntity.get(BusinessObjectDataEntity_.version), businessObjectDataVersion));
         }
         else
         {
@@ -750,17 +736,16 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
             // Meaning, when both business object data version and business object data status are not specified, we just return
             // the latest business object data version in the specified storage.
             Subquery<Integer> subQuery =
-                    getMaximumBusinessObjectDataVersionSubQuery(builder, criteria, businessObjectDataEntity, businessObjectFormatEntity,
-                            businessObjectDataStatus,
-                            Collections.singletonList(storageName), null, null, false);
+                getMaximumBusinessObjectDataVersionSubQuery(builder, criteria, businessObjectDataEntity, businessObjectFormatEntity, businessObjectDataStatus,
+                    Collections.singletonList(storageName), null, null, false);
 
             mainQueryRestriction =
-                    builder.and(mainQueryRestriction, builder.in(businessObjectDataEntity.get(BusinessObjectDataEntity_.version)).value(subQuery));
+                builder.and(mainQueryRestriction, builder.in(businessObjectDataEntity.get(BusinessObjectDataEntity_.version)).value(subQuery));
         }
 
         // Add a storage name restriction to the main query where clause.
         mainQueryRestriction =
-                builder.and(mainQueryRestriction, builder.equal(builder.upper(storageEntity.get(StorageEntity_.name)), storageName.toUpperCase()));
+            builder.and(mainQueryRestriction, builder.equal(builder.upper(storageEntity.get(StorageEntity_.name)), storageName.toUpperCase()));
 
         // Add the clauses for the query.
         criteria.select(businessObjectDataEntity).where(mainQueryRestriction);
@@ -793,9 +778,8 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
     public List<BusinessObjectData> searchBusinessObjectData(List<BusinessObjectDataSearchFilter> filters)
     {
         Integer businessObjectDataSearchMaxResultsPerPage =
-                configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULTS_PER_PAGE,
-                        Integer.class);
-  
+            configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULTS_PER_PAGE, Integer.class);
+
         // assume only one filter and only on search key, the validation should be passed by now
         BusinessObjectDataSearchKey businessDataSearchKey = filters.get(0).getBusinessObjectDataSearchKeys().get(0);
 
@@ -842,20 +826,33 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         if (businessDataSearchKey.getBusinessObjectFormatVersion() != null)
         {
             predicate = builder.and(predicate, builder.equal(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.businessObjectFormatVersion),
-                    businessDataSearchKey.getBusinessObjectFormatVersion()));
+                businessDataSearchKey.getBusinessObjectFormatVersion()));
         }
-      
+
         predicate = createPartitionValueFilters(businessDataSearchKey, businessObjectDataEntity, businessObjectFormatEntity, builder, predicate);
-           
+
         criteria.select(businessObjectDataEntity).where(predicate);
 
-        // Order by business object partition values
-        criteria.orderBy(builder.asc(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue)));
+        //order by
+        List<Order> orderList = new ArrayList<>();
+        orderList.add(builder.asc(businessObjectDefinitionEntity.get(BusinessObjectDefinitionEntity_.namespace)));
+        orderList.add(builder.asc(businessObjectDefinitionEntity.get(BusinessObjectDefinitionEntity_.name)));
+        orderList.add(builder.asc(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.usage)));
+        orderList.add(builder.asc(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.fileType)));
+        orderList.add(builder.desc(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.businessObjectFormatVersion)));
+        orderList.add(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue)));
+        orderList.add(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue2)));
+        orderList.add(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue3)));
+        orderList.add(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue4)));
+        orderList.add(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue5)));
+        orderList.add(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.version)));
+
+        criteria.orderBy(orderList);
 
         List<BusinessObjectData> businessObjectDataList = new ArrayList<>();
 
         List<BusinessObjectDataEntity> entitityArray =
-                entityManager.createQuery(criteria).setMaxResults(businessObjectDataSearchMaxResultsPerPage).getResultList();
+            entityManager.createQuery(criteria).setMaxResults(businessObjectDataSearchMaxResultsPerPage).getResultList();
         for (BusinessObjectDataEntity dataEntity : entitityArray)
         {
             BusinessObjectData businessObjectData = new BusinessObjectData();
@@ -898,30 +895,33 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
         return businessObjectDataList;
     }
-    
+
     /**
      * Helper method to create partition value filters
+     *
      * @param businessDataSearchKey businessDataSearchKey
      * @param businessObjectDataEntity businessObjectDataEntity
      * @param businessObjectFormatEntity businessObjectFormatEntity
      * @param builder builder
      * @param predicatePram predicate parameter
+     *
      * @return predicate value
      */
     private Predicate createPartitionValueFilters(BusinessObjectDataSearchKey businessDataSearchKey, Root<BusinessObjectDataEntity> businessObjectDataEntity,
         Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> businessObjectFormatEntity, CriteriaBuilder builder, Predicate predicatePram)
     {
         Predicate predicate = predicatePram;
-        
+
         if (businessDataSearchKey.getPartitionValueFilters() != null && !businessDataSearchKey.getPartitionValueFilters().isEmpty())
         {
-            for (PartitionValueFilter partitionFilter : businessDataSearchKey.getPartitionValueFilters() )   
+            for (PartitionValueFilter partitionFilter : businessDataSearchKey.getPartitionValueFilters())
             {
                 Join<BusinessObjectFormatEntity, SchemaColumnEntity> schemaEntity = businessObjectFormatEntity.join(BusinessObjectFormatEntity_.schemaColumns);
-            
+
                 List<String> partitionValues = partitionFilter.getPartitionValues();
 
-                predicate = builder.and(predicate, builder.equal(schemaEntity.get(SchemaColumnEntity_.name), partitionFilter.getPartitionKey()));
+                predicate = builder
+                    .and(predicate, builder.equal(builder.upper(schemaEntity.get(SchemaColumnEntity_.name)), partitionFilter.getPartitionKey().toUpperCase()));
                 predicate = builder.and(predicate, builder.isNotNull(schemaEntity.get(SchemaColumnEntity_.partitionLevel)));
 
                 if (partitionValues != null && !partitionValues.isEmpty())
@@ -961,7 +961,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
                 }
             }
         }
-        
+
         return predicate;
     }
 }
