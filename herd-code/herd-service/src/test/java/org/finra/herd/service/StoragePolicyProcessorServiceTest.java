@@ -67,8 +67,9 @@ public class StoragePolicyProcessorServiceTest extends AbstractServiceTest
             S3FileTransferRequestParamsDto.builder().s3BucketName(S3_BUCKET_NAME_2).s3KeyPrefix(S3_BUCKET_NAME + "/" + s3KeyPrefix + "/").build();
 
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
-            Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
+        storagePolicyServiceTestHelper
+            .createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
+                Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
 
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =

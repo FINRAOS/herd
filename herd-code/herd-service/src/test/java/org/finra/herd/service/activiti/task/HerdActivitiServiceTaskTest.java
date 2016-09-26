@@ -46,6 +46,7 @@ public abstract class HerdActivitiServiceTaskTest extends AbstractServiceTest
     private final String serviceTaskId = "testServiceTask";
 
     public final String VARIABLE_VALUE_NOT_NULL = "NOT_NULL";
+
     public final String VARIABLE_VALUE_IS_NULL = "IS_NULL";
 
     protected FieldExtension buildFieldExtension(String name, String expression)
@@ -83,7 +84,7 @@ public abstract class HerdActivitiServiceTaskTest extends AbstractServiceTest
     private Job createJobAndCheckTaskStatusSuccess(String activitiXml, List<Parameter> parameters, Map<String, Object> variableValuesToValidate)
         throws Exception
     {
-        Job job = createJobFromActivitiXml(activitiXml, parameters);
+        Job job = jobServiceTestHelper.createJobFromActivitiXml(activitiXml, parameters);
         assertNotNull(job);
 
         HistoricProcessInstance hisInstance =
@@ -127,7 +128,7 @@ public abstract class HerdActivitiServiceTaskTest extends AbstractServiceTest
     private Job createJobAndCheckTaskStatusFailure(String activitiXml, List<Parameter> parameters, Map<String, Object> variableValuesToValidate)
         throws Exception
     {
-        Job job = createJobFromActivitiXml(activitiXml, parameters);
+        Job job = jobServiceTestHelper.createJobFromActivitiXml(activitiXml, parameters);
         assertNotNull(job);
 
         HistoricProcessInstance hisInstance =

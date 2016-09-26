@@ -25,6 +25,7 @@ import org.junit.Test;
 
 import org.finra.herd.model.api.xml.BusinessObjectDataDdlCollectionRequest;
 import org.finra.herd.model.api.xml.Parameter;
+import org.finra.herd.service.AbstractServiceTest;
 import org.finra.herd.service.activiti.ActivitiRuntimeHelper;
 
 /**
@@ -36,10 +37,10 @@ public class GenerateBusinessObjectDataDdlCollectionTest extends HerdActivitiSer
     public void testGenerateBusinessObjectDataDdlCollectionXml() throws Exception
     {
         // Prepare database entities required for testing.
-        createDatabaseEntitiesForBusinessObjectDataDdlCollectionTesting();
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataDdlTesting(AbstractServiceTest.PARTITION_VALUE);
 
         // Prepare the request.
-        BusinessObjectDataDdlCollectionRequest request = getTestBusinessObjectDataDdlCollectionRequest();
+        BusinessObjectDataDdlCollectionRequest request = businessObjectDataServiceTestHelper.getTestBusinessObjectDataDdlCollectionRequest();
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
 
@@ -52,8 +53,8 @@ public class GenerateBusinessObjectDataDdlCollectionTest extends HerdActivitiSer
         parameters.add(buildParameter("businessObjectDataDdlCollectionRequest", xmlHelper.objectToXml(request)));
 
         Map<String, Object> variableValuesToValidate = new HashMap<>();
-        variableValuesToValidate
-            .put(GenerateBusinessObjectDataDdlCollection.VARIABLE_DDL_COLLECTION, getExpectedBusinessObjectDataDdlCollectionResponse().getDdlCollection());
+        variableValuesToValidate.put(GenerateBusinessObjectDataDdlCollection.VARIABLE_DDL_COLLECTION,
+            businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataDdlCollectionResponse().getDdlCollection());
 
         executeWithoutLogging(LogVariables.class, () -> {
             testActivitiServiceTaskSuccess(GenerateBusinessObjectDataDdlCollection.class.getCanonicalName(), fieldExtensionList, parameters,
@@ -65,10 +66,10 @@ public class GenerateBusinessObjectDataDdlCollectionTest extends HerdActivitiSer
     public void testGenerateBusinessObjectDataDdlCollectionJson() throws Exception
     {
         // Prepare database entities required for testing.
-        createDatabaseEntitiesForBusinessObjectDataDdlCollectionTesting();
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataDdlTesting(AbstractServiceTest.PARTITION_VALUE);
 
         // Prepare the request.
-        BusinessObjectDataDdlCollectionRequest request = getTestBusinessObjectDataDdlCollectionRequest();
+        BusinessObjectDataDdlCollectionRequest request = businessObjectDataServiceTestHelper.getTestBusinessObjectDataDdlCollectionRequest();
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
 
@@ -81,8 +82,8 @@ public class GenerateBusinessObjectDataDdlCollectionTest extends HerdActivitiSer
         parameters.add(buildParameter("businessObjectDataDdlCollectionRequest", jsonHelper.objectToJson(request)));
 
         Map<String, Object> variableValuesToValidate = new HashMap<>();
-        variableValuesToValidate
-            .put(GenerateBusinessObjectDataDdlCollection.VARIABLE_DDL_COLLECTION, getExpectedBusinessObjectDataDdlCollectionResponse().getDdlCollection());
+        variableValuesToValidate.put(GenerateBusinessObjectDataDdlCollection.VARIABLE_DDL_COLLECTION,
+            businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataDdlCollectionResponse().getDdlCollection());
 
         executeWithoutLogging(LogVariables.class, () -> {
             testActivitiServiceTaskSuccess(GenerateBusinessObjectDataDdlCollection.class.getCanonicalName(), fieldExtensionList, parameters,

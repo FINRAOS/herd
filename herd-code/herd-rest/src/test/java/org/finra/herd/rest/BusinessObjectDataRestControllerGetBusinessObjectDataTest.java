@@ -42,7 +42,7 @@ public class BusinessObjectDataRestControllerGetBusinessObjectDataTest extends A
     @Test
     public void testGetBusinessObjectDataUsingCreateRequest()
     {
-        BusinessObjectDataCreateRequest request = getNewBusinessObjectDataCreateRequest();
+        BusinessObjectDataCreateRequest request = businessObjectDataServiceTestHelper.getNewBusinessObjectDataCreateRequest();
         StorageUnitCreateRequest storageUnit = request.getStorageUnits().get(0);
 
         // Create the business object data.
@@ -76,10 +76,10 @@ public class BusinessObjectDataRestControllerGetBusinessObjectDataTest extends A
         assertEquals(storageUnit.getStorageDirectory(), resultStorageUnit.getStorageDirectory());
 
         // Check if result list of storage files matches to the list from the create request.
-        validateStorageFiles(resultStorageUnit.getStorageFiles(), storageUnit.getStorageFiles());
+        businessObjectDataServiceTestHelper.validateStorageFiles(resultStorageUnit.getStorageFiles(), storageUnit.getStorageFiles());
 
         // Check if result list of attributes matches to the list from the create request.
-        validateAttributes(request.getAttributes(), businessObjectData.getAttributes());
+        businessObjectDefinitionServiceTestHelper.validateAttributes(request.getAttributes(), businessObjectData.getAttributes());
 
         // Validate the parents.
         assertTrue(businessObjectData.getBusinessObjectDataParents().size() == 2);
@@ -136,8 +136,10 @@ public class BusinessObjectDataRestControllerGetBusinessObjectDataTest extends A
                         NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY);
 
                 // Validate the returned object.
-                validateBusinessObjectData(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, businessObjectFormatVersion, PARTITION_VALUE,
-                    SUBPARTITION_VALUES, businessObjectDataVersion, businessObjectDataVersion == SECOND_DATA_VERSION, BDATA_STATUS, resultBusinessObjectData);
+                businessObjectDataServiceTestHelper
+                    .validateBusinessObjectData(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, businessObjectFormatVersion,
+                        PARTITION_VALUE, SUBPARTITION_VALUES, businessObjectDataVersion, businessObjectDataVersion == SECOND_DATA_VERSION, BDATA_STATUS,
+                        resultBusinessObjectData);
             }
         }
     }
@@ -162,9 +164,10 @@ public class BusinessObjectDataRestControllerGetBusinessObjectDataTest extends A
                 NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY);
 
         // Validate the returned object, it should be the latest VALID business object data version available for the initial business object format version.
-        validateBusinessObjectData(businessObjectDataEntities.get(0).getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-            INITIAL_FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, INITIAL_DATA_VERSION, NO_LATEST_VERSION_FLAG_SET,
-            BusinessObjectDataStatusEntity.VALID, resultBusinessObjectData);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectData(businessObjectDataEntities.get(0).getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+                INITIAL_FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, INITIAL_DATA_VERSION, NO_LATEST_VERSION_FLAG_SET,
+                BusinessObjectDataStatusEntity.VALID, resultBusinessObjectData);
 
         // Retrieve a business object data by explicitly specifying business object data status testing value.
         // Please note that we do not specify business object data version in order for the business object data status to have an effect.
@@ -175,8 +178,10 @@ public class BusinessObjectDataRestControllerGetBusinessObjectDataTest extends A
 
         // Validate the returned object, it should be the latest business object data version with
         // the test business object data status available for the initial business object format version.
-        validateBusinessObjectData(businessObjectDataEntities.get(1).getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-            INITIAL_FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, SECOND_DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS, resultBusinessObjectData);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectData(businessObjectDataEntities.get(1).getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+                INITIAL_FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, SECOND_DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS,
+                resultBusinessObjectData);
     }
 
     @Test
@@ -199,9 +204,10 @@ public class BusinessObjectDataRestControllerGetBusinessObjectDataTest extends A
                     NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY);
 
             // Validate the returned object.
-            validateBusinessObjectData(businessObjectDataEntities.get(1).getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-                SECOND_FORMAT_VERSION, PARTITION_VALUE, NO_SUBPARTITION_VALUES, INITIAL_DATA_VERSION, false, BusinessObjectDataStatusEntity.VALID,
-                resultBusinessObjectData);
+            businessObjectDataServiceTestHelper
+                .validateBusinessObjectData(businessObjectDataEntities.get(1).getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+                    SECOND_FORMAT_VERSION, PARTITION_VALUE, NO_SUBPARTITION_VALUES, INITIAL_DATA_VERSION, false, BusinessObjectDataStatusEntity.VALID,
+                    resultBusinessObjectData);
         }
     }
 }

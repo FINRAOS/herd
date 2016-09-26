@@ -41,6 +41,7 @@ import org.finra.herd.model.api.xml.Job;
 import org.finra.herd.model.api.xml.JobCreateRequest;
 import org.finra.herd.model.api.xml.JobStatusEnum;
 import org.finra.herd.model.api.xml.Parameter;
+import org.finra.herd.service.JdbcServiceTestHelper;
 import org.finra.herd.service.activiti.ActivitiRuntimeHelper;
 
 public class ExecuteJdbcTest extends HerdActivitiServiceTaskTest
@@ -48,12 +49,15 @@ public class ExecuteJdbcTest extends HerdActivitiServiceTaskTest
     private static final String JAVA_DELEGATE_CLASS_NAME = ExecuteJdbc.class.getCanonicalName();
 
     @Autowired
-    ExecuteJdbcTestHelper executeJdbcTestHelper;
+    private ExecuteJdbcTestHelper executeJdbcTestHelper;
+
+    @Autowired
+    private JdbcServiceTestHelper jdbcServiceTestHelper;
 
     @Test
     public void testExecuteJdbcSuccess() throws Exception
     {
-        JdbcExecutionRequest jdbcExecutionRequest = createDefaultUpdateJdbcExecutionRequest();
+        JdbcExecutionRequest jdbcExecutionRequest = jdbcServiceTestHelper.createDefaultUpdateJdbcExecutionRequest();
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
         List<Parameter> parameters = new ArrayList<>();
@@ -76,7 +80,7 @@ public class ExecuteJdbcTest extends HerdActivitiServiceTaskTest
     @Test
     public void testExecuteJdbcErrorValidation() throws Exception
     {
-        JdbcExecutionRequest jdbcExecutionRequest = createDefaultUpdateJdbcExecutionRequest();
+        JdbcExecutionRequest jdbcExecutionRequest = jdbcServiceTestHelper.createDefaultUpdateJdbcExecutionRequest();
         jdbcExecutionRequest.setConnection(null);
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
@@ -96,7 +100,7 @@ public class ExecuteJdbcTest extends HerdActivitiServiceTaskTest
     @Test
     public void testExecuteJdbcErrorStatement() throws Exception
     {
-        JdbcExecutionRequest jdbcExecutionRequest = createDefaultUpdateJdbcExecutionRequest();
+        JdbcExecutionRequest jdbcExecutionRequest = jdbcServiceTestHelper.createDefaultUpdateJdbcExecutionRequest();
         jdbcExecutionRequest.getStatements().get(0).setSql(MockJdbcOperations.CASE_2_SQL);
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
@@ -140,7 +144,7 @@ public class ExecuteJdbcTest extends HerdActivitiServiceTaskTest
         try
         {
             // Create a JDBC execution request.
-            JdbcExecutionRequest jdbcExecutionRequest = createDefaultUpdateJdbcExecutionRequest();
+            JdbcExecutionRequest jdbcExecutionRequest = jdbcServiceTestHelper.createDefaultUpdateJdbcExecutionRequest();
 
             // Create and initialize a list of parameters.
             List<Parameter> parameters = new ArrayList<>();
@@ -148,7 +152,7 @@ public class ExecuteJdbcTest extends HerdActivitiServiceTaskTest
             parameters.add(new Parameter("jdbcExecutionRequest", xmlHelper.objectToXml(jdbcExecutionRequest)));
 
             // Get a job create request.
-            JobCreateRequest jobCreateRequest = createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME);
+            JobCreateRequest jobCreateRequest = jobServiceTestHelper.createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME);
             jobCreateRequest.setParameters(parameters);
 
             // Start the job.

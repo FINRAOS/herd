@@ -61,15 +61,17 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
     public void testInitiateUploadSingle()
     {
         // Create database entities required for testing.
-        createDatabaseEntitiesForUploadDownloadTesting();
+        uploadDownloadServiceTestHelper.createDatabaseEntitiesForUploadDownloadTesting();
 
         // Initiate a file upload.
-        UploadSingleInitiationResponse resultUploadSingleInitiationResponse = uploadDownloadService.initiateUploadSingle(createUploadSingleInitiationRequest());
+        UploadSingleInitiationResponse resultUploadSingleInitiationResponse =
+            uploadDownloadService.initiateUploadSingle(uploadDownloadServiceTestHelper.createUploadSingleInitiationRequest());
 
         // Validate the returned object.
-        validateUploadSingleInitiationResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NAMESPACE, BDEF_NAME_2,
-            FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, getNewAttributes(), FILE_NAME, FILE_SIZE_1_KB, null,
-            resultUploadSingleInitiationResponse);
+        uploadDownloadServiceTestHelper
+            .validateUploadSingleInitiationResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NAMESPACE, BDEF_NAME_2,
+                FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, businessObjectDefinitionServiceTestHelper.getNewAttributes(), FILE_NAME,
+                FILE_SIZE_1_KB, null, resultUploadSingleInitiationResponse);
     }
 
     @Test
@@ -78,7 +80,7 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         UploadSingleInitiationRequest request;
 
         // Try to initiate a single file upload when business object format key is not specified.
-        request = createUploadSingleInitiationRequest();
+        request = uploadDownloadServiceTestHelper.createUploadSingleInitiationRequest();
         request.setSourceBusinessObjectFormatKey(null);
         try
         {
@@ -93,7 +95,7 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         // Try to initiate a single file upload when namespace is not specified.
         try
         {
-            request = createUploadSingleInitiationRequest();
+            request = uploadDownloadServiceTestHelper.createUploadSingleInitiationRequest();
             request.getSourceBusinessObjectFormatKey().setNamespace(BLANK_TEXT);
 
             uploadDownloadService.initiateUploadSingle(request);
@@ -107,7 +109,7 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         // Try to initiate a single file upload when business object definition name is not specified.
         try
         {
-            request = createUploadSingleInitiationRequest();
+            request = uploadDownloadServiceTestHelper.createUploadSingleInitiationRequest();
             request.getSourceBusinessObjectFormatKey().setBusinessObjectDefinitionName(BLANK_TEXT);
 
             uploadDownloadService.initiateUploadSingle(request);
@@ -121,7 +123,7 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         // Try to initiate a single file upload when business object format usage is not specified.
         try
         {
-            request = createUploadSingleInitiationRequest();
+            request = uploadDownloadServiceTestHelper.createUploadSingleInitiationRequest();
             request.getSourceBusinessObjectFormatKey().setBusinessObjectFormatUsage(BLANK_TEXT);
 
             uploadDownloadService.initiateUploadSingle(request);
@@ -135,7 +137,7 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         // Try to initiate a single file upload when business object format file type is not specified.
         try
         {
-            request = createUploadSingleInitiationRequest();
+            request = uploadDownloadServiceTestHelper.createUploadSingleInitiationRequest();
             request.getSourceBusinessObjectFormatKey().setBusinessObjectFormatFileType(BLANK_TEXT);
 
             uploadDownloadService.initiateUploadSingle(request);
@@ -149,7 +151,7 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         // Try to initiate a single file upload when business object format version is not specified.
         try
         {
-            request = createUploadSingleInitiationRequest();
+            request = uploadDownloadServiceTestHelper.createUploadSingleInitiationRequest();
             request.getSourceBusinessObjectFormatKey().setBusinessObjectFormatVersion(null);
 
             uploadDownloadService.initiateUploadSingle(request);
@@ -161,7 +163,7 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         }
 
         // Try to initiate a single file upload when business object format key is not specified.
-        request = createUploadSingleInitiationRequest();
+        request = uploadDownloadServiceTestHelper.createUploadSingleInitiationRequest();
         request.setTargetBusinessObjectFormatKey(null);
         try
         {
@@ -176,7 +178,7 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         // Try to initiate a single file upload when namespace is not specified.
         try
         {
-            request = createUploadSingleInitiationRequest();
+            request = uploadDownloadServiceTestHelper.createUploadSingleInitiationRequest();
             request.getTargetBusinessObjectFormatKey().setNamespace(BLANK_TEXT);
 
             uploadDownloadService.initiateUploadSingle(request);
@@ -190,7 +192,7 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         // Try to initiate a single file upload when business object definition name is not specified.
         try
         {
-            request = createUploadSingleInitiationRequest();
+            request = uploadDownloadServiceTestHelper.createUploadSingleInitiationRequest();
             request.getTargetBusinessObjectFormatKey().setBusinessObjectDefinitionName(BLANK_TEXT);
 
             uploadDownloadService.initiateUploadSingle(request);
@@ -204,7 +206,7 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         // Try to initiate a single file upload when business object format usage is not specified.
         try
         {
-            request = createUploadSingleInitiationRequest();
+            request = uploadDownloadServiceTestHelper.createUploadSingleInitiationRequest();
             request.getTargetBusinessObjectFormatKey().setBusinessObjectFormatUsage(BLANK_TEXT);
 
             uploadDownloadService.initiateUploadSingle(request);
@@ -218,7 +220,7 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         // Try to initiate a single file upload when business object format file type is not specified.
         try
         {
-            request = createUploadSingleInitiationRequest();
+            request = uploadDownloadServiceTestHelper.createUploadSingleInitiationRequest();
             request.getTargetBusinessObjectFormatKey().setBusinessObjectFormatFileType(BLANK_TEXT);
 
             uploadDownloadService.initiateUploadSingle(request);
@@ -232,7 +234,7 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         // Try to initiate a single file upload when business object format version is not specified.
         try
         {
-            request = createUploadSingleInitiationRequest();
+            request = uploadDownloadServiceTestHelper.createUploadSingleInitiationRequest();
             request.getTargetBusinessObjectFormatKey().setBusinessObjectFormatVersion(null);
 
             uploadDownloadService.initiateUploadSingle(request);
@@ -244,7 +246,7 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         }
 
         // Try to initiate a single file upload when attribute name is not specified.
-        request = createUploadSingleInitiationRequest();
+        request = uploadDownloadServiceTestHelper.createUploadSingleInitiationRequest();
         request.getBusinessObjectDataAttributes().get(0).setName(BLANK_TEXT);
         try
         {
@@ -257,7 +259,7 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         }
 
         // Try to initiate a single file upload when file information is not specified.
-        request = createUploadSingleInitiationRequest();
+        request = uploadDownloadServiceTestHelper.createUploadSingleInitiationRequest();
         request.setFile(null);
         try
         {
@@ -270,7 +272,7 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         }
 
         // Try to initiate a single file upload when file name is not specified.
-        request = createUploadSingleInitiationRequest();
+        request = uploadDownloadServiceTestHelper.createUploadSingleInitiationRequest();
         request.getFile().setFileName(BLANK_TEXT);
         try
         {
@@ -287,85 +289,89 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
     public void testInitiateUploadSingleMissingOptionalParameters()
     {
         // Create database entities required for testing.
-        createDatabaseEntitiesForUploadDownloadTesting();
+        uploadDownloadServiceTestHelper.createDatabaseEntitiesForUploadDownloadTesting();
 
         // Initiate a file upload without specifying any of the optional parameters.
-        UploadSingleInitiationRequest request = createUploadSingleInitiationRequest();
+        UploadSingleInitiationRequest request = uploadDownloadServiceTestHelper.createUploadSingleInitiationRequest();
         request.setBusinessObjectDataAttributes(null);
         request.getFile().setFileSizeBytes(null);
         UploadSingleInitiationResponse resultUploadSingleInitiationResponse = uploadDownloadService.initiateUploadSingle(request);
 
         // Validate the returned object.
-        validateUploadSingleInitiationResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NAMESPACE, BDEF_NAME_2,
-            FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, NO_ATTRIBUTES, FILE_NAME, null, null, resultUploadSingleInitiationResponse);
+        uploadDownloadServiceTestHelper
+            .validateUploadSingleInitiationResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NAMESPACE, BDEF_NAME_2,
+                FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, NO_ATTRIBUTES, FILE_NAME, null, null, resultUploadSingleInitiationResponse);
     }
 
     @Test
     public void testInitiateUploadSingleTrimParameters()
     {
         // Create database entities required for testing.
-        createDatabaseEntitiesForUploadDownloadTesting();
+        uploadDownloadServiceTestHelper.createDatabaseEntitiesForUploadDownloadTesting();
 
         // Initiate a file upload using input parameters with leading and trailing empty spaces.
-        UploadSingleInitiationResponse resultUploadSingleInitiationResponse = uploadDownloadService.initiateUploadSingle(
-            createUploadSingleInitiationRequest(addWhitespace(NAMESPACE), addWhitespace(BDEF_NAME), addWhitespace(FORMAT_USAGE_CODE),
+        UploadSingleInitiationResponse resultUploadSingleInitiationResponse = uploadDownloadService.initiateUploadSingle(uploadDownloadServiceTestHelper
+            .createUploadSingleInitiationRequest(addWhitespace(NAMESPACE), addWhitespace(BDEF_NAME), addWhitespace(FORMAT_USAGE_CODE),
                 addWhitespace(FORMAT_FILE_TYPE_CODE), FORMAT_VERSION, addWhitespace(NAMESPACE), addWhitespace(BDEF_NAME_2), addWhitespace(FORMAT_USAGE_CODE_2),
                 addWhitespace(FORMAT_FILE_TYPE_CODE_2), FORMAT_VERSION_2));
 
         // Validate the returned object.
-        validateUploadSingleInitiationResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NAMESPACE, BDEF_NAME_2,
-            FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, getNewAttributes(), FILE_NAME, FILE_SIZE_1_KB, null,
-            resultUploadSingleInitiationResponse);
+        uploadDownloadServiceTestHelper
+            .validateUploadSingleInitiationResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NAMESPACE, BDEF_NAME_2,
+                FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, businessObjectDefinitionServiceTestHelper.getNewAttributes(), FILE_NAME,
+                FILE_SIZE_1_KB, null, resultUploadSingleInitiationResponse);
     }
 
     @Test
     public void testInitiateUploadSingleUpperCaseParameters()
     {
         // Create database entities required for testing.
-        createDatabaseEntitiesForUploadDownloadTesting();
+        uploadDownloadServiceTestHelper.createDatabaseEntitiesForUploadDownloadTesting();
 
         // Initiate a file upload using lower case values.
-        UploadSingleInitiationResponse resultUploadSingleInitiationResponse = uploadDownloadService.initiateUploadSingle(
-            createUploadSingleInitiationRequest(NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(),
+        UploadSingleInitiationResponse resultUploadSingleInitiationResponse = uploadDownloadService.initiateUploadSingle(uploadDownloadServiceTestHelper
+            .createUploadSingleInitiationRequest(NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(),
                 FORMAT_FILE_TYPE_CODE.toLowerCase(), FORMAT_VERSION, NAMESPACE.toLowerCase(), BDEF_NAME_2.toLowerCase(), FORMAT_USAGE_CODE_2.toLowerCase(),
                 FORMAT_FILE_TYPE_CODE_2.toLowerCase(), FORMAT_VERSION_2));
 
         // Validate the returned object.
-        validateUploadSingleInitiationResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NAMESPACE, BDEF_NAME_2,
-            FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, getNewAttributes(), FILE_NAME, FILE_SIZE_1_KB, null,
-            resultUploadSingleInitiationResponse);
+        uploadDownloadServiceTestHelper
+            .validateUploadSingleInitiationResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NAMESPACE, BDEF_NAME_2,
+                FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, businessObjectDefinitionServiceTestHelper.getNewAttributes(), FILE_NAME,
+                FILE_SIZE_1_KB, null, resultUploadSingleInitiationResponse);
     }
 
     @Test
     public void testInitiateUploadSingleLowerCaseParameters()
     {
         // Create database entities required for testing.
-        createDatabaseEntitiesForUploadDownloadTesting();
+        uploadDownloadServiceTestHelper.createDatabaseEntitiesForUploadDownloadTesting();
 
         // Initiate a file upload using upper case values.
-        UploadSingleInitiationResponse resultUploadSingleInitiationResponse = uploadDownloadService.initiateUploadSingle(
-            createUploadSingleInitiationRequest(NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(),
+        UploadSingleInitiationResponse resultUploadSingleInitiationResponse = uploadDownloadService.initiateUploadSingle(uploadDownloadServiceTestHelper
+            .createUploadSingleInitiationRequest(NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(),
                 FORMAT_FILE_TYPE_CODE.toUpperCase(), FORMAT_VERSION, NAMESPACE.toUpperCase(), BDEF_NAME_2.toUpperCase(), FORMAT_USAGE_CODE_2.toUpperCase(),
                 FORMAT_FILE_TYPE_CODE_2.toUpperCase(), FORMAT_VERSION_2));
 
         // Validate the returned object.
-        validateUploadSingleInitiationResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NAMESPACE, BDEF_NAME_2,
-            FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, getNewAttributes(), FILE_NAME, FILE_SIZE_1_KB, null,
-            resultUploadSingleInitiationResponse);
+        uploadDownloadServiceTestHelper
+            .validateUploadSingleInitiationResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NAMESPACE, BDEF_NAME_2,
+                FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, businessObjectDefinitionServiceTestHelper.getNewAttributes(), FILE_NAME,
+                FILE_SIZE_1_KB, null, resultUploadSingleInitiationResponse);
     }
 
     @Test
     public void testInitiateUploadSingleInvalidParameters()
     {
         // Create database entities required for testing.
-        createDatabaseEntitiesForUploadDownloadTesting();
+        uploadDownloadServiceTestHelper.createDatabaseEntitiesForUploadDownloadTesting();
 
         UploadSingleInitiationRequest request;
 
         // Try to initiate a single file upload using invalid namespace.
         try
         {
-            request = createUploadSingleInitiationRequest();
+            request = uploadDownloadServiceTestHelper.createUploadSingleInitiationRequest();
             request.getSourceBusinessObjectFormatKey().setNamespace("I_DO_NOT_EXIST");
 
             uploadDownloadService.initiateUploadSingle(request);
@@ -373,15 +379,15 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(
-                getExpectedBusinessObjectFormatNotFoundErrorMessage("I_DO_NOT_EXIST", BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION),
+            assertEquals(businessObjectFormatServiceTestHelper
+                .getExpectedBusinessObjectFormatNotFoundErrorMessage("I_DO_NOT_EXIST", BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION),
                 e.getMessage());
         }
 
         // Try to initiate a single file upload using invalid business object definition name.
         try
         {
-            request = createUploadSingleInitiationRequest();
+            request = uploadDownloadServiceTestHelper.createUploadSingleInitiationRequest();
             request.getSourceBusinessObjectFormatKey().setBusinessObjectDefinitionName("I_DO_NOT_EXIST");
 
             uploadDownloadService.initiateUploadSingle(request);
@@ -389,15 +395,15 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(
-                getExpectedBusinessObjectFormatNotFoundErrorMessage(NAMESPACE, "I_DO_NOT_EXIST", FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION),
+            assertEquals(businessObjectFormatServiceTestHelper
+                .getExpectedBusinessObjectFormatNotFoundErrorMessage(NAMESPACE, "I_DO_NOT_EXIST", FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION),
                 e.getMessage());
         }
 
         // Try to initiate a single file upload using invalid format usage.
         try
         {
-            request = createUploadSingleInitiationRequest();
+            request = uploadDownloadServiceTestHelper.createUploadSingleInitiationRequest();
             request.getSourceBusinessObjectFormatKey().setBusinessObjectFormatUsage("I_DO_NOT_EXIST");
 
             uploadDownloadService.initiateUploadSingle(request);
@@ -405,14 +411,15 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(getExpectedBusinessObjectFormatNotFoundErrorMessage(NAMESPACE, BDEF_NAME, "I_DO_NOT_EXIST", FORMAT_FILE_TYPE_CODE, FORMAT_VERSION),
+            assertEquals(businessObjectFormatServiceTestHelper
+                .getExpectedBusinessObjectFormatNotFoundErrorMessage(NAMESPACE, BDEF_NAME, "I_DO_NOT_EXIST", FORMAT_FILE_TYPE_CODE, FORMAT_VERSION),
                 e.getMessage());
         }
 
         // Try to initiate a single file upload using invalid format file type.
         try
         {
-            request = createUploadSingleInitiationRequest();
+            request = uploadDownloadServiceTestHelper.createUploadSingleInitiationRequest();
             request.getSourceBusinessObjectFormatKey().setBusinessObjectFormatFileType("I_DO_NOT_EXIST");
 
             uploadDownloadService.initiateUploadSingle(request);
@@ -420,14 +427,15 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(getExpectedBusinessObjectFormatNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, "I_DO_NOT_EXIST", FORMAT_VERSION),
+            assertEquals(businessObjectFormatServiceTestHelper
+                .getExpectedBusinessObjectFormatNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, "I_DO_NOT_EXIST", FORMAT_VERSION),
                 e.getMessage());
         }
 
         // Try to initiate a single file upload using invalid business object format version.
         try
         {
-            request = createUploadSingleInitiationRequest();
+            request = uploadDownloadServiceTestHelper.createUploadSingleInitiationRequest();
             request.getSourceBusinessObjectFormatKey().setBusinessObjectFormatVersion(INVALID_FORMAT_VERSION);
 
             uploadDownloadService.initiateUploadSingle(request);
@@ -435,15 +443,15 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(
-                getExpectedBusinessObjectFormatNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INVALID_FORMAT_VERSION),
+            assertEquals(businessObjectFormatServiceTestHelper
+                .getExpectedBusinessObjectFormatNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INVALID_FORMAT_VERSION),
                 e.getMessage());
         }
 
         // Try to initiate a single file upload using invalid namespace.
         try
         {
-            request = createUploadSingleInitiationRequest();
+            request = uploadDownloadServiceTestHelper.createUploadSingleInitiationRequest();
             request.getTargetBusinessObjectFormatKey().setNamespace("I_DO_NOT_EXIST");
 
             uploadDownloadService.initiateUploadSingle(request);
@@ -451,14 +459,15 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(getExpectedBusinessObjectFormatNotFoundErrorMessage("I_DO_NOT_EXIST", BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2,
-                FORMAT_VERSION_2), e.getMessage());
+            assertEquals(businessObjectFormatServiceTestHelper
+                .getExpectedBusinessObjectFormatNotFoundErrorMessage("I_DO_NOT_EXIST", BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2,
+                    FORMAT_VERSION_2), e.getMessage());
         }
 
         // Try to initiate a single file upload using invalid business object definition name.
         try
         {
-            request = createUploadSingleInitiationRequest();
+            request = uploadDownloadServiceTestHelper.createUploadSingleInitiationRequest();
             request.getTargetBusinessObjectFormatKey().setBusinessObjectDefinitionName("I_DO_NOT_EXIST");
 
             uploadDownloadService.initiateUploadSingle(request);
@@ -466,14 +475,15 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(getExpectedBusinessObjectFormatNotFoundErrorMessage(NAMESPACE, "I_DO_NOT_EXIST", FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2,
-                FORMAT_VERSION_2), e.getMessage());
+            assertEquals(businessObjectFormatServiceTestHelper
+                .getExpectedBusinessObjectFormatNotFoundErrorMessage(NAMESPACE, "I_DO_NOT_EXIST", FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2,
+                    FORMAT_VERSION_2), e.getMessage());
         }
 
         // Try to initiate a single file upload using invalid format usage.
         try
         {
-            request = createUploadSingleInitiationRequest();
+            request = uploadDownloadServiceTestHelper.createUploadSingleInitiationRequest();
             request.getTargetBusinessObjectFormatKey().setBusinessObjectFormatUsage("I_DO_NOT_EXIST");
 
             uploadDownloadService.initiateUploadSingle(request);
@@ -481,15 +491,15 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(
-                getExpectedBusinessObjectFormatNotFoundErrorMessage(NAMESPACE, BDEF_NAME_2, "I_DO_NOT_EXIST", FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2),
+            assertEquals(businessObjectFormatServiceTestHelper
+                .getExpectedBusinessObjectFormatNotFoundErrorMessage(NAMESPACE, BDEF_NAME_2, "I_DO_NOT_EXIST", FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2),
                 e.getMessage());
         }
 
         // Try to initiate a single file upload using invalid format file type.
         try
         {
-            request = createUploadSingleInitiationRequest();
+            request = uploadDownloadServiceTestHelper.createUploadSingleInitiationRequest();
             request.getTargetBusinessObjectFormatKey().setBusinessObjectFormatFileType("I_DO_NOT_EXIST");
 
             uploadDownloadService.initiateUploadSingle(request);
@@ -497,14 +507,15 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(getExpectedBusinessObjectFormatNotFoundErrorMessage(NAMESPACE, BDEF_NAME_2, FORMAT_USAGE_CODE_2, "I_DO_NOT_EXIST", FORMAT_VERSION_2),
+            assertEquals(businessObjectFormatServiceTestHelper
+                .getExpectedBusinessObjectFormatNotFoundErrorMessage(NAMESPACE, BDEF_NAME_2, FORMAT_USAGE_CODE_2, "I_DO_NOT_EXIST", FORMAT_VERSION_2),
                 e.getMessage());
         }
 
         // Try to initiate a single file upload using invalid business object format version.
         try
         {
-            request = createUploadSingleInitiationRequest();
+            request = uploadDownloadServiceTestHelper.createUploadSingleInitiationRequest();
             request.getTargetBusinessObjectFormatKey().setBusinessObjectFormatVersion(INVALID_FORMAT_VERSION);
 
             uploadDownloadService.initiateUploadSingle(request);
@@ -512,8 +523,9 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(getExpectedBusinessObjectFormatNotFoundErrorMessage(NAMESPACE, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2,
-                INVALID_FORMAT_VERSION), e.getMessage());
+            assertEquals(businessObjectFormatServiceTestHelper
+                .getExpectedBusinessObjectFormatNotFoundErrorMessage(NAMESPACE, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2,
+                    INVALID_FORMAT_VERSION), e.getMessage());
         }
     }
 
@@ -521,10 +533,10 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
     public void testInitiateUploadSingleDuplicateAttributes()
     {
         // Create database entities required for testing.
-        createDatabaseEntitiesForUploadDownloadTesting();
+        uploadDownloadServiceTestHelper.createDatabaseEntitiesForUploadDownloadTesting();
 
         // Try to initiate a single file upload when duplicate attributes are specified.
-        UploadSingleInitiationRequest request = createUploadSingleInitiationRequest();
+        UploadSingleInitiationRequest request = uploadDownloadServiceTestHelper.createUploadSingleInitiationRequest();
         request.setBusinessObjectDataAttributes(Arrays.asList(new Attribute(ATTRIBUTE_NAME_3_MIXED_CASE.toLowerCase(), ATTRIBUTE_VALUE_3),
             new Attribute(ATTRIBUTE_NAME_3_MIXED_CASE.toUpperCase(), ATTRIBUTE_VALUE_3)));
         try
@@ -542,7 +554,7 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
     public void testInitiateUploadSingleRequiredAttribute()
     {
         // Create database entities required for testing.
-        createDatabaseEntitiesForUploadDownloadTesting();
+        uploadDownloadServiceTestHelper.createDatabaseEntitiesForUploadDownloadTesting();
 
         // Create and persist a business object data attribute definition entity.
         businessObjectFormatDaoTestHelper
@@ -550,19 +562,21 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
                 ATTRIBUTE_NAME_1_MIXED_CASE);
 
         // Initiate a file upload.
-        UploadSingleInitiationResponse resultUploadSingleInitiationResponse = uploadDownloadService.initiateUploadSingle(createUploadSingleInitiationRequest());
+        UploadSingleInitiationResponse resultUploadSingleInitiationResponse =
+            uploadDownloadService.initiateUploadSingle(uploadDownloadServiceTestHelper.createUploadSingleInitiationRequest());
 
         // Validate the returned object.
-        validateUploadSingleInitiationResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NAMESPACE, BDEF_NAME_2,
-            FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, getNewAttributes(), FILE_NAME, FILE_SIZE_1_KB, null,
-            resultUploadSingleInitiationResponse);
+        uploadDownloadServiceTestHelper
+            .validateUploadSingleInitiationResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NAMESPACE, BDEF_NAME_2,
+                FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, businessObjectDefinitionServiceTestHelper.getNewAttributes(), FILE_NAME,
+                FILE_SIZE_1_KB, null, resultUploadSingleInitiationResponse);
     }
 
     @Test
     public void testInitiateUploadSingleRequiredAttributeMissingValue()
     {
         // Create database entities required for testing.
-        createDatabaseEntitiesForUploadDownloadTesting();
+        uploadDownloadServiceTestHelper.createDatabaseEntitiesForUploadDownloadTesting();
 
         // Create and persist a business object data attribute definition entity.
         businessObjectFormatDaoTestHelper
@@ -570,7 +584,7 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
                 ATTRIBUTE_NAME_1_MIXED_CASE);
 
         // Try to initiate a single file upload when a required attribute value is not specified.
-        UploadSingleInitiationRequest request = createUploadSingleInitiationRequest();
+        UploadSingleInitiationRequest request = uploadDownloadServiceTestHelper.createUploadSingleInitiationRequest();
         request.setBusinessObjectDataAttributes(Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, BLANK_TEXT)));
         try
         {
@@ -591,7 +605,7 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
     public void testInitiateUploadSingleAssertUseTargetStorageInRequest()
     {
         // Create database entities required for testing.
-        createDatabaseEntitiesForUploadDownloadTesting();
+        uploadDownloadServiceTestHelper.createDatabaseEntitiesForUploadDownloadTesting();
         StorageEntity storageEntity = storageDaoTestHelper.createStorageEntity(STORAGE_NAME_3);
         storageEntity.getAttributes().add(storageDaoTestHelper
             .createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), "testBucketName"));
@@ -603,15 +617,16 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
                 "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012"));
 
         // Initiate a file upload.
-        UploadSingleInitiationRequest uploadSingleInitiationRequest = createUploadSingleInitiationRequest();
+        UploadSingleInitiationRequest uploadSingleInitiationRequest = uploadDownloadServiceTestHelper.createUploadSingleInitiationRequest();
         uploadSingleInitiationRequest.setTargetStorageName(STORAGE_NAME_3);
 
         UploadSingleInitiationResponse resultUploadSingleInitiationResponse = uploadDownloadService.initiateUploadSingle(uploadSingleInitiationRequest);
 
         // Validate the returned object.
-        validateUploadSingleInitiationResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NAMESPACE, BDEF_NAME_2,
-            FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, getNewAttributes(), FILE_NAME, FILE_SIZE_1_KB, STORAGE_NAME_3,
-            resultUploadSingleInitiationResponse);
+        uploadDownloadServiceTestHelper
+            .validateUploadSingleInitiationResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NAMESPACE, BDEF_NAME_2,
+                FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, businessObjectDefinitionServiceTestHelper.getNewAttributes(), FILE_NAME,
+                FILE_SIZE_1_KB, STORAGE_NAME_3, resultUploadSingleInitiationResponse);
 
         BusinessObjectDataEntity targetBusinessObjectDataEntity = businessObjectDataDao.getBusinessObjectDataByAltKey(
             new BusinessObjectDataKey(NAMESPACE, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2,
@@ -633,7 +648,7 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
     public void testInitiateUploadSingleAssertTargetStorageBucketNameRequired()
     {
         // Create database entities required for testing.
-        createDatabaseEntitiesForUploadDownloadTesting();
+        uploadDownloadServiceTestHelper.createDatabaseEntitiesForUploadDownloadTesting();
         StorageEntity storageEntity = storageDaoTestHelper.createStorageEntity(STORAGE_NAME_3);
         storageEntity.getAttributes().add(storageDaoTestHelper
             .createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE),
@@ -643,7 +658,7 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
                 "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012"));
 
         // Initiate a file upload.
-        UploadSingleInitiationRequest uploadSingleInitiationRequest = createUploadSingleInitiationRequest();
+        UploadSingleInitiationRequest uploadSingleInitiationRequest = uploadDownloadServiceTestHelper.createUploadSingleInitiationRequest();
         uploadSingleInitiationRequest.setTargetStorageName(STORAGE_NAME_3);
 
         try
@@ -666,7 +681,7 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
     public void testInitiateUploadSingleAssertTargetStorageKmsKeyIdRequired()
     {
         // Create database entities required for testing.
-        createDatabaseEntitiesForUploadDownloadTesting();
+        uploadDownloadServiceTestHelper.createDatabaseEntitiesForUploadDownloadTesting();
         StorageEntity storageEntity = storageDaoTestHelper.createStorageEntity(STORAGE_NAME_3);
         storageEntity.getAttributes().add(storageDaoTestHelper
             .createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), "testBucketName"));
@@ -675,7 +690,7 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
                 "$environment/$namespace/$businessObjectDataPartitionValue"));
 
         // Initiate a file upload.
-        UploadSingleInitiationRequest uploadSingleInitiationRequest = createUploadSingleInitiationRequest();
+        UploadSingleInitiationRequest uploadSingleInitiationRequest = uploadDownloadServiceTestHelper.createUploadSingleInitiationRequest();
         uploadSingleInitiationRequest.setTargetStorageName(STORAGE_NAME_3);
 
         try
@@ -698,7 +713,7 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
     public void testInitiateUploadSingleAssertTargetStoragePrefixTemplateRequired()
     {
         // Create database entities required for testing.
-        createDatabaseEntitiesForUploadDownloadTesting();
+        uploadDownloadServiceTestHelper.createDatabaseEntitiesForUploadDownloadTesting();
         StorageEntity storageEntity = storageDaoTestHelper.createStorageEntity(STORAGE_NAME_3);
         storageEntity.getAttributes().add(storageDaoTestHelper
             .createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), "testBucketName"));
@@ -707,7 +722,7 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
                 "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012"));
 
         // Initiate a file upload.
-        UploadSingleInitiationRequest uploadSingleInitiationRequest = createUploadSingleInitiationRequest();
+        UploadSingleInitiationRequest uploadSingleInitiationRequest = uploadDownloadServiceTestHelper.createUploadSingleInitiationRequest();
         uploadSingleInitiationRequest.setTargetStorageName(STORAGE_NAME_3);
 
         try
@@ -727,10 +742,10 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
     {
         setLogLevel(UploadDownloadServiceImpl.class, LogLevel.OFF);
 
-        createDatabaseEntitiesForUploadDownloadTesting();
+        uploadDownloadServiceTestHelper.createDatabaseEntitiesForUploadDownloadTesting();
 
-        UploadSingleInitiationResponse resultUploadSingleInitiationResponse = uploadDownloadService.initiateUploadSingle(
-            createUploadSingleInitiationRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NAMESPACE, BDEF_NAME_2,
+        UploadSingleInitiationResponse resultUploadSingleInitiationResponse = uploadDownloadService.initiateUploadSingle(uploadDownloadServiceTestHelper
+            .createUploadSingleInitiationRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NAMESPACE, BDEF_NAME_2,
                 FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, FILE_NAME));
 
         // Get the file path.
@@ -792,10 +807,10 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
     {
         setLogLevel(UploadDownloadServiceImpl.class, LogLevel.OFF);
 
-        createDatabaseEntitiesForUploadDownloadTesting();
+        uploadDownloadServiceTestHelper.createDatabaseEntitiesForUploadDownloadTesting();
 
-        UploadSingleInitiationResponse resultUploadSingleInitiationResponse = uploadDownloadService.initiateUploadSingle(
-            createUploadSingleInitiationRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NAMESPACE, BDEF_NAME_2,
+        UploadSingleInitiationResponse resultUploadSingleInitiationResponse = uploadDownloadService.initiateUploadSingle(uploadDownloadServiceTestHelper
+            .createUploadSingleInitiationRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NAMESPACE, BDEF_NAME_2,
                 FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, FILE_NAME));
 
         String filePath = resultUploadSingleInitiationResponse.getTargetBusinessObjectData().getStorageUnits().get(0).getStorageFiles().get(0).getFilePath();
@@ -813,10 +828,10 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
     @Test
     public void testPerformCompleteUploadSingleMessageSourceBusinessObjectDataStatusNotUploading()
     {
-        createDatabaseEntitiesForUploadDownloadTesting();
+        uploadDownloadServiceTestHelper.createDatabaseEntitiesForUploadDownloadTesting();
 
-        UploadSingleInitiationResponse resultUploadSingleInitiationResponse = uploadDownloadService.initiateUploadSingle(
-            createUploadSingleInitiationRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NAMESPACE, BDEF_NAME_2,
+        UploadSingleInitiationResponse resultUploadSingleInitiationResponse = uploadDownloadService.initiateUploadSingle(uploadDownloadServiceTestHelper
+            .createUploadSingleInitiationRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NAMESPACE, BDEF_NAME_2,
                 FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, FILE_NAME));
 
         String filePath = resultUploadSingleInitiationResponse.getTargetBusinessObjectData().getStorageUnits().get(0).getStorageFiles().get(0).getFilePath();
@@ -841,10 +856,10 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
     @Test
     public void testPerformCompleteUploadSingleMessageTargetBusinessObjectDataStatusNotUploading()
     {
-        createDatabaseEntitiesForUploadDownloadTesting();
+        uploadDownloadServiceTestHelper.createDatabaseEntitiesForUploadDownloadTesting();
 
-        UploadSingleInitiationResponse resultUploadSingleInitiationResponse = uploadDownloadService.initiateUploadSingle(
-            createUploadSingleInitiationRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NAMESPACE, BDEF_NAME_2,
+        UploadSingleInitiationResponse resultUploadSingleInitiationResponse = uploadDownloadService.initiateUploadSingle(uploadDownloadServiceTestHelper
+            .createUploadSingleInitiationRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NAMESPACE, BDEF_NAME_2,
                 FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, FILE_NAME));
 
         String filePath = resultUploadSingleInitiationResponse.getTargetBusinessObjectData().getStorageUnits().get(0).getStorageFiles().get(0).getFilePath();
@@ -870,13 +885,14 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
     public void testInitiateDownloadSingle()
     {
         // Create the upload data.
-        UploadSingleInitiationResponse uploadSingleInitiationResponse = createUploadedFileData(BusinessObjectDataStatusEntity.VALID);
+        UploadSingleInitiationResponse uploadSingleInitiationResponse =
+            uploadDownloadServiceTestHelper.createUploadedFileData(BusinessObjectDataStatusEntity.VALID);
 
         // Initiate the download against the uploaded data (i.e. the target business object data).
         DownloadSingleInitiationResponse downloadSingleInitiationResponse = initiateDownload(uploadSingleInitiationResponse.getTargetBusinessObjectData());
 
         // Validate the download initiation response.
-        validateDownloadSingleInitiationResponse(uploadSingleInitiationResponse, downloadSingleInitiationResponse);
+        uploadDownloadServiceTestHelper.validateDownloadSingleInitiationResponse(uploadSingleInitiationResponse, downloadSingleInitiationResponse);
     }
 
     @Test
@@ -885,7 +901,8 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         String INVALID_PARTITION_VALUE = "DOES_NOT_EXIST";
 
         // Create the upload data.
-        UploadSingleInitiationResponse uploadSingleInitiationResponse = createUploadedFileData(BusinessObjectDataStatusEntity.VALID);
+        UploadSingleInitiationResponse uploadSingleInitiationResponse =
+            uploadDownloadServiceTestHelper.createUploadedFileData(BusinessObjectDataStatusEntity.VALID);
 
         // Change the target business object data partition value to something invalid.
         uploadSingleInitiationResponse.getTargetBusinessObjectData().setPartitionValue(INVALID_PARTITION_VALUE);
@@ -900,8 +917,8 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         catch (ObjectNotFoundException e)
         {
             BusinessObjectData businessObjectData = uploadSingleInitiationResponse.getTargetBusinessObjectData();
-            assertEquals(
-                getExpectedBusinessObjectDataNotFoundErrorMessage(businessObjectData.getNamespace(), businessObjectData.getBusinessObjectDefinitionName(),
+            assertEquals(businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataNotFoundErrorMessage(businessObjectData.getNamespace(), businessObjectData.getBusinessObjectDefinitionName(),
                     businessObjectData.getBusinessObjectFormatUsage(), businessObjectData.getBusinessObjectFormatFileType(),
                     businessObjectData.getBusinessObjectFormatVersion(), INVALID_PARTITION_VALUE, NO_SUBPARTITION_VALUES, businessObjectData.getVersion(),
                     null), e.getMessage());
@@ -912,7 +929,8 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
     public void testInitiateDownloadSingleMultipleStorageFilesExist()
     {
         // Create the upload data.
-        UploadSingleInitiationResponse uploadSingleInitiationResponse = createUploadedFileData(BusinessObjectDataStatusEntity.VALID);
+        UploadSingleInitiationResponse uploadSingleInitiationResponse =
+            uploadDownloadServiceTestHelper.createUploadedFileData(BusinessObjectDataStatusEntity.VALID);
 
         // Get the target business object data entity.
         BusinessObjectDataEntity targetBusinessObjectDataEntity = businessObjectDataDao
@@ -935,8 +953,8 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         {
             BusinessObjectData businessObjectData = uploadSingleInitiationResponse.getTargetBusinessObjectData();
             assertEquals(String.format("Found 2 registered storage files when expecting one in \"%s\" storage for the business object data {%s}.",
-                targetStorageUnitEntity.getStorage().getName(),
-                getExpectedBusinessObjectDataKeyAsString(businessObjectDataHelper.getBusinessObjectDataKey(businessObjectData))), e.getMessage());
+                targetStorageUnitEntity.getStorage().getName(), businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataKeyAsString(businessObjectDataHelper.getBusinessObjectDataKey(businessObjectData))), e.getMessage());
         }
     }
 
@@ -944,7 +962,8 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
     public void testInitiateDownloadSingleBusinessObjectDataStatusNotValid()
     {
         // Create the upload data, but leave the target business object data in a "RE-ENCRYPTING" status.
-        UploadSingleInitiationResponse uploadSingleInitiationResponse = createUploadedFileData(BusinessObjectDataStatusEntity.RE_ENCRYPTING);
+        UploadSingleInitiationResponse uploadSingleInitiationResponse =
+            uploadDownloadServiceTestHelper.createUploadedFileData(BusinessObjectDataStatusEntity.RE_ENCRYPTING);
 
         // Try to initiate a single file download when the business object data is not set to "VALID" which is invalid.
         try
@@ -958,10 +977,11 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
             BusinessObjectData businessObjectData = uploadSingleInitiationResponse.getTargetBusinessObjectData();
             assertEquals(String.format("Business object data status \"%s\" does not match the expected status \"%s\" for the business object data {%s}.",
                 uploadSingleInitiationResponse.getTargetBusinessObjectData().getStatus(), BusinessObjectDataStatusEntity.VALID,
-                getExpectedBusinessObjectDataKeyAsString(businessObjectData.getNamespace(), businessObjectData.getBusinessObjectDefinitionName(),
-                    businessObjectData.getBusinessObjectFormatUsage(), businessObjectData.getBusinessObjectFormatFileType(),
-                    businessObjectData.getBusinessObjectFormatVersion(), businessObjectData.getPartitionValue(), businessObjectData.getSubPartitionValues(),
-                    businessObjectData.getVersion())), e.getMessage());
+                businessObjectDataServiceTestHelper
+                    .getExpectedBusinessObjectDataKeyAsString(businessObjectData.getNamespace(), businessObjectData.getBusinessObjectDefinitionName(),
+                        businessObjectData.getBusinessObjectFormatUsage(), businessObjectData.getBusinessObjectFormatFileType(),
+                        businessObjectData.getBusinessObjectFormatVersion(), businessObjectData.getPartitionValue(), businessObjectData.getSubPartitionValues(),
+                        businessObjectData.getVersion())), e.getMessage());
         }
     }
 
@@ -969,10 +989,11 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
     public void testExtendUploadSingleCredentials() throws InterruptedException
     {
         // Create source and target business object formats database entities which are required to initiate an upload.
-        createDatabaseEntitiesForUploadDownloadTesting();
+        uploadDownloadServiceTestHelper.createDatabaseEntitiesForUploadDownloadTesting();
 
         // Initiate a file upload.
-        UploadSingleInitiationResponse uploadSingleInitiationResponse = uploadDownloadService.initiateUploadSingle(createUploadSingleInitiationRequest());
+        UploadSingleInitiationResponse uploadSingleInitiationResponse =
+            uploadDownloadService.initiateUploadSingle(uploadDownloadServiceTestHelper.createUploadSingleInitiationRequest());
 
         // Sleep a short amount of time to ensure the extended credentials don't return the same expiration as the initial credentials.
         Thread.sleep(10);
@@ -1004,7 +1025,8 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
     {
         // Create the upload data. This internally calls "complete" which sets the source business object data's status to "DELETED".
         // This is a status where credentials can't be extended (i.e. only UPLOADING statuses).
-        UploadSingleInitiationResponse uploadSingleInitiationResponse = createUploadedFileData(BusinessObjectDataStatusEntity.VALID);
+        UploadSingleInitiationResponse uploadSingleInitiationResponse =
+            uploadDownloadServiceTestHelper.createUploadedFileData(BusinessObjectDataStatusEntity.VALID);
 
         // Try to extend the upload credentials of a source business object data with an invalid status of "DELETED".
         try
@@ -1016,10 +1038,11 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         {
             BusinessObjectData businessObjectData = uploadSingleInitiationResponse.getSourceBusinessObjectData();
             assertEquals(String.format("Business object data {%s} has a status of \"%s\" and must be \"%s\" to extend credentials.",
-                getExpectedBusinessObjectDataKeyAsString(businessObjectData.getNamespace(), businessObjectData.getBusinessObjectDefinitionName(),
-                    businessObjectData.getBusinessObjectFormatUsage(), businessObjectData.getBusinessObjectFormatFileType(),
-                    businessObjectData.getBusinessObjectFormatVersion(), businessObjectData.getPartitionValue(), NO_SUBPARTITION_VALUES,
-                    businessObjectData.getVersion()), BusinessObjectDataStatusEntity.DELETED, BusinessObjectDataStatusEntity.UPLOADING), e.getMessage());
+                businessObjectDataServiceTestHelper
+                    .getExpectedBusinessObjectDataKeyAsString(businessObjectData.getNamespace(), businessObjectData.getBusinessObjectDefinitionName(),
+                        businessObjectData.getBusinessObjectFormatUsage(), businessObjectData.getBusinessObjectFormatFileType(),
+                        businessObjectData.getBusinessObjectFormatVersion(), businessObjectData.getPartitionValue(), NO_SUBPARTITION_VALUES,
+                        businessObjectData.getVersion()), BusinessObjectDataStatusEntity.DELETED, BusinessObjectDataStatusEntity.UPLOADING), e.getMessage());
         }
     }
 
@@ -1029,7 +1052,8 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         String INVALID_PARTITION_VALUE = "DOES_NOT_EXIST";
 
         // Create the upload data.
-        UploadSingleInitiationResponse uploadSingleInitiationResponse = createUploadedFileData(BusinessObjectDataStatusEntity.VALID);
+        UploadSingleInitiationResponse uploadSingleInitiationResponse =
+            uploadDownloadServiceTestHelper.createUploadedFileData(BusinessObjectDataStatusEntity.VALID);
 
         // Change the source business object data partition value to something invalid.
         uploadSingleInitiationResponse.getSourceBusinessObjectData().setPartitionValue(INVALID_PARTITION_VALUE);
@@ -1043,8 +1067,8 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         catch (ObjectNotFoundException e)
         {
             BusinessObjectData businessObjectData = uploadSingleInitiationResponse.getSourceBusinessObjectData();
-            assertEquals(
-                getExpectedBusinessObjectDataNotFoundErrorMessage(businessObjectData.getNamespace(), businessObjectData.getBusinessObjectDefinitionName(),
+            assertEquals(businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataNotFoundErrorMessage(businessObjectData.getNamespace(), businessObjectData.getBusinessObjectDefinitionName(),
                     businessObjectData.getBusinessObjectFormatUsage(), businessObjectData.getBusinessObjectFormatFileType(),
                     businessObjectData.getBusinessObjectFormatVersion(), INVALID_PARTITION_VALUE, NO_SUBPARTITION_VALUES, businessObjectData.getVersion(),
                     null), e.getMessage());

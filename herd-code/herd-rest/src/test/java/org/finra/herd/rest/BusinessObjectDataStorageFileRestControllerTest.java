@@ -17,6 +17,7 @@ package org.finra.herd.rest;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -43,7 +44,7 @@ import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
 
 /**
- * Tests for {@link org.finra.herd.rest.BusinessObjectDataStorageFileRestController#createBusinessObjectDataStorageFiles(org.finra.herd.model.api.xml.BusinessObjectDataStorageFilesCreateRequest)}
+ * This class tests CreateBusinessObjectDataStorageFiles functionality within the business object data storage file REST controller.
  */
 public class BusinessObjectDataStorageFileRestControllerTest extends AbstractRestTest
 {
@@ -69,9 +70,11 @@ public class BusinessObjectDataStorageFileRestControllerTest extends AbstractRes
 
     private static final List<String> SUB_PARTITION_VALUES = Arrays.asList(PARTITION_VALUE_2, PARTITION_VALUE_3, PARTITION_VALUE_4, PARTITION_VALUE_5);
 
-    private String testS3KeyPrefix =
+    private static final String testS3KeyPrefix =
         getExpectedS3KeyPrefix(NAMESPACE, DATA_PROVIDER_NAME, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_KEY,
             PARTITION_VALUE, null, null, DATA_VERSION);
+
+    private Path localTempPath;
 
     /**
      * Sets up the test environment.
@@ -104,14 +107,16 @@ public class BusinessObjectDataStorageFileRestControllerTest extends AbstractRes
         createDataWithSubPartitions();
 
         BusinessObjectDataStorageFilesCreateRequest request =
-            createBusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                SUB_PARTITION_VALUES, DATA_VERSION, STORAGE_NAME, Arrays.asList(createFile(FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000)));
+            new BusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUB_PARTITION_VALUES, DATA_VERSION, STORAGE_NAME, Arrays.asList(createFile(FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000)),
+                NO_DISCOVER_STORAGE_FILES);
 
         BusinessObjectDataStorageFilesCreateResponse response = businessObjectDataStorageFileRestController.createBusinessObjectDataStorageFiles(request);
 
         // Validate the returned object.
-        validateBusinessObjectDataStorageFilesCreateResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-            SUB_PARTITION_VALUES, DATA_VERSION, STORAGE_NAME, request.getStorageFiles(), response);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectDataStorageFilesCreateResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                PARTITION_VALUE, SUB_PARTITION_VALUES, DATA_VERSION, STORAGE_NAME, request.getStorageFiles(), response);
     }
 
     private StorageFile createFile(String filePath, Long size, Long rowCount)

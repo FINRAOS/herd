@@ -20,6 +20,7 @@ import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -84,9 +85,11 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
 
     private static final List<String> SUB_PARTITION_VALUES = Arrays.asList(PARTITION_VALUE_2, PARTITION_VALUE_3, PARTITION_VALUE_4, PARTITION_VALUE_5);
 
-    private String testS3KeyPrefix =
+    private static final String testS3KeyPrefix =
         getExpectedS3KeyPrefix(NAMESPACE, DATA_PROVIDER_NAME, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_KEY,
             PARTITION_VALUE, null, null, DATA_VERSION);
+
+    private Path localTempPath;
 
     /**
      * Sets up the test environment.
@@ -119,14 +122,16 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
         createDataWithSubPartitions();
 
         BusinessObjectDataStorageFilesCreateRequest request =
-            createBusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                SUB_PARTITION_VALUES, DATA_VERSION, STORAGE_NAME, Arrays.asList(createFile(FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000)));
+            new BusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUB_PARTITION_VALUES, DATA_VERSION, STORAGE_NAME, Arrays.asList(createFile(FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000)),
+                NO_DISCOVER_STORAGE_FILES);
 
         BusinessObjectDataStorageFilesCreateResponse response = businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(request);
 
         // Validate the returned object.
-        validateBusinessObjectDataStorageFilesCreateResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-            SUB_PARTITION_VALUES, DATA_VERSION, STORAGE_NAME, request.getStorageFiles(), response);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectDataStorageFilesCreateResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                PARTITION_VALUE, SUB_PARTITION_VALUES, DATA_VERSION, STORAGE_NAME, request.getStorageFiles(), response);
     }
 
     @Test
@@ -136,8 +141,9 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
         try
         {
             businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(
-                createBusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BLANK_TEXT, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                    PARTITION_VALUE, SUB_PARTITION_VALUES, DATA_VERSION, STORAGE_NAME, Arrays.asList(createFile(FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000))));
+                new BusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BLANK_TEXT, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                    PARTITION_VALUE, SUB_PARTITION_VALUES, DATA_VERSION, STORAGE_NAME, Arrays.asList(createFile(FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000)),
+                    NO_DISCOVER_STORAGE_FILES));
             fail("Should throw an IllegalArgumentException when business object definition name is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -149,8 +155,9 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
         try
         {
             businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(
-                createBusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, BLANK_TEXT, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                    SUB_PARTITION_VALUES, DATA_VERSION, STORAGE_NAME, Arrays.asList(createFile(FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000))));
+                new BusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, BLANK_TEXT, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    SUB_PARTITION_VALUES, DATA_VERSION, STORAGE_NAME, Arrays.asList(createFile(FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000)),
+                    NO_DISCOVER_STORAGE_FILES));
             fail("Should throw an IllegalArgumentException when business object format usage is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -162,8 +169,9 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
         try
         {
             businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(
-                createBusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, BLANK_TEXT, FORMAT_VERSION, PARTITION_VALUE,
-                    SUB_PARTITION_VALUES, DATA_VERSION, STORAGE_NAME, Arrays.asList(createFile(FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000))));
+                new BusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, BLANK_TEXT, FORMAT_VERSION, PARTITION_VALUE,
+                    SUB_PARTITION_VALUES, DATA_VERSION, STORAGE_NAME, Arrays.asList(createFile(FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000)),
+                    NO_DISCOVER_STORAGE_FILES));
             fail("Should throw an IllegalArgumentException when business object format file type is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -175,8 +183,9 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
         try
         {
             businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(
-                createBusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null, PARTITION_VALUE,
-                    SUB_PARTITION_VALUES, DATA_VERSION, STORAGE_NAME, Arrays.asList(createFile(FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000))));
+                new BusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null, PARTITION_VALUE,
+                    SUB_PARTITION_VALUES, DATA_VERSION, STORAGE_NAME, Arrays.asList(createFile(FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000)),
+                    NO_DISCOVER_STORAGE_FILES));
             fail("Should throw an IllegalArgumentException when business object format version is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -188,8 +197,9 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
         try
         {
             businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(
-                createBusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, BLANK_TEXT,
-                    SUB_PARTITION_VALUES, DATA_VERSION, STORAGE_NAME, Arrays.asList(createFile(FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000))));
+                new BusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, BLANK_TEXT,
+                    SUB_PARTITION_VALUES, DATA_VERSION, STORAGE_NAME, Arrays.asList(createFile(FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000)),
+                    NO_DISCOVER_STORAGE_FILES));
             fail("Should throw an IllegalArgumentException when partition value is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -201,9 +211,9 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
         try
         {
             businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(
-                createBusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                    PARTITION_VALUE, Arrays.asList(BLANK_TEXT), DATA_VERSION, STORAGE_NAME,
-                    Arrays.asList(createFile(FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000))));
+                new BusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    Arrays.asList(BLANK_TEXT), DATA_VERSION, STORAGE_NAME, Arrays.asList(createFile(FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000)),
+                    NO_DISCOVER_STORAGE_FILES));
             fail("Should throw an IllegalArgumentException when subpartition value is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -215,8 +225,9 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
         try
         {
             businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(
-                createBusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                    PARTITION_VALUE, SUB_PARTITION_VALUES, null, STORAGE_NAME, Arrays.asList(createFile(FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000))));
+                new BusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    SUB_PARTITION_VALUES, null, STORAGE_NAME, Arrays.asList(createFile(FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000)),
+                    NO_DISCOVER_STORAGE_FILES));
             fail("Should throw an IllegalArgumentException when business object data version is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -228,8 +239,9 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
         try
         {
             businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(
-                createBusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                    PARTITION_VALUE, SUB_PARTITION_VALUES, DATA_VERSION, BLANK_TEXT, Arrays.asList(createFile(FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000))));
+                new BusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    SUB_PARTITION_VALUES, DATA_VERSION, BLANK_TEXT, Arrays.asList(createFile(FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000)),
+                    NO_DISCOVER_STORAGE_FILES));
             fail("Should throw an IllegalArgumentException when storage name is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -241,8 +253,8 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
         try
         {
             businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(
-                createBusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                    PARTITION_VALUE, SUB_PARTITION_VALUES, DATA_VERSION, STORAGE_NAME, null));
+                new BusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    SUB_PARTITION_VALUES, DATA_VERSION, STORAGE_NAME, null, NO_DISCOVER_STORAGE_FILES));
             fail("Should throw an IllegalArgumentException when storage files are not specified.");
         }
         catch (IllegalArgumentException e)
@@ -254,8 +266,9 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
         try
         {
             businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(
-                createBusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                    PARTITION_VALUE, SUB_PARTITION_VALUES, DATA_VERSION, STORAGE_NAME, Arrays.asList(createFile(BLANK_TEXT, FILE_SIZE_1_KB, ROW_COUNT_1000))));
+                new BusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    SUB_PARTITION_VALUES, DATA_VERSION, STORAGE_NAME, Arrays.asList(createFile(BLANK_TEXT, FILE_SIZE_1_KB, ROW_COUNT_1000)),
+                    NO_DISCOVER_STORAGE_FILES));
             fail("Should throw an IllegalArgumentException when storage file path is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -267,8 +280,8 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
         try
         {
             businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(
-                createBusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                    PARTITION_VALUE, SUB_PARTITION_VALUES, DATA_VERSION, STORAGE_NAME, Arrays.asList(createFile(FILE_PATH_2, null, ROW_COUNT_1000))));
+                new BusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    SUB_PARTITION_VALUES, DATA_VERSION, STORAGE_NAME, Arrays.asList(createFile(FILE_PATH_2, null, ROW_COUNT_1000)), NO_DISCOVER_STORAGE_FILES));
             fail("Should throw an IllegalArgumentException when storage file size is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -287,14 +300,15 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
 
         // Create business object data storage files without passing any of the optional parameters.
         BusinessObjectDataStorageFilesCreateRequest request =
-            createBusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                null, DATA_VERSION, STORAGE_NAME, Arrays.asList(createFile(FILE_PATH_2, FILE_SIZE_1_KB, null)));
+            new BusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                null, DATA_VERSION, STORAGE_NAME, Arrays.asList(createFile(FILE_PATH_2, FILE_SIZE_1_KB, null)), NO_DISCOVER_STORAGE_FILES);
 
         BusinessObjectDataStorageFilesCreateResponse response = businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(request);
 
         // Validate the returned object.
-        validateBusinessObjectDataStorageFilesCreateResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-            NO_SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME, request.getStorageFiles(), response);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectDataStorageFilesCreateResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                PARTITION_VALUE, NO_SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME, request.getStorageFiles(), response);
     }
 
     @Test
@@ -304,15 +318,17 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
 
         // Create business object data storage files by passing all input parameters with leading and trailing empty spaces.
         BusinessObjectDataStorageFilesCreateRequest request =
-            createBusinessObjectDataStorageFilesCreateRequest(addWhitespace(NAMESPACE), addWhitespace(BDEF_NAME), addWhitespace(FORMAT_USAGE_CODE),
+            new BusinessObjectDataStorageFilesCreateRequest(addWhitespace(NAMESPACE), addWhitespace(BDEF_NAME), addWhitespace(FORMAT_USAGE_CODE),
                 addWhitespace(FORMAT_FILE_TYPE_CODE), FORMAT_VERSION, addWhitespace(PARTITION_VALUE), addWhitespace(SUB_PARTITION_VALUES), DATA_VERSION,
-                addWhitespace(STORAGE_NAME), Arrays.asList(createFile(addWhitespace(FILE_PATH_2), FILE_SIZE_1_KB, ROW_COUNT_1000)));
+                addWhitespace(STORAGE_NAME), Arrays.asList(createFile(addWhitespace(FILE_PATH_2), FILE_SIZE_1_KB, ROW_COUNT_1000)), NO_DISCOVER_STORAGE_FILES);
 
         BusinessObjectDataStorageFilesCreateResponse response = businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(request);
 
         // Validate the returned object.
-        validateBusinessObjectDataStorageFilesCreateResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-            SUB_PARTITION_VALUES, DATA_VERSION, STORAGE_NAME, Arrays.asList(createFile(FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000)), response);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectDataStorageFilesCreateResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                PARTITION_VALUE, SUB_PARTITION_VALUES, DATA_VERSION, STORAGE_NAME, Arrays.asList(createFile(FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000)),
+                response);
     }
 
     @Test
@@ -322,15 +338,16 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
 
         // Create business object data storage files using upper case input parameters (except for case-sensitive partition values and storage file paths).
         BusinessObjectDataStorageFilesCreateRequest request =
-            createBusinessObjectDataStorageFilesCreateRequest(NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(),
+            new BusinessObjectDataStorageFilesCreateRequest(NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(),
                 FORMAT_FILE_TYPE_CODE.toUpperCase(), FORMAT_VERSION, PARTITION_VALUE, SUB_PARTITION_VALUES, DATA_VERSION, STORAGE_NAME.toUpperCase(),
-                Arrays.asList(createFile(FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000)));
+                Arrays.asList(createFile(FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000)), NO_DISCOVER_STORAGE_FILES);
 
         BusinessObjectDataStorageFilesCreateResponse response = businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(request);
 
         // Validate the returned object.
-        validateBusinessObjectDataStorageFilesCreateResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-            SUB_PARTITION_VALUES, DATA_VERSION, STORAGE_NAME, request.getStorageFiles(), response);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectDataStorageFilesCreateResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                PARTITION_VALUE, SUB_PARTITION_VALUES, DATA_VERSION, STORAGE_NAME, request.getStorageFiles(), response);
     }
 
     @Test
@@ -340,15 +357,16 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
 
         // Create business object data storage files using lower case input parameters (except for case-sensitive partition values and storage file paths).
         BusinessObjectDataStorageFilesCreateRequest request =
-            createBusinessObjectDataStorageFilesCreateRequest(NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(),
+            new BusinessObjectDataStorageFilesCreateRequest(NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(),
                 FORMAT_FILE_TYPE_CODE.toLowerCase(), FORMAT_VERSION, PARTITION_VALUE, SUB_PARTITION_VALUES, DATA_VERSION, STORAGE_NAME.toLowerCase(),
-                Arrays.asList(createFile(FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000)));
+                Arrays.asList(createFile(FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000)), NO_DISCOVER_STORAGE_FILES);
 
         BusinessObjectDataStorageFilesCreateResponse response = businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(request);
 
         // Validate the returned object.
-        validateBusinessObjectDataStorageFilesCreateResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-            SUB_PARTITION_VALUES, DATA_VERSION, STORAGE_NAME, request.getStorageFiles(), response);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectDataStorageFilesCreateResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                PARTITION_VALUE, SUB_PARTITION_VALUES, DATA_VERSION, STORAGE_NAME, request.getStorageFiles(), response);
     }
 
     @Test
@@ -358,9 +376,9 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
         try
         {
             businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(
-                createBusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                    PARTITION_VALUE, Arrays.asList(PARTITION_VALUE_2, PARTITION_VALUE_3, PARTITION_VALUE_4, PARTITION_VALUE_5, PARTITION_KEY_2), DATA_VERSION,
-                    STORAGE_NAME, Arrays.asList(createFile(FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000))));
+                new BusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    Arrays.asList(PARTITION_VALUE_2, PARTITION_VALUE_3, PARTITION_VALUE_4, PARTITION_VALUE_5, PARTITION_KEY_2), DATA_VERSION, STORAGE_NAME,
+                    Arrays.asList(createFile(FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000)), NO_DISCOVER_STORAGE_FILES));
             fail("Should throw an IllegalArgumentException when too many sub-partition values are specified.");
         }
         catch (IllegalArgumentException e)
@@ -372,8 +390,8 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
         try
         {
             businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(
-                createBusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                    PARTITION_VALUE, SUB_PARTITION_VALUES, DATA_VERSION, STORAGE_NAME, Arrays.asList(createFile(FILE_PATH_2, FILE_SIZE_1_KB, -1l))));
+                new BusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    SUB_PARTITION_VALUES, DATA_VERSION, STORAGE_NAME, Arrays.asList(createFile(FILE_PATH_2, FILE_SIZE_1_KB, -1l)), NO_DISCOVER_STORAGE_FILES));
             fail("Should throw an IllegalArgumentException when storage file has an invalid row count number.");
         }
         catch (IllegalArgumentException e)
@@ -385,9 +403,10 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
         try
         {
             businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(
-                createBusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                    PARTITION_VALUE, SUB_PARTITION_VALUES, DATA_VERSION, STORAGE_NAME,
-                    Arrays.asList(createFile(FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000), createFile(FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000))));
+                new BusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    SUB_PARTITION_VALUES, DATA_VERSION, STORAGE_NAME,
+                    Arrays.asList(createFile(FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000), createFile(FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000)),
+                    NO_DISCOVER_STORAGE_FILES));
             fail("Should throw an IllegalArgumentException when trying to add duplicate storage files.");
         }
         catch (IllegalArgumentException e)
@@ -402,13 +421,15 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
         // Add a storage file to a storage unit with a storage directory path.
         createData("some/path", false);
         BusinessObjectDataStorageFilesCreateRequest request =
-            createBusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                null, DATA_VERSION, STORAGE_NAME, Arrays.asList(createFile("some/path/" + FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000)));
+            new BusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                null, DATA_VERSION, STORAGE_NAME, Arrays.asList(createFile("some/path/" + FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000)),
+                NO_DISCOVER_STORAGE_FILES);
         BusinessObjectDataStorageFilesCreateResponse response = businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(request);
 
         // Validate the returned object.
-        validateBusinessObjectDataStorageFilesCreateResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-            NO_SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME, request.getStorageFiles(), response);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectDataStorageFilesCreateResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                PARTITION_VALUE, NO_SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME, request.getStorageFiles(), response);
     }
 
     @Test
@@ -420,9 +441,9 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
         try
         {
             businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(
-                createBusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                    PARTITION_VALUE, null, DATA_VERSION, STORAGE_NAME,
-                    Arrays.asList(createFile("incorrect/path/" + FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000))));
+                new BusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    null, DATA_VERSION, STORAGE_NAME, Arrays.asList(createFile("incorrect/path/" + FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000)),
+                    NO_DISCOVER_STORAGE_FILES));
             fail("Should throw an IllegalArgumentException when a storage file path does not match the storage directory path.");
         }
         catch (IllegalArgumentException e)
@@ -439,14 +460,15 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
         try
         {
             businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(
-                createBusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                    PARTITION_VALUE, null, DATA_VERSION, STORAGE_NAME, Arrays.asList(createFile(FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000))));
+                new BusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    null, DATA_VERSION, STORAGE_NAME, Arrays.asList(createFile(FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000)), NO_DISCOVER_STORAGE_FILES));
             fail("Should throw an ObjectNotFoundException when using non-existing business object data.");
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                PARTITION_VALUE, NO_SUBPARTITION_VALUES, DATA_VERSION, null), e.getMessage());
+            assertEquals(businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                    PARTITION_VALUE, NO_SUBPARTITION_VALUES, DATA_VERSION, null), e.getMessage());
         }
     }
 
@@ -466,16 +488,16 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
         try
         {
             businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(
-                createBusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                    PARTITION_VALUE, null, DATA_VERSION, STORAGE_NAME, Arrays.asList(createFile(FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000))));
+                new BusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    null, DATA_VERSION, STORAGE_NAME, Arrays.asList(createFile(FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000)), NO_DISCOVER_STORAGE_FILES));
             fail("Should throw an IllegalArgumentException when business object data status is not flagged as a pre-registration status.");
         }
         catch (IllegalArgumentException e)
         {
             assertEquals(String.format(
                 "Business object data status must be one of the pre-registration statuses. " + "Business object data status {%s}, business object data {%s}",
-                businessObjectDataStatusEntity.getCode(),
-                getExpectedBusinessObjectDataKeyAsString(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                businessObjectDataStatusEntity.getCode(), businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataKeyAsString(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                     NO_PARTITION_VALUES, DATA_VERSION)), e.getMessage());
         }
     }
@@ -489,15 +511,16 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
         try
         {
             businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(
-                createBusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                    PARTITION_VALUE, null, DATA_VERSION, "I_DO_NOT_EXIST", Arrays.asList(createFile(FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000))));
+                new BusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    null, DATA_VERSION, "I_DO_NOT_EXIST", Arrays.asList(createFile(FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000)), NO_DISCOVER_STORAGE_FILES));
             fail("Should throw an ObjectNotFoundException when using non-existing storage.");
         }
         catch (ObjectNotFoundException e)
         {
             assertEquals(String.format("Could not find storage unit in \"I_DO_NOT_EXIST\" storage for the business object data {%s}.",
-                getExpectedBusinessObjectDataKeyAsString(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, null,
-                    DATA_VERSION)), e.getMessage());
+                businessObjectDataServiceTestHelper
+                    .getExpectedBusinessObjectDataKeyAsString(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                        null, DATA_VERSION)), e.getMessage());
         }
     }
 
@@ -521,8 +544,9 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
         try
         {
             businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(
-                createBusinessObjectDataStorageFilesCreateRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                    PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME, Arrays.asList(createFile(FILE_PATH_1, FILE_SIZE_1_KB, ROW_COUNT_1000))));
+                new BusinessObjectDataStorageFilesCreateRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                    PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME, Arrays.asList(createFile(FILE_PATH_1, FILE_SIZE_1_KB, ROW_COUNT_1000)),
+                    NO_DISCOVER_STORAGE_FILES));
             fail("Should throw an IllegalArgumentException when adding files to storage with file existence validation enabled without file size validation.");
         }
         catch (IllegalArgumentException e)
@@ -554,17 +578,19 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
         storageUnitEntity.getStorageFiles().add(storageFileEntity);
 
         // Create and upload to S3 managed storage two test files with 1 KB file size.
-        prepareTestS3Files(testS3KeyPrefix, Arrays.asList(FILE_PATH_1, FILE_PATH_2));
+        businessObjectDataServiceTestHelper.prepareTestS3Files(testS3KeyPrefix, localTempPath, Arrays.asList(FILE_PATH_1, FILE_PATH_2));
 
         // Add a second storage file to this business object data.
         BusinessObjectDataStorageFilesCreateRequest request =
-            createBusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                null, DATA_VERSION, STORAGE_NAME, Arrays.asList(createFile(testS3KeyPrefix + "/" + FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000)));
+            new BusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                null, DATA_VERSION, STORAGE_NAME, Arrays.asList(createFile(testS3KeyPrefix + "/" + FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000)),
+                NO_DISCOVER_STORAGE_FILES);
         BusinessObjectDataStorageFilesCreateResponse response = businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(request);
 
         // Validate the returned object.
-        validateBusinessObjectDataStorageFilesCreateResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-            NO_SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME, request.getStorageFiles(), response);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectDataStorageFilesCreateResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                PARTITION_VALUE, NO_SUBPARTITION_VALUES, DATA_VERSION, STORAGE_NAME, request.getStorageFiles(), response);
     }
 
     @Test
@@ -576,15 +602,16 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
         try
         {
             businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(
-                createBusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                    PARTITION_VALUE, null, DATA_VERSION, STORAGE_NAME, Arrays.asList(createFile(FILE_PATH_1, FILE_SIZE_1_KB, ROW_COUNT_1000))));
+                new BusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    null, DATA_VERSION, STORAGE_NAME, Arrays.asList(createFile(FILE_PATH_1, FILE_SIZE_1_KB, ROW_COUNT_1000)), NO_DISCOVER_STORAGE_FILES));
             fail("Should throw an AlreadyExistsException when request contains storage file what is already registered.");
         }
         catch (AlreadyExistsException e)
         {
             assertEquals(String.format("S3 file \"%s\" in \"%s\" storage is already registered by the business object data {%s}.", FILE_PATH_1, STORAGE_NAME,
-                getExpectedBusinessObjectDataKeyAsString(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                    NO_SUBPARTITION_VALUES, DATA_VERSION)), e.getMessage());
+                businessObjectDataServiceTestHelper
+                    .getExpectedBusinessObjectDataKeyAsString(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                        NO_SUBPARTITION_VALUES, DATA_VERSION)), e.getMessage());
         }
     }
 
@@ -592,17 +619,18 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
     public void testCreateBusinessObjectDataStorageFilesS3Managed() throws Exception
     {
         createData(null, true, Arrays.asList(testS3KeyPrefix + "/" + FILE_PATH_1));
-        prepareTestS3Files(testS3KeyPrefix, Arrays.asList(FILE_PATH_1, FILE_PATH_2));
+        businessObjectDataServiceTestHelper.prepareTestS3Files(testS3KeyPrefix, localTempPath, Arrays.asList(FILE_PATH_1, FILE_PATH_2));
 
         BusinessObjectDataStorageFilesCreateRequest request =
-            createBusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            new BusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 null, DATA_VERSION, StorageEntity.MANAGED_STORAGE,
-                Arrays.asList(createFile(testS3KeyPrefix + "/" + FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000)));
+                Arrays.asList(createFile(testS3KeyPrefix + "/" + FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000)), NO_DISCOVER_STORAGE_FILES);
         BusinessObjectDataStorageFilesCreateResponse response = businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(request);
 
         // Validate the returned object.
-        validateBusinessObjectDataStorageFilesCreateResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-            NO_SUBPARTITION_VALUES, DATA_VERSION, StorageEntity.MANAGED_STORAGE, request.getStorageFiles(), response);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectDataStorageFilesCreateResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                PARTITION_VALUE, NO_SUBPARTITION_VALUES, DATA_VERSION, StorageEntity.MANAGED_STORAGE, request.getStorageFiles(), response);
     }
 
     @Test
@@ -610,17 +638,18 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
     {
         // Prepare test data with a storage unit registered with a storage directory path.
         createData(testS3KeyPrefix, true, Arrays.asList(testS3KeyPrefix + "/" + FILE_PATH_1));
-        prepareTestS3Files(testS3KeyPrefix, Arrays.asList(FILE_PATH_1, FILE_PATH_2));
+        businessObjectDataServiceTestHelper.prepareTestS3Files(testS3KeyPrefix, localTempPath, Arrays.asList(FILE_PATH_1, FILE_PATH_2));
 
         BusinessObjectDataStorageFilesCreateRequest request =
-            createBusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            new BusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 null, DATA_VERSION, StorageEntity.MANAGED_STORAGE,
-                Arrays.asList(createFile(testS3KeyPrefix + "/" + FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000)));
+                Arrays.asList(createFile(testS3KeyPrefix + "/" + FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000)), NO_DISCOVER_STORAGE_FILES);
         BusinessObjectDataStorageFilesCreateResponse response = businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(request);
 
         // Validate the returned object.
-        validateBusinessObjectDataStorageFilesCreateResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-            NO_SUBPARTITION_VALUES, DATA_VERSION, StorageEntity.MANAGED_STORAGE, request.getStorageFiles(), response);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectDataStorageFilesCreateResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                PARTITION_VALUE, NO_SUBPARTITION_VALUES, DATA_VERSION, StorageEntity.MANAGED_STORAGE, request.getStorageFiles(), response);
     }
 
     @Test
@@ -631,17 +660,18 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
 
         // Create and upload to S3 managed storage a set of test files including an extra
         // file not to be listed in the create business object data create request.
-        prepareTestS3Files(testS3KeyPrefix, Arrays.asList(FILE_PATH_1, FILE_PATH_2, FILE_PATH_3));
+        businessObjectDataServiceTestHelper.prepareTestS3Files(testS3KeyPrefix, localTempPath, Arrays.asList(FILE_PATH_1, FILE_PATH_2, FILE_PATH_3));
 
         BusinessObjectDataStorageFilesCreateRequest request =
-            createBusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            new BusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 null, DATA_VERSION, StorageEntity.MANAGED_STORAGE,
-                Arrays.asList(createFile(testS3KeyPrefix + "/" + FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000)));
+                Arrays.asList(createFile(testS3KeyPrefix + "/" + FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000)), NO_DISCOVER_STORAGE_FILES);
         BusinessObjectDataStorageFilesCreateResponse response = businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(request);
 
         // Validate the returned object.
-        validateBusinessObjectDataStorageFilesCreateResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-            NO_SUBPARTITION_VALUES, DATA_VERSION, StorageEntity.MANAGED_STORAGE, request.getStorageFiles(), response);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectDataStorageFilesCreateResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                PARTITION_VALUE, NO_SUBPARTITION_VALUES, DATA_VERSION, StorageEntity.MANAGED_STORAGE, request.getStorageFiles(), response);
     }
 
     @Test
@@ -654,9 +684,9 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
         try
         {
             businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(
-                createBusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                    PARTITION_VALUE, null, DATA_VERSION, StorageEntity.MANAGED_STORAGE,
-                    Arrays.asList(createFile(invalidS3KeyPrefix + "/" + FILE_PATH_1, FILE_SIZE_1_KB, ROW_COUNT_1000))));
+                new BusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    null, DATA_VERSION, StorageEntity.MANAGED_STORAGE,
+                    Arrays.asList(createFile(invalidS3KeyPrefix + "/" + FILE_PATH_1, FILE_SIZE_1_KB, ROW_COUNT_1000)), NO_DISCOVER_STORAGE_FILES));
             fail("Should throw an IllegalArgumentException when a storage file path in S3 managed storage does not match the expected S3 key prefix.");
         }
         catch (IllegalArgumentException e)
@@ -680,17 +710,18 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
         try
         {
             businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(
-                createBusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                    PARTITION_VALUE, null, DATA_VERSION, StorageEntity.MANAGED_STORAGE,
-                    Arrays.asList(createFile(testFilePath, FILE_SIZE_1_KB, ROW_COUNT_1000))));
+                new BusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    null, DATA_VERSION, StorageEntity.MANAGED_STORAGE, Arrays.asList(createFile(testFilePath, FILE_SIZE_1_KB, ROW_COUNT_1000)),
+                    NO_DISCOVER_STORAGE_FILES));
             fail("Should throw an AlreadyExistsException when request contains storage file what is already registered.");
         }
         catch (AlreadyExistsException e)
         {
             assertEquals(String
                 .format("S3 file \"%s\" in \"%s\" storage is already registered by the business object data {%s}.", testFilePath, StorageEntity.MANAGED_STORAGE,
-                    getExpectedBusinessObjectDataKeyAsString(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                        NO_SUBPARTITION_VALUES, DATA_VERSION)), e.getMessage());
+                    businessObjectDataServiceTestHelper
+                        .getExpectedBusinessObjectDataKeyAsString(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                            PARTITION_VALUE, NO_SUBPARTITION_VALUES, DATA_VERSION)), e.getMessage());
         }
     }
 
@@ -701,15 +732,15 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
         createData(null, true, Arrays.asList(testS3KeyPrefix + "/" + FILE_PATH_1));
 
         // Create and upload to S3 managed storage a test file that is not the already registered storage file.
-        prepareTestS3Files(testS3KeyPrefix, Arrays.asList(FILE_PATH_2));
+        businessObjectDataServiceTestHelper.prepareTestS3Files(testS3KeyPrefix, localTempPath, Arrays.asList(FILE_PATH_2));
 
         // Try to add a storage file to the business object data when an already registered storage file is not found in S3.
         try
         {
             businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(
-                createBusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                    PARTITION_VALUE, null, DATA_VERSION, StorageEntity.MANAGED_STORAGE,
-                    Arrays.asList(createFile(testS3KeyPrefix + "/" + FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000))));
+                new BusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    null, DATA_VERSION, StorageEntity.MANAGED_STORAGE,
+                    Arrays.asList(createFile(testS3KeyPrefix + "/" + FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000)), NO_DISCOVER_STORAGE_FILES));
             fail("Should throw an ObjectNotFoundException when an already registered storage file not found in S3.");
         }
         catch (ObjectNotFoundException e)
@@ -734,15 +765,15 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
         storageUnitEntity.getStorageFiles().add(storageFileEntity);
 
         // Create and upload to S3 managed storage two test files with 1 KB file size.
-        prepareTestS3Files(testS3KeyPrefix, Arrays.asList(FILE_PATH_1, FILE_PATH_2));
+        businessObjectDataServiceTestHelper.prepareTestS3Files(testS3KeyPrefix, localTempPath, Arrays.asList(FILE_PATH_1, FILE_PATH_2));
 
         // Try to add storage file to the business object data when an already registered storage file has a null file size.
         try
         {
             businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(
-                createBusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                    PARTITION_VALUE, null, DATA_VERSION, StorageEntity.MANAGED_STORAGE,
-                    Arrays.asList(createFile(testS3KeyPrefix + "/" + FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000))));
+                new BusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    null, DATA_VERSION, StorageEntity.MANAGED_STORAGE,
+                    Arrays.asList(createFile(testS3KeyPrefix + "/" + FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000)), NO_DISCOVER_STORAGE_FILES));
             fail("Should throw an IllegalArgumentException when an already registered storage file has a null file size");
         }
         catch (IllegalArgumentException e)
@@ -767,15 +798,15 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
         storageUnitEntity.getStorageFiles().add(storageFileEntity);
 
         // Create and upload to S3 managed storage two test files with 1 KB file size.
-        prepareTestS3Files(testS3KeyPrefix, Arrays.asList(FILE_PATH_1, FILE_PATH_2));
+        businessObjectDataServiceTestHelper.prepareTestS3Files(testS3KeyPrefix, localTempPath, Arrays.asList(FILE_PATH_1, FILE_PATH_2));
 
         // Try to add storage file to the business object data when file size reported by S3 does not match for an already registered storage file.
         try
         {
             businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(
-                createBusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                    PARTITION_VALUE, null, DATA_VERSION, StorageEntity.MANAGED_STORAGE,
-                    Arrays.asList(createFile(testS3KeyPrefix + "/" + FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000))));
+                new BusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    null, DATA_VERSION, StorageEntity.MANAGED_STORAGE,
+                    Arrays.asList(createFile(testS3KeyPrefix + "/" + FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000)), NO_DISCOVER_STORAGE_FILES));
             fail("Should throw an IllegalArgumentException when an already registered storage file size does not match file size reported by S3.");
         }
         catch (IllegalArgumentException e)
@@ -790,15 +821,15 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
     public void testCreateBusinessObjectDataStorageFilesS3ManagedS3FileNotFound() throws Exception
     {
         createData(null, true, Arrays.asList(testS3KeyPrefix + "/" + FILE_PATH_1));
-        prepareTestS3Files(testS3KeyPrefix, Arrays.asList(FILE_PATH_1));
+        businessObjectDataServiceTestHelper.prepareTestS3Files(testS3KeyPrefix, localTempPath, Arrays.asList(FILE_PATH_1));
 
         // Try to add a storage file that does not exist in S3 managed storage.
         try
         {
             businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(
-                createBusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                    PARTITION_VALUE, null, DATA_VERSION, StorageEntity.MANAGED_STORAGE,
-                    Arrays.asList(createFile(testS3KeyPrefix + "/" + FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000))));
+                new BusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    null, DATA_VERSION, StorageEntity.MANAGED_STORAGE,
+                    Arrays.asList(createFile(testS3KeyPrefix + "/" + FILE_PATH_2, FILE_SIZE_1_KB, ROW_COUNT_1000)), NO_DISCOVER_STORAGE_FILES));
             fail("Should throw an ObjectNotFoundException when a storage file does not exist in S3 managed storage.");
         }
         catch (ObjectNotFoundException e)
@@ -813,15 +844,15 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
     public void testCreateBusinessObjectDataStorageFilesS3ManagedS3FileSizeMismatch() throws Exception
     {
         createData(null, true, Arrays.asList(testS3KeyPrefix + "/" + FILE_PATH_1));
-        prepareTestS3Files(testS3KeyPrefix, Arrays.asList(FILE_PATH_1, FILE_PATH_2));
+        businessObjectDataServiceTestHelper.prepareTestS3Files(testS3KeyPrefix, localTempPath, Arrays.asList(FILE_PATH_1, FILE_PATH_2));
 
         // Try to add a storage file with file size that does not match to file size reported by S3.
         try
         {
             businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(
-                createBusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                    PARTITION_VALUE, null, DATA_VERSION, StorageEntity.MANAGED_STORAGE,
-                    Arrays.asList(createFile(testS3KeyPrefix + "/" + FILE_PATH_2, FILE_SIZE_0_BYTE, ROW_COUNT_1000))));
+                new BusinessObjectDataStorageFilesCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    null, DATA_VERSION, StorageEntity.MANAGED_STORAGE,
+                    Arrays.asList(createFile(testS3KeyPrefix + "/" + FILE_PATH_2, FILE_SIZE_0_BYTE, ROW_COUNT_1000)), NO_DISCOVER_STORAGE_FILES));
             fail("Should throw an IllegalArgumentException when a storage file size does not match file size reported by S3.");
         }
         catch (IllegalArgumentException e)
@@ -836,7 +867,7 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
     public void testCreateBusinessObjectDataStorageFilesAutoDiscovery() throws Exception
     {
         createData(testS3KeyPrefix, true, Arrays.asList(testS3KeyPrefix + "/" + FILE_PATH_1));
-        prepareTestS3Files(testS3KeyPrefix, Arrays.asList(FILE_PATH_1, FILE_PATH_2));
+        businessObjectDataServiceTestHelper.prepareTestS3Files(testS3KeyPrefix, localTempPath, Arrays.asList(FILE_PATH_1, FILE_PATH_2));
 
         // Discover storage files in S3 managed storage.
         BusinessObjectDataStorageFilesCreateResponse response = businessObjectDataStorageFileService.createBusinessObjectDataStorageFiles(
@@ -872,7 +903,7 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
     public void testCreateBusinessObjectDataStorageFilesAutoDiscoveryStorageUnitHasNoStorageDirectoryPath() throws Exception
     {
         createData(null, true, Arrays.asList(testS3KeyPrefix + "/" + FILE_PATH_1));
-        prepareTestS3Files(testS3KeyPrefix, Arrays.asList(FILE_PATH_1, FILE_PATH_2));
+        businessObjectDataServiceTestHelper.prepareTestS3Files(testS3KeyPrefix, localTempPath, Arrays.asList(FILE_PATH_1, FILE_PATH_2));
 
         // Try to discover storage files when storage unit has no storage directory path.
         try
@@ -928,7 +959,7 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
         createData(testS3KeyPrefix, true, Arrays.asList(testS3KeyPrefix + "/" + FILE_PATH_1));
 
         // Create and upload to S3 managed storage a test file that is not the already registered storage file.
-        prepareTestS3Files(testS3KeyPrefix, Arrays.asList(FILE_PATH_2));
+        businessObjectDataServiceTestHelper.prepareTestS3Files(testS3KeyPrefix, localTempPath, Arrays.asList(FILE_PATH_2));
 
         // Try to discover storage files when an already registered storage file is not found in S3.
         try
@@ -960,7 +991,7 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
         storageUnitEntity.getStorageFiles().add(storageFileEntity);
 
         // Create and upload to S3 managed storage two test files with 1 KB file size.
-        prepareTestS3Files(testS3KeyPrefix, Arrays.asList(FILE_PATH_1, FILE_PATH_2));
+        businessObjectDataServiceTestHelper.prepareTestS3Files(testS3KeyPrefix, localTempPath, Arrays.asList(FILE_PATH_1, FILE_PATH_2));
 
         // Try to discover storage files when file size reported by S3 does not match for an already registered storage file.
         try
@@ -985,7 +1016,7 @@ public class BusinessObjectDataStorageFileServiceTest extends AbstractServiceTes
         createData(testS3KeyPrefix, true, Arrays.asList(testS3KeyPrefix + "/" + FILE_PATH_1));
 
         // Create and upload to S3 managed storage only the already registered file.
-        prepareTestS3Files(testS3KeyPrefix, Arrays.asList(FILE_PATH_1));
+        businessObjectDataServiceTestHelper.prepareTestS3Files(testS3KeyPrefix, localTempPath, Arrays.asList(FILE_PATH_1));
 
         // Try to discover storage files when no unregistered storage files are present in S3.
         try

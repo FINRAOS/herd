@@ -13,17 +13,14 @@ import org.finra.herd.model.api.xml.BusinessObjectDataSearchRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchResult;
 
 /**
- * Test Business Object Rest controller Search Business Object Data
- * 
- * @author k22201
- *
+ * This class tests searchBusinessObjectData functionality within the business object data REST controller.
  */
 public class BusinessObjectDataRestControllerSearchBusinessObjectDataTest extends AbstractRestTest
 {
     @Test
-    public void testSearchBussinessObjectDataRest()
+    public void testSearchBusinessObjectData()
     {
-        createDatabaseEntitiesForBusinessObjectDataSearchTesting();
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataSearchTesting();
 
         BusinessObjectDataSearchRequest request = new BusinessObjectDataSearchRequest();
         List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
@@ -41,8 +38,8 @@ public class BusinessObjectDataRestControllerSearchBusinessObjectDataTest extend
         BusinessObjectDataSearchResult result = businessObjectDataRestController.searchBusinessObjectData(request);
 
         Assert.isTrue(result.getBusinessObjectDataElements().size() == 2);
-        
-        for(BusinessObjectData data : result.getBusinessObjectDataElements())
+
+        for (BusinessObjectData data : result.getBusinessObjectDataElements())
         {
             Assert.isTrue(NAMESPACE.equals(data.getNamespace()));
             Assert.isTrue(BDEF_NAME.equals(data.getBusinessObjectDefinitionName()));

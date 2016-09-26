@@ -28,7 +28,6 @@ import org.finra.herd.service.AbstractServiceTest;
 
 /**
  * Tests the TerminateEmrCluster Activiti task wrapper.
- *
  */
 public class TerminateEmrClusterTest extends AbstractServiceTest
 {
@@ -44,7 +43,7 @@ public class TerminateEmrClusterTest extends AbstractServiceTest
         parameters.add(parameter);
 
         // Run a job with Activiti XML that will start cluster and terminate.
-        Job job = createJobForCreateCluster(ACTIVITI_XML_TERMINATE_CLUSTER_WITH_CLASSPATH, parameters);
+        Job job = jobServiceTestHelper.createJobForCreateCluster(ACTIVITI_XML_TERMINATE_CLUSTER_WITH_CLASSPATH, parameters);
         assertNotNull(job);
     }
 }

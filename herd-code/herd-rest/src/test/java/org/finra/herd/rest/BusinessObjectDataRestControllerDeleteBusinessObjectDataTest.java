@@ -20,7 +20,7 @@ import static org.junit.Assert.assertNull;
 
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.Arrays;
+import java.nio.file.Path;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
@@ -38,6 +38,8 @@ import org.finra.herd.model.jpa.BusinessObjectDataEntity;
  */
 public class BusinessObjectDataRestControllerDeleteBusinessObjectDataTest extends AbstractRestTest
 {
+    private Path localTempPath;
+
     /**
      * Sets up the test environment.
      */
@@ -57,14 +59,10 @@ public class BusinessObjectDataRestControllerDeleteBusinessObjectDataTest extend
         // Clean up the local directory.
         FileUtils.deleteDirectory(localTempPath.toFile());
 
-        // Clean up the destination S3 folders.
+        // Clean up the destination S3 folders. Since the key prefix represents a directory, we add a trailing '/' character to it.
         S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = s3DaoTestHelper.getTestS3FileTransferRequestParamsDto();
-        for (String keyPrefix : Arrays.asList(testS3KeyPrefix, TEST_S3_KEY_PREFIX))
-        {
-            // Since the key prefix represents a directory, we add a trailing '/' character to it.
-            s3FileTransferRequestParamsDto.setS3KeyPrefix(keyPrefix + "/");
-            s3Dao.deleteDirectory(s3FileTransferRequestParamsDto);
-        }
+        s3FileTransferRequestParamsDto.setS3KeyPrefix(TEST_S3_KEY_PREFIX + "/");
+        s3Dao.deleteDirectory(s3FileTransferRequestParamsDto);
     }
 
     @Test
@@ -87,8 +85,9 @@ public class BusinessObjectDataRestControllerDeleteBusinessObjectDataTest extend
                 SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2), SUBPARTITION_VALUES.get(3), INITIAL_DATA_VERSION, false);
 
         // Validate the returned object.
-        validateBusinessObjectData(businessObjectDataEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-            PARTITION_VALUE, SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS, deletedBusinessObjectData);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectData(businessObjectDataEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                PARTITION_VALUE, SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS, deletedBusinessObjectData);
 
         // Ensure that this business object data is no longer there.
         assertNull(businessObjectDataDao.getBusinessObjectDataByAltKey(businessObjectDataKey));
@@ -146,8 +145,9 @@ public class BusinessObjectDataRestControllerDeleteBusinessObjectDataTest extend
             }
 
             // Validate the returned object.
-            validateBusinessObjectData(businessObjectDataEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                PARTITION_VALUE, subPartitionValues, DATA_VERSION, true, BDATA_STATUS, deletedBusinessObjectData);
+            businessObjectDataServiceTestHelper
+                .validateBusinessObjectData(businessObjectDataEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                    PARTITION_VALUE, subPartitionValues, DATA_VERSION, true, BDATA_STATUS, deletedBusinessObjectData);
 
             // Ensure that this business object data is no longer there.
             assertNull(businessObjectDataDao.getBusinessObjectDataByAltKey(businessObjectDataKey));

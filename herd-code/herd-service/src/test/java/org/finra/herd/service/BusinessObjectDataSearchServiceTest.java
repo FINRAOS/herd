@@ -26,7 +26,7 @@ public class BusinessObjectDataSearchServiceTest extends AbstractServiceTest
     @Test
     public void testSearchBusinessObjectData()
     {
-        createDatabaseEntitiesForBusinessObjectDataSearchTesting();
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataSearchTesting();
 
         BusinessObjectDataSearchRequest request = new BusinessObjectDataSearchRequest();
         List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
@@ -43,18 +43,19 @@ public class BusinessObjectDataSearchServiceTest extends AbstractServiceTest
         BusinessObjectDataSearchResult result = this.businessObjectDataService.searchBusinessObjectData(request);
 
         Assert.isTrue(result.getBusinessObjectDataElements().size() == 2);
-        
-        for(BusinessObjectData data : result.getBusinessObjectDataElements())
+
+        for (BusinessObjectData data : result.getBusinessObjectDataElements())
         {
             Assert.isTrue(NAMESPACE.equals(data.getNamespace()));
             Assert.isTrue(BDEF_NAME.equals(data.getBusinessObjectDefinitionName()));
         }
 
     }
+
     @Test
     public void testSearchBusinessObjectDataWithPartitionFilterValues()
     {
-        createDatabaseEntitiesForBusinessObjectDataSearchTesting();
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataSearchTesting();
 
         BusinessObjectDataSearchRequest request = new BusinessObjectDataSearchRequest();
         List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
@@ -62,16 +63,16 @@ public class BusinessObjectDataSearchServiceTest extends AbstractServiceTest
         BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
         key.setNamespace(NAMESPACE);
         key.setBusinessObjectDefinitionName(BDEF_NAME);
-        
+
         List<PartitionValueFilter> partitionValueFilters = new ArrayList<PartitionValueFilter>();
         PartitionValueFilter partitionValueFilter = new PartitionValueFilter();
         partitionValueFilters.add(partitionValueFilter);
         partitionValueFilter.setPartitionKey(PARTITION_KEY);
         List<String> values = new ArrayList<String>();
         values.add(PARTITION_VALUE);
-        partitionValueFilter.setPartitionValues(values);   
+        partitionValueFilter.setPartitionValues(values);
         key.setPartitionValueFilters(partitionValueFilters);
-        
+
         businessObjectDataSearchKeys.add(key);
 
         BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
@@ -86,7 +87,7 @@ public class BusinessObjectDataSearchServiceTest extends AbstractServiceTest
     @Test
     public void testSearchBusinessObjectDataWithPartitionFilterBadRequest()
     {
-        createDatabaseEntitiesForBusinessObjectDataSearchTesting();
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataSearchTesting();
 
         BusinessObjectDataSearchRequest request = new BusinessObjectDataSearchRequest();
         List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
@@ -94,14 +95,14 @@ public class BusinessObjectDataSearchServiceTest extends AbstractServiceTest
         BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
         key.setNamespace(NAMESPACE);
         key.setBusinessObjectDefinitionName(BDEF_NAME);
-        
+
         List<PartitionValueFilter> partitionValueFilters = new ArrayList<PartitionValueFilter>();
         PartitionValueFilter partitionValueFilter = new PartitionValueFilter();
         partitionValueFilters.add(partitionValueFilter);
         partitionValueFilter.setLatestAfterPartitionValue(new LatestAfterPartitionValue("A"));
         partitionValueFilter.setLatestBeforePartitionValue(new LatestBeforePartitionValue("B"));
         key.setPartitionValueFilters(partitionValueFilters);
-        
+
         businessObjectDataSearchKeys.add(key);
 
         BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
@@ -114,7 +115,7 @@ public class BusinessObjectDataSearchServiceTest extends AbstractServiceTest
             fail("Should not get here, as IllegalArgumentException should be thrown");
         }
         catch (IllegalArgumentException ex)
-        {           
+        {
         }
 
     }

@@ -76,13 +76,13 @@ public class JobServiceTest extends AbstractServiceTest
         namespaceDaoTestHelper.createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
 
         // Create a job definition create request using hard coded test values.
-        JobDefinitionCreateRequest jobDefinitionCreateRequest = createJobDefinitionCreateRequest();
+        JobDefinitionCreateRequest jobDefinitionCreateRequest = jobDefinitionServiceTestHelper.createJobDefinitionCreateRequest();
 
         // Create the job definition.
         jobDefinitionService.createJobDefinition(jobDefinitionCreateRequest, false);
 
         // Create a job create request using hard coded test values.
-        JobCreateRequest jobCreateRequest = createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME);
+        JobCreateRequest jobCreateRequest = jobServiceTestHelper.createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME);
 
         // Create the job.
         Job resultJob = jobService.createAndStartJob(jobCreateRequest);
@@ -109,14 +109,14 @@ public class JobServiceTest extends AbstractServiceTest
         namespaceDaoTestHelper.createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
 
         // Create a job definition create request using hard coded test values.
-        JobDefinitionCreateRequest jobDefinitionCreateRequest = createJobDefinitionCreateRequest();
+        JobDefinitionCreateRequest jobDefinitionCreateRequest = jobDefinitionServiceTestHelper.createJobDefinitionCreateRequest();
         jobDefinitionCreateRequest.setParameters(null);
 
         // Create the job definition.
         jobDefinitionService.createJobDefinition(jobDefinitionCreateRequest, false);
 
         // Create a job create request using hard coded test values.
-        JobCreateRequest jobCreateRequest = createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME);
+        JobCreateRequest jobCreateRequest = jobServiceTestHelper.createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME);
         jobCreateRequest.setParameters(null);
 
         // Create the job.
@@ -135,21 +135,21 @@ public class JobServiceTest extends AbstractServiceTest
     public void testCreateJobNamespaceEmpty() throws Exception
     {
         // Try to create a job by passing an empty namespace code.
-        jobService.createAndStartJob(createJobCreateRequest(" ", TEST_ACTIVITI_JOB_NAME));
+        jobService.createAndStartJob(jobServiceTestHelper.createJobCreateRequest(" ", TEST_ACTIVITI_JOB_NAME));
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testCreateJobJobNameEmpty() throws Exception
     {
         // Try to create a job by passing an empty job name.
-        jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, " "));
+        jobService.createAndStartJob(jobServiceTestHelper.createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, " "));
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testCreateJobParameterNameEmpty() throws Exception
     {
         // Create a job create request using hard coded test values.
-        JobCreateRequest jobCreateRequest = createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME);
+        JobCreateRequest jobCreateRequest = jobServiceTestHelper.createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME);
 
         // Add a parameter with an empty name.
         Parameter parameter = new Parameter(" ", ATTRIBUTE_VALUE_1);
@@ -165,7 +165,7 @@ public class JobServiceTest extends AbstractServiceTest
         // Try to create a job when namespace contains a forward slash character.
         try
         {
-            jobService.createAndStartJob(createJobCreateRequest(addSlash(TEST_ACTIVITI_NAMESPACE_CD), TEST_ACTIVITI_JOB_NAME));
+            jobService.createAndStartJob(jobServiceTestHelper.createJobCreateRequest(addSlash(TEST_ACTIVITI_NAMESPACE_CD), TEST_ACTIVITI_JOB_NAME));
             fail("Should throw an IllegalArgumentException when namespace contains a forward slash character.");
         }
         catch (IllegalArgumentException e)
@@ -176,7 +176,7 @@ public class JobServiceTest extends AbstractServiceTest
         // Try to create a job when job name name contains a forward slash character.
         try
         {
-            jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, addSlash(TEST_ACTIVITI_JOB_NAME)));
+            jobService.createAndStartJob(jobServiceTestHelper.createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, addSlash(TEST_ACTIVITI_JOB_NAME)));
             fail("Should throw an IllegalArgumentException when job name contains a forward slash character.");
         }
         catch (IllegalArgumentException e)
@@ -189,7 +189,7 @@ public class JobServiceTest extends AbstractServiceTest
     public void testCreateJobDuplicateParameterName() throws Exception
     {
         // Create a job create request using hard coded test values.
-        JobCreateRequest jobCreateRequest = createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME);
+        JobCreateRequest jobCreateRequest = jobServiceTestHelper.createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME);
 
         // Add a duplicate parameter.
         Parameter parameter = new Parameter();
@@ -205,7 +205,7 @@ public class JobServiceTest extends AbstractServiceTest
     public void testCreateJobNamespaceNoExists() throws Exception
     {
         // Try to create a job using non-existing namespace code.
-        jobService.createAndStartJob(createJobCreateRequest("I_DO_NOT_EXIST", TEST_ACTIVITI_JOB_NAME));
+        jobService.createAndStartJob(jobServiceTestHelper.createJobCreateRequest("I_DO_NOT_EXIST", TEST_ACTIVITI_JOB_NAME));
     }
 
     @Test(expected = ObjectNotFoundException.class)
@@ -215,15 +215,15 @@ public class JobServiceTest extends AbstractServiceTest
         namespaceDaoTestHelper.createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
 
         // Try to create a job using non-existing job definition name.
-        jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, "I_DO_NOT_EXIST"));
+        jobService.createAndStartJob(jobServiceTestHelper.createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, "I_DO_NOT_EXIST"));
     }
 
     @Test
     public void testGetJob() throws Exception
     {
-        createJobDefinition(ACTIVITI_XML_TEST_USER_TASK_WITH_CLASSPATH);
+        jobDefinitionServiceTestHelper.createJobDefinition(ACTIVITI_XML_TEST_USER_TASK_WITH_CLASSPATH);
 
-        Job job = jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
+        Job job = jobService.createAndStartJob(jobServiceTestHelper.createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
 
         String activitiXml = IOUtils.toString(resourceLoader.getResource(ACTIVITI_XML_TEST_USER_TASK_WITH_CLASSPATH).getInputStream());
         // Job should be waiting at User task.
@@ -273,9 +273,9 @@ public class JobServiceTest extends AbstractServiceTest
     @Test
     public void testGetJobIntermediateTimer() throws Exception
     {
-        createJobDefinition(ACTIVITI_XML_HERD_INTERMEDIATE_TIMER_WITH_CLASSPATH);
+        jobDefinitionServiceTestHelper.createJobDefinition(ACTIVITI_XML_HERD_INTERMEDIATE_TIMER_WITH_CLASSPATH);
 
-        Job job = jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
+        Job job = jobService.createAndStartJob(jobServiceTestHelper.createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
 
         String activitiXml = IOUtils.toString(resourceLoader.getResource(ACTIVITI_XML_HERD_INTERMEDIATE_TIMER_WITH_CLASSPATH).getInputStream());
         // Job should be waiting at User task.
@@ -317,17 +317,18 @@ public class JobServiceTest extends AbstractServiceTest
     public void testGetJobs() throws Exception
     {
         // Create and persist a job definition.
-        createJobDefinition(ACTIVITI_XML_TEST_USER_TASK_WITH_CLASSPATH);
+        jobDefinitionServiceTestHelper.createJobDefinition(ACTIVITI_XML_TEST_USER_TASK_WITH_CLASSPATH);
 
         // Create and start three Activiti jobs.
-        List<Job> jobs = Arrays.asList(jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME)),
-            jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME)),
-            jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME)));
+        List<Job> jobs = Arrays
+            .asList(jobService.createAndStartJob(jobServiceTestHelper.createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME)),
+                jobService.createAndStartJob(jobServiceTestHelper.createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME)),
+                jobService.createAndStartJob(jobServiceTestHelper.createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME)));
 
         // Jobs should be waiting at relative User tasks.
 
         // Allow READ access for the current user to the job definition namespace.
-        setCurrentUserNamespaceAuthorizations(TEST_ACTIVITI_NAMESPACE_CD, Arrays.asList(NamespacePermissionEnum.READ));
+        jobServiceTestHelper.setCurrentUserNamespaceAuthorizations(TEST_ACTIVITI_NAMESPACE_CD, Arrays.asList(NamespacePermissionEnum.READ));
 
         JobSummaries resultJobSummaries;
         Map<String, JobStatusEnum> expectedJobStatuses;
@@ -373,15 +374,15 @@ public class JobServiceTest extends AbstractServiceTest
     public void testGetJobsTrimAndCaseInsensitivity() throws Exception
     {
         // Create and persist a job definition.
-        createJobDefinition(ACTIVITI_XML_TEST_USER_TASK_WITH_CLASSPATH);
+        jobDefinitionServiceTestHelper.createJobDefinition(ACTIVITI_XML_TEST_USER_TASK_WITH_CLASSPATH);
 
         // Create and start an Activiti job.
-        Job job = jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
+        Job job = jobService.createAndStartJob(jobServiceTestHelper.createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
 
         // Job should be waiting at relative User tasks.
 
         // Allow READ access for the current user to the job definition namespace.
-        setCurrentUserNamespaceAuthorizations(TEST_ACTIVITI_NAMESPACE_CD, Arrays.asList(NamespacePermissionEnum.READ));
+        jobServiceTestHelper.setCurrentUserNamespaceAuthorizations(TEST_ACTIVITI_NAMESPACE_CD, Arrays.asList(NamespacePermissionEnum.READ));
 
         // Perform the getJobs calls.
         JobSummaries resultJobSummaries;
@@ -433,17 +434,18 @@ public class JobServiceTest extends AbstractServiceTest
     public void testGetJobsMissingOptionalParameters() throws Exception
     {
         // Create and persist a job definition.
-        createJobDefinition(ACTIVITI_XML_TEST_USER_TASK_WITH_CLASSPATH);
+        jobDefinitionServiceTestHelper.createJobDefinition(ACTIVITI_XML_TEST_USER_TASK_WITH_CLASSPATH);
 
         // Create and start three Activiti jobs.
-        List<Job> jobs = Arrays.asList(jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME)),
-            jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME)),
-            jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME)));
+        List<Job> jobs = Arrays
+            .asList(jobService.createAndStartJob(jobServiceTestHelper.createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME)),
+                jobService.createAndStartJob(jobServiceTestHelper.createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME)),
+                jobService.createAndStartJob(jobServiceTestHelper.createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME)));
 
         // Jobs should be waiting at relative User tasks.
 
         // Allow READ access for the current user to the job definition namespace.
-        setCurrentUserNamespaceAuthorizations(TEST_ACTIVITI_NAMESPACE_CD, Arrays.asList(NamespacePermissionEnum.READ));
+        jobServiceTestHelper.setCurrentUserNamespaceAuthorizations(TEST_ACTIVITI_NAMESPACE_CD, Arrays.asList(NamespacePermissionEnum.READ));
 
         JobSummaries resultJobSummaries;
         Map<String, JobStatusEnum> expectedJobStatuses;
@@ -486,17 +488,18 @@ public class JobServiceTest extends AbstractServiceTest
     public void testGetJobsInvalidParameters() throws Exception
     {
         // Create and persist a job definition.
-        createJobDefinition(ACTIVITI_XML_TEST_USER_TASK_WITH_CLASSPATH);
+        jobDefinitionServiceTestHelper.createJobDefinition(ACTIVITI_XML_TEST_USER_TASK_WITH_CLASSPATH);
 
         // Create and start three Activiti jobs.
-        List<Job> jobs = Arrays.asList(jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME)),
-            jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME)),
-            jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME)));
+        List<Job> jobs = Arrays
+            .asList(jobService.createAndStartJob(jobServiceTestHelper.createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME)),
+                jobService.createAndStartJob(jobServiceTestHelper.createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME)),
+                jobService.createAndStartJob(jobServiceTestHelper.createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME)));
 
         // Jobs should be waiting at relative User tasks.
 
         // Allow READ access for the current user to the job definition namespace.
-        setCurrentUserNamespaceAuthorizations(TEST_ACTIVITI_NAMESPACE_CD, Arrays.asList(NamespacePermissionEnum.READ));
+        jobServiceTestHelper.setCurrentUserNamespaceAuthorizations(TEST_ACTIVITI_NAMESPACE_CD, Arrays.asList(NamespacePermissionEnum.READ));
 
         JobSummaries resultJobSummaries;
         Map<String, JobStatusEnum> expectedJobStatuses;
@@ -565,16 +568,18 @@ public class JobServiceTest extends AbstractServiceTest
     public void testGetJobsValidateJobStatusFilter() throws Exception
     {
         // Create and persist a job definition.
-        createJobDefinition(ACTIVITI_XML_TEST_USER_TASK_WITH_CLASSPATH);
+        jobDefinitionServiceTestHelper.createJobDefinition(ACTIVITI_XML_TEST_USER_TASK_WITH_CLASSPATH);
 
         // Create and start two Activiti jobs.
-        List<Job> jobs = Arrays.asList(jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME)),
-            jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME)));
+        List<Job> jobs = Arrays
+            .asList(jobService.createAndStartJob(jobServiceTestHelper.createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME)),
+                jobService.createAndStartJob(jobServiceTestHelper.createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME)));
 
         // Jobs should be waiting at relative User tasks.
 
         // Allow READ and EXECUTE access for the current user to the job definition namespace.
-        setCurrentUserNamespaceAuthorizations(TEST_ACTIVITI_NAMESPACE_CD, Arrays.asList(NamespacePermissionEnum.READ, NamespacePermissionEnum.EXECUTE));
+        jobServiceTestHelper
+            .setCurrentUserNamespaceAuthorizations(TEST_ACTIVITI_NAMESPACE_CD, Arrays.asList(NamespacePermissionEnum.READ, NamespacePermissionEnum.EXECUTE));
 
         JobSummaries resultJobSummaries;
         Map<String, JobStatusEnum> expectedJobStatuses;
@@ -662,10 +667,10 @@ public class JobServiceTest extends AbstractServiceTest
     @Test
     public void testSignalJob() throws Exception
     {
-        createJobDefinition(ACTIVITI_XML_TEST_RECEIVE_TASK_WITH_CLASSPATH);
+        jobDefinitionServiceTestHelper.createJobDefinition(ACTIVITI_XML_TEST_RECEIVE_TASK_WITH_CLASSPATH);
 
         // Start the job.
-        Job job = jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
+        Job job = jobService.createAndStartJob(jobServiceTestHelper.createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
 
         // Job should be waiting at Receive task.
         Job jobGet = jobService.getJob(job.getId(), false);
@@ -694,10 +699,10 @@ public class JobServiceTest extends AbstractServiceTest
     @Test
     public void testSignalJobNoParameters() throws Exception
     {
-        createJobDefinition(ACTIVITI_XML_TEST_RECEIVE_TASK_WITH_CLASSPATH);
+        jobDefinitionServiceTestHelper.createJobDefinition(ACTIVITI_XML_TEST_RECEIVE_TASK_WITH_CLASSPATH);
 
         // Start the job.
-        Job job = jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
+        Job job = jobService.createAndStartJob(jobServiceTestHelper.createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
 
         // Job should be waiting at Receive task.
         Job jobGet = jobService.getJob(job.getId(), false);
@@ -733,10 +738,10 @@ public class JobServiceTest extends AbstractServiceTest
         }
 
         // Signal job with receive task that does not exist.
-        createJobDefinition(ACTIVITI_XML_TEST_RECEIVE_TASK_WITH_CLASSPATH);
+        jobDefinitionServiceTestHelper.createJobDefinition(ACTIVITI_XML_TEST_RECEIVE_TASK_WITH_CLASSPATH);
 
         // Start the job.
-        Job job = jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
+        Job job = jobService.createAndStartJob(jobServiceTestHelper.createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
 
         try
         {
@@ -763,13 +768,13 @@ public class JobServiceTest extends AbstractServiceTest
     @Test
     public void testSignalJobWithS3Properties() throws Exception
     {
-        createJobDefinition(ACTIVITI_XML_TEST_RECEIVE_TASK_WITH_CLASSPATH);
+        jobDefinitionServiceTestHelper.createJobDefinition(ACTIVITI_XML_TEST_RECEIVE_TASK_WITH_CLASSPATH);
 
         Parameter parameter = new Parameter("testName", "testValue");
         S3PropertiesLocation s3PropertiesLocation = getS3PropertiesLocation("s3BucketName", "s3ObjectKey", parameter);
 
         // Start the job.
-        Job job = jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
+        Job job = jobService.createAndStartJob(jobServiceTestHelper.createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
 
         JobSignalRequest jobSignalRequest = new JobSignalRequest(job.getId(), "receivetask1", null, null);
         jobSignalRequest.setS3PropertiesLocation(s3PropertiesLocation);
@@ -787,7 +792,7 @@ public class JobServiceTest extends AbstractServiceTest
     @Test
     public void testSignalJobWithS3PropertiesPrecedenceRequestParamsOverridesS3() throws Exception
     {
-        createJobDefinition(ACTIVITI_XML_TEST_RECEIVE_TASK_WITH_CLASSPATH);
+        jobDefinitionServiceTestHelper.createJobDefinition(ACTIVITI_XML_TEST_RECEIVE_TASK_WITH_CLASSPATH);
 
         Parameter s3Parameter = new Parameter("testName", "testValue");
         Parameter requestParameter = new Parameter("testName", "expectedValue");
@@ -795,7 +800,7 @@ public class JobServiceTest extends AbstractServiceTest
         S3PropertiesLocation s3PropertiesLocation = getS3PropertiesLocation("s3BucketName", "s3ObjectKey", s3Parameter);
 
         // Start the job.
-        Job job = jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
+        Job job = jobService.createAndStartJob(jobServiceTestHelper.createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
 
         JobSignalRequest jobSignalRequest = new JobSignalRequest(job.getId(), "receivetask1", null, null);
         jobSignalRequest.setS3PropertiesLocation(s3PropertiesLocation);
@@ -810,10 +815,10 @@ public class JobServiceTest extends AbstractServiceTest
     public void testUpdateJob() throws Exception
     {
         // Create a test job definition.
-        createJobDefinition(ACTIVITI_XML_TEST_USER_TASK_WITH_CLASSPATH);
+        jobDefinitionServiceTestHelper.createJobDefinition(ACTIVITI_XML_TEST_USER_TASK_WITH_CLASSPATH);
 
         // Create and start the job.
-        Job job = jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
+        Job job = jobService.createAndStartJob(jobServiceTestHelper.createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
 
         // Job should be waiting at User task.
 
@@ -902,10 +907,10 @@ public class JobServiceTest extends AbstractServiceTest
     public void testUpdateJobTrimParameters() throws Exception
     {
         // Create a test job definition.
-        createJobDefinition(ACTIVITI_XML_TEST_USER_TASK_WITH_CLASSPATH);
+        jobDefinitionServiceTestHelper.createJobDefinition(ACTIVITI_XML_TEST_USER_TASK_WITH_CLASSPATH);
 
         // Create and start the job.
-        Job job = jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
+        Job job = jobService.createAndStartJob(jobServiceTestHelper.createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
 
         // Job should be waiting at User task.
 
@@ -957,10 +962,10 @@ public class JobServiceTest extends AbstractServiceTest
     public void testUpdateJobInvalidParameters() throws Exception
     {
         // Create a test job definition.
-        createJobDefinition(ACTIVITI_XML_TEST_USER_TASK_WITH_CLASSPATH);
+        jobDefinitionServiceTestHelper.createJobDefinition(ACTIVITI_XML_TEST_USER_TASK_WITH_CLASSPATH);
 
         // Create and start the job.
-        Job job = jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
+        Job job = jobService.createAndStartJob(jobServiceTestHelper.createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
 
         // Job should be waiting at User task.
 
@@ -1305,7 +1310,7 @@ public class JobServiceTest extends AbstractServiceTest
         namespaceDaoTestHelper.createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
 
         // Create a job definition create request using hard coded test values.
-        JobDefinitionCreateRequest jobDefinitionCreateRequest = createJobDefinitionCreateRequest();
+        JobDefinitionCreateRequest jobDefinitionCreateRequest = jobDefinitionServiceTestHelper.createJobDefinitionCreateRequest();
         jobDefinitionCreateRequest.setS3PropertiesLocation(getS3PropertiesLocation("testBucketName", "testObjectKey", new Parameter("testName", "testValue")));
         jobDefinitionCreateRequest.setParameters(null);
 
@@ -1317,7 +1322,7 @@ public class JobServiceTest extends AbstractServiceTest
         jobDefinitionEntity.setS3ObjectKey(null);
 
         // Create a job create request using hard coded test values.
-        JobCreateRequest jobCreateRequest = createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME);
+        JobCreateRequest jobCreateRequest = jobServiceTestHelper.createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME);
         jobCreateRequest.setParameters(null);
 
         // Create the job.
@@ -1335,8 +1340,8 @@ public class JobServiceTest extends AbstractServiceTest
     public void testDeleteJob() throws Exception
     {
         // Start a job that will wait in a receive task
-        createJobDefinition(ACTIVITI_XML_TEST_RECEIVE_TASK_WITH_CLASSPATH);
-        Job job = jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
+        jobDefinitionServiceTestHelper.createJobDefinition(ACTIVITI_XML_TEST_RECEIVE_TASK_WITH_CLASSPATH);
+        Job job = jobService.createAndStartJob(jobServiceTestHelper.createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
 
         // Create a job delete request
         JobDeleteRequest jobDeleteRequest = new JobDeleteRequest();
@@ -1366,8 +1371,8 @@ public class JobServiceTest extends AbstractServiceTest
     public void testDeleteJobAssertErrorDeleteReasonBlank() throws Exception
     {
         // Start a job that will wait in a receive task
-        createJobDefinition(ACTIVITI_XML_TEST_RECEIVE_TASK_WITH_CLASSPATH);
-        Job job = jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
+        jobDefinitionServiceTestHelper.createJobDefinition(ACTIVITI_XML_TEST_RECEIVE_TASK_WITH_CLASSPATH);
+        Job job = jobService.createAndStartJob(jobServiceTestHelper.createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
 
         // Create a job delete request
         JobDeleteRequest jobDeleteRequest = new JobDeleteRequest();
@@ -1409,8 +1414,8 @@ public class JobServiceTest extends AbstractServiceTest
     public void testDeleteJobAssertAccessDeniedWhenUserHasNoPermissions() throws Exception
     {
         // Start a job that will wait in a receive task
-        createJobDefinition(ACTIVITI_XML_TEST_RECEIVE_TASK_WITH_CLASSPATH);
-        Job job = jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
+        jobDefinitionServiceTestHelper.createJobDefinition(ACTIVITI_XML_TEST_RECEIVE_TASK_WITH_CLASSPATH);
+        Job job = jobService.createAndStartJob(jobServiceTestHelper.createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
 
         String username = "username";
         ApplicationUser applicationUser = new ApplicationUser(getClass());
@@ -1437,8 +1442,8 @@ public class JobServiceTest extends AbstractServiceTest
     public void testDeleteJobAssertNoErrorWhenUserHasPermissions() throws Exception
     {
         // Start a job that will wait in a receive task
-        createJobDefinition(ACTIVITI_XML_TEST_RECEIVE_TASK_WITH_CLASSPATH);
-        Job job = jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
+        jobDefinitionServiceTestHelper.createJobDefinition(ACTIVITI_XML_TEST_RECEIVE_TASK_WITH_CLASSPATH);
+        Job job = jobService.createAndStartJob(jobServiceTestHelper.createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
 
         String username = "username";
         ApplicationUser applicationUser = new ApplicationUser(getClass());
@@ -1463,8 +1468,8 @@ public class JobServiceTest extends AbstractServiceTest
     @Test
     public void testGetJobAssertAccessDeniedGivenJobCompletedAndUserDoesNotHavePermissions() throws Exception
     {
-        createJobDefinition(null);
-        Job job = jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
+        jobDefinitionServiceTestHelper.createJobDefinition(null);
+        Job job = jobService.createAndStartJob(jobServiceTestHelper.createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
 
         String username = "username";
         ApplicationUser applicationUser = new ApplicationUser(getClass());
@@ -1490,8 +1495,8 @@ public class JobServiceTest extends AbstractServiceTest
     @Test
     public void testGetJobAssertNoErrorGivenJobCompletedAndUserDoesHasPermissions() throws Exception
     {
-        createJobDefinition(null);
-        Job job = jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
+        jobDefinitionServiceTestHelper.createJobDefinition(null);
+        Job job = jobService.createAndStartJob(jobServiceTestHelper.createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
 
         String username = "username";
         ApplicationUser applicationUser = new ApplicationUser(getClass());
@@ -1515,8 +1520,8 @@ public class JobServiceTest extends AbstractServiceTest
     @Test
     public void testGetJobAssertAccessDeniedGivenJobRunningAndUserDoesNotHavePermissions() throws Exception
     {
-        createJobDefinition(ACTIVITI_XML_TEST_USER_TASK_WITH_CLASSPATH);
-        Job job = jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
+        jobDefinitionServiceTestHelper.createJobDefinition(ACTIVITI_XML_TEST_USER_TASK_WITH_CLASSPATH);
+        Job job = jobService.createAndStartJob(jobServiceTestHelper.createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
 
         String username = "username";
         ApplicationUser applicationUser = new ApplicationUser(getClass());
@@ -1542,8 +1547,8 @@ public class JobServiceTest extends AbstractServiceTest
     @Test
     public void testGetJobAssertNoErrorGivenJobRunningAndUserDoesHasPermissions() throws Exception
     {
-        createJobDefinition(ACTIVITI_XML_TEST_USER_TASK_WITH_CLASSPATH);
-        Job job = jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
+        jobDefinitionServiceTestHelper.createJobDefinition(ACTIVITI_XML_TEST_USER_TASK_WITH_CLASSPATH);
+        Job job = jobService.createAndStartJob(jobServiceTestHelper.createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
 
         String username = "username";
         ApplicationUser applicationUser = new ApplicationUser(getClass());
@@ -1601,7 +1606,7 @@ public class JobServiceTest extends AbstractServiceTest
         namespaceDaoTestHelper.createNamespaceEntity(TEST_ACTIVITI_NAMESPACE_CD);
 
         // Create a job definition create request using hard coded test values.
-        JobDefinitionCreateRequest jobDefinitionCreateRequest = createJobDefinitionCreateRequest();
+        JobDefinitionCreateRequest jobDefinitionCreateRequest = jobDefinitionServiceTestHelper.createJobDefinitionCreateRequest();
         jobDefinitionCreateRequest.setParameters(jobDefinitionParameters);
         jobDefinitionCreateRequest.setS3PropertiesLocation(jobDefinitionS3PropertiesLocation);
 
@@ -1609,7 +1614,7 @@ public class JobServiceTest extends AbstractServiceTest
         jobDefinitionService.createJobDefinition(jobDefinitionCreateRequest, false);
 
         // Create a job create request using hard coded test values.
-        JobCreateRequest jobCreateRequest = createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME);
+        JobCreateRequest jobCreateRequest = jobServiceTestHelper.createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME);
         jobCreateRequest.setParameters(jobCreateRequestParameters);
         jobCreateRequest.setS3PropertiesLocation(jobCreateRequestS3PropertiesLocation);
 

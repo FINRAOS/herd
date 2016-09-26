@@ -39,11 +39,11 @@ public class StoragePolicyRestControllerTest extends AbstractRestTest
         StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
 
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForStoragePolicyTesting();
+        storagePolicyServiceTestHelper.createDatabaseEntitiesForStoragePolicyTesting();
 
         // Create a storage policy.
-        StoragePolicy resultStoragePolicy = storagePolicyRestController.createStoragePolicy(
-            createStoragePolicyCreateRequest(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME,
+        StoragePolicy resultStoragePolicy = storagePolicyRestController.createStoragePolicy(storagePolicyServiceTestHelper
+            .createStoragePolicyCreateRequest(storagePolicyKey, STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME,
                 FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED));
 
         // Validate the returned object.
@@ -59,7 +59,7 @@ public class StoragePolicyRestControllerTest extends AbstractRestTest
         StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
 
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForStoragePolicyTesting();
+        storagePolicyServiceTestHelper.createDatabaseEntitiesForStoragePolicyTesting();
 
         // Create and persist a storage policy entity.
         StoragePolicyEntity storagePolicyEntity = storagePolicyDaoTestHelper
@@ -69,8 +69,9 @@ public class StoragePolicyRestControllerTest extends AbstractRestTest
 
         // Update a storage policy.
         StoragePolicy resultStoragePolicy = storagePolicyRestController.updateStoragePolicy(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME,
-            createStoragePolicyUpdateRequest(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
-                FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.DISABLED));
+            storagePolicyServiceTestHelper
+                .createStoragePolicyUpdateRequest(STORAGE_POLICY_RULE_TYPE, STORAGE_POLICY_RULE_VALUE, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+                    FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.DISABLED));
 
         // Validate the returned object.
         assertEquals(
