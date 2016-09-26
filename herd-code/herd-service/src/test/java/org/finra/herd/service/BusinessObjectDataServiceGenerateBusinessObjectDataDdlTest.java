@@ -1473,7 +1473,7 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
     public void testGenerateBusinessObjectDataDdlLatestBeforePartitionValueWithIncludeArchivedBusinessObjectData()
     {
         // Prepare database entities required for testing.
-        StorageUnitEntity storageUnitEntity = createDatabaseEntitiesForBusinessObjectDataDdlTesting(PARTITION_VALUE);
+        StorageUnitEntity storageUnitEntity = businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataDdlTesting(PARTITION_VALUE);
 
         // Retrieve business object data ddl using a latest before partition value filter option.
         BusinessObjectDataDdl resultBusinessObjectDataDdl = businessObjectDataService.generateBusinessObjectDataDdl(
@@ -1489,7 +1489,7 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
             new PartitionValueFilter(FIRST_PARTITION_COLUMN_NAME, NO_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE,
                 new LatestBeforePartitionValue(PARTITION_VALUE_2), NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, DATA_VERSION,
             NO_STORAGE_NAMES, STORAGE_NAME, BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, TABLE_NAME, NO_CUSTOM_DDL_NAME,
-            getExpectedHiveDdl(PARTITION_VALUE)), resultBusinessObjectDataDdl);
+            businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataDdl(PARTITION_VALUE)), resultBusinessObjectDataDdl);
 
         // Update the storage unit status to a non-available one.
         storageUnitEntity.setStatus(
@@ -1532,14 +1532,14 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
             new PartitionValueFilter(FIRST_PARTITION_COLUMN_NAME, NO_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE,
                 new LatestBeforePartitionValue(PARTITION_VALUE_2), NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, DATA_VERSION,
             NO_STORAGE_NAMES, STORAGE_NAME, BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, TABLE_NAME, NO_CUSTOM_DDL_NAME,
-            getExpectedHiveDdl(PARTITION_VALUE)), resultBusinessObjectDataDdl);
+            businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataDdl(PARTITION_VALUE)), resultBusinessObjectDataDdl);
     }
 
     @Test
     public void testGenerateBusinessObjectDataDdlLatestAfterPartitionValueWithIncludeArchivedBusinessObjectData()
     {
         // Prepare database entities required for testing.
-        StorageUnitEntity storageUnitEntity = createDatabaseEntitiesForBusinessObjectDataDdlTesting(PARTITION_VALUE_2);
+        StorageUnitEntity storageUnitEntity = businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataDdlTesting(PARTITION_VALUE_2);
 
         // Retrieve business object data ddl using a latest after partition value filter option.
         BusinessObjectDataDdl resultBusinessObjectDataDdl = businessObjectDataService.generateBusinessObjectDataDdl(
@@ -1553,8 +1553,8 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         assertEquals(new BusinessObjectDataDdl(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION, Arrays.asList(
             new PartitionValueFilter(FIRST_PARTITION_COLUMN_NAME, NO_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
                 new LatestAfterPartitionValue(PARTITION_VALUE))), NO_STANDALONE_PARTITION_VALUE_FILTER, DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME,
-            BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, TABLE_NAME, NO_CUSTOM_DDL_NAME, getExpectedHiveDdl(PARTITION_VALUE_2)),
-            resultBusinessObjectDataDdl);
+            BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, TABLE_NAME, NO_CUSTOM_DDL_NAME,
+            businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataDdl(PARTITION_VALUE_2)), resultBusinessObjectDataDdl);
 
         // Update the storage unit status to a non-available one.
         storageUnitEntity.setStatus(
@@ -1595,8 +1595,8 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
         assertEquals(new BusinessObjectDataDdl(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION, Arrays.asList(
             new PartitionValueFilter(FIRST_PARTITION_COLUMN_NAME, NO_PARTITION_VALUES, NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
                 new LatestAfterPartitionValue(PARTITION_VALUE))), NO_STANDALONE_PARTITION_VALUE_FILTER, DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME,
-            BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, TABLE_NAME, NO_CUSTOM_DDL_NAME, getExpectedHiveDdl(PARTITION_VALUE_2)),
-            resultBusinessObjectDataDdl);
+            BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, TABLE_NAME, NO_CUSTOM_DDL_NAME,
+            businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataDdl(PARTITION_VALUE_2)), resultBusinessObjectDataDdl);
     }
 
     @Test
