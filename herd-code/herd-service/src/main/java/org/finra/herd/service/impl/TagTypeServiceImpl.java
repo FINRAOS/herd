@@ -70,27 +70,60 @@ public class TagTypeServiceImpl implements TagTypeService
     }
 
     @Override
-    public TagType updateTagType(TagTypeKey tagTypeKey, TagTypeUpdateRequest tagTypeUpdateRequest)
+    public TagType updateTagType(TagTypeKey tagTypeKey, TagTypeUpdateRequest request)
     {
-        return null;
+        // Perform validation and trim.
+        validateTagTypeKey(tagTypeKey);
+
+        // Perform validation and trim the alternate key parameters.
+        validateTagTypeUpdateRequest(request);
+
+        // Retrieve and ensure that a tag type already exists with the specified key.
+        TagTypeEntity tagTypeEntity = tagTypeDao.getTagTypeByKey(tagTypeKey);
+
+        tagTypeEntity.setDisplayName(request.getDisplayName());
+        tagTypeEntity.setOrderNumber(request.getTagTypeOrder());
+
+        // Persist and refresh the entity.
+        tagTypeEntity = tagTypeDao.saveAndRefresh(tagTypeEntity);
+
+        // Create and return the business object format object from the persisted entity.
+        return createTagTypeFromEntity(tagTypeEntity);
     }
 
     @Override
     public TagType getTagType(TagTypeKey tagTypeKey)
     {
-        return null;
+        // Perform validation and trim.
+        validateTagTypeKey(tagTypeKey);
+
+        // Retrieve and ensure that a tag type already exists with the specified key.
+        TagTypeEntity tagTypeEntity = tagTypeDao.getTagTypeByKey(tagTypeKey);
+
+        // Create and return the tag type object from the persisted entity.
+        return createTagTypeFromEntity(tagTypeEntity);
     }
 
     @Override
     public TagType deleteTagType(TagTypeKey tagTypeKey)
     {
-        return null;
+        // Perform validation and trim.
+        validateTagTypeKey(tagTypeKey);
+
+        // Retrieve and ensure that a tag type already exists with the specified key.
+        TagTypeEntity namespaceEntity = tagTypeDao.getTagTypeByKey(tagTypeKey);
+
+        // Delete the tag type.
+        tagTypeDao.delete(namespaceEntity);
+
+        // Create and return the tag type object from the deleted entity.
+        return createTagTypeFromEntity(namespaceEntity);
     }
 
     @Override
     public TagTypeKeys getTagTypes()
     {
-        return null;
+        return new TagTypeKeys(tagTypeDao.getTagTypes());
     }
 
     /**
@@ -100,12 +133,26 @@ public class TagTypeServiceImpl implements TagTypeService
      */
     private void validateTagTypeCreateRequest(TagTypeCreateRequest request)
     {
-        Assert.notNull(request, "A storage policy create request must be specified.");
+        Assert.notNull(request, "A tag type create request must be specified.");
 
         validateTagTypeKey(request.getTagTypeKey());
 
         // Validate display name
-        Assert.hasText(request.getDisplayName(), "A storage policy status must be specified.");
+        Assert.hasText(request.getDisplayName(), "A display name must be specified.");
+        request.setDisplayName(request.getDisplayName().trim());
+    }
+
+    /**
+     * Validates the tag type update request. This method also trims the request parameters.
+     *
+     * @param request the tag type update request
+     */
+    private void validateTagTypeUpdateRequest(TagTypeUpdateRequest request)
+    {
+        Assert.notNull(request, "A tag type update request must be specified.");
+
+        // Validate display name
+        Assert.hasText(request.getDisplayName(), "A display name must be specified.");
         request.setDisplayName(request.getDisplayName().trim());
     }
 
