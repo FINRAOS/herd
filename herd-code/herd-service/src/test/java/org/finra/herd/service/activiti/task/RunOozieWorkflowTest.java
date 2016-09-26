@@ -52,7 +52,8 @@ public class RunOozieWorkflowTest extends AbstractServiceTest
         parameters.add(new Parameter("runOozieWorkflowRequest", xmlHelper.objectToXml(runOozieRequest)));
 
         // Run a job with Activiti XML that will run the oozie workflow.
-        Job job = createJobForCreateCluster(ACTIVITI_XML_RUN_OOZIE_WORKFLOW_WITH_CLASSPATH, parameters, MockAwsOperationsHelper.AMAZON_CLUSTER_STATUS_WAITING);
+        Job job = jobServiceTestHelper
+            .createJobForCreateCluster(ACTIVITI_XML_RUN_OOZIE_WORKFLOW_WITH_CLASSPATH, parameters, MockAwsOperationsHelper.AMAZON_CLUSTER_STATUS_WAITING);
 
         assertNotNull(job);
 
@@ -81,7 +82,8 @@ public class RunOozieWorkflowTest extends AbstractServiceTest
         parameters.add(new Parameter("runOozieWorkflowRequest", jsonHelper.objectToJson(runOozieRequest)));
 
         // Run a job with Activiti XML that will run the oozie workflow.
-        Job job = createJobForCreateCluster(ACTIVITI_XML_RUN_OOZIE_WORKFLOW_WITH_CLASSPATH, parameters, MockAwsOperationsHelper.AMAZON_CLUSTER_STATUS_WAITING);
+        Job job = jobServiceTestHelper
+            .createJobForCreateCluster(ACTIVITI_XML_RUN_OOZIE_WORKFLOW_WITH_CLASSPATH, parameters, MockAwsOperationsHelper.AMAZON_CLUSTER_STATUS_WAITING);
 
         assertNotNull(job);
 
@@ -108,8 +110,8 @@ public class RunOozieWorkflowTest extends AbstractServiceTest
 
         executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
             // Run a job with Activiti XML that will run the oozie workflow.
-            Job job =
-                createJobForCreateCluster(ACTIVITI_XML_RUN_OOZIE_WORKFLOW_WITH_CLASSPATH, parameters, MockAwsOperationsHelper.AMAZON_CLUSTER_STATUS_WAITING);
+            Job job = jobServiceTestHelper
+                .createJobForCreateCluster(ACTIVITI_XML_RUN_OOZIE_WORKFLOW_WITH_CLASSPATH, parameters, MockAwsOperationsHelper.AMAZON_CLUSTER_STATUS_WAITING);
 
             assertNotNull(job);
 
@@ -137,8 +139,8 @@ public class RunOozieWorkflowTest extends AbstractServiceTest
 
         executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
             // Run a job with Activiti XML that will run the oozie workflow.
-            Job job =
-                createJobForCreateCluster(ACTIVITI_XML_RUN_OOZIE_WORKFLOW_WITH_CLASSPATH, parameters, MockAwsOperationsHelper.AMAZON_CLUSTER_STATUS_WAITING);
+            Job job = jobServiceTestHelper
+                .createJobForCreateCluster(ACTIVITI_XML_RUN_OOZIE_WORKFLOW_WITH_CLASSPATH, parameters, MockAwsOperationsHelper.AMAZON_CLUSTER_STATUS_WAITING);
 
             assertNotNull(job);
 
@@ -166,8 +168,8 @@ public class RunOozieWorkflowTest extends AbstractServiceTest
 
         executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
             // Run a job with Activiti XML that will run the oozie workflow.
-            Job job =
-                createJobForCreateCluster(ACTIVITI_XML_RUN_OOZIE_WORKFLOW_WITH_CLASSPATH, parameters, MockAwsOperationsHelper.AMAZON_CLUSTER_STATUS_WAITING);
+            Job job = jobServiceTestHelper
+                .createJobForCreateCluster(ACTIVITI_XML_RUN_OOZIE_WORKFLOW_WITH_CLASSPATH, parameters, MockAwsOperationsHelper.AMAZON_CLUSTER_STATUS_WAITING);
 
             assertNotNull(job);
 
@@ -195,8 +197,8 @@ public class RunOozieWorkflowTest extends AbstractServiceTest
 
         executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
             // Run a job with Activiti XML that will run the oozie workflow.
-            Job job =
-                createJobForCreateCluster(ACTIVITI_XML_RUN_OOZIE_WORKFLOW_WITH_CLASSPATH, parameters, MockAwsOperationsHelper.AMAZON_CLUSTER_STATUS_WAITING);
+            Job job = jobServiceTestHelper
+                .createJobForCreateCluster(ACTIVITI_XML_RUN_OOZIE_WORKFLOW_WITH_CLASSPATH, parameters, MockAwsOperationsHelper.AMAZON_CLUSTER_STATUS_WAITING);
 
             assertNotNull(job);
 

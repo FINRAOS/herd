@@ -62,8 +62,8 @@ public class SecurityUserWrapperTest extends AbstractAppTest
 
             // Create a business object definition.
             // This indirectly requires the "FN_BUSINESS_OBJECT_DEFINITIONS_POST" function point to be present in the authenticated user.
-            BusinessObjectDefinitionCreateRequest request =
-                createBusinessObjectDefinitionCreateRequest(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
+            BusinessObjectDefinitionCreateRequest request = businessObjectDefinitionServiceTestHelper
+                .createBusinessObjectDefinitionCreateRequest(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
             BusinessObjectDefinition businessObjectDefinition = businessObjectDefinitionRestController.createBusinessObjectDefinition(request);
 
             // Retrieve the newly created business object definition and validate the created by field.

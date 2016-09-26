@@ -23,6 +23,7 @@ import static org.junit.Assert.fail;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
@@ -34,6 +35,8 @@ import org.junit.Test;
  */
 public class HerdFileUtilsTest extends AbstractCoreTest
 {
+    private Path localTempPath;
+
     @Before
     public void setup() throws IOException
     {

@@ -54,7 +54,7 @@ public class NotificationEventServiceTest extends AbstractServiceTest
     public void testProcessBusinessObjectDataRegistrationNotificationEventSync() throws Exception
     {
         // Create job definition
-        JobDefinition jobDefinition = createJobDefinition(ACTIVITI_XML_LOG_VARIABLES_NO_REGEX_WITH_CLASSPATH);
+        JobDefinition jobDefinition = jobDefinitionServiceTestHelper.createJobDefinition(ACTIVITI_XML_LOG_VARIABLES_NO_REGEX_WITH_CLASSPATH);
 
         List<JobAction> jobActions = new ArrayList<>();
         jobActions.add(new JobAction(jobDefinition.getNamespace(), jobDefinition.getJobName(), CORRELATION_DATA));
@@ -113,7 +113,7 @@ public class NotificationEventServiceTest extends AbstractServiceTest
     public void testProcessBusinessObjectDataRegistrationNotificationEventSyncAssertFireEnabledOnly() throws Exception
     {
         // Create job definition
-        JobDefinition jobDefinition = createJobDefinition(ACTIVITI_XML_LOG_VARIABLES_NO_REGEX_WITH_CLASSPATH);
+        JobDefinition jobDefinition = jobDefinitionServiceTestHelper.createJobDefinition(ACTIVITI_XML_LOG_VARIABLES_NO_REGEX_WITH_CLASSPATH);
 
         List<JobAction> jobActions1 = Arrays.asList(new JobAction(jobDefinition.getNamespace(), jobDefinition.getJobName(), CORRELATION_DATA));
 
@@ -172,7 +172,7 @@ public class NotificationEventServiceTest extends AbstractServiceTest
     public void testProcessBusinessObjectDataRegistrationNotificationEventSyncAssertNoopWhenAllDisabled() throws Exception
     {
         // Create job definition
-        JobDefinition jobDefinition = createJobDefinition(ACTIVITI_XML_LOG_VARIABLES_NO_REGEX_WITH_CLASSPATH);
+        JobDefinition jobDefinition = jobDefinitionServiceTestHelper.createJobDefinition(ACTIVITI_XML_LOG_VARIABLES_NO_REGEX_WITH_CLASSPATH);
 
         List<JobAction> jobActions1 = Arrays.asList(new JobAction(jobDefinition.getNamespace(), jobDefinition.getJobName(), CORRELATION_DATA));
 
@@ -216,7 +216,7 @@ public class NotificationEventServiceTest extends AbstractServiceTest
     public void testProcessBusinessObjectDataRegistrationNotificationEventSyncMissingOptional() throws Exception
     {
         // Create job definition
-        JobDefinition jobDefinition = createJobDefinition(ACTIVITI_XML_LOG_VARIABLES_NO_REGEX_WITH_CLASSPATH);
+        JobDefinition jobDefinition = jobDefinitionServiceTestHelper.createJobDefinition(ACTIVITI_XML_LOG_VARIABLES_NO_REGEX_WITH_CLASSPATH);
 
         List<JobAction> jobActions = new ArrayList<>();
         jobActions.add(new JobAction(jobDefinition.getNamespace(), jobDefinition.getJobName(), CORRELATION_DATA));
@@ -263,7 +263,7 @@ public class NotificationEventServiceTest extends AbstractServiceTest
     public void testProcessBusinessObjectDataRegistrationNotificationEventSyncMultipleNotifications() throws Exception
     {
         // Create job definition
-        JobDefinition jobDefinition = createJobDefinition(ACTIVITI_XML_LOG_VARIABLES_NO_REGEX_WITH_CLASSPATH);
+        JobDefinition jobDefinition = jobDefinitionServiceTestHelper.createJobDefinition(ACTIVITI_XML_LOG_VARIABLES_NO_REGEX_WITH_CLASSPATH);
 
         List<JobAction> jobActions = new ArrayList<>();
         jobActions.add(new JobAction(jobDefinition.getNamespace(), jobDefinition.getJobName(), CORRELATION_DATA));
@@ -393,7 +393,7 @@ public class NotificationEventServiceTest extends AbstractServiceTest
     private void runProcessBusinessObjectDataStatusChangeNotificationEventSyncTest() throws Exception
     {
         // Create a job definition.
-        JobDefinition jobDefinition = createJobDefinition(ACTIVITI_XML_LOG_VARIABLES_NO_REGEX_WITH_CLASSPATH);
+        JobDefinition jobDefinition = jobDefinitionServiceTestHelper.createJobDefinition(ACTIVITI_XML_LOG_VARIABLES_NO_REGEX_WITH_CLASSPATH);
 
         List<JobAction> jobActions = new ArrayList<>();
         jobActions.add(new JobAction(jobDefinition.getNamespace(), jobDefinition.getJobName(), CORRELATION_DATA));
@@ -448,7 +448,7 @@ public class NotificationEventServiceTest extends AbstractServiceTest
     private void runProcessStorageUnitStatusChangeNotificationEventSyncTest() throws Exception
     {
         // Create a job definition.
-        JobDefinition jobDefinition = createJobDefinition(ACTIVITI_XML_LOG_VARIABLES_NO_REGEX_WITH_CLASSPATH);
+        JobDefinition jobDefinition = jobDefinitionServiceTestHelper.createJobDefinition(ACTIVITI_XML_LOG_VARIABLES_NO_REGEX_WITH_CLASSPATH);
 
         // Create a job action.
         List<JobAction> jobActions = new ArrayList<>();

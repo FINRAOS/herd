@@ -57,7 +57,8 @@ public class BusinessObjectDataServiceRestoreBusinessObjectDataTest extends Abst
                 DATA_VERSION);
 
         // Create database entities required for testing.
-        BusinessObjectDataEntity businessObjectDataEntity = createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey);
+        BusinessObjectDataEntity businessObjectDataEntity =
+            businessObjectDataServiceTestHelper.createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey);
 
         // Get the origin storage unit entity.
         StorageUnitEntity originStorageUnitEntity = storageUnitDaoHelper.getStorageUnitEntity(STORAGE_NAME_ORIGIN, businessObjectDataEntity);
@@ -78,7 +79,8 @@ public class BusinessObjectDataServiceRestoreBusinessObjectDataTest extends Abst
             BusinessObjectData businessObjectData = businessObjectDataService.restoreBusinessObjectData(businessObjectDataKey);
 
             // Validate the returned object.
-            validateBusinessObjectData(businessObjectDataEntity.getId(), businessObjectDataKey, LATEST_VERSION_FLAG_SET, BDATA_STATUS, businessObjectData);
+            businessObjectDataServiceTestHelper
+                .validateBusinessObjectData(businessObjectDataEntity.getId(), businessObjectDataKey, LATEST_VERSION_FLAG_SET, BDATA_STATUS, businessObjectData);
 
             // Validate that the origin storage unit status is RESTORING.
             assertEquals(StorageUnitStatusEntity.RESTORING, originStorageUnitEntity.getStatus().getCode());
@@ -118,7 +120,8 @@ public class BusinessObjectDataServiceRestoreBusinessObjectDataTest extends Abst
                 DATA_VERSION);
 
         // Create database entities required for testing.
-        BusinessObjectDataEntity businessObjectDataEntity = createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey);
+        BusinessObjectDataEntity businessObjectDataEntity =
+            businessObjectDataServiceTestHelper.createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey);
 
         // Get the origin storage unit entity.
         StorageUnitEntity originStorageUnitEntity = storageUnitDaoHelper.getStorageUnitEntity(STORAGE_NAME_ORIGIN, businessObjectDataEntity);
@@ -182,7 +185,8 @@ public class BusinessObjectDataServiceRestoreBusinessObjectDataTest extends Abst
                 DATA_VERSION);
 
         // Create database entities required for testing.
-        BusinessObjectDataEntity businessObjectDataEntity = createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey);
+        BusinessObjectDataEntity businessObjectDataEntity =
+            businessObjectDataServiceTestHelper.createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey);
 
         // Get the origin storage unit entity.
         StorageUnitEntity originStorageUnitEntity = storageUnitDaoHelper.getStorageUnitEntity(STORAGE_NAME_ORIGIN, businessObjectDataEntity);
@@ -203,7 +207,8 @@ public class BusinessObjectDataServiceRestoreBusinessObjectDataTest extends Abst
             BusinessObjectData businessObjectData = businessObjectDataService.restoreBusinessObjectData(businessObjectDataKey);
 
             // Validate the returned object.
-            validateBusinessObjectData(businessObjectDataEntity.getId(), businessObjectDataKey, LATEST_VERSION_FLAG_SET, BDATA_STATUS, businessObjectData);
+            businessObjectDataServiceTestHelper
+                .validateBusinessObjectData(businessObjectDataEntity.getId(), businessObjectDataKey, LATEST_VERSION_FLAG_SET, BDATA_STATUS, businessObjectData);
 
             // Validate that the origin storage unit status is RESTORING.
             assertEquals(StorageUnitStatusEntity.RESTORING, originStorageUnitEntity.getStatus().getCode());

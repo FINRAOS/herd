@@ -39,7 +39,8 @@ public class CheckBusinessObjectDataAvailabilityMultiplePartitionsTest extends H
         businessObjectDataAvailabilityTestHelper.createDatabaseEntitiesForBusinessObjectDataAvailabilityTesting(null);
 
         // Prepare a check business object data availability request.
-        BusinessObjectDataAvailabilityRequest businessObjectDataAvailabilityRequest = getTestBusinessObjectDataAvailabilityRequest(UNSORTED_PARTITION_VALUES);
+        BusinessObjectDataAvailabilityRequest businessObjectDataAvailabilityRequest =
+            businessObjectDataServiceTestHelper.getTestBusinessObjectDataAvailabilityRequest(UNSORTED_PARTITION_VALUES);
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
 
@@ -66,7 +67,8 @@ public class CheckBusinessObjectDataAvailabilityMultiplePartitionsTest extends H
         businessObjectDataAvailabilityTestHelper.createDatabaseEntitiesForBusinessObjectDataAvailabilityTesting(null);
 
         // Prepare a check business object data availability request.
-        BusinessObjectDataAvailabilityRequest businessObjectDataAvailabilityRequest = getTestBusinessObjectDataAvailabilityRequest(UNSORTED_PARTITION_VALUES);
+        BusinessObjectDataAvailabilityRequest businessObjectDataAvailabilityRequest =
+            businessObjectDataServiceTestHelper.getTestBusinessObjectDataAvailabilityRequest(UNSORTED_PARTITION_VALUES);
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
 

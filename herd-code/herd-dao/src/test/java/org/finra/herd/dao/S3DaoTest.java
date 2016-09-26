@@ -33,6 +33,7 @@ import java.io.InputStream;
 import java.io.StringWriter;
 import java.net.URI;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -87,8 +88,6 @@ import org.junit.Test;
 import org.mockito.ArgumentMatcher;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import org.finra.herd.core.helper.LogLevel;
@@ -107,7 +106,7 @@ import org.finra.herd.model.dto.S3FileTransferResultsDto;
  */
 public class S3DaoTest extends AbstractDaoTest
 {
-    protected static Logger s3DaoImplLogger = LoggerFactory.getLogger(S3DaoImpl.class);
+    private Path localTempPath;
 
     /**
      * Sets up the test environment.
@@ -572,8 +571,7 @@ public class S3DaoTest extends AbstractDaoTest
         catch (IllegalStateException e)
         {
             assertEquals(String.format("Failed to get S3 metadata for object key \"%s\" from bucket \"%s\". " +
-                    "Reason: InternalError (Service: null; Status Code: 0; Error Code: null; Request ID: null)", s3FileTransferRequestParamsDto
-                    .getS3KeyPrefix(),
+                "Reason: InternalError (Service: null; Status Code: 0; Error Code: null; Request ID: null)", s3FileTransferRequestParamsDto.getS3KeyPrefix(),
                 s3FileTransferRequestParamsDto.getS3BucketName()), e.getMessage());
         }
     }
@@ -2407,8 +2405,7 @@ public class S3DaoTest extends AbstractDaoTest
             s3FileTransferRequestParamsDto.setS3BucketName(s3BucketName);
             s3FileTransferRequestParamsDto.setS3KeyPrefix(s3KeyPrefix);
 
-            when(mockS3Operations.putObject(any(), any())).then((Answer<PutObjectResult>) invocation ->
-            {
+            when(mockS3Operations.putObject(any(), any())).then((Answer<PutObjectResult>) invocation -> {
                 AmazonS3Client amazonS3Client = invocation.getArgumentAt(1, AmazonS3Client.class);
                 ClientConfiguration clientConfiguration = (ClientConfiguration) ReflectionTestUtils.getField(amazonS3Client, "clientConfiguration");
                 assertEquals(S3Dao.SIGNER_OVERRIDE_V4, clientConfiguration.getSignerOverride());

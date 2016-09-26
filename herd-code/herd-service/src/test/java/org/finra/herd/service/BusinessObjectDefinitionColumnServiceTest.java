@@ -90,7 +90,8 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
             {
                 assertEquals(String.format(
                     "Unable to create business object definition column with name \"%s\" because it already exists for the business object definition {%s}.",
-                    businessObjectDefinitionColumnName, getExpectedBusinessObjectDefinitionKeyAsString(BDEF_NAMESPACE, BDEF_NAME)), e.getMessage());
+                    businessObjectDefinitionColumnName,
+                    businessObjectDefinitionServiceTestHelper.getExpectedBusinessObjectDefinitionKeyAsString(BDEF_NAMESPACE, BDEF_NAME)), e.getMessage());
             }
         }
     }
@@ -108,7 +109,8 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(getExpectedBusinessObjectDefinitionNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME), e.getMessage());
+            assertEquals(businessObjectDefinitionServiceTestHelper.getExpectedBusinessObjectDefinitionNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME),
+                e.getMessage());
         }
     }
 
@@ -288,7 +290,7 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
             {
                 assertEquals(String.format("Unable to create business object definition column because a business object definition column " +
                     "with schema column name \"%s\" already exists for the business object definition {%s}.", schemaColumnName,
-                    getExpectedBusinessObjectDefinitionKeyAsString(BDEF_NAMESPACE, BDEF_NAME)), e.getMessage());
+                    businessObjectDefinitionServiceTestHelper.getExpectedBusinessObjectDefinitionKeyAsString(BDEF_NAMESPACE, BDEF_NAME)), e.getMessage());
             }
         }
     }
@@ -311,7 +313,7 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
         {
             assertEquals(String.format("Unable to create business object definition column because there are no format schema columns " +
                 "with name \"%s\" for the business object definition {%s}.", COLUMN_NAME,
-                getExpectedBusinessObjectDefinitionKeyAsString(BDEF_NAMESPACE, BDEF_NAME)), e.getMessage());
+                businessObjectDefinitionServiceTestHelper.getExpectedBusinessObjectDefinitionKeyAsString(BDEF_NAMESPACE, BDEF_NAME)), e.getMessage());
         }
     }
 
@@ -411,7 +413,7 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
         catch (ObjectNotFoundException e)
         {
             assertEquals(String.format("Column with name \"%s\" does not exist for business object definition {%s}.", BDEF_COLUMN_NAME,
-                getExpectedBusinessObjectDefinitionKeyAsString(BDEF_NAMESPACE, BDEF_NAME)), e.getMessage());
+                businessObjectDefinitionServiceTestHelper.getExpectedBusinessObjectDefinitionKeyAsString(BDEF_NAMESPACE, BDEF_NAME)), e.getMessage());
         }
     }
 
@@ -623,7 +625,7 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
         catch (ObjectNotFoundException e)
         {
             assertEquals(String.format("Column with name \"%s\" does not exist for business object definition {%s}.", BDEF_COLUMN_NAME,
-                getExpectedBusinessObjectDefinitionKeyAsString(BDEF_NAMESPACE, BDEF_NAME)), e.getMessage());
+                businessObjectDefinitionServiceTestHelper.getExpectedBusinessObjectDefinitionKeyAsString(BDEF_NAMESPACE, BDEF_NAME)), e.getMessage());
         }
     }
 
@@ -791,7 +793,8 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(getExpectedBusinessObjectDefinitionNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME), e.getMessage());
+            assertEquals(businessObjectDefinitionServiceTestHelper.getExpectedBusinessObjectDefinitionNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME),
+                e.getMessage());
         }
     }
 
@@ -918,7 +921,7 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
         catch (ObjectNotFoundException e)
         {
             assertEquals(String.format("Column with name \"%s\" does not exist for business object definition {%s}.", BDEF_COLUMN_NAME,
-                getExpectedBusinessObjectDefinitionKeyAsString(BDEF_NAMESPACE, BDEF_NAME)), e.getMessage());
+                businessObjectDefinitionServiceTestHelper.getExpectedBusinessObjectDefinitionKeyAsString(BDEF_NAMESPACE, BDEF_NAME)), e.getMessage());
         }
     }
 

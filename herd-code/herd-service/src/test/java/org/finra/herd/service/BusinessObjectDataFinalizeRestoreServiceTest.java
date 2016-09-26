@@ -99,7 +99,8 @@ public class BusinessObjectDataFinalizeRestoreServiceTest extends AbstractServic
                 DATA_VERSION);
 
         // Create database entities required for testing.
-        BusinessObjectDataEntity businessObjectDataEntity = createDatabaseEntitiesForFinalizeRestoreTesting(businessObjectDataKey);
+        BusinessObjectDataEntity businessObjectDataEntity =
+            businessObjectDataServiceTestHelper.createDatabaseEntitiesForFinalizeRestoreTesting(businessObjectDataKey);
 
         // Get the origin storage unit entity.
         StorageUnitEntity originStorageUnitEntity = storageUnitDaoHelper.getStorageUnitEntity(STORAGE_NAME_ORIGIN, businessObjectDataEntity);
@@ -163,7 +164,8 @@ public class BusinessObjectDataFinalizeRestoreServiceTest extends AbstractServic
                 DATA_VERSION);
 
         // Create database entities required for testing.
-        BusinessObjectDataEntity businessObjectDataEntity = createDatabaseEntitiesForFinalizeRestoreTesting(businessObjectDataKey);
+        BusinessObjectDataEntity businessObjectDataEntity =
+            businessObjectDataServiceTestHelper.createDatabaseEntitiesForFinalizeRestoreTesting(businessObjectDataKey);
 
         // Get the origin storage unit entity.
         StorageUnitEntity originStorageUnitEntity = storageUnitDaoHelper.getStorageUnitEntity(STORAGE_NAME_ORIGIN, businessObjectDataEntity);
@@ -248,7 +250,8 @@ public class BusinessObjectDataFinalizeRestoreServiceTest extends AbstractServic
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(getExpectedBusinessObjectDataNotFoundErrorMessage(businessObjectDataKey, NO_BDATA_STATUS), e.getMessage());
+            assertEquals(businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataNotFoundErrorMessage(businessObjectDataKey, NO_BDATA_STATUS),
+                e.getMessage());
         }
     }
 }

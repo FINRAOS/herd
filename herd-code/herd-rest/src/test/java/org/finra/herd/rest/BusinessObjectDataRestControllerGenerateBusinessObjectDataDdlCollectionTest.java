@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
 import org.finra.herd.model.api.xml.BusinessObjectDataDdlCollectionResponse;
+import org.finra.herd.service.AbstractServiceTest;
 
 /**
  * This class tests generateBusinessObjectDataDdlCollection functionality within the business object data REST controller.
@@ -30,13 +31,13 @@ public class BusinessObjectDataRestControllerGenerateBusinessObjectDataDdlCollec
     public void testGenerateBusinessObjectDataDdlCollection()
     {
         // Prepare database entities required for testing.
-        createDatabaseEntitiesForBusinessObjectDataDdlCollectionTesting();
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataDdlTesting(AbstractServiceTest.PARTITION_VALUE);
 
         // Generate DDL for a collection of business object data.
-        BusinessObjectDataDdlCollectionResponse resultBusinessObjectDataDdlCollectionResponse =
-            businessObjectDataRestController.generateBusinessObjectDataDdlCollection(getTestBusinessObjectDataDdlCollectionRequest());
+        BusinessObjectDataDdlCollectionResponse resultBusinessObjectDataDdlCollectionResponse = businessObjectDataRestController
+            .generateBusinessObjectDataDdlCollection(businessObjectDataServiceTestHelper.getTestBusinessObjectDataDdlCollectionRequest());
 
         // Validate the response object.
-        assertEquals(getExpectedBusinessObjectDataDdlCollectionResponse(), resultBusinessObjectDataDdlCollectionResponse);
+        assertEquals(businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataDdlCollectionResponse(), resultBusinessObjectDataDdlCollectionResponse);
     }
 }

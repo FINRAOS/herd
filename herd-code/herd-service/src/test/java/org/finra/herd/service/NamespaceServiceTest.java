@@ -38,10 +38,10 @@ public class NamespaceServiceTest extends AbstractServiceTest
     public void testCreateNamespace() throws Exception
     {
         // Create a namespace.
-        Namespace resultNamespace = namespaceService.createNamespace(createNamespaceCreateRequest(NAMESPACE));
+        Namespace resultNamespace = namespaceService.createNamespace(namespaceServiceTestHelper.createNamespaceCreateRequest(NAMESPACE));
 
         // Validate the returned object.
-        validateNamespace(NAMESPACE, resultNamespace);
+        namespaceServiceTestHelper.validateNamespace(NAMESPACE, resultNamespace);
     }
 
     @Test
@@ -50,7 +50,7 @@ public class NamespaceServiceTest extends AbstractServiceTest
         // Try to create a namespace instance when namespace code is not specified.
         try
         {
-            namespaceService.createNamespace(createNamespaceCreateRequest(BLANK_TEXT));
+            namespaceService.createNamespace(namespaceServiceTestHelper.createNamespaceCreateRequest(BLANK_TEXT));
             fail("Should throw an IllegalArgumentException when namespace is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -63,30 +63,30 @@ public class NamespaceServiceTest extends AbstractServiceTest
     public void testCreateNamespaceTrimParameters()
     {
         // Create a namespace using input parameters with leading and trailing empty spaces.
-        Namespace resultNamespace = namespaceService.createNamespace(createNamespaceCreateRequest(addWhitespace(NAMESPACE)));
+        Namespace resultNamespace = namespaceService.createNamespace(namespaceServiceTestHelper.createNamespaceCreateRequest(addWhitespace(NAMESPACE)));
 
         // Validate the returned object.
-        validateNamespace(NAMESPACE, resultNamespace);
+        namespaceServiceTestHelper.validateNamespace(NAMESPACE, resultNamespace);
     }
 
     @Test
     public void testCreateNamespaceUpperCaseParameters()
     {
         // Create a namespace using upper case input parameters.
-        Namespace resultNamespace = namespaceService.createNamespace(createNamespaceCreateRequest(NAMESPACE.toUpperCase()));
+        Namespace resultNamespace = namespaceService.createNamespace(namespaceServiceTestHelper.createNamespaceCreateRequest(NAMESPACE.toUpperCase()));
 
         // Validate the returned object.
-        validateNamespace(NAMESPACE.toUpperCase(), resultNamespace);
+        namespaceServiceTestHelper.validateNamespace(NAMESPACE.toUpperCase(), resultNamespace);
     }
 
     @Test
     public void testCreateNamespaceLowerCaseParameters()
     {
         // Create a namespace using lower case input parameters.
-        Namespace resultNamespace = namespaceService.createNamespace(createNamespaceCreateRequest(NAMESPACE.toLowerCase()));
+        Namespace resultNamespace = namespaceService.createNamespace(namespaceServiceTestHelper.createNamespaceCreateRequest(NAMESPACE.toLowerCase()));
 
         // Validate the returned object.
-        validateNamespace(NAMESPACE.toLowerCase(), resultNamespace);
+        namespaceServiceTestHelper.validateNamespace(NAMESPACE.toLowerCase(), resultNamespace);
     }
 
     @Test
@@ -95,7 +95,7 @@ public class NamespaceServiceTest extends AbstractServiceTest
         // Try to create a namespace instance when namespace contains a forward slash character.
         try
         {
-            namespaceService.createNamespace(createNamespaceCreateRequest(addSlash(NAMESPACE)));
+            namespaceService.createNamespace(namespaceServiceTestHelper.createNamespaceCreateRequest(addSlash(NAMESPACE)));
             fail("Should throw an IllegalArgumentException when namespace contains a forward slash character.");
         }
         catch (IllegalArgumentException e)
@@ -113,7 +113,7 @@ public class NamespaceServiceTest extends AbstractServiceTest
         // Try to create a namespace when it already exists.
         try
         {
-            namespaceService.createNamespace(createNamespaceCreateRequest(NAMESPACE));
+            namespaceService.createNamespace(namespaceServiceTestHelper.createNamespaceCreateRequest(NAMESPACE));
             fail("Should throw an AlreadyExistsException when namespace already exists.");
         }
         catch (AlreadyExistsException e)
@@ -132,7 +132,7 @@ public class NamespaceServiceTest extends AbstractServiceTest
         Namespace resultNamespace = namespaceService.getNamespace(new NamespaceKey(NAMESPACE));
 
         // Validate the returned object.
-        validateNamespace(NAMESPACE, resultNamespace);
+        namespaceServiceTestHelper.validateNamespace(NAMESPACE, resultNamespace);
     }
 
     @Test
@@ -160,7 +160,7 @@ public class NamespaceServiceTest extends AbstractServiceTest
         Namespace resultNamespace = namespaceService.getNamespace(new NamespaceKey(addWhitespace(NAMESPACE)));
 
         // Validate the returned object.
-        validateNamespace(NAMESPACE, resultNamespace);
+        namespaceServiceTestHelper.validateNamespace(NAMESPACE, resultNamespace);
     }
 
     @Test
@@ -173,7 +173,7 @@ public class NamespaceServiceTest extends AbstractServiceTest
         Namespace resultNamespace = namespaceService.getNamespace(new NamespaceKey(NAMESPACE.toUpperCase()));
 
         // Validate the returned object.
-        validateNamespace(NAMESPACE.toLowerCase(), resultNamespace);
+        namespaceServiceTestHelper.validateNamespace(NAMESPACE.toLowerCase(), resultNamespace);
     }
 
     @Test
@@ -186,7 +186,7 @@ public class NamespaceServiceTest extends AbstractServiceTest
         Namespace resultNamespace = namespaceService.getNamespace(new NamespaceKey(NAMESPACE.toLowerCase()));
 
         // Validate the returned object.
-        validateNamespace(NAMESPACE.toUpperCase(), resultNamespace);
+        namespaceServiceTestHelper.validateNamespace(NAMESPACE.toUpperCase(), resultNamespace);
     }
 
     @Test
@@ -240,7 +240,7 @@ public class NamespaceServiceTest extends AbstractServiceTest
         Namespace deletedNamespace = namespaceService.deleteNamespace(new NamespaceKey(NAMESPACE));
 
         // Validate the returned object.
-        validateNamespace(NAMESPACE, deletedNamespace);
+        namespaceServiceTestHelper.validateNamespace(NAMESPACE, deletedNamespace);
 
         // Ensure that this namespace is no longer there.
         assertNull(namespaceDao.getNamespaceByKey(namespaceKey));
@@ -275,7 +275,7 @@ public class NamespaceServiceTest extends AbstractServiceTest
         Namespace deletedNamespace = namespaceService.deleteNamespace(new NamespaceKey(addWhitespace(NAMESPACE)));
 
         // Validate the returned object.
-        validateNamespace(NAMESPACE, deletedNamespace);
+        namespaceServiceTestHelper.validateNamespace(NAMESPACE, deletedNamespace);
 
         // Ensure that this namespace is no longer there.
         assertNull(namespaceDao.getNamespaceByKey(namespaceKey));
@@ -295,7 +295,7 @@ public class NamespaceServiceTest extends AbstractServiceTest
         Namespace deletedNamespace = namespaceService.deleteNamespace(new NamespaceKey(NAMESPACE.toUpperCase()));
 
         // Validate the returned object.
-        validateNamespace(NAMESPACE.toLowerCase(), deletedNamespace);
+        namespaceServiceTestHelper.validateNamespace(NAMESPACE.toLowerCase(), deletedNamespace);
 
         // Ensure that this namespace is no longer there.
         assertNull(namespaceDao.getNamespaceByKey(namespaceKey));
@@ -315,7 +315,7 @@ public class NamespaceServiceTest extends AbstractServiceTest
         Namespace deletedNamespace = namespaceService.deleteNamespace(new NamespaceKey(NAMESPACE.toLowerCase()));
 
         // Validate the returned object.
-        validateNamespace(NAMESPACE.toUpperCase(), deletedNamespace);
+        namespaceServiceTestHelper.validateNamespace(NAMESPACE.toUpperCase(), deletedNamespace);
 
         // Ensure that this namespace is no longer there.
         assertNull(namespaceDao.getNamespaceByKey(namespaceKey));

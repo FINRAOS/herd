@@ -60,12 +60,14 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
 
         // Create a business object data attribute.
         BusinessObjectDataAttribute resultBusinessObjectDataAttribute = businessObjectDataAttributeService.createBusinessObjectDataAttribute(
-            createBusinessObjectDataAttributeCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1));
+            businessObjectDataAttributeServiceTestHelper
+                .createBusinessObjectDataAttributeCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1));
 
         // Validate the returned object.
-        validateBusinessObjectDataAttribute(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-            SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1, resultBusinessObjectDataAttribute);
+        businessObjectDataAttributeServiceTestHelper
+            .validateBusinessObjectDataAttribute(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1, resultBusinessObjectDataAttribute);
     }
 
     @Test
@@ -74,9 +76,9 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
         // Try to create a business object data attribute instance when business object definition name is not specified.
         try
         {
-            businessObjectDataAttributeService.createBusinessObjectDataAttribute(
-                createBusinessObjectDataAttributeCreateRequest(NAMESPACE, BLANK_TEXT, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                    SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1));
+            businessObjectDataAttributeService.createBusinessObjectDataAttribute(businessObjectDataAttributeServiceTestHelper
+                .createBusinessObjectDataAttributeCreateRequest(NAMESPACE, BLANK_TEXT, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                    PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1));
             fail("Should throw an IllegalArgumentException when business object definition name is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -87,8 +89,8 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
         // Try to create a business object data attribute instance when business object format usage is not specified.
         try
         {
-            businessObjectDataAttributeService.createBusinessObjectDataAttribute(
-                createBusinessObjectDataAttributeCreateRequest(NAMESPACE, BDEF_NAME, BLANK_TEXT, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            businessObjectDataAttributeService.createBusinessObjectDataAttribute(businessObjectDataAttributeServiceTestHelper
+                .createBusinessObjectDataAttributeCreateRequest(NAMESPACE, BDEF_NAME, BLANK_TEXT, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                     SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1));
             fail("Should throw an IllegalArgumentException when business object format usage is not specified.");
         }
@@ -100,8 +102,8 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
         // Try to create a business object data attribute instance when business object format file type is not specified.
         try
         {
-            businessObjectDataAttributeService.createBusinessObjectDataAttribute(
-                createBusinessObjectDataAttributeCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, BLANK_TEXT, FORMAT_VERSION, PARTITION_VALUE,
+            businessObjectDataAttributeService.createBusinessObjectDataAttribute(businessObjectDataAttributeServiceTestHelper
+                .createBusinessObjectDataAttributeCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, BLANK_TEXT, FORMAT_VERSION, PARTITION_VALUE,
                     SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1));
             fail("Should throw an IllegalArgumentException when business object format file type is not specified.");
         }
@@ -113,8 +115,8 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
         // Try to create a business object data attribute instance when business object format version is not specified.
         try
         {
-            businessObjectDataAttributeService.createBusinessObjectDataAttribute(
-                createBusinessObjectDataAttributeCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null, PARTITION_VALUE,
+            businessObjectDataAttributeService.createBusinessObjectDataAttribute(businessObjectDataAttributeServiceTestHelper
+                .createBusinessObjectDataAttributeCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null, PARTITION_VALUE,
                     SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1));
             fail("Should throw an IllegalArgumentException when business object format version is not specified.");
         }
@@ -126,8 +128,8 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
         // Try to create a business object data attribute instance when partition value is not specified.
         try
         {
-            businessObjectDataAttributeService.createBusinessObjectDataAttribute(
-                createBusinessObjectDataAttributeCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, BLANK_TEXT,
+            businessObjectDataAttributeService.createBusinessObjectDataAttribute(businessObjectDataAttributeServiceTestHelper
+                .createBusinessObjectDataAttributeCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, BLANK_TEXT,
                     SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1));
             fail("Should throw an IllegalArgumentException when partition value is not specified.");
         }
@@ -139,8 +141,8 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
         // Try to create a business object data attribute instance when subpartition value is not specified.
         try
         {
-            businessObjectDataAttributeService.createBusinessObjectDataAttribute(
-                createBusinessObjectDataAttributeCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            businessObjectDataAttributeService.createBusinessObjectDataAttribute(businessObjectDataAttributeServiceTestHelper
+                .createBusinessObjectDataAttributeCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                     Arrays.asList(BLANK_TEXT), DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1));
             fail("Should throw an IllegalArgumentException when subpartition value is not specified.");
         }
@@ -152,8 +154,8 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
         // Try to create a business object data attribute instance when business object data version is not specified.
         try
         {
-            businessObjectDataAttributeService.createBusinessObjectDataAttribute(
-                createBusinessObjectDataAttributeCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            businessObjectDataAttributeService.createBusinessObjectDataAttribute(businessObjectDataAttributeServiceTestHelper
+                .createBusinessObjectDataAttributeCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                     SUBPARTITION_VALUES, null, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1));
             fail("Should throw an IllegalArgumentException when business object data version is not specified.");
         }
@@ -165,8 +167,8 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
         // Try to create a business object data attribute instance when business object data attribute name is not specified.
         try
         {
-            businessObjectDataAttributeService.createBusinessObjectDataAttribute(
-                createBusinessObjectDataAttributeCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            businessObjectDataAttributeService.createBusinessObjectDataAttribute(businessObjectDataAttributeServiceTestHelper
+                .createBusinessObjectDataAttributeCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                     SUBPARTITION_VALUES, DATA_VERSION, BLANK_TEXT, ATTRIBUTE_VALUE_1));
             fail("Should throw an IllegalArgumentException when business object data attribute name is not specified.");
         }
@@ -186,13 +188,15 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
 
         // Create a business object data attribute using input parameters with leading and trailing empty spaces.
         BusinessObjectDataAttribute resultBusinessObjectDataAttribute = businessObjectDataAttributeService.createBusinessObjectDataAttribute(
-            createBusinessObjectDataAttributeCreateRequest(NAMESPACE, addWhitespace(BDEF_NAME), addWhitespace(FORMAT_USAGE_CODE),
-                addWhitespace(FORMAT_FILE_TYPE_CODE), FORMAT_VERSION, addWhitespace(PARTITION_VALUE), addWhitespace(SUBPARTITION_VALUES), DATA_VERSION,
-                addWhitespace(ATTRIBUTE_NAME_1_MIXED_CASE), addWhitespace(ATTRIBUTE_VALUE_1)));
+            businessObjectDataAttributeServiceTestHelper
+                .createBusinessObjectDataAttributeCreateRequest(NAMESPACE, addWhitespace(BDEF_NAME), addWhitespace(FORMAT_USAGE_CODE),
+                    addWhitespace(FORMAT_FILE_TYPE_CODE), FORMAT_VERSION, addWhitespace(PARTITION_VALUE), addWhitespace(SUBPARTITION_VALUES), DATA_VERSION,
+                    addWhitespace(ATTRIBUTE_NAME_1_MIXED_CASE), addWhitespace(ATTRIBUTE_VALUE_1)));
 
         // Validate the returned object.
-        validateBusinessObjectDataAttribute(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-            SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, addWhitespace(ATTRIBUTE_VALUE_1), resultBusinessObjectDataAttribute);
+        businessObjectDataAttributeServiceTestHelper
+            .validateBusinessObjectDataAttribute(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, addWhitespace(ATTRIBUTE_VALUE_1), resultBusinessObjectDataAttribute);
     }
 
     @Test
@@ -205,14 +209,16 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
 
         // Create a business object data attribute using upper case input parameters (except for case-sensitive partition values).
         BusinessObjectDataAttribute resultBusinessObjectDataAttribute = businessObjectDataAttributeService.createBusinessObjectDataAttribute(
-            createBusinessObjectDataAttributeCreateRequest(NAMESPACE, BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(),
-                FORMAT_FILE_TYPE_CODE.toUpperCase(), FORMAT_VERSION, PARTITION_VALUE.toLowerCase(), convertListToLowerCase(SUBPARTITION_VALUES), DATA_VERSION,
-                ATTRIBUTE_NAME_1_MIXED_CASE.toUpperCase(), ATTRIBUTE_VALUE_1.toUpperCase()));
+            businessObjectDataAttributeServiceTestHelper
+                .createBusinessObjectDataAttributeCreateRequest(NAMESPACE, BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(),
+                    FORMAT_FILE_TYPE_CODE.toUpperCase(), FORMAT_VERSION, PARTITION_VALUE.toLowerCase(), convertListToLowerCase(SUBPARTITION_VALUES),
+                    DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE.toUpperCase(), ATTRIBUTE_VALUE_1.toUpperCase()));
 
         // Validate the returned object.
-        validateBusinessObjectDataAttribute(null, NAMESPACE, BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(), FORMAT_FILE_TYPE_CODE.toLowerCase(),
-            FORMAT_VERSION, PARTITION_VALUE.toLowerCase(), convertListToLowerCase(SUBPARTITION_VALUES), DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE.toUpperCase(),
-            ATTRIBUTE_VALUE_1.toUpperCase(), resultBusinessObjectDataAttribute);
+        businessObjectDataAttributeServiceTestHelper
+            .validateBusinessObjectDataAttribute(null, NAMESPACE, BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(), FORMAT_FILE_TYPE_CODE.toLowerCase(),
+                FORMAT_VERSION, PARTITION_VALUE.toLowerCase(), convertListToLowerCase(SUBPARTITION_VALUES), DATA_VERSION,
+                ATTRIBUTE_NAME_1_MIXED_CASE.toUpperCase(), ATTRIBUTE_VALUE_1.toUpperCase(), resultBusinessObjectDataAttribute);
     }
 
     @Test
@@ -225,14 +231,16 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
 
         // Create a business object data attribute using lower case input parameters (except for case-sensitive partition values).
         BusinessObjectDataAttribute resultBusinessObjectDataAttribute = businessObjectDataAttributeService.createBusinessObjectDataAttribute(
-            createBusinessObjectDataAttributeCreateRequest(NAMESPACE, BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(),
-                FORMAT_FILE_TYPE_CODE.toLowerCase(), FORMAT_VERSION, PARTITION_VALUE.toUpperCase(), convertListToUpperCase(SUBPARTITION_VALUES), DATA_VERSION,
-                ATTRIBUTE_NAME_1_MIXED_CASE.toLowerCase(), ATTRIBUTE_VALUE_1.toLowerCase()));
+            businessObjectDataAttributeServiceTestHelper
+                .createBusinessObjectDataAttributeCreateRequest(NAMESPACE, BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(),
+                    FORMAT_FILE_TYPE_CODE.toLowerCase(), FORMAT_VERSION, PARTITION_VALUE.toUpperCase(), convertListToUpperCase(SUBPARTITION_VALUES),
+                    DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE.toLowerCase(), ATTRIBUTE_VALUE_1.toLowerCase()));
 
         // Validate the returned object.
-        validateBusinessObjectDataAttribute(null, NAMESPACE, BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(), FORMAT_FILE_TYPE_CODE.toUpperCase(),
-            FORMAT_VERSION, PARTITION_VALUE.toUpperCase(), convertListToUpperCase(SUBPARTITION_VALUES), DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE.toLowerCase(),
-            ATTRIBUTE_VALUE_1.toLowerCase(), resultBusinessObjectDataAttribute);
+        businessObjectDataAttributeServiceTestHelper
+            .validateBusinessObjectDataAttribute(null, NAMESPACE, BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(), FORMAT_FILE_TYPE_CODE.toUpperCase(),
+                FORMAT_VERSION, PARTITION_VALUE.toUpperCase(), convertListToUpperCase(SUBPARTITION_VALUES), DATA_VERSION,
+                ATTRIBUTE_NAME_1_MIXED_CASE.toLowerCase(), ATTRIBUTE_VALUE_1.toLowerCase(), resultBusinessObjectDataAttribute);
     }
 
     @Test
@@ -336,8 +344,8 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
         // Try to create a business object data attribute instance using non-existing business object format.
         try
         {
-            businessObjectDataAttributeService.createBusinessObjectDataAttribute(
-                createBusinessObjectDataAttributeCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            businessObjectDataAttributeService.createBusinessObjectDataAttribute(businessObjectDataAttributeServiceTestHelper
+                .createBusinessObjectDataAttributeCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                     SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1));
             fail("Should throw an ObjectNotFoundException when business object format does not exist.");
         }
@@ -360,15 +368,16 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
         // Try to create a business object data attribute instance using non-existing business object data.
         try
         {
-            businessObjectDataAttributeService.createBusinessObjectDataAttribute(
-                createBusinessObjectDataAttributeCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            businessObjectDataAttributeService.createBusinessObjectDataAttribute(businessObjectDataAttributeServiceTestHelper
+                .createBusinessObjectDataAttributeCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                     SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1));
             fail("Should throw an ObjectNotFoundException when business object data does not exist.");
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, null), e.getMessage());
+            assertEquals(businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                    PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, null), e.getMessage());
         }
     }
 
@@ -383,8 +392,8 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
         // Try to add a duplicate business object data attribute.
         try
         {
-            businessObjectDataAttributeService.createBusinessObjectDataAttribute(
-                createBusinessObjectDataAttributeCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            businessObjectDataAttributeService.createBusinessObjectDataAttribute(businessObjectDataAttributeServiceTestHelper
+                .createBusinessObjectDataAttributeCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                     SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE.toLowerCase(), ATTRIBUTE_VALUE_2));
             fail("Should throw an AlreadyExistsException when business object data attribute already exists.");
         }
@@ -410,12 +419,14 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
 
         // Create a business object data attribute with a null value.
         BusinessObjectDataAttribute resultBusinessObjectDataAttribute = businessObjectDataAttributeService.createBusinessObjectDataAttribute(
-            createBusinessObjectDataAttributeCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, BLANK_TEXT));
+            businessObjectDataAttributeServiceTestHelper
+                .createBusinessObjectDataAttributeCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, BLANK_TEXT));
 
         // Validate the returned object.
-        validateBusinessObjectDataAttribute(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-            SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, BLANK_TEXT, resultBusinessObjectDataAttribute);
+        businessObjectDataAttributeServiceTestHelper
+            .validateBusinessObjectDataAttribute(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, BLANK_TEXT, resultBusinessObjectDataAttribute);
     }
 
     @Test
@@ -428,12 +439,14 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
 
         // Create a business object data attribute with a null value.
         BusinessObjectDataAttribute resultBusinessObjectDataAttribute = businessObjectDataAttributeService.createBusinessObjectDataAttribute(
-            createBusinessObjectDataAttributeCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, null));
+            businessObjectDataAttributeServiceTestHelper
+                .createBusinessObjectDataAttributeCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, null));
 
         // Validate the returned object.
-        validateBusinessObjectDataAttribute(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-            SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, null, resultBusinessObjectDataAttribute);
+        businessObjectDataAttributeServiceTestHelper
+            .validateBusinessObjectDataAttribute(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, null, resultBusinessObjectDataAttribute);
     }
 
     @Test
@@ -451,12 +464,14 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
 
         // Create a required business object data attribute.
         BusinessObjectDataAttribute resultBusinessObjectDataAttribute = businessObjectDataAttributeService.createBusinessObjectDataAttribute(
-            createBusinessObjectDataAttributeCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1));
+            businessObjectDataAttributeServiceTestHelper
+                .createBusinessObjectDataAttributeCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1));
 
         // Validate the returned object.
-        validateBusinessObjectDataAttribute(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-            SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1, resultBusinessObjectDataAttribute);
+        businessObjectDataAttributeServiceTestHelper
+            .validateBusinessObjectDataAttribute(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1, resultBusinessObjectDataAttribute);
     }
 
     @Test
@@ -475,8 +490,8 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
         // Try to create a required business object data attribute instance when business object data attribute value is not specified.
         try
         {
-            businessObjectDataAttributeService.createBusinessObjectDataAttribute(
-                createBusinessObjectDataAttributeCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            businessObjectDataAttributeService.createBusinessObjectDataAttribute(businessObjectDataAttributeServiceTestHelper
+                .createBusinessObjectDataAttributeCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                     SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, BLANK_TEXT));
             fail("Should throw an IllegalArgumentException when business object data attribute value is not specified for a required attribute.");
         }
@@ -503,9 +518,10 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
                 SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE));
 
         // Validate the returned object.
-        validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-            FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1,
-            resultBusinessObjectDataAttribute);
+        businessObjectDataAttributeServiceTestHelper
+            .validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+                FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1,
+                resultBusinessObjectDataAttribute);
     }
 
     @Test
@@ -707,9 +723,10 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
             }
 
             // Validate the returned object.
-            validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-                FORMAT_VERSION, PARTITION_VALUE, subPartitionValues, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1,
-                resultBusinessObjectDataAttribute);
+            businessObjectDataAttributeServiceTestHelper
+                .validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+                    FORMAT_VERSION, PARTITION_VALUE, subPartitionValues, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1,
+                    resultBusinessObjectDataAttribute);
         }
     }
 
@@ -727,9 +744,10 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
                 FORMAT_VERSION, addWhitespace(PARTITION_VALUE), addWhitespace(SUBPARTITION_VALUES), DATA_VERSION, addWhitespace(ATTRIBUTE_NAME_1_MIXED_CASE)));
 
         // Validate the returned object.
-        validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-            FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1,
-            resultBusinessObjectDataAttribute);
+        businessObjectDataAttributeServiceTestHelper
+            .validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+                FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1,
+                resultBusinessObjectDataAttribute);
     }
 
     @Test
@@ -748,9 +766,10 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
                 ATTRIBUTE_NAME_1_MIXED_CASE.toUpperCase()));
 
         // Validate the returned object.
-        validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE, BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(),
-            FORMAT_FILE_TYPE_CODE.toLowerCase(), FORMAT_VERSION, PARTITION_VALUE.toLowerCase(), convertListToLowerCase(SUBPARTITION_VALUES), DATA_VERSION,
-            ATTRIBUTE_NAME_1_MIXED_CASE.toLowerCase(), ATTRIBUTE_VALUE_1.toLowerCase(), resultBusinessObjectDataAttribute);
+        businessObjectDataAttributeServiceTestHelper
+            .validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE, BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(),
+                FORMAT_FILE_TYPE_CODE.toLowerCase(), FORMAT_VERSION, PARTITION_VALUE.toLowerCase(), convertListToLowerCase(SUBPARTITION_VALUES), DATA_VERSION,
+                ATTRIBUTE_NAME_1_MIXED_CASE.toLowerCase(), ATTRIBUTE_VALUE_1.toLowerCase(), resultBusinessObjectDataAttribute);
     }
 
     @Test
@@ -769,9 +788,10 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
                 ATTRIBUTE_NAME_1_MIXED_CASE.toLowerCase()));
 
         // Validate the returned object.
-        validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE, BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(),
-            FORMAT_FILE_TYPE_CODE.toUpperCase(), FORMAT_VERSION, PARTITION_VALUE.toUpperCase(), convertListToUpperCase(SUBPARTITION_VALUES), DATA_VERSION,
-            ATTRIBUTE_NAME_1_MIXED_CASE.toUpperCase(), ATTRIBUTE_VALUE_1.toUpperCase(), resultBusinessObjectDataAttribute);
+        businessObjectDataAttributeServiceTestHelper
+            .validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE, BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(),
+                FORMAT_FILE_TYPE_CODE.toUpperCase(), FORMAT_VERSION, PARTITION_VALUE.toUpperCase(), convertListToUpperCase(SUBPARTITION_VALUES), DATA_VERSION,
+                ATTRIBUTE_NAME_1_MIXED_CASE.toUpperCase(), ATTRIBUTE_VALUE_1.toUpperCase(), resultBusinessObjectDataAttribute);
     }
 
     @Test
@@ -787,8 +807,9 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, null), e.getMessage());
+            assertEquals(businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                    PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, null), e.getMessage());
         }
     }
 
@@ -844,9 +865,10 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
         assertEquals(testBusinessObjectDataAttributeNames.size(), resultBusinessObjectDataAttributeKeys.getBusinessObjectDataAttributeKeys().size());
         for (int i = 0; i < testBusinessObjectDataAttributeNames.size(); i++)
         {
-            validateBusinessObjectDataAttributeKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES, DATA_VERSION, testBusinessObjectDataAttributeNames.get(i),
-                resultBusinessObjectDataAttributeKeys.getBusinessObjectDataAttributeKeys().get(i));
+            businessObjectDataAttributeServiceTestHelper
+                .validateBusinessObjectDataAttributeKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    SUBPARTITION_VALUES, DATA_VERSION, testBusinessObjectDataAttributeNames.get(i),
+                    resultBusinessObjectDataAttributeKeys.getBusinessObjectDataAttributeKeys().get(i));
         }
     }
 
@@ -1041,9 +1063,10 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
             assertEquals(testBusinessObjectDataAttributeNames.size(), resultBusinessObjectDataAttributeKeys.getBusinessObjectDataAttributeKeys().size());
             for (int j = 0; j < testBusinessObjectDataAttributeNames.size(); j++)
             {
-                validateBusinessObjectDataAttributeKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                    subPartitionValues, DATA_VERSION, testBusinessObjectDataAttributeNames.get(j),
-                    resultBusinessObjectDataAttributeKeys.getBusinessObjectDataAttributeKeys().get(j));
+                businessObjectDataAttributeServiceTestHelper
+                    .validateBusinessObjectDataAttributeKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                        subPartitionValues, DATA_VERSION, testBusinessObjectDataAttributeNames.get(j),
+                        resultBusinessObjectDataAttributeKeys.getBusinessObjectDataAttributeKeys().get(j));
             }
         }
     }
@@ -1072,9 +1095,10 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
         assertEquals(testBusinessObjectDataAttributeNames.size(), resultBusinessObjectDataAttributeKeys.getBusinessObjectDataAttributeKeys().size());
         for (int i = 0; i < testBusinessObjectDataAttributeNames.size(); i++)
         {
-            validateBusinessObjectDataAttributeKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES, DATA_VERSION, testBusinessObjectDataAttributeNames.get(i),
-                resultBusinessObjectDataAttributeKeys.getBusinessObjectDataAttributeKeys().get(i));
+            businessObjectDataAttributeServiceTestHelper
+                .validateBusinessObjectDataAttributeKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    SUBPARTITION_VALUES, DATA_VERSION, testBusinessObjectDataAttributeNames.get(i),
+                    resultBusinessObjectDataAttributeKeys.getBusinessObjectDataAttributeKeys().get(i));
         }
     }
 
@@ -1103,9 +1127,11 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
         assertEquals(testBusinessObjectDataAttributeNames.size(), resultBusinessObjectDataAttributeKeys.getBusinessObjectDataAttributeKeys().size());
         for (int i = 0; i < testBusinessObjectDataAttributeNames.size(); i++)
         {
-            validateBusinessObjectDataAttributeKey(NAMESPACE, BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(), FORMAT_FILE_TYPE_CODE.toLowerCase(),
-                FORMAT_VERSION, PARTITION_VALUE.toLowerCase(), convertListToLowerCase(SUBPARTITION_VALUES), DATA_VERSION,
-                testBusinessObjectDataAttributeNames.get(i).toLowerCase(), resultBusinessObjectDataAttributeKeys.getBusinessObjectDataAttributeKeys().get(i));
+            businessObjectDataAttributeServiceTestHelper
+                .validateBusinessObjectDataAttributeKey(NAMESPACE, BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(),
+                    FORMAT_FILE_TYPE_CODE.toLowerCase(), FORMAT_VERSION, PARTITION_VALUE.toLowerCase(), convertListToLowerCase(SUBPARTITION_VALUES),
+                    DATA_VERSION, testBusinessObjectDataAttributeNames.get(i).toLowerCase(),
+                    resultBusinessObjectDataAttributeKeys.getBusinessObjectDataAttributeKeys().get(i));
         }
     }
 
@@ -1134,9 +1160,11 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
         assertEquals(testBusinessObjectDataAttributeNames.size(), resultBusinessObjectDataAttributeKeys.getBusinessObjectDataAttributeKeys().size());
         for (int i = 0; i < testBusinessObjectDataAttributeNames.size(); i++)
         {
-            validateBusinessObjectDataAttributeKey(NAMESPACE, BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(), FORMAT_FILE_TYPE_CODE.toUpperCase(),
-                FORMAT_VERSION, PARTITION_VALUE.toUpperCase(), convertListToUpperCase(SUBPARTITION_VALUES), DATA_VERSION,
-                testBusinessObjectDataAttributeNames.get(i).toUpperCase(), resultBusinessObjectDataAttributeKeys.getBusinessObjectDataAttributeKeys().get(i));
+            businessObjectDataAttributeServiceTestHelper
+                .validateBusinessObjectDataAttributeKey(NAMESPACE, BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(),
+                    FORMAT_FILE_TYPE_CODE.toUpperCase(), FORMAT_VERSION, PARTITION_VALUE.toUpperCase(), convertListToUpperCase(SUBPARTITION_VALUES),
+                    DATA_VERSION, testBusinessObjectDataAttributeNames.get(i).toUpperCase(),
+                    resultBusinessObjectDataAttributeKeys.getBusinessObjectDataAttributeKeys().get(i));
         }
     }
 
@@ -1153,8 +1181,9 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, null), e.getMessage());
+            assertEquals(businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                    PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, null), e.getMessage());
         }
     }
 
@@ -1187,12 +1216,14 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
         // Update the business object data attribute.
         BusinessObjectDataAttribute updatedBusinessObjectDataAttribute = businessObjectDataAttributeService.updateBusinessObjectDataAttribute(
             new BusinessObjectDataAttributeKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE), createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_2));
+                SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE),
+            businessObjectDataAttributeServiceTestHelper.createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_2));
 
         // Validate the returned object.
-        validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-            FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_2,
-            updatedBusinessObjectDataAttribute);
+        businessObjectDataAttributeServiceTestHelper
+            .validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+                FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_2,
+                updatedBusinessObjectDataAttribute);
     }
 
     @Test
@@ -1203,7 +1234,8 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
         {
             businessObjectDataAttributeService.updateBusinessObjectDataAttribute(
                 new BusinessObjectDataAttributeKey(NAMESPACE, BLANK_TEXT, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                    SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE), createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_1));
+                    SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE),
+                businessObjectDataAttributeServiceTestHelper.createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_1));
             fail("Should throw an IllegalArgumentException when business object definition name is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -1216,7 +1248,8 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
         {
             businessObjectDataAttributeService.updateBusinessObjectDataAttribute(
                 new BusinessObjectDataAttributeKey(NAMESPACE, BDEF_NAME, BLANK_TEXT, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                    SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE), createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_1));
+                    SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE),
+                businessObjectDataAttributeServiceTestHelper.createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_1));
             fail("Should throw an IllegalArgumentException when business object format usage is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -1229,7 +1262,8 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
         {
             businessObjectDataAttributeService.updateBusinessObjectDataAttribute(
                 new BusinessObjectDataAttributeKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, BLANK_TEXT, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                    DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE), createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_1));
+                    DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE),
+                businessObjectDataAttributeServiceTestHelper.createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_1));
             fail("Should throw an IllegalArgumentException when business object format file type is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -1242,7 +1276,8 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
         {
             businessObjectDataAttributeService.updateBusinessObjectDataAttribute(
                 new BusinessObjectDataAttributeKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null, PARTITION_VALUE, SUBPARTITION_VALUES,
-                    DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE), createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_1));
+                    DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE),
+                businessObjectDataAttributeServiceTestHelper.createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_1));
             fail("Should throw an IllegalArgumentException when business object format version is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -1255,7 +1290,8 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
         {
             businessObjectDataAttributeService.updateBusinessObjectDataAttribute(
                 new BusinessObjectDataAttributeKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, BLANK_TEXT,
-                    NO_SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE), createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_1));
+                    NO_SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE),
+                businessObjectDataAttributeServiceTestHelper.createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_1));
             fail("Should throw an IllegalArgumentException when partition value is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -1269,7 +1305,8 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
             businessObjectDataAttributeService.updateBusinessObjectDataAttribute(
                 new BusinessObjectDataAttributeKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                     Arrays.asList(BLANK_TEXT, SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2), SUBPARTITION_VALUES.get(3)), DATA_VERSION,
-                    ATTRIBUTE_NAME_1_MIXED_CASE), createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_1));
+                    ATTRIBUTE_NAME_1_MIXED_CASE),
+                businessObjectDataAttributeServiceTestHelper.createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_1));
             fail("Should throw an IllegalArgumentException when 1st subpartition value is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -1283,7 +1320,8 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
             businessObjectDataAttributeService.updateBusinessObjectDataAttribute(
                 new BusinessObjectDataAttributeKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                     Arrays.asList(SUBPARTITION_VALUES.get(0), BLANK_TEXT, SUBPARTITION_VALUES.get(2), SUBPARTITION_VALUES.get(3)), DATA_VERSION,
-                    ATTRIBUTE_NAME_1_MIXED_CASE), createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_1));
+                    ATTRIBUTE_NAME_1_MIXED_CASE),
+                businessObjectDataAttributeServiceTestHelper.createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_1));
             fail("Should throw an IllegalArgumentException when 2nd subpartition value is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -1297,7 +1335,8 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
             businessObjectDataAttributeService.updateBusinessObjectDataAttribute(
                 new BusinessObjectDataAttributeKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                     Arrays.asList(SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), BLANK_TEXT, SUBPARTITION_VALUES.get(3)), DATA_VERSION,
-                    ATTRIBUTE_NAME_1_MIXED_CASE), createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_1));
+                    ATTRIBUTE_NAME_1_MIXED_CASE),
+                businessObjectDataAttributeServiceTestHelper.createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_1));
             fail("Should throw an IllegalArgumentException when 3rd subpartition value is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -1311,7 +1350,8 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
             businessObjectDataAttributeService.updateBusinessObjectDataAttribute(
                 new BusinessObjectDataAttributeKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                     Arrays.asList(SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2), BLANK_TEXT), DATA_VERSION,
-                    ATTRIBUTE_NAME_1_MIXED_CASE), createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_1));
+                    ATTRIBUTE_NAME_1_MIXED_CASE),
+                businessObjectDataAttributeServiceTestHelper.createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_1));
             fail("Should throw an IllegalArgumentException when 4th subpartition value is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -1324,7 +1364,8 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
         {
             businessObjectDataAttributeService.updateBusinessObjectDataAttribute(
                 new BusinessObjectDataAttributeKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                    NO_SUBPARTITION_VALUES, null, ATTRIBUTE_NAME_1_MIXED_CASE), createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_1));
+                    NO_SUBPARTITION_VALUES, null, ATTRIBUTE_NAME_1_MIXED_CASE),
+                businessObjectDataAttributeServiceTestHelper.createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_1));
             fail("Should throw an IllegalArgumentException when business object data version is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -1337,7 +1378,8 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
         {
             businessObjectDataAttributeService.updateBusinessObjectDataAttribute(
                 new BusinessObjectDataAttributeKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                    SUBPARTITION_VALUES, DATA_VERSION, BLANK_TEXT), createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_1));
+                    SUBPARTITION_VALUES, DATA_VERSION, BLANK_TEXT),
+                businessObjectDataAttributeServiceTestHelper.createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_1));
             fail("Should throw an IllegalArgumentException when business object data attribute name is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -1368,37 +1410,40 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
                     updatedBusinessObjectDataAttribute = businessObjectDataAttributeService.updateBusinessObjectDataAttribute(
                         new BusinessObjectDataAttributeKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                             NO_SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE),
-                        createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_2));
+                        businessObjectDataAttributeServiceTestHelper.createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_2));
                     break;
                 case 1:
                     updatedBusinessObjectDataAttribute = businessObjectDataAttributeService.updateBusinessObjectDataAttribute(
                         new BusinessObjectDataAttributeKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                             Arrays.asList(subPartitionValues.get(0)), DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE),
-                        createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_2));
+                        businessObjectDataAttributeServiceTestHelper.createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_2));
                     break;
                 case 2:
                     updatedBusinessObjectDataAttribute = businessObjectDataAttributeService.updateBusinessObjectDataAttribute(
                         new BusinessObjectDataAttributeKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                             Arrays.asList(subPartitionValues.get(0), subPartitionValues.get(1)), DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE),
-                        createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_2));
+                        businessObjectDataAttributeServiceTestHelper.createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_2));
                     break;
                 case 3:
                     updatedBusinessObjectDataAttribute = businessObjectDataAttributeService.updateBusinessObjectDataAttribute(
                         new BusinessObjectDataAttributeKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                             Arrays.asList(subPartitionValues.get(0), subPartitionValues.get(1), subPartitionValues.get(2)), DATA_VERSION,
-                            ATTRIBUTE_NAME_1_MIXED_CASE), createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_2));
+                            ATTRIBUTE_NAME_1_MIXED_CASE),
+                        businessObjectDataAttributeServiceTestHelper.createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_2));
                     break;
                 case 4:
                     updatedBusinessObjectDataAttribute = businessObjectDataAttributeService.updateBusinessObjectDataAttribute(
                         new BusinessObjectDataAttributeKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                            SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE), createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_2));
+                            SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE),
+                        businessObjectDataAttributeServiceTestHelper.createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_2));
                     break;
             }
 
             // Validate the returned object.
-            validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-                FORMAT_VERSION, PARTITION_VALUE, subPartitionValues, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_2,
-                updatedBusinessObjectDataAttribute);
+            businessObjectDataAttributeServiceTestHelper
+                .validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+                    FORMAT_VERSION, PARTITION_VALUE, subPartitionValues, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_2,
+                    updatedBusinessObjectDataAttribute);
         }
     }
 
@@ -1414,12 +1459,14 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
         BusinessObjectDataAttribute updatedBusinessObjectDataAttribute = businessObjectDataAttributeService.updateBusinessObjectDataAttribute(
             new BusinessObjectDataAttributeKey(addWhitespace(NAMESPACE), addWhitespace(BDEF_NAME), addWhitespace(FORMAT_USAGE_CODE),
                 addWhitespace(FORMAT_FILE_TYPE_CODE), FORMAT_VERSION, addWhitespace(PARTITION_VALUE), addWhitespace(SUBPARTITION_VALUES), DATA_VERSION,
-                addWhitespace(ATTRIBUTE_NAME_1_MIXED_CASE)), createBusinessObjectDataAttributeUpdateRequest(addWhitespace(ATTRIBUTE_VALUE_2)));
+                addWhitespace(ATTRIBUTE_NAME_1_MIXED_CASE)),
+            businessObjectDataAttributeServiceTestHelper.createBusinessObjectDataAttributeUpdateRequest(addWhitespace(ATTRIBUTE_VALUE_2)));
 
         // Validate the returned object.
-        validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-            FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, addWhitespace(ATTRIBUTE_VALUE_2),
-            updatedBusinessObjectDataAttribute);
+        businessObjectDataAttributeServiceTestHelper
+            .validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+                FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, addWhitespace(ATTRIBUTE_VALUE_2),
+                updatedBusinessObjectDataAttribute);
     }
 
     @Test
@@ -1435,13 +1482,15 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
         BusinessObjectDataAttribute updatedBusinessObjectDataAttribute = businessObjectDataAttributeService.updateBusinessObjectDataAttribute(
             new BusinessObjectDataAttributeKey(NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(),
                 FORMAT_FILE_TYPE_CODE.toUpperCase(), FORMAT_VERSION, PARTITION_VALUE.toLowerCase(), convertListToLowerCase(SUBPARTITION_VALUES), DATA_VERSION,
-                ATTRIBUTE_NAME_1_MIXED_CASE.toUpperCase()), createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_2.toUpperCase()));
+                ATTRIBUTE_NAME_1_MIXED_CASE.toUpperCase()),
+            businessObjectDataAttributeServiceTestHelper.createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_2.toUpperCase()));
 
         // Validate the returned object.
-        validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(),
-            FORMAT_USAGE_CODE.toLowerCase(), FORMAT_FILE_TYPE_CODE.toLowerCase(), FORMAT_VERSION, PARTITION_VALUE.toLowerCase(),
-            convertListToLowerCase(SUBPARTITION_VALUES), DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE.toLowerCase(), ATTRIBUTE_VALUE_2.toUpperCase(),
-            updatedBusinessObjectDataAttribute);
+        businessObjectDataAttributeServiceTestHelper
+            .validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(),
+                FORMAT_USAGE_CODE.toLowerCase(), FORMAT_FILE_TYPE_CODE.toLowerCase(), FORMAT_VERSION, PARTITION_VALUE.toLowerCase(),
+                convertListToLowerCase(SUBPARTITION_VALUES), DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE.toLowerCase(), ATTRIBUTE_VALUE_2.toUpperCase(),
+                updatedBusinessObjectDataAttribute);
     }
 
     @Test
@@ -1457,13 +1506,15 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
         BusinessObjectDataAttribute updatedBusinessObjectDataAttribute = businessObjectDataAttributeService.updateBusinessObjectDataAttribute(
             new BusinessObjectDataAttributeKey(NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(),
                 FORMAT_FILE_TYPE_CODE.toLowerCase(), FORMAT_VERSION, PARTITION_VALUE.toUpperCase(), convertListToUpperCase(SUBPARTITION_VALUES), DATA_VERSION,
-                ATTRIBUTE_NAME_1_MIXED_CASE.toLowerCase()), createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_2.toLowerCase()));
+                ATTRIBUTE_NAME_1_MIXED_CASE.toLowerCase()),
+            businessObjectDataAttributeServiceTestHelper.createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_2.toLowerCase()));
 
         // Validate the returned object.
-        validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(),
-            FORMAT_USAGE_CODE.toUpperCase(), FORMAT_FILE_TYPE_CODE.toUpperCase(), FORMAT_VERSION, PARTITION_VALUE.toUpperCase(),
-            convertListToUpperCase(SUBPARTITION_VALUES), DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE.toUpperCase(), ATTRIBUTE_VALUE_2.toLowerCase(),
-            updatedBusinessObjectDataAttribute);
+        businessObjectDataAttributeServiceTestHelper
+            .validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(),
+                FORMAT_USAGE_CODE.toUpperCase(), FORMAT_FILE_TYPE_CODE.toUpperCase(), FORMAT_VERSION, PARTITION_VALUE.toUpperCase(),
+                convertListToUpperCase(SUBPARTITION_VALUES), DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE.toUpperCase(), ATTRIBUTE_VALUE_2.toLowerCase(),
+                updatedBusinessObjectDataAttribute);
     }
 
     @Test
@@ -1474,7 +1525,8 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
         {
             businessObjectDataAttributeService.updateBusinessObjectDataAttribute(
                 new BusinessObjectDataAttributeKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                    SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE), createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_1));
+                    SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE),
+                businessObjectDataAttributeServiceTestHelper.createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_1));
             fail("Should throw an ObjectNotFoundException when business object format does not exist.");
         }
         catch (ObjectNotFoundException e)
@@ -1498,13 +1550,15 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
         {
             businessObjectDataAttributeService.updateBusinessObjectDataAttribute(
                 new BusinessObjectDataAttributeKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                    SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE), createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_1));
+                    SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE),
+                businessObjectDataAttributeServiceTestHelper.createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_1));
             fail("Should throw an ObjectNotFoundException when business object data does not exist.");
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, null), e.getMessage());
+            assertEquals(businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                    PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, null), e.getMessage());
         }
     }
 
@@ -1521,7 +1575,8 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
         {
             businessObjectDataAttributeService.updateBusinessObjectDataAttribute(
                 new BusinessObjectDataAttributeKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                    SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE), createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_1));
+                    SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE),
+                businessObjectDataAttributeServiceTestHelper.createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_1));
             fail("Should throw an ObjectNotFoundException when business object data attribute does not exist.");
         }
         catch (ObjectNotFoundException e)
@@ -1547,11 +1602,14 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
         // Update the business object data attribute with a null value.
         BusinessObjectDataAttribute updatedBusinessObjectDataAttribute = businessObjectDataAttributeService.updateBusinessObjectDataAttribute(
             new BusinessObjectDataAttributeKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE), createBusinessObjectDataAttributeUpdateRequest(BLANK_TEXT));
+                SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE),
+            businessObjectDataAttributeServiceTestHelper.createBusinessObjectDataAttributeUpdateRequest(BLANK_TEXT));
 
         // Validate the returned object.
-        validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-            FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, BLANK_TEXT, updatedBusinessObjectDataAttribute);
+        businessObjectDataAttributeServiceTestHelper
+            .validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+                FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, BLANK_TEXT,
+                updatedBusinessObjectDataAttribute);
     }
 
     @Test
@@ -1565,11 +1623,13 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
         // Update the business object data attribute with a null value.
         BusinessObjectDataAttribute updatedBusinessObjectDataAttribute = businessObjectDataAttributeService.updateBusinessObjectDataAttribute(
             new BusinessObjectDataAttributeKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE), createBusinessObjectDataAttributeUpdateRequest(null));
+                SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE),
+            businessObjectDataAttributeServiceTestHelper.createBusinessObjectDataAttributeUpdateRequest(null));
 
         // Validate the returned object.
-        validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-            FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, null, updatedBusinessObjectDataAttribute);
+        businessObjectDataAttributeServiceTestHelper
+            .validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+                FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, null, updatedBusinessObjectDataAttribute);
     }
 
     @Test
@@ -1588,12 +1648,14 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
         // Update the required business object data attribute.
         BusinessObjectDataAttribute updatedBusinessObjectDataAttribute = businessObjectDataAttributeService.updateBusinessObjectDataAttribute(
             new BusinessObjectDataAttributeKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE), createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_2));
+                SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE),
+            businessObjectDataAttributeServiceTestHelper.createBusinessObjectDataAttributeUpdateRequest(ATTRIBUTE_VALUE_2));
 
         // Validate the returned object.
-        validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-            FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_2,
-            updatedBusinessObjectDataAttribute);
+        businessObjectDataAttributeServiceTestHelper
+            .validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+                FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_2,
+                updatedBusinessObjectDataAttribute);
     }
 
     @Test
@@ -1614,7 +1676,8 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
         {
             businessObjectDataAttributeService.updateBusinessObjectDataAttribute(
                 new BusinessObjectDataAttributeKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                    SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE), createBusinessObjectDataAttributeUpdateRequest(BLANK_TEXT));
+                    SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE),
+                businessObjectDataAttributeServiceTestHelper.createBusinessObjectDataAttributeUpdateRequest(BLANK_TEXT));
             fail("Should throw an IllegalArgumentException when business object data attribute value is not specified for a required attribute.");
         }
         catch (IllegalArgumentException e)
@@ -1645,9 +1708,10 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
                 SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE));
 
         // Validate the returned object.
-        validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-            FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1,
-            deletedBusinessObjectDataAttribute);
+        businessObjectDataAttributeServiceTestHelper
+            .validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+                FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1,
+                deletedBusinessObjectDataAttribute);
 
         // Ensure that this business object data attribute is no longer there.
         try
@@ -1872,9 +1936,10 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
             }
 
             // Validate the returned object.
-            validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-                FORMAT_VERSION, PARTITION_VALUE, subPartitionValues, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1,
-                deletedBusinessObjectDataAttribute);
+            businessObjectDataAttributeServiceTestHelper
+                .validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+                    FORMAT_VERSION, PARTITION_VALUE, subPartitionValues, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1,
+                    deletedBusinessObjectDataAttribute);
 
             // Ensure that this business object data attribute is no longer there.
             try
@@ -1914,9 +1979,10 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
                 FORMAT_VERSION, addWhitespace(PARTITION_VALUE), addWhitespace(SUBPARTITION_VALUES), DATA_VERSION, addWhitespace(ATTRIBUTE_NAME_1_MIXED_CASE)));
 
         // Validate the returned object.
-        validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-            FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1,
-            deletedBusinessObjectDataAttribute);
+        businessObjectDataAttributeServiceTestHelper
+            .validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+                FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1,
+                deletedBusinessObjectDataAttribute);
 
         // Ensure that this business object data attribute is no longer there.
         try
@@ -1960,10 +2026,11 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
                 ATTRIBUTE_NAME_1_MIXED_CASE.toUpperCase()));
 
         // Validate the returned object.
-        validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(),
-            FORMAT_USAGE_CODE.toLowerCase(), FORMAT_FILE_TYPE_CODE.toLowerCase(), FORMAT_VERSION, PARTITION_VALUE.toLowerCase(),
-            convertListToLowerCase(SUBPARTITION_VALUES), DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE.toLowerCase(), ATTRIBUTE_VALUE_1.toLowerCase(),
-            deletedBusinessObjectDataAttribute);
+        businessObjectDataAttributeServiceTestHelper
+            .validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(),
+                FORMAT_USAGE_CODE.toLowerCase(), FORMAT_FILE_TYPE_CODE.toLowerCase(), FORMAT_VERSION, PARTITION_VALUE.toLowerCase(),
+                convertListToLowerCase(SUBPARTITION_VALUES), DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE.toLowerCase(), ATTRIBUTE_VALUE_1.toLowerCase(),
+                deletedBusinessObjectDataAttribute);
 
         // Ensure that this business object data attribute is no longer there.
         try
@@ -2009,10 +2076,11 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
                 ATTRIBUTE_NAME_1_MIXED_CASE.toLowerCase()));
 
         // Validate the returned object.
-        validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(),
-            FORMAT_USAGE_CODE.toUpperCase(), FORMAT_FILE_TYPE_CODE.toUpperCase(), FORMAT_VERSION, PARTITION_VALUE.toUpperCase(),
-            convertListToUpperCase(SUBPARTITION_VALUES), DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE.toUpperCase(), ATTRIBUTE_VALUE_1.toUpperCase(),
-            deletedBusinessObjectDataAttribute);
+        businessObjectDataAttributeServiceTestHelper
+            .validateBusinessObjectDataAttribute(businessObjectDataAttributeEntity.getId(), NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(),
+                FORMAT_USAGE_CODE.toUpperCase(), FORMAT_FILE_TYPE_CODE.toUpperCase(), FORMAT_VERSION, PARTITION_VALUE.toUpperCase(),
+                convertListToUpperCase(SUBPARTITION_VALUES), DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE.toUpperCase(), ATTRIBUTE_VALUE_1.toUpperCase(),
+                deletedBusinessObjectDataAttribute);
 
         // Ensure that this business object data attribute is no longer there.
         try
@@ -2073,8 +2141,9 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, null), e.getMessage());
+            assertEquals(businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                    PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, null), e.getMessage());
         }
     }
 
@@ -2160,8 +2229,8 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(
-                getExpectedBusinessObjectFormatNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION),
+            assertEquals(businessObjectFormatServiceTestHelper
+                .getExpectedBusinessObjectFormatNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION),
                 e.getMessage());
         }
 
@@ -2173,7 +2242,8 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(getExpectedBusinessObjectDataNotFoundErrorMessage(businessObjectDataKey, NO_BDATA_STATUS), e.getMessage());
+            assertEquals(businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataNotFoundErrorMessage(businessObjectDataKey, NO_BDATA_STATUS),
+                e.getMessage());
         }
 
         // Try to update a business object data attribute when specified business object format does not exist.
@@ -2185,8 +2255,8 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(
-                getExpectedBusinessObjectFormatNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION),
+            assertEquals(businessObjectFormatServiceTestHelper
+                .getExpectedBusinessObjectFormatNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION),
                 e.getMessage());
         }
 
@@ -2198,8 +2268,8 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(
-                getExpectedBusinessObjectFormatNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION),
+            assertEquals(businessObjectFormatServiceTestHelper
+                .getExpectedBusinessObjectFormatNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION),
                 e.getMessage());
         }
 
@@ -2212,7 +2282,8 @@ public class BusinessObjectDataAttributeServiceTest extends AbstractServiceTest
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(getExpectedBusinessObjectDataNotFoundErrorMessage(businessObjectDataKey, NO_BDATA_STATUS), e.getMessage());
+            assertEquals(businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataNotFoundErrorMessage(businessObjectDataKey, NO_BDATA_STATUS),
+                e.getMessage());
         }
     }
 }

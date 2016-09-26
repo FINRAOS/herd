@@ -47,11 +47,13 @@ public class CustomDdlServiceTest extends AbstractServiceTest
                 PARTITION_KEY);
 
         // Create a custom DDL.
-        CustomDdl resultCustomDdl = customDdlService.createCustomDdl(
-            createCustomDdlCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME, TEST_DDL));
+        CustomDdl resultCustomDdl = customDdlService.createCustomDdl(customDdlServiceTestHelper
+            .createCustomDdlCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME, TEST_DDL));
 
         // Validate the returned object.
-        validateCustomDdl(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME, TEST_DDL, resultCustomDdl);
+        customDdlServiceTestHelper
+            .validateCustomDdl(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME, TEST_DDL,
+                resultCustomDdl);
     }
 
     @Test
@@ -60,8 +62,8 @@ public class CustomDdlServiceTest extends AbstractServiceTest
         // Try to create a custom DDL instance when business object definition name is not specified.
         try
         {
-            customDdlService.createCustomDdl(
-                createCustomDdlCreateRequest(NAMESPACE, BLANK_TEXT, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME, TEST_DDL));
+            customDdlService.createCustomDdl(customDdlServiceTestHelper
+                .createCustomDdlCreateRequest(NAMESPACE, BLANK_TEXT, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME, TEST_DDL));
             fail("Should throw an IllegalArgumentException when business object definition name is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -72,8 +74,8 @@ public class CustomDdlServiceTest extends AbstractServiceTest
         // Try to create a custom DDL instance when business object format usage is not specified.
         try
         {
-            customDdlService.createCustomDdl(
-                createCustomDdlCreateRequest(NAMESPACE, BDEF_NAME, BLANK_TEXT, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME, TEST_DDL));
+            customDdlService.createCustomDdl(customDdlServiceTestHelper
+                .createCustomDdlCreateRequest(NAMESPACE, BDEF_NAME, BLANK_TEXT, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME, TEST_DDL));
             fail("Should throw an IllegalArgumentException when business object format usage is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -84,8 +86,8 @@ public class CustomDdlServiceTest extends AbstractServiceTest
         // Try to create a custom DDL instance when business object format file type is not specified.
         try
         {
-            customDdlService
-                .createCustomDdl(createCustomDdlCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, BLANK_TEXT, FORMAT_VERSION, CUSTOM_DDL_NAME, TEST_DDL));
+            customDdlService.createCustomDdl(customDdlServiceTestHelper
+                .createCustomDdlCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, BLANK_TEXT, FORMAT_VERSION, CUSTOM_DDL_NAME, TEST_DDL));
             fail("Should throw an IllegalArgumentException when business object format file type is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -96,8 +98,8 @@ public class CustomDdlServiceTest extends AbstractServiceTest
         // Try to create a custom DDL instance when business object format version is not specified.
         try
         {
-            customDdlService
-                .createCustomDdl(createCustomDdlCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null, CUSTOM_DDL_NAME, TEST_DDL));
+            customDdlService.createCustomDdl(customDdlServiceTestHelper
+                .createCustomDdlCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null, CUSTOM_DDL_NAME, TEST_DDL));
             fail("Should throw an IllegalArgumentException when business object format version is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -108,8 +110,8 @@ public class CustomDdlServiceTest extends AbstractServiceTest
         // Try to create a custom DDL instance when custom DDL name is not specified.
         try
         {
-            customDdlService.createCustomDdl(
-                createCustomDdlCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, BLANK_TEXT, TEST_DDL));
+            customDdlService.createCustomDdl(customDdlServiceTestHelper
+                .createCustomDdlCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, BLANK_TEXT, TEST_DDL));
             fail("Should throw an IllegalArgumentException when custom DDL name is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -120,8 +122,8 @@ public class CustomDdlServiceTest extends AbstractServiceTest
         // Try to create a custom DDL instance when custom DDL is not specified.
         try
         {
-            customDdlService.createCustomDdl(
-                createCustomDdlCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME, BLANK_TEXT));
+            customDdlService.createCustomDdl(customDdlServiceTestHelper
+                .createCustomDdlCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME, BLANK_TEXT));
             fail("Should throw an IllegalArgumentException when custom DDL is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -139,12 +141,14 @@ public class CustomDdlServiceTest extends AbstractServiceTest
                 PARTITION_KEY);
 
         // Create a custom DDL using input parameters with leading and trailing empty spaces.
-        CustomDdl resultCustomDdl = customDdlService.createCustomDdl(
-            createCustomDdlCreateRequest(addWhitespace(NAMESPACE), addWhitespace(BDEF_NAME), addWhitespace(FORMAT_USAGE_CODE),
+        CustomDdl resultCustomDdl = customDdlService.createCustomDdl(customDdlServiceTestHelper
+            .createCustomDdlCreateRequest(addWhitespace(NAMESPACE), addWhitespace(BDEF_NAME), addWhitespace(FORMAT_USAGE_CODE),
                 addWhitespace(FORMAT_FILE_TYPE_CODE), FORMAT_VERSION, addWhitespace(CUSTOM_DDL_NAME), addWhitespace(TEST_DDL)));
 
         // Validate the returned object.
-        validateCustomDdl(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME, TEST_DDL, resultCustomDdl);
+        customDdlServiceTestHelper
+            .validateCustomDdl(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME, TEST_DDL,
+                resultCustomDdl);
     }
 
     @Test
@@ -155,13 +159,14 @@ public class CustomDdlServiceTest extends AbstractServiceTest
             FORMAT_FILE_TYPE_CODE.toLowerCase(), FORMAT_VERSION, FORMAT_DESCRIPTION.toLowerCase(), true, PARTITION_KEY.toLowerCase());
 
         // Create a custom DDL using upper case input parameters.
-        CustomDdl resultCustomDdl = customDdlService.createCustomDdl(
-            createCustomDdlCreateRequest(NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(), FORMAT_FILE_TYPE_CODE.toUpperCase(),
-                FORMAT_VERSION, CUSTOM_DDL_NAME.toUpperCase(), TEST_DDL.toUpperCase()));
+        CustomDdl resultCustomDdl = customDdlService.createCustomDdl(customDdlServiceTestHelper
+            .createCustomDdlCreateRequest(NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(),
+                FORMAT_FILE_TYPE_CODE.toUpperCase(), FORMAT_VERSION, CUSTOM_DDL_NAME.toUpperCase(), TEST_DDL.toUpperCase()));
 
         // Validate the returned object.
-        validateCustomDdl(null, NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(), FORMAT_FILE_TYPE_CODE.toLowerCase(),
-            FORMAT_VERSION, CUSTOM_DDL_NAME.toUpperCase(), TEST_DDL.toUpperCase(), resultCustomDdl);
+        customDdlServiceTestHelper
+            .validateCustomDdl(null, NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(), FORMAT_FILE_TYPE_CODE.toLowerCase(),
+                FORMAT_VERSION, CUSTOM_DDL_NAME.toUpperCase(), TEST_DDL.toUpperCase(), resultCustomDdl);
     }
 
     @Test
@@ -172,13 +177,14 @@ public class CustomDdlServiceTest extends AbstractServiceTest
             FORMAT_FILE_TYPE_CODE.toUpperCase(), FORMAT_VERSION, FORMAT_DESCRIPTION.toUpperCase(), true, PARTITION_KEY.toUpperCase());
 
         // Create a custom DDL using lower case input parameters.
-        CustomDdl resultCustomDdl = customDdlService.createCustomDdl(
-            createCustomDdlCreateRequest(NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(), FORMAT_FILE_TYPE_CODE.toLowerCase(),
-                FORMAT_VERSION, CUSTOM_DDL_NAME.toLowerCase(), TEST_DDL.toLowerCase()));
+        CustomDdl resultCustomDdl = customDdlService.createCustomDdl(customDdlServiceTestHelper
+            .createCustomDdlCreateRequest(NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(),
+                FORMAT_FILE_TYPE_CODE.toLowerCase(), FORMAT_VERSION, CUSTOM_DDL_NAME.toLowerCase(), TEST_DDL.toLowerCase()));
 
         // Validate the returned object.
-        validateCustomDdl(null, NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(), FORMAT_FILE_TYPE_CODE.toUpperCase(),
-            FORMAT_VERSION, CUSTOM_DDL_NAME.toLowerCase(), TEST_DDL.toLowerCase(), resultCustomDdl);
+        customDdlServiceTestHelper
+            .validateCustomDdl(null, NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(), FORMAT_FILE_TYPE_CODE.toUpperCase(),
+                FORMAT_VERSION, CUSTOM_DDL_NAME.toLowerCase(), TEST_DDL.toLowerCase(), resultCustomDdl);
     }
 
     @Test
@@ -187,8 +193,8 @@ public class CustomDdlServiceTest extends AbstractServiceTest
         // Try to create a custom DDL instance when namespace contains a forward slash character.
         try
         {
-            customDdlService.createCustomDdl(
-                createCustomDdlCreateRequest(addSlash(NAMESPACE), BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME,
+            customDdlService.createCustomDdl(customDdlServiceTestHelper
+                .createCustomDdlCreateRequest(addSlash(NAMESPACE), BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME,
                     TEST_DDL));
             fail("Should throw an IllegalArgumentException when namespace contains a forward slash character.");
         }
@@ -200,8 +206,8 @@ public class CustomDdlServiceTest extends AbstractServiceTest
         // Try to create a custom DDL instance when business object definition name contains a forward slash character.
         try
         {
-            customDdlService.createCustomDdl(
-                createCustomDdlCreateRequest(NAMESPACE, addSlash(BDEF_NAME), FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME,
+            customDdlService.createCustomDdl(customDdlServiceTestHelper
+                .createCustomDdlCreateRequest(NAMESPACE, addSlash(BDEF_NAME), FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME,
                     TEST_DDL));
             fail("Should throw an IllegalArgumentException when business object definition name contains a forward slash character.");
         }
@@ -213,8 +219,8 @@ public class CustomDdlServiceTest extends AbstractServiceTest
         // Try to create a custom DDL instance when business object format usage contains a forward slash character.
         try
         {
-            customDdlService.createCustomDdl(
-                createCustomDdlCreateRequest(NAMESPACE, BDEF_NAME, addSlash(FORMAT_USAGE_CODE), FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME,
+            customDdlService.createCustomDdl(customDdlServiceTestHelper
+                .createCustomDdlCreateRequest(NAMESPACE, BDEF_NAME, addSlash(FORMAT_USAGE_CODE), FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME,
                     TEST_DDL));
             fail("Should throw an IllegalArgumentException when business object format usage contains a forward slash character.");
         }
@@ -226,8 +232,8 @@ public class CustomDdlServiceTest extends AbstractServiceTest
         // Try to create a custom DDL instance when business object format file type contains a forward slash character.
         try
         {
-            customDdlService.createCustomDdl(
-                createCustomDdlCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, addSlash(FORMAT_FILE_TYPE_CODE), FORMAT_VERSION, CUSTOM_DDL_NAME,
+            customDdlService.createCustomDdl(customDdlServiceTestHelper
+                .createCustomDdlCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, addSlash(FORMAT_FILE_TYPE_CODE), FORMAT_VERSION, CUSTOM_DDL_NAME,
                     TEST_DDL));
             fail("Should throw an IllegalArgumentException when business object format file type contains a forward slash character.");
         }
@@ -239,8 +245,8 @@ public class CustomDdlServiceTest extends AbstractServiceTest
         // Try to create a custom DDL instance when custom DDL name contains a forward slash character.
         try
         {
-            customDdlService.createCustomDdl(
-                createCustomDdlCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, addSlash(CUSTOM_DDL_NAME),
+            customDdlService.createCustomDdl(customDdlServiceTestHelper
+                .createCustomDdlCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, addSlash(CUSTOM_DDL_NAME),
                     TEST_DDL));
             fail("Should throw an IllegalArgumentException when custom DDL name contains a forward slash character.");
         }
@@ -256,13 +262,14 @@ public class CustomDdlServiceTest extends AbstractServiceTest
         // Try to create a custom DDL instance using non-existing business object format.
         try
         {
-            customDdlService.createCustomDdl(
-                createCustomDdlCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME, TEST_DDL));
+            customDdlService.createCustomDdl(customDdlServiceTestHelper
+                .createCustomDdlCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME, TEST_DDL));
             fail("Should throw an ObjectNotFoundException when business object format does not exist.");
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(getExpectedBusinessObjectFormatNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION),
+            assertEquals(businessObjectFormatServiceTestHelper
+                .getExpectedBusinessObjectFormatNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION),
                 e.getMessage());
         }
     }
@@ -277,8 +284,8 @@ public class CustomDdlServiceTest extends AbstractServiceTest
         // Try to create a duplicate custom DDL instance (uses the same custom DDL name).
         try
         {
-            customDdlService.createCustomDdl(
-                createCustomDdlCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME.toLowerCase(),
+            customDdlService.createCustomDdl(customDdlServiceTestHelper
+                .createCustomDdlCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME.toLowerCase(),
                     TEST_DDL_2));
             fail("Should throw an AlreadyExistsException when custom DDL already exists.");
         }
@@ -303,8 +310,9 @@ public class CustomDdlServiceTest extends AbstractServiceTest
             customDdlService.getCustomDdl(new CustomDdlKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME));
 
         // Validate the returned object.
-        validateCustomDdl(customDdlEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME, TEST_DDL,
-            resultCustomDdl);
+        customDdlServiceTestHelper
+            .validateCustomDdl(customDdlEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME,
+                TEST_DDL, resultCustomDdl);
     }
 
     @Test
@@ -379,8 +387,9 @@ public class CustomDdlServiceTest extends AbstractServiceTest
                 FORMAT_VERSION, addWhitespace(CUSTOM_DDL_NAME)));
 
         // Validate the returned object.
-        validateCustomDdl(customDdlEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME, TEST_DDL,
-            resultCustomDdl);
+        customDdlServiceTestHelper
+            .validateCustomDdl(customDdlEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME,
+                TEST_DDL, resultCustomDdl);
     }
 
     @Test
@@ -397,7 +406,7 @@ public class CustomDdlServiceTest extends AbstractServiceTest
                 FORMAT_VERSION, CUSTOM_DDL_NAME.toUpperCase()));
 
         // Validate the returned object.
-        validateCustomDdl(customDdlEntity.getId(), NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(),
+        customDdlServiceTestHelper.validateCustomDdl(customDdlEntity.getId(), NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(),
             FORMAT_FILE_TYPE_CODE.toLowerCase(), FORMAT_VERSION, CUSTOM_DDL_NAME.toLowerCase(), TEST_DDL.toLowerCase(), resultCustomDdl);
     }
 
@@ -415,7 +424,7 @@ public class CustomDdlServiceTest extends AbstractServiceTest
                 FORMAT_VERSION, CUSTOM_DDL_NAME.toLowerCase()));
 
         // Validate the returned object.
-        validateCustomDdl(customDdlEntity.getId(), NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(),
+        customDdlServiceTestHelper.validateCustomDdl(customDdlEntity.getId(), NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(),
             FORMAT_FILE_TYPE_CODE.toUpperCase(), FORMAT_VERSION, CUSTOM_DDL_NAME.toUpperCase(), TEST_DDL.toUpperCase(), resultCustomDdl);
     }
 
@@ -610,7 +619,8 @@ public class CustomDdlServiceTest extends AbstractServiceTest
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(getExpectedBusinessObjectFormatNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION),
+            assertEquals(businessObjectFormatServiceTestHelper
+                .getExpectedBusinessObjectFormatNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION),
                 e.getMessage());
         }
     }
@@ -642,11 +652,12 @@ public class CustomDdlServiceTest extends AbstractServiceTest
         // Update the custom DDL.
         CustomDdl updatedCustomDdl = customDdlService
             .updateCustomDdl(new CustomDdlKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME),
-                createCustomDdlUpdateRequest(TEST_DDL_2));
+                customDdlServiceTestHelper.createCustomDdlUpdateRequest(TEST_DDL_2));
 
         // Validate the returned object.
-        validateCustomDdl(customDdlEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME, TEST_DDL_2,
-            updatedCustomDdl);
+        customDdlServiceTestHelper
+            .validateCustomDdl(customDdlEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME,
+                TEST_DDL_2, updatedCustomDdl);
     }
 
     @Test
@@ -656,7 +667,7 @@ public class CustomDdlServiceTest extends AbstractServiceTest
         try
         {
             customDdlService.updateCustomDdl(new CustomDdlKey(NAMESPACE, BLANK_TEXT, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME),
-                createCustomDdlUpdateRequest(TEST_DDL));
+                customDdlServiceTestHelper.createCustomDdlUpdateRequest(TEST_DDL));
             fail("Should throw an IllegalArgumentException when business object definition name is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -668,7 +679,7 @@ public class CustomDdlServiceTest extends AbstractServiceTest
         try
         {
             customDdlService.updateCustomDdl(new CustomDdlKey(NAMESPACE, BDEF_NAME, BLANK_TEXT, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME),
-                createCustomDdlUpdateRequest(TEST_DDL));
+                customDdlServiceTestHelper.createCustomDdlUpdateRequest(TEST_DDL));
             fail("Should throw an IllegalArgumentException when business object format usage is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -680,7 +691,7 @@ public class CustomDdlServiceTest extends AbstractServiceTest
         try
         {
             customDdlService.updateCustomDdl(new CustomDdlKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, BLANK_TEXT, FORMAT_VERSION, CUSTOM_DDL_NAME),
-                createCustomDdlUpdateRequest(TEST_DDL));
+                customDdlServiceTestHelper.createCustomDdlUpdateRequest(TEST_DDL));
             fail("Should throw an IllegalArgumentException when business object format file type is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -692,7 +703,7 @@ public class CustomDdlServiceTest extends AbstractServiceTest
         try
         {
             customDdlService.updateCustomDdl(new CustomDdlKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null, CUSTOM_DDL_NAME),
-                createCustomDdlUpdateRequest(TEST_DDL));
+                customDdlServiceTestHelper.createCustomDdlUpdateRequest(TEST_DDL));
             fail("Should throw an IllegalArgumentException when business object format version is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -704,7 +715,7 @@ public class CustomDdlServiceTest extends AbstractServiceTest
         try
         {
             customDdlService.updateCustomDdl(new CustomDdlKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, BLANK_TEXT),
-                createCustomDdlUpdateRequest(TEST_DDL));
+                customDdlServiceTestHelper.createCustomDdlUpdateRequest(TEST_DDL));
             fail("Should throw an IllegalArgumentException when custom DDL name is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -716,7 +727,7 @@ public class CustomDdlServiceTest extends AbstractServiceTest
         try
         {
             customDdlService.updateCustomDdl(new CustomDdlKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME),
-                createCustomDdlUpdateRequest(BLANK_TEXT));
+                customDdlServiceTestHelper.createCustomDdlUpdateRequest(BLANK_TEXT));
             fail("Should throw an IllegalArgumentException when custom DDL is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -735,11 +746,12 @@ public class CustomDdlServiceTest extends AbstractServiceTest
         // Update the custom DDL using input parameters with leading and trailing empty spaces.
         CustomDdl updatedCustomDdl = customDdlService.updateCustomDdl(
             new CustomDdlKey(addWhitespace(NAMESPACE), addWhitespace(BDEF_NAME), addWhitespace(FORMAT_USAGE_CODE), addWhitespace(FORMAT_FILE_TYPE_CODE),
-                FORMAT_VERSION, addWhitespace(CUSTOM_DDL_NAME)), createCustomDdlUpdateRequest(addWhitespace(TEST_DDL_2)));
+                FORMAT_VERSION, addWhitespace(CUSTOM_DDL_NAME)), customDdlServiceTestHelper.createCustomDdlUpdateRequest(addWhitespace(TEST_DDL_2)));
 
         // Validate the returned object.
-        validateCustomDdl(customDdlEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME, TEST_DDL_2,
-            updatedCustomDdl);
+        customDdlServiceTestHelper
+            .validateCustomDdl(customDdlEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME,
+                TEST_DDL_2, updatedCustomDdl);
     }
 
     @Test
@@ -753,10 +765,10 @@ public class CustomDdlServiceTest extends AbstractServiceTest
         // Update the custom DDL using upper case input parameters.
         CustomDdl updatedCustomDdl = customDdlService.updateCustomDdl(
             new CustomDdlKey(NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(), FORMAT_FILE_TYPE_CODE.toUpperCase(),
-                FORMAT_VERSION, CUSTOM_DDL_NAME.toUpperCase()), createCustomDdlUpdateRequest(TEST_DDL_2.toUpperCase()));
+                FORMAT_VERSION, CUSTOM_DDL_NAME.toUpperCase()), customDdlServiceTestHelper.createCustomDdlUpdateRequest(TEST_DDL_2.toUpperCase()));
 
         // Validate the returned object.
-        validateCustomDdl(customDdlEntity.getId(), NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(),
+        customDdlServiceTestHelper.validateCustomDdl(customDdlEntity.getId(), NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(),
             FORMAT_FILE_TYPE_CODE.toLowerCase(), FORMAT_VERSION, CUSTOM_DDL_NAME.toLowerCase(), TEST_DDL_2.toUpperCase(), updatedCustomDdl);
     }
 
@@ -771,10 +783,10 @@ public class CustomDdlServiceTest extends AbstractServiceTest
         // Update the custom DDL using lower case input parameters.
         CustomDdl updatedCustomDdl = customDdlService.updateCustomDdl(
             new CustomDdlKey(NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(), FORMAT_FILE_TYPE_CODE.toLowerCase(),
-                FORMAT_VERSION, CUSTOM_DDL_NAME.toLowerCase()), createCustomDdlUpdateRequest(TEST_DDL_2.toLowerCase()));
+                FORMAT_VERSION, CUSTOM_DDL_NAME.toLowerCase()), customDdlServiceTestHelper.createCustomDdlUpdateRequest(TEST_DDL_2.toLowerCase()));
 
         // Validate the returned object.
-        validateCustomDdl(customDdlEntity.getId(), NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(),
+        customDdlServiceTestHelper.validateCustomDdl(customDdlEntity.getId(), NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(),
             FORMAT_FILE_TYPE_CODE.toUpperCase(), FORMAT_VERSION, CUSTOM_DDL_NAME.toUpperCase(), TEST_DDL_2.toLowerCase(), updatedCustomDdl);
     }
 
@@ -785,7 +797,7 @@ public class CustomDdlServiceTest extends AbstractServiceTest
         try
         {
             customDdlService.updateCustomDdl(new CustomDdlKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME),
-                createCustomDdlUpdateRequest(TEST_DDL));
+                customDdlServiceTestHelper.createCustomDdlUpdateRequest(TEST_DDL));
             fail("Should throw an ObjectNotFoundException when custom DDL does not exist.");
         }
         catch (ObjectNotFoundException e)
@@ -812,8 +824,9 @@ public class CustomDdlServiceTest extends AbstractServiceTest
             customDdlService.deleteCustomDdl(new CustomDdlKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME));
 
         // Validate the returned object.
-        validateCustomDdl(customDdlEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME, TEST_DDL,
-            deletedCustomDdl);
+        customDdlServiceTestHelper
+            .validateCustomDdl(customDdlEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME,
+                TEST_DDL, deletedCustomDdl);
 
         // Ensure that this custom DDL is no longer there.
         assertNull(customDdlDao.getCustomDdlByKey(customDdlKey));
@@ -896,8 +909,9 @@ public class CustomDdlServiceTest extends AbstractServiceTest
                 FORMAT_VERSION, addWhitespace(CUSTOM_DDL_NAME)));
 
         // Validate the returned object.
-        validateCustomDdl(customDdlEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME, TEST_DDL,
-            deletedCustomDdl);
+        customDdlServiceTestHelper
+            .validateCustomDdl(customDdlEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME,
+                TEST_DDL, deletedCustomDdl);
 
         // Ensure that this custom DDL is no longer there.
         assertNull(customDdlDao.getCustomDdlByKey(customDdlKey));
@@ -923,7 +937,7 @@ public class CustomDdlServiceTest extends AbstractServiceTest
                 FORMAT_VERSION, CUSTOM_DDL_NAME.toUpperCase()));
 
         // Validate the returned object.
-        validateCustomDdl(customDdlEntity.getId(), NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(),
+        customDdlServiceTestHelper.validateCustomDdl(customDdlEntity.getId(), NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(),
             FORMAT_FILE_TYPE_CODE.toLowerCase(), FORMAT_VERSION, CUSTOM_DDL_NAME.toLowerCase(), TEST_DDL.toLowerCase(), deletedCustomDdl);
 
         // Ensure that this custom DDL is no longer there.
@@ -950,7 +964,7 @@ public class CustomDdlServiceTest extends AbstractServiceTest
                 FORMAT_VERSION, CUSTOM_DDL_NAME.toLowerCase()));
 
         // Validate the returned object.
-        validateCustomDdl(customDdlEntity.getId(), NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(),
+        customDdlServiceTestHelper.validateCustomDdl(customDdlEntity.getId(), NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(),
             FORMAT_FILE_TYPE_CODE.toUpperCase(), FORMAT_VERSION, CUSTOM_DDL_NAME.toUpperCase(), TEST_DDL.toUpperCase(), deletedCustomDdl);
 
         // Ensure that this custom DDL is no longer there.

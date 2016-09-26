@@ -22,6 +22,7 @@ import org.junit.Test;
 import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredResponse;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
+import org.finra.herd.model.jpa.StorageEntity;
 
 public class BusinessObjectDataRestControllerInvalidateUnregisteredBusinessObjectDataTest extends AbstractRestTest
 {
@@ -29,21 +30,23 @@ public class BusinessObjectDataRestControllerInvalidateUnregisteredBusinessObjec
     public void test()
     {
         BusinessObjectDataInvalidateUnregisteredRequest businessObjectDataInvalidateUnregisteredRequest =
-            getDefaultBusinessObjectDataInvalidateUnregisteredRequest();
-        BusinessObjectFormatEntity businessObjectFormatEntity = createBusinessObjectFormat(businessObjectDataInvalidateUnregisteredRequest);
-        createS3Object(businessObjectFormatEntity, businessObjectDataInvalidateUnregisteredRequest, 0);
-        BusinessObjectDataInvalidateUnregisteredResponse businessObjectDataInvalidateUnregisteredResponse = businessObjectDataRestController
-            .invalidateUnregisteredBusinessObjectData(businessObjectDataInvalidateUnregisteredRequest);
+            new BusinessObjectDataInvalidateUnregisteredRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, StorageEntity.MANAGED_STORAGE);
+        BusinessObjectFormatEntity businessObjectFormatEntity =
+            businessObjectFormatServiceTestHelper.createBusinessObjectFormat(businessObjectDataInvalidateUnregisteredRequest);
+        businessObjectDataServiceTestHelper.createS3Object(businessObjectFormatEntity, businessObjectDataInvalidateUnregisteredRequest, 0);
+        BusinessObjectDataInvalidateUnregisteredResponse businessObjectDataInvalidateUnregisteredResponse =
+            businessObjectDataRestController.invalidateUnregisteredBusinessObjectData(businessObjectDataInvalidateUnregisteredRequest);
 
         assertEquals(businessObjectDataInvalidateUnregisteredRequest.getNamespace(), businessObjectDataInvalidateUnregisteredResponse.getNamespace());
-        assertEquals(businessObjectDataInvalidateUnregisteredRequest.getBusinessObjectDefinitionName(), businessObjectDataInvalidateUnregisteredResponse
-            .getBusinessObjectDefinitionName());
-        assertEquals(businessObjectDataInvalidateUnregisteredRequest.getBusinessObjectFormatUsage(), businessObjectDataInvalidateUnregisteredResponse
-            .getBusinessObjectFormatUsage());
-        assertEquals(businessObjectDataInvalidateUnregisteredRequest.getBusinessObjectFormatFileType(), businessObjectDataInvalidateUnregisteredResponse
-            .getBusinessObjectFormatFileType());
-        assertEquals(businessObjectDataInvalidateUnregisteredRequest.getBusinessObjectFormatVersion(), businessObjectDataInvalidateUnregisteredResponse
-            .getBusinessObjectFormatVersion());
+        assertEquals(businessObjectDataInvalidateUnregisteredRequest.getBusinessObjectDefinitionName(),
+            businessObjectDataInvalidateUnregisteredResponse.getBusinessObjectDefinitionName());
+        assertEquals(businessObjectDataInvalidateUnregisteredRequest.getBusinessObjectFormatUsage(),
+            businessObjectDataInvalidateUnregisteredResponse.getBusinessObjectFormatUsage());
+        assertEquals(businessObjectDataInvalidateUnregisteredRequest.getBusinessObjectFormatFileType(),
+            businessObjectDataInvalidateUnregisteredResponse.getBusinessObjectFormatFileType());
+        assertEquals(businessObjectDataInvalidateUnregisteredRequest.getBusinessObjectFormatVersion(),
+            businessObjectDataInvalidateUnregisteredResponse.getBusinessObjectFormatVersion());
         assertEquals(businessObjectDataInvalidateUnregisteredRequest.getPartitionValue(), businessObjectDataInvalidateUnregisteredResponse.getPartitionValue());
         assertEquals(businessObjectDataInvalidateUnregisteredRequest.getStorageName(), businessObjectDataInvalidateUnregisteredResponse.getStorageName());
         assertEquals(1, businessObjectDataInvalidateUnregisteredResponse.getRegisteredBusinessObjectDataList().size());

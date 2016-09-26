@@ -19,8 +19,14 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.PutObjectRequest;
+import org.fusesource.hawtbuf.ByteArrayInputStream;
+import org.junit.Assert;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import org.finra.herd.dao.impl.MockJdbcOperations;
-import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.api.xml.JdbcExecutionRequest;
 import org.finra.herd.model.api.xml.JdbcExecutionResponse;
 import org.finra.herd.model.api.xml.JdbcStatement;
@@ -28,18 +34,16 @@ import org.finra.herd.model.api.xml.JdbcStatementResultSetRow;
 import org.finra.herd.model.api.xml.JdbcStatementStatus;
 import org.finra.herd.model.api.xml.JdbcStatementType;
 import org.finra.herd.model.api.xml.S3PropertiesLocation;
-import org.fusesource.hawtbuf.ByteArrayInputStream;
-import org.junit.Assert;
-import org.junit.Test;
-
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.PutObjectRequest;
+import org.finra.herd.model.dto.ConfigurationValue;
 
 /**
  * Test cases for {@link org.finra.herd.service.JdbcService}
  */
 public class JdbcServiceTest extends AbstractServiceTest
 {
+    @Autowired
+    private JdbcServiceTestHelper jdbcServiceTestHelper;
+
     /**
      * Use case where a single successful statement is executed.
      */
@@ -47,7 +51,7 @@ public class JdbcServiceTest extends AbstractServiceTest
     public void testExecuteJdbcStatementSuccess()
     {
         // Get test request
-        JdbcExecutionRequest jdbcExecutionRequest = createDefaultUpdateJdbcExecutionRequest();
+        JdbcExecutionRequest jdbcExecutionRequest = jdbcServiceTestHelper.createDefaultUpdateJdbcExecutionRequest();
 
         // Execute
         JdbcExecutionResponse jdbcExecutionResponse = jdbcService.executeJdbc(jdbcExecutionRequest);
@@ -67,16 +71,14 @@ public class JdbcServiceTest extends AbstractServiceTest
     }
 
     /**
-     * Use case where 3 statements are requested to be executed, but the 2nd is erroneous.
-     * The first statement should result in SUCCESS.
-     * The second should result in ERROR, with appropriate result message.
-     * The third should result in SKIPPED with no result.
+     * Use case where 3 statements are requested to be executed, but the 2nd is erroneous. The first statement should result in SUCCESS. The second should
+     * result in ERROR, with appropriate result message. The third should result in SKIPPED with no result.
      */
     @Test
     public void testExecuteJdbcStatementError()
     {
         // Create test request
-        JdbcExecutionRequest jdbcExecutionRequest = createDefaultUpdateJdbcExecutionRequest();
+        JdbcExecutionRequest jdbcExecutionRequest = jdbcServiceTestHelper.createDefaultUpdateJdbcExecutionRequest();
         // First statement already included
         // Second statement uses case 2 which throws an error
         jdbcExecutionRequest.getStatements().add(new JdbcStatement(JdbcStatementType.UPDATE, MockJdbcOperations.CASE_2_SQL, null, null, null, null, null));
@@ -97,8 +99,8 @@ public class JdbcServiceTest extends AbstractServiceTest
 
             Assert.assertEquals("JDBC statement [1] status", JdbcStatementStatus.ERROR, actualJdbcStatement.getStatus());
             Assert.assertNull("JDBC statement [1] result is not null", actualJdbcStatement.getResult());
-            Assert.assertEquals("JDBC statement [1] error message", "java.sql.SQLException: test DataIntegrityViolationException cause", actualJdbcStatement
-                .getErrorMessage());
+            Assert.assertEquals("JDBC statement [1] error message", "java.sql.SQLException: test DataIntegrityViolationException cause",
+                actualJdbcStatement.getErrorMessage());
         }
         {
             JdbcStatement actualJdbcStatement = jdbcExecutionResponse.getStatements().get(2);
@@ -109,14 +111,14 @@ public class JdbcServiceTest extends AbstractServiceTest
     }
 
     /**
-     * Test case where statements result in errors, but continue on error flag is set to true for those statements.
-     * The subsequent statements should continue executing.
+     * Test case where statements result in errors, but continue on error flag is set to true for those statements. The subsequent statements should continue
+     * executing.
      */
     @Test
     public void testExecuteJdbcStatementErrorContinueOnError()
     {
         // Create test request
-        JdbcExecutionRequest jdbcExecutionRequest = createDefaultUpdateJdbcExecutionRequest();
+        JdbcExecutionRequest jdbcExecutionRequest = jdbcServiceTestHelper.createDefaultUpdateJdbcExecutionRequest();
         // First statement already included
         // Second statement uses case 2 which throws an error
         jdbcExecutionRequest.getStatements().add(new JdbcStatement(JdbcStatementType.UPDATE, MockJdbcOperations.CASE_2_SQL, true, null, null, null, null));
@@ -139,8 +141,8 @@ public class JdbcServiceTest extends AbstractServiceTest
             Assert.assertEquals("JDBC statement [1] continue on error", expectedJdbcStatement.isContinueOnError(), actualJdbcStatement.isContinueOnError());
             Assert.assertEquals("JDBC statement [1] status", JdbcStatementStatus.ERROR, actualJdbcStatement.getStatus());
             Assert.assertNull("JDBC statement [1] result is not null", actualJdbcStatement.getResult());
-            Assert.assertEquals("JDBC statement [1] error message", "java.sql.SQLException: test DataIntegrityViolationException cause", actualJdbcStatement
-                .getErrorMessage());
+            Assert.assertEquals("JDBC statement [1] error message", "java.sql.SQLException: test DataIntegrityViolationException cause",
+                actualJdbcStatement.getErrorMessage());
         }
         {
             JdbcStatement expectedJdbcStatement = jdbcExecutionResponse.getStatements().get(2);
@@ -158,7 +160,7 @@ public class JdbcServiceTest extends AbstractServiceTest
     public void testExecuteJdbcStatementTypeQuerySuccess()
     {
         // Get test request
-        JdbcExecutionRequest jdbcExecutionRequest = createDefaultQueryJdbcExecutionRequest();
+        JdbcExecutionRequest jdbcExecutionRequest = jdbcServiceTestHelper.createDefaultQueryJdbcExecutionRequest();
         JdbcStatement expectedJdbcStatement = jdbcExecutionRequest.getStatements().get(0);
 
         JdbcExecutionResponse jdbcExecutionResponse = jdbcService.executeJdbc(jdbcExecutionRequest);
@@ -173,8 +175,8 @@ public class JdbcServiceTest extends AbstractServiceTest
         Assert.assertEquals("JDBC statement type", expectedJdbcStatement.getType(), actualJdbcStatement.getType());
         Assert.assertNotNull("JDBC statement result set is null", actualJdbcStatement.getResultSet());
         Assert.assertNotNull("JDBC statement result set column names is null", actualJdbcStatement.getResultSet().getColumnNames());
-        Assert.assertEquals("JDBC statement result set column names", Arrays.asList("COL1", "COL2", "COL3"), actualJdbcStatement.getResultSet()
-            .getColumnNames());
+        Assert
+            .assertEquals("JDBC statement result set column names", Arrays.asList("COL1", "COL2", "COL3"), actualJdbcStatement.getResultSet().getColumnNames());
         Assert.assertNotNull("JDBC statement result set rows is null", actualJdbcStatement.getResultSet().getRows());
         Assert.assertEquals("JDBC statement result set rows size", 2, actualJdbcStatement.getResultSet().getRows().size());
         {
@@ -210,7 +212,7 @@ public class JdbcServiceTest extends AbstractServiceTest
         try
         {
             // Get test request
-            JdbcExecutionRequest jdbcExecutionRequest = createDefaultQueryJdbcExecutionRequest();
+            JdbcExecutionRequest jdbcExecutionRequest = jdbcServiceTestHelper.createDefaultQueryJdbcExecutionRequest();
 
             JdbcExecutionResponse jdbcExecutionResponse = jdbcService.executeJdbc(jdbcExecutionRequest);
 
@@ -230,13 +232,14 @@ public class JdbcServiceTest extends AbstractServiceTest
     }
 
     /**
-     * Test case where user specifies a QUERY statement type, but there are SQL errors. The status should be ERROR and no result set should exist in the result.
+     * Test case where user specifies a QUERY statement type, but there are SQL errors. The status should be ERROR and no result set should exist in the
+     * result.
      */
     @Test
     public void testExecuteJdbcStatementTypeQueryError()
     {
         // Get test request
-        JdbcExecutionRequest jdbcExecutionRequest = createDefaultQueryJdbcExecutionRequest();
+        JdbcExecutionRequest jdbcExecutionRequest = jdbcServiceTestHelper.createDefaultQueryJdbcExecutionRequest();
         JdbcStatement expectedJdbcStatement = jdbcExecutionRequest.getStatements().get(0);
         expectedJdbcStatement.setSql(MockJdbcOperations.CASE_2_SQL);
 
@@ -246,8 +249,8 @@ public class JdbcServiceTest extends AbstractServiceTest
 
         JdbcStatement actualJdbcStatement = jdbcExecutionResponse.getStatements().get(0);
         Assert.assertNotNull("JDBC statement error message", actualJdbcStatement.getErrorMessage());
-        Assert.assertEquals("JDBC statement error message", "java.sql.SQLException: test DataIntegrityViolationException cause", actualJdbcStatement
-            .getErrorMessage());
+        Assert.assertEquals("JDBC statement error message", "java.sql.SQLException: test DataIntegrityViolationException cause",
+            actualJdbcStatement.getErrorMessage());
         Assert.assertNull("JDBC statement result", actualJdbcStatement.getResult());
         Assert.assertEquals("JDBC statement status", JdbcStatementStatus.ERROR, actualJdbcStatement.getStatus());
         Assert.assertEquals("JDBC statement type", expectedJdbcStatement.getType(), actualJdbcStatement.getType());
@@ -279,7 +282,7 @@ public class JdbcServiceTest extends AbstractServiceTest
     @Test
     public void testExecuteJdbcParamValidationConnectionNull()
     {
-        JdbcExecutionRequest jdbcExecutionRequest = createDefaultUpdateJdbcExecutionRequest();
+        JdbcExecutionRequest jdbcExecutionRequest = jdbcServiceTestHelper.createDefaultUpdateJdbcExecutionRequest();
         jdbcExecutionRequest.setConnection(null);
 
         try
@@ -301,7 +304,7 @@ public class JdbcServiceTest extends AbstractServiceTest
     @Test
     public void testExecuteJdbcParamValidationConnectionUrlEmpty()
     {
-        JdbcExecutionRequest jdbcExecutionRequest = createDefaultUpdateJdbcExecutionRequest();
+        JdbcExecutionRequest jdbcExecutionRequest = jdbcServiceTestHelper.createDefaultUpdateJdbcExecutionRequest();
         jdbcExecutionRequest.getConnection().setUrl(" \t\n\r");
 
         try
@@ -318,13 +321,12 @@ public class JdbcServiceTest extends AbstractServiceTest
     }
 
     /**
-     * Parameter validation, request connection username is null.
-     * Username can be empty however, since some databases allow that.
+     * Parameter validation, request connection username is null. Username can be empty however, since some databases allow that.
      */
     @Test
     public void testExecuteJdbcParamValidationConnectionUsernameNull()
     {
-        JdbcExecutionRequest jdbcExecutionRequest = createDefaultUpdateJdbcExecutionRequest();
+        JdbcExecutionRequest jdbcExecutionRequest = jdbcServiceTestHelper.createDefaultUpdateJdbcExecutionRequest();
         jdbcExecutionRequest.getConnection().setUsername(null);
 
         try
@@ -341,13 +343,12 @@ public class JdbcServiceTest extends AbstractServiceTest
     }
 
     /**
-     * Parameter validation, request connection password is null.
-     * Password can be empty however, since some databases allow that.
+     * Parameter validation, request connection password is null. Password can be empty however, since some databases allow that.
      */
     @Test
     public void testExecuteJdbcParamValidationConnectionPasswordNull()
     {
-        JdbcExecutionRequest jdbcExecutionRequest = createDefaultUpdateJdbcExecutionRequest();
+        JdbcExecutionRequest jdbcExecutionRequest = jdbcServiceTestHelper.createDefaultUpdateJdbcExecutionRequest();
         jdbcExecutionRequest.getConnection().setPassword(null);
 
         try
@@ -369,7 +370,7 @@ public class JdbcServiceTest extends AbstractServiceTest
     @Test
     public void testExecuteJdbcParamValidationConnectionDatabaseTypeNull()
     {
-        JdbcExecutionRequest jdbcExecutionRequest = createDefaultUpdateJdbcExecutionRequest();
+        JdbcExecutionRequest jdbcExecutionRequest = jdbcServiceTestHelper.createDefaultUpdateJdbcExecutionRequest();
         jdbcExecutionRequest.getConnection().setDatabaseType(null);
 
         try
@@ -391,7 +392,7 @@ public class JdbcServiceTest extends AbstractServiceTest
     @Test
     public void testExecuteJdbcParamValidationStatementsNull()
     {
-        JdbcExecutionRequest jdbcExecutionRequest = createDefaultUpdateJdbcExecutionRequest();
+        JdbcExecutionRequest jdbcExecutionRequest = jdbcServiceTestHelper.createDefaultUpdateJdbcExecutionRequest();
         jdbcExecutionRequest.setStatements(null);
 
         try
@@ -432,7 +433,7 @@ public class JdbcServiceTest extends AbstractServiceTest
          * Add 1 more statement to the JDBC request.
          * The default request should already have 1 statement.
          */
-        JdbcExecutionRequest jdbcExecutionRequest = createDefaultUpdateJdbcExecutionRequest();
+        JdbcExecutionRequest jdbcExecutionRequest = jdbcServiceTestHelper.createDefaultUpdateJdbcExecutionRequest();
 
         try
         {
@@ -479,7 +480,7 @@ public class JdbcServiceTest extends AbstractServiceTest
          * Add 1 more statement to the JDBC request.
          * The default request should already have 1 statement.
          */
-        JdbcExecutionRequest jdbcExecutionRequest = createDefaultUpdateJdbcExecutionRequest();
+        JdbcExecutionRequest jdbcExecutionRequest = jdbcServiceTestHelper.createDefaultUpdateJdbcExecutionRequest();
         jdbcExecutionRequest.getStatements().add(new JdbcStatement());
 
         try
@@ -516,7 +517,7 @@ public class JdbcServiceTest extends AbstractServiceTest
     @Test
     public void testExecuteJdbcParamValidationStatementsEmpty()
     {
-        JdbcExecutionRequest jdbcExecutionRequest = createDefaultUpdateJdbcExecutionRequest();
+        JdbcExecutionRequest jdbcExecutionRequest = jdbcServiceTestHelper.createDefaultUpdateJdbcExecutionRequest();
         jdbcExecutionRequest.getStatements().clear();
 
         try
@@ -538,7 +539,7 @@ public class JdbcServiceTest extends AbstractServiceTest
     @Test
     public void testExecuteJdbcParamValidationStatementTypeNull()
     {
-        JdbcExecutionRequest jdbcExecutionRequest = createDefaultUpdateJdbcExecutionRequest();
+        JdbcExecutionRequest jdbcExecutionRequest = jdbcServiceTestHelper.createDefaultUpdateJdbcExecutionRequest();
         jdbcExecutionRequest.getStatements().get(0).setType(null);
 
         try
@@ -560,7 +561,7 @@ public class JdbcServiceTest extends AbstractServiceTest
     @Test
     public void testExecuteJdbcParamValidationStatementTypeSqlEmpty()
     {
-        JdbcExecutionRequest jdbcExecutionRequest = createDefaultUpdateJdbcExecutionRequest();
+        JdbcExecutionRequest jdbcExecutionRequest = jdbcServiceTestHelper.createDefaultUpdateJdbcExecutionRequest();
         jdbcExecutionRequest.getStatements().get(0).setSql(" \t\n\r");
 
         try
@@ -579,7 +580,7 @@ public class JdbcServiceTest extends AbstractServiceTest
     @Test
     public void testExecuteJdbcErrorConnection()
     {
-        JdbcExecutionRequest jdbcExecutionRequest = createDefaultUpdateJdbcExecutionRequest();
+        JdbcExecutionRequest jdbcExecutionRequest = jdbcServiceTestHelper.createDefaultUpdateJdbcExecutionRequest();
         jdbcExecutionRequest.getStatements().get(0).setSql(MockJdbcOperations.CASE_3_SQL);
 
         try
@@ -601,7 +602,7 @@ public class JdbcServiceTest extends AbstractServiceTest
     @Test
     public void testExecuteJdbcParamValidationS3PropertiesLocationBucketNameBlank()
     {
-        JdbcExecutionRequest jdbcExecutionRequest = createDefaultUpdateJdbcExecutionRequest();
+        JdbcExecutionRequest jdbcExecutionRequest = jdbcServiceTestHelper.createDefaultUpdateJdbcExecutionRequest();
         jdbcExecutionRequest.setS3PropertiesLocation(new S3PropertiesLocation(BLANK_TEXT, "test_key"));
 
         try
@@ -622,7 +623,7 @@ public class JdbcServiceTest extends AbstractServiceTest
     @Test
     public void testExecuteJdbcParamValidationS3PropertiesLocationKeyBlank()
     {
-        JdbcExecutionRequest jdbcExecutionRequest = createDefaultUpdateJdbcExecutionRequest();
+        JdbcExecutionRequest jdbcExecutionRequest = jdbcServiceTestHelper.createDefaultUpdateJdbcExecutionRequest();
         jdbcExecutionRequest.setS3PropertiesLocation(new S3PropertiesLocation("test_bucket", BLANK_TEXT));
 
         try
@@ -648,7 +649,7 @@ public class JdbcServiceTest extends AbstractServiceTest
         String content = "foo=";
         putS3Object(s3BucketName, s3ObjectKey, content);
 
-        JdbcExecutionRequest jdbcExecutionRequest = createDefaultUpdateJdbcExecutionRequest();
+        JdbcExecutionRequest jdbcExecutionRequest = jdbcServiceTestHelper.createDefaultUpdateJdbcExecutionRequest();
         jdbcExecutionRequest.getConnection().setUrl("${foo}");
         jdbcExecutionRequest.setS3PropertiesLocation(new S3PropertiesLocation(s3BucketName, s3ObjectKey));
 
@@ -675,7 +676,7 @@ public class JdbcServiceTest extends AbstractServiceTest
         String content = "foo=";
         putS3Object(s3BucketName, s3ObjectKey, content);
 
-        JdbcExecutionRequest jdbcExecutionRequest = createDefaultUpdateJdbcExecutionRequest();
+        JdbcExecutionRequest jdbcExecutionRequest = jdbcServiceTestHelper.createDefaultUpdateJdbcExecutionRequest();
         jdbcExecutionRequest.getStatements().get(0).setSql("${foo}");
         jdbcExecutionRequest.setS3PropertiesLocation(new S3PropertiesLocation(s3BucketName, s3ObjectKey));
 
@@ -692,9 +693,8 @@ public class JdbcServiceTest extends AbstractServiceTest
     }
 
     /**
-     * Execute JDBC using S3 properties file.
-     * Unfortunately, not many assertions that can be done through the service layer.
-     * Asserts that no errors are thrown, and that the response SQL does not expose the secrets.
+     * Execute JDBC using S3 properties file. Unfortunately, not many assertions that can be done through the service layer. Asserts that no errors are thrown,
+     * and that the response SQL does not expose the secrets.
      */
     @Test
     public void testExecuteJdbcWithS3PropertiesSuccess()
@@ -704,7 +704,7 @@ public class JdbcServiceTest extends AbstractServiceTest
         String content = "foo=bar";
         putS3Object(s3BucketName, s3ObjectKey, content);
 
-        JdbcExecutionRequest jdbcExecutionRequest = createDefaultUpdateJdbcExecutionRequest();
+        JdbcExecutionRequest jdbcExecutionRequest = jdbcServiceTestHelper.createDefaultUpdateJdbcExecutionRequest();
         jdbcExecutionRequest.getConnection().setUrl("test_url_${foo}");
         jdbcExecutionRequest.getConnection().setUsername("test_username_${foo}");
         jdbcExecutionRequest.getConnection().setPassword("test_password_${foo}");
@@ -725,9 +725,9 @@ public class JdbcServiceTest extends AbstractServiceTest
 
     /**
      * Some JDBC exception messages echoes back parts of the SQL statement. This is problem for security if some of the variables were replaced, and may
-     * accidentally expose secret information in the response error message.
-     * The application should mask any values given in the properties which exist in the exception message.
-     * 
+     * accidentally expose secret information in the response error message. The application should mask any values given in the properties which exist in the
+     * exception message.
+     * <p/>
      * This test will use a SQL that will throw an exception, and the exception message is known. Then asserts that the value has been replaced with a mask in
      * the response error message.
      */
@@ -739,22 +739,22 @@ public class JdbcServiceTest extends AbstractServiceTest
         String content = "foo=DataIntegrityViolationException";
         putS3Object(s3BucketName, s3ObjectKey, content);
 
-        JdbcExecutionRequest jdbcExecutionRequest = createDefaultUpdateJdbcExecutionRequest();
+        JdbcExecutionRequest jdbcExecutionRequest = jdbcServiceTestHelper.createDefaultUpdateJdbcExecutionRequest();
         jdbcExecutionRequest.getStatements().get(0).setSql(MockJdbcOperations.CASE_2_SQL);
         jdbcExecutionRequest.setS3PropertiesLocation(new S3PropertiesLocation(s3BucketName, s3ObjectKey));
 
         JdbcExecutionResponse jdbcExecutionResponse = jdbcService.executeJdbc(jdbcExecutionRequest);
 
-        Assert.assertEquals("jdbc execution response statement [0] error message", "java.sql.SQLException: test **** cause", jdbcExecutionResponse
-            .getStatements().get(0).getErrorMessage());
+        Assert.assertEquals("jdbc execution response statement [0] error message", "java.sql.SQLException: test **** cause",
+            jdbcExecutionResponse.getStatements().get(0).getErrorMessage());
     }
 
     /**
      * Puts an S3 object with the given parameters directly into S3.
-     * 
-     * @param s3BucketName
-     * @param s3ObjectKey
-     * @param content
+     *
+     * @param s3BucketName the S3 bucket name
+     * @param s3ObjectKey the S3 object key
+     * @param content the content of the S3 object
      */
     private void putS3Object(String s3BucketName, String s3ObjectKey, String content)
     {

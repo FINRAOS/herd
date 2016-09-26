@@ -47,7 +47,7 @@ public class BusinessObjectDataNotificationRegistrationRestControllerTest extend
         NotificationRegistrationKey businessObjectDataNotificationRegistrationKey = new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME);
 
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting();
+        notificationRegistrationServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting();
 
         // Create a business object data notification.
         BusinessObjectDataNotificationRegistration resultBusinessObjectDataNotificationRegistration = businessObjectDataNotificationRegistrationRestController
@@ -96,7 +96,7 @@ public class BusinessObjectDataNotificationRegistrationRestControllerTest extend
         NotificationRegistrationKey businessObjectDataNotificationRegistrationKey = new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME);
 
         // Create database entities required for testing.
-        createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting(NAMESPACE, Arrays
+        notificationRegistrationServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting(NAMESPACE, Arrays
             .asList(NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_STTS_CHG.name(),
                 NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_RGSTN.name()), BDEF_NAMESPACE_2, BDEF_NAME_2,
             Arrays.asList(FORMAT_FILE_TYPE_CODE, FORMAT_FILE_TYPE_CODE_2), Arrays.asList(STORAGE_NAME, STORAGE_NAME_2),

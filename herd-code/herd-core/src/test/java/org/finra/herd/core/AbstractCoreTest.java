@@ -75,8 +75,6 @@ public abstract class AbstractCoreTest
 
     public static final long ROW_COUNT_1000 = 1000L;
 
-    protected static Path localTempPath;
-
     @Autowired
     protected ApplicationContext appContext;
 
@@ -118,7 +116,7 @@ public abstract class AbstractCoreTest
      *
      * @see StringUtils#isEmpty(CharSequence)
      */
-    protected void assertEqualsIgnoreNullOrEmpty(String message, String expected, String actual)
+    public static void assertEqualsIgnoreNullOrEmpty(String message, String expected, String actual)
     {
         if (!StringUtils.isEmpty(expected) || !StringUtils.isEmpty(actual))
         {
@@ -134,7 +132,7 @@ public abstract class AbstractCoreTest
      * @param expected - expected collection
      * @param actual - actual collection
      */
-    protected void assertEqualsIgnoreOrder(String message, Collection<?> expected, Collection<?> actual)
+    public static void assertEqualsIgnoreOrder(String message, Collection<?> expected, Collection<?> actual)
     {
         if (expected != null && actual != null)
         {
@@ -149,26 +147,6 @@ public abstract class AbstractCoreTest
     }
 
     /**
-     * Asserts that the given value is strictly greater than the greaterThan value. Throws an AssertionError if the assertion fails.
-     *
-     * @param message Optional message added to the exception message
-     * @param value The value that must not be greater than "greaterThan"
-     * @param greaterThan The value which "value" must not be greater than
-     */
-    protected void assertGreaterThan(String message, long value, long greaterThan)
-    {
-        if (!(value > greaterThan))
-        {
-            String detailMessage = String.format("Expected greater than %s. Actual %s", greaterThan, value);
-            if (StringUtils.isNotBlank(message))
-            {
-                detailMessage = message + ". " + detailMessage;
-            }
-            throw new AssertionError(detailMessage);
-        }
-    }
-
-    /**
      * Creates a file of the specified size relative to the base directory.
      *
      * @param baseDirectory the local parent directory path, relative to which we want our file to be created
@@ -177,7 +155,7 @@ public abstract class AbstractCoreTest
      *
      * @return the created file
      */
-    protected File createLocalFile(String baseDirectory, String file, long size) throws IOException
+    public static File createLocalFile(String baseDirectory, String file, long size) throws IOException
     {
         Path filePath = Paths.get(baseDirectory, file);
         // We don't check the "mkdirs" response because the directory may already exist which would return false.

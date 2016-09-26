@@ -36,7 +36,8 @@ public class AddBusinessObjectDataStorageFilesTest extends HerdActivitiServiceTa
     @Test
     public void testAddBusinessObjectDataStorageFilesXml() throws Exception
     {
-        BusinessObjectDataStorageFilesCreateRequest businessObjectDataStorageFilesCreateRequest = getNewBusinessObjectDataStorageFilesCreateRequest();
+        BusinessObjectDataStorageFilesCreateRequest businessObjectDataStorageFilesCreateRequest =
+            businessObjectDataServiceTestHelper.getNewBusinessObjectDataStorageFilesCreateRequest();
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
 
@@ -57,7 +58,8 @@ public class AddBusinessObjectDataStorageFilesTest extends HerdActivitiServiceTa
     @Test
     public void testAddBusinessObjectDataStorageFilesJson() throws Exception
     {
-        BusinessObjectDataStorageFilesCreateRequest businessObjectDataStorageFilesCreateRequest = getNewBusinessObjectDataStorageFilesCreateRequest();
+        BusinessObjectDataStorageFilesCreateRequest businessObjectDataStorageFilesCreateRequest =
+            businessObjectDataServiceTestHelper.getNewBusinessObjectDataStorageFilesCreateRequest();
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
 
