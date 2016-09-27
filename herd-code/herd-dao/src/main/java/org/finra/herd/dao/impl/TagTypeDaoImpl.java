@@ -1,5 +1,5 @@
 /*
-* Copyright 2016 herd contributors
+* Copyright 2015 herd contributors
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -72,7 +72,7 @@ public class TagTypeDaoImpl extends AbstractHerdDao implements TagTypeDao
 
         // Get the columns.
         Path<String> tagTypeCodeColumn = tagTypeEntity.get(TagTypeEntity_.typeCode);
-        Path<String> tagTypeOrderColumn = tagTypeEntity.get(TagTypeEntity_.orderNumber);
+        Path<Integer> tagTypeOrderColumn = tagTypeEntity.get(TagTypeEntity_.orderNumber);
 
         // Add the select clause.
         criteria.select(tagTypeCodeColumn);
