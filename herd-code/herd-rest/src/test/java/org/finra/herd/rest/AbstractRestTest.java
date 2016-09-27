@@ -110,6 +110,9 @@ public abstract class AbstractRestTest extends AbstractUiTest
     protected SystemJobRestController systemJobRestController;
 
     @Autowired
+    protected TagTypeRestController tagTypeRestController;
+
+    @Autowired
     protected UploadDownloadRestController uploadDownloadRestController;
 
     @Autowired

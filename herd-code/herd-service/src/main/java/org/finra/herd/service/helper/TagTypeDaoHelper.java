@@ -21,6 +21,7 @@ import org.springframework.stereotype.Component;
 import org.finra.herd.dao.TagTypeDao;
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.ObjectNotFoundException;
+import org.finra.herd.model.api.xml.TagTypeKey;
 import org.finra.herd.model.jpa.TagTypeEntity;
 
 /**
@@ -35,18 +36,18 @@ public class TagTypeDaoHelper
     /**
      * Gets a tag type entity and ensure it exists.
      *
-     * @param tagTypeCode the tag type (case insensitive)
+     * @param tagTypeKey the tag type (case insensitive)
      *
      * @return the tag type entity
      * @throws ObjectNotFoundException if the tag type entity doesn't exist
      */
-    public TagTypeEntity getTagTypeEntity(String tagTypeCode) throws ObjectNotFoundException
+    public TagTypeEntity getTagTypeEntity(TagTypeKey tagTypeKey) throws ObjectNotFoundException
     {
-        TagTypeEntity tagTypeEntity = tagTypeDao.getTagTypeByCd(tagTypeCode);
+        TagTypeEntity tagTypeEntity = tagTypeDao.getTagTypeByKey(tagTypeKey);
 
         if (tagTypeEntity == null)
         {
-            throw new ObjectNotFoundException(String.format("Tag type with code \"%s\" doesn't exist.", tagTypeCode));
+            throw new ObjectNotFoundException(String.format("Tag type with code \"%s\" doesn't exist.", tagTypeKey.getTagTypeCode()));
         }
 
         return tagTypeEntity;

@@ -86,7 +86,10 @@ public class TagTypeServiceImpl implements TagTypeService
         validateTagTypeUpdateRequest(request);
 
         // Retrieve and ensure that a tag type already exists with the specified key.
-        TagTypeEntity tagTypeEntity = tagTypeDaoHelper.getTagTypeEntity(tagTypeKey.getTagTypeCode());
+        TagTypeEntity tagTypeEntity = tagTypeDaoHelper.getTagTypeEntity(tagTypeKey);
+
+        // Validate the display name does not already exist in the database
+        tagTypeDaoHelper.assertTagTypeDisplayNameDoesNotExist(request.getDisplayName());
 
         updateTagTypeEntity(tagTypeEntity, request);
 
@@ -101,7 +104,7 @@ public class TagTypeServiceImpl implements TagTypeService
         tagTypeHelper.validateTagTypeKey(tagTypeKey);
 
         // Retrieve and ensure that a tag type already exists with the specified key.
-        TagTypeEntity tagTypeEntity = tagTypeDaoHelper.getTagTypeEntity(tagTypeKey.getTagTypeCode());
+        TagTypeEntity tagTypeEntity = tagTypeDaoHelper.getTagTypeEntity(tagTypeKey);
 
         // Create and return the tag type object from the persisted entity.
         return createTagTypeFromEntity(tagTypeEntity);
@@ -114,7 +117,7 @@ public class TagTypeServiceImpl implements TagTypeService
         tagTypeHelper.validateTagTypeKey(tagTypeKey);
 
         // Retrieve and ensure that a tag type already exists with the specified key.
-        TagTypeEntity namespaceEntity = tagTypeDaoHelper.getTagTypeEntity(tagTypeKey.getTagTypeCode());
+        TagTypeEntity namespaceEntity = tagTypeDaoHelper.getTagTypeEntity(tagTypeKey);
 
         // Delete the tag type.
         tagTypeDao.delete(namespaceEntity);

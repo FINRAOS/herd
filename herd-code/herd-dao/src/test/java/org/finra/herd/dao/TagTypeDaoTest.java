@@ -31,11 +31,26 @@ public class TagTypeDaoTest extends AbstractDaoTest
     @Test
     public void testGetTagTypeByKey()
     {
-        // Create a namespace entity.
+        // Create a tag type entity.
         tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, 1);
 
-        // Retrieve the namespace entity.
+        // Retrieve the tag type entity.
         TagTypeEntity resultTagTypeEntity = tagTypeDao.getTagTypeByKey(new TagTypeKey(TAG_TYPE));
+
+        // Validate the results.
+        assertEquals(TAG_TYPE, resultTagTypeEntity.getTypeCode());
+        assertEquals(TAG_TYPE_DISPLAY_NAME, resultTagTypeEntity.getDisplayName());
+        assertEquals(new Integer(1), resultTagTypeEntity.getOrderNumber());
+    }
+
+    @Test
+    public void testGetTagTypeByDisplayName()
+    {
+        // Create a tag type entity.
+        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, 1);
+
+        // Retrieve the tag type entity.
+        TagTypeEntity resultTagTypeEntity = tagTypeDao.getTagTypeByDisplayName(TAG_TYPE_DISPLAY_NAME);
 
         // Validate the results.
         assertEquals(TAG_TYPE, resultTagTypeEntity.getTypeCode());
@@ -46,14 +61,11 @@ public class TagTypeDaoTest extends AbstractDaoTest
     @Test
     public void testGetTagTypes()
     {
-        // Create and persist namespace entities.
-        int orderNumber = 1;
-        for (TagTypeKey key : tagTypeDaoTestHelper.getTestTagTypeKeys())
-        {
-            tagTypeDaoTestHelper.createTagTypeEntity(key.getTagTypeCode(), TAG_TYPE_DISPLAY_NAME, orderNumber++);
-        }
+        // Create and persist tag type entities.
+        tagTypeDaoTestHelper.createTagTypeEntity(tagTypeDaoTestHelper.getTestTagTypeKeys().get(0).getTagTypeCode(), TAG_TYPE_DISPLAY_NAME, 1);
+        tagTypeDaoTestHelper.createTagTypeEntity(tagTypeDaoTestHelper.getTestTagTypeKeys().get(1).getTagTypeCode(), TAG_TYPE_DISPLAY_NAME_2, 2);
 
-        // Retrieve a list of namespace keys.
+        // Retrieve a list of tag type keys.
         List<TagTypeKey> resultTagTypeKeys = tagTypeDao.getTagTypes();
 
         // Validate the returned object.

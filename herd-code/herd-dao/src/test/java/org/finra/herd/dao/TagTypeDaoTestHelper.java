@@ -49,16 +49,6 @@ public class TagTypeDaoTestHelper
     }
 
     /**
-     * Creates and persists a new tag type entity.
-     *
-     * @return the newly created tag type entity.
-     */
-    public TagTypeEntity createTagTypeEntity()
-    {
-        return createTagTypeEntity("TagTypeTest" + AbstractDaoTest.getRandomSuffix(), "TagTypeTest" + AbstractDaoTest.getRandomSuffix(), 1);
-    }
-
-    /**
      * Returns a list of test tag type keys.
      *
      * @return the list of test tag type keys
