@@ -71,7 +71,7 @@ public class TagTypeDaoImpl extends AbstractHerdDao implements TagTypeDao
         Root<TagTypeEntity> tagTypeEntity = criteria.from(TagTypeEntity.class);
 
         // Create the standard restrictions.
-        Predicate queryRestriction = builder.equal(builder.upper(tagTypeEntity.get(TagTypeEntity_.displayName)), tagTypeCode.toUpperCase());
+        Predicate queryRestriction = builder.equal(builder.upper(tagTypeEntity.get(TagTypeEntity_.displayName)), displayName.toUpperCase());
 
         criteria.select(tagTypeEntity).where(queryRestriction);
 
