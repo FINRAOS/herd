@@ -52,13 +52,14 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         // Create a business object definition.
         BusinessObjectDefinitionCreateRequest request = businessObjectDefinitionServiceTestHelper
-            .createBusinessObjectDefinitionCreateRequest(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
+            .createBusinessObjectDefinitionCreateRequest(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME,
                 businessObjectDefinitionServiceTestHelper.getNewAttributes());
         BusinessObjectDefinition resultBusinessObjectDefinition = businessObjectDefinitionService.createBusinessObjectDefinition(request);
 
         // Validate the returned object.
-        businessObjectDefinitionServiceTestHelper.validateBusinessObjectDefinition(null, NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
-            businessObjectDefinitionServiceTestHelper.getNewAttributes(), resultBusinessObjectDefinition);
+        assertEquals(
+            new BusinessObjectDefinition(resultBusinessObjectDefinition.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME,
+                businessObjectDefinitionServiceTestHelper.getNewAttributes()), resultBusinessObjectDefinition);
     }
 
     @Test
@@ -68,7 +69,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         try
         {
             businessObjectDefinitionService.createBusinessObjectDefinition(businessObjectDefinitionServiceTestHelper
-                .createBusinessObjectDefinitionCreateRequest(BLANK_TEXT, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION));
+                .createBusinessObjectDefinitionCreateRequest(BLANK_TEXT, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME));
             fail("Should throw an IllegalArgumentException when namespace is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -80,7 +81,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         try
         {
             businessObjectDefinitionService.createBusinessObjectDefinition(businessObjectDefinitionServiceTestHelper
-                .createBusinessObjectDefinitionCreateRequest(NAMESPACE, BLANK_TEXT, DATA_PROVIDER_NAME, BDEF_DESCRIPTION));
+                .createBusinessObjectDefinitionCreateRequest(NAMESPACE, BLANK_TEXT, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME));
             fail("Should throw an IllegalArgumentException when business object definition name is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -91,8 +92,8 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         // Try to create a business object definition instance when data provider name is not specified.
         try
         {
-            businessObjectDefinitionService.createBusinessObjectDefinition(
-                businessObjectDefinitionServiceTestHelper.createBusinessObjectDefinitionCreateRequest(NAMESPACE, BDEF_NAME, BLANK_TEXT, BDEF_DESCRIPTION));
+            businessObjectDefinitionService.createBusinessObjectDefinition(businessObjectDefinitionServiceTestHelper
+                .createBusinessObjectDefinitionCreateRequest(NAMESPACE, BDEF_NAME, BLANK_TEXT, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME));
             fail("Should throw an IllegalArgumentException when data provider name is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -104,7 +105,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         try
         {
             businessObjectDefinitionService.createBusinessObjectDefinition(businessObjectDefinitionServiceTestHelper
-                .createBusinessObjectDefinitionCreateRequest(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
+                .createBusinessObjectDefinitionCreateRequest(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME,
                     Arrays.asList(new Attribute(BLANK_TEXT, ATTRIBUTE_VALUE_1))));
             fail("Should throw an IllegalArgumentException when attribute name is not specified.");
         }
@@ -122,12 +123,13 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         // Create a business object definition without specifying any of the optional parameters (passing whitespace characters).
         BusinessObjectDefinition resultBusinessObjectDefinition = businessObjectDefinitionService.createBusinessObjectDefinition(
-            businessObjectDefinitionServiceTestHelper.createBusinessObjectDefinitionCreateRequest(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BLANK_TEXT,
-                Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, BLANK_TEXT))));
+            businessObjectDefinitionServiceTestHelper
+                .createBusinessObjectDefinitionCreateRequest(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BLANK_TEXT, BLANK_TEXT,
+                    Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, BLANK_TEXT))));
 
         // Validate the returned object.
-        businessObjectDefinitionServiceTestHelper.validateBusinessObjectDefinition(null, NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BLANK_TEXT,
-            Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, BLANK_TEXT)), resultBusinessObjectDefinition);
+        assertEquals(new BusinessObjectDefinition(resultBusinessObjectDefinition.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BLANK_TEXT, EMPTY_STRING,
+            Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, BLANK_TEXT))), resultBusinessObjectDefinition);
     }
 
     @Test
@@ -138,12 +140,12 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         // Create a business object definition without specifying any of the optional parameters (passing whitespace characters).
         BusinessObjectDefinition resultBusinessObjectDefinition = businessObjectDefinitionService.createBusinessObjectDefinition(
-            businessObjectDefinitionServiceTestHelper.createBusinessObjectDefinitionCreateRequest(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, null,
+            businessObjectDefinitionServiceTestHelper.createBusinessObjectDefinitionCreateRequest(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, null, null,
                 Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, null))));
 
         // Validate the returned object.
-        businessObjectDefinitionServiceTestHelper.validateBusinessObjectDefinition(null, NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, null,
-            Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, null)), resultBusinessObjectDefinition);
+        assertEquals(new BusinessObjectDefinition(resultBusinessObjectDefinition.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, null, null,
+            Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, null))), resultBusinessObjectDefinition);
     }
 
     @Test
@@ -157,8 +159,8 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
             businessObjectDefinitionServiceTestHelper.createBusinessObjectDefinitionCreateRequest(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, null, null));
 
         // Validate the returned object.
-        businessObjectDefinitionServiceTestHelper
-            .validateBusinessObjectDefinition(null, NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, null, NO_ATTRIBUTES, resultBusinessObjectDefinition);
+        assertEquals(new BusinessObjectDefinition(resultBusinessObjectDefinition.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, null, null, NO_ATTRIBUTES),
+            resultBusinessObjectDefinition);
     }
 
     @Test
@@ -171,13 +173,14 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         BusinessObjectDefinition resultBusinessObjectDefinition = businessObjectDefinitionService.createBusinessObjectDefinition(
             businessObjectDefinitionServiceTestHelper
                 .createBusinessObjectDefinitionCreateRequest(addWhitespace(NAMESPACE), addWhitespace(BDEF_NAME), addWhitespace(DATA_PROVIDER_NAME),
-                    addWhitespace(BDEF_DESCRIPTION),
+                    addWhitespace(BDEF_DESCRIPTION), addWhitespace(BDEF_DISPLAY_NAME),
                     Arrays.asList(new Attribute(addWhitespace(ATTRIBUTE_NAME_1_MIXED_CASE), addWhitespace(ATTRIBUTE_VALUE_1)))));
 
         // Validate the returned object.
-        businessObjectDefinitionServiceTestHelper
-            .validateBusinessObjectDefinition(null, NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, addWhitespace(BDEF_DESCRIPTION),
-                Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, addWhitespace(ATTRIBUTE_VALUE_1))), resultBusinessObjectDefinition);
+        assertEquals(
+            new BusinessObjectDefinition(resultBusinessObjectDefinition.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, addWhitespace(BDEF_DESCRIPTION),
+                BDEF_DISPLAY_NAME, Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, addWhitespace(ATTRIBUTE_VALUE_1)))),
+            resultBusinessObjectDefinition);
     }
 
     @Test
@@ -191,13 +194,13 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         BusinessObjectDefinition resultBusinessObjectDefinition = businessObjectDefinitionService.createBusinessObjectDefinition(
             businessObjectDefinitionServiceTestHelper
                 .createBusinessObjectDefinitionCreateRequest(NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(), DATA_PROVIDER_NAME.toUpperCase(),
-                    BDEF_DESCRIPTION.toUpperCase(), Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE.toUpperCase(), ATTRIBUTE_VALUE_1.toUpperCase()))));
+                    BDEF_DESCRIPTION.toUpperCase(), BDEF_DISPLAY_NAME.toUpperCase(),
+                    Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE.toUpperCase(), ATTRIBUTE_VALUE_1.toUpperCase()))));
 
         // Validate the returned object.
-        businessObjectDefinitionServiceTestHelper
-            .validateBusinessObjectDefinition(null, NAMESPACE.toLowerCase(), BDEF_NAME.toUpperCase(), DATA_PROVIDER_NAME.toLowerCase(),
-                BDEF_DESCRIPTION.toUpperCase(), Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE.toUpperCase(), ATTRIBUTE_VALUE_1.toUpperCase())),
-                resultBusinessObjectDefinition);
+        assertEquals(new BusinessObjectDefinition(resultBusinessObjectDefinition.getId(), NAMESPACE.toLowerCase(), BDEF_NAME.toUpperCase(),
+            DATA_PROVIDER_NAME.toLowerCase(), BDEF_DESCRIPTION.toUpperCase(), BDEF_DISPLAY_NAME.toUpperCase(),
+            Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE.toUpperCase(), ATTRIBUTE_VALUE_1.toUpperCase()))), resultBusinessObjectDefinition);
     }
 
     @Test
@@ -211,13 +214,13 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         BusinessObjectDefinition resultBusinessObjectDefinition = businessObjectDefinitionService.createBusinessObjectDefinition(
             businessObjectDefinitionServiceTestHelper
                 .createBusinessObjectDefinitionCreateRequest(NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(), DATA_PROVIDER_NAME.toLowerCase(),
-                    BDEF_DESCRIPTION.toLowerCase(), Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE.toLowerCase(), ATTRIBUTE_VALUE_1.toLowerCase()))));
+                    BDEF_DESCRIPTION.toLowerCase(), BDEF_DISPLAY_NAME.toLowerCase(),
+                    Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE.toLowerCase(), ATTRIBUTE_VALUE_1.toLowerCase()))));
 
         // Validate the returned object.
-        businessObjectDefinitionServiceTestHelper
-            .validateBusinessObjectDefinition(null, NAMESPACE.toUpperCase(), BDEF_NAME.toLowerCase(), DATA_PROVIDER_NAME.toUpperCase(),
-                BDEF_DESCRIPTION.toLowerCase(), Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE.toLowerCase(), ATTRIBUTE_VALUE_1.toLowerCase())),
-                resultBusinessObjectDefinition);
+        assertEquals(new BusinessObjectDefinition(resultBusinessObjectDefinition.getId(), NAMESPACE.toUpperCase(), BDEF_NAME.toLowerCase(),
+            DATA_PROVIDER_NAME.toUpperCase(), BDEF_DESCRIPTION.toLowerCase(), BDEF_DISPLAY_NAME.toLowerCase(),
+            Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE.toLowerCase(), ATTRIBUTE_VALUE_1.toLowerCase()))), resultBusinessObjectDefinition);
     }
 
     @Test
@@ -230,7 +233,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         // Try to create a business object definition using non-existing namespace.
         request = businessObjectDefinitionServiceTestHelper
-            .createBusinessObjectDefinitionCreateRequest("I_DO_NOT_EXIST", BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
+            .createBusinessObjectDefinitionCreateRequest("I_DO_NOT_EXIST", BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME);
         try
         {
             businessObjectDefinitionService.createBusinessObjectDefinition(request);
@@ -243,7 +246,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         // Try to create a business object definition when namespace contains a forward slash character.
         request = businessObjectDefinitionServiceTestHelper
-            .createBusinessObjectDefinitionCreateRequest(addSlash(BDEF_NAMESPACE), BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
+            .createBusinessObjectDefinitionCreateRequest(addSlash(BDEF_NAMESPACE), BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME);
         try
         {
             businessObjectDefinitionService.createBusinessObjectDefinition(request);
@@ -256,7 +259,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         // Try to create a business object definition when business object definition name contains a forward slash character.
         request = businessObjectDefinitionServiceTestHelper
-            .createBusinessObjectDefinitionCreateRequest(BDEF_NAMESPACE, addSlash(BDEF_NAME), DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
+            .createBusinessObjectDefinitionCreateRequest(BDEF_NAMESPACE, addSlash(BDEF_NAME), DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME);
         try
         {
             businessObjectDefinitionService.createBusinessObjectDefinition(request);
@@ -268,8 +271,8 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         }
 
         // Try to create a business object definition using non-existing data provider.
-        request =
-            businessObjectDefinitionServiceTestHelper.createBusinessObjectDefinitionCreateRequest(NAMESPACE, BDEF_NAME, "I_DO_NOT_EXIST", BDEF_DESCRIPTION);
+        request = businessObjectDefinitionServiceTestHelper
+            .createBusinessObjectDefinitionCreateRequest(NAMESPACE, BDEF_NAME, "I_DO_NOT_EXIST", BDEF_DESCRIPTION, BDEF_DISPLAY_NAME);
         try
         {
             businessObjectDefinitionService.createBusinessObjectDefinition(request);
@@ -282,7 +285,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         // Try to create a business object definition when data provider name contains a forward slash character.
         request = businessObjectDefinitionServiceTestHelper
-            .createBusinessObjectDefinitionCreateRequest(BDEF_NAMESPACE, BDEF_NAME, addSlash(DATA_PROVIDER_NAME), BDEF_DESCRIPTION);
+            .createBusinessObjectDefinitionCreateRequest(BDEF_NAMESPACE, BDEF_NAME, addSlash(DATA_PROVIDER_NAME), BDEF_DESCRIPTION, BDEF_DISPLAY_NAME);
         try
         {
             businessObjectDefinitionService.createBusinessObjectDefinition(request);
@@ -301,7 +304,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         try
         {
             businessObjectDefinitionService.createBusinessObjectDefinition(businessObjectDefinitionServiceTestHelper
-                .createBusinessObjectDefinitionCreateRequest(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, Arrays
+                .createBusinessObjectDefinitionCreateRequest(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME, Arrays
                     .asList(new Attribute(ATTRIBUTE_NAME_3_MIXED_CASE.toLowerCase(), ATTRIBUTE_VALUE_3),
                         new Attribute(ATTRIBUTE_NAME_3_MIXED_CASE.toUpperCase(), ATTRIBUTE_VALUE_3))));
             fail("Should throw an IllegalArgumentException when duplicate attributes are specified.");
@@ -322,7 +325,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         try
         {
             businessObjectDefinitionService.createBusinessObjectDefinition(businessObjectDefinitionServiceTestHelper
-                .createBusinessObjectDefinitionCreateRequest(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION));
+                .createBusinessObjectDefinitionCreateRequest(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME));
             fail("Should throw an AlreadyExistsException when business object definition already exists.");
         }
         catch (AlreadyExistsException e)
@@ -344,13 +347,13 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         // Create a business object definition that has the same name, but belongs to a different namespace.
         BusinessObjectDefinitionCreateRequest request = businessObjectDefinitionServiceTestHelper
-            .createBusinessObjectDefinitionCreateRequest(NAMESPACE_2, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
+            .createBusinessObjectDefinitionCreateRequest(NAMESPACE_2, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME,
                 businessObjectDefinitionServiceTestHelper.getNewAttributes());
         BusinessObjectDefinition resultBusinessObjectDefinition = businessObjectDefinitionService.createBusinessObjectDefinition(request);
 
         // Validate the returned object.
-        businessObjectDefinitionServiceTestHelper.validateBusinessObjectDefinition(null, NAMESPACE_2, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
-            businessObjectDefinitionServiceTestHelper.getNewAttributes(), resultBusinessObjectDefinition);
+        assertEquals(new BusinessObjectDefinition(resultBusinessObjectDefinition.getId(), NAMESPACE_2, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
+            BDEF_DISPLAY_NAME, businessObjectDefinitionServiceTestHelper.getNewAttributes()), resultBusinessObjectDefinition);
     }
 
     @Test
@@ -364,12 +367,14 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         // Perform an update by changing the description and updating the attributes.
         BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionService
             .updateBusinessObjectDefinition(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME), businessObjectDefinitionServiceTestHelper
-                .createBusinessObjectDefinitionUpdateRequest(BDEF_DESCRIPTION_2, businessObjectDefinitionServiceTestHelper.getNewAttributes2()));
+                .createBusinessObjectDefinitionUpdateRequest(BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2,
+                    businessObjectDefinitionServiceTestHelper.getNewAttributes2()));
 
         // Validate the returned object.
-        businessObjectDefinitionServiceTestHelper
-            .validateBusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION_2,
-                businessObjectDefinitionServiceTestHelper.getNewAttributes2(), updatedBusinessObjectDefinition);
+        assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION_2,
+            BDEF_DISPLAY_NAME_2, businessObjectDefinitionServiceTestHelper.getNewAttributes2()), updatedBusinessObjectDefinition);
+
+
     }
 
     @Test
@@ -379,8 +384,8 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         try
         {
             businessObjectDefinitionService.updateBusinessObjectDefinition(new BusinessObjectDefinitionKey(NAMESPACE, BLANK_TEXT),
-                businessObjectDefinitionServiceTestHelper
-                    .createBusinessObjectDefinitionUpdateRequest(BDEF_DESCRIPTION_2, businessObjectDefinitionServiceTestHelper.getNewAttributes2()));
+                businessObjectDefinitionServiceTestHelper.createBusinessObjectDefinitionUpdateRequest(BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2,
+                    businessObjectDefinitionServiceTestHelper.getNewAttributes2()));
             fail("Should throw an IllegalArgumentException when business object definition name is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -392,8 +397,8 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         try
         {
             businessObjectDefinitionService.updateBusinessObjectDefinition(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME),
-                businessObjectDefinitionServiceTestHelper
-                    .createBusinessObjectDefinitionUpdateRequest(BDEF_DESCRIPTION_2, Arrays.asList(new Attribute(BLANK_TEXT, ATTRIBUTE_VALUE_1))));
+                businessObjectDefinitionServiceTestHelper.createBusinessObjectDefinitionUpdateRequest(BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2,
+                    Arrays.asList(new Attribute(BLANK_TEXT, ATTRIBUTE_VALUE_1))));
             fail("Should throw an IllegalArgumentException when attribute name is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -413,14 +418,17 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         // Perform an update using input parameters with leading and trailing empty spaces.
         BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionService
             .updateBusinessObjectDefinition(new BusinessObjectDefinitionKey(addWhitespace(NAMESPACE), addWhitespace(BDEF_NAME)),
-                businessObjectDefinitionServiceTestHelper.createBusinessObjectDefinitionUpdateRequest(addWhitespace(BDEF_DESCRIPTION_2),
-                    Arrays.asList(new Attribute(addWhitespace(ATTRIBUTE_NAME_1_MIXED_CASE), addWhitespace(ATTRIBUTE_VALUE_1)))));
+                businessObjectDefinitionServiceTestHelper
+                    .createBusinessObjectDefinitionUpdateRequest(addWhitespace(BDEF_DESCRIPTION_2), addWhitespace(BDEF_DISPLAY_NAME_2),
+                        Arrays.asList(new Attribute(addWhitespace(ATTRIBUTE_NAME_1_MIXED_CASE), addWhitespace(ATTRIBUTE_VALUE_1)))));
 
         // Validate the returned object.
-        businessObjectDefinitionServiceTestHelper
-            .validateBusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME,
-                addWhitespace(BDEF_DESCRIPTION_2), Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, addWhitespace(ATTRIBUTE_VALUE_1))),
-                updatedBusinessObjectDefinition);
+        assertEquals(
+            new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, addWhitespace(BDEF_DESCRIPTION_2),
+                BDEF_DISPLAY_NAME_2, Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, addWhitespace(ATTRIBUTE_VALUE_1)))),
+            updatedBusinessObjectDefinition);
+
+
     }
 
     @Test
@@ -434,14 +442,15 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         // Perform an update using upper case input parameters.
         BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionService
             .updateBusinessObjectDefinition(new BusinessObjectDefinitionKey(NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase()),
-                businessObjectDefinitionServiceTestHelper.createBusinessObjectDefinitionUpdateRequest(BDEF_DESCRIPTION_2.toUpperCase(),
-                    Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE.toUpperCase(), ATTRIBUTE_VALUE_1.toUpperCase()))));
+                businessObjectDefinitionServiceTestHelper
+                    .createBusinessObjectDefinitionUpdateRequest(BDEF_DESCRIPTION_2.toUpperCase(), BDEF_DISPLAY_NAME_2.toUpperCase(),
+                        Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE.toUpperCase(), ATTRIBUTE_VALUE_1.toUpperCase()))));
 
         // Validate the returned object.
-        businessObjectDefinitionServiceTestHelper
-            .validateBusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(),
-                DATA_PROVIDER_NAME.toLowerCase(), BDEF_DESCRIPTION_2.toUpperCase(),
-                Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE.toLowerCase(), ATTRIBUTE_VALUE_1.toUpperCase())), updatedBusinessObjectDefinition);
+        assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(),
+            DATA_PROVIDER_NAME.toLowerCase(), BDEF_DESCRIPTION_2.toUpperCase(), BDEF_DISPLAY_NAME_2.toUpperCase(),
+            Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE.toLowerCase(), ATTRIBUTE_VALUE_1.toUpperCase()))), updatedBusinessObjectDefinition);
+
     }
 
     @Test
@@ -455,14 +464,14 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         // Perform an update using lower case input parameters.
         BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionService
             .updateBusinessObjectDefinition(new BusinessObjectDefinitionKey(NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase()),
-                businessObjectDefinitionServiceTestHelper.createBusinessObjectDefinitionUpdateRequest(BDEF_DESCRIPTION_2.toLowerCase(),
-                    Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE.toLowerCase(), ATTRIBUTE_VALUE_1.toLowerCase()))));
+                businessObjectDefinitionServiceTestHelper
+                    .createBusinessObjectDefinitionUpdateRequest(BDEF_DESCRIPTION_2.toLowerCase(), BDEF_DISPLAY_NAME_2.toLowerCase(),
+                        Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE.toLowerCase(), ATTRIBUTE_VALUE_1.toLowerCase()))));
 
         // Validate the returned object.
-        businessObjectDefinitionServiceTestHelper
-            .validateBusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(),
-                DATA_PROVIDER_NAME.toUpperCase(), BDEF_DESCRIPTION_2.toLowerCase(),
-                Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE.toUpperCase(), ATTRIBUTE_VALUE_1.toLowerCase())), updatedBusinessObjectDefinition);
+        assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(),
+            DATA_PROVIDER_NAME.toUpperCase(), BDEF_DESCRIPTION_2.toLowerCase(), BDEF_DISPLAY_NAME_2.toLowerCase(),
+            Arrays.asList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE.toUpperCase(), ATTRIBUTE_VALUE_1.toLowerCase()))), updatedBusinessObjectDefinition);
     }
 
     @Test
@@ -472,7 +481,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         try
         {
             businessObjectDefinitionService.updateBusinessObjectDefinition(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME),
-                businessObjectDefinitionServiceTestHelper.createBusinessObjectDefinitionUpdateRequest(BDEF_DESCRIPTION_2, Arrays
+                businessObjectDefinitionServiceTestHelper.createBusinessObjectDefinitionUpdateRequest(BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2, Arrays
                     .asList(new Attribute(ATTRIBUTE_NAME_3_MIXED_CASE.toLowerCase(), ATTRIBUTE_VALUE_3),
                         new Attribute(ATTRIBUTE_NAME_3_MIXED_CASE.toUpperCase(), ATTRIBUTE_VALUE_3))));
             fail("Should throw an IllegalArgumentException when duplicate attributes are specified.");
@@ -490,8 +499,8 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         try
         {
             businessObjectDefinitionService.updateBusinessObjectDefinition(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME),
-                businessObjectDefinitionServiceTestHelper
-                    .createBusinessObjectDefinitionUpdateRequest(BDEF_DESCRIPTION_2, businessObjectDefinitionServiceTestHelper.getNewAttributes2()));
+                businessObjectDefinitionServiceTestHelper.createBusinessObjectDefinitionUpdateRequest(BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2,
+                    businessObjectDefinitionServiceTestHelper.getNewAttributes2()));
             fail("Should throw an ObjectNotFoundException when business object definition doesn't exist.");
         }
         catch (ObjectNotFoundException e)
@@ -511,12 +520,12 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         // Perform an update by changing the description and adding the new attributes.
         BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionService
             .updateBusinessObjectDefinition(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME), businessObjectDefinitionServiceTestHelper
-                .createBusinessObjectDefinitionUpdateRequest(BDEF_DESCRIPTION_2, businessObjectDefinitionServiceTestHelper.getNewAttributes2()));
+                .createBusinessObjectDefinitionUpdateRequest(BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2,
+                    businessObjectDefinitionServiceTestHelper.getNewAttributes2()));
 
         // Validate the returned object.
-        businessObjectDefinitionServiceTestHelper
-            .validateBusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION_2,
-                businessObjectDefinitionServiceTestHelper.getNewAttributes2(), updatedBusinessObjectDefinition);
+        assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION_2,
+            BDEF_DISPLAY_NAME_2, businessObjectDefinitionServiceTestHelper.getNewAttributes2()), updatedBusinessObjectDefinition);
     }
 
     @Test
@@ -531,8 +540,8 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         try
         {
             businessObjectDefinitionService.updateBusinessObjectDefinition(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME),
-                businessObjectDefinitionServiceTestHelper
-                    .createBusinessObjectDefinitionUpdateRequest(BDEF_DESCRIPTION_2, businessObjectDefinitionServiceTestHelper.getNewAttributes2()));
+                businessObjectDefinitionServiceTestHelper.createBusinessObjectDefinitionUpdateRequest(BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2,
+                    businessObjectDefinitionServiceTestHelper.getNewAttributes2()));
             fail("Should throw an IllegalStateException when business object definition contains duplicate attributes.");
         }
         catch (IllegalStateException e)
@@ -542,6 +551,157 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
                     ATTRIBUTE_NAME_1_MIXED_CASE.toLowerCase(), NAMESPACE, BDEF_NAME), e.getMessage());
         }
     }
+
+    @Test
+    public void testUpdateBusinessObjectDefinitionDescriptiveInfo() throws Exception
+    {
+        // Create and persist a business object definition entity.
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntityDescriptiveInfo(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME);
+
+        // Perform an update by changing the description and updating the attributes.
+        BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionService
+            .updateBusinessObjectDefinitionDescriptiveInfo(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME),
+                businessObjectDefinitionServiceTestHelper.createBusinessObjectDefinitionDescriptiveInfoUpdateRequest(BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2));
+
+        // Validate the returned object.
+        assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION_2,
+            BDEF_DISPLAY_NAME_2, NO_ATTRIBUTES), updatedBusinessObjectDefinition);
+    }
+
+    @Test
+    public void testUpdateBusinessObjectDefinitionDescriptiveInfoMissingRequiredParameters()
+    {
+        // Try to update a business object definition instance when business object definition namespace is not specified.
+        try
+        {
+            businessObjectDefinitionService.updateBusinessObjectDefinitionDescriptiveInfo(new BusinessObjectDefinitionKey(BLANK_TEXT, BDEF_NAME),
+                businessObjectDefinitionServiceTestHelper.createBusinessObjectDefinitionDescriptiveInfoUpdateRequest(BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2));
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("A namespace must be specified.", e.getMessage());
+        }
+
+        // Try to update a business object definition instance when business object definition name is not specified.
+        try
+        {
+            businessObjectDefinitionService.updateBusinessObjectDefinitionDescriptiveInfo(new BusinessObjectDefinitionKey(NAMESPACE, BLANK_TEXT),
+                businessObjectDefinitionServiceTestHelper.createBusinessObjectDefinitionDescriptiveInfoUpdateRequest(BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2));
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("A business object definition name must be specified.", e.getMessage());
+        }
+    }
+
+    @Test
+    public void testUpdateBusinessObjectDefinitionDescriptiveInfoOptionalParametersPassedAsWhitespace()
+    {
+        // Create and persist a business object definition entity.
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntityDescriptiveInfo(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME);
+
+        // Perform an update using input parameters with leading and trailing empty spaces.
+        BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionService
+            .updateBusinessObjectDefinitionDescriptiveInfo(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME),
+                businessObjectDefinitionServiceTestHelper.createBusinessObjectDefinitionDescriptiveInfoUpdateRequest(BLANK_TEXT, BLANK_TEXT));
+
+        // Validate the returned object.
+        assertEquals(
+            new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BLANK_TEXT, BLANK_TEXT.trim(),
+                NO_ATTRIBUTES), updatedBusinessObjectDefinition);
+    }
+
+    @Test
+    public void testUpdateBusinessObjectDefinitionDescriptiveInfoOptionalParametersPassedAsNulls()
+    {
+        // Create and persist a business object definition entity.
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntityDescriptiveInfo(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME);
+
+        // Perform an update using input parameters with leading and trailing empty spaces.
+        BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionService
+            .updateBusinessObjectDefinitionDescriptiveInfo(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME),
+                businessObjectDefinitionServiceTestHelper.createBusinessObjectDefinitionDescriptiveInfoUpdateRequest(null, null));
+
+        // Validate the returned object.
+        assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, null, null, NO_ATTRIBUTES),
+            updatedBusinessObjectDefinition);
+    }
+
+    @Test
+    public void testUpdateBusinessObjectDefinitionDescriptiveInfoTrimParameters()
+    {
+        // Create and persist a business object definition entity.
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntityDescriptiveInfo(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME);
+
+        // Perform an update using input parameters with leading and trailing empty spaces.
+        BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionService
+            .updateBusinessObjectDefinitionDescriptiveInfo(new BusinessObjectDefinitionKey(addWhitespace(NAMESPACE), addWhitespace(BDEF_NAME)),
+                businessObjectDefinitionServiceTestHelper
+                    .createBusinessObjectDefinitionDescriptiveInfoUpdateRequest(addWhitespace(BDEF_DESCRIPTION_2), addWhitespace(BDEF_DISPLAY_NAME_2)));
+
+        // Validate the returned object.
+        assertEquals(
+            new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, addWhitespace(BDEF_DESCRIPTION_2),
+                BDEF_DISPLAY_NAME_2, NO_ATTRIBUTES), updatedBusinessObjectDefinition);
+    }
+
+    @Test
+    public void testUpdateBusinessObjectDefinitionDescriptiveInfoUpperCaseParameters()
+    {
+        // Create and persist a business object definition entity using lower case values.
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntityDescriptiveInfo(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME);
+
+        // Perform an update using upper case input parameters.
+        BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionService
+            .updateBusinessObjectDefinitionDescriptiveInfo(new BusinessObjectDefinitionKey(NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase()),
+                businessObjectDefinitionServiceTestHelper.createBusinessObjectDefinitionDescriptiveInfoUpdateRequest(BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2));
+
+        // Validate the returned object.
+        assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION_2,
+            BDEF_DISPLAY_NAME_2, NO_ATTRIBUTES), updatedBusinessObjectDefinition);
+    }
+
+    @Test
+    public void testUpdateBusinessObjectDefinitionDescriptiveInfoLowerCaseParameters()
+    {
+        // Create and persist a business object definition entity using lower case values.
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntityDescriptiveInfo(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME);
+
+        // Perform an update using lower case input parameters.
+        BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionService
+            .updateBusinessObjectDefinitionDescriptiveInfo(new BusinessObjectDefinitionKey(NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase()),
+                businessObjectDefinitionServiceTestHelper.createBusinessObjectDefinitionDescriptiveInfoUpdateRequest(BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2));
+
+        // Validate the returned object.
+        assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION_2,
+            BDEF_DISPLAY_NAME_2, NO_ATTRIBUTES), updatedBusinessObjectDefinition);
+    }
+
+    @Test
+    public void testUpdateBusinessObjectDefinitionDescriptiveInfoBusinessObjectDefinitionNoExists() throws Exception
+    {
+        // Try to update a non-existing business object definition.
+        try
+        {
+            businessObjectDefinitionService.updateBusinessObjectDefinitionDescriptiveInfo(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME),
+                businessObjectDefinitionServiceTestHelper.createBusinessObjectDefinitionDescriptiveInfoUpdateRequest(BDEF_DESCRIPTION_2, BDEF_DESCRIPTION_2));
+            fail("Should throw an ObjectNotFoundException when business object definition doesn't exist.");
+        }
+        catch (ObjectNotFoundException e)
+        {
+            assertEquals(String.format("Business object definition with name \"%s\" doesn't exist for namespace \"%s\".", BDEF_NAME, NAMESPACE),
+                e.getMessage());
+        }
+    }
+
 
     @Test
     public void testGetBusinessObjectDefinition() throws Exception
@@ -556,9 +716,8 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
             businessObjectDefinitionService.getBusinessObjectDefinition(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME));
 
         // Validate the returned object.
-        businessObjectDefinitionServiceTestHelper
-            .validateBusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
-                businessObjectDefinitionServiceTestHelper.getNewAttributes(), resultBusinessObjectDefinition);
+        assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null,
+            businessObjectDefinitionServiceTestHelper.getNewAttributes()), resultBusinessObjectDefinition);
     }
 
     @Test
@@ -589,9 +748,10 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
             businessObjectDefinitionService.getBusinessObjectDefinition(new BusinessObjectDefinitionKey(addWhitespace(NAMESPACE), addWhitespace(BDEF_NAME)));
 
         // Validate the returned object.
-        businessObjectDefinitionServiceTestHelper
-            .validateBusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
-                businessObjectDefinitionServiceTestHelper.getNewAttributes(), resultBusinessObjectDefinition);
+        assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null,
+            businessObjectDefinitionServiceTestHelper.getNewAttributes()), resultBusinessObjectDefinition);
+
+
     }
 
     @Test
@@ -607,10 +767,13 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
             businessObjectDefinitionService.getBusinessObjectDefinition(new BusinessObjectDefinitionKey(NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase()));
 
         // Validate the returned object.
-        businessObjectDefinitionServiceTestHelper
-            .validateBusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(),
-                DATA_PROVIDER_NAME.toLowerCase(), BDEF_DESCRIPTION.toLowerCase(), businessObjectDefinitionServiceTestHelper.getNewAttributes(),
-                resultBusinessObjectDefinition);
+        assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(),
+            DATA_PROVIDER_NAME.toLowerCase(), BDEF_DESCRIPTION.toLowerCase(), null, businessObjectDefinitionServiceTestHelper.getNewAttributes()),
+            resultBusinessObjectDefinition);
+
+        assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(),
+            DATA_PROVIDER_NAME.toLowerCase(), BDEF_DESCRIPTION.toLowerCase(), null, businessObjectDefinitionServiceTestHelper.getNewAttributes()),
+            resultBusinessObjectDefinition);
     }
 
     @Test
@@ -626,10 +789,11 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
             businessObjectDefinitionService.getBusinessObjectDefinition(new BusinessObjectDefinitionKey(NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase()));
 
         // Validate the returned object.
-        businessObjectDefinitionServiceTestHelper
-            .validateBusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(),
-                DATA_PROVIDER_NAME.toUpperCase(), BDEF_DESCRIPTION.toUpperCase(), businessObjectDefinitionServiceTestHelper.getNewAttributes(),
-                resultBusinessObjectDefinition);
+        assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(),
+            DATA_PROVIDER_NAME.toUpperCase(), BDEF_DESCRIPTION.toUpperCase(), null, businessObjectDefinitionServiceTestHelper.getNewAttributes()),
+            resultBusinessObjectDefinition);
+
+
     }
 
     @Test
@@ -761,9 +925,8 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
             businessObjectDefinitionService.deleteBusinessObjectDefinition(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME));
 
         // Validate the returned object.
-        businessObjectDefinitionServiceTestHelper
-            .validateBusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
-                businessObjectDefinitionServiceTestHelper.getNewAttributes(), deletedBusinessObjectDefinition);
+        assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null,
+            businessObjectDefinitionServiceTestHelper.getNewAttributes()), deletedBusinessObjectDefinition);
 
         // Ensure that this business object definition is no longer there.
         assertNull(businessObjectDefinitionDao.getBusinessObjectDefinitionByKey(businessObjectDefinitionKey));
@@ -801,9 +964,8 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
             businessObjectDefinitionService.deleteBusinessObjectDefinition(new BusinessObjectDefinitionKey(addWhitespace(NAMESPACE), addWhitespace(BDEF_NAME)));
 
         // Validate the returned object.
-        businessObjectDefinitionServiceTestHelper
-            .validateBusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
-                businessObjectDefinitionServiceTestHelper.getNewAttributes(), deletedBusinessObjectDefinition);
+        assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null,
+            businessObjectDefinitionServiceTestHelper.getNewAttributes()), deletedBusinessObjectDefinition);
 
         // Ensure that this business object definition is no longer there.
         assertNull(businessObjectDefinitionDao.getBusinessObjectDefinitionByKey(businessObjectDefinitionKey));
@@ -826,10 +988,9 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
             businessObjectDefinitionService.deleteBusinessObjectDefinition(new BusinessObjectDefinitionKey(NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase()));
 
         // Validate the returned object.
-        businessObjectDefinitionServiceTestHelper
-            .validateBusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(),
-                DATA_PROVIDER_NAME.toLowerCase(), BDEF_DESCRIPTION.toLowerCase(), businessObjectDefinitionServiceTestHelper.getNewAttributes(),
-                deletedBusinessObjectDefinition);
+        assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(),
+            DATA_PROVIDER_NAME.toLowerCase(), BDEF_DESCRIPTION.toLowerCase(), null, businessObjectDefinitionServiceTestHelper.getNewAttributes()),
+            deletedBusinessObjectDefinition);
 
         // Ensure that this business object definition is no longer there.
         assertNull(businessObjectDefinitionDao.getBusinessObjectDefinitionByKey(businessObjectDefinitionKey));
@@ -852,10 +1013,9 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
             businessObjectDefinitionService.deleteBusinessObjectDefinition(new BusinessObjectDefinitionKey(NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase()));
 
         // Validate the returned object.
-        businessObjectDefinitionServiceTestHelper
-            .validateBusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(),
-                DATA_PROVIDER_NAME.toUpperCase(), BDEF_DESCRIPTION.toUpperCase(), businessObjectDefinitionServiceTestHelper.getNewAttributes(),
-                deletedBusinessObjectDefinition);
+        assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(),
+            DATA_PROVIDER_NAME.toUpperCase(), BDEF_DESCRIPTION.toUpperCase(), null, businessObjectDefinitionServiceTestHelper.getNewAttributes()),
+            deletedBusinessObjectDefinition);
 
         // Ensure that this business object definition is no longer there.
         assertNull(businessObjectDefinitionDao.getBusinessObjectDefinitionByKey(businessObjectDefinitionKey));

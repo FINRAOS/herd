@@ -579,6 +579,11 @@
                <xs:documentation>An optional description</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="displayName" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An optional business friendly name</xs:documentation>
+            </xs:annotation>
+         </xs:element>
          <xs:element name="attributes" type="attributes" minOccurs="0">
             <xs:annotation>
                <xs:documentation>Custom user-defined metadata associated with this Business Object Definition. "name" is the attribute name (i.e. the key) and
@@ -597,11 +602,32 @@
                <xs:documentation>An optional description</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="displayName" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An optional business friendly name</xs:documentation>
+            </xs:annotation>
+         </xs:element>
          <xs:element name="attributes" type="attributes" minOccurs="0">
             <xs:annotation>
                <xs:documentation>Custom user-defined metadata associated with this Business Object Definition. "name" is the attribute name (i.e. the key) and
                   "value" is the attribute value.
                </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDefinitionDescriptiveInfoUpdateRequest" type="businessObjectDefinitionDescriptiveInfoUpdateRequest"/>
+   <xs:complexType name="businessObjectDefinitionDescriptiveInfoUpdateRequest">
+      <xs:all>
+         <xs:element name="description" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An optional description</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="displayName" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An optional business friendly name for business object definition</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -633,6 +659,11 @@
          <xs:element name="description" type="xs:string" minOccurs="0">
             <xs:annotation>
                <xs:documentation>An optional description</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="displayName" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An optional business friendly name</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="attributes" type="attributes" minOccurs="0">

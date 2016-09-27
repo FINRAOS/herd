@@ -16,7 +16,6 @@
 package org.finra.herd.service;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,8 +26,8 @@ import org.springframework.stereotype.Component;
 import org.finra.herd.dao.DataProviderDaoTestHelper;
 import org.finra.herd.dao.NamespaceDaoTestHelper;
 import org.finra.herd.model.api.xml.Attribute;
-import org.finra.herd.model.api.xml.BusinessObjectDefinition;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionCreateRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptiveInfoUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionUpdateRequest;
 
@@ -48,14 +47,15 @@ public class BusinessObjectDefinitionServiceTestHelper
      * @param businessObjectDefinitionName the business object definition name
      * @param dataProviderName the data provider name
      * @param businessObjectDefinitionDescription the description of the business object definition
+     * @param displayName the display name of the business object definition
      *
      * @return the newly created business object definition create request
      */
     public BusinessObjectDefinitionCreateRequest createBusinessObjectDefinitionCreateRequest(String namespaceCode, String businessObjectDefinitionName,
-        String dataProviderName, String businessObjectDefinitionDescription)
+        String dataProviderName, String businessObjectDefinitionDescription, String displayName)
     {
         return createBusinessObjectDefinitionCreateRequest(namespaceCode, businessObjectDefinitionName, dataProviderName, businessObjectDefinitionDescription,
-            null);
+            displayName, AbstractServiceTest.NO_ATTRIBUTES);
     }
 
     /**
@@ -65,18 +65,37 @@ public class BusinessObjectDefinitionServiceTestHelper
      * @param businessObjectDefinitionName the business object definition name
      * @param dataProviderName the data provider name
      * @param businessObjectDefinitionDescription the description of the business object definition
+     * @param displayName the display name of the business object definition
+     * @param attributes the list of attributes
      *
      * @return the newly created business object definition create request
      */
     public BusinessObjectDefinitionCreateRequest createBusinessObjectDefinitionCreateRequest(String namespaceCode, String businessObjectDefinitionName,
-        String dataProviderName, String businessObjectDefinitionDescription, List<Attribute> attributes)
+        String dataProviderName, String businessObjectDefinitionDescription, String displayName, List<Attribute> attributes)
     {
         BusinessObjectDefinitionCreateRequest request = new BusinessObjectDefinitionCreateRequest();
         request.setNamespace(namespaceCode);
         request.setBusinessObjectDefinitionName(businessObjectDefinitionName);
         request.setDataProviderName(dataProviderName);
         request.setDescription(businessObjectDefinitionDescription);
+        request.setDisplayName(displayName);
         request.setAttributes(attributes);
+        return request;
+    }
+
+    /**
+     * Creates a business object data definition metadata update request.
+     *
+     * @param businessObjectDefinitionDescription the description of the business object definition
+     *
+     * @return the newly created business object definition update request
+     */
+    public BusinessObjectDefinitionDescriptiveInfoUpdateRequest createBusinessObjectDefinitionDescriptiveInfoUpdateRequest(
+        String businessObjectDefinitionDescription, String displayName)
+    {
+        BusinessObjectDefinitionDescriptiveInfoUpdateRequest request = new BusinessObjectDefinitionDescriptiveInfoUpdateRequest();
+        request.setDescription(businessObjectDefinitionDescription);
+        request.setDisplayName(displayName);
         return request;
     }
 
@@ -87,11 +106,12 @@ public class BusinessObjectDefinitionServiceTestHelper
      *
      * @return the newly created business object definition update request
      */
-    public BusinessObjectDefinitionUpdateRequest createBusinessObjectDefinitionUpdateRequest(String businessObjectDefinitionDescription,
+    public BusinessObjectDefinitionUpdateRequest createBusinessObjectDefinitionUpdateRequest(String businessObjectDefinitionDescription, String displayName,
         List<Attribute> attributes)
     {
         BusinessObjectDefinitionUpdateRequest request = new BusinessObjectDefinitionUpdateRequest();
         request.setDescription(businessObjectDefinitionDescription);
+        request.setDisplayName(displayName);
         request.setAttributes(attributes);
         return request;
     }
@@ -213,32 +233,5 @@ public class BusinessObjectDefinitionServiceTestHelper
             assertEquals(expectedAttribute.getName(), actualAttribute.getName());
             assertEquals(expectedAttribute.getValue(), actualAttribute.getValue());
         }
-    }
-
-    /**
-     * Validates business object definition contents against specified arguments.
-     *
-     * @param expectedBusinessObjectDefinitionId the expected business object definition ID
-     * @param expectedNamespaceCode the expected namespace code
-     * @param expectedBusinessObjectDefinitionName the expected business object definition name
-     * @param expectedDataProviderName the expected data provider name
-     * @param expectedBusinessObjectDefinitionDescription the expected business object definition description
-     * @param expectedAttributes the expected list of attributes
-     * @param actualBusinessObjectDefinition the business object definition object instance to be validated
-     */
-    public void validateBusinessObjectDefinition(Integer expectedBusinessObjectDefinitionId, String expectedNamespaceCode,
-        String expectedBusinessObjectDefinitionName, String expectedDataProviderName, String expectedBusinessObjectDefinitionDescription,
-        List<Attribute> expectedAttributes, BusinessObjectDefinition actualBusinessObjectDefinition)
-    {
-        assertNotNull(actualBusinessObjectDefinition);
-        if (expectedBusinessObjectDefinitionId != null)
-        {
-            assertEquals(expectedBusinessObjectDefinitionId, Integer.valueOf(actualBusinessObjectDefinition.getId()));
-        }
-        assertEquals(expectedNamespaceCode, actualBusinessObjectDefinition.getNamespace());
-        assertEquals(expectedBusinessObjectDefinitionName, actualBusinessObjectDefinition.getBusinessObjectDefinitionName());
-        assertEquals(expectedDataProviderName, actualBusinessObjectDefinition.getDataProviderName());
-        assertEquals(expectedBusinessObjectDefinitionDescription, actualBusinessObjectDefinition.getDescription());
-        assertEquals(expectedAttributes, actualBusinessObjectDefinition.getAttributes());
     }
 }

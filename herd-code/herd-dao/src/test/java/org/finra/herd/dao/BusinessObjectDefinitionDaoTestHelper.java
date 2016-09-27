@@ -95,6 +95,20 @@ public class BusinessObjectDefinitionDaoTestHelper
      *
      * @return the newly created business object definition.
      */
+    public BusinessObjectDefinitionEntity createBusinessObjectDefinitionEntityDescriptiveInfo(String namespaceCode, String businessObjectDefinitionName,
+        String dataProviderName, String businessObjectDefinitionDescription, String displayName)
+    {
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
+            createBusinessObjectDefinitionEntity(namespaceCode, businessObjectDefinitionName, dataProviderName, businessObjectDefinitionDescription, null);
+        businessObjectDefinitionEntity.setDisplayName(displayName);
+        return businessObjectDefinitionDao.saveAndRefresh(businessObjectDefinitionEntity);
+    }
+
+    /**
+     * Creates and persists a new business object definition.
+     *
+     * @return the newly created business object definition.
+     */
     public BusinessObjectDefinitionEntity createBusinessObjectDefinitionEntity(String namespaceCode, String businessObjectDefinitionName,
         String dataProviderName, String businessObjectDefinitionDescription, List<Attribute> attributes)
     {
