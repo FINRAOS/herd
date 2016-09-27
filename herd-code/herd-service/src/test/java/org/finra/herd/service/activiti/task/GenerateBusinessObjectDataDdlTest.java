@@ -36,9 +36,10 @@ public class GenerateBusinessObjectDataDdlTest extends HerdActivitiServiceTaskTe
     public void testGenerateBusinessObjectDataDdlXml() throws Exception
     {
         // Prepare test data.
-        createDatabaseEntitiesForBusinessObjectDataDdlTesting();
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataDdlTesting();
 
-        BusinessObjectDataDdlRequest businessObjectDataDdlRequest = getTestBusinessObjectDataDdlRequest(UNSORTED_PARTITION_VALUES, CUSTOM_DDL_NAME);
+        BusinessObjectDataDdlRequest businessObjectDataDdlRequest =
+            businessObjectDataServiceTestHelper.getTestBusinessObjectDataDdlRequest(UNSORTED_PARTITION_VALUES, CUSTOM_DDL_NAME);
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
 
@@ -62,9 +63,10 @@ public class GenerateBusinessObjectDataDdlTest extends HerdActivitiServiceTaskTe
     public void testGenerateBusinessObjectDataDdlJson() throws Exception
     {
         // Prepare test data.
-        createDatabaseEntitiesForBusinessObjectDataDdlTesting();
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataDdlTesting();
 
-        BusinessObjectDataDdlRequest businessObjectDataDdlRequest = getTestBusinessObjectDataDdlRequest(UNSORTED_PARTITION_VALUES, CUSTOM_DDL_NAME);
+        BusinessObjectDataDdlRequest businessObjectDataDdlRequest =
+            businessObjectDataServiceTestHelper.getTestBusinessObjectDataDdlRequest(UNSORTED_PARTITION_VALUES, CUSTOM_DDL_NAME);
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
 

@@ -49,7 +49,7 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
     @Test
     public void testGetBusinessObjectDataUsingCreateRequest()
     {
-        BusinessObjectDataCreateRequest request = getNewBusinessObjectDataCreateRequest();
+        BusinessObjectDataCreateRequest request = businessObjectDataServiceTestHelper.getNewBusinessObjectDataCreateRequest();
         StorageUnitCreateRequest storageUnit = request.getStorageUnits().get(0);
 
         // Create the business object data.
@@ -83,10 +83,10 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         assertEquals(storageUnit.getStorageDirectory(), resultStorageUnit.getStorageDirectory());
 
         // Check if result list of storage files matches to the list from the create request.
-        validateStorageFiles(resultStorageUnit.getStorageFiles(), storageUnit.getStorageFiles());
+        businessObjectDataServiceTestHelper.validateStorageFiles(resultStorageUnit.getStorageFiles(), storageUnit.getStorageFiles());
 
         // Check if result list of attributes matches to the list from the create request.
-        validateAttributes(request.getAttributes(), businessObjectData.getAttributes());
+        businessObjectDefinitionServiceTestHelper.validateAttributes(request.getAttributes(), businessObjectData.getAttributes());
 
         // Validate the parents.
         assertTrue(businessObjectData.getBusinessObjectDataParents().size() == 2);
@@ -154,8 +154,10 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
                         SUBPARTITION_VALUES, businessObjectDataVersion), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY);
 
                 // Validate the returned object.
-                validateBusinessObjectData(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, businessObjectFormatVersion, PARTITION_VALUE,
-                    SUBPARTITION_VALUES, businessObjectDataVersion, businessObjectDataVersion == SECOND_DATA_VERSION, BDATA_STATUS, resultBusinessObjectData);
+                businessObjectDataServiceTestHelper
+                    .validateBusinessObjectData(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, businessObjectFormatVersion,
+                        PARTITION_VALUE, SUBPARTITION_VALUES, businessObjectDataVersion, businessObjectDataVersion == SECOND_DATA_VERSION, BDATA_STATUS,
+                        resultBusinessObjectData);
             }
         }
 
@@ -166,8 +168,9 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
                 SUBPARTITION_VALUES, INITIAL_DATA_VERSION), PARTITION_KEY, BDATA_STATUS_2, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY);
 
         // Validate the returned object.
-        validateBusinessObjectData(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
-            SUBPARTITION_VALUES, INITIAL_DATA_VERSION, NO_LATEST_VERSION_FLAG_SET, BDATA_STATUS, resultBusinessObjectData);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectData(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, INITIAL_DATA_VERSION, NO_LATEST_VERSION_FLAG_SET, BDATA_STATUS, resultBusinessObjectData);
     }
 
     @Test
@@ -264,9 +267,10 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
                 partitionKey, NO_BDATA_STATUS, null);
 
             // Validate the returned object.
-            validateBusinessObjectData(businessObjectDataEntities.get(1).getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-                SECOND_FORMAT_VERSION, PARTITION_VALUE, NO_SUBPARTITION_VALUES, INITIAL_DATA_VERSION, false, BusinessObjectDataStatusEntity.VALID,
-                resultBusinessObjectData);
+            businessObjectDataServiceTestHelper
+                .validateBusinessObjectData(businessObjectDataEntities.get(1).getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+                    SECOND_FORMAT_VERSION, PARTITION_VALUE, NO_SUBPARTITION_VALUES, INITIAL_DATA_VERSION, false, BusinessObjectDataStatusEntity.VALID,
+                    resultBusinessObjectData);
         }
     }
 
@@ -286,8 +290,9 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
             addWhitespace(PARTITION_KEY), addWhitespace(BDATA_STATUS), NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY);
 
         // Validate the returned object.
-        validateBusinessObjectData(businessObjectDataEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-            PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS, resultBusinessObjectData);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectData(businessObjectDataEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS, resultBusinessObjectData);
     }
 
     @Test
@@ -309,9 +314,10 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
             BDATA_STATUS.toUpperCase(), NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY);
 
         // Validate the returned object.
-        validateBusinessObjectData(businessObjectDataEntity.getId(), NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(),
-            FORMAT_FILE_TYPE_CODE.toLowerCase(), FORMAT_VERSION, PARTITION_VALUE.toLowerCase(), convertListToLowerCase(SUBPARTITION_VALUES), DATA_VERSION, true,
-            BDATA_STATUS.toLowerCase(), resultBusinessObjectData);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectData(businessObjectDataEntity.getId(), NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(),
+                FORMAT_FILE_TYPE_CODE.toLowerCase(), FORMAT_VERSION, PARTITION_VALUE.toLowerCase(), convertListToLowerCase(SUBPARTITION_VALUES), DATA_VERSION,
+                true, BDATA_STATUS.toLowerCase(), resultBusinessObjectData);
     }
 
     @Test
@@ -333,9 +339,10 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
             BDATA_STATUS.toLowerCase(), NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY);
 
         // Validate the returned object.
-        validateBusinessObjectData(businessObjectDataEntity.getId(), NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(),
-            FORMAT_FILE_TYPE_CODE.toUpperCase(), FORMAT_VERSION, PARTITION_VALUE.toUpperCase(), convertListToUpperCase(SUBPARTITION_VALUES), DATA_VERSION, true,
-            BDATA_STATUS.toUpperCase(), resultBusinessObjectData);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectData(businessObjectDataEntity.getId(), NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(),
+                FORMAT_FILE_TYPE_CODE.toUpperCase(), FORMAT_VERSION, PARTITION_VALUE.toUpperCase(), convertListToUpperCase(SUBPARTITION_VALUES), DATA_VERSION,
+                true, BDATA_STATUS.toUpperCase(), resultBusinessObjectData);
     }
 
     @Test
@@ -352,8 +359,9 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
                 DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY);
 
         // Validate the returned object.
-        validateBusinessObjectData(businessObjectDataEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-            PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS, resultBusinessObjectData);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectData(businessObjectDataEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS, resultBusinessObjectData);
 
         // Try to perform a get using invalid business object definition name.
         try
@@ -365,8 +373,8 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(
-                getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, "I_DO_NOT_EXIST", FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+            assertEquals(businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, "I_DO_NOT_EXIST", FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
                     PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID), e.getMessage());
         }
 
@@ -380,8 +388,9 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, BDEF_NAME, "I_DO_NOT_EXIST", FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID), e.getMessage());
+            assertEquals(businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, BDEF_NAME, "I_DO_NOT_EXIST", FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                    PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID), e.getMessage());
         }
 
         // Try to perform a get using invalid format file type.
@@ -394,8 +403,8 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(
-                getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, "I_DO_NOT_EXIST", FORMAT_VERSION, PARTITION_VALUE,
+            assertEquals(businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, "I_DO_NOT_EXIST", FORMAT_VERSION, PARTITION_VALUE,
                     SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID), e.getMessage());
         }
 
@@ -424,8 +433,9 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                "I_DO_NOT_EXIST", SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID), e.getMessage());
+            assertEquals(businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                    "I_DO_NOT_EXIST", SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID), e.getMessage());
         }
 
         // Try to perform a get using invalid subpartition value.
@@ -443,8 +453,9 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
             }
             catch (ObjectNotFoundException e)
             {
-                assertEquals(getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                    PARTITION_VALUE, testSubPartitionValues, DATA_VERSION, BusinessObjectDataStatusEntity.VALID), e.getMessage());
+                assertEquals(businessObjectDataServiceTestHelper
+                    .getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                        PARTITION_VALUE, testSubPartitionValues, DATA_VERSION, BusinessObjectDataStatusEntity.VALID), e.getMessage());
             }
         }
 
@@ -473,8 +484,8 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(
-                getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INVALID_FORMAT_VERSION,
+            assertEquals(businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INVALID_FORMAT_VERSION,
                     PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID), e.getMessage());
         }
 
@@ -488,8 +499,9 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                PARTITION_VALUE, SUBPARTITION_VALUES, INVALID_DATA_VERSION, BusinessObjectDataStatusEntity.VALID), e.getMessage());
+            assertEquals(businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                    PARTITION_VALUE, SUBPARTITION_VALUES, INVALID_DATA_VERSION, BusinessObjectDataStatusEntity.VALID), e.getMessage());
         }
 
         // Try to perform a get using an invalid business object data status.
@@ -522,8 +534,9 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID), e.getMessage());
+            assertEquals(businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                    PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID), e.getMessage());
         }
 
         // Try to get a non-existing business object data by specifying a business object data status.
@@ -536,8 +549,9 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                PARTITION_VALUE, SUBPARTITION_VALUES, NO_DATA_VERSION, BDATA_STATUS), e.getMessage());
+            assertEquals(businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                    PARTITION_VALUE, SUBPARTITION_VALUES, NO_DATA_VERSION, BDATA_STATUS), e.getMessage());
         }
     }
 
@@ -571,8 +585,9 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
                 DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY);
 
         // Validate the returned object.
-        validateBusinessObjectData(businessObjectDataEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-            PARTITION_VALUE_2, SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS, resultBusinessObjectData);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectData(businessObjectDataEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                PARTITION_VALUE_2, SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS, resultBusinessObjectData);
 
         // Make sure that the parent data's key is listed.
         assertEquals(1, resultBusinessObjectData.getBusinessObjectDataParents().size());
@@ -646,9 +661,10 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
                 SUBPARTITION_VALUES, NO_DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY);
 
         // Validate the result for the initial business object format version.
-        validateBusinessObjectData(businessObjectDataEntities.get(0).getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-            INITIAL_FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, INITIAL_DATA_VERSION, NO_LATEST_VERSION_FLAG_SET,
-            BusinessObjectDataStatusEntity.VALID, resultBusinessObjectData);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectData(businessObjectDataEntities.get(0).getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+                INITIAL_FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, INITIAL_DATA_VERSION, NO_LATEST_VERSION_FLAG_SET,
+                BusinessObjectDataStatusEntity.VALID, resultBusinessObjectData);
 
         // Retrieve a business object data for the second business object format version.
         resultBusinessObjectData = businessObjectDataService.getBusinessObjectData(
@@ -656,9 +672,10 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
                 SUBPARTITION_VALUES, NO_DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY);
 
         // Validate the result for the second business object format version.
-        validateBusinessObjectData(businessObjectDataEntities.get(2).getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-            SECOND_FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, INITIAL_DATA_VERSION, NO_LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID,
-            resultBusinessObjectData);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectData(businessObjectDataEntities.get(2).getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+                SECOND_FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, INITIAL_DATA_VERSION, NO_LATEST_VERSION_FLAG_SET,
+                BusinessObjectDataStatusEntity.VALID, resultBusinessObjectData);
 
         // Try to retrieve business object data for the third business object format version.
         try
@@ -670,8 +687,9 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, THIRD_FORMAT_VERSION,
-                PARTITION_VALUE, SUBPARTITION_VALUES, NO_DATA_VERSION, BusinessObjectDataStatusEntity.VALID), e.getMessage());
+            assertEquals(businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, THIRD_FORMAT_VERSION,
+                    PARTITION_VALUE, SUBPARTITION_VALUES, NO_DATA_VERSION, BusinessObjectDataStatusEntity.VALID), e.getMessage());
         }
 
         // Retrieve a business object data by explicitly specifying VALID business object data status.
@@ -680,9 +698,10 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
                 SUBPARTITION_VALUES, NO_DATA_VERSION), PARTITION_KEY, BusinessObjectDataStatusEntity.VALID, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY);
 
         // Validate the returned object, it should be the latest VALID business object data version available for the initial business object format version.
-        validateBusinessObjectData(businessObjectDataEntities.get(0).getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-            INITIAL_FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, INITIAL_DATA_VERSION, NO_LATEST_VERSION_FLAG_SET,
-            BusinessObjectDataStatusEntity.VALID, resultBusinessObjectData);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectData(businessObjectDataEntities.get(0).getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+                INITIAL_FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, INITIAL_DATA_VERSION, NO_LATEST_VERSION_FLAG_SET,
+                BusinessObjectDataStatusEntity.VALID, resultBusinessObjectData);
 
         // Retrieve a business object data by explicitly specifying business object data status testing value.
         resultBusinessObjectData = businessObjectDataService.getBusinessObjectData(
@@ -691,8 +710,10 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
 
         // Validate the returned object, it should be the latest business object data version with
         // the test business object data status available for the initial business object format version.
-        validateBusinessObjectData(businessObjectDataEntities.get(1).getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-            INITIAL_FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, SECOND_DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS, resultBusinessObjectData);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectData(businessObjectDataEntities.get(1).getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+                INITIAL_FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, SECOND_DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS,
+                resultBusinessObjectData);
 
         // Try to retrieve a business object data by explicitly specifying an incorrect business object data status value.
         try
@@ -704,8 +725,8 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(
-                getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION,
+            assertEquals(businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION,
                     PARTITION_VALUE, SUBPARTITION_VALUES, NO_DATA_VERSION, BDATA_STATUS_2), e.getMessage());
         }
     }
@@ -780,8 +801,9 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
                 INITIAL_DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY);
 
         // Validate the returned object.
-        validateBusinessObjectData(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, THIRD_FORMAT_VERSION, PARTITION_VALUE,
-            SUBPARTITION_VALUES, INITIAL_DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS, resultBusinessObjectData);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectData(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, THIRD_FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, INITIAL_DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS, resultBusinessObjectData);
 
         // Retrieve a second business object data version without specifying business object format version.
         resultBusinessObjectData = businessObjectDataService.getBusinessObjectData(
@@ -789,8 +811,9 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
                 SECOND_DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY);
 
         // Validate the returned object.
-        validateBusinessObjectData(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FOURTH_FORMAT_VERSION, PARTITION_VALUE,
-            SUBPARTITION_VALUES, SECOND_DATA_VERSION, NO_LATEST_VERSION_FLAG_SET, BDATA_STATUS, resultBusinessObjectData);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectData(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FOURTH_FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, SECOND_DATA_VERSION, NO_LATEST_VERSION_FLAG_SET, BDATA_STATUS, resultBusinessObjectData);
 
         // Retrieve a third business object data version without specifying business object format version.
         resultBusinessObjectData = businessObjectDataService.getBusinessObjectData(
@@ -798,8 +821,9 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
                 THIRD_DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY);
 
         // Validate the returned object.
-        validateBusinessObjectData(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, SECOND_FORMAT_VERSION, PARTITION_VALUE,
-            SUBPARTITION_VALUES, THIRD_DATA_VERSION, NO_LATEST_VERSION_FLAG_SET, BDATA_STATUS, resultBusinessObjectData);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectData(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, SECOND_FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, THIRD_DATA_VERSION, NO_LATEST_VERSION_FLAG_SET, BDATA_STATUS, resultBusinessObjectData);
 
         // Validate that business object data status is ignored when business object data version is specified
         // by retrieving business object data using no business object format version and an incorrect business object data status.
@@ -808,8 +832,9 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
                 INITIAL_DATA_VERSION), PARTITION_KEY, BDATA_STATUS_2, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY);
 
         // Validate the returned object.
-        validateBusinessObjectData(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, THIRD_FORMAT_VERSION, PARTITION_VALUE,
-            SUBPARTITION_VALUES, INITIAL_DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS, resultBusinessObjectData);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectData(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, THIRD_FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, INITIAL_DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS, resultBusinessObjectData);
     }
 
     /**
@@ -854,8 +879,9 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
                 NO_DATA_VERSION), PARTITION_KEY, NO_BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY);
 
         // Validate the returned object, it should be the latest VALID business object format and data version available.
-        validateBusinessObjectData(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
-            SUBPARTITION_VALUES, SECOND_DATA_VERSION, NO_LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID, resultBusinessObjectData);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectData(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, SECOND_DATA_VERSION, NO_LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID, resultBusinessObjectData);
 
         // Retrieve a business object data by explicitly specifying VALID business object data status.
         resultBusinessObjectData = businessObjectDataService.getBusinessObjectData(
@@ -863,8 +889,9 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
                 NO_DATA_VERSION), PARTITION_KEY, BusinessObjectDataStatusEntity.VALID, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY);
 
         // Validate the returned object, it should be the latest VALID business object format and data version available.
-        validateBusinessObjectData(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
-            SUBPARTITION_VALUES, SECOND_DATA_VERSION, NO_LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID, resultBusinessObjectData);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectData(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, SECOND_DATA_VERSION, NO_LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID, resultBusinessObjectData);
 
         // Retrieve a business object data by explicitly specifying business object data status testing value.
         resultBusinessObjectData = businessObjectDataService.getBusinessObjectData(
@@ -872,8 +899,9 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
                 NO_DATA_VERSION), PARTITION_KEY, BDATA_STATUS, NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY);
 
         // Validate the returned object, it should be the latest business object format and data version with the test business object data status.
-        validateBusinessObjectData(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, SECOND_FORMAT_VERSION, PARTITION_VALUE,
-            SUBPARTITION_VALUES, INITIAL_DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS, resultBusinessObjectData);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectData(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, SECOND_FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, INITIAL_DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS, resultBusinessObjectData);
 
         // Try to retrieve a business object data by explicitly specifying an incorrect business object data status value.
         try
@@ -885,8 +913,9 @@ public class BusinessObjectDataServiceGetBusinessObjectDataTest extends Abstract
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, NO_FORMAT_VERSION,
-                PARTITION_VALUE, SUBPARTITION_VALUES, NO_DATA_VERSION, BDATA_STATUS_2), e.getMessage());
+            assertEquals(businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, NO_FORMAT_VERSION,
+                    PARTITION_VALUE, SUBPARTITION_VALUES, NO_DATA_VERSION, BDATA_STATUS_2), e.getMessage());
         }
     }
 }

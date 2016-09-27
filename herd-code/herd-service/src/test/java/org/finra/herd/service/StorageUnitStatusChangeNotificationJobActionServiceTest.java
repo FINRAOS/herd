@@ -42,7 +42,7 @@ public class StorageUnitStatusChangeNotificationJobActionServiceTest extends Abs
     public void testGetIdentifyingInformation() throws Exception
     {
         // Create a job definition.
-        JobDefinition jobDefinition = createJobDefinition(ACTIVITI_XML_LOG_VARIABLES_NO_REGEX_WITH_CLASSPATH);
+        JobDefinition jobDefinition = jobDefinitionServiceTestHelper.createJobDefinition(ACTIVITI_XML_LOG_VARIABLES_NO_REGEX_WITH_CLASSPATH);
 
         // Create a job action.
         List<JobAction> jobActions = new ArrayList<>();

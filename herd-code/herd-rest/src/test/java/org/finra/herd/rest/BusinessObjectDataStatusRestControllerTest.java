@@ -21,6 +21,7 @@ import org.junit.Test;
 
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatusInformation;
+import org.finra.herd.model.api.xml.BusinessObjectDataStatusUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatusUpdateResponse;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 
@@ -43,7 +44,7 @@ public class BusinessObjectDataStatusRestControllerTest extends AbstractRestTest
                 getDelimitedFieldValues(SUBPARTITION_VALUES), FORMAT_VERSION, DATA_VERSION);
 
         // Validate the returned object.
-        validateBusinessObjectDataStatusInformation(
+        businessObjectDataServiceTestHelper.validateBusinessObjectDataStatusInformation(
             new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION), BDATA_STATUS, resultBusinessObjectDataStatusInformation);
     }
@@ -69,7 +70,7 @@ public class BusinessObjectDataStatusRestControllerTest extends AbstractRestTest
                     getDelimitedFieldValues(subPartitionValues), null, null);
 
             // Validate the returned object.
-            validateBusinessObjectDataStatusInformation(
+            businessObjectDataServiceTestHelper.validateBusinessObjectDataStatusInformation(
                 new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, subPartitionValues,
                     DATA_VERSION), BDATA_STATUS, resultBusinessObjectDataStatusInformation);
         }
@@ -88,7 +89,7 @@ public class BusinessObjectDataStatusRestControllerTest extends AbstractRestTest
             .getBusinessObjectDataStatus(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null, PARTITION_VALUE, null, null, null);
 
         // Validate the returned object.
-        validateBusinessObjectDataStatusInformation(
+        businessObjectDataServiceTestHelper.validateBusinessObjectDataStatusInformation(
             new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, NO_SUBPARTITION_VALUES,
                 DATA_VERSION), BDATA_STATUS, resultBusinessObjectDataStatusInformation);
     }
@@ -106,10 +107,10 @@ public class BusinessObjectDataStatusRestControllerTest extends AbstractRestTest
         BusinessObjectDataStatusUpdateResponse response = businessObjectDataStatusRestController
             .updateBusinessObjectDataStatus(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES.get(0), SUBPARTITION_VALUES.get(1), SUBPARTITION_VALUES.get(2), SUBPARTITION_VALUES.get(3), DATA_VERSION,
-                createBusinessObjectDataStatusUpdateRequest(BDATA_STATUS_2));
+                new BusinessObjectDataStatusUpdateRequest(BDATA_STATUS_2));
 
         // Validate the returned object.
-        validateBusinessObjectDataStatusUpdateResponse(
+        businessObjectDataServiceTestHelper.validateBusinessObjectDataStatusUpdateResponse(
             new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION), BDATA_STATUS_2, BDATA_STATUS, response);
     }
@@ -139,34 +140,34 @@ public class BusinessObjectDataStatusRestControllerTest extends AbstractRestTest
                 case 0:
                     response = businessObjectDataStatusRestController
                         .updateBusinessObjectDataStatus(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                            DATA_VERSION, createBusinessObjectDataStatusUpdateRequest(BDATA_STATUS_2));
+                            DATA_VERSION, new BusinessObjectDataStatusUpdateRequest(BDATA_STATUS_2));
                     break;
                 case 1:
                     response = businessObjectDataStatusRestController
                         .updateBusinessObjectDataStatus(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                            subPartitionValues.get(0), DATA_VERSION, createBusinessObjectDataStatusUpdateRequest(BDATA_STATUS_2));
+                            subPartitionValues.get(0), DATA_VERSION, new BusinessObjectDataStatusUpdateRequest(BDATA_STATUS_2));
                     break;
                 case 2:
                     response = businessObjectDataStatusRestController
                         .updateBusinessObjectDataStatus(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                            subPartitionValues.get(0), subPartitionValues.get(1), DATA_VERSION, createBusinessObjectDataStatusUpdateRequest(BDATA_STATUS_2));
+                            subPartitionValues.get(0), subPartitionValues.get(1), DATA_VERSION, new BusinessObjectDataStatusUpdateRequest(BDATA_STATUS_2));
                     break;
                 case 3:
                     response = businessObjectDataStatusRestController
                         .updateBusinessObjectDataStatus(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                             subPartitionValues.get(0), subPartitionValues.get(1), subPartitionValues.get(2), DATA_VERSION,
-                            createBusinessObjectDataStatusUpdateRequest(BDATA_STATUS_2));
+                            new BusinessObjectDataStatusUpdateRequest(BDATA_STATUS_2));
                     break;
                 case 4:
                     response = businessObjectDataStatusRestController
                         .updateBusinessObjectDataStatus(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                             subPartitionValues.get(0), subPartitionValues.get(1), subPartitionValues.get(2), subPartitionValues.get(3), DATA_VERSION,
-                            createBusinessObjectDataStatusUpdateRequest(BDATA_STATUS_2));
+                            new BusinessObjectDataStatusUpdateRequest(BDATA_STATUS_2));
                     break;
             }
 
             // Validate the returned object.
-            validateBusinessObjectDataStatusUpdateResponse(
+            businessObjectDataServiceTestHelper.validateBusinessObjectDataStatusUpdateResponse(
                 new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, subPartitionValues,
                     DATA_VERSION), BDATA_STATUS_2, BDATA_STATUS, response);
         }

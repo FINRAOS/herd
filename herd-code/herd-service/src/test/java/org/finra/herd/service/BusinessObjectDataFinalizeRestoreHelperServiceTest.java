@@ -68,7 +68,8 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
         StorageUnitAlternateKeyDto glacierStorageUnitKey = storageUnitHelper.createStorageUnitKey(businessObjectDataKey, STORAGE_NAME_GLACIER);
 
         // Create database entities required for testing.
-        BusinessObjectDataEntity businessObjectDataEntity = createDatabaseEntitiesForFinalizeRestoreTesting(businessObjectDataKey);
+        BusinessObjectDataEntity businessObjectDataEntity =
+            businessObjectDataServiceTestHelper.createDatabaseEntitiesForFinalizeRestoreTesting(businessObjectDataKey);
 
         // Get the origin storage unit entity.
         StorageUnitEntity originStorageUnitEntity = storageUnitDaoHelper.getStorageUnitEntity(STORAGE_NAME_ORIGIN, businessObjectDataEntity);
@@ -78,9 +79,10 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
             businessObjectDataFinalizeRestoreHelperService.prepareToFinalizeRestore(glacierStorageUnitKey);
 
         // Validate the returned object.
-        validateBusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN, TEST_S3_KEY_PREFIX,
-            storageFileHelper.createStorageFilesFromEntities(originStorageUnitEntity.getStorageFiles()), STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER,
-            S3_BUCKET_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX, null, resultStoragePolicyTransitionParamsDto);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN, TEST_S3_KEY_PREFIX,
+                storageFileHelper.createStorageFilesFromEntities(originStorageUnitEntity.getStorageFiles()), STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER,
+                S3_BUCKET_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX, null, resultStoragePolicyTransitionParamsDto);
     }
 
     @Test
@@ -92,7 +94,8 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
                 NO_SUBPARTITION_VALUES, DATA_VERSION);
 
         // Create database entities required for testing.
-        BusinessObjectDataEntity businessObjectDataEntity = createDatabaseEntitiesForFinalizeRestoreTesting(businessObjectDataKey);
+        BusinessObjectDataEntity businessObjectDataEntity =
+            businessObjectDataServiceTestHelper.createDatabaseEntitiesForFinalizeRestoreTesting(businessObjectDataKey);
 
         // Get the origin storage unit entity.
         StorageUnitEntity originStorageUnitEntity = storageUnitDaoHelper.getStorageUnitEntity(STORAGE_NAME_ORIGIN, businessObjectDataEntity);
@@ -105,9 +108,10 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
             businessObjectDataFinalizeRestoreHelperService.prepareToFinalizeRestore(glacierStorageUnitKey);
 
         // Validate the returned object.
-        validateBusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN, TEST_S3_KEY_PREFIX,
-            storageFileHelper.createStorageFilesFromEntities(originStorageUnitEntity.getStorageFiles()), STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER,
-            S3_BUCKET_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX, null, resultStoragePolicyTransitionParamsDto);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectDataRestoreDto(businessObjectDataKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN, TEST_S3_KEY_PREFIX,
+                storageFileHelper.createStorageFilesFromEntities(originStorageUnitEntity.getStorageFiles()), STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER,
+                S3_BUCKET_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX, null, resultStoragePolicyTransitionParamsDto);
     }
 
     @Test
@@ -134,8 +138,8 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(
-                getExpectedBusinessObjectDataNotFoundErrorMessage("I_DO_NOT_EXIST", BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+            assertEquals(businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataNotFoundErrorMessage("I_DO_NOT_EXIST", BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
                     PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
         }
 
@@ -149,8 +153,8 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(
-                getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, "I_DO_NOT_EXIST", FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+            assertEquals(businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, "I_DO_NOT_EXIST", FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
                     PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
         }
 
@@ -164,8 +168,9 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, "I_DO_NOT_EXIST", FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
+            assertEquals(businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, "I_DO_NOT_EXIST", FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                    PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
         }
 
         // Try to prepare to finalize a restore using an invalid format file type.
@@ -178,8 +183,9 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, "I_DO_NOT_EXIST", FORMAT_VERSION,
-                PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
+            assertEquals(businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, "I_DO_NOT_EXIST", FORMAT_VERSION,
+                    PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
         }
 
         // Try to prepare to finalize a restore using an invalid business object format version.
@@ -192,8 +198,8 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(
-                getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INVALID_FORMAT_VERSION,
+            assertEquals(businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INVALID_FORMAT_VERSION,
                     PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
         }
 
@@ -207,8 +213,9 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                "I_DO_NOT_EXIST", SUBPARTITION_VALUES, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
+            assertEquals(businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                    "I_DO_NOT_EXIST", SUBPARTITION_VALUES, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
         }
 
         // Try to prepare to finalize a restore using an invalid sub-partition value.
@@ -225,8 +232,8 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
             }
             catch (ObjectNotFoundException e)
             {
-                assertEquals(
-                    getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                assertEquals(businessObjectDataServiceTestHelper
+                    .getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
                         PARTITION_VALUE, testSubPartitionValues, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
             }
         }
@@ -241,8 +248,9 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                PARTITION_VALUE, SUBPARTITION_VALUES, INVALID_DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
+            assertEquals(businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                    PARTITION_VALUE, SUBPARTITION_VALUES, INVALID_DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
         }
 
         // Try to prepare to finalize a restore using an invalid Glacier storage name.
@@ -256,8 +264,9 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
         catch (ObjectNotFoundException e)
         {
             assertEquals(String.format("Could not find storage unit in \"%s\" storage for the business object data {%s}.", "I_DO_NOT_EXIST",
-                getExpectedBusinessObjectDataKeyAsString(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                    SUBPARTITION_VALUES, DATA_VERSION)), e.getMessage());
+                businessObjectDataServiceTestHelper
+                    .getExpectedBusinessObjectDataKeyAsString(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                        PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION)), e.getMessage());
         }
     }
 
@@ -274,8 +283,9 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
+            assertEquals(businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                    PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
         }
     }
 
@@ -302,7 +312,7 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
         catch (ObjectNotFoundException e)
         {
             assertEquals(String.format("Could not find storage unit in \"%s\" storage for the business object data {%s}.", STORAGE_NAME_GLACIER,
-                getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
+                businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
         }
     }
 
@@ -330,9 +340,8 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals(String
-                .format("Business object data is not archived. Business object data: {%s}", getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)),
-                e.getMessage());
+            assertEquals(String.format("Business object data is not archived. Business object data: {%s}",
+                businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
         }
     }
 
@@ -362,7 +371,8 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
         {
             assertEquals(String
                 .format("Business object data has no storage directory path specified in \"%s\" %s storage. Business object data: {%s}", STORAGE_NAME_GLACIER,
-                    StoragePlatformEntity.GLACIER, getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
+                    StoragePlatformEntity.GLACIER, businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)),
+                e.getMessage());
         }
     }
 
@@ -375,8 +385,8 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
                 DATA_VERSION);
 
         // Create database entities required for testing with Glacier storage unit storage directory path not starting with the origin S3 bucket name.
-        createDatabaseEntitiesForFinalizeRestoreTesting(businessObjectDataKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN, StorageUnitStatusEntity.RESTORING,
-            STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER, StorageUnitStatusEntity.ENABLED, TEST_S3_KEY_PREFIX);
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForFinalizeRestoreTesting(businessObjectDataKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN,
+            StorageUnitStatusEntity.RESTORING, STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER, StorageUnitStatusEntity.ENABLED, TEST_S3_KEY_PREFIX);
 
         // Create a Glacier storage unit key.
         StorageUnitAlternateKeyDto glacierStorageUnitKey = storageUnitHelper.createStorageUnitKey(businessObjectDataKey, STORAGE_NAME_GLACIER);
@@ -393,8 +403,8 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
             assertEquals(String.format(
                 "Storage directory path \"%s\" for business object data in \"%s\" %s storage does not start with the origin S3 bucket name. " +
                     "Origin S3 bucket name: {%s}, origin storage: {%s}, business object data: {%s}", TEST_S3_KEY_PREFIX, STORAGE_NAME_GLACIER,
-                StoragePlatformEntity.GLACIER, S3_BUCKET_NAME_ORIGIN, STORAGE_NAME_ORIGIN, getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)),
-                e.getMessage());
+                StoragePlatformEntity.GLACIER, S3_BUCKET_NAME_ORIGIN, STORAGE_NAME_ORIGIN,
+                businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
         }
     }
 
@@ -407,9 +417,10 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
                 DATA_VERSION);
 
         // Create database entities required for testing.
-        BusinessObjectDataEntity businessObjectDataEntity =
-            createDatabaseEntitiesForFinalizeRestoreTesting(businessObjectDataKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN, StorageUnitStatusEntity.DISABLED,
-                STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER, StorageUnitStatusEntity.ENABLED, S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX);
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataServiceTestHelper
+            .createDatabaseEntitiesForFinalizeRestoreTesting(businessObjectDataKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN,
+                StorageUnitStatusEntity.DISABLED, STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER, StorageUnitStatusEntity.ENABLED,
+                S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX);
 
         // Get the Glacier storage unit entity.
         StorageUnitEntity glacierStorageUnitEntity = storageUnitDaoHelper.getStorageUnitEntity(STORAGE_NAME_GLACIER, businessObjectDataEntity);
@@ -429,7 +440,7 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
         catch (IllegalArgumentException e)
         {
             assertEquals(String.format("Glacier storage unit in \"%s\" storage has no origin S3 storage unit. Business object data: {%s}", STORAGE_NAME_GLACIER,
-                getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
+                businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
         }
     }
 
@@ -442,9 +453,10 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
                 DATA_VERSION);
 
         // Create database entities required for testing.
-        BusinessObjectDataEntity businessObjectDataEntity =
-            createDatabaseEntitiesForFinalizeRestoreTesting(businessObjectDataKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN, StorageUnitStatusEntity.DISABLED,
-                STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER, StorageUnitStatusEntity.ENABLED, S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX);
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataServiceTestHelper
+            .createDatabaseEntitiesForFinalizeRestoreTesting(businessObjectDataKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN,
+                StorageUnitStatusEntity.DISABLED, STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER, StorageUnitStatusEntity.ENABLED,
+                S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX);
 
         // Create a non-S3 storage unit for this business object data.
         StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
@@ -468,7 +480,7 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
         catch (IllegalArgumentException e)
         {
             assertEquals(String.format("Glacier storage unit in \"%s\" storage has no origin S3 storage unit. Business object data: {%s}", STORAGE_NAME_GLACIER,
-                getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
+                businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
         }
     }
 
@@ -481,8 +493,9 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
                 DATA_VERSION);
 
         // Create database entities required for testing with an enabled origin storage unit.
-        createDatabaseEntitiesForFinalizeRestoreTesting(businessObjectDataKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN, StorageUnitStatusEntity.ENABLED,
-            STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER, StorageUnitStatusEntity.ENABLED, S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX);
+        businessObjectDataServiceTestHelper
+            .createDatabaseEntitiesForFinalizeRestoreTesting(businessObjectDataKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN, StorageUnitStatusEntity.ENABLED,
+                STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER, StorageUnitStatusEntity.ENABLED, S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX);
 
         // Create a Glacier storage unit key.
         StorageUnitAlternateKeyDto glacierStorageUnitKey = storageUnitHelper.createStorageUnitKey(businessObjectDataKey, STORAGE_NAME_GLACIER);
@@ -496,7 +509,7 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
         catch (IllegalArgumentException e)
         {
             assertEquals(String.format("Business object data is already available in \"%s\" S3 storage. Business object data: {%s}", STORAGE_NAME_ORIGIN,
-                getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
+                businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
         }
     }
 
@@ -509,8 +522,9 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
                 DATA_VERSION);
 
         // Create database entities required for testing with a non-RESTORING origin storage unit.
-        createDatabaseEntitiesForFinalizeRestoreTesting(businessObjectDataKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN, STORAGE_UNIT_STATUS,
-            STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER, StorageUnitStatusEntity.ENABLED, S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX);
+        businessObjectDataServiceTestHelper
+            .createDatabaseEntitiesForFinalizeRestoreTesting(businessObjectDataKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN, STORAGE_UNIT_STATUS,
+                STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER, StorageUnitStatusEntity.ENABLED, S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX);
 
         // Create a Glacier storage unit key.
         StorageUnitAlternateKeyDto glacierStorageUnitKey = storageUnitHelper.createStorageUnitKey(businessObjectDataKey, STORAGE_NAME_GLACIER);
@@ -526,7 +540,7 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
             assertEquals(String
                 .format("Origin S3 storage unit in \"%s\" storage must have \"%s\" status, but it actually has \"%s\" status. Business object data: {%s}",
                     STORAGE_NAME_ORIGIN, StorageUnitStatusEntity.RESTORING, STORAGE_UNIT_STATUS,
-                    getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
+                    businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
         }
     }
 
@@ -539,8 +553,8 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
                 DATA_VERSION);
 
         // Create database entities required for testing.
-        BusinessObjectDataEntity businessObjectDataEntity =
-            createDatabaseEntitiesForFinalizeRestoreTesting(businessObjectDataKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN,
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataServiceTestHelper
+            .createDatabaseEntitiesForFinalizeRestoreTesting(businessObjectDataKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN,
                 StorageUnitStatusEntity.RESTORING, STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER, StorageUnitStatusEntity.ENABLED,
                 S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX);
 
@@ -563,7 +577,7 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
         {
             assertEquals(String
                 .format("Business object data has no storage files registered in \"%s\" origin storage. Business object data: {%s}", STORAGE_NAME_ORIGIN,
-                    getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
+                    businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
         }
     }
 
@@ -576,8 +590,8 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
                 DATA_VERSION);
 
         // Create database entities required for testing with Glacier storage not having S3 bucket name configured.
-        createDatabaseEntitiesForFinalizeRestoreTesting(businessObjectDataKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN, StorageUnitStatusEntity.DISABLED,
-            STORAGE_NAME_GLACIER, null, StorageUnitStatusEntity.ENABLED, S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX);
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForFinalizeRestoreTesting(businessObjectDataKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN,
+            StorageUnitStatusEntity.DISABLED, STORAGE_NAME_GLACIER, null, StorageUnitStatusEntity.ENABLED, S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX);
 
         // Create a Glacier storage unit key.
         StorageUnitAlternateKeyDto glacierStorageUnitKey = storageUnitHelper.createStorageUnitKey(businessObjectDataKey, STORAGE_NAME_GLACIER);
@@ -605,8 +619,9 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
                 DATA_VERSION);
 
         // Create database entities required for testing with the origin storage not having S3 bucket name configured.
-        createDatabaseEntitiesForFinalizeRestoreTesting(businessObjectDataKey, STORAGE_NAME_ORIGIN, null, StorageUnitStatusEntity.RESTORING,
-            STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER, StorageUnitStatusEntity.ENABLED, S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX);
+        businessObjectDataServiceTestHelper
+            .createDatabaseEntitiesForFinalizeRestoreTesting(businessObjectDataKey, STORAGE_NAME_ORIGIN, null, StorageUnitStatusEntity.RESTORING,
+                STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER, StorageUnitStatusEntity.ENABLED, S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX);
 
         // Create a Glacier storage unit key.
         StorageUnitAlternateKeyDto glacierStorageUnitKey = storageUnitHelper.createStorageUnitKey(businessObjectDataKey, STORAGE_NAME_GLACIER);
@@ -963,7 +978,7 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
                     "target storage: {%s}, target S3 bucket name: {%s}, target S3 object key: {%s/%s}, business object data: {%s}", STORAGE_NAME_GLACIER,
                     S3_BUCKET_NAME_GLACIER, S3_BUCKET_NAME_ORIGIN, TEST_S3_KEY_PREFIX, MockS3OperationsImpl.MOCK_S3_FILE_NAME_SERVICE_EXCEPTION,
                     STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN, TEST_S3_KEY_PREFIX, MockS3OperationsImpl.MOCK_S3_FILE_NAME_SERVICE_EXCEPTION,
-                    getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
+                    businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
             }
 
             // Validate that the origin S3 location is empty.
@@ -996,7 +1011,8 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
                 DATA_VERSION);
 
         // Create database entities required for testing.
-        BusinessObjectDataEntity businessObjectDataEntity = createDatabaseEntitiesForFinalizeRestoreTesting(businessObjectDataKey);
+        BusinessObjectDataEntity businessObjectDataEntity =
+            businessObjectDataServiceTestHelper.createDatabaseEntitiesForFinalizeRestoreTesting(businessObjectDataKey);
 
         // Get the origin storage unit entity.
         StorageUnitEntity originStorageUnitEntity = storageUnitDaoHelper.getStorageUnitEntity(STORAGE_NAME_ORIGIN, businessObjectDataEntity);
@@ -1039,7 +1055,8 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(getExpectedBusinessObjectDataNotFoundErrorMessage(businessObjectDataKey, NO_BDATA_STATUS), e.getMessage());
+            assertEquals(businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataNotFoundErrorMessage(businessObjectDataKey, NO_BDATA_STATUS),
+                e.getMessage());
         }
 
         // Create an origin storage file.
@@ -1069,7 +1086,8 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(getExpectedBusinessObjectDataNotFoundErrorMessage(businessObjectDataKey, NO_BDATA_STATUS), e.getMessage());
+            assertEquals(businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataNotFoundErrorMessage(businessObjectDataKey, NO_BDATA_STATUS),
+                e.getMessage());
         }
     }
 }

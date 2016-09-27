@@ -32,7 +32,7 @@ public class LogVariablesTest extends AbstractServiceTest
     {
         // Run a job with Activiti XML that will log variables. The XML will only log 1 of the 2 variables present in the test workflow.
         // Since we can't really test what got logged, we'll just ensure that no exceptions were thrown and that the job isn't null.
-        Job job = createJob(ACTIVITI_XML_LOG_VARIABLES_WITH_CLASSPATH);
+        Job job = jobServiceTestHelper.createJob(ACTIVITI_XML_LOG_VARIABLES_WITH_CLASSPATH);
         assertNotNull(job);
     }
 
@@ -41,7 +41,7 @@ public class LogVariablesTest extends AbstractServiceTest
     {
         // This does the same thing as the testLogVariables test above, but uses a workflow that uses a deprecated service task.
         // This test can be removed once all deprecated service tasks are removed.
-        Job job = createJob(ACTIVITI_XML_LOG_VARIABLES_WITH_CLASSPATH_DM);
+        Job job = jobServiceTestHelper.createJob(ACTIVITI_XML_LOG_VARIABLES_WITH_CLASSPATH_DM);
         assertNotNull(job);
     }
 
@@ -49,7 +49,7 @@ public class LogVariablesTest extends AbstractServiceTest
     public void testLogVariablesNoRegex() throws Exception
     {
         // Run a job with Activiti XML that will log variables. The XML will log all variables present in the test workflow because no Regex is specified.
-        Job job = createJob(ACTIVITI_XML_LOG_VARIABLES_NO_REGEX_WITH_CLASSPATH);
+        Job job = jobServiceTestHelper.createJob(ACTIVITI_XML_LOG_VARIABLES_NO_REGEX_WITH_CLASSPATH);
         assertNotNull(job);
     }
 }

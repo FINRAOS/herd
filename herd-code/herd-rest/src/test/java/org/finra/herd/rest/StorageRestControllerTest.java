@@ -48,7 +48,7 @@ public class StorageRestControllerTest extends AbstractRestTest
         assertTrue(storage.getName().equals(storageCreateRequest.getName()));
 
         // Check if result list of attributes matches to the list from the create request.
-        validateAttributes(storageCreateRequest.getAttributes(), storage.getAttributes());
+        businessObjectDefinitionServiceTestHelper.validateAttributes(storageCreateRequest.getAttributes(), storage.getAttributes());
     }
 
     @Test
@@ -135,7 +135,7 @@ public class StorageRestControllerTest extends AbstractRestTest
         StorageCreateRequest storageRequest = new StorageCreateRequest();
         storageRequest.setStoragePlatformName(StoragePlatformEntity.S3);
         storageRequest.setName(name);
-        storageRequest.setAttributes(getNewAttributes());
+        storageRequest.setAttributes(businessObjectDefinitionServiceTestHelper.getNewAttributes());
         return storageRequest;
     }
 }

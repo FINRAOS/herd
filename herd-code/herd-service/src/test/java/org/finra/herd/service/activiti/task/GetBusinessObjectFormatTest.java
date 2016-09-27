@@ -40,7 +40,7 @@ public class GetBusinessObjectFormatTest extends HerdActivitiServiceTaskTest
     public void testGetBusinessObjectFormat() throws Exception
     {
         // Create and persist a business object format.
-        BusinessObjectFormat businessObjectFormat = createTestBusinessObjectFormat();
+        BusinessObjectFormat businessObjectFormat = businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat();
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
         fieldExtensionList.add(buildFieldExtension("namespace", "${namespace}"));
@@ -69,7 +69,7 @@ public class GetBusinessObjectFormatTest extends HerdActivitiServiceTaskTest
     public void testGetBusinessObjectFormatMissingOptionalParameters() throws Exception
     {
         // Create and persist a business object format.
-        BusinessObjectFormat businessObjectFormat = createTestBusinessObjectFormat();
+        BusinessObjectFormat businessObjectFormat = businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat();
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
         fieldExtensionList.add(buildFieldExtension("namespace", "${namespace}"));
@@ -152,8 +152,8 @@ public class GetBusinessObjectFormatTest extends HerdActivitiServiceTaskTest
         executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
             // Try to get a non-existing business object format.
             Map<String, Object> variableValuesToValidate = new HashMap<>();
-            variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, String
-                .format(getExpectedBusinessObjectFormatNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION)));
+            variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ERROR_MESSAGE, String.format(businessObjectFormatServiceTestHelper
+                .getExpectedBusinessObjectFormatNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION)));
             testActivitiServiceTaskFailure(GetBusinessObjectFormat.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
         });
     }

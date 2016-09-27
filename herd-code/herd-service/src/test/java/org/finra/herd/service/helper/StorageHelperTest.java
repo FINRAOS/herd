@@ -42,7 +42,7 @@ public class StorageHelperTest extends AbstractServiceTest
 
         Storage testStorage = new Storage();
         testStorage.setName(testStorageName);
-        testStorage.setAttributes(getNewAttributes());
+        testStorage.setAttributes(businessObjectDefinitionServiceTestHelper.getNewAttributes());
 
         assertEquals(ATTRIBUTE_VALUE_1, storageHelper.getStorageAttributeValueByName(ATTRIBUTE_NAME_1_MIXED_CASE, testStorage, Boolean.FALSE));
         assertEquals(ATTRIBUTE_VALUE_2, storageHelper.getStorageAttributeValueByName(ATTRIBUTE_NAME_2_MIXED_CASE, testStorage, Boolean.TRUE));

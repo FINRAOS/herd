@@ -62,8 +62,9 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
     public void testInitiateStoragePolicyTransition()
     {
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
-            Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
+        storagePolicyServiceTestHelper
+            .createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
+                Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
 
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
@@ -100,8 +101,9 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
     public void testInitiateStoragePolicyTransitionDestinationStorageUnitDisabled()
     {
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
-            Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
+        storagePolicyServiceTestHelper
+            .createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
+                Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
 
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
@@ -256,7 +258,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(getExpectedBusinessObjectDataNotFoundErrorMessage(businessObjectDataKey, null), e.getMessage());
+            assertEquals(businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataNotFoundErrorMessage(businessObjectDataKey, null), e.getMessage());
         }
     }
 
@@ -285,7 +287,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         {
             assertEquals(String
                 .format("Business object data status \"%s\" is not supported by the storage policy feature. Business object data: {%s}", BDATA_STATUS,
-                    getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
+                    businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
         }
     }
 
@@ -350,7 +352,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         catch (IllegalArgumentException e)
         {
             assertEquals(String.format("Storage platform for storage policy filter storage with name \"%s\" is not \"%s\". Storage policy: {%s}", STORAGE_NAME,
-                StoragePlatformEntity.S3, getExpectedStoragePolicyKeyAndVersionAsString(storagePolicyKey, INITIAL_VERSION)), e.getMessage());
+                StoragePlatformEntity.S3, storagePolicyServiceTestHelper.getExpectedStoragePolicyKeyAndVersionAsString(storagePolicyKey, INITIAL_VERSION)),
+                e.getMessage());
         }
     }
 
@@ -390,7 +393,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         catch (IllegalStateException e)
         {
             assertEquals(String.format("Path prefix validation must be enabled on \"%s\" storage. Storage policy: {%s}", STORAGE_NAME,
-                getExpectedStoragePolicyKeyAndVersionAsString(storagePolicyKey, INITIAL_VERSION)), e.getMessage());
+                storagePolicyServiceTestHelper.getExpectedStoragePolicyKeyAndVersionAsString(storagePolicyKey, INITIAL_VERSION)), e.getMessage());
         }
     }
 
@@ -430,7 +433,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         catch (IllegalStateException e)
         {
             assertEquals(String.format("File existence validation must be enabled on \"%s\" storage. Storage policy: {%s}", STORAGE_NAME,
-                getExpectedStoragePolicyKeyAndVersionAsString(storagePolicyKey, INITIAL_VERSION)), e.getMessage());
+                storagePolicyServiceTestHelper.getExpectedStoragePolicyKeyAndVersionAsString(storagePolicyKey, INITIAL_VERSION)), e.getMessage());
         }
     }
 
@@ -477,8 +480,9 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
     public void testInitiateStoragePolicyTransitionDestinationStorageInvalidStoragePlatform()
     {
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
-            Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
+        storagePolicyServiceTestHelper
+            .createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
+                Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
 
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
@@ -507,7 +511,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         {
             assertEquals(String
                 .format("Storage platform for storage policy transition destination storage with name \"%s\" is not \"%s\". Storage policy: {%s}", STORAGE_NAME,
-                    StoragePlatformEntity.GLACIER, getExpectedStoragePolicyKeyAndVersionAsString(storagePolicyKey, INITIAL_VERSION)), e.getMessage());
+                    StoragePlatformEntity.GLACIER,
+                    storagePolicyServiceTestHelper.getExpectedStoragePolicyKeyAndVersionAsString(storagePolicyKey, INITIAL_VERSION)), e.getMessage());
         }
     }
 
@@ -515,8 +520,9 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
     public void testInitiateStoragePolicyTransitionDestinationStorageVaultNameNotConfigured()
     {
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
-            Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), new ArrayList<>());
+        storagePolicyServiceTestHelper
+            .createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
+                Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), new ArrayList<>());
 
         // Create a Glacier storage without any attributes.
         storageDaoTestHelper.createStorageEntity(STORAGE_NAME_2, StoragePlatformEntity.GLACIER);
@@ -555,8 +561,9 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
     public void testInitiateStoragePolicyTransitionSourceStorageUnitNoExists()
     {
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
-            Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
+        storagePolicyServiceTestHelper
+            .createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
+                Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
 
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
@@ -584,7 +591,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         catch (ObjectNotFoundException e)
         {
             assertEquals(String.format("Could not find storage unit in \"%s\" storage for the business object data {%s}.", STORAGE_NAME,
-                getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
+                businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
         }
     }
 
@@ -592,8 +599,9 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
     public void testInitiateStoragePolicyTransitionSourceStorageUnitNotEnabled()
     {
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
-            Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
+        storagePolicyServiceTestHelper
+            .createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
+                Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
 
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
@@ -624,7 +632,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         {
             assertEquals(String.format("Source storage unit status is \"%s\", but must be \"%s\" for storage policy transition to proceed. " +
                 "Storage: {%s}, business object data: {%s}", STORAGE_UNIT_STATUS, StorageUnitStatusEntity.ENABLED, STORAGE_NAME,
-                getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
+                businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
         }
     }
 
@@ -632,8 +640,9 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
     public void testInitiateStoragePolicyTransitionDestinationStorageUnitNotDisabled()
     {
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
-            Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
+        storagePolicyServiceTestHelper
+            .createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
+                Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
 
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
@@ -669,7 +678,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         {
             assertEquals(String
                 .format("Destination storage unit already exists and has \"%s\" status. Storage: {%s}, business object data: {%s}", STORAGE_UNIT_STATUS,
-                    STORAGE_NAME_2, getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
+                    STORAGE_NAME_2, businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
         }
     }
 
@@ -677,8 +686,9 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
     public void testInitiateStoragePolicyTransitionDestinationStorageFileExist()
     {
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
-            Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
+        storagePolicyServiceTestHelper
+            .createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
+                Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
 
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
@@ -717,7 +727,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         {
             assertEquals(String.format(
                 "Destination storage unit already exists and has 1 storage file(s), but must have no storage files. Storage: {%s}, business object data: {%s}",
-                STORAGE_NAME_2, getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
+                STORAGE_NAME_2, businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
         }
     }
 
@@ -725,8 +735,9 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
     public void testInitiateStoragePolicyTransitionSubpartitionValuesWithoutFormatSchema()
     {
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
-            Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
+        storagePolicyServiceTestHelper
+            .createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
+                Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
 
         // Create a business object data key. Please note that business object data key contains
         // sub-partition value that would require the relative business object format to have schema.
@@ -756,7 +767,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         catch (IllegalArgumentException e)
         {
             assertEquals(String.format("Schema must be defined when using subpartition values for business object format {%s}.",
-                getExpectedBusinessObjectFormatKeyAsString(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION)),
+                businessObjectFormatServiceTestHelper
+                    .getExpectedBusinessObjectFormatKeyAsString(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION)),
                 e.getMessage());
         }
     }
@@ -765,8 +777,9 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
     public void testInitiateStoragePolicyTransitionStorageFilesNoExists()
     {
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
-            Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
+        storagePolicyServiceTestHelper
+            .createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
+                Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
 
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
@@ -795,7 +808,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         catch (IllegalArgumentException e)
         {
             assertEquals(String.format("Business object data has no storage files registered in \"%s\" storage. Business object data: {%s}", STORAGE_NAME,
-                getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
+                businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
         }
     }
 
@@ -810,8 +823,9 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         try
         {
             // Create and persist the relative database entities.
-            createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
-                Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
+            storagePolicyServiceTestHelper
+                .createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
+                    Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
 
             // Create a business object data key.
             BusinessObjectDataKey businessObjectDataKey =
@@ -851,7 +865,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
                 assertEquals(String.format("Total size of storage files (%d bytes) for business object data in \"%s\" storage is greater than " +
                     "the configured threshold of 0 GB (0 bytes) as per \"%s\" configuration entry. Business object data: {%s}", FILE_SIZE_1_KB, STORAGE_NAME,
                     ConfigurationValue.STORAGE_POLICY_PROCESSOR_BDATA_SIZE_THRESHOLD_GB.getKey(),
-                    getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
+                    businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
             }
         }
         finally
@@ -865,8 +879,9 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
     public void testInitiateStoragePolicyTransitionStorageFileDoesNotMatchS3KeyPrefix()
     {
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
-            Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
+        storagePolicyServiceTestHelper
+            .createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
+                Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
 
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
@@ -906,8 +921,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         {
             assertEquals(String.format(
                 "Storage file \"%s\" registered with business object data {%s} in \"%s\" storage " + "does not match the expected S3 key prefix \"%s\".",
-                storageFileEntity.getPath(), getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey), STORAGE_NAME, expectedS3KeyPrefix),
-                e.getMessage());
+                storageFileEntity.getPath(), businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey), STORAGE_NAME,
+                expectedS3KeyPrefix), e.getMessage());
         }
     }
 
@@ -915,8 +930,9 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
     public void testInitiateStoragePolicyTransitionOtherBusinessObjectDataHasStorageFilesMatchingS3KeyPrefix()
     {
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
-            Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
+        storagePolicyServiceTestHelper
+            .createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
+                Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
 
         // Create two business object data keys.
         List<BusinessObjectDataKey> businessObjectDataKeys = Arrays.asList(
@@ -965,7 +981,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
                 .format("Found %d registered storage file(s) matching business object data S3 key prefix in the storage that is not equal to the number " +
                     "of storage files (%d) registered with the business object data in that storage. " +
                     "Storage: {%s}, s3KeyPrefix {%s}, business object data: {%s}", storageFileEntities.size(), 1, STORAGE_NAME, expectedS3KeyPrefix,
-                    getExpectedBusinessObjectDataKeyAsString(businessObjectDataKeys.get(0))), e.getMessage());
+                    businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKeys.get(0))), e.getMessage());
         }
     }
 
@@ -1146,7 +1162,8 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
             assertEquals(String.format("Failed to copy S3 file. Source storage: {%s}, source S3 bucket name: {%s}, source S3 object key: {%s}, " +
                 "target storage: {%s}, target S3 bucket name: {%s}, target S3 object key: {%s/%s/%s}, business object data: {%s}", STORAGE_NAME, S3_BUCKET_NAME,
                 sourceStorageFiles.get(0).getFilePath(), STORAGE_NAME_2, S3_BUCKET_NAME_2, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX,
-                MockS3OperationsImpl.MOCK_S3_FILE_NAME_SERVICE_EXCEPTION, getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
+                MockS3OperationsImpl.MOCK_S3_FILE_NAME_SERVICE_EXCEPTION,
+                businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
 
             // Validate that we still have our source S3 files in the source S3 bucket.
             assertEquals(sourceStorageFiles.size(), s3Dao.listDirectory(sourceS3FileTransferRequestParamsDto).size());
@@ -1173,8 +1190,9 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
     public void testCompleteStoragePolicyTransition()
     {
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
-            Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
+        storagePolicyServiceTestHelper
+            .createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
+                Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
 
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
@@ -1222,7 +1240,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(getExpectedBusinessObjectDataNotFoundErrorMessage(businessObjectDataKey, null), e.getMessage());
+            assertEquals(businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataNotFoundErrorMessage(businessObjectDataKey, null), e.getMessage());
         }
     }
 
@@ -1250,7 +1268,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         {
             assertEquals(String
                 .format("Business object data status \"%s\" is not supported by the storage policy feature. Business object data: {%s}", BDATA_STATUS,
-                    getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
+                    businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
         }
     }
 
@@ -1258,8 +1276,9 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
     public void testCompleteStoragePolicyTransitionSourceStorageUnitNoExists()
     {
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
-            Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
+        storagePolicyServiceTestHelper
+            .createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
+                Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
 
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
@@ -1281,7 +1300,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         catch (ObjectNotFoundException e)
         {
             assertEquals(String.format("Could not find storage unit in \"%s\" storage for the business object data {%s}.", STORAGE_NAME,
-                getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
+                businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
         }
     }
 
@@ -1289,8 +1308,9 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
     public void testCompleteStoragePolicyTransitionSourceStorageUnitNotEnabled()
     {
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
-            Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
+        storagePolicyServiceTestHelper
+            .createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
+                Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
 
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
@@ -1315,7 +1335,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         {
             assertEquals(String.format("Source storage unit status is \"%s\", but must be \"%s\" for storage policy transition to proceed. " +
                 "Storage: {%s}, business object data: {%s}", STORAGE_UNIT_STATUS, StorageUnitStatusEntity.ENABLED, STORAGE_NAME,
-                getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
+                businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
         }
     }
 
@@ -1323,8 +1343,9 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
     public void testCompleteStoragePolicyTransitionDestinationStorageUnitNoExists()
     {
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
-            Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
+        storagePolicyServiceTestHelper
+            .createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
+                Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
 
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
@@ -1347,7 +1368,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         catch (ObjectNotFoundException e)
         {
             assertEquals(String.format("Could not find storage unit in \"%s\" storage for the business object data {%s}.", STORAGE_NAME_2,
-                getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
+                businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
         }
     }
 
@@ -1355,8 +1376,9 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
     public void testCompleteStoragePolicyTransitionDestinationStorageUnitNotInArchivingState()
     {
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
-            Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
+        storagePolicyServiceTestHelper
+            .createDatabaseEntitiesForStoragePolicyTesting(STORAGE_POLICY_NAMESPACE_CD, Arrays.asList(STORAGE_POLICY_RULE_TYPE), BDEF_NAMESPACE, BDEF_NAME,
+                Arrays.asList(FORMAT_FILE_TYPE_CODE), Arrays.asList(STORAGE_NAME), Arrays.asList(STORAGE_NAME_2));
 
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
@@ -1386,7 +1408,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         {
             assertEquals(String.format("Destination storage unit status is \"%s\", but must be \"%s\" for storage policy transition to proceed. " +
                 "Storage: {%s}, business object data: {%s}", STORAGE_UNIT_STATUS, StorageUnitStatusEntity.ARCHIVING, STORAGE_NAME_2,
-                getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
+                businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
         }
     }
 

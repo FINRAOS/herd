@@ -167,7 +167,8 @@ public class Hive13DdlGenerator extends DdlGenerator
         // the call below, so we select storage units only from all S3 storages, when the specified list of storages is empty.
         List<List<String>> partitionFilters = businessObjectDataDaoHelper
             .buildPartitionFilters(request.getPartitionValueFilters(), request.getPartitionValueFilter(), businessObjectFormatKey,
-                request.getBusinessObjectDataVersion(), storageNames, StoragePlatformEntity.S3, null, businessObjectFormatEntity);
+                request.getBusinessObjectDataVersion(), storageNames, StoragePlatformEntity.S3, null,
+                BooleanUtils.isTrue(request.isIncludeArchivedBusinessObjectData()), businessObjectFormatEntity);
 
         // If the partitionKey="partition" and partitionValue="none", then DDL should
         // return a DDL which treats business object data as a table, not a partition.

@@ -24,6 +24,7 @@ import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -49,6 +50,12 @@ import org.finra.herd.model.jpa.StorageUnitStatusEntity;
  */
 public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends AbstractServiceTest
 {
+    private static final String testS3KeyPrefix =
+        getExpectedS3KeyPrefix(NAMESPACE, DATA_PROVIDER_NAME, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
+            PARTITION_VALUE, null, null, INITIAL_DATA_VERSION);
+
+    private Path localTempPath;
+
     /**
      * Sets up the test environment.
      */
@@ -98,8 +105,9 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
                 INITIAL_DATA_VERSION), false);
 
         // Validate the returned object.
-        validateBusinessObjectData(businessObjectDataEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-            PARTITION_VALUE, SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS, deletedBusinessObjectData);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectData(businessObjectDataEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                PARTITION_VALUE, SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS, deletedBusinessObjectData);
 
         // Ensure that this business object data is no longer there.
         assertNull(businessObjectDataDao.getBusinessObjectDataByAltKey(businessObjectDataKey));
@@ -304,8 +312,9 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
             }
 
             // Validate the returned object.
-            validateBusinessObjectData(businessObjectDataEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                PARTITION_VALUE, subPartitionValues, DATA_VERSION, true, BDATA_STATUS, deletedBusinessObjectData);
+            businessObjectDataServiceTestHelper
+                .validateBusinessObjectData(businessObjectDataEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                    PARTITION_VALUE, subPartitionValues, DATA_VERSION, true, BDATA_STATUS, deletedBusinessObjectData);
 
             // Ensure that this business object data is no longer there.
             assertNull(businessObjectDataDao.getBusinessObjectDataByAltKey(businessObjectDataKey));
@@ -332,8 +341,9 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
                 addWhitespace(FORMAT_FILE_TYPE_CODE), FORMAT_VERSION, addWhitespace(PARTITION_VALUE), addWhitespace(SUBPARTITION_VALUES), DATA_VERSION), false);
 
         // Validate the returned object.
-        validateBusinessObjectData(businessObjectDataEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-            PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS, deletedBusinessObjectData);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectData(businessObjectDataEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, true, BDATA_STATUS, deletedBusinessObjectData);
 
         // Ensure that this business object data is no longer there.
         assertNull(businessObjectDataDao.getBusinessObjectDataByAltKey(businessObjectDataKey));
@@ -360,9 +370,10 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
                 FORMAT_VERSION, PARTITION_VALUE.toLowerCase(), convertListToLowerCase(SUBPARTITION_VALUES), DATA_VERSION), false);
 
         // Validate the returned object.
-        validateBusinessObjectData(businessObjectDataEntity.getId(), NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(),
-            FORMAT_FILE_TYPE_CODE.toLowerCase(), FORMAT_VERSION, PARTITION_VALUE.toLowerCase(), convertListToLowerCase(SUBPARTITION_VALUES), DATA_VERSION, true,
-            BDATA_STATUS.toLowerCase(), deletedBusinessObjectData);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectData(businessObjectDataEntity.getId(), NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE.toLowerCase(),
+                FORMAT_FILE_TYPE_CODE.toLowerCase(), FORMAT_VERSION, PARTITION_VALUE.toLowerCase(), convertListToLowerCase(SUBPARTITION_VALUES), DATA_VERSION,
+                true, BDATA_STATUS.toLowerCase(), deletedBusinessObjectData);
 
         // Ensure that this business object format is no longer there.
         assertNull(businessObjectDataDao.getBusinessObjectDataByAltKey(businessObjectDataKey));
@@ -389,9 +400,10 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
                 FORMAT_VERSION, PARTITION_VALUE.toUpperCase(), convertListToUpperCase(SUBPARTITION_VALUES), DATA_VERSION), false);
 
         // Validate the returned object.
-        validateBusinessObjectData(businessObjectDataEntity.getId(), NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(),
-            FORMAT_FILE_TYPE_CODE.toUpperCase(), FORMAT_VERSION, PARTITION_VALUE.toUpperCase(), convertListToUpperCase(SUBPARTITION_VALUES), DATA_VERSION, true,
-            BDATA_STATUS.toUpperCase(), deletedBusinessObjectData);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectData(businessObjectDataEntity.getId(), NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE.toUpperCase(),
+                FORMAT_FILE_TYPE_CODE.toUpperCase(), FORMAT_VERSION, PARTITION_VALUE.toUpperCase(), convertListToUpperCase(SUBPARTITION_VALUES), DATA_VERSION,
+                true, BDATA_STATUS.toUpperCase(), deletedBusinessObjectData);
 
         // Ensure that this business object format is no longer there.
         assertNull(businessObjectDataDao.getBusinessObjectDataByAltKey(businessObjectDataKey));
@@ -421,8 +433,8 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(
-                getExpectedBusinessObjectDataNotFoundErrorMessage("I_DO_NOT_EXIST", BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+            assertEquals(businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataNotFoundErrorMessage("I_DO_NOT_EXIST", BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
                     PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, null), e.getMessage());
         }
 
@@ -436,8 +448,8 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(
-                getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, "I_DO_NOT_EXIST", FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+            assertEquals(businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, "I_DO_NOT_EXIST", FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
                     PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, null), e.getMessage());
         }
 
@@ -451,8 +463,9 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, BDEF_NAME, "I_DO_NOT_EXIST", FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, null), e.getMessage());
+            assertEquals(businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, BDEF_NAME, "I_DO_NOT_EXIST", FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                    PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, null), e.getMessage());
         }
 
         // Try to perform a delete using invalid format file type.
@@ -465,8 +478,8 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(
-                getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, "I_DO_NOT_EXIST", FORMAT_VERSION, PARTITION_VALUE,
+            assertEquals(businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, "I_DO_NOT_EXIST", FORMAT_VERSION, PARTITION_VALUE,
                     SUBPARTITION_VALUES, DATA_VERSION, null), e.getMessage());
         }
 
@@ -480,8 +493,8 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(
-                getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INVALID_FORMAT_VERSION,
+            assertEquals(businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INVALID_FORMAT_VERSION,
                     PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, null), e.getMessage());
         }
 
@@ -495,8 +508,9 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                "I_DO_NOT_EXIST", SUBPARTITION_VALUES, DATA_VERSION, null), e.getMessage());
+            assertEquals(businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                    "I_DO_NOT_EXIST", SUBPARTITION_VALUES, DATA_VERSION, null), e.getMessage());
         }
 
         // Try to perform a delete using invalid subpartition value.
@@ -513,8 +527,9 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
             }
             catch (ObjectNotFoundException e)
             {
-                assertEquals(getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                    PARTITION_VALUE, testSubPartitionValues, DATA_VERSION, null), e.getMessage());
+                assertEquals(businessObjectDataServiceTestHelper
+                    .getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                        PARTITION_VALUE, testSubPartitionValues, DATA_VERSION, null), e.getMessage());
             }
         }
 
@@ -528,8 +543,9 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                PARTITION_VALUE, SUBPARTITION_VALUES, INVALID_DATA_VERSION, null), e.getMessage());
+            assertEquals(businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                    PARTITION_VALUE, SUBPARTITION_VALUES, INVALID_DATA_VERSION, null), e.getMessage());
         }
     }
 
@@ -546,8 +562,9 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, null), e.getMessage());
+            assertEquals(businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                    PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, null), e.getMessage());
         }
     }
 
@@ -607,8 +624,9 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
                 DATA_VERSION), false);
 
         // Validate the returned object.
-        validateBusinessObjectData(businessObjectDataEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-            PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, false, BDATA_STATUS, deletedBusinessObjectData);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectData(businessObjectDataEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, false, BDATA_STATUS, deletedBusinessObjectData);
 
         // Ensure that this business object data is no longer there.
         assertNull(businessObjectDataDao.getBusinessObjectDataByAltKey(businessObjectDataKey));
@@ -635,8 +653,9 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
                 SECOND_DATA_VERSION), false);
 
         // Validate the returned object.
-        validateBusinessObjectData(latestVersionBusinessObjectDataEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-            FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, SECOND_DATA_VERSION, true, BDATA_STATUS, deletedBusinessObjectData);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectData(latestVersionBusinessObjectDataEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+                FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, SECOND_DATA_VERSION, true, BDATA_STATUS, deletedBusinessObjectData);
 
         // Ensure that this business object format is no longer there.
         assertNull(businessObjectDataDao.getBusinessObjectDataByAltKey(
@@ -656,8 +675,9 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
                 INITIAL_DATA_VERSION), false);
 
         // Validate the returned object.
-        validateBusinessObjectData(initialVersionBusinessObjectDataEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-            FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS, deletedBusinessObjectData);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectData(initialVersionBusinessObjectDataEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+                FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS, deletedBusinessObjectData);
 
         // Ensure that this business object format is no longer there.
         assertNull(businessObjectDataDao.getBusinessObjectDataByAltKey(
@@ -672,7 +692,7 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
         createTestDatabaseEntities(StorageEntity.MANAGED_STORAGE, StoragePlatformEntity.S3, testS3KeyPrefix, LOCAL_FILES);
 
         // Create and upload to the test S3 storage a set of files.
-        prepareTestS3Files(testS3KeyPrefix, LOCAL_FILES);
+        businessObjectDataServiceTestHelper.prepareTestS3Files(testS3KeyPrefix, localTempPath, LOCAL_FILES);
 
         // Validate that this business object data exists.
         BusinessObjectDataKey businessObjectDataKey =
@@ -687,8 +707,9 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
                 NO_SUBPARTITION_VALUES, INITIAL_DATA_VERSION), true);
 
         // Validate the returned object.
-        validateBusinessObjectData(businessObjectDataEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION,
-            PARTITION_VALUE, NO_SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS, deletedBusinessObjectData);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectData(businessObjectDataEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+                INITIAL_FORMAT_VERSION, PARTITION_VALUE, NO_SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS, deletedBusinessObjectData);
 
         // Validate that data files got deleted from S3.
         S3FileTransferRequestParamsDto params = s3DaoTestHelper.getTestS3FileTransferRequestParamsDto();
@@ -706,7 +727,7 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
         createTestDatabaseEntities(STORAGE_NAME, StoragePlatformEntity.S3, TEST_S3_KEY_PREFIX, new ArrayList<String>());
 
         // Create and upload to the test S3 storage a set of files.
-        prepareTestS3Files(TEST_S3_KEY_PREFIX, LOCAL_FILES);
+        businessObjectDataServiceTestHelper.prepareTestS3Files(TEST_S3_KEY_PREFIX, localTempPath, LOCAL_FILES);
 
         // Validate that this business object data exists.
         BusinessObjectDataKey businessObjectDataKey =
@@ -720,8 +741,9 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
             new BusinessObjectDataKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
                 NO_SUBPARTITION_VALUES, INITIAL_DATA_VERSION), true);
         // Validate the returned object.
-        validateBusinessObjectData(businessObjectDataEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION,
-            PARTITION_VALUE, NO_SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS, deletedBusinessObjectData);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectData(businessObjectDataEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+                INITIAL_FORMAT_VERSION, PARTITION_VALUE, NO_SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS, deletedBusinessObjectData);
 
         // Validate that data files got deleted from S3.
         S3FileTransferRequestParamsDto params = s3DaoTestHelper.getTestS3FileTransferRequestParamsDto();
@@ -740,7 +762,7 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
 
         // Create and upload to the S3 storage a subset of test files.
         // Please note that we are only uploading a subset of test files to make sure we do not fail the deletion because of missing (non-existing) S3 files.
-        prepareTestS3Files(TEST_S3_KEY_PREFIX, LOCAL_FILES_SUBSET);
+        businessObjectDataServiceTestHelper.prepareTestS3Files(TEST_S3_KEY_PREFIX, localTempPath, LOCAL_FILES_SUBSET);
 
         // Validate that this business object data exists.
         BusinessObjectDataKey businessObjectDataKey =
@@ -755,8 +777,9 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
                 NO_SUBPARTITION_VALUES, INITIAL_DATA_VERSION), true);
 
         // Validate the returned object.
-        validateBusinessObjectData(businessObjectDataEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION,
-            PARTITION_VALUE, NO_SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS, deletedBusinessObjectData);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectData(businessObjectDataEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+                INITIAL_FORMAT_VERSION, PARTITION_VALUE, NO_SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS, deletedBusinessObjectData);
 
         // Validate that data files got deleted from S3 - please note that
         S3FileTransferRequestParamsDto params = s3DaoTestHelper.getTestS3FileTransferRequestParamsDto();
@@ -786,8 +809,9 @@ public class BusinessObjectDataServiceDeleteBusinessObjectDataTest extends Abstr
                 NO_SUBPARTITION_VALUES, INITIAL_DATA_VERSION), true);
 
         // Validate the returned object.
-        validateBusinessObjectData(businessObjectDataEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION,
-            PARTITION_VALUE, NO_SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS, deletedBusinessObjectData);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectData(businessObjectDataEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+                INITIAL_FORMAT_VERSION, PARTITION_VALUE, NO_SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS, deletedBusinessObjectData);
 
         // Ensure that this business object data is no longer there.
         assertNull(businessObjectDataDao.getBusinessObjectDataByAltKey(businessObjectDataKey));

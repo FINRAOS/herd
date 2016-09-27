@@ -47,7 +47,7 @@ public class StorageUnitNotificationRegistrationRestControllerTest extends Abstr
         NotificationRegistrationKey notificationRegistrationKey = new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME);
 
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForStorageUnitNotificationRegistrationTesting();
+        notificationRegistrationServiceTestHelper.createDatabaseEntitiesForStorageUnitNotificationRegistrationTesting();
 
         // Create a business object data notification.
         StorageUnitNotificationRegistration resultStorageUnitNotificationRegistration = storageUnitNotificationRegistrationRestController
@@ -188,7 +188,7 @@ public class StorageUnitNotificationRegistrationRestControllerTest extends Abstr
         NotificationRegistrationKey storageUnitNotificationRegistrationKey = new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME);
 
         // Create database entities required for testing.
-        createDatabaseEntitiesForStorageUnitNotificationRegistrationTesting(NAMESPACE, Arrays
+        notificationRegistrationServiceTestHelper.createDatabaseEntitiesForStorageUnitNotificationRegistrationTesting(NAMESPACE, Arrays
             .asList(NOTIFICATION_EVENT_TYPE, NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG.name(),
                 NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG.name()), BDEF_NAMESPACE_2, BDEF_NAME_2,
             Arrays.asList(FORMAT_FILE_TYPE_CODE, FORMAT_FILE_TYPE_CODE_2), Arrays.asList(STORAGE_NAME, STORAGE_NAME_2),

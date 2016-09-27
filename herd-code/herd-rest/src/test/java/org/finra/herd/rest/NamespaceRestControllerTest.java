@@ -34,10 +34,10 @@ public class NamespaceRestControllerTest extends AbstractRestTest
     public void testCreateNamespace() throws Exception
     {
         // Create a namespace.
-        Namespace resultNamespace = namespaceRestController.createNamespace(createNamespaceCreateRequest(NAMESPACE));
+        Namespace resultNamespace = namespaceRestController.createNamespace(namespaceServiceTestHelper.createNamespaceCreateRequest(NAMESPACE));
 
         // Validate the returned object.
-        validateNamespace(NAMESPACE, resultNamespace);
+        namespaceServiceTestHelper.validateNamespace(NAMESPACE, resultNamespace);
     }
 
     @Test
@@ -50,7 +50,7 @@ public class NamespaceRestControllerTest extends AbstractRestTest
         Namespace resultNamespace = namespaceRestController.getNamespace(NAMESPACE);
 
         // Validate the returned object.
-        validateNamespace(NAMESPACE, resultNamespace);
+        namespaceServiceTestHelper.validateNamespace(NAMESPACE, resultNamespace);
     }
 
     @Test
@@ -89,7 +89,7 @@ public class NamespaceRestControllerTest extends AbstractRestTest
         Namespace deletedNamespace = namespaceRestController.deleteNamespace(NAMESPACE);
 
         // Validate the returned object.
-        validateNamespace(NAMESPACE, deletedNamespace);
+        namespaceServiceTestHelper.validateNamespace(NAMESPACE, deletedNamespace);
 
         // Ensure that this namespace is no longer there.
         assertNull(namespaceDao.getNamespaceByKey(namespaceKey));
