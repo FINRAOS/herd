@@ -281,6 +281,11 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
             alternateKeyHelper.validateStringParameter("business object definition name", request.getBusinessObjectDefinitionName()));
         request.setDataProviderName(alternateKeyHelper.validateStringParameter("data provider name", request.getDataProviderName()));
 
+        if (request.getDisplayName() != null)
+        {
+            request.setDisplayName(request.getDisplayName().trim());
+        }
+
         // Validate attributes.
         attributeHelper.validateAttributes(request.getAttributes());
     }
@@ -294,13 +299,13 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
      */
     private void validateBusinessObjectDefinitionUpdateRequest(BusinessObjectDefinitionUpdateRequest request)
     {
-        // Validate attributes.
-        attributeHelper.validateAttributes(request.getAttributes());
-
         if (request.getDisplayName() != null)
         {
             request.setDisplayName(request.getDisplayName().trim());
         }
+
+        // Validate attributes.
+        attributeHelper.validateAttributes(request.getAttributes());
     }
 
     /**
