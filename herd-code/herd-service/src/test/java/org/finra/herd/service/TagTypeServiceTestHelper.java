@@ -37,7 +37,7 @@ public class TagTypeServiceTestHelper
      *
      * @return the newly created tag type create request
      */
-    public TagTypeCreateRequest createTagTypeCreateRequest(String tagTypeCode, String displayName, int orderNumber)
+    public TagTypeCreateRequest createTagTypeCreateRequest(String tagTypeCode, String displayName, Integer orderNumber)
     {
         TagTypeCreateRequest request = new TagTypeCreateRequest();
         request.setTagTypeKey(new TagTypeKey(tagTypeCode));
@@ -54,7 +54,7 @@ public class TagTypeServiceTestHelper
      *
      * @return the newly created tag type create request
      */
-    public TagTypeUpdateRequest createTagTypeUpdateRequest(String displayName, int orderNumber)
+    public TagTypeUpdateRequest createTagTypeUpdateRequest(String displayName, Integer orderNumber)
     {
         TagTypeUpdateRequest request = new TagTypeUpdateRequest();
         request.setDisplayName(displayName);
@@ -68,7 +68,7 @@ public class TagTypeServiceTestHelper
      * @param expectedTagTypeCode the expected tag type code
      * @param actualTagType the tag type object instance to be validated
      */
-    public void validateTagType(int tagTypeId, String expectedTagTypeCode, String expectedDisplayName, int expectedOrderNumber, TagType actualTagType)
+    public void validateTagType(int tagTypeId, String expectedTagTypeCode, String expectedDisplayName, Integer expectedOrderNumber, TagType actualTagType)
     {
         assertNotNull(actualTagType);
         assertEquals(new TagType(tagTypeId, new TagTypeKey(expectedTagTypeCode), expectedDisplayName, expectedOrderNumber), actualTagType);

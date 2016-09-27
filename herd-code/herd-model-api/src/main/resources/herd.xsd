@@ -483,7 +483,12 @@
                <xs:documentation>The tag type's name in plain text for human readability</xs:documentation>
             </xs:annotation>
          </xs:element>
-         <xs:element name="tagTypeOrder" type="xs:int">
+         <!--
+           This is required, but is left as optional here so the auto-generated object becomes "Integer" and not "int".
+           That way, JSON objects that deserialize into the auto-generated object don't use the default int value of "0" and instead will leave
+           the field as null. The validation that this field is required is handled via the service layer validation.
+           -->
+         <xs:element name="tagTypeOrder" type="xs:int" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The tag type's order relative to other tag types</xs:documentation>
             </xs:annotation>
@@ -499,7 +504,12 @@
                <xs:documentation>The tag type's name in plain text for human readability</xs:documentation>
             </xs:annotation>
          </xs:element>
-         <xs:element name="tagTypeOrder" type="xs:int">
+         <!--
+           This is required, but is left as optional here so the auto-generated object becomes "Integer" and not "int".
+           That way, JSON objects that deserialize into the auto-generated object don't use the default int value of "0" and instead will leave
+           the field as null. The validation that this field is required is handled via the service layer validation.
+           -->
+         <xs:element name="tagTypeOrder" type="xs:int" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The tag type's order relative to other tag types</xs:documentation>
             </xs:annotation>

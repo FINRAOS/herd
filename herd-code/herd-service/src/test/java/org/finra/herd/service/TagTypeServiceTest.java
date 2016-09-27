@@ -67,6 +67,17 @@ public class TagTypeServiceTest extends AbstractServiceTest
         {
             assertEquals("A display name must be specified.", e.getMessage());
         }
+
+        // Try to create a tag type instance when tag type order is not specified.
+        try
+        {
+            tagTypeService.createTagType(tagTypeServiceTestHelper.createTagTypeCreateRequest(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, null));
+            fail("Should throw an IllegalArgumentException when tag type order is not specified.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("A tag type order must be specified.", e.getMessage());
+        }
     }
 
     @Test
@@ -282,6 +293,17 @@ public class TagTypeServiceTest extends AbstractServiceTest
         catch (IllegalArgumentException e)
         {
             assertEquals("A display name must be specified.", e.getMessage());
+        }
+
+        // Try to update a tag type instance when tag type order is not specified.
+        try
+        {
+            tagTypeService.updateTagType(new TagTypeKey(TAG_TYPE), tagTypeServiceTestHelper.createTagTypeUpdateRequest(TAG_TYPE_DISPLAY_NAME_2, null));
+            fail("Should throw an IllegalArgumentException when tag type order is not specified.");
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("A tag type order must be specified.", e.getMessage());
         }
     }
 

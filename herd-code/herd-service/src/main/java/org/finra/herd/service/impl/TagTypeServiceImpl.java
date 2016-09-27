@@ -145,6 +145,9 @@ public class TagTypeServiceImpl implements TagTypeService
 
         // Validate display name
         request.setDisplayName(alternateKeyHelper.validateStringParameter("display name", request.getDisplayName()));
+
+        // Validate order number
+        Assert.notNull(request.getTagTypeOrder(), "A tag type order must be specified.");
     }
 
     /**
@@ -158,6 +161,9 @@ public class TagTypeServiceImpl implements TagTypeService
 
         // Validate display name
         request.setDisplayName(alternateKeyHelper.validateStringParameter("display name", request.getDisplayName()));
+
+        // Validate order number
+        Assert.notNull(request.getTagTypeOrder(), "A tag type order must be specified.");
     }
 
     /**
