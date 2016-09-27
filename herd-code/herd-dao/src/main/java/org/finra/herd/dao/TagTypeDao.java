@@ -41,6 +41,15 @@ public interface TagTypeDao extends BaseJpaDao
     public TagTypeEntity getTagTypeByCd(String tagTypeCode);
 
     /**
+     * Gets a tag type by its code.
+     *
+     * @param displayName the tag type display name (case-insensitive)
+     *
+     * @return the tag type entity for the specified display name
+     */
+    public TagTypeEntity getTagTypeByDisplayName(String displayName);
+
+    /**
      * Gets an ordered list of tag type keys for all tag types defined in the system.
      *
      * @return the list of tag type keys

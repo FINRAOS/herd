@@ -61,6 +61,24 @@ public class TagTypeDaoImpl extends AbstractHerdDao implements TagTypeDao
     }
 
     @Override
+    public TagTypeEntity getTagTypeByDisplayName(String displayName)
+    {
+        // Create the criteria builder and the criteria.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<TagTypeEntity> criteria = builder.createQuery(TagTypeEntity.class);
+
+        // The criteria root is the tag type code.
+        Root<TagTypeEntity> tagTypeEntity = criteria.from(TagTypeEntity.class);
+
+        // Create the standard restrictions.
+        Predicate queryRestriction = builder.equal(builder.upper(tagTypeEntity.get(TagTypeEntity_.displayName)), tagTypeCode.toUpperCase());
+
+        criteria.select(tagTypeEntity).where(queryRestriction);
+
+        return executeSingleResultQuery(criteria, String.format("Found more than one tag type with displayName=\"%s\".", displayName));
+    }
+
+    @Override
     public List<TagTypeKey> getTagTypes()
     {
         // Create the criteria builder and a tuple style criteria query.

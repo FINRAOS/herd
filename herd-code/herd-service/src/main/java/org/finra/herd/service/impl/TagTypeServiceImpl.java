@@ -31,6 +31,8 @@ import org.finra.herd.model.api.xml.TagTypeUpdateRequest;
 import org.finra.herd.model.jpa.TagTypeEntity;
 import org.finra.herd.service.TagTypeService;
 import org.finra.herd.service.helper.AlternateKeyHelper;
+import org.finra.herd.service.helper.TagTypeDaoHelper;
+import org.finra.herd.service.helper.TagTypeHelper;
 
 /**
  * The tag type service implementation.
@@ -41,29 +43,34 @@ public class TagTypeServiceImpl implements TagTypeService
 {
     @Autowired
     private AlternateKeyHelper alternateKeyHelper;
+    @Autowired
+    private TagTypeHelper tagTypeHelper;
+
+    @Autowired
+    private TagTypeDaoHelper tagTypeDaoHelper;
 
     @Autowired
     private TagTypeDao tagTypeDao;
 
     @Override
-    public TagType createTagType(TagTypeCreateRequest tagTypeCreateRequest)
+    public TagType createTagType(TagTypeCreateRequest request)
     {
         // Validate and trim the request parameters.
-        validateTagTypeCreateRequest(tagTypeCreateRequest);
-
-        // Get the tag type key.
-        TagTypeKey tagTypeKey = tagTypeCreateRequest.getTagTypeKey();
+        validateTagTypeCreateRequest(request);
 
         // Validate the tag type does not already exist in the database.
-        TagTypeEntity tagTypeEntity = tagTypeDao.getTagTypeByKey(tagTypeKey);
+        TagTypeEntity tagTypeEntity = tagTypeDao.getTagTypeByKey(request.getTagTypeKey());
         if (tagTypeEntity != null)
         {
             throw new AlreadyExistsException(
-                String.format("Unable to create tag type with code \"%s\" because it already exists.", tagTypeKey.getTagTypeCode()));
+                String.format("Unable to create tag type with code \"%s\" because it already exists.", request.getTagTypeKey().getTagTypeCode()));
         }
 
+        // Validate the display name does not already exist in the database
+        tagTypeDaoHelper.assertTagTypeDisplayNameDoesNotExist(request.getDisplayName());
+
         // Create and persist a new tag type entity from the request information.
-        tagTypeEntity = createTagTypeEntity(tagTypeKey.getTagTypeCode(), tagTypeCreateRequest.getDisplayName(), tagTypeCreateRequest.getTagTypeOrder());
+        tagTypeEntity = createTagTypeEntity(request.getTagTypeKey().getTagTypeCode(), request.getDisplayName(), request.getTagTypeOrder());
 
         // Create and return the tag type object from the persisted entity.
         return createTagTypeFromEntity(tagTypeEntity);
@@ -73,19 +80,15 @@ public class TagTypeServiceImpl implements TagTypeService
     public TagType updateTagType(TagTypeKey tagTypeKey, TagTypeUpdateRequest request)
     {
         // Perform validation and trim.
-        validateTagTypeKey(tagTypeKey);
+        tagTypeHelper.validateTagTypeKey(tagTypeKey);
 
         // Perform validation and trim the alternate key parameters.
         validateTagTypeUpdateRequest(request);
 
         // Retrieve and ensure that a tag type already exists with the specified key.
-        TagTypeEntity tagTypeEntity = tagTypeDao.getTagTypeByKey(tagTypeKey);
+        TagTypeEntity tagTypeEntity = tagTypeDaoHelper.getTagTypeEntity(tagTypeKey.getTagTypeCode());
 
-        tagTypeEntity.setDisplayName(request.getDisplayName());
-        tagTypeEntity.setOrderNumber(request.getTagTypeOrder());
-
-        // Persist and refresh the entity.
-        tagTypeEntity = tagTypeDao.saveAndRefresh(tagTypeEntity);
+        updateTagTypeEntity(tagTypeEntity, request);
 
         // Create and return the business object format object from the persisted entity.
         return createTagTypeFromEntity(tagTypeEntity);
@@ -95,10 +98,10 @@ public class TagTypeServiceImpl implements TagTypeService
     public TagType getTagType(TagTypeKey tagTypeKey)
     {
         // Perform validation and trim.
-        validateTagTypeKey(tagTypeKey);
+        tagTypeHelper.validateTagTypeKey(tagTypeKey);
 
         // Retrieve and ensure that a tag type already exists with the specified key.
-        TagTypeEntity tagTypeEntity = tagTypeDao.getTagTypeByKey(tagTypeKey);
+        TagTypeEntity tagTypeEntity = tagTypeDaoHelper.getTagTypeEntity(tagTypeKey.getTagTypeCode());
 
         // Create and return the tag type object from the persisted entity.
         return createTagTypeFromEntity(tagTypeEntity);
@@ -108,10 +111,10 @@ public class TagTypeServiceImpl implements TagTypeService
     public TagType deleteTagType(TagTypeKey tagTypeKey)
     {
         // Perform validation and trim.
-        validateTagTypeKey(tagTypeKey);
+        tagTypeHelper.validateTagTypeKey(tagTypeKey);
 
         // Retrieve and ensure that a tag type already exists with the specified key.
-        TagTypeEntity namespaceEntity = tagTypeDao.getTagTypeByKey(tagTypeKey);
+        TagTypeEntity namespaceEntity = tagTypeDaoHelper.getTagTypeEntity(tagTypeKey.getTagTypeCode());
 
         // Delete the tag type.
         tagTypeDao.delete(namespaceEntity);
@@ -135,11 +138,10 @@ public class TagTypeServiceImpl implements TagTypeService
     {
         Assert.notNull(request, "A tag type create request must be specified.");
 
-        validateTagTypeKey(request.getTagTypeKey());
+        tagTypeHelper.validateTagTypeKey(request.getTagTypeKey());
 
         // Validate display name
-        Assert.hasText(request.getDisplayName(), "A display name must be specified.");
-        request.setDisplayName(request.getDisplayName().trim());
+        request.setDisplayName(alternateKeyHelper.validateStringParameter("display name", request.getDisplayName()));
     }
 
     /**
@@ -152,21 +154,7 @@ public class TagTypeServiceImpl implements TagTypeService
         Assert.notNull(request, "A tag type update request must be specified.");
 
         // Validate display name
-        Assert.hasText(request.getDisplayName(), "A display name must be specified.");
-        request.setDisplayName(request.getDisplayName().trim());
-    }
-
-    /**
-     * Validates the tag type key. This method also trims the key parameters.
-     *
-     * @param key the tag type key
-     *
-     * @throws IllegalArgumentException if any validation errors were found
-     */
-    public void validateTagTypeKey(TagTypeKey key) throws IllegalArgumentException
-    {
-        Assert.notNull(key, "A tag type key must be specified.");
-        key.setTagTypeCode(alternateKeyHelper.validateStringParameter("tag type code", key.getTagTypeCode()));
+        request.setDisplayName(alternateKeyHelper.validateStringParameter("display name", request.getDisplayName()));
     }
 
     /**
@@ -210,5 +198,20 @@ public class TagTypeServiceImpl implements TagTypeService
         tagType.setTagTypeOrder(tagTypeEntity.getOrderNumber());
 
         return tagType;
+    }
+
+    /**
+     * Update and persist the tag type per specified update request.
+     *
+     * @param tagTypeEntity the tag type entity
+     * @param request the tag type update request
+     */
+    private void updateTagTypeEntity(TagTypeEntity tagTypeEntity, TagTypeUpdateRequest request)
+    {
+        tagTypeEntity.setDisplayName(request.getDisplayName());
+        tagTypeEntity.setOrderNumber(request.getTagTypeOrder());
+
+        // Persist and refresh the entity.
+        tagTypeDao.saveAndRefresh(tagTypeEntity);
     }
 }

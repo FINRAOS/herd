@@ -26,9 +26,9 @@ import org.finra.herd.model.api.xml.TagTypeUpdateRequest;
  */
 public interface TagTypeService
 {
-    public TagType createTagType(TagTypeCreateRequest tagTypeCreateRequest);
+    public TagType createTagType(TagTypeCreateRequest request);
 
-    public TagType updateTagType(TagTypeKey tagTypeKey, TagTypeUpdateRequest tagTypeUpdateRequest);
+    public TagType updateTagType(TagTypeKey tagTypeKey, TagTypeUpdateRequest request);
 
     public TagType getTagType(TagTypeKey tagTypeKey);
 
