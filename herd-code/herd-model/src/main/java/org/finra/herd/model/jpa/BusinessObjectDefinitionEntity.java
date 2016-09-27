@@ -53,7 +53,7 @@ public class BusinessObjectDefinitionEntity extends AuditableEntity
     @Column(name = "name_tx")
     private String name;
 
-    @Column(name = "display_name_tx")
+    @Column(name = "dsply_name_tx")
     private String displayName;
 
     @Column(name = "desc_tx", length = 500)
