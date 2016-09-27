@@ -521,6 +521,12 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String TABLE_NAME = "Test_Table" + RANDOM_SUFFIX;
 
+    public static final String TAG_TYPE = "UT_TagType_1_" + RANDOM_SUFFIX;
+
+    public static final String TAG_TYPE_2 = "UT_TagType_2_" + RANDOM_SUFFIX;
+
+    public static final String TAG_TYPE_DISPLAY_NAME = "Tag Type" + RANDOM_SUFFIX;
+
     public static final String TARGET_S3_KEY = "herd-dao-test-key-prefix" + RANDOM_SUFFIX + "/" + LOCAL_FILE;
 
     public static final String TEST_DDL = "CREATE EXTERNAL TABLE `ITEMS` (\n" +
@@ -771,6 +777,12 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     @Autowired
     protected StsDao stsDao;
+
+    @Autowired
+    protected TagTypeDao tagTypeDao;
+
+    @Autowired
+    protected TagTypeDaoTestHelper tagTypeDaoTestHelper;
 
     @Autowired
     protected UserDao userDao;
