@@ -59,7 +59,7 @@ public class TagTypeEntity extends AuditableEntity
     /**
      * The order number.
      */
-    @Column(name = "order_nb", nullable = false)
+    @Column(name = "pstn_nb", nullable = false)
     private Integer orderNumber;
 
     public String getTypeCode()
