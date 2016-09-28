@@ -89,7 +89,7 @@ public class BusinessObjectDefinitionRestController extends HerdBaseController
      * @return the updated business object definition
      */
     @RequestMapping(
-        value = "businessObjectDefinitionDescriptiveInformation/namespaces/{namespace}/businessObjectDefinitionNames/{businessObjectDefinitionName}",
+        value = "/businessObjectDefinitionDescriptiveInformation/namespaces/{namespace}/businessObjectDefinitionNames/{businessObjectDefinitionName}",
         method = RequestMethod.PUT,
         consumes = {"application/xml", "application/json"})
     @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DEFINITIONS_DESCRIPTIVE_INFO_PUT)
