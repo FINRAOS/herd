@@ -23,7 +23,7 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
 /**
- * A storage policy.
+ * A tag type.
  */
 @Table(name = TagTypeEntity.TABLE_NAME)
 @Entity
