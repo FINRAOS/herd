@@ -177,13 +177,7 @@ public class TagTypeServiceImpl implements TagTypeService
      */
     private TagTypeEntity createTagTypeEntity(String tagTypeCode, String displayName, int tagTypeOrder)
     {
-        TagTypeEntity tagTypeEntity = new TagTypeEntity();
-
-        tagTypeEntity.setTypeCode(tagTypeCode);
-        tagTypeEntity.setDisplayName(displayName);
-        tagTypeEntity.setOrderNumber(tagTypeOrder);
-
-        return tagTypeDao.saveAndRefresh(tagTypeEntity);
+        return tagTypeDao.saveAndRefresh(new TagTypeEntity(tagTypeCode,displayName,tagTypeOrder));
     }
 
     /**

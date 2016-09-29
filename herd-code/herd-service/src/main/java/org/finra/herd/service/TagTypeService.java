@@ -26,13 +26,46 @@ import org.finra.herd.model.api.xml.TagTypeUpdateRequest;
  */
 public interface TagTypeService
 {
+    /**
+     * Creates a new tag type.
+     *
+     * @param request the tag type create request
+     *
+     * @return the created tag type
+     */
     public TagType createTagType(TagTypeCreateRequest request);
 
+    /**
+     * Updates a tag type.
+     *
+     * @param request the tag type update request
+     *
+     * @return the updated tag type
+     */
     public TagType updateTagType(TagTypeKey tagTypeKey, TagTypeUpdateRequest request);
 
+    /**
+     * Retrieve a tag type.
+     *
+     * @param tagTypeKey the tag type key
+     *
+     * @return the retrieved tag type
+     */
     public TagType getTagType(TagTypeKey tagTypeKey);
 
+    /**
+     * Deletes a tag type.
+     *
+     * @param tagTypeKey the tag type key
+     *
+     * @return the deleted tag type
+     */
     public TagType deleteTagType(TagTypeKey tagTypeKey);
 
+    /**
+     * Retrieves a list of tag type keys.
+     *
+     * @return the list of retrieved tag type keys
+     */
     public TagTypeKeys getTagTypes();
 }

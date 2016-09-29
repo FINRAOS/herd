@@ -58,6 +58,28 @@ public class TagTypeEntity extends AuditableEntity
     @Column(name = "pstn_nb", nullable = false)
     private Integer orderNumber;
 
+    /**
+     * Default tag type entity constructor.
+     */
+    public TagTypeEntity()
+    {
+        // Empty constructor
+    }
+
+    /**
+     * Fully qualified constructor for tag type entity.
+     *
+     * @param tagTypeCode the tag type code
+     * @param displayName the display name
+     * @param orderNumber the tag type ordering
+     */
+    public TagTypeEntity(String tagTypeCode, String displayName, Integer orderNumber)
+    {
+        typeCode = tagTypeCode;
+        this.displayName = displayName;
+        this.orderNumber = orderNumber;
+    }
+
     public String getTypeCode()
     {
         return typeCode;

@@ -24,8 +24,10 @@ import org.junit.Test;
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.TagType;
+import org.finra.herd.model.api.xml.TagTypeCreateRequest;
 import org.finra.herd.model.api.xml.TagTypeKey;
 import org.finra.herd.model.api.xml.TagTypeKeys;
+import org.finra.herd.model.api.xml.TagTypeUpdateRequest;
 import org.finra.herd.model.jpa.TagTypeEntity;
 
 /**
@@ -37,10 +39,10 @@ public class TagTypeServiceTest extends AbstractServiceTest
     public void testCreateTagType() throws Exception
     {
         // Create a tag type.
-        TagType resultTagType = tagTypeService.createTagType(tagTypeServiceTestHelper.createTagTypeCreateRequest(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, 1));
+        TagType resultTagType = tagTypeService.createTagType(new TagTypeCreateRequest(new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME, 1));
 
         // Validate the returned object.
-        tagTypeServiceTestHelper.validateTagType(resultTagType.getId(), TAG_TYPE, TAG_TYPE_DISPLAY_NAME, 1, resultTagType);
+        assertEquals(new TagType(resultTagType.getId(), new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME, 1), resultTagType);
     }
 
     @Test
@@ -49,7 +51,7 @@ public class TagTypeServiceTest extends AbstractServiceTest
         // Try to create a tag type instance when tag type code is not specified.
         try
         {
-            tagTypeService.createTagType(tagTypeServiceTestHelper.createTagTypeCreateRequest(BLANK_TEXT, TAG_TYPE_DISPLAY_NAME, 1));
+            tagTypeService.createTagType(new TagTypeCreateRequest(new TagTypeKey(BLANK_TEXT), TAG_TYPE_DISPLAY_NAME, 1));
             fail("Should throw an IllegalArgumentException when tag type code is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -60,7 +62,7 @@ public class TagTypeServiceTest extends AbstractServiceTest
         // Try to create a tag type instance when display name is not specified.
         try
         {
-            tagTypeService.createTagType(tagTypeServiceTestHelper.createTagTypeCreateRequest(TAG_TYPE, BLANK_TEXT, 1));
+            tagTypeService.createTagType(new TagTypeCreateRequest(new TagTypeKey(TAG_TYPE), BLANK_TEXT, 1));
             fail("Should throw an IllegalArgumentException when display name is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -71,7 +73,7 @@ public class TagTypeServiceTest extends AbstractServiceTest
         // Try to create a tag type instance when tag type order is not specified.
         try
         {
-            tagTypeService.createTagType(tagTypeServiceTestHelper.createTagTypeCreateRequest(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, null));
+            tagTypeService.createTagType(new TagTypeCreateRequest(new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME, null));
             fail("Should throw an IllegalArgumentException when tag type order is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -85,10 +87,10 @@ public class TagTypeServiceTest extends AbstractServiceTest
     {
         // Create a tag type.
         TagType resultTagType =
-            tagTypeService.createTagType(tagTypeServiceTestHelper.createTagTypeCreateRequest(addWhitespace(TAG_TYPE), addWhitespace(TAG_TYPE_DISPLAY_NAME), 1));
+            tagTypeService.createTagType(new TagTypeCreateRequest(new TagTypeKey(addWhitespace(TAG_TYPE)), addWhitespace(TAG_TYPE_DISPLAY_NAME), 1));
 
         // Validate the returned object.
-        tagTypeServiceTestHelper.validateTagType(resultTagType.getId(), TAG_TYPE, TAG_TYPE_DISPLAY_NAME, 1, resultTagType);
+        assertEquals(new TagType(resultTagType.getId(), new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME, 1), resultTagType);
     }
 
     @Test
@@ -97,7 +99,7 @@ public class TagTypeServiceTest extends AbstractServiceTest
         // Try to create a tag type instance when tag type code contains a forward slash character.
         try
         {
-            tagTypeService.createTagType(tagTypeServiceTestHelper.createTagTypeCreateRequest(addSlash(TAG_TYPE), TAG_TYPE_DISPLAY_NAME, 1));
+            tagTypeService.createTagType(new TagTypeCreateRequest(new TagTypeKey(addSlash(TAG_TYPE)), TAG_TYPE_DISPLAY_NAME, 1));
             fail("Should throw an IllegalArgumentException when tag type code contains a forward slash character.");
         }
         catch (IllegalArgumentException e)
@@ -115,7 +117,7 @@ public class TagTypeServiceTest extends AbstractServiceTest
         // Try to create a duplicate tag type instance (uses the same tag type code).
         try
         {
-            tagTypeService.createTagType(tagTypeServiceTestHelper.createTagTypeCreateRequest(TAG_TYPE, TAG_TYPE_DISPLAY_NAME_2, 2));
+            tagTypeService.createTagType(new TagTypeCreateRequest(new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME_2, 2));
             fail("Should throw an AlreadyExistsException when tag type already exists.");
         }
         catch (AlreadyExistsException e)
@@ -133,7 +135,7 @@ public class TagTypeServiceTest extends AbstractServiceTest
         // Try to create a duplicate tag type instance (uses the same display name).
         try
         {
-            tagTypeService.createTagType(tagTypeServiceTestHelper.createTagTypeCreateRequest(TAG_TYPE_2, TAG_TYPE_DISPLAY_NAME, 2));
+            tagTypeService.createTagType(new TagTypeCreateRequest(new TagTypeKey(TAG_TYPE_2), TAG_TYPE_DISPLAY_NAME, 2));
             fail("Should throw an AlreadyExistsException when display name already exists.");
         }
         catch (AlreadyExistsException e)
@@ -152,7 +154,7 @@ public class TagTypeServiceTest extends AbstractServiceTest
         TagType resultTagType = tagTypeService.getTagType(new TagTypeKey(TAG_TYPE));
 
         // Validate the returned object.
-        tagTypeServiceTestHelper.validateTagType(tagTypeEntity.getId(), TAG_TYPE, TAG_TYPE_DISPLAY_NAME, 1, resultTagType);
+        assertEquals(new TagType(tagTypeEntity.getId(), new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME, 1), resultTagType);
     }
 
     @Test
@@ -183,7 +185,7 @@ public class TagTypeServiceTest extends AbstractServiceTest
         TagType resultTagType = tagTypeService.getTagType(new TagTypeKey(addWhitespace(TAG_TYPE)));
 
         // Validate the returned object.
-        tagTypeServiceTestHelper.validateTagType(tagTypeEntity.getId(), TAG_TYPE, TAG_TYPE_DISPLAY_NAME, 1, resultTagType);
+        assertEquals(new TagType(tagTypeEntity.getId(), new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME, 1), resultTagType);
     }
 
     @Test
@@ -196,7 +198,7 @@ public class TagTypeServiceTest extends AbstractServiceTest
         TagType resultTagType = tagTypeService.getTagType(new TagTypeKey(TAG_TYPE.toUpperCase()));
 
         // Validate the returned object.
-        tagTypeServiceTestHelper.validateTagType(tagTypeEntity.getId(), TAG_TYPE.toLowerCase(), TAG_TYPE_DISPLAY_NAME.toLowerCase(), 1, resultTagType);
+        assertEquals(new TagType(tagTypeEntity.getId(), new TagTypeKey(TAG_TYPE.toLowerCase()), TAG_TYPE_DISPLAY_NAME.toLowerCase(), 1), resultTagType);
     }
 
     @Test
@@ -209,7 +211,7 @@ public class TagTypeServiceTest extends AbstractServiceTest
         TagType resultTagType = tagTypeService.getTagType(new TagTypeKey(TAG_TYPE.toLowerCase()));
 
         // Validate the returned object.
-        tagTypeServiceTestHelper.validateTagType(tagTypeEntity.getId(), TAG_TYPE.toUpperCase(), TAG_TYPE_DISPLAY_NAME.toUpperCase(), 1, resultTagType);
+        assertEquals(new TagType(tagTypeEntity.getId(), new TagTypeKey(TAG_TYPE.toUpperCase()), TAG_TYPE_DISPLAY_NAME.toUpperCase(), 1), resultTagType);
     }
 
     @Test
@@ -260,11 +262,10 @@ public class TagTypeServiceTest extends AbstractServiceTest
         TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, 1);
 
         // Update the tag type
-        TagType resultTagType =
-            tagTypeService.updateTagType(new TagTypeKey(TAG_TYPE), tagTypeServiceTestHelper.createTagTypeUpdateRequest(TAG_TYPE_DISPLAY_NAME_2, 2));
+        TagType resultTagType = tagTypeService.updateTagType(new TagTypeKey(TAG_TYPE), new TagTypeUpdateRequest(TAG_TYPE_DISPLAY_NAME_2, 2));
 
         // Validate the returned object.
-        tagTypeServiceTestHelper.validateTagType(tagTypeEntity.getId(), TAG_TYPE, TAG_TYPE_DISPLAY_NAME_2, 2, resultTagType);
+        assertEquals(new TagType(tagTypeEntity.getId(), new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME_2, 2), resultTagType);
     }
 
     @Test
@@ -276,7 +277,7 @@ public class TagTypeServiceTest extends AbstractServiceTest
         // Try to update a tag type instance when tag type code is not specified.
         try
         {
-            tagTypeService.updateTagType(new TagTypeKey(BLANK_TEXT), tagTypeServiceTestHelper.createTagTypeUpdateRequest(TAG_TYPE_DISPLAY_NAME_2, 2));
+            tagTypeService.updateTagType(new TagTypeKey(BLANK_TEXT), new TagTypeUpdateRequest(TAG_TYPE_DISPLAY_NAME_2, 2));
             fail("Should throw an IllegalArgumentException when tag type code is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -287,7 +288,7 @@ public class TagTypeServiceTest extends AbstractServiceTest
         // Try to update a tag type instance when display name is not specified.
         try
         {
-            tagTypeService.updateTagType(new TagTypeKey(TAG_TYPE), tagTypeServiceTestHelper.createTagTypeUpdateRequest(BLANK_TEXT, 2));
+            tagTypeService.updateTagType(new TagTypeKey(TAG_TYPE), new TagTypeUpdateRequest(BLANK_TEXT, 2));
             fail("Should throw an IllegalArgumentException when display name is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -298,7 +299,7 @@ public class TagTypeServiceTest extends AbstractServiceTest
         // Try to update a tag type instance when tag type order is not specified.
         try
         {
-            tagTypeService.updateTagType(new TagTypeKey(TAG_TYPE), tagTypeServiceTestHelper.createTagTypeUpdateRequest(TAG_TYPE_DISPLAY_NAME_2, null));
+            tagTypeService.updateTagType(new TagTypeKey(TAG_TYPE), new TagTypeUpdateRequest(TAG_TYPE_DISPLAY_NAME_2, null));
             fail("Should throw an IllegalArgumentException when tag type order is not specified.");
         }
         catch (IllegalArgumentException e)
@@ -314,11 +315,11 @@ public class TagTypeServiceTest extends AbstractServiceTest
         TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, 1);
 
         // Update the tag type
-        TagType resultTagType = tagTypeService.updateTagType(new TagTypeKey(addWhitespace(TAG_TYPE)),
-            tagTypeServiceTestHelper.createTagTypeUpdateRequest(addWhitespace(TAG_TYPE_DISPLAY_NAME_2), 2));
+        TagType resultTagType =
+            tagTypeService.updateTagType(new TagTypeKey(addWhitespace(TAG_TYPE)), new TagTypeUpdateRequest(addWhitespace(TAG_TYPE_DISPLAY_NAME_2), 2));
 
         // Validate the returned object.
-        tagTypeServiceTestHelper.validateTagType(tagTypeEntity.getId(), TAG_TYPE, TAG_TYPE_DISPLAY_NAME_2, 2, resultTagType);
+        assertEquals(new TagType(tagTypeEntity.getId(), new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME_2, 2), resultTagType);
     }
 
     @Test
@@ -328,11 +329,11 @@ public class TagTypeServiceTest extends AbstractServiceTest
         TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE.toLowerCase(), TAG_TYPE_DISPLAY_NAME.toLowerCase(), 1);
 
         // Update the tag type
-        TagType resultTagType = tagTypeService.updateTagType(new TagTypeKey(TAG_TYPE.toUpperCase()),
-            tagTypeServiceTestHelper.createTagTypeUpdateRequest(TAG_TYPE_DISPLAY_NAME_2.toUpperCase(), 2));
+        TagType resultTagType =
+            tagTypeService.updateTagType(new TagTypeKey(TAG_TYPE.toUpperCase()), new TagTypeUpdateRequest(TAG_TYPE_DISPLAY_NAME_2.toUpperCase(), 2));
 
         // Validate the returned object.
-        tagTypeServiceTestHelper.validateTagType(tagTypeEntity.getId(), TAG_TYPE.toLowerCase(), TAG_TYPE_DISPLAY_NAME_2.toUpperCase(), 2, resultTagType);
+        assertEquals(new TagType(tagTypeEntity.getId(), new TagTypeKey(TAG_TYPE.toLowerCase()), TAG_TYPE_DISPLAY_NAME_2.toUpperCase(), 2), resultTagType);
     }
 
     @Test
@@ -342,11 +343,11 @@ public class TagTypeServiceTest extends AbstractServiceTest
         TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE.toUpperCase(), TAG_TYPE_DISPLAY_NAME.toUpperCase(), 1);
 
         // Update the tag type
-        TagType resultTagType = tagTypeService.updateTagType(new TagTypeKey(TAG_TYPE.toLowerCase()),
-            tagTypeServiceTestHelper.createTagTypeUpdateRequest(TAG_TYPE_DISPLAY_NAME_2.toLowerCase(), 2));
+        TagType resultTagType =
+            tagTypeService.updateTagType(new TagTypeKey(TAG_TYPE.toLowerCase()), new TagTypeUpdateRequest(TAG_TYPE_DISPLAY_NAME_2.toLowerCase(), 2));
 
         // Validate the returned object.
-        tagTypeServiceTestHelper.validateTagType(tagTypeEntity.getId(), TAG_TYPE.toUpperCase(), TAG_TYPE_DISPLAY_NAME_2.toLowerCase(), 2, resultTagType);
+        assertEquals(new TagType(tagTypeEntity.getId(), new TagTypeKey(TAG_TYPE.toUpperCase()), TAG_TYPE_DISPLAY_NAME_2.toLowerCase(), 2), resultTagType);
     }
 
     @Test
@@ -359,7 +360,7 @@ public class TagTypeServiceTest extends AbstractServiceTest
         // Try to update a tag type instance when display name is not specified.
         try
         {
-            tagTypeService.updateTagType(new TagTypeKey(TAG_TYPE), tagTypeServiceTestHelper.createTagTypeUpdateRequest(TAG_TYPE_DISPLAY_NAME_2, 3));
+            tagTypeService.updateTagType(new TagTypeKey(TAG_TYPE), new TagTypeUpdateRequest(TAG_TYPE_DISPLAY_NAME_2, 3));
             fail("Should throw an AlreadyExistsException when display name already exists.");
         }
         catch (AlreadyExistsException e)
@@ -375,7 +376,7 @@ public class TagTypeServiceTest extends AbstractServiceTest
         // Try to update a tag type instance when display name is not specified.
         try
         {
-            tagTypeService.updateTagType(new TagTypeKey(TAG_TYPE), tagTypeServiceTestHelper.createTagTypeUpdateRequest(TAG_TYPE_DISPLAY_NAME, 1));
+            tagTypeService.updateTagType(new TagTypeKey(TAG_TYPE), new TagTypeUpdateRequest(TAG_TYPE_DISPLAY_NAME, 1));
             fail("Should throw an ObjectNotFoundException when tag type code does not exist.");
         }
         catch (ObjectNotFoundException e)
@@ -394,7 +395,7 @@ public class TagTypeServiceTest extends AbstractServiceTest
         TagType resultTagType = tagTypeService.deleteTagType(new TagTypeKey(TAG_TYPE));
 
         // Validate the returned object.
-        tagTypeServiceTestHelper.validateTagType(tagTypeEntity.getId(), TAG_TYPE, TAG_TYPE_DISPLAY_NAME, 1, resultTagType);
+        assertEquals(new TagType(tagTypeEntity.getId(), new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME, 1), resultTagType);
 
         // Ensure that this tag type is no longer there.
         assertNull(tagTypeDao.getTagTypeByKey(resultTagType.getTagTypeKey()));
@@ -428,7 +429,7 @@ public class TagTypeServiceTest extends AbstractServiceTest
         TagType resultTagType = tagTypeService.deleteTagType(new TagTypeKey(addWhitespace(TAG_TYPE)));
 
         // Validate the returned object.
-        tagTypeServiceTestHelper.validateTagType(tagTypeEntity.getId(), TAG_TYPE, TAG_TYPE_DISPLAY_NAME, 1, resultTagType);
+        assertEquals(new TagType(tagTypeEntity.getId(), new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME, 1), resultTagType);
 
         // Ensure that this tag type is no longer there.
         assertNull(tagTypeDao.getTagTypeByKey(resultTagType.getTagTypeKey()));
@@ -444,7 +445,7 @@ public class TagTypeServiceTest extends AbstractServiceTest
         TagType resultTagType = tagTypeService.deleteTagType(new TagTypeKey(TAG_TYPE.toUpperCase()));
 
         // Validate the returned object.
-        tagTypeServiceTestHelper.validateTagType(tagTypeEntity.getId(), TAG_TYPE.toLowerCase(), TAG_TYPE_DISPLAY_NAME.toLowerCase(), 1, resultTagType);
+        assertEquals(new TagType(tagTypeEntity.getId(), new TagTypeKey(TAG_TYPE.toLowerCase()), TAG_TYPE_DISPLAY_NAME.toLowerCase(), 1), resultTagType);
 
         // Ensure that this tag type is no longer there.
         assertNull(tagTypeDao.getTagTypeByKey(resultTagType.getTagTypeKey()));
@@ -460,7 +461,7 @@ public class TagTypeServiceTest extends AbstractServiceTest
         TagType resultTagType = tagTypeService.deleteTagType(new TagTypeKey(TAG_TYPE.toLowerCase()));
 
         // Validate the returned object.
-        tagTypeServiceTestHelper.validateTagType(tagTypeEntity.getId(), TAG_TYPE.toUpperCase(), TAG_TYPE_DISPLAY_NAME.toUpperCase(), 1, resultTagType);
+        assertEquals(new TagType(tagTypeEntity.getId(), new TagTypeKey(TAG_TYPE.toUpperCase()), TAG_TYPE_DISPLAY_NAME.toUpperCase(), 1), resultTagType);
 
         // Ensure that this tag type is no longer there.
         assertNull(tagTypeDao.getTagTypeByKey(resultTagType.getTagTypeKey()));
