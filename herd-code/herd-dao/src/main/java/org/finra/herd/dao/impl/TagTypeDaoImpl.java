@@ -90,6 +90,7 @@ public class TagTypeDaoImpl extends AbstractHerdDao implements TagTypeDao
 
         // Get the columns.
         Path<String> tagTypeCodeColumn = tagTypeEntity.get(TagTypeEntity_.typeCode);
+        Path<String> displayNameColumn = tagTypeEntity.get(TagTypeEntity_.displayName);
         Path<Integer> tagTypeOrderColumn = tagTypeEntity.get(TagTypeEntity_.orderNumber);
 
         // Add the select clause.
@@ -98,6 +99,7 @@ public class TagTypeDaoImpl extends AbstractHerdDao implements TagTypeDao
         // Add the order by clauses.
         List<Order> orderList = new ArrayList<>();
         orderList.add(builder.asc(tagTypeOrderColumn));
+        orderList.add(builder.asc(displayNameColumn));
         orderList.add(builder.asc(tagTypeCodeColumn));
         criteria.orderBy(orderList);
 
