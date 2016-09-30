@@ -27,7 +27,7 @@ import org.finra.herd.dao.DataProviderDaoTestHelper;
 import org.finra.herd.dao.NamespaceDaoTestHelper;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionCreateRequest;
-import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptiveInfoUpdateRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptiveInformationUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionUpdateRequest;
 
@@ -90,10 +90,10 @@ public class BusinessObjectDefinitionServiceTestHelper
      *
      * @return the newly created business object definition update request
      */
-    public BusinessObjectDefinitionDescriptiveInfoUpdateRequest createBusinessObjectDefinitionDescriptiveInfoUpdateRequest(
+    public BusinessObjectDefinitionDescriptiveInformationUpdateRequest createBusinessObjectDefinitionDescriptiveInformationUpdateRequest(
         String businessObjectDefinitionDescription, String displayName)
     {
-        BusinessObjectDefinitionDescriptiveInfoUpdateRequest request = new BusinessObjectDefinitionDescriptiveInfoUpdateRequest();
+        BusinessObjectDefinitionDescriptiveInformationUpdateRequest request = new BusinessObjectDefinitionDescriptiveInformationUpdateRequest();
         request.setDescription(businessObjectDefinitionDescription);
         request.setDisplayName(displayName);
         return request;

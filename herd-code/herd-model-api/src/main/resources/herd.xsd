@@ -627,8 +627,8 @@
       </xs:all>
    </xs:complexType>
 
-   <xs:element name="businessObjectDefinitionDescriptiveInfoUpdateRequest" type="businessObjectDefinitionDescriptiveInfoUpdateRequest"/>
-   <xs:complexType name="businessObjectDefinitionDescriptiveInfoUpdateRequest">
+   <xs:element name="businessObjectDefinitionDescriptiveInformationUpdateRequest" type="businessObjectDefinitionDescriptiveInformationUpdateRequest"/>
+   <xs:complexType name="businessObjectDefinitionDescriptiveInformationUpdateRequest">
       <xs:all>
          <xs:element name="description" type="xs:string" minOccurs="0">
             <xs:annotation>

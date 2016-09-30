@@ -35,7 +35,7 @@ import org.finra.herd.model.annotation.NamespacePermission;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.BusinessObjectDefinition;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionCreateRequest;
-import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptiveInfoUpdateRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptiveInformationUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKeys;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionUpdateRequest;
@@ -158,19 +158,19 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
      * @return the updated business object definition
      */
     @Override
-    public BusinessObjectDefinition updateBusinessObjectDefinitionDescriptiveInfo(BusinessObjectDefinitionKey businessObjectDefinitionKey,
-        BusinessObjectDefinitionDescriptiveInfoUpdateRequest request)
+    public BusinessObjectDefinition updateBusinessObjectDefinitionDescriptiveInformation(BusinessObjectDefinitionKey businessObjectDefinitionKey,
+        BusinessObjectDefinitionDescriptiveInformationUpdateRequest request)
     {
         // Perform validation and trim.
         businessObjectDefinitionHelper.validateBusinessObjectDefinitionKey(businessObjectDefinitionKey);
-        validateBusinessObjectDefinitionDescriptiveInfoUpdateRequest(request);
+        validateBusinessObjectDefinitionDescriptiveInformationUpdateRequest(request);
 
         // Retrieve and ensure that a business object definition already exists with the specified key.
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
             businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
 
         // Update and persist the entity.
-        updateBusinessObjectDefinitionEntityDescriptiveInfo(businessObjectDefinitionEntity, request);
+        updateBusinessObjectDefinitionEntityDescriptiveInformation(businessObjectDefinitionEntity, request);
 
         // Create and return the business object definition object from the persisted entity.
         return createBusinessObjectDefinitionFromEntity(businessObjectDefinitionEntity);
@@ -315,7 +315,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
      *
      * @throws IllegalArgumentException if any validation errors were found.
      */
-    private void validateBusinessObjectDefinitionDescriptiveInfoUpdateRequest(BusinessObjectDefinitionDescriptiveInfoUpdateRequest request)
+    private void validateBusinessObjectDefinitionDescriptiveInformationUpdateRequest(BusinessObjectDefinitionDescriptiveInformationUpdateRequest request)
     {
         if (request.getDisplayName() != null)
         {
@@ -443,8 +443,8 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
      * @param businessObjectDefinitionEntity the business object definition entity
      * @param request the business object definition update request
      */
-    private void updateBusinessObjectDefinitionEntityDescriptiveInfo(BusinessObjectDefinitionEntity businessObjectDefinitionEntity,
-        BusinessObjectDefinitionDescriptiveInfoUpdateRequest request)
+    private void updateBusinessObjectDefinitionEntityDescriptiveInformation(BusinessObjectDefinitionEntity businessObjectDefinitionEntity,
+        BusinessObjectDefinitionDescriptiveInformationUpdateRequest request)
     {
         // Update the entity with the new description value.
         businessObjectDefinitionEntity.setDescription(request.getDescription());
