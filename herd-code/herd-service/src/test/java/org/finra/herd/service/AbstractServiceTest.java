@@ -544,9 +544,6 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     protected SystemJobService systemJobService;
 
     @Autowired
-    protected TagTypeServiceTestHelper tagTypeServiceTestHelper;
-
-    @Autowired
     protected TagTypeService tagTypeService;
 
     @Autowired

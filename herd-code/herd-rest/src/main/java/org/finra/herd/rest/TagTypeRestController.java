@@ -69,7 +69,7 @@ public class TagTypeRestController
     @RequestMapping(value = "/tagTypes/{tagTypeCode}", method = RequestMethod.PUT,
         consumes = {"application/xml", "application/json"})
     @Secured(SecurityFunctions.FN_TAG_TYPES_PUT)
-    public TagType updateTagType(@PathVariable("tagTypeCode") String tagTypeCode, @RequestBody TagTypeUpdateRequest request) throws Exception
+    public TagType updateTagType(@PathVariable("tagTypeCode") String tagTypeCode, @RequestBody TagTypeUpdateRequest request)
     {
         return tagTypeService.updateTagType(new TagTypeKey(tagTypeCode), request);
     }
