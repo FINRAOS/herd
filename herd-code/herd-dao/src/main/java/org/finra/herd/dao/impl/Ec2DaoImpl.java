@@ -40,11 +40,13 @@ import com.amazonaws.services.ec2.model.SpotPrice;
 import com.amazonaws.services.ec2.model.Subnet;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Repository;
 
 import org.finra.herd.dao.Ec2Dao;
 import org.finra.herd.dao.Ec2Operations;
 import org.finra.herd.dao.RetryPolicyFactory;
+import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.dto.AwsParamsDto;
 
@@ -113,6 +115,7 @@ public class Ec2DaoImpl implements Ec2Dao
      * @return the AmazonEC2Client object
      */
     @Override
+    @Cacheable(DaoSpringModuleConfig.HERD_CACHE_NAME)
     public AmazonEC2Client getEc2Client(AwsParamsDto awsParamsDto)
     {
         // TODO Building EC2 client every time requested, if this becomes a performance issue,

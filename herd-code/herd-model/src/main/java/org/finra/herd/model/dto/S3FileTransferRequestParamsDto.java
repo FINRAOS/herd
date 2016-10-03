@@ -345,4 +345,188 @@ public class S3FileTransferRequestParamsDto extends AwsParamsDto
             return params;
         }
     }
+    
+    @Override
+    public int hashCode()
+    {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + ((additionalAwsCredentialsProviders == null) ? 0 : additionalAwsCredentialsProviders.hashCode());
+        result = prime * result + ((files == null) ? 0 : files.hashCode());
+        result = prime * result + ((isRecursive == null) ? 0 : isRecursive.hashCode());
+        result = prime * result + ((kmsKeyId == null) ? 0 : kmsKeyId.hashCode());
+        result = prime * result + ((localPath == null) ? 0 : localPath.hashCode());
+        result = prime * result + ((maxThreads == null) ? 0 : maxThreads.hashCode());
+        result = prime * result + ((s3AccessKey == null) ? 0 : s3AccessKey.hashCode());
+        result = prime * result + ((s3BucketName == null) ? 0 : s3BucketName.hashCode());
+        result = prime * result + ((s3Endpoint == null) ? 0 : s3Endpoint.hashCode());
+        result = prime * result + ((s3KeyPrefix == null) ? 0 : s3KeyPrefix.hashCode());
+        result = prime * result + ((s3SecretKey == null) ? 0 : s3SecretKey.hashCode());
+        result = prime * result + ((socketTimeout == null) ? 0 : socketTimeout.hashCode());
+        result = prime * result + ((useRrs == null) ? 0 : useRrs.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (this == obj)
+        {
+            return true;
+        }
+        if (!super.equals(obj))
+        {
+            return false;
+        }
+        if (getClass() != obj.getClass())
+        {
+            return false;
+        }
+        S3FileTransferRequestParamsDto other = (S3FileTransferRequestParamsDto) obj;
+        if (additionalAwsCredentialsProviders == null)
+        {
+            if (other.additionalAwsCredentialsProviders != null)
+            {
+                return false;
+            }
+        }
+        else if (!additionalAwsCredentialsProviders.equals(other.additionalAwsCredentialsProviders))
+        {
+            return false;
+        }
+        if (files == null)
+        {
+            if (other.files != null)
+            {
+                return false;
+            }
+        }
+        else if (!files.equals(other.files))
+        {
+            return false;
+        }
+        if (isRecursive == null)
+        {
+            if (other.isRecursive != null)
+                {
+                  return false;
+                }
+        }
+        else if (!isRecursive.equals(other.isRecursive))
+        {
+            return false;
+        }
+        if (kmsKeyId == null)
+        {
+            if (other.kmsKeyId != null)
+            {
+                return false;
+            }
+        }
+        else if (!kmsKeyId.equals(other.kmsKeyId))
+        {
+            return false;
+        }
+        if (localPath == null)
+        {
+            if (other.localPath != null)
+                {
+                  return false;
+                }
+        }
+        else if (!localPath.equals(other.localPath))
+        {
+            return false;
+        }
+        if (maxThreads == null)
+        {
+            if (other.maxThreads != null)
+            {
+                return false;
+            }
+        }
+        else if (!maxThreads.equals(other.maxThreads))
+        {
+            return false;
+        }
+        if (s3AccessKey == null)
+        {
+            if (other.s3AccessKey != null)
+                {
+                  return false;
+                }
+        }
+        else if (!s3AccessKey.equals(other.s3AccessKey))
+        {
+            return false;
+        }
+        if (s3BucketName == null)
+        {
+            if (other.s3BucketName != null)
+                {
+                  return false;
+                }
+        }
+        else if (!s3BucketName.equals(other.s3BucketName))
+        {
+            return false;
+        }
+        if (s3Endpoint == null)
+        {
+            if (other.s3Endpoint != null)
+                {
+                  return false;
+                }
+        }
+        else if (!s3Endpoint.equals(other.s3Endpoint))
+        {
+            return false;
+        }
+        if (s3KeyPrefix == null)
+        {
+            if (other.s3KeyPrefix != null)
+                {
+                  return false;
+                }
+        }
+        else if (!s3KeyPrefix.equals(other.s3KeyPrefix))
+        {
+            return false;
+        }
+        if (s3SecretKey == null)
+        {
+            if (other.s3SecretKey != null)
+            {
+                return false;
+            }
+        }
+        else if (!s3SecretKey.equals(other.s3SecretKey))
+        {
+            return false;
+        }
+        if (socketTimeout == null)
+        {
+            if (other.socketTimeout != null)
+            {
+                return false;
+            }
+        }
+        else if (!socketTimeout.equals(other.socketTimeout))
+        {
+            return false;
+        }
+        if (useRrs == null)
+        {
+            if (other.useRrs != null)
+            {
+                return false;
+            }
+        }
+        else if (!useRrs.equals(other.useRrs))
+        {
+            return false;
+        }
+        return true;
+    }
+
 }
