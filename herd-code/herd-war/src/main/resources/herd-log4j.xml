@@ -56,6 +56,10 @@
        <logger name="org.springframework.cache" level="trace">
         <appender-ref ref="Console" />
        </logger>
+       <logger name="net.sf.ehcache">
+         <level value="DEBUG"/>
+          <appender-ref ref="Console" />
+       </logger>
 
       <!-- We are using "warn" as the default level which will prevent too much logging (e.g. info, debug, etc.) unless specifically configured with a separate Logger. -->
       <Root level="warn">
