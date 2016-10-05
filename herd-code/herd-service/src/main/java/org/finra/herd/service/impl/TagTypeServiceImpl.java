@@ -43,6 +43,7 @@ public class TagTypeServiceImpl implements TagTypeService
 {
     @Autowired
     private AlternateKeyHelper alternateKeyHelper;
+
     @Autowired
     private TagTypeHelper tagTypeHelper;
 
@@ -93,7 +94,7 @@ public class TagTypeServiceImpl implements TagTypeService
 
         updateTagTypeEntity(tagTypeEntity, request);
 
-        // Create and return the business object format object from the persisted entity.
+        // Create and return the tag type object from the persisted entity.
         return createTagTypeFromEntity(tagTypeEntity);
     }
 

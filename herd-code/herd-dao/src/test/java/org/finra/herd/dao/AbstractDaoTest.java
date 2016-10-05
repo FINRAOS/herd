@@ -237,6 +237,7 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Integer INITIAL_VERSION = 0;
 
+
     public static final Integer INTEGER_VALUE = (int) (Math.random() * Integer.MAX_VALUE);
 
     public static final Integer INVALID_DATA_VERSION = -1 * DATA_VERSION;
@@ -525,6 +526,18 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String TABLE_NAME = "Test_Table" + RANDOM_SUFFIX;
 
+    public static final String TAG = "UT_Tag_1_" + RANDOM_SUFFIX;
+
+    public static final String TAG_2 = "UT_Tag_2_" + RANDOM_SUFFIX;
+
+    public static final String TAG_DISPLAY_NAME = "Tag " + RANDOM_SUFFIX;
+
+    public static final String TAG_DISPLAY_NAME_2 = "Tag2 " + RANDOM_SUFFIX;
+
+    public static final String TAG_DESCRIPTION = "Tag_description " + RANDOM_SUFFIX;
+
+    public static final String TAG_DESCRIPTION_2 = "Tag_description2 " + RANDOM_SUFFIX;
+
     public static final String TAG_TYPE = "UT_TagType_1_" + RANDOM_SUFFIX;
 
     public static final String TAG_TYPE_2 = "UT_TagType_2_" + RANDOM_SUFFIX;
@@ -789,6 +802,12 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     @Autowired
     protected TagTypeDaoTestHelper tagTypeDaoTestHelper;
+
+    @Autowired
+    protected TagDao tagDao;
+
+    @Autowired
+    protected TagDaoTestHelper tagDaoTestHelper;
 
     @Autowired
     protected UserDao userDao;

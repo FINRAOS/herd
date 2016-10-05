@@ -293,6 +293,15 @@ public class SecurityFunctions
 
     public static final String FN_TAG_TYPES_PUT = "FN_TAG_TYPES_PUT";
 
+    public static final String FN_TAGS_GET = "FN_TAGS_GET";
+
+    public static final String FN_TAGS_DELETE = "FN_TAGS_DELETE";
+
+    public static final String FN_TAGS_ALL_GET = "FN_TAGS_ALL_GET";
+
+    public static final String FN_TAGS_POST = "FN_TAGS_POST";
+
+    public static final String FN_TAGS_PUT = "FN_TAGS_PUT";
     /**
      * Returns all the functions sorted by function name.
      *

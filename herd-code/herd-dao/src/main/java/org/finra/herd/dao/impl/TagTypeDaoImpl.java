@@ -33,6 +33,9 @@ import org.finra.herd.model.api.xml.TagTypeKey;
 import org.finra.herd.model.jpa.TagTypeEntity;
 import org.finra.herd.model.jpa.TagTypeEntity_;
 
+/**
+ * The tag type dao implementation.
+ */
 @Repository
 public class TagTypeDaoImpl extends AbstractHerdDao implements TagTypeDao
 {
@@ -85,7 +88,7 @@ public class TagTypeDaoImpl extends AbstractHerdDao implements TagTypeDao
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
         CriteriaQuery<String> criteria = builder.createQuery(String.class);
 
-        // The criteria root is the business object definition.
+        // The criteria root is the tag type entity.
         Root<TagTypeEntity> tagTypeEntity = criteria.from(TagTypeEntity.class);
 
         // Get the columns.
@@ -103,10 +106,10 @@ public class TagTypeDaoImpl extends AbstractHerdDao implements TagTypeDao
         orderList.add(builder.asc(tagTypeCodeColumn));
         criteria.orderBy(orderList);
 
-        // Run the query to get a list of namespace codes back.
+        // Run the query to get a list of tag type codes back.
         List<String> tagTypeCodes = entityManager.createQuery(criteria).getResultList();
 
-        // Populate the "keys" objects from the returned namespace codes.
+        // Populate the "keys" objects from the returned tag type codes.
         return tagTypeCodes.stream().map(TagTypeKey::new).collect(Collectors.toList());
     }
 }
