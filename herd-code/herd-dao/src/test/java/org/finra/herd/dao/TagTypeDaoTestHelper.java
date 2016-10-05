@@ -42,7 +42,7 @@ public class TagTypeDaoTestHelper
     public TagTypeEntity createTagTypeEntity(String typeCode, String displayName, Integer orderNumber)
     {
         TagTypeEntity tagTypeEntity = new TagTypeEntity();
-        tagTypeEntity.setTypeCode(typeCode);
+        tagTypeEntity.setCode(typeCode);
         tagTypeEntity.setOrderNumber(orderNumber);
         tagTypeEntity.setDisplayName(displayName);
         return tagTypeDao.saveAndRefresh(tagTypeEntity);

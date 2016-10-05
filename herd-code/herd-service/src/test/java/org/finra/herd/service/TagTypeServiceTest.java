@@ -28,7 +28,6 @@ import org.finra.herd.model.api.xml.TagTypeCreateRequest;
 import org.finra.herd.model.api.xml.TagTypeKey;
 import org.finra.herd.model.api.xml.TagTypeKeys;
 import org.finra.herd.model.api.xml.TagTypeUpdateRequest;
-import org.finra.herd.model.jpa.TagTypeEntity;
 
 /**
  * This class tests various functionality within the namespace REST controller.
@@ -42,7 +41,7 @@ public class TagTypeServiceTest extends AbstractServiceTest
         TagType resultTagType = tagTypeService.createTagType(new TagTypeCreateRequest(new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME, 1));
 
         // Validate the returned object.
-        assertEquals(new TagType(resultTagType.getId(), new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME, 1), resultTagType);
+        assertEquals(new TagType(new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME, 1), resultTagType);
     }
 
     @Test
@@ -90,7 +89,7 @@ public class TagTypeServiceTest extends AbstractServiceTest
             tagTypeService.createTagType(new TagTypeCreateRequest(new TagTypeKey(addWhitespace(TAG_TYPE)), addWhitespace(TAG_TYPE_DISPLAY_NAME), 1));
 
         // Validate the returned object.
-        assertEquals(new TagType(resultTagType.getId(), new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME, 1), resultTagType);
+        assertEquals(new TagType(new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME, 1), resultTagType);
     }
 
     @Test
@@ -148,13 +147,14 @@ public class TagTypeServiceTest extends AbstractServiceTest
     public void testGetTagType()
     {
         // Create and persist a tag type entity.
-        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, 1);
+        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, 1);
 
         // Retrieve the tag type
         TagType resultTagType = tagTypeService.getTagType(new TagTypeKey(TAG_TYPE));
 
         // Validate the returned object.
-        assertEquals(new TagType(tagTypeEntity.getId(), new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME, 1), resultTagType);
+
+        assertEquals(new TagType(new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME, 1), resultTagType);
     }
 
     @Test
@@ -179,39 +179,39 @@ public class TagTypeServiceTest extends AbstractServiceTest
     public void testGetTagTypeTrimParameters()
     {
         // Create and persist a tag type entity.
-        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, 1);
+        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, 1);
 
         // Retrieve the tag type
         TagType resultTagType = tagTypeService.getTagType(new TagTypeKey(addWhitespace(TAG_TYPE)));
 
         // Validate the returned object.
-        assertEquals(new TagType(tagTypeEntity.getId(), new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME, 1), resultTagType);
+        assertEquals(new TagType(new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME, 1), resultTagType);
     }
 
     @Test
     public void testGetTagTypeUpperCaseParameters()
     {
         // Create and persist a tag type entity.
-        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE.toLowerCase(), TAG_TYPE_DISPLAY_NAME.toLowerCase(), 1);
+        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE.toLowerCase(), TAG_TYPE_DISPLAY_NAME.toLowerCase(), 1);
 
         // Retrieve the tag type
         TagType resultTagType = tagTypeService.getTagType(new TagTypeKey(TAG_TYPE.toUpperCase()));
 
         // Validate the returned object.
-        assertEquals(new TagType(tagTypeEntity.getId(), new TagTypeKey(TAG_TYPE.toLowerCase()), TAG_TYPE_DISPLAY_NAME.toLowerCase(), 1), resultTagType);
+        assertEquals(new TagType(new TagTypeKey(TAG_TYPE.toLowerCase()), TAG_TYPE_DISPLAY_NAME.toLowerCase(), 1), resultTagType);
     }
 
     @Test
     public void testGetTagTypeLowerCaseParameters()
     {
         // Create and persist a tag type entity.
-        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE.toUpperCase(), TAG_TYPE_DISPLAY_NAME.toUpperCase(), 1);
+        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE.toUpperCase(), TAG_TYPE_DISPLAY_NAME.toUpperCase(), 1);
 
         // Retrieve the tag type
         TagType resultTagType = tagTypeService.getTagType(new TagTypeKey(TAG_TYPE.toLowerCase()));
 
         // Validate the returned object.
-        assertEquals(new TagType(tagTypeEntity.getId(), new TagTypeKey(TAG_TYPE.toUpperCase()), TAG_TYPE_DISPLAY_NAME.toUpperCase(), 1), resultTagType);
+        assertEquals(new TagType(new TagTypeKey(TAG_TYPE.toUpperCase()), TAG_TYPE_DISPLAY_NAME.toUpperCase(), 1), resultTagType);
     }
 
     @Test
@@ -259,13 +259,13 @@ public class TagTypeServiceTest extends AbstractServiceTest
     public void testUpdateTagType()
     {
         // Create and persist a tag type entity.
-        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, 1);
+        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, 1);
 
         // Update the tag type
         TagType resultTagType = tagTypeService.updateTagType(new TagTypeKey(TAG_TYPE), new TagTypeUpdateRequest(TAG_TYPE_DISPLAY_NAME_2, 2));
 
         // Validate the returned object.
-        assertEquals(new TagType(tagTypeEntity.getId(), new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME_2, 2), resultTagType);
+        assertEquals(new TagType(new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME_2, 2), resultTagType);
     }
 
     @Test
@@ -312,42 +312,42 @@ public class TagTypeServiceTest extends AbstractServiceTest
     public void testUpdateTagTypeTrimParameters()
     {
         // Create and persist a tag type entity.
-        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, 1);
+        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, 1);
 
         // Update the tag type
         TagType resultTagType =
             tagTypeService.updateTagType(new TagTypeKey(addWhitespace(TAG_TYPE)), new TagTypeUpdateRequest(addWhitespace(TAG_TYPE_DISPLAY_NAME_2), 2));
 
         // Validate the returned object.
-        assertEquals(new TagType(tagTypeEntity.getId(), new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME_2, 2), resultTagType);
+        assertEquals(new TagType(new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME_2, 2), resultTagType);
     }
 
     @Test
     public void testUpdateTagTypeUpperCaseParameters()
     {
         // Create and persist a tag type entity.
-        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE.toLowerCase(), TAG_TYPE_DISPLAY_NAME.toLowerCase(), 1);
+        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE.toLowerCase(), TAG_TYPE_DISPLAY_NAME.toLowerCase(), 1);
 
         // Update the tag type
         TagType resultTagType =
             tagTypeService.updateTagType(new TagTypeKey(TAG_TYPE.toUpperCase()), new TagTypeUpdateRequest(TAG_TYPE_DISPLAY_NAME_2.toUpperCase(), 2));
 
         // Validate the returned object.
-        assertEquals(new TagType(tagTypeEntity.getId(), new TagTypeKey(TAG_TYPE.toLowerCase()), TAG_TYPE_DISPLAY_NAME_2.toUpperCase(), 2), resultTagType);
+        assertEquals(new TagType(new TagTypeKey(TAG_TYPE.toLowerCase()), TAG_TYPE_DISPLAY_NAME_2.toUpperCase(), 2), resultTagType);
     }
 
     @Test
     public void testUpdateTagTypeLowerCaseParameters()
     {
         // Create and persist a tag type entity.
-        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE.toUpperCase(), TAG_TYPE_DISPLAY_NAME.toUpperCase(), 1);
+        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE.toUpperCase(), TAG_TYPE_DISPLAY_NAME.toUpperCase(), 1);
 
         // Update the tag type
         TagType resultTagType =
             tagTypeService.updateTagType(new TagTypeKey(TAG_TYPE.toLowerCase()), new TagTypeUpdateRequest(TAG_TYPE_DISPLAY_NAME_2.toLowerCase(), 2));
 
         // Validate the returned object.
-        assertEquals(new TagType(tagTypeEntity.getId(), new TagTypeKey(TAG_TYPE.toUpperCase()), TAG_TYPE_DISPLAY_NAME_2.toLowerCase(), 2), resultTagType);
+        assertEquals(new TagType(new TagTypeKey(TAG_TYPE.toUpperCase()), TAG_TYPE_DISPLAY_NAME_2.toLowerCase(), 2), resultTagType);
     }
 
     @Test
@@ -389,13 +389,13 @@ public class TagTypeServiceTest extends AbstractServiceTest
     public void testDeleteTagType()
     {
         // Create and persist a tag type entity.
-        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, 1);
+        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, 1);
 
         // Delete the tag type
         TagType resultTagType = tagTypeService.deleteTagType(new TagTypeKey(TAG_TYPE));
 
         // Validate the returned object.
-        assertEquals(new TagType(tagTypeEntity.getId(), new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME, 1), resultTagType);
+        assertEquals(new TagType(new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME, 1), resultTagType);
 
         // Ensure that this tag type is no longer there.
         assertNull(tagTypeDao.getTagTypeByKey(resultTagType.getTagTypeKey()));
@@ -423,13 +423,13 @@ public class TagTypeServiceTest extends AbstractServiceTest
     public void testDeleteTagTypeTrimParameters()
     {
         // Create and persist a tag type entity.
-        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, 1);
+        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, 1);
 
         // Delete the tag type
         TagType resultTagType = tagTypeService.deleteTagType(new TagTypeKey(addWhitespace(TAG_TYPE)));
 
         // Validate the returned object.
-        assertEquals(new TagType(tagTypeEntity.getId(), new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME, 1), resultTagType);
+        assertEquals(new TagType(new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME, 1), resultTagType);
 
         // Ensure that this tag type is no longer there.
         assertNull(tagTypeDao.getTagTypeByKey(resultTagType.getTagTypeKey()));
@@ -439,13 +439,13 @@ public class TagTypeServiceTest extends AbstractServiceTest
     public void testDeleteTagTypeUpperCaseParameters()
     {
         // Create and persist a tag type entity.
-        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE.toLowerCase(), TAG_TYPE_DISPLAY_NAME.toLowerCase(), 1);
+        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE.toLowerCase(), TAG_TYPE_DISPLAY_NAME.toLowerCase(), 1);
 
         // Delete the tag type
         TagType resultTagType = tagTypeService.deleteTagType(new TagTypeKey(TAG_TYPE.toUpperCase()));
 
         // Validate the returned object.
-        assertEquals(new TagType(tagTypeEntity.getId(), new TagTypeKey(TAG_TYPE.toLowerCase()), TAG_TYPE_DISPLAY_NAME.toLowerCase(), 1), resultTagType);
+        assertEquals(new TagType(new TagTypeKey(TAG_TYPE.toLowerCase()), TAG_TYPE_DISPLAY_NAME.toLowerCase(), 1), resultTagType);
 
         // Ensure that this tag type is no longer there.
         assertNull(tagTypeDao.getTagTypeByKey(resultTagType.getTagTypeKey()));
@@ -455,13 +455,13 @@ public class TagTypeServiceTest extends AbstractServiceTest
     public void testDeleteTagTypeLowerCaseParameters()
     {
         // Create and persist a tag type entity.
-        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE.toUpperCase(), TAG_TYPE_DISPLAY_NAME.toUpperCase(), 1);
+        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE.toUpperCase(), TAG_TYPE_DISPLAY_NAME.toUpperCase(), 1);
 
         // Delete the tag type
         TagType resultTagType = tagTypeService.deleteTagType(new TagTypeKey(TAG_TYPE.toLowerCase()));
 
         // Validate the returned object.
-        assertEquals(new TagType(tagTypeEntity.getId(), new TagTypeKey(TAG_TYPE.toUpperCase()), TAG_TYPE_DISPLAY_NAME.toUpperCase(), 1), resultTagType);
+        assertEquals(new TagType(new TagTypeKey(TAG_TYPE.toUpperCase()), TAG_TYPE_DISPLAY_NAME.toUpperCase(), 1), resultTagType);
 
         // Ensure that this tag type is no longer there.
         assertNull(tagTypeDao.getTagTypeByKey(resultTagType.getTagTypeKey()));

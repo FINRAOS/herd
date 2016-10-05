@@ -38,7 +38,7 @@ public class TagTypeDaoTest extends AbstractDaoTest
         TagTypeEntity resultTagTypeEntity = tagTypeDao.getTagTypeByKey(new TagTypeKey(TAG_TYPE));
 
         // Validate the results.
-        assertEquals(TAG_TYPE, resultTagTypeEntity.getTypeCode());
+        assertEquals(TAG_TYPE, resultTagTypeEntity.getCode());
         assertEquals(TAG_TYPE_DISPLAY_NAME, resultTagTypeEntity.getDisplayName());
         assertEquals(new Integer(1), resultTagTypeEntity.getOrderNumber());
     }
@@ -53,7 +53,7 @@ public class TagTypeDaoTest extends AbstractDaoTest
         TagTypeEntity resultTagTypeEntity = tagTypeDao.getTagTypeByDisplayName(TAG_TYPE_DISPLAY_NAME);
 
         // Validate the results.
-        assertEquals(TAG_TYPE, resultTagTypeEntity.getTypeCode());
+        assertEquals(TAG_TYPE, resultTagTypeEntity.getCode());
         assertEquals(TAG_TYPE_DISPLAY_NAME, resultTagTypeEntity.getDisplayName());
         assertEquals(new Integer(1), resultTagTypeEntity.getOrderNumber());
     }

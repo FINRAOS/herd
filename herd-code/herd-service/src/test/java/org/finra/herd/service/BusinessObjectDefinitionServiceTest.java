@@ -556,7 +556,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
     }
 
     @Test
-    public void testUpdateBusinessObjectDefinitionDescriptiveInfo() throws Exception
+    public void testUpdateBusinessObjectDefinitionDescriptiveInformationrmation() throws Exception
     {
         // Create and persist a business object definition entity.
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoTestHelper
@@ -564,8 +564,9 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         // Perform an update by changing the description and updating the attributes.
         BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionService
-            .updateBusinessObjectDefinitionDescriptiveInfo(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME),
-                businessObjectDefinitionServiceTestHelper.createBusinessObjectDefinitionDescriptiveInfoUpdateRequest(BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2));
+            .updateBusinessObjectDefinitionDescriptiveInformation(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME),
+                businessObjectDefinitionServiceTestHelper
+                    .createBusinessObjectDefinitionDescriptiveInformationUpdateRequest(BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2));
 
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION_2,
@@ -573,13 +574,14 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
     }
 
     @Test
-    public void testUpdateBusinessObjectDefinitionDescriptiveInfoMissingRequiredParameters()
+    public void testUpdateBusinessObjectDefinitionDescriptiveInformationrmationMissingRequiredParameters()
     {
         // Try to update a business object definition instance when business object definition namespace is not specified.
         try
         {
-            businessObjectDefinitionService.updateBusinessObjectDefinitionDescriptiveInfo(new BusinessObjectDefinitionKey(BLANK_TEXT, BDEF_NAME),
-                businessObjectDefinitionServiceTestHelper.createBusinessObjectDefinitionDescriptiveInfoUpdateRequest(BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2));
+            businessObjectDefinitionService.updateBusinessObjectDefinitionDescriptiveInformation(new BusinessObjectDefinitionKey(BLANK_TEXT, BDEF_NAME),
+                businessObjectDefinitionServiceTestHelper
+                    .createBusinessObjectDefinitionDescriptiveInformationUpdateRequest(BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2));
             fail();
         }
         catch (IllegalArgumentException e)
@@ -590,8 +592,9 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         // Try to update a business object definition instance when business object definition name is not specified.
         try
         {
-            businessObjectDefinitionService.updateBusinessObjectDefinitionDescriptiveInfo(new BusinessObjectDefinitionKey(NAMESPACE, BLANK_TEXT),
-                businessObjectDefinitionServiceTestHelper.createBusinessObjectDefinitionDescriptiveInfoUpdateRequest(BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2));
+            businessObjectDefinitionService.updateBusinessObjectDefinitionDescriptiveInformation(new BusinessObjectDefinitionKey(NAMESPACE, BLANK_TEXT),
+                businessObjectDefinitionServiceTestHelper
+                    .createBusinessObjectDefinitionDescriptiveInformationUpdateRequest(BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2));
             fail();
         }
         catch (IllegalArgumentException e)
@@ -601,7 +604,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
     }
 
     @Test
-    public void testUpdateBusinessObjectDefinitionDescriptiveInfoOptionalParametersPassedAsWhitespace()
+    public void testUpdateBusinessObjectDefinitionDescriptiveInformationOptionalParametersPassedAsWhitespace()
     {
         // Create and persist a business object definition entity.
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoTestHelper
@@ -609,8 +612,8 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         // Perform an update using input parameters with leading and trailing empty spaces.
         BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionService
-            .updateBusinessObjectDefinitionDescriptiveInfo(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME),
-                businessObjectDefinitionServiceTestHelper.createBusinessObjectDefinitionDescriptiveInfoUpdateRequest(BLANK_TEXT, BLANK_TEXT));
+            .updateBusinessObjectDefinitionDescriptiveInformation(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME),
+                businessObjectDefinitionServiceTestHelper.createBusinessObjectDefinitionDescriptiveInformationUpdateRequest(BLANK_TEXT, BLANK_TEXT));
 
         // Validate the returned object.
         assertEquals(
@@ -619,7 +622,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
     }
 
     @Test
-    public void testUpdateBusinessObjectDefinitionDescriptiveInfoOptionalParametersPassedAsNulls()
+    public void testUpdateBusinessObjectDefinitionDescriptiveInformationrmationOptionalParametersPassedAsNulls()
     {
         // Create and persist a business object definition entity.
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoTestHelper
@@ -627,8 +630,8 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         // Perform an update using input parameters with leading and trailing empty spaces.
         BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionService
-            .updateBusinessObjectDefinitionDescriptiveInfo(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME),
-                businessObjectDefinitionServiceTestHelper.createBusinessObjectDefinitionDescriptiveInfoUpdateRequest(null, null));
+            .updateBusinessObjectDefinitionDescriptiveInformation(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME),
+                businessObjectDefinitionServiceTestHelper.createBusinessObjectDefinitionDescriptiveInformationUpdateRequest(null, null));
 
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, null, null, NO_ATTRIBUTES),
@@ -636,7 +639,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
     }
 
     @Test
-    public void testUpdateBusinessObjectDefinitionDescriptiveInfoTrimParameters()
+    public void testUpdateBusinessObjectDefinitionDescriptiveInformationTrimParameters()
     {
         // Create and persist a business object definition entity.
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoTestHelper
@@ -644,9 +647,9 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         // Perform an update using input parameters with leading and trailing empty spaces.
         BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionService
-            .updateBusinessObjectDefinitionDescriptiveInfo(new BusinessObjectDefinitionKey(addWhitespace(NAMESPACE), addWhitespace(BDEF_NAME)),
+            .updateBusinessObjectDefinitionDescriptiveInformation(new BusinessObjectDefinitionKey(addWhitespace(NAMESPACE), addWhitespace(BDEF_NAME)),
                 businessObjectDefinitionServiceTestHelper
-                    .createBusinessObjectDefinitionDescriptiveInfoUpdateRequest(addWhitespace(BDEF_DESCRIPTION_2), addWhitespace(BDEF_DISPLAY_NAME_2)));
+                    .createBusinessObjectDefinitionDescriptiveInformationUpdateRequest(addWhitespace(BDEF_DESCRIPTION_2), addWhitespace(BDEF_DISPLAY_NAME_2)));
 
         // Validate the returned object.
         assertEquals(
@@ -655,7 +658,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
     }
 
     @Test
-    public void testUpdateBusinessObjectDefinitionDescriptiveInfoUpperCaseParameters()
+    public void testUpdateBusinessObjectDefinitionDescriptiveInformationUpperCaseParameters()
     {
         // Create and persist a business object definition entity using lower case values.
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoTestHelper
@@ -663,8 +666,9 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         // Perform an update using upper case input parameters.
         BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionService
-            .updateBusinessObjectDefinitionDescriptiveInfo(new BusinessObjectDefinitionKey(NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase()),
-                businessObjectDefinitionServiceTestHelper.createBusinessObjectDefinitionDescriptiveInfoUpdateRequest(BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2));
+            .updateBusinessObjectDefinitionDescriptiveInformation(new BusinessObjectDefinitionKey(NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase()),
+                businessObjectDefinitionServiceTestHelper
+                    .createBusinessObjectDefinitionDescriptiveInformationUpdateRequest(BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2));
 
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION_2,
@@ -672,7 +676,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
     }
 
     @Test
-    public void testUpdateBusinessObjectDefinitionDescriptiveInfoLowerCaseParameters()
+    public void testUpdateBusinessObjectDefinitionDescriptiveInformationLowerCaseParameters()
     {
         // Create and persist a business object definition entity using lower case values.
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoTestHelper
@@ -680,8 +684,9 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         // Perform an update using lower case input parameters.
         BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionService
-            .updateBusinessObjectDefinitionDescriptiveInfo(new BusinessObjectDefinitionKey(NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase()),
-                businessObjectDefinitionServiceTestHelper.createBusinessObjectDefinitionDescriptiveInfoUpdateRequest(BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2));
+            .updateBusinessObjectDefinitionDescriptiveInformation(new BusinessObjectDefinitionKey(NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase()),
+                businessObjectDefinitionServiceTestHelper
+                    .createBusinessObjectDefinitionDescriptiveInformationUpdateRequest(BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2));
 
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION_2,
@@ -689,13 +694,14 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
     }
 
     @Test
-    public void testUpdateBusinessObjectDefinitionDescriptiveInfoBusinessObjectDefinitionNoExists() throws Exception
+    public void testUpdateBusinessObjectDefinitionDescriptiveInformationBusinessObjectDefinitionNoExists() throws Exception
     {
         // Try to update a non-existing business object definition.
         try
         {
-            businessObjectDefinitionService.updateBusinessObjectDefinitionDescriptiveInfo(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME),
-                businessObjectDefinitionServiceTestHelper.createBusinessObjectDefinitionDescriptiveInfoUpdateRequest(BDEF_DESCRIPTION_2, BDEF_DESCRIPTION_2));
+            businessObjectDefinitionService.updateBusinessObjectDefinitionDescriptiveInformation(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME),
+                businessObjectDefinitionServiceTestHelper
+                    .createBusinessObjectDefinitionDescriptiveInformationUpdateRequest(BDEF_DESCRIPTION_2, BDEF_DESCRIPTION_2));
             fail("Should throw an ObjectNotFoundException when business object definition doesn't exist.");
         }
         catch (ObjectNotFoundException e)

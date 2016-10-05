@@ -56,7 +56,7 @@ public class TagTypeDaoImpl extends AbstractHerdDao implements TagTypeDao
         Root<TagTypeEntity> tagTypeEntity = criteria.from(TagTypeEntity.class);
 
         // Create the standard restrictions.
-        Predicate queryRestriction = builder.equal(builder.upper(tagTypeEntity.get(TagTypeEntity_.typeCode)), tagTypeCode.toUpperCase());
+        Predicate queryRestriction = builder.equal(builder.upper(tagTypeEntity.get(TagTypeEntity_.code)), tagTypeCode.toUpperCase());
 
         criteria.select(tagTypeEntity).where(queryRestriction);
 
@@ -92,7 +92,7 @@ public class TagTypeDaoImpl extends AbstractHerdDao implements TagTypeDao
         Root<TagTypeEntity> tagTypeEntity = criteria.from(TagTypeEntity.class);
 
         // Get the columns.
-        Path<String> tagTypeCodeColumn = tagTypeEntity.get(TagTypeEntity_.typeCode);
+        Path<String> tagTypeCodeColumn = tagTypeEntity.get(TagTypeEntity_.code);
         Path<String> displayNameColumn = tagTypeEntity.get(TagTypeEntity_.displayName);
         Path<Integer> tagTypeOrderColumn = tagTypeEntity.get(TagTypeEntity_.orderNumber);
 
@@ -103,7 +103,6 @@ public class TagTypeDaoImpl extends AbstractHerdDao implements TagTypeDao
         List<Order> orderList = new ArrayList<>();
         orderList.add(builder.asc(tagTypeOrderColumn));
         orderList.add(builder.asc(displayNameColumn));
-        orderList.add(builder.asc(tagTypeCodeColumn));
         criteria.orderBy(orderList);
 
         // Run the query to get a list of tag type codes back.

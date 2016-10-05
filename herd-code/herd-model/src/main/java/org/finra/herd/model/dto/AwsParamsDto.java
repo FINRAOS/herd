@@ -57,4 +57,38 @@ public class AwsParamsDto
     {
         this.httpProxyPort = httpProxyPort;
     }
+    
+    @Override
+    public boolean equals(Object object)
+    {
+        if (this == object)
+        {
+            return true;
+        }
+        if (object == null || getClass() != object.getClass())
+        {
+            return false;
+        }
+        
+        AwsParamsDto that = (AwsParamsDto) object;
+
+        if (httpProxyHost != null ? !httpProxyHost.equals(that.httpProxyHost) : that.httpProxyHost != null)
+        {
+            return false;
+        }
+        if (httpProxyPort != null ? !httpProxyPort.equals(that.httpProxyPort) : that.httpProxyPort != null)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int result = httpProxyHost != null ? httpProxyHost.hashCode() : 0;
+        result = 31 * result + (httpProxyPort != null ? httpProxyPort.hashCode() : 0);
+        return result;
+    }
 }

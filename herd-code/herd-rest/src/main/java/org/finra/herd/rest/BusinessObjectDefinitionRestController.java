@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import org.finra.herd.model.api.xml.BusinessObjectDefinition;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionCreateRequest;
-import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptiveInfoUpdateRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptiveInformationUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKeys;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionUpdateRequest;
@@ -93,12 +93,12 @@ public class BusinessObjectDefinitionRestController extends HerdBaseController
         method = RequestMethod.PUT,
         consumes = {"application/xml", "application/json"})
     @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DEFINITIONS_DESCRIPTIVE_INFO_PUT)
-    public BusinessObjectDefinition updateBusinessObjectDefinitionDescriptiveInfo(@PathVariable("namespace") String namespace,
+    public BusinessObjectDefinition updateBusinessObjectDefinitionDescriptiveInformation(@PathVariable("namespace") String namespace,
         @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
-        @RequestBody BusinessObjectDefinitionDescriptiveInfoUpdateRequest request)
+        @RequestBody BusinessObjectDefinitionDescriptiveInformationUpdateRequest request)
     {
         BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(namespace, businessObjectDefinitionName);
-        return businessObjectDefinitionService.updateBusinessObjectDefinitionDescriptiveInfo(businessObjectDefinitionKey, request);
+        return businessObjectDefinitionService.updateBusinessObjectDefinitionDescriptiveInformation(businessObjectDefinitionKey, request);
     }
 
     /**

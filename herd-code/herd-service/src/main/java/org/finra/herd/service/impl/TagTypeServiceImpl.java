@@ -43,7 +43,6 @@ public class TagTypeServiceImpl implements TagTypeService
 {
     @Autowired
     private AlternateKeyHelper alternateKeyHelper;
-
     @Autowired
     private TagTypeHelper tagTypeHelper;
 
@@ -94,7 +93,7 @@ public class TagTypeServiceImpl implements TagTypeService
 
         updateTagTypeEntity(tagTypeEntity, request);
 
-        // Create and return the tag type object from the persisted entity.
+        // Create and return the tag type from the persisted entity.
         return createTagTypeFromEntity(tagTypeEntity);
     }
 
@@ -118,13 +117,13 @@ public class TagTypeServiceImpl implements TagTypeService
         tagTypeHelper.validateTagTypeKey(tagTypeKey);
 
         // Retrieve and ensure that a tag type already exists with the specified key.
-        TagTypeEntity namespaceEntity = tagTypeDaoHelper.getTagTypeEntity(tagTypeKey);
+        TagTypeEntity tagTypeEntity = tagTypeDaoHelper.getTagTypeEntity(tagTypeKey);
 
         // Delete the tag type.
-        tagTypeDao.delete(namespaceEntity);
+        tagTypeDao.delete(tagTypeEntity);
 
         // Create and return the tag type object from the deleted entity.
-        return createTagTypeFromEntity(namespaceEntity);
+        return createTagTypeFromEntity(tagTypeEntity);
     }
 
     @Override
@@ -178,7 +177,11 @@ public class TagTypeServiceImpl implements TagTypeService
      */
     private TagTypeEntity createTagTypeEntity(String tagTypeCode, String displayName, int tagTypeOrder)
     {
-        return tagTypeDao.saveAndRefresh(new TagTypeEntity(tagTypeCode,displayName,tagTypeOrder));
+        TagTypeEntity tagTypeEntity = new TagTypeEntity();
+        tagTypeEntity.setCode(tagTypeCode);
+        tagTypeEntity.setDisplayName(displayName);
+        tagTypeEntity.setOrderNumber(tagTypeOrder);
+        return tagTypeDao.saveAndRefresh(tagTypeEntity);
     }
 
     /**
@@ -192,11 +195,9 @@ public class TagTypeServiceImpl implements TagTypeService
     {
         TagType tagType = new TagType();
 
-        tagType.setId(tagTypeEntity.getId());
-
         TagTypeKey tagTypeKey = new TagTypeKey();
         tagType.setTagTypeKey(tagTypeKey);
-        tagTypeKey.setTagTypeCode(tagTypeEntity.getTypeCode());
+        tagTypeKey.setTagTypeCode(tagTypeEntity.getCode());
 
         tagType.setDisplayName(tagTypeEntity.getDisplayName());
         tagType.setTagTypeOrder(tagTypeEntity.getOrderNumber());

@@ -239,7 +239,7 @@ public class TagServiceImpl implements TagService
         Tag tag = new Tag();
         tag.setId(tagEntity.getId());
 
-        TagKey tagKey = new TagKey(tagEntity.getTagType().getTypeCode(), tagEntity.getTagCode());
+        TagKey tagKey = new TagKey(tagEntity.getTagType().getCode(), tagEntity.getTagCode());
         tag.setTagKey(tagKey);
 
         tag.setDisplayName(tagEntity.getDisplayName());

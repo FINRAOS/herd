@@ -27,7 +27,6 @@ import org.finra.herd.model.api.xml.TagTypeCreateRequest;
 import org.finra.herd.model.api.xml.TagTypeKey;
 import org.finra.herd.model.api.xml.TagTypeKeys;
 import org.finra.herd.model.api.xml.TagTypeUpdateRequest;
-import org.finra.herd.model.jpa.TagTypeEntity;
 
 /**
  * This class tests various functionality within the namespace REST controller.
@@ -41,20 +40,20 @@ public class TagTypeRestControllerTest extends AbstractRestTest
         TagType resultTagType = tagTypeRestController.createTagType(new TagTypeCreateRequest(new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME, 1));
 
         // Validate the returned object.
-        assertEquals(new TagType(resultTagType.getId(), new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME, 1), resultTagType);
+        assertEquals(new TagType(new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME, 1), resultTagType);
     }
 
     @Test
     public void testGetTagType() throws Exception
     {
         // Create and persist a tag type entity.
-        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, 1);
+        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, 1);
 
         // Retrieve the tag type.
         TagType resultTagType = tagTypeRestController.getTagType(TAG_TYPE);
 
         // Validate the returned object.
-        assertEquals(new TagType(tagTypeEntity.getId(), new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME, 1), resultTagType);
+        assertEquals(new TagType(new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME, 1), resultTagType);
     }
 
     @Test
@@ -81,7 +80,7 @@ public class TagTypeRestControllerTest extends AbstractRestTest
     public void testDeleteTagType() throws Exception
     {
         // Create and persist a tag type entity.
-        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, 1);
+        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, 1);
 
         // Validate that this tag type exists.
         TagTypeKey tagTypeKey = new TagTypeKey(TAG_TYPE);
@@ -91,7 +90,7 @@ public class TagTypeRestControllerTest extends AbstractRestTest
         TagType deletedTagType = tagTypeRestController.deleteTagType(TAG_TYPE);
 
         // Validate the returned object.
-        assertEquals(new TagType(tagTypeEntity.getId(), new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME, 1), deletedTagType);
+        assertEquals(new TagType(new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME, 1), deletedTagType);
 
         // Ensure that this tag type is no longer there.
         assertNull(tagTypeDao.getTagTypeByKey(tagTypeKey));
@@ -101,12 +100,12 @@ public class TagTypeRestControllerTest extends AbstractRestTest
     public void testUpdateTagType() throws Exception
     {
         // Create and persist a tag type entity.
-        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, 1);
+        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, 1);
 
         // Retrieve the tag type.
         TagType resultTagType = tagTypeRestController.updateTagType(TAG_TYPE, new TagTypeUpdateRequest(TAG_TYPE_DISPLAY_NAME_2, 2));
 
         // Validate the returned object.
-        assertEquals(new TagType(tagTypeEntity.getId(), new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME_2, 2), resultTagType);
+        assertEquals(new TagType(new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME_2, 2), resultTagType);
     }
 }

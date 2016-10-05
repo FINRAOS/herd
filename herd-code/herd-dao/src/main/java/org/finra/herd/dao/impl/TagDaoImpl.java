@@ -54,7 +54,7 @@ public class TagDaoImpl extends AbstractHerdDao implements TagDao
 
         // Create the standard restrictions (i.e. the standard where clauses).
         List<Predicate> predicates = new ArrayList<>();
-        predicates.add(builder.equal(builder.upper(tagTypeEntityJoin.get(TagTypeEntity_.typeCode)), tagKey.getTagTypeCode().toUpperCase()));
+        predicates.add(builder.equal(builder.upper(tagTypeEntityJoin.get(TagTypeEntity_.code)), tagKey.getTagTypeCode().toUpperCase()));
         predicates.add(builder.equal(builder.upper(tagEntityRoot.get(TagEntity_.tagCode)), tagKey.getTagCode().toUpperCase()));
 
         // Add the clauses for the query.
@@ -79,7 +79,7 @@ public class TagDaoImpl extends AbstractHerdDao implements TagDao
 
         // Create the standard restrictions (i.e. the standard where clauses).
         List<Predicate> predicates = new ArrayList<>();
-        predicates.add(builder.equal(builder.upper(tagTypeEntityJoin.get(TagTypeEntity_.typeCode)), tagTypeCode.toUpperCase()));
+        predicates.add(builder.equal(builder.upper(tagTypeEntityJoin.get(TagTypeEntity_.code)), tagTypeCode.toUpperCase()));
         predicates.add(builder.equal(builder.upper(tagEntityRoot.get(TagEntity_.displayName)), displayName.toUpperCase()));
 
         // Add the clauses for the query.
@@ -103,7 +103,7 @@ public class TagDaoImpl extends AbstractHerdDao implements TagDao
         Join<TagEntity, TagTypeEntity> tagTypeEntityJoin = tagEntityRoot.join(TagEntity_.tagType);
 
         // Create the restriction.
-        Predicate queryRestriction = builder.equal(builder.upper(tagTypeEntityJoin.get(TagTypeEntity_.typeCode)), tagTypeCode.toUpperCase());
+        Predicate queryRestriction = builder.equal(builder.upper(tagTypeEntityJoin.get(TagTypeEntity_.code)), tagTypeCode.toUpperCase());
 
         // Add the restriction to the query.
         criteria.select(tagEntityRoot).where(queryRestriction);
@@ -115,7 +115,7 @@ public class TagDaoImpl extends AbstractHerdDao implements TagDao
         List<TagKey> tagKeys = new ArrayList<>();
         for (TagEntity tagEntity : tagEntities)
         {
-            TagKey tagKey = new TagKey(tagEntity.getTagType().getTypeCode(), tagEntity.getTagCode());
+            TagKey tagKey = new TagKey(tagEntity.getTagType().getCode(), tagEntity.getTagCode());
             tagKeys.add(tagKey);
         }
 

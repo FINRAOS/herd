@@ -120,7 +120,7 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
     }
 
     @Test
-    public void testUpdateBusinessObjectDefinitionDescriptiveInfo() throws Exception
+    public void testUpdateBusinessObjectDefinitionDescriptiveInformation() throws Exception
     {
         // Create and persist a business object definition entity.
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoTestHelper
@@ -128,8 +128,8 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
 
         // Perform an update by changing the description and updating the attributes.
         BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionRestController
-            .updateBusinessObjectDefinitionDescriptiveInfo(NAMESPACE, BDEF_NAME,
-                businessObjectDefinitionServiceTestHelper.createBusinessObjectDefinitionDescriptiveInfoUpdateRequest(BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2));
+            .updateBusinessObjectDefinitionDescriptiveInformation(NAMESPACE, BDEF_NAME, businessObjectDefinitionServiceTestHelper
+                .createBusinessObjectDefinitionDescriptiveInformationUpdateRequest(BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2));
 
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION_2,
