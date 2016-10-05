@@ -67,31 +67,6 @@ public class TagEntity extends AuditableEntity
     @Column(name = "desc_tx", nullable = true)
     private String description;
 
-    /**
-     * Default no-arg constructor
-     */
-    public TagEntity()
-    {
-        // Empty constructor
-    }
-
-    /**
-     * Fully initialising constructor.
-     *
-     * @param tagTypeEntity the specified tag type entity.
-     *
-     * @param displayName the specified display name.
-     *
-     * @param description the specified description.
-     */
-    public TagEntity(final TagTypeEntity tagTypeEntity, final String tagCode, final String displayName, final String description)
-    {
-        this.tagType = tagTypeEntity;
-        this.tagCode = tagCode;
-        this.displayName = displayName;
-        this.description = description;
-    }
-
     public Integer getId()
     {
         return id;

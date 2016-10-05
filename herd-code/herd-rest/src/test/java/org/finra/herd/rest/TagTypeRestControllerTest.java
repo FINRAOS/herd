@@ -29,7 +29,7 @@ import org.finra.herd.model.api.xml.TagTypeKeys;
 import org.finra.herd.model.api.xml.TagTypeUpdateRequest;
 
 /**
- * This class tests various functionality within the namespace REST controller.
+ * This class tests various functionality within the tag type REST controller.
  */
 public class TagTypeRestControllerTest extends AbstractRestTest
 {

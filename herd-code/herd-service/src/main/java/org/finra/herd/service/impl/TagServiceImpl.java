@@ -83,7 +83,8 @@ public class TagServiceImpl implements TagService
         TagTypeEntity tagTypeEntity = tagTypeDaoHelper.getTagTypeEntity(tagTypeKey);
 
         // Create and persist a new tag entity from the information in the request.
-        tagEntity = createTagEntity(tagTypeEntity, tagCreateRequest.getTagKey().getTagCode(), tagCreateRequest.getDisplayName(), tagCreateRequest.getDescription());
+        tagEntity =
+            createTagEntity(tagTypeEntity, tagCreateRequest.getTagKey().getTagCode(), tagCreateRequest.getDisplayName(), tagCreateRequest.getDescription());
 
         // Create and return the tag object from the persisted entity.
         return createTagFromEntity(tagEntity);
@@ -202,7 +203,12 @@ public class TagServiceImpl implements TagService
      */
     private TagEntity createTagEntity(TagTypeEntity tagTypeEntity, String tagCode, String displayName, String description)
     {
-        return tagDao.saveAndRefresh(new TagEntity(tagTypeEntity, tagCode, displayName, description));
+        TagEntity tagEntity = new TagEntity();
+        tagEntity.setTagType(tagTypeEntity);
+        tagEntity.setTagCode(tagCode);
+        tagEntity.setDisplayName(displayName);
+        tagEntity.setDescription(description);
+        return tagDao.saveAndRefresh(tagEntity);
     }
 
     /**
@@ -237,7 +243,6 @@ public class TagServiceImpl implements TagService
     private Tag createTagFromEntity(TagEntity tagEntity)
     {
         Tag tag = new Tag();
-        tag.setId(tagEntity.getId());
 
         TagKey tagKey = new TagKey(tagEntity.getTagType().getCode(), tagEntity.getTagCode());
         tag.setTagKey(tagKey);

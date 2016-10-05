@@ -40,6 +40,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ContextConfiguration;
 
 import org.finra.herd.dao.AbstractDaoTest;
+import org.finra.herd.dao.TagDaoTestHelper;
+import org.finra.herd.dao.TagTypeDaoTestHelper;
 import org.finra.herd.dao.helper.AwsHelper;
 import org.finra.herd.dao.helper.EmrHelper;
 import org.finra.herd.dao.helper.HerdStringHelper;
@@ -545,6 +547,12 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     @Autowired
     protected TagTypeService tagTypeService;
+
+    @Autowired
+    protected TagTypeDaoTestHelper tagTypeDaoTestHelper;
+
+    @Autowired
+    protected TagDaoTestHelper tagDaoTestHelper;
 
     @Autowired
     protected UploadDownloadHelperService uploadDownloadHelperService;
