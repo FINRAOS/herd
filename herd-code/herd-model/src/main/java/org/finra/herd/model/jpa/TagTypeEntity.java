@@ -17,9 +17,7 @@ package org.finra.herd.model.jpa;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
 /**
@@ -34,17 +32,12 @@ public class TagTypeEntity extends AuditableEntity
      */
     public static final String TABLE_NAME = "tag_type";
 
-    @Id
-    @Column(name = TABLE_NAME + "_id")
-    @GeneratedValue(generator = TABLE_NAME + "_seq")
-    @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq", allocationSize = 1)
-    private Integer id;
-
     /**
      * The tag type code column.
      */
+    @Id
     @Column(name = "tag_type_cd", nullable = false)
-    private String typeCode;
+    private String code;
 
     /**
      * The display name column.
@@ -58,36 +51,14 @@ public class TagTypeEntity extends AuditableEntity
     @Column(name = "pstn_nb", nullable = false)
     private Integer orderNumber;
 
-    /**
-     * Default tag type entity constructor.
-     */
-    public TagTypeEntity()
+    public String getCode()
     {
-        // Empty constructor
+        return code;
     }
 
-    /**
-     * Fully qualified constructor for tag type entity.
-     *
-     * @param tagTypeCode the tag type code
-     * @param displayName the display name
-     * @param orderNumber the tag type ordering
-     */
-    public TagTypeEntity(String tagTypeCode, String displayName, Integer orderNumber)
+    public void setCode(String code)
     {
-        typeCode = tagTypeCode;
-        this.displayName = displayName;
-        this.orderNumber = orderNumber;
-    }
-
-    public String getTypeCode()
-    {
-        return typeCode;
-    }
-
-    public void setTypeCode(String typeCode)
-    {
-        this.typeCode = typeCode;
+        this.code = code;
     }
 
     public String getDisplayName()
@@ -108,15 +79,5 @@ public class TagTypeEntity extends AuditableEntity
     public void setOrderNumber(Integer orderNumber)
     {
         this.orderNumber = orderNumber;
-    }
-
-    public Integer getId()
-    {
-        return id;
-    }
-
-    public void setId(Integer id)
-    {
-        this.id = id;
     }
 }
