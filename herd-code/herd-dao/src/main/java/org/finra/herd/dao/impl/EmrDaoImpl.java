@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.springframework.cache.annotation.Cacheable;
+
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.services.elasticmapreduce.AmazonElasticMapReduceClient;
 import com.amazonaws.services.elasticmapreduce.model.ActionOnFailure;
@@ -63,6 +65,7 @@ import org.finra.herd.dao.Ec2Dao;
 import org.finra.herd.dao.EmrDao;
 import org.finra.herd.dao.EmrOperations;
 import org.finra.herd.dao.RetryPolicyFactory;
+import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.dao.helper.EmrHelper;
 import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.model.api.xml.ConfigurationFile;
@@ -350,6 +353,7 @@ public class EmrDaoImpl implements EmrDao
      * @return the AmazonElasticMapReduceClient object.
      */
     @Override
+    @Cacheable(DaoSpringModuleConfig.HERD_CACHE_NAME)
     public AmazonElasticMapReduceClient getEmrClient(AwsParamsDto awsParamsDto)
     {
         // TODO Building EMR client every time requested, if this becomes a performance issue,
