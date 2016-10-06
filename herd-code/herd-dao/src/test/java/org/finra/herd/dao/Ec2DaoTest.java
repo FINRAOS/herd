@@ -17,24 +17,33 @@ package org.finra.herd.dao;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.argThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
 import com.amazonaws.services.ec2.model.DescribeSpotPriceHistoryRequest;
+import com.amazonaws.services.ec2.model.DescribeSpotPriceHistoryResult;
 import com.google.common.base.Objects;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.annotation.DirtiesContext.ClassMode;
 
 import org.finra.herd.dao.helper.AwsHelper;
+import org.finra.herd.dao.impl.Ec2DaoImpl;
 import org.finra.herd.model.dto.AwsParamsDto;
 
 /**
  * This class tests functionality of Ec2Dao.
  */
+@DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
 public class Ec2DaoTest extends AbstractDaoTest
 {
     /**
@@ -108,40 +117,34 @@ public class Ec2DaoTest extends AbstractDaoTest
     @Test
     public void testGetLatestSpotPricesAssertConstructsCorrectDescribeSpotPriceHistoryRequest()
     {
-//        /*
-//         * Initialize inputs
-//         */
-//        String availabilityZone = "a";
-//        Collection<String> instanceTypes = Arrays.asList("a", "b", "c");
-//        Collection<String> productDescriptions = Arrays.asList("b", "c", "d");
-//        AwsParamsDto awsParamsDto = new AwsParamsDto();
-//
-//        /*
-//         * Set up mock
-//         */
-//        RetryPolicyFactory retryPolicyFactory = mock(RetryPolicyFactory.class);
-//        Ec2Operations ec2Operations = mock(Ec2Operations.class);
-//
-//        Ec2DaoImpl ec2Dao = new Ec2DaoImpl();
-//       // ec2Dao.setRetryPolicyFactory(retryPolicyFactory);
-//        
-//        
-//        ec2Dao.setEc2Operations(ec2Operations);
-//
-//        when(retryPolicyFactory.getRetryPolicy()).thenReturn(ClientConfiguration.DEFAULT_RETRY_POLICY);
-//
-//        DescribeSpotPriceHistoryResult describeSpotPriceHistoryResult = new DescribeSpotPriceHistoryResult();
-//        when(ec2Operations.describeSpotPriceHistory(any(), any())).thenReturn(describeSpotPriceHistoryResult);
-//
-//        /*
-//         * Execute MUT
-//         */
-//        ec2Dao.getLatestSpotPrices(availabilityZone, instanceTypes, productDescriptions, awsParamsDto);
-//
-//        /*
-//         * Verify that the dependency was called with the correct parameters
-//         */
-//        verify(ec2Operations).describeSpotPriceHistory(any(), equalsDescribeSpotPriceHistoryRequest(availabilityZone, instanceTypes, productDescriptions));  
+        /*
+         * Initialize inputs
+         */
+        String availabilityZone = "a";
+        Collection<String> instanceTypes = Arrays.asList("a", "b", "c");
+        Collection<String> productDescriptions = Arrays.asList("b", "c", "d");
+        AwsParamsDto awsParamsDto = new AwsParamsDto();
+
+        /*
+         * Set up mock
+         */
+        RetryPolicyFactory retryPolicyFactory = mock(RetryPolicyFactory.class);
+        Ec2Operations ec2Operations = mock(Ec2Operations.class);
+       
+        ((Ec2DaoImpl) ec2Dao).setEc2Operations(ec2Operations);
+
+        DescribeSpotPriceHistoryResult describeSpotPriceHistoryResult = new DescribeSpotPriceHistoryResult();
+        when(ec2Operations.describeSpotPriceHistory(any(), any())).thenReturn(describeSpotPriceHistoryResult);
+
+        /*
+         * Execute MUT
+         */
+        ec2Dao.getLatestSpotPrices(availabilityZone, instanceTypes, productDescriptions, awsParamsDto);
+
+        /*
+         * Verify that the dependency was called with the correct parameters
+         */
+        verify(ec2Operations).describeSpotPriceHistory(any(), equalsDescribeSpotPriceHistoryRequest(availabilityZone, instanceTypes, productDescriptions));  
         }
 
     /**
