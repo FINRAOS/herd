@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Set;
 
 import com.amazonaws.AmazonServiceException;
-import com.amazonaws.ClientConfiguration;
 import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.ec2.model.AvailabilityZone;
 import com.amazonaws.services.ec2.model.DescribeAvailabilityZonesRequest;
@@ -38,15 +37,12 @@ import com.amazonaws.services.ec2.model.InstanceAttributeName;
 import com.amazonaws.services.ec2.model.ModifyInstanceAttributeRequest;
 import com.amazonaws.services.ec2.model.SpotPrice;
 import com.amazonaws.services.ec2.model.Subnet;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Repository;
 
+import org.finra.herd.dao.AwsClientFactory;
 import org.finra.herd.dao.Ec2Dao;
 import org.finra.herd.dao.Ec2Operations;
-import org.finra.herd.dao.RetryPolicyFactory;
-import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.dto.AwsParamsDto;
 
@@ -65,8 +61,8 @@ public class Ec2DaoImpl implements Ec2Dao
     private Ec2Operations ec2Operations;
 
     @Autowired
-    private RetryPolicyFactory retryPolicyFactory;
-
+    private AwsClientFactory awsClientFactory;
+    
     /**
      * Adds the security groups to an EC2 instance.
      *
@@ -115,22 +111,9 @@ public class Ec2DaoImpl implements Ec2Dao
      * @return the AmazonEC2Client object
      */
     @Override
-    @Cacheable(DaoSpringModuleConfig.HERD_CACHE_NAME)
     public AmazonEC2Client getEc2Client(AwsParamsDto awsParamsDto)
     {
-        // TODO Building EC2 client every time requested, if this becomes a performance issue,
-        // might need to consider storing a singleton or building the client once per request.
-
-        ClientConfiguration clientConfiguration = new ClientConfiguration().withRetryPolicy(retryPolicyFactory.getRetryPolicy());
-
-        // Create an EC2 client with HTTP proxy information.
-        if (StringUtils.isNotBlank(awsParamsDto.getHttpProxyHost()) && awsParamsDto.getHttpProxyPort() != null)
-        {
-            clientConfiguration.withProxyHost(awsParamsDto.getHttpProxyHost()).withProxyPort(awsParamsDto.getHttpProxyPort());
-        }
-
-        // Return the client.
-        return new AmazonEC2Client(clientConfiguration);
+        return  awsClientFactory.getEc2Client(awsParamsDto);
     }
 
     /**
@@ -220,13 +203,4 @@ public class Ec2DaoImpl implements Ec2Dao
         this.ec2Operations = ec2Operations;
     }
 
-    public RetryPolicyFactory getRetryPolicyFactory()
-    {
-        return retryPolicyFactory;
-    }
-
-    public void setRetryPolicyFactory(RetryPolicyFactory retryPolicyFactory)
-    {
-        this.retryPolicyFactory = retryPolicyFactory;
-    }
 }

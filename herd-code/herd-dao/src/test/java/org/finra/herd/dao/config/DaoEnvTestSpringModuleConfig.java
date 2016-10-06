@@ -26,6 +26,8 @@ import org.springframework.jdbc.datasource.init.DatabasePopulatorUtils;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 
 import org.finra.herd.dao.Ec2Operations;
+import org.finra.herd.dao.EmrDao;
+import org.finra.herd.dao.EmrDaoImplTest;
 import org.finra.herd.dao.EmrOperations;
 import org.finra.herd.dao.HttpClientOperations;
 import org.finra.herd.dao.JdbcOperations;
@@ -191,5 +193,11 @@ public class DaoEnvTestSpringModuleConfig
     public HttpClientOperations httpClientOperations()
     {
         return new MockHttpClientOperationsImpl();
+    }
+    
+    @Bean
+    public EmrDao emrDao()
+    {
+        return new EmrDaoImplTest();
     }
 }
