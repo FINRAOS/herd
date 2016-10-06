@@ -19,28 +19,29 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
-import org.finra.herd.model.api.xml.TagTypeKey;
+import org.finra.herd.model.api.xml.TagKey;
 
 /**
- * A helper class for Tag type related code.
+ * A helper class for Tag related code
  */
 @Component
-public class TagTypeHelper
+public class TagHelper
 {
     @Autowired
     private AlternateKeyHelper alternateKeyHelper;
 
     /**
-     * Validates a tag type key. This method also trims the key parameters.
+     * Validates a tag key. This method also trims the key parameters.
      *
-     * @param tagTypeKey the tag type key
+     * @param tagKey the tag key
      *
      * @throws IllegalArgumentException if any validation errors were found
      */
-    public void validateTagTypeKey(TagTypeKey tagTypeKey) throws IllegalArgumentException
+    public void validateTagKey(TagKey tagKey) throws IllegalArgumentException
     {
         // Validate.
-        Assert.notNull(tagTypeKey, "A tag type key must be specified.");
-        tagTypeKey.setTagTypeCode(alternateKeyHelper.validateStringParameter("tag type code", tagTypeKey.getTagTypeCode()));
+        Assert.notNull(tagKey, "A tag key must be specified.");
+        tagKey.setTagCode(alternateKeyHelper.validateStringParameter("tag code", tagKey.getTagCode()));
+        tagKey.setTagTypeCode(alternateKeyHelper.validateStringParameter("tag type code", tagKey.getTagTypeCode()));
     }
 }

@@ -28,7 +28,6 @@ import org.finra.herd.model.api.xml.TagTypeCreateRequest;
 import org.finra.herd.model.api.xml.TagTypeKey;
 import org.finra.herd.model.api.xml.TagTypeKeys;
 import org.finra.herd.model.api.xml.TagTypeUpdateRequest;
-import org.finra.herd.model.jpa.TagTypeEntity;
 
 /**
  * This class tests various functionality within the namespace REST controller.

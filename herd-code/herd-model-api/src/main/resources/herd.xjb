@@ -62,6 +62,9 @@
       <jaxb:bindings node="//xs:complexType[@name='tagTypeKeys']//xs:element[@name='tagTypeKey']">
          <jaxb:property name="tagTypeKeys"/>
       </jaxb:bindings>
+      <jaxb:bindings node="//xs:complexType[@name='tagKeys']//xs:element[@name='tagKey']">
+         <jaxb:property name="tagKeys"/>
+      </jaxb:bindings>
       <jaxb:bindings node="//xs:complexType[@name='businessObjectDefinitionKeys']//xs:element[@name='businessObjectDefinitionKey']">
          <jaxb:property name="businessObjectDefinitionKeys"/>
       </jaxb:bindings>

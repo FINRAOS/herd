@@ -559,6 +559,92 @@
       </xs:all>
    </xs:complexType>
 
+   <!-- ***** Tag ***** -->
+
+   <xs:element name="tagCreateRequest" type="tagCreateRequest"/>
+   <xs:complexType name="tagCreateRequest">
+      <xs:all>
+         <xs:element name="tagKey" type="tagKey">
+            <xs:annotation>
+               <xs:documentation>The tag type unique key.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="displayName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The tag's name in plain text for human readability.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="description" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The tag's description.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="tagUpdateRequest" type="tagUpdateRequest"/>
+   <xs:complexType name="tagUpdateRequest">
+      <xs:all>
+         <xs:element name="displayName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The tag's name in plain text for human readability.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="description" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The tag's description.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="tag" type="tag"/>
+   <xs:complexType name="tag">
+      <xs:all>
+         <xs:element name="tagKey" type="tagKey">
+            <xs:annotation>
+               <xs:documentation>The tag's unique key</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="displayName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The tag's name in plain text for human readability</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="description" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The tag's description.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="tagKeys" type="tagKeys"/>
+   <xs:complexType name="tagKeys">
+      <xs:sequence>
+         <xs:element name="tagKey" type="tagKey" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>An ordered list of tag keys.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="tagKey">
+      <xs:all>
+         <xs:element name="tagTypeCode" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The tag type reference code.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="tagCode" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The tag reference code.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
    <!-- ***** Business Object Definition ***** -->
 
    <xs:element name="businessObjectDefinitionCreateRequest" type="businessObjectDefinitionCreateRequest"/>
