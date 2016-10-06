@@ -108,17 +108,17 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String BDEF_DESCRIPTION_2 = "UT_BusinessObjectDefinition_Description_" + RANDOM_SUFFIX_2;
 
-    public static final String BDEF_NAME = "UT_BusinessObjectDefinition_Name_1_" + RANDOM_SUFFIX;
-
     public static final String BDEF_DISPLAY_NAME = "UT_BusinessObjectDefinition_Display_Name_1_" + RANDOM_SUFFIX;
+
+    public static final String BDEF_DISPLAY_NAME_2 = "UT_BusinessObjectDefinition_Display_Name_2_" + RANDOM_SUFFIX;
+
+    public static final String BDEF_NAME = "UT_BusinessObjectDefinition_Name_1_" + RANDOM_SUFFIX;
 
     public static final String BDEF_NAMESPACE = "UT_BusinessObjectDefinition_Namespace_1_" + RANDOM_SUFFIX;
 
     public static final String BDEF_NAMESPACE_2 = "UT_BusinessObjectDefinition_Namespace_2_" + RANDOM_SUFFIX;
 
     public static final String BDEF_NAME_2 = "UT_BusinessObjectDefinition_Name_2_" + RANDOM_SUFFIX;
-
-    public static final String BDEF_DISPLAY_NAME_2 = "UT_BusinessObjectDefinition_Display_Name_2_" + RANDOM_SUFFIX;
 
     public static final String COLUMN_DATA_TYPE = "UT_Column_Data_Type_1_" + RANDOM_SUFFIX;
 
@@ -236,7 +236,6 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final Integer INITIAL_FORMAT_VERSION = 0;
 
     public static final Integer INITIAL_VERSION = 0;
-
 
     public static final Integer INTEGER_VALUE = (int) (Math.random() * Integer.MAX_VALUE);
 
@@ -526,17 +525,17 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String TABLE_NAME = "Test_Table" + RANDOM_SUFFIX;
 
-    public static final String TAG = "UT_Tag_1_" + RANDOM_SUFFIX;
+    public static final String TAG_CODE = "UT_TagCode_1_" + RANDOM_SUFFIX;
 
-    public static final String TAG_2 = "UT_Tag_2_" + RANDOM_SUFFIX;
-
-    public static final String TAG_DISPLAY_NAME = "Tag " + RANDOM_SUFFIX;
-
-    public static final String TAG_DISPLAY_NAME_2 = "Tag2 " + RANDOM_SUFFIX;
+    public static final String TAG_CODE_2 = "UT_Tag_2_" + RANDOM_SUFFIX;
 
     public static final String TAG_DESCRIPTION = "Tag_description " + RANDOM_SUFFIX;
 
     public static final String TAG_DESCRIPTION_2 = "Tag_description2 " + RANDOM_SUFFIX;
+
+    public static final String TAG_DISPLAY_NAME = "Tag " + RANDOM_SUFFIX;
+
+    public static final String TAG_DISPLAY_NAME_2 = "Tag2 " + RANDOM_SUFFIX;
 
     public static final String TAG_TYPE = "UT_TagType_1_" + RANDOM_SUFFIX;
 
@@ -798,16 +797,16 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     protected StsDao stsDao;
 
     @Autowired
-    protected TagTypeDao tagTypeDao;
-
-    @Autowired
-    protected TagTypeDaoTestHelper tagTypeDaoTestHelper;
-
-    @Autowired
     protected TagDao tagDao;
 
     @Autowired
     protected TagDaoTestHelper tagDaoTestHelper;
+
+    @Autowired
+    protected TagTypeDao tagTypeDao;
+
+    @Autowired
+    protected TagTypeDaoTestHelper tagTypeDaoTestHelper;
 
     @Autowired
     protected UserDao userDao;

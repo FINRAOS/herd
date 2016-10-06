@@ -20,6 +20,7 @@ import org.springframework.stereotype.Component;
 
 import org.finra.herd.dao.TagDao;
 import org.finra.herd.model.AlreadyExistsException;
+import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.TagKey;
 import org.finra.herd.model.jpa.TagEntity;
 
@@ -48,20 +49,23 @@ public class TagDaoHelper
     }
 
     /**
-     * Ensures that a tag entity does not have the same description as the one specified.
+     * Gets a tag entity and ensure it exists.
      *
-     * @param tagKey the specified tag key.
-     * @param description the specified description.
+     * @param tagKey the tag (case insensitive)
+     *
+     * @return the tag entity
+     * @throws org.finra.herd.model.ObjectNotFoundException if the tag entity doesn't exist
      */
-    public void assertDescriptionIsNotSame(TagKey tagKey, String description)
+    public TagEntity getTagEntity(TagKey tagKey) throws ObjectNotFoundException
     {
         TagEntity tagEntity = tagDao.getTagByKey(tagKey);
 
-        if (tagEntity.getDescription().equals(description))
+        if (tagEntity == null)
         {
-            throw new AlreadyExistsException(String
-                .format("Unable to create tag with tag type code \"%s\" and tag code \"%s\" because it already exists.", tagKey.getTagTypeCode(),
-                    tagKey.getTagCode()));
+            throw new ObjectNotFoundException(
+                String.format("Tag with code \"%s\" doesn't exist for tag type \"%s\".", tagKey.getTagCode(), tagKey.getTagTypeCode()));
         }
+
+        return tagEntity;
     }
 }

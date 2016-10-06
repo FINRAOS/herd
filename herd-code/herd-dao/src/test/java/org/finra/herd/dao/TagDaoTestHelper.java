@@ -18,6 +18,7 @@ package org.finra.herd.dao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import org.finra.herd.model.api.xml.TagTypeKey;
 import org.finra.herd.model.jpa.TagEntity;
 import org.finra.herd.model.jpa.TagTypeEntity;
 
@@ -27,22 +28,51 @@ public class TagDaoTestHelper
     @Autowired
     private TagDao tagDao;
 
+    @Autowired
+    private TagTypeDao tagTypeDao;
+
+    @Autowired
+    private TagTypeDaoTestHelper tagTypeDaoTestHelper;
+
     /**
      * Creates and persists a new tag entity.
      *
-     * @param tagTypeEntity the specified tag type entity.
-     * @param displayName the specified display name.
-     * @param description the specified description.
+     * @param tagType the tag type
+     * @param tagCode the tag code
+     * @param tagDisplayName the tag display name
+     * @param tagDescription the description of the tag
      *
      * @return the newly created tag entity.
      */
-    public TagEntity createTagEntity(TagTypeEntity tagTypeEntity, String tagCode, String displayName, String description)
+    public TagEntity createTagEntity(String tagType, String tagCode, String tagDisplayName, String tagDescription)
+    {
+        // Create a tag type entity if needed.
+        TagTypeEntity tagTypeEntity = tagTypeDao.getTagTypeByKey(new TagTypeKey(tagType));
+        if (tagTypeEntity == null)
+        {
+            tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(tagType, AbstractDaoTest.TAG_TYPE_DISPLAY_NAME, AbstractDaoTest.INTEGER_VALUE);
+        }
+
+        return createTagEntity(tagTypeEntity, tagCode, tagDisplayName, tagDescription);
+    }
+
+    /**
+     * Creates and persists a new tag entity.
+     *
+     * @param tagTypeEntity the tag type entity
+     * @param tagCode the tag code
+     * @param tagDisplayName the tag display name
+     * @param tagDescription the description of the tag
+     *
+     * @return the newly created tag entity.
+     */
+    public TagEntity createTagEntity(TagTypeEntity tagTypeEntity, String tagCode, String tagDisplayName, String tagDescription)
     {
         TagEntity tagEntity = new TagEntity();
         tagEntity.setTagType(tagTypeEntity);
         tagEntity.setTagCode(tagCode);
-        tagEntity.setDisplayName(displayName);
-        tagEntity.setDescription(description);
+        tagEntity.setDisplayName(tagDisplayName);
+        tagEntity.setDescription(tagDescription);
         return tagDao.saveAndRefresh(tagEntity);
     }
 }

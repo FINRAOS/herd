@@ -35,7 +35,7 @@ public class TagDaoTest extends AbstractDaoTest
     {
         Assert.assertNotNull(tagEntity);
         Assert.assertEquals(TAG_TYPE, tagEntity.getTagType().getCode());
-        Assert.assertEquals(TAG, tagEntity.getTagCode());
+        Assert.assertEquals(TAG_CODE, tagEntity.getTagCode());
         Assert.assertEquals(TAG_DISPLAY_NAME, tagEntity.getDisplayName());
         Assert.assertEquals(TAG_DESCRIPTION, tagEntity.getDescription());
     }
@@ -47,10 +47,10 @@ public class TagDaoTest extends AbstractDaoTest
         TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, 1);
 
         // Create a tag entity.
-        tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+        tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
 
         // Get tag entity and validate
-        TagEntity tagEntity = tagDao.getTagByKey(new TagKey(TAG_TYPE, TAG));
+        TagEntity tagEntity = tagDao.getTagByKey(new TagKey(TAG_TYPE, TAG_CODE));
         validateTagEntity(tagEntity);
     }
 
@@ -61,7 +61,7 @@ public class TagDaoTest extends AbstractDaoTest
         TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, 1);
 
         // Create a tag entity.
-        tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+        tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
 
         // Get tag entity and validate
         TagEntity tagEntity = tagDao.getTagByTagTypeAndDisplayName(TAG_TYPE, TAG_DISPLAY_NAME);
@@ -75,14 +75,14 @@ public class TagDaoTest extends AbstractDaoTest
         TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, 1);
 
         // Create a tag entity.
-        tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+        tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
 
         List<TagKey> resultTagKeys = tagDao.getTagsByTagType(TAG_TYPE);
 
         Assert.assertNotNull(resultTagKeys);
         Assert.assertTrue(resultTagKeys.size() == 1);
         Assert.assertEquals(TAG_TYPE, resultTagKeys.get(0).getTagTypeCode());
-        Assert.assertEquals(TAG, resultTagKeys.get(0).getTagCode());
+        Assert.assertEquals(TAG_CODE, resultTagKeys.get(0).getTagCode());
     }
 
     @Test
@@ -92,19 +92,18 @@ public class TagDaoTest extends AbstractDaoTest
         TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, 1);
 
         // Create a tag entity.
-        tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+        tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
 
         // Create another tag entity.
-        tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_2, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2);
+        tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_2, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2);
 
         List<TagKey> resultTagKeys = tagDao.getTagsByTagType(TAG_TYPE);
 
         Assert.assertNotNull(resultTagKeys);
         Assert.assertTrue(resultTagKeys.size() == 2);
         Assert.assertEquals(TAG_TYPE, resultTagKeys.get(0).getTagTypeCode());
-        Assert.assertEquals(TAG, resultTagKeys.get(0).getTagCode());
+        Assert.assertEquals(TAG_CODE, resultTagKeys.get(0).getTagCode());
         Assert.assertEquals(TAG_TYPE, resultTagKeys.get(1).getTagTypeCode());
-        Assert.assertEquals(TAG_2, resultTagKeys.get(1).getTagCode());
+        Assert.assertEquals(TAG_CODE_2, resultTagKeys.get(1).getTagCode());
     }
-
 }
