@@ -552,6 +552,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     protected TagTypeDaoTestHelper tagTypeDaoTestHelper;
 
     @Autowired
+    protected TagService tagService;
+
+    @Autowired
     protected TagDaoTestHelper tagDaoTestHelper;
 
     @Autowired

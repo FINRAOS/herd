@@ -66,7 +66,7 @@ public class TagRestControllerTest extends AbstractRestTest
         TagKey tagKey = new TagKey(TAG_TYPE, TAG);
         Tag tag = tagRestController.createTag(new TagCreateRequest(tagKey, TAG_DISPLAY_NAME, TAG_DESCRIPTION));
 
-        Assert.assertEquals(new Tag(new TagKey(TAG_TYPE, TAG), TAG_DISPLAY_NAME, TAG_DESCRIPTION), tag);
+        Assert.assertEquals(new Tag(tag.getId(), new TagKey(TAG_TYPE, TAG), TAG_DISPLAY_NAME, TAG_DESCRIPTION), tag);
     }
 
     @Test
@@ -76,7 +76,7 @@ public class TagRestControllerTest extends AbstractRestTest
         createTag(tagTypeEntity, TAG, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
 
         Tag tag = tagRestController.getTag(TAG_TYPE, TAG);
-        Assert.assertEquals(new Tag(new TagKey(TAG_TYPE, TAG), TAG_DISPLAY_NAME, TAG_DESCRIPTION), tag);
+        Assert.assertEquals(new Tag(tag.getId(), new TagKey(TAG_TYPE, TAG), TAG_DISPLAY_NAME, TAG_DESCRIPTION), tag);
     }
 
     @Test
@@ -86,7 +86,7 @@ public class TagRestControllerTest extends AbstractRestTest
         createTag(tagTypeEntity, TAG, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
 
         Tag tag = tagRestController.updateTag(TAG_TYPE, TAG, new TagUpdateRequest("newDisplayName", "newDescription"));
-        Assert.assertEquals(new Tag(new TagKey(TAG_TYPE, TAG), "newDisplayName", "newDescription"), tag);
+        Assert.assertEquals(new Tag(tag.getId(), new TagKey(TAG_TYPE, TAG), "newDisplayName", "newDescription"), tag);
     }
 
     @Test
@@ -96,7 +96,7 @@ public class TagRestControllerTest extends AbstractRestTest
         createTag(tagTypeEntity, TAG, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
 
         Tag tag = tagRestController.deleteTag(TAG_TYPE, TAG);
-        Assert.assertEquals(new Tag(new TagKey(TAG_TYPE, TAG), TAG_DISPLAY_NAME, TAG_DESCRIPTION), tag);
+        Assert.assertEquals(new Tag(tag.getId(), new TagKey(TAG_TYPE, TAG), TAG_DISPLAY_NAME, TAG_DESCRIPTION), tag);
 
         TagEntity tagEntity = tagDao.getTagByKey(new TagKey(TAG_TYPE, TAG));
         Assert.assertNull(tagEntity);

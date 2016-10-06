@@ -20,6 +20,7 @@ import org.springframework.stereotype.Component;
 
 import org.finra.herd.dao.TagDao;
 import org.finra.herd.model.AlreadyExistsException;
+import org.finra.herd.model.api.xml.TagKey;
 import org.finra.herd.model.jpa.TagEntity;
 
 @Component
@@ -31,17 +32,36 @@ public class TagDaoHelper
     /**
      * Ensures that a tag entity does not exist for a specified tag type code and display name.
      *
-     * @param tagTypeCode the specified tag type code.
+     * @param tagCode the specified tag type code.
      * @param displayName the specified display name.
      */
-    public void assertDisplayNameDoesNotExistForTagType(String tagTypeCode, String displayName)
+    public void assertDisplayNameDoesNotExistForTag(String tagCode, String displayName)
     {
-        TagEntity tagEntity = tagDao.getTagByTagTypeAndDisplayName(tagTypeCode, displayName);
+        TagEntity tagEntity = tagDao.getTagByTagTypeAndDisplayName(tagCode, displayName);
 
         if (tagEntity != null)
         {
-            throw new AlreadyExistsException(
-                String.format("Unable to create tag with tag type code \"%s\" and display name \"%s\" because it already exists.", tagTypeCode, displayName));
+            throw new AlreadyExistsException(String
+                .format("Display name \"%s\" already exists for a tag with tag type \"%s\" and tag code \"%s\".", displayName, tagEntity.getTagType().getCode(),
+                    tagEntity.getTagCode()));
+        }
+    }
+
+    /**
+     * Ensures that a tag entity does not have the same description as the one specified.
+     *
+     * @param tagKey the specified tag key.
+     * @param description the specified description.
+     */
+    public void assertDescriptionIsNotSame(TagKey tagKey, String description)
+    {
+        TagEntity tagEntity = tagDao.getTagByKey(tagKey);
+
+        if (tagEntity.getDescription().equals(description))
+        {
+            throw new AlreadyExistsException(String
+                .format("Unable to create tag with tag type code \"%s\" and tag code \"%s\" because it already exists.", tagKey.getTagTypeCode(),
+                    tagKey.getTagCode()));
         }
     }
 }

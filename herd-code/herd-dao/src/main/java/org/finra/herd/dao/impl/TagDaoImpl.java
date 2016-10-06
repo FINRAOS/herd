@@ -17,10 +17,14 @@ package org.finra.herd.dao.impl;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import javax.persistence.Tuple;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
+import javax.persistence.criteria.Order;
+import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
@@ -90,35 +94,39 @@ public class TagDaoImpl extends AbstractHerdDao implements TagDao
     }
 
     @Override
-    public List<TagKey> getTagsByTagType(String tagTypeCode)
+    public List<TagKey> getTagsByTagType(String tagType)
     {
-        // Create the criteria builder and the criteria.
+        // Create the criteria builder and a tuple style criteria query.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-        CriteriaQuery<TagEntity> criteria = builder.createQuery(TagEntity.class);
+        CriteriaQuery<Tuple> criteria = builder.createTupleQuery();
 
-        // The criteria root is the tag code.
+        // The criteria root is the business object definition.
         Root<TagEntity> tagEntityRoot = criteria.from(TagEntity.class);
 
-        // Join on the other tables we can filter on.
+        // Join to the other tables we can filter on.
         Join<TagEntity, TagTypeEntity> tagTypeEntityJoin = tagEntityRoot.join(TagEntity_.tagType);
 
-        // Create the restriction.
-        Predicate queryRestriction = builder.equal(builder.upper(tagTypeEntityJoin.get(TagTypeEntity_.code)), tagTypeCode.toUpperCase());
+        // Get the columns.
+        Path<String> tagTypeCodeColumn = tagTypeEntityJoin.get(TagTypeEntity_.code);
+        Path<String> tagCodeColumn = tagEntityRoot.get(TagEntity_.tagCode);
+        Path<String> displayNameColumn = tagEntityRoot.get(TagEntity_.displayName);
 
-        // Add the restriction to the query.
-        criteria.select(tagEntityRoot).where(queryRestriction);
+        // Create the standard restrictions (i.e. the standard where clauses).
+        List<Predicate> predicates = new ArrayList<>();
+        predicates.add(builder.equal(builder.upper(tagTypeEntityJoin.get(TagTypeEntity_.code)), tagType.toUpperCase()));
 
-        // Run the query to get the a of tag entities back.
-        List<TagEntity> tagEntities = entityManager.createQuery(criteria).getResultList();
+        // Add the order by clauses.
+        List<Order> orderList = new ArrayList<>();
+        orderList.add(builder.asc(tagTypeCodeColumn));
+        orderList.add(builder.asc(displayNameColumn));
 
-        // Construct a list of tag keys to be sent back.
-        List<TagKey> tagKeys = new ArrayList<>();
-        for (TagEntity tagEntity : tagEntities)
-        {
-            TagKey tagKey = new TagKey(tagEntity.getTagType().getCode(), tagEntity.getTagCode());
-            tagKeys.add(tagKey);
-        }
+        // Add the clauses to the query.
+        criteria.multiselect(tagTypeCodeColumn, tagCodeColumn).where(builder.and(predicates.toArray(new Predicate[predicates.size()]))).orderBy(orderList);
 
-        return tagKeys;
+        // Run the query to get a list of tuples back.
+        List<Tuple> tuples = entityManager.createQuery(criteria).getResultList();
+
+        // Populate the "keys" objects from the returned tuples and return (i.e. 1 tuple for each row).
+        return tuples.stream().map(tuple -> new TagKey(tuple.get(tagTypeCodeColumn), tuple.get(tagCodeColumn))).collect(Collectors.toList());
     }
 }

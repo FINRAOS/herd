@@ -41,6 +41,8 @@ public class TagHelper
     {
         // Validate.
         Assert.notNull(tagKey, "A tag key must be specified.");
+        Assert.notNull(tagKey.getTagTypeCode(), "A tag type code must be specified.");
+        Assert.notNull(tagKey.getTagCode(), "A tag code must be specified.");
         tagKey.setTagCode(alternateKeyHelper.validateStringParameter("tag code", tagKey.getTagCode()));
         tagKey.setTagTypeCode(alternateKeyHelper.validateStringParameter("tag type code", tagKey.getTagTypeCode()));
     }

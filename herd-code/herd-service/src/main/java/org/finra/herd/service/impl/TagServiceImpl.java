@@ -15,6 +15,7 @@
 */
 package org.finra.herd.service.impl;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -75,7 +76,7 @@ public class TagServiceImpl implements TagService
         }
 
         // Validate that the specified display name does not already exist for the specified tag type
-        tagDaohelper.assertDisplayNameDoesNotExistForTagType(tagCreateRequest.getTagKey().getTagTypeCode(), tagCreateRequest.getDisplayName());
+        tagDaohelper.assertDisplayNameDoesNotExistForTag(tagCreateRequest.getTagKey().getTagTypeCode(), tagCreateRequest.getDisplayName());
 
         TagTypeKey tagTypeKey = new TagTypeKey(tagCreateRequest.getTagKey().getTagTypeCode());
 
@@ -105,11 +106,15 @@ public class TagServiceImpl implements TagService
         if (tagEntity == null)
         {
             throw new ObjectNotFoundException(
-                String.format("Tag not found with the tag type code: \"%s\" and tag code: \"%s\"", tagKey.getTagTypeCode(), tagKey.getTagCode()));
+                String.format("Tag not found with the tag type code \"%s\" and tag code \"%s\".", tagKey.getTagTypeCode(), tagKey.getTagCode()));
         }
 
-        // Validate that the specified display name does not already exist in the database.
-        tagDaohelper.assertDisplayNameDoesNotExistForTagType(tagKey.getTagTypeCode(), tagUpdateRequest.getDisplayName());
+        // Validate the display name does not already exist for another tag for this tag type in the database.
+        if (!StringUtils.equalsIgnoreCase(tagEntity.getDisplayName(), tagUpdateRequest.getDisplayName()))
+        {
+            // Validate that the description is different.
+            tagDaohelper.assertDescriptionIsNotSame(tagKey, tagUpdateRequest.getDescription());
+        }
 
         // Update and persist the tag entity.
         updateTagEntity(tagEntity, tagUpdateRequest);
@@ -130,7 +135,7 @@ public class TagServiceImpl implements TagService
         if (tagEntity == null)
         {
             throw new ObjectNotFoundException(
-                String.format("Tag not found with the tag type code: \"%s\" and tag code: \"%s\"", tagKey.getTagTypeCode(), tagKey.getTagCode()));
+                String.format("Tag not found with the tag type code \"%s\" and tag code \"%s\".", tagKey.getTagTypeCode(), tagKey.getTagCode()));
         }
 
         // Create and return the tag object from the entity which was retrieved.
@@ -149,7 +154,7 @@ public class TagServiceImpl implements TagService
         if (tagEntity == null)
         {
             throw new ObjectNotFoundException(
-                String.format("Tag not found with the tag type code: \"%s\" and tag code: \"%s\"", tagKey.getTagTypeCode(), tagKey.getTagCode()));
+                String.format("Tag not found with the tag type code \"%s\" and tag code \"%s\".", tagKey.getTagTypeCode(), tagKey.getTagCode()));
         }
 
         // delete the tag.
@@ -162,7 +167,13 @@ public class TagServiceImpl implements TagService
     @Override
     public TagKeys getTags(String tagTypeCode)
     {
-        return new TagKeys(tagDao.getTagsByTagType(tagTypeCode));
+        // Validate and trim the tag type code.
+        tagTypeCode = alternateKeyHelper.validateStringParameter("tag type code", tagTypeCode);
+
+        // Retrieve and ensure that a tag type exists for the specified tag type code.
+        tagTypeDaoHelper.getTagTypeEntity(new TagTypeKey(tagTypeCode));
+
+        return new TagKeys(tagDao.getTagsByTagType(alternateKeyHelper.validateStringParameter("tag type code", tagTypeCode)));
     }
 
     /**
