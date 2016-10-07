@@ -139,7 +139,7 @@ public class TagTypeServiceTest extends AbstractServiceTest
         }
         catch (AlreadyExistsException e)
         {
-            assertEquals(String.format("Unable to create tag type with display name \"%s\" because it already exists.", TAG_TYPE_DISPLAY_NAME), e.getMessage());
+            assertEquals(String.format("Display name \"%s\" already exists for tag type \"%s\".", TAG_TYPE_DISPLAY_NAME, TAG_TYPE), e.getMessage());
         }
     }
 
@@ -353,11 +353,11 @@ public class TagTypeServiceTest extends AbstractServiceTest
     @Test
     public void testUpdateTagTypeDisplayNameAlreadyExists()
     {
-        // Create and persist a tag type entity.
+        // Create and persist two tag type entities with the second one having display name that we want to update to.
         tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, 1);
         tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE_2, TAG_TYPE_DISPLAY_NAME_2, 2);
 
-        // Try to update a tag type instance when display name is not specified.
+        // Try to update a tag type instance when display name already exists.
         try
         {
             tagTypeService.updateTagType(new TagTypeKey(TAG_TYPE), new TagTypeUpdateRequest(TAG_TYPE_DISPLAY_NAME_2, 3));
@@ -365,9 +365,35 @@ public class TagTypeServiceTest extends AbstractServiceTest
         }
         catch (AlreadyExistsException e)
         {
-            assertEquals(String.format("Unable to create tag type with display name \"%s\" because it already exists.", TAG_TYPE_DISPLAY_NAME_2),
-                e.getMessage());
+            assertEquals(String.format("Display name \"%s\" already exists for tag type \"%s\".", TAG_TYPE_DISPLAY_NAME_2, TAG_TYPE_2), e.getMessage());
         }
+    }
+
+    @Test
+    public void testUpdateTagTypeNoChangesToDisplayName()
+    {
+        // Create and persist a tag type entity.
+        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, INTEGER_VALUE);
+
+        // Update the tag type without changing the display name.
+        TagType updatedTagType = tagTypeService.updateTagType(new TagTypeKey(TAG_TYPE), new TagTypeUpdateRequest(TAG_TYPE_DISPLAY_NAME, INTEGER_VALUE_2));
+
+        // Validate the returned object.
+        assertEquals(new TagType(new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME, INTEGER_VALUE_2), updatedTagType);
+    }
+
+    @Test
+    public void testUpdateTagTypeNoChangesToDisplayNameExceptForCase()
+    {
+        // Create and persist a tag type entity.
+        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, INTEGER_VALUE);
+
+        // Update the tag type with the new display name that only changes case.
+        TagType updatedTagType =
+            tagTypeService.updateTagType(new TagTypeKey(TAG_TYPE), new TagTypeUpdateRequest(TAG_TYPE_DISPLAY_NAME.toLowerCase(), INTEGER_VALUE_2));
+
+        // Validate the returned object.
+        assertEquals(new TagType(new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME.toLowerCase(), INTEGER_VALUE_2), updatedTagType);
     }
 
     @Test

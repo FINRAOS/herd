@@ -15,6 +15,7 @@
 */
 package org.finra.herd.service.impl;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,6 +44,7 @@ public class TagTypeServiceImpl implements TagTypeService
 {
     @Autowired
     private AlternateKeyHelper alternateKeyHelper;
+
     @Autowired
     private TagTypeHelper tagTypeHelper;
 
@@ -88,9 +90,14 @@ public class TagTypeServiceImpl implements TagTypeService
         // Retrieve and ensure that a tag type already exists with the specified key.
         TagTypeEntity tagTypeEntity = tagTypeDaoHelper.getTagTypeEntity(tagTypeKey);
 
-        // Validate the display name does not already exist in the database
-        tagTypeDaoHelper.assertTagTypeDisplayNameDoesNotExist(request.getDisplayName());
+        // Validate the display name does not already exist for another tag type.
+        if (!StringUtils.equalsIgnoreCase(tagTypeEntity.getDisplayName(), request.getDisplayName()))
+        {
+            // Validate that the description is different.
+            tagTypeDaoHelper.assertTagTypeDisplayNameDoesNotExist(request.getDisplayName());
+        }
 
+        // Update and persist the tag type entity.
         updateTagTypeEntity(tagTypeEntity, request);
 
         // Create and return the tag type from the persisted entity.

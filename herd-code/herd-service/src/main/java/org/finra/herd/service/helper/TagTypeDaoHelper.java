@@ -66,7 +66,7 @@ public class TagTypeDaoHelper
 
         if (tagTypeEntity != null)
         {
-            throw new AlreadyExistsException(String.format("Unable to create tag type with display name \"%s\" because it already exists.", displayName));
+            throw new AlreadyExistsException(String.format("Display name \"%s\" already exists for tag type \"%s\".", displayName, tagTypeEntity.getCode()));
         }
     }
 }

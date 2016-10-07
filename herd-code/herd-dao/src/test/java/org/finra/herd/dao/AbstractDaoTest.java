@@ -239,6 +239,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Integer INTEGER_VALUE = (int) (Math.random() * Integer.MAX_VALUE);
 
+    public static final Integer INTEGER_VALUE_2 = (int) (Math.random() * Integer.MAX_VALUE);
+
     public static final Integer INVALID_DATA_VERSION = -1 * DATA_VERSION;
 
     public static final Integer INVALID_FORMAT_VERSION = -1 * FORMAT_VERSION;
