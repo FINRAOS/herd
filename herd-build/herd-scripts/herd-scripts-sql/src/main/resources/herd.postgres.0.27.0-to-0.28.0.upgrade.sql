@@ -15,32 +15,32 @@
 */
 
 CREATE TABLE tag_type  ( 
-    tag_type_cd       varchar(30) 	NOT NULL,
-    dsply_name_tx     varchar(30) 	NOT NULL,
-    pstn_nb           int8 			NOT NULL,
-    creat_ts          timestamp 	NOT NULL DEFAULT ('now'::text)::timestamp without time zone,
-    creat_user_id     varchar(100) 	NOT NULL,
-    updt_ts           timestamp 	NOT NULL DEFAULT ('now'::text)::timestamp without time zone,
-    updt_user_id      varchar(100) 	NULL
+    tag_type_cd       varchar(30)   NOT NULL,
+    dsply_name_tx     varchar(30)   NOT NULL,
+    pstn_nb           int8          NOT NULL,
+    creat_ts          timestamp     NOT NULL DEFAULT ('now'::text)::timestamp without time zone,
+    creat_user_id     varchar(100)  NOT NULL,
+    updt_ts           timestamp     NOT NULL DEFAULT ('now'::text)::timestamp without time zone,
+    updt_user_id      varchar(100)  NULL
     );
 alter table tag_type add constraint tag_type_pk primary key (tag_type_cd);
 
 CREATE UNIQUE INDEX tag_type_ix1 ON tag_type(dsply_name_tx);
 
 CREATE TABLE tag  ( 
-	tag_id			int8			NOT NULL,
-    tag_type_cd     varchar(30) 	NOT NULL,
-    tag_cd       	varchar(30) 	NOT NULL,
-    dsply_name_tx   varchar(100) 	NOT NULL,
-    desc_tx     	varchar(24000) 	NULL,
-    creat_ts        timestamp 		NOT NULL DEFAULT ('now'::text)::timestamp without time zone,
-    creat_user_id   varchar(100) 	NOT NULL,
-    updt_ts         timestamp 		NOT NULL DEFAULT ('now'::text)::timestamp without time zone,
-    updt_user_id    varchar(100) 	NULL
+    tag_id          int8            NOT NULL,
+    tag_type_cd     varchar(30)     NOT NULL,
+    tag_cd          varchar(30)     NOT NULL,
+    dsply_name_tx   varchar(100)    NOT NULL,
+    desc_tx         varchar(24000)  NULL,
+    creat_ts        timestamp       NOT NULL DEFAULT ('now'::text)::timestamp without time zone,
+    creat_user_id   varchar(100)    NOT NULL,
+    updt_ts         timestamp       NOT NULL DEFAULT ('now'::text)::timestamp without time zone,
+    updt_user_id    varchar(100)    NULL
     );
-	
+    
 alter table tag add constraint tag_pk primary key (tag_id);
-ALTER TABLE tag ADD CONSTRAINT tag_fk1 	FOREIGN KEY(tag_type_cd) REFERENCES tag_type(tag_type_cd);
+ALTER TABLE tag ADD CONSTRAINT tag_fk1  FOREIGN KEY(tag_type_cd) REFERENCES tag_type(tag_type_cd);
 
 CREATE UNIQUE INDEX tag_ak ON tag(tag_type_cd,tag_cd);
 CREATE UNIQUE INDEX tag_ix1 ON tag(tag_type_cd,dsply_name_tx);
