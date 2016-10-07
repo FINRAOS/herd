@@ -16,51 +16,25 @@
 package org.finra.herd.rest;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
-import org.junit.Assert;
+import java.util.Arrays;
+
 import org.junit.Test;
 
 import org.finra.herd.model.api.xml.Tag;
 import org.finra.herd.model.api.xml.TagCreateRequest;
 import org.finra.herd.model.api.xml.TagKey;
+import org.finra.herd.model.api.xml.TagKeys;
 import org.finra.herd.model.api.xml.TagUpdateRequest;
 import org.finra.herd.model.jpa.TagEntity;
-import org.finra.herd.model.jpa.TagTypeEntity;
 
 /**
  * This class tests various functionality within the Tag REST controller
  */
 public class TagRestControllerTest extends AbstractRestTest
 {
-    /**
-     * Creates a tag type entity and persists it.
-     *
-     * @param code the specified tag type code.
-     * @param displayName the specified tag type displayName.
-     * @param position the specified tag type position.
-     *
-     * @return the newly created tag type entity.
-     */
-    private TagTypeEntity createTagType(final String code, final String displayName, final int position)
-    {
-        return tagTypeDaoTestHelper.createTagTypeEntity(code, displayName, position);
-    }
-
-    /**
-     * Creates a tag entity and persists it.
-     *
-     * @param tagTypeEntity the specified tag type entity.
-     * @param tagCode the specified tag code.
-     * @param displayName the specified display name.
-     * @param description the description.
-     *
-     * @return the newly created tag entity.
-     */
-    private TagEntity createTag(TagTypeEntity tagTypeEntity, String tagCode, String displayName, String description)
-    {
-        return tagDaoTestHelper.createTagEntity(tagTypeEntity, tagCode, displayName, description);
-    }
-
     @Test
     public void testCreateTag()
     {
@@ -90,23 +64,50 @@ public class TagRestControllerTest extends AbstractRestTest
     @Test
     public void testUpdateTag()
     {
-        TagTypeEntity tagTypeEntity = createTagType(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, 1);
-        createTag(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+        // Create and persist a tag entity.
+        TagEntity tagEntity = tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
 
-        Tag tag = tagRestController.updateTag(TAG_TYPE, TAG_CODE, new TagUpdateRequest("newDisplayName", "newDescription"));
-        Assert.assertEquals(new Tag(tag.getId(), new TagKey(TAG_TYPE, TAG_CODE), "newDisplayName", "newDescription"), tag);
+        // Update the tag.
+        Tag updatedTag = tagRestController.updateTag(TAG_TYPE, TAG_CODE, new TagUpdateRequest(TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2));
+
+        // Validate the returned object.
+        assertEquals(new Tag(tagEntity.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2), updatedTag);
     }
 
     @Test
     public void testDeleteTag()
     {
-        TagTypeEntity tagTypeEntity = createTagType(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, 1);
-        createTag(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+        // Create a tag key.
+        TagKey tagKey = new TagKey(TAG_TYPE, TAG_CODE);
 
-        Tag tag = tagRestController.deleteTag(TAG_TYPE, TAG_CODE);
-        Assert.assertEquals(new Tag(tag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION), tag);
+        // Create and persist a tag entity.
+        TagEntity tagEntity = tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME, DESCRIPTION);
 
-        TagEntity tagEntity = tagDao.getTagByKey(new TagKey(TAG_TYPE, TAG_CODE));
-        Assert.assertNull(tagEntity);
+        // Validate that this tag exists.
+        assertNotNull(tagDao.getTagByKey(tagKey));
+
+        // Delete this tag.
+        Tag deletedTag = tagRestController.deleteTag(TAG_TYPE, TAG_CODE);
+
+        // Validate the returned object.
+        assertEquals(new Tag(tagEntity.getId(), tagKey, TAG_DISPLAY_NAME, DESCRIPTION), deletedTag);
+
+        // Ensure that this tag is no longer there.
+        assertNull(tagDao.getTagByKey(tagKey));
+    }
+
+    @Test
+    public void testGetTags()
+    {
+        // Create and persist tag entities.
+        tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_TYPE_DISPLAY_NAME, DESCRIPTION);
+        tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE_2, TAG_TYPE_DISPLAY_NAME_2, DESCRIPTION);
+
+        // Retrieve a list of tag keys.
+        TagKeys resultTagKeys = tagRestController.getTags(TAG_TYPE);
+
+        // Validate the returned object.
+        assertNotNull(resultTagKeys);
+        assertEquals(Arrays.asList(new TagKey(TAG_TYPE, TAG_CODE), new TagKey(TAG_TYPE, TAG_CODE_2)), resultTagKeys.getTagKeys());
     }
 }
