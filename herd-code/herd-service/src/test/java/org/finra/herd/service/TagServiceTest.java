@@ -158,10 +158,10 @@ public class TagServiceTest extends AbstractServiceTest
 
         // Create a tag using uppercase input parameters.
         Tag resultTag = tagService.createTag(
-            new TagCreateRequest(new TagKey(TAG_TYPE.toUpperCase(), TAG_CODE.toUpperCase()), TAG_DISPLAY_NAME.toUpperCase(), DESCRIPTION.toUpperCase()));
+            new TagCreateRequest(new TagKey(TAG_TYPE.toUpperCase(), TAG_CODE.toUpperCase()), TAG_DISPLAY_NAME.toUpperCase(), TAG_DESCRIPTION.toUpperCase()));
 
         // Validate the returned object.
-        assertEquals(new Tag(resultTag.getId(), new TagKey(TAG_TYPE, TAG_CODE.toUpperCase()), TAG_DISPLAY_NAME.toUpperCase(), DESCRIPTION.toUpperCase()),
+        assertEquals(new Tag(resultTag.getId(), new TagKey(TAG_TYPE, TAG_CODE.toUpperCase()), TAG_DISPLAY_NAME.toUpperCase(), TAG_DESCRIPTION.toUpperCase()),
             resultTag);
     }
 
@@ -174,10 +174,10 @@ public class TagServiceTest extends AbstractServiceTest
 
         // Create a tag using lowercase input parameters.
         Tag resultTag = tagService.createTag(
-            new TagCreateRequest(new TagKey(TAG_TYPE.toLowerCase(), TAG_CODE.toLowerCase()), TAG_DISPLAY_NAME.toLowerCase(), DESCRIPTION.toLowerCase()));
+            new TagCreateRequest(new TagKey(TAG_TYPE.toLowerCase(), TAG_CODE.toLowerCase()), TAG_DISPLAY_NAME.toLowerCase(), TAG_DESCRIPTION.toLowerCase()));
 
         // Validate the returned object.
-        assertEquals(new Tag(resultTag.getId(), new TagKey(TAG_TYPE, TAG_CODE.toLowerCase()), TAG_DISPLAY_NAME.toLowerCase(), DESCRIPTION.toLowerCase()),
+        assertEquals(new Tag(resultTag.getId(), new TagKey(TAG_TYPE, TAG_CODE.toLowerCase()), TAG_DISPLAY_NAME.toLowerCase(), TAG_DESCRIPTION.toLowerCase()),
             resultTag);
     }
 
@@ -187,7 +187,7 @@ public class TagServiceTest extends AbstractServiceTest
         // Try to create a tag when tag type contains a forward slash character.
         try
         {
-            tagService.createTag(new TagCreateRequest(new TagKey(addSlash(TAG_TYPE), TAG_CODE), TAG_DISPLAY_NAME, DESCRIPTION));
+            tagService.createTag(new TagCreateRequest(new TagKey(addSlash(TAG_TYPE), TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION));
             fail();
         }
         catch (IllegalArgumentException e)
@@ -198,7 +198,7 @@ public class TagServiceTest extends AbstractServiceTest
         // Try to create a tag when tag code contains a forward slash character.
         try
         {
-            tagService.createTag(new TagCreateRequest(new TagKey(TAG_TYPE, addSlash(TAG_CODE)), TAG_DISPLAY_NAME, DESCRIPTION));
+            tagService.createTag(new TagCreateRequest(new TagKey(TAG_TYPE, addSlash(TAG_CODE)), TAG_DISPLAY_NAME, TAG_DESCRIPTION));
             fail();
         }
         catch (IllegalArgumentException e)
@@ -213,7 +213,7 @@ public class TagServiceTest extends AbstractServiceTest
         // Try to create a tag using non-existing tag type.
         try
         {
-            tagService.createTag(new TagCreateRequest(new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, DESCRIPTION));
+            tagService.createTag(new TagCreateRequest(new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION));
             fail();
         }
         catch (ObjectNotFoundException e)
@@ -225,16 +225,13 @@ public class TagServiceTest extends AbstractServiceTest
     @Test
     public void testCreateTagTagCodeAlreadyExists()
     {
-        // Create and persist a tag type entity.
-        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, INTEGER_VALUE);
-
         // Create and persist a tag entity.
-        tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+        tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
 
         // Try to create a duplicate tag (uses the same tag type and tag name).
         try
         {
-            tagService.createTag(new TagCreateRequest(new TagKey(TAG_TYPE, TAG_CODE.toLowerCase()), TAG_DISPLAY_NAME_2, DESCRIPTION));
+            tagService.createTag(new TagCreateRequest(new TagKey(TAG_TYPE, TAG_CODE.toLowerCase()), TAG_DISPLAY_NAME_2, TAG_DESCRIPTION));
             fail();
         }
         catch (AlreadyExistsException e)
@@ -248,16 +245,13 @@ public class TagServiceTest extends AbstractServiceTest
     @Test
     public void testCreateTagDisplayNameAlreadyExists()
     {
-        // Create and persist a tag type entity.
-        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, INTEGER_VALUE);
-
         // Create and persist a tag entity.
-        tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+        tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
 
         // Try to create a tag with a duplicate tag display name.
         try
         {
-            tagService.createTag(new TagCreateRequest(new TagKey(TAG_TYPE, TAG_CODE_2), TAG_DISPLAY_NAME.toLowerCase(), DESCRIPTION));
+            tagService.createTag(new TagCreateRequest(new TagKey(TAG_TYPE, TAG_CODE_2), TAG_DISPLAY_NAME.toLowerCase(), TAG_DESCRIPTION));
             fail();
         }
         catch (AlreadyExistsException e)
@@ -271,11 +265,8 @@ public class TagServiceTest extends AbstractServiceTest
     @Test
     public void testGetTag()
     {
-        // Create and persist a tag type entity.
-        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, INTEGER_VALUE);
-
         // Create and persist a tag entity.
-        TagEntity tagEntity = tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+        tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
 
         // Retrieve the tag.
         Tag resultTag = tagService.getTag(new TagKey(TAG_TYPE, TAG_CODE));
@@ -313,11 +304,8 @@ public class TagServiceTest extends AbstractServiceTest
     @Test
     public void testGetTagTrimParameters()
     {
-        // Create and persist a tag type entity.
-        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, INTEGER_VALUE);
-
         // Create and persist a tag entity.
-        TagEntity tagEntity = tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+        tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
 
         // Retrieve the tag using input parameters with leading and trailing empty spaces.
         Tag resultTag = tagService.getTag(new TagKey(addWhitespace(TAG_TYPE), addWhitespace(TAG_CODE)));
@@ -329,11 +317,8 @@ public class TagServiceTest extends AbstractServiceTest
     @Test
     public void testGetTagUpperCaseParameters()
     {
-        // Create and persist a tag type entity.
-        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, INTEGER_VALUE);
-
         // Create and persist a tag entity.
-        tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+        tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
 
         // Get the tag using uppercase input parameters.
         Tag resultTag = tagService.getTag(new TagKey(TAG_TYPE.toUpperCase(), TAG_CODE.toUpperCase()));
@@ -345,11 +330,8 @@ public class TagServiceTest extends AbstractServiceTest
     @Test
     public void testGetTagLowerCaseParameters()
     {
-        // Create and persist a tag type entity.
-        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, INTEGER_VALUE);
-
         // Create and persist a tag entity.
-        TagEntity tagEntity = tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+        tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
 
         // Get the tag using lower case input parameters.
         Tag resultTag = tagService.getTag(new TagKey(TAG_TYPE.toLowerCase(), TAG_CODE.toLowerCase()));
@@ -392,7 +374,7 @@ public class TagServiceTest extends AbstractServiceTest
         // Try to update a tag when tag type is not specified.
         try
         {
-            tagService.updateTag(new TagKey(BLANK_TEXT, TAG_CODE), new TagUpdateRequest(TAG_DISPLAY_NAME, DESCRIPTION));
+            tagService.updateTag(new TagKey(BLANK_TEXT, TAG_CODE), new TagUpdateRequest(TAG_DISPLAY_NAME, TAG_DESCRIPTION));
             fail();
         }
         catch (IllegalArgumentException e)
@@ -403,7 +385,7 @@ public class TagServiceTest extends AbstractServiceTest
         // Try to update a tag when tag code is not specified.
         try
         {
-            tagService.updateTag(new TagKey(TAG_TYPE, BLANK_TEXT), new TagUpdateRequest(TAG_DISPLAY_NAME, DESCRIPTION));
+            tagService.updateTag(new TagKey(TAG_TYPE, BLANK_TEXT), new TagUpdateRequest(TAG_DISPLAY_NAME, TAG_DESCRIPTION));
             fail();
         }
         catch (IllegalArgumentException e)
@@ -414,7 +396,7 @@ public class TagServiceTest extends AbstractServiceTest
         // Try to update a tag when tag display name is not specified.
         try
         {
-            tagService.updateTag(new TagKey(TAG_TYPE, TAG_CODE), new TagUpdateRequest(BLANK_TEXT, DESCRIPTION));
+            tagService.updateTag(new TagKey(TAG_TYPE, TAG_CODE), new TagUpdateRequest(BLANK_TEXT, TAG_DESCRIPTION));
             fail();
         }
         catch (IllegalArgumentException e)
@@ -426,12 +408,10 @@ public class TagServiceTest extends AbstractServiceTest
     @Test
     public void testUpdateTagTrimParameters()
     {
-        // Create and persist a tag type entity.
-        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, INTEGER_VALUE);
-
         // Create and persist a tag entity.
-        TagEntity tagEntity = tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+        tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
 
+        // Update the tag using input parameters with leading and trailing empty spaces.
         Tag updatedTag = tagService.updateTag(new TagKey(addWhitespace(TAG_TYPE), addWhitespace(TAG_CODE)),
             new TagUpdateRequest(addWhitespace(TAG_DISPLAY_NAME_2), addWhitespace(TAG_DESCRIPTION_2)));
 
@@ -442,13 +422,10 @@ public class TagServiceTest extends AbstractServiceTest
     @Test
     public void testUpdateTagUpperCaseParameters()
     {
-        // Create and persist a tag type entity.
-        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, INTEGER_VALUE);
-
         // Create and persist a tag entity.
-        TagEntity tagEntity = tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+        tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
 
-        // Update the tag using input parameters with leading and trailing empty spaces.
+        // Update the tag using uppercase input parameters.
         Tag updatedTag = tagService.updateTag(new TagKey(TAG_TYPE.toUpperCase(), TAG_CODE.toUpperCase()),
             new TagUpdateRequest(TAG_DISPLAY_NAME_2.toUpperCase(), TAG_DESCRIPTION_2.toUpperCase()));
 
@@ -460,13 +437,10 @@ public class TagServiceTest extends AbstractServiceTest
     @Test
     public void testUpdateTagLowerCaseParameters()
     {
-        // Create and persist a tag type entity.
-        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, INTEGER_VALUE);
-
         // Create and persist a tag entity.
-        TagEntity tagEntity = tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+        tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
 
-        // Update the tag using input parameters with leading and trailing empty spaces.
+        // Update the tag using lower input parameters.
         Tag updatedTag = tagService.updateTag(new TagKey(TAG_TYPE.toLowerCase(), TAG_CODE.toLowerCase()),
             new TagUpdateRequest(TAG_DISPLAY_NAME_2.toLowerCase(), TAG_DESCRIPTION_2.toLowerCase()));
 
@@ -481,7 +455,7 @@ public class TagServiceTest extends AbstractServiceTest
         // Try to update a non-existing tag.
         try
         {
-            tagService.updateTag(new TagKey(TAG_TYPE, TAG_CODE), new TagUpdateRequest(TAG_DISPLAY_NAME, DESCRIPTION));
+            tagService.updateTag(new TagKey(TAG_TYPE, TAG_CODE), new TagUpdateRequest(TAG_DISPLAY_NAME, TAG_DESCRIPTION));
             fail();
         }
         catch (ObjectNotFoundException e)
@@ -494,15 +468,15 @@ public class TagServiceTest extends AbstractServiceTest
     public void testUpdateTagDisplayNameAlreadyExistsForThisTagType()
     {
         // Create and persist a tag entity.
-        tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME, DESCRIPTION);
+        tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
 
         // Create and persist a second tag entity for the same tag type that would have the display name to be updated to.
-        tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE_2, TAG_DISPLAY_NAME_2, DESCRIPTION);
+        tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE_2, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION);
 
         // Try to update a tag with an already existing display name.
         try
         {
-            tagService.updateTag(new TagKey(TAG_TYPE, TAG_CODE), new TagUpdateRequest(TAG_DISPLAY_NAME_2.toLowerCase(), DESCRIPTION));
+            tagService.updateTag(new TagKey(TAG_TYPE, TAG_CODE), new TagUpdateRequest(TAG_DISPLAY_NAME_2.toLowerCase(), TAG_DESCRIPTION));
             fail();
         }
         catch (AlreadyExistsException e)
@@ -517,10 +491,10 @@ public class TagServiceTest extends AbstractServiceTest
     public void testUpdateTagDisplayNameAlreadyExistsForOtherTagType()
     {
         // Create and persist a tag entity.
-        TagEntity tagEntity = tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+        tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
 
         // Create and persist a second tag entity for the another tag type that would have the display name to be updated to.
-        tagDaoTestHelper.createTagEntity(TAG_TYPE_2, TAG_CODE_2, TAG_DISPLAY_NAME_2, DESCRIPTION);
+        tagDaoTestHelper.createTagEntity(TAG_TYPE_2, TAG_CODE_2, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION);
 
         // Update the tag.
         Tag updatedTag = tagService.updateTag(new TagKey(TAG_TYPE, TAG_CODE), new TagUpdateRequest(TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2));
@@ -532,11 +506,8 @@ public class TagServiceTest extends AbstractServiceTest
     @Test
     public void testUpdateTagNoChangesToDisplayName()
     {
-        // Create and persist a tag type entity.
-        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, INTEGER_VALUE);
-
         // Create and persist a tag entity.
-        TagEntity tagEntity = tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+        tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
 
         // Update the tag with out changing the display name.
         Tag updatedTag = tagService.updateTag(new TagKey(TAG_TYPE, TAG_CODE), new TagUpdateRequest(TAG_DISPLAY_NAME, TAG_DESCRIPTION_2));
@@ -548,11 +519,8 @@ public class TagServiceTest extends AbstractServiceTest
     @Test
     public void testUpdateTagNoChangesToDisplayNameExceptForCase()
     {
-        // Create and persist a tag type entity.
-        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, INTEGER_VALUE);
-
         // Create and persist a tag entity.
-        TagEntity tagEntity = tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+        tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
 
         // Update the tag with out changing the display name.
         Tag updatedTag = tagService.updateTag(new TagKey(TAG_TYPE, TAG_CODE), new TagUpdateRequest(TAG_DISPLAY_NAME.toLowerCase(), TAG_DESCRIPTION_2));
@@ -567,11 +535,8 @@ public class TagServiceTest extends AbstractServiceTest
         // Create a tag key.
         TagKey tagKey = new TagKey(TAG_TYPE, TAG_CODE);
 
-        // Create and persist a tag type entity.
-        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, INTEGER_VALUE);
-
         // Create and persist a tag entity.
-        TagEntity tagEntity = tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+        tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
 
         // Validate that this tag exists.
         assertNotNull(tagDao.getTagByKey(tagKey));
@@ -618,11 +583,8 @@ public class TagServiceTest extends AbstractServiceTest
         // Create a tag key.
         TagKey tagKey = new TagKey(TAG_TYPE, TAG_CODE);
 
-        // Create and persist a tag type entity.
-        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, INTEGER_VALUE);
-
         // Create and persist a tag entity.
-        TagEntity tagEntity = tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+        tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
 
         // Validate that this tag exists.
         assertNotNull(tagDao.getTagByKey(tagKey));
@@ -643,11 +605,8 @@ public class TagServiceTest extends AbstractServiceTest
         // Create a tag key.
         TagKey tagKey = new TagKey(TAG_TYPE, TAG_CODE);
 
-        // Create and persist a tag type entity.
-        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, INTEGER_VALUE);
-
         // Create and persist a tag entity.
-        tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+        tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
 
         // Validate that this tag exists.
         assertNotNull(tagDao.getTagByKey(tagKey));
@@ -668,11 +627,8 @@ public class TagServiceTest extends AbstractServiceTest
         // Create a tag key.
         TagKey tagKey = new TagKey(TAG_TYPE, TAG_CODE);
 
-        // Create and persist a tag type entity.
-        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, INTEGER_VALUE);
-
         // Create and persist a tag entity.
-        TagEntity tagEntity = tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+        tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
 
         // Validate that this tag exists.
         assertNotNull(tagDao.getTagByKey(tagKey));
@@ -708,9 +664,9 @@ public class TagServiceTest extends AbstractServiceTest
         // Create and persist a tag type entity.
         TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, INTEGER_VALUE);
 
-        // Create and persist a tag entities.
+        // Create and persist two tag entities for the same tag type.
         tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
-        tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_2, TAG_TYPE_DISPLAY_NAME_2, DESCRIPTION);
+        tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_2, TAG_TYPE_DISPLAY_NAME_2, TAG_DESCRIPTION);
 
         // Retrieve a list of tag keys.
         TagKeys resultTagKeys = tagService.getTags(TAG_TYPE);
@@ -741,7 +697,7 @@ public class TagServiceTest extends AbstractServiceTest
         // Create and persist a tag type entity.
         TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, INTEGER_VALUE);
 
-        // Create and persist a tag entities.
+        // Create and persist two tag entities for the same tag type.
         tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
         tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_2, TAG_TYPE_DISPLAY_NAME_2, TAG_DESCRIPTION_2);
 
@@ -759,9 +715,9 @@ public class TagServiceTest extends AbstractServiceTest
         // Create and persist a tag type entity.
         TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, INTEGER_VALUE);
 
-        // Create and persist a tag entities.
+        // Create and persist two tag entities for the same tag type.
         tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
-        tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_2, TAG_TYPE_DISPLAY_NAME_2, DESCRIPTION);
+        tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_2, TAG_TYPE_DISPLAY_NAME_2, TAG_DESCRIPTION);
 
         // Retrieve a list of tag keys using uppercase input parameters.
         TagKeys resultTagKeys = tagService.getTags(TAG_TYPE.toUpperCase());
@@ -777,9 +733,9 @@ public class TagServiceTest extends AbstractServiceTest
         // Create and persist a tag type entity.
         TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, INTEGER_VALUE);
 
-        // Create and persist a tag entities.
+        // Create and persist two tag entities for the same tag type.
         tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
-        tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_2, TAG_TYPE_DISPLAY_NAME_2, DESCRIPTION);
+        tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_2, TAG_TYPE_DISPLAY_NAME_2, TAG_DESCRIPTION);
 
         // Retrieve a list of tag keys using lowercase input parameters.
         TagKeys resultTagKeys = tagService.getTags(TAG_TYPE.toLowerCase());
@@ -810,7 +766,7 @@ public class TagServiceTest extends AbstractServiceTest
         // Create and persist a tag type entity.
         tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, INTEGER_VALUE);
 
-        // Retrieve a list of tag keys, when none of the tags exist.
+        // Retrieve a list of tag keys, when none of the tags exist for the tag type.
         TagKeys resultTagKeys = tagService.getTags(TAG_TYPE);
 
         // Validate the returned object.
