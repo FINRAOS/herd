@@ -36,10 +36,10 @@ public class CheckBusinessObjectDataAvailabilityCollectionTest extends HerdActiv
     public void testCheckBusinessObjectDataAvailabilityCollectionXml() throws Exception
     {
         // Prepare database entities required for testing.
-        createDatabaseEntitiesForBusinessObjectDataAvailabilityCollectionTesting();
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataAvailabilityCollectionTesting();
 
         // Prepare the request.
-        BusinessObjectDataAvailabilityCollectionRequest request = getTestBusinessObjectDataAvailabilityCollectionRequest();
+        BusinessObjectDataAvailabilityCollectionRequest request = businessObjectDataServiceTestHelper.getTestBusinessObjectDataAvailabilityCollectionRequest();
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
 
@@ -54,8 +54,8 @@ public class CheckBusinessObjectDataAvailabilityCollectionTest extends HerdActiv
         Map<String, Object> variableValuesToValidate = new HashMap<>();
         variableValuesToValidate.put(CheckBusinessObjectDataAvailabilityCollection.VARIABLE_IS_ALL_DATA_AVAILABLE, true);
         variableValuesToValidate.put(CheckBusinessObjectDataAvailabilityCollection.VARIABLE_IS_ALL_DATA_NOT_AVAILABLE, false);
-        variableValuesToValidate
-            .put(BaseJavaDelegate.VARIABLE_JSON_RESPONSE, jsonHelper.objectToJson(getExpectedBusinessObjectDataAvailabilityCollectionResponse()));
+        variableValuesToValidate.put(BaseJavaDelegate.VARIABLE_JSON_RESPONSE,
+            jsonHelper.objectToJson(businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataAvailabilityCollectionResponse()));
 
         testActivitiServiceTaskSuccess(CheckBusinessObjectDataAvailabilityCollection.class.getCanonicalName(), fieldExtensionList, parameters,
             variableValuesToValidate);
@@ -65,10 +65,10 @@ public class CheckBusinessObjectDataAvailabilityCollectionTest extends HerdActiv
     public void testCheckBusinessObjectDataAvailabilityCollectionJson() throws Exception
     {
         // Prepare database entities required for testing.
-        createDatabaseEntitiesForBusinessObjectDataAvailabilityCollectionTesting();
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataAvailabilityCollectionTesting();
 
         // Prepare the request.
-        BusinessObjectDataAvailabilityCollectionRequest request = getTestBusinessObjectDataAvailabilityCollectionRequest();
+        BusinessObjectDataAvailabilityCollectionRequest request = businessObjectDataServiceTestHelper.getTestBusinessObjectDataAvailabilityCollectionRequest();
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
 
@@ -83,8 +83,8 @@ public class CheckBusinessObjectDataAvailabilityCollectionTest extends HerdActiv
         Map<String, Object> variableValuesToValidate = new HashMap<>();
         variableValuesToValidate.put(CheckBusinessObjectDataAvailabilityCollection.VARIABLE_IS_ALL_DATA_AVAILABLE, true);
         variableValuesToValidate.put(CheckBusinessObjectDataAvailabilityCollection.VARIABLE_IS_ALL_DATA_NOT_AVAILABLE, false);
-        variableValuesToValidate
-            .put(BaseJavaDelegate.VARIABLE_JSON_RESPONSE, jsonHelper.objectToJson(getExpectedBusinessObjectDataAvailabilityCollectionResponse()));
+        variableValuesToValidate.put(BaseJavaDelegate.VARIABLE_JSON_RESPONSE,
+            jsonHelper.objectToJson(businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataAvailabilityCollectionResponse()));
 
         testActivitiServiceTaskSuccess(CheckBusinessObjectDataAvailabilityCollection.class.getCanonicalName(), fieldExtensionList, parameters,
             variableValuesToValidate);

@@ -35,7 +35,7 @@ public class RegisterBusinessObjectDataTest extends HerdActivitiServiceTaskTest
     @Test
     public void testRegisterBusinessObjectDataXml() throws Exception
     {
-        BusinessObjectDataCreateRequest businessObjectDataCreateRequest = getNewBusinessObjectDataCreateRequest();
+        BusinessObjectDataCreateRequest businessObjectDataCreateRequest = businessObjectDataServiceTestHelper.getNewBusinessObjectDataCreateRequest();
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
 
@@ -57,7 +57,7 @@ public class RegisterBusinessObjectDataTest extends HerdActivitiServiceTaskTest
     @Test
     public void testRegisterBusinessObjectDataJson() throws Exception
     {
-        BusinessObjectDataCreateRequest businessObjectDataCreateRequest = getNewBusinessObjectDataCreateRequest();
+        BusinessObjectDataCreateRequest businessObjectDataCreateRequest = businessObjectDataServiceTestHelper.getNewBusinessObjectDataCreateRequest();
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
 

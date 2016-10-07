@@ -53,6 +53,9 @@ public class BusinessObjectDefinitionEntity extends AuditableEntity
     @Column(name = "name_tx")
     private String name;
 
+    @Column(name = "dsply_name_tx")
+    private String displayName;
+
     @Column(name = "desc_tx", length = 500)
     private String description;
 
@@ -103,6 +106,16 @@ public class BusinessObjectDefinitionEntity extends AuditableEntity
     public void setDescription(String description)
     {
         this.description = description;
+    }
+
+    public String getDisplayName()
+    {
+        return displayName;
+    }
+
+    public void setDisplayName(String displayName)
+    {
+        this.displayName = displayName;
     }
 
     public DataProviderEntity getDataProvider()

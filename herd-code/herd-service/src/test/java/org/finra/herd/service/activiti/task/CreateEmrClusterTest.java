@@ -27,9 +27,9 @@ import java.util.Map;
 import javax.xml.bind.JAXBException;
 
 import org.activiti.engine.history.HistoricProcessInstance;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.junit.Test;
 
 import org.finra.herd.model.api.xml.EmrClusterDefinition;
 import org.finra.herd.model.api.xml.Job;
@@ -57,7 +57,7 @@ public class CreateEmrClusterTest extends AbstractServiceTest
         parameters.add(new Parameter("emrClusterDefinitionOverride", emrClusterDefinitionOverride));
 
         // Run a job with Activiti XML that will start cluster.
-        Job job = createJobForCreateCluster(ACTIVITI_XML_CREATE_CLUSTER_WITH_CLASSPATH, parameters);
+        Job job = jobServiceTestHelper.createJobForCreateCluster(ACTIVITI_XML_CREATE_CLUSTER_WITH_CLASSPATH, parameters);
         assertNotNull(job);
 
         HistoricProcessInstance hisInstance =
@@ -221,7 +221,7 @@ public class CreateEmrClusterTest extends AbstractServiceTest
         executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
             // Run a job with Activiti XML that will start cluster.
             // clusterName is not set as parameter, hence error will occur but will not be re-thrown
-            createJobForCreateCluster(ACTIVITI_XML_CREATE_CLUSTER_WITH_CLASSPATH, parameters);
+            jobServiceTestHelper.createJobForCreateCluster(ACTIVITI_XML_CREATE_CLUSTER_WITH_CLASSPATH, parameters);
         });
     }
 }

@@ -51,7 +51,7 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
         NotificationRegistrationKey notificationRegistrationKey = new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME);
 
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting();
+        notificationRegistrationServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting();
 
         // Create a business object data notification registration for business object data registration notification event with ENABLED status.
         BusinessObjectDataNotificationRegistration result = businessObjectDataNotificationRegistrationService.createBusinessObjectDataNotificationRegistration(
@@ -74,7 +74,7 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
         NotificationRegistrationKey notificationRegistrationKey = new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME);
 
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting();
+        notificationRegistrationServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting();
 
         // Create a business object data notification registration for business object data status change notification event with DISABLED status.
         BusinessObjectDataNotificationRegistration result = businessObjectDataNotificationRegistrationService.createBusinessObjectDataNotificationRegistration(
@@ -216,7 +216,7 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
         businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
 
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting();
+        notificationRegistrationServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting();
 
         // Create a business object data notification without specifying any of the optional parameters (passing whitespace characters).
         BusinessObjectDataNotificationRegistration resultBusinessObjectDataNotificationRegistration = businessObjectDataNotificationRegistrationService
@@ -242,7 +242,7 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
         businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
 
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting();
+        notificationRegistrationServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting();
 
         // Create a business object data notification without specifying any of the optional parameters (passing null values).
         BusinessObjectDataNotificationRegistration resultBusinessObjectDataNotificationRegistration = businessObjectDataNotificationRegistrationService
@@ -263,7 +263,7 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
     public void testCreateBusinessObjectDataNotificationRegistrationTrimParameters()
     {
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting();
+        notificationRegistrationServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting();
 
         // Create a business object data notification using input parameters with leading and trailing empty spaces.
         BusinessObjectDataNotificationRegistration resultBusinessObjectDataNotificationRegistration = businessObjectDataNotificationRegistrationService
@@ -288,7 +288,7 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
     public void testCreateBusinessObjectDataNotificationRegistrationUpperCaseParameters()
     {
         // Create and persist the relative database entities using lower case values.
-        createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting(NAMESPACE.toLowerCase(),
+        notificationRegistrationServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting(NAMESPACE.toLowerCase(),
             Arrays.asList(NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_STTS_CHG.name()), BDEF_NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(),
             Arrays.asList(FORMAT_FILE_TYPE_CODE.toLowerCase()), Arrays.asList(STORAGE_NAME.toLowerCase()),
             Arrays.asList(BDATA_STATUS.toLowerCase(), BDATA_STATUS_2.toLowerCase()),
@@ -318,7 +318,7 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
     public void testCreateBusinessObjectDataNotificationRegistrationLowerCaseParameters()
     {
         // Create and persist the relative database entities using upper case values.
-        createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting(NAMESPACE.toUpperCase(),
+        notificationRegistrationServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting(NAMESPACE.toUpperCase(),
             Arrays.asList(NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_STTS_CHG.name()), BDEF_NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(),
             Arrays.asList(FORMAT_FILE_TYPE_CODE.toUpperCase()), Arrays.asList(STORAGE_NAME.toUpperCase()),
             Arrays.asList(BDATA_STATUS.toUpperCase(), BDATA_STATUS_2.toUpperCase()),
@@ -352,7 +352,7 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
         BusinessObjectDataNotificationRegistrationCreateRequest request;
 
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting();
+        notificationRegistrationServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting();
 
         // Try to create a business object data notification using non-existing namespace.
         request = new BusinessObjectDataNotificationRegistrationCreateRequest(new NotificationRegistrationKey("I_DO_NOT_EXIST", NOTIFICATION_NAME),
@@ -582,7 +582,7 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
     public void testCreateBusinessObjectDataNotificationRegistrationDuplicateJobActions()
     {
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting();
+        notificationRegistrationServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting();
 
         // Try to create a business object data notification with duplicate job actions.
         BusinessObjectDataNotificationRegistrationCreateRequest request =
@@ -777,7 +777,7 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
         NotificationRegistrationKey notificationRegistrationKey = new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME);
 
         // Create database entities required for testing.
-        createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting(NAMESPACE, Arrays
+        notificationRegistrationServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting(NAMESPACE, Arrays
             .asList(NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_STTS_CHG.name(),
                 NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_RGSTN.name()), BDEF_NAMESPACE_2, BDEF_NAME_2,
             Arrays.asList(FORMAT_FILE_TYPE_CODE, FORMAT_FILE_TYPE_CODE_2), Arrays.asList(STORAGE_NAME, STORAGE_NAME_2),
@@ -811,7 +811,7 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
         NotificationRegistrationKey notificationRegistrationKey = new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME);
 
         // Create database entities required for testing.
-        createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting(NAMESPACE, Arrays
+        notificationRegistrationServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting(NAMESPACE, Arrays
             .asList(NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_STTS_CHG.name(),
                 NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_RGSTN.name()), BDEF_NAMESPACE_2, BDEF_NAME_2,
             Arrays.asList(FORMAT_FILE_TYPE_CODE, FORMAT_FILE_TYPE_CODE_2), Arrays.asList(STORAGE_NAME, STORAGE_NAME_2),
@@ -896,7 +896,7 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
         NotificationRegistrationKey notificationRegistrationKey = new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME);
 
         // Create other database entities required for testing.
-        createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting(NAMESPACE, Arrays
+        notificationRegistrationServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting(NAMESPACE, Arrays
             .asList(NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_STTS_CHG.name(),
                 NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_RGSTN.name()), BDEF_NAMESPACE_2, BDEF_NAME_2, null, null,
             Arrays.asList(BDATA_STATUS, BDATA_STATUS_2), notificationRegistrationDaoTestHelper.getTestJobActions());
@@ -928,7 +928,7 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
         NotificationRegistrationKey notificationRegistrationKey = new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME);
 
         // Create other database entities required for testing.
-        createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting(NAMESPACE, Arrays
+        notificationRegistrationServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting(NAMESPACE, Arrays
             .asList(NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_STTS_CHG.name(),
                 NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_RGSTN.name()), BDEF_NAMESPACE_2, BDEF_NAME_2, null, null,
             Arrays.asList(BDATA_STATUS, BDATA_STATUS_2), notificationRegistrationDaoTestHelper.getTestJobActions());
@@ -960,7 +960,7 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
         NotificationRegistrationKey notificationRegistrationKey = new NotificationRegistrationKey(NAMESPACE, NOTIFICATION_NAME);
 
         // Create database entities required for testing.
-        createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting(NAMESPACE, Arrays
+        notificationRegistrationServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting(NAMESPACE, Arrays
             .asList(NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_STTS_CHG.name(),
                 NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_RGSTN.name()), BDEF_NAMESPACE_2, BDEF_NAME_2,
             Arrays.asList(FORMAT_FILE_TYPE_CODE, FORMAT_FILE_TYPE_CODE_2), Arrays.asList(STORAGE_NAME, STORAGE_NAME_2),
@@ -995,7 +995,7 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
     public void testUpdateBusinessObjectDataNotificationRegistrationUpperCaseParameters()
     {
         // Create database entities required for testing using lower case alternate key values.
-        createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting(NAMESPACE.toLowerCase(), Arrays
+        notificationRegistrationServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting(NAMESPACE.toLowerCase(), Arrays
             .asList(NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_STTS_CHG.name().toLowerCase(),
                 NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_RGSTN.name().toLowerCase()), BDEF_NAMESPACE_2.toLowerCase(),
             BDEF_NAME_2.toLowerCase(), Arrays.asList(FORMAT_FILE_TYPE_CODE.toLowerCase(), FORMAT_FILE_TYPE_CODE_2.toLowerCase()),
@@ -1035,7 +1035,7 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
     public void testUpdateBusinessObjectDataNotificationRegistrationLowerCaseParameters()
     {
         // Create database entities required for testing using upper case alternate key values.
-        createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting(NAMESPACE.toUpperCase(), Arrays
+        notificationRegistrationServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting(NAMESPACE.toUpperCase(), Arrays
             .asList(NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_STTS_CHG.name().toUpperCase(),
                 NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_RGSTN.name().toUpperCase()), BDEF_NAMESPACE_2.toUpperCase(),
             BDEF_NAME_2.toUpperCase(), Arrays.asList(FORMAT_FILE_TYPE_CODE.toUpperCase(), FORMAT_FILE_TYPE_CODE_2.toUpperCase()),
@@ -1077,7 +1077,7 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
         BusinessObjectDataNotificationRegistrationUpdateRequest request;
 
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting(NAMESPACE, Arrays
+        notificationRegistrationServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting(NAMESPACE, Arrays
             .asList(NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_STTS_CHG.name(),
                 NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_RGSTN.name(), NOTIFICATION_EVENT_TYPE), BDEF_NAMESPACE_2, BDEF_NAME_2,
             Arrays.asList(FORMAT_FILE_TYPE_CODE, FORMAT_FILE_TYPE_CODE_2), Arrays.asList(STORAGE_NAME, STORAGE_NAME_2),
@@ -1581,7 +1581,7 @@ public class BusinessObjectDataNotificationRegistrationServiceTest extends Abstr
     public void testGetBusinessObjectDataNotificationRegistrationsByNamespaceBusinessObjectDataNotificationsNoExist()
     {
         // Create and persist the relative database entities.
-        createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting();
+        notificationRegistrationServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataNotificationRegistrationTesting();
 
         // Retrieve an empty list of business object data notification registration keys.
         BusinessObjectDataNotificationRegistrationKeys resultKeys =

@@ -50,8 +50,7 @@ public class HerdJmsMessageListenerTest extends AbstractServiceTest
     @Test
     public void testSystemMonitorMessage() throws Exception
     {
-        executeWithoutLogging(HerdJmsMessageListener.class, () ->
-        {
+        executeWithoutLogging(HerdJmsMessageListener.class, () -> {
             herdJmsMessageListener.processMessage(getTestSystemMonitorIncomingMessage(), null);
         });
     }
@@ -61,9 +60,10 @@ public class HerdJmsMessageListenerTest extends AbstractServiceTest
     {
         setLogLevel(UploadDownloadHelperServiceImpl.class, LogLevel.OFF);
 
-        createDatabaseEntitiesForUploadDownloadTesting();
+        uploadDownloadServiceTestHelper.createDatabaseEntitiesForUploadDownloadTesting();
 
-        UploadSingleInitiationResponse resultUploadSingleInitiationResponse = uploadDownloadService.initiateUploadSingle(createUploadSingleInitiationRequest());
+        UploadSingleInitiationResponse resultUploadSingleInitiationResponse =
+            uploadDownloadService.initiateUploadSingle(uploadDownloadServiceTestHelper.createUploadSingleInitiationRequest());
 
         String filePath = resultUploadSingleInitiationResponse.getSourceBusinessObjectData().getStorageUnits().get(0).getStorageFiles().get(0).getFilePath();
 
@@ -85,10 +85,10 @@ public class HerdJmsMessageListenerTest extends AbstractServiceTest
     {
         setLogLevel(UploadDownloadHelperServiceImpl.class, LogLevel.OFF);
 
-        createDatabaseEntitiesForUploadDownloadTesting();
+        uploadDownloadServiceTestHelper.createDatabaseEntitiesForUploadDownloadTesting();
 
-        UploadSingleInitiationResponse resultUploadSingleInitiationResponse = uploadDownloadService.initiateUploadSingle(
-            createUploadSingleInitiationRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NAMESPACE, BDEF_NAME_2,
+        UploadSingleInitiationResponse resultUploadSingleInitiationResponse = uploadDownloadService.initiateUploadSingle(uploadDownloadServiceTestHelper
+            .createUploadSingleInitiationRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NAMESPACE, BDEF_NAME_2,
                 FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, TARGET_S3_KEY));
 
         String filePath = resultUploadSingleInitiationResponse.getSourceBusinessObjectData().getStorageUnits().get(0).getStorageFiles().get(0).getFilePath();

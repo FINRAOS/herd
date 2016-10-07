@@ -50,7 +50,7 @@ public class AddEmrMasterSecurityGroupTest extends AbstractServiceTest
         parameters.add(parameter);
 
         // Run a job with Activiti XML that will add SecurityGroups EMR master node.
-        Job job = createJobForCreateCluster(ACTIVITI_XML_ADD_EMR_MASTER_SECURITY_GROUPS_WITH_CLASSPATH, parameters);
+        Job job = jobServiceTestHelper.createJobForCreateCluster(ACTIVITI_XML_ADD_EMR_MASTER_SECURITY_GROUPS_WITH_CLASSPATH, parameters);
         assertNotNull(job);
     }
 
@@ -70,7 +70,7 @@ public class AddEmrMasterSecurityGroupTest extends AbstractServiceTest
 
         executeWithoutLogging(ActivitiRuntimeHelper.class, () -> {
             // Run a job with Activiti XML that will add SecurityGroups EMR master node.
-            Job job = createJobForCreateCluster(ACTIVITI_XML_ADD_EMR_MASTER_SECURITY_GROUPS_WITH_CLASSPATH, parameters);
+            Job job = jobServiceTestHelper.createJobForCreateCluster(ACTIVITI_XML_ADD_EMR_MASTER_SECURITY_GROUPS_WITH_CLASSPATH, parameters);
 
             HistoricProcessInstance hisInstance =
                 activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(job.getId()).includeProcessVariables().singleResult();

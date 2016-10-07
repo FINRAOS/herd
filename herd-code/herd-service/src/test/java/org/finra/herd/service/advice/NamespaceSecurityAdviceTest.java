@@ -80,7 +80,7 @@ public class NamespaceSecurityAdviceTest extends AbstractServiceTest
         try
         {
             businessObjectDefinitionService
-                .createBusinessObjectDefinition(new BusinessObjectDefinitionCreateRequest(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, null, null));
+                .createBusinessObjectDefinition(new BusinessObjectDefinitionCreateRequest(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, null, null, null));
             fail();
         }
         catch (Exception e)

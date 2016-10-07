@@ -19,6 +19,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+
 /**
  * A DTO that holds various parameters for making an S3 file/directory transfer request.
  * <p/>
@@ -345,4 +347,60 @@ public class S3FileTransferRequestParamsDto extends AwsParamsDto
             return params;
         }
     }
+    
+    @Override
+    public int hashCode()
+    {
+        int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + ((additionalAwsCredentialsProviders == null) ? 0 : additionalAwsCredentialsProviders.hashCode());
+        result = prime * result + ((files == null) ? 0 : files.hashCode());
+        result = prime * result + ((isRecursive == null) ? 0 : isRecursive.hashCode());
+        result = prime * result + ((kmsKeyId == null) ? 0 : kmsKeyId.hashCode());
+        result = prime * result + ((localPath == null) ? 0 : localPath.hashCode());
+        result = prime * result + ((maxThreads == null) ? 0 : maxThreads.hashCode());
+        result = prime * result + ((s3AccessKey == null) ? 0 : s3AccessKey.hashCode());
+        result = prime * result + ((s3BucketName == null) ? 0 : s3BucketName.hashCode());
+        result = prime * result + ((s3Endpoint == null) ? 0 : s3Endpoint.hashCode());
+        result = prime * result + ((s3KeyPrefix == null) ? 0 : s3KeyPrefix.hashCode());
+        result = prime * result + ((s3SecretKey == null) ? 0 : s3SecretKey.hashCode());
+        result = prime * result + ((socketTimeout == null) ? 0 : socketTimeout.hashCode());
+        result = prime * result + ((useRrs == null) ? 0 : useRrs.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (this == obj)
+        {
+            return true;
+        }
+        if (!super.equals(obj))
+        {
+            return false;
+        }
+        if (getClass() != obj.getClass())
+        {
+            return false;
+        }
+           
+        S3FileTransferRequestParamsDto other = (S3FileTransferRequestParamsDto) obj;
+        
+        return new EqualsBuilder()
+        .appendSuper(super.equals(obj))
+        .append(additionalAwsCredentialsProviders, other.additionalAwsCredentialsProviders)
+        .append(files, other.files)
+        .append(localPath, other.localPath)
+        .append(maxThreads, other.maxThreads)
+        .append(s3AccessKey, other.s3AccessKey)
+        .append(s3BucketName, other.s3BucketName)
+        .append(s3Endpoint, other.s3Endpoint)
+        .append(s3KeyPrefix, other.s3KeyPrefix)
+        .append(s3SecretKey, other.s3SecretKey)
+        .append(socketTimeout, other.socketTimeout)
+        .append(useRrs, other.useRrs)
+        .isEquals();
+    }
+
 }

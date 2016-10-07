@@ -32,11 +32,14 @@ import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.util.CollectionUtils;
 
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.Storage;
 import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.api.xml.StorageUnit;
+import org.finra.herd.model.jpa.StorageUnitStatusEntity;
 import org.finra.herd.service.AbstractServiceTest;
 
 public class StorageFileHelperTest extends AbstractServiceTest
@@ -149,7 +152,7 @@ public class StorageFileHelperTest extends AbstractServiceTest
         {
             assertEquals(String
                 .format("Found unexpected S3 file \"%s\" in \"%s\" storage while validating copied S3 files. Business object data {%s}", TARGET_S3_KEY,
-                    STORAGE_NAME, getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
+                    STORAGE_NAME, businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
         }
     }
 
@@ -239,7 +242,7 @@ public class StorageFileHelperTest extends AbstractServiceTest
         {
             assertEquals(String
                 .format("Found unexpected S3 file \"%s\" in \"%s\" storage while validating registered S3 files. Business object data {%s}", TARGET_S3_KEY,
-                    STORAGE_NAME, getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
+                    STORAGE_NAME, businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
         }
     }
 
@@ -434,5 +437,39 @@ public class StorageFileHelperTest extends AbstractServiceTest
         {
             createLocalFile(baseDirectory, file, size);
         }
+    }
+
+    /**
+     * Creates a storage unit with the specified list of files.
+     *
+     * @param s3KeyPrefix the S3 key prefix.
+     * @param files the list of files.
+     * @param fileSizeBytes the file size in bytes.
+     *
+     * @return the storage unit with the list of file paths
+     */
+    private StorageUnit createStorageUnit(String s3KeyPrefix, List<String> files, Long fileSizeBytes)
+    {
+        StorageUnit storageUnit = new StorageUnit();
+
+        Storage storage = new Storage();
+        storageUnit.setStorage(storage);
+
+        storage.setName("TEST_STORAGE");
+        List<StorageFile> storageFiles = new ArrayList<>();
+        storageUnit.setStorageFiles(storageFiles);
+        if (!CollectionUtils.isEmpty(files))
+        {
+            for (String file : files)
+            {
+                StorageFile storageFile = new StorageFile();
+                storageFiles.add(storageFile);
+                storageFile.setFilePath(String.format("%s/%s", s3KeyPrefix, file));
+                storageFile.setFileSizeBytes(fileSizeBytes);
+            }
+        }
+        storageUnit.setStorageUnitStatus(StorageUnitStatusEntity.ENABLED);
+
+        return storageUnit;
     }
 }

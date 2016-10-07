@@ -79,7 +79,7 @@ public class CreateBusinessObjectDataAttributeTest extends HerdActivitiServiceTa
 
         // Run the activiti task.
         String activitiXml = buildActivitiXml(CreateBusinessObjectDataAttribute.class.getCanonicalName(), fieldExtensionList);
-        Job job = createJobFromActivitiXml(activitiXml, parameters);
+        Job job = jobServiceTestHelper.createJobFromActivitiXml(activitiXml, parameters);
         assertNotNull(job);
         HistoricProcessInstance hisInstance =
             activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(job.getId()).includeProcessVariables().singleResult();
@@ -161,7 +161,7 @@ public class CreateBusinessObjectDataAttributeTest extends HerdActivitiServiceTa
 
         // Run the activiti task.
         String activitiXml = buildActivitiXml(CreateBusinessObjectDataAttribute.class.getCanonicalName(), fieldExtensionList);
-        Job job = createJobFromActivitiXml(activitiXml, parameters);
+        Job job = jobServiceTestHelper.createJobFromActivitiXml(activitiXml, parameters);
         assertNotNull(job);
         HistoricProcessInstance hisInstance =
             activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(job.getId()).includeProcessVariables().singleResult();
@@ -226,7 +226,7 @@ public class CreateBusinessObjectDataAttributeTest extends HerdActivitiServiceTa
 
         // Run the activiti task.
         String activitiXml = buildActivitiXml(CreateBusinessObjectDataAttribute.class.getCanonicalName(), fieldExtensionList);
-        Job job = createJobFromActivitiXml(activitiXml, parameters);
+        Job job = jobServiceTestHelper.createJobFromActivitiXml(activitiXml, parameters);
         assertNotNull(job);
         HistoricProcessInstance hisInstance =
             activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(job.getId()).includeProcessVariables().singleResult();

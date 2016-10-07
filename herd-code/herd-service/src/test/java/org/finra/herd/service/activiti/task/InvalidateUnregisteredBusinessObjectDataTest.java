@@ -23,10 +23,10 @@ import java.util.Map;
 import org.activiti.bpmn.model.FieldExtension;
 import org.junit.Test;
 
-import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredResponse;
 import org.finra.herd.model.api.xml.Parameter;
+import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.service.activiti.ActivitiRuntimeHelper;
 
 public class InvalidateUnregisteredBusinessObjectDataTest extends HerdActivitiServiceTaskTest
@@ -40,13 +40,15 @@ public class InvalidateUnregisteredBusinessObjectDataTest extends HerdActivitiSe
     public void testInvalidateUnregisteredBusinessObjectDataSuccessXml() throws Exception
     {
         // The test request
-        BusinessObjectDataInvalidateUnregisteredRequest request = getDefaultBusinessObjectDataInvalidateUnregisteredRequest();
+        BusinessObjectDataInvalidateUnregisteredRequest request =
+            new BusinessObjectDataInvalidateUnregisteredRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, StorageEntity.MANAGED_STORAGE);
 
         // The expected response
         BusinessObjectDataInvalidateUnregisteredResponse expectedResponse = getExpectedBusinessObjectDataInvalidateUnregisteredResponse(request);
 
         // Setup format
-        createBusinessObjectFormat(request);
+        businessObjectFormatServiceTestHelper.createBusinessObjectFormat(request);
 
         // Construct Activiti parameters
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
@@ -83,13 +85,15 @@ public class InvalidateUnregisteredBusinessObjectDataTest extends HerdActivitiSe
     public void testInvalidateUnregisteredBusinessObjectDataSuccessJson() throws Exception
     {
         // The test request
-        BusinessObjectDataInvalidateUnregisteredRequest request = getDefaultBusinessObjectDataInvalidateUnregisteredRequest();
+        BusinessObjectDataInvalidateUnregisteredRequest request =
+            new BusinessObjectDataInvalidateUnregisteredRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, StorageEntity.MANAGED_STORAGE);
 
         // The expected response
         BusinessObjectDataInvalidateUnregisteredResponse expectedResponse = getExpectedBusinessObjectDataInvalidateUnregisteredResponse(request);
 
         // Setup format
-        createBusinessObjectFormat(request);
+        businessObjectFormatServiceTestHelper.createBusinessObjectFormat(request);
 
         // Construct Activiti parameters
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
@@ -126,7 +130,9 @@ public class InvalidateUnregisteredBusinessObjectDataTest extends HerdActivitiSe
     public void testInvalidateUnregisteredBusinessObjectDataError() throws Exception
     {
         // The test request
-        BusinessObjectDataInvalidateUnregisteredRequest request = getDefaultBusinessObjectDataInvalidateUnregisteredRequest();
+        BusinessObjectDataInvalidateUnregisteredRequest request =
+            new BusinessObjectDataInvalidateUnregisteredRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, StorageEntity.MANAGED_STORAGE);
 
         // Construct Activiti parameters
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
@@ -171,7 +177,7 @@ public class InvalidateUnregisteredBusinessObjectDataTest extends HerdActivitiSe
         expectedResponse.setPartitionValue(request.getPartitionValue());
         expectedResponse.setSubPartitionValues(request.getSubPartitionValues());
         expectedResponse.setStorageName(request.getStorageName());
-        expectedResponse.setRegisteredBusinessObjectDataList(new ArrayList<BusinessObjectData>());
+        expectedResponse.setRegisteredBusinessObjectDataList(new ArrayList<>());
         return expectedResponse;
     }
 }

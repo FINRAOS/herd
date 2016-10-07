@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -45,6 +46,8 @@ import org.finra.herd.service.impl.S3ServiceImpl;
  */
 public class S3ServiceTest extends AbstractServiceTest
 {
+    private Path localTempPath;
+
     /**
      * Sets up the test environment.
      */

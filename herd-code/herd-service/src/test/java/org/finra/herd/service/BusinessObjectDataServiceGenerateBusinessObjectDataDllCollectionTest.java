@@ -37,14 +37,14 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDllCollectionTes
     public void testGenerateBusinessObjectDataDdlCollection()
     {
         // Prepare database entities required for testing.
-        createDatabaseEntitiesForBusinessObjectDataDdlCollectionTesting();
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataDdlTesting(AbstractServiceTest.PARTITION_VALUE);
 
         // Generate DDL for a collection of business object data.
-        BusinessObjectDataDdlCollectionResponse resultBusinessObjectDataDdlCollectionResponse =
-            businessObjectDataService.generateBusinessObjectDataDdlCollection(getTestBusinessObjectDataDdlCollectionRequest());
+        BusinessObjectDataDdlCollectionResponse resultBusinessObjectDataDdlCollectionResponse = businessObjectDataService
+            .generateBusinessObjectDataDdlCollection(businessObjectDataServiceTestHelper.getTestBusinessObjectDataDdlCollectionRequest());
 
         // Validate the response object.
-        assertEquals(getExpectedBusinessObjectDataDdlCollectionResponse(), resultBusinessObjectDataDdlCollectionResponse);
+        assertEquals(businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataDdlCollectionResponse(), resultBusinessObjectDataDdlCollectionResponse);
     }
 
     @Test
@@ -64,7 +64,7 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDllCollectionTes
         }
 
         // Try to generate business object data ddl collection collection when business object data ddl request is not specified.
-        request = getTestBusinessObjectDataDdlCollectionRequest();
+        request = businessObjectDataServiceTestHelper.getTestBusinessObjectDataDdlCollectionRequest();
         for (List<BusinessObjectDataDdlRequest> businessObjectDataDdlRequests : Arrays.asList(null, new ArrayList<BusinessObjectDataDdlRequest>()))
         {
             request.setBusinessObjectDataDdlRequests(businessObjectDataDdlRequests);
@@ -80,7 +80,7 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDllCollectionTes
         }
 
         // Try to generate business object data ddl collection collection when business object data ddl request is null.
-        request = getTestBusinessObjectDataDdlCollectionRequest();
+        request = businessObjectDataServiceTestHelper.getTestBusinessObjectDataDdlCollectionRequest();
         request.getBusinessObjectDataDdlRequests().set(0, null);
         try
         {

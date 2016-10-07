@@ -36,10 +36,10 @@ public class GenerateBusinessObjectFormatDdlCollectionTest extends HerdActivitiS
     public void testGenerateBusinessObjectFormatDdlCollectionXml() throws Exception
     {
         // Prepare database entities required for testing.
-        createDatabaseEntitiesForBusinessObjectFormatDdlCollectionTesting();
+        businessObjectFormatServiceTestHelper.createDatabaseEntitiesForBusinessObjectFormatDdlCollectionTesting();
 
         // Prepare the request.
-        BusinessObjectFormatDdlCollectionRequest request = getTestBusinessObjectFormatDdlCollectionRequest();
+        BusinessObjectFormatDdlCollectionRequest request = businessObjectFormatServiceTestHelper.getTestBusinessObjectFormatDdlCollectionRequest();
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
 
@@ -52,8 +52,8 @@ public class GenerateBusinessObjectFormatDdlCollectionTest extends HerdActivitiS
         parameters.add(buildParameter("businessObjectFormatDdlCollectionRequest", xmlHelper.objectToXml(request)));
 
         Map<String, Object> variableValuesToValidate = new HashMap<>();
-        variableValuesToValidate
-            .put(GenerateBusinessObjectFormatDdlCollection.VARIABLE_DDL_COLLECTION, getExpectedBusinessObjectFormatDdlCollectionResponse().getDdlCollection());
+        variableValuesToValidate.put(GenerateBusinessObjectFormatDdlCollection.VARIABLE_DDL_COLLECTION,
+            businessObjectFormatServiceTestHelper.getExpectedBusinessObjectFormatDdlCollectionResponse().getDdlCollection());
 
         executeWithoutLogging(LogVariables.class, () -> {
             testActivitiServiceTaskSuccess(GenerateBusinessObjectFormatDdlCollection.class.getCanonicalName(), fieldExtensionList, parameters,
@@ -65,10 +65,10 @@ public class GenerateBusinessObjectFormatDdlCollectionTest extends HerdActivitiS
     public void testGenerateBusinessObjectFormatDdlCollectionJson() throws Exception
     {
         // Prepare database entities required for testing.
-        createDatabaseEntitiesForBusinessObjectFormatDdlCollectionTesting();
+        businessObjectFormatServiceTestHelper.createDatabaseEntitiesForBusinessObjectFormatDdlCollectionTesting();
 
         // Prepare the request.
-        BusinessObjectFormatDdlCollectionRequest request = getTestBusinessObjectFormatDdlCollectionRequest();
+        BusinessObjectFormatDdlCollectionRequest request = businessObjectFormatServiceTestHelper.getTestBusinessObjectFormatDdlCollectionRequest();
 
         List<FieldExtension> fieldExtensionList = new ArrayList<>();
 
@@ -81,8 +81,8 @@ public class GenerateBusinessObjectFormatDdlCollectionTest extends HerdActivitiS
         parameters.add(buildParameter("businessObjectFormatDdlCollectionRequest", jsonHelper.objectToJson(request)));
 
         Map<String, Object> variableValuesToValidate = new HashMap<>();
-        variableValuesToValidate
-            .put(GenerateBusinessObjectFormatDdlCollection.VARIABLE_DDL_COLLECTION, getExpectedBusinessObjectFormatDdlCollectionResponse().getDdlCollection());
+        variableValuesToValidate.put(GenerateBusinessObjectFormatDdlCollection.VARIABLE_DDL_COLLECTION,
+            businessObjectFormatServiceTestHelper.getExpectedBusinessObjectFormatDdlCollectionResponse().getDdlCollection());
 
         executeWithoutLogging(LogVariables.class, () -> {
             testActivitiServiceTaskSuccess(GenerateBusinessObjectFormatDdlCollection.class.getCanonicalName(), fieldExtensionList, parameters,
