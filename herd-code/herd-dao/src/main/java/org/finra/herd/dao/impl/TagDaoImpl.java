@@ -23,7 +23,6 @@ import javax.persistence.Tuple;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
-import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
@@ -115,13 +114,9 @@ public class TagDaoImpl extends AbstractHerdDao implements TagDao
         List<Predicate> predicates = new ArrayList<>();
         predicates.add(builder.equal(builder.upper(tagTypeEntityJoin.get(TagTypeEntity_.code)), tagType.toUpperCase()));
 
-        // Add the order by clauses.
-        List<Order> orderList = new ArrayList<>();
-        orderList.add(builder.asc(tagTypeCodeColumn));
-        orderList.add(builder.asc(displayNameColumn));
-
         // Add the clauses to the query.
-        criteria.multiselect(tagTypeCodeColumn, tagCodeColumn).where(builder.and(predicates.toArray(new Predicate[predicates.size()]))).orderBy(orderList);
+        criteria.multiselect(tagTypeCodeColumn, tagCodeColumn).where(builder.and(predicates.toArray(new Predicate[predicates.size()])))
+            .orderBy(builder.asc(displayNameColumn));
 
         // Run the query to get a list of tuples back.
         List<Tuple> tuples = entityManager.createQuery(criteria).getResultList();

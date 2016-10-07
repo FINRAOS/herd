@@ -15,9 +15,13 @@
 */
 package org.finra.herd.dao;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.Arrays;
 import java.util.List;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import org.finra.herd.model.api.xml.TagKey;
@@ -26,84 +30,69 @@ import org.finra.herd.model.jpa.TagTypeEntity;
 
 public class TagDaoTest extends AbstractDaoTest
 {
-    /**
-     * Validate a tag entity.
-     *
-     * @param tagEntity the tag entity to be validated.
-     */
-    private void validateTagEntity(TagEntity tagEntity)
-    {
-        Assert.assertNotNull(tagEntity);
-        Assert.assertEquals(TAG_TYPE, tagEntity.getTagType().getCode());
-        Assert.assertEquals(TAG_CODE, tagEntity.getTagCode());
-        Assert.assertEquals(TAG_DISPLAY_NAME, tagEntity.getDisplayName());
-        Assert.assertEquals(TAG_DESCRIPTION, tagEntity.getDescription());
-    }
-
     @Test
     public void testGetTagByKey()
     {
-        // Create a tag type entity.
-        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, 1);
-
         // Create a tag entity.
-        tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+        TagEntity tagEntity = tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
 
-        // Get tag entity and validate
-        TagEntity tagEntity = tagDao.getTagByKey(new TagKey(TAG_TYPE, TAG_CODE));
-        validateTagEntity(tagEntity);
+        // Get tag entity and validate.
+        assertEquals(tagEntity, tagDao.getTagByKey(new TagKey(TAG_TYPE, TAG_CODE)));
+
+        // Get tag entity by passing all case-insensitive parameters in uppercase.
+        assertEquals(tagEntity, tagDao.getTagByKey(new TagKey(TAG_TYPE.toUpperCase(), TAG_CODE.toUpperCase())));
+
+        // Get tag entity by passing all case-insensitive parameters in lowercase.
+        assertEquals(tagEntity, tagDao.getTagByKey(new TagKey(TAG_TYPE.toLowerCase(), TAG_CODE.toLowerCase())));
+
+        // Try invalid values for all input parameters.
+        assertNull(tagDao.getTagByKey(new TagKey("I_DO_NOT_EXIST", TAG_CODE)));
+        assertNull(tagDao.getTagByKey(new TagKey(TAG_TYPE, "I_DO_NOT_EXIST")));
     }
 
     @Test
     public void testGetTagByTagTypeAndDisplayName()
     {
-        // Create a tag type entity.
-        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, 1);
-
         // Create a tag entity.
-        tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+        TagEntity tagEntity = tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
 
-        // Get tag entity and validate
-        TagEntity tagEntity = tagDao.getTagByTagTypeAndDisplayName(TAG_TYPE, TAG_DISPLAY_NAME);
-        validateTagEntity(tagEntity);
+        // Get tag entity and validate.
+        assertEquals(tagEntity, tagDao.getTagByTagTypeAndDisplayName(TAG_TYPE, TAG_DISPLAY_NAME));
+
+        // Get tag entity by passing all case-insensitive parameters in uppercase.
+        assertEquals(tagEntity, tagDao.getTagByTagTypeAndDisplayName(TAG_TYPE.toUpperCase(), TAG_DISPLAY_NAME.toUpperCase()));
+
+        // Get tag entity by passing all case-insensitive parameters in lowercase.
+        assertEquals(tagEntity, tagDao.getTagByTagTypeAndDisplayName(TAG_TYPE.toLowerCase(), TAG_DISPLAY_NAME.toLowerCase()));
+
+        // Try invalid values for all input parameters.
+        assertNull(tagDao.getTagByTagTypeAndDisplayName("I_DO_NOT_EXIST", TAG_DISPLAY_NAME));
+        assertNull(tagDao.getTagByTagTypeAndDisplayName(TAG_TYPE, "I_DO_NOT_EXIST"));
     }
 
     @Test
-    public void testGetTagsByTagTypeOneTag()
+    public void testGetTags()
     {
+        // Create a list of tag key for the same tag type.
+        List<TagKey> tagKeys = Arrays.asList(new TagKey(TAG_TYPE, TAG_CODE), new TagKey(TAG_TYPE, TAG_CODE_2));
+
         // Create a tag type entity.
-        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, 1);
+        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, INTEGER_VALUE);
 
-        // Create a tag entity.
+        // Create two tag entities.
         tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
-
-        List<TagKey> resultTagKeys = tagDao.getTagsByTagType(TAG_TYPE);
-
-        Assert.assertNotNull(resultTagKeys);
-        Assert.assertTrue(resultTagKeys.size() == 1);
-        Assert.assertEquals(TAG_TYPE, resultTagKeys.get(0).getTagTypeCode());
-        Assert.assertEquals(TAG_CODE, resultTagKeys.get(0).getTagCode());
-    }
-
-    @Test
-    public void testGetTagsByTagTypeMultipleTags()
-    {
-        // Create a tag type entity.
-        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, 1);
-
-        // Create a tag entity.
-        tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
-
-        // Create another tag entity.
         tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_2, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2);
 
-        List<TagKey> resultTagKeys = tagDao.getTagsByTagType(TAG_TYPE);
+        // Retrieve a list of tag keys.
+        assertEquals(tagKeys, tagDao.getTagsByTagType(TAG_TYPE));
 
-        Assert.assertNotNull(resultTagKeys);
-        Assert.assertTrue(resultTagKeys.size() == 2);
-        Assert.assertEquals(TAG_TYPE, resultTagKeys.get(0).getTagTypeCode());
-        Assert.assertEquals(TAG_CODE, resultTagKeys.get(0).getTagCode());
-        Assert.assertEquals(TAG_TYPE, resultTagKeys.get(1).getTagTypeCode());
-        Assert.assertEquals(TAG_CODE_2, resultTagKeys.get(1).getTagCode());
+        // Get tag keys by passing all case-insensitive parameters in uppercase.
+        assertEquals(tagKeys, tagDao.getTagsByTagType(TAG_TYPE.toUpperCase()));
+
+        // Get tag keys by passing all case-insensitive parameters in lowercase.
+        assertEquals(tagKeys, tagDao.getTagsByTagType(TAG_TYPE.toLowerCase()));
+
+        // Try invalid values for all input parameters.
+        assertTrue(tagDao.getTagsByTagType("I_DO_NOT_EXIST").isEmpty());
     }
 }
