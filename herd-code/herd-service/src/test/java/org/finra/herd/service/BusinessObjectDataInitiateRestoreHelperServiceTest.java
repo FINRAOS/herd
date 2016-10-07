@@ -55,7 +55,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
                 DATA_VERSION);
 
         // Create database entities required for testing.
-        createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey);
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey);
 
         // Execute a before step for the initiate a business object data restore request.
         BusinessObjectDataRestoreDto storagePolicyTransitionParamsDto =
@@ -208,7 +208,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
                 NO_SUBPARTITION_VALUES, DATA_VERSION);
 
         // Create database entities required for testing.
-        createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey);
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey);
 
         // Execute a before step for the initiate a business object data restore request for business object data without sub-partition values.
         BusinessObjectDataRestoreDto storagePolicyTransitionParamsDto =
@@ -227,7 +227,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
                 DATA_VERSION);
 
         // Create database entities required for testing.
-        createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey);
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey);
 
         // Execute a before step for the initiate a business object data restore request using input parameters with leading and trailing empty spaces.
         BusinessObjectDataRestoreDto storagePolicyTransitionParamsDto = businessObjectDataInitiateRestoreHelperService.prepareToInitiateRestore(
@@ -247,7 +247,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
                 DATA_VERSION);
 
         // Create database entities required for testing.
-        createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey);
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey);
 
         // Execute a before step for the initiate a business object data restore request
         // using upper case input parameters (except for case-sensitive partition values).
@@ -268,7 +268,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
                 DATA_VERSION);
 
         // Create database entities required for testing.
-        createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey);
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey);
 
         // Execute a before step for the initiate a business object data restore request
         // using lower case input parameters (except for case-sensitive partition values).
@@ -304,8 +304,8 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(
-                getExpectedBusinessObjectDataNotFoundErrorMessage("I_DO_NOT_EXIST", BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+            assertEquals(businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataNotFoundErrorMessage("I_DO_NOT_EXIST", BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
                     PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
         }
 
@@ -319,8 +319,8 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(
-                getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, "I_DO_NOT_EXIST", FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+            assertEquals(businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, "I_DO_NOT_EXIST", FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
                     PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
         }
 
@@ -334,8 +334,9 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, "I_DO_NOT_EXIST", FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
+            assertEquals(businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, "I_DO_NOT_EXIST", FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                    PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
         }
 
         // Try to execute a before step for the initiate a business object data restore request using an invalid format file type.
@@ -348,8 +349,9 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, "I_DO_NOT_EXIST", FORMAT_VERSION,
-                PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
+            assertEquals(businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, "I_DO_NOT_EXIST", FORMAT_VERSION,
+                    PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
         }
 
         // Try to execute a before step for the initiate a business object data restore request using an invalid business object format version.
@@ -362,8 +364,8 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(
-                getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INVALID_FORMAT_VERSION,
+            assertEquals(businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INVALID_FORMAT_VERSION,
                     PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
         }
 
@@ -377,8 +379,9 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                "I_DO_NOT_EXIST", SUBPARTITION_VALUES, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
+            assertEquals(businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                    "I_DO_NOT_EXIST", SUBPARTITION_VALUES, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
         }
 
         // Try to execute a before step for the initiate a business object data restore request using an invalid sub-partition value.
@@ -395,8 +398,8 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
             }
             catch (ObjectNotFoundException e)
             {
-                assertEquals(
-                    getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                assertEquals(businessObjectDataServiceTestHelper
+                    .getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
                         PARTITION_VALUE, testSubPartitionValues, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
             }
         }
@@ -411,8 +414,9 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                PARTITION_VALUE, SUBPARTITION_VALUES, INVALID_DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
+            assertEquals(businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                    PARTITION_VALUE, SUBPARTITION_VALUES, INVALID_DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
         }
     }
 
@@ -430,8 +434,9 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
-                PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
+            assertEquals(businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataNotFoundErrorMessage(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                    PARTITION_VALUE, SUBPARTITION_VALUES, DATA_VERSION, NO_BDATA_STATUS), e.getMessage());
         }
     }
 
@@ -454,9 +459,8 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals(String
-                .format("Business object data is not archived. Business object data: {%s}", getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)),
-                e.getMessage());
+            assertEquals(String.format("Business object data is not archived. Business object data: {%s}",
+                businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
         }
     }
 
@@ -489,7 +493,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
         catch (IllegalArgumentException e)
         {
             assertEquals(String.format("Business object data has multiple (2) GLACIER storage units. Business object data: {%s}",
-                getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
+                businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
         }
     }
 
@@ -514,9 +518,8 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals(String
-                .format("Business object data is not archived. Business object data: {%s}", getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)),
-                e.getMessage());
+            assertEquals(String.format("Business object data is not archived. Business object data: {%s}",
+                businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
         }
     }
 
@@ -543,7 +546,8 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
         {
             assertEquals(String
                 .format("Business object data has no storage directory path specified in \"%s\" %s storage. Business object data: {%s}", STORAGE_NAME_GLACIER,
-                    StoragePlatformEntity.GLACIER, getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
+                    StoragePlatformEntity.GLACIER, businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)),
+                e.getMessage());
         }
     }
 
@@ -556,8 +560,8 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
                 DATA_VERSION);
 
         // Create database entities required for testing with Glacier storage unit storage directory path not starting with the origin S3 bucket name.
-        createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN, StorageUnitStatusEntity.DISABLED,
-            STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER, StorageUnitStatusEntity.ENABLED, TEST_S3_KEY_PREFIX);
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN,
+            StorageUnitStatusEntity.DISABLED, STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER, StorageUnitStatusEntity.ENABLED, TEST_S3_KEY_PREFIX);
 
         // Try to execute a before step for the initiate a business object data restore request
         // when Glacier storage unit storage directory path does not start with the origin S3 bucket name.
@@ -571,8 +575,8 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
             assertEquals(String.format(
                 "Storage directory path \"%s\" for business object data in \"%s\" %s storage does not start with the origin S3 bucket name. " +
                     "Origin S3 bucket name: {%s}, origin storage: {%s}, business object data: {%s}", TEST_S3_KEY_PREFIX, STORAGE_NAME_GLACIER,
-                StoragePlatformEntity.GLACIER, S3_BUCKET_NAME_ORIGIN, STORAGE_NAME_ORIGIN, getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)),
-                e.getMessage());
+                StoragePlatformEntity.GLACIER, S3_BUCKET_NAME_ORIGIN, STORAGE_NAME_ORIGIN,
+                businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
         }
     }
 
@@ -585,9 +589,10 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
                 DATA_VERSION);
 
         // Create database entities required for testing.
-        BusinessObjectDataEntity businessObjectDataEntity =
-            createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN, StorageUnitStatusEntity.DISABLED,
-                STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER, StorageUnitStatusEntity.ENABLED, S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX);
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataServiceTestHelper
+            .createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN,
+                StorageUnitStatusEntity.DISABLED, STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER, StorageUnitStatusEntity.ENABLED,
+                S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX);
 
         // Get the Glacier storage unit entity.
         StorageUnitEntity glacierStorageUnitEntity = storageUnitDaoHelper.getStorageUnitEntity(STORAGE_NAME_GLACIER, businessObjectDataEntity);
@@ -604,7 +609,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
         catch (IllegalArgumentException e)
         {
             assertEquals(String.format("Glacier storage unit in \"%s\" storage has no origin S3 storage unit. Business object data: {%s}", STORAGE_NAME_GLACIER,
-                getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
+                businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
         }
     }
 
@@ -617,9 +622,10 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
                 DATA_VERSION);
 
         // Create database entities required for testing.
-        BusinessObjectDataEntity businessObjectDataEntity =
-            createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN, StorageUnitStatusEntity.DISABLED,
-                STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER, StorageUnitStatusEntity.ENABLED, S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX);
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataServiceTestHelper
+            .createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN,
+                StorageUnitStatusEntity.DISABLED, STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER, StorageUnitStatusEntity.ENABLED,
+                S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX);
 
         // Create a non-S3 storage unit for this business object data.
         StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
@@ -640,7 +646,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
         catch (IllegalArgumentException e)
         {
             assertEquals(String.format("Glacier storage unit in \"%s\" storage has no origin S3 storage unit. Business object data: {%s}", STORAGE_NAME_GLACIER,
-                getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
+                businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
         }
     }
 
@@ -653,8 +659,9 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
                 DATA_VERSION);
 
         // Create database entities required for testing with an enabled origin storage unit.
-        createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN, StorageUnitStatusEntity.ENABLED,
-            STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER, StorageUnitStatusEntity.ENABLED, S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX);
+        businessObjectDataServiceTestHelper
+            .createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN, StorageUnitStatusEntity.ENABLED,
+                STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER, StorageUnitStatusEntity.ENABLED, S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX);
 
         // Try to execute a before step for the initiate a business object data restore request when origin storage unit is already enabled.
         try
@@ -665,7 +672,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
         catch (IllegalArgumentException e)
         {
             assertEquals(String.format("Business object data is already available in \"%s\" S3 storage. Business object data: {%s}", STORAGE_NAME_ORIGIN,
-                getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
+                businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
         }
     }
 
@@ -678,8 +685,9 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
                 DATA_VERSION);
 
         // Create database entities required for testing with an origin storage unit already being restored.
-        createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN, StorageUnitStatusEntity.RESTORING,
-            STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER, StorageUnitStatusEntity.ENABLED, S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX);
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN,
+            StorageUnitStatusEntity.RESTORING, STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER, StorageUnitStatusEntity.ENABLED,
+            S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX);
 
         // Try to execute a before step for the initiate a business object data restore request when origin storage unit already being restored.
         try
@@ -690,7 +698,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
         catch (IllegalArgumentException e)
         {
             assertEquals(String.format("Business object data is already being restored to \"%s\" S3 storage. Business object data: {%s}", STORAGE_NAME_ORIGIN,
-                getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
+                businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
         }
     }
 
@@ -703,8 +711,9 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
                 DATA_VERSION);
 
         // Create database entities required for testing with a non-DISABLED origin storage unit.
-        createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN, STORAGE_UNIT_STATUS,
-            STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER, StorageUnitStatusEntity.ENABLED, S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX);
+        businessObjectDataServiceTestHelper
+            .createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN, STORAGE_UNIT_STATUS,
+                STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER, StorageUnitStatusEntity.ENABLED, S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX);
 
         // Try to execute a before step for the initiate a business object data restore request when origin storage unit is not disabled.
         try
@@ -717,7 +726,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
             assertEquals(String
                 .format("Origin S3 storage unit in \"%s\" storage must have \"%s\" status, but it actually has \"%s\" status. Business object data: {%s}",
                     STORAGE_NAME_ORIGIN, StorageUnitStatusEntity.DISABLED, STORAGE_UNIT_STATUS,
-                    getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
+                    businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
         }
     }
 
@@ -730,9 +739,10 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
                 DATA_VERSION);
 
         // Create database entities required for testing.
-        BusinessObjectDataEntity businessObjectDataEntity =
-            createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN, StorageUnitStatusEntity.DISABLED,
-                STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER, StorageUnitStatusEntity.ENABLED, S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX);
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataServiceTestHelper
+            .createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN,
+                StorageUnitStatusEntity.DISABLED, STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER, StorageUnitStatusEntity.ENABLED,
+                S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX);
 
         // Get the origin storage unit entity.
         StorageUnitEntity originStorageUnitEntity = storageUnitDaoHelper.getStorageUnitEntity(STORAGE_NAME_ORIGIN, businessObjectDataEntity);
@@ -750,7 +760,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
         {
             assertEquals(String
                 .format("Business object data has no storage files registered in \"%s\" origin storage. Business object data: {%s}", STORAGE_NAME_ORIGIN,
-                    getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
+                    businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
         }
     }
 
@@ -763,8 +773,8 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
                 DATA_VERSION);
 
         // Create database entities required for testing with Glacier storage not having S3 bucket name configured.
-        createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN, StorageUnitStatusEntity.DISABLED,
-            STORAGE_NAME_GLACIER, null, StorageUnitStatusEntity.ENABLED, S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX);
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN,
+            StorageUnitStatusEntity.DISABLED, STORAGE_NAME_GLACIER, null, StorageUnitStatusEntity.ENABLED, S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX);
 
         // Try to execute a before step for the initiate a business object data restore request
         // when Glacier storage does not have an S3 bucket name configured.
@@ -789,8 +799,9 @@ public class BusinessObjectDataInitiateRestoreHelperServiceTest extends Abstract
                 DATA_VERSION);
 
         // Create database entities required for testing with the origin storage not having S3 bucket name configured.
-        createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey, STORAGE_NAME_ORIGIN, null, StorageUnitStatusEntity.DISABLED,
-            STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER, StorageUnitStatusEntity.ENABLED, S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX);
+        businessObjectDataServiceTestHelper
+            .createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey, STORAGE_NAME_ORIGIN, null, StorageUnitStatusEntity.DISABLED,
+                STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER, StorageUnitStatusEntity.ENABLED, S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX);
 
         // Try to execute a before step for the initiate a business object data restore request
         // when the origin storage does not have an S3 bucket name configured.

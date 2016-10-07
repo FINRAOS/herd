@@ -79,4 +79,53 @@ public class S3FileCopyRequestParamsDto extends S3FileTransferRequestParamsDto
     {
         this.targetObjectKey = targetObjectKey;
     }
+    
+    @Override
+    public boolean equals(Object object)
+    {
+        if (this == object)
+        {
+            return true;
+        }
+        if (object == null || getClass() != object.getClass())
+        {
+            return false;
+        }
+        if (!super.equals(object))
+        {
+            return false;
+        }
+
+        S3FileCopyRequestParamsDto that = (S3FileCopyRequestParamsDto) object;
+
+        if (sourceBucketName != null ? !sourceBucketName.equals(that.sourceBucketName) : that.sourceBucketName != null)
+        {
+            return false;
+        }
+        if (sourceObjectKey != null ? !sourceObjectKey.equals(that.sourceObjectKey) : that.sourceObjectKey != null)
+        {
+            return false;
+        }
+        if (targetBucketName != null ? !targetBucketName.equals(that.targetBucketName) : that.targetBucketName != null)
+        {
+            return false;
+        }
+        if (targetObjectKey != null ? !targetObjectKey.equals(that.targetObjectKey) : that.targetObjectKey != null)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int result = super.hashCode();
+        result = 31 * result + (sourceBucketName != null ? sourceBucketName.hashCode() : 0);
+        result = 31 * result + (targetBucketName != null ? targetBucketName.hashCode() : 0);
+        result = 31 * result + (sourceObjectKey != null ? sourceObjectKey.hashCode() : 0);
+        result = 31 * result + (targetObjectKey != null ? targetObjectKey.hashCode() : 0);
+        return result;
+    }
 }

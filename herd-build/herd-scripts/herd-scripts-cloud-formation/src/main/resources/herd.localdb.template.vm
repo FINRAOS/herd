@@ -502,23 +502,42 @@
           "/usr/bin/wget http://localhost:8080/herd-app/rest/buildInfo -t12 --retry-connrefused -qO-\n",
           "\n",
           "/usr/bin/curl -s -X POST --header 'Content-Type: application/json' -d '{",
-          "\"namespaceCode\": \"DEMO\"",
+          "\"namespaceCode\": \"Demo_App_A\"",
           "}' http://localhost:8080/herd-app/rest/namespaces\n",
-
 #set($H = '#')
           "/usr/bin/curl -s -X POST --header 'Content-Type: application/json' -d '{",
           "\"attributes\": [",
           "{\"name\": \"bucket.name\",\"value\": \"",{"Ref": "herdS3Bucket" }, "\"},",
-		  "{\"name\": \"key.prefix.velocity.template\",\"value\":\"$namespace/$dataProviderName/$businessObjectFormatUsage/$businessObjectFormatFileType/$businessObjectDefinitionName/schm-v$businessObjectFormatVersion/data-v$businessObjectDataVersion/$businessObjectFormatPartitionKey=$businessObjectDataPartitionValue${H}if($CollectionUtils.isNotEmpty($businessObjectDataSubPartitions.keySet()))${H}foreach($subPartitionKey in $businessObjectDataSubPartitions.keySet())/$subPartitionKey=$businessObjectDataSubPartitions.get($subPartitionKey)${H}end${H}end\"}",
-          "],\"name\": \"HERD_DEMO\", \"storagePlatformName\": \"S3\"",
+          "{\"name\": \"key.prefix.velocity.template\",\"value\":\"$namespace/$dataProviderName/$businessObjectFormatUsage/$businessObjectFormatFileType/$businessObjectDefinitionName/schm-v$businessObjectFormatVersion/data-v$businessObjectDataVersion/$businessObjectFormatPartitionKey=$businessObjectDataPartitionValue#if($CollectionUtils.isNotEmpty($businessObjectDataSubPartitions.keySet()))#foreach($subPartitionKey in $businessObjectDataSubPartitions.keySet())/$subPartitionKey=$businessObjectDataSubPartitions.get($subPartitionKey)#end#end\"}",
+          "],\"name\": \"Demo_Storage\", \"storagePlatformName\": \"S3\"",
           "}' http://localhost:8080/herd-app/rest/storages\n",
 
           "/usr/bin/curl -s -X POST --header 'Content-Type: application/json' -d '{",
-          "\"attributes\": [",
-          "{\"name\": \"bucket.name\"  ,\"value\": \"",{"Ref": "herdS3Bucket" }, "\"},",
-		  "{\"name\": \"key.prefix.velocity.template\",\"value\":\"$namespace/$dataProviderName/$businessObjectFormatUsage/$businessObjectFormatFileType/$businessObjectDefinitionName/schm-v$businessObjectFormatVersion/data-v$businessObjectDataVersion/$businessObjectFormatPartitionKey=$businessObjectDataPartitionValue${H}if($CollectionUtils.isNotEmpty($businessObjectDataSubPartitions.keySet()))${H}foreach($subPartitionKey in $businessObjectDataSubPartitions.keySet())/$subPartitionKey=$businessObjectDataSubPartitions.get($subPartitionKey)${H}end${H}end\"}",
-          "],\"name\": \"S3_MANAGED\", \"storagePlatformName\": \"S3\"",
-          "}' http://localhost:8080/herd-app/rest/storages\n",
+          "\"namespace\":\"Demo_App_A\",\"businessObjectDefinitionName\":\"Data_Object_A\",\"dataProviderName\":\"EXCHANGE\",\"description\":\"Object_A is transactional data with important information including X, Y, Z\"",
+          "}' http://localhost:8080/herd-app/rest/businessObjectDefinitions\n",
+
+          "/usr/bin/curl -s -X POST --header 'Content-Type: application/json' -d '{",
+          "\"partitionKeyGroupKey\":{\"partitionKeyGroupName\":\"TRADE_DT\"}",
+          "}' http://localhost:8080/herd-app/rest/partitionKeyGroups\n",
+
+          "/usr/bin/curl -s -X POST --header 'Content-Type: application/json' -d '{",
+          "\"partitionKeyGroupKey\":{\"partitionKeyGroupName\":\"TRADE_DT\"},\"expectedPartitionValues\": [",
+          "\"2015-06-01\",\"2015-06-02\",\"2015-06-03\",\"2015-06-04\",\"2015-06-05\",\"2015-06-08\",\"2015-06-09\"","]",
+          "}' http://localhost:8080/herd-app/rest/expectedPartitionValues\n",
+
+          "/usr/bin/curl -s -X POST --header 'Content-Type: application/json' -d '{",
+          "\"namespace\":\"Demo_App_A\",\"businessObjectDefinitionName\":\"Data_Object_A\",\"businessObjectFormatUsage\":\"Source\",\"businessObjectFormatFileType\":\"BZ\",\"partitionKey\":\"Transaction_Date\",\"attributeDefinitions\":[",
+          "{\"name\":\"Processor_Id\"}","],\"schema\":{\"columns\":[",
+          "{\"name\":\"Last_Name\",\"type\":\"STRING\",\"required\":true,\"description\":\"Last Name of the individual who made the transaction\"},",
+          "{\"name\":\"Transaction_Amount\",\"type\":\"DECIMAL\",\"size\":\"10,2\",\"required\":true,\"description\":\"Amount of transaction in USD\",\"defaultValue\":\"0\"}","],\"partitions\":[",
+          "{\"name\":\"Transaction_Date\",\"type\":\"DATE\",\"required\":true,\"description\":\"Date the transaction occurred\"}","],\"nullValue\":\"\\\\N\",\"delimiter\":\"|\",\"escapeCharacter\":\"\\\\\",\"partitionKeyGroup\":\"TRADE_DT\"}",
+          "}' http://localhost:8080/herd-app/rest/businessObjectFormats\n",
+
+          "/usr/bin/curl -s -X POST --header 'Content-Type: application/json' -d '{",
+          "\"namespace\":\"Demo_App_A\",\"businessObjectDefinitionName\":\"Data_Object_A\",\"businessObjectFormatUsage\":\"Source\",\"businessObjectFormatFileType\":\"BZ\",\"businessObjectFormatVersion\":0,\"partitionKey\":\"Transaction_Date\",\"partitionValue\":\"2015-06-01\",\"storageUnits\":[",
+          "{\"storageName\":\"Demo_Storage\",\"storageFiles\":[",
+          "{\"filePath\":\"demo-app-a\/exchange\/source\/bz\/data-object-a\/frmt-v0\/data-v0\/transaction-date=2015-06-01\/object_a.gz\",\"fileSizeBytes\":\"9511\",\"rowCount\":\"1000\"}","]}","],\"attributes\":[","{\"name\":\"Processor_Id\",\"value\":\"8801\"}","]",
+          "}' http://localhost:8080/herd-app/rest/businessObjectData\n ",
 
           "# If all went well, signal success\n",
           "/opt/aws/bin/cfn-signal -e $? -r 'Herd Server configuration' '", { "Ref" : "herdServerWaitHandle" }, "'\n"

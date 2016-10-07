@@ -33,6 +33,7 @@ import org.finra.herd.model.api.xml.StorageUnit;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
+import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.service.AbstractServiceTest;
 
 public class BusinessObjectDataInvalidateUnregisteredHelperTest extends AbstractServiceTest
@@ -53,12 +54,14 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
     @Test
     public void testInvalidateUnregisteredBusinessObjectDataS30Herd0() throws Exception
     {
-        BusinessObjectDataInvalidateUnregisteredRequest request = getDefaultBusinessObjectDataInvalidateUnregisteredRequest();
+        BusinessObjectDataInvalidateUnregisteredRequest request =
+            new BusinessObjectDataInvalidateUnregisteredRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, StorageEntity.MANAGED_STORAGE);
 
         // Given a business object format
         try
         {
-            createBusinessObjectFormat(request);
+            businessObjectFormatServiceTestHelper.createBusinessObjectFormat(request);
         }
         catch (Exception e)
         {
@@ -92,14 +95,17 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
     @Test
     public void testInvalidateUnregisteredBusinessObjectDataS31Herd1() throws Exception
     {
-        BusinessObjectDataInvalidateUnregisteredRequest request = getDefaultBusinessObjectDataInvalidateUnregisteredRequest();
+        BusinessObjectDataInvalidateUnregisteredRequest request =
+            new BusinessObjectDataInvalidateUnregisteredRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, StorageEntity.MANAGED_STORAGE);
 
         // Given a business object format
         try
         {
-            BusinessObjectFormatEntity businessObjectFormatEntity = createBusinessObjectFormat(request);
-            createS3Object(businessObjectFormatEntity, request, 0);
-            createBusinessObjectData(businessObjectFormatEntity, request, 0, true);
+            BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatServiceTestHelper.createBusinessObjectFormat(request);
+
+            businessObjectDataServiceTestHelper.createS3Object(businessObjectFormatEntity, request, 0);
+            createBusinessObjectDataEntityFromBusinessObjectDataInvalidateUnregisteredRequest(businessObjectFormatEntity, request, 0, true);
         }
         catch (Exception e)
         {
@@ -121,16 +127,18 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
     @Test
     public void testInvalidateUnregisteredBusinessObjectDataS31Herd0() throws Exception
     {
-        BusinessObjectDataInvalidateUnregisteredRequest request = getDefaultBusinessObjectDataInvalidateUnregisteredRequest();
+        BusinessObjectDataInvalidateUnregisteredRequest request =
+            new BusinessObjectDataInvalidateUnregisteredRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, StorageEntity.MANAGED_STORAGE);
 
         // Given a business object format
         // Given an object in S3
         BusinessObjectFormatEntity businessObjectFormatEntity;
         try
         {
-            businessObjectFormatEntity = createBusinessObjectFormat(request);
+            businessObjectFormatEntity = businessObjectFormatServiceTestHelper.createBusinessObjectFormat(request);
 
-            createS3Object(businessObjectFormatEntity, request, 0);
+            businessObjectDataServiceTestHelper.createS3Object(businessObjectFormatEntity, request, 0);
         }
         catch (Exception e)
         {
@@ -168,17 +176,18 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
     @Test
     public void testInvalidateUnregisteredBusinessObjectDataS31Herd0WithSubPartitions() throws Exception
     {
-        BusinessObjectDataInvalidateUnregisteredRequest request = getDefaultBusinessObjectDataInvalidateUnregisteredRequest();
-        request.setSubPartitionValues(SUBPARTITION_VALUES);
+        BusinessObjectDataInvalidateUnregisteredRequest request =
+            new BusinessObjectDataInvalidateUnregisteredRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, StorageEntity.MANAGED_STORAGE);
 
         // Given a business object format
         // Given an object in S3
         BusinessObjectFormatEntity businessObjectFormatEntity;
         try
         {
-            businessObjectFormatEntity = createBusinessObjectFormat(request);
+            businessObjectFormatEntity = businessObjectFormatServiceTestHelper.createBusinessObjectFormat(request);
 
-            createS3Object(businessObjectFormatEntity, request, 0);
+            businessObjectDataServiceTestHelper.createS3Object(businessObjectFormatEntity, request, 0);
         }
         catch (Exception e)
         {
@@ -218,7 +227,9 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
     @Test
     public void testInvalidateUnregisteredBusinessObjectDataS32Herd1() throws Exception
     {
-        BusinessObjectDataInvalidateUnregisteredRequest request = getDefaultBusinessObjectDataInvalidateUnregisteredRequest();
+        BusinessObjectDataInvalidateUnregisteredRequest request =
+            new BusinessObjectDataInvalidateUnregisteredRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, StorageEntity.MANAGED_STORAGE);
 
         // Given a business object format
         // Given 1 business object data registered
@@ -226,11 +237,11 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
         BusinessObjectFormatEntity businessObjectFormatEntity;
         try
         {
-            businessObjectFormatEntity = createBusinessObjectFormat(request);
+            businessObjectFormatEntity = businessObjectFormatServiceTestHelper.createBusinessObjectFormat(request);
 
-            createBusinessObjectData(businessObjectFormatEntity, request, 0, true);
-            createS3Object(businessObjectFormatEntity, request, 0);
-            createS3Object(businessObjectFormatEntity, request, 1);
+            createBusinessObjectDataEntityFromBusinessObjectDataInvalidateUnregisteredRequest(businessObjectFormatEntity, request, 0, true);
+            businessObjectDataServiceTestHelper.createS3Object(businessObjectFormatEntity, request, 0);
+            businessObjectDataServiceTestHelper.createS3Object(businessObjectFormatEntity, request, 1);
         }
         catch (Exception e)
         {
@@ -268,7 +279,9 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
     @Test
     public void testInvalidateUnregisteredBusinessObjectDataS32Herd0() throws Exception
     {
-        BusinessObjectDataInvalidateUnregisteredRequest request = getDefaultBusinessObjectDataInvalidateUnregisteredRequest();
+        BusinessObjectDataInvalidateUnregisteredRequest request =
+            new BusinessObjectDataInvalidateUnregisteredRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, StorageEntity.MANAGED_STORAGE);
 
         // Given a business object format
         // Given 1 business object data registered
@@ -276,10 +289,10 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
         BusinessObjectFormatEntity businessObjectFormatEntity;
         try
         {
-            businessObjectFormatEntity = createBusinessObjectFormat(request);
+            businessObjectFormatEntity = businessObjectFormatServiceTestHelper.createBusinessObjectFormat(request);
 
-            createS3Object(businessObjectFormatEntity, request, 0);
-            createS3Object(businessObjectFormatEntity, request, 1);
+            businessObjectDataServiceTestHelper.createS3Object(businessObjectFormatEntity, request, 0);
+            businessObjectDataServiceTestHelper.createS3Object(businessObjectFormatEntity, request, 1);
         }
         catch (Exception e)
         {
@@ -336,17 +349,18 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
     @Test
     public void testInvalidateUnregisteredBusinessObjectDataS31Herd0WithGap()
     {
-        BusinessObjectDataInvalidateUnregisteredRequest request = getDefaultBusinessObjectDataInvalidateUnregisteredRequest();
-        request.setSubPartitionValues(SUBPARTITION_VALUES);
+        BusinessObjectDataInvalidateUnregisteredRequest request =
+            new BusinessObjectDataInvalidateUnregisteredRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, StorageEntity.MANAGED_STORAGE);
 
         // Given a business object format
         // Given an object in S3
         BusinessObjectFormatEntity businessObjectFormatEntity;
         try
         {
-            businessObjectFormatEntity = createBusinessObjectFormat(request);
+            businessObjectFormatEntity = businessObjectFormatServiceTestHelper.createBusinessObjectFormat(request);
 
-            createS3Object(businessObjectFormatEntity, request, 1);
+            businessObjectDataServiceTestHelper.createS3Object(businessObjectFormatEntity, request, 1);
         }
         catch (Exception e)
         {
@@ -369,17 +383,19 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
     @Test
     public void testInvalidateUnregisteredBusinessObjectDataS3PrefixWithSlash() throws Exception
     {
-        BusinessObjectDataInvalidateUnregisteredRequest request = getDefaultBusinessObjectDataInvalidateUnregisteredRequest();
+        BusinessObjectDataInvalidateUnregisteredRequest request =
+            new BusinessObjectDataInvalidateUnregisteredRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, StorageEntity.MANAGED_STORAGE);
 
         // Given a business object format
         // Given an object in S3
         BusinessObjectFormatEntity businessObjectFormatEntity;
         try
         {
-            businessObjectFormatEntity = createBusinessObjectFormat(request);
+            businessObjectFormatEntity = businessObjectFormatServiceTestHelper.createBusinessObjectFormat(request);
 
             request.setPartitionValue("AA"); // Create S3 object which is contains the partition value as substring
-            createS3Object(businessObjectFormatEntity, request, 0);
+            businessObjectDataServiceTestHelper.createS3Object(businessObjectFormatEntity, request, 0);
 
             request.setPartitionValue("A"); // Send request with substring
         }
@@ -403,13 +419,15 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
     @Test
     public void testInvalidateUnregisteredBusinessObjectDataValidationNamespaceRequired()
     {
-        BusinessObjectDataInvalidateUnregisteredRequest request = getDefaultBusinessObjectDataInvalidateUnregisteredRequest();
+        BusinessObjectDataInvalidateUnregisteredRequest request =
+            new BusinessObjectDataInvalidateUnregisteredRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, StorageEntity.MANAGED_STORAGE);
         request.setNamespace(BLANK_TEXT);
 
         // Given a business object format
         try
         {
-            createBusinessObjectFormat(request);
+            businessObjectFormatServiceTestHelper.createBusinessObjectFormat(request);
         }
         catch (Exception e)
         {
@@ -435,13 +453,14 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
     @Test
     public void testInvalidateUnregisteredBusinessObjectDataValidationBusinessObjectDefinitionNameRequired()
     {
-        BusinessObjectDataInvalidateUnregisteredRequest request = getDefaultBusinessObjectDataInvalidateUnregisteredRequest();
-        request.setBusinessObjectDefinitionName(BLANK_TEXT);
+        BusinessObjectDataInvalidateUnregisteredRequest request =
+            new BusinessObjectDataInvalidateUnregisteredRequest(NAMESPACE, BLANK_TEXT, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION,
+                PARTITION_VALUE, NO_SUBPARTITION_VALUES, StorageEntity.MANAGED_STORAGE);
 
         // Given a business object format
         try
         {
-            createBusinessObjectFormat(request);
+            businessObjectFormatServiceTestHelper.createBusinessObjectFormat(request);
         }
         catch (Exception e)
         {
@@ -467,13 +486,14 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
     @Test
     public void testInvalidateUnregisteredBusinessObjectDataValidationBusinessObjectFormatUsageRequired()
     {
-        BusinessObjectDataInvalidateUnregisteredRequest request = getDefaultBusinessObjectDataInvalidateUnregisteredRequest();
-        request.setBusinessObjectFormatUsage(BLANK_TEXT);
+        BusinessObjectDataInvalidateUnregisteredRequest request =
+            new BusinessObjectDataInvalidateUnregisteredRequest(NAMESPACE, BDEF_NAME, BLANK_TEXT, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, StorageEntity.MANAGED_STORAGE);
 
         // Given a business object format
         try
         {
-            createBusinessObjectFormat(request);
+            businessObjectFormatServiceTestHelper.createBusinessObjectFormat(request);
         }
         catch (Exception e)
         {
@@ -499,12 +519,14 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
     @Test
     public void testInvalidateUnregisteredBusinessObjectDataValidationBusinessObjectFormatMustExist()
     {
-        BusinessObjectDataInvalidateUnregisteredRequest request = getDefaultBusinessObjectDataInvalidateUnregisteredRequest();
+        BusinessObjectDataInvalidateUnregisteredRequest request =
+            new BusinessObjectDataInvalidateUnregisteredRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, StorageEntity.MANAGED_STORAGE);
 
         // Given a business object format
         try
         {
-            createBusinessObjectFormat(request);
+            businessObjectFormatServiceTestHelper.createBusinessObjectFormat(request);
         }
         catch (Exception e)
         {
@@ -537,13 +559,14 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
     @Test
     public void testInvalidateUnregisteredBusinessObjectDataValidationBusinessObjectFormatFileTypeRequired()
     {
-        BusinessObjectDataInvalidateUnregisteredRequest request = getDefaultBusinessObjectDataInvalidateUnregisteredRequest();
-        request.setBusinessObjectFormatFileType(BLANK_TEXT);
+        BusinessObjectDataInvalidateUnregisteredRequest request =
+            new BusinessObjectDataInvalidateUnregisteredRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, BLANK_TEXT, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, StorageEntity.MANAGED_STORAGE);
 
         // Given a business object format
         try
         {
-            createBusinessObjectFormat(request);
+            businessObjectFormatServiceTestHelper.createBusinessObjectFormat(request);
         }
         catch (Exception e)
         {
@@ -569,12 +592,14 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
     @Test
     public void testInvalidateUnregisteredBusinessObjectDataValidationBusinessObjectFormatVersionRequired()
     {
-        BusinessObjectDataInvalidateUnregisteredRequest request = getDefaultBusinessObjectDataInvalidateUnregisteredRequest();
+        BusinessObjectDataInvalidateUnregisteredRequest request =
+            new BusinessObjectDataInvalidateUnregisteredRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, StorageEntity.MANAGED_STORAGE);
 
         // Given a business object format
         try
         {
-            createBusinessObjectFormat(request);
+            businessObjectFormatServiceTestHelper.createBusinessObjectFormat(request);
         }
         catch (Exception e)
         {
@@ -603,13 +628,14 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
     @Test
     public void testInvalidateUnregisteredBusinessObjectDataValidationBusinessObjectFormatVersionNegative()
     {
-        BusinessObjectDataInvalidateUnregisteredRequest request = getDefaultBusinessObjectDataInvalidateUnregisteredRequest();
-        request.setBusinessObjectFormatVersion(-1);
+        BusinessObjectDataInvalidateUnregisteredRequest request =
+            new BusinessObjectDataInvalidateUnregisteredRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, -1, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, StorageEntity.MANAGED_STORAGE);
 
         // Given a business object format
         try
         {
-            createBusinessObjectFormat(request);
+            businessObjectFormatServiceTestHelper.createBusinessObjectFormat(request);
         }
         catch (Exception e)
         {
@@ -635,13 +661,14 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
     @Test
     public void testInvalidateUnregisteredBusinessObjectDataValidationPartitionValueRequired()
     {
-        BusinessObjectDataInvalidateUnregisteredRequest request = getDefaultBusinessObjectDataInvalidateUnregisteredRequest();
-        request.setPartitionValue(BLANK_TEXT);
+        BusinessObjectDataInvalidateUnregisteredRequest request =
+            new BusinessObjectDataInvalidateUnregisteredRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, BLANK_TEXT,
+                NO_SUBPARTITION_VALUES, StorageEntity.MANAGED_STORAGE);
 
         // Given a business object format
         try
         {
-            createBusinessObjectFormat(request);
+            businessObjectFormatServiceTestHelper.createBusinessObjectFormat(request);
         }
         catch (Exception e)
         {
@@ -667,13 +694,14 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
     @Test
     public void testInvalidateUnregisteredBusinessObjectDataValidationStorageNameRequired()
     {
-        BusinessObjectDataInvalidateUnregisteredRequest request = getDefaultBusinessObjectDataInvalidateUnregisteredRequest();
-        request.setStorageName(BLANK_TEXT);
+        BusinessObjectDataInvalidateUnregisteredRequest request =
+            new BusinessObjectDataInvalidateUnregisteredRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, BLANK_TEXT);
 
         // Given a business object format
         try
         {
-            createBusinessObjectFormat(request);
+            businessObjectFormatServiceTestHelper.createBusinessObjectFormat(request);
         }
         catch (Exception e)
         {
@@ -699,13 +727,14 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
     @Test
     public void testInvalidateUnregisteredBusinessObjectDataValidationStorageMustExist()
     {
-        BusinessObjectDataInvalidateUnregisteredRequest request = getDefaultBusinessObjectDataInvalidateUnregisteredRequest();
-        request.setStorageName("DOES_NOT_EXIST");
+        BusinessObjectDataInvalidateUnregisteredRequest request =
+            new BusinessObjectDataInvalidateUnregisteredRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, "DOES_NOT_EXIST");
 
         // Given a business object format
         try
         {
-            createBusinessObjectFormat(request);
+            businessObjectFormatServiceTestHelper.createBusinessObjectFormat(request);
         }
         catch (Exception e)
         {
@@ -731,14 +760,15 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
     @Test
     public void testInvalidateUnregisteredBusinessObjectDataValidationStoragePlatformMustBeS3()
     {
-        BusinessObjectDataInvalidateUnregisteredRequest request = getDefaultBusinessObjectDataInvalidateUnregisteredRequest();
-        request.setStorageName(STORAGE_NAME);
+        BusinessObjectDataInvalidateUnregisteredRequest request =
+            new BusinessObjectDataInvalidateUnregisteredRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, STORAGE_NAME);
 
         // Given a business object format
         try
         {
             storageDaoTestHelper.createStorageEntity(request.getStorageName(), "NOT_S3");
-            createBusinessObjectFormat(request);
+            businessObjectFormatServiceTestHelper.createBusinessObjectFormat(request);
         }
         catch (Exception e)
         {
@@ -765,13 +795,14 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
     @Test
     public void testInvalidateUnregisteredBusinessObjectDataValidationSubPartitionValueNotBlank()
     {
-        BusinessObjectDataInvalidateUnregisteredRequest request = getDefaultBusinessObjectDataInvalidateUnregisteredRequest();
-        request.setSubPartitionValues(Arrays.asList(BLANK_TEXT));
+        BusinessObjectDataInvalidateUnregisteredRequest request =
+            new BusinessObjectDataInvalidateUnregisteredRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                Arrays.asList(BLANK_TEXT), StorageEntity.MANAGED_STORAGE);
 
         // Given a business object format
         try
         {
-            createBusinessObjectFormat(request);
+            businessObjectFormatServiceTestHelper.createBusinessObjectFormat(request);
         }
         catch (Exception e)
         {
@@ -797,13 +828,14 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
     @Test
     public void testInvalidateUnregisteredBusinessObjectDataTrim() throws Exception
     {
-        BusinessObjectDataInvalidateUnregisteredRequest request = getDefaultBusinessObjectDataInvalidateUnregisteredRequest();
-        request.setSubPartitionValues(SUBPARTITION_VALUES);
+        BusinessObjectDataInvalidateUnregisteredRequest request =
+            new BusinessObjectDataInvalidateUnregisteredRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, StorageEntity.MANAGED_STORAGE);
 
         // Given a business object format
         try
         {
-            createBusinessObjectFormat(request);
+            businessObjectFormatServiceTestHelper.createBusinessObjectFormat(request);
         }
         catch (Exception e)
         {
@@ -848,19 +880,21 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
     }
 
     /**
-     * Creates and persists a {@link BusinessObjectDataEntity} with the specified parameters.
+     * Creates and persists a business object data entity per specified parameters.
      *
-     * @param businessObjectFormatEntity {@link BusinessObjectFormatEntity}
-     * @param request {@link BusinessObjectDataInvalidateUnregisteredRequest} with bdata alt key
-     * @param businessObjectDataVersion bdata version
-     * @param latestVersion is this data the latest version?
+     * @param businessObjectFormatEntity the business object format entity
+     * @param request the business object data invalidate unregistered request that contains the business object data key
+     * @param businessObjectDataVersion the business object data version
+     * @param latestVersion specifies if this business object data is the latest version
      *
-     * @return the created {@link BusinessObjectDataEntity}
+     * @return the business object data entity
      */
-    private BusinessObjectDataEntity createBusinessObjectData(BusinessObjectFormatEntity businessObjectFormatEntity,
-        BusinessObjectDataInvalidateUnregisteredRequest request, int businessObjectDataVersion, boolean latestVersion)
+    private BusinessObjectDataEntity createBusinessObjectDataEntityFromBusinessObjectDataInvalidateUnregisteredRequest(
+        BusinessObjectFormatEntity businessObjectFormatEntity, BusinessObjectDataInvalidateUnregisteredRequest request, int businessObjectDataVersion,
+        boolean latestVersion)
     {
         BusinessObjectDataEntity businessObjectDataEntity = new BusinessObjectDataEntity();
+
         businessObjectDataEntity.setBusinessObjectFormat(businessObjectFormatEntity);
         businessObjectDataEntity.setPartitionValue(request.getPartitionValue());
         businessObjectDataEntity.setPartitionValue2(herdCollectionHelper.safeGet(request.getSubPartitionValues(), 0));
@@ -870,7 +904,7 @@ public class BusinessObjectDataInvalidateUnregisteredHelperTest extends Abstract
         businessObjectDataEntity.setVersion(businessObjectDataVersion);
         businessObjectDataEntity.setLatestVersion(latestVersion);
         businessObjectDataEntity.setStatus(businessObjectDataStatusDao.getBusinessObjectDataStatusByCode(BusinessObjectDataStatusEntity.VALID));
-        herdDao.saveAndRefresh(businessObjectDataEntity);
-        return businessObjectDataEntity;
+
+        return businessObjectDataDao.saveAndRefresh(businessObjectDataEntity);
     }
 }

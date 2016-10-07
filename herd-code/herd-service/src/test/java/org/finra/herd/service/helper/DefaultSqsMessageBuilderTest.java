@@ -275,7 +275,8 @@ public class DefaultSqsMessageBuilderTest extends AbstractServiceTest
     private void testBuildBusinessObjectDataStatusChangeMessage(List<String> subPartitionValues, String triggeredByUsername)
     {
         // Create a business object data entity.
-        BusinessObjectDataEntity businessObjectDataEntity = createTestValidBusinessObjectData(subPartitionValues, NO_ATTRIBUTE_DEFINITIONS, NO_ATTRIBUTES);
+        BusinessObjectDataEntity businessObjectDataEntity =
+            businessObjectDataServiceTestHelper.createTestValidBusinessObjectData(subPartitionValues, NO_ATTRIBUTE_DEFINITIONS, NO_ATTRIBUTES);
         BusinessObjectDataKey businessObjectDataKey = businessObjectDataHelper.getBusinessObjectDataKey(businessObjectDataEntity);
 
         String newBusinessObjectDataStatus = "testNewBusinessObjectDataStatus";
@@ -286,7 +287,8 @@ public class DefaultSqsMessageBuilderTest extends AbstractServiceTest
             .buildBusinessObjectDataStatusChangeMessage(businessObjectDataKey, newBusinessObjectDataStatus, oldBusinessObjectDataStatus);
 
         // Validate the message.
-        validateBusinessObjectDataStatusChangeMessage(message, businessObjectDataKey, businessObjectDataEntity.getId(), triggeredByUsername,
-            newBusinessObjectDataStatus, oldBusinessObjectDataStatus, NO_ATTRIBUTES);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectDataStatusChangeMessage(message, businessObjectDataKey, businessObjectDataEntity.getId(), triggeredByUsername,
+                newBusinessObjectDataStatus, oldBusinessObjectDataStatus, NO_ATTRIBUTES);
     }
 }

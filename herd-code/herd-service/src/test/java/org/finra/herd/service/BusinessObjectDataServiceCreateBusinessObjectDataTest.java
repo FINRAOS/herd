@@ -23,6 +23,7 @@ import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -67,6 +68,12 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(BusinessObjectDataServiceCreateBusinessObjectDataTest.class);
 
+    private static final String testS3KeyPrefix =
+        getExpectedS3KeyPrefix(NAMESPACE, DATA_PROVIDER_NAME, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
+            PARTITION_VALUE, null, null, INITIAL_DATA_VERSION);
+
+    private Path localTempPath;
+
     /**
      * Sets up the test environment.
      */
@@ -104,11 +111,11 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
     public void testCreateBusinessObjectData()
     {
         // Create an initial version of the business object data.
-        BusinessObjectDataCreateRequest businessObjectDataCreateRequest = getNewBusinessObjectDataCreateRequest();
+        BusinessObjectDataCreateRequest businessObjectDataCreateRequest = businessObjectDataServiceTestHelper.getNewBusinessObjectDataCreateRequest();
         BusinessObjectData resultBusinessObjectData = businessObjectDataService.createBusinessObjectData(businessObjectDataCreateRequest);
 
         // Verify the results.
-        validateBusinessObjectData(businessObjectDataCreateRequest, INITIAL_DATA_VERSION, true, resultBusinessObjectData);
+        businessObjectDataServiceTestHelper.validateBusinessObjectData(businessObjectDataCreateRequest, INITIAL_DATA_VERSION, true, resultBusinessObjectData);
     }
 
     @Test
@@ -124,8 +131,10 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
         List<StorageFile> storageFiles;
 
         // Try to create a business object data instance when business object definition name is not specified.
-        request = createBusinessObjectDataCreateRequest(NAMESPACE, BLANK_TEXT, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
-            PARTITION_VALUE, BusinessObjectDataStatusEntity.VALID, STORAGE_NAME, testS3KeyPrefix, getTestStorageFiles(testS3KeyPrefix, LOCAL_FILES));
+        request = businessObjectDataServiceTestHelper
+            .createBusinessObjectDataCreateRequest(NAMESPACE, BLANK_TEXT, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
+                PARTITION_VALUE, BusinessObjectDataStatusEntity.VALID, STORAGE_NAME, testS3KeyPrefix,
+                businessObjectDataServiceTestHelper.getTestStorageFiles(testS3KeyPrefix, LOCAL_FILES));
         try
         {
             businessObjectDataService.createBusinessObjectData(request);
@@ -137,8 +146,10 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
         }
 
         // Try to create a business object data instance when business object format usage is not specified.
-        request = createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, BLANK_TEXT, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
-            PARTITION_VALUE, BusinessObjectDataStatusEntity.VALID, STORAGE_NAME, testS3KeyPrefix, getTestStorageFiles(testS3KeyPrefix, LOCAL_FILES));
+        request = businessObjectDataServiceTestHelper
+            .createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, BLANK_TEXT, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
+                PARTITION_VALUE, BusinessObjectDataStatusEntity.VALID, STORAGE_NAME, testS3KeyPrefix,
+                businessObjectDataServiceTestHelper.getTestStorageFiles(testS3KeyPrefix, LOCAL_FILES));
         try
         {
             businessObjectDataService.createBusinessObjectData(request);
@@ -150,9 +161,10 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
         }
 
         // Try to create a business object data instance when business object format file type is not specified.
-        request =
-            createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, BLANK_TEXT, INITIAL_FORMAT_VERSION, PARTITION_KEY, PARTITION_VALUE,
-                BusinessObjectDataStatusEntity.VALID, STORAGE_NAME, testS3KeyPrefix, getTestStorageFiles(testS3KeyPrefix, LOCAL_FILES));
+        request = businessObjectDataServiceTestHelper
+            .createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, BLANK_TEXT, INITIAL_FORMAT_VERSION, PARTITION_KEY, PARTITION_VALUE,
+                BusinessObjectDataStatusEntity.VALID, STORAGE_NAME, testS3KeyPrefix,
+                businessObjectDataServiceTestHelper.getTestStorageFiles(testS3KeyPrefix, LOCAL_FILES));
         try
         {
             businessObjectDataService.createBusinessObjectData(request);
@@ -164,8 +176,10 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
         }
 
         // Try to create a business object data instance when business object format version is not specified.
-        request = createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null, PARTITION_KEY, PARTITION_VALUE,
-            BusinessObjectDataStatusEntity.VALID, STORAGE_NAME, testS3KeyPrefix, getTestStorageFiles(testS3KeyPrefix, LOCAL_FILES));
+        request = businessObjectDataServiceTestHelper
+            .createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null, PARTITION_KEY, PARTITION_VALUE,
+                BusinessObjectDataStatusEntity.VALID, STORAGE_NAME, testS3KeyPrefix,
+                businessObjectDataServiceTestHelper.getTestStorageFiles(testS3KeyPrefix, LOCAL_FILES));
         try
         {
             businessObjectDataService.createBusinessObjectData(request);
@@ -177,8 +191,10 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
         }
 
         // Try to create a business object data instance when business object format partition key is not specified.
-        request = createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, BLANK_TEXT,
-            PARTITION_VALUE, BusinessObjectDataStatusEntity.VALID, STORAGE_NAME, testS3KeyPrefix, getTestStorageFiles(testS3KeyPrefix, LOCAL_FILES));
+        request = businessObjectDataServiceTestHelper
+            .createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, BLANK_TEXT,
+                PARTITION_VALUE, BusinessObjectDataStatusEntity.VALID, STORAGE_NAME, testS3KeyPrefix,
+                businessObjectDataServiceTestHelper.getTestStorageFiles(testS3KeyPrefix, LOCAL_FILES));
         try
         {
             businessObjectDataService.createBusinessObjectData(request);
@@ -190,8 +206,10 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
         }
 
         // Try to create a business object data instance when partition value is not specified.
-        request = createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
-            BLANK_TEXT, BusinessObjectDataStatusEntity.VALID, STORAGE_NAME, testS3KeyPrefix, getTestStorageFiles(testS3KeyPrefix, LOCAL_FILES));
+        request = businessObjectDataServiceTestHelper
+            .createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
+                BLANK_TEXT, BusinessObjectDataStatusEntity.VALID, STORAGE_NAME, testS3KeyPrefix,
+                businessObjectDataServiceTestHelper.getTestStorageFiles(testS3KeyPrefix, LOCAL_FILES));
         try
         {
             businessObjectDataService.createBusinessObjectData(request);
@@ -203,8 +221,10 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
         }
 
         // Try to create a business object data instance when request contains no storage units element.
-        request = createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
-            PARTITION_VALUE, BusinessObjectDataStatusEntity.VALID, STORAGE_NAME, testS3KeyPrefix, getTestStorageFiles(testS3KeyPrefix, LOCAL_FILES));
+        request = businessObjectDataServiceTestHelper
+            .createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
+                PARTITION_VALUE, BusinessObjectDataStatusEntity.VALID, STORAGE_NAME, testS3KeyPrefix,
+                businessObjectDataServiceTestHelper.getTestStorageFiles(testS3KeyPrefix, LOCAL_FILES));
         request.setStorageUnits(null);
         try
         {
@@ -217,8 +237,10 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
         }
 
         // Try to create a business object data instance when no storage units are specified.
-        request = createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
-            PARTITION_VALUE, BusinessObjectDataStatusEntity.VALID, STORAGE_NAME, testS3KeyPrefix, getTestStorageFiles(testS3KeyPrefix, LOCAL_FILES));
+        request = businessObjectDataServiceTestHelper
+            .createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
+                PARTITION_VALUE, BusinessObjectDataStatusEntity.VALID, STORAGE_NAME, testS3KeyPrefix,
+                businessObjectDataServiceTestHelper.getTestStorageFiles(testS3KeyPrefix, LOCAL_FILES));
         request.setStorageUnits(new ArrayList<StorageUnitCreateRequest>());
         try
         {
@@ -231,8 +253,10 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
         }
 
         // Try to create a business object data instance when request contains an empty storage unit element.
-        request = createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
-            PARTITION_VALUE, BusinessObjectDataStatusEntity.VALID, STORAGE_NAME, testS3KeyPrefix, getTestStorageFiles(testS3KeyPrefix, LOCAL_FILES));
+        request = businessObjectDataServiceTestHelper
+            .createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
+                PARTITION_VALUE, BusinessObjectDataStatusEntity.VALID, STORAGE_NAME, testS3KeyPrefix,
+                businessObjectDataServiceTestHelper.getTestStorageFiles(testS3KeyPrefix, LOCAL_FILES));
         List<StorageUnitCreateRequest> storageUnits = new ArrayList<>();
         storageUnits.add(null);
         request.setStorageUnits(storageUnits);
@@ -247,8 +271,10 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
         }
 
         // Try to create a business object data instance when storage name is not specified for a storage unit.
-        request = createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
-            PARTITION_VALUE, BusinessObjectDataStatusEntity.VALID, STORAGE_NAME, testS3KeyPrefix, getTestStorageFiles(testS3KeyPrefix, LOCAL_FILES));
+        request = businessObjectDataServiceTestHelper
+            .createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
+                PARTITION_VALUE, BusinessObjectDataStatusEntity.VALID, STORAGE_NAME, testS3KeyPrefix,
+                businessObjectDataServiceTestHelper.getTestStorageFiles(testS3KeyPrefix, LOCAL_FILES));
         request.getStorageUnits().get(0).setStorageName(BLANK_TEXT);
         try
         {
@@ -261,8 +287,9 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
         }
 
         // Try to create a business object data instance when both storage directory and storage files are not specified.
-        request = createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
-            PARTITION_VALUE, BusinessObjectDataStatusEntity.VALID, STORAGE_NAME, null, null);
+        request = businessObjectDataServiceTestHelper
+            .createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
+                PARTITION_VALUE, BusinessObjectDataStatusEntity.VALID, STORAGE_NAME, null, null);
         try
         {
             businessObjectDataService.createBusinessObjectData(request);
@@ -274,8 +301,10 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
         }
 
         // Try to create a business object data instance when storage directory element is present, but the actual directory path value is not specified.
-        request = createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
-            PARTITION_VALUE, BusinessObjectDataStatusEntity.VALID, STORAGE_NAME, BLANK_TEXT, getTestStorageFiles(testS3KeyPrefix, LOCAL_FILES));
+        request = businessObjectDataServiceTestHelper
+            .createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
+                PARTITION_VALUE, BusinessObjectDataStatusEntity.VALID, STORAGE_NAME, BLANK_TEXT,
+                businessObjectDataServiceTestHelper.getTestStorageFiles(testS3KeyPrefix, LOCAL_FILES));
         try
         {
             businessObjectDataService.createBusinessObjectData(request);
@@ -287,10 +316,11 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
         }
 
         // Try to create a business object data instance when storage file element is present, but the actual file path value is not specified.
-        storageFiles = getTestStorageFiles(testS3KeyPrefix, Arrays.asList(LOCAL_FILE));
+        storageFiles = businessObjectDataServiceTestHelper.getTestStorageFiles(testS3KeyPrefix, Arrays.asList(LOCAL_FILE));
         storageFiles.get(0).setFilePath(BLANK_TEXT);
-        request = createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
-            PARTITION_VALUE, BusinessObjectDataStatusEntity.VALID, STORAGE_NAME, testS3KeyPrefix, storageFiles);
+        request = businessObjectDataServiceTestHelper
+            .createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
+                PARTITION_VALUE, BusinessObjectDataStatusEntity.VALID, STORAGE_NAME, testS3KeyPrefix, storageFiles);
         try
         {
             businessObjectDataService.createBusinessObjectData(request);
@@ -302,10 +332,11 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
         }
 
         // Try to create a business object data instance when storage file size is not specified.
-        storageFiles = getTestStorageFiles(testS3KeyPrefix, Arrays.asList(LOCAL_FILE));
+        storageFiles = businessObjectDataServiceTestHelper.getTestStorageFiles(testS3KeyPrefix, Arrays.asList(LOCAL_FILE));
         storageFiles.get(0).setFileSizeBytes(null);
-        request = createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
-            PARTITION_VALUE, BusinessObjectDataStatusEntity.VALID, STORAGE_NAME, testS3KeyPrefix, storageFiles);
+        request = businessObjectDataServiceTestHelper
+            .createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
+                PARTITION_VALUE, BusinessObjectDataStatusEntity.VALID, STORAGE_NAME, testS3KeyPrefix, storageFiles);
         try
         {
             businessObjectDataService.createBusinessObjectData(request);
@@ -327,8 +358,8 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
         storageDaoTestHelper.createStorageEntity(STORAGE_NAME);
 
         // Create an initial version of business object data without specifying any of the optional parameters except for namespace.
-        BusinessObjectDataCreateRequest request =
-            createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
+        BusinessObjectDataCreateRequest request = businessObjectDataServiceTestHelper
+            .createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
                 PARTITION_VALUE, BDATA_STATUS, STORAGE_NAME, testS3KeyPrefix, null);
         assertNull(request.getSubPartitionValues());
         request.setStatus(BLANK_TEXT);
@@ -339,38 +370,38 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
         BusinessObjectData resultBusinessObjectData = businessObjectDataService.createBusinessObjectData(request);
 
         // Verify the results.
-        validateBusinessObjectData(request, INITIAL_DATA_VERSION, true, resultBusinessObjectData);
+        businessObjectDataServiceTestHelper.validateBusinessObjectData(request, INITIAL_DATA_VERSION, true, resultBusinessObjectData);
     }
 
     @Test
     public void testCreateBusinessObjectDataNoStorageDirectory()
     {
         // Create an initial version of the business object data without specifying a storage directory.
-        BusinessObjectDataCreateRequest request = getNewBusinessObjectDataCreateRequest();
+        BusinessObjectDataCreateRequest request = businessObjectDataServiceTestHelper.getNewBusinessObjectDataCreateRequest();
         request.getStorageUnits().get(0).setStorageDirectory(null);
         BusinessObjectData resultBusinessObjectData = businessObjectDataService.createBusinessObjectData(request);
 
         // Verify the results.
-        validateBusinessObjectData(request, INITIAL_DATA_VERSION, true, resultBusinessObjectData);
+        businessObjectDataServiceTestHelper.validateBusinessObjectData(request, INITIAL_DATA_VERSION, true, resultBusinessObjectData);
     }
 
     @Test
     public void testCreateBusinessObjectDataNoStorageFiles()
     {
         // Create the initial version of the business object data without specifying storage files.
-        BusinessObjectDataCreateRequest request = getNewBusinessObjectDataCreateRequest();
+        BusinessObjectDataCreateRequest request = businessObjectDataServiceTestHelper.getNewBusinessObjectDataCreateRequest();
         request.getStorageUnits().get(0).setStorageFiles(null);
         BusinessObjectData resultBusinessObjectData = businessObjectDataService.createBusinessObjectData(request);
 
         // Verify the results.
-        validateBusinessObjectData(request, INITIAL_DATA_VERSION, true, resultBusinessObjectData);
+        businessObjectDataServiceTestHelper.validateBusinessObjectData(request, INITIAL_DATA_VERSION, true, resultBusinessObjectData);
     }
 
     @Test
     public void testCreateBusinessObjectDataNoAttributes()
     {
         // Create business object data with no attribute definitions and no attributes which is valid.
-        BusinessObjectDataCreateRequest businessObjectDataCreateRequest = getNewBusinessObjectDataCreateRequest(false);
+        BusinessObjectDataCreateRequest businessObjectDataCreateRequest = businessObjectDataServiceTestHelper.getNewBusinessObjectDataCreateRequest(false);
         businessObjectDataService.createBusinessObjectData(businessObjectDataCreateRequest);
     }
 
@@ -385,10 +416,10 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
         storageDaoTestHelper.createStorageEntity(STORAGE_NAME);
 
         // Build a business object data create request with some of the request parameters having leading and trailing whitespace characters.
-        BusinessObjectDataCreateRequest request =
-            createBusinessObjectDataCreateRequest(NAMESPACE, addWhitespace(BDEF_NAME), addWhitespace(FORMAT_USAGE_CODE), addWhitespace(FORMAT_FILE_TYPE_CODE),
+        BusinessObjectDataCreateRequest request = businessObjectDataServiceTestHelper
+            .createBusinessObjectDataCreateRequest(NAMESPACE, addWhitespace(BDEF_NAME), addWhitespace(FORMAT_USAGE_CODE), addWhitespace(FORMAT_FILE_TYPE_CODE),
                 INITIAL_FORMAT_VERSION, addWhitespace(PARTITION_KEY), addWhitespace(PARTITION_VALUE), addWhitespace(BDATA_STATUS), addWhitespace(STORAGE_NAME),
-                addWhitespace(testS3KeyPrefix), getTestStorageFiles(testS3KeyPrefix, LOCAL_FILES));
+                addWhitespace(testS3KeyPrefix), businessObjectDataServiceTestHelper.getTestStorageFiles(testS3KeyPrefix, LOCAL_FILES));
         for (StorageFile storageFile : request.getStorageUnits().get(0).getStorageFiles())
         {
             storageFile.setFilePath(addWhitespace(storageFile.getFilePath()));
@@ -396,9 +427,10 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
         BusinessObjectData resultBusinessObjectData = businessObjectDataService.createBusinessObjectData(request);
 
         // Verify the results.
-        validateBusinessObjectData(businessObjectFormatEntity, PARTITION_VALUE, NO_SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS, STORAGE_NAME,
-            testS3KeyPrefix, getTestStorageFiles(testS3KeyPrefix, SORTED_LOCAL_FILES),
-            CollectionUtils.isEmpty(request.getAttributes()) ? new ArrayList<Attribute>() : request.getAttributes(), resultBusinessObjectData);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectData(businessObjectFormatEntity, PARTITION_VALUE, NO_SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS,
+                STORAGE_NAME, testS3KeyPrefix, businessObjectDataServiceTestHelper.getTestStorageFiles(testS3KeyPrefix, SORTED_LOCAL_FILES),
+                CollectionUtils.isEmpty(request.getAttributes()) ? new ArrayList<Attribute>() : request.getAttributes(), resultBusinessObjectData);
     }
 
     @Test
@@ -537,9 +569,10 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
 
         // Build a business object data create request with a non-existing business object data status code.
         String invalidStatusCode = "I_DO_NOT_EXIST";
-        BusinessObjectDataCreateRequest businessObjectDataCreateRequest =
-            createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_KEY,
-                PARTITION_VALUE, invalidStatusCode, STORAGE_NAME, testS3KeyPrefix, getTestStorageFiles(testS3KeyPrefix, Arrays.asList(LOCAL_FILE)));
+        BusinessObjectDataCreateRequest businessObjectDataCreateRequest = businessObjectDataServiceTestHelper
+            .createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_KEY,
+                PARTITION_VALUE, invalidStatusCode, STORAGE_NAME, testS3KeyPrefix,
+                businessObjectDataServiceTestHelper.getTestStorageFiles(testS3KeyPrefix, Arrays.asList(LOCAL_FILE)));
 
         try
         {
@@ -565,9 +598,10 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
 
         // Build a business object data create request with a non-existing business object format.
         String invalidBusinessObjectFormatUsage = "I_DO_NOT_EXIST";
-        BusinessObjectDataCreateRequest businessObjectDataCreateRequest =
-            createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, invalidBusinessObjectFormatUsage, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_KEY,
-                PARTITION_VALUE, BDATA_STATUS, STORAGE_NAME, testS3KeyPrefix, getTestStorageFiles(testS3KeyPrefix, Arrays.asList(LOCAL_FILE)));
+        BusinessObjectDataCreateRequest businessObjectDataCreateRequest = businessObjectDataServiceTestHelper
+            .createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, invalidBusinessObjectFormatUsage, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_KEY,
+                PARTITION_VALUE, BDATA_STATUS, STORAGE_NAME, testS3KeyPrefix,
+                businessObjectDataServiceTestHelper.getTestStorageFiles(testS3KeyPrefix, Arrays.asList(LOCAL_FILE)));
 
         try
         {
@@ -577,8 +611,9 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(getExpectedBusinessObjectFormatNotFoundErrorMessage(NAMESPACE, BDEF_NAME, invalidBusinessObjectFormatUsage, FORMAT_FILE_TYPE_CODE,
-                FORMAT_VERSION), e.getMessage());
+            assertEquals(businessObjectFormatServiceTestHelper
+                .getExpectedBusinessObjectFormatNotFoundErrorMessage(NAMESPACE, BDEF_NAME, invalidBusinessObjectFormatUsage, FORMAT_FILE_TYPE_CODE,
+                    FORMAT_VERSION), e.getMessage());
         }
     }
 
@@ -592,10 +627,10 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
         businessObjectDataStatusDaoTestHelper.createBusinessObjectDataStatusEntity(BDATA_STATUS);
 
         // Try to create a business object data instance when an invalid partition key value is specified.
-        BusinessObjectDataCreateRequest request =
-            createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION,
+        BusinessObjectDataCreateRequest request = businessObjectDataServiceTestHelper
+            .createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION,
                 "INVALID_PARTITION_KEY", PARTITION_VALUE, BDATA_STATUS, STORAGE_NAME, testS3KeyPrefix,
-                getTestStorageFiles(testS3KeyPrefix, Arrays.asList(LOCAL_FILE)));
+                businessObjectDataServiceTestHelper.getTestStorageFiles(testS3KeyPrefix, Arrays.asList(LOCAL_FILE)));
         try
         {
             businessObjectDataService.createBusinessObjectData(request);
@@ -620,9 +655,10 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
 
         // Build a business object data create request with a non-existing storage name.
         String invalidStorageName = "I_DO_NOT_EXIST";
-        BusinessObjectDataCreateRequest businessObjectDataCreateRequest =
-            createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
-                PARTITION_VALUE, BDATA_STATUS, invalidStorageName, testS3KeyPrefix, getTestStorageFiles(testS3KeyPrefix, Arrays.asList(LOCAL_FILE)));
+        BusinessObjectDataCreateRequest businessObjectDataCreateRequest = businessObjectDataServiceTestHelper
+            .createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
+                PARTITION_VALUE, BDATA_STATUS, invalidStorageName, testS3KeyPrefix,
+                businessObjectDataServiceTestHelper.getTestStorageFiles(testS3KeyPrefix, Arrays.asList(LOCAL_FILE)));
 
         try
         {
@@ -657,10 +693,10 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
         // Try to create a business object data instance using storage with file existence validation enabled without file size validation.
         try
         {
-            businessObjectDataService.createBusinessObjectData(
-                createBusinessObjectDataCreateRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION,
+            businessObjectDataService.createBusinessObjectData(businessObjectDataServiceTestHelper
+                .createBusinessObjectDataCreateRequest(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION,
                     PARTITION_KEY, PARTITION_VALUE, BDATA_STATUS, STORAGE_NAME, testS3KeyPrefix,
-                    getTestStorageFiles(testS3KeyPrefix, Arrays.asList(LOCAL_FILE))));
+                    businessObjectDataServiceTestHelper.getTestStorageFiles(testS3KeyPrefix, Arrays.asList(LOCAL_FILE))));
             fail("Should throw an IllegalArgumentException when using storage with file existence validation enabled without file size validation.");
         }
         catch (IllegalArgumentException e)
@@ -681,9 +717,10 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
 
         // Build a business object data create request with a storage file path not matching the storage directory path.
         String wrongS3KeyPrefix = "WRONG_S3_KEY_PREFIX";
-        BusinessObjectDataCreateRequest request =
-            createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
-                PARTITION_VALUE, BDATA_STATUS, STORAGE_NAME, testS3KeyPrefix, getTestStorageFiles(wrongS3KeyPrefix, Arrays.asList(LOCAL_FILE)));
+        BusinessObjectDataCreateRequest request = businessObjectDataServiceTestHelper
+            .createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
+                PARTITION_VALUE, BDATA_STATUS, STORAGE_NAME, testS3KeyPrefix,
+                businessObjectDataServiceTestHelper.getTestStorageFiles(wrongS3KeyPrefix, Arrays.asList(LOCAL_FILE)));
 
         try
         {
@@ -715,14 +752,14 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
         businessObjectDataStatusDaoTestHelper.createBusinessObjectDataStatusEntity(BDATA_STATUS);
 
         // Build a list of storage files.
-        List<StorageFile> storageFiles = getTestStorageFiles(testS3KeyPrefix, LOCAL_FILES);
+        List<StorageFile> storageFiles = businessObjectDataServiceTestHelper.getTestStorageFiles(testS3KeyPrefix, LOCAL_FILES);
 
         // Create and upload to S3 managed storage a set of test files.
-        prepareTestS3Files(S3_BUCKET_NAME, testS3KeyPrefix, LOCAL_FILES, new ArrayList<String>());
+        businessObjectDataServiceTestHelper.prepareTestS3Files(S3_BUCKET_NAME, testS3KeyPrefix, localTempPath, LOCAL_FILES, new ArrayList<String>());
 
         // Build a new business object data create request.
-        BusinessObjectDataCreateRequest request =
-            createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
+        BusinessObjectDataCreateRequest request = businessObjectDataServiceTestHelper
+            .createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
                 PARTITION_VALUE, BDATA_STATUS, STORAGE_NAME, testS3KeyPrefix, storageFiles);
 
         // Try to create a business object data instance. It should go through without any errors.
@@ -745,14 +782,14 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
         businessObjectDataStatusDaoTestHelper.createBusinessObjectDataStatusEntity(BDATA_STATUS);
 
         // Build a list of storage files.
-        List<StorageFile> storageFiles = getTestStorageFiles(testS3KeyPrefix, LOCAL_FILES);
+        List<StorageFile> storageFiles = businessObjectDataServiceTestHelper.getTestStorageFiles(testS3KeyPrefix, LOCAL_FILES);
 
         // Create and upload to S3 managed storage a set of test files.
-        prepareTestS3Files(S3_BUCKET_NAME, testS3KeyPrefix, LOCAL_FILES, new ArrayList<String>());
+        businessObjectDataServiceTestHelper.prepareTestS3Files(S3_BUCKET_NAME, testS3KeyPrefix, localTempPath, LOCAL_FILES, new ArrayList<String>());
 
         // Build a new business object data create request.
-        BusinessObjectDataCreateRequest request =
-            createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
+        BusinessObjectDataCreateRequest request = businessObjectDataServiceTestHelper
+            .createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
                 PARTITION_VALUE, BDATA_STATUS, STORAGE_NAME, "INVALID_DIRECTORY_PATH", storageFiles);
 
         try
@@ -783,11 +820,11 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
         businessObjectDataStatusDaoTestHelper.createBusinessObjectDataStatusEntity(BDATA_STATUS);
 
         // Build a list of storage files.
-        List<StorageFile> storageFiles = getTestStorageFiles(testS3KeyPrefix, SORTED_LOCAL_FILES);
+        List<StorageFile> storageFiles = businessObjectDataServiceTestHelper.getTestStorageFiles(testS3KeyPrefix, SORTED_LOCAL_FILES);
 
         // Build a new business object data create request.
-        BusinessObjectDataCreateRequest request =
-            createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
+        BusinessObjectDataCreateRequest request = businessObjectDataServiceTestHelper
+            .createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
                 PARTITION_VALUE, BDATA_STATUS, STORAGE_NAME, testS3KeyPrefix, storageFiles);
 
         try
@@ -819,11 +856,11 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
         businessObjectDataStatusDaoTestHelper.createBusinessObjectDataStatusEntity(BDATA_STATUS);
 
         // Build a list of storage files.
-        List<StorageFile> storageFiles = getTestStorageFiles(testS3KeyPrefix, LOCAL_FILES);
+        List<StorageFile> storageFiles = businessObjectDataServiceTestHelper.getTestStorageFiles(testS3KeyPrefix, LOCAL_FILES);
 
         // Build a new business object data create request.
-        BusinessObjectDataCreateRequest request =
-            createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
+        BusinessObjectDataCreateRequest request = businessObjectDataServiceTestHelper
+            .createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
                 PARTITION_VALUE, BDATA_STATUS, STORAGE_NAME, testS3KeyPrefix, storageFiles);
 
         // Try to create a business object data instance. This should succeed since the bucket is not of type "S3", even though there are no files in S3.
@@ -840,10 +877,10 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
         storageDaoTestHelper.createStorageEntity(STORAGE_NAME);
 
         // Try to create a business object data instance when storage file row count has a negative value.
-        List<StorageFile> storageFiles = getTestStorageFiles(testS3KeyPrefix, Arrays.asList(LOCAL_FILE));
+        List<StorageFile> storageFiles = businessObjectDataServiceTestHelper.getTestStorageFiles(testS3KeyPrefix, Arrays.asList(LOCAL_FILE));
         storageFiles.get(0).setRowCount(-1L);
-        BusinessObjectDataCreateRequest request =
-            createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
+        BusinessObjectDataCreateRequest request = businessObjectDataServiceTestHelper
+            .createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
                 PARTITION_VALUE, BusinessObjectDataStatusEntity.VALID, STORAGE_NAME, testS3KeyPrefix, storageFiles);
         try
         {
@@ -866,11 +903,11 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
         storageDaoTestHelper.createStorageEntity(STORAGE_NAME);
 
         // Build a list of storage files.
-        List<StorageFile> storageFiles = getTestStorageFiles(testS3KeyPrefix, SORTED_LOCAL_FILES);
+        List<StorageFile> storageFiles = businessObjectDataServiceTestHelper.getTestStorageFiles(testS3KeyPrefix, SORTED_LOCAL_FILES);
 
         // Build a new business object data create request.
-        BusinessObjectDataCreateRequest request =
-            createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
+        BusinessObjectDataCreateRequest request = businessObjectDataServiceTestHelper
+            .createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
                 PARTITION_VALUE, BDATA_STATUS, STORAGE_NAME, testS3KeyPrefix, storageFiles);
 
         // Try to create the second version of the business object data (version 1) with createNewVersion flag set to null and to false.
@@ -894,7 +931,7 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
         BusinessObjectData resultBusinessObjectData = businessObjectDataService.createBusinessObjectData(request);
 
         // Validate the results for the second version if the business object data.
-        validateBusinessObjectData(request, SECOND_DATA_VERSION, true, resultBusinessObjectData);
+        businessObjectDataServiceTestHelper.validateBusinessObjectData(request, SECOND_DATA_VERSION, true, resultBusinessObjectData);
 
         // Confirm that the initial version of the business object data now does not have the latestFlag set.
         BusinessObjectDataEntity initialVersionBusinessObjectDataEntity = businessObjectDataDao.getBusinessObjectDataByAltKey(
@@ -908,7 +945,7 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
     {
         // This will create a business object data create request with attributes. It will be associated with a format that has attribute definitions
         // that require the attribute to be specified.
-        BusinessObjectDataCreateRequest businessObjectDataCreateRequest = getNewBusinessObjectDataCreateRequest(true);
+        BusinessObjectDataCreateRequest businessObjectDataCreateRequest = businessObjectDataServiceTestHelper.getNewBusinessObjectDataCreateRequest(true);
 
         // Null out the attributes in the create request, even though the format requires them.
         businessObjectDataCreateRequest.setAttributes(null);
@@ -928,9 +965,10 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
 
         // Try to create a business object data instance when duplicate attribute names are specified.
         // Ensure different cases are still considered a duplicate.
-        BusinessObjectDataCreateRequest request =
-            createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
-                PARTITION_VALUE, BusinessObjectDataStatusEntity.VALID, STORAGE_NAME, testS3KeyPrefix, getTestStorageFiles(testS3KeyPrefix, LOCAL_FILES));
+        BusinessObjectDataCreateRequest request = businessObjectDataServiceTestHelper
+            .createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
+                PARTITION_VALUE, BusinessObjectDataStatusEntity.VALID, STORAGE_NAME, testS3KeyPrefix,
+                businessObjectDataServiceTestHelper.getTestStorageFiles(testS3KeyPrefix, LOCAL_FILES));
         List<Attribute> attributes = new ArrayList<>();
         request.setAttributes(attributes);
         attributes.add(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE.toUpperCase(), ATTRIBUTE_VALUE_1));
@@ -950,7 +988,7 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
     @Test(expected = PersistenceException.class)
     public void testCreateBusinessObjectDataAttributeValueTooLarge() throws Exception
     {
-        final BusinessObjectDataCreateRequest businessObjectDataCreateRequest = getNewBusinessObjectDataCreateRequest();
+        final BusinessObjectDataCreateRequest businessObjectDataCreateRequest = businessObjectDataServiceTestHelper.getNewBusinessObjectDataCreateRequest();
 
         // Create and add a duplicate attribute which is not allowed.
         Attribute newAttribute = new Attribute();
@@ -979,20 +1017,22 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
         businessObjectDataStatusDaoTestHelper.createBusinessObjectDataStatusEntity(BDATA_STATUS);
 
         // Create and upload to S3 managed storage a set of test files.
-        prepareTestS3Files(testS3KeyPrefix, LOCAL_FILES);
+        businessObjectDataServiceTestHelper.prepareTestS3Files(testS3KeyPrefix, localTempPath, LOCAL_FILES);
 
         // Build a new business object data create request.
-        BusinessObjectDataCreateRequest request =
-            createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
-                PARTITION_VALUE, BDATA_STATUS, StorageEntity.MANAGED_STORAGE, testS3KeyPrefix, getTestStorageFiles(testS3KeyPrefix, LOCAL_FILES));
+        BusinessObjectDataCreateRequest request = businessObjectDataServiceTestHelper
+            .createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
+                PARTITION_VALUE, BDATA_STATUS, StorageEntity.MANAGED_STORAGE, testS3KeyPrefix,
+                businessObjectDataServiceTestHelper.getTestStorageFiles(testS3KeyPrefix, LOCAL_FILES));
 
         // Create the business object data.
         BusinessObjectData resultBusinessObjectData = businessObjectDataService.createBusinessObjectData(request);
 
         // Verify the results.
-        validateBusinessObjectData(businessObjectFormatEntity, PARTITION_VALUE, NO_SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS,
-            StorageEntity.MANAGED_STORAGE, testS3KeyPrefix, getTestStorageFiles(testS3KeyPrefix, SORTED_LOCAL_FILES),
-            CollectionUtils.isEmpty(request.getAttributes()) ? new ArrayList<Attribute>() : request.getAttributes(), resultBusinessObjectData);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectData(businessObjectFormatEntity, PARTITION_VALUE, NO_SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS,
+                StorageEntity.MANAGED_STORAGE, testS3KeyPrefix, businessObjectDataServiceTestHelper.getTestStorageFiles(testS3KeyPrefix, SORTED_LOCAL_FILES),
+                CollectionUtils.isEmpty(request.getAttributes()) ? new ArrayList<Attribute>() : request.getAttributes(), resultBusinessObjectData);
     }
 
     @Test
@@ -1010,20 +1050,22 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
         localFiles.addAll(LOCAL_FILES);
         localFiles.add(FILE_NAME);
         localFiles.add(FILE_NAME_2);
-        prepareTestS3Files(testS3KeyPrefix, localFiles);
+        businessObjectDataServiceTestHelper.prepareTestS3Files(testS3KeyPrefix, localTempPath, localFiles);
 
         // Build a new business object data create request.
-        BusinessObjectDataCreateRequest request =
-            createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
-                PARTITION_VALUE, BDATA_STATUS, StorageEntity.MANAGED_STORAGE, testS3KeyPrefix, getTestStorageFiles(testS3KeyPrefix, LOCAL_FILES));
+        BusinessObjectDataCreateRequest request = businessObjectDataServiceTestHelper
+            .createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
+                PARTITION_VALUE, BDATA_STATUS, StorageEntity.MANAGED_STORAGE, testS3KeyPrefix,
+                businessObjectDataServiceTestHelper.getTestStorageFiles(testS3KeyPrefix, LOCAL_FILES));
 
         // Create the business object data.
         BusinessObjectData resultBusinessObjectData = businessObjectDataService.createBusinessObjectData(request);
 
         // Verify the results.
-        validateBusinessObjectData(businessObjectFormatEntity, PARTITION_VALUE, NO_SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS,
-            StorageEntity.MANAGED_STORAGE, testS3KeyPrefix, getTestStorageFiles(testS3KeyPrefix, SORTED_LOCAL_FILES),
-            CollectionUtils.isEmpty(request.getAttributes()) ? new ArrayList<>() : request.getAttributes(), resultBusinessObjectData);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectData(businessObjectFormatEntity, PARTITION_VALUE, NO_SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS,
+                StorageEntity.MANAGED_STORAGE, testS3KeyPrefix, businessObjectDataServiceTestHelper.getTestStorageFiles(testS3KeyPrefix, SORTED_LOCAL_FILES),
+                CollectionUtils.isEmpty(request.getAttributes()) ? new ArrayList<>() : request.getAttributes(), resultBusinessObjectData);
     }
 
     @Test
@@ -1037,9 +1079,10 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
 
         // Build a business object data create request with directory path not matching the expected S3 key prefix.
         String invalidS3KeyPrefix = "INVALID_S3_KEY_PREFIX";
-        BusinessObjectDataCreateRequest request =
-            createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
-                PARTITION_VALUE, BDATA_STATUS, StorageEntity.MANAGED_STORAGE, invalidS3KeyPrefix, getTestStorageFiles(testS3KeyPrefix, LOCAL_FILES));
+        BusinessObjectDataCreateRequest request = businessObjectDataServiceTestHelper
+            .createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
+                PARTITION_VALUE, BDATA_STATUS, StorageEntity.MANAGED_STORAGE, invalidS3KeyPrefix,
+                businessObjectDataServiceTestHelper.getTestStorageFiles(testS3KeyPrefix, LOCAL_FILES));
 
         try
         {
@@ -1066,10 +1109,10 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
 
         // Build a business object data create request with a storage file path not matching the expected S3 key prefix.
         String invalidS3KeyPrefix = "INVALID_S3_KEY_PREFIX";
-        BusinessObjectDataCreateRequest request =
-            createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
+        BusinessObjectDataCreateRequest request = businessObjectDataServiceTestHelper
+            .createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
                 PARTITION_VALUE, BDATA_STATUS, StorageEntity.MANAGED_STORAGE, testS3KeyPrefix,
-                getTestStorageFiles(invalidS3KeyPrefix, Arrays.asList(LOCAL_FILE)));
+                businessObjectDataServiceTestHelper.getTestStorageFiles(invalidS3KeyPrefix, Arrays.asList(LOCAL_FILE)));
 
         try
         {
@@ -1098,9 +1141,10 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
                 testS3KeyPrefix);
 
         // Build a new business object data create request containing the already registered storage directory path.
-        BusinessObjectDataCreateRequest request =
-            createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
-                PARTITION_VALUE, BDATA_STATUS, StorageEntity.MANAGED_STORAGE, testS3KeyPrefix, getTestStorageFiles(testS3KeyPrefix, Arrays.asList(LOCAL_FILE)));
+        BusinessObjectDataCreateRequest request = businessObjectDataServiceTestHelper
+            .createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
+                PARTITION_VALUE, BDATA_STATUS, StorageEntity.MANAGED_STORAGE, testS3KeyPrefix,
+                businessObjectDataServiceTestHelper.getTestStorageFiles(testS3KeyPrefix, Arrays.asList(LOCAL_FILE)));
 
         try
         {
@@ -1112,8 +1156,8 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
         catch (AlreadyExistsException e)
         {
             assertEquals(String.format("Storage directory \"%s\" in \"%s\" storage is already registered by the business object data {%s}.", testS3KeyPrefix,
-                StorageEntity.MANAGED_STORAGE,
-                getExpectedBusinessObjectDataKeyAsString(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION,
+                StorageEntity.MANAGED_STORAGE, businessObjectDataServiceTestHelper
+                .getExpectedBusinessObjectDataKeyAsString(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION,
                     PARTITION_VALUE_2, NO_SUBPARTITION_VALUES, INITIAL_DATA_VERSION)), e.getMessage());
         }
     }
@@ -1132,9 +1176,10 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
             .createStorageFileEntity(storageUnitEntity, String.format("%s/%s", testS3KeyPrefix, LOCAL_FILE), FILE_SIZE_1_KB, ROW_COUNT_1000);
 
         // Build a new business object data create request containing the already registered storage file.
-        BusinessObjectDataCreateRequest request =
-            createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
-                PARTITION_VALUE, BDATA_STATUS, StorageEntity.MANAGED_STORAGE, testS3KeyPrefix, getTestStorageFiles(testS3KeyPrefix, Arrays.asList(LOCAL_FILE)));
+        BusinessObjectDataCreateRequest request = businessObjectDataServiceTestHelper
+            .createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
+                PARTITION_VALUE, BDATA_STATUS, StorageEntity.MANAGED_STORAGE, testS3KeyPrefix,
+                businessObjectDataServiceTestHelper.getTestStorageFiles(testS3KeyPrefix, Arrays.asList(LOCAL_FILE)));
 
         try
         {
@@ -1160,9 +1205,10 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
         businessObjectDataStatusDaoTestHelper.createBusinessObjectDataStatusEntity(BDATA_STATUS);
 
         // Build a new business object data create request with a storage file which was not uploaded to S3 managed storage.
-        BusinessObjectDataCreateRequest businessObjectDataCreateRequest =
-            createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
-                PARTITION_VALUE, BDATA_STATUS, StorageEntity.MANAGED_STORAGE, testS3KeyPrefix, getTestStorageFiles(testS3KeyPrefix, Arrays.asList(LOCAL_FILE)));
+        BusinessObjectDataCreateRequest businessObjectDataCreateRequest = businessObjectDataServiceTestHelper
+            .createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
+                PARTITION_VALUE, BDATA_STATUS, StorageEntity.MANAGED_STORAGE, testS3KeyPrefix,
+                businessObjectDataServiceTestHelper.getTestStorageFiles(testS3KeyPrefix, Arrays.asList(LOCAL_FILE)));
 
         try
         {
@@ -1187,12 +1233,13 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
         businessObjectDataStatusDaoTestHelper.createBusinessObjectDataStatusEntity(BDATA_STATUS);
 
         // Create and upload to S3 managed storage a set of test files.
-        prepareTestS3Files(testS3KeyPrefix, Arrays.asList(LOCAL_FILE));
+        businessObjectDataServiceTestHelper.prepareTestS3Files(testS3KeyPrefix, localTempPath, Arrays.asList(LOCAL_FILE));
 
         // Build a new business object data create request.
-        BusinessObjectDataCreateRequest request =
-            createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
-                PARTITION_VALUE, BDATA_STATUS, StorageEntity.MANAGED_STORAGE, testS3KeyPrefix, getTestStorageFiles(testS3KeyPrefix, Arrays.asList(LOCAL_FILE)));
+        BusinessObjectDataCreateRequest request = businessObjectDataServiceTestHelper
+            .createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
+                PARTITION_VALUE, BDATA_STATUS, StorageEntity.MANAGED_STORAGE, testS3KeyPrefix,
+                businessObjectDataServiceTestHelper.getTestStorageFiles(testS3KeyPrefix, Arrays.asList(LOCAL_FILE)));
 
         // Change the storage file size to 0 bytes in the request.
         request.getStorageUnits().get(0).getStorageFiles().get(0).setFileSizeBytes(FILE_SIZE_0_BYTE);
@@ -1221,27 +1268,29 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
         businessObjectDataStatusDaoTestHelper.createBusinessObjectDataStatusEntity(BDATA_STATUS);
 
         // Place test files and 0 byte S3 directory markers in the S3 managed storage.
-        prepareTestS3Files(testS3KeyPrefix, LOCAL_FILES, S3_DIRECTORY_MARKERS);
+        businessObjectDataServiceTestHelper.prepareTestS3Files(testS3KeyPrefix, localTempPath, LOCAL_FILES, S3_DIRECTORY_MARKERS);
 
         // Build a new business object data create request.
-        BusinessObjectDataCreateRequest request =
-            createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
-                PARTITION_VALUE, BDATA_STATUS, StorageEntity.MANAGED_STORAGE, testS3KeyPrefix, getTestStorageFiles(testS3KeyPrefix, LOCAL_FILES));
+        BusinessObjectDataCreateRequest request = businessObjectDataServiceTestHelper
+            .createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_KEY,
+                PARTITION_VALUE, BDATA_STATUS, StorageEntity.MANAGED_STORAGE, testS3KeyPrefix,
+                businessObjectDataServiceTestHelper.getTestStorageFiles(testS3KeyPrefix, LOCAL_FILES));
 
         // Create the business object data.
         BusinessObjectData resultBusinessObjectData = businessObjectDataService.createBusinessObjectData(request);
 
         // Verify the results.
-        validateBusinessObjectData(businessObjectFormatEntity, PARTITION_VALUE, NO_SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS,
-            StorageEntity.MANAGED_STORAGE, testS3KeyPrefix, getTestStorageFiles(testS3KeyPrefix, SORTED_LOCAL_FILES),
-            CollectionUtils.isEmpty(request.getAttributes()) ? new ArrayList<Attribute>() : request.getAttributes(), resultBusinessObjectData);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectData(businessObjectFormatEntity, PARTITION_VALUE, NO_SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS,
+                StorageEntity.MANAGED_STORAGE, testS3KeyPrefix, businessObjectDataServiceTestHelper.getTestStorageFiles(testS3KeyPrefix, SORTED_LOCAL_FILES),
+                CollectionUtils.isEmpty(request.getAttributes()) ? new ArrayList<Attribute>() : request.getAttributes(), resultBusinessObjectData);
     }
 
     @Test
     public void testCreateBusinessObjectDataDuplicateParents()
     {
         // This will create a business object data create request with parents.
-        BusinessObjectDataCreateRequest businessObjectDataCreateRequest = getNewBusinessObjectDataCreateRequest(true);
+        BusinessObjectDataCreateRequest businessObjectDataCreateRequest = businessObjectDataServiceTestHelper.getNewBusinessObjectDataCreateRequest(true);
 
         // Add a duplicate parent.
         List<BusinessObjectDataKey> businessObjectDataKeys = businessObjectDataCreateRequest.getBusinessObjectDataParents();
@@ -1263,7 +1312,7 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
     public void testCreateBusinessObjectDataParentMissingBusinessObjectFormatVersion()
     {
         // This will create a business object data create request with parents.
-        BusinessObjectDataCreateRequest businessObjectDataCreateRequest = getNewBusinessObjectDataCreateRequest(true);
+        BusinessObjectDataCreateRequest businessObjectDataCreateRequest = businessObjectDataServiceTestHelper.getNewBusinessObjectDataCreateRequest(true);
 
         // Remove the business object format version required field.
         List<BusinessObjectDataKey> businessObjectDataKeys = businessObjectDataCreateRequest.getBusinessObjectDataParents();
@@ -1285,7 +1334,7 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
     public void testCreateBusinessObjectDataParentMissingPartitionValue()
     {
         // This will create a business object data create request with parents.
-        BusinessObjectDataCreateRequest businessObjectDataCreateRequest = getNewBusinessObjectDataCreateRequest(true);
+        BusinessObjectDataCreateRequest businessObjectDataCreateRequest = businessObjectDataServiceTestHelper.getNewBusinessObjectDataCreateRequest(true);
 
         // Remove the partition value required field.
         List<BusinessObjectDataKey> businessObjectDataKeys = businessObjectDataCreateRequest.getBusinessObjectDataParents();
@@ -1307,7 +1356,7 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
     public void testCreateBusinessObjectDataParentMissingBusinessObjectDataVersion()
     {
         // This will create a business object data create request with parents.
-        BusinessObjectDataCreateRequest businessObjectDataCreateRequest = getNewBusinessObjectDataCreateRequest(true);
+        BusinessObjectDataCreateRequest businessObjectDataCreateRequest = businessObjectDataServiceTestHelper.getNewBusinessObjectDataCreateRequest(true);
 
         // Remove the business object data version required field.
         List<BusinessObjectDataKey> businessObjectDataKeys = businessObjectDataCreateRequest.getBusinessObjectDataParents();
@@ -1329,7 +1378,7 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
     public void testCreateBusinessObjectDataParentNoExists()
     {
         // This will create a business object data create request with parents.
-        BusinessObjectDataCreateRequest businessObjectDataCreateRequest = getNewBusinessObjectDataCreateRequest(true);
+        BusinessObjectDataCreateRequest businessObjectDataCreateRequest = businessObjectDataServiceTestHelper.getNewBusinessObjectDataCreateRequest(true);
 
         // Set the partition value to a business object data that doesn't exist.
         List<BusinessObjectDataKey> businessObjectDataKeys = businessObjectDataCreateRequest.getBusinessObjectDataParents();
@@ -1374,9 +1423,10 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
         storageDaoTestHelper.createStorageEntity(STORAGE_NAME);
 
         // Create a business object data create request with one of the entities created above listed as a parent.
-        BusinessObjectDataCreateRequest request =
-            createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_KEY,
-                PARTITION_VALUE_2, BDATA_STATUS, STORAGE_NAME, testS3KeyPrefix, getTestStorageFiles(testS3KeyPrefix, Arrays.asList(LOCAL_FILE)));
+        BusinessObjectDataCreateRequest request = businessObjectDataServiceTestHelper
+            .createBusinessObjectDataCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_KEY,
+                PARTITION_VALUE_2, BDATA_STATUS, STORAGE_NAME, testS3KeyPrefix,
+                businessObjectDataServiceTestHelper.getTestStorageFiles(testS3KeyPrefix, Arrays.asList(LOCAL_FILE)));
         List<BusinessObjectDataKey> parents = new ArrayList<>();
         request.setBusinessObjectDataParents(parents);
         parents.add(betaBusinessObjectDataKey);
@@ -1403,7 +1453,7 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
         businessObjectDataStatusDaoTestHelper.createBusinessObjectDataStatusEntity(BDATA_STATUS);
 
         // Create and upload to S3 managed storage a set of test files.
-        prepareTestS3Files(testS3KeyPrefix, LOCAL_FILES);
+        businessObjectDataServiceTestHelper.prepareTestS3Files(testS3KeyPrefix, localTempPath, LOCAL_FILES);
 
         // Build a new business object data create request with enabled discovery of storage files.
         BusinessObjectDataCreateRequest request =
@@ -1427,9 +1477,9 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
                     new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_FILE_EXISTENCE), Boolean.TRUE.toString()),
                     new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_FILE_SIZE), Boolean.TRUE.toString()),
                     new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_PATH_PREFIX), Boolean.TRUE.toString()))),
-                    new StorageDirectory(testS3KeyPrefix), getTestStorageFiles(testS3KeyPrefix, SORTED_LOCAL_FILES, false), StorageUnitStatusEntity.ENABLED)),
-                NO_ATTRIBUTES, NO_BUSINESS_OBJECT_DATA_PARENTS, NO_BUSINESS_OBJECT_DATA_CHILDREN, NO_BUSINESS_OBJECT_DATA_STATUS_HISTORY),
-            resultBusinessObjectData);
+                    new StorageDirectory(testS3KeyPrefix), businessObjectDataServiceTestHelper.getTestStorageFiles(testS3KeyPrefix, SORTED_LOCAL_FILES, false),
+                    StorageUnitStatusEntity.ENABLED)), NO_ATTRIBUTES, NO_BUSINESS_OBJECT_DATA_PARENTS, NO_BUSINESS_OBJECT_DATA_CHILDREN,
+                NO_BUSINESS_OBJECT_DATA_STATUS_HISTORY), resultBusinessObjectData);
     }
 
     @Test
@@ -1542,7 +1592,7 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
         businessObjectDataStatusDaoTestHelper.createBusinessObjectDataStatusEntity(BDATA_STATUS);
 
         // Create and upload to S3 managed storage a set of test files.
-        prepareTestS3Files(testS3KeyPrefix, LOCAL_FILES);
+        businessObjectDataServiceTestHelper.prepareTestS3Files(testS3KeyPrefix, localTempPath, LOCAL_FILES);
 
         // Create an S3 storage entity with a bucket name attribute with a value matching to the test S3 managed storage (required for unit test clean up).
         String testBucketName = storageDaoTestHelper.getS3ManagedBucketName();
@@ -1567,9 +1617,10 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
                 PARTITION_KEY, PARTITION_VALUE, NO_SUBPARTITION_VALUES, INITIAL_DATA_VERSION, LATEST_VERSION_FLAG_SET, BDATA_STATUS, Arrays.asList(
                 new StorageUnit(new Storage(STORAGE_NAME, StoragePlatformEntity.S3,
                     Arrays.asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), testBucketName))),
-                    new StorageDirectory(testStorageDirectoryPath), getTestStorageFiles(testS3KeyPrefix, SORTED_LOCAL_FILES, false),
-                    StorageUnitStatusEntity.ENABLED)), NO_ATTRIBUTES, NO_BUSINESS_OBJECT_DATA_PARENTS, NO_BUSINESS_OBJECT_DATA_CHILDREN,
-                NO_BUSINESS_OBJECT_DATA_STATUS_HISTORY), resultBusinessObjectData);
+                    new StorageDirectory(testStorageDirectoryPath),
+                    businessObjectDataServiceTestHelper.getTestStorageFiles(testS3KeyPrefix, SORTED_LOCAL_FILES, false), StorageUnitStatusEntity.ENABLED)),
+                NO_ATTRIBUTES, NO_BUSINESS_OBJECT_DATA_PARENTS, NO_BUSINESS_OBJECT_DATA_CHILDREN, NO_BUSINESS_OBJECT_DATA_STATUS_HISTORY),
+            resultBusinessObjectData);
     }
 
     @Test
@@ -1581,7 +1632,7 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
                 "foo"));
 
         // Create an initial version of the business object data.
-        BusinessObjectDataCreateRequest businessObjectDataCreateRequest = getNewBusinessObjectDataCreateRequest();
+        BusinessObjectDataCreateRequest businessObjectDataCreateRequest = businessObjectDataServiceTestHelper.getNewBusinessObjectDataCreateRequest();
         businessObjectDataCreateRequest.setSubPartitionValues(null);
         businessObjectDataCreateRequest.setStatus("UPLOADING");
         businessObjectDataCreateRequest.setStorageUnits(Arrays.asList(new StorageUnitCreateRequest(STORAGE_NAME, null, null, null)));
@@ -1593,7 +1644,7 @@ public class BusinessObjectDataServiceCreateBusinessObjectDataTest extends Abstr
     public void testCreateBusinessObjectDataPreRegistrationAssertCannotCreateNewVersionWhenLatestIsPreRegistrationStatus()
     {
         // Create an initial version of the business object data.
-        BusinessObjectDataCreateRequest businessObjectDataCreateRequest = getNewBusinessObjectDataCreateRequest();
+        BusinessObjectDataCreateRequest businessObjectDataCreateRequest = businessObjectDataServiceTestHelper.getNewBusinessObjectDataCreateRequest();
         businessObjectDataCreateRequest.setStatus("UPLOADING");
         businessObjectDataService.createBusinessObjectData(businessObjectDataCreateRequest);
 

@@ -254,7 +254,7 @@ public class AddEmrStepsTest extends AbstractServiceTest
 
     private void createJobAndCheckStepStatusSuccess(String activitiXml, List<Parameter> parameters) throws Exception
     {
-        Job job = createJobForCreateClusterForActivitiXml(activitiXml, parameters);
+        Job job = jobServiceTestHelper.createJobForCreateClusterForActivitiXml(activitiXml, parameters);
         assertNotNull(job);
 
         HistoricProcessInstance hisInstance =
@@ -277,7 +277,7 @@ public class AddEmrStepsTest extends AbstractServiceTest
 
     private void createJobAndCheckStepStatusFailure(String activitiXml, List<Parameter> parameters) throws Exception
     {
-        Job job = createJobForCreateClusterForActivitiXml(activitiXml, parameters);
+        Job job = jobServiceTestHelper.createJobForCreateClusterForActivitiXml(activitiXml, parameters);
         assertNotNull(job);
 
         HistoricProcessInstance hisInstance =

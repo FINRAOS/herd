@@ -37,17 +37,19 @@ public class BusinessObjectDataRestControllerCheckBusinessObjectDataAvailability
     {
         // Prepare test data and execute the check business object data availability request.
         businessObjectDataAvailabilityTestHelper.createDatabaseEntitiesForBusinessObjectDataAvailabilityTesting(null);
-        BusinessObjectDataAvailabilityRequest request = getTestBusinessObjectDataAvailabilityRequest(UNSORTED_PARTITION_VALUES);
+        BusinessObjectDataAvailabilityRequest request =
+            businessObjectDataServiceTestHelper.getTestBusinessObjectDataAvailabilityRequest(UNSORTED_PARTITION_VALUES);
         BusinessObjectDataAvailability resultAvailability = businessObjectDataRestController.checkBusinessObjectDataAvailability(request);
 
         // Validate the results.
-        List<BusinessObjectDataStatus> expectedAvailableStatuses =
-            getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, STORAGE_1_AVAILABLE_PARTITION_VALUES,
+        List<BusinessObjectDataStatus> expectedAvailableStatuses = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, STORAGE_1_AVAILABLE_PARTITION_VALUES,
                 NO_SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID, false);
-        List<BusinessObjectDataStatus> expectedNotAvailableStatuses =
-            getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+        List<BusinessObjectDataStatus> expectedNotAvailableStatuses = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
                 STORAGE_1_NOT_AVAILABLE_PARTITION_VALUES, null, DATA_VERSION, BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED, false);
-        validateBusinessObjectDataAvailability(request, expectedAvailableStatuses, expectedNotAvailableStatuses, resultAvailability);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectDataAvailability(request, expectedAvailableStatuses, expectedNotAvailableStatuses, resultAvailability);
     }
 
     @Test
@@ -55,19 +57,21 @@ public class BusinessObjectDataRestControllerCheckBusinessObjectDataAvailability
     {
         // Prepare test data and execute the check business object data availability request with a standalone partition value filter.
         businessObjectDataAvailabilityTestHelper.createDatabaseEntitiesForBusinessObjectDataAvailabilityTesting(null);
-        BusinessObjectDataAvailabilityRequest request = getTestBusinessObjectDataAvailabilityRequest(UNSORTED_PARTITION_VALUES);
+        BusinessObjectDataAvailabilityRequest request =
+            businessObjectDataServiceTestHelper.getTestBusinessObjectDataAvailabilityRequest(UNSORTED_PARTITION_VALUES);
         request.setPartitionValueFilter(request.getPartitionValueFilters().get(0));
         request.setPartitionValueFilters(null);
         BusinessObjectDataAvailability resultAvailability = businessObjectDataRestController.checkBusinessObjectDataAvailability(request);
 
         // Validate the results.
-        List<BusinessObjectDataStatus> expectedAvailableStatuses =
-            getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, STORAGE_1_AVAILABLE_PARTITION_VALUES,
+        List<BusinessObjectDataStatus> expectedAvailableStatuses = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, STORAGE_1_AVAILABLE_PARTITION_VALUES,
                 NO_SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID, false);
-        List<BusinessObjectDataStatus> expectedNotAvailableStatuses =
-            getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+        List<BusinessObjectDataStatus> expectedNotAvailableStatuses = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
                 STORAGE_1_NOT_AVAILABLE_PARTITION_VALUES, null, DATA_VERSION, BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED, true);
-        validateBusinessObjectDataAvailability(request, expectedAvailableStatuses, expectedNotAvailableStatuses, resultAvailability);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectDataAvailability(request, expectedAvailableStatuses, expectedNotAvailableStatuses, resultAvailability);
     }
 
     @Test
@@ -83,28 +87,31 @@ public class BusinessObjectDataRestControllerCheckBusinessObjectDataAvailability
         List<BusinessObjectDataStatus> expectedNotAvailableStatuses;
 
         // Execute the check business object data availability request when start partition value is less than the end partition value.
-        request = getTestBusinessObjectDataAvailabilityRequest(START_PARTITION_VALUE, END_PARTITION_VALUE);
+        request = businessObjectDataServiceTestHelper.getTestBusinessObjectDataAvailabilityRequest(START_PARTITION_VALUE, END_PARTITION_VALUE);
         resultAvailability = businessObjectDataRestController.checkBusinessObjectDataAvailability(request);
 
         // Validate the results.
-        expectedAvailableStatuses =
-            getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, PROCESS_DATE_AVAILABLE_PARTITION_VALUES,
-                NO_SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID, false);
-        expectedNotAvailableStatuses = getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
-            PROCESS_DATE_NOT_AVAILABLE_PARTITION_VALUES, null, DATA_VERSION, BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED, false);
-        validateBusinessObjectDataAvailability(request, expectedAvailableStatuses, expectedNotAvailableStatuses, resultAvailability);
+        expectedAvailableStatuses = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                PROCESS_DATE_AVAILABLE_PARTITION_VALUES, NO_SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID, false);
+        expectedNotAvailableStatuses = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                PROCESS_DATE_NOT_AVAILABLE_PARTITION_VALUES, null, DATA_VERSION, BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED, false);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectDataAvailability(request, expectedAvailableStatuses, expectedNotAvailableStatuses, resultAvailability);
 
         // Execute the check business object data availability request when start partition value is equal to the end partition value.
-        request = getTestBusinessObjectDataAvailabilityRequest(START_PARTITION_VALUE, START_PARTITION_VALUE);
+        request = businessObjectDataServiceTestHelper.getTestBusinessObjectDataAvailabilityRequest(START_PARTITION_VALUE, START_PARTITION_VALUE);
         resultAvailability = businessObjectDataRestController.checkBusinessObjectDataAvailability(request);
 
         // Validate the results.
-        expectedAvailableStatuses =
-            getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, Arrays.asList(START_PARTITION_VALUE),
+        expectedAvailableStatuses = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, Arrays.asList(START_PARTITION_VALUE),
                 NO_SUBPARTITION_VALUES, DATA_VERSION, BusinessObjectDataStatusEntity.VALID, false);
-        expectedNotAvailableStatuses =
-            getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, null, null, DATA_VERSION,
+        expectedNotAvailableStatuses = businessObjectDataServiceTestHelper
+            .getTestBusinessObjectDataStatuses(FORMAT_VERSION, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, null, null, DATA_VERSION,
                 BusinessObjectDataServiceImpl.REASON_NOT_REGISTERED, false);
-        validateBusinessObjectDataAvailability(request, expectedAvailableStatuses, expectedNotAvailableStatuses, resultAvailability);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectDataAvailability(request, expectedAvailableStatuses, expectedNotAvailableStatuses, resultAvailability);
     }
 }

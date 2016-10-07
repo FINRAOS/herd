@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import com.amazonaws.ClientConfiguration;
 import com.amazonaws.services.elasticmapreduce.AmazonElasticMapReduceClient;
 import com.amazonaws.services.elasticmapreduce.model.ActionOnFailure;
 import com.amazonaws.services.elasticmapreduce.model.AddJobFlowStepsRequest;
@@ -59,10 +58,10 @@ import org.springframework.stereotype.Repository;
 import org.springframework.util.CollectionUtils;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
+import org.finra.herd.dao.AwsClientFactory;
 import org.finra.herd.dao.Ec2Dao;
 import org.finra.herd.dao.EmrDao;
 import org.finra.herd.dao.EmrOperations;
-import org.finra.herd.dao.RetryPolicyFactory;
 import org.finra.herd.dao.helper.EmrHelper;
 import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.model.api.xml.ConfigurationFile;
@@ -92,6 +91,9 @@ public class EmrDaoImpl implements EmrDao
 
     @Autowired
     private EmrOperations emrOperations;
+    
+    @Autowired
+    private AwsClientFactory awsClientFactory;
 
     @Autowired
     private Ec2Dao ec2Dao;
@@ -101,9 +103,6 @@ public class EmrDaoImpl implements EmrDao
 
     @Autowired
     private EmrHelper emrHelper;
-
-    @Autowired
-    private RetryPolicyFactory retryPolicyFactory;
 
     /**
      * Add an EMR Step. This method adds the step to EMR cluster based on the input.
@@ -351,20 +350,8 @@ public class EmrDaoImpl implements EmrDao
      */
     @Override
     public AmazonElasticMapReduceClient getEmrClient(AwsParamsDto awsParamsDto)
-    {
-        // TODO Building EMR client every time requested, if this becomes a performance issue,
-        // might need to consider storing a singleton or building the client once per request.
-
-        ClientConfiguration clientConfiguration = new ClientConfiguration().withRetryPolicy(retryPolicyFactory.getRetryPolicy());
-
-        // Create an EMR client with HTTP proxy information.
-        if (StringUtils.isNotBlank(awsParamsDto.getHttpProxyHost()) && awsParamsDto.getHttpProxyPort() != null)
-        {
-            clientConfiguration.withProxyHost(awsParamsDto.getHttpProxyHost()).withProxyPort(awsParamsDto.getHttpProxyPort());
-        }
-
-        // Return the client.
-        return new AmazonElasticMapReduceClient(clientConfiguration);
+    {   
+        return  awsClientFactory.getEmrClient(awsParamsDto);
     }
 
     private String[] getActiveEmrClusterStates()

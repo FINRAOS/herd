@@ -29,6 +29,9 @@ import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKeys;
 import org.finra.herd.model.api.xml.BusinessObjectFormatUpdateRequest;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
+import org.finra.herd.model.jpa.FileTypeEntity;
+import org.finra.herd.service.AbstractServiceTest;
+import org.finra.herd.service.helper.Hive13DdlGenerator;
 
 /**
  * This class tests various functionality within the business object format REST controller.
@@ -39,62 +42,71 @@ public class BusinessObjectFormatRestControllerTest extends AbstractRestTest
     public void testCreateBusinessObjectFormat()
     {
         // Create relative database entities.
-        createTestDatabaseEntitiesForBusinessObjectFormatTesting();
+        businessObjectFormatServiceTestHelper.createTestDatabaseEntitiesForBusinessObjectFormatTesting();
 
         // Create an initial version of the business object format.
-        BusinessObjectFormatCreateRequest request =
-            createBusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, FORMAT_DESCRIPTION,
-                getNewAttributes(), getTestAttributeDefinitions(), getTestSchema());
+        BusinessObjectFormatCreateRequest request = businessObjectFormatServiceTestHelper
+            .createBusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, FORMAT_DESCRIPTION,
+                businessObjectDefinitionServiceTestHelper.getNewAttributes(), businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(),
+                businessObjectFormatServiceTestHelper.getTestSchema());
 
         // Create an initial version of a business object format.
         BusinessObjectFormat businessObjectFormat = businessObjectFormatRestController.createBusinessObjectFormat(request);
 
         // Validate the returned object.
-        validateBusinessObjectFormat(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET,
-            PARTITION_KEY, FORMAT_DESCRIPTION, getNewAttributes(), getTestAttributeDefinitions(), getTestSchema(), businessObjectFormat);
+        businessObjectFormatServiceTestHelper
+            .validateBusinessObjectFormat(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, LATEST_VERSION_FLAG_SET,
+                PARTITION_KEY, FORMAT_DESCRIPTION, businessObjectDefinitionServiceTestHelper.getNewAttributes(),
+                businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), businessObjectFormatServiceTestHelper.getTestSchema(),
+                businessObjectFormat);
     }
 
     @Test
     public void testUpdateBusinessObjectFormat()
     {
         // Create an initial version of a business object format with format description and schema information.
-        BusinessObjectFormat originalBusinessObjectFormat = createTestBusinessObjectFormat();
+        BusinessObjectFormat originalBusinessObjectFormat = businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat();
 
         // Create a new partition key group for the update request.
         partitionKeyGroupDaoTestHelper.createPartitionKeyGroupEntity(PARTITION_KEY_GROUP_2);
 
         // Perform an update by changing the description and schema.
-        BusinessObjectFormatUpdateRequest request = createBusinessObjectFormatUpdateRequest(FORMAT_DESCRIPTION_2, NO_ATTRIBUTES, getTestSchema2());
+        BusinessObjectFormatUpdateRequest request = businessObjectFormatServiceTestHelper
+            .createBusinessObjectFormatUpdateRequest(FORMAT_DESCRIPTION_2, NO_ATTRIBUTES, businessObjectFormatServiceTestHelper.getTestSchema2());
         BusinessObjectFormat updatedBusinessObjectFormat = businessObjectFormatRestController
             .updateBusinessObjectFormat(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, request);
 
         // Validate the returned object.
-        validateBusinessObjectFormat(originalBusinessObjectFormat.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-            INITIAL_FORMAT_VERSION, true, PARTITION_KEY, FORMAT_DESCRIPTION_2, NO_ATTRIBUTES, getTestAttributeDefinitions(), getTestSchema2(),
-            updatedBusinessObjectFormat);
+        businessObjectFormatServiceTestHelper
+            .validateBusinessObjectFormat(originalBusinessObjectFormat.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+                INITIAL_FORMAT_VERSION, true, PARTITION_KEY, FORMAT_DESCRIPTION_2, NO_ATTRIBUTES,
+                businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), businessObjectFormatServiceTestHelper.getTestSchema2(),
+                updatedBusinessObjectFormat);
     }
 
     @Test
     public void testGetBusinessObjectFormat()
     {
         // Create an initial version of a business object format with format description and schema information.
-        BusinessObjectFormat originalBusinessObjectFormat = createTestBusinessObjectFormat();
+        BusinessObjectFormat originalBusinessObjectFormat = businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat();
 
         // Call GET Business Object Format.
         BusinessObjectFormat resultBusinessObjectFormat =
             businessObjectFormatRestController.getBusinessObjectFormat(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION);
 
         // Validate the returned object.
-        validateBusinessObjectFormat(originalBusinessObjectFormat.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-            INITIAL_FORMAT_VERSION, true, PARTITION_KEY, FORMAT_DESCRIPTION, NO_ATTRIBUTES, getTestAttributeDefinitions(), getTestSchema(),
-            resultBusinessObjectFormat);
+        businessObjectFormatServiceTestHelper
+            .validateBusinessObjectFormat(originalBusinessObjectFormat.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+                INITIAL_FORMAT_VERSION, true, PARTITION_KEY, FORMAT_DESCRIPTION, NO_ATTRIBUTES,
+                businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), businessObjectFormatServiceTestHelper.getTestSchema(),
+                resultBusinessObjectFormat);
     }
 
     @Test
     public void testDeleteBusinessObjectFormat() throws Exception
     {
         // Create an initial version of a business object format.
-        createTestBusinessObjectFormat();
+        businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat();
 
         // Retrieve the business object format entity.
         BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDao.getBusinessObjectFormatByAltKey(
@@ -105,8 +117,11 @@ public class BusinessObjectFormatRestControllerTest extends AbstractRestTest
             .deleteBusinessObjectFormat(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION);
 
         // Validate the returned object.
-        validateBusinessObjectFormat(businessObjectFormatEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION,
-            true, PARTITION_KEY, FORMAT_DESCRIPTION, NO_ATTRIBUTES, getTestAttributeDefinitions(), getTestSchema(), deletedBusinessObjectFormat);
+        businessObjectFormatServiceTestHelper
+            .validateBusinessObjectFormat(businessObjectFormatEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+                INITIAL_FORMAT_VERSION, true, PARTITION_KEY, FORMAT_DESCRIPTION, NO_ATTRIBUTES,
+                businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(), businessObjectFormatServiceTestHelper.getTestSchema(),
+                deletedBusinessObjectFormat);
 
         // Ensure that this business object format is no longer there.
         assertNull(businessObjectFormatDao.getBusinessObjectFormatByAltKey(
@@ -147,30 +162,34 @@ public class BusinessObjectFormatRestControllerTest extends AbstractRestTest
     public void testGenerateBusinessObjectFormatDdl()
     {
         // Prepare test data.
-        createDatabaseEntitiesForBusinessObjectFormatDdlTesting();
+        businessObjectFormatServiceTestHelper.createDatabaseEntitiesForBusinessObjectFormatDdlTesting();
 
         BusinessObjectFormatDdlRequest request;
         BusinessObjectFormatDdl resultDdl;
 
-        // Retrieve business object data ddl.
-        request = getTestBusinessObjectFormatDdlRequest(CUSTOM_DDL_NAME);
+        // Retrieve business object format ddl.
+        request = businessObjectFormatServiceTestHelper.getTestBusinessObjectFormatDdlRequest(CUSTOM_DDL_NAME);
         resultDdl = businessObjectFormatRestController.generateBusinessObjectFormatDdl(request);
 
         // Validate the results.
-        validateBusinessObjectFormatDdl(CUSTOM_DDL_NAME, getBusinessObjectFormatExpectedDdl(), resultDdl);
+        businessObjectFormatServiceTestHelper.validateBusinessObjectFormatDdl(CUSTOM_DDL_NAME, businessObjectFormatServiceTestHelper
+            .getExpectedBusinessObjectFormatDdl(AbstractServiceTest.PARTITION_COLUMNS.length, AbstractServiceTest.FIRST_COLUMN_NAME,
+                AbstractServiceTest.FIRST_COLUMN_DATA_TYPE, AbstractServiceTest.ROW_FORMAT, Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT,
+                FileTypeEntity.TXT_FILE_TYPE, true, true), resultDdl);
     }
 
     @Test
     public void testGenerateBusinessObjectFormatDdlCollection()
     {
         // Prepare database entities required for testing.
-        createDatabaseEntitiesForBusinessObjectFormatDdlCollectionTesting();
+        businessObjectFormatServiceTestHelper.createDatabaseEntitiesForBusinessObjectFormatDdlCollectionTesting();
 
-        // Generate DDL for a collection of business object data.
-        BusinessObjectFormatDdlCollectionResponse resultBusinessObjectFormatDdlCollectionResponse =
-            businessObjectFormatRestController.generateBusinessObjectFormatDdlCollection(getTestBusinessObjectFormatDdlCollectionRequest());
+        // Generate DDL for a collection of business object formats.
+        BusinessObjectFormatDdlCollectionResponse resultBusinessObjectFormatDdlCollectionResponse = businessObjectFormatRestController
+            .generateBusinessObjectFormatDdlCollection(businessObjectFormatServiceTestHelper.getTestBusinessObjectFormatDdlCollectionRequest());
 
         // Validate the response object.
-        assertEquals(getExpectedBusinessObjectFormatDdlCollectionResponse(), resultBusinessObjectFormatDdlCollectionResponse);
+        assertEquals(businessObjectFormatServiceTestHelper.getExpectedBusinessObjectFormatDdlCollectionResponse(),
+            resultBusinessObjectFormatDdlCollectionResponse);
     }
 }

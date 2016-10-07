@@ -43,7 +43,7 @@ public class GetBusinessObjectDataAttributesTest extends HerdActivitiServiceTask
                 DATA_VERSION);
 
         // Get a list of test attributes.
-        List<Attribute> testAttributes = getNewAttributes();
+        List<Attribute> testAttributes = businessObjectDefinitionServiceTestHelper.getNewAttributes();
 
         // Create a business object data attribute entities.
         for (Attribute attribute : testAttributes)
@@ -114,7 +114,7 @@ public class GetBusinessObjectDataAttributesTest extends HerdActivitiServiceTask
                 NO_SUBPARTITION_VALUES, DATA_VERSION);
 
         // Get a list of test attributes.
-        List<Attribute> testAttributes = getNewAttributes();
+        List<Attribute> testAttributes = businessObjectDefinitionServiceTestHelper.getNewAttributes();
 
         // Create a business object data attribute entities.
         for (Attribute attribute : testAttributes)
@@ -165,7 +165,7 @@ public class GetBusinessObjectDataAttributesTest extends HerdActivitiServiceTask
                 NO_SUBPARTITION_VALUES, DATA_VERSION);
 
         // Get a list of test attributes.
-        List<Attribute> testAttributes = getNewAttributes();
+        List<Attribute> testAttributes = businessObjectDefinitionServiceTestHelper.getNewAttributes();
 
         // Create a business object data attribute entities.
         for (Attribute attribute : testAttributes)

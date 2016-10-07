@@ -778,7 +778,7 @@ public class GetBusinessObjectDataTest extends HerdActivitiServiceTaskTest
         String activitiXml = buildActivitiXml(IMPLEMENTATION, fieldExtensionList);
 
         // Execute job
-        Job job = createJobForCreateClusterForActivitiXml(activitiXml, parameters);
+        Job job = jobServiceTestHelper.createJobForCreateClusterForActivitiXml(activitiXml, parameters);
         assertNotNull(job);
 
         HistoricProcessInstance hisInstance =
