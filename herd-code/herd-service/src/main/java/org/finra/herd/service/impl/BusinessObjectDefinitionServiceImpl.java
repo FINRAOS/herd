@@ -35,6 +35,7 @@ import org.finra.herd.model.annotation.NamespacePermission;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.BusinessObjectDefinition;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionCreateRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptiveInformationUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKeys;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionUpdateRequest;
@@ -149,6 +150,33 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     }
 
     /**
+     * Updates a business object definition.
+     *
+     * @param businessObjectDefinitionKey the business object definition key
+     * @param request the business object definition update request
+     *
+     * @return the updated business object definition
+     */
+    @Override
+    public BusinessObjectDefinition updateBusinessObjectDefinitionDescriptiveInformation(BusinessObjectDefinitionKey businessObjectDefinitionKey,
+        BusinessObjectDefinitionDescriptiveInformationUpdateRequest request)
+    {
+        // Perform validation and trim.
+        businessObjectDefinitionHelper.validateBusinessObjectDefinitionKey(businessObjectDefinitionKey);
+        validateBusinessObjectDefinitionDescriptiveInformationUpdateRequest(request);
+
+        // Retrieve and ensure that a business object definition already exists with the specified key.
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
+            businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
+
+        // Update and persist the entity.
+        updateBusinessObjectDefinitionEntityDescriptiveInformation(businessObjectDefinitionEntity, request);
+
+        // Create and return the business object definition object from the persisted entity.
+        return createBusinessObjectDefinitionFromEntity(businessObjectDefinitionEntity);
+    }
+
+    /**
      * Gets a business object definition for the specified key. This method starts a new transaction.
      *
      * @param businessObjectDefinitionKey the business object definition key
@@ -253,6 +281,11 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
             alternateKeyHelper.validateStringParameter("business object definition name", request.getBusinessObjectDefinitionName()));
         request.setDataProviderName(alternateKeyHelper.validateStringParameter("data provider name", request.getDataProviderName()));
 
+        if (request.getDisplayName() != null)
+        {
+            request.setDisplayName(request.getDisplayName().trim());
+        }
+
         // Validate attributes.
         attributeHelper.validateAttributes(request.getAttributes());
     }
@@ -266,8 +299,28 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
      */
     private void validateBusinessObjectDefinitionUpdateRequest(BusinessObjectDefinitionUpdateRequest request)
     {
+        if (request.getDisplayName() != null)
+        {
+            request.setDisplayName(request.getDisplayName().trim());
+        }
+
         // Validate attributes.
         attributeHelper.validateAttributes(request.getAttributes());
+    }
+
+    /**
+     * Validates the business object definition update request. This method also trims request parameters.
+     *
+     * @param request the request.
+     *
+     * @throws IllegalArgumentException if any validation errors were found.
+     */
+    private void validateBusinessObjectDefinitionDescriptiveInformationUpdateRequest(BusinessObjectDefinitionDescriptiveInformationUpdateRequest request)
+    {
+        if (request.getDisplayName() != null)
+        {
+            request.setDisplayName(request.getDisplayName().trim());
+        }
     }
 
     /**
@@ -288,6 +341,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         businessObjectDefinitionEntity.setName(request.getBusinessObjectDefinitionName());
         businessObjectDefinitionEntity.setDescription(request.getDescription());
         businessObjectDefinitionEntity.setDataProvider(dataProviderEntity);
+        businessObjectDefinitionEntity.setDisplayName(request.getDisplayName());
 
         // Create the attributes if they are specified.
         if (!CollectionUtils.isEmpty(request.getAttributes()))
@@ -319,6 +373,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     {
         // Update the entity with the new description value.
         businessObjectDefinitionEntity.setDescription(request.getDescription());
+        businessObjectDefinitionEntity.setDisplayName(request.getDisplayName());
 
         // Update the attributes.
         // Load all existing attribute entities in a map with a "lowercase" attribute name as the key for case insensitivity.
@@ -383,11 +438,26 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     }
 
     /**
+     * Update and persist the business object definition descriptive information per specified update request.
+     *
+     * @param businessObjectDefinitionEntity the business object definition entity
+     * @param request the business object definition update request
+     */
+    private void updateBusinessObjectDefinitionEntityDescriptiveInformation(BusinessObjectDefinitionEntity businessObjectDefinitionEntity,
+        BusinessObjectDefinitionDescriptiveInformationUpdateRequest request)
+    {
+        // Update the entity with the new description value.
+        businessObjectDefinitionEntity.setDescription(request.getDescription());
+        businessObjectDefinitionEntity.setDisplayName(request.getDisplayName());
+        businessObjectDefinitionDao.saveAndRefresh(businessObjectDefinitionEntity);
+    }
+
+    /**
      * Creates the business object definition from the persisted entity.
      *
-     * @param businessObjectDefinitionEntity the newly persisted business object definition entity.
+     * @param businessObjectDefinitionEntity the newly persisted business object definition entity
      *
-     * @return the business object definition.
+     * @return the business object definition
      */
     private BusinessObjectDefinition createBusinessObjectDefinitionFromEntity(BusinessObjectDefinitionEntity businessObjectDefinitionEntity)
     {
@@ -398,6 +468,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         businessObjectDefinition.setBusinessObjectDefinitionName(businessObjectDefinitionEntity.getName());
         businessObjectDefinition.setDescription(businessObjectDefinitionEntity.getDescription());
         businessObjectDefinition.setDataProviderName(businessObjectDefinitionEntity.getDataProvider().getName());
+        businessObjectDefinition.setDisplayName(businessObjectDefinitionEntity.getDisplayName());
 
         // Add in the attributes.
         List<Attribute> attributes = new ArrayList<>();
@@ -412,4 +483,6 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 
         return businessObjectDefinition;
     }
+
+
 }

@@ -59,8 +59,8 @@ public class ActivitiDelegateTest extends HerdActivitiServiceTaskTest
     public void testTimerJob() throws Exception
     {
         // Create and start the workflow.
-        createJobDefinition(ACTIVITI_XML_HERD_TIMER_WITH_CLASSPATH);
-        Job job = jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
+        jobDefinitionServiceTestHelper.createJobDefinition(ACTIVITI_XML_HERD_TIMER_WITH_CLASSPATH);
+        Job job = jobService.createAndStartJob(jobServiceTestHelper.createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
         assertNotNull(job);
 
         // This workflow would normally automatically start a timer which would eventually complete the workflow, however, since
@@ -127,14 +127,14 @@ public class ActivitiDelegateTest extends HerdActivitiServiceTaskTest
         exceptionField.setExpression("${exceptionToThrow}");
         serviceTask.getFieldExtensions().add(exceptionField);
 
-        createJobDefinitionForActivitiXml(getActivitiXmlFromBpmnModel(bpmnModel));
+        jobDefinitionServiceTestHelper.createJobDefinitionForActivitiXml(getActivitiXmlFromBpmnModel(bpmnModel));
 
         List<Parameter> parameters = new ArrayList<>();
 
         Parameter parameter = new Parameter("exceptionToThrow", MockJavaDelegate.EXCEPTION_BPMN_ERROR);
         parameters.add(parameter);
 
-        Job job = jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME, parameters));
+        Job job = jobService.createAndStartJob(jobServiceTestHelper.createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME, parameters));
         org.activiti.engine.runtime.Job timer = activitiManagementService.createJobQuery().processInstanceId(job.getId()).timers().singleResult();
         if (timer != null)
         {
@@ -158,8 +158,8 @@ public class ActivitiDelegateTest extends HerdActivitiServiceTaskTest
         serviceTask.setImplementationType(ImplementationType.IMPLEMENTATION_TYPE_EXPRESSION);
         serviceTask.setImplementation("${BeanNotAvailable}");
 
-        createJobDefinitionForActivitiXml(getActivitiXmlFromBpmnModel(bpmnModel));
-        Job job = jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME, null));
+        jobDefinitionServiceTestHelper.createJobDefinitionForActivitiXml(getActivitiXmlFromBpmnModel(bpmnModel));
+        Job job = jobService.createAndStartJob(jobServiceTestHelper.createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME, null));
         org.activiti.engine.runtime.Job timer = activitiManagementService.createJobQuery().processInstanceId(job.getId()).timers().singleResult();
         if (timer != null)
         {
@@ -182,11 +182,11 @@ public class ActivitiDelegateTest extends HerdActivitiServiceTaskTest
         serviceTask.getFieldExtensions().clear();
 
         // Define the job definition
-        createJobDefinitionForActivitiXml(getActivitiXmlFromBpmnModel(bpmnModel));
+        jobDefinitionServiceTestHelper.createJobDefinitionForActivitiXml(getActivitiXmlFromBpmnModel(bpmnModel));
 
         // Executing the job twice so that the same JavaDelegate object is used and spring beans are not wired again.
-        jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
-        jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
+        jobService.createAndStartJob(jobServiceTestHelper.createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
+        jobService.createAndStartJob(jobServiceTestHelper.createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
     }
 
     /**
@@ -213,7 +213,7 @@ public class ActivitiDelegateTest extends HerdActivitiServiceTaskTest
         parameters.add(parameter);
 
         executeWithoutLogging(Arrays.asList(ActivitiRuntimeHelper.class, BaseJavaDelegate.class), () -> {
-            createJobFromActivitiXml(getActivitiXmlFromBpmnModel(bpmnModel), parameters);
+            jobServiceTestHelper.createJobFromActivitiXml(getActivitiXmlFromBpmnModel(bpmnModel), parameters);
         });
     }
 
@@ -224,7 +224,7 @@ public class ActivitiDelegateTest extends HerdActivitiServiceTaskTest
     public void testCreateProcessCommandProcessNotDefined() throws Exception
     {
         // Create the job with Activiti.
-        jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, "test_process_not_defined"));
+        jobService.createAndStartJob(jobServiceTestHelper.createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, "test_process_not_defined"));
     }
 
     /**
@@ -234,14 +234,14 @@ public class ActivitiDelegateTest extends HerdActivitiServiceTaskTest
     public void testCreateProcessCommandProcessSuspended() throws Exception
     {
         // Define the job definition
-        JobDefinition jobDefinition = createJobDefinition(ACTIVITI_XML_HERD_WORKFLOW);
+        JobDefinition jobDefinition = jobDefinitionServiceTestHelper.createJobDefinition(ACTIVITI_XML_HERD_WORKFLOW);
 
         JobDefinitionEntity jobDefinitionEntity = jobDefinitionDao.getJobDefinitionByAltKey(jobDefinition.getNamespace(), jobDefinition.getJobName());
 
         // Suspend the job definition with activiti api
         activitiRepositoryService.suspendProcessDefinitionById(jobDefinitionEntity.getActivitiId());
 
-        jobService.createAndStartJob(createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
+        jobService.createAndStartJob(jobServiceTestHelper.createJobCreateRequest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME));
     }
 
     /**
@@ -259,7 +259,7 @@ public class ActivitiDelegateTest extends HerdActivitiServiceTaskTest
         // Run a job with Activiti XML that will start cluster.
         try
         {
-            createJobFromActivitiXml(getActivitiXmlFromBpmnModel(bpmnModel), null);
+            jobServiceTestHelper.createJobFromActivitiXml(getActivitiXmlFromBpmnModel(bpmnModel), null);
             fail();
         }
         catch (Exception e)

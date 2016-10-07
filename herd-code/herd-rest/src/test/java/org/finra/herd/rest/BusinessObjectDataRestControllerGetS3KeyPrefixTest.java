@@ -37,7 +37,7 @@ public class BusinessObjectDataRestControllerGetS3KeyPrefixTest extends Abstract
     public void testGetS3KeyPrefix()
     {
         // Create database entities required for testing. Please note that we are not passing the flag to create a business object data entity.
-        createDatabaseEntitiesForGetS3KeyPrefixTesting(false);
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForGetS3KeyPrefixTesting(false);
 
         // Get the test partition columns.
         List<SchemaColumn> testPartitionColumns = schemaColumnDaoTestHelper.getTestPartitionColumns();

@@ -30,13 +30,14 @@ public class BusinessObjectDataRestControllerCheckBusinessObjectDataAvailability
     public void testCheckBusinessObjectDataAvailabilityCollection()
     {
         // Prepare database entities required for testing.
-        createDatabaseEntitiesForBusinessObjectDataAvailabilityCollectionTesting();
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataAvailabilityCollectionTesting();
 
         // Check an availability for a collection of business object data.
-        BusinessObjectDataAvailabilityCollectionResponse resultBusinessObjectDataAvailabilityCollectionResponse =
-            businessObjectDataRestController.checkBusinessObjectDataAvailabilityCollection(getTestBusinessObjectDataAvailabilityCollectionRequest());
+        BusinessObjectDataAvailabilityCollectionResponse resultBusinessObjectDataAvailabilityCollectionResponse = businessObjectDataRestController
+            .checkBusinessObjectDataAvailabilityCollection(businessObjectDataServiceTestHelper.getTestBusinessObjectDataAvailabilityCollectionRequest());
 
         // Validate the response object.
-        assertEquals(getExpectedBusinessObjectDataAvailabilityCollectionResponse(), resultBusinessObjectDataAvailabilityCollectionResponse);
+        assertEquals(businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataAvailabilityCollectionResponse(),
+            resultBusinessObjectDataAvailabilityCollectionResponse);
     }
 }

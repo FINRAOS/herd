@@ -96,6 +96,8 @@ public class SecurityFunctions
 
     public static final String FN_BUSINESS_OBJECT_DEFINITIONS_PUT = "FN_BUSINESS_OBJECT_DEFINITIONS_PUT";
 
+    public static final String FN_BUSINESS_OBJECT_DEFINITIONS_DESCRIPTIVE_INFO_PUT = "FN_BUSINESS_OBJECT_DEFINITIONS_DESCRIPTIVE_INFO_PUT";
+
     public static final String FN_BUSINESS_OBJECT_DEFINITION_COLUMNS_ALL_GET = "FN_BUSINESS_OBJECT_DEFINITION_COLUMNS_ALL_GET";
 
     public static final String FN_BUSINESS_OBJECT_DEFINITION_COLUMNS_DELETE = "FN_BUSINESS_OBJECT_DEFINITION_COLUMNS_DELETE";
@@ -281,6 +283,25 @@ public class SecurityFunctions
 
     public static final String FN_USER_NAMESPACE_AUTHORIZATIONS_PUT = "FN_USER_NAMESPACE_AUTHORIZATIONS_POST";
 
+    public static final String FN_TAG_TYPES_ALL_GET = "FN_TAG_TYPES_ALL_GET";
+
+    public static final String FN_TAG_TYPES_DELETE = "FN_TAG_TYPES_DELETE";
+
+    public static final String FN_TAG_TYPES_GET = "FN_TAG_TYPES_GET";
+
+    public static final String FN_TAG_TYPES_POST = "FN_TAG_TYPES_POST";
+
+    public static final String FN_TAG_TYPES_PUT = "FN_TAG_TYPES_PUT";
+
+    public static final String FN_TAGS_GET = "FN_TAGS_GET";
+
+    public static final String FN_TAGS_DELETE = "FN_TAGS_DELETE";
+
+    public static final String FN_TAGS_ALL_GET = "FN_TAGS_ALL_GET";
+
+    public static final String FN_TAGS_POST = "FN_TAGS_POST";
+
+    public static final String FN_TAGS_PUT = "FN_TAGS_PUT";
     /**
      * Returns all the functions sorted by function name.
      *

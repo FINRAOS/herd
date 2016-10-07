@@ -34,51 +34,54 @@ public class BusinessObjectDataRestControllerGenerateBusinessObjectDataDdlTest e
     public void testGenerateBusinessObjectDataDdlPartitionValueList()
     {
         // Prepare test data.
-        createDatabaseEntitiesForBusinessObjectDataDdlTesting();
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataDdlTesting();
 
         BusinessObjectDataDdlRequest request;
         BusinessObjectDataDdl resultDdl;
 
         // Retrieve business object data ddl.
-        request = getTestBusinessObjectDataDdlRequest(UNSORTED_PARTITION_VALUES, CUSTOM_DDL_NAME);
+        request = businessObjectDataServiceTestHelper.getTestBusinessObjectDataDdlRequest(UNSORTED_PARTITION_VALUES, CUSTOM_DDL_NAME);
         resultDdl = businessObjectDataRestController.generateBusinessObjectDataDdl(request);
 
         // Validate the results.
-        validateBusinessObjectDataDdl(request, getExpectedDdl(), resultDdl);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectDataDdl(request, businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataDdl(), resultDdl);
 
         // Retrieve business object data ddl when request partition value list has duplicate values.
-        request = getTestBusinessObjectDataDdlRequest(UNSORTED_PARTITION_VALUES, CUSTOM_DDL_NAME);
+        request = businessObjectDataServiceTestHelper.getTestBusinessObjectDataDdlRequest(UNSORTED_PARTITION_VALUES, CUSTOM_DDL_NAME);
         request.getPartitionValueFilters().get(0).getPartitionValues().add(UNSORTED_PARTITION_VALUES.get(0));
         resultDdl = businessObjectDataRestController.generateBusinessObjectDataDdl(request);
 
         // Validate the results.
-        validateBusinessObjectDataDdl(request, getExpectedDdl(), resultDdl);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectDataDdl(request, businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataDdl(), resultDdl);
     }
 
     @Test
     public void testGenerateBusinessObjectDataDdlPartitionValueListStandalonePartitionValueFilter()
     {
         // Prepare test data.
-        createDatabaseEntitiesForBusinessObjectDataDdlTesting();
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataDdlTesting();
 
         BusinessObjectDataDdlRequest request;
         BusinessObjectDataDdl resultDdl;
 
         // Retrieve business object data ddl using request with a standalone partition value filter.
-        request = getTestBusinessObjectDataDdlRequest(UNSORTED_PARTITION_VALUES, CUSTOM_DDL_NAME);
+        request = businessObjectDataServiceTestHelper.getTestBusinessObjectDataDdlRequest(UNSORTED_PARTITION_VALUES, CUSTOM_DDL_NAME);
         request.setPartitionValueFilter(request.getPartitionValueFilters().get(0));
         request.setPartitionValueFilters(null);
         resultDdl = businessObjectDataRestController.generateBusinessObjectDataDdl(request);
 
         // Validate the results.
-        validateBusinessObjectDataDdl(request, getExpectedDdl(), resultDdl);
+        businessObjectDataServiceTestHelper
+            .validateBusinessObjectDataDdl(request, businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataDdl(), resultDdl);
     }
 
     @Test
     public void testGenerateBusinessObjectDataDdlPartitionValueRange()
     {
         // Prepare test data.
-        createDatabaseEntitiesForBusinessObjectDataDdlTesting();
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataDdlTesting();
         expectedPartitionValueDaoTestHelper.createExpectedPartitionValueProcessDatesForApril2014(PARTITION_KEY_GROUP);
 
         BusinessObjectDataDdlRequest request;
@@ -86,23 +89,25 @@ public class BusinessObjectDataRestControllerGenerateBusinessObjectDataDdlTest e
         String expectedDdl;
 
         // Retrieve business object data ddl when start partition value is less than the end partition value.
-        request = getTestBusinessObjectDataDdlRequest(START_PARTITION_VALUE, END_PARTITION_VALUE, CUSTOM_DDL_NAME);
+        request = businessObjectDataServiceTestHelper.getTestBusinessObjectDataDdlRequest(START_PARTITION_VALUE, END_PARTITION_VALUE, CUSTOM_DDL_NAME);
         resultDdl = businessObjectDataRestController.generateBusinessObjectDataDdl(request);
 
         // Validate the results.
-        expectedDdl = getExpectedDdl(PARTITION_COLUMNS.length, FIRST_COLUMN_NAME, FIRST_COLUMN_DATA_TYPE, ROW_FORMAT, Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT,
-            FileTypeEntity.TXT_FILE_TYPE, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, PROCESS_DATE_AVAILABLE_PARTITION_VALUES,
-            SUBPARTITION_VALUES, false, true, true);
-        validateBusinessObjectDataDdl(request, expectedDdl, resultDdl);
+        expectedDdl = businessObjectDataServiceTestHelper
+            .getExpectedBusinessObjectDataDdl(PARTITION_COLUMNS.length, FIRST_COLUMN_NAME, FIRST_COLUMN_DATA_TYPE, ROW_FORMAT,
+                Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT, FileTypeEntity.TXT_FILE_TYPE, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                PROCESS_DATE_AVAILABLE_PARTITION_VALUES, SUBPARTITION_VALUES, false, true, true);
+        businessObjectDataServiceTestHelper.validateBusinessObjectDataDdl(request, expectedDdl, resultDdl);
 
         // Retrieve business object data ddl when start partition value is equal to the end partition value.
-        request = getTestBusinessObjectDataDdlRequest(START_PARTITION_VALUE, START_PARTITION_VALUE, CUSTOM_DDL_NAME);
+        request = businessObjectDataServiceTestHelper.getTestBusinessObjectDataDdlRequest(START_PARTITION_VALUE, START_PARTITION_VALUE, CUSTOM_DDL_NAME);
         resultDdl = businessObjectDataRestController.generateBusinessObjectDataDdl(request);
 
         // Validate the results.
-        expectedDdl = getExpectedDdl(PARTITION_COLUMNS.length, FIRST_COLUMN_NAME, FIRST_COLUMN_DATA_TYPE, ROW_FORMAT, Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT,
-            FileTypeEntity.TXT_FILE_TYPE, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION, Arrays.asList(START_PARTITION_VALUE), SUBPARTITION_VALUES,
-            false, true, true);
-        validateBusinessObjectDataDdl(request, expectedDdl, resultDdl);
+        expectedDdl = businessObjectDataServiceTestHelper
+            .getExpectedBusinessObjectDataDdl(PARTITION_COLUMNS.length, FIRST_COLUMN_NAME, FIRST_COLUMN_DATA_TYPE, ROW_FORMAT,
+                Hive13DdlGenerator.TEXT_HIVE_FILE_FORMAT, FileTypeEntity.TXT_FILE_TYPE, BusinessObjectDataEntity.FIRST_PARTITION_COLUMN_POSITION,
+                Arrays.asList(START_PARTITION_VALUE), SUBPARTITION_VALUES, false, true, true);
+        businessObjectDataServiceTestHelper.validateBusinessObjectDataDdl(request, expectedDdl, resultDdl);
     }
 }

@@ -420,7 +420,7 @@ public enum ConfigurationValue
      * Indicates whether the JMS message listener service is enabled or not. The default is "true" (enabled).
      */
     JMS_LISTENER_ENABLED("jms.listener.enabled", "true"),
-    
+
     /**
      * JMS listener concurrency limits for the storage policy processor JMS message listener service via a "lower-upper" String, e.g. "5-10". Refer to
      * DefaultMessageListenerContainer#setConcurrency for details. Default is "1-1".
@@ -594,9 +594,10 @@ public enum ConfigurationValue
      * The maximum number of records per page returned in business object data search results
      */
     BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULTS_PER_PAGE("business.object.data.search.max.results.per.page", 50);
-    
+
     // Properties
     private String key;
+
     private Object defaultValue;
 
     private ConfigurationValue(String key, Object defaultValue)

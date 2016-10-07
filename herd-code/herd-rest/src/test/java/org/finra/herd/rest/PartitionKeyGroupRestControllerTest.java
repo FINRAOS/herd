@@ -32,11 +32,11 @@ public class PartitionKeyGroupRestControllerTest extends AbstractRestTest
     public void testCreatePartitionKeyGroup()
     {
         // Create a partition key group.
-        PartitionKeyGroup resultPartitionKeyGroup =
-            partitionKeyGroupRestController.createPartitionKeyGroup(createPartitionKeyGroupCreateRequest(PARTITION_KEY_GROUP));
+        PartitionKeyGroup resultPartitionKeyGroup = partitionKeyGroupRestController
+            .createPartitionKeyGroup(partitionKeyGroupServiceTestHelper.createPartitionKeyGroupCreateRequest(PARTITION_KEY_GROUP));
 
         // Validate the returned object.
-        validatePartitionKeyGroup(PARTITION_KEY_GROUP, resultPartitionKeyGroup);
+        partitionKeyGroupServiceTestHelper.validatePartitionKeyGroup(PARTITION_KEY_GROUP, resultPartitionKeyGroup);
     }
 
     @Test
@@ -49,7 +49,7 @@ public class PartitionKeyGroupRestControllerTest extends AbstractRestTest
         PartitionKeyGroup resultPartitionKeyGroup = partitionKeyGroupRestController.getPartitionKeyGroup(PARTITION_KEY_GROUP);
 
         // Validate the returned object.
-        validatePartitionKeyGroup(PARTITION_KEY_GROUP, resultPartitionKeyGroup);
+        partitionKeyGroupServiceTestHelper.validatePartitionKeyGroup(PARTITION_KEY_GROUP, resultPartitionKeyGroup);
     }
 
     @Test
@@ -65,10 +65,10 @@ public class PartitionKeyGroupRestControllerTest extends AbstractRestTest
         PartitionKeyGroup deletedPartitionKeyGroup = partitionKeyGroupRestController.deletePartitionKeyGroup(PARTITION_KEY_GROUP);
 
         // Validate the returned object.
-        validatePartitionKeyGroup(PARTITION_KEY_GROUP, deletedPartitionKeyGroup);
+        partitionKeyGroupServiceTestHelper.validatePartitionKeyGroup(PARTITION_KEY_GROUP, deletedPartitionKeyGroup);
 
         // Ensure that this partition key group is no longer there.
-        assertNull(partitionKeyGroupDao.getPartitionKeyGroupByKey(createPartitionKeyGroupKey(PARTITION_KEY_GROUP)));
+        assertNull(partitionKeyGroupDao.getPartitionKeyGroupByKey(partitionKeyGroupServiceTestHelper.createPartitionKeyGroupKey(PARTITION_KEY_GROUP)));
     }
 
     @Test
@@ -83,7 +83,9 @@ public class PartitionKeyGroupRestControllerTest extends AbstractRestTest
 
         // Validate the returned object.
         assertTrue(partitionKeyGroupKeys.getPartitionKeyGroupKeys().size() >= 2);
-        assertTrue(partitionKeyGroupKeys.getPartitionKeyGroupKeys().contains(createPartitionKeyGroupKey(PARTITION_KEY_GROUP)));
-        assertTrue(partitionKeyGroupKeys.getPartitionKeyGroupKeys().contains(createPartitionKeyGroupKey(PARTITION_KEY_GROUP_2)));
+        assertTrue(
+            partitionKeyGroupKeys.getPartitionKeyGroupKeys().contains(partitionKeyGroupServiceTestHelper.createPartitionKeyGroupKey(PARTITION_KEY_GROUP)));
+        assertTrue(
+            partitionKeyGroupKeys.getPartitionKeyGroupKeys().contains(partitionKeyGroupServiceTestHelper.createPartitionKeyGroupKey(PARTITION_KEY_GROUP_2)));
     }
 }

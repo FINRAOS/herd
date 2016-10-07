@@ -43,31 +43,34 @@ public class CheckEmrOozieWorkflowJobTest extends AbstractServiceTest
     public void testCheckOozieWorkflowJob() throws Exception
     {
         String clusterName = "testCluster" + Math.random();
-        
+
         List<Parameter> parameters = new ArrayList<>();
-        
+
         parameters.add(new Parameter("clusterName", clusterName));
         parameters.add(new Parameter("oozieWorkflowJobId", MockOozieOperationsImpl.CASE_1_JOB_ID));
         parameters.add(new Parameter("verbose", "false"));
 
         // Run a job with Activiti XML that will check the oozie workflow.
-        Job job = createJobForCreateCluster(ACTIVITI_XML_CHECK_OOZIE_WORKFLOW_WITH_CLASSPATH, parameters, MockAwsOperationsHelper.AMAZON_CLUSTER_STATUS_WAITING);
-        
+        Job job = jobServiceTestHelper
+            .createJobForCreateCluster(ACTIVITI_XML_CHECK_OOZIE_WORKFLOW_WITH_CLASSPATH, parameters, MockAwsOperationsHelper.AMAZON_CLUSTER_STATUS_WAITING);
+
         assertNotNull(job);
 
         HistoricProcessInstance hisInstance =
-                activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(job.getId()).includeProcessVariables().singleResult();
+            activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(job.getId()).includeProcessVariables().singleResult();
         Map<String, Object> variables = hisInstance.getProcessVariables();
-        String oozieJobTaskStatus = (String) variables.get("checkOozieWorkflowTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + ActivitiRuntimeHelper.VARIABLE_STATUS);
-        String jsonResponse = (String) variables.get("checkOozieWorkflowTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + BaseJavaDelegate.VARIABLE_JSON_RESPONSE);
+        String oozieJobTaskStatus =
+            (String) variables.get("checkOozieWorkflowTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + ActivitiRuntimeHelper.VARIABLE_STATUS);
+        String jsonResponse =
+            (String) variables.get("checkOozieWorkflowTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + BaseJavaDelegate.VARIABLE_JSON_RESPONSE);
 
         assertEquals(oozieJobTaskStatus, ActivitiRuntimeHelper.TASK_STATUS_SUCCESS);
         assertNotNull(jsonResponse);
-        
+
         OozieWorkflowJob oozieWorkflowJob = jsonHelper.unmarshallJsonToObject(OozieWorkflowJob.class, jsonResponse);
-        
+
         assertNotNull(oozieWorkflowJob);
-        
+
         assertEquals("job ID", MockOozieOperationsImpl.CASE_1_JOB_ID, oozieWorkflowJob.getId());
         assertEquals("EMR cluster name", clusterName, oozieWorkflowJob.getEmrClusterName());
         assertNotNull("job start time is null", oozieWorkflowJob.getStartTime());
@@ -79,31 +82,34 @@ public class CheckEmrOozieWorkflowJobTest extends AbstractServiceTest
     public void testCheckOozieWorkflowJobVerbose() throws Exception
     {
         String clusterName = "testCluster" + Math.random();
-        
+
         List<Parameter> parameters = new ArrayList<>();
-        
+
         parameters.add(new Parameter("clusterName", clusterName));
         parameters.add(new Parameter("oozieWorkflowJobId", MockOozieOperationsImpl.CASE_1_JOB_ID));
         parameters.add(new Parameter("verbose", "true"));
 
         // Run a job with Activiti XML that will check the oozie workflow.
-        Job job = createJobForCreateCluster(ACTIVITI_XML_CHECK_OOZIE_WORKFLOW_WITH_CLASSPATH, parameters, MockAwsOperationsHelper.AMAZON_CLUSTER_STATUS_WAITING);
-        
+        Job job = jobServiceTestHelper
+            .createJobForCreateCluster(ACTIVITI_XML_CHECK_OOZIE_WORKFLOW_WITH_CLASSPATH, parameters, MockAwsOperationsHelper.AMAZON_CLUSTER_STATUS_WAITING);
+
         assertNotNull(job);
 
         HistoricProcessInstance hisInstance =
-                activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(job.getId()).includeProcessVariables().singleResult();
+            activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(job.getId()).includeProcessVariables().singleResult();
         Map<String, Object> variables = hisInstance.getProcessVariables();
-        String oozieJobTaskStatus = (String) variables.get("checkOozieWorkflowTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + ActivitiRuntimeHelper.VARIABLE_STATUS);
-        String jsonResponse = (String) variables.get("checkOozieWorkflowTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + BaseJavaDelegate.VARIABLE_JSON_RESPONSE);
+        String oozieJobTaskStatus =
+            (String) variables.get("checkOozieWorkflowTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + ActivitiRuntimeHelper.VARIABLE_STATUS);
+        String jsonResponse =
+            (String) variables.get("checkOozieWorkflowTask" + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + BaseJavaDelegate.VARIABLE_JSON_RESPONSE);
 
         assertEquals(oozieJobTaskStatus, ActivitiRuntimeHelper.TASK_STATUS_SUCCESS);
         assertNotNull(jsonResponse);
-        
+
         OozieWorkflowJob oozieWorkflowJob = jsonHelper.unmarshallJsonToObject(OozieWorkflowJob.class, jsonResponse);
-        
+
         assertNotNull(oozieWorkflowJob);
-        
+
         assertEquals("job ID", MockOozieOperationsImpl.CASE_1_JOB_ID, oozieWorkflowJob.getId());
         assertEquals("EMR cluster name", clusterName, oozieWorkflowJob.getEmrClusterName());
         assertNotNull("job start time is null", oozieWorkflowJob.getStartTime());

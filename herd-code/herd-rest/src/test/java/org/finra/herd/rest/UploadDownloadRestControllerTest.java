@@ -35,40 +35,42 @@ public class UploadDownloadRestControllerTest extends AbstractRestTest
     public void testInitiateUploadSingle()
     {
         // Create database entities required for testing.
-        createDatabaseEntitiesForUploadDownloadTesting();
+        uploadDownloadServiceTestHelper.createDatabaseEntitiesForUploadDownloadTesting();
 
         // Initiate a file upload.
         UploadSingleInitiationResponse resultUploadSingleInitiationResponse =
-            uploadDownloadRestController.initiateUploadSingle(createUploadSingleInitiationRequest());
+            uploadDownloadRestController.initiateUploadSingle(uploadDownloadServiceTestHelper.createUploadSingleInitiationRequest());
 
         // Validate the returned object.
-        validateUploadSingleInitiationResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NAMESPACE, BDEF_NAME_2,
-            FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, getNewAttributes(), FILE_NAME, FILE_SIZE_1_KB, null,
-            resultUploadSingleInitiationResponse);
+        uploadDownloadServiceTestHelper
+            .validateUploadSingleInitiationResponse(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, NAMESPACE, BDEF_NAME_2,
+                FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, FORMAT_VERSION_2, businessObjectDefinitionServiceTestHelper.getNewAttributes(), FILE_NAME,
+                FILE_SIZE_1_KB, null, resultUploadSingleInitiationResponse);
     }
 
     @Test
     public void testInitiateDownloadSingle()
     {
         // Create the upload data.
-        UploadSingleInitiationResponse uploadSingleInitiationResponse = createUploadedFileData(BusinessObjectDataStatusEntity.VALID);
+        UploadSingleInitiationResponse uploadSingleInitiationResponse =
+            uploadDownloadServiceTestHelper.createUploadedFileData(BusinessObjectDataStatusEntity.VALID);
 
         // Initiate the download against the uploaded data (i.e. the target business object data).
         DownloadSingleInitiationResponse downloadSingleInitiationResponse = initiateDownload(uploadSingleInitiationResponse.getTargetBusinessObjectData());
 
         // Validate the download initiation response.
-        validateDownloadSingleInitiationResponse(uploadSingleInitiationResponse, downloadSingleInitiationResponse);
+        uploadDownloadServiceTestHelper.validateDownloadSingleInitiationResponse(uploadSingleInitiationResponse, downloadSingleInitiationResponse);
     }
 
     @Test
     public void testExtendUploadSingleCredentials() throws InterruptedException
     {
         // Create source and target business object formats database entities which are required to initiate an upload.
-        createDatabaseEntitiesForUploadDownloadTesting();
+        uploadDownloadServiceTestHelper.createDatabaseEntitiesForUploadDownloadTesting();
 
         // Initiate a file upload.
         UploadSingleInitiationResponse uploadSingleInitiationResponse =
-            uploadDownloadRestController.initiateUploadSingle(createUploadSingleInitiationRequest());
+            uploadDownloadRestController.initiateUploadSingle(uploadDownloadServiceTestHelper.createUploadSingleInitiationRequest());
 
         // Sleep a short amount of time to ensure the extended credentials don't return the same expiration as the initial credentials.
         Thread.sleep(10);

@@ -43,11 +43,13 @@ public class CustomDdlRestControllerTest extends AbstractRestTest
                 PARTITION_KEY);
 
         // Create a custom DDL.
-        CustomDdl resultCustomDdl = customDdlRestController.createCustomDdl(
-            createCustomDdlCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME, TEST_DDL));
+        CustomDdl resultCustomDdl = customDdlRestController.createCustomDdl(customDdlServiceTestHelper
+            .createCustomDdlCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME, TEST_DDL));
 
         // Validate the returned object.
-        validateCustomDdl(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME, TEST_DDL, resultCustomDdl);
+        customDdlServiceTestHelper
+            .validateCustomDdl(null, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME, TEST_DDL,
+                resultCustomDdl);
     }
 
     @Test
@@ -62,8 +64,9 @@ public class CustomDdlRestControllerTest extends AbstractRestTest
             customDdlRestController.getCustomDdl(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME);
 
         // Validate the returned object.
-        validateCustomDdl(customDdlEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME, TEST_DDL,
-            resultCustomDdl);
+        customDdlServiceTestHelper
+            .validateCustomDdl(customDdlEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME,
+                TEST_DDL, resultCustomDdl);
     }
 
     @Test
@@ -103,11 +106,12 @@ public class CustomDdlRestControllerTest extends AbstractRestTest
         // Update the custom DDL.
         CustomDdl updatedCustomDdl = customDdlRestController
             .updateCustomDdl(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME,
-                createCustomDdlUpdateRequest(TEST_DDL_2));
+                customDdlServiceTestHelper.createCustomDdlUpdateRequest(TEST_DDL_2));
 
         // Validate the returned object.
-        validateCustomDdl(customDdlEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME, TEST_DDL_2,
-            updatedCustomDdl);
+        customDdlServiceTestHelper
+            .validateCustomDdl(customDdlEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME,
+                TEST_DDL_2, updatedCustomDdl);
     }
 
     @Test
@@ -126,8 +130,9 @@ public class CustomDdlRestControllerTest extends AbstractRestTest
             customDdlRestController.deleteCustomDdl(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME);
 
         // Validate the returned object.
-        validateCustomDdl(customDdlEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME, TEST_DDL,
-            deletedCustomDdl);
+        customDdlServiceTestHelper
+            .validateCustomDdl(customDdlEntity.getId(), NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, CUSTOM_DDL_NAME,
+                TEST_DDL, deletedCustomDdl);
 
         // Ensure that this custom DDL is no longer there.
         assertNull(customDdlDao.getCustomDdlByKey(customDdlKey));

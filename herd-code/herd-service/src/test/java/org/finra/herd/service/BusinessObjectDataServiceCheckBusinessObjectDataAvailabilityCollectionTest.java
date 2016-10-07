@@ -37,14 +37,15 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityCollect
     public void testCheckBusinessObjectDataAvailabilityCollection()
     {
         // Prepare database entities required for testing.
-        createDatabaseEntitiesForBusinessObjectDataAvailabilityCollectionTesting();
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataAvailabilityCollectionTesting();
 
         // Check an availability for a collection of business object data.
-        BusinessObjectDataAvailabilityCollectionResponse resultBusinessObjectDataAvailabilityCollectionResponse =
-            businessObjectDataService.checkBusinessObjectDataAvailabilityCollection(getTestBusinessObjectDataAvailabilityCollectionRequest());
+        BusinessObjectDataAvailabilityCollectionResponse resultBusinessObjectDataAvailabilityCollectionResponse = businessObjectDataService
+            .checkBusinessObjectDataAvailabilityCollection(businessObjectDataServiceTestHelper.getTestBusinessObjectDataAvailabilityCollectionRequest());
 
         // Validate the response object.
-        assertEquals(getExpectedBusinessObjectDataAvailabilityCollectionResponse(), resultBusinessObjectDataAvailabilityCollectionResponse);
+        assertEquals(businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataAvailabilityCollectionResponse(),
+            resultBusinessObjectDataAvailabilityCollectionResponse);
     }
 
     @Test
@@ -64,7 +65,7 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityCollect
         }
 
         // Try to check business object data availability collection when business object data availability request is not specified.
-        request = getTestBusinessObjectDataAvailabilityCollectionRequest();
+        request = businessObjectDataServiceTestHelper.getTestBusinessObjectDataAvailabilityCollectionRequest();
         for (List<BusinessObjectDataAvailabilityRequest> businessObjectDataAvailabilityRequests : Arrays
             .asList(null, new ArrayList<BusinessObjectDataAvailabilityRequest>()))
         {
@@ -81,7 +82,7 @@ public class BusinessObjectDataServiceCheckBusinessObjectDataAvailabilityCollect
         }
 
         // Try to check business object data availability collection when business object data availability request is null.
-        request = getTestBusinessObjectDataAvailabilityCollectionRequest();
+        request = businessObjectDataServiceTestHelper.getTestBusinessObjectDataAvailabilityCollectionRequest();
         request.getBusinessObjectDataAvailabilityRequests().set(0, null);
         try
         {

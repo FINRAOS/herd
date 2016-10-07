@@ -55,11 +55,11 @@ public class HerdJmsMessageListener
 
     @Autowired
     private UploadDownloadService uploadDownloadService;
-    
+
     @Autowired
     private ConfigurationHelper configurationHelper;
 
-    
+
     /**
      * Periodically check the configuration and apply the action to the herd JMS message listener service, if needed.
      */
@@ -69,20 +69,18 @@ public class HerdJmsMessageListener
         try
         {
             // Get the configuration setting.
-            Boolean jmsMessageListenerEnabled =
-                Boolean.valueOf(configurationHelper.getProperty(ConfigurationValue.JMS_LISTENER_ENABLED));
+            Boolean jmsMessageListenerEnabled = Boolean.valueOf(configurationHelper.getProperty(ConfigurationValue.JMS_LISTENER_ENABLED));
 
             // Get the registry bean.
             JmsListenerEndpointRegistry registry = ApplicationContextHolder.getApplicationContext()
                 .getBean("org.springframework.jms.config.internalJmsListenerEndpointRegistry", JmsListenerEndpointRegistry.class);
 
             // Get the herd JMS message listener container.
-            MessageListenerContainer jmsMessageListenerContainer =
-                registry.getListenerContainer(HerdJmsDestinationResolver.SQS_DESTINATION_HERD_INCOMING);
+            MessageListenerContainer jmsMessageListenerContainer = registry.getListenerContainer(HerdJmsDestinationResolver.SQS_DESTINATION_HERD_INCOMING);
 
             // Get the current JMS message listener status and the configuration value.
-            LOGGER.debug("controlHerdJmsMessageListener(): {}={} jmsMessageListenerContainer.isRunning()={}",
-                ConfigurationValue.JMS_LISTENER_ENABLED.getKey(), jmsMessageListenerEnabled, jmsMessageListenerContainer.isRunning());
+            LOGGER.debug("controlHerdJmsMessageListener(): {}={} jmsMessageListenerContainer.isRunning()={}", ConfigurationValue.JMS_LISTENER_ENABLED.getKey(),
+                jmsMessageListenerEnabled, jmsMessageListenerContainer.isRunning());
 
             // Apply the relative action if needed.
             if (!jmsMessageListenerEnabled && jmsMessageListenerContainer.isRunning())
@@ -103,14 +101,15 @@ public class HerdJmsMessageListener
             LOGGER.error("controlHerdJmsMessageListener(): Failed to control the herd Jms message listener service.", e);
         }
     }
-    
+
     /**
      * Processes a JMS message.
      *
      * @param payload the message payload.
      * @param allHeaders the JMS headers.
      */
-    @JmsListener(containerFactory = "jmsListenerContainerFactory", destination = HerdJmsDestinationResolver.SQS_DESTINATION_HERD_INCOMING)
+    @JmsListener(id = HerdJmsDestinationResolver.SQS_DESTINATION_HERD_INCOMING,
+        containerFactory = "jmsListenerContainerFactory", destination = HerdJmsDestinationResolver.SQS_DESTINATION_HERD_INCOMING)
     public void processMessage(String payload, @Headers Map<Object, Object> allHeaders)
     {
         LOGGER.info("JMS message received from the queue. jmsQueueName=\"{}\" jmsMessageHeaders=\"{}\" jmsMessagePayload={}",
