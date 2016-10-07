@@ -62,7 +62,6 @@ import org.finra.herd.dao.AwsClientFactory;
 import org.finra.herd.dao.Ec2Dao;
 import org.finra.herd.dao.EmrDao;
 import org.finra.herd.dao.EmrOperations;
-import org.finra.herd.dao.RetryPolicyFactory;
 import org.finra.herd.dao.helper.EmrHelper;
 import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.model.api.xml.ConfigurationFile;
@@ -104,9 +103,6 @@ public class EmrDaoImpl implements EmrDao
 
     @Autowired
     private EmrHelper emrHelper;
-
-    @Autowired
-    private RetryPolicyFactory retryPolicyFactory;
 
     /**
      * Add an EMR Step. This method adds the step to EMR cluster based on the input.
