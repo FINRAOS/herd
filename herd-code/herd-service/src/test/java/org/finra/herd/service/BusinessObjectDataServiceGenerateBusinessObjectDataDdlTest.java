@@ -1648,6 +1648,27 @@ public class BusinessObjectDataServiceGenerateBusinessObjectDataDdlTest extends 
     }
 
     @Test
+    public void testGenerateBusinessObjectDataDdlMissingBusinessObjectDataAllowMissingDataIncludeDropPartitionsDataNoExists()
+    {
+        // Prepare database entities required for testing.
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataDdlTesting(PARTITION_VALUE);
+
+        // Retrieve business object data ddl when all of the business object data is not available
+        // and both "allow missing data" and "include drop partitions" flags are set to "true".
+        BusinessObjectDataDdlRequest request = businessObjectDataServiceTestHelper.getTestBusinessObjectDataDdlRequest(Arrays.asList(PARTITION_VALUE_2));
+        request.setIncludeDropPartitions(true);
+        request.setAllowMissingData(true);
+        BusinessObjectDataDdl result = businessObjectDataService.generateBusinessObjectDataDdl(request);
+
+        // Validate the response object.
+        assertEquals(new BusinessObjectDataDdl(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, FORMAT_VERSION, Arrays.asList(
+            new PartitionValueFilter(FIRST_PARTITION_COLUMN_NAME, Arrays.asList(PARTITION_VALUE_2), NO_PARTITION_VALUE_RANGE, NO_LATEST_BEFORE_PARTITION_VALUE,
+                NO_LATEST_AFTER_PARTITION_VALUE)), NO_STANDALONE_PARTITION_VALUE_FILTER, DATA_VERSION, NO_STORAGE_NAMES, STORAGE_NAME,
+            BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, TABLE_NAME, NO_CUSTOM_DDL_NAME,
+            businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataDdl(PARTITION_VALUE_2, null)), result);
+    }
+
+    @Test
     public void testGenerateBusinessObjectDataDdlNoCustomDdlNoPartitioningMissingBusinessObjectDataAllowMissingData()
     {
         // Prepare test data without custom ddl.  Please note that we do not use NO_PARTITIONING_PARTITION_VALUE for the test

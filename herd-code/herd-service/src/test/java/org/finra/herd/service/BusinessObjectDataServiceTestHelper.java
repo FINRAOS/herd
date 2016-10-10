@@ -1063,9 +1063,24 @@ public class BusinessObjectDataServiceTestHelper
     /**
      * Returns the actual HIVE DDL expected to be generated.
      *
+     * @param partitionValue the partition value
+     *
      * @return the actual HIVE DDL expected to be generated
      */
     public String getExpectedBusinessObjectDataDdl(String partitionValue)
+    {
+        return getExpectedBusinessObjectDataDdl(partitionValue, partitionValue);
+    }
+
+    /**
+     * Returns the actual HIVE DDL expected to be generated.
+     *
+     * @param partitionValueToDrop the partition value to drop
+     * @param partitionValueToAdd the partition value to add
+     *
+     * @return the actual HIVE DDL expected to be generated
+     */
+    public String getExpectedBusinessObjectDataDdl(String partitionValueToDrop, String partitionValueToAdd)
     {
         // Build ddl expected to be generated.
         StringBuilder ddlBuilder = new StringBuilder();
@@ -1079,25 +1094,28 @@ public class BusinessObjectDataServiceTestHelper
         ddlBuilder.append("ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' ESCAPED BY '\\\\' NULL DEFINED AS '\\N'\n");
         ddlBuilder.append("STORED AS TEXTFILE;");
 
-        if (partitionValue != null)
+        if (partitionValueToDrop != null)
         {
             // Add the alter table drop partition statement.
             ddlBuilder.append("\n\n");
             ddlBuilder.append(
                 "ALTER TABLE `" + AbstractServiceTest.TABLE_NAME + "` DROP IF EXISTS PARTITION (`" + AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME + "`='" +
-                    partitionValue + "');");
+                    partitionValueToDrop + "');");
+        }
 
+        if (partitionValueToAdd != null)
+        {
             // Build an expected S3 key prefix.
             String expectedS3KeyPrefix = AbstractServiceTest
                 .getExpectedS3KeyPrefix(AbstractServiceTest.NAMESPACE, AbstractServiceTest.DATA_PROVIDER_NAME, AbstractServiceTest.BDEF_NAME,
                     AbstractServiceTest.FORMAT_USAGE_CODE, FileTypeEntity.TXT_FILE_TYPE, AbstractServiceTest.FORMAT_VERSION,
-                    AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME, partitionValue, null, null, AbstractServiceTest.DATA_VERSION);
+                    AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME, partitionValueToAdd, null, null, AbstractServiceTest.DATA_VERSION);
 
             // Add the alter table add partition statement.
             ddlBuilder.append("\n\n");
             ddlBuilder.append(
                 "ALTER TABLE `" + AbstractServiceTest.TABLE_NAME + "` ADD IF NOT EXISTS PARTITION (`" + AbstractServiceTest.FIRST_PARTITION_COLUMN_NAME +
-                    "`='" + partitionValue +
+                    "`='" + partitionValueToAdd +
                     "') LOCATION 's3n://" + AbstractServiceTest.S3_BUCKET_NAME + "/" + expectedS3KeyPrefix + "';");
         }
 
