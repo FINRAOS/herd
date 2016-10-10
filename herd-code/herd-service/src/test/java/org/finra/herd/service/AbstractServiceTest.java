@@ -158,8 +158,6 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Boolean INCLUDE_ALL_REGISTERED_SUBPARTITIONS = true;
 
-    public static final Boolean INCLUDE_ARCHIVED_BUSINESS_OBJECT_DATA = true;
-
     public static final Boolean INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY = true;
 
     public static final Boolean INCLUDE_DROP_PARTITIONS = true;
@@ -203,8 +201,6 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final Long NO_FILE_SIZE = null;
 
     public static final Boolean NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS = false;
-
-    public static final Boolean NO_INCLUDE_ARCHIVED_BUSINESS_OBJECT_DATA = false;
 
     public static final Boolean NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY = false;
 

@@ -1634,8 +1634,7 @@ public class BusinessObjectDataServiceTestHelper
                 AbstractServiceTest.DATA_VERSION, AbstractServiceTest.NO_STORAGE_NAMES, AbstractServiceTest.STORAGE_NAME,
                 BusinessObjectDataDdlOutputFormatEnum.HIVE_13_DDL, AbstractServiceTest.TABLE_NAME, AbstractServiceTest.NO_CUSTOM_DDL_NAME,
                 AbstractServiceTest.INCLUDE_DROP_TABLE_STATEMENT, AbstractServiceTest.INCLUDE_IF_NOT_EXISTS_OPTION, AbstractServiceTest.INCLUDE_DROP_PARTITIONS,
-                AbstractServiceTest.NO_ALLOW_MISSING_DATA, AbstractServiceTest.NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS,
-                AbstractServiceTest.NO_INCLUDE_ARCHIVED_BUSINESS_OBJECT_DATA);
+                AbstractServiceTest.NO_ALLOW_MISSING_DATA, AbstractServiceTest.NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS);
 
         // Add two business object ddl requests to the collection request.
         businessObjectDataDdlRequests.add(businessObjectDataDdlRequest);
@@ -1692,7 +1691,6 @@ public class BusinessObjectDataServiceTestHelper
         request.setIncludeIfNotExistsOption(true);
         request.setAllowMissingData(true);
         request.setIncludeAllRegisteredSubPartitions(AbstractServiceTest.NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS);
-        request.setIncludeArchivedBusinessObjectData(AbstractServiceTest.NO_INCLUDE_ARCHIVED_BUSINESS_OBJECT_DATA);
 
         return request;
     }
