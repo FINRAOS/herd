@@ -19,11 +19,16 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.junit.Test;
 
 import org.finra.herd.model.api.xml.Tag;
+import org.finra.herd.model.api.xml.TagChild;
 import org.finra.herd.model.api.xml.TagCreateRequest;
 import org.finra.herd.model.api.xml.TagKey;
+import org.finra.herd.model.api.xml.TagListResponse;
 import org.finra.herd.model.api.xml.TagUpdateRequest;
 import org.finra.herd.model.jpa.TagEntity;
 
@@ -96,15 +101,19 @@ public class TagRestControllerTest extends AbstractRestTest
     @Test
     public void testGetTags()
     {
-//        // Create and persist tag entities.
-//        tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_TYPE_DISPLAY_NAME, DESCRIPTION);
-//        tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE_2, TAG_TYPE_DISPLAY_NAME_2, DESCRIPTION);
-//
-//        // Retrieve a list of tag keys.
-//        TagKeys resultTagKeys = tagRestController.getTags(TAG_TYPE);
-//
-//        // Validate the returned object.
-//        assertNotNull(resultTagKeys);
-//        assertEquals(Arrays.asList(new TagKey(TAG_TYPE, TAG_CODE), new TagKey(TAG_TYPE, TAG_CODE_2)), resultTagKeys.getTagKeys());
-      }
+       // Create and persist tag entities.
+        tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_TYPE_DISPLAY_NAME, DESCRIPTION);
+        tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE_2, TAG_TYPE_DISPLAY_NAME_2, DESCRIPTION);
+
+       // Retrieve a list of tag keys.
+        TagListResponse resultTagKeys = tagRestController.getTags(TAG_TYPE, null);
+        // Retrieve a list of tag keys using uppercase input parameters.
+       List<TagChild> tagChildren = new ArrayList<>();
+       tagChildren.add(new TagChild(new TagKey(TAG_TYPE, TAG_CODE), false));
+       tagChildren.add(new TagChild(new TagKey(TAG_TYPE, TAG_CODE_2), false));
+
+        // Validate the returned object.
+        assertNotNull(resultTagKeys);
+        assertEquals(tagChildren, resultTagKeys.getTagChildren());
+     }
 }

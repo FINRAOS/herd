@@ -19,7 +19,6 @@ import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -79,7 +78,7 @@ public class TagEntity extends AuditableEntity
     private TagEntity parentTagEntity;
 
     // These are the children.
-    @OneToMany(mappedBy = "parentTagEntity", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "parentTagEntity")
     private List<TagEntity> childrenTagEntities;
 
     public Integer getId()

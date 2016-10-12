@@ -17,10 +17,12 @@ package org.finra.herd.service.helper;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 
 import org.finra.herd.dao.TagDao;
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.ObjectNotFoundException;
+import org.finra.herd.model.api.xml.TagCreateRequest;
 import org.finra.herd.model.api.xml.TagKey;
 import org.finra.herd.model.jpa.TagEntity;
 
@@ -68,4 +70,14 @@ public class TagDaoHelper
 
         return tagEntity;
     }
+    
+    public void validateCreateTagParentKey(TagCreateRequest tagCreateRequest)
+    {
+        if (tagCreateRequest.getParentTagKey() != null)
+        {
+            Assert.isTrue(tagCreateRequest.getTagKey().getTagTypeCode().equals(tagCreateRequest.getParentTagKey().getTagTypeCode()), 
+                    "Create Tag Request type code should be the same as parent tag type code");      
+        }
+    }
+
 }

@@ -81,7 +81,6 @@ public class TagRestController
     @Secured(SecurityFunctions.FN_TAGS_ALL_GET)
     public TagListResponse getTags(@PathVariable("tagTypeCode") String tagTypeCode, @RequestParam("tagCode") String tagCode)
     {       
-        return null;
-        // return tagService.getTags(tagTypeCode, tagCode);
+        return tagService.getTags(tagTypeCode, tagCode);
     }
 }

@@ -652,7 +652,7 @@
                <xs:documentation>The tag's unique key.</xs:documentation>
             </xs:annotation>
          </xs:element>
-         <xs:element name="childrenTagKeys" type="childrenTagKeys" minOccurs="0">
+         <xs:element name="tagChildren" type="tagChildren" minOccurs="0">
             <xs:annotation>
                <xs:documentation>Children Tag Keys.</xs:documentation>
             </xs:annotation>
@@ -660,9 +660,9 @@
     </xs:all> 
   </xs:complexType>
 
-   <xs:complexType name="childrenTagKeys">
+   <xs:complexType name="tagChildren">
       <xs:sequence>
-         <xs:element name="childrenTagKey" type="childrenTagKey" minOccurs="0" maxOccurs="unbounded">
+         <xs:element name="tagChild" type="tagChild" minOccurs="0" maxOccurs="unbounded">
             <xs:annotation>
                <xs:documentation>An ordered list of tag keys.</xs:documentation>
             </xs:annotation>
@@ -670,16 +670,11 @@
       </xs:sequence>
    </xs:complexType>
   
-    <xs:complexType name="childrenTagKey">
+    <xs:complexType name="tagChild">
       <xs:all>
-         <xs:element name="tagTypeCode" type="xs:string">
+          <xs:element name="tagKey" type="tagKey">
             <xs:annotation>
-               <xs:documentation>The tag type reference code.</xs:documentation>
-            </xs:annotation>
-         </xs:element>
-         <xs:element name="tagCode" type="xs:string">
-            <xs:annotation>
-               <xs:documentation>The tag reference code.</xs:documentation>
+               <xs:documentation>The tag's unique key.</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="hasChildren" type="xs:boolean">

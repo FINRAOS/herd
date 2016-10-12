@@ -15,6 +15,8 @@
 */
 package org.finra.herd.service.impl;
 
+import java.util.List;
+
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,6 +27,7 @@ import org.finra.herd.dao.TagDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.api.xml.Tag;
+import org.finra.herd.model.api.xml.TagChild;
 import org.finra.herd.model.api.xml.TagCreateRequest;
 import org.finra.herd.model.api.xml.TagKey;
 import org.finra.herd.model.api.xml.TagListResponse;
@@ -80,9 +83,14 @@ public class TagServiceImpl implements TagService
 
         // Validate that the specified display name does not already exist for the specified tag type
         tagDaoHelper.assertDisplayNameDoesNotExistForTag(request.getTagKey().getTagTypeCode(), request.getDisplayName());
-
+        TagEntity parentTagEntity  = null;
+        if (request.getParentTagKey() != null)
+        {
+            parentTagEntity = tagDaoHelper.getTagEntity(request.getParentTagKey() );
+        }
+        
         // Create and persist a new tag entity from the information in the request.
-        tagEntity = createTagEntity(tagTypeEntity, request.getTagKey().getTagCode(), request.getDisplayName(), request.getDescription());
+        tagEntity = createTagEntity(tagTypeEntity, request.getTagKey().getTagCode(), request.getDisplayName(), request.getDescription(), parentTagEntity);
 
         // Create and return the tag object from the persisted entity.
         return createTagFromEntity(tagEntity);
@@ -155,11 +163,21 @@ public class TagServiceImpl implements TagService
         // Get the list of tag keys.
         TagListResponse response = new TagListResponse();
         
+        //not root, need to set the tag key and parent tag key
+        //getTag method will validate the requested tag exists
+        if (tagCode != null)
+        {
+            TagKey tagKey = new TagKey(tagTypeCodeLocal, tagCode);
+            Tag tag = getTag(tagKey);
+            response.setTagKey(tagKey);
+            response.setParentTagKey(tag.getParentTagKey());
+        }
         
-        
-        return null;
-             
-        //return new TagKeys(tagDao.getTagsByTagType(tagTypeCodeLocal));
+        List<TagChild> tagChildren = tagDao.getTagsByTagType(tagTypeCodeLocal, tagCode);
+         
+        response.setTagChildren(tagChildren);
+              
+        return response;
     }
 
     /**
@@ -172,6 +190,7 @@ public class TagServiceImpl implements TagService
         Assert.notNull(tagCreateRequest, "A tag create request must be specified.");
         tagHelper.validateTagKey(tagCreateRequest.getTagKey());
         tagCreateRequest.setDisplayName(alternateKeyHelper.validateStringParameter("display name", tagCreateRequest.getDisplayName()));
+        tagDaoHelper.validateCreateTagParentKey(tagCreateRequest);
     }
 
     /**
@@ -191,10 +210,10 @@ public class TagServiceImpl implements TagService
      * @param tagTypeEntity the specified tag type entity.
      * @param displayName the specified display name.
      * @param description the specified description.
-     *
+     * @param parentTagEntity the specified parent tag entity
      * @return the newly created tag entity.
      */
-    private TagEntity createTagEntity(TagTypeEntity tagTypeEntity, String tagCode, String displayName, String description)
+    private TagEntity createTagEntity(TagTypeEntity tagTypeEntity, String tagCode, String displayName, String description, TagEntity parentTagEntity)
     {
         TagEntity tagEntity = new TagEntity();
 
@@ -202,7 +221,8 @@ public class TagServiceImpl implements TagService
         tagEntity.setTagCode(tagCode);
         tagEntity.setDisplayName(displayName);
         tagEntity.setDescription(description);
-
+        tagEntity.setParentTagEntity(parentTagEntity);
+        
         return tagDao.saveAndRefresh(tagEntity);
     }
 
@@ -235,6 +255,12 @@ public class TagServiceImpl implements TagService
         tag.setTagKey(new TagKey(tagEntity.getTagType().getCode(), tagEntity.getTagCode()));
         tag.setDisplayName(tagEntity.getDisplayName());
         tag.setDescription(tagEntity.getDescription());
+        
+        TagEntity parentTagEntity = tagEntity.getParentTagEntity();
+        if (parentTagEntity != null)
+        {
+            tag.setParentTagKey(new TagKey(parentTagEntity.getTagType().getCode(), parentTagEntity.getTagCode()));
+        }
 
         return tag;
     }
