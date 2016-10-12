@@ -27,7 +27,7 @@ import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.api.xml.Tag;
 import org.finra.herd.model.api.xml.TagCreateRequest;
 import org.finra.herd.model.api.xml.TagKey;
-import org.finra.herd.model.api.xml.TagKeys;
+import org.finra.herd.model.api.xml.TagListResponse;
 import org.finra.herd.model.api.xml.TagTypeKey;
 import org.finra.herd.model.api.xml.TagUpdateRequest;
 import org.finra.herd.model.jpa.TagEntity;
@@ -144,7 +144,7 @@ public class TagServiceImpl implements TagService
     }
 
     @Override
-    public TagKeys getTags(String tagTypeCode)
+    public TagListResponse getTags(String tagTypeCode, String tagCode)
     {
         // Validate and trim the tag type code.
         String tagTypeCodeLocal = alternateKeyHelper.validateStringParameter("tag type code", tagTypeCode);
@@ -153,7 +153,13 @@ public class TagServiceImpl implements TagService
         tagTypeDaoHelper.getTagTypeEntity(new TagTypeKey(tagTypeCodeLocal));
 
         // Get the list of tag keys.
-        return new TagKeys(tagDao.getTagsByTagType(tagTypeCodeLocal));
+        TagListResponse response = new TagListResponse();
+        
+        
+        
+        return null;
+             
+        //return new TagKeys(tagDao.getTagsByTagType(tagTypeCodeLocal));
     }
 
     /**

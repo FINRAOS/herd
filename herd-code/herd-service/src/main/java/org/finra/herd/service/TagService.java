@@ -18,7 +18,7 @@ package org.finra.herd.service;
 import org.finra.herd.model.api.xml.Tag;
 import org.finra.herd.model.api.xml.TagCreateRequest;
 import org.finra.herd.model.api.xml.TagKey;
-import org.finra.herd.model.api.xml.TagKeys;
+import org.finra.herd.model.api.xml.TagListResponse;
 import org.finra.herd.model.api.xml.TagUpdateRequest;
 
 /**
@@ -67,8 +67,9 @@ public interface TagService
      * Retrieves all associated tags for the specified tag type code.
      *
      * @param tagTypeCode the tag type's code.
+     * @param tagCode the tag code.
      *
      * @return all associated tags.
      */
-    public TagKeys getTags(String tagTypeCode);
+    public TagListResponse getTags(String tagTypeCode, String tagCode);
 }
