@@ -22,12 +22,13 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import org.finra.herd.model.api.xml.Tag;
 import org.finra.herd.model.api.xml.TagCreateRequest;
 import org.finra.herd.model.api.xml.TagKey;
-import org.finra.herd.model.api.xml.TagKeys;
+import org.finra.herd.model.api.xml.TagListResponse;
 import org.finra.herd.model.api.xml.TagUpdateRequest;
 import org.finra.herd.model.dto.SecurityFunctions;
 import org.finra.herd.service.TagService;
@@ -108,6 +109,16 @@ public class TagRestController
         return tagService.deleteTag(tagKey);
     }
 
+    /**
+     * Retrieves all associated tags for the specified tag type code.
+     * When tagCode is null, return all tags of the tag type code.
+     * When tagCode is provided, return all tags of the tag type code and whose parent tag code is tagCode.
+     * 
+     * @param tagTypeCode the tag type's code.
+     * @param tagCode the parent tag code.
+     *
+     * @return all associated tags, with parent, itself and the children tags with has more children flag.
+     */
     @RequestMapping(value = "/tags/tagTypes/{tagTypeCode}", method = RequestMethod.GET, consumes = {"application/xml", "application/json"})
     @Secured(SecurityFunctions.FN_TAGS_ALL_GET)
     public TagListResponse getTags(@PathVariable("tagTypeCode") String tagTypeCode, @RequestParam("tagCode") String tagCode)
