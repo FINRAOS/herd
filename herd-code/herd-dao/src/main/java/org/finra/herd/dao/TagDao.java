@@ -17,6 +17,7 @@ package org.finra.herd.dao;
 
 import java.util.List;
 
+import org.finra.herd.model.api.xml.TagChild;
 import org.finra.herd.model.api.xml.TagKey;
 import org.finra.herd.model.jpa.TagEntity;
 
@@ -43,9 +44,16 @@ public interface TagDao extends BaseJpaDao
     public TagEntity getTagByTagTypeAndDisplayName(String tagTypeCode, String displayName);
 
     /**
-     * Gets an ordered list of tag keys for the tags defined in the system for the specified tag type code.
+     *  Gets a list of Tag Key with Children flags
      *
-     * @return the list of tags.
+     * @return list of Tag with Children flags
      */
-    public List<TagKey> getTagsByTagType(String tagTypeCd);
+    public List<TagChild> getTagsByTagType(String tagTypeCd, String tagCode);
+    
+    /**
+     * Gets a list of Tag Key with Children flags
+     * @param tagTypeCd tag Type code
+     * @return list of Tag with Children flags
+     */
+    public List<TagChild> getTagsByTagType(String tagTypeCd);
 }

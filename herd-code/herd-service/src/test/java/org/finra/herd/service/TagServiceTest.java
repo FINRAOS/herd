@@ -836,6 +836,99 @@ public class TagServiceTest extends AbstractServiceTest
         {
             //as expected
         }
+    }
+    
+    @Test
+    public void testUpdateTagWithParent()
+    {
+        // Create and persist a tag entity.
+        TagEntity tagEntity = tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
 
+        TagEntity tagEntity2 = tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE_2, TAG_DISPLAY_NAME + "x", TAG_DESCRIPTION_2 + "x");
+      
+        // Update the tag.
+        Tag updatedTag = tagService.updateTag(new TagKey(TAG_TYPE, TAG_CODE), new TagUpdateRequest(TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, new TagKey(TAG_TYPE, TAG_CODE_2)));
+
+        // Validate the returned object.
+        assertEquals(new Tag(tagEntity.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, new TagKey(TAG_TYPE, TAG_CODE_2)), updatedTag);
+        
+        //set parent tag to null
+        updatedTag = tagService.updateTag(new TagKey(TAG_TYPE, TAG_CODE), new TagUpdateRequest(TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, null));
+       
+        assertEquals(new Tag(tagEntity.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, null), updatedTag);
+    }
+    
+    @Test
+    public void testUpdateTagWithParentValidationError()
+    {
+        // Create and persist a tag entity.
+        tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+
+        tagDaoTestHelper.createTagEntity(TAG_TYPE_2, TAG_CODE_2, TAG_DISPLAY_NAME + "x", TAG_DESCRIPTION_2 + "x");
+      
+        try
+        {
+            // Update the tag.
+            Tag updatedTag = tagService.updateTag(new TagKey(TAG_TYPE, TAG_CODE), new TagUpdateRequest(TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, new TagKey(TAG_TYPE_2, TAG_CODE_2))); 
+            Assert.fail("Update should fail because parent type key is different");
+        }
+        catch (IllegalArgumentException ex)
+        {
+            //as expected
+        }
+    }
+    
+    @Test
+    public void testUpdateTagWithParentValidationError2()
+    {
+        // Create and persist a tag entity.
+        TagEntity root = tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+
+        tagDaoTestHelper.createTagEntity(TAG_TYPE_2, TAG_CODE_2, TAG_DISPLAY_NAME + "x", TAG_DESCRIPTION_2 + "x", root);
+      
+        try
+        {
+            // Update the tag.
+            Tag updatedTag = tagService.updateTag(new TagKey(TAG_TYPE, TAG_CODE), new TagUpdateRequest(TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, new TagKey(TAG_TYPE_2, TAG_CODE_2))); 
+            Assert.fail("Update should fail because parent type key is different");
+        }
+        catch (IllegalArgumentException ex)
+        {
+            //as expected
+        }
+    }
+    
+    @Test
+    public void testUpdateTagWithParentValidationErrorLooping()
+    {
+        // Create and persist a tag entity.
+        TagEntity root = tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+
+        TagEntity child = tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE_2, TAG_DISPLAY_NAME + "x", TAG_DESCRIPTION_2 + "x", root);
+        TagEntity grandChild = tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE_2 + "y", TAG_DISPLAY_NAME_2 + "y", TAG_DESCRIPTION_2 + "y", child);
+        
+        try
+        {
+            // Update the tag.
+            tagService.updateTag(new TagKey(TAG_TYPE, TAG_CODE), new TagUpdateRequest(TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, new TagKey(TAG_TYPE, TAG_CODE_2))); 
+            Assert.fail("Update should fail, can not set itself as parent");
+        }
+        catch (IllegalArgumentException ex)
+        {
+            System.out.println(ex);
+            //as expected
+        }
+        
+        try
+        {
+            // Update the tag.
+            tagService.updateTag(new TagKey(TAG_TYPE, TAG_CODE), new TagUpdateRequest(TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, new TagKey(TAG_TYPE, TAG_CODE_2 + "y"))); 
+            Assert.fail("Update should fail, can not set itself as parent");
+        }
+        catch (IllegalArgumentException ex)
+        {
+            System.out.println(ex);
+            //as expected
+        }
     }
 }

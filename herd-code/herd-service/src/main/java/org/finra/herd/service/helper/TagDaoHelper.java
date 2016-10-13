@@ -24,6 +24,7 @@ import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.TagCreateRequest;
 import org.finra.herd.model.api.xml.TagKey;
+import org.finra.herd.model.api.xml.TagUpdateRequest;
 import org.finra.herd.model.jpa.TagEntity;
 
 @Component
@@ -31,6 +32,8 @@ public class TagDaoHelper
 {
     @Autowired
     private TagDao tagDao;
+    
+    private static final int MAX_PARENT_LEVEL = 100;
 
     /**
      * Ensures that a tag entity does not exist for a specified tag type code and display name.
@@ -78,6 +81,30 @@ public class TagDaoHelper
             Assert.isTrue(tagCreateRequest.getTagKey().getTagTypeCode().equals(tagCreateRequest.getParentTagKey().getTagTypeCode()), 
                     "Create Tag Request type code should be the same as parent tag type code");      
         }
+    }
+    
+    public void validateUpdateTagParentKey(TagEntity tagEntity, TagUpdateRequest tagUpdateRequest)
+    {
+        TagKey parentTagKey = tagUpdateRequest.getParentTagKey();
+        if (parentTagKey != null)
+        {
+            Assert.isTrue(tagEntity.getTagType().getCode().equals(parentTagKey.getTagTypeCode()), "Parent tag type code should be the same as requested");
+        
+            int level = 0;
+            //ensure parent tag Exists
+            TagEntity parentTagEntity = getTagEntity(parentTagKey);
+            
+            while (parentTagEntity != null)
+            {
+                Assert.isTrue(!tagEntity.equals(parentTagEntity), "Parent Tag key should not be child of the requested tag Entitiy or itself");
+                parentTagEntity = parentTagEntity.getParentTagEntity();
+                if (level++ >= MAX_PARENT_LEVEL)
+                {
+                    throw new IllegalArgumentException("Max parent level " + MAX_PARENT_LEVEL + "reached, abort action.");
+                }
+            }
+            
+        }   
     }
 
 }

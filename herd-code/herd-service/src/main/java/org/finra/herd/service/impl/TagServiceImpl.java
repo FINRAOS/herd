@@ -115,6 +115,9 @@ public class TagServiceImpl implements TagService
             tagDaoHelper.assertDisplayNameDoesNotExistForTag(tagKey.getTagTypeCode(), tagUpdateRequest.getDisplayName());
         }
 
+        //validate parent key if there is one
+        tagDaoHelper.validateUpdateTagParentKey(tagEntity, tagUpdateRequest);
+        
         // Update and persist the tag entity.
         updateTagEntity(tagEntity, tagUpdateRequest);
 
@@ -236,7 +239,17 @@ public class TagServiceImpl implements TagService
     {
         tagEntity.setDisplayName(tagUpdateRequest.getDisplayName());
         tagEntity.setDescription(tagUpdateRequest.getDescription());
-
+        
+        if (tagUpdateRequest.getParentTagKey() != null)
+        {
+            TagEntity parentTagEntity = tagDaoHelper.getTagEntity(tagUpdateRequest.getParentTagKey());
+            tagEntity.setParentTagEntity(parentTagEntity);
+        }
+        else
+        {
+            tagEntity.setParentTagEntity(null);
+        }
+        
         tagDao.saveAndRefresh(tagEntity);
     }
 
