@@ -108,7 +108,7 @@ public class TagDaoHelper
         {
             Assert.isTrue(tagEntity.getTagType().getCode().equals(parentTagKey.getTagTypeCode()), "Parent tag type code should be the same as requested");
         
-            Integer max_allowed_tag_nesting =
+            Integer maxAllowedTagNesting =
                     configurationHelper.getProperty(ConfigurationValue.MAX_ALLOWED_TAG_NESTING, Integer.class);
 
             int level = 0;
@@ -119,9 +119,9 @@ public class TagDaoHelper
             {
                 Assert.isTrue(!tagEntity.equals(parentTagEntity), "Parent Tag key should not be child of the requested tag Entitiy or itself");
                 parentTagEntity = parentTagEntity.getParentTagEntity();
-                if (level++ >= max_allowed_tag_nesting)
+                if (level++ >= maxAllowedTagNesting)
                 {
-                    throw new IllegalArgumentException("Exceeds maximum allowed tag nesting level of " + max_allowed_tag_nesting);
+                    throw new IllegalArgumentException("Exceeds maximum allowed tag nesting level of " + maxAllowedTagNesting);
                 }
             }          
         }   
