@@ -579,6 +579,11 @@
                <xs:documentation>The tag's description.</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="parentTagKey" type="tagKey" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The tag's description.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
@@ -591,6 +596,11 @@
             </xs:annotation>
          </xs:element>
          <xs:element name="description" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The tag's description.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="parentTagKey" type="tagKey" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The tag's description.</xs:documentation>
             </xs:annotation>
@@ -621,20 +631,74 @@
                <xs:documentation>The tag's description.</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="userId" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The User ID of the user who last updated.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+          <xs:element name="updatedTime" type="xs:dateTime">
+            <xs:annotation>
+               <xs:documentation>The timestamp of when it is last updated.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+          <xs:element name="parentTagKey" type="tagKey" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The tag's description.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
-   <xs:element name="tagKeys" type="tagKeys"/>
-   <xs:complexType name="tagKeys">
+  <xs:element name="tagListResponse" type="tagListResponse"/>
+  <xs:complexType name="tagListResponse">
+    <xs:all>
+        <xs:element name="tagKey" type="tagKey">
+            <xs:annotation>
+               <xs:documentation>The tag's unique key.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="parentTagKey" type="tagKey"  minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The tag's unique key.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="tagChildren" type="tagChildren" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Children Tag Keys.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+    </xs:all> 
+  </xs:complexType>
+
+   <xs:complexType name="tagChildren">
       <xs:sequence>
-         <xs:element name="tagKey" type="tagKey" minOccurs="0" maxOccurs="unbounded">
+         <xs:element name="tagChild" type="tagChild" minOccurs="0" maxOccurs="unbounded">
             <xs:annotation>
                <xs:documentation>An ordered list of tag keys.</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:sequence>
    </xs:complexType>
+  
+    <xs:complexType name="tagChild">
+      <xs:all>
+          <xs:element name="tagKey" type="tagKey">
+            <xs:annotation>
+               <xs:documentation>The tag's unique key.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="hasChildren" type="xs:boolean">
+            <xs:annotation>
+               <xs:documentation>A Y/N flag that shows if this Tag has further children
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
 
+   <xs:element name="tagKey" type="tagKey">
+   </xs:element>
+   
    <xs:complexType name="tagKey">
       <xs:all>
          <xs:element name="tagTypeCode" type="xs:string">

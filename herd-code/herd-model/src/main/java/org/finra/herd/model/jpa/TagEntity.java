@@ -15,12 +15,16 @@
 */
 package org.finra.herd.model.jpa;
 
+import java.util.List;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
@@ -66,6 +70,16 @@ public class TagEntity extends AuditableEntity
      */
     @Column(name = "desc_tx", nullable = true)
     private String description;
+    
+    // This is the parent
+    @JoinTable(name = "tag_prnt", joinColumns = {@JoinColumn(name = TABLE_NAME + "_id", referencedColumnName = TABLE_NAME + "_id")},
+        inverseJoinColumns = {@JoinColumn(name = "prnt_tag_id", referencedColumnName = TABLE_NAME + "_id")})
+    @ManyToOne
+    private TagEntity parentTagEntity;
+
+    // These are the children.
+    @OneToMany(mappedBy = "parentTagEntity")
+    private List<TagEntity> childrenTagEntities;
 
     public Integer getId()
     {
@@ -116,4 +130,25 @@ public class TagEntity extends AuditableEntity
     {
         this.description = description;
     }
+
+    public TagEntity getParentTagEntity()
+    {
+        return parentTagEntity;
+    }
+
+    public void setParentTagEntity(TagEntity parentTagEntity)
+    {
+        this.parentTagEntity = parentTagEntity;
+    }
+
+    public List<TagEntity> getChildrenTagEntities()
+    {
+        return childrenTagEntities;
+    }
+
+    public void setChildrenTagEntities(List<TagEntity> childrenTagEntities)
+    {
+        this.childrenTagEntities = childrenTagEntities;
+    }
+
 }

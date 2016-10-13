@@ -16,13 +16,22 @@
 package org.finra.herd.rest;
 
 import io.swagger.annotations.Api;
-import org.finra.herd.model.api.xml.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.annotation.Secured;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
+
+import org.finra.herd.model.api.xml.Tag;
+import org.finra.herd.model.api.xml.TagCreateRequest;
+import org.finra.herd.model.api.xml.TagKey;
+import org.finra.herd.model.api.xml.TagKeys;
+import org.finra.herd.model.api.xml.TagUpdateRequest;
 import org.finra.herd.model.dto.SecurityFunctions;
 import org.finra.herd.service.TagService;
 import org.finra.herd.ui.constants.UiConstants;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.annotation.Secured;
-import org.springframework.web.bind.annotation.*;
 
 /**
  * The REST controller that handles tag REST requests.
@@ -99,17 +108,10 @@ public class TagRestController
         return tagService.deleteTag(tagKey);
     }
 
-    /**
-     * Get all tags by a tag type code.
-     *
-     * @param tagTypeCode the tag type code
-     *
-     * @return the list of tag keys
-     */
     @RequestMapping(value = "/tags/tagTypes/{tagTypeCode}", method = RequestMethod.GET, consumes = {"application/xml", "application/json"})
     @Secured(SecurityFunctions.FN_TAGS_ALL_GET)
-    public TagKeys getTags(@PathVariable("tagTypeCode") String tagTypeCode)
-    {
-        return tagService.getTags(tagTypeCode);
+    public TagListResponse getTags(@PathVariable("tagTypeCode") String tagTypeCode, @RequestParam("tagCode") String tagCode)
+    {       
+        return tagService.getTags(tagTypeCode, tagCode);
     }
 }
