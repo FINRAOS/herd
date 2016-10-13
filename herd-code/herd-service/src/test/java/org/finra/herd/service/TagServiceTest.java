@@ -49,7 +49,7 @@ public class TagServiceTest extends AbstractServiceTest
         Tag tag = tagService.createTag(new TagCreateRequest(new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION, null));
 
         // Validate the tag which was created.
-        assertEquals(new Tag(tag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION, null), tag);
+        assertEquals(new Tag(tag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION, tag.getUserId(), tag.getUpdatedTime(), null), tag);
     }
 
     @Test
@@ -62,7 +62,7 @@ public class TagServiceTest extends AbstractServiceTest
         Tag tag = tagService.createTag(new TagCreateRequest(new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, null, null));
 
         // Validate the tag which was created.
-        assertEquals(new Tag(tag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, null, null), tag);
+        assertEquals(new Tag(tag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, null, tag.getUserId(), tag.getUpdatedTime(), null), tag);
     }
 
     @Test
@@ -123,7 +123,7 @@ public class TagServiceTest extends AbstractServiceTest
         Tag tag = tagService.createTag(new TagCreateRequest(new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, BLANK_TEXT, null));
 
         // Validate the tag which was created.
-        assertEquals(new Tag(tag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, BLANK_TEXT, null), tag);
+        assertEquals(new Tag(tag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, BLANK_TEXT, tag.getUserId(), tag.getUpdatedTime(), null), tag);
     }
 
     @Test
@@ -136,7 +136,7 @@ public class TagServiceTest extends AbstractServiceTest
         Tag tag = tagService.createTag(new TagCreateRequest(new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, null, null));
 
         // Validate the tag which was created.
-        assertEquals(new Tag(tag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, null, null), tag);
+        assertEquals(new Tag(tag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, null, tag.getUserId(), tag.getUpdatedTime(), null), tag);
     }
 
     @Test
@@ -150,7 +150,7 @@ public class TagServiceTest extends AbstractServiceTest
             addWhitespace(TAG_DESCRIPTION), null));
 
         // Validate the tag which was created.
-        assertEquals(new Tag(tag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, addWhitespace(TAG_DESCRIPTION), null), tag);
+        assertEquals(new Tag(tag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, addWhitespace(TAG_DESCRIPTION), tag.getUserId(), tag.getUpdatedTime(), null), tag);
     }
 
     @Test
@@ -164,8 +164,8 @@ public class TagServiceTest extends AbstractServiceTest
             new TagCreateRequest(new TagKey(TAG_TYPE.toUpperCase(), TAG_CODE.toUpperCase()), TAG_DISPLAY_NAME.toUpperCase(), TAG_DESCRIPTION.toUpperCase(), null));
 
         // Validate the returned object.
-        assertEquals(new Tag(resultTag.getId(), new TagKey(TAG_TYPE, TAG_CODE.toUpperCase()), TAG_DISPLAY_NAME.toUpperCase(), TAG_DESCRIPTION.toUpperCase(), null),
-            resultTag);
+        assertEquals(new Tag(resultTag.getId(), new TagKey(TAG_TYPE, TAG_CODE.toUpperCase()), TAG_DISPLAY_NAME.toUpperCase(), TAG_DESCRIPTION.toUpperCase(),
+                resultTag.getUserId(), resultTag.getUpdatedTime(), null), resultTag);
     }
 
 
@@ -180,8 +180,8 @@ public class TagServiceTest extends AbstractServiceTest
             new TagCreateRequest(new TagKey(TAG_TYPE.toLowerCase(), TAG_CODE.toLowerCase()), TAG_DISPLAY_NAME.toLowerCase(), TAG_DESCRIPTION.toLowerCase(), null));
 
         // Validate the returned object.
-        assertEquals(new Tag(resultTag.getId(), new TagKey(TAG_TYPE, TAG_CODE.toLowerCase()), TAG_DISPLAY_NAME.toLowerCase(), TAG_DESCRIPTION.toLowerCase(), null),
-            resultTag);
+        assertEquals(new Tag(resultTag.getId(), new TagKey(TAG_TYPE, TAG_CODE.toLowerCase()), TAG_DISPLAY_NAME.toLowerCase(), TAG_DESCRIPTION.toLowerCase(),
+                resultTag.getUserId(), resultTag.getUpdatedTime(), null), resultTag);
     }
 
     @Test
@@ -275,7 +275,8 @@ public class TagServiceTest extends AbstractServiceTest
         Tag resultTag = tagService.getTag(new TagKey(TAG_TYPE, TAG_CODE));
 
         // Validate the returned object.
-        assertEquals(new Tag(resultTag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION, null), resultTag);
+        assertEquals(new Tag(resultTag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION,
+                resultTag.getUserId(), resultTag.getUpdatedTime(), null), resultTag);
     }
 
     @Test
@@ -314,7 +315,8 @@ public class TagServiceTest extends AbstractServiceTest
         Tag resultTag = tagService.getTag(new TagKey(addWhitespace(TAG_TYPE), addWhitespace(TAG_CODE)));
 
         // Validate the returned object.
-        assertEquals(new Tag(resultTag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION, null), resultTag);
+        assertEquals(new Tag(resultTag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION, 
+               resultTag.getUserId(), resultTag.getUpdatedTime(), null), resultTag);
     }
 
     @Test
@@ -327,7 +329,8 @@ public class TagServiceTest extends AbstractServiceTest
         Tag resultTag = tagService.getTag(new TagKey(TAG_TYPE.toUpperCase(), TAG_CODE.toUpperCase()));
 
         // Validate the returned object.
-        assertEquals(new Tag(resultTag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION, null), resultTag);
+        assertEquals(new Tag(resultTag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION, 
+                resultTag.getUserId(), resultTag.getUpdatedTime(), null), resultTag);
     }
 
     @Test
@@ -340,7 +343,8 @@ public class TagServiceTest extends AbstractServiceTest
         Tag resultTag = tagService.getTag(new TagKey(TAG_TYPE.toLowerCase(), TAG_CODE.toLowerCase()));
 
         // Validate the returned object.
-        assertEquals(new Tag(resultTag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION, null), resultTag);
+        assertEquals(new Tag(resultTag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION, 
+                resultTag.getUserId(), resultTag.getUpdatedTime(), null), resultTag);
     }
 
     @Test
@@ -368,7 +372,8 @@ public class TagServiceTest extends AbstractServiceTest
         Tag updatedTag = tagService.updateTag(new TagKey(TAG_TYPE, TAG_CODE), new TagUpdateRequest(TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, null));
 
         // Validate the returned object.
-        assertEquals(new Tag(tagEntity.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, null), updatedTag);
+        assertEquals(new Tag(tagEntity.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2,
+                updatedTag.getUserId(), updatedTag.getUpdatedTime(), null), updatedTag);
     }
 
     @Test
@@ -419,7 +424,8 @@ public class TagServiceTest extends AbstractServiceTest
             new TagUpdateRequest(addWhitespace(TAG_DISPLAY_NAME_2), addWhitespace(TAG_DESCRIPTION_2), null));
 
         // Validate the returned object.
-        assertEquals(new Tag(updatedTag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME_2, addWhitespace(TAG_DESCRIPTION_2), null), updatedTag);
+        assertEquals(new Tag(updatedTag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME_2, addWhitespace(TAG_DESCRIPTION_2),
+                updatedTag.getUserId(), updatedTag.getUpdatedTime(), null), updatedTag);
     }
 
     @Test
@@ -433,8 +439,8 @@ public class TagServiceTest extends AbstractServiceTest
             new TagUpdateRequest(TAG_DISPLAY_NAME_2.toUpperCase(), TAG_DESCRIPTION_2.toUpperCase(), null));
 
         // Validate the returned object.
-        assertEquals(new Tag(updatedTag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME_2.toUpperCase(), TAG_DESCRIPTION_2.toUpperCase(), null),
-            updatedTag);
+        assertEquals(new Tag(updatedTag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME_2.toUpperCase(), TAG_DESCRIPTION_2.toUpperCase(),
+                updatedTag.getUserId(), updatedTag.getUpdatedTime(), null), updatedTag);
     }
 
     @Test
@@ -448,8 +454,8 @@ public class TagServiceTest extends AbstractServiceTest
             new TagUpdateRequest(TAG_DISPLAY_NAME_2.toLowerCase(), TAG_DESCRIPTION_2.toLowerCase(), null));
 
         // Validate the returned object.
-        assertEquals(new Tag(updatedTag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME_2.toLowerCase(), TAG_DESCRIPTION_2.toLowerCase(), null),
-            updatedTag);
+        assertEquals(new Tag(updatedTag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME_2.toLowerCase(), TAG_DESCRIPTION_2.toLowerCase(), 
+                updatedTag.getUserId(), updatedTag.getUpdatedTime(), null), updatedTag);
     }
 
     @Test
@@ -503,7 +509,8 @@ public class TagServiceTest extends AbstractServiceTest
         Tag updatedTag = tagService.updateTag(new TagKey(TAG_TYPE, TAG_CODE), new TagUpdateRequest(TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, null));
 
         // Validate the returned object.
-        assertEquals(new Tag(updatedTag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, null), updatedTag);
+        assertEquals(new Tag(updatedTag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, 
+                updatedTag.getUserId(), updatedTag.getUpdatedTime(), null), updatedTag);
     }
 
     @Test
@@ -516,7 +523,8 @@ public class TagServiceTest extends AbstractServiceTest
         Tag updatedTag = tagService.updateTag(new TagKey(TAG_TYPE, TAG_CODE), new TagUpdateRequest(TAG_DISPLAY_NAME, TAG_DESCRIPTION_2, null));
 
         // Validate the returned object.
-        assertEquals(new Tag(updatedTag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION_2, null), updatedTag);
+        assertEquals(new Tag(updatedTag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION_2, 
+                updatedTag.getUserId(), updatedTag.getUpdatedTime(), null), updatedTag);
     }
 
     @Test
@@ -529,7 +537,8 @@ public class TagServiceTest extends AbstractServiceTest
         Tag updatedTag = tagService.updateTag(new TagKey(TAG_TYPE, TAG_CODE), new TagUpdateRequest(TAG_DISPLAY_NAME.toLowerCase(), TAG_DESCRIPTION_2, null));
 
         // Validate the returned object.
-        assertEquals(new Tag(updatedTag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME.toLowerCase(), TAG_DESCRIPTION_2, null), updatedTag);
+        assertEquals(new Tag(updatedTag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME.toLowerCase(), TAG_DESCRIPTION_2, 
+                updatedTag.getUserId(), updatedTag.getUpdatedTime(), null), updatedTag);
     }
 
     @Test
@@ -548,7 +557,8 @@ public class TagServiceTest extends AbstractServiceTest
         Tag deletedTag = tagService.deleteTag(new TagKey(TAG_TYPE, TAG_CODE));
 
         // Validate the returned object.
-        assertEquals(new Tag(deletedTag.getId(), tagKey, TAG_DISPLAY_NAME, TAG_DESCRIPTION, null), deletedTag);
+        assertEquals(new Tag(deletedTag.getId(), tagKey, TAG_DISPLAY_NAME, TAG_DESCRIPTION, 
+                deletedTag.getUserId(), deletedTag.getUpdatedTime(), null), deletedTag);
 
         // Ensure that this tag is no longer there.
         assertNull(tagDao.getTagByKey(tagKey));
@@ -596,7 +606,8 @@ public class TagServiceTest extends AbstractServiceTest
         Tag deletedTag = tagService.deleteTag(new TagKey(addWhitespace(TAG_TYPE), addWhitespace(TAG_CODE)));
 
         // Validate the returned object.
-        assertEquals(new Tag(deletedTag.getId(), tagKey, TAG_DISPLAY_NAME, TAG_DESCRIPTION, null), deletedTag);
+        assertEquals(new Tag(deletedTag.getId(), tagKey, TAG_DISPLAY_NAME, TAG_DESCRIPTION, 
+                deletedTag.getUserId(), deletedTag.getUpdatedTime(), null), deletedTag);
 
         // Ensure that this tag is no longer there.
         assertNull(tagDao.getTagByKey(tagKey));
@@ -618,7 +629,8 @@ public class TagServiceTest extends AbstractServiceTest
         Tag deletedTag = tagService.deleteTag(new TagKey(TAG_TYPE.toUpperCase(), TAG_CODE.toUpperCase()));
 
         // Validate the returned object.
-        assertEquals(new Tag(deletedTag.getId(), tagKey, TAG_DISPLAY_NAME, TAG_DESCRIPTION, null), deletedTag);
+        assertEquals(new Tag(deletedTag.getId(), tagKey, TAG_DISPLAY_NAME, TAG_DESCRIPTION,
+                deletedTag.getUserId(), deletedTag.getUpdatedTime(), null), deletedTag);
 
         // Ensure that this tag is no longer there.
         assertNull(tagDao.getTagByKey(tagKey));
@@ -640,7 +652,8 @@ public class TagServiceTest extends AbstractServiceTest
         Tag deletedTag = tagService.deleteTag(new TagKey(TAG_TYPE.toLowerCase(), TAG_CODE.toLowerCase()));
 
         // Validate the returned object.
-        assertEquals(new Tag(deletedTag.getId(), tagKey, TAG_DISPLAY_NAME, TAG_DESCRIPTION, null), deletedTag);
+        assertEquals(new Tag(deletedTag.getId(), tagKey, TAG_DISPLAY_NAME, TAG_DESCRIPTION, 
+                deletedTag.getUserId(), deletedTag.getUpdatedTime(), null), deletedTag);
 
         // Ensure that this tag is no longer there.
         assertNull(tagDao.getTagByKey(tagKey));
@@ -797,12 +810,14 @@ public class TagServiceTest extends AbstractServiceTest
         Tag tag = tagService.createTag(new TagCreateRequest(new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION, null));
 
         // Validate the tag which was created.
-        assertEquals(new Tag(tag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION, null), tag);
+        assertEquals(new Tag(tag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION, 
+                tag.getUserId(), tag.getUpdatedTime(), null), tag);
         
         // Create a child tag
         Tag childTag = tagService.createTag(new TagCreateRequest(new TagKey(TAG_TYPE, TAG_CODE_2), TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, new TagKey(TAG_TYPE, TAG_CODE)));
     
-        assertEquals(new Tag(childTag.getId(), new TagKey(TAG_TYPE, TAG_CODE_2), TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, new TagKey(TAG_TYPE, TAG_CODE)), childTag);
+        assertEquals(new Tag(childTag.getId(), new TagKey(TAG_TYPE, TAG_CODE_2), TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2,  
+                childTag.getUserId(), childTag.getUpdatedTime(), new TagKey(TAG_TYPE, TAG_CODE)), childTag);
     }
     
     @Test
@@ -850,12 +865,14 @@ public class TagServiceTest extends AbstractServiceTest
         Tag updatedTag = tagService.updateTag(new TagKey(TAG_TYPE, TAG_CODE), new TagUpdateRequest(TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, new TagKey(TAG_TYPE, TAG_CODE_2)));
 
         // Validate the returned object.
-        assertEquals(new Tag(tagEntity.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, new TagKey(TAG_TYPE, TAG_CODE_2)), updatedTag);
+        assertEquals(new Tag(tagEntity.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, 
+                updatedTag.getUserId(), updatedTag.getUpdatedTime(), new TagKey(TAG_TYPE, TAG_CODE_2)), updatedTag);
         
         //set parent tag to null
         updatedTag = tagService.updateTag(new TagKey(TAG_TYPE, TAG_CODE), new TagUpdateRequest(TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, null));
        
-        assertEquals(new Tag(tagEntity.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, null), updatedTag);
+        assertEquals(new Tag(tagEntity.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, 
+                updatedTag.getUserId(), updatedTag.getUpdatedTime(), null), updatedTag);
     }
     
     @Test

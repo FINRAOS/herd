@@ -65,11 +65,16 @@ public interface TagService
 
     /**
      * Retrieves all associated tags for the specified tag type code.
-     *
+     * 
+     * When tagCode is null, return all tags of the tag type code.
+     * 
+     * When tagCode is provided, return all tags of the tag type code and whose parent tag code is tagCode.
+     * 
      * @param tagTypeCode the tag type's code.
+     * 
      * @param tagCode the tag code.
      *
-     * @return all associated tags.
+     * @return all associated tags, with parent, itself and the children tags with has more children flag.
      */
     public TagListResponse getTags(String tagTypeCode, String tagCode);
 }

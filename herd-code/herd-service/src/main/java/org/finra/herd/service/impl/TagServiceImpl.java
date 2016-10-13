@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
+import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.dao.TagDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
@@ -268,6 +269,8 @@ public class TagServiceImpl implements TagService
         tag.setTagKey(new TagKey(tagEntity.getTagType().getCode(), tagEntity.getTagCode()));
         tag.setDisplayName(tagEntity.getDisplayName());
         tag.setDescription(tagEntity.getDescription());
+        tag.setUserId(tagEntity.getCreatedBy());
+        tag.setUpdatedTime(HerdDateUtils.getXMLGregorianCalendarValue(tagEntity.getUpdatedOn()));
         
         TagEntity parentTagEntity = tagEntity.getParentTagEntity();
         if (parentTagEntity != null)

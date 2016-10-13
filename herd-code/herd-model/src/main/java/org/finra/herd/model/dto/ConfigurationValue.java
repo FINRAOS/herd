@@ -593,8 +593,13 @@ public enum ConfigurationValue
     /**
      * The maximum number of records per page returned in business object data search results
      */
-    BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULTS_PER_PAGE("business.object.data.search.max.results.per.page", 50);
+    BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULTS_PER_PAGE("business.object.data.search.max.results.per.page", 50),
 
+    /**
+     * The maximum number of nested tags allowed
+     */
+    MAX_ALLOWED_TAG_NESTING("tag.max.nesting", 10);
+    
     // Properties
     private String key;
 

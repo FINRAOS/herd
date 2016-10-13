@@ -631,7 +631,17 @@
                <xs:documentation>The tag's description.</xs:documentation>
             </xs:annotation>
          </xs:element>
-         <xs:element name="parentTagKey" type="tagKey" minOccurs="0">
+         <xs:element name="userId" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The User ID of the user who last updated.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+          <xs:element name="updatedTime" type="xs:dateTime">
+            <xs:annotation>
+               <xs:documentation>The timestamp of when it is last updated.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+          <xs:element name="parentTagKey" type="tagKey" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The tag's description.</xs:documentation>
             </xs:annotation>

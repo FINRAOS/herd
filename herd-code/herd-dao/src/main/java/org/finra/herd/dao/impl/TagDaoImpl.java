@@ -94,8 +94,7 @@ public class TagDaoImpl extends AbstractHerdDao implements TagDao
     @Override
     public List<TagChild> getTagsByTagType(String tagType, String tagCode)
     {
-        List<TagChild> childrenTagKeys = new ArrayList<>();
-        // Create the criteria builder and a tuple style criteria query.
+        List<TagChild> tagChildren = new ArrayList<>();
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
         CriteriaQuery<TagEntity> criteria = builder.createQuery(TagEntity.class);
 
@@ -127,13 +126,13 @@ public class TagDaoImpl extends AbstractHerdDao implements TagDao
         for (TagEntity tag: tagList)
         {           
             boolean hasMoreChildren = tag.getChildrenTagEntities().size() > 0 ? true: false;
-            TagChild childTagKey = new TagChild();
-            childTagKey.setTagKey(new TagKey(tag.getTagType().getCode(), tag.getTagCode()));
-            childTagKey.setHasChildren(hasMoreChildren);        
-            childrenTagKeys.add(childTagKey);
+            TagChild tagChild = new TagChild();
+            tagChild.setTagKey(new TagKey(tag.getTagType().getCode(), tag.getTagCode()));
+            tagChild.setHasChildren(hasMoreChildren);        
+            tagChildren.add(tagChild);
         }
        
-        return childrenTagKeys;
+        return tagChildren;
     }
         
 

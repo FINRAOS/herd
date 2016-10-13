@@ -19,12 +19,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
+import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.TagDao;
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.TagCreateRequest;
 import org.finra.herd.model.api.xml.TagKey;
 import org.finra.herd.model.api.xml.TagUpdateRequest;
+import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.jpa.TagEntity;
 
 @Component
@@ -33,8 +35,9 @@ public class TagDaoHelper
     @Autowired
     private TagDao tagDao;
     
-    private static final int MAX_PARENT_LEVEL = 100;
-
+    @Autowired
+    protected ConfigurationHelper configurationHelper;
+    
     /**
      * Ensures that a tag entity does not exist for a specified tag type code and display name.
      *
@@ -74,6 +77,11 @@ public class TagDaoHelper
         return tagEntity;
     }
     
+    /**
+     * Validate create tag request's parent tag key.
+     * 
+     * @param tagCreateRequest the create tag request.
+     */
     public void validateCreateTagParentKey(TagCreateRequest tagCreateRequest)
     {
         if (tagCreateRequest.getParentTagKey() != null)
@@ -83,6 +91,16 @@ public class TagDaoHelper
         }
     }
     
+    /**
+     * Validate update tag request's parent tag key.
+     * The parent tag should be be the same type of the updated tag.
+     * The parent tag should not be on the children tree of the updated tag. 
+     * No more than MAX_HIERARCHY_LEVEL is allowed to update parent-child relation.
+     * 
+     * @param tagEntity the tagEntity to be updated
+     * 
+     * @param tagUpdateRequest the update request
+     */
     public void validateUpdateTagParentKey(TagEntity tagEntity, TagUpdateRequest tagUpdateRequest)
     {
         TagKey parentTagKey = tagUpdateRequest.getParentTagKey();
@@ -90,6 +108,9 @@ public class TagDaoHelper
         {
             Assert.isTrue(tagEntity.getTagType().getCode().equals(parentTagKey.getTagTypeCode()), "Parent tag type code should be the same as requested");
         
+            Integer max_allowed_tag_nesting =
+                    configurationHelper.getProperty(ConfigurationValue.MAX_ALLOWED_TAG_NESTING, Integer.class);
+
             int level = 0;
             //ensure parent tag Exists
             TagEntity parentTagEntity = getTagEntity(parentTagKey);
@@ -98,12 +119,11 @@ public class TagDaoHelper
             {
                 Assert.isTrue(!tagEntity.equals(parentTagEntity), "Parent Tag key should not be child of the requested tag Entitiy or itself");
                 parentTagEntity = parentTagEntity.getParentTagEntity();
-                if (level++ >= MAX_PARENT_LEVEL)
+                if (level++ >= max_allowed_tag_nesting)
                 {
-                    throw new IllegalArgumentException("Max parent level " + MAX_PARENT_LEVEL + "reached, abort action.");
+                    throw new IllegalArgumentException("Exceeds maximum allowed tag nesting level of " + max_allowed_tag_nesting);
                 }
-            }
-            
+            }          
         }   
     }
 

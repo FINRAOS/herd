@@ -44,16 +44,25 @@ public interface TagDao extends BaseJpaDao
     public TagEntity getTagByTagTypeAndDisplayName(String tagTypeCode, String displayName);
 
     /**
-     *  Gets a list of Tag Key with Children flags
-     *
-     * @return list of Tag with Children flags
+     *  Gets a list of Tag Key with Children flags, whose parent tag code is tagCode.
+     *  
+     *  When tagCode is null, return tags of tagTypeCd whose have no parent (root tags).
+     *  
+     * @param tagTypeCd tag Type code.
+     * 
+     * @param tagCode the parent tag code.
+     * 
+     * @return list of Tag with Children flags.
      */
     public List<TagChild> getTagsByTagType(String tagTypeCd, String tagCode);
     
     /**
-     * Gets a list of Tag Key with Children flags
-     * @param tagTypeCd tag Type code
-     * @return list of Tag with Children flags
+     * Gets a list of Tag Key with Children flags, which have tag type of tagTypeCd
+     * and have no parents (root tags).
+     * 
+     * @param tagTypeCd tag Type code.
+     * 
+     * @return list of Tag with Children flags.
      */
     public List<TagChild> getTagsByTagType(String tagTypeCd);
 }
