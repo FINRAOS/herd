@@ -620,6 +620,12 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     protected BusinessObjectDefinitionDaoTestHelper businessObjectDefinitionDaoTestHelper;
 
     @Autowired
+    protected BusinessObjectDefinitionTagDao businessObjectDefinitionTagDao;
+
+    @Autowired
+    protected BusinessObjectDefinitionTagDaoTestHelper businessObjectDefinitionTagDaoTestHelper;
+
+    @Autowired
     protected BusinessObjectFormatDao businessObjectFormatDao;
 
     @Autowired

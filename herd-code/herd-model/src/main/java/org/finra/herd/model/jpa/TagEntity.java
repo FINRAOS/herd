@@ -15,8 +15,10 @@
 */
 package org.finra.herd.model.jpa;
 
+import java.util.Collection;
 import java.util.List;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -25,6 +27,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.OrderBy;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
@@ -70,7 +73,7 @@ public class TagEntity extends AuditableEntity
      */
     @Column(name = "desc_tx", nullable = true)
     private String description;
-    
+
     // This is the parent
     @JoinTable(name = "tag_prnt", joinColumns = {@JoinColumn(name = TABLE_NAME + "_id", referencedColumnName = TABLE_NAME + "_id")},
         inverseJoinColumns = {@JoinColumn(name = "prnt_tag_id", referencedColumnName = TABLE_NAME + "_id")})
@@ -80,6 +83,10 @@ public class TagEntity extends AuditableEntity
     // These are the children.
     @OneToMany(mappedBy = "parentTagEntity")
     private List<TagEntity> childrenTagEntities;
+
+    @OneToMany(mappedBy = "tag", orphanRemoval = true, cascade = {CascadeType.ALL})
+    @OrderBy("bus_objct_dfntn_id")
+    private Collection<BusinessObjectDefinitionTagEntity> businessObjectDefinitionTags;
 
     public Integer getId()
     {
@@ -151,4 +158,13 @@ public class TagEntity extends AuditableEntity
         this.childrenTagEntities = childrenTagEntities;
     }
 
+    public Collection<BusinessObjectDefinitionTagEntity> getBusinessObjectDefinitionTags()
+    {
+        return businessObjectDefinitionTags;
+    }
+
+    public void setBusinessObjectDefinitionTags(Collection<BusinessObjectDefinitionTagEntity> businessObjectDefinitionTags)
+    {
+        this.businessObjectDefinitionTags = businessObjectDefinitionTags;
+    }
 }
