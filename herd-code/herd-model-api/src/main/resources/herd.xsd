@@ -636,12 +636,12 @@
                <xs:documentation>The User ID of the user who last updated.</xs:documentation>
             </xs:annotation>
          </xs:element>
-          <xs:element name="updatedTime" type="xs:dateTime">
+         <xs:element name="updatedTime" type="xs:dateTime">
             <xs:annotation>
                <xs:documentation>The timestamp of when it is last updated.</xs:documentation>
             </xs:annotation>
          </xs:element>
-          <xs:element name="parentTagKey" type="tagKey" minOccurs="0">
+         <xs:element name="parentTagKey" type="tagKey" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The tag's description.</xs:documentation>
             </xs:annotation>
@@ -649,15 +649,15 @@
       </xs:all>
    </xs:complexType>
 
-  <xs:element name="tagListResponse" type="tagListResponse"/>
-  <xs:complexType name="tagListResponse">
-    <xs:all>
-        <xs:element name="tagKey" type="tagKey">
+   <xs:element name="tagListResponse" type="tagListResponse"/>
+   <xs:complexType name="tagListResponse">
+      <xs:all>
+         <xs:element name="tagKey" type="tagKey">
             <xs:annotation>
                <xs:documentation>The tag's unique key.</xs:documentation>
             </xs:annotation>
          </xs:element>
-         <xs:element name="parentTagKey" type="tagKey"  minOccurs="0">
+         <xs:element name="parentTagKey" type="tagKey" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The tag's unique key.</xs:documentation>
             </xs:annotation>
@@ -667,8 +667,8 @@
                <xs:documentation>Children Tag Keys.</xs:documentation>
             </xs:annotation>
          </xs:element>
-    </xs:all> 
-  </xs:complexType>
+      </xs:all>
+   </xs:complexType>
 
    <xs:complexType name="tagChildren">
       <xs:sequence>
@@ -679,10 +679,10 @@
          </xs:element>
       </xs:sequence>
    </xs:complexType>
-  
-    <xs:complexType name="tagChild">
+
+   <xs:complexType name="tagChild">
       <xs:all>
-          <xs:element name="tagKey" type="tagKey">
+         <xs:element name="tagKey" type="tagKey">
             <xs:annotation>
                <xs:documentation>The tag's unique key.</xs:documentation>
             </xs:annotation>
@@ -698,7 +698,7 @@
 
    <xs:element name="tagKey" type="tagKey">
    </xs:element>
-   
+
    <xs:complexType name="tagKey">
       <xs:all>
          <xs:element name="tagTypeCode" type="xs:string">
@@ -948,6 +948,61 @@
          <xs:element name="businessObjectDefinitionColumnName" type="xs:string">
             <xs:annotation>
                <xs:documentation>The name of the Business Object Definition Column</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <!-- ***** Business Object Definition Tag ***** -->
+
+   <xs:element name="businessObjectDefinitionTagCreateRequest" type="businessObjectDefinitionTagCreateRequest"/>
+   <xs:complexType name="businessObjectDefinitionTagCreateRequest">
+      <xs:all>
+         <xs:element name="businessObjectDefinitionTagKey" type="businessObjectDefinitionTagKey">
+            <xs:annotation>
+               <xs:documentation>Values that uniquely identify a Business Object Definition Tag</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDefinitionTag" type="businessObjectDefinitionTag"/>
+   <xs:complexType name="businessObjectDefinitionTag">
+      <xs:all>
+         <xs:element name="id" type="xs:int">
+            <xs:annotation>
+               <xs:documentation>The internal Id that uniquely references a Business Object Definition Tag</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectDefinitionTagKey" type="businessObjectDefinitionTagKey">
+            <xs:annotation>
+               <xs:documentation>Values that uniquely identify a Business Object Definition Tag</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDefinitionTagKeys" type="businessObjectDefinitionTagKeys"/>
+   <xs:complexType name="businessObjectDefinitionTagKeys">
+      <xs:sequence>
+         <xs:element name="businessObjectDefinitionTagKey" type="businessObjectDefinitionTagKey" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>Values that uniquely identify a Business Object Definition Tag</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDefinitionTagKey">
+      <xs:all>
+         <xs:element name="businessObjectDefinitionKey" type="businessObjectDefinitionKey">
+            <xs:annotation>
+               <xs:documentation>Values that uniquely identify a Business Object Definition</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="tagKey" type="tagKey">
+            <xs:annotation>
+               <xs:documentation>Values that uniquely identify a Tag</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
