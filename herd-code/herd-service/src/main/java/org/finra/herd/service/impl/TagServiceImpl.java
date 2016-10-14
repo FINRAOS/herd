@@ -171,9 +171,10 @@ public class TagServiceImpl implements TagService
         //getTag method will validate the requested tag exists
         if (tagCode != null)
         {
+            tagCode = alternateKeyHelper.validateStringParameter("tag code", tagCode);
             TagKey tagKey = new TagKey(tagTypeCodeLocal, tagCode);
             Tag tag = getTag(tagKey);
-            response.setTagKey(tagKey);
+            response.setTagKey(tag.getTagKey());
             response.setParentTagKey(tag.getParentTagKey());
         }
         

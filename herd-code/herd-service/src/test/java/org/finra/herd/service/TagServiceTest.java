@@ -948,4 +948,36 @@ public class TagServiceTest extends AbstractServiceTest
             //as expected
         }
     }
+    
+    @Test
+    public void getTagsWithParent()
+    {
+        // Create and persist a tag entity.
+        TagEntity root = tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+        TagEntity child = tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE_2, TAG_DISPLAY_NAME + "x", TAG_DESCRIPTION_2 + "x", root);
+        TagEntity grandChild = tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE_2 + "y", TAG_DISPLAY_NAME_2 + "y", TAG_DESCRIPTION_2 + "y", child);
+        //only the root
+        TagListResponse resultTagKeys = tagService.getTags(TAG_TYPE, null);
+        assertNull(resultTagKeys.getParentTagKey());
+        assertNull(resultTagKeys.getTagKey());
+        assertEquals(resultTagKeys.getTagChildren().size(), 1);
+        
+        resultTagKeys = tagService.getTags(TAG_TYPE, TAG_CODE);
+        assertNull(resultTagKeys.getParentTagKey());
+        assertEquals(resultTagKeys.getTagChildren().size(), 1);
+        assertEquals(resultTagKeys.getTagKey(), new TagKey(TAG_TYPE, TAG_CODE));
+        //the lower case should be the same
+        resultTagKeys = tagService.getTags(TAG_TYPE, TAG_CODE.toLowerCase() + " ");
+        assertNull(resultTagKeys.getParentTagKey());
+        assertEquals(resultTagKeys.getTagChildren().size(), 1);
+        assertEquals(resultTagKeys.getTagKey(), new TagKey(TAG_TYPE, TAG_CODE));
+        
+        resultTagKeys = tagService.getTags(TAG_TYPE, TAG_CODE_2.toLowerCase() + " ");
+        assertNotNull(resultTagKeys.getParentTagKey());
+        assertEquals(resultTagKeys.getParentTagKey(), new TagKey(TAG_TYPE, TAG_CODE));
+        assertEquals(resultTagKeys.getTagChildren().size(), 1);
+        assertEquals(resultTagKeys.getTagKey(), new TagKey(TAG_TYPE, TAG_CODE_2));
+        
+        
+    }
 }
