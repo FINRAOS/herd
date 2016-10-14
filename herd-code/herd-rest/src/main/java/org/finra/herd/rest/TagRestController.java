@@ -122,7 +122,7 @@ public class TagRestController
      */
     @RequestMapping(value = "/tags/tagTypes/{tagTypeCode}", method = RequestMethod.GET, consumes = {"application/xml", "application/json"})
     @Secured(SecurityFunctions.FN_TAGS_ALL_GET)
-    public TagListResponse getTags(@PathVariable("tagTypeCode") String tagTypeCode, @RequestParam("tagCode") String tagCode)
+    public TagListResponse getTags(@PathVariable("tagTypeCode") String tagTypeCode, @RequestParam(value="tagCode", required=false) String tagCode)
     {       
         return tagService.getTags(tagTypeCode, tagCode);
     }
