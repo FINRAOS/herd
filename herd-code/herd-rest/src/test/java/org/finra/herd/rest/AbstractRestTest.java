@@ -53,6 +53,9 @@ public abstract class AbstractRestTest extends AbstractUiTest
     protected BusinessObjectDefinitionRestController businessObjectDefinitionRestController;
 
     @Autowired
+    protected BusinessObjectDefinitionTagRestController businessObjectDefinitionTagRestController;
+
+    @Autowired
     protected BusinessObjectFormatRestController businessObjectFormatRestController;
 
     @Autowired
