@@ -87,7 +87,7 @@ public class TagServiceImpl implements TagService
         TagEntity parentTagEntity  = null;
         if (request.getParentTagKey() != null)
         {
-            parentTagEntity = tagDaoHelper.getTagEntity(request.getParentTagKey() );
+            parentTagEntity = tagDaoHelper.getTagEntity(request.getParentTagKey());
         }
         
         // Create and persist a new tag entity from the information in the request.
@@ -193,6 +193,11 @@ public class TagServiceImpl implements TagService
     {
         Assert.notNull(tagCreateRequest, "A tag create request must be specified.");
         tagHelper.validateTagKey(tagCreateRequest.getTagKey());
+        
+        if (tagCreateRequest.getParentTagKey() != null)
+        {
+            tagHelper.validateTagKey(tagCreateRequest.getParentTagKey());
+        }
         tagCreateRequest.setDisplayName(alternateKeyHelper.validateStringParameter("display name", tagCreateRequest.getDisplayName()));
         tagDaoHelper.validateCreateTagParentKey(tagCreateRequest);
     }
@@ -206,6 +211,11 @@ public class TagServiceImpl implements TagService
     {
         Assert.notNull(tagUpdateRequest, "A tag update request must be specified.");
         tagUpdateRequest.setDisplayName(alternateKeyHelper.validateStringParameter("display name", tagUpdateRequest.getDisplayName()));
+   
+        if (tagUpdateRequest.getParentTagKey() != null)
+        {
+            tagHelper.validateTagKey(tagUpdateRequest.getParentTagKey());
+        }   
     }
 
     /**
