@@ -68,6 +68,7 @@ public class TagRestController
      * @return the tag
      */
     @RequestMapping(value = "/tags/tagTypes/{tagTypeCode}/tagCodes/{tagCode}", method = RequestMethod.GET, consumes = {"application/xml", "application/json"})
+    @Secured(SecurityFunctions.FN_TAGS_GET)
     public Tag getTag(@PathVariable("tagTypeCode") String tagTypeCode, @PathVariable("tagCode") String tagCode)
     {
         TagKey tagKey = new TagKey(tagTypeCode, tagCode);
@@ -111,7 +112,7 @@ public class TagRestController
 
     /**
      * Retrieves all associated tags for the specified tag type code.
-     * When tagCode is null, return all tags of the tag type code.
+     * When tagCode is null, return all tags of the tag type code, which has no parent (i.e. root tags).
      * When tagCode is provided, return all tags of the tag type code and whose parent tag code is tagCode.
      * 
      * @param tagTypeCode the tag type's code.
