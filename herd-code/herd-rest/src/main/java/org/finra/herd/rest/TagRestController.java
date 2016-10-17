@@ -67,7 +67,7 @@ public class TagRestController
      *
      * @return the tag
      */
-    @RequestMapping(value = "/tags/tagTypes/{tagTypeCode}/tagCodes/{tagCode}", method = RequestMethod.GET, consumes = {"application/xml", "application/json"})
+    @RequestMapping(value = "/tags/tagTypes/{tagTypeCode}/tagCodes/{tagCode}", method = RequestMethod.GET)
     @Secured(SecurityFunctions.FN_TAGS_GET)
     public Tag getTag(@PathVariable("tagTypeCode") String tagTypeCode, @PathVariable("tagCode") String tagCode)
     {
@@ -101,8 +101,7 @@ public class TagRestController
      *
      * @return the deleted tag
      */
-    @RequestMapping(value = "/tags/tagTypes/{tagTypeCode}/tagCodes/{tagCode}", method = RequestMethod.DELETE, consumes = {"application/xml",
-            "application/json"})
+    @RequestMapping(value = "/tags/tagTypes/{tagTypeCode}/tagCodes/{tagCode}", method = RequestMethod.DELETE)
     @Secured(SecurityFunctions.FN_TAGS_DELETE)
     public Tag deleteTag(@PathVariable("tagTypeCode") String tagTypeCode, @PathVariable("tagCode") String tagCode)
     {
@@ -120,7 +119,7 @@ public class TagRestController
      *
      * @return all associated tags, with parent, itself and the children tags with has more children flag.
      */
-    @RequestMapping(value = "/tags/tagTypes/{tagTypeCode}", method = RequestMethod.GET, consumes = {"application/xml", "application/json"})
+    @RequestMapping(value = "/tags/tagTypes/{tagTypeCode}", method = RequestMethod.GET)
     @Secured(SecurityFunctions.FN_TAGS_ALL_GET)
     public TagListResponse getTags(@PathVariable("tagTypeCode") String tagTypeCode, @RequestParam(value="tagCode", required=false) String tagCode)
     {       
