@@ -86,9 +86,19 @@ public class TagDaoHelper
     {
         if (tagCreateRequest.getParentTagKey() != null)
         {
-            Assert.isTrue(tagCreateRequest.getTagKey().getTagTypeCode().equals(tagCreateRequest.getParentTagKey().getTagTypeCode()), 
-                    "Tag type code in parent tag key must match the tag type code in the request.");      
+            validateTagParentKeyType(tagCreateRequest.getTagKey(), tagCreateRequest.getParentTagKey());    
         }
+    }
+    
+    /**
+     * validate parent tag Key
+     * @param tagKey requested tag key
+     * @param parentTagKey parent tag key
+     */
+    public void validateTagParentKeyType(TagKey tagKey, TagKey parentTagKey)
+    {
+        Assert.isTrue(tagKey.getTagTypeCode().equalsIgnoreCase(parentTagKey.getTagTypeCode()), 
+                "Tag type code in parent tag key must match the tag type code in the request.");      
     }
     
     /**
@@ -106,9 +116,8 @@ public class TagDaoHelper
         TagKey parentTagKey = tagUpdateRequest.getParentTagKey();
         if (parentTagKey != null)
         {
-            Assert.isTrue(tagEntity.getTagType().getCode().equalsIgnoreCase(parentTagKey.getTagTypeCode()), 
-                    "Tag type code in parent tag key must match the tag type code in the request.");
-        
+            validateTagParentKeyType(new TagKey(tagEntity.getTagType().getCode(), tagEntity.getTagCode()), tagUpdateRequest.getParentTagKey());
+
             Integer maxAllowedTagNesting =
                     configurationHelper.getProperty(ConfigurationValue.MAX_ALLOWED_TAG_NESTING, Integer.class);
 
