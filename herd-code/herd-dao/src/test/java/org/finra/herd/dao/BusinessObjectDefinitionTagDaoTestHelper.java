@@ -80,7 +80,21 @@ public class BusinessObjectDefinitionTagDaoTestHelper
                 .createTagEntity(tagKey.getTagTypeCode(), tagKey.getTagCode(), AbstractDaoTest.TAG_DISPLAY_NAME, AbstractDaoTest.TAG_DESCRIPTION);
         }
 
-        // Create a business object definition entity.
+        return createBusinessObjectDefinitionTagEntity(businessObjectDefinitionEntity, tagEntity);
+    }
+
+    /**
+     * Creates and persists a new business object definition tag entity.
+     *
+     * @param businessObjectDefinitionEntity the business object definition entity
+     * @param tagEntity the tag entity
+     *
+     * @return the newly created business object definition tag entity
+     */
+    public BusinessObjectDefinitionTagEntity createBusinessObjectDefinitionTagEntity(BusinessObjectDefinitionEntity businessObjectDefinitionEntity,
+        TagEntity tagEntity)
+    {
+        // Create a business object definition tag entity.
         BusinessObjectDefinitionTagEntity businessObjectDefinitionTagEntity = new BusinessObjectDefinitionTagEntity();
         businessObjectDefinitionTagEntity.setBusinessObjectDefinition(businessObjectDefinitionEntity);
         businessObjectDefinitionTagEntity.setTag(tagEntity);
