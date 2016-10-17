@@ -161,6 +161,8 @@ public class TagServiceImpl implements TagService
         // Validate and trim the tag type code.
         String tagTypeCodeLocal = alternateKeyHelper.validateStringParameter("tag type code", tagTypeCode);
 
+        String cleanTagCode = tagCode;
+        
         // Retrieve and ensure that a tag type exists for the specified tag type code.
         tagTypeDaoHelper.getTagTypeEntity(new TagTypeKey(tagTypeCodeLocal));
 
@@ -171,14 +173,14 @@ public class TagServiceImpl implements TagService
         //getTag method will validate the requested tag exists
         if (tagCode != null)
         {
-            tagCode = alternateKeyHelper.validateStringParameter("tag code", tagCode);
-            TagKey tagKey = new TagKey(tagTypeCodeLocal, tagCode);
+            cleanTagCode = alternateKeyHelper.validateStringParameter("tag code", tagCode);
+            TagKey tagKey = new TagKey(tagTypeCodeLocal, cleanTagCode);
             Tag tag = getTag(tagKey);
             response.setTagKey(tag.getTagKey());
             response.setParentTagKey(tag.getParentTagKey());
         }
         
-        List<TagChild> tagChildren = tagDao.getTagsByTagType(tagTypeCodeLocal, tagCode);
+        List<TagChild> tagChildren = tagDao.getTagsByTagType(tagTypeCodeLocal, cleanTagCode);
          
         response.setTagChildren(tagChildren);
               
