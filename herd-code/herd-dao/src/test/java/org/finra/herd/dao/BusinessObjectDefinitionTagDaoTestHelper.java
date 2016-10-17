@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionTagKey;
 import org.finra.herd.model.api.xml.TagKey;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionTagEntity;
@@ -38,6 +39,19 @@ public class BusinessObjectDefinitionTagDaoTestHelper
 
     @Autowired
     private TagDaoTestHelper tagDaoTestHelper;
+
+    /**
+     * Creates and persists a new business object definition tag entity.
+     *
+     * @param businessObjectDefinitionTagKey the business object definition tag key
+     *
+     * @return the newly created business object definition tag entity
+     */
+    public BusinessObjectDefinitionTagEntity createBusinessObjectDefinitionTagEntity(BusinessObjectDefinitionTagKey businessObjectDefinitionTagKey)
+    {
+        return createBusinessObjectDefinitionTagEntity(businessObjectDefinitionTagKey.getBusinessObjectDefinitionKey(),
+            businessObjectDefinitionTagKey.getTagKey());
+    }
 
     /**
      * Creates and persists a new business object definition tag entity.
