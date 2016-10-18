@@ -20,6 +20,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
@@ -82,6 +83,7 @@ public class TagDaoTest extends AbstractDaoTest
         tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_2, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2);
         //no parent key is provided, so only search the root
         assertEquals(2, tagDao.getTagsByTagType(TAG_TYPE).size());
+
     }
     
     @Test
@@ -102,11 +104,18 @@ public class TagDaoTest extends AbstractDaoTest
         child =  tagDao.getTagByKey(new TagKey(TAG_TYPE, TAG_CODE_2));
         assertEquals(child.getChildrenTagEntities().size(), 1);
         
-        //assertEquals(childBack.getChildrenTagEntities().size(), 1);
+        List<TagChild> expectedList = Arrays.asList(new TagChild(new TagKey(TAG_TYPE, TAG_CODE_2), true));
+        assertEquals(list, expectedList);
+        
         list = tagDao.getTagsByTagType(TAG_TYPE, TAG_CODE_2);
         // Retrieve a list of tag keys.
         assertEquals(1, list.size());
         assertFalse(list.get(0).isHasChildren());
+        expectedList = Arrays.asList(new TagChild(new TagKey(TAG_TYPE, TAG_CODE_2 + "x"), false));
+             
+        TagEntity grandChild2 = tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE_2 + "a", TAG_DISPLAY_NAME_2 + "a", TAG_DESCRIPTION, child);
+        list = tagDao.getTagsByTagType(TAG_TYPE, TAG_CODE_2);
+        expectedList = Arrays.asList(new TagChild(new TagKey(TAG_TYPE, TAG_CODE_2 + "a"), false), new TagChild(new TagKey(TAG_TYPE, TAG_CODE_2 + "x"), false));   
     }
     
     @Test
