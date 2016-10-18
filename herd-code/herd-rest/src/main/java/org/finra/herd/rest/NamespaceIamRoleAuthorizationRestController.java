@@ -37,7 +37,7 @@ import org.finra.herd.ui.constants.UiConstants;
  */
 @RestController
 @RequestMapping(value = UiConstants.REST_URL_BASE, produces = {"application/xml", "application/json"})
-@Api(tags = "NamespaceIamRoleAuthorization")
+@Api(tags = "Namespace IAM Role Authorization")
 public class NamespaceIamRoleAuthorizationRestController extends HerdBaseController
 {
     @Autowired
@@ -45,8 +45,9 @@ public class NamespaceIamRoleAuthorizationRestController extends HerdBaseControl
 
     /**
      * Authorizes a namespace to use IAM roles.
-     * 
+     *
      * @param request The namespace IAM role create request
+     *
      * @return The namespace IAM role authorization
      */
     @RequestMapping(value = "/namespaceIamRoleAuthorizations", method = RequestMethod.POST, consumes = {"application/xml", "application/json"})
@@ -58,8 +59,9 @@ public class NamespaceIamRoleAuthorizationRestController extends HerdBaseControl
 
     /**
      * Get the IAM roles that a namespace is authorized to use.
-     * 
+     *
      * @param namespace The namespace
+     *
      * @return The namespace IAM role authorization
      */
     @RequestMapping(value = "/namespaceIamRoleAuthorizations/namespaces/{namespace}", method = RequestMethod.GET)
@@ -71,7 +73,7 @@ public class NamespaceIamRoleAuthorizationRestController extends HerdBaseControl
 
     /**
      * Get a list of namespace IAM role authorizations.
-     * 
+     *
      * @return The list of namespace IAM role authorizations.
      */
     @RequestMapping(value = "/namespaceIamRoleAuthorizations", method = RequestMethod.GET)
@@ -83,13 +85,14 @@ public class NamespaceIamRoleAuthorizationRestController extends HerdBaseControl
 
     /**
      * Sets the authorizations a namespace has to use IAM roles.
-     * 
+     *
      * @param namespace The namespace to update authorizations
      * @param request The namespace IAM role update request
+     *
      * @return The namespace IAM role authorization
      */
-    @RequestMapping(value = "/namespaceIamRoleAuthorizations/namespaces/{namespace}", method = RequestMethod.PUT, consumes = {"application/xml",
-        "application/json"})
+    @RequestMapping(value = "/namespaceIamRoleAuthorizations/namespaces/{namespace}", method = RequestMethod.PUT,
+        consumes = {"application/xml", "application/json"})
     @Secured(SecurityFunctions.FN_NAMESPACE_IAM_ROLE_AUTHORIZATIONS_PUT)
     public NamespaceIamRoleAuthorization updateNamespaceIamRoleAuthorization(@PathVariable("namespace") String namespace,
         @RequestBody NamespaceIamRoleAuthorizationUpdateRequest request)
@@ -99,8 +102,9 @@ public class NamespaceIamRoleAuthorizationRestController extends HerdBaseControl
 
     /**
      * Removes IAM roles a namespace has authorizations to use.
-     * 
+     *
      * @param namespace The namespace of the authorizations to remove
+     *
      * @return The namespace IAM role authorization
      */
     @RequestMapping(value = "/namespaceIamRoleAuthorizations/namespaces/{namespace}", method = RequestMethod.DELETE)
