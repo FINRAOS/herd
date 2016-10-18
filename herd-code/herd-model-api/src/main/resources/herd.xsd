@@ -696,9 +696,6 @@
       </xs:all>
    </xs:complexType>
 
-   <xs:element name="tagKey" type="tagKey">
-   </xs:element>
-
    <xs:complexType name="tagKey">
       <xs:all>
          <xs:element name="tagTypeCode" type="xs:string">
