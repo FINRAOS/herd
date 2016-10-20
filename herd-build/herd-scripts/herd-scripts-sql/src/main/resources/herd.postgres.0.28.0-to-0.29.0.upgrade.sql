@@ -13,11 +13,11 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-
 CREATE TABLE tag_prnt  ( 
     tag_id            int8 			NOT NULL,
     prnt_tag_id       int8 			NULL
     );
+    
 alter table tag_prnt add constraint tag_prnt_pk primary key (tag_id);
 ALTER TABLE tag_prnt ADD CONSTRAINT tag_prnt_fk1 FOREIGN KEY(tag_id) REFERENCES tag(tag_id);
 ALTER TABLE tag_prnt ADD CONSTRAINT tag_prnt_fk2 FOREIGN KEY(prnt_tag_id) REFERENCES tag(tag_id);
@@ -52,7 +52,5 @@ insert into scrty_fn_lk (scrty_fn_cd, creat_ts, creat_user_id, updt_ts, updt_use
 values ('FN_BUSINESS_OBJECT_DEFINITION_TAGS_BY_BUSINESS_OBJECT_DEFINITION_GET', current_timestamp, 'SYSTEM', current_timestamp, 'SYSTEM');
 insert into scrty_fn_lk (scrty_fn_cd, creat_ts, creat_user_id, updt_ts, updt_user_id)
 values ('FN_BUSINESS_OBJECT_DEFINITION_TAGS_BY_TAG_GET', current_timestamp, 'SYSTEM', current_timestamp, 'SYSTEM');
-
-
 
 
