@@ -52,3 +52,7 @@ insert into scrty_fn_lk (scrty_fn_cd, creat_ts, creat_user_id, updt_ts, updt_use
 values ('FN_BUSINESS_OBJECT_DEFINITION_TAGS_BY_BUSINESS_OBJECT_DEFINITION_GET', current_timestamp, 'SYSTEM', current_timestamp, 'SYSTEM');
 insert into scrty_fn_lk (scrty_fn_cd, creat_ts, creat_user_id, updt_ts, updt_user_id)
 values ('FN_BUSINESS_OBJECT_DEFINITION_TAGS_BY_TAG_GET', current_timestamp, 'SYSTEM', current_timestamp, 'SYSTEM');
+
+
+
+
