@@ -652,7 +652,7 @@
    <xs:element name="tagListResponse" type="tagListResponse"/>
    <xs:complexType name="tagListResponse">
       <xs:all>
-         <xs:element name="tagKey" type="tagKey">
+         <xs:element name="tagKey" type="tagKey" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The tag's unique key.</xs:documentation>
             </xs:annotation>
