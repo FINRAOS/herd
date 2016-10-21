@@ -78,6 +78,10 @@ public class BusinessObjectDefinitionEntity extends AuditableEntity
     @OrderBy("name")
     private Collection<BusinessObjectDefinitionColumnEntity> columns;
 
+    @OneToMany(mappedBy = "businessObjectDefinition", orphanRemoval = true, cascade = {CascadeType.ALL})
+    @OrderBy("tag_id")
+    private Collection<BusinessObjectDefinitionTagEntity> businessObjectDefinitionTags;
+
     public Integer getId()
     {
         return id;
@@ -166,5 +170,15 @@ public class BusinessObjectDefinitionEntity extends AuditableEntity
     public void setColumns(Collection<BusinessObjectDefinitionColumnEntity> columns)
     {
         this.columns = columns;
+    }
+
+    public Collection<BusinessObjectDefinitionTagEntity> getBusinessObjectDefinitionTags()
+    {
+        return businessObjectDefinitionTags;
+    }
+
+    public void setBusinessObjectDefinitionTags(Collection<BusinessObjectDefinitionTagEntity> businessObjectDefinitionTags)
+    {
+        this.businessObjectDefinitionTags = businessObjectDefinitionTags;
     }
 }

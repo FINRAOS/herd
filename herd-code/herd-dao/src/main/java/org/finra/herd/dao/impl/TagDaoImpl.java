@@ -17,9 +17,7 @@ package org.finra.herd.dao.impl;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
-import javax.persistence.Tuple;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
@@ -30,6 +28,7 @@ import javax.persistence.criteria.Root;
 import org.springframework.stereotype.Repository;
 
 import org.finra.herd.dao.TagDao;
+import org.finra.herd.model.api.xml.TagChild;
 import org.finra.herd.model.api.xml.TagKey;
 import org.finra.herd.model.jpa.TagEntity;
 import org.finra.herd.model.jpa.TagEntity_;
@@ -93,35 +92,54 @@ public class TagDaoImpl extends AbstractHerdDao implements TagDao
     }
 
     @Override
-    public List<TagKey> getTagsByTagType(String tagType)
+    public List<TagChild> getTagsByTagType(String tagType, String tagCode)
     {
-        // Create the criteria builder and a tuple style criteria query.
+        List<TagChild> tagChildren = new ArrayList<>();
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-        CriteriaQuery<Tuple> criteria = builder.createTupleQuery();
+        CriteriaQuery<TagEntity> criteria = builder.createQuery(TagEntity.class);
 
-        // The criteria root is the business object definition.
         Root<TagEntity> tagEntityRoot = criteria.from(TagEntity.class);
 
         // Join to the other tables we can filter on.
         Join<TagEntity, TagTypeEntity> tagTypeEntityJoin = tagEntityRoot.join(TagEntity_.tagType);
 
         // Get the columns.
-        Path<String> tagTypeCodeColumn = tagTypeEntityJoin.get(TagTypeEntity_.code);
-        Path<String> tagCodeColumn = tagEntityRoot.get(TagEntity_.tagCode);
         Path<String> displayNameColumn = tagEntityRoot.get(TagEntity_.displayName);
-
+        
         // Create the standard restrictions (i.e. the standard where clauses).
         List<Predicate> predicates = new ArrayList<>();
         predicates.add(builder.equal(builder.upper(tagTypeEntityJoin.get(TagTypeEntity_.code)), tagType.toUpperCase()));
 
-        // Add the clauses to the query.
-        criteria.multiselect(tagTypeCodeColumn, tagCodeColumn).where(builder.and(predicates.toArray(new Predicate[predicates.size()])))
-            .orderBy(builder.asc(displayNameColumn));
-
-        // Run the query to get a list of tuples back.
-        List<Tuple> tuples = entityManager.createQuery(criteria).getResultList();
-
-        // Populate the "keys" objects from the returned tuples and return (i.e. 1 tuple for each row).
-        return tuples.stream().map(tuple -> new TagKey(tuple.get(tagTypeCodeColumn), tuple.get(tagCodeColumn))).collect(Collectors.toList());
+        //no tag code is provided, so return all tag code with no parents, i.e. root
+        if (tagCode == null)
+        {
+            predicates.add(builder.isNull(tagEntityRoot.get(TagEntity_.parentTagEntity)));
+        }
+        else
+        {
+            predicates.add(builder.equal(builder.upper(tagEntityRoot.get(TagEntity_.parentTagEntity).get(TagEntity_.tagCode)), tagCode.toUpperCase()));
+        }
+        
+        criteria.select(tagEntityRoot).where(builder.and(predicates.toArray(new Predicate[predicates.size()]))).orderBy(builder.asc(displayNameColumn));
+           
+        List<TagEntity> tagList = entityManager.createQuery(criteria).getResultList();
+        for (TagEntity tag: tagList)
+        {           
+            boolean hasMoreChildren = tag.getChildrenTagEntities().size() > 0 ? true: false;
+            TagChild tagChild = new TagChild();
+            tagChild.setTagKey(new TagKey(tag.getTagType().getCode(), tag.getTagCode()));
+            tagChild.setHasChildren(hasMoreChildren);        
+            tagChildren.add(tagChild);
+        }
+       
+        return tagChildren;
     }
+        
+
+    @Override
+    public List<TagChild> getTagsByTagType(String tagTypeCd)
+    {
+        return getTagsByTagType(tagTypeCd, null);
+    }
+    
 }

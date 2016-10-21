@@ -17,11 +17,16 @@ package org.finra.herd.service.helper;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 
+import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.TagDao;
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.ObjectNotFoundException;
+import org.finra.herd.model.api.xml.TagCreateRequest;
 import org.finra.herd.model.api.xml.TagKey;
+import org.finra.herd.model.api.xml.TagUpdateRequest;
+import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.jpa.TagEntity;
 
 @Component
@@ -29,7 +34,10 @@ public class TagDaoHelper
 {
     @Autowired
     private TagDao tagDao;
-
+    
+    @Autowired
+    protected ConfigurationHelper configurationHelper;
+    
     /**
      * Ensures that a tag entity does not exist for a specified tag type code and display name.
      *
@@ -68,4 +76,65 @@ public class TagDaoHelper
 
         return tagEntity;
     }
+    
+    /**
+     * Validate create tag request's parent tag key.
+     * 
+     * @param tagCreateRequest the create tag request.
+     */
+    public void validateCreateTagParentKey(TagCreateRequest tagCreateRequest)
+    {
+        if (tagCreateRequest.getParentTagKey() != null)
+        {
+            validateTagParentKeyType(tagCreateRequest.getTagKey(), tagCreateRequest.getParentTagKey());    
+        }
+    }
+    
+    /**
+     * validate parent tag Key
+     * @param tagKey requested tag key
+     * @param parentTagKey parent tag key
+     */
+    public void validateTagParentKeyType(TagKey tagKey, TagKey parentTagKey)
+    {
+        Assert.isTrue(tagKey.getTagTypeCode().equalsIgnoreCase(parentTagKey.getTagTypeCode()), 
+                "Tag type code in parent tag key must match the tag type code in the request.");      
+    }
+    
+    /**
+     * Validate update tag request's parent tag key.
+     * The parent tag should be be the same type of the updated tag.
+     * The parent tag should not be on the children tree of the updated tag. 
+     * No more than MAX_HIERARCHY_LEVEL is allowed to update parent-child relation.
+     * 
+     * @param tagEntity the tagEntity to be updated
+     * 
+     * @param tagUpdateRequest the update request
+     */
+    public void validateUpdateTagParentKey(TagEntity tagEntity, TagUpdateRequest tagUpdateRequest)
+    {
+        TagKey parentTagKey = tagUpdateRequest.getParentTagKey();
+        if (parentTagKey != null)
+        {
+            validateTagParentKeyType(new TagKey(tagEntity.getTagType().getCode(), tagEntity.getTagCode()), tagUpdateRequest.getParentTagKey());
+
+            Integer maxAllowedTagNesting =
+                    configurationHelper.getProperty(ConfigurationValue.MAX_ALLOWED_TAG_NESTING, Integer.class);
+
+            int level = 0;
+            //ensure parent tag Exists
+            TagEntity parentTagEntity = getTagEntity(parentTagKey);
+            
+            while (parentTagEntity != null)
+            {
+                Assert.isTrue(!tagEntity.equals(parentTagEntity), "Parent tag key cannot be the requested tag key or any of its children’s tag keys.");
+                parentTagEntity = parentTagEntity.getParentTagEntity();
+                if (level++ >= maxAllowedTagNesting)
+                {
+                    throw new IllegalArgumentException("Exceeds maximum allowed tag nesting level of " + maxAllowedTagNesting);
+                }
+            }          
+        }   
+    }
+
 }

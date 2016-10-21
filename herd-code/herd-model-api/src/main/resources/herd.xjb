@@ -62,14 +62,14 @@
       <jaxb:bindings node="//xs:complexType[@name='tagTypeKeys']//xs:element[@name='tagTypeKey']">
          <jaxb:property name="tagTypeKeys"/>
       </jaxb:bindings>
-      <jaxb:bindings node="//xs:complexType[@name='tagKeys']//xs:element[@name='tagKey']">
-         <jaxb:property name="tagKeys"/>
-      </jaxb:bindings>
       <jaxb:bindings node="//xs:complexType[@name='businessObjectDefinitionKeys']//xs:element[@name='businessObjectDefinitionKey']">
          <jaxb:property name="businessObjectDefinitionKeys"/>
       </jaxb:bindings>
       <jaxb:bindings node="//xs:complexType[@name='businessObjectDefinitionColumnKeys']//xs:element[@name='businessObjectDefinitionColumnKey']">
          <jaxb:property name="businessObjectDefinitionColumnKeys"/>
+      </jaxb:bindings>
+      <jaxb:bindings node="//xs:complexType[@name='businessObjectDefinitionTagKeys']//xs:element[@name='businessObjectDefinitionTagKey']">
+         <jaxb:property name="businessObjectDefinitionTagKeys"/>
       </jaxb:bindings>
       <jaxb:bindings node="//xs:complexType[@name='fileTypeKeys']//xs:element[@name='fileTypeKey']">
          <jaxb:property name="fileTypeKeys"/>

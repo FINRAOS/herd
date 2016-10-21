@@ -14,10 +14,11 @@
   limitations under the License.
 -->
 <%@page import="java.util.Enumeration" %>
-<%@ page import="org.apache.log4j.Logger" %>
 <%@ page import="org.springframework.web.context.WebApplicationContext" %>
 <%@ page import="org.springframework.web.context.support.WebApplicationContextUtils" %>
 <%@ page import="org.springframework.web.util.HtmlUtils" %>
+<%@ page import="org.slf4j.Logger" %>
+<%@ page import="org.slf4j.LoggerFactory" %>
 
 <%
    // Determine if the header snooper is enabled.
@@ -39,7 +40,7 @@
    }
 
    // Log the headers even if we disable the header snooper from the user UI so we can still get the headers for debugging purposes.
-   Logger logger = Logger.getLogger("org.finra.herd.HeaderSnooper");
+   Logger logger = LoggerFactory.getLogger("org.finra.herd.HeaderSnooper");
    Enumeration<?> enumeration = request.getHeaderNames();
    while (enumeration.hasMoreElements())
    {

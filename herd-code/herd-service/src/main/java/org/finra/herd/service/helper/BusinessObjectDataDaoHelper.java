@@ -148,14 +148,13 @@ public class BusinessObjectDataDaoHelper
      * @param storagePlatformType the optional storage platform type, e.g. S3 for Hive DDL. It is ignored when the list of storages is not empty
      * @param excludedStoragePlatformType the optional storage platform type to be excluded from search. It is ignored when the list of storages is not empty or
      * the storage platform type is specified
-     * @param includeArchivedBusinessObjectData specifies to treat archived business object data as non-archived
      * @param businessObjectFormatEntity the business object format entity
      *
      * @return the list of partition filters
      */
     public List<List<String>> buildPartitionFilters(List<PartitionValueFilter> partitionValueFilters, PartitionValueFilter standalonePartitionValueFilter,
         BusinessObjectFormatKey businessObjectFormatKey, Integer businessObjectDataVersion, List<String> storageNames, String storagePlatformType,
-        String excludedStoragePlatformType, boolean includeArchivedBusinessObjectData, BusinessObjectFormatEntity businessObjectFormatEntity)
+        String excludedStoragePlatformType, BusinessObjectFormatEntity businessObjectFormatEntity)
     {
         // Build a list of partition value filters to process based on the specified partition value filters.
         List<PartitionValueFilter> partitionValueFiltersToProcess = getPartitionValuesToProcess(partitionValueFilters, standalonePartitionValueFilter);
@@ -182,7 +181,7 @@ public class BusinessObjectDataDaoHelper
             // Get unique and sorted list of partition values to check the availability for.
             List<String> uniqueAndSortedPartitionValues =
                 getPartitionValues(partitionValueFilter, partitionKey, partitionColumnPosition, businessObjectFormatKey, businessObjectDataVersion,
-                    storageNames, storagePlatformType, excludedStoragePlatformType, includeArchivedBusinessObjectData, businessObjectFormatEntity);
+                    storageNames, storagePlatformType, excludedStoragePlatformType, businessObjectFormatEntity);
 
             // Add this partition value filter to the map.
             List<String> previousPartitionValues = partitionValues.put(partitionColumnPosition - 1, uniqueAndSortedPartitionValues);
@@ -368,14 +367,13 @@ public class BusinessObjectDataDaoHelper
      * @param storagePlatformType the optional storage platform type, e.g. S3 for Hive DDL. It is ignored when the list of storages is not empty
      * @param excludedStoragePlatformType the optional storage platform type to be excluded from search. It is ignored when the list of storages is not empty or
      * the storage platform type is specified
-     * @param includeArchivedBusinessObjectData specifies to treat archived business object data as non-archived
      * @param businessObjectFormatEntity the business object format entity
      *
      * @return the unique and sorted partition value list
      */
     public List<String> getPartitionValues(PartitionValueFilter partitionValueFilter, String partitionKey, int partitionColumnPosition,
         BusinessObjectFormatKey businessObjectFormatKey, Integer businessObjectDataVersion, List<String> storageNames, String storagePlatformType,
-        String excludedStoragePlatformType, boolean includeArchivedBusinessObjectData, BusinessObjectFormatEntity businessObjectFormatEntity)
+        String excludedStoragePlatformType, BusinessObjectFormatEntity businessObjectFormatEntity)
     {
         List<String> partitionValues = new ArrayList<>();
 
@@ -399,7 +397,7 @@ public class BusinessObjectDataDaoHelper
             // If a business object data version isn't specified, the latest VALID business object data version will be used.
             String maxPartitionValue = businessObjectDataDao
                 .getBusinessObjectDataMaxPartitionValue(partitionColumnPosition, businessObjectFormatKey, businessObjectDataVersion,
-                    BusinessObjectDataStatusEntity.VALID, storageNames, storagePlatformType, excludedStoragePlatformType, includeArchivedBusinessObjectData,
+                    BusinessObjectDataStatusEntity.VALID, storageNames, storagePlatformType, excludedStoragePlatformType,
                     partitionValueFilter.getLatestBeforePartitionValue().getPartitionValue(), null);
             if (maxPartitionValue != null)
             {
@@ -420,8 +418,8 @@ public class BusinessObjectDataDaoHelper
             // If a business object data version isn't specified, the latest VALID business object data version will be used.
             String maxPartitionValue = businessObjectDataDao
                 .getBusinessObjectDataMaxPartitionValue(partitionColumnPosition, businessObjectFormatKey, businessObjectDataVersion,
-                    BusinessObjectDataStatusEntity.VALID, storageNames, storagePlatformType, excludedStoragePlatformType, includeArchivedBusinessObjectData,
-                    null, partitionValueFilter.getLatestAfterPartitionValue().getPartitionValue());
+                    BusinessObjectDataStatusEntity.VALID, storageNames, storagePlatformType, excludedStoragePlatformType, null,
+                    partitionValueFilter.getLatestAfterPartitionValue().getPartitionValue());
             if (maxPartitionValue != null)
             {
                 partitionValues.add(maxPartitionValue);
@@ -1061,7 +1059,7 @@ public class BusinessObjectDataDaoHelper
         {
             String maxPartitionValue = businessObjectDataDao
                 .getBusinessObjectDataMaxPartitionValue(partitionColumnPosition, businessObjectFormatKey, businessObjectDataVersion,
-                    BusinessObjectDataStatusEntity.VALID, storageNames, storagePlatformType, excludedStoragePlatformType, false, null, null);
+                    BusinessObjectDataStatusEntity.VALID, storageNames, storagePlatformType, excludedStoragePlatformType, null, null);
             if (maxPartitionValue == null)
             {
                 throw new ObjectNotFoundException(

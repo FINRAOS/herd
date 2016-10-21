@@ -73,7 +73,6 @@ public interface BusinessObjectDataDao extends BaseJpaDao
      * @param storagePlatformType the optional storage platform type, e.g. S3 for Hive DDL. It is ignored when the list of storages is not empty
      * @param excludedStoragePlatformType the optional storage platform type to be excluded from search. It is ignored when the list of storages is not empty or
      * the storage platform type is specified
-     * @param includeArchivedBusinessObjectData specifies to treat archived business object data as non-archived
      * @param upperBoundPartitionValue the optional inclusive upper bound for the maximum available partition value
      * @param lowerBoundPartitionValue the optional inclusive lower bound for the maximum available partition value
      *
@@ -81,7 +80,7 @@ public interface BusinessObjectDataDao extends BaseJpaDao
      */
     public String getBusinessObjectDataMaxPartitionValue(int partitionColumnPosition, BusinessObjectFormatKey businessObjectFormatKey,
         Integer businessObjectDataVersion, String businessObjectDataStatus, List<String> storageNames, String storagePlatformType,
-        String excludedStoragePlatformType, boolean includeArchivedBusinessObjectData, String upperBoundPartitionValue, String lowerBoundPartitionValue);
+        String excludedStoragePlatformType, String upperBoundPartitionValue, String lowerBoundPartitionValue);
 
     /**
      * Retrieves a minimum available partition value per specified parameters.

@@ -459,7 +459,7 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         // Since we want to search across "available" storage units, we exclude Glacier storage platform type.
         List<List<String>> partitionFilters = businessObjectDataDaoHelper
             .buildPartitionFilters(request.getPartitionValueFilters(), request.getPartitionValueFilter(), businessObjectFormatKey,
-                request.getBusinessObjectDataVersion(), storageNames, null, StoragePlatformEntity.GLACIER, false, businessObjectFormatEntity);
+                request.getBusinessObjectDataVersion(), storageNames, null, StoragePlatformEntity.GLACIER, businessObjectFormatEntity);
 
         // Retrieve a list of storage unit entities for the specified partition values. The entities will be sorted by partition value that is identified
         // by partition column position. If a business object data version isn't specified, the latest VALID business object data version is returned.
