@@ -16,6 +16,7 @@
 package org.finra.herd.dao;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -24,6 +25,7 @@ import java.util.List;
 
 import org.junit.Test;
 
+import org.finra.herd.model.api.xml.TagChild;
 import org.finra.herd.model.api.xml.TagKey;
 import org.finra.herd.model.jpa.TagEntity;
 import org.finra.herd.model.jpa.TagTypeEntity;
@@ -73,26 +75,71 @@ public class TagDaoTest extends AbstractDaoTest
     @Test
     public void testGetTags()
     {
-        // Create a list of tag key for the same tag type.
-        List<TagKey> tagKeys = Arrays.asList(new TagKey(TAG_TYPE, TAG_CODE), new TagKey(TAG_TYPE, TAG_CODE_2));
-
         // Create a tag type entity.
         TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, INTEGER_VALUE);
 
         // Create two tag entities.
         tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
         tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_2, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2);
+        //no parent key is provided, so only search the root
+        assertEquals(2, tagDao.getTagsByTagType(TAG_TYPE).size());
 
+    }
+    
+    @Test
+    public void testGetTagsWithParentTagKey()
+    {
+        // Create a tag entity.
+        TagEntity root = tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+        //create a child of root
+        TagEntity child = tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE_2, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION, root);
+        //grand child of root     
+        TagEntity grandChild = tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE_2 + "x", TAG_DISPLAY_NAME_2 + "x", TAG_DESCRIPTION, child);
+        //get the list of TagKey with parent of child
+        List<TagChild> list = tagDao.getTagsByTagType(TAG_TYPE, TAG_CODE);
         // Retrieve a list of tag keys.
-        assertEquals(tagKeys, tagDao.getTagsByTagType(TAG_TYPE));
+        assertEquals(1, list.size());
+        assertTrue(list.get(0).isHasChildren());
 
-        // Get tag keys by passing all case-insensitive parameters in uppercase.
-        assertEquals(tagKeys, tagDao.getTagsByTagType(TAG_TYPE.toUpperCase()));
+        child =  tagDao.getTagByKey(new TagKey(TAG_TYPE, TAG_CODE_2));
+        assertEquals(child.getChildrenTagEntities().size(), 1);
+        
+        List<TagChild> expectedList = Arrays.asList(new TagChild(new TagKey(TAG_TYPE, TAG_CODE_2), true));
+        assertEquals(list, expectedList);
+        
+        list = tagDao.getTagsByTagType(TAG_TYPE, TAG_CODE_2);
+        // Retrieve a list of tag keys.
+        assertEquals(1, list.size());
+        assertFalse(list.get(0).isHasChildren());
+        expectedList = Arrays.asList(new TagChild(new TagKey(TAG_TYPE, TAG_CODE_2 + "x"), false));
+             
+        TagEntity grandChild2 = tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE_2 + "a", TAG_DISPLAY_NAME_2 + "a", TAG_DESCRIPTION, child);
+        list = tagDao.getTagsByTagType(TAG_TYPE, TAG_CODE_2);
+        expectedList = Arrays.asList(new TagChild(new TagKey(TAG_TYPE, TAG_CODE_2 + "a"), false), new TagChild(new TagKey(TAG_TYPE, TAG_CODE_2 + "x"), false));   
+    }
+    
+    @Test
+    public void testGetTagByKeyWithParent()
+    {
+        // Create a tag entity.
+        TagEntity tagEntity = tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+        //tageEntity2 is a child of tagEntity
+        TagEntity tagEntity2 = tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE_2, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION, tagEntity);
+        
+        TagEntity tagEntity3 = tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE_2 + "x", TAG_DISPLAY_NAME_2 + "x", TAG_DESCRIPTION, tagEntity2);
+             
+        // Get tag entity and validate.
+        assertEquals(tagEntity2, tagDao.getTagByKey(new TagKey(TAG_TYPE, TAG_CODE_2)));
+        
+        tagEntity = tagDao.getTagByKey(new TagKey(TAG_TYPE, TAG_CODE));
+        
+        assertEquals(tagEntity.getChildrenTagEntities().size(), 1);
+        
+        assertEquals(tagEntity.getChildrenTagEntities().get(0), tagEntity2);
+        
+        tagEntity2 =  tagDao.getTagByKey(new TagKey(TAG_TYPE, TAG_CODE_2));
+        
+        assertEquals(tagEntity2.getChildrenTagEntities().size(), 1);
 
-        // Get tag keys by passing all case-insensitive parameters in lowercase.
-        assertEquals(tagKeys, tagDao.getTagsByTagType(TAG_TYPE.toLowerCase()));
-
-        // Try invalid values for all input parameters.
-        assertTrue(tagDao.getTagsByTagType("I_DO_NOT_EXIST").isEmpty());
     }
 }

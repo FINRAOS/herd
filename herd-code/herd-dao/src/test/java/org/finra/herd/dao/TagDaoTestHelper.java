@@ -73,6 +73,40 @@ public class TagDaoTestHelper
         tagEntity.setTagCode(tagCode);
         tagEntity.setDisplayName(tagDisplayName);
         tagEntity.setDescription(tagDescription);
+        tagEntity.setParentTagEntity(null);
         return tagDao.saveAndRefresh(tagEntity);
+    }
+    
+    public TagEntity createTagEntity(TagTypeEntity tagTypeEntity, String tagCode, String tagDisplayName, String tagDescription, TagEntity parentTagEntity)
+    {
+        TagEntity tagEntity = new TagEntity();
+        tagEntity.setTagType(tagTypeEntity);
+        tagEntity.setTagCode(tagCode);
+        tagEntity.setDisplayName(tagDisplayName);
+        tagEntity.setDescription(tagDescription);
+        tagEntity.setParentTagEntity(parentTagEntity);
+        return tagDao.saveAndRefresh(tagEntity);
+    }
+    
+    /**
+     * Creates and persists a new tag entity.
+     *
+     * @param tagType the tag type entity
+     * @param tagCode the tag code
+     * @param tagDisplayName the tag display name
+     * @param tagDescription the description of the tag
+     *
+     * @return the newly created tag entity.
+     */
+    public TagEntity createTagEntity(String tagType, String tagCode, String tagDisplayName, String tagDescription, TagEntity parentTagEntity)
+    {
+        // Create a tag type entity if needed.
+        TagTypeEntity tagTypeEntity = tagTypeDao.getTagTypeByKey(new TagTypeKey(tagType));
+        if (tagTypeEntity == null)
+        {
+            tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(tagType, AbstractDaoTest.TAG_TYPE_DISPLAY_NAME, AbstractDaoTest.INTEGER_VALUE);
+        }
+
+        return createTagEntity(tagTypeEntity, tagCode, tagDisplayName, tagDescription, parentTagEntity);
     }
 }

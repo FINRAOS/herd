@@ -255,11 +255,10 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
     @Override
     public String getBusinessObjectDataMaxPartitionValue(int partitionColumnPosition, BusinessObjectFormatKey businessObjectFormatKey,
         Integer businessObjectDataVersion, String businessObjectDataStatus, List<String> storageNames, String storagePlatformType,
-        String excludedStoragePlatformType, boolean includeArchivedBusinessObjectData, String upperBoundPartitionValue, String lowerBoundPartitionValue)
+        String excludedStoragePlatformType, String upperBoundPartitionValue, String lowerBoundPartitionValue)
     {
         return getBusinessObjectDataPartitionValue(partitionColumnPosition, businessObjectFormatKey, businessObjectDataVersion, businessObjectDataStatus,
-            storageNames, storagePlatformType, excludedStoragePlatformType, includeArchivedBusinessObjectData, AggregateFunction.GREATEST,
-            upperBoundPartitionValue, lowerBoundPartitionValue);
+            storageNames, storagePlatformType, excludedStoragePlatformType, AggregateFunction.GREATEST, upperBoundPartitionValue, lowerBoundPartitionValue);
     }
 
     @Override
@@ -268,7 +267,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         String excludedStoragePlatformType)
     {
         return getBusinessObjectDataPartitionValue(partitionColumnPosition, businessObjectFormatKey, businessObjectDataVersion, businessObjectDataStatus,
-            storageNames, storagePlatformType, excludedStoragePlatformType, false, AggregateFunction.LEAST, null, null);
+            storageNames, storagePlatformType, excludedStoragePlatformType, AggregateFunction.LEAST, null, null);
     }
 
     @Override
@@ -513,7 +512,6 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
      * @param storagePlatformType the optional storage platform type, e.g. S3 for Hive DDL. It is ignored when the list of storages is not empty
      * @param excludedStoragePlatformType the optional storage platform type to be excluded from search. It is ignored when the list of storages is not empty or
      * the storage platform type is specified
-     * @param includeArchivedBusinessObjectData specifies to treat archived business object data as non-archived
      * @param aggregateFunction the aggregate function to use against partition values
      * @param upperBoundPartitionValue the optional inclusive upper bound for the maximum available partition value
      * @param lowerBoundPartitionValue the optional inclusive lower bound for the maximum available partition value
@@ -522,8 +520,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
      */
     private String getBusinessObjectDataPartitionValue(int partitionColumnPosition, BusinessObjectFormatKey businessObjectFormatKey,
         Integer businessObjectDataVersion, String businessObjectDataStatus, List<String> storageNames, String storagePlatformType,
-        String excludedStoragePlatformType, boolean includeArchivedBusinessObjectData, AggregateFunction aggregateFunction, String upperBoundPartitionValue,
-        String lowerBoundPartitionValue)
+        String excludedStoragePlatformType, AggregateFunction aggregateFunction, String upperBoundPartitionValue, String lowerBoundPartitionValue)
     {
         // Create the criteria builder and the criteria.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
@@ -613,11 +610,8 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         mainQueryRestriction = builder.and(mainQueryRestriction,
             getQueryRestrictionOnStorage(builder, storageEntity, storagePlatformEntity, storageNames, storagePlatformType, excludedStoragePlatformType));
 
-        // Unless flag is set to include archived business object data, search across only "available" storage units.
-        if (!includeArchivedBusinessObjectData)
-        {
-            mainQueryRestriction = builder.and(mainQueryRestriction, builder.isTrue(storageUnitStatusEntity.get(StorageUnitStatusEntity_.available)));
-        }
+        // Search across only "available" storage units.
+        mainQueryRestriction = builder.and(mainQueryRestriction, builder.isTrue(storageUnitStatusEntity.get(StorageUnitStatusEntity_.available)));
 
         criteria.select(partitionValue).where(mainQueryRestriction);
 
