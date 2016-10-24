@@ -787,7 +787,7 @@
                <xs:documentation>An optional business friendly name for business object definition</xs:documentation>
             </xs:annotation>
          </xs:element>
-         <xs:element name="descriptiveFormat" type="descriptiveBusinessObjectFormatUpdateRequest" minOccurs="0">
+         <xs:element name="descriptiveBusinessObjectFormat" type="descriptiveBusinessObjectFormatUpdateRequest" minOccurs="0">
             <xs:annotation>
                <xs:documentation>An optional business object definition descriptive format</xs:documentation>
             </xs:annotation>
@@ -835,7 +835,7 @@
                </xs:documentation>
             </xs:annotation>
          </xs:element>
-         <xs:element name="descriptiveFormat" type="descriptiveBusinessObjectFormat" minOccurs="0">
+         <xs:element name="descriptiveBusinessObjectFormat" type="descriptiveBusinessObjectFormat" minOccurs="0">
             <xs:annotation>
                <xs:documentation>An optional business object definition descriptive format. The descriptive format is the single BusinessObjectFormat that will
                   be used to represent this BusinessObjectDefinition to consumers
