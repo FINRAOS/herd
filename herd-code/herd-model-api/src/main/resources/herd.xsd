@@ -787,7 +787,7 @@
                <xs:documentation>An optional business friendly name for business object definition</xs:documentation>
             </xs:annotation>
          </xs:element>
-         <xs:element name="businessObjectDefinitionDescriptiveFormat" type="businessObjectDefinitionDescriptiveFormatUpdateRequest" minOccurs="0">
+         <xs:element name="descriptiveFormat" type="descriptiveBusinessObjectFormatUpdateRequest" minOccurs="0">
             <xs:annotation>
                <xs:documentation>An optional business object definition descriptive format</xs:documentation>
             </xs:annotation>
@@ -835,9 +835,11 @@
                </xs:documentation>
             </xs:annotation>
          </xs:element>
-         <xs:element name="businessObjectDefinitionDescriptiveFormat" type="businessObjectDefinitionDescriptiveFormat" minOccurs="0">
+         <xs:element name="descriptiveFormat" type="descriptiveBusinessObjectFormat" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>An optional business object definition descriptive format</xs:documentation>
+               <xs:documentation>An optional business object definition descriptive format. The descriptive format is the single BusinessObjectFormat that will
+                  be used to represent this BusinessObjectDefinition to consumers
+               </xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -869,18 +871,18 @@
       </xs:all>
    </xs:complexType>
 
-    <!-- ***** Business Object Definition Descriptive Format ***** -->
-    <xs:complexType name="businessObjectDefinitionDescriptiveFormat">
-       <xs:all>
+   <xs:complexType name="descriptiveBusinessObjectFormat">
+      <xs:all>
          <xs:element name="businessObjectFormatUsage" type="xs:string">
             <xs:annotation>
                <xs:documentation>The Usage of this Business Object Format - a string describing how this format is used. Often used as a label for the Business
-                  Object Format.</xs:documentation>
+                  Object Format
+               </xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="businessObjectFormatFileType" type="xs:string">
             <xs:annotation>
-               <xs:documentation>The File type for this Business Object Definition</xs:documentation>
+               <xs:documentation>The File type for this Business Object Format</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="businessObjectFormatVersion" type="xs:int">
@@ -891,16 +893,15 @@
             </xs:annotation>
          </xs:element>
       </xs:all>
-    </xs:complexType>
-    
+   </xs:complexType>
 
-    <!-- ***** Business Object Definition Descriptive Format Update Request ***** -->
-    <xs:complexType name="businessObjectDefinitionDescriptiveFormatUpdateRequest">
-       <xs:all>
+   <xs:complexType name="descriptiveBusinessObjectFormatUpdateRequest">
+      <xs:all>
          <xs:element name="businessObjectFormatUsage" type="xs:string">
             <xs:annotation>
                <xs:documentation>The Usage of this Business Object Format - a string describing how this format is used. Often used as a label for the Business
-                  Object Format.</xs:documentation>
+                  Object Format.
+               </xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="businessObjectFormatFileType" type="xs:string">
@@ -909,8 +910,7 @@
             </xs:annotation>
          </xs:element>
       </xs:all>
-    </xs:complexType>
-
+   </xs:complexType>
 
    <!-- ***** Business Object Definition Column ***** -->
 
