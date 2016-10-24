@@ -39,9 +39,13 @@ import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptiveInformati
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKeys;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionUpdateRequest;
+import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
+import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormat;
+import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormatUpdateRequest;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionAttributeEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
+import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.DataProviderEntity;
 import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.service.BusinessObjectDefinitionService;
@@ -49,6 +53,8 @@ import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.AttributeHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionHelper;
+import org.finra.herd.service.helper.BusinessObjectFormatDaoHelper;
+import org.finra.herd.service.helper.BusinessObjectFormatHelper;
 import org.finra.herd.service.helper.DataProviderDaoHelper;
 import org.finra.herd.service.helper.NamespaceDaoHelper;
 
@@ -76,6 +82,12 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 
     @Autowired
     private DataProviderDaoHelper dataProviderDaoHelper;
+    
+    @Autowired
+    private BusinessObjectFormatHelper businessObjectFormatHelper;
+    
+    @Autowired
+    private BusinessObjectFormatDaoHelper businessObjectFormatDaoHelper;
 
     @Autowired
     private NamespaceDaoHelper namespaceDaoHelper;
@@ -163,7 +175,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     {
         // Perform validation and trim.
         businessObjectDefinitionHelper.validateBusinessObjectDefinitionKey(businessObjectDefinitionKey);
-        validateBusinessObjectDefinitionDescriptiveInformationUpdateRequest(request);
+        validateBusinessObjectDefinitionDescriptiveInformationUpdateRequest(businessObjectDefinitionKey, request);
 
         // Retrieve and ensure that a business object definition already exists with the specified key.
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
@@ -315,11 +327,25 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
      *
      * @throws IllegalArgumentException if any validation errors were found.
      */
-    private void validateBusinessObjectDefinitionDescriptiveInformationUpdateRequest(BusinessObjectDefinitionDescriptiveInformationUpdateRequest request)
+    private void validateBusinessObjectDefinitionDescriptiveInformationUpdateRequest(BusinessObjectDefinitionKey businessObjectDefinitionKey, BusinessObjectDefinitionDescriptiveInformationUpdateRequest request)
     {
         if (request.getDisplayName() != null)
         {
             request.setDisplayName(request.getDisplayName().trim());
+        }
+        
+        if (request.getDescriptiveFormat() != null)
+        {
+            DescriptiveBusinessObjectFormatUpdateRequest descriptiveFormat = request.getDescriptiveFormat();
+            BusinessObjectFormatKey businessObjectFormatKey = new BusinessObjectFormatKey();
+            businessObjectFormatKey.setBusinessObjectDefinitionName(businessObjectDefinitionKey.getBusinessObjectDefinitionName());
+            businessObjectFormatKey.setNamespace(businessObjectDefinitionKey.getNamespace());
+            businessObjectFormatKey.setBusinessObjectFormatFileType(descriptiveFormat.getBusinessObjectFormatFileType());
+            businessObjectFormatKey.setBusinessObjectFormatUsage(descriptiveFormat.getBusinessObjectFormatUsage());
+            businessObjectFormatHelper.validateBusinessObjectFormatKey(businessObjectFormatKey, false);
+            //set the validated values back to the request
+            descriptiveFormat.setBusinessObjectFormatFileType(businessObjectFormatKey.getBusinessObjectFormatFileType());
+            descriptiveFormat.setBusinessObjectFormatUsage(businessObjectFormatKey.getBusinessObjectFormatUsage());
         }
     }
 
@@ -449,6 +475,23 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         // Update the entity with the new description value.
         businessObjectDefinitionEntity.setDescription(request.getDescription());
         businessObjectDefinitionEntity.setDisplayName(request.getDisplayName());
+        
+        if (request.getDescriptiveFormat() != null)
+        {
+            DescriptiveBusinessObjectFormatUpdateRequest descriptiveFormat = request.getDescriptiveFormat();
+            BusinessObjectFormatKey businessObjectFormatKey = new BusinessObjectFormatKey();
+            businessObjectFormatKey.setBusinessObjectDefinitionName(businessObjectDefinitionEntity.getName());
+            businessObjectFormatKey.setNamespace(businessObjectDefinitionEntity.getNamespace().getCode());
+            businessObjectFormatKey.setBusinessObjectFormatFileType(descriptiveFormat.getBusinessObjectFormatFileType());
+            businessObjectFormatKey.setBusinessObjectFormatUsage(descriptiveFormat.getBusinessObjectFormatUsage());           
+            BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey);
+            businessObjectDefinitionEntity.setDescriptivebusinessObjectFormat(businessObjectFormatEntity);     
+        }
+        else
+        {
+            businessObjectDefinitionEntity.setDescriptivebusinessObjectFormat(null);
+        }
+        
         businessObjectDefinitionDao.saveAndRefresh(businessObjectDefinitionEntity);
     }
 
@@ -481,6 +524,16 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
             attribute.setValue(attributeEntity.getValue());
         }
 
+        if (businessObjectDefinitionEntity.getDescriptivebusinessObjectFormat() != null)
+        {
+            BusinessObjectFormatEntity descriptiveFormatEntity = businessObjectDefinitionEntity.getDescriptivebusinessObjectFormat();
+            DescriptiveBusinessObjectFormat descriptiveBusinessObjectFormat = new DescriptiveBusinessObjectFormat();
+            businessObjectDefinition.setDescriptiveFormat(descriptiveBusinessObjectFormat);
+            descriptiveBusinessObjectFormat.setBusinessObjectFormatUsage(descriptiveFormatEntity.getUsage());
+            descriptiveBusinessObjectFormat.setBusinessObjectFormatFileType(descriptiveFormatEntity.getFileType().getCode());
+            descriptiveBusinessObjectFormat.setBusinessObjectFormatVersion(descriptiveFormatEntity.getBusinessObjectFormatVersion());        
+        }
+        
         return businessObjectDefinition;
     }
 

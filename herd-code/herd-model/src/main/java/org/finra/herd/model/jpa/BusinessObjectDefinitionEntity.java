@@ -81,6 +81,10 @@ public class BusinessObjectDefinitionEntity extends AuditableEntity
     @OneToMany(mappedBy = "businessObjectDefinition", orphanRemoval = true, cascade = {CascadeType.ALL})
     @OrderBy("tag_id")
     private Collection<BusinessObjectDefinitionTagEntity> businessObjectDefinitionTags;
+    
+    @ManyToOne
+    @JoinColumn(name = "desc_bus_objct_frmt_id", referencedColumnName = "bus_objct_frmt_id", nullable = true)
+    private BusinessObjectFormatEntity descriptivebusinessObjectFormat;
 
     public Integer getId()
     {
@@ -180,5 +184,15 @@ public class BusinessObjectDefinitionEntity extends AuditableEntity
     public void setBusinessObjectDefinitionTags(Collection<BusinessObjectDefinitionTagEntity> businessObjectDefinitionTags)
     {
         this.businessObjectDefinitionTags = businessObjectDefinitionTags;
+    }
+
+    public BusinessObjectFormatEntity getDescriptivebusinessObjectFormat()
+    {
+        return descriptivebusinessObjectFormat;
+    }
+
+    public void setDescriptivebusinessObjectFormat(BusinessObjectFormatEntity descriptivebusinessObjectFormat)
+    {
+        this.descriptivebusinessObjectFormat = descriptivebusinessObjectFormat;
     }
 }
