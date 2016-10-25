@@ -183,6 +183,19 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
             businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
 
+        BusinessObjectFormatEntity businessObjectFormatEntity = null;
+        if (request.getDescriptiveBusinessObjectFormat() != null)
+        {
+            DescriptiveBusinessObjectFormatUpdateRequest descriptiveFormat = request.getDescriptiveBusinessObjectFormat();
+            BusinessObjectFormatKey businessObjectFormatKey = new BusinessObjectFormatKey();
+            businessObjectFormatKey.setBusinessObjectDefinitionName(businessObjectDefinitionEntity.getName());
+            businessObjectFormatKey.setNamespace(businessObjectDefinitionEntity.getNamespace().getCode());
+            businessObjectFormatKey.setBusinessObjectFormatFileType(descriptiveFormat.getBusinessObjectFormatFileType());
+            businessObjectFormatKey.setBusinessObjectFormatUsage(descriptiveFormat.getBusinessObjectFormatUsage());
+            businessObjectFormatEntity = businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey); 
+        }
+        businessObjectDefinitionEntity.setDescriptiveBusinessObjectFormat(businessObjectFormatEntity);
+        
         // Update and persist the entity.
         updateBusinessObjectDefinitionEntityDescriptiveInformation(businessObjectDefinitionEntity, request);
 
@@ -472,29 +485,12 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
      * @param businessObjectDefinitionEntity the business object definition entity
      * @param request the business object definition update request
      */
-    private void updateBusinessObjectDefinitionEntityDescriptiveInformation(BusinessObjectDefinitionEntity businessObjectDefinitionEntity,
-        BusinessObjectDefinitionDescriptiveInformationUpdateRequest request)
+    private void updateBusinessObjectDefinitionEntityDescriptiveInformation(BusinessObjectDefinitionEntity businessObjectDefinitionEntity, BusinessObjectDefinitionDescriptiveInformationUpdateRequest request)
     {
         // Update the entity with the new description value.
         businessObjectDefinitionEntity.setDescription(request.getDescription());
         businessObjectDefinitionEntity.setDisplayName(request.getDisplayName());
-
-        if (request.getDescriptiveBusinessObjectFormat() != null)
-        {
-            DescriptiveBusinessObjectFormatUpdateRequest descriptiveFormat = request.getDescriptiveBusinessObjectFormat();
-            BusinessObjectFormatKey businessObjectFormatKey = new BusinessObjectFormatKey();
-            businessObjectFormatKey.setBusinessObjectDefinitionName(businessObjectDefinitionEntity.getName());
-            businessObjectFormatKey.setNamespace(businessObjectDefinitionEntity.getNamespace().getCode());
-            businessObjectFormatKey.setBusinessObjectFormatFileType(descriptiveFormat.getBusinessObjectFormatFileType());
-            businessObjectFormatKey.setBusinessObjectFormatUsage(descriptiveFormat.getBusinessObjectFormatUsage());
-            BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey);
-            businessObjectDefinitionEntity.setDescriptiveBusinessObjectFormat(businessObjectFormatEntity);
-        }
-        else
-        {
-            businessObjectDefinitionEntity.setDescriptiveBusinessObjectFormat(null);
-        }
-
+        
         businessObjectDefinitionDao.saveAndRefresh(businessObjectDefinitionEntity);
     }
 

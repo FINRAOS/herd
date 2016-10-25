@@ -30,6 +30,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDefinitionCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptiveInformationUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionUpdateRequest;
+import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormatUpdateRequest;
 import org.finra.herd.model.api.xml.SampleDataFile;
 
 @Component
@@ -94,12 +95,26 @@ public class BusinessObjectDefinitionServiceTestHelper
     public BusinessObjectDefinitionDescriptiveInformationUpdateRequest createBusinessObjectDefinitionDescriptiveInformationUpdateRequest(
         String businessObjectDefinitionDescription, String displayName)
     {
+        return createBusinessObjectDefinitionDescriptiveInformationUpdateRequest(businessObjectDefinitionDescription, displayName, null);
+    }
+
+    /**
+     * Creates a business object data definition metadata update request.
+     * @param businessObjectDefinitionDescription businessObjectDefinitionDescription the description of the business object definition
+     * @param displayName the display name
+     * @param descriptiveFormat the descriptive format
+     * @return the newly created business object definition update request
+     */
+    public BusinessObjectDefinitionDescriptiveInformationUpdateRequest createBusinessObjectDefinitionDescriptiveInformationUpdateRequest(
+        String businessObjectDefinitionDescription, String displayName, DescriptiveBusinessObjectFormatUpdateRequest descriptiveFormat)
+    {
         BusinessObjectDefinitionDescriptiveInformationUpdateRequest request = new BusinessObjectDefinitionDescriptiveInformationUpdateRequest();
         request.setDescription(businessObjectDefinitionDescription);
         request.setDisplayName(displayName);
+        request.setDescriptiveBusinessObjectFormat(descriptiveFormat);
         return request;
     }
-
+    
     /**
      * Creates a business object data definition update request.
      *
