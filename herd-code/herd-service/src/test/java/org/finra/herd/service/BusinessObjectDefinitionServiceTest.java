@@ -1103,9 +1103,9 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
                 e.getMessage());
         }
     }
-    
+
     @Test
-    public void testUpdateBusinessObjectDefinitionDescriptiveInformationrmationWithDescriptiveFormat() throws Exception
+    public void testUpdateBusinessObjectDefinitionDescriptiveInformationWithDescriptiveFormat() throws Exception
     {
         // Create and persist a business object definition entity.
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoTestHelper
@@ -1116,21 +1116,106 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
             new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION);
         BusinessObjectFormatEntity businessObjectFormatEntity =
             businessObjectFormatDaoTestHelper.createBusinessObjectFormatEntity(businessObjectFormatKey, FORMAT_DESCRIPTION, true, PARTITION_KEY);
-        
-        DescriptiveBusinessObjectFormatUpdateRequest descriptiveBusinessObjectFormatUpdateRequest
-                     = new DescriptiveBusinessObjectFormatUpdateRequest(FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE);
-        
+
+        DescriptiveBusinessObjectFormatUpdateRequest descriptiveBusinessObjectFormatUpdateRequest =
+            new DescriptiveBusinessObjectFormatUpdateRequest(FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE);
+
         // Perform an update by changing the description and updating the attributes.
         BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionService
             .updateBusinessObjectDefinitionDescriptiveInformation(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME),
                 businessObjectDefinitionServiceTestHelper
-                    .createBusinessObjectDefinitionDescriptiveInformationUpdateRequest(BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2, descriptiveBusinessObjectFormatUpdateRequest));
+                    .createBusinessObjectDefinitionDescriptiveInformationUpdateRequest(BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2,
+                        descriptiveBusinessObjectFormatUpdateRequest));
 
-        DescriptiveBusinessObjectFormat descriptiveBusinessObjectFormat = new DescriptiveBusinessObjectFormat(FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION);
+        DescriptiveBusinessObjectFormat descriptiveBusinessObjectFormat =
+            new DescriptiveBusinessObjectFormat(FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION);
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION_2,
             BDEF_DISPLAY_NAME_2, NO_ATTRIBUTES, descriptiveBusinessObjectFormat, NO_SAMPLE_DATA_FILES), updatedBusinessObjectDefinition);
     }
-    
+
+    @Test
+    public void testUpdateBusinessObjectDefinitionDescriptiveInformationWithDescriptiveFormatValidationError() throws Exception
+    {
+        // Create and persist a business object definition entity.
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME, NO_ATTRIBUTES);
+
+        //update descriptive format, which does not exist yet
+        DescriptiveBusinessObjectFormatUpdateRequest descriptiveBusinessObjectFormatUpdateRequest =
+            new DescriptiveBusinessObjectFormatUpdateRequest(FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE);
+
+        try
+        {
+            // Perform an update by changing the description and updating the attributes.
+            BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionService
+                .updateBusinessObjectDefinitionDescriptiveInformation(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME),
+                    businessObjectDefinitionServiceTestHelper
+                        .createBusinessObjectDefinitionDescriptiveInformationUpdateRequest(BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2,
+                            descriptiveBusinessObjectFormatUpdateRequest));
+
+            fail("Object not found exception should be thrown.");
+        }
+        catch (ObjectNotFoundException ex)
+        {
+            // as expected
+        }
+
+        // Create a business object format entity
+        BusinessObjectFormatKey businessObjectFormatKey =
+            new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION);
+        BusinessObjectFormatEntity businessObjectFormatEntity =
+            businessObjectFormatDaoTestHelper.createBusinessObjectFormatEntity(businessObjectFormatKey, FORMAT_DESCRIPTION, true, PARTITION_KEY);
+        //make descriptive business format to be some thing not existing
+        descriptiveBusinessObjectFormatUpdateRequest = new DescriptiveBusinessObjectFormatUpdateRequest(FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE);
+        // Perform an update by changing the description and updating the attributes.
+
+
+        try
+        {
+            // Perform an update by changing the description and updating the attributes.
+            BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionService
+                .updateBusinessObjectDefinitionDescriptiveInformation(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME),
+                    businessObjectDefinitionServiceTestHelper
+                        .createBusinessObjectDefinitionDescriptiveInformationUpdateRequest(BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2,
+                            descriptiveBusinessObjectFormatUpdateRequest));
+
+            fail("Object not found exception should be thrown.");
+        }
+        catch (ObjectNotFoundException ex)
+        {
+            // as expected
+        }
+    }
+
+    @Test
+    public void testUpdateBusinessObjectDefinitionDescriptiveInformationWithDescriptiveFormatWithLowerCase() throws Exception
+    {
+        // Create and persist a business object definition entity.
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME, NO_ATTRIBUTES);
+
+        // Create a business object format entity.
+        BusinessObjectFormatKey businessObjectFormatKey =
+            new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION);
+        BusinessObjectFormatEntity businessObjectFormatEntity =
+            businessObjectFormatDaoTestHelper.createBusinessObjectFormatEntity(businessObjectFormatKey, FORMAT_DESCRIPTION, true, PARTITION_KEY);
+
+        DescriptiveBusinessObjectFormatUpdateRequest descriptiveBusinessObjectFormatUpdateRequest =
+            new DescriptiveBusinessObjectFormatUpdateRequest(FORMAT_USAGE_CODE.toLowerCase(), FORMAT_FILE_TYPE_CODE.toLowerCase());
+
+        // Perform an update by changing the description and updating the attributes.
+        BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionService
+            .updateBusinessObjectDefinitionDescriptiveInformation(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME),
+                businessObjectDefinitionServiceTestHelper
+                    .createBusinessObjectDefinitionDescriptiveInformationUpdateRequest(BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2,
+                        descriptiveBusinessObjectFormatUpdateRequest));
+
+        DescriptiveBusinessObjectFormat descriptiveBusinessObjectFormat =
+            new DescriptiveBusinessObjectFormat(FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION);
+        // Validate the returned object.
+        assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION_2,
+            BDEF_DISPLAY_NAME_2, NO_ATTRIBUTES, descriptiveBusinessObjectFormat, NO_SAMPLE_DATA_FILES), updatedBusinessObjectDefinition);
+    }
     
 }
