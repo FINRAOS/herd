@@ -485,12 +485,13 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
      * @param businessObjectDefinitionEntity the business object definition entity
      * @param request the business object definition update request
      */
-    private void updateBusinessObjectDefinitionEntityDescriptiveInformation(BusinessObjectDefinitionEntity businessObjectDefinitionEntity, BusinessObjectDefinitionDescriptiveInformationUpdateRequest request)
+    private void updateBusinessObjectDefinitionEntityDescriptiveInformation(BusinessObjectDefinitionEntity businessObjectDefinitionEntity,
+        BusinessObjectDefinitionDescriptiveInformationUpdateRequest request)
     {
         // Update the entity with the new description value.
         businessObjectDefinitionEntity.setDescription(request.getDescription());
         businessObjectDefinitionEntity.setDisplayName(request.getDisplayName());
-        
+
         businessObjectDefinitionDao.saveAndRefresh(businessObjectDefinitionEntity);
     }
 
