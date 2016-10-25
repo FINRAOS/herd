@@ -488,11 +488,11 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
             businessObjectFormatKey.setBusinessObjectFormatFileType(descriptiveFormat.getBusinessObjectFormatFileType());
             businessObjectFormatKey.setBusinessObjectFormatUsage(descriptiveFormat.getBusinessObjectFormatUsage());
             BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey);
-            businessObjectDefinitionEntity.setDescriptivebusinessObjectFormat(businessObjectFormatEntity);
+            businessObjectDefinitionEntity.setDescriptiveBusinessObjectFormat(businessObjectFormatEntity);
         }
         else
         {
-            businessObjectDefinitionEntity.setDescriptivebusinessObjectFormat(null);
+            businessObjectDefinitionEntity.setDescriptiveBusinessObjectFormat(null);
         }
 
         businessObjectDefinitionDao.saveAndRefresh(businessObjectDefinitionEntity);
@@ -524,9 +524,9 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
             attributes.add(new Attribute(attributeEntity.getName(), attributeEntity.getValue()));
         }
 
-        if (businessObjectDefinitionEntity.getDescriptivebusinessObjectFormat() != null)
+        if (businessObjectDefinitionEntity.getDescriptiveBusinessObjectFormat() != null)
         {
-            BusinessObjectFormatEntity descriptiveFormatEntity = businessObjectDefinitionEntity.getDescriptivebusinessObjectFormat();
+            BusinessObjectFormatEntity descriptiveFormatEntity = businessObjectDefinitionEntity.getDescriptiveBusinessObjectFormat();
             DescriptiveBusinessObjectFormat descriptiveBusinessObjectFormat = new DescriptiveBusinessObjectFormat();
             businessObjectDefinition.setDescriptiveBusinessObjectFormat(descriptiveBusinessObjectFormat);
             descriptiveBusinessObjectFormat.setBusinessObjectFormatUsage(descriptiveFormatEntity.getUsage());

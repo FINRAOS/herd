@@ -84,7 +84,7 @@ public class BusinessObjectDefinitionEntity extends AuditableEntity
     
     @ManyToOne
     @JoinColumn(name = "desc_bus_objct_frmt_id", referencedColumnName = "bus_objct_frmt_id", nullable = true)
-    private BusinessObjectFormatEntity descriptivebusinessObjectFormat;
+    private BusinessObjectFormatEntity descriptiveBusinessObjectFormat;
 
     @OneToMany(mappedBy = "businessObjectDefinition", orphanRemoval = true, cascade = {CascadeType.ALL})
     @OrderBy("file_nm,drcty_path_tx")
@@ -190,14 +190,14 @@ public class BusinessObjectDefinitionEntity extends AuditableEntity
         this.businessObjectDefinitionTags = businessObjectDefinitionTags;
     }
 
-    public BusinessObjectFormatEntity getDescriptivebusinessObjectFormat()
+    public BusinessObjectFormatEntity getDescriptiveBusinessObjectFormat()
     {
-        return descriptivebusinessObjectFormat;
+        return descriptiveBusinessObjectFormat;
     }
 
-    public void setDescriptivebusinessObjectFormat(BusinessObjectFormatEntity descriptivebusinessObjectFormat)
+    public void setDescriptiveBusinessObjectFormat(BusinessObjectFormatEntity descriptivebusinessObjectFormat)
     {
-        this.descriptivebusinessObjectFormat = descriptivebusinessObjectFormat;
+        this.descriptiveBusinessObjectFormat = descriptivebusinessObjectFormat;
     }
 
     public Collection<BusinessObjectDefinitionSampleDataFileEntity> getSampleDataFiles()
