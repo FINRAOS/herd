@@ -37,6 +37,7 @@ import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
 import org.finra.herd.dao.BusinessObjectDataDao;
+import org.finra.herd.dao.BusinessObjectDefinitionDao;
 import org.finra.herd.dao.BusinessObjectFormatDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.annotation.NamespacePermission;
@@ -101,6 +102,9 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
 
     @Autowired
     private BusinessObjectDefinitionDaoHelper businessObjectDefinitionDaoHelper;
+    
+    @Autowired
+    private BusinessObjectDefinitionDao businessObjectDefinitionDao;
 
     @Autowired
     private BusinessObjectDefinitionHelper businessObjectDefinitionHelper;
@@ -170,13 +174,20 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
             latestVersionBusinessObjectFormatEntity.setLatestVersion(false);
             businessObjectFormatDao.saveAndRefresh(latestVersionBusinessObjectFormatEntity);
         }
-
+       
         // Create a business object format entity from the request information.
         Integer businessObjectFormatVersion =
             latestVersionBusinessObjectFormatEntity == null ? 0 : latestVersionBusinessObjectFormatEntity.getBusinessObjectFormatVersion() + 1;
         BusinessObjectFormatEntity newBusinessObjectFormatEntity =
             createBusinessObjectFormatEntity(request, businessObjectDefinitionEntity, fileTypeEntity, businessObjectFormatVersion);
-
+        //latest version format is the descriptive format for the bdef, update the bdef descriptive format to the newly created one
+        if (latestVersionBusinessObjectFormatEntity != null &&
+                latestVersionBusinessObjectFormatEntity.equals(businessObjectDefinitionEntity.getDescriptiveBusinessObjectFormat()))
+        {
+            businessObjectDefinitionEntity.setDescriptiveBusinessObjectFormat(newBusinessObjectFormatEntity);
+            businessObjectDefinitionDao.saveAndRefresh(businessObjectDefinitionEntity);
+        }
+        
         // Create and return the business object format object from the persisted entity.
         return businessObjectFormatHelper.createBusinessObjectFormatFromEntity(newBusinessObjectFormatEntity);
     }
