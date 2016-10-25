@@ -30,6 +30,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDefinitionCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptiveInformationUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionUpdateRequest;
+import org.finra.herd.model.api.xml.SampleDataFile;
 
 @Component
 public class BusinessObjectDefinitionServiceTestHelper
@@ -215,6 +216,21 @@ public class BusinessObjectDefinitionServiceTestHelper
         attributes.add(new Attribute(AbstractServiceTest.ATTRIBUTE_NAME_4_MIXED_CASE, AbstractServiceTest.ATTRIBUTE_VALUE_4));
 
         return attributes;
+    }
+
+    /**
+     * Gets a list of test sample data files.
+     *
+     * @return the list of sample data files
+     */
+    public List<SampleDataFile> getTestSampleDataFiles()
+    {
+        List<SampleDataFile> sampleDataFiles = new ArrayList<>();
+
+        sampleDataFiles.add(new SampleDataFile(AbstractServiceTest.DIRECTORY_PATH, AbstractServiceTest.FILE_NAME));
+        sampleDataFiles.add(new SampleDataFile(AbstractServiceTest.DIRECTORY_PATH, AbstractServiceTest.FILE_NAME_2));
+
+        return sampleDataFiles;
     }
 
     /**

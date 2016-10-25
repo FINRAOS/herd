@@ -40,6 +40,7 @@ import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.AttributeDefinition;
 import org.finra.herd.model.api.xml.DataProviderKey;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
+import org.finra.herd.model.api.xml.SampleDataFile;
 import org.finra.herd.model.api.xml.Schema;
 import org.finra.herd.model.api.xml.SchemaColumn;
 
@@ -316,6 +317,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String NO_BDEF_COLUMN_DESCRIPTION = null;
 
+    public static final String NO_BDEF_DESCRIPTION = null;
+
+    public static final String NO_BDEF_DISPLAY_NAME = null;
+
     public static final String NO_BDEF_NAME = null;
 
     public static final String NO_BDEF_NAMESPACE = null;
@@ -349,6 +354,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String NO_PARTITION_KEY_GROUP = null;
 
     public static final Boolean NO_PUBLISH_ATTRIBUTE = false;
+
+    public static final List<SampleDataFile> NO_SAMPLE_DATA_FILES = new ArrayList<>();
 
     public static final Schema NO_SCHEMA = null;
 

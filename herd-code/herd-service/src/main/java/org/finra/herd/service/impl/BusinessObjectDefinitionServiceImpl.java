@@ -40,8 +40,10 @@ import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKeys;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionUpdateRequest;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
+import org.finra.herd.model.api.xml.SampleDataFile;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionAttributeEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
+import org.finra.herd.model.jpa.BusinessObjectDefinitionSampleDataFileEntity;
 import org.finra.herd.model.jpa.DataProviderEntity;
 import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.service.BusinessObjectDefinitionService;
@@ -453,15 +455,15 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     }
 
     /**
-     * Creates the business object definition from the persisted entity.
+     * Creates a business object definition from the persisted entity.
      *
-     * @param businessObjectDefinitionEntity the newly persisted business object definition entity
+     * @param businessObjectDefinitionEntity the business object definition entity
      *
      * @return the business object definition
      */
     private BusinessObjectDefinition createBusinessObjectDefinitionFromEntity(BusinessObjectDefinitionEntity businessObjectDefinitionEntity)
     {
-        // Create the business object definition information.
+        // Create a business object definition.
         BusinessObjectDefinition businessObjectDefinition = new BusinessObjectDefinition();
         businessObjectDefinition.setId(businessObjectDefinitionEntity.getId());
         businessObjectDefinition.setNamespace(businessObjectDefinitionEntity.getNamespace().getCode());
@@ -470,19 +472,22 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         businessObjectDefinition.setDataProviderName(businessObjectDefinitionEntity.getDataProvider().getName());
         businessObjectDefinition.setDisplayName(businessObjectDefinitionEntity.getDisplayName());
 
-        // Add in the attributes.
+        // Add attributes.
         List<Attribute> attributes = new ArrayList<>();
         businessObjectDefinition.setAttributes(attributes);
         for (BusinessObjectDefinitionAttributeEntity attributeEntity : businessObjectDefinitionEntity.getAttributes())
         {
-            Attribute attribute = new Attribute();
-            attributes.add(attribute);
-            attribute.setName(attributeEntity.getName());
-            attribute.setValue(attributeEntity.getValue());
+            attributes.add(new Attribute(attributeEntity.getName(), attributeEntity.getValue()));
+        }
+
+        // Add sample data files.
+        List<SampleDataFile> sampleDataFiles = new ArrayList<>();
+        businessObjectDefinition.setSampleDataFiles(sampleDataFiles);
+        for (BusinessObjectDefinitionSampleDataFileEntity sampleDataFileEntity : businessObjectDefinitionEntity.getSampleDataFiles())
+        {
+            sampleDataFiles.add(new SampleDataFile(sampleDataFileEntity.getDirectoryPath(), sampleDataFileEntity.getFileName()));
         }
 
         return businessObjectDefinition;
     }
-
-
 }

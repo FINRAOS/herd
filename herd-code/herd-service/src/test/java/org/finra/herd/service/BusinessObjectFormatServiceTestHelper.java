@@ -116,7 +116,9 @@ public class BusinessObjectFormatServiceTestHelper
 
         // Create business object definition
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoTestHelper
-            .createBusinessObjectDefinitionEntity(namespaceEntity, request.getBusinessObjectDefinitionName(), dataProviderEntity, null, null);
+            .createBusinessObjectDefinitionEntity(namespaceEntity, request.getBusinessObjectDefinitionName(), dataProviderEntity,
+                AbstractServiceTest.NO_BDEF_DESCRIPTION, AbstractServiceTest.NO_BDEF_DISPLAY_NAME, AbstractServiceTest.NO_ATTRIBUTES,
+                AbstractServiceTest.NO_SAMPLE_DATA_FILES);
 
         // Create file type
         FileTypeEntity fileTypeEntity = fileTypeDaoTestHelper.createFileTypeEntity(request.getBusinessObjectFormatFileType());

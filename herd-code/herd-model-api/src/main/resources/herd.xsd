@@ -842,6 +842,13 @@
                </xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="sampleDataFiles" type="sampleDataFiles" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>
+                  An optional list of sample data files associated with the Business Object Definition
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
@@ -907,6 +914,35 @@
          <xs:element name="businessObjectFormatFileType" type="xs:string">
             <xs:annotation>
                <xs:documentation>The File type for this Business Object Definition</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="sampleDataFiles">
+      <xs:sequence>
+         <xs:element name="sampleDataFile" type="sampleDataFile" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>A sample data file associated with the Business Object Definition. The data in this file must conform with the schema of the
+                  descriptiveFormat for this Business Object Definition
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="sampleDataFile">
+      <xs:all>
+         <xs:element name="directoryPath" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The directory path of the sample data file. Note that directory path will contain a trailing "directory" separator, thus the
+                  caller needs to concatenate the directory path and the file name as is in order to construct a fully qualified path for the sample data file
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="fileName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The name of the sample data file</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
