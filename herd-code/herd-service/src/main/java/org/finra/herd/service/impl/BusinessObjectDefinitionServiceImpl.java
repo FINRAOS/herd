@@ -56,7 +56,6 @@ import org.finra.herd.service.helper.AttributeHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionHelper;
 import org.finra.herd.service.helper.BusinessObjectFormatDaoHelper;
-import org.finra.herd.service.helper.BusinessObjectFormatHelper;
 import org.finra.herd.service.helper.DataProviderDaoHelper;
 import org.finra.herd.service.helper.NamespaceDaoHelper;
 
@@ -84,9 +83,6 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 
     @Autowired
     private DataProviderDaoHelper dataProviderDaoHelper;
-
-    @Autowired
-    private BusinessObjectFormatHelper businessObjectFormatHelper;
 
     @Autowired
     private BusinessObjectFormatDaoHelper businessObjectFormatDaoHelper;
@@ -177,7 +173,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     {
         // Perform validation and trim.
         businessObjectDefinitionHelper.validateBusinessObjectDefinitionKey(businessObjectDefinitionKey);
-        validateBusinessObjectDefinitionDescriptiveInformationUpdateRequest(businessObjectDefinitionKey, request);
+        validateBusinessObjectDefinitionDescriptiveInformationUpdateRequest(request);
 
         // Retrieve and ensure that a business object definition already exists with the specified key.
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
@@ -337,13 +333,11 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 
     /**
      * Validates the business object definition update request. This method also trims request parameters.
-     *
      * @param request the request.
      *
      * @throws IllegalArgumentException if any validation errors were found.
      */
-    private void validateBusinessObjectDefinitionDescriptiveInformationUpdateRequest(BusinessObjectDefinitionKey businessObjectDefinitionKey,
-        BusinessObjectDefinitionDescriptiveInformationUpdateRequest request)
+    private void validateBusinessObjectDefinitionDescriptiveInformationUpdateRequest(BusinessObjectDefinitionDescriptiveInformationUpdateRequest request)
     {
         if (request.getDisplayName() != null)
         {
