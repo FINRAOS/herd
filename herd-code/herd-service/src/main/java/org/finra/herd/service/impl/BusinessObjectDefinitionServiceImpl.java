@@ -184,9 +184,9 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
             businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
 
         BusinessObjectFormatEntity businessObjectFormatEntity = null;
-        if (request.getDescriptiveBusinessObjectFormat() != null)
+        DescriptiveBusinessObjectFormatUpdateRequest descriptiveFormat = request.getDescriptiveBusinessObjectFormat();
+        if (descriptiveFormat != null)
         {
-            DescriptiveBusinessObjectFormatUpdateRequest descriptiveFormat = request.getDescriptiveBusinessObjectFormat();
             BusinessObjectFormatKey businessObjectFormatKey = new BusinessObjectFormatKey();
             businessObjectFormatKey.setBusinessObjectDefinitionName(businessObjectDefinitionEntity.getName());
             businessObjectFormatKey.setNamespace(businessObjectDefinitionEntity.getNamespace().getCode());
@@ -353,15 +353,11 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         if (request.getDescriptiveBusinessObjectFormat() != null)
         {
             DescriptiveBusinessObjectFormatUpdateRequest descriptiveFormat = request.getDescriptiveBusinessObjectFormat();
-            BusinessObjectFormatKey businessObjectFormatKey = new BusinessObjectFormatKey();
-            businessObjectFormatKey.setBusinessObjectDefinitionName(businessObjectDefinitionKey.getBusinessObjectDefinitionName());
-            businessObjectFormatKey.setNamespace(businessObjectDefinitionKey.getNamespace());
-            businessObjectFormatKey.setBusinessObjectFormatFileType(descriptiveFormat.getBusinessObjectFormatFileType());
-            businessObjectFormatKey.setBusinessObjectFormatUsage(descriptiveFormat.getBusinessObjectFormatUsage());
-            businessObjectFormatHelper.validateBusinessObjectFormatKey(businessObjectFormatKey, false);
-            //set the validated values back to the request
-            descriptiveFormat.setBusinessObjectFormatFileType(businessObjectFormatKey.getBusinessObjectFormatFileType());
-            descriptiveFormat.setBusinessObjectFormatUsage(businessObjectFormatKey.getBusinessObjectFormatUsage());
+
+            descriptiveFormat.setBusinessObjectFormatUsage(alternateKeyHelper.validateStringParameter("business object format usage",
+                    descriptiveFormat.getBusinessObjectFormatUsage()));
+            descriptiveFormat.setBusinessObjectFormatFileType(
+                    alternateKeyHelper.validateStringParameter("business object format file type", descriptiveFormat.getBusinessObjectFormatFileType()));
         }
     }
 
