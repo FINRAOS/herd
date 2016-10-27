@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 import org.junit.Test;
@@ -34,7 +35,11 @@ import org.finra.herd.model.api.xml.BusinessObjectDefinitionTagCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionTagKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionTagKeys;
 import org.finra.herd.model.api.xml.TagKey;
+import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionTagEntity;
+import org.finra.herd.model.jpa.TagEntity;
+import org.finra.herd.model.jpa.TagTypeEntity;
 
 /**
  * This class tests functionality within the business object definition tag service.
@@ -733,7 +738,7 @@ public class BusinessObjectDefinitionTagServiceTest extends AbstractServiceTest
     }
 
     @Test
-    public void testGetBusinessObjectDefinitionTagsByTagTrimParamters()
+    public void testGetBusinessObjectDefinitionTagsByTagTrimParameters()
     {
         // Create business object definition keys.
         List<BusinessObjectDefinitionKey> businessObjectDefinitionKeys =
@@ -782,5 +787,78 @@ public class BusinessObjectDefinitionTagServiceTest extends AbstractServiceTest
         assertNotNull(result);
         assertEquals(Arrays.asList(new BusinessObjectDefinitionTagKey(businessObjectDefinitionKeys.get(0), tagKey),
             new BusinessObjectDefinitionTagKey(businessObjectDefinitionKeys.get(1), tagKey)), result.getBusinessObjectDefinitionTagKeys());
+    }
+
+    @Test
+    public void testGetBusinessObjectDefinitionTagsByTagWhenChildrenExists() throws Exception
+    {
+        // Create a tag type entity.
+        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, INTEGER_VALUE);
+
+        // Create a root tag entity for the tag type.
+        TagEntity rootTagEntity = tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+
+        // Create two children for the root tag with tag display name in reverse order.
+        List<TagEntity> childrenTagEntities = Arrays
+            .asList(tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_2, TAG_DISPLAY_NAME_3, TAG_DESCRIPTION, rootTagEntity),
+                tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_3, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION, rootTagEntity));
+
+        // Create one grandchild of the root tag.
+        TagEntity grandchildTagEntity =
+            tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_4, TAG_DISPLAY_NAME_4, TAG_DESCRIPTION, childrenTagEntities.get(0));
+
+        // Create four business object definition entities (one for each tag nesting level used in this test) with display names in reverse order.
+        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities = Arrays.asList(businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntity(BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, DESCRIPTION, BDEF_DISPLAY_NAME_3, NO_ATTRIBUTES),
+            businessObjectDefinitionDaoTestHelper
+                .createBusinessObjectDefinitionEntity(BDEF_NAMESPACE, BDEF_NAME_2, DATA_PROVIDER_NAME, DESCRIPTION, BDEF_DISPLAY_NAME_2, NO_ATTRIBUTES),
+            businessObjectDefinitionDaoTestHelper
+                .createBusinessObjectDefinitionEntity(BDEF_NAMESPACE, BDEF_NAME_3, DATA_PROVIDER_NAME, DESCRIPTION, BDEF_DISPLAY_NAME, NO_ATTRIBUTES));
+
+        // Create and persist business object definition tag entities for all tags in each level of the hierarchy.
+        // Please note that in order to validate the sort order, the same business object definition is used for both immediate children of the root tag.
+        businessObjectDefinitionTagDaoTestHelper.createBusinessObjectDefinitionTagEntity(businessObjectDefinitionEntities.get(0), rootTagEntity);
+        businessObjectDefinitionTagDaoTestHelper.createBusinessObjectDefinitionTagEntity(businessObjectDefinitionEntities.get(1), childrenTagEntities.get(0));
+        businessObjectDefinitionTagDaoTestHelper.createBusinessObjectDefinitionTagEntity(businessObjectDefinitionEntities.get(1), childrenTagEntities.get(1));
+        businessObjectDefinitionTagDaoTestHelper.createBusinessObjectDefinitionTagEntity(businessObjectDefinitionEntities.get(2), grandchildTagEntity);
+
+        // Set the maximum allowed tag nesting to be bigger than the number of levels in our tag hierarchy.
+        modifyPropertySourceInEnvironment(new HashMap<String, Object>()
+        {{
+                put(ConfigurationValue.MAX_ALLOWED_TAG_NESTING.getKey(), 10);
+            }});
+        try
+        {
+            // Get business object definition tags for the root tags and all their children tags in the hierarchy with max nesting level set to 10.
+            assertEquals(new BusinessObjectDefinitionTagKeys(Arrays
+                .asList(new BusinessObjectDefinitionTagKey(new BusinessObjectDefinitionKey(BDEF_NAMESPACE, BDEF_NAME_3), new TagKey(TAG_TYPE, TAG_CODE_4)),
+                    new BusinessObjectDefinitionTagKey(new BusinessObjectDefinitionKey(BDEF_NAMESPACE, BDEF_NAME_2), new TagKey(TAG_TYPE, TAG_CODE_3)),
+                    new BusinessObjectDefinitionTagKey(new BusinessObjectDefinitionKey(BDEF_NAMESPACE, BDEF_NAME_2), new TagKey(TAG_TYPE, TAG_CODE_2)),
+                    new BusinessObjectDefinitionTagKey(new BusinessObjectDefinitionKey(BDEF_NAMESPACE, BDEF_NAME), new TagKey(TAG_TYPE, TAG_CODE)))),
+                businessObjectDefinitionTagService.getBusinessObjectDefinitionTagsByTag(new TagKey(TAG_TYPE, TAG_CODE)));
+        }
+        finally
+        {
+            restorePropertySourceInEnvironment();
+        }
+
+        // Set the maximum allowed tag nesting to 1 - that should cut off the grandchild tag.
+        modifyPropertySourceInEnvironment(new HashMap<String, Object>()
+        {{
+                put(ConfigurationValue.MAX_ALLOWED_TAG_NESTING.getKey(), 1);
+            }});
+        try
+        {
+            // Get business object definition tags for the root tags and all their children tags in the hierarchy with max nesting level set to 1.
+            assertEquals(new BusinessObjectDefinitionTagKeys(Arrays
+                .asList(new BusinessObjectDefinitionTagKey(new BusinessObjectDefinitionKey(BDEF_NAMESPACE, BDEF_NAME_2), new TagKey(TAG_TYPE, TAG_CODE_3)),
+                    new BusinessObjectDefinitionTagKey(new BusinessObjectDefinitionKey(BDEF_NAMESPACE, BDEF_NAME_2), new TagKey(TAG_TYPE, TAG_CODE_2)),
+                    new BusinessObjectDefinitionTagKey(new BusinessObjectDefinitionKey(BDEF_NAMESPACE, BDEF_NAME), new TagKey(TAG_TYPE, TAG_CODE)))),
+                businessObjectDefinitionTagService.getBusinessObjectDefinitionTagsByTag(new TagKey(TAG_TYPE, TAG_CODE)));
+        }
+        finally
+        {
+            restorePropertySourceInEnvironment();
+        }
     }
 }
