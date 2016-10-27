@@ -837,8 +837,8 @@
          </xs:element>
          <xs:element name="descriptiveBusinessObjectFormat" type="descriptiveBusinessObjectFormat" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>An optional business object definition descriptive format. The descriptive format is the single Business Object Format that will
-                  be used to represent this Business Object Definition to consumers
+               <xs:documentation>An optional business object definition descriptive format. The descriptive format is the single Business Object Format that
+                  will be used to represent this Business Object Definition to consumers
                </xs:documentation>
             </xs:annotation>
          </xs:element>
@@ -923,8 +923,10 @@
       <xs:sequence>
          <xs:element name="sampleDataFile" type="sampleDataFile" minOccurs="0" maxOccurs="unbounded">
             <xs:annotation>
-               <xs:documentation>A sample data file associated with the Business Object Definition. The data in this file must conform with the schema of the
-                  descriptiveFormat for this Business Object Definition
+               <xs:documentation>
+                  A sample data file associated with the Business Object Definition. The data in this file is expected to match the schema of the
+                  descriptiveFormat for this Business Object Definition – but the data in this file is not validated against the descriptiveFormat schema at
+                  this time
                </xs:documentation>
             </xs:annotation>
          </xs:element>
