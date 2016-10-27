@@ -56,12 +56,13 @@ public interface BusinessObjectDefinitionTagDao extends BaseJpaDao
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity);
 
     /**
-     * Gets a list of keys for all business object definition tags associated with the specified tag entity. The list of keys is ordered by business object
-     * definition display name and business object definition name.
+     * Gets a list of keys for all business object definition tags associated with the specified list of tag entities. The list of keys is ordered by business
+     * object definition display name, business object definition namespace, business object definition name, tag display name, and tag type code (since tag
+     * display name is unique across a tag type).
      *
-     * @param tagEntity the tag entity
+     * @param tagEntities the list of tag entity
      *
      * @return the list of business object definition tag keys
      */
-    public List<BusinessObjectDefinitionTagKey> getBusinessObjectDefinitionTagsByTagEntity(TagEntity tagEntity);
+    public List<BusinessObjectDefinitionTagKey> getBusinessObjectDefinitionTagsByTagEntities(List<TagEntity> tagEntities);
 }
