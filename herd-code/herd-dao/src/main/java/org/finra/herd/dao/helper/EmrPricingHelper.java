@@ -143,7 +143,7 @@ public class EmrPricingHelper extends AwsHelper
         for (AvailabilityZone availabilityZone : getAvailabilityZones(subnets))
         {
             // Create a mapping of instance types to prices for more efficient, in-memory lookup
-            Map<String, BigDecimal> instanceTypeSpotPrices = new HashMap<>();
+            Map<String, BigDecimal> instanceTypeSpotPrices = null;
             try
             {
                 instanceTypeSpotPrices = getInstanceTypeSpotPrices(availabilityZone, requestedInstanceTypes);
