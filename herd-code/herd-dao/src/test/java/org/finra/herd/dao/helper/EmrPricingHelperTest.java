@@ -611,6 +611,39 @@ public class EmrPricingHelperTest extends AbstractDaoTest
     }
 
     /**
+     * Tests case where instance type was not found in the spot list because AWS does not have a
+     * spot price for the given instance type in the given AZ.
+     * But there is another AZ available for that does have a all spot prices available.
+     */
+    @Test
+    public void testBestPriceSpotInstanceNotFoundBecauseSpotPriceIsNotAvailable()
+    {
+        String subnetId = MockEc2OperationsImpl.SUBNET_1 + "," + MockEc2OperationsImpl.SUBNET_5;
+
+        MasterInstanceDefinition masterInstanceDefinition = new MasterInstanceDefinition();
+        masterInstanceDefinition.setInstanceCount(1);
+        masterInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_3);
+
+        InstanceDefinition coreInstanceDefinition = new InstanceDefinition();
+        coreInstanceDefinition.setInstanceCount(1);
+        coreInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_1);
+
+        InstanceDefinition taskInstanceDefinition = null;
+
+        EmrClusterDefinition emrClusterDefinition =
+                updateEmrClusterDefinitionWithBestPrice(subnetId, masterInstanceDefinition, coreInstanceDefinition, taskInstanceDefinition);
+
+        try
+        {
+            assertBestPriceCriteriaRemoved(emrClusterDefinition);
+        }
+        catch (AssertionError e)
+        {
+            throw new RuntimeException("The tests shouldn't fail with these errors, most likely a developer or configuration error", e);
+        }
+    }
+
+    /**
      * Tests case where spot price is found but no on-demand price was found for the specified subnet's region and instance type. This is a case where the
      * on-demand configuration table was not properly configured or the user specified invalid instance type.
      */
