@@ -26,11 +26,6 @@ import org.springframework.stereotype.Component;
 import org.finra.herd.dao.DataProviderDaoTestHelper;
 import org.finra.herd.dao.NamespaceDaoTestHelper;
 import org.finra.herd.model.api.xml.Attribute;
-import org.finra.herd.model.api.xml.BusinessObjectDefinitionCreateRequest;
-import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptiveInformationUpdateRequest;
-import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
-import org.finra.herd.model.api.xml.BusinessObjectDefinitionUpdateRequest;
-import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormatUpdateRequest;
 import org.finra.herd.model.api.xml.SampleDataFile;
 
 @Component
@@ -41,96 +36,6 @@ public class BusinessObjectDefinitionServiceTestHelper
 
     @Autowired
     private NamespaceDaoTestHelper namespaceDaoTestHelper;
-
-    /**
-     * Creates a business object data definition create request.
-     *
-     * @param namespaceCode the namespace code
-     * @param businessObjectDefinitionName the business object definition name
-     * @param dataProviderName the data provider name
-     * @param businessObjectDefinitionDescription the description of the business object definition
-     * @param displayName the display name of the business object definition
-     *
-     * @return the newly created business object definition create request
-     */
-    public BusinessObjectDefinitionCreateRequest createBusinessObjectDefinitionCreateRequest(String namespaceCode, String businessObjectDefinitionName,
-        String dataProviderName, String businessObjectDefinitionDescription, String displayName)
-    {
-        return createBusinessObjectDefinitionCreateRequest(namespaceCode, businessObjectDefinitionName, dataProviderName, businessObjectDefinitionDescription,
-            displayName, AbstractServiceTest.NO_ATTRIBUTES);
-    }
-
-    /**
-     * Creates a business object data definition create request.
-     *
-     * @param namespaceCode the namespace code
-     * @param businessObjectDefinitionName the business object definition name
-     * @param dataProviderName the data provider name
-     * @param businessObjectDefinitionDescription the description of the business object definition
-     * @param displayName the display name of the business object definition
-     * @param attributes the list of attributes
-     *
-     * @return the newly created business object definition create request
-     */
-    public BusinessObjectDefinitionCreateRequest createBusinessObjectDefinitionCreateRequest(String namespaceCode, String businessObjectDefinitionName,
-        String dataProviderName, String businessObjectDefinitionDescription, String displayName, List<Attribute> attributes)
-    {
-        BusinessObjectDefinitionCreateRequest request = new BusinessObjectDefinitionCreateRequest();
-        request.setNamespace(namespaceCode);
-        request.setBusinessObjectDefinitionName(businessObjectDefinitionName);
-        request.setDataProviderName(dataProviderName);
-        request.setDescription(businessObjectDefinitionDescription);
-        request.setDisplayName(displayName);
-        request.setAttributes(attributes);
-        return request;
-    }
-
-    /**
-     * Creates a business object data definition metadata update request.
-     *
-     * @param businessObjectDefinitionDescription the description of the business object definition
-     *
-     * @return the newly created business object definition update request
-     */
-    public BusinessObjectDefinitionDescriptiveInformationUpdateRequest createBusinessObjectDefinitionDescriptiveInformationUpdateRequest(
-        String businessObjectDefinitionDescription, String displayName)
-    {
-        return createBusinessObjectDefinitionDescriptiveInformationUpdateRequest(businessObjectDefinitionDescription, displayName, null);
-    }
-
-    /**
-     * Creates a business object data definition metadata update request.
-     * @param businessObjectDefinitionDescription businessObjectDefinitionDescription the description of the business object definition
-     * @param displayName the display name
-     * @param descriptiveFormat the descriptive format
-     * @return the newly created business object definition update request
-     */
-    public BusinessObjectDefinitionDescriptiveInformationUpdateRequest createBusinessObjectDefinitionDescriptiveInformationUpdateRequest(
-        String businessObjectDefinitionDescription, String displayName, DescriptiveBusinessObjectFormatUpdateRequest descriptiveFormat)
-    {
-        BusinessObjectDefinitionDescriptiveInformationUpdateRequest request = new BusinessObjectDefinitionDescriptiveInformationUpdateRequest();
-        request.setDescription(businessObjectDefinitionDescription);
-        request.setDisplayName(displayName);
-        request.setDescriptiveBusinessObjectFormat(descriptiveFormat);
-        return request;
-    }
-    
-    /**
-     * Creates a business object data definition update request.
-     *
-     * @param businessObjectDefinitionDescription the description of the business object definition
-     *
-     * @return the newly created business object definition update request
-     */
-    public BusinessObjectDefinitionUpdateRequest createBusinessObjectDefinitionUpdateRequest(String businessObjectDefinitionDescription, String displayName,
-        List<Attribute> attributes)
-    {
-        BusinessObjectDefinitionUpdateRequest request = new BusinessObjectDefinitionUpdateRequest();
-        request.setDescription(businessObjectDefinitionDescription);
-        request.setDisplayName(displayName);
-        request.setAttributes(attributes);
-        return request;
-    }
 
     /**
      * Create and persist database entities required for testing.
@@ -153,19 +58,6 @@ public class BusinessObjectDefinitionServiceTestHelper
 
         // Create a data provider entity.
         dataProviderDaoTestHelper.createDataProviderEntity(dataProviderName);
-    }
-
-    /**
-     * Returns an expected string representation of the specified business object definition key.
-     *
-     * @param businessObjectDefinitionKey the key of the business object definition
-     *
-     * @return the string representation of the specified business object definition key
-     */
-    public String getExpectedBusinessObjectDefinitionKeyAsString(BusinessObjectDefinitionKey businessObjectDefinitionKey)
-    {
-        return getExpectedBusinessObjectDefinitionKeyAsString(businessObjectDefinitionKey.getNamespace(),
-            businessObjectDefinitionKey.getBusinessObjectDefinitionName());
     }
 
     /**

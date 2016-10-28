@@ -51,6 +51,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatus;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatusChangeEvent;
 import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormat;
+import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormatUpdateRequest;
 import org.finra.herd.model.api.xml.JobStatusEnum;
 import org.finra.herd.model.api.xml.LatestAfterPartitionValue;
 import org.finra.herd.model.api.xml.LatestBeforePartitionValue;
@@ -200,6 +201,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final Boolean NO_CREATE_NEW_VERSION = false;
 
     public static final DescriptiveBusinessObjectFormat NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT = null;
+
+    public static final DescriptiveBusinessObjectFormatUpdateRequest NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT_UPDATE_REQUEST = null;
 
     public static final Boolean NO_DISCOVER_STORAGE_FILES = false;
 
