@@ -674,13 +674,10 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         BusinessObjectDefinitionSampleDataFileEntity businessObjectDefinitionSampleDataFileEntity =
                   validateDownloadBusinesObjectDefinitionSingleInitiationRequest(downloadRequest);
        
+        BusinessObjectDefinitionSampleDataFileKey businessObjectDefinitionSampleDataFileKey = downloadRequest.getBusinessObjectDefinitionSampleDataFileKey();
         StorageEntity storageEntity = businessObjectDefinitionSampleDataFileEntity.getStorage();
-        
-        // Validate that the storage unit contains only 1 file
-        //assertHasOneStorageFile(storageUnitEntity);
-
         String s3BucketName = storageHelper.getStorageBucketName(storageEntity);
-        String s3ObjectKey = null; //IterableUtils.get(storageUnitEntity.getStorageFiles(), 0).getPath();
+        String s3ObjectKey = businessObjectDefinitionSampleDataFileKey.getDirectoryPath() + businessObjectDefinitionSampleDataFileKey.getFileName();
 
         // Get the temporary credentials
         Credentials downloaderCredentials =
