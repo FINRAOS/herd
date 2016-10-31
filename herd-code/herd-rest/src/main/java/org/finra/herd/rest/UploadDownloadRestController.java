@@ -165,7 +165,7 @@ public class UploadDownloadRestController extends HerdBaseController
      */
     @RequestMapping(value = "/download/businessObjectDefinitionSampleDataFile/single/initiation", method = RequestMethod.POST, consumes = {"application/xml",
         "application/json"})
-    @Secured(SecurityFunctions.FN_BUSINESS_DEFINITION_SAMPLEFILE_GET)
+    @Secured(SecurityFunctions.FN_DOWNLOAD_BUSINESS_OBJECT_DEFINITION_SAMPLE_DATA_FILE_POST)
     public DownloadBusinesObjectDefinitionSingleInitiationResponse initiateDownloadSingleSampleFile(
         @RequestBody DownloadBusinesObjectDefinitionSingleInitiationRequest downloadBusinesObjectDefinitionSingleInitiationRequest)
     {
