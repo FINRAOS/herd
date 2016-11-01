@@ -15,6 +15,7 @@
 */
 package org.finra.herd.service.impl;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.UUID;
 
@@ -37,11 +38,16 @@ import org.finra.herd.dao.StsDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.dao.helper.AwsHelper;
 import org.finra.herd.dao.helper.JsonHelper;
+import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.annotation.NamespacePermission;
 import org.finra.herd.model.annotation.PublishJmsMessages;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionSampleDataFileKey;
+import org.finra.herd.model.api.xml.DownloadBusinesObjectDefinitionSingleInitiationRequest;
+import org.finra.herd.model.api.xml.DownloadBusinesObjectDefinitionSingleInitiationResponse;
 import org.finra.herd.model.api.xml.DownloadSingleInitiationResponse;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.api.xml.UploadSingleCredentialExtensionResponse;
@@ -52,6 +58,8 @@ import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
+import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
+import org.finra.herd.model.jpa.BusinessObjectDefinitionSampleDataFileEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.StorageFileEntity;
@@ -62,6 +70,8 @@ import org.finra.herd.service.helper.AttributeHelper;
 import org.finra.herd.service.helper.AwsPolicyBuilder;
 import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
+import org.finra.herd.service.helper.BusinessObjectDefinitionDaoHelper;
+import org.finra.herd.service.helper.BusinessObjectDefinitionHelper;
 import org.finra.herd.service.helper.BusinessObjectFormatDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectFormatHelper;
 import org.finra.herd.service.helper.KmsActions;
@@ -96,6 +106,12 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
 
     @Autowired
     private BusinessObjectFormatHelper businessObjectFormatHelper;
+    
+    @Autowired
+    private BusinessObjectDefinitionHelper businessObjectDefinitionHelper;
+    
+    @Autowired
+    private BusinessObjectDefinitionDaoHelper businessObjectDefinitionDaoHelper;
 
     @Autowired
     private ConfigurationHelper configurationHelper;
@@ -647,5 +663,85 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
     {
         return storageHelper
             .getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_DOWNLOAD_ROLE_ARN), storageEntity, true);
+    }
+
+    @Override
+    public DownloadBusinesObjectDefinitionSingleInitiationResponse initiateDownloadSingleSampleFile(
+        DownloadBusinesObjectDefinitionSingleInitiationRequest downloadRequest)
+    {
+        DownloadBusinesObjectDefinitionSingleInitiationResponse response =  new DownloadBusinesObjectDefinitionSingleInitiationResponse();
+       
+        BusinessObjectDefinitionSampleDataFileEntity businessObjectDefinitionSampleDataFileEntity =
+                  validateDownloadBusinesObjectDefinitionSingleInitiationRequest(downloadRequest);
+       
+        BusinessObjectDefinitionSampleDataFileKey businessObjectDefinitionSampleDataFileKey = downloadRequest.getBusinessObjectDefinitionSampleDataFileKey();
+        StorageEntity storageEntity = businessObjectDefinitionSampleDataFileEntity.getStorage();
+        String s3BucketName = storageHelper.getStorageBucketName(storageEntity);
+        String s3ObjectKey = businessObjectDefinitionSampleDataFileKey.getDirectoryPath() + businessObjectDefinitionSampleDataFileKey.getFileName();
+
+        // Get the temporary credentials
+        Credentials downloaderCredentials =
+            getExternalDownloaderCredentials(storageEntity, String.valueOf(businessObjectDefinitionSampleDataFileEntity.getId()), s3ObjectKey);
+
+        // Generate a pre-signed URL
+        Date expiration = downloaderCredentials.getExpiration();
+        S3FileTransferRequestParamsDto s3BucketAccessParams = storageHelper.getS3BucketAccessParams(storageEntity);
+        String presignedUrl = s3Dao.generateGetObjectPresignedUrl(s3BucketName, s3ObjectKey, expiration, s3BucketAccessParams);
+       
+        response.setBusinessObjectDefinitionSampleDataFileKey(downloadRequest.getBusinessObjectDefinitionSampleDataFileKey());
+        response.setAwsAccessKey(downloaderCredentials.getAccessKeyId());
+        response.setAwsSecretKey(downloaderCredentials.getSecretAccessKey());
+        response.setAwsSessionToken(downloaderCredentials.getSessionToken());
+        response.setAwsSessionExpirationTime(HerdDateUtils.getXMLGregorianCalendarValue(expiration));
+        response.setPreSignedUrl(presignedUrl);
+        
+        return response;
+    }
+    
+    private BusinessObjectDefinitionSampleDataFileEntity validateDownloadBusinesObjectDefinitionSingleInitiationRequest(DownloadBusinesObjectDefinitionSingleInitiationRequest downloadRequest)
+    {
+        BusinessObjectDefinitionSampleDataFileKey businessObjectDefinitionSampleDataFileKey = downloadRequest.getBusinessObjectDefinitionSampleDataFileKey();
+      
+        // Validate and trim the file directory information.
+        Assert.notNull(businessObjectDefinitionSampleDataFileKey, "A business object definition sample file key must be specified.");
+        Assert.notNull(businessObjectDefinitionSampleDataFileKey.getDirectoryPath(), "A directory path must be specified.");
+        Assert.hasText(businessObjectDefinitionSampleDataFileKey.getDirectoryPath(), "A directory path must be specified.");       
+        businessObjectDefinitionSampleDataFileKey.setDirectoryPath(businessObjectDefinitionSampleDataFileKey.getDirectoryPath().trim());
+        // Validate and trim the file name information.
+        Assert.notNull(businessObjectDefinitionSampleDataFileKey.getFileName(), "A file name must be specified.");
+        Assert.hasText(businessObjectDefinitionSampleDataFileKey.getFileName(), "A file name must be specified.");       
+        businessObjectDefinitionSampleDataFileKey.setFileName(businessObjectDefinitionSampleDataFileKey.getFileName().trim());
+        
+        BusinessObjectDefinitionKey businessObjectDefinitionKey =
+                new BusinessObjectDefinitionKey(businessObjectDefinitionSampleDataFileKey.getNamespace(), businessObjectDefinitionSampleDataFileKey
+                        .getBusinessObjectDefinitionName());
+        businessObjectDefinitionHelper.validateBusinessObjectDefinitionKey(businessObjectDefinitionKey);
+        // reset the name space and business definition name to the validated fields
+        businessObjectDefinitionSampleDataFileKey.setNamespace(businessObjectDefinitionKey.getNamespace());
+        businessObjectDefinitionSampleDataFileKey.setBusinessObjectDefinitionName(businessObjectDefinitionKey.getBusinessObjectDefinitionName());
+        // validate that business definition exists
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
+                businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
+        Collection<BusinessObjectDefinitionSampleDataFileEntity> sampleDateFiles = businessObjectDefinitionEntity.getSampleDataFiles();
+        BusinessObjectDefinitionSampleDataFileEntity businessObjectDefinitionSampleDataFileEntity = null;
+        for (BusinessObjectDefinitionSampleDataFileEntity sampleDataFileEntity : sampleDateFiles)
+        {
+            if (sampleDataFileEntity.getDirectoryPath().equals(businessObjectDefinitionSampleDataFileKey.getDirectoryPath())
+                    && sampleDataFileEntity.getFileName().equals(businessObjectDefinitionSampleDataFileKey.getFileName()))
+            {
+                businessObjectDefinitionSampleDataFileEntity = sampleDataFileEntity;
+                break;
+            }
+        }
+
+        if (businessObjectDefinitionSampleDataFileEntity == null)
+        {
+            throw new ObjectNotFoundException(String.format(
+                    "Business object definition with name \"%s\" and namespace \"%s\". does not have the specificed sample file registered \"%s\"  \"%s\"",
+                    businessObjectDefinitionKey.getBusinessObjectDefinitionName(), businessObjectDefinitionKey.getNamespace(),
+                    businessObjectDefinitionSampleDataFileKey.getDirectoryPath(), businessObjectDefinitionSampleDataFileKey.getFileName()));
+        }
+        
+        return businessObjectDefinitionSampleDataFileEntity;
     }
 }

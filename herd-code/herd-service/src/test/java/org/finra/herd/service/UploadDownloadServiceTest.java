@@ -21,6 +21,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
 import java.util.Arrays;
+import java.util.List;
 
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import org.apache.commons.collections4.IterableUtils;
@@ -35,7 +36,11 @@ import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatusUpdateRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionSampleDataFileKey;
+import org.finra.herd.model.api.xml.DownloadBusinesObjectDefinitionSingleInitiationRequest;
+import org.finra.herd.model.api.xml.DownloadBusinesObjectDefinitionSingleInitiationResponse;
 import org.finra.herd.model.api.xml.DownloadSingleInitiationResponse;
+import org.finra.herd.model.api.xml.SampleDataFile;
 import org.finra.herd.model.api.xml.UploadSingleCredentialExtensionResponse;
 import org.finra.herd.model.api.xml.UploadSingleInitiationRequest;
 import org.finra.herd.model.api.xml.UploadSingleInitiationResponse;
@@ -43,6 +48,7 @@ import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
+import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.service.impl.UploadDownloadHelperServiceImpl;
@@ -1112,5 +1118,41 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         return uploadDownloadService.extendUploadSingleCredentials(businessObjectData.getNamespace(), businessObjectData.getBusinessObjectDefinitionName(),
             businessObjectData.getBusinessObjectFormatUsage(), businessObjectData.getBusinessObjectFormatFileType(),
             businessObjectData.getBusinessObjectFormatVersion(), businessObjectData.getPartitionValue(), businessObjectData.getVersion());
+    }
+    
+    @Test
+    public void testDownLoadBusinessObjectDefinitionSampleFiles() throws Exception
+    {
+        // Create and persist a business object definition entity.
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME,
+                businessObjectDefinitionServiceTestHelper.getNewAttributes(), businessObjectDefinitionServiceTestHelper.getTestSampleDataFiles());
+
+        List<SampleDataFile> sampleFileList = businessObjectDefinitionServiceTestHelper.getTestSampleDataFiles();
+        
+        StorageEntity storageEntity = storageDaoHelper.getStorageEntity(STORAGE_NAME);
+        storageEntity.getAttributes().add(storageDaoTestHelper
+                .createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), "testBucketName"));   
+
+        storageEntity.getAttributes().add(storageDaoTestHelper
+                .createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KMS_KEY_ID),
+                    "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012"));
+        
+        storageEntity.getAttributes().add(storageDaoTestHelper
+                .createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_DOWNLOAD_ROLE_ARN), "downloadRole"));   
+        
+        DownloadBusinesObjectDefinitionSingleInitiationRequest downloadRequest = new DownloadBusinesObjectDefinitionSingleInitiationRequest();
+        BusinessObjectDefinitionSampleDataFileKey sampleDataFileKey = new BusinessObjectDefinitionSampleDataFileKey();
+        sampleDataFileKey.setBusinessObjectDefinitionName(BDEF_NAME);
+        sampleDataFileKey.setNamespace(NAMESPACE);
+        sampleDataFileKey.setDirectoryPath(sampleFileList.get(0).getDirectoryPath());
+        sampleDataFileKey.setFileName(sampleFileList.get(0).getFileName());
+        
+        downloadRequest.setBusinessObjectDefinitionSampleDataFileKey(sampleDataFileKey);
+        
+        DownloadBusinesObjectDefinitionSingleInitiationResponse downloadRespone = uploadDownloadService.initiateDownloadSingleSampleFile(downloadRequest);
+        
+        assertEquals(downloadRespone.getBusinessObjectDefinitionSampleDataFileKey(), sampleDataFileKey);
+        
     }
 }

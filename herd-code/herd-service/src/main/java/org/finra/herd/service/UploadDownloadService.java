@@ -15,6 +15,8 @@
 */
 package org.finra.herd.service;
 
+import org.finra.herd.model.api.xml.DownloadBusinesObjectDefinitionSingleInitiationRequest;
+import org.finra.herd.model.api.xml.DownloadBusinesObjectDefinitionSingleInitiationResponse;
 import org.finra.herd.model.api.xml.DownloadSingleInitiationResponse;
 import org.finra.herd.model.api.xml.UploadSingleCredentialExtensionResponse;
 import org.finra.herd.model.api.xml.UploadSingleInitiationRequest;
@@ -78,4 +80,8 @@ public interface UploadDownloadService
     public UploadSingleCredentialExtensionResponse extendUploadSingleCredentials(String namespace, String businessObjectDefinitionName,
         String businessObjectFormatUsage, String businessObjectFormatFileType, Integer businessObjectFormatVersion, String partitionValue,
         Integer businessObjectDataVersion);
+    
+    public DownloadBusinesObjectDefinitionSingleInitiationResponse initiateDownloadSingleSampleFile(
+        DownloadBusinesObjectDefinitionSingleInitiationRequest downloadRequest);
+
 }
