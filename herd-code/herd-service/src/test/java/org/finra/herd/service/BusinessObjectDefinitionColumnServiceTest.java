@@ -33,6 +33,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnKeys;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionColumnEntity;
+import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.SchemaColumnEntity;
 
@@ -289,7 +290,7 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
             catch (AlreadyExistsException e)
             {
                 assertEquals(String.format("Unable to create business object definition column because a business object definition column " +
-                    "with schema column name \"%s\" already exists for the business object definition {%s}.", schemaColumnName,
+                        "with schema column name \"%s\" already exists for the business object definition {%s}.", schemaColumnName,
                     businessObjectDefinitionServiceTestHelper.getExpectedBusinessObjectDefinitionKeyAsString(BDEF_NAMESPACE, BDEF_NAME)), e.getMessage());
             }
         }
@@ -312,7 +313,39 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
         catch (ObjectNotFoundException e)
         {
             assertEquals(String.format("Unable to create business object definition column because there are no format schema columns " +
-                "with name \"%s\" for the business object definition {%s}.", COLUMN_NAME,
+                    "with name \"%s\" for the business object definition {%s}.", COLUMN_NAME,
+                businessObjectDefinitionServiceTestHelper.getExpectedBusinessObjectDefinitionKeyAsString(BDEF_NAMESPACE, BDEF_NAME)), e.getMessage());
+        }
+    }
+
+    @Test
+    public void testCreateBusinessObjectDefinitionColumnSchemaColumnNoExistsForDescriptiveFormat()
+    {
+        // Create and persist a business object definition entity.
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
+            businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
+
+        // Create and persist a business object format entity.
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+                LATEST_VERSION_FLAG_SET, PARTITION_KEY);
+
+        // Add descriptive format to definition
+        businessObjectDefinitionEntity.setDescriptiveBusinessObjectFormat(businessObjectFormatEntity);
+        businessObjectDefinitionDao.saveAndRefresh(businessObjectDefinitionEntity);
+
+        // Try to create a business object definition column when there are no matching schema columns.
+        try
+        {
+            businessObjectDefinitionColumnService.createBusinessObjectDefinitionColumn(
+                new BusinessObjectDefinitionColumnCreateRequest(new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME), COLUMN_NAME,
+                    BDEF_COLUMN_DESCRIPTION));
+            fail("Should throw an ObjectNotFoundException when no matching schema column exists.");
+        }
+        catch (ObjectNotFoundException e)
+        {
+            assertEquals(String.format("Unable to create business object definition column because there are no format schema " +
+                    "columns with name \"%s\" for the business object definition {%s}.", COLUMN_NAME,
                 businessObjectDefinitionServiceTestHelper.getExpectedBusinessObjectDefinitionKeyAsString(BDEF_NAMESPACE, BDEF_NAME)), e.getMessage());
         }
     }

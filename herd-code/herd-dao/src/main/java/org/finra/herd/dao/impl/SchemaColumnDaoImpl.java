@@ -52,7 +52,16 @@ public class SchemaColumnDaoImpl extends AbstractHerdDao implements SchemaColumn
 
         // Create the standard restrictions (i.e. the standard where clauses).
         List<Predicate> predicates = new ArrayList<>();
-        predicates.add(builder.equal(businessObjectFormatEntityJoin.get(BusinessObjectFormatEntity_.businessObjectDefinition), businessObjectDefinitionEntity));
+        if (businessObjectDefinitionEntity.getDescriptiveBusinessObjectFormat() == null)
+        {
+            predicates
+                .add(builder.equal(businessObjectFormatEntityJoin.get(BusinessObjectFormatEntity_.businessObjectDefinition), businessObjectDefinitionEntity));
+        }
+        else
+        {
+            predicates.add(builder.equal(businessObjectFormatEntityJoin.get(BusinessObjectFormatEntity_.id),
+                businessObjectDefinitionEntity.getDescriptiveBusinessObjectFormat().getId()));
+        }
         predicates.add(builder.equal(builder.upper(schemaColumnEntityRoot.get(SchemaColumnEntity_.name)), schemaColumnName.toUpperCase()));
 
         // Add the clauses for the query.
