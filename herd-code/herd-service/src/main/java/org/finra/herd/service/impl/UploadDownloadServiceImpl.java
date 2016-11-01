@@ -698,20 +698,21 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         return response;
     }
     
-    private BusinessObjectDefinitionSampleDataFileEntity validateDownloadBusinesObjectDefinitionSingleInitiationRequest(DownloadBusinesObjectDefinitionSingleInitiationRequest downloadRequest)
+    private BusinessObjectDefinitionSampleDataFileEntity validateDownloadBusinesObjectDefinitionSingleInitiationRequest(
+        DownloadBusinesObjectDefinitionSingleInitiationRequest downloadRequest)
     {
         BusinessObjectDefinitionSampleDataFileKey businessObjectDefinitionSampleDataFileKey = downloadRequest.getBusinessObjectDefinitionSampleDataFileKey();
-      
+
         // Validate and trim the file directory information.
         Assert.notNull(businessObjectDefinitionSampleDataFileKey, "A business object definition sample file key must be specified.");
         Assert.notNull(businessObjectDefinitionSampleDataFileKey.getDirectoryPath(), "A directory path must be specified.");
-        Assert.hasText(businessObjectDefinitionSampleDataFileKey.getDirectoryPath(), "A directory path must be specified.");       
+        Assert.hasText(businessObjectDefinitionSampleDataFileKey.getDirectoryPath(), "A directory path must be specified.");
         businessObjectDefinitionSampleDataFileKey.setDirectoryPath(businessObjectDefinitionSampleDataFileKey.getDirectoryPath().trim());
         // Validate and trim the file name information.
         Assert.notNull(businessObjectDefinitionSampleDataFileKey.getFileName(), "A file name must be specified.");
-        Assert.hasText(businessObjectDefinitionSampleDataFileKey.getFileName(), "A file name must be specified.");       
+        Assert.hasText(businessObjectDefinitionSampleDataFileKey.getFileName(), "A file name must be specified.");
         businessObjectDefinitionSampleDataFileKey.setFileName(businessObjectDefinitionSampleDataFileKey.getFileName().trim());
-        
+
         BusinessObjectDefinitionKey businessObjectDefinitionKey =
                 new BusinessObjectDefinitionKey(businessObjectDefinitionSampleDataFileKey.getNamespace(), businessObjectDefinitionSampleDataFileKey
                         .getBusinessObjectDefinitionName());
@@ -741,7 +742,7 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
                     businessObjectDefinitionKey.getBusinessObjectDefinitionName(), businessObjectDefinitionKey.getNamespace(),
                     businessObjectDefinitionSampleDataFileKey.getDirectoryPath(), businessObjectDefinitionSampleDataFileKey.getFileName()));
         }
-        
+
         return businessObjectDefinitionSampleDataFileEntity;
     }
 }
