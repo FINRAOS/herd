@@ -90,13 +90,13 @@ public class SchemaColumnDaoTest extends AbstractDaoTest
         businessObjectDefinitionDao.saveAndRefresh(businessObjectDefinitionEntity);
 
         // Get a list of schema columns from the business object definition matching to the first column name.
-        assertEquals(2, schemaColumnDao.getSchemaColumns(businessObjectDefinitionEntity, FIRST_COLUMN_NAME).size());
+        assertEquals(1, schemaColumnDao.getSchemaColumns(businessObjectDefinitionEntity, FIRST_COLUMN_NAME).size());
 
         // Get a list of schema columns by passing all case-insensitive parameters in uppercase.
-        assertEquals(2, schemaColumnDao.getSchemaColumns(businessObjectDefinitionEntity, FIRST_COLUMN_NAME.toUpperCase()).size());
+        assertEquals(1, schemaColumnDao.getSchemaColumns(businessObjectDefinitionEntity, FIRST_COLUMN_NAME.toUpperCase()).size());
 
         // Get business object definition column by passing all case-insensitive parameters in lowercase.
-        assertEquals(2, schemaColumnDao.getSchemaColumns(businessObjectDefinitionEntity, FIRST_COLUMN_NAME.toLowerCase()).size());
+        assertEquals(1, schemaColumnDao.getSchemaColumns(businessObjectDefinitionEntity, FIRST_COLUMN_NAME.toLowerCase()).size());
 
         // Try invalid values for all input parameters.
         assertEquals(0, schemaColumnDao.getSchemaColumns(

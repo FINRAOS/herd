@@ -345,7 +345,7 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
         catch (ObjectNotFoundException e)
         {
             assertEquals(String.format("Unable to create business object definition column because there are no format schema " +
-                    "columns with name \"%s\" for the business object definition {%s}.", COLUMN_NAME,
+                    "columns with name \"%s\" in the descriptive business object format for the business object definition {%s}.", COLUMN_NAME,
                 businessObjectDefinitionServiceTestHelper.getExpectedBusinessObjectDefinitionKeyAsString(BDEF_NAMESPACE, BDEF_NAME)), e.getMessage());
         }
     }
