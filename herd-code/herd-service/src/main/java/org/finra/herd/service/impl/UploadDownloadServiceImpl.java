@@ -46,8 +46,8 @@ import org.finra.herd.model.api.xml.BusinessObjectDataCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionSampleDataFileKey;
-import org.finra.herd.model.api.xml.DownloadBusinesObjectDefinitionSampleDataFileSingleInitiationRequest;
-import org.finra.herd.model.api.xml.DownloadBusinesObjectDefinitionSampleDataFileSingleInitiationResponse;
+import org.finra.herd.model.api.xml.DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest;
+import org.finra.herd.model.api.xml.DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse;
 import org.finra.herd.model.api.xml.DownloadSingleInitiationResponse;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.api.xml.UploadSingleCredentialExtensionResponse;
@@ -687,11 +687,11 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
     }
 
     @Override
-    public DownloadBusinesObjectDefinitionSampleDataFileSingleInitiationResponse initiateDownloadSingleSampleFile(
-        DownloadBusinesObjectDefinitionSampleDataFileSingleInitiationRequest downloadRequest)
+    public DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse initiateDownloadSingleSampleFile(
+        DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest downloadRequest)
     {
-        DownloadBusinesObjectDefinitionSampleDataFileSingleInitiationResponse response =
-                new DownloadBusinesObjectDefinitionSampleDataFileSingleInitiationResponse();
+        DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse response =
+                new DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse();
 
         BusinessObjectDefinitionSampleDataFileEntity businessObjectDefinitionSampleDataFileEntity =
                 validateDownloadBusinesObjectDefinitionSingleInitiationRequest(downloadRequest);
@@ -734,7 +734,7 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
      * @return business object definition sample data file entity
      */
     private BusinessObjectDefinitionSampleDataFileEntity validateDownloadBusinesObjectDefinitionSingleInitiationRequest(
-        DownloadBusinesObjectDefinitionSampleDataFileSingleInitiationRequest downloadRequest)
+        DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest downloadRequest)
     {
         BusinessObjectDefinitionSampleDataFileKey businessObjectDefinitionSampleDataFileKey = downloadRequest.getBusinessObjectDefinitionSampleDataFileKey();
 
@@ -776,7 +776,7 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
                 "Business object definition with name \"%s\" and namespace \"%s\" does not have the specified sample file registered with file name \"%s\" in" +
                  " directory path \"%s\"",
                 businessObjectDefinitionKey.getBusinessObjectDefinitionName(), businessObjectDefinitionKey.getNamespace(),
-                businessObjectDefinitionSampleDataFileKey.getDirectoryPath(), businessObjectDefinitionSampleDataFileKey.getFileName()));
+                businessObjectDefinitionSampleDataFileKey.getFileName(), businessObjectDefinitionSampleDataFileKey.getDirectoryPath()));
         }
 
         return businessObjectDefinitionSampleDataFileEntity;

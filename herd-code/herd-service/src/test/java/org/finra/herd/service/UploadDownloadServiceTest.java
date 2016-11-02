@@ -37,8 +37,8 @@ import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatusUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionSampleDataFileKey;
-import org.finra.herd.model.api.xml.DownloadBusinesObjectDefinitionSampleDataFileSingleInitiationRequest;
-import org.finra.herd.model.api.xml.DownloadBusinesObjectDefinitionSampleDataFileSingleInitiationResponse;
+import org.finra.herd.model.api.xml.DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest;
+import org.finra.herd.model.api.xml.DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse;
 import org.finra.herd.model.api.xml.DownloadSingleInitiationResponse;
 import org.finra.herd.model.api.xml.SampleDataFile;
 import org.finra.herd.model.api.xml.UploadSingleCredentialExtensionResponse;
@@ -1141,8 +1141,8 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
                         .createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_DOWNLOAD_ROLE_ARN),
                                 "downloadRole"));
 
-        DownloadBusinesObjectDefinitionSampleDataFileSingleInitiationRequest downloadRequest =
-                new DownloadBusinesObjectDefinitionSampleDataFileSingleInitiationRequest();
+        DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest downloadRequest =
+                new DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest();
         BusinessObjectDefinitionSampleDataFileKey sampleDataFileKey = new BusinessObjectDefinitionSampleDataFileKey();
         sampleDataFileKey.setBusinessObjectDefinitionName(BDEF_NAME);
         sampleDataFileKey.setNamespace(NAMESPACE);
@@ -1151,7 +1151,7 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
 
         downloadRequest.setBusinessObjectDefinitionSampleDataFileKey(sampleDataFileKey);
 
-        DownloadBusinesObjectDefinitionSampleDataFileSingleInitiationResponse downloadResponse =
+        DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse downloadResponse =
                 uploadDownloadService.initiateDownloadSingleSampleFile(downloadRequest);
 
         assertEquals(downloadResponse.getBusinessObjectDefinitionSampleDataFileKey(), sampleDataFileKey);
@@ -1183,8 +1183,8 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
     @Test
     public void testDownLoadBusinessObjectDefinitionSampleFilesValidationError() throws Exception
     {
-        DownloadBusinesObjectDefinitionSampleDataFileSingleInitiationRequest downloadRequest =
-                new DownloadBusinesObjectDefinitionSampleDataFileSingleInitiationRequest();
+        DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest downloadRequest =
+                new DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest();
         BusinessObjectDefinitionSampleDataFileKey sampleDataFileKey = new BusinessObjectDefinitionSampleDataFileKey();
         sampleDataFileKey.setBusinessObjectDefinitionName(BDEF_NAME);
         sampleDataFileKey.setNamespace(NAMESPACE);
@@ -1239,8 +1239,8 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         sampleDataFileKey.setDirectoryPath("NA");
         sampleDataFileKey.setFileName("NA");
 
-        DownloadBusinesObjectDefinitionSampleDataFileSingleInitiationRequest downloadRequest =
-                new DownloadBusinesObjectDefinitionSampleDataFileSingleInitiationRequest();
+        DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest downloadRequest =
+                new DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest();
         downloadRequest.setBusinessObjectDefinitionSampleDataFileKey(sampleDataFileKey);
 
         try

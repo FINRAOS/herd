@@ -28,8 +28,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
-import org.finra.herd.model.api.xml.DownloadBusinesObjectDefinitionSampleDataFileSingleInitiationRequest;
-import org.finra.herd.model.api.xml.DownloadBusinesObjectDefinitionSampleDataFileSingleInitiationResponse;
+import org.finra.herd.model.api.xml.DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest;
+import org.finra.herd.model.api.xml.DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse;
 import org.finra.herd.model.api.xml.DownloadSingleInitiationResponse;
 import org.finra.herd.model.api.xml.StorageUnit;
 import org.finra.herd.model.api.xml.UploadSingleCredentialExtensionResponse;
@@ -166,8 +166,8 @@ public class UploadDownloadRestController extends HerdBaseController
     @RequestMapping(value = "/download/businessObjectDefinitionSampleDataFile/single/initiation", method = RequestMethod.POST, consumes = {"application/xml",
         "application/json"})
     @Secured(SecurityFunctions.FN_DOWNLOAD_BUSINESS_OBJECT_DEFINITION_SAMPLE_DATA_FILE_POST)
-    public DownloadBusinesObjectDefinitionSampleDataFileSingleInitiationResponse initiateDownloadSingleSampleFile(
-        @RequestBody DownloadBusinesObjectDefinitionSampleDataFileSingleInitiationRequest downloadBusinesObjectDefinitionSingleInitiationRequest)
+    public DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse initiateDownloadSingleSampleFile(
+        @RequestBody DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest downloadBusinesObjectDefinitionSingleInitiationRequest)
     {
         return uploadDownloadService.initiateDownloadSingleSampleFile(downloadBusinesObjectDefinitionSingleInitiationRequest);
     }
