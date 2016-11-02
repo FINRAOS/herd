@@ -772,11 +772,11 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
 
         if (businessObjectDefinitionSampleDataFileEntity == null)
         {
-            throw new ObjectNotFoundException(
-                    String.format(
-                            "Business object definition with name \"%s\" and namespace \"%s\" does not have the specificed sample file registered with file name \"%s\" in directory path \"%s\"",
-                            businessObjectDefinitionKey.getBusinessObjectDefinitionName(), businessObjectDefinitionKey.getNamespace(),
-                            businessObjectDefinitionSampleDataFileKey.getDirectoryPath(), businessObjectDefinitionSampleDataFileKey.getFileName()));
+            throw new ObjectNotFoundException(String.format(
+                "Business object definition with name \"%s\" and namespace \"%s\" does not have the specified sample file registered with file name \"%s\" in" +
+                 " directory path \"%s\"",
+                businessObjectDefinitionKey.getBusinessObjectDefinitionName(), businessObjectDefinitionKey.getNamespace(),
+                businessObjectDefinitionSampleDataFileKey.getDirectoryPath(), businessObjectDefinitionSampleDataFileKey.getFileName()));
         }
 
         return businessObjectDefinitionSampleDataFileEntity;
