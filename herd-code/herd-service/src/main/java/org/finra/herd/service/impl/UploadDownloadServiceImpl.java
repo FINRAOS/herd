@@ -46,8 +46,8 @@ import org.finra.herd.model.api.xml.BusinessObjectDataCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionSampleDataFileKey;
-import org.finra.herd.model.api.xml.DownloadBusinesObjectDefinitionSingleInitiationRequest;
-import org.finra.herd.model.api.xml.DownloadBusinesObjectDefinitionSingleInitiationResponse;
+import org.finra.herd.model.api.xml.DownloadBusinessObjectDefinitionSingleInitiationRequest;
+import org.finra.herd.model.api.xml.DownloadBusinessObjectDefinitionSingleInitiationResponse;
 import org.finra.herd.model.api.xml.DownloadSingleInitiationResponse;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.api.xml.UploadSingleCredentialExtensionResponse;
@@ -305,6 +305,20 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         return new AwsPolicyBuilder().withS3(s3BucketName, s3Key, S3Actions.GetObject).withKms(awsKmsKeyId, KmsActions.DECRYPT).build();
     }
 
+    /**
+     * Creates a restricted policy JSON string which only allows GetObject to the given bucket name and object key, and allows Decrypt for the given key ID.
+     *
+     * @param s3BucketName - The S3 bucket name to restrict uploads to
+     * @param s3Key - The S3 object key to restrict the uploads to
+     *
+     * @return the policy JSON string
+     */
+    @SuppressWarnings("PMD.CloseResource") // These are not SQL statements so they don't need to be closed.
+    private Policy createDownloaderPolicy(String s3BucketName, String s3Key)
+    {
+        return new AwsPolicyBuilder().withS3(s3BucketName, s3Key, S3Actions.GetObject).build();
+    }
+    
     @Override
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public CompleteUploadSingleMessageResult performCompleteUploadSingleMessage(String objectKey)
@@ -611,6 +625,13 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
             createDownloaderPolicy(storageHelper.getStorageBucketName(storageEntity), s3ObjectKey, storageHelper.getStorageKmsKeyId(storageEntity)));
     }
 
+    private Credentials getDownloaderCredentialsNoKmsKey(StorageEntity storageEntity, String sessionName, String s3ObjectKey)
+    {
+        return stsDao.getTemporarySecurityCredentials(awsHelper.getAwsParamsDto(), sessionName, getStorageDownloadRoleArn(storageEntity),
+            getStorageDownloadSessionDuration(storageEntity),
+            createDownloaderPolicy(storageHelper.getStorageBucketName(storageEntity), s3ObjectKey));
+    }
+    
     /**
      * Gets the storage's upload session duration in seconds. Defaults to the configured default value if not defined.
      *
@@ -666,10 +687,10 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
     }
 
     @Override
-    public DownloadBusinesObjectDefinitionSingleInitiationResponse initiateDownloadSingleSampleFile(
-        DownloadBusinesObjectDefinitionSingleInitiationRequest downloadRequest)
+    public DownloadBusinessObjectDefinitionSingleInitiationResponse initiateDownloadSingleSampleFile(
+        DownloadBusinessObjectDefinitionSingleInitiationRequest downloadRequest)
     {
-        DownloadBusinesObjectDefinitionSingleInitiationResponse response =  new DownloadBusinesObjectDefinitionSingleInitiationResponse();
+        DownloadBusinessObjectDefinitionSingleInitiationResponse response =  new DownloadBusinessObjectDefinitionSingleInitiationResponse();
        
         BusinessObjectDefinitionSampleDataFileEntity businessObjectDefinitionSampleDataFileEntity =
                   validateDownloadBusinesObjectDefinitionSingleInitiationRequest(downloadRequest);
@@ -681,7 +702,7 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
 
         // Get the temporary credentials
         Credentials downloaderCredentials =
-            getExternalDownloaderCredentials(storageEntity, String.valueOf(businessObjectDefinitionSampleDataFileEntity.getId()), s3ObjectKey);
+            getDownloaderCredentialsNoKmsKey(storageEntity, String.valueOf(businessObjectDefinitionSampleDataFileEntity.getId()), s3ObjectKey);
 
         // Generate a pre-signed URL
         Date expiration = downloaderCredentials.getExpiration();
@@ -698,8 +719,13 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         return response;
     }
     
+    /**
+     * Validate business object definition sample file request, once pass validation return the sample file data entity
+     * @param downloadRequest download request for business definition sample file
+     * @return business object definition sample data file entity
+     */
     private BusinessObjectDefinitionSampleDataFileEntity validateDownloadBusinesObjectDefinitionSingleInitiationRequest(
-        DownloadBusinesObjectDefinitionSingleInitiationRequest downloadRequest)
+        DownloadBusinessObjectDefinitionSingleInitiationRequest downloadRequest)
     {
         BusinessObjectDefinitionSampleDataFileKey businessObjectDefinitionSampleDataFileKey = downloadRequest.getBusinessObjectDefinitionSampleDataFileKey();
 

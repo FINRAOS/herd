@@ -15,8 +15,8 @@
 */
 package org.finra.herd.service;
 
-import org.finra.herd.model.api.xml.DownloadBusinesObjectDefinitionSingleInitiationRequest;
-import org.finra.herd.model.api.xml.DownloadBusinesObjectDefinitionSingleInitiationResponse;
+import org.finra.herd.model.api.xml.DownloadBusinessObjectDefinitionSingleInitiationRequest;
+import org.finra.herd.model.api.xml.DownloadBusinessObjectDefinitionSingleInitiationResponse;
 import org.finra.herd.model.api.xml.DownloadSingleInitiationResponse;
 import org.finra.herd.model.api.xml.UploadSingleCredentialExtensionResponse;
 import org.finra.herd.model.api.xml.UploadSingleInitiationRequest;
@@ -81,7 +81,12 @@ public interface UploadDownloadService
         String businessObjectFormatUsage, String businessObjectFormatFileType, Integer businessObjectFormatVersion, String partitionValue,
         Integer businessObjectDataVersion);
     
-    public DownloadBusinesObjectDefinitionSingleInitiationResponse initiateDownloadSingleSampleFile(
-        DownloadBusinesObjectDefinitionSingleInitiationRequest downloadRequest);
+    /**
+     * Returns information required to download object from S3 for business object definition sample file
+     * @param downloadRequest download request for single sample file
+     * @return download response
+     */
+    public DownloadBusinessObjectDefinitionSingleInitiationResponse initiateDownloadSingleSampleFile(
+        DownloadBusinessObjectDefinitionSingleInitiationRequest downloadRequest);
 
 }

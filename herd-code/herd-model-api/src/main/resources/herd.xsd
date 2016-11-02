@@ -3663,8 +3663,8 @@
    </xs:complexType>
 
    <!-- ***** Download Sample Business Data File ***** -->
-   <xs:element name="downloadBusinesObjectDefinitionSingleInitiationResponse" type="downloadBusinesObjectDefinitionSingleInitiationResponse"/>
-   <xs:complexType name="downloadBusinesObjectDefinitionSingleInitiationResponse">
+   <xs:element name="downloadBusinessObjectDefinitionSingleInitiationResponse" type="downloadBusinessObjectDefinitionSingleInitiationResponse"/>
+   <xs:complexType name="downloadBusinessObjectDefinitionSingleInitiationResponse">
       <xs:sequence>
          <xs:element name="businessObjectDefinitionSampleDataFileKey" type="businessObjectDefinitionSampleDataFileKey"/>
          <xs:element name="awsAccessKey" type="xs:string"/>
@@ -3695,8 +3695,8 @@
       </xs:sequence>
    </xs:complexType>
    
-   <xs:element name="downloadBusinesObjectDefinitionSingleInitiationRequest" type="downloadBusinesObjectDefinitionSingleInitiationRequest"/>
-   <xs:complexType name="downloadBusinesObjectDefinitionSingleInitiationRequest">
+   <xs:element name="downloadBusinessObjectDefinitionSingleInitiationRequest" type="downloadBusinessObjectDefinitionSingleInitiationRequest"/>
+   <xs:complexType name="downloadBusinessObjectDefinitionSingleInitiationRequest">
       <xs:sequence>
          <xs:element name="businessObjectDefinitionSampleDataFileKey" type="businessObjectDefinitionSampleDataFileKey"/>
       </xs:sequence>
