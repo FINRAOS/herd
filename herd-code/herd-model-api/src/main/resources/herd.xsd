@@ -3663,10 +3663,11 @@
    </xs:complexType>
 
    <!-- ***** Download Sample Business Data File ***** -->
-   <xs:element name="downloadBusinessObjectDefinitionSingleInitiationResponse" type="downloadBusinessObjectDefinitionSingleInitiationResponse"/>
-   <xs:complexType name="downloadBusinessObjectDefinitionSingleInitiationResponse">
+   <xs:element name="downloadBusinesObjectDefinitionSampleDataFileSingleInitiationResponse" type="downloadBusinesObjectDefinitionSampleDataFileSingleInitiationResponse"/>
+   <xs:complexType name="downloadBusinesObjectDefinitionSampleDataFileSingleInitiationResponse">
       <xs:sequence>
          <xs:element name="businessObjectDefinitionSampleDataFileKey" type="businessObjectDefinitionSampleDataFileKey"/>
+         <xs:element name="awsS3BucketName" type="xs:string"/>
          <xs:element name="awsAccessKey" type="xs:string"/>
          <xs:element name="awsSecretKey" type="xs:string"/>
          <xs:element name="awsSessionToken" type="xs:string"/>
@@ -3695,8 +3696,8 @@
       </xs:sequence>
    </xs:complexType>
    
-   <xs:element name="downloadBusinessObjectDefinitionSingleInitiationRequest" type="downloadBusinessObjectDefinitionSingleInitiationRequest"/>
-   <xs:complexType name="downloadBusinessObjectDefinitionSingleInitiationRequest">
+   <xs:element name="downloadBusinesObjectDefinitionSampleDataFileSingleInitiationRequest" type="downloadBusinesObjectDefinitionSampleDataFileSingleInitiationRequest"/>
+   <xs:complexType name="downloadBusinesObjectDefinitionSampleDataFileSingleInitiationRequest">
       <xs:sequence>
          <xs:element name="businessObjectDefinitionSampleDataFileKey" type="businessObjectDefinitionSampleDataFileKey"/>
       </xs:sequence>

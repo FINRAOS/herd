@@ -25,8 +25,8 @@ import org.junit.Test;
 
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionSampleDataFileKey;
-import org.finra.herd.model.api.xml.DownloadBusinessObjectDefinitionSingleInitiationRequest;
-import org.finra.herd.model.api.xml.DownloadBusinessObjectDefinitionSingleInitiationResponse;
+import org.finra.herd.model.api.xml.DownloadBusinesObjectDefinitionSampleDataFileSingleInitiationRequest;
+import org.finra.herd.model.api.xml.DownloadBusinesObjectDefinitionSampleDataFileSingleInitiationResponse;
 import org.finra.herd.model.api.xml.DownloadSingleInitiationResponse;
 import org.finra.herd.model.api.xml.SampleDataFile;
 import org.finra.herd.model.api.xml.UploadSingleCredentialExtensionResponse;
@@ -157,7 +157,8 @@ public class UploadDownloadRestControllerTest extends AbstractRestTest
                         .createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_DOWNLOAD_ROLE_ARN),
                                 "downloadRole"));
 
-        DownloadBusinessObjectDefinitionSingleInitiationRequest downloadRequest = new DownloadBusinessObjectDefinitionSingleInitiationRequest();
+        DownloadBusinesObjectDefinitionSampleDataFileSingleInitiationRequest downloadRequest =
+                new DownloadBusinesObjectDefinitionSampleDataFileSingleInitiationRequest();
         BusinessObjectDefinitionSampleDataFileKey sampleDataFileKey = new BusinessObjectDefinitionSampleDataFileKey();
         sampleDataFileKey.setBusinessObjectDefinitionName(BDEF_NAME);
         sampleDataFileKey.setNamespace(NAMESPACE);
@@ -166,7 +167,7 @@ public class UploadDownloadRestControllerTest extends AbstractRestTest
 
         downloadRequest.setBusinessObjectDefinitionSampleDataFileKey(sampleDataFileKey);
 
-        DownloadBusinessObjectDefinitionSingleInitiationResponse downloadResponse =
+        DownloadBusinesObjectDefinitionSampleDataFileSingleInitiationResponse downloadResponse =
                 uploadDownloadRestController.initiateDownloadSingleSampleFile(downloadRequest);
 
         assertEquals(downloadResponse.getBusinessObjectDefinitionSampleDataFileKey(), sampleDataFileKey);

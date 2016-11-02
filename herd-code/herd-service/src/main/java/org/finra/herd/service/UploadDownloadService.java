@@ -15,8 +15,8 @@
 */
 package org.finra.herd.service;
 
-import org.finra.herd.model.api.xml.DownloadBusinessObjectDefinitionSingleInitiationRequest;
-import org.finra.herd.model.api.xml.DownloadBusinessObjectDefinitionSingleInitiationResponse;
+import org.finra.herd.model.api.xml.DownloadBusinesObjectDefinitionSampleDataFileSingleInitiationRequest;
+import org.finra.herd.model.api.xml.DownloadBusinesObjectDefinitionSampleDataFileSingleInitiationResponse;
 import org.finra.herd.model.api.xml.DownloadSingleInitiationResponse;
 import org.finra.herd.model.api.xml.UploadSingleCredentialExtensionResponse;
 import org.finra.herd.model.api.xml.UploadSingleInitiationRequest;
@@ -86,7 +86,7 @@ public interface UploadDownloadService
      * @param downloadRequest download request for single sample file
      * @return download response
      */
-    public DownloadBusinessObjectDefinitionSingleInitiationResponse initiateDownloadSingleSampleFile(
-        DownloadBusinessObjectDefinitionSingleInitiationRequest downloadRequest);
+    public DownloadBusinesObjectDefinitionSampleDataFileSingleInitiationResponse initiateDownloadSingleSampleFile(
+        DownloadBusinesObjectDefinitionSampleDataFileSingleInitiationRequest downloadRequest);
 
 }
