@@ -15,7 +15,6 @@
 */
 package org.finra.herd.service.impl;
 
-import java.util.Collection;
 import java.util.Date;
 import java.util.UUID;
 
@@ -66,12 +65,12 @@ import org.finra.herd.model.jpa.StorageFileEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.service.UploadDownloadHelperService;
 import org.finra.herd.service.UploadDownloadService;
+import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.AttributeHelper;
 import org.finra.herd.service.helper.AwsPolicyBuilder;
 import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionDaoHelper;
-import org.finra.herd.service.helper.BusinessObjectDefinitionHelper;
 import org.finra.herd.service.helper.BusinessObjectFormatDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectFormatHelper;
 import org.finra.herd.service.helper.KmsActions;
@@ -90,6 +89,9 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
     private static final Logger LOGGER = LoggerFactory.getLogger(UploadDownloadServiceImpl.class);
 
     @Autowired
+    private AlternateKeyHelper alternateKeyHelper;
+
+    @Autowired
     private AttributeHelper attributeHelper;
 
     @Autowired
@@ -106,10 +108,7 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
 
     @Autowired
     private BusinessObjectFormatHelper businessObjectFormatHelper;
-    
-    @Autowired
-    private BusinessObjectDefinitionHelper businessObjectDefinitionHelper;
-    
+
     @Autowired
     private BusinessObjectDefinitionDaoHelper businessObjectDefinitionDaoHelper;
 
@@ -318,7 +317,7 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
     {
         return new AwsPolicyBuilder().withS3(s3BucketName, s3Key, S3Actions.GetObject).build();
     }
-    
+
     @Override
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public CompleteUploadSingleMessageResult performCompleteUploadSingleMessage(String objectKey)
@@ -628,10 +627,9 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
     private Credentials getDownloaderCredentialsNoKmsKey(StorageEntity storageEntity, String sessionName, String s3ObjectKey)
     {
         return stsDao.getTemporarySecurityCredentials(awsHelper.getAwsParamsDto(), sessionName, getStorageDownloadRoleArn(storageEntity),
-            getStorageDownloadSessionDuration(storageEntity),
-            createDownloaderPolicy(storageHelper.getStorageBucketName(storageEntity), s3ObjectKey));
+            getStorageDownloadSessionDuration(storageEntity), createDownloaderPolicy(storageHelper.getStorageBucketName(storageEntity), s3ObjectKey));
     }
-    
+
     /**
      * Gets the storage's upload session duration in seconds. Defaults to the configured default value if not defined.
      *
@@ -688,35 +686,46 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
 
     @Override
     public DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse initiateDownloadSingleSampleFile(
-        DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest downloadRequest)
+        DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest request)
     {
-        DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse response =
-                new DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse();
+        // Validate and trim the request parameters.
+        validateDownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest(request);
 
+        // Get the business object definition sample data file key.
+        BusinessObjectDefinitionSampleDataFileKey businessObjectDefinitionSampleDataFileKey = request.getBusinessObjectDefinitionSampleDataFileKey();
+
+        // Get the business object definition key.
+        BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(businessObjectDefinitionSampleDataFileKey.getNamespace(),
+            businessObjectDefinitionSampleDataFileKey.getBusinessObjectDefinitionName());
+
+        // Get the business object definition entity and ensure it exists.
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
+            businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
+
+        // Get the sample data file exists for the business object definition and ensure it exists.
         BusinessObjectDefinitionSampleDataFileEntity businessObjectDefinitionSampleDataFileEntity =
-                validateDownloadBusinesObjectDefinitionSingleInitiationRequest(downloadRequest);
+            getBusinessObjectDefinitionSampleDataFileEntity(businessObjectDefinitionEntity, businessObjectDefinitionSampleDataFileKey);
 
-        BusinessObjectDefinitionSampleDataFileKey businessObjectDefinitionSampleDataFileKey = downloadRequest.getBusinessObjectDefinitionSampleDataFileKey();
+        // Retrieve the storage related information.
         StorageEntity storageEntity = businessObjectDefinitionSampleDataFileEntity.getStorage();
         String s3BucketName = storageHelper.getStorageBucketName(storageEntity);
         String s3ObjectKey = businessObjectDefinitionSampleDataFileKey.getDirectoryPath() + businessObjectDefinitionSampleDataFileKey.getFileName();
 
-        // Get the temporary credentials
+        // Get the temporary credentials.
         Credentials downloaderCredentials =
-                getDownloaderCredentialsNoKmsKey(storageEntity, String.valueOf(businessObjectDefinitionSampleDataFileEntity.getId()), s3ObjectKey);
+            getDownloaderCredentialsNoKmsKey(storageEntity, String.valueOf(businessObjectDefinitionSampleDataFileEntity.getId()), s3ObjectKey);
 
-        // Generate a pre-signed URL
+        // Generate a pre-signed URL.
         Date expiration = downloaderCredentials.getExpiration();
         S3FileTransferRequestParamsDto s3BucketAccessParams = storageHelper.getS3BucketAccessParams(storageEntity);
         String presignedUrl = s3Dao.generateGetObjectPresignedUrl(s3BucketName, s3ObjectKey, expiration, s3BucketAccessParams);
 
-        BusinessObjectDefinitionSampleDataFileKey responseSampleDataFileKey = new BusinessObjectDefinitionSampleDataFileKey();
-        responseSampleDataFileKey.setNamespace(businessObjectDefinitionSampleDataFileEntity.getBusinessObjectDefinition().getNamespace().getCode());
-        responseSampleDataFileKey.setBusinessObjectDefinitionName(businessObjectDefinitionSampleDataFileEntity.getBusinessObjectDefinition().getName());
-        responseSampleDataFileKey.setDirectoryPath(businessObjectDefinitionSampleDataFileEntity.getDirectoryPath());
-        responseSampleDataFileKey.setFileName(businessObjectDefinitionSampleDataFileEntity.getFileName());
-
-        response.setBusinessObjectDefinitionSampleDataFileKey(responseSampleDataFileKey);
+        // Create the download business object definition sample data file single initiation response.
+        DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse response =
+            new DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse();
+        response.setBusinessObjectDefinitionSampleDataFileKey(
+            new BusinessObjectDefinitionSampleDataFileKey(businessObjectDefinitionEntity.getNamespace().getCode(), businessObjectDefinitionEntity.getName(),
+                businessObjectDefinitionSampleDataFileEntity.getDirectoryPath(), businessObjectDefinitionSampleDataFileEntity.getFileName()));
         response.setAwsS3BucketName(s3BucketName);
         response.setAwsAccessKey(downloaderCredentials.getAccessKeyId());
         response.setAwsSecretKey(downloaderCredentials.getSecretAccessKey());
@@ -724,46 +733,56 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         response.setAwsSessionExpirationTime(HerdDateUtils.getXMLGregorianCalendarValue(expiration));
         response.setPreSignedUrl(presignedUrl);
 
+        // Return the response.
         return response;
     }
 
     /**
-     * Validate business object definition sample file request, once pass validation return the sample file data entity
-     * 
-     * @param downloadRequest download request for business definition sample file
-     * @return business object definition sample data file entity
+     * Validates the download business object definition sample data file single initiation request.
+     *
+     * @param request the download business object definition sample data file single initiation request request
      */
-    private BusinessObjectDefinitionSampleDataFileEntity validateDownloadBusinesObjectDefinitionSingleInitiationRequest(
-        DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest downloadRequest)
+    private void validateDownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest(
+        DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest request)
     {
-        BusinessObjectDefinitionSampleDataFileKey businessObjectDefinitionSampleDataFileKey = downloadRequest.getBusinessObjectDefinitionSampleDataFileKey();
+        Assert.notNull(request, "A download business object definition sample data file single initiation request must be specified.");
+        validateBusinessObjectDefinitionSampleDataFileKey(request.getBusinessObjectDefinitionSampleDataFileKey());
+    }
 
-        // Validate and trim the file directory information.
-        Assert.notNull(businessObjectDefinitionSampleDataFileKey, "A business object definition sample file key must be specified.");
-        Assert.notNull(businessObjectDefinitionSampleDataFileKey.getDirectoryPath(), "A directory path must be specified.");
-        Assert.hasText(businessObjectDefinitionSampleDataFileKey.getDirectoryPath(), "A directory path must be specified.");
-        businessObjectDefinitionSampleDataFileKey.setDirectoryPath(businessObjectDefinitionSampleDataFileKey.getDirectoryPath().trim());
-        // Validate and trim the file name information.
-        Assert.notNull(businessObjectDefinitionSampleDataFileKey.getFileName(), "A file name must be specified.");
-        Assert.hasText(businessObjectDefinitionSampleDataFileKey.getFileName(), "A file name must be specified.");
-        businessObjectDefinitionSampleDataFileKey.setFileName(businessObjectDefinitionSampleDataFileKey.getFileName().trim());
+    /**
+     * Validates a business object definition sample data file key. This method also trims the key parameters.
+     *
+     * @param key the business object definition sample data file key
+     */
+    private void validateBusinessObjectDefinitionSampleDataFileKey(BusinessObjectDefinitionSampleDataFileKey key)
+    {
+        Assert.notNull(key, "A business object definition sample data file key must be specified.");
+        key.setNamespace(alternateKeyHelper.validateStringParameter("namespace", key.getNamespace()));
+        key.setBusinessObjectDefinitionName(
+            alternateKeyHelper.validateStringParameter("business object definition name", key.getBusinessObjectDefinitionName()));
+        Assert.hasText(key.getDirectoryPath(), "A directory path must be specified.");
+        key.setDirectoryPath(key.getDirectoryPath().trim());
+        Assert.hasText(key.getFileName(), "A file name must be specified.");
+        key.setFileName(key.getFileName().trim());
+    }
 
-        BusinessObjectDefinitionKey businessObjectDefinitionKey =
-                new BusinessObjectDefinitionKey(businessObjectDefinitionSampleDataFileKey.getNamespace(), businessObjectDefinitionSampleDataFileKey
-                        .getBusinessObjectDefinitionName());
-        businessObjectDefinitionHelper.validateBusinessObjectDefinitionKey(businessObjectDefinitionKey);
-        // reset the name space and business definition name to the validated fields
-        businessObjectDefinitionSampleDataFileKey.setNamespace(businessObjectDefinitionKey.getNamespace());
-        businessObjectDefinitionSampleDataFileKey.setBusinessObjectDefinitionName(businessObjectDefinitionKey.getBusinessObjectDefinitionName());
-        // validate that business definition exists
-        BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
-                businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
-        Collection<BusinessObjectDefinitionSampleDataFileEntity> sampleDateFiles = businessObjectDefinitionEntity.getSampleDataFiles();
+    /**
+     * Gets a business object definition sample data file entity per specified parameters.
+     *
+     * @param businessObjectDefinitionEntity the business object definition entity
+     * @param businessObjectDefinitionSampleDataFileKey the business object definition sample data file key
+     *
+     * @return the business object definition sample data file entity
+     */
+    private BusinessObjectDefinitionSampleDataFileEntity getBusinessObjectDefinitionSampleDataFileEntity(
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity, BusinessObjectDefinitionSampleDataFileKey businessObjectDefinitionSampleDataFileKey)
+    {
         BusinessObjectDefinitionSampleDataFileEntity businessObjectDefinitionSampleDataFileEntity = null;
-        for (BusinessObjectDefinitionSampleDataFileEntity sampleDataFileEntity : sampleDateFiles)
+
+        for (BusinessObjectDefinitionSampleDataFileEntity sampleDataFileEntity : businessObjectDefinitionEntity.getSampleDataFiles())
         {
-            if (sampleDataFileEntity.getDirectoryPath().equals(businessObjectDefinitionSampleDataFileKey.getDirectoryPath())
-                    && sampleDataFileEntity.getFileName().equals(businessObjectDefinitionSampleDataFileKey.getFileName()))
+            if (sampleDataFileEntity.getDirectoryPath().equals(businessObjectDefinitionSampleDataFileKey.getDirectoryPath()) &&
+                sampleDataFileEntity.getFileName().equals(businessObjectDefinitionSampleDataFileKey.getFileName()))
             {
                 businessObjectDefinitionSampleDataFileEntity = sampleDataFileEntity;
                 break;
@@ -774,9 +793,9 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         {
             throw new ObjectNotFoundException(String.format(
                 "Business object definition with name \"%s\" and namespace \"%s\" does not have the specified sample file registered with file name \"%s\" in" +
-                 " directory path \"%s\"",
-                businessObjectDefinitionKey.getBusinessObjectDefinitionName(), businessObjectDefinitionKey.getNamespace(),
-                businessObjectDefinitionSampleDataFileKey.getFileName(), businessObjectDefinitionSampleDataFileKey.getDirectoryPath()));
+                    " directory path \"%s\"", businessObjectDefinitionSampleDataFileKey.getBusinessObjectDefinitionName(),
+                businessObjectDefinitionSampleDataFileKey.getNamespace(), businessObjectDefinitionSampleDataFileKey.getFileName(),
+                businessObjectDefinitionSampleDataFileKey.getDirectoryPath()));
         }
 
         return businessObjectDefinitionSampleDataFileEntity;
