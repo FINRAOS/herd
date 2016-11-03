@@ -59,8 +59,7 @@ public class SchemaColumnDaoImpl extends AbstractHerdDao implements SchemaColumn
         }
         else
         {
-            predicates.add(builder.equal(businessObjectFormatEntityJoin.get(BusinessObjectFormatEntity_.id),
-                businessObjectDefinitionEntity.getDescriptiveBusinessObjectFormat().getId()));
+            predicates.add(builder.equal(businessObjectFormatEntityJoin, businessObjectDefinitionEntity.getDescriptiveBusinessObjectFormat()));
         }
         predicates.add(builder.equal(builder.upper(schemaColumnEntityRoot.get(SchemaColumnEntity_.name)), schemaColumnName.toUpperCase()));
 
