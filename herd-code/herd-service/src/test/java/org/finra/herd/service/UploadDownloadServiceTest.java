@@ -1383,7 +1383,14 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         }
         catch (ObjectNotFoundException ex)
         {
-            // as expected
+            String expectedErrorMsg =
+                    String.format(
+                            "Business object definition with name \"%s\" and namespace \"%s\" does not have the specified sample file registered with file name \"%s\" in"
+                                    + " directory path \"%s\"",
+                            sampleDataFileKey.getBusinessObjectDefinitionName(), sampleDataFileKey.getNamespace(),
+                            sampleDataFileKey.getFileName(), sampleDataFileKey.getDirectoryPath());
+
+            assertEquals(ex.getMessage(), expectedErrorMsg);
         }
     }
 }
