@@ -51,6 +51,9 @@ public class BusinessObjectDefinitionDaoTestHelper
     private NamespaceDaoTestHelper namespaceDaoTestHelper;
 
     @Autowired
+    private StorageDao storageDao;
+
+    @Autowired
     private StorageDaoTestHelper storageDaoTestHelper;
 
     /**
@@ -181,9 +184,16 @@ public class BusinessObjectDefinitionDaoTestHelper
         // Create business object definition sample data file entities if they are specified.
         if (!CollectionUtils.isEmpty(sampleDataFiles))
         {
+            // Create a storage entity if needed.
+            StorageEntity storageEntity = storageDao.getStorageByName(AbstractDaoTest.STORAGE_NAME);
+            if (storageEntity == null)
+            {
+                storageEntity = storageDaoTestHelper.createStorageEntity(AbstractDaoTest.STORAGE_NAME);
+            }
+
+            // Create sample data file entities.
             List<BusinessObjectDefinitionSampleDataFileEntity> sampleDataFileEntities = new ArrayList<>();
             businessObjectDefinitionEntity.setSampleDataFiles(sampleDataFileEntities);
-            StorageEntity storageEntity = storageDaoTestHelper.createStorageEntity(AbstractDaoTest.STORAGE_NAME);
             for (SampleDataFile sampleDataFile : sampleDataFiles)
             {
                 BusinessObjectDefinitionSampleDataFileEntity sampleDataFileEntity = new BusinessObjectDefinitionSampleDataFileEntity();
