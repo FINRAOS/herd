@@ -153,7 +153,7 @@ public class BusinessObjectDefinitionTagDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void testGetBusinessObjectDefinitionTagsByTagEntity()
+    public void testGetBusinessObjectDefinitionTagsByTagEntities()
     {
         // Create and persist two business object definition entities with display names in reverse order.
         List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities = Arrays.asList(businessObjectDefinitionDaoTestHelper
@@ -161,23 +161,30 @@ public class BusinessObjectDefinitionTagDaoTest extends AbstractDaoTest
             businessObjectDefinitionDaoTestHelper
                 .createBusinessObjectDefinitionEntity(BDEF_NAMESPACE_2, BDEF_NAME_2, DATA_PROVIDER_NAME, BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME, NO_ATTRIBUTES));
 
-        // Create and persist two tag entities.
-        List<TagEntity> tagEntities = Arrays.asList(tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION),
-            tagDaoTestHelper.createTagEntity(TAG_TYPE_2, TAG_CODE_2, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION));
+        // Create and persist three tag entities with display names in reverse order.
+        List<TagEntity> tagEntities = Arrays.asList(tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION),
+            tagDaoTestHelper.createTagEntity(TAG_TYPE_2, TAG_CODE_2, TAG_DISPLAY_NAME, TAG_DESCRIPTION),
+            tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE_2, TAG_DISPLAY_NAME, TAG_DESCRIPTION));
 
-        // Create and persist two business object definition tag entities for the first business object definition entity.
+        // Create and persist two business object definition tag entities for the first two tag entities.
         for (BusinessObjectDefinitionEntity businessObjectDefinitionEntity : businessObjectDefinitionEntities)
         {
-            businessObjectDefinitionTagDaoTestHelper.createBusinessObjectDefinitionTagEntity(businessObjectDefinitionEntity, tagEntities.get(0));
+            for (TagEntity tagEntity : tagEntities.subList(0, 2))
+            {
+                businessObjectDefinitionTagDaoTestHelper.createBusinessObjectDefinitionTagEntity(businessObjectDefinitionEntity, tagEntity);
+            }
         }
 
-        // Get business object definition tags by business object definition entity.
+        // Get business object definition tags by the list of tag entities.
+        // Validate that the keys are ordered by business object definition display name and tag display name.
         assertEquals(Arrays
-            .asList(new BusinessObjectDefinitionTagKey(new BusinessObjectDefinitionKey(BDEF_NAMESPACE_2, BDEF_NAME_2), new TagKey(TAG_TYPE, TAG_CODE)),
+            .asList(new BusinessObjectDefinitionTagKey(new BusinessObjectDefinitionKey(BDEF_NAMESPACE_2, BDEF_NAME_2), new TagKey(TAG_TYPE_2, TAG_CODE_2)),
+                new BusinessObjectDefinitionTagKey(new BusinessObjectDefinitionKey(BDEF_NAMESPACE_2, BDEF_NAME_2), new TagKey(TAG_TYPE, TAG_CODE)),
+                new BusinessObjectDefinitionTagKey(new BusinessObjectDefinitionKey(BDEF_NAMESPACE, BDEF_NAME), new TagKey(TAG_TYPE_2, TAG_CODE_2)),
                 new BusinessObjectDefinitionTagKey(new BusinessObjectDefinitionKey(BDEF_NAMESPACE, BDEF_NAME), new TagKey(TAG_TYPE, TAG_CODE))),
-            businessObjectDefinitionTagDao.getBusinessObjectDefinitionTagsByTagEntity(tagEntities.get(0)));
+            businessObjectDefinitionTagDao.getBusinessObjectDefinitionTagsByTagEntities(tagEntities));
 
         // Try invalid values for all input parameters.
-        assertTrue(businessObjectDefinitionTagDao.getBusinessObjectDefinitionTagsByTagEntity(tagEntities.get(1)).isEmpty());
+        assertTrue(businessObjectDefinitionTagDao.getBusinessObjectDefinitionTagsByTagEntities(Arrays.asList(tagEntities.get(2))).isEmpty());
     }
 }

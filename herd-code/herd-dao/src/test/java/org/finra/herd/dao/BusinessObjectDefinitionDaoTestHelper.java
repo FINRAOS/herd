@@ -24,10 +24,13 @@ import org.springframework.util.CollectionUtils;
 
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
+import org.finra.herd.model.api.xml.SampleDataFile;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionAttributeEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
+import org.finra.herd.model.jpa.BusinessObjectDefinitionSampleDataFileEntity;
 import org.finra.herd.model.jpa.DataProviderEntity;
 import org.finra.herd.model.jpa.NamespaceEntity;
+import org.finra.herd.model.jpa.StorageEntity;
 
 @Component
 public class BusinessObjectDefinitionDaoTestHelper
@@ -46,6 +49,12 @@ public class BusinessObjectDefinitionDaoTestHelper
 
     @Autowired
     private NamespaceDaoTestHelper namespaceDaoTestHelper;
+
+    @Autowired
+    private StorageDao storageDao;
+
+    @Autowired
+    private StorageDaoTestHelper storageDaoTestHelper;
 
     /**
      * Creates and persists a new business object definition.
@@ -76,7 +85,7 @@ public class BusinessObjectDefinitionDaoTestHelper
         String businessObjectDefinitionDescription)
     {
         return createBusinessObjectDefinitionEntity(businessObjectDefinitionKey.getNamespace(), businessObjectDefinitionKey.getBusinessObjectDefinitionName(),
-            dataProviderName, businessObjectDefinitionDescription, null);
+            dataProviderName, businessObjectDefinitionDescription);
     }
 
     /**
@@ -91,27 +100,37 @@ public class BusinessObjectDefinitionDaoTestHelper
     }
 
     /**
-     * Creates and persists a new business object definition.
+     * Creates and persists a new business object definition entity.
      *
-     * @return the newly created business object definition.
+     * @return the newly created business object definition entity
+     */
+    public BusinessObjectDefinitionEntity createBusinessObjectDefinitionEntity(String namespaceCode, String businessObjectDefinitionName,
+        String dataProviderName, String businessObjectDefinitionDescription, List<Attribute> attributes)
+    {
+        return createBusinessObjectDefinitionEntity(namespaceCode, businessObjectDefinitionName, dataProviderName, businessObjectDefinitionDescription, null,
+            attributes);
+    }
+
+    /**
+     * Creates and persists a new business object definition entity.
+     *
+     * @return the newly created business object definition entity
      */
     public BusinessObjectDefinitionEntity createBusinessObjectDefinitionEntity(String namespaceCode, String businessObjectDefinitionName,
         String dataProviderName, String businessObjectDefinitionDescription, String displayName, List<Attribute> attributes)
     {
-        BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
-            createBusinessObjectDefinitionEntity(namespaceCode, businessObjectDefinitionName, dataProviderName, businessObjectDefinitionDescription,
-                attributes);
-        businessObjectDefinitionEntity.setDisplayName(displayName);
-        return businessObjectDefinitionDao.saveAndRefresh(businessObjectDefinitionEntity);
+        return createBusinessObjectDefinitionEntity(namespaceCode, businessObjectDefinitionName, dataProviderName, businessObjectDefinitionDescription,
+            displayName, attributes, null);
     }
 
     /**
-     * Creates and persists a new business object definition.
+     * Creates and persists a new business object definition entity.
      *
-     * @return the newly created business object definition.
+     * @return the newly created business object definition entity
      */
     public BusinessObjectDefinitionEntity createBusinessObjectDefinitionEntity(String namespaceCode, String businessObjectDefinitionName,
-        String dataProviderName, String businessObjectDefinitionDescription, List<Attribute> attributes)
+        String dataProviderName, String businessObjectDefinitionDescription, String displayName, List<Attribute> attributes,
+        List<SampleDataFile> sampleDataFiles)
     {
         // Create a namespace entity if needed.
         NamespaceEntity namespaceEntity = namespaceDao.getNamespaceByCd(namespaceCode);
@@ -128,24 +147,26 @@ public class BusinessObjectDefinitionDaoTestHelper
         }
 
         return createBusinessObjectDefinitionEntity(namespaceEntity, businessObjectDefinitionName, dataProviderEntity, businessObjectDefinitionDescription,
-            attributes);
+            displayName, attributes, sampleDataFiles);
     }
 
     /**
-     * Creates and persists a new business object definition.
+     * Creates and persists a new business object definition entity.
      *
-     * @return the newly created business object definition.
+     * @return the newly created business object definition entity
      */
     public BusinessObjectDefinitionEntity createBusinessObjectDefinitionEntity(NamespaceEntity namespaceEntity, String businessObjectDefinitionName,
-        DataProviderEntity dataProviderEntity, String businessObjectDefinitionDescription, List<Attribute> attributes)
+        DataProviderEntity dataProviderEntity, String businessObjectDefinitionDescription, String displayName, List<Attribute> attributes,
+        List<SampleDataFile> sampleDataFiles)
     {
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity = new BusinessObjectDefinitionEntity();
         businessObjectDefinitionEntity.setNamespace(namespaceEntity);
         businessObjectDefinitionEntity.setDataProvider(dataProviderEntity);
         businessObjectDefinitionEntity.setName(businessObjectDefinitionName);
         businessObjectDefinitionEntity.setDescription(businessObjectDefinitionDescription);
+        businessObjectDefinitionEntity.setDisplayName(displayName);
 
-        // Create the attributes if they are specified.
+        // Create business object definition attribute entities if they are specified.
         if (!CollectionUtils.isEmpty(attributes))
         {
             List<BusinessObjectDefinitionAttributeEntity> attributeEntities = new ArrayList<>();
@@ -157,6 +178,31 @@ public class BusinessObjectDefinitionDaoTestHelper
                 attributeEntity.setBusinessObjectDefinition(businessObjectDefinitionEntity);
                 attributeEntity.setName(attribute.getName());
                 attributeEntity.setValue(attribute.getValue());
+            }
+        }
+
+        // Create business object definition sample data file entities if they are specified.
+        if (!CollectionUtils.isEmpty(sampleDataFiles))
+        {
+            // Create a storage entity if needed.
+            StorageEntity storageEntity = storageDao.getStorageByName(AbstractDaoTest.STORAGE_NAME);
+            if (storageEntity == null)
+            {
+                storageEntity = storageDaoTestHelper.createStorageEntity(AbstractDaoTest.STORAGE_NAME);
+            }
+
+            // Create sample data file entities.
+            List<BusinessObjectDefinitionSampleDataFileEntity> sampleDataFileEntities = new ArrayList<>();
+            businessObjectDefinitionEntity.setSampleDataFiles(sampleDataFileEntities);
+            for (SampleDataFile sampleDataFile : sampleDataFiles)
+            {
+                BusinessObjectDefinitionSampleDataFileEntity sampleDataFileEntity = new BusinessObjectDefinitionSampleDataFileEntity();
+                sampleDataFileEntities.add(sampleDataFileEntity);
+                sampleDataFileEntity.setBusinessObjectDefinition(businessObjectDefinitionEntity);
+                sampleDataFileEntity.setDirectoryPath(sampleDataFile.getDirectoryPath());
+                sampleDataFileEntity.setFileName(sampleDataFile.getFileName());
+                sampleDataFileEntity.setFileSizeBytes(AbstractDaoTest.FILE_SIZE_1_KB);
+                sampleDataFileEntity.setStorage(storageEntity);
             }
         }
 

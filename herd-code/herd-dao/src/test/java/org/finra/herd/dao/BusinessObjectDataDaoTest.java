@@ -1418,8 +1418,9 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
 
         NamespaceEntity namespaceEntity = super.namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
         DataProviderEntity dataProviderEntity = super.dataProviderDaoTestHelper.createDataProviderEntity(DATA_PROVIDER_NAME);
-        BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
-            super.businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(namespaceEntity, BDEF_NAME, dataProviderEntity, null, null);
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = super.businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntity(namespaceEntity, BDEF_NAME, dataProviderEntity, NO_BDEF_DESCRIPTION, NO_BDEF_DISPLAY_NAME, NO_ATTRIBUTES,
+                NO_SAMPLE_DATA_FILES);
         FileTypeEntity fileTypeEntity = super.fileTypeDaoTestHelper.createFileTypeEntity(FORMAT_FILE_TYPE_CODE, FORMAT_DESCRIPTION);
 
         BusinessObjectFormatEntity businessObjectFormatEntity = super.businessObjectFormatDaoTestHelper

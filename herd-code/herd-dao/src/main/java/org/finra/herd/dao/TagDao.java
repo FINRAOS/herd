@@ -24,45 +24,42 @@ import org.finra.herd.model.jpa.TagEntity;
 public interface TagDao extends BaseJpaDao
 {
     /**
-     * Get a tag by its key.
+     * Gets a list of tag entities that are immediate children of the specified parent tag entities.
      *
-     * @param tagKey the tag key.
+     * @param parentTagEntities the list of parent tag entities
      *
-     * @return the tag entity for the specified key.
+     * @return the list of tag entities that are immediate children of the specified parent tag entities
+     */
+    public List<TagEntity> getChildrenTags(List<TagEntity> parentTagEntities);
+
+    /**
+     * Get a tag entity by its key.
+     *
+     * @param tagKey the tag key
+     *
+     * @return the tag entity for the specified key
      */
     public TagEntity getTagByKey(TagKey tagKey);
 
     /**
-     * Get a tag by its tag type code and display name.
+     * Get a tag entity by its tag type code and display name.
      *
-     * @param tagTypeCode the specified tag type code.
+     * @param tagTypeCode the specified tag type code
+     * @param displayName the specified display name
      *
-     * @param displayName the specified display name.
-     *
-     * @return the tag entity for the specified parameters.
+     * @return the tag entity for the specified parameters
      */
     public TagEntity getTagByTagTypeAndDisplayName(String tagTypeCode, String displayName);
 
     /**
-     *  Gets a list of Tag Key with Children flags, whose parent tag code is tagCode.
-     *  
-     *  When tagCode is null, return tags of tagTypeCd whose have no parent (root tags).
-     *  
-     * @param tagTypeCd tag Type code.
-     * 
-     * @param tagCode the parent tag code.
-     * 
-     * @return list of Tag with Children flags.
+     * Gets a list of tag child objects with children flags, whose parent tag code is the specified tag code.
+     * <p/>
+     * When tagCode is null, return tags of tagTypeCode whose have no parent (root tags).
+     *
+     * @param tagTypeCode the tag type code
+     * @param parentTagCode the parent tag code, may be null
+     *
+     * @return list of tag child objects with children flags
      */
-    public List<TagChild> getTagsByTagType(String tagTypeCd, String tagCode);
-    
-    /**
-     * Gets a list of Tag Key with Children flags, which have tag type of tagTypeCd
-     * and have no parents (root tags).
-     * 
-     * @param tagTypeCd tag Type code.
-     * 
-     * @return list of Tag with Children flags.
-     */
-    public List<TagChild> getTagsByTagType(String tagTypeCd);
+    public List<TagChild> getTagsByTagTypeAndParentTagCode(String tagTypeCode, String parentTagCode);
 }

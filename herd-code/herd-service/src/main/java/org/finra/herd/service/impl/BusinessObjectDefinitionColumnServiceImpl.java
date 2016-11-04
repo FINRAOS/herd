@@ -103,9 +103,18 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
         // Ensure that exists at least one schema column that matches the specified schema column name.
         if (CollectionUtils.isEmpty(schemaColumnEntities))
         {
-            throw new ObjectNotFoundException(String.format("Unable to create business object definition column because there are no format schema columns " +
-                "with name \"%s\" for the business object definition {%s}.", request.getSchemaColumnName(),
-                businessObjectDefinitionHelper.businessObjectDefinitionKeyToString(businessObjectDefinitionKey)));
+            if (businessObjectDefinitionEntity.getDescriptiveBusinessObjectFormat() == null)
+            {
+                throw new ObjectNotFoundException(String.format("Unable to create business object definition column because there are no format schema " +
+                        "columns with name \"%s\" for the business object definition {%s}.", request.getSchemaColumnName(),
+                    businessObjectDefinitionHelper.businessObjectDefinitionKeyToString(businessObjectDefinitionKey)));
+            }
+            else
+            {
+                throw new ObjectNotFoundException(String.format("Unable to create business object definition column because there are no format schema " +
+                        "columns with name \"%s\" in the descriptive business object format for the business object definition {%s}.",
+                    request.getSchemaColumnName(), businessObjectDefinitionHelper.businessObjectDefinitionKeyToString(businessObjectDefinitionKey)));
+            }
         }
 
         // Ensure a business object definition column with the specified schema column name doesn't already exist for this business object definition.

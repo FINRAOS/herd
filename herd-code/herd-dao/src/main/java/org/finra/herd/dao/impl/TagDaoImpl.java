@@ -42,13 +42,36 @@ import org.finra.herd.model.jpa.TagTypeEntity_;
 public class TagDaoImpl extends AbstractHerdDao implements TagDao
 {
     @Override
+    public List<TagEntity> getChildrenTags(List<TagEntity> parentTagEntities)
+    {
+        // Create the criteria builder and the criteria.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<TagEntity> criteria = builder.createQuery(TagEntity.class);
+
+        // The criteria root is the tag entity.
+        Root<TagEntity> tagEntityRoot = criteria.from(TagEntity.class);
+
+        // Get the columns.
+        Path<String> tagDisplayNameColumn = tagEntityRoot.get(TagEntity_.displayName);
+
+        // Create the standard restrictions (i.e. the standard where clauses).
+        Predicate predicate = getPredicateForInClause(builder, tagEntityRoot.get(TagEntity_.parentTagEntity), parentTagEntities);
+
+        // Add all clauses to the query.
+        criteria.select(tagEntityRoot).where(predicate).orderBy(builder.asc(tagDisplayNameColumn));
+
+        // Run the query to get a list of tag children.
+        return entityManager.createQuery(criteria).getResultList();
+    }
+
+    @Override
     public TagEntity getTagByKey(TagKey tagKey)
     {
         // Create the criteria builder and the criteria.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
         CriteriaQuery<TagEntity> criteria = builder.createQuery(TagEntity.class);
 
-        // The criteria root is the tag code.
+        // The criteria root is the tag entity.
         Root<TagEntity> tagEntityRoot = criteria.from(TagEntity.class);
 
         // Join on the other tables we can filter on.
@@ -59,7 +82,7 @@ public class TagDaoImpl extends AbstractHerdDao implements TagDao
         predicates.add(builder.equal(builder.upper(tagTypeEntityJoin.get(TagTypeEntity_.code)), tagKey.getTagTypeCode().toUpperCase()));
         predicates.add(builder.equal(builder.upper(tagEntityRoot.get(TagEntity_.tagCode)), tagKey.getTagCode().toUpperCase()));
 
-        // Add the clauses for the query.
+        // Add all clauses to the query.
         criteria.select(tagEntityRoot).where(builder.and(predicates.toArray(new Predicate[predicates.size()])));
 
         return executeSingleResultQuery(criteria,
@@ -73,7 +96,7 @@ public class TagDaoImpl extends AbstractHerdDao implements TagDao
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
         CriteriaQuery<TagEntity> criteria = builder.createQuery(TagEntity.class);
 
-        // The criteria root is the tag code.
+        // The criteria root is the tag entity.
         Root<TagEntity> tagEntityRoot = criteria.from(TagEntity.class);
 
         // Join on the other tables we can filter on.
@@ -84,7 +107,7 @@ public class TagDaoImpl extends AbstractHerdDao implements TagDao
         predicates.add(builder.equal(builder.upper(tagTypeEntityJoin.get(TagTypeEntity_.code)), tagTypeCode.toUpperCase()));
         predicates.add(builder.equal(builder.upper(tagEntityRoot.get(TagEntity_.displayName)), displayName.toUpperCase()));
 
-        // Add the clauses for the query.
+        // Add all clauses to the query.
         criteria.select(tagEntityRoot).where(builder.and(predicates.toArray(new Predicate[predicates.size()])));
 
         return executeSingleResultQuery(criteria,
@@ -92,12 +115,13 @@ public class TagDaoImpl extends AbstractHerdDao implements TagDao
     }
 
     @Override
-    public List<TagChild> getTagsByTagType(String tagType, String tagCode)
+    public List<TagChild> getTagsByTagTypeAndParentTagCode(String tagType, String parentTagCode)
     {
-        List<TagChild> tagChildren = new ArrayList<>();
+        // Create the criteria builder and the criteria.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
         CriteriaQuery<TagEntity> criteria = builder.createQuery(TagEntity.class);
 
+        // The criteria root is the tag entity.
         Root<TagEntity> tagEntityRoot = criteria.from(TagEntity.class);
 
         // Join to the other tables we can filter on.
@@ -105,41 +129,36 @@ public class TagDaoImpl extends AbstractHerdDao implements TagDao
 
         // Get the columns.
         Path<String> displayNameColumn = tagEntityRoot.get(TagEntity_.displayName);
-        
+
         // Create the standard restrictions (i.e. the standard where clauses).
         List<Predicate> predicates = new ArrayList<>();
         predicates.add(builder.equal(builder.upper(tagTypeEntityJoin.get(TagTypeEntity_.code)), tagType.toUpperCase()));
 
-        //no tag code is provided, so return all tag code with no parents, i.e. root
-        if (tagCode == null)
+        if (parentTagCode == null)
         {
+            // Parent tag code is not specified, then return all tags with no parents, i.e. root tags.
             predicates.add(builder.isNull(tagEntityRoot.get(TagEntity_.parentTagEntity)));
         }
         else
         {
-            predicates.add(builder.equal(builder.upper(tagEntityRoot.get(TagEntity_.parentTagEntity).get(TagEntity_.tagCode)), tagCode.toUpperCase()));
+            // Add a restriction for the parent tag code.
+            predicates.add(builder.equal(builder.upper(tagEntityRoot.get(TagEntity_.parentTagEntity).get(TagEntity_.tagCode)), parentTagCode.toUpperCase()));
         }
-        
+
+        // Add all clauses to the query.
         criteria.select(tagEntityRoot).where(builder.and(predicates.toArray(new Predicate[predicates.size()]))).orderBy(builder.asc(displayNameColumn));
-           
-        List<TagEntity> tagList = entityManager.createQuery(criteria).getResultList();
-        for (TagEntity tag: tagList)
-        {           
-            boolean hasMoreChildren = tag.getChildrenTagEntities().size() > 0 ? true: false;
-            TagChild tagChild = new TagChild();
-            tagChild.setTagKey(new TagKey(tag.getTagType().getCode(), tag.getTagCode()));
-            tagChild.setHasChildren(hasMoreChildren);        
-            tagChildren.add(tagChild);
+
+        // Run the query to get a list of tag entities back.
+        List<TagEntity> tagEntities = entityManager.createQuery(criteria).getResultList();
+
+        // Populate tag child objects from the returned tag entities.
+        List<TagChild> tagChildren = new ArrayList<>();
+        for (TagEntity tagEntity : tagEntities)
+        {
+            boolean hasChildren = !tagEntity.getChildrenTagEntities().isEmpty();
+            tagChildren.add(new TagChild(new TagKey(tagEntity.getTagType().getCode(), tagEntity.getTagCode()), hasChildren));
         }
-       
+
         return tagChildren;
     }
-        
-
-    @Override
-    public List<TagChild> getTagsByTagType(String tagTypeCd)
-    {
-        return getTagsByTagType(tagTypeCd, null);
-    }
-    
 }

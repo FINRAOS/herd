@@ -275,14 +275,8 @@ public class EmrPricingHelperTest extends AbstractDaoTest
         EmrClusterDefinition emrClusterDefinition =
             updateEmrClusterDefinitionWithBestPrice(subnetId, masterInstanceDefinition, coreInstanceDefinition, taskInstanceDefinition);
 
-        try
-        {
-            assertBestPriceCriteriaRemoved(emrClusterDefinition);
-        }
-        catch (AssertionError e)
-        {
-            throw new RuntimeException("The tests shouldn't fail with these errors, most likely a developer or configuration error", e);
-        }
+
+        assertBestPriceCriteriaRemoved(emrClusterDefinition);
 
         assertEquals("master instance bid price", ON_DEMAND, emrClusterDefinition.getInstanceDefinitions().getMasterInstances().getInstanceSpotPrice());
         assertNull("core instance was not on-demand", emrClusterDefinition.getInstanceDefinitions().getCoreInstances().getInstanceSpotPrice());
@@ -314,16 +308,9 @@ public class EmrPricingHelperTest extends AbstractDaoTest
         EmrClusterDefinition emrClusterDefinition =
             updateEmrClusterDefinitionWithBestPrice(subnetId, masterInstanceDefinition, coreInstanceDefinition, taskInstanceDefinition);
 
-        try
-        {
-            assertBestPriceCriteriaRemoved(emrClusterDefinition);
-            assertEquals("master instance bid price", ON_DEMAND, emrClusterDefinition.getInstanceDefinitions().getMasterInstances().getInstanceSpotPrice());
-            assertEquals("core instance bid price", ON_DEMAND, emrClusterDefinition.getInstanceDefinitions().getCoreInstances().getInstanceSpotPrice());
-        }
-        catch (AssertionError e)
-        {
-            throw new RuntimeException("The tests shouldn't fail with these errors, most likely a developer or configuration error", e);
-        }
+        assertBestPriceCriteriaRemoved(emrClusterDefinition);
+        assertEquals("master instance bid price", ON_DEMAND, emrClusterDefinition.getInstanceDefinitions().getMasterInstances().getInstanceSpotPrice());
+        assertEquals("core instance bid price", ON_DEMAND, emrClusterDefinition.getInstanceDefinitions().getCoreInstances().getInstanceSpotPrice());
 
         assertEquals("selected subnet", MockEc2OperationsImpl.SUBNET_3, emrClusterDefinition.getSubnetId());
     }
@@ -385,16 +372,9 @@ public class EmrPricingHelperTest extends AbstractDaoTest
         EmrClusterDefinition emrClusterDefinition =
             updateEmrClusterDefinitionWithBestPrice(subnetId, masterInstanceDefinition, coreInstanceDefinition, taskInstanceDefinition);
 
-        try
-        {
-            assertBestPriceCriteriaRemoved(emrClusterDefinition);
-            assertEquals("master instance bid price", ON_DEMAND, emrClusterDefinition.getInstanceDefinitions().getMasterInstances().getInstanceSpotPrice());
-            assertEquals("core instance bid price", ON_DEMAND, emrClusterDefinition.getInstanceDefinitions().getCoreInstances().getInstanceSpotPrice());
-        }
-        catch (AssertionError e)
-        {
-            throw new RuntimeException("The tests shouldn't fail with these errors, most likely a developer or configuration error", e);
-        }
+        assertBestPriceCriteriaRemoved(emrClusterDefinition);
+        assertEquals("master instance bid price", ON_DEMAND, emrClusterDefinition.getInstanceDefinitions().getMasterInstances().getInstanceSpotPrice());
+        assertEquals("core instance bid price", ON_DEMAND, emrClusterDefinition.getInstanceDefinitions().getCoreInstances().getInstanceSpotPrice());
 
         assertEquals("selected subnet", MockEc2OperationsImpl.SUBNET_1, emrClusterDefinition.getSubnetId());
     }
@@ -431,18 +411,11 @@ public class EmrPricingHelperTest extends AbstractDaoTest
         EmrClusterDefinition emrClusterDefinition =
             updateEmrClusterDefinitionWithBestPrice(subnetId, masterInstanceDefinition, coreInstanceDefinition, taskInstanceDefinition);
 
-        try
-        {
-            assertBestPriceCriteriaRemoved(emrClusterDefinition);
-            assertEquals("master instance bid price", SPOT_PRICE_VERY_HIGH,
+        assertBestPriceCriteriaRemoved(emrClusterDefinition);
+        assertEquals("master instance bid price", SPOT_PRICE_VERY_HIGH,
                 emrClusterDefinition.getInstanceDefinitions().getMasterInstances().getInstanceSpotPrice());
-            assertEquals("core instance bid price", ON_DEMAND, emrClusterDefinition.getInstanceDefinitions().getCoreInstances().getInstanceSpotPrice());
-            assertEquals("task instance bid price", ON_DEMAND, emrClusterDefinition.getInstanceDefinitions().getTaskInstances().getInstanceSpotPrice());
-        }
-        catch (AssertionError e)
-        {
-            throw new RuntimeException("The tests shouldn't fail with these errors, most likely a developer or configuration error", e);
-        }
+        assertEquals("core instance bid price", ON_DEMAND, emrClusterDefinition.getInstanceDefinitions().getCoreInstances().getInstanceSpotPrice());
+        assertEquals("task instance bid price", ON_DEMAND, emrClusterDefinition.getInstanceDefinitions().getTaskInstances().getInstanceSpotPrice());
 
         assertEquals("selected subnet", MockEc2OperationsImpl.SUBNET_1, emrClusterDefinition.getSubnetId());
     }
@@ -477,18 +450,11 @@ public class EmrPricingHelperTest extends AbstractDaoTest
         EmrClusterDefinition emrClusterDefinition =
             updateEmrClusterDefinitionWithBestPrice(subnetId, masterInstanceDefinition, coreInstanceDefinition, taskInstanceDefinition);
 
-        try
-        {
-            assertBestPriceCriteriaRemoved(emrClusterDefinition);
-            assertEquals("master instance bid price", SPOT_PRICE_VERY_HIGH,
+        assertBestPriceCriteriaRemoved(emrClusterDefinition);
+        assertEquals("master instance bid price", SPOT_PRICE_VERY_HIGH,
                 emrClusterDefinition.getInstanceDefinitions().getMasterInstances().getInstanceSpotPrice());
-            assertEquals("core instance bid price", ON_DEMAND, emrClusterDefinition.getInstanceDefinitions().getCoreInstances().getInstanceSpotPrice());
-            assertEquals("task instance bid price", ON_DEMAND, emrClusterDefinition.getInstanceDefinitions().getTaskInstances().getInstanceSpotPrice());
-        }
-        catch (AssertionError e)
-        {
-            throw new RuntimeException("The tests shouldn't fail with these errors, most likely a developer or configuration error", e);
-        }
+        assertEquals("core instance bid price", ON_DEMAND, emrClusterDefinition.getInstanceDefinitions().getCoreInstances().getInstanceSpotPrice());
+        assertEquals("task instance bid price", ON_DEMAND, emrClusterDefinition.getInstanceDefinitions().getTaskInstances().getInstanceSpotPrice());
 
         assertTrue("selected subnet was neither SUBNET_1 or SUBNET_4", MockEc2OperationsImpl.SUBNET_1.equals(emrClusterDefinition.getSubnetId()) ||
             MockEc2OperationsImpl.SUBNET_4.equals(emrClusterDefinition.getSubnetId()));
@@ -526,18 +492,11 @@ public class EmrPricingHelperTest extends AbstractDaoTest
         EmrClusterDefinition emrClusterDefinition =
             updateEmrClusterDefinitionWithBestPrice(subnetId, masterInstanceDefinition, coreInstanceDefinition, taskInstanceDefinition);
 
-        try
-        {
-            assertBestPriceCriteriaRemoved(emrClusterDefinition);
-            assertEquals("master instance bid price", SPOT_PRICE_VERY_HIGH,
+        assertBestPriceCriteriaRemoved(emrClusterDefinition);
+        assertEquals("master instance bid price", SPOT_PRICE_VERY_HIGH,
                 emrClusterDefinition.getInstanceDefinitions().getMasterInstances().getInstanceSpotPrice());
-            assertEquals("core instance bid price", ON_DEMAND, emrClusterDefinition.getInstanceDefinitions().getCoreInstances().getInstanceSpotPrice());
-            assertEquals("task instance bid price", ON_DEMAND, emrClusterDefinition.getInstanceDefinitions().getTaskInstances().getInstanceSpotPrice());
-        }
-        catch (AssertionError e)
-        {
-            throw new RuntimeException("The tests shouldn't fail with these errors, most likely a developer or configuration error", e);
-        }
+        assertEquals("core instance bid price", ON_DEMAND, emrClusterDefinition.getInstanceDefinitions().getCoreInstances().getInstanceSpotPrice());
+        assertEquals("task instance bid price", ON_DEMAND, emrClusterDefinition.getInstanceDefinitions().getTaskInstances().getInstanceSpotPrice());
 
         assertEquals("selected subnet", MockEc2OperationsImpl.SUBNET_4, emrClusterDefinition.getSubnetId());
     }
@@ -566,16 +525,9 @@ public class EmrPricingHelperTest extends AbstractDaoTest
         EmrClusterDefinition emrClusterDefinition =
             updateEmrClusterDefinitionWithBestPrice(subnetId, masterInstanceDefinition, coreInstanceDefinition, taskInstanceDefinition);
 
-        try
-        {
-            assertBestPriceCriteriaRemoved(emrClusterDefinition);
-            assertNull("master instance was not on-demand", emrClusterDefinition.getInstanceDefinitions().getMasterInstances().getInstanceSpotPrice());
-            assertNull("core instance was not on-demand", emrClusterDefinition.getInstanceDefinitions().getMasterInstances().getInstanceSpotPrice());
-        }
-        catch (AssertionError e)
-        {
-            throw new RuntimeException("The tests shouldn't fail with these errors, most likely a developer or configuration error", e);
-        }
+        assertBestPriceCriteriaRemoved(emrClusterDefinition);
+        assertNull("master instance was not on-demand", emrClusterDefinition.getInstanceDefinitions().getMasterInstances().getInstanceSpotPrice());
+        assertNull("core instance was not on-demand", emrClusterDefinition.getInstanceDefinitions().getMasterInstances().getInstanceSpotPrice());
 
         assertEquals("selected subnet", MockEc2OperationsImpl.SUBNET_5, emrClusterDefinition.getSubnetId());
     }
@@ -608,6 +560,33 @@ public class EmrPricingHelperTest extends AbstractDaoTest
         {
             assertEquals("thrown exception", ObjectNotFoundException.class, e.getClass());
         }
+    }
+
+    /**
+     * Tests case where instance type was not found in the spot list because AWS does not have a
+     * spot price for the given instance type in the given AZ.
+     * But there is another AZ available for that does have a all spot prices available.
+     */
+    @Test
+    public void testBestPriceSpotInstanceNotFoundBecauseSpotPriceIsNotAvailable()
+    {
+        String subnetId = MockEc2OperationsImpl.SUBNET_1 + "," + MockEc2OperationsImpl.SUBNET_5;
+
+        MasterInstanceDefinition masterInstanceDefinition = new MasterInstanceDefinition();
+        masterInstanceDefinition.setInstanceCount(1);
+        masterInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_3);
+
+        InstanceDefinition coreInstanceDefinition = new InstanceDefinition();
+        coreInstanceDefinition.setInstanceCount(1);
+        coreInstanceDefinition.setInstanceType(MockEc2OperationsImpl.INSTANCE_TYPE_1);
+
+        InstanceDefinition taskInstanceDefinition = null;
+
+        EmrClusterDefinition emrClusterDefinition =
+                updateEmrClusterDefinitionWithBestPrice(subnetId, masterInstanceDefinition, coreInstanceDefinition, taskInstanceDefinition);
+
+
+        assertBestPriceCriteriaRemoved(emrClusterDefinition);
     }
 
     /**
@@ -661,14 +640,7 @@ public class EmrPricingHelperTest extends AbstractDaoTest
         EmrClusterDefinition emrClusterDefinition =
             updateEmrClusterDefinitionWithBestPrice(subnetId, masterInstanceDefinition, coreInstanceDefinition, taskInstanceDefinition);
 
-        try
-        {
-            assertBestPriceCriteriaRemoved(emrClusterDefinition);
-        }
-        catch (AssertionError e)
-        {
-            throw new RuntimeException("The tests shouldn't fail with these errors, most likely a developer or configuration error", e);
-        }
+        assertBestPriceCriteriaRemoved(emrClusterDefinition);
 
         assertTrue("subnet was not selected", StringUtils.isNotBlank(emrClusterDefinition.getSubnetId()));
     }
@@ -696,14 +668,7 @@ public class EmrPricingHelperTest extends AbstractDaoTest
         EmrClusterDefinition emrClusterDefinition =
             updateEmrClusterDefinitionWithBestPrice(subnetId, masterInstanceDefinition, coreInstanceDefinition, taskInstanceDefinition);
 
-        try
-        {
-            assertBestPriceCriteriaRemoved(emrClusterDefinition);
-        }
-        catch (AssertionError e)
-        {
-            throw new RuntimeException("The tests shouldn't fail with these errors, most likely a developer or configuration error", e);
-        }
+        assertBestPriceCriteriaRemoved(emrClusterDefinition);
 
         assertEquals("selected subnet", MockEc2OperationsImpl.SUBNET_1, emrClusterDefinition.getSubnetId());
     }
@@ -790,14 +755,7 @@ public class EmrPricingHelperTest extends AbstractDaoTest
         EmrClusterDefinition emrClusterDefinition =
             updateEmrClusterDefinitionWithBestPrice(subnetId, masterInstanceDefinition, coreInstanceDefinition, taskInstanceDefinition);
 
-        try
-        {
-            assertBestPriceCriteriaRemoved(emrClusterDefinition);
-        }
-        catch (AssertionError e)
-        {
-            throw new RuntimeException("The tests shouldn't fail with these errors, most likely a developer or configuration error", e);
-        }
+        assertBestPriceCriteriaRemoved(emrClusterDefinition);
 
         assertEquals("selected subnet", MockEc2OperationsImpl.SUBNET_2, emrClusterDefinition.getSubnetId());
     }

@@ -50,6 +50,8 @@ import org.finra.herd.dao.helper.XmlHelper;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatus;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatusChangeEvent;
+import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormat;
+import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormatUpdateRequest;
 import org.finra.herd.model.api.xml.JobStatusEnum;
 import org.finra.herd.model.api.xml.LatestAfterPartitionValue;
 import org.finra.herd.model.api.xml.LatestBeforePartitionValue;
@@ -140,6 +142,10 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Boolean CREATE_NEW_VERSION = true;
 
+    public static final String DIRECTORY_PATH = "UT_Directory_Path/Some_Path_1/" + RANDOM_SUFFIX + "/";
+
+    public static final String DIRECTORY_PATH_2 = "UT_Directory_Path/Some_Path_2/" + RANDOM_SUFFIX + "/";
+
     public static final Boolean DISCOVER_STORAGE_FILES = true;
 
     public static final String END_PARTITION_VALUE = "2014-04-08";
@@ -193,6 +199,10 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final String NO_COLUMN_SIZE = null;
 
     public static final Boolean NO_CREATE_NEW_VERSION = false;
+
+    public static final DescriptiveBusinessObjectFormat NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT = null;
+
+    public static final DescriptiveBusinessObjectFormatUpdateRequest NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT_UPDATE_REQUEST = null;
 
     public static final Boolean NO_DISCOVER_STORAGE_FILES = false;
 
@@ -545,16 +555,16 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     protected SystemJobService systemJobService;
 
     @Autowired
-    protected TagTypeService tagTypeService;
-
-    @Autowired
-    protected TagTypeDaoTestHelper tagTypeDaoTestHelper;
+    protected TagDaoTestHelper tagDaoTestHelper;
 
     @Autowired
     protected TagService tagService;
 
     @Autowired
-    protected TagDaoTestHelper tagDaoTestHelper;
+    protected TagTypeDaoTestHelper tagTypeDaoTestHelper;
+
+    @Autowired
+    protected TagTypeService tagTypeService;
 
     @Autowired
     protected UploadDownloadHelperService uploadDownloadHelperService;

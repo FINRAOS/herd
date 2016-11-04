@@ -39,9 +39,15 @@ import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptiveInformati
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKeys;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionUpdateRequest;
+import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
+import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormat;
+import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormatUpdateRequest;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
+import org.finra.herd.model.api.xml.SampleDataFile;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionAttributeEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
+import org.finra.herd.model.jpa.BusinessObjectDefinitionSampleDataFileEntity;
+import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.DataProviderEntity;
 import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.service.BusinessObjectDefinitionService;
@@ -49,6 +55,7 @@ import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.AttributeHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionHelper;
+import org.finra.herd.service.helper.BusinessObjectFormatDaoHelper;
 import org.finra.herd.service.helper.DataProviderDaoHelper;
 import org.finra.herd.service.helper.NamespaceDaoHelper;
 
@@ -76,6 +83,9 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 
     @Autowired
     private DataProviderDaoHelper dataProviderDaoHelper;
+
+    @Autowired
+    private BusinessObjectFormatDaoHelper businessObjectFormatDaoHelper;
 
     @Autowired
     private NamespaceDaoHelper namespaceDaoHelper;
@@ -169,6 +179,19 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
             businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
 
+        BusinessObjectFormatEntity businessObjectFormatEntity = null;
+        DescriptiveBusinessObjectFormatUpdateRequest descriptiveFormat = request.getDescriptiveBusinessObjectFormat();
+        if (descriptiveFormat != null)
+        {
+            BusinessObjectFormatKey businessObjectFormatKey = new BusinessObjectFormatKey();
+            businessObjectFormatKey.setBusinessObjectDefinitionName(businessObjectDefinitionEntity.getName());
+            businessObjectFormatKey.setNamespace(businessObjectDefinitionEntity.getNamespace().getCode());
+            businessObjectFormatKey.setBusinessObjectFormatFileType(descriptiveFormat.getBusinessObjectFormatFileType());
+            businessObjectFormatKey.setBusinessObjectFormatUsage(descriptiveFormat.getBusinessObjectFormatUsage());
+            businessObjectFormatEntity = businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey); 
+        }
+        businessObjectDefinitionEntity.setDescriptiveBusinessObjectFormat(businessObjectFormatEntity);
+        
         // Update and persist the entity.
         updateBusinessObjectDefinitionEntityDescriptiveInformation(businessObjectDefinitionEntity, request);
 
@@ -310,7 +333,6 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 
     /**
      * Validates the business object definition update request. This method also trims request parameters.
-     *
      * @param request the request.
      *
      * @throws IllegalArgumentException if any validation errors were found.
@@ -320,6 +342,16 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         if (request.getDisplayName() != null)
         {
             request.setDisplayName(request.getDisplayName().trim());
+        }
+
+        if (request.getDescriptiveBusinessObjectFormat() != null)
+        {
+            DescriptiveBusinessObjectFormatUpdateRequest descriptiveFormat = request.getDescriptiveBusinessObjectFormat();
+
+            descriptiveFormat.setBusinessObjectFormatUsage(alternateKeyHelper.validateStringParameter("business object format usage",
+                    descriptiveFormat.getBusinessObjectFormatUsage()));
+            descriptiveFormat.setBusinessObjectFormatFileType(
+                    alternateKeyHelper.validateStringParameter("business object format file type", descriptiveFormat.getBusinessObjectFormatFileType()));
         }
     }
 
@@ -449,19 +481,20 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         // Update the entity with the new description value.
         businessObjectDefinitionEntity.setDescription(request.getDescription());
         businessObjectDefinitionEntity.setDisplayName(request.getDisplayName());
+
         businessObjectDefinitionDao.saveAndRefresh(businessObjectDefinitionEntity);
     }
 
     /**
-     * Creates the business object definition from the persisted entity.
+     * Creates a business object definition from the persisted entity.
      *
-     * @param businessObjectDefinitionEntity the newly persisted business object definition entity
+     * @param businessObjectDefinitionEntity the business object definition entity
      *
      * @return the business object definition
      */
     private BusinessObjectDefinition createBusinessObjectDefinitionFromEntity(BusinessObjectDefinitionEntity businessObjectDefinitionEntity)
     {
-        // Create the business object definition information.
+        // Create a business object definition.
         BusinessObjectDefinition businessObjectDefinition = new BusinessObjectDefinition();
         businessObjectDefinition.setId(businessObjectDefinitionEntity.getId());
         businessObjectDefinition.setNamespace(businessObjectDefinitionEntity.getNamespace().getCode());
@@ -470,19 +503,32 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         businessObjectDefinition.setDataProviderName(businessObjectDefinitionEntity.getDataProvider().getName());
         businessObjectDefinition.setDisplayName(businessObjectDefinitionEntity.getDisplayName());
 
-        // Add in the attributes.
+        // Add attributes.
         List<Attribute> attributes = new ArrayList<>();
         businessObjectDefinition.setAttributes(attributes);
         for (BusinessObjectDefinitionAttributeEntity attributeEntity : businessObjectDefinitionEntity.getAttributes())
         {
-            Attribute attribute = new Attribute();
-            attributes.add(attribute);
-            attribute.setName(attributeEntity.getName());
-            attribute.setValue(attributeEntity.getValue());
+            attributes.add(new Attribute(attributeEntity.getName(), attributeEntity.getValue()));
+        }
+
+        if (businessObjectDefinitionEntity.getDescriptiveBusinessObjectFormat() != null)
+        {
+            BusinessObjectFormatEntity descriptiveFormatEntity = businessObjectDefinitionEntity.getDescriptiveBusinessObjectFormat();
+            DescriptiveBusinessObjectFormat descriptiveBusinessObjectFormat = new DescriptiveBusinessObjectFormat();
+            businessObjectDefinition.setDescriptiveBusinessObjectFormat(descriptiveBusinessObjectFormat);
+            descriptiveBusinessObjectFormat.setBusinessObjectFormatUsage(descriptiveFormatEntity.getUsage());
+            descriptiveBusinessObjectFormat.setBusinessObjectFormatFileType(descriptiveFormatEntity.getFileType().getCode());
+            descriptiveBusinessObjectFormat.setBusinessObjectFormatVersion(descriptiveFormatEntity.getBusinessObjectFormatVersion());
+        }
+
+        // Add sample data files.
+        List<SampleDataFile> sampleDataFiles = new ArrayList<>();
+        businessObjectDefinition.setSampleDataFiles(sampleDataFiles);
+        for (BusinessObjectDefinitionSampleDataFileEntity sampleDataFileEntity : businessObjectDefinitionEntity.getSampleDataFiles())
+        {
+            sampleDataFiles.add(new SampleDataFile(sampleDataFileEntity.getDirectoryPath(), sampleDataFileEntity.getFileName()));
         }
 
         return businessObjectDefinition;
     }
-
-
 }
