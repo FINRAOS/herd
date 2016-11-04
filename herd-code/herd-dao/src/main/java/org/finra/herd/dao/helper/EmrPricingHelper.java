@@ -143,7 +143,21 @@ public class EmrPricingHelper extends AwsHelper
         for (AvailabilityZone availabilityZone : getAvailabilityZones(subnets))
         {
             // Create a mapping of instance types to prices for more efficient, in-memory lookup
-            Map<String, BigDecimal> instanceTypeSpotPrices = getInstanceTypeSpotPrices(availabilityZone, requestedInstanceTypes);
+            Map<String, BigDecimal> instanceTypeSpotPrices = null;
+
+            // When AWS does not return any spot price history for an instance type in
+            // an availability zone, the algorithm will not use that availability zone
+            // when selecting the lowest price.
+            try
+            {
+                instanceTypeSpotPrices = getInstanceTypeSpotPrices(availabilityZone, requestedInstanceTypes);
+            }
+            catch (ObjectNotFoundException objectNotFoundException)
+            {
+                LOGGER.warn(objectNotFoundException.getMessage());
+                LOGGER.warn("Bypassing the availabilityZone=" + availabilityZone + " because a spot price was not found for an instance type.");
+                continue;
+            }
             Map<String, BigDecimal> instanceTypeOnDemandPrices = getInstanceTypeOnDemandPrices(availabilityZone, requestedInstanceTypes);
 
             emrVpcPricingState.getSpotPricesPerAvailabilityZone().put(availabilityZone.getZoneName(), instanceTypeSpotPrices);

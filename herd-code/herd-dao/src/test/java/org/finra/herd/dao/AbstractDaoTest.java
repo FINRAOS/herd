@@ -40,6 +40,7 @@ import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.AttributeDefinition;
 import org.finra.herd.model.api.xml.DataProviderKey;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
+import org.finra.herd.model.api.xml.SampleDataFile;
 import org.finra.herd.model.api.xml.Schema;
 import org.finra.herd.model.api.xml.SchemaColumn;
 
@@ -82,6 +83,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String AWS_ROLE_ARN = "UT_AwsRoleArn" + RANDOM_SUFFIX;
 
+    public static final String DOWNLOADER_ROLE_ARN = "UT_DownloaderRoleArn" + RANDOM_SUFFIX;
+
     public static final String BACKSLASH = "\\";
 
     public static final Integer BDATA_AGE_IN_DAYS = 1000;
@@ -112,6 +115,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String BDEF_DISPLAY_NAME_2 = "UT_BusinessObjectDefinition_Display_Name_2_" + RANDOM_SUFFIX;
 
+    public static final String BDEF_DISPLAY_NAME_3 = "UT_BusinessObjectDefinition_Display_Name_3_" + RANDOM_SUFFIX;
+
     public static final String BDEF_NAME = "UT_BusinessObjectDefinition_Name_1_" + RANDOM_SUFFIX;
 
     public static final String BDEF_NAMESPACE = "UT_BusinessObjectDefinition_Namespace_1_" + RANDOM_SUFFIX;
@@ -119,6 +124,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String BDEF_NAMESPACE_2 = "UT_BusinessObjectDefinition_Namespace_2_" + RANDOM_SUFFIX;
 
     public static final String BDEF_NAME_2 = "UT_BusinessObjectDefinition_Name_2_" + RANDOM_SUFFIX;
+
+    public static final String BDEF_NAME_3 = "UT_BusinessObjectDefinition_Name_3_" + RANDOM_SUFFIX;
 
     public static final String COLUMN_DATA_TYPE = "UT_Column_Data_Type_1_" + RANDOM_SUFFIX;
 
@@ -227,6 +234,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Integer FOURTH_FORMAT_VERSION = 3;
 
+    public static final Boolean HAS_CHILDREN_FLAG_SET = true;
+
     public static final String HTTP_PROXY_HOST = "UT_ProxyHost" + RANDOM_SUFFIX;
 
     public static final Integer HTTP_PROXY_PORT = (int) (Math.random() * Integer.MAX_VALUE);
@@ -316,6 +325,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String NO_BDEF_COLUMN_DESCRIPTION = null;
 
+    public static final String NO_BDEF_DESCRIPTION = null;
+
+    public static final String NO_BDEF_DISPLAY_NAME = null;
+
     public static final String NO_BDEF_NAME = null;
 
     public static final String NO_BDEF_NAMESPACE = null;
@@ -334,6 +347,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Integer NO_FORMAT_VERSION = null;
 
+    public static final Boolean NO_HAS_CHILDREN_FLAG_SET = false;
+
     public static final String NO_JOB_NAME = null;
 
     public static final String NO_JOB_NAMESPACE = null;
@@ -349,6 +364,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String NO_PARTITION_KEY_GROUP = null;
 
     public static final Boolean NO_PUBLISH_ATTRIBUTE = false;
+
+    public static final List<SampleDataFile> NO_SAMPLE_DATA_FILES = new ArrayList<>();
 
     public static final Schema NO_SCHEMA = null;
 
@@ -529,23 +546,35 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String TAG_CODE = "UT_TagCode_1_" + RANDOM_SUFFIX;
 
-    public static final String TAG_CODE_2 = "UT_Tag_2_" + RANDOM_SUFFIX;
+    public static final String TAG_CODE_2 = "UT_TagCode_2_" + RANDOM_SUFFIX;
 
-    public static final String TAG_DESCRIPTION = "Tag_description " + RANDOM_SUFFIX;
+    public static final String TAG_CODE_3 = "UT_TagCode_3_" + RANDOM_SUFFIX;
 
-    public static final String TAG_DESCRIPTION_2 = "Tag_description2 " + RANDOM_SUFFIX;
+    public static final String TAG_CODE_4 = "UT_TagCode_4_" + RANDOM_SUFFIX;
 
-    public static final String TAG_DISPLAY_NAME = "Tag " + RANDOM_SUFFIX;
+    public static final String TAG_CODE_5 = "UT_TagCode_5_" + RANDOM_SUFFIX;
 
-    public static final String TAG_DISPLAY_NAME_2 = "Tag2 " + RANDOM_SUFFIX;
+    public static final String TAG_DESCRIPTION = "UT_TagDescription_1_" + RANDOM_SUFFIX;
+
+    public static final String TAG_DESCRIPTION_2 = "UT_TagDescription_2_" + RANDOM_SUFFIX;
+
+    public static final String TAG_DISPLAY_NAME = "UT_TagDisplayName_1_" + RANDOM_SUFFIX;
+
+    public static final String TAG_DISPLAY_NAME_2 = "UT_TagDisplayName_2_" + RANDOM_SUFFIX;
+
+    public static final String TAG_DISPLAY_NAME_3 = "UT_TagDisplayName_3_" + RANDOM_SUFFIX;
+
+    public static final String TAG_DISPLAY_NAME_4 = "UT_TagDisplayName_4_" + RANDOM_SUFFIX;
+
+    public static final String TAG_DISPLAY_NAME_5 = "UT_TagDisplayName_5_" + RANDOM_SUFFIX;
 
     public static final String TAG_TYPE = "UT_TagType_1_" + RANDOM_SUFFIX;
 
     public static final String TAG_TYPE_2 = "UT_TagType_2_" + RANDOM_SUFFIX;
 
-    public static final String TAG_TYPE_DISPLAY_NAME = "Tag Type" + RANDOM_SUFFIX;
+    public static final String TAG_TYPE_DISPLAY_NAME = "UT_TagTypeDisplayName_1_" + RANDOM_SUFFIX;
 
-    public static final String TAG_TYPE_DISPLAY_NAME_2 = "Tag2 Type" + RANDOM_SUFFIX;
+    public static final String TAG_TYPE_DISPLAY_NAME_2 = "UT_TagTypeDisplayName_2_" + RANDOM_SUFFIX;
 
     public static final String TARGET_S3_KEY = "herd-dao-test-key-prefix" + RANDOM_SUFFIX + "/" + LOCAL_FILE;
 

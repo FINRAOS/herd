@@ -21,6 +21,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
 import java.util.Arrays;
+import java.util.List;
 
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import org.apache.commons.collections4.IterableUtils;
@@ -30,12 +31,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
 import org.finra.herd.core.helper.LogLevel;
+import org.finra.herd.dao.impl.MockStsOperationsImpl;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatusUpdateRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionSampleDataFileKey;
+import org.finra.herd.model.api.xml.DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest;
+import org.finra.herd.model.api.xml.DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse;
 import org.finra.herd.model.api.xml.DownloadSingleInitiationResponse;
+import org.finra.herd.model.api.xml.SampleDataFile;
 import org.finra.herd.model.api.xml.UploadSingleCredentialExtensionResponse;
 import org.finra.herd.model.api.xml.UploadSingleInitiationRequest;
 import org.finra.herd.model.api.xml.UploadSingleInitiationResponse;
@@ -1112,5 +1118,317 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         return uploadDownloadService.extendUploadSingleCredentials(businessObjectData.getNamespace(), businessObjectData.getBusinessObjectDefinitionName(),
             businessObjectData.getBusinessObjectFormatUsage(), businessObjectData.getBusinessObjectFormatFileType(),
             businessObjectData.getBusinessObjectFormatVersion(), businessObjectData.getPartitionValue(), businessObjectData.getVersion());
+    }
+
+    @Test
+    public void testDownloadBusinessObjectDefinitionSampleFile()
+    {
+        // Create a test storage.
+        storageDaoTestHelper.createStorageEntity(STORAGE_NAME, Arrays
+            .asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), S3_BUCKET_NAME),
+                new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_DOWNLOAD_ROLE_ARN), DOWNLOADER_ROLE_ARN)));
+
+        // Create and persist a business object definition entity with sample data files.
+        businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME,
+                businessObjectDefinitionServiceTestHelper.getNewAttributes(), Arrays.asList(new SampleDataFile(DIRECTORY_PATH, FILE_NAME)));
+
+        // Initiate download of a sample data file.
+        DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest downloadRequest =
+            new DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest();
+        BusinessObjectDefinitionSampleDataFileKey sampleDataFileKey = new BusinessObjectDefinitionSampleDataFileKey();
+        sampleDataFileKey.setNamespace(NAMESPACE);
+        sampleDataFileKey.setBusinessObjectDefinitionName(BDEF_NAME);
+        sampleDataFileKey.setDirectoryPath(DIRECTORY_PATH);
+        sampleDataFileKey.setFileName(FILE_NAME);
+        downloadRequest.setBusinessObjectDefinitionSampleDataFileKey(sampleDataFileKey);
+        DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse downloadResponse =
+            uploadDownloadService.initiateDownloadSingleSampleFile(downloadRequest);
+
+        // Validate the response.
+        assertNotNull(downloadResponse.getAwsSessionExpirationTime());
+        assertNotNull(downloadResponse.getPreSignedUrl());
+        assertEquals(new DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse(
+            new BusinessObjectDefinitionSampleDataFileKey(NAMESPACE, BDEF_NAME, DIRECTORY_PATH, FILE_NAME), S3_BUCKET_NAME,
+            MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_ACCESS_KEY, MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_SECRET_KEY,
+            MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_SESSION_TOKEN, downloadResponse.getAwsSessionExpirationTime(), downloadResponse.getPreSignedUrl()),
+            downloadResponse);
+    }
+
+    @Test
+    public void testDownloadBusinessObjectDefinitionSampleFileLowerCaseParameters()
+    {
+        // Create and persist a business object definition entity.
+        businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME,
+                businessObjectDefinitionServiceTestHelper.getNewAttributes(), businessObjectDefinitionServiceTestHelper.getTestSampleDataFiles());
+
+        List<SampleDataFile> sampleFileList = businessObjectDefinitionServiceTestHelper.getTestSampleDataFiles();
+
+        StorageEntity storageEntity = storageDaoHelper.getStorageEntity(STORAGE_NAME);
+        storageEntity.getAttributes().add(storageDaoTestHelper
+            .createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), "testBucketName"));
+
+        storageEntity.getAttributes().add(storageDaoTestHelper
+            .createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_DOWNLOAD_ROLE_ARN),
+                "downloadRole"));
+
+        DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest downloadRequest =
+            new DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest();
+
+        BusinessObjectDefinitionSampleDataFileKey sampleDataFileKey = new BusinessObjectDefinitionSampleDataFileKey();
+        sampleDataFileKey.setBusinessObjectDefinitionName(BDEF_NAME);
+        sampleDataFileKey.setNamespace(NAMESPACE);
+        sampleDataFileKey.setDirectoryPath(sampleFileList.get(0).getDirectoryPath());
+        sampleDataFileKey.setFileName(sampleFileList.get(0).getFileName());
+
+        //use the lower case name space and business definition still return the same response
+        BusinessObjectDefinitionSampleDataFileKey sampleDataFileKeyLowerCase = new BusinessObjectDefinitionSampleDataFileKey();
+        sampleDataFileKeyLowerCase.setBusinessObjectDefinitionName(BDEF_NAME.toLowerCase());
+        sampleDataFileKeyLowerCase.setNamespace(NAMESPACE.toLowerCase());
+        sampleDataFileKeyLowerCase.setDirectoryPath(sampleFileList.get(0).getDirectoryPath());
+        sampleDataFileKeyLowerCase.setFileName(sampleFileList.get(0).getFileName());
+        downloadRequest.setBusinessObjectDefinitionSampleDataFileKey(sampleDataFileKeyLowerCase);
+
+        DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse downloadResponse =
+            uploadDownloadService.initiateDownloadSingleSampleFile(downloadRequest);
+
+        assertEquals(downloadResponse.getBusinessObjectDefinitionSampleDataFileKey(), sampleDataFileKey);
+        assertNotNull(downloadResponse.getAwsS3BucketName());
+        assertNotNull(downloadResponse.getAwsAccessKey());
+        assertNotNull(downloadResponse.getAwsSecretKey());
+        assertNotNull(downloadResponse.getAwsSessionExpirationTime());
+        assertNotNull(downloadResponse.getAwsSessionToken());
+        assertNotNull(downloadResponse.getPreSignedUrl());
+    }
+
+    @Test
+    public void testDownloadBusinessObjectDefinitionSampleFileUpperCaseParameters()
+    {
+        // Create and persist a business object definition entity.
+        businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME,
+                businessObjectDefinitionServiceTestHelper.getNewAttributes(), businessObjectDefinitionServiceTestHelper.getTestSampleDataFiles());
+
+        List<SampleDataFile> sampleFileList = businessObjectDefinitionServiceTestHelper.getTestSampleDataFiles();
+
+        StorageEntity storageEntity = storageDaoHelper.getStorageEntity(STORAGE_NAME);
+        storageEntity.getAttributes().add(storageDaoTestHelper
+            .createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), "testBucketName"));
+
+        storageEntity.getAttributes().add(storageDaoTestHelper
+            .createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_DOWNLOAD_ROLE_ARN),
+                "downloadRole"));
+
+        DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest downloadRequest =
+            new DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest();
+
+        BusinessObjectDefinitionSampleDataFileKey sampleDataFileKey = new BusinessObjectDefinitionSampleDataFileKey();
+        sampleDataFileKey.setBusinessObjectDefinitionName(BDEF_NAME);
+        sampleDataFileKey.setNamespace(NAMESPACE);
+        sampleDataFileKey.setDirectoryPath(sampleFileList.get(0).getDirectoryPath());
+        sampleDataFileKey.setFileName(sampleFileList.get(0).getFileName());
+
+        //use the lower case name space and business definition still return the same response
+        BusinessObjectDefinitionSampleDataFileKey sampleDataFileKeyUpperCase = new BusinessObjectDefinitionSampleDataFileKey();
+        sampleDataFileKeyUpperCase.setBusinessObjectDefinitionName(BDEF_NAME.toUpperCase());
+        sampleDataFileKeyUpperCase.setNamespace(NAMESPACE.toUpperCase());
+        sampleDataFileKeyUpperCase.setDirectoryPath(sampleFileList.get(0).getDirectoryPath());
+        sampleDataFileKeyUpperCase.setFileName(sampleFileList.get(0).getFileName());
+        downloadRequest.setBusinessObjectDefinitionSampleDataFileKey(sampleDataFileKeyUpperCase);
+
+        DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse downloadResponse =
+            uploadDownloadService.initiateDownloadSingleSampleFile(downloadRequest);
+
+        assertEquals(downloadResponse.getBusinessObjectDefinitionSampleDataFileKey(), sampleDataFileKey);
+        assertNotNull(downloadResponse.getAwsS3BucketName());
+        assertNotNull(downloadResponse.getAwsAccessKey());
+        assertNotNull(downloadResponse.getAwsSecretKey());
+        assertNotNull(downloadResponse.getAwsSessionExpirationTime());
+        assertNotNull(downloadResponse.getAwsSessionToken());
+        assertNotNull(downloadResponse.getPreSignedUrl());
+    }
+
+    @Test
+    public void testDownloadBusinessObjectDefinitionSampleFileTrimmedParameters()
+    {
+        // Create and persist a business object definition entity.
+        businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME,
+                businessObjectDefinitionServiceTestHelper.getNewAttributes(), businessObjectDefinitionServiceTestHelper.getTestSampleDataFiles());
+
+        List<SampleDataFile> sampleFileList = businessObjectDefinitionServiceTestHelper.getTestSampleDataFiles();
+
+        StorageEntity storageEntity = storageDaoHelper.getStorageEntity(STORAGE_NAME);
+        storageEntity.getAttributes().add(storageDaoTestHelper
+            .createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), "testBucketName"));
+
+        storageEntity.getAttributes().add(storageDaoTestHelper
+            .createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_DOWNLOAD_ROLE_ARN),
+                "downloadRole"));
+
+        DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest downloadRequest =
+            new DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest();
+
+        BusinessObjectDefinitionSampleDataFileKey sampleDataFileKey = new BusinessObjectDefinitionSampleDataFileKey();
+        sampleDataFileKey.setBusinessObjectDefinitionName(BDEF_NAME);
+        sampleDataFileKey.setNamespace(NAMESPACE);
+        sampleDataFileKey.setDirectoryPath(sampleFileList.get(0).getDirectoryPath());
+        sampleDataFileKey.setFileName(sampleFileList.get(0).getFileName());
+
+        //use the lower case name space and business definition still return the same response
+        BusinessObjectDefinitionSampleDataFileKey sampleDataFileKeyPadded = new BusinessObjectDefinitionSampleDataFileKey();
+        sampleDataFileKeyPadded.setBusinessObjectDefinitionName(" " + BDEF_NAME + " ");
+        sampleDataFileKeyPadded.setNamespace(" " + NAMESPACE + " ");
+        sampleDataFileKeyPadded.setDirectoryPath(sampleFileList.get(0).getDirectoryPath());
+        sampleDataFileKeyPadded.setFileName(sampleFileList.get(0).getFileName());
+        downloadRequest.setBusinessObjectDefinitionSampleDataFileKey(sampleDataFileKeyPadded);
+
+        DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse downloadResponse =
+            uploadDownloadService.initiateDownloadSingleSampleFile(downloadRequest);
+
+        assertEquals(downloadResponse.getBusinessObjectDefinitionSampleDataFileKey(), sampleDataFileKey);
+        assertNotNull(downloadResponse.getAwsS3BucketName());
+        assertNotNull(downloadResponse.getAwsAccessKey());
+        assertNotNull(downloadResponse.getAwsSecretKey());
+        assertNotNull(downloadResponse.getAwsSessionExpirationTime());
+        assertNotNull(downloadResponse.getAwsSessionToken());
+        assertNotNull(downloadResponse.getPreSignedUrl());
+    }
+
+    @Test
+    public void testDownloadBusinessObjectDefinitionSampleFilesMissingRequiredParameters()
+    {
+        try
+        {
+            uploadDownloadService.initiateDownloadSingleSampleFile(null);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("A download business object definition sample data file single initiation request must be specified.", e.getMessage());
+        }
+
+        try
+        {
+            uploadDownloadService.initiateDownloadSingleSampleFile(new DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest(null));
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("A business object definition sample data file key must be specified.", e.getMessage());
+        }
+
+        try
+        {
+            uploadDownloadService.initiateDownloadSingleSampleFile(new DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest(
+                new BusinessObjectDefinitionSampleDataFileKey(BLANK_TEXT, BDEF_NAME, DIRECTORY_PATH, FILE_NAME)));
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("A namespace must be specified.", e.getMessage());
+        }
+
+        try
+        {
+            uploadDownloadService.initiateDownloadSingleSampleFile(new DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest(
+                new BusinessObjectDefinitionSampleDataFileKey(NAMESPACE, BLANK_TEXT, DIRECTORY_PATH, FILE_NAME)));
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("A business object definition name must be specified.", e.getMessage());
+        }
+
+        try
+        {
+            uploadDownloadService.initiateDownloadSingleSampleFile(new DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest(
+                new BusinessObjectDefinitionSampleDataFileKey(NAMESPACE, BDEF_NAME, BLANK_TEXT, FILE_NAME)));
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("A directory path must be specified.", e.getMessage());
+        }
+
+        try
+        {
+            uploadDownloadService.initiateDownloadSingleSampleFile(new DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest(
+                new BusinessObjectDefinitionSampleDataFileKey(NAMESPACE, BDEF_NAME, DIRECTORY_PATH, BLANK_TEXT)));
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("A file name must be specified.", e.getMessage());
+        }
+    }
+
+    @Test
+    public void testDownloadBusinessObjectDefinitionInvalidParameters()
+    {
+        // Create a test storage.
+        storageDaoTestHelper.createStorageEntity(STORAGE_NAME, Arrays
+            .asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), S3_BUCKET_NAME),
+                new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_DOWNLOAD_ROLE_ARN), DOWNLOADER_ROLE_ARN)));
+
+        // Create and persist a business object definition entity with sample data files.
+        businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME,
+                businessObjectDefinitionServiceTestHelper.getNewAttributes(), Arrays.asList(new SampleDataFile(DIRECTORY_PATH, FILE_NAME)));
+
+        // Try to initiate a download using an invalid namespace.
+        try
+        {
+            uploadDownloadService.initiateDownloadSingleSampleFile(new DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest(
+                new BusinessObjectDefinitionSampleDataFileKey("I_DO_NOT_EXIST", BDEF_NAME, DIRECTORY_PATH, FILE_NAME)));
+            fail();
+        }
+        catch (ObjectNotFoundException e)
+        {
+            assertEquals(businessObjectDefinitionServiceTestHelper.getExpectedBusinessObjectDefinitionNotFoundErrorMessage("I_DO_NOT_EXIST", BDEF_NAME),
+                e.getMessage());
+        }
+
+        // Try to initiate a download using an invalid business object definition name.
+        try
+        {
+            uploadDownloadService.initiateDownloadSingleSampleFile(new DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest(
+                new BusinessObjectDefinitionSampleDataFileKey(NAMESPACE, "I_DO_NOT_EXIST", DIRECTORY_PATH, FILE_NAME)));
+            fail();
+        }
+        catch (ObjectNotFoundException e)
+        {
+            assertEquals(businessObjectDefinitionServiceTestHelper.getExpectedBusinessObjectDefinitionNotFoundErrorMessage(NAMESPACE, "I_DO_NOT_EXIST"),
+                e.getMessage());
+        }
+
+        // Try to initiate a download using an invalid directory path.
+        try
+        {
+            uploadDownloadService.initiateDownloadSingleSampleFile(new DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest(
+                new BusinessObjectDefinitionSampleDataFileKey(NAMESPACE, BDEF_NAME, "I_DO_NOT_EXIST", FILE_NAME)));
+            fail();
+        }
+        catch (ObjectNotFoundException e)
+        {
+            assertEquals(String.format(
+                "Business object definition with name \"%s\" and namespace \"%s\" does not have the specified sample file registered with file name \"%s\" in" +
+                    " directory path \"%s\"", BDEF_NAME, NAMESPACE, FILE_NAME, "I_DO_NOT_EXIST"), e.getMessage());
+        }
+
+        // Try to initiate a download using an invalid file name.
+        try
+        {
+            uploadDownloadService.initiateDownloadSingleSampleFile(new DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest(
+                new BusinessObjectDefinitionSampleDataFileKey(NAMESPACE, BDEF_NAME, DIRECTORY_PATH, "I_DO_NOT_EXIST")));
+            fail();
+        }
+        catch (ObjectNotFoundException e)
+        {
+            assertEquals(String.format(
+                "Business object definition with name \"%s\" and namespace \"%s\" does not have the specified sample file registered with file name \"%s\" in" +
+                    " directory path \"%s\"", BDEF_NAME, NAMESPACE, "I_DO_NOT_EXIST", DIRECTORY_PATH), e.getMessage());
+        }
     }
 }

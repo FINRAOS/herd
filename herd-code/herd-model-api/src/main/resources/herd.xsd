@@ -626,7 +626,7 @@
                <xs:documentation>The tag's name in plain text for human readability.</xs:documentation>
             </xs:annotation>
          </xs:element>
-         <xs:element name="description" type="xs:string">
+         <xs:element name="description" type="xs:string" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The tag's description.</xs:documentation>
             </xs:annotation>
@@ -787,6 +787,11 @@
                <xs:documentation>An optional business friendly name for business object definition</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="descriptiveBusinessObjectFormat" type="descriptiveBusinessObjectFormatUpdateRequest" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An optional business object definition descriptive format update request</xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
@@ -826,7 +831,21 @@
          <xs:element name="attributes" type="attributes" minOccurs="0">
             <xs:annotation>
                <xs:documentation>Custom user-defined metadata associated with this Business Object Definition. "name" is the attribute name (i.e. the key) and
-                  "value" is the attribute value.
+                  "value" is the attribute value
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="descriptiveBusinessObjectFormat" type="descriptiveBusinessObjectFormat" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An optional business object definition descriptive format. The descriptive format is the single Business Object Format that
+                  will be used to represent this Business Object Definition to consumers
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="sampleDataFiles" type="sampleDataFiles" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>
+                  An optional list of sample data files associated with the Business Object Definition
                </xs:documentation>
             </xs:annotation>
          </xs:element>
@@ -854,6 +873,78 @@
          <xs:element name="businessObjectDefinitionName" type="xs:string">
             <xs:annotation>
                <xs:documentation>The name for this Business Object Definition</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="descriptiveBusinessObjectFormat">
+      <xs:all>
+         <xs:element name="businessObjectFormatUsage" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The Usage of this Business Object Format - a string describing how this format is used. Often used as a label for the Business
+                  Object Format
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectFormatFileType" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The File type for this Business Object Format</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectFormatVersion" type="xs:int">
+            <xs:annotation>
+               <xs:documentation>The numeric version of a Business Object Format. Each time a format is registered, the new version will be the previous version
+                  + 1
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="descriptiveBusinessObjectFormatUpdateRequest">
+      <xs:all>
+         <xs:element name="businessObjectFormatUsage" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The Usage of this Business Object Format - a string describing how this format is used. Often used as a label for the Business
+                  Object Format.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectFormatFileType" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The File type for this Business Object Definition</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="sampleDataFiles">
+      <xs:sequence>
+         <xs:element name="sampleDataFile" type="sampleDataFile" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>
+                  A sample data file associated with the Business Object Definition. The data in this file is expected to match the schema of the
+                  descriptiveFormat for this Business Object Definition – but the data in this file is not validated against the descriptiveFormat schema at
+                  this time
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="sampleDataFile">
+      <xs:all>
+         <xs:element name="directoryPath" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The directory path of the sample data file. Note that directory path will contain a trailing "directory" separator, thus the
+                  caller needs to concatenate the directory path and the file name as is in order to construct a fully qualified path for the sample data file
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="fileName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The name of the sample data file</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -3570,6 +3661,62 @@
          <xs:element name="preSignedUrl" type="xs:string"/>
       </xs:sequence>
    </xs:complexType>
+
+   <!-- ***** Download Sample Business Data File ***** -->
+   <xs:element name="downloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse" type="downloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse"/>
+   <xs:complexType name="downloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse">
+      <xs:sequence>
+         <xs:element name="businessObjectDefinitionSampleDataFileKey" type="businessObjectDefinitionSampleDataFileKey"/>
+         <xs:element name="awsS3BucketName" type="xs:string"/>
+         <xs:element name="awsAccessKey" type="xs:string"/>
+         <xs:element name="awsSecretKey" type="xs:string"/>
+         <xs:element name="awsSessionToken" type="xs:string"/>
+         <xs:element name="awsSessionExpirationTime" type="xs:dateTime"/>
+         <xs:element name="preSignedUrl" type="xs:string"/>
+      </xs:sequence>
+   </xs:complexType>
+
+	<xs:element name="businessObjectDefinitionSampleDataFileKey"
+		type="businessObjectDefinitionSampleDataFileKey" />
+	<xs:complexType name="businessObjectDefinitionSampleDataFileKey">
+		<xs:sequence>
+			<xs:element name="namespace" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>The namespace of the business object definition
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="businessObjectDefinitionName" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>The business object definition name
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="directoryPath" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>The directory path of the sample data file. Note
+						that directory path will contain a trailing "directory" separator,
+						thus the caller needs to concatenate the directory path and the
+						file name as is in order to construct a fully qualified path for
+						the sample data file
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="fileName" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>The name of the sample data file
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+   
+   <xs:element name="downloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest" type="downloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest"/>
+   <xs:complexType name="downloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest">
+      <xs:sequence>
+         <xs:element name="businessObjectDefinitionSampleDataFileKey" type="businessObjectDefinitionSampleDataFileKey"/>
+      </xs:sequence>
+   </xs:complexType> 
 
    <!-- ***** System Job ***** -->
 

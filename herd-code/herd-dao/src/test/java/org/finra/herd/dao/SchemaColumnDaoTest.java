@@ -23,6 +23,7 @@ import org.junit.Test;
 
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
+import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.FileTypeEntity;
 
 public class SchemaColumnDaoTest extends AbstractDaoTest
@@ -57,6 +58,45 @@ public class SchemaColumnDaoTest extends AbstractDaoTest
 
         // Get business object definition column by passing all case-insensitive parameters in lowercase.
         assertEquals(2, schemaColumnDao.getSchemaColumns(businessObjectDefinitionEntity, FIRST_COLUMN_NAME.toLowerCase()).size());
+
+        // Try invalid values for all input parameters.
+        assertEquals(0, schemaColumnDao.getSchemaColumns(
+            businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(BDEF_NAMESPACE, BDEF_NAME_2, DATA_PROVIDER_NAME, DESCRIPTION),
+            FIRST_COLUMN_NAME).size());
+        assertEquals(0, schemaColumnDao.getSchemaColumns(businessObjectDefinitionEntity, "I_DO_NOT_EXIST").size());
+    }
+
+    @Test
+    public void testGetSchemaColumnsWithDescriptiveFormat()
+    {
+        // Create a business object definition column key.
+        BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(BDEF_NAMESPACE, BDEF_NAME);
+
+        // Create a business object definition entity.
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
+            businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(businessObjectDefinitionKey, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
+
+        // Create a file type entity.
+        FileTypeEntity fileTypeEntity = fileTypeDaoTestHelper.createFileTypeEntity(FORMAT_FILE_TYPE_CODE);
+
+        // Create and persist database entities required for testing.
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(businessObjectDefinitionEntity, FORMAT_USAGE_CODE, fileTypeEntity, INITIAL_FORMAT_VERSION, FORMAT_DESCRIPTION,
+                LATEST_VERSION_FLAG_SET, PARTITION_KEY, null, NO_ATTRIBUTES, SCHEMA_DELIMITER_PIPE, SCHEMA_ESCAPE_CHARACTER_BACKSLASH,
+                SCHEMA_NULL_VALUE_BACKSLASH_N, schemaColumnDaoTestHelper.getTestSchemaColumns(), NO_PARTITION_COLUMNS);
+
+        // Update business object definition entity
+        businessObjectDefinitionEntity.setDescriptiveBusinessObjectFormat(businessObjectFormatEntity);
+        businessObjectDefinitionDao.saveAndRefresh(businessObjectDefinitionEntity);
+
+        // Get a list of schema columns from the business object definition matching to the first column name.
+        assertEquals(1, schemaColumnDao.getSchemaColumns(businessObjectDefinitionEntity, FIRST_COLUMN_NAME).size());
+
+        // Get a list of schema columns by passing all case-insensitive parameters in uppercase.
+        assertEquals(1, schemaColumnDao.getSchemaColumns(businessObjectDefinitionEntity, FIRST_COLUMN_NAME.toUpperCase()).size());
+
+        // Get business object definition column by passing all case-insensitive parameters in lowercase.
+        assertEquals(1, schemaColumnDao.getSchemaColumns(businessObjectDefinitionEntity, FIRST_COLUMN_NAME.toLowerCase()).size());
 
         // Try invalid values for all input parameters.
         assertEquals(0, schemaColumnDao.getSchemaColumns(

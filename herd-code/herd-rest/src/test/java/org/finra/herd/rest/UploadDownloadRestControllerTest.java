@@ -15,16 +15,26 @@
 */
 package org.finra.herd.rest;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
+
+import java.util.List;
 
 import org.junit.Test;
 
 import org.finra.herd.model.api.xml.BusinessObjectData;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionSampleDataFileKey;
+import org.finra.herd.model.api.xml.DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest;
+import org.finra.herd.model.api.xml.DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse;
 import org.finra.herd.model.api.xml.DownloadSingleInitiationResponse;
+import org.finra.herd.model.api.xml.SampleDataFile;
 import org.finra.herd.model.api.xml.UploadSingleCredentialExtensionResponse;
 import org.finra.herd.model.api.xml.UploadSingleInitiationResponse;
+import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
+import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
+import org.finra.herd.model.jpa.StorageEntity;
 
 /**
  * This class tests various functionality within the custom DDL REST controller.
@@ -124,5 +134,47 @@ public class UploadDownloadRestControllerTest extends AbstractRestTest
             .extendUploadSingleCredentials(businessObjectData.getNamespace(), businessObjectData.getBusinessObjectDefinitionName(),
                 businessObjectData.getBusinessObjectFormatUsage(), businessObjectData.getBusinessObjectFormatFileType(),
                 businessObjectData.getBusinessObjectFormatVersion(), businessObjectData.getPartitionValue(), businessObjectData.getVersion());
+    }
+    
+    @Test
+    public void testDownloadSampleDataFile()
+    {
+        // Create and persist a business object definition entity.
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoTestHelper
+                .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME,
+                        businessObjectDefinitionServiceTestHelper.getNewAttributes(), businessObjectDefinitionServiceTestHelper.getTestSampleDataFiles());
+
+        List<SampleDataFile> sampleFileList = businessObjectDefinitionServiceTestHelper.getTestSampleDataFiles();
+
+        StorageEntity storageEntity = storageDaoHelper.getStorageEntity(STORAGE_NAME);
+        storageEntity.getAttributes().add(
+                storageDaoTestHelper
+                        .createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME),
+                                "testBucketName"));
+
+        storageEntity.getAttributes().add(
+                storageDaoTestHelper
+                        .createStorageAttributeEntity(storageEntity, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_DOWNLOAD_ROLE_ARN),
+                                "downloadRole"));
+
+        DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest downloadRequest =
+                new DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest();
+        BusinessObjectDefinitionSampleDataFileKey sampleDataFileKey = new BusinessObjectDefinitionSampleDataFileKey();
+        sampleDataFileKey.setBusinessObjectDefinitionName(BDEF_NAME);
+        sampleDataFileKey.setNamespace(NAMESPACE);
+        sampleDataFileKey.setDirectoryPath(sampleFileList.get(0).getDirectoryPath());
+        sampleDataFileKey.setFileName(sampleFileList.get(0).getFileName());
+
+        downloadRequest.setBusinessObjectDefinitionSampleDataFileKey(sampleDataFileKey);
+
+        DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse downloadResponse =
+                uploadDownloadRestController.initiateDownloadSingleSampleFile(downloadRequest);
+
+        assertEquals(downloadResponse.getBusinessObjectDefinitionSampleDataFileKey(), sampleDataFileKey);
+        assertNotNull(downloadResponse.getAwsAccessKey());
+        assertNotNull(downloadResponse.getAwsSecretKey());
+        assertNotNull(downloadResponse.getAwsSessionExpirationTime());
+        assertNotNull(downloadResponse.getAwsSessionToken());
+        assertNotNull(downloadResponse.getPreSignedUrl());
     }
 }
