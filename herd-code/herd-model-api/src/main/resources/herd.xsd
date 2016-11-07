@@ -3663,7 +3663,8 @@
    </xs:complexType>
 
    <!-- ***** Download Sample Business Data File ***** -->
-   <xs:element name="downloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse" type="downloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse"/>
+   <xs:element name="downloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse"
+               type="downloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse"/>
    <xs:complexType name="downloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse">
       <xs:sequence>
          <xs:element name="businessObjectDefinitionSampleDataFileKey" type="businessObjectDefinitionSampleDataFileKey"/>
@@ -3676,47 +3677,48 @@
       </xs:sequence>
    </xs:complexType>
 
-	<xs:element name="businessObjectDefinitionSampleDataFileKey"
-		type="businessObjectDefinitionSampleDataFileKey" />
-	<xs:complexType name="businessObjectDefinitionSampleDataFileKey">
-		<xs:sequence>
-			<xs:element name="namespace" type="xs:string">
-				<xs:annotation>
-					<xs:documentation>The namespace of the business object definition
-					</xs:documentation>
-				</xs:annotation>
-			</xs:element>
-			<xs:element name="businessObjectDefinitionName" type="xs:string">
-				<xs:annotation>
-					<xs:documentation>The business object definition name
-					</xs:documentation>
-				</xs:annotation>
-			</xs:element>
-			<xs:element name="directoryPath" type="xs:string">
-				<xs:annotation>
-					<xs:documentation>The directory path of the sample data file. Note
-						that directory path will contain a trailing "directory" separator,
-						thus the caller needs to concatenate the directory path and the
-						file name as is in order to construct a fully qualified path for
-						the sample data file
-					</xs:documentation>
-				</xs:annotation>
-			</xs:element>
-			<xs:element name="fileName" type="xs:string">
-				<xs:annotation>
-					<xs:documentation>The name of the sample data file
-					</xs:documentation>
-				</xs:annotation>
-			</xs:element>
-		</xs:sequence>
-	</xs:complexType>
-   
-   <xs:element name="downloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest" type="downloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest"/>
+   <xs:element name="businessObjectDefinitionSampleDataFileKey"
+               type="businessObjectDefinitionSampleDataFileKey"/>
+   <xs:complexType name="businessObjectDefinitionSampleDataFileKey">
+      <xs:sequence>
+         <xs:element name="namespace" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The namespace of the business object definition
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectDefinitionName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The business object definition name
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="directoryPath" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The directory path of the sample data file. Note
+                  that directory path will contain a trailing "directory" separator,
+                  thus the caller needs to concatenate the directory path and the
+                  file name as is in order to construct a fully qualified path for
+                  the sample data file
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="fileName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The name of the sample data file
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:element name="downloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest"
+               type="downloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest"/>
    <xs:complexType name="downloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest">
       <xs:sequence>
          <xs:element name="businessObjectDefinitionSampleDataFileKey" type="businessObjectDefinitionSampleDataFileKey"/>
       </xs:sequence>
-   </xs:complexType> 
+   </xs:complexType>
 
    <!-- ***** System Job ***** -->
 
