@@ -15,6 +15,8 @@
 */
 package org.finra.herd.dao;
 
+import java.util.List;
+
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnKey;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionColumnEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
@@ -40,4 +42,15 @@ public interface BusinessObjectDefinitionColumnDao extends BaseJpaDao
      * @return the business object definition column entity
      */
     public BusinessObjectDefinitionColumnEntity getBusinessObjectDefinitionColumnByKey(BusinessObjectDefinitionColumnKey businessObjectDefinitionColumnKey);
+
+    /**
+     * Gets a list of business object definition columns by business object definition entity. Returns the business object definition column keys by default
+     * along with any other top-level elements as specified by the fields String array.
+     *
+     * @param businessObjectDefinitionEntity the business object definition entity
+     *
+     * @return the business object definition column entity
+     */
+    public List<BusinessObjectDefinitionColumnEntity> getBusinessObjectDefinitionColumnsByBusinessObjectDefinition(
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity);
 }
