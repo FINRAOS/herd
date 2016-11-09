@@ -17,12 +17,11 @@ package org.finra.herd.service.impl;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -58,6 +57,7 @@ import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.DataProviderEntity;
 import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.service.BusinessObjectDefinitionService;
+import org.finra.herd.service.SearchableService;
 import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.AttributeHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionDaoHelper;
@@ -71,7 +71,7 @@ import org.finra.herd.service.helper.NamespaceDaoHelper;
  */
 @Service
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
-public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefinitionService
+public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefinitionService, SearchableService
 {
     @Autowired
     private AlternateKeyHelper alternateKeyHelper;
@@ -322,7 +322,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         Assert.notNull(request, "A valid search request must be specified.");
 
         // Validate the business object definition search fields
-        validateBusinessObjectDefinitionSearchFields(fields);
+        validateSearchResponseFields(fields);
 
         BusinessObjectDefinitionSearchResponse searchResponse = new BusinessObjectDefinitionSearchResponse();
         List<BusinessObjectDefinition> businessObjectDefinitions = new ArrayList<>();
@@ -638,34 +638,10 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
      *
      * @return the set of valid search response fields
      */
-    private ImmutableList<String> getValidSearchResponseFields()
+    @Override
+    public Set<String> getValidSearchResponseFields()
     {
-        return ImmutableList.of(DATA_PROVIDER_NAME, SHORT_DESCRIPTION, DISPLAY_NAME);
+        return ImmutableSet.of(DATA_PROVIDER_NAME, SHORT_DESCRIPTION, DISPLAY_NAME);
     }
 
-    /**
-     * Validates the business object definition search fields. This method also trims the fields.
-     *
-     * @param fields the business object definition search fields
-     * @return list of normalized fields
-     */
-    public Set<String> validateBusinessObjectDefinitionSearchFields(Set<String> fields)
-    {
-        // Create a local copy of the fields set so that we can stream it to modify the fields set
-        Set<String> localCopy = new HashSet<>(fields);
-
-        // Clear the fields set
-        fields.clear();
-
-        // Perform the following operations on each element:
-        // 1. Validate that the element is not whitespace or an empty string
-        // 2. Trim whitespace
-        // 3. Change characters to lower case to ensure case-insensitivity later
-        localCopy.stream().filter(StringUtils::isNotBlank).map(String::trim).map(String::toLowerCase).forEachOrdered(fields::add);
-
-        // Validate the field names
-        fields.forEach(field -> Assert.isTrue(getValidSearchResponseFields().contains(field), "Search response field" + field + " is not supported."));
-
-        return fields;
-    }
 }
