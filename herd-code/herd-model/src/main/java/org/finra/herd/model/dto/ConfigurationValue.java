@@ -598,8 +598,13 @@ public enum ConfigurationValue
     /**
      * The maximum number of nested tags allowed
      */
-    MAX_ALLOWED_TAG_NESTING("tag.max.nesting", 10);
-    
+    MAX_ALLOWED_TAG_NESTING("tag.max.nesting", 10),
+
+    /**
+     * The cut-off length of the short description
+     */
+    SHORT_DESCRIPTION_LENGTH("business.object.definition.short.description.max.length", 300);
+
     // Properties
     private String key;
 

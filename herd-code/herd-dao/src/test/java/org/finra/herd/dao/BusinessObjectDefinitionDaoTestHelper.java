@@ -210,7 +210,7 @@ public class BusinessObjectDefinitionDaoTestHelper
     }
 
     /**
-     * Returns a list of test business object definition keys expected to be returned by getBusinessObjectDefinitions() method.
+     * Returns a list of test business object definition keys expected to be returned by getBusinessObjectDefinitionKeys() method.
      *
      * @return the list of expected business object definition keys
      */

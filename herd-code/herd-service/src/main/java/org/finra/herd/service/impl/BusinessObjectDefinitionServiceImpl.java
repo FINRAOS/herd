@@ -17,9 +17,12 @@ package org.finra.herd.service.impl;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import com.google.common.collect.ImmutableList;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -28,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
+import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.BusinessObjectDefinitionDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
@@ -38,12 +42,15 @@ import org.finra.herd.model.api.xml.BusinessObjectDefinitionCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptiveInformationUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKeys;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormat;
 import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormatUpdateRequest;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.api.xml.SampleDataFile;
+import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionAttributeEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionSampleDataFileEntity;
@@ -89,6 +96,18 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 
     @Autowired
     private NamespaceDaoHelper namespaceDaoHelper;
+
+    @Autowired
+    private ConfigurationHelper configurationHelper;
+
+    // Constant to hold the data provider name option for the business object definition search
+    private static final String DATA_PROVIDER_NAME = "dataprovidername";
+
+    // Constant to hold the short description option for the business object definition search
+    private static final String SHORT_DESCRIPTION = "shortdescription";
+
+    // Constant to hold the display name option for the business object definition search
+    private static final String DISPLAY_NAME = "displayname";
 
     /**
      * Creates a new business object definition.
@@ -188,10 +207,10 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
             businessObjectFormatKey.setNamespace(businessObjectDefinitionEntity.getNamespace().getCode());
             businessObjectFormatKey.setBusinessObjectFormatFileType(descriptiveFormat.getBusinessObjectFormatFileType());
             businessObjectFormatKey.setBusinessObjectFormatUsage(descriptiveFormat.getBusinessObjectFormatUsage());
-            businessObjectFormatEntity = businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey); 
+            businessObjectFormatEntity = businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey);
         }
         businessObjectDefinitionEntity.setDescriptiveBusinessObjectFormat(businessObjectFormatEntity);
-        
+
         // Update and persist the entity.
         updateBusinessObjectDefinitionEntityDescriptiveInformation(businessObjectDefinitionEntity, request);
 
@@ -267,7 +286,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     public BusinessObjectDefinitionKeys getBusinessObjectDefinitions()
     {
         BusinessObjectDefinitionKeys businessObjectDefinitionKeys = new BusinessObjectDefinitionKeys();
-        businessObjectDefinitionKeys.getBusinessObjectDefinitionKeys().addAll(businessObjectDefinitionDao.getBusinessObjectDefinitions());
+        businessObjectDefinitionKeys.getBusinessObjectDefinitionKeys().addAll(businessObjectDefinitionDao.getBusinessObjectDefinitionKeys());
         return businessObjectDefinitionKeys;
     }
 
@@ -286,8 +305,38 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 
         // Retrieve and return the list of business object definitions
         BusinessObjectDefinitionKeys businessObjectDefinitionKeys = new BusinessObjectDefinitionKeys();
-        businessObjectDefinitionKeys.getBusinessObjectDefinitionKeys().addAll(businessObjectDefinitionDao.getBusinessObjectDefinitions(namespaceCode.trim()));
+        businessObjectDefinitionKeys.getBusinessObjectDefinitionKeys()
+            .addAll(businessObjectDefinitionDao.getBusinessObjectDefinitionKeys(namespaceCode.trim()));
         return businessObjectDefinitionKeys;
+    }
+
+    /**
+     * Gets a list of all business object definitions defined in the system.
+     *
+     * @return the business object definitions.
+     */
+    @Override
+    public BusinessObjectDefinitionSearchResponse searchBusinessObjectDefinitions(BusinessObjectDefinitionSearchRequest request, Set<String> fields)
+    {
+        // Validate the search request
+        Assert.notNull(request, "A valid search request must be specified.");
+
+        // Validate the business object definition search fields
+        validateBusinessObjectDefinitionSearchFields(fields);
+
+        BusinessObjectDefinitionSearchResponse searchResponse = new BusinessObjectDefinitionSearchResponse();
+        List<BusinessObjectDefinition> businessObjectDefinitions = new ArrayList<>();
+
+        // Retrieve all business object definition entities and construct a list of business object definitions based on the requested fields
+        for (BusinessObjectDefinitionEntity businessObjectDefinition : businessObjectDefinitionDao.getBusinessObjectDefinitions())
+        {
+            businessObjectDefinitions.add(createBusinessObjectDefinitionFromEntity(businessObjectDefinition, fields));
+        }
+
+        // Construct business object search response and return it
+        searchResponse.setBusinessObjectDefinitions(businessObjectDefinitions);
+
+        return searchResponse;
     }
 
     /**
@@ -333,6 +382,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 
     /**
      * Validates the business object definition update request. This method also trims request parameters.
+     *
      * @param request the request.
      *
      * @throws IllegalArgumentException if any validation errors were found.
@@ -348,10 +398,10 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         {
             DescriptiveBusinessObjectFormatUpdateRequest descriptiveFormat = request.getDescriptiveBusinessObjectFormat();
 
-            descriptiveFormat.setBusinessObjectFormatUsage(alternateKeyHelper.validateStringParameter("business object format usage",
-                    descriptiveFormat.getBusinessObjectFormatUsage()));
+            descriptiveFormat.setBusinessObjectFormatUsage(
+                alternateKeyHelper.validateStringParameter("business object format usage", descriptiveFormat.getBusinessObjectFormatUsage()));
             descriptiveFormat.setBusinessObjectFormatFileType(
-                    alternateKeyHelper.validateStringParameter("business object format file type", descriptiveFormat.getBusinessObjectFormatFileType()));
+                alternateKeyHelper.validateStringParameter("business object format file type", descriptiveFormat.getBusinessObjectFormatFileType()));
         }
     }
 
@@ -530,5 +580,92 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         }
 
         return businessObjectDefinition;
+    }
+
+    /**
+     * Creates a light-weight business object definition from its persisted entity based on a set of requested fields.
+     *
+     * @param businessObjectDefinitionEntity the specified business object definition entity
+     * @param fields the set of requested fields
+     *
+     * @return the light-weight business object definition
+     */
+    private BusinessObjectDefinition createBusinessObjectDefinitionFromEntity(BusinessObjectDefinitionEntity businessObjectDefinitionEntity, Set<String> fields)
+    {
+        BusinessObjectDefinition definition = new BusinessObjectDefinition();
+
+        //populate namespace and business object definition name fields by default
+        definition.setNamespace(businessObjectDefinitionEntity.getNamespace().getCode());
+        definition.setBusinessObjectDefinitionName(businessObjectDefinitionEntity.getName());
+
+        //decorate object with only the required fields
+        if (fields.contains(DATA_PROVIDER_NAME))
+        {
+            definition.setDataProviderName(businessObjectDefinitionEntity.getDataProvider().getName());
+        }
+
+        if (fields.contains(SHORT_DESCRIPTION))
+        {
+            definition.setShortDescription(getShortDescription(businessObjectDefinitionEntity.getDescription()));
+        }
+
+        if (fields.contains(DISPLAY_NAME))
+        {
+            definition.setShortDescription(getShortDescription(businessObjectDefinitionEntity.getDisplayName()));
+        }
+
+        return definition;
+    }
+
+    /**
+     * Truncates the description field to a configurable value thereby producing a 'short description'
+     *
+     * @param description the specified description
+     *
+     * @return truncated (short) description
+     */
+    private String getShortDescription(String description)
+    {
+        // Get the configured value for short description's length
+        Integer shortDescMaxLength = configurationHelper.getProperty(ConfigurationValue.SHORT_DESCRIPTION_LENGTH, Integer.class);
+
+        // Truncate and return
+        return StringUtils.left(description, shortDescMaxLength);
+    }
+
+    /**
+     * Returns valid search respponse fields
+     *
+     * @return the set of valid search response fields
+     */
+    private ImmutableList<String> getValidSearchResponseFields()
+    {
+        return ImmutableList.of(DATA_PROVIDER_NAME, SHORT_DESCRIPTION, DISPLAY_NAME);
+    }
+
+    /**
+     * Validates the business object definition search fields. This method also trims the fields.
+     *
+     * @param fields the business object definition search fields
+     * @return list of normalized fields
+     */
+    public Set<String> validateBusinessObjectDefinitionSearchFields(Set<String> fields)
+    {
+        // Create a local copy of the fields set so that we can stream it to modify the fields set
+        Set<String> localCopy = new HashSet<>(fields);
+
+        // Clear the fields set
+        fields.clear();
+
+        // Perform the following operations on each element:
+        // 1. Validate that the element is not whitespace or an empty string
+        // 2. Trim whitespace
+        // 3. Change characters to lower case to ensure case-insensitivity later
+        localCopy.stream().filter(StringUtils::isNotBlank).map(String::trim).map(String::toLowerCase).forEachOrdered(fields::add);
+
+        // Validate the field names
+        fields.forEach(field -> Assert.isTrue(getValidSearchResponseFields().contains(field), "Search response field" + field + " is not supported."));
+
+        return fields;
     }
 }

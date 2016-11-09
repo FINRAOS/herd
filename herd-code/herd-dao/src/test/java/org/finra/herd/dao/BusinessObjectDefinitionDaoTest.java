@@ -53,7 +53,7 @@ public class BusinessObjectDefinitionDaoTest extends AbstractDaoTest
         }
 
         // Retrieve a list of business object definition keys for the specified namespace.
-        List<BusinessObjectDefinitionKey> resultKeys = businessObjectDefinitionDao.getBusinessObjectDefinitions(NAMESPACE);
+        List<BusinessObjectDefinitionKey> resultKeys = businessObjectDefinitionDao.getBusinessObjectDefinitionKeys(NAMESPACE);
 
         // Validate the returned object.
         assertEquals(businessObjectDefinitionDaoTestHelper.getExpectedBusinessObjectDefinitionKeys(), resultKeys);

@@ -127,6 +127,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String BDEF_NAME_3 = "UT_BusinessObjectDefinition_Name_3_" + RANDOM_SUFFIX;
 
+    public static final String BDEF_SHORT_DESCRIPTION = "UT_BusinessObjectDefinition_ShortDescription_" + RANDOM_SUFFIX;
+
+    public static final String BDEF_SHORT_DESCRIPTION_2 = "UT_BusinessObjectDefinition_ShortDescription_2_" + RANDOM_SUFFIX;
+
     public static final String COLUMN_DATA_TYPE = "UT_Column_Data_Type_1_" + RANDOM_SUFFIX;
 
     public static final String COLUMN_DATA_TYPE_2 = "UT_Column_Data_Type_2_" + RANDOM_SUFFIX;
@@ -332,6 +336,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String NO_BDEF_NAME = null;
 
     public static final String NO_BDEF_NAMESPACE = null;
+
+    public static final String NO_BDEF_SHORT_DESCRIPTION = null;
 
     public static final String NO_COLUMN_NAME = null;
 

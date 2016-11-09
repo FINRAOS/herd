@@ -72,13 +72,13 @@ public class BusinessObjectDefinitionDaoImpl extends AbstractHerdDao implements 
     }
 
     @Override
-    public List<BusinessObjectDefinitionKey> getBusinessObjectDefinitions()
+    public List<BusinessObjectDefinitionKey> getBusinessObjectDefinitionKeys()
     {
-        return getBusinessObjectDefinitions(null);
+        return getBusinessObjectDefinitionKeys(null);
     }
 
     @Override
-    public List<BusinessObjectDefinitionKey> getBusinessObjectDefinitions(String namespaceCode)
+    public List<BusinessObjectDefinitionKey> getBusinessObjectDefinitionKeys(String namespaceCode)
     {
         // Create the criteria builder and a tuple style criteria query.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
@@ -106,11 +106,11 @@ public class BusinessObjectDefinitionDaoImpl extends AbstractHerdDao implements 
         // Add the order by clause.
         if (StringUtils.isNotBlank(namespaceCode))
         {
-            criteria.orderBy(builder.asc(namespaceCodeColumn), builder.asc(businessObjectDefinitionNameColumn));
+            criteria.orderBy(builder.asc(businessObjectDefinitionNameColumn));
         }
         else
         {
-            criteria.orderBy(builder.asc(businessObjectDefinitionNameColumn));
+            criteria.orderBy(builder.asc(businessObjectDefinitionNameColumn), builder.asc(namespaceCodeColumn));
         }
 
         // Run the query to get a list of tuples back.
@@ -127,5 +127,30 @@ public class BusinessObjectDefinitionDaoImpl extends AbstractHerdDao implements 
         }
 
         return businessObjectDefinitionKeys;
+    }
+
+    @Override
+    public List<BusinessObjectDefinitionEntity> getBusinessObjectDefinitions()
+    {
+        // Create the criteria builder and a tuple style criteria query.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<BusinessObjectDefinitionEntity> criteria = builder.createQuery(BusinessObjectDefinitionEntity.class);
+
+        // The criteria root is the business object definition.
+        Root<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityRoot = criteria.from(BusinessObjectDefinitionEntity.class);
+
+        // Join to the other tables we can filter on.
+        Join<BusinessObjectDefinitionEntity, NamespaceEntity> namespaceEntity =
+            businessObjectDefinitionEntityRoot.join(BusinessObjectDefinitionEntity_.namespace);
+
+        // Get the columns.
+        Path<String> namespaceCodeColumn = namespaceEntity.get(NamespaceEntity_.code);
+        Path<String> businessObjectDefinitionNameColumn = businessObjectDefinitionEntityRoot.get(BusinessObjectDefinitionEntity_.name);
+
+        // Add all clauses to the query.
+        criteria.select(businessObjectDefinitionEntityRoot).orderBy(builder.asc(businessObjectDefinitionNameColumn), builder.asc(namespaceCodeColumn));
+
+        // Run the query to get a list of business object definitions back and return them.
+        return entityManager.createQuery(criteria).getResultList();
     }
 }
