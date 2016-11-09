@@ -23,24 +23,6 @@ import org.finra.herd.model.jpa.TagTypeEntity;
 public interface TagTypeDao extends BaseJpaDao
 {
     /**
-     * Gets a tag type by its key.
-     *
-     * @param tagTypeKey the tag type key (case-insensitive)
-     *
-     * @return the tag type entity for the specified key
-     */
-    public TagTypeEntity getTagTypeByKey(TagTypeKey tagTypeKey);
-
-    /**
-     * Gets a tag type by its code.
-     *
-     * @param tagTypeCode the tag type code (case-insensitive)
-     *
-     * @return the tag type entity for the specified code
-     */
-    public TagTypeEntity getTagTypeByCd(String tagTypeCode);
-
-    /**
      * Gets a tag type by its code.
      *
      * @param displayName the tag type display name (case-insensitive)
@@ -50,9 +32,25 @@ public interface TagTypeDao extends BaseJpaDao
     public TagTypeEntity getTagTypeByDisplayName(String displayName);
 
     /**
+     * Gets a tag type by its key.
+     *
+     * @param tagTypeKey the tag type key (case-insensitive)
+     *
+     * @return the tag type entity for the specified key
+     */
+    public TagTypeEntity getTagTypeByKey(TagTypeKey tagTypeKey);
+
+    /**
      * Gets an ordered list of tag type keys for all tag types defined in the system.
      *
      * @return the list of tag type keys
      */
-    public List<TagTypeKey> getTagTypes();
+    public List<TagTypeKey> getTagTypeKeys();
+
+    /**
+     * Gets an ordered list of tag type entities for all tag types defined in the system.
+     *
+     * @return the list of tag type entities
+     */
+    public List<TagTypeEntity> getTagTypes();
 }

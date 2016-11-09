@@ -25,6 +25,8 @@ import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
+import org.apache.commons.lang.BooleanUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Repository;
 
 import org.finra.herd.dao.TagDao;
@@ -160,5 +162,45 @@ public class TagDaoImpl extends AbstractHerdDao implements TagDao
         }
 
         return tagChildren;
+    }
+
+    @Override
+    public List<TagEntity> getTagsByTagTypeEntityAndParentTagCode(TagTypeEntity tagTypeEntity, String parentTagCode, Boolean isParentTagNull)
+    {
+        // Create the criteria builder and the criteria.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<TagEntity> criteria = builder.createQuery(TagEntity.class);
+
+        // The criteria root is the tag entity.
+        Root<TagEntity> tagEntityRoot = criteria.from(TagEntity.class);
+
+        // Get the columns.
+        Path<String> displayNameColumn = tagEntityRoot.get(TagEntity_.displayName);
+
+        // Create the standard restrictions (i.e. the standard where clauses).
+        List<Predicate> predicates = new ArrayList<>();
+        predicates.add(builder.equal(tagEntityRoot.get(TagEntity_.tagType), tagTypeEntity));
+
+        if (StringUtils.isNotBlank(parentTagCode))
+        {
+            // Return all tags that are immediate children of the specified parent tag.
+            predicates.add(builder.equal(builder.upper(tagEntityRoot.get(TagEntity_.parentTagEntity).get(TagEntity_.tagCode)), parentTagCode.toUpperCase()));
+        }
+        else if (BooleanUtils.isTrue(isParentTagNull))
+        {
+            // The flag is non-null and true, return all tags with no parents, i.e. root tags.
+            predicates.add(builder.isNull(tagEntityRoot.get(TagEntity_.parentTagEntity)));
+        }
+        else if (BooleanUtils.isFalse(isParentTagNull))
+        {
+            // The flag is non-null and false, return all tags with parents.
+            predicates.add(builder.isNotNull(tagEntityRoot.get(TagEntity_.parentTagEntity)));
+        }
+
+        // Add all clauses to the query.
+        criteria.select(tagEntityRoot).where(builder.and(predicates.toArray(new Predicate[predicates.size()]))).orderBy(builder.asc(displayNameColumn));
+
+        // Run the query to get the results.
+        return entityManager.createQuery(criteria).getResultList();
     }
 }

@@ -290,6 +290,8 @@ public class SecurityFunctions
 
     public static final String FN_TAGS_PUT = "FN_TAGS_PUT";
 
+    public static final String FN_TAGS_SEARCH_POST = "FN_TAGS_SEARCH_POST";
+
     public static final String FN_TAG_TYPES_ALL_GET = "FN_TAG_TYPES_ALL_GET";
 
     public static final String FN_TAG_TYPES_DELETE = "FN_TAG_TYPES_DELETE";
@@ -299,6 +301,8 @@ public class SecurityFunctions
     public static final String FN_TAG_TYPES_POST = "FN_TAG_TYPES_POST";
 
     public static final String FN_TAG_TYPES_PUT = "FN_TAG_TYPES_PUT";
+
+    public static final String FN_TAG_TYPES_SEARCH_POST = "FN_TAG_TYPES_SEARCH_POST";
 
     public static final String FN_UPLOAD_EXTEND_CREDENTIALS_GET = "FN_UPLOAD_EXTEND_CREDENTIALS_GET";
 
