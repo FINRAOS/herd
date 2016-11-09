@@ -358,9 +358,8 @@ public class TagTypeServiceTest extends AbstractServiceTest
     @Test
     public void testSearchTagTypes()
     {
-        // Create and persist tag type entities with tag type order values in reverse order.
-        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER_2);
-        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE_2, TAG_TYPE_DISPLAY_NAME_2, TAG_TYPE_ORDER);
+        // Create and persist database entities required for testing.
+        createDatabaseEntitiesForTagTypeSearchTesting();
 
         // Search tag types.
         TagTypeSearchResponse tagTypeSearchResponse = tagTypeService
@@ -372,11 +371,40 @@ public class TagTypeServiceTest extends AbstractServiceTest
     }
 
     @Test
+    public void testSearchTagTypesInvalidParameters()
+    {
+        // Try to search tag types using a un-supported search response field option.
+        try
+        {
+            tagTypeService.searchTagTypes(new TagTypeSearchRequest(), Sets.newHashSet("INVALID_FIELD_OPTION"));
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Search response field \"invalid_field_option\" is not supported.", e.getMessage());
+        }
+    }
+
+    @Test
+    public void testSearchTagTypesLowerCaseParameters()
+    {
+        // Create and persist database entities required for testing.
+        createDatabaseEntitiesForTagTypeSearchTesting();
+
+        // Search tag types using lower case input parameters.
+        TagTypeSearchResponse tagTypeSearchResponse = tagTypeService.searchTagTypes(new TagTypeSearchRequest(),
+            Sets.newHashSet(TagTypeServiceImpl.DISPLAY_NAME_FIELD.toLowerCase(), TagTypeServiceImpl.TAG_TYPE_ORDER_FIELD.toLowerCase()));
+
+        // Validate the returned object.
+        assertEquals(new TagTypeSearchResponse(Arrays.asList(new TagType(new TagTypeKey(TAG_TYPE_2), TAG_TYPE_DISPLAY_NAME_2, TAG_TYPE_ORDER),
+            new TagType(new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER_2))), tagTypeSearchResponse);
+    }
+
+    @Test
     public void testSearchTagTypesMissingOptionalParameters()
     {
-        // Create and persist tag type entities with tag type order values in reverse order.
-        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER_2);
-        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE_2, TAG_TYPE_DISPLAY_NAME_2, TAG_TYPE_ORDER);
+        // Create and persist database entities required for testing.
+        createDatabaseEntitiesForTagTypeSearchTesting();
 
         // Search tag types without specifying optional parameters.
         assertEquals(new TagTypeSearchResponse(Arrays.asList(new TagType(new TagTypeKey(TAG_TYPE_2), NO_TAG_TYPE_DISPLAY_NAME, NO_TAG_TYPE_ORDER),
@@ -410,12 +438,42 @@ public class TagTypeServiceTest extends AbstractServiceTest
     }
 
     @Test
+    public void testSearchTagTypesTrimParameters()
+    {
+        // Create and persist database entities required for testing.
+        createDatabaseEntitiesForTagTypeSearchTesting();
+
+        // Search tag types by using input parameters with leading and trailing empty spaces.
+        TagTypeSearchResponse tagTypeSearchResponse = tagTypeService.searchTagTypes(new TagTypeSearchRequest(),
+            Sets.newHashSet(addWhitespace(TagTypeServiceImpl.DISPLAY_NAME_FIELD), addWhitespace(TagTypeServiceImpl.TAG_TYPE_ORDER_FIELD)));
+
+        // Validate the returned object.
+        assertEquals(new TagTypeSearchResponse(Arrays.asList(new TagType(new TagTypeKey(TAG_TYPE_2), TAG_TYPE_DISPLAY_NAME_2, TAG_TYPE_ORDER),
+            new TagType(new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER_2))), tagTypeSearchResponse);
+    }
+
+    @Test
+    public void testSearchTagTypesUpperCaseParameters()
+    {
+        // Create and persist database entities required for testing.
+        createDatabaseEntitiesForTagTypeSearchTesting();
+
+        // Search tag types using upper case input parameters.
+        TagTypeSearchResponse tagTypeSearchResponse = tagTypeService.searchTagTypes(new TagTypeSearchRequest(),
+            Sets.newHashSet(TagTypeServiceImpl.DISPLAY_NAME_FIELD.toUpperCase(), TagTypeServiceImpl.TAG_TYPE_ORDER_FIELD.toUpperCase()));
+
+        // Validate the returned object.
+        assertEquals(new TagTypeSearchResponse(Arrays.asList(new TagType(new TagTypeKey(TAG_TYPE_2), TAG_TYPE_DISPLAY_NAME_2, TAG_TYPE_ORDER),
+            new TagType(new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER_2))), tagTypeSearchResponse);
+    }
+
+    @Test
     public void testUpdateTagType()
     {
         // Create and persist a tag type entity.
         tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, 1);
 
-        // Update the tag type
+        // Update the tag type.
         TagType resultTagType = tagTypeService.updateTagType(new TagTypeKey(TAG_TYPE), new TagTypeUpdateRequest(TAG_TYPE_DISPLAY_NAME_2, 2));
 
         // Validate the returned object.
@@ -563,5 +621,15 @@ public class TagTypeServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new TagType(new TagTypeKey(TAG_TYPE.toLowerCase()), TAG_TYPE_DISPLAY_NAME_2.toUpperCase(), 2), resultTagType);
+    }
+
+    /**
+     * Creates database entities required for the tag type search service unit tests.
+     */
+    private void createDatabaseEntitiesForTagTypeSearchTesting()
+    {
+        // Create and persist tag type entities with tag type order values in reverse order.
+        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER_2);
+        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE_2, TAG_TYPE_DISPLAY_NAME_2, TAG_TYPE_ORDER);
     }
 }

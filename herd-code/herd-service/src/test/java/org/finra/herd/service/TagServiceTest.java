@@ -727,15 +727,8 @@ public class TagServiceTest extends AbstractServiceTest
     @Test
     public void testSearchTags()
     {
-        // Create and persist a tag type entity.
-        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER);
-
-        // Create a root tag entity for the tag type.
-        TagEntity rootTagEntity = tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
-
-        // Create two children for the root tag with tag display name in reverse order.
-        tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_2, TAG_DISPLAY_NAME_3, TAG_DESCRIPTION_2, rootTagEntity);
-        tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_3, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_3, rootTagEntity);
+        // Create and persist database entities required for testing.
+        createDatabaseEntitiesForTagSearchTesting();
 
         // Search the tags.
         TagSearchResponse tagSearchResponse = tagService.searchTags(
@@ -752,17 +745,234 @@ public class TagServiceTest extends AbstractServiceTest
     }
 
     @Test
+    public void testSearchTagsInvalidParameters()
+    {
+        // Try to search tags when there are more than one tag search filter is specified.
+        try
+        {
+            tagService.searchTags(new TagSearchRequest(Arrays.asList(new TagSearchFilter(), new TagSearchFilter())), NO_SEARCH_RESPONSE_FIELDS);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Exactly one tag search filter must be specified.", e.getMessage());
+        }
+
+        // Try to search tags when there are more than one tag search key is specified.
+        try
+        {
+            tagService.searchTags(new TagSearchRequest(Arrays.asList(new TagSearchFilter(Arrays.asList(new TagSearchKey(), new TagSearchKey())))),
+                NO_SEARCH_RESPONSE_FIELDS);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Exactly one tag search key must be specified.", e.getMessage());
+        }
+
+        // Try to search tags for a non-existing tag type.
+        try
+        {
+            tagService.searchTags(new TagSearchRequest(
+                Arrays.asList(new TagSearchFilter(Arrays.asList(new TagSearchKey("I_DO_NOT_EXIST", NO_PARENT_TAG_CODE, NO_IS_PARENT_TAG_NULL_FLAG))))),
+                NO_SEARCH_RESPONSE_FIELDS);
+            fail();
+        }
+        catch (ObjectNotFoundException e)
+        {
+            assertEquals("Tag type with code \"I_DO_NOT_EXIST\" doesn't exist.", e.getMessage());
+        }
+
+        // Try to search tags using a un-supported search response field option.
+        try
+        {
+            tagService.searchTags(new TagSearchRequest(
+                Arrays.asList(new TagSearchFilter(Arrays.asList(new TagSearchKey(TAG_TYPE, NO_PARENT_TAG_CODE, NO_IS_PARENT_TAG_NULL_FLAG))))),
+                Sets.newHashSet("INVALID_FIELD_OPTION"));
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Search response field \"invalid_field_option\" is not supported.", e.getMessage());
+        }
+
+        // Try to search tags when parent tag code is specified along with "is parent tag null" flag set to true.
+        try
+        {
+            tagService
+                .searchTags(new TagSearchRequest(Arrays.asList(new TagSearchFilter(Arrays.asList(new TagSearchKey(TAG_TYPE, TAG_CODE, PARENT_TAG_IS_NULL))))),
+                    NO_SEARCH_RESPONSE_FIELDS);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("A parent tag code can not be specified when isParentTagNull flag is set to true.", e.getMessage());
+        }
+    }
+
+    @Test
+    public void testSearchTagsLowerCaseParameters()
+    {
+        // Create and persist database entities required for testing.
+        createDatabaseEntitiesForTagSearchTesting();
+
+        // Search the tags using lower case input parameters.
+        TagSearchResponse tagSearchResponse = tagService.searchTags(new TagSearchRequest(
+            Arrays.asList(new TagSearchFilter(Arrays.asList(new TagSearchKey(TAG_TYPE.toLowerCase(), TAG_CODE.toLowerCase(), NO_IS_PARENT_TAG_NULL_FLAG))))),
+            Sets.newHashSet(TagServiceImpl.DISPLAY_NAME_FIELD.toLowerCase(), TagServiceImpl.DESCRIPTION_FIELD.toLowerCase(),
+                TagServiceImpl.PARENT_TAG_KEY_FIELD.toLowerCase(), TagServiceImpl.HAS_CHILDREN_FIELD.toLowerCase()));
+
+        // Validate the returned object.
+        assertEquals(new TagSearchResponse(Arrays.asList(
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_3), TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_3, NO_USER_ID, NO_UPDATED_TIME, new TagKey(TAG_TYPE, TAG_CODE),
+                TAG_HAS_NO_CHILDREN),
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_2), TAG_DISPLAY_NAME_3, TAG_DESCRIPTION_2, NO_USER_ID, NO_UPDATED_TIME, new TagKey(TAG_TYPE, TAG_CODE),
+                TAG_HAS_NO_CHILDREN))), tagSearchResponse);
+    }
+
+    @Test
+    public void testSearchTagsMissingOptionalParameters()
+    {
+        // Create and persist database entities required for testing.
+        createDatabaseEntitiesForTagSearchTesting();
+
+        // Search tags without specifying optional parameters.
+        assertEquals(new TagSearchResponse(Arrays.asList(
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
+                NO_TAG_HAS_CHILDREN_FLAG),
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_3), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
+                NO_TAG_HAS_CHILDREN_FLAG),
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_2), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
+                NO_TAG_HAS_CHILDREN_FLAG))), tagService.searchTags(
+            new TagSearchRequest(Arrays.asList(new TagSearchFilter(Arrays.asList(new TagSearchKey(TAG_TYPE, BLANK_TEXT, NO_IS_PARENT_TAG_NULL_FLAG))))),
+            NO_SEARCH_RESPONSE_FIELDS));
+
+        // Search tags without specifying optional parameters except for the display name field option.
+        assertEquals(new TagSearchResponse(Arrays.asList(
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
+                NO_TAG_HAS_CHILDREN_FLAG),
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_3), TAG_DISPLAY_NAME_2, NO_TAG_DESCRIPTION, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
+                NO_TAG_HAS_CHILDREN_FLAG),
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_2), TAG_DISPLAY_NAME_3, NO_TAG_DESCRIPTION, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
+                NO_TAG_HAS_CHILDREN_FLAG))), tagService.searchTags(
+            new TagSearchRequest(Arrays.asList(new TagSearchFilter(Arrays.asList(new TagSearchKey(TAG_TYPE, BLANK_TEXT, NO_IS_PARENT_TAG_NULL_FLAG))))),
+            Sets.newHashSet(TagServiceImpl.DISPLAY_NAME_FIELD)));
+
+        // Search tags without specifying optional parameters except for the description field option.
+        assertEquals(new TagSearchResponse(Arrays.asList(
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE), NO_TAG_DISPLAY_NAME, TAG_DESCRIPTION, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
+                NO_TAG_HAS_CHILDREN_FLAG),
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_3), NO_TAG_DISPLAY_NAME, TAG_DESCRIPTION_3, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
+                NO_TAG_HAS_CHILDREN_FLAG),
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_2), NO_TAG_DISPLAY_NAME, TAG_DESCRIPTION_2, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
+                NO_TAG_HAS_CHILDREN_FLAG))), tagService.searchTags(
+            new TagSearchRequest(Arrays.asList(new TagSearchFilter(Arrays.asList(new TagSearchKey(TAG_TYPE, BLANK_TEXT, NO_IS_PARENT_TAG_NULL_FLAG))))),
+            Sets.newHashSet(TagServiceImpl.DESCRIPTION_FIELD)));
+
+        // Search tags without specifying optional parameters except for the parent tag key field option.
+        assertEquals(new TagSearchResponse(Arrays.asList(
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
+                NO_TAG_HAS_CHILDREN_FLAG),
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_3), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_UPDATED_TIME,
+                new TagKey(TAG_TYPE, TAG_CODE), NO_TAG_HAS_CHILDREN_FLAG),
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_2), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_UPDATED_TIME,
+                new TagKey(TAG_TYPE, TAG_CODE), NO_TAG_HAS_CHILDREN_FLAG))), tagService.searchTags(
+            new TagSearchRequest(Arrays.asList(new TagSearchFilter(Arrays.asList(new TagSearchKey(TAG_TYPE, BLANK_TEXT, NO_IS_PARENT_TAG_NULL_FLAG))))),
+            Sets.newHashSet(TagServiceImpl.PARENT_TAG_KEY_FIELD)));
+
+        // Search tags without specifying optional parameters except for the "has children" field option.
+        assertEquals(new TagSearchResponse(Arrays.asList(
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
+                TAG_HAS_CHILDREN),
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_3), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
+                TAG_HAS_NO_CHILDREN),
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_2), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
+                TAG_HAS_NO_CHILDREN))), tagService.searchTags(
+            new TagSearchRequest(Arrays.asList(new TagSearchFilter(Arrays.asList(new TagSearchKey(TAG_TYPE, BLANK_TEXT, NO_IS_PARENT_TAG_NULL_FLAG))))),
+            Sets.newHashSet(TagServiceImpl.HAS_CHILDREN_FIELD)));
+    }
+
+    @Test
+    public void testSearchTagsMissingRequiredParameters()
+    {
+        // Try to search tags when tag search request is not specified.
+        try
+        {
+            tagService.searchTags(null, NO_SEARCH_RESPONSE_FIELDS);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("A tag search request must be specified.", e.getMessage());
+        }
+
+        // Try to search tags when tag search filter is not specified.
+        try
+        {
+            tagService.searchTags(new TagSearchRequest(), NO_SEARCH_RESPONSE_FIELDS);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Exactly one tag search filter must be specified.", e.getMessage());
+        }
+
+        // Try to search tags when tag search filter is set to null.
+        try
+        {
+            List<TagSearchFilter> tagSearchFilters = new ArrayList<>();
+            tagSearchFilters.add(null);
+            tagService.searchTags(new TagSearchRequest(tagSearchFilters), NO_SEARCH_RESPONSE_FIELDS);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Exactly one tag search filter must be specified.", e.getMessage());
+        }
+
+        // Try to search tags when tag search key is not specified.
+        try
+        {
+            tagService.searchTags(new TagSearchRequest(Arrays.asList(new TagSearchFilter())), NO_SEARCH_RESPONSE_FIELDS);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Exactly one tag search key must be specified.", e.getMessage());
+        }
+
+        // Try to search tags when tag search key is set to null.
+        try
+        {
+            List<TagSearchKey> tagSearchKeys = new ArrayList<>();
+            tagSearchKeys.add(null);
+            tagService.searchTags(new TagSearchRequest(Arrays.asList(new TagSearchFilter(tagSearchKeys))), NO_SEARCH_RESPONSE_FIELDS);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Exactly one tag search key must be specified.", e.getMessage());
+        }
+
+        // Try to search tags when tag type code is not specified.
+        try
+        {
+            tagService.searchTags(new TagSearchRequest(
+                Arrays.asList(new TagSearchFilter(Arrays.asList(new TagSearchKey(BLANK_TEXT, NO_PARENT_TAG_CODE, NO_IS_PARENT_TAG_NULL_FLAG))))),
+                NO_SEARCH_RESPONSE_FIELDS);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("A tag type code must be specified.", e.getMessage());
+        }
+    }
+
+    @Test
     public void testSearchTagsTrimParameters()
     {
-        // Create and persist a tag type entity.
-        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER);
-
-        // Create a root tag entity for the tag type.
-        TagEntity rootTagEntity = tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
-
-        // Create two children for the root tag with tag display name in reverse order.
-        tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_2, TAG_DISPLAY_NAME_3, TAG_DESCRIPTION_2, rootTagEntity);
-        tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_3, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_3, rootTagEntity);
+        // Create and persist database entities required for testing.
+        createDatabaseEntitiesForTagSearchTesting();
 
         // Search the tags by using input parameters with leading and trailing empty spaces.
         TagSearchResponse tagSearchResponse = tagService.searchTags(new TagSearchRequest(
@@ -776,6 +986,49 @@ public class TagServiceTest extends AbstractServiceTest
                 TAG_HAS_NO_CHILDREN),
             new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_2), TAG_DISPLAY_NAME_3, TAG_DESCRIPTION_2, NO_USER_ID, NO_UPDATED_TIME, new TagKey(TAG_TYPE, TAG_CODE),
                 TAG_HAS_NO_CHILDREN))), tagSearchResponse);
+    }
+
+    @Test
+    public void testSearchTagsUpperCaseParameters()
+    {
+        // Create and persist database entities required for testing.
+        createDatabaseEntitiesForTagSearchTesting();
+
+        // Search the tags using upper case input parameters.
+        TagSearchResponse tagSearchResponse = tagService.searchTags(new TagSearchRequest(
+            Arrays.asList(new TagSearchFilter(Arrays.asList(new TagSearchKey(TAG_TYPE.toUpperCase(), TAG_CODE.toUpperCase(), NO_IS_PARENT_TAG_NULL_FLAG))))),
+            Sets.newHashSet(TagServiceImpl.DISPLAY_NAME_FIELD.toUpperCase(), TagServiceImpl.DESCRIPTION_FIELD.toUpperCase(),
+                TagServiceImpl.PARENT_TAG_KEY_FIELD.toUpperCase(), TagServiceImpl.HAS_CHILDREN_FIELD.toUpperCase()));
+
+        // Validate the returned object.
+        assertEquals(new TagSearchResponse(Arrays.asList(
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_3), TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_3, NO_USER_ID, NO_UPDATED_TIME, new TagKey(TAG_TYPE, TAG_CODE),
+                TAG_HAS_NO_CHILDREN),
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_2), TAG_DISPLAY_NAME_3, TAG_DESCRIPTION_2, NO_USER_ID, NO_UPDATED_TIME, new TagKey(TAG_TYPE, TAG_CODE),
+                TAG_HAS_NO_CHILDREN))), tagSearchResponse);
+    }
+
+    @Test
+    public void testSearchTagsWithIsParentTagNullFlag()
+    {
+        // Create and persist database entities required for testing.
+        createDatabaseEntitiesForTagSearchTesting();
+
+        // Get root tag entities (parent tag must not be set).
+        assertEquals(new TagSearchResponse(Arrays.asList(
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
+                NO_TAG_HAS_CHILDREN_FLAG))), tagService.searchTags(
+            new TagSearchRequest(Arrays.asList(new TagSearchFilter(Arrays.asList(new TagSearchKey(TAG_TYPE, NO_PARENT_TAG_CODE, PARENT_TAG_IS_NULL))))),
+            NO_SEARCH_RESPONSE_FIELDS));
+
+        // Get all non-root tag entities (parent tag must be set).
+        assertEquals(new TagSearchResponse(Arrays.asList(
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_3), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
+                NO_TAG_HAS_CHILDREN_FLAG),
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_2), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
+                NO_TAG_HAS_CHILDREN_FLAG))), tagService.searchTags(
+            new TagSearchRequest(Arrays.asList(new TagSearchFilter(Arrays.asList(new TagSearchKey(TAG_TYPE, NO_PARENT_TAG_CODE, PARENT_TAG_IS_NOT_NULL))))),
+            NO_SEARCH_RESPONSE_FIELDS));
     }
 
     @Test
@@ -1055,5 +1308,21 @@ public class TagServiceTest extends AbstractServiceTest
             System.out.println(ex);
             //as expected
         }
+    }
+
+    /**
+     * Creates database entities required for the tag search service unit tests.
+     */
+    private void createDatabaseEntitiesForTagSearchTesting()
+    {
+        // Create and persist a tag type entity.
+        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER);
+
+        // Create a root tag entity for the tag type.
+        TagEntity rootTagEntity = tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+
+        // Create two children for the root tag with tag display name in reverse order.
+        tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_2, TAG_DISPLAY_NAME_3, TAG_DESCRIPTION_2, rootTagEntity);
+        tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_3, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_3, rootTagEntity);
     }
 }

@@ -389,6 +389,12 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final List<String> NO_SUBPARTITION_VALUES = new ArrayList<>();
 
+    public static final String NO_TAG_DESCRIPTION = null;
+
+    public static final String NO_TAG_DISPLAY_NAME = null;
+
+    public static final Boolean NO_TAG_HAS_CHILDREN_FLAG = null;
+
     public static final String NO_TAG_TYPE_DISPLAY_NAME = null;
 
     public static final Integer NO_TAG_TYPE_ORDER = null;
