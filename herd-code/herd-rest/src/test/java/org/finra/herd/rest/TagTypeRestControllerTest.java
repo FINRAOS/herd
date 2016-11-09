@@ -20,13 +20,19 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Arrays;
+
+import com.google.common.collect.Sets;
 import org.junit.Test;
 
 import org.finra.herd.model.api.xml.TagType;
 import org.finra.herd.model.api.xml.TagTypeCreateRequest;
 import org.finra.herd.model.api.xml.TagTypeKey;
 import org.finra.herd.model.api.xml.TagTypeKeys;
+import org.finra.herd.model.api.xml.TagTypeSearchRequest;
+import org.finra.herd.model.api.xml.TagTypeSearchResponse;
 import org.finra.herd.model.api.xml.TagTypeUpdateRequest;
+import org.finra.herd.service.impl.TagTypeServiceImpl;
 
 /**
  * This class tests various functionality within the tag type REST controller.
@@ -41,6 +47,26 @@ public class TagTypeRestControllerTest extends AbstractRestTest
 
         // Validate the returned object.
         assertEquals(new TagType(new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME, 1), resultTagType);
+    }
+
+    @Test
+    public void testDeleteTagType() throws Exception
+    {
+        // Create and persist a tag type entity.
+        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, 1);
+
+        // Validate that this tag type exists.
+        TagTypeKey tagTypeKey = new TagTypeKey(TAG_TYPE);
+        assertNotNull(tagTypeDao.getTagTypeByKey(tagTypeKey));
+
+        // Delete this tag type.
+        TagType deletedTagType = tagTypeRestController.deleteTagType(TAG_TYPE);
+
+        // Validate the returned object.
+        assertEquals(new TagType(new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME, 1), deletedTagType);
+
+        // Ensure that this tag type is no longer there.
+        assertNull(tagTypeDao.getTagTypeByKey(tagTypeKey));
     }
 
     @Test
@@ -77,23 +103,19 @@ public class TagTypeRestControllerTest extends AbstractRestTest
     }
 
     @Test
-    public void testDeleteTagType() throws Exception
+    public void testSearchTagTypes()
     {
-        // Create and persist a tag type entity.
-        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, 1);
+        // Create and persist tag type entities with tag type order values in reverse order.
+        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER_2);
+        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE_2, TAG_TYPE_DISPLAY_NAME_2, TAG_TYPE_ORDER);
 
-        // Validate that this tag type exists.
-        TagTypeKey tagTypeKey = new TagTypeKey(TAG_TYPE);
-        assertNotNull(tagTypeDao.getTagTypeByKey(tagTypeKey));
-
-        // Delete this tag type.
-        TagType deletedTagType = tagTypeRestController.deleteTagType(TAG_TYPE);
+        // Search tag types.
+        TagTypeSearchResponse tagTypeSearchResponse = tagTypeRestController
+            .searchTagTypes(new TagTypeSearchRequest(), Sets.newHashSet(TagTypeServiceImpl.DISPLAY_NAME_FIELD, TagTypeServiceImpl.TAG_TYPE_ORDER_FIELD));
 
         // Validate the returned object.
-        assertEquals(new TagType(new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME, 1), deletedTagType);
-
-        // Ensure that this tag type is no longer there.
-        assertNull(tagTypeDao.getTagTypeByKey(tagTypeKey));
+        assertEquals(new TagTypeSearchResponse(Arrays.asList(new TagType(new TagTypeKey(TAG_TYPE_2), TAG_TYPE_DISPLAY_NAME_2, TAG_TYPE_ORDER),
+            new TagType(new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER_2))), tagTypeSearchResponse);
     }
 
     @Test
