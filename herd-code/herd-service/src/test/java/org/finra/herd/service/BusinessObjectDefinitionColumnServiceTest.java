@@ -917,7 +917,7 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
         assertEquals(new BusinessObjectDefinitionColumnKeys(Arrays.asList(new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME),
             new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME_2))), resultBusinessObjectDefinitionColumnKeys);
     }
-    
+
     @Test
     public void testSearchBusinessObjectDefinitionColumns()
     {
@@ -950,6 +950,111 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
                 new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME), schemaColumnEntity.getName(),
                 businessObjectDefinitionColumnEntity.getDescription()), new BusinessObjectDefinitionColumn(businessObjectDefinitionColumnEntity2.getId(),
                 new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME_2), schemaColumnEntity2.getName(),
+                businessObjectDefinitionColumnEntity2.getDescription()))), businessObjectDefinitionColumnSearchResponse);
+    }
+
+    @Test
+    public void testSearchBusinessObjectDefinitionColumnsNoFields()
+    {
+        // Create and persist business object definition column entities.
+        BusinessObjectDefinitionColumnEntity businessObjectDefinitionColumnEntity = businessObjectDefinitionColumnDaoTestHelper
+            .createBusinessObjectDefinitionColumnEntity(new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME), DESCRIPTION);
+        BusinessObjectDefinitionColumnEntity businessObjectDefinitionColumnEntity2 = businessObjectDefinitionColumnDaoTestHelper
+            .createBusinessObjectDefinitionColumnEntity(new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME_2), DESCRIPTION_2);
+
+        // Create and persist a business object format entity.
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+                LATEST_VERSION_FLAG_SET, PARTITION_KEY);
+
+        // Create and persist a schema column for this business object format that is linked with the business object definition column.
+        SchemaColumnEntity schemaColumnEntity =
+            schemaColumnDaoTestHelper.createSchemaColumnEntity(businessObjectFormatEntity, COLUMN_NAME, businessObjectDefinitionColumnEntity);
+        SchemaColumnEntity schemaColumnEntity2 =
+            schemaColumnDaoTestHelper.createSchemaColumnEntity(businessObjectFormatEntity, COLUMN_NAME_2, businessObjectDefinitionColumnEntity2);
+
+        // Get a list of business object definition column keys.
+        BusinessObjectDefinitionColumnSearchResponse businessObjectDefinitionColumnSearchResponse = businessObjectDefinitionColumnService
+            .searchBusinessObjectDefinitionColumns(new BusinessObjectDefinitionColumnSearchRequest(Arrays
+                    .asList(new BusinessObjectDefinitionColumnSearchFilter(Arrays.asList(new BusinessObjectDefinitionColumnSearchKey(BDEF_NAMESPACE, BDEF_NAME))))),
+                Sets.newHashSet());
+
+        // Validate the response object.
+        assertEquals(new BusinessObjectDefinitionColumnSearchResponse(Arrays.asList(
+            new BusinessObjectDefinitionColumn(businessObjectDefinitionColumnEntity.getId(),
+                new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME), null, null),
+            new BusinessObjectDefinitionColumn(businessObjectDefinitionColumnEntity2.getId(),
+                new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME_2), null, null))),
+            businessObjectDefinitionColumnSearchResponse);
+    }
+
+    @Test
+    public void testSearchBusinessObjectDefinitionColumnsNoDescriptionField()
+    {
+        // Create and persist business object definition column entities.
+        BusinessObjectDefinitionColumnEntity businessObjectDefinitionColumnEntity = businessObjectDefinitionColumnDaoTestHelper
+            .createBusinessObjectDefinitionColumnEntity(new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME), DESCRIPTION);
+        BusinessObjectDefinitionColumnEntity businessObjectDefinitionColumnEntity2 = businessObjectDefinitionColumnDaoTestHelper
+            .createBusinessObjectDefinitionColumnEntity(new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME_2), DESCRIPTION_2);
+
+        // Create and persist a business object format entity.
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+                LATEST_VERSION_FLAG_SET, PARTITION_KEY);
+
+        // Create and persist a schema column for this business object format that is linked with the business object definition column.
+        SchemaColumnEntity schemaColumnEntity =
+            schemaColumnDaoTestHelper.createSchemaColumnEntity(businessObjectFormatEntity, COLUMN_NAME, businessObjectDefinitionColumnEntity);
+        SchemaColumnEntity schemaColumnEntity2 =
+            schemaColumnDaoTestHelper.createSchemaColumnEntity(businessObjectFormatEntity, COLUMN_NAME_2, businessObjectDefinitionColumnEntity2);
+
+        // Get a list of business object definition column keys.
+        BusinessObjectDefinitionColumnSearchResponse businessObjectDefinitionColumnSearchResponse = businessObjectDefinitionColumnService
+            .searchBusinessObjectDefinitionColumns(new BusinessObjectDefinitionColumnSearchRequest(Arrays
+                    .asList(new BusinessObjectDefinitionColumnSearchFilter(Arrays.asList(new BusinessObjectDefinitionColumnSearchKey(BDEF_NAMESPACE, BDEF_NAME))))),
+                Sets.newHashSet(SCHEMA_COLUMN_NAME_FIELD));
+
+        // Validate the response object.
+        assertEquals(new BusinessObjectDefinitionColumnSearchResponse(Arrays.asList(
+            new BusinessObjectDefinitionColumn(businessObjectDefinitionColumnEntity.getId(),
+                new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME), schemaColumnEntity.getName(), null),
+            new BusinessObjectDefinitionColumn(businessObjectDefinitionColumnEntity2.getId(),
+                new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME_2), schemaColumnEntity2.getName(), null))),
+            businessObjectDefinitionColumnSearchResponse);
+    }
+
+    @Test
+    public void testSearchBusinessObjectDefinitionColumnsNoSchemaColumnNameField()
+    {
+        // Create and persist business object definition column entities.
+        BusinessObjectDefinitionColumnEntity businessObjectDefinitionColumnEntity = businessObjectDefinitionColumnDaoTestHelper
+            .createBusinessObjectDefinitionColumnEntity(new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME), DESCRIPTION);
+        BusinessObjectDefinitionColumnEntity businessObjectDefinitionColumnEntity2 = businessObjectDefinitionColumnDaoTestHelper
+            .createBusinessObjectDefinitionColumnEntity(new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME_2), DESCRIPTION_2);
+
+        // Create and persist a business object format entity.
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+                LATEST_VERSION_FLAG_SET, PARTITION_KEY);
+
+        // Create and persist a schema column for this business object format that is linked with the business object definition column.
+        SchemaColumnEntity schemaColumnEntity =
+            schemaColumnDaoTestHelper.createSchemaColumnEntity(businessObjectFormatEntity, COLUMN_NAME, businessObjectDefinitionColumnEntity);
+        SchemaColumnEntity schemaColumnEntity2 =
+            schemaColumnDaoTestHelper.createSchemaColumnEntity(businessObjectFormatEntity, COLUMN_NAME_2, businessObjectDefinitionColumnEntity2);
+
+        // Get a list of business object definition column keys.
+        BusinessObjectDefinitionColumnSearchResponse businessObjectDefinitionColumnSearchResponse = businessObjectDefinitionColumnService
+            .searchBusinessObjectDefinitionColumns(new BusinessObjectDefinitionColumnSearchRequest(Arrays
+                    .asList(new BusinessObjectDefinitionColumnSearchFilter(Arrays.asList(new BusinessObjectDefinitionColumnSearchKey(BDEF_NAMESPACE, BDEF_NAME))))),
+                Sets.newHashSet(DESCRIPTION_FIELD));
+
+        // Validate the response object.
+        assertEquals(new BusinessObjectDefinitionColumnSearchResponse(Arrays.asList(
+            new BusinessObjectDefinitionColumn(businessObjectDefinitionColumnEntity.getId(),
+                new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME), null,
+                businessObjectDefinitionColumnEntity.getDescription()), new BusinessObjectDefinitionColumn(businessObjectDefinitionColumnEntity2.getId(),
+                new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME_2), null,
                 businessObjectDefinitionColumnEntity2.getDescription()))), businessObjectDefinitionColumnSearchResponse);
     }
 

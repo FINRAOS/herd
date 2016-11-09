@@ -222,6 +222,16 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
         return businessObjectDefinitionColumnKeys;
     }
 
+    /**
+     * Returns the valid search fields.
+     *
+     * @return valid search fields
+     */
+    public static Set<String> getValidSearchResponseFields()
+    {
+        return ImmutableSet.of(SCHEMA_COLUMN_NAME_FIELD, DESCRIPTION_FIELD);
+    }
+    
     @Override
     public BusinessObjectDefinitionColumnSearchResponse searchBusinessObjectDefinitionColumns(BusinessObjectDefinitionColumnSearchRequest request,
         Set<String> fields)
@@ -345,16 +355,6 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
     {
         return new BusinessObjectDefinitionColumnKey(businessObjectDefinitionColumnEntity.getBusinessObjectDefinition().getNamespace().getCode(),
             businessObjectDefinitionColumnEntity.getBusinessObjectDefinition().getName(), businessObjectDefinitionColumnEntity.getName());
-    }
-
-    /**
-     * Returns the valid search fields.
-     *
-     * @return valid search fields
-     */
-    private Set<String> getValidSearchResponseFields()
-    {
-        return ImmutableSet.of(SCHEMA_COLUMN_NAME_FIELD, DESCRIPTION_FIELD);
     }
 
     /**

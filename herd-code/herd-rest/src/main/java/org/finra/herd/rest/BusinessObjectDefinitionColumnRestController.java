@@ -15,9 +15,7 @@
 */
 package org.finra.herd.rest;
 
-import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
