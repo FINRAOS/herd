@@ -16,7 +16,6 @@
 package org.finra.herd.service.impl;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -46,6 +45,7 @@ import org.finra.herd.model.api.xml.TagTypeKey;
 import org.finra.herd.model.api.xml.TagUpdateRequest;
 import org.finra.herd.model.jpa.TagEntity;
 import org.finra.herd.model.jpa.TagTypeEntity;
+import org.finra.herd.service.SearchableService;
 import org.finra.herd.service.TagService;
 import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.TagDaoHelper;
@@ -57,7 +57,7 @@ import org.finra.herd.service.helper.TagTypeDaoHelper;
  */
 @Service
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
-public class TagServiceImpl implements TagService
+public class TagServiceImpl implements TagService, SearchableService
 {
     // Constant to hold the display name field option for the search response.
     public final static String DESCRIPTION_FIELD = "description".toLowerCase();
@@ -178,6 +178,12 @@ public class TagServiceImpl implements TagService
         response.setTagChildren(tagChildren);
 
         return response;
+    }
+
+    @Override
+    public Set<String> getValidSearchResponseFields()
+    {
+        return ImmutableSet.of(DISPLAY_NAME_FIELD, DESCRIPTION_FIELD, PARENT_TAG_KEY_FIELD, HAS_CHILDREN_FIELD);
     }
 
     @Override
@@ -339,16 +345,6 @@ public class TagServiceImpl implements TagService
     }
 
     /**
-     * Returns valid search response fields.
-     *
-     * @return the set of valid search response fields
-     */
-    private Set<String> getValidSearchResponseFields()
-    {
-        return ImmutableSet.of(DISPLAY_NAME_FIELD, DESCRIPTION_FIELD, PARENT_TAG_KEY_FIELD, HAS_CHILDREN_FIELD);
-    }
-
-    /**
      * Updates and persists the tag entity per the specified update request.
      *
      * @param tagEntity the specified tag entity.
@@ -370,27 +366,6 @@ public class TagServiceImpl implements TagService
         }
 
         tagDao.saveAndRefresh(tagEntity);
-    }
-
-    /**
-     * Validates the search response fields. This method also trims and lowers the fields.
-     *
-     * @param fields the search response fields
-     */
-    private void validateSearchResponseFields(Set<String> fields)
-    {
-        // Create a local copy of the fields set so that we can stream it to modify the fields set
-        Set<String> localCopy = new HashSet<>(fields);
-
-        // Clear the fields set
-        fields.clear();
-
-        // Add to the fields set field the strings both trimmed and lower cased and filter out empty and null strings
-        localCopy.stream().filter(StringUtils::isNotBlank).map(String::trim).map(String::toLowerCase).forEachOrdered(fields::add);
-
-        // Validate the field names
-        fields.forEach(
-            field -> Assert.isTrue(getValidSearchResponseFields().contains(field), String.format("Search response field \"%s\" is not supported.", field)));
     }
 
     /**

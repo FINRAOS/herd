@@ -16,7 +16,6 @@
 package org.finra.herd.service.impl;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -38,6 +37,7 @@ import org.finra.herd.model.api.xml.TagTypeSearchRequest;
 import org.finra.herd.model.api.xml.TagTypeSearchResponse;
 import org.finra.herd.model.api.xml.TagTypeUpdateRequest;
 import org.finra.herd.model.jpa.TagTypeEntity;
+import org.finra.herd.service.SearchableService;
 import org.finra.herd.service.TagTypeService;
 import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.TagTypeDaoHelper;
@@ -48,7 +48,7 @@ import org.finra.herd.service.helper.TagTypeHelper;
  */
 @Service
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
-public class TagTypeServiceImpl implements TagTypeService
+public class TagTypeServiceImpl implements TagTypeService, SearchableService
 {
     // Constant to hold the display name field option for the search response.
     public final static String DISPLAY_NAME_FIELD = "displayName".toLowerCase();
@@ -125,6 +125,12 @@ public class TagTypeServiceImpl implements TagTypeService
     public TagTypeKeys getTagTypes()
     {
         return new TagTypeKeys(tagTypeDao.getTagTypeKeys());
+    }
+
+    @Override
+    public Set<String> getValidSearchResponseFields()
+    {
+        return ImmutableSet.of(DISPLAY_NAME_FIELD, TAG_TYPE_ORDER_FIELD);
     }
 
     @Override
@@ -237,16 +243,6 @@ public class TagTypeServiceImpl implements TagTypeService
     }
 
     /**
-     * Returns valid search response fields.
-     *
-     * @return the set of valid search response fields
-     */
-    private Set<String> getValidSearchResponseFields()
-    {
-        return ImmutableSet.of(DISPLAY_NAME_FIELD, TAG_TYPE_ORDER_FIELD);
-    }
-
-    /**
      * Update and persist the tag type per specified update request.
      *
      * @param tagTypeEntity the tag type entity
@@ -259,27 +255,6 @@ public class TagTypeServiceImpl implements TagTypeService
 
         // Persist and refresh the entity.
         tagTypeDao.saveAndRefresh(tagTypeEntity);
-    }
-
-    /**
-     * Validates the search response fields. This method also trims and lowers the fields.
-     *
-     * @param fields the search response fields
-     */
-    private void validateSearchResponseFields(Set<String> fields)
-    {
-        // Create a local copy of the fields set so that we can stream it to modify the fields set
-        Set<String> localCopy = new HashSet<>(fields);
-
-        // Clear the fields set
-        fields.clear();
-
-        // Add to the fields set field the strings both trimmed and lower cased and filter out empty and null strings
-        localCopy.stream().filter(StringUtils::isNotBlank).map(String::trim).map(String::toLowerCase).forEachOrdered(fields::add);
-
-        // Validate the field names
-        fields.forEach(
-            field -> Assert.isTrue(getValidSearchResponseFields().contains(field), String.format("Search response field \"%s\" is not supported.", field)));
     }
 
     /**

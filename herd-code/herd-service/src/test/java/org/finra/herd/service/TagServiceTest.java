@@ -752,6 +752,33 @@ public class TagServiceTest extends AbstractServiceTest
     }
 
     @Test
+    public void testSearchTagsTrimParameters()
+    {
+        // Create and persist a tag type entity.
+        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER);
+
+        // Create a root tag entity for the tag type.
+        TagEntity rootTagEntity = tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+
+        // Create two children for the root tag with tag display name in reverse order.
+        tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_2, TAG_DISPLAY_NAME_3, TAG_DESCRIPTION_2, rootTagEntity);
+        tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_3, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_3, rootTagEntity);
+
+        // Search the tags by using input parameters with leading and trailing empty spaces.
+        TagSearchResponse tagSearchResponse = tagService.searchTags(new TagSearchRequest(
+            Arrays.asList(new TagSearchFilter(Arrays.asList(new TagSearchKey(addWhitespace(TAG_TYPE), addWhitespace(TAG_CODE), NO_IS_PARENT_TAG_NULL_FLAG))))),
+            Sets.newHashSet(addWhitespace(TagServiceImpl.DISPLAY_NAME_FIELD), addWhitespace(TagServiceImpl.DESCRIPTION_FIELD),
+                addWhitespace(TagServiceImpl.PARENT_TAG_KEY_FIELD), addWhitespace(TagServiceImpl.HAS_CHILDREN_FIELD)));
+
+        // Validate the returned object.
+        assertEquals(new TagSearchResponse(Arrays.asList(
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_3), TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_3, NO_USER_ID, NO_UPDATED_TIME, new TagKey(TAG_TYPE, TAG_CODE),
+                TAG_HAS_NO_CHILDREN),
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_2), TAG_DISPLAY_NAME_3, TAG_DESCRIPTION_2, NO_USER_ID, NO_UPDATED_TIME, new TagKey(TAG_TYPE, TAG_CODE),
+                TAG_HAS_NO_CHILDREN))), tagSearchResponse);
+    }
+
+    @Test
     public void testUpdateTag()
     {
         // Create and persist a tag entity.
