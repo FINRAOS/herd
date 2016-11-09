@@ -15,10 +15,14 @@
 */
 package org.finra.herd.service;
 
+import java.util.Set;
+
 import org.finra.herd.model.api.xml.TagType;
 import org.finra.herd.model.api.xml.TagTypeCreateRequest;
 import org.finra.herd.model.api.xml.TagTypeKey;
 import org.finra.herd.model.api.xml.TagTypeKeys;
+import org.finra.herd.model.api.xml.TagTypeSearchRequest;
+import org.finra.herd.model.api.xml.TagTypeSearchResponse;
 import org.finra.herd.model.api.xml.TagTypeUpdateRequest;
 
 /**
@@ -36,13 +40,13 @@ public interface TagTypeService
     public TagType createTagType(TagTypeCreateRequest request);
 
     /**
-     * Updates a tag type.
+     * Deletes a tag type.
      *
-     * @param request the tag type update request
+     * @param tagTypeKey the tag type key
      *
-     * @return the updated tag type
+     * @return the deleted tag type
      */
-    public TagType updateTagType(TagTypeKey tagTypeKey, TagTypeUpdateRequest request);
+    public TagType deleteTagType(TagTypeKey tagTypeKey);
 
     /**
      * Retrieve a tag type.
@@ -54,18 +58,30 @@ public interface TagTypeService
     public TagType getTagType(TagTypeKey tagTypeKey);
 
     /**
-     * Deletes a tag type.
-     *
-     * @param tagTypeKey the tag type key
-     *
-     * @return the deleted tag type
-     */
-    public TagType deleteTagType(TagTypeKey tagTypeKey);
-
-    /**
      * Retrieves a list of tag type keys.
      *
      * @return the list of retrieved tag type keys
      */
     public TagTypeKeys getTagTypes();
+
+    /**
+     * Retrieves all tag types existing in the system. For each tag type entity, the endpoint returns tag type key by default along with any other top-level
+     * elements as specified by the "fields" query string parameter. The list of tag types returned by the endpoint is sorted alphabetically by tag type's order
+     * value ascending.
+     *
+     * @param request the tag type search request. The request does not take any search keys or filters
+     * @param fields the field options for the tag type search response
+     *
+     * @return the tag type search response
+     */
+    public TagTypeSearchResponse searchTagTypes(TagTypeSearchRequest request, Set<String> fields);
+
+    /**
+     * Updates a tag type.
+     *
+     * @param request the tag type update request
+     *
+     * @return the updated tag type
+     */
+    public TagType updateTagType(TagTypeKey tagTypeKey, TagTypeUpdateRequest request);
 }

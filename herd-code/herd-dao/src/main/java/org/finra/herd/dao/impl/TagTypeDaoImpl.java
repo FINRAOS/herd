@@ -40,30 +40,6 @@ import org.finra.herd.model.jpa.TagTypeEntity_;
 public class TagTypeDaoImpl extends AbstractHerdDao implements TagTypeDao
 {
     @Override
-    public TagTypeEntity getTagTypeByKey(TagTypeKey tagTypeKey)
-    {
-        return getTagTypeByCd(tagTypeKey.getTagTypeCode());
-    }
-
-    @Override
-    public TagTypeEntity getTagTypeByCd(String tagTypeCode)
-    {
-        // Create the criteria builder and the criteria.
-        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-        CriteriaQuery<TagTypeEntity> criteria = builder.createQuery(TagTypeEntity.class);
-
-        // The criteria root is the tag type code.
-        Root<TagTypeEntity> tagTypeEntity = criteria.from(TagTypeEntity.class);
-
-        // Create the standard restrictions.
-        Predicate queryRestriction = builder.equal(builder.upper(tagTypeEntity.get(TagTypeEntity_.code)), tagTypeCode.toUpperCase());
-
-        criteria.select(tagTypeEntity).where(queryRestriction);
-
-        return executeSingleResultQuery(criteria, String.format("Found more than one tag type with tagTypeCode=\"%s\".", tagTypeCode));
-    }
-
-    @Override
     public TagTypeEntity getTagTypeByDisplayName(String displayName)
     {
         // Create the criteria builder and the criteria.
@@ -76,13 +52,35 @@ public class TagTypeDaoImpl extends AbstractHerdDao implements TagTypeDao
         // Create the standard restrictions.
         Predicate queryRestriction = builder.equal(builder.upper(tagTypeEntity.get(TagTypeEntity_.displayName)), displayName.toUpperCase());
 
+        // Add all clauses to the query.
         criteria.select(tagTypeEntity).where(queryRestriction);
 
+        // Run the query and return the results.
         return executeSingleResultQuery(criteria, String.format("Found more than one tag type with displayName=\"%s\".", displayName));
     }
 
     @Override
-    public List<TagTypeKey> getTagTypes()
+    public TagTypeEntity getTagTypeByKey(TagTypeKey tagTypeKey)
+    {
+        // Create the criteria builder and the criteria.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<TagTypeEntity> criteria = builder.createQuery(TagTypeEntity.class);
+
+        // The criteria root is the tag type code.
+        Root<TagTypeEntity> tagTypeEntity = criteria.from(TagTypeEntity.class);
+
+        // Create the standard restrictions.
+        Predicate queryRestriction = builder.equal(builder.upper(tagTypeEntity.get(TagTypeEntity_.code)), tagTypeKey.getTagTypeCode().toUpperCase());
+
+        // Add all clauses to the query.
+        criteria.select(tagTypeEntity).where(queryRestriction);
+
+        // Run the query and return the results.
+        return executeSingleResultQuery(criteria, String.format("Found more than one tag type with tagTypeCode=\"%s\".", tagTypeKey.getTagTypeCode()));
+    }
+
+    @Override
+    public List<TagTypeKey> getTagTypeKeys()
     {
         // Create the criteria builder and a tuple style criteria query.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
@@ -110,5 +108,31 @@ public class TagTypeDaoImpl extends AbstractHerdDao implements TagTypeDao
 
         // Populate the "keys" objects from the returned tag type codes.
         return tagTypeCodes.stream().map(TagTypeKey::new).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<TagTypeEntity> getTagTypes()
+    {
+        // Create the criteria builder and the criteria.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<TagTypeEntity> criteria = builder.createQuery(TagTypeEntity.class);
+
+        // The criteria root is the tag type entity.
+        Root<TagTypeEntity> tagTypeEntityRoot = criteria.from(TagTypeEntity.class);
+
+        // Get the columns.
+        Path<String> displayNameColumn = tagTypeEntityRoot.get(TagTypeEntity_.displayName);
+        Path<Integer> tagTypeOrderColumn = tagTypeEntityRoot.get(TagTypeEntity_.orderNumber);
+
+        // Order the results by tag type's order and display name.
+        List<Order> orderBy = new ArrayList<>();
+        orderBy.add(builder.asc(tagTypeOrderColumn));
+        orderBy.add(builder.asc(displayNameColumn));
+
+        // Add all clauses to the query.
+        criteria.select(tagTypeEntityRoot).orderBy(orderBy);
+
+        // Run the query and return the results.
+        return entityManager.createQuery(criteria).getResultList();
     }
 }
