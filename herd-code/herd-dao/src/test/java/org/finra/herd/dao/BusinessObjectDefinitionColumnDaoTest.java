@@ -19,6 +19,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
+import java.util.List;
+
 import org.junit.Test;
 
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnKey;
@@ -84,7 +86,7 @@ public class BusinessObjectDefinitionColumnDaoTest extends AbstractDaoTest
         catch (IllegalArgumentException e)
         {
             assertEquals(String.format("Found more than one business object definition column instance with parameters {namespace=\"%s\", " +
-                "businessObjectDefinitionName=\"%s\", businessObjectDefinitionColumnName=\"%s\"}.", BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME),
+                    "businessObjectDefinitionName=\"%s\", businessObjectDefinitionColumnName=\"%s\"}.", BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME),
                 e.getMessage());
         }
     }
@@ -144,8 +146,35 @@ public class BusinessObjectDefinitionColumnDaoTest extends AbstractDaoTest
         catch (IllegalArgumentException e)
         {
             assertEquals(String.format("Found more than one business object definition column instance with parameters {namespace=\"%s\", " +
-                "businessObjectDefinitionName=\"%s\", businessObjectDefinitionColumnName=\"%s\"}.", BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME),
+                    "businessObjectDefinitionName=\"%s\", businessObjectDefinitionColumnName=\"%s\"}.", BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME),
                 e.getMessage());
         }
+    }
+
+    @Test
+    public void testGetBusinessObjectDefinitionColumnsByBusinessObjectDefinition()
+    {
+        // Create a business object definition entity.
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
+            businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
+
+        // Create business object definition columns.
+        BusinessObjectDefinitionColumnEntity businessObjectDefinitionColumnEntity = businessObjectDefinitionColumnDaoTestHelper
+            .createBusinessObjectDefinitionColumnEntity(businessObjectDefinitionEntity, BDEF_COLUMN_NAME, DESCRIPTION);
+        BusinessObjectDefinitionColumnEntity businessObjectDefinitionColumnEntity2 = businessObjectDefinitionColumnDaoTestHelper
+            .createBusinessObjectDefinitionColumnEntity(businessObjectDefinitionEntity, BDEF_COLUMN_NAME_2, DESCRIPTION_2);
+
+        // Get a list of business object definition column entities.
+        List<BusinessObjectDefinitionColumnEntity> businessObjectDefinitionColumnEntities =
+            businessObjectDefinitionColumnDao.getBusinessObjectDefinitionColumnsByBusinessObjectDefinition(businessObjectDefinitionEntity);
+
+        // Validate the business object definition column entities.
+        assertEquals(businessObjectDefinitionColumnEntities.get(0).getBusinessObjectDefinition(), businessObjectDefinitionEntity);
+        assertEquals(businessObjectDefinitionColumnEntities.get(0).getName(), BDEF_COLUMN_NAME);
+        assertEquals(businessObjectDefinitionColumnEntities.get(0).getDescription(), DESCRIPTION);
+
+        assertEquals(businessObjectDefinitionColumnEntities.get(1).getBusinessObjectDefinition(), businessObjectDefinitionEntity);
+        assertEquals(businessObjectDefinitionColumnEntities.get(1).getName(), BDEF_COLUMN_NAME_2);
+        assertEquals(businessObjectDefinitionColumnEntities.get(1).getDescription(), DESCRIPTION_2);
     }
 }

@@ -1126,7 +1126,7 @@
    <xs:element name="businessObjectDefinitionColumn" type="businessObjectDefinitionColumn"/>
    <xs:complexType name="businessObjectDefinitionColumn">
       <xs:all>
-         <xs:element name="id" type="xs:int">
+         <xs:element name="id" type="xs:int" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The internal Id that uniquely references a Business Object Definition Column</xs:documentation>
             </xs:annotation>
