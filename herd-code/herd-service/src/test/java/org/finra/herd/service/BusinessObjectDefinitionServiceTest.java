@@ -21,7 +21,12 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
+import com.google.common.collect.Sets;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -34,6 +39,8 @@ import org.finra.herd.model.api.xml.BusinessObjectDefinitionCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptiveInformationUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKeys;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionUpdateRequest;
 import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormat;
 import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormatUpdateRequest;
@@ -48,6 +55,15 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
     @Autowired
     @Qualifier(value = "businessObjectDefinitionServiceImpl")
     private BusinessObjectDefinitionService businessObjectDefinitionServiceImpl;
+
+    // Constant to hold the data provider name option for the business object definition search
+    public static final String DATA_PROVIDER_NAME = "dataProviderName";
+
+    // Constant to hold the short description option for the business object definition search
+    public static final String SHORT_DESCRIPTION = "shortDescription";
+
+    // Constant to hold the display name option for the business object definition search
+    public static final String DISPLAY_NAME = "displayName";
 
     @Test
     public void testCreateBusinessObjectDefinition() throws Exception
@@ -1199,6 +1215,20 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
     @Test
     public void testSearchBusinessObjectDefinitionValidParams()
     {
+        // Create and retrieve a list of business object definition entities
+        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities =
+            businessObjectDefinitionDaoTestHelper.createAndGetExpectedBusinessObjectDefinitionEntities();
 
+        // Convert the entities into business object definition objects for easy comparison later
+        Set<BusinessObjectDefinition> expectedBusinessObjectDefinitions = businessObjectDefinitionEntities.stream().map(
+            businessObjectDefinitionEntity -> businessObjectDefinitionServiceTestHelper
+                .createBusinessObjectDefinitionFromEntityForSearchTesting(businessObjectDefinitionEntity)).collect(Collectors.toSet());
+
+        // Retrieve the actual business object defintion objects from the search response
+        BusinessObjectDefinitionSearchResponse searchResponse = businessObjectDefinitionService
+            .searchBusinessObjectDefinitions(new BusinessObjectDefinitionSearchRequest(), Sets.newHashSet(DATA_PROVIDER_NAME, DISPLAY_NAME, SHORT_DESCRIPTION));
+        Set<BusinessObjectDefinition> actualBusinessObjectDefinitions = new HashSet<>(searchResponse.getBusinessObjectDefinitions());
+
+        assertEquals(expectedBusinessObjectDefinitions, actualBusinessObjectDefinitions);
     }
 }
