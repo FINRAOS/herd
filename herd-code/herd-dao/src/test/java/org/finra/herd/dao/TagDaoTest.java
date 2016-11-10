@@ -195,12 +195,10 @@ public class TagDaoTest extends AbstractDaoTest
         // Get all immediate children of the root tag by passing all case-insensitive parameters in lowercase.
         assertEquals(Arrays.asList(childrenTagEntities.get(1), childrenTagEntities.get(0)),
             tagDao.getTagsByTagTypeEntityAndParentTagCode(tagTypeEntity, TAG_CODE.toUpperCase(), NO_IS_PARENT_TAG_NULL_FLAG));
-        ;
 
         // Get all immediate children of the root tag by passing all case-insensitive parameters in lowercase.
         assertEquals(Arrays.asList(childrenTagEntities.get(1), childrenTagEntities.get(0)),
             tagDao.getTagsByTagTypeEntityAndParentTagCode(tagTypeEntity, TAG_CODE.toLowerCase(), NO_IS_PARENT_TAG_NULL_FLAG));
-        ;
 
         // Create another tag type entity without any tag associated with it.
         TagTypeEntity invalidTagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE_2, TAG_TYPE_DISPLAY_NAME_2, TAG_TYPE_ORDER_2);
