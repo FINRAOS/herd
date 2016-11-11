@@ -1096,23 +1096,69 @@
       </xs:all>
    </xs:complexType>
 
-   <xs:element name="businessObjectDefinitionSearchRequest" type="businessObjectDefinitionSearchRequest"/>
+   <!-- ***** Business Object Definition Search ***** -->
+
+   <xs:element name="businessObjectDefinitionSearchRequest" type="businessObjectDefinitionSearchRequest">
+      <xs:annotation>
+         <xs:documentation>A wrapper for business Object Definition search request. The request accept only a single search filter and a single search key
+         </xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
    <xs:complexType name="businessObjectDefinitionSearchRequest">
       <xs:all>
-         <xs:element name="noData" type="xs:string" minOccurs="0" maxOccurs="0">
+         <xs:element name="businessObjectDefinitionSearchFilters" type="businessObjectDefinitionSearchFilters">
             <xs:annotation>
-               <xs:documentation>There is nothing that is currently posted, but we will have something in the future.</xs:documentation>
+               <xs:documentation>A list of business Object Definition search filters. Only a single search filter is supported</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
    </xs:complexType>
 
-   <xs:element name="businessObjectDefinitions" type="businessObjectDefinitions"/>
-   <xs:complexType name="businessObjectDefinitions">
+   <xs:complexType name="businessObjectDefinitionSearchFilters">
       <xs:sequence>
-         <xs:element name="businessObjectDefinition" type="businessObjectDefinition" minOccurs="0" maxOccurs="unbounded">
+         <xs:element name="businessObjectDefinitionSearchFilter" type="businessObjectDefinitionSearchFilter" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>A business Object Definition search filter</xs:documentation>
+            </xs:annotation>
          </xs:element>
       </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDefinitionSearchFilter">
+      <xs:all>
+         <xs:element name="businessObjectDefinitionSearchKeys" type="businessObjectDefinitionSearchKeys">
+            <xs:annotation>
+               <xs:documentation>A list of business Object Definition search keys. Only a single search key is supported</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDefinitionSearchKeys">
+      <xs:sequence>
+         <xs:element name="businessObjectDefinitionSearchKey" type="businessObjectDefinitionSearchKey" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>A business Object Definition search key</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDefinitionSearchKey">
+      <xs:all>
+         <xs:element name="tagKey" type="tagKey">
+            <xs:annotation>
+               <xs:documentation>Values that uniquely identify a Tag</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="includeTagHierarchy" type="xs:boolean" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An optional boolean flag that specifies if business object definition associated with entire tag hierarchy is to be retrieved
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
    </xs:complexType>
 
    <xs:element name="businessObjectDefinitionSearchResponse" type="businessObjectDefinitionSearchResponse"/>
@@ -1126,6 +1172,14 @@
             </xs:annotation>
          </xs:element>
       </xs:all>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDefinitions" type="businessObjectDefinitions"/>
+   <xs:complexType name="businessObjectDefinitions">
+      <xs:sequence>
+         <xs:element name="businessObjectDefinition" type="businessObjectDefinition" minOccurs="0" maxOccurs="unbounded">
+         </xs:element>
+      </xs:sequence>
    </xs:complexType>
 
    <!-- ***** Business Object Definition Column ***** -->
