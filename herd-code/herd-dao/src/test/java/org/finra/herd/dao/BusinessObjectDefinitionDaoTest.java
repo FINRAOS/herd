@@ -43,7 +43,7 @@ public class BusinessObjectDefinitionDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void testGetBusinessObjectDefinitions() throws Exception
+    public void testGetBusinessObjectDefinitionKey() throws Exception
     {
         // Create and persist business object definition entities.
         for (BusinessObjectDefinitionKey key : businessObjectDefinitionDaoTestHelper.getTestBusinessObjectDefinitionKeys())
@@ -53,9 +53,23 @@ public class BusinessObjectDefinitionDaoTest extends AbstractDaoTest
         }
 
         // Retrieve a list of business object definition keys for the specified namespace.
-        List<BusinessObjectDefinitionKey> resultKeys = businessObjectDefinitionDao.getBusinessObjectDefinitions(NAMESPACE);
+        List<BusinessObjectDefinitionKey> resultKeys = businessObjectDefinitionDao.getBusinessObjectDefinitionKeys(NAMESPACE);
 
         // Validate the returned object.
         assertEquals(businessObjectDefinitionDaoTestHelper.getExpectedBusinessObjectDefinitionKeys(), resultKeys);
     }
+
+    @Test
+    public void testGetBusinessObjectDefinitions()
+    {
+        // Create and get a list of business object definition entities
+        List<BusinessObjectDefinitionEntity> expectedEntities = businessObjectDefinitionDaoTestHelper.createAndGetExpectedBusinessObjectDefinitionEntities();
+
+        // Retrieve the actual list of business object definitions
+        List<BusinessObjectDefinitionEntity> actualEntities = businessObjectDefinitionDao.getBusinessObjectDefinitions();
+
+        // Validate
+        assertEquals(expectedEntities, actualEntities);
+    }
+
 }

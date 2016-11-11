@@ -46,7 +46,7 @@ public interface BusinessObjectDefinitionDao extends BaseJpaDao
      *
      * @return the list of all business object definition keys
      */
-    public List<BusinessObjectDefinitionKey> getBusinessObjectDefinitions();
+    public List<BusinessObjectDefinitionKey> getBusinessObjectDefinitionKeys();
 
     /**
      * Gets a list of all business object definition keys for a specified namespace, or, if, namespace is not specified, for all namespaces in the system.
@@ -55,5 +55,12 @@ public interface BusinessObjectDefinitionDao extends BaseJpaDao
      *
      * @return the list of all business object definition keys
      */
-    public List<BusinessObjectDefinitionKey> getBusinessObjectDefinitions(String namespaceCode);
+    public List<BusinessObjectDefinitionKey> getBusinessObjectDefinitionKeys(String namespaceCode);
+
+    /**
+     * Gets a list of all business object definition entities for the specified namespace.
+     *
+     * @return the list of all business object definition entities.
+     */
+    public List<BusinessObjectDefinitionEntity> getBusinessObjectDefinitions();
 }

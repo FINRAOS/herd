@@ -210,7 +210,7 @@ public class BusinessObjectDefinitionDaoTestHelper
     }
 
     /**
-     * Returns a list of test business object definition keys expected to be returned by getBusinessObjectDefinitions() method.
+     * Returns a list of test business object definition keys expected to be returned by getBusinessObjectDefinitionKeys() method.
      *
      * @return the list of expected business object definition keys
      */
@@ -222,6 +222,28 @@ public class BusinessObjectDefinitionDaoTestHelper
         keys.add(new BusinessObjectDefinitionKey(AbstractDaoTest.NAMESPACE, AbstractDaoTest.BDEF_NAME_2));
 
         return keys;
+    }
+
+    /**
+     * Creates and returns a list of business object definition entities.
+     *
+     * @return the list of expected business object definition entities
+     */
+    public List<BusinessObjectDefinitionEntity> createAndGetExpectedBusinessObjectDefinitionEntities()
+    {
+        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities = new ArrayList<>();
+
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntityOne =
+            createBusinessObjectDefinitionEntity(AbstractDaoTest.NAMESPACE, AbstractDaoTest.BDEF_NAME, AbstractDaoTest.DATA_PROVIDER_NAME,
+                AbstractDaoTest.BDEF_DESCRIPTION);
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntityTwo =
+            createBusinessObjectDefinitionEntity(AbstractDaoTest.NAMESPACE_2, AbstractDaoTest.BDEF_NAME_2, AbstractDaoTest.DATA_PROVIDER_NAME_2,
+                AbstractDaoTest.BDEF_DESCRIPTION_2);
+
+        businessObjectDefinitionEntities.add(businessObjectDefinitionEntityOne);
+        businessObjectDefinitionEntities.add(businessObjectDefinitionEntityTwo);
+
+        return businessObjectDefinitionEntities;
     }
 
     /**

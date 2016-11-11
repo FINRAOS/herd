@@ -20,13 +20,18 @@ import static org.junit.Assert.assertEquals;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.DataProviderDaoTestHelper;
 import org.finra.herd.dao.NamespaceDaoTestHelper;
 import org.finra.herd.model.api.xml.Attribute;
+import org.finra.herd.model.api.xml.BusinessObjectDefinition;
 import org.finra.herd.model.api.xml.SampleDataFile;
+import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 
 @Component
 public class BusinessObjectDefinitionServiceTestHelper
@@ -36,6 +41,9 @@ public class BusinessObjectDefinitionServiceTestHelper
 
     @Autowired
     private NamespaceDaoTestHelper namespaceDaoTestHelper;
+
+    @Autowired
+    private ConfigurationHelper configurationHelper;
 
     /**
      * Create and persist database entities required for testing.
@@ -58,6 +66,27 @@ public class BusinessObjectDefinitionServiceTestHelper
 
         // Create a data provider entity.
         dataProviderDaoTestHelper.createDataProviderEntity(dataProviderName);
+    }
+
+    /**
+     * Creates a business object definition from a business object definition entity.
+     *
+     * @param businessObjectDefinitionEntity the specified business object definition entity
+     *
+     * @return the business object definition entity
+     */
+    public BusinessObjectDefinition createBusinessObjectDefinitionFromEntityForSearchTesting(BusinessObjectDefinitionEntity businessObjectDefinitionEntity)
+    {
+        BusinessObjectDefinition businessObjectDefinition = new BusinessObjectDefinition();
+
+        businessObjectDefinition.setNamespace(businessObjectDefinitionEntity.getNamespace().getCode());
+        businessObjectDefinition.setBusinessObjectDefinitionName(businessObjectDefinitionEntity.getName());
+        businessObjectDefinition.setDataProviderName(businessObjectDefinitionEntity.getDataProvider().getName());
+        businessObjectDefinition.setDisplayName(businessObjectDefinitionEntity.getDisplayName());
+        businessObjectDefinition.setShortDescription(StringUtils.left(businessObjectDefinitionEntity.getDescription(),
+            configurationHelper.getProperty(ConfigurationValue.SHORT_DESCRIPTION_LENGTH, Integer.class)));
+
+        return businessObjectDefinition;
     }
 
     /**
