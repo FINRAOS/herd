@@ -46,7 +46,7 @@ public class BusinessObjectDefinitionDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void testGetBusinessObjectDefinitionKey() throws Exception
+    public void testGetBusinessObjectDefinitionKeys() throws Exception
     {
         // Create and persist business object definition entities.
         for (BusinessObjectDefinitionKey key : businessObjectDefinitionDaoTestHelper.getTestBusinessObjectDefinitionKeys())
@@ -63,27 +63,11 @@ public class BusinessObjectDefinitionDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void testGetBusinessObjectDefinitions()
-    {
-        // Create and get a list of business object definition entities
-        List<BusinessObjectDefinitionEntity> expectedEntities = businessObjectDefinitionDaoTestHelper.createAndGetExpectedBusinessObjectDefinitionEntities();
-
-        // Retrieve the actual list of business object definitions
-        List<BusinessObjectDefinitionEntity> actualEntities = businessObjectDefinitionDao.getBusinessObjectDefinitions();
-
-        // Validate
-        assertEquals(expectedEntities, actualEntities);
-    }
-
-
-    @Test
-    public void testGetBusinessObjectDefinitionsByTagKey() throws Exception
+    public void testGetBusinessObjectDefinitions() throws Exception
     {
         // Create and persist two business object definition entities.
-        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities = Arrays.asList(businessObjectDefinitionDaoTestHelper
-                .createBusinessObjectDefinitionEntity(new BusinessObjectDefinitionKey(BDEF_NAMESPACE, BDEF_NAME), DATA_PROVIDER_NAME, DESCRIPTION),
-            businessObjectDefinitionDaoTestHelper
-                .createBusinessObjectDefinitionEntity(new BusinessObjectDefinitionKey(BDEF_NAMESPACE_2, BDEF_NAME_2), DATA_PROVIDER_NAME, DESCRIPTION));
+        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities =
+            businessObjectDefinitionDaoTestHelper.createAndGetExpectedBusinessObjectDefinitionEntities();
 
         // Create and persist root tag entity
         TagEntity parentTagEntity = tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION, null);
