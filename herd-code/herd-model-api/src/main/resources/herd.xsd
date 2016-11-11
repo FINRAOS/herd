@@ -1107,7 +1107,7 @@
 
    <xs:complexType name="businessObjectDefinitionSearchRequest">
       <xs:all>
-         <xs:element name="businessObjectDefinitionSearchFilters" type="businessObjectDefinitionSearchFilters">
+         <xs:element name="businessObjectDefinitionSearchFilters" type="businessObjectDefinitionSearchFilters" minOccurs="0">
             <xs:annotation>
                <xs:documentation>A list of business Object Definition search filters. Only a single search filter is supported</xs:documentation>
             </xs:annotation>
