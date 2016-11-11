@@ -336,19 +336,21 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         // Validate the business object definition search fields.
         validateSearchResponseFields(fields);
 
-        //
-        BusinessObjectDefinitionSearchKey businessObjectDefinitionSearchKey =
-            request.getBusinessObjectDefinitionSearchFilters().get(0).getBusinessObjectDefinitionSearchKeys().get(0);
-
-        //
-        TagEntity tagEntity = tagDaoHelper.getTagEntity(businessObjectDefinitionSearchKey.getTagKey());
-
-        // If includeTagHierarchy is true, get list of children tag entities down the hierarchy of the specified tag.
+        BusinessObjectDefinitionSearchKey businessObjectDefinitionSearchKey = null;
         List<TagEntity> tagEntities = new ArrayList<>();
-        tagEntities.add(tagEntity);
-        if (BooleanUtils.isTrue(businessObjectDefinitionSearchKey.isIncludeTagHierarchy()))
+
+        if (null != request.getBusinessObjectDefinitionSearchFilters())
         {
-            tagEntities.addAll(tagDaoHelper.getTagChildrenEntities(tagEntity));
+            businessObjectDefinitionSearchKey = request.getBusinessObjectDefinitionSearchFilters().get(0).getBusinessObjectDefinitionSearchKeys().get(0);
+
+            TagEntity tagEntity = tagDaoHelper.getTagEntity(businessObjectDefinitionSearchKey.getTagKey());
+
+            // If includeTagHierarchy is true, get list of children tag entities down the hierarchy of the specified tag.
+            tagEntities.add(tagEntity);
+            if (BooleanUtils.isTrue(businessObjectDefinitionSearchKey.isIncludeTagHierarchy()))
+            {
+                tagEntities.addAll(tagDaoHelper.getTagChildrenEntities(tagEntity));
+            }
         }
 
         // Construct business object search response.
@@ -677,26 +679,34 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
      */
     private void validateBusinessObjectDefinitionSearchRequest(BusinessObjectDefinitionSearchRequest businessObjectDefinitionSearchRequest)
     {
-        Assert.notNull(businessObjectDefinitionSearchRequest, "A tag search request must be specified.");
+        if (null != businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters())
+        {
+            if (org.apache.commons.collections4.CollectionUtils.size(businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters()) == 1 &&
+                businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters().get(0) != null)
+            {
+                // Get the business object definition search filter.
+                BusinessObjectDefinitionSearchFilter businessObjectDefinitionSearchFilter =
+                    businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters().get(0);
 
-        Assert.isTrue(
-            org.apache.commons.collections4.CollectionUtils.size(businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters()) == 1 &&
-                businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters().get(0) != null,
-            "Exactly one business object definition search filter must be specified.");
+                Assert.isTrue(
+                    org.apache.commons.collections4.CollectionUtils.size(businessObjectDefinitionSearchFilter.getBusinessObjectDefinitionSearchKeys()) == 1 &&
+                        businessObjectDefinitionSearchFilter.getBusinessObjectDefinitionSearchKeys().get(0) != null,
+                    "Exactly one business object definition search key must be specified.");
 
-        // Get the business object definition search filter.
-        BusinessObjectDefinitionSearchFilter businessObjectDefinitionSearchFilter =
-            businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters().get(0);
+                // Get the tag search key.
+                BusinessObjectDefinitionSearchKey businessObjectDefinitionSearchKey =
+                    businessObjectDefinitionSearchFilter.getBusinessObjectDefinitionSearchKeys().get(0);
 
-        Assert.isTrue(org.apache.commons.collections4.CollectionUtils.size(businessObjectDefinitionSearchFilter.getBusinessObjectDefinitionSearchKeys()) == 1 &&
-                businessObjectDefinitionSearchFilter.getBusinessObjectDefinitionSearchKeys().get(0) != null,
-            "Exactly one business object definition search key must be specified.");
-
-        // Get the tag search key.
-        BusinessObjectDefinitionSearchKey businessObjectDefinitionSearchKey =
-            businessObjectDefinitionSearchFilter.getBusinessObjectDefinitionSearchKeys().get(0);
-
-        tagHelper.validateTagKey(businessObjectDefinitionSearchKey.getTagKey());
+                tagHelper.validateTagKey(businessObjectDefinitionSearchKey.getTagKey());
+            }
+            else
+            {
+                Assert.isTrue(
+                    org.apache.commons.collections4.CollectionUtils.size(businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters()) ==
+                        1 && businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters().get(0) != null,
+                    "Exactly one business object definition search filter must be specified.");
+            }
+        }
 
     }
 

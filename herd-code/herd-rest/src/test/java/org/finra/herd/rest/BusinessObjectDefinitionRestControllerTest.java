@@ -239,10 +239,6 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
         businessObjectDefinitionTagDaoTestHelper.createBusinessObjectDefinitionTagEntity(businessObjectDefinitionEntities.get(0), childTagEntity1);
         businessObjectDefinitionTagDaoTestHelper.createBusinessObjectDefinitionTagEntity(businessObjectDefinitionEntities.get(1), childTagEntity2);
 
-        BusinessObjectDefinitionSearchResponse businessObjectDefinitionSearchResponse = businessObjectDefinitionRestController
-            .searchBusinessObjectDefinitions(Sets.newHashSet(FIELD_DATA_PROVIDER_NAME, FIELD_DISPLAY_NAME, FIELD_SHORT_DESCRIPTION),
-                new BusinessObjectDefinitionSearchRequest(Arrays.asList(new BusinessObjectDefinitionSearchFilter(
-                    Arrays.asList(new BusinessObjectDefinitionSearchKey(new TagKey(TAG_TYPE, TAG_CODE), INCLUDE_TAG_HIERARCHY))))));
 
         List<BusinessObjectDefinition> actualBusinessObjectDefinitions = new ArrayList<>();
         for (BusinessObjectDefinitionEntity businessObjectDefinitionEntity : businessObjectDefinitionEntities)
@@ -252,6 +248,19 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
                     businessObjectDefinitionEntity.getDataProvider().getName(), NO_BDEF_DESCRIPTION, businessObjectDefinitionEntity.getDescription(), null,
                     null, null, null));
         }
+
+        //tests with tag filter
+        BusinessObjectDefinitionSearchResponse businessObjectDefinitionSearchResponse = businessObjectDefinitionRestController
+            .searchBusinessObjectDefinitions(Sets.newHashSet(FIELD_DATA_PROVIDER_NAME, FIELD_DISPLAY_NAME, FIELD_SHORT_DESCRIPTION),
+                new BusinessObjectDefinitionSearchRequest(Arrays.asList(new BusinessObjectDefinitionSearchFilter(
+                    Arrays.asList(new BusinessObjectDefinitionSearchKey(new TagKey(TAG_TYPE, TAG_CODE), INCLUDE_TAG_HIERARCHY))))));
+
+        assertEquals(actualBusinessObjectDefinitions, businessObjectDefinitionSearchResponse.getBusinessObjectDefinitions());
+
+        //Tests without tag filter
+        businessObjectDefinitionSearchResponse = businessObjectDefinitionRestController
+            .searchBusinessObjectDefinitions(Sets.newHashSet(FIELD_DATA_PROVIDER_NAME, FIELD_DISPLAY_NAME, FIELD_SHORT_DESCRIPTION),
+                new BusinessObjectDefinitionSearchRequest());
 
         assertEquals(actualBusinessObjectDefinitions, businessObjectDefinitionSearchResponse.getBusinessObjectDefinitions());
 

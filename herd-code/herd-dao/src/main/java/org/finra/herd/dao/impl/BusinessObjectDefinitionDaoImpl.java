@@ -148,17 +148,25 @@ public class BusinessObjectDefinitionDaoImpl extends AbstractHerdDao implements 
         Join<BusinessObjectDefinitionEntity, NamespaceEntity> namespaceEntity =
             businessObjectDefinitionEntityRoot.join(BusinessObjectDefinitionEntity_.namespace);
 
-        // Create the standard restrictions (i.e. the standard where clauses).
-        Predicate predicate = getPredicateForInClause(builder, businessObjectDefinitionTagEntityJoin.get(BusinessObjectDefinitionTagEntity_.tag), tagEntities);
 
         // Get the columns.
         Path<String> namespaceCodeColumn = namespaceEntity.get(NamespaceEntity_.code);
         Path<String> businessObjectDefinitionNameColumn = businessObjectDefinitionEntityRoot.get(BusinessObjectDefinitionEntity_.name);
 
-        // Add all clauses to the query.
-        criteria.select(businessObjectDefinitionEntityRoot).where(predicate)
-            .orderBy(builder.asc(businessObjectDefinitionNameColumn), builder.asc(namespaceCodeColumn));
+        // Create the standard restrictions (i.e. the standard where clauses).
+        Predicate predicate;
 
+        if (tagEntities.size() > 0)
+        {
+            predicate = getPredicateForInClause(builder, businessObjectDefinitionTagEntityJoin.get(BusinessObjectDefinitionTagEntity_.tag), tagEntities);
+            // Add all clauses to the query.
+            criteria.select(businessObjectDefinitionEntityRoot).where(predicate)
+                .orderBy(builder.asc(businessObjectDefinitionNameColumn), builder.asc(namespaceCodeColumn));
+        }
+        else
+        {
+            criteria.select(businessObjectDefinitionEntityRoot).orderBy(builder.asc(businessObjectDefinitionNameColumn), builder.asc(namespaceCodeColumn));
+        }
         //Returns duplicate business object definition. When a bdef is associated with multiple tags.
         return entityManager.createQuery(criteria).getResultList();
     }

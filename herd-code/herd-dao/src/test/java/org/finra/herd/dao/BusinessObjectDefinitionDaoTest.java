@@ -17,6 +17,7 @@ package org.finra.herd.dao;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -87,5 +88,9 @@ public class BusinessObjectDefinitionDaoTest extends AbstractDaoTest
         //filter duplicates and validate result
         assertEquals(ImmutableSet.copyOf(businessObjectDefinitionEntities),
             ImmutableSet.copyOf(businessObjectDefinitionDao.getBusinessObjectDefinitions(tagEntities)));
+
+        //Get the list of business object definitions when tag entities is empty
+        assertEquals(ImmutableSet.copyOf(businessObjectDefinitionEntities),
+            ImmutableSet.copyOf(businessObjectDefinitionDao.getBusinessObjectDefinitions(new ArrayList<>())));
     }
 }
