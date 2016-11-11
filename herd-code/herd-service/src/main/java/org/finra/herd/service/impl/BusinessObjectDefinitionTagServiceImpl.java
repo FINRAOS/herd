@@ -23,9 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
-import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.BusinessObjectDefinitionTagDao;
-import org.finra.herd.dao.TagDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.ObjectNotFoundException;
@@ -59,12 +57,6 @@ public class BusinessObjectDefinitionTagServiceImpl implements BusinessObjectDef
 
     @Autowired
     private BusinessObjectDefinitionTagDao businessObjectDefinitionTagDao;
-
-    @Autowired
-    private ConfigurationHelper configurationHelper;
-
-    @Autowired
-    private TagDao tagDao;
 
     @Autowired
     private TagDaoHelper tagDaoHelper;

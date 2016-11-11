@@ -171,7 +171,8 @@ public class BusinessObjectDefinitionRestController extends HerdBaseController
     /**
      * Searches across all business object definitions that are defined in the system per specified search filters and keys
      *
-     * @param fields A comma-separated list of fields to be retrieved with each business object definition entity. Valid options: dataProviderName, shortDescription, displayName
+     * @param fields A comma-separated list of fields to be retrieved with each business object definition entity.
+     *               Valid options: dataProviderName, shortDescription, displayName
      * @param request the information needed to search across the business object definitions
      *
      * @return the retrieved business object definition list
