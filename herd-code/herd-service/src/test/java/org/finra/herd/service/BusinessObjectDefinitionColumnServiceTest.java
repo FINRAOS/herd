@@ -15,13 +15,18 @@
 */
 package org.finra.herd.service;
 
+import static org.finra.herd.service.impl.BusinessObjectDefinitionColumnServiceImpl.DESCRIPTION_FIELD;
+import static org.finra.herd.service.impl.BusinessObjectDefinitionColumnServiceImpl.SCHEMA_COLUMN_NAME_FIELD;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
+import com.google.common.collect.Sets;
 import org.junit.Test;
 
 import org.finra.herd.model.AlreadyExistsException;
@@ -30,6 +35,10 @@ import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumn;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnKeys;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnSearchFilter;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnSearchKey;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnSearchRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnSearchResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionColumnEntity;
@@ -912,6 +921,251 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
     }
 
     @Test
+    public void testSearchBusinessObjectDefinitionColumns()
+    {
+        createDatabaseEntitiesForBusinessObjectDefinitionColumnSearchTesting();
+
+        // Search the business object definition columns using all field parameters.
+        BusinessObjectDefinitionColumnSearchResponse businessObjectDefinitionColumnSearchResponse = businessObjectDefinitionColumnService
+            .searchBusinessObjectDefinitionColumns(new BusinessObjectDefinitionColumnSearchRequest(Arrays
+                    .asList(new BusinessObjectDefinitionColumnSearchFilter(Arrays.asList(new BusinessObjectDefinitionColumnSearchKey(BDEF_NAMESPACE, BDEF_NAME))))),
+                Sets.newHashSet(SCHEMA_COLUMN_NAME_FIELD, DESCRIPTION_FIELD));
+
+        // Validate the response object.
+        assertEquals(new BusinessObjectDefinitionColumnSearchResponse(Arrays.asList(
+            new BusinessObjectDefinitionColumn(NO_ID, new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME), COLUMN_NAME,
+                BDEF_COLUMN_DESCRIPTION),
+            new BusinessObjectDefinitionColumn(NO_ID, new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME_2), COLUMN_NAME_2,
+                BDEF_COLUMN_DESCRIPTION_2))), businessObjectDefinitionColumnSearchResponse);
+    }
+
+    @Test
+    public void testSearchBusinessObjectDefinitionColumnsInvalidParameters()
+    {
+        // Try to search business object definition columns when more than one search filter is specified.
+        try
+        {
+            businessObjectDefinitionColumnService.searchBusinessObjectDefinitionColumns(new BusinessObjectDefinitionColumnSearchRequest(
+                Arrays.asList(new BusinessObjectDefinitionColumnSearchFilter(), new BusinessObjectDefinitionColumnSearchFilter())), NO_SEARCH_RESPONSE_FIELDS);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Exactly one business object definition column search filter must be specified.", e.getMessage());
+        }
+
+        // Try to search business object definition columns when more than one search key is specified.
+        try
+        {
+            businessObjectDefinitionColumnService.searchBusinessObjectDefinitionColumns(new BusinessObjectDefinitionColumnSearchRequest(Arrays.asList(
+                new BusinessObjectDefinitionColumnSearchFilter(
+                    Arrays.asList(new BusinessObjectDefinitionColumnSearchKey(), new BusinessObjectDefinitionColumnSearchKey())))), NO_SEARCH_RESPONSE_FIELDS);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Exactly one business object definition column search key must be specified.", e.getMessage());
+        }
+
+        // Try to search business object definition columns using a un-supported search response field option.
+        try
+        {
+            BusinessObjectDefinitionColumnSearchResponse businessObjectDefinitionColumnSearchResponse = businessObjectDefinitionColumnService
+                .searchBusinessObjectDefinitionColumns(new BusinessObjectDefinitionColumnSearchRequest(Arrays.asList(
+                    new BusinessObjectDefinitionColumnSearchFilter(Arrays.asList(new BusinessObjectDefinitionColumnSearchKey(BDEF_NAMESPACE, BDEF_NAME))))),
+                    Sets.newHashSet("INVALID_FIELD_OPTION"));
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Search response field \"invalid_field_option\" is not supported.", e.getMessage());
+        }
+    }
+
+    @Test
+    public void testSearchBusinessObjectDefinitionColumnsLowerCaseParameters()
+    {
+        createDatabaseEntitiesForBusinessObjectDefinitionColumnSearchTesting();
+
+        // Search the business object definition columns using lower case input parameters.
+        BusinessObjectDefinitionColumnSearchResponse businessObjectDefinitionColumnSearchResponse = businessObjectDefinitionColumnService
+            .searchBusinessObjectDefinitionColumns(new BusinessObjectDefinitionColumnSearchRequest(Arrays
+                    .asList(new BusinessObjectDefinitionColumnSearchFilter(Arrays.asList(new BusinessObjectDefinitionColumnSearchKey(BDEF_NAMESPACE, BDEF_NAME))))),
+                Sets.newHashSet(SCHEMA_COLUMN_NAME_FIELD.toLowerCase(), DESCRIPTION_FIELD.toLowerCase()));
+
+        // Validate the response object.
+        assertEquals(new BusinessObjectDefinitionColumnSearchResponse(Arrays.asList(
+            new BusinessObjectDefinitionColumn(NO_ID, new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME), COLUMN_NAME,
+                BDEF_COLUMN_DESCRIPTION),
+            new BusinessObjectDefinitionColumn(NO_ID, new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME_2), COLUMN_NAME_2,
+                BDEF_COLUMN_DESCRIPTION_2))), businessObjectDefinitionColumnSearchResponse);
+    }
+
+    @Test
+    public void testSearchBusinessObjectDefinitionColumnsMissingOptionalParameters()
+    {
+        createDatabaseEntitiesForBusinessObjectDefinitionColumnSearchTesting();
+
+        // Search business object definition columns without specifying optional parameters except for the description field option.
+        assertEquals(new BusinessObjectDefinitionColumnSearchResponse(Arrays.asList(
+            new BusinessObjectDefinitionColumn(NO_ID, new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME), COLUMN_NAME, null),
+            new BusinessObjectDefinitionColumn(NO_ID, new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME_2), COLUMN_NAME_2,
+                null))), businessObjectDefinitionColumnService.searchBusinessObjectDefinitionColumns(new BusinessObjectDefinitionColumnSearchRequest(Arrays
+                .asList(new BusinessObjectDefinitionColumnSearchFilter(Arrays.asList(new BusinessObjectDefinitionColumnSearchKey(BDEF_NAMESPACE, BDEF_NAME))))),
+            Sets.newHashSet(SCHEMA_COLUMN_NAME_FIELD)));
+
+        // Search business object definition columns without specifying optional parameters except for the schema column name field option.
+        assertEquals(new BusinessObjectDefinitionColumnSearchResponse(Arrays.asList(
+            new BusinessObjectDefinitionColumn(NO_ID, new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME), null,
+                BDEF_COLUMN_DESCRIPTION),
+            new BusinessObjectDefinitionColumn(NO_ID, new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME_2), null,
+                BDEF_COLUMN_DESCRIPTION_2))), businessObjectDefinitionColumnService.searchBusinessObjectDefinitionColumns(
+            new BusinessObjectDefinitionColumnSearchRequest(Arrays
+                .asList(new BusinessObjectDefinitionColumnSearchFilter(Arrays.asList(new BusinessObjectDefinitionColumnSearchKey(BDEF_NAMESPACE, BDEF_NAME))))),
+            Sets.newHashSet(DESCRIPTION_FIELD)));
+
+        // Search business object definition columns without specifying optional parameters.
+        assertEquals(new BusinessObjectDefinitionColumnSearchResponse(Arrays
+                .asList(new BusinessObjectDefinitionColumn(NO_ID, new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME), null, null),
+                    new BusinessObjectDefinitionColumn(NO_ID, new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME_2), null, null))),
+            businessObjectDefinitionColumnService.searchBusinessObjectDefinitionColumns(new BusinessObjectDefinitionColumnSearchRequest(Arrays
+                    .asList(new BusinessObjectDefinitionColumnSearchFilter(Arrays.asList(new BusinessObjectDefinitionColumnSearchKey(BDEF_NAMESPACE, BDEF_NAME))))),
+                Sets.newHashSet()));
+    }
+
+    @Test
+    public void testSearchBusinessObjectDefinitionColumnsMissingRequiredParameters()
+    {
+        // Try to search business object definition columns when a search request is not specified.
+        try
+        {
+            businessObjectDefinitionColumnService.searchBusinessObjectDefinitionColumns(null, NO_SEARCH_RESPONSE_FIELDS);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("A business object definition column search request must be specified.", e.getMessage());
+        }
+
+        // Try to search business object definition columns when a search filter is not specified.
+        try
+        {
+            businessObjectDefinitionColumnService
+                .searchBusinessObjectDefinitionColumns(new BusinessObjectDefinitionColumnSearchRequest(), NO_SEARCH_RESPONSE_FIELDS);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Exactly one business object definition column search filter must be specified.", e.getMessage());
+        }
+
+        // Try to search business object definition columns when a search filter is set to null.
+        try
+        {
+            List<BusinessObjectDefinitionColumnSearchFilter> businessObjectDefinitionColumnSearchFilters = new ArrayList<>();
+            businessObjectDefinitionColumnSearchFilters.add(null);
+            businessObjectDefinitionColumnService
+                .searchBusinessObjectDefinitionColumns(new BusinessObjectDefinitionColumnSearchRequest(businessObjectDefinitionColumnSearchFilters),
+                    NO_SEARCH_RESPONSE_FIELDS);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Exactly one business object definition column search filter must be specified.", e.getMessage());
+        }
+
+        // Try to search business object definition columns when a search key is not specified.
+        try
+        {
+            businessObjectDefinitionColumnService.searchBusinessObjectDefinitionColumns(
+                new BusinessObjectDefinitionColumnSearchRequest(Arrays.asList(new BusinessObjectDefinitionColumnSearchFilter())), NO_SEARCH_RESPONSE_FIELDS);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Exactly one business object definition column search key must be specified.", e.getMessage());
+        }
+
+        // Try to search business object definition columns when a search key is set to null.
+        try
+        {
+            List<BusinessObjectDefinitionColumnSearchKey> businessObjectDefinitionColumnSearchKeys = new ArrayList<>();
+            businessObjectDefinitionColumnSearchKeys.add(null);
+            businessObjectDefinitionColumnService.searchBusinessObjectDefinitionColumns(new BusinessObjectDefinitionColumnSearchRequest(
+                Arrays.asList(new BusinessObjectDefinitionColumnSearchFilter(businessObjectDefinitionColumnSearchKeys))), NO_SEARCH_RESPONSE_FIELDS);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Exactly one business object definition column search key must be specified.", e.getMessage());
+        }
+
+        // Try to search business object definition columns when namespace is not specified.
+        try
+        {
+            businessObjectDefinitionColumnService.searchBusinessObjectDefinitionColumns(new BusinessObjectDefinitionColumnSearchRequest(Arrays
+                    .asList(new BusinessObjectDefinitionColumnSearchFilter(Arrays.asList(new BusinessObjectDefinitionColumnSearchKey(NO_NAMESPACE, BDEF_NAME))))),
+                Sets.newHashSet(SCHEMA_COLUMN_NAME_FIELD, DESCRIPTION_FIELD));
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("A namespace must be specified.", e.getMessage());
+        }
+
+        // Try to search business object definition columns when business object definition name is not specified.
+        try
+        {
+            businessObjectDefinitionColumnService.searchBusinessObjectDefinitionColumns(new BusinessObjectDefinitionColumnSearchRequest(Arrays.asList(
+                new BusinessObjectDefinitionColumnSearchFilter(Arrays.asList(new BusinessObjectDefinitionColumnSearchKey(BDEF_NAMESPACE, NO_BDEF_NAME))))),
+                Sets.newHashSet(SCHEMA_COLUMN_NAME_FIELD, DESCRIPTION_FIELD));
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("A business object definition name must be specified.", e.getMessage());
+        }
+    }
+
+    @Test
+    public void testSearchBusinessObjectDefinitionColumnsTrimParameters()
+    {
+        createDatabaseEntitiesForBusinessObjectDefinitionColumnSearchTesting();
+
+        // Search the business object definition columns using added whitespace input parameters.
+        BusinessObjectDefinitionColumnSearchResponse businessObjectDefinitionColumnSearchResponse = businessObjectDefinitionColumnService
+            .searchBusinessObjectDefinitionColumns(new BusinessObjectDefinitionColumnSearchRequest(Arrays
+                    .asList(new BusinessObjectDefinitionColumnSearchFilter(Arrays.asList(new BusinessObjectDefinitionColumnSearchKey(BDEF_NAMESPACE, BDEF_NAME))))),
+                Sets.newHashSet(addWhitespace(SCHEMA_COLUMN_NAME_FIELD), addWhitespace(DESCRIPTION_FIELD)));
+
+        // Validate the response object.
+        assertEquals(new BusinessObjectDefinitionColumnSearchResponse(Arrays.asList(
+            new BusinessObjectDefinitionColumn(NO_ID, new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME), COLUMN_NAME,
+                BDEF_COLUMN_DESCRIPTION),
+            new BusinessObjectDefinitionColumn(NO_ID, new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME_2), COLUMN_NAME_2,
+                BDEF_COLUMN_DESCRIPTION_2))), businessObjectDefinitionColumnSearchResponse);
+    }
+
+    @Test
+    public void testSearchBusinessObjectDefinitionColumnsUpperCaseParameters()
+    {
+        createDatabaseEntitiesForBusinessObjectDefinitionColumnSearchTesting();
+
+        // Search the business object definition columns using added upper case input parameters.
+        BusinessObjectDefinitionColumnSearchResponse businessObjectDefinitionColumnSearchResponse = businessObjectDefinitionColumnService
+            .searchBusinessObjectDefinitionColumns(new BusinessObjectDefinitionColumnSearchRequest(Arrays
+                    .asList(new BusinessObjectDefinitionColumnSearchFilter(Arrays.asList(new BusinessObjectDefinitionColumnSearchKey(BDEF_NAMESPACE, BDEF_NAME))))),
+                Sets.newHashSet(SCHEMA_COLUMN_NAME_FIELD.toUpperCase(), DESCRIPTION_FIELD.toUpperCase()));
+
+        // Validate the response object.
+        assertEquals(new BusinessObjectDefinitionColumnSearchResponse(Arrays.asList(
+            new BusinessObjectDefinitionColumn(NO_ID, new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME), COLUMN_NAME,
+                BDEF_COLUMN_DESCRIPTION),
+            new BusinessObjectDefinitionColumn(NO_ID, new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME_2), COLUMN_NAME_2,
+                BDEF_COLUMN_DESCRIPTION_2))), businessObjectDefinitionColumnSearchResponse);
+    }
+
+    @Test
     public void testUpdateBusinessObjectDefinitionColumn()
     {
         // Create a business object definition column key.
@@ -1115,5 +1369,28 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinitionColumn(businessObjectDefinitionColumnEntity.getId(), businessObjectDefinitionColumnKey, COLUMN_NAME,
             BDEF_COLUMN_DESCRIPTION_2.toUpperCase()), updatedBusinessObjectDefinitionColumn);
+    }
+
+    /**
+     * Creates database entities required for the business object definition column search service unit tests.
+     */
+    private void createDatabaseEntitiesForBusinessObjectDefinitionColumnSearchTesting()
+    {
+        // Create and persist business object definition column entities.
+        BusinessObjectDefinitionColumnEntity businessObjectDefinitionColumnEntity = businessObjectDefinitionColumnDaoTestHelper
+            .createBusinessObjectDefinitionColumnEntity(new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME),
+                BDEF_COLUMN_DESCRIPTION);
+        BusinessObjectDefinitionColumnEntity businessObjectDefinitionColumnEntity2 = businessObjectDefinitionColumnDaoTestHelper
+            .createBusinessObjectDefinitionColumnEntity(new BusinessObjectDefinitionColumnKey(BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME_2),
+                BDEF_COLUMN_DESCRIPTION_2);
+
+        // Create and persist a business object format entity.
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+                LATEST_VERSION_FLAG_SET, PARTITION_KEY);
+
+        // Create and persist a schema column for this business object format that is linked with the business object definition column.
+        schemaColumnDaoTestHelper.createSchemaColumnEntity(businessObjectFormatEntity, COLUMN_NAME, businessObjectDefinitionColumnEntity);
+        schemaColumnDaoTestHelper.createSchemaColumnEntity(businessObjectFormatEntity, COLUMN_NAME_2, businessObjectDefinitionColumnEntity2);
     }
 }

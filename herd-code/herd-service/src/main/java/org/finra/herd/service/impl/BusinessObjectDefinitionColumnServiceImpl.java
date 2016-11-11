@@ -16,7 +16,11 @@
 package org.finra.herd.service.impl;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
+import com.google.common.collect.ImmutableSet;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.IterableUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,12 +38,17 @@ import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumn;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnKeys;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnSearchFilter;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnSearchKey;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnSearchRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnSearchResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionColumnEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.SchemaColumnEntity;
 import org.finra.herd.service.BusinessObjectDefinitionColumnService;
+import org.finra.herd.service.SearchableService;
 import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionColumnDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionDaoHelper;
@@ -50,8 +59,14 @@ import org.finra.herd.service.helper.BusinessObjectDefinitionHelper;
  */
 @Service
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
-public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObjectDefinitionColumnService
+public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObjectDefinitionColumnService, SearchableService
 {
+    // Constant to hold the schema column name field option for the business object definition column search
+    public static final String SCHEMA_COLUMN_NAME_FIELD = "schemaColumnName".toLowerCase();
+
+    // Constant to hold the description field option for the business object definition column search
+    public static final String DESCRIPTION_FIELD = "description";
+
     @Autowired
     private AlternateKeyHelper alternateKeyHelper;
 
@@ -143,7 +158,7 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
         businessObjectDefinitionColumnEntity = businessObjectDefinitionColumnDao.saveAndRefresh(businessObjectDefinitionColumnEntity);
 
         // Create and return the business object definition column object from the persisted entity.
-        return createBusinessObjectDefinitionColumnFromEntity(businessObjectDefinitionColumnEntity);
+        return createBusinessObjectDefinitionColumnFromEntity(businessObjectDefinitionColumnEntity, true, getValidSearchResponseFields());
     }
 
     @Override
@@ -168,7 +183,7 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
         businessObjectDefinitionDao.saveAndRefresh(businessObjectDefinitionEntity);
 
         // Create and return the business object definition column object from the deleted entity.
-        return createBusinessObjectDefinitionColumnFromEntity(businessObjectDefinitionColumnEntity);
+        return createBusinessObjectDefinitionColumnFromEntity(businessObjectDefinitionColumnEntity, true, getValidSearchResponseFields());
     }
 
     @Override
@@ -182,7 +197,7 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
             businessObjectDefinitionColumnDaoHelper.getBusinessObjectDefinitionColumnEntity(businessObjectDefinitionColumnKey);
 
         // Create and return the business object definition column object from the persisted entity.
-        return createBusinessObjectDefinitionColumnFromEntity(businessObjectDefinitionColumnEntity);
+        return createBusinessObjectDefinitionColumnFromEntity(businessObjectDefinitionColumnEntity, true, getValidSearchResponseFields());
     }
 
     @Override
@@ -206,6 +221,55 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
         return businessObjectDefinitionColumnKeys;
     }
 
+    /**
+     * Returns the valid search fields.
+     *
+     * @return valid search fields
+     */
+    @Override
+    public Set<String> getValidSearchResponseFields()
+    {
+        return ImmutableSet.of(SCHEMA_COLUMN_NAME_FIELD, DESCRIPTION_FIELD);
+    }
+
+    @Override
+    public BusinessObjectDefinitionColumnSearchResponse searchBusinessObjectDefinitionColumns(BusinessObjectDefinitionColumnSearchRequest request,
+        Set<String> fields)
+    {
+        // Validate search request
+        validateBusinessObjectDefinitionColumnSearchRequest(request);
+
+        // Validate the fields
+        validateSearchResponseFields(fields);
+
+        // Only a single search filter and a single search key is allowed at this time.
+        // Use the first search filter and first search key in the filter and keys list.
+        String namespace = request.getBusinessObjectDefinitionColumnSearchFilters().get(0).getBusinessObjectDefinitionColumnSearchKeys().get(0).getNamespace();
+        String businessObjectDefinitionName =
+            request.getBusinessObjectDefinitionColumnSearchFilters().get(0).getBusinessObjectDefinitionColumnSearchKeys().get(0)
+                .getBusinessObjectDefinitionName();
+
+        BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(namespace, businessObjectDefinitionName);
+
+        // Validate and trim the business object definition key.
+        businessObjectDefinitionHelper.validateBusinessObjectDefinitionKey(businessObjectDefinitionKey);
+
+        // Retrieve the business object definition and ensure it exists.
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
+            businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
+
+        // Get the business object definition columns that match the search criteria
+        List<BusinessObjectDefinitionColumnEntity> businessObjectDefinitionColumnEntities =
+            businessObjectDefinitionColumnDao.getBusinessObjectDefinitionColumnsByBusinessObjectDefinition(businessObjectDefinitionEntity);
+
+        BusinessObjectDefinitionColumnSearchResponse response = new BusinessObjectDefinitionColumnSearchResponse();
+        response.setBusinessObjectDefinitionColumns(businessObjectDefinitionColumnEntities.stream()
+            .map(businessObjectDefinitionColumnEntity -> createBusinessObjectDefinitionColumnFromEntity(businessObjectDefinitionColumnEntity, false, fields))
+            .collect(Collectors.toList()));
+
+        return response;
+    }
+
     @Override
     public BusinessObjectDefinitionColumn updateBusinessObjectDefinitionColumn(BusinessObjectDefinitionColumnKey businessObjectDefinitionColumnKey,
         BusinessObjectDefinitionColumnUpdateRequest request)
@@ -227,7 +291,7 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
         businessObjectDefinitionColumnEntity = businessObjectDefinitionColumnDao.saveAndRefresh(businessObjectDefinitionColumnEntity);
 
         // Create and return the business object definition column object from the persisted entity.
-        return createBusinessObjectDefinitionColumnFromEntity(businessObjectDefinitionColumnEntity);
+        return createBusinessObjectDefinitionColumnFromEntity(businessObjectDefinitionColumnEntity, true, getValidSearchResponseFields());
     }
 
     /**
@@ -254,19 +318,29 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
      * Creates a business object definition column from the persisted entity.
      *
      * @param businessObjectDefinitionColumnEntity the business object definition column entity
+     * @param includeId boolean value indicating whether or not to include the id
+     * @param fields set of field parameters to include on the business object definition column
      *
      * @return the business object definition column
      */
     private BusinessObjectDefinitionColumn createBusinessObjectDefinitionColumnFromEntity(
-        BusinessObjectDefinitionColumnEntity businessObjectDefinitionColumnEntity)
+        BusinessObjectDefinitionColumnEntity businessObjectDefinitionColumnEntity, boolean includeId, Set<String> fields)
     {
         BusinessObjectDefinitionColumn businessObjectDefinitionColumn = new BusinessObjectDefinitionColumn();
 
-        businessObjectDefinitionColumn.setId(businessObjectDefinitionColumnEntity.getId());
-        businessObjectDefinitionColumn.setBusinessObjectDefinitionColumnKey(getBusinessObjectDefinitionColumnKey(businessObjectDefinitionColumnEntity));
-        businessObjectDefinitionColumn.setDescription(businessObjectDefinitionColumnEntity.getDescription());
+        if (includeId)
+        {
+            businessObjectDefinitionColumn.setId(businessObjectDefinitionColumnEntity.getId());
+        }
 
-        if (CollectionUtils.isNotEmpty(businessObjectDefinitionColumnEntity.getSchemaColumns()))
+        businessObjectDefinitionColumn.setBusinessObjectDefinitionColumnKey(getBusinessObjectDefinitionColumnKey(businessObjectDefinitionColumnEntity));
+
+        if (fields.contains(DESCRIPTION_FIELD))
+        {
+            businessObjectDefinitionColumn.setDescription(businessObjectDefinitionColumnEntity.getDescription());
+        }
+
+        if (fields.contains(SCHEMA_COLUMN_NAME_FIELD) && CollectionUtils.isNotEmpty(businessObjectDefinitionColumnEntity.getSchemaColumns()))
         {
             businessObjectDefinitionColumn.setSchemaColumnName(IterableUtils.get(businessObjectDefinitionColumnEntity.getSchemaColumns(), 0).getName());
         }
@@ -317,6 +391,34 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
             alternateKeyHelper.validateStringParameter("business object definition name", key.getBusinessObjectDefinitionName()));
         key.setBusinessObjectDefinitionColumnName(
             alternateKeyHelper.validateStringParameter("business object definition column name", key.getBusinessObjectDefinitionColumnName()));
+    }
+
+    /**
+     * Validates the business object definition column search request.
+     *
+     * @param request the business object definition column search request
+     *
+     * @throws IllegalArgumentException if any validation errors were found
+     */
+    private void validateBusinessObjectDefinitionColumnSearchRequest(BusinessObjectDefinitionColumnSearchRequest request) throws IllegalArgumentException
+    {
+        // Validate the request
+        Assert.notNull(request, "A business object definition column search request must be specified.");
+
+        // Validate the search filters
+        List<BusinessObjectDefinitionColumnSearchFilter> businessObjectDefinitionColumnSearchFilters = request.getBusinessObjectDefinitionColumnSearchFilters();
+        Assert.isTrue(CollectionUtils.size(businessObjectDefinitionColumnSearchFilters) == 1 && businessObjectDefinitionColumnSearchFilters.get(0) != null,
+            "Exactly one business object definition column search filter must be specified.");
+
+        // Validate the search keys
+        List<BusinessObjectDefinitionColumnSearchKey> businessObjectDefinitionColumnSearchKeys =
+            businessObjectDefinitionColumnSearchFilters.get(0).getBusinessObjectDefinitionColumnSearchKeys();
+        Assert.isTrue(CollectionUtils.size(businessObjectDefinitionColumnSearchKeys) == 1 && businessObjectDefinitionColumnSearchKeys.get(0) != null,
+            "Exactly one business object definition column search key must be specified.");
+
+        // Validate the search key
+        BusinessObjectDefinitionColumnSearchKey businessObjectDefinitionColumnSearchKey = businessObjectDefinitionColumnSearchKeys.get(0);
+        Assert.notNull(businessObjectDefinitionColumnSearchKey, "A business object definition column search key must be specified.");
     }
 
     /**

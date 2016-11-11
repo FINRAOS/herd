@@ -15,10 +15,14 @@
 */
 package org.finra.herd.service;
 
+import java.util.Set;
+
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumn;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnKeys;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnSearchRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnSearchResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 
@@ -74,4 +78,15 @@ public interface BusinessObjectDefinitionColumnService
      * @return the list of business object definition column keys
      */
     public BusinessObjectDefinitionColumnKeys getBusinessObjectDefinitionColumns(BusinessObjectDefinitionKey businessObjectDefinitionKey);
+
+    /**
+     * Search business object definition columns based on the request
+     *
+     * @param request search request
+     * @param fields business object data columns optional fields to return
+     *
+     * @return business object definition column search response
+     */
+    public BusinessObjectDefinitionColumnSearchResponse searchBusinessObjectDefinitionColumns(BusinessObjectDefinitionColumnSearchRequest request,
+        Set<String> fields);
 }

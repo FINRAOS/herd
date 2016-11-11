@@ -637,7 +637,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 
         if (fields.contains(DISPLAY_NAME))
         {
-            definition.setShortDescription(getShortDescription(businessObjectDefinitionEntity.getDisplayName()));
+            definition.setDisplayName(businessObjectDefinitionEntity.getDisplayName());
         }
 
         return definition;
