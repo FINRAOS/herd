@@ -159,7 +159,7 @@ public class BusinessObjectDefinitionDaoImpl extends AbstractHerdDao implements 
         criteria.select(businessObjectDefinitionEntityRoot).where(predicate)
             .orderBy(builder.asc(businessObjectDefinitionNameColumn), builder.asc(namespaceCodeColumn));
 
-        // Run the query to get a list of business object definitions back and return them.
+        //Returns duplicate business object definition. When a bdef is associated with multiple tags.
         return entityManager.createQuery(criteria).getResultList();
     }
 }
