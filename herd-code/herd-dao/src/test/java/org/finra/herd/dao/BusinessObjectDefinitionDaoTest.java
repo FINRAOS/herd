@@ -83,11 +83,13 @@ public class BusinessObjectDefinitionDaoTest extends AbstractDaoTest
                 tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE_4, TAG_DISPLAY_NAME_3, TAG_DESCRIPTION, parentTagEntity));
 
         //Create and persist two business object definition tag entities for the child tag entities.
-        businessObjectDefinitionTagDaoTestHelper.createBusinessObjectDefinitionTagEntity(businessObjectDefinitionEntities.get(0), tagEntities.get(1));
-        businessObjectDefinitionTagDaoTestHelper.createBusinessObjectDefinitionTagEntity(businessObjectDefinitionEntities.get(1), tagEntities.get(1));
-
-        businessObjectDefinitionTagDaoTestHelper.createBusinessObjectDefinitionTagEntity(businessObjectDefinitionEntities.get(0), tagEntities.get(2));
-        businessObjectDefinitionTagDaoTestHelper.createBusinessObjectDefinitionTagEntity(businessObjectDefinitionEntities.get(1), tagEntities.get(2));
+        for (BusinessObjectDefinitionEntity businessObjectDefinitionEntity : businessObjectDefinitionEntities)
+        {
+            for (TagEntity tagEntity : tagEntities)
+            {
+                businessObjectDefinitionTagDaoTestHelper.createBusinessObjectDefinitionTagEntity(businessObjectDefinitionEntity, tagEntity);
+            }
+        }
 
         //filter duplicates and validate result
         assertEquals(ImmutableSet.copyOf(businessObjectDefinitionEntities),
