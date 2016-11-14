@@ -1348,7 +1348,7 @@
 
    <xs:complexType name="businessObjectDefinitionColumns">
       <xs:sequence>
-         <xs:element name="businessObjectDefinitionColumn" type="businessObjectDefinitionColumn" minOccurs="1" maxOccurs="unbounded">
+         <xs:element name="businessObjectDefinitionColumn" type="businessObjectDefinitionColumn" minOccurs="0" maxOccurs="unbounded">
             <xs:annotation>
                <xs:documentation>A wrapper for business object definition column information</xs:documentation>
             </xs:annotation>
