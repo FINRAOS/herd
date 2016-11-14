@@ -70,6 +70,10 @@ public class BusinessObjectDefinitionDaoTest extends AbstractDaoTest
         List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities =
             businessObjectDefinitionDaoTestHelper.createAndGetExpectedBusinessObjectDefinitionEntities();
 
+        //Get the list of business object definitions when tag entities is empty
+        assertEquals(ImmutableSet.copyOf(businessObjectDefinitionEntities),
+            ImmutableSet.copyOf(businessObjectDefinitionDao.getBusinessObjectDefinitions(new ArrayList<>())));
+
         // Create and persist root tag entity
         TagEntity parentTagEntity = tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION, null);
 
@@ -78,7 +82,7 @@ public class BusinessObjectDefinitionDaoTest extends AbstractDaoTest
             .asList(parentTagEntity, tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE_3, TAG_DISPLAY_NAME_4, TAG_DESCRIPTION, parentTagEntity),
                 tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE_4, TAG_DISPLAY_NAME_3, TAG_DESCRIPTION, parentTagEntity));
 
-        // Create and persist two business object definition tag entities for the child tag entities.
+        //Create and persist two business object definition tag entities for the child tag entities.
         businessObjectDefinitionTagDaoTestHelper.createBusinessObjectDefinitionTagEntity(businessObjectDefinitionEntities.get(0), tagEntities.get(1));
         businessObjectDefinitionTagDaoTestHelper.createBusinessObjectDefinitionTagEntity(businessObjectDefinitionEntities.get(1), tagEntities.get(1));
 
@@ -88,9 +92,7 @@ public class BusinessObjectDefinitionDaoTest extends AbstractDaoTest
         //filter duplicates and validate result
         assertEquals(ImmutableSet.copyOf(businessObjectDefinitionEntities),
             ImmutableSet.copyOf(businessObjectDefinitionDao.getBusinessObjectDefinitions(tagEntities)));
-
-        //Get the list of business object definitions when tag entities is empty
-        assertEquals(ImmutableSet.copyOf(businessObjectDefinitionEntities),
-            ImmutableSet.copyOf(businessObjectDefinitionDao.getBusinessObjectDefinitions(new ArrayList<>())));
     }
+
+
 }
