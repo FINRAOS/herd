@@ -19,8 +19,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
+import com.google.common.collect.Sets;
 import org.junit.Test;
 
 import org.finra.herd.dao.helper.HerdDaoSecurityHelper;
@@ -30,14 +34,30 @@ import org.finra.herd.model.api.xml.BusinessObjectDefinitionCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptiveInformationUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKeys;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchFilter;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchKey;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionUpdateRequest;
+import org.finra.herd.model.api.xml.TagKey;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
+import org.finra.herd.model.jpa.TagEntity;
+import org.finra.herd.model.jpa.TagTypeEntity;
 
 /**
  * This class tests various functionality within the business object definition REST controller.
  */
 public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
 {
+    // Constant to hold the data provider name option for the business object definition search
+    public static final String FIELD_DATA_PROVIDER_NAME = "dataProviderName";
+
+    // Constant to hold the short description option for the business object definition search
+    public static final String FIELD_SHORT_DESCRIPTION = "shortDescription";
+
+    // Constant to hold the display name option for the business object definition search
+    public static final String FIELD_DISPLAY_NAME = "displayName";
+
     @Test
     public void testCreateBusinessObjectDefinition() throws Exception
     {
@@ -195,6 +215,55 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
 
         // Ensure that this business object definition is no longer there.
         assertNull(businessObjectDefinitionDao.getBusinessObjectDefinitionByKey(businessObjectDefinitionKey));
+    }
+
+    @Test
+    public void testSearchBusinessObjectDefinition() throws Exception
+    {
+
+        // Create and retrieve a list of business object definition entities
+        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities =
+            businessObjectDefinitionDaoTestHelper.createAndGetExpectedBusinessObjectDefinitionEntities();
+
+        // Create and persist a tag type entity.
+        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER);
+
+        // Create a root tag entity for the tag type.
+        TagEntity rootTagEntity = tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+
+        // Create two children for the root tag
+        TagEntity childTagEntity1 = tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_2, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, rootTagEntity);
+        TagEntity childTagEntity2 = tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_3, TAG_DISPLAY_NAME_3, TAG_DESCRIPTION_3, rootTagEntity);
+
+        //Create association between business object definition and tag
+        businessObjectDefinitionTagDaoTestHelper.createBusinessObjectDefinitionTagEntity(businessObjectDefinitionEntities.get(0), childTagEntity1);
+        businessObjectDefinitionTagDaoTestHelper.createBusinessObjectDefinitionTagEntity(businessObjectDefinitionEntities.get(1), childTagEntity2);
+
+
+        List<BusinessObjectDefinition> actualBusinessObjectDefinitions = new ArrayList<>();
+        for (BusinessObjectDefinitionEntity businessObjectDefinitionEntity : businessObjectDefinitionEntities)
+        {
+            actualBusinessObjectDefinitions.add(
+                new BusinessObjectDefinition(null, businessObjectDefinitionEntity.getNamespace().getCode(), businessObjectDefinitionEntity.getName(),
+                    businessObjectDefinitionEntity.getDataProvider().getName(), NO_BDEF_DESCRIPTION, businessObjectDefinitionEntity.getDescription(), null,
+                    null, null, null));
+        }
+
+        //tests with tag filter
+        BusinessObjectDefinitionSearchResponse businessObjectDefinitionSearchResponse = businessObjectDefinitionRestController
+            .searchBusinessObjectDefinitions(Sets.newHashSet(FIELD_DATA_PROVIDER_NAME, FIELD_DISPLAY_NAME, FIELD_SHORT_DESCRIPTION),
+                new BusinessObjectDefinitionSearchRequest(Arrays.asList(new BusinessObjectDefinitionSearchFilter(
+                    Arrays.asList(new BusinessObjectDefinitionSearchKey(new TagKey(TAG_TYPE, TAG_CODE), INCLUDE_TAG_HIERARCHY))))));
+
+        assertEquals(actualBusinessObjectDefinitions, businessObjectDefinitionSearchResponse.getBusinessObjectDefinitions());
+
+        //Tests without tag filter
+        businessObjectDefinitionSearchResponse = businessObjectDefinitionRestController
+            .searchBusinessObjectDefinitions(Sets.newHashSet(FIELD_DATA_PROVIDER_NAME, FIELD_DISPLAY_NAME, FIELD_SHORT_DESCRIPTION),
+                new BusinessObjectDefinitionSearchRequest());
+
+        assertEquals(actualBusinessObjectDefinitions, businessObjectDefinitionSearchResponse.getBusinessObjectDefinitions());
+
     }
 
 }

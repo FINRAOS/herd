@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.ImmutableSet;
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -41,6 +42,8 @@ import org.finra.herd.model.api.xml.BusinessObjectDefinitionCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptiveInformationUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKeys;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchFilter;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionUpdateRequest;
@@ -56,6 +59,7 @@ import org.finra.herd.model.jpa.BusinessObjectDefinitionSampleDataFileEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.DataProviderEntity;
 import org.finra.herd.model.jpa.NamespaceEntity;
+import org.finra.herd.model.jpa.TagEntity;
 import org.finra.herd.service.BusinessObjectDefinitionService;
 import org.finra.herd.service.SearchableService;
 import org.finra.herd.service.helper.AlternateKeyHelper;
@@ -65,6 +69,8 @@ import org.finra.herd.service.helper.BusinessObjectDefinitionHelper;
 import org.finra.herd.service.helper.BusinessObjectFormatDaoHelper;
 import org.finra.herd.service.helper.DataProviderDaoHelper;
 import org.finra.herd.service.helper.NamespaceDaoHelper;
+import org.finra.herd.service.helper.TagDaoHelper;
+import org.finra.herd.service.helper.TagHelper;
 
 /**
  * The business object definition service implementation.
@@ -99,6 +105,12 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 
     @Autowired
     private ConfigurationHelper configurationHelper;
+
+    @Autowired
+    private TagHelper tagHelper;
+
+    @Autowired
+    private TagDaoHelper tagDaoHelper;
 
     // Constant to hold the data provider name option for the business object definition search
     private static final String DATA_PROVIDER_NAME_FIELD = "dataprovidername";
@@ -318,23 +330,40 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     @Override
     public BusinessObjectDefinitionSearchResponse searchBusinessObjectDefinitions(BusinessObjectDefinitionSearchRequest request, Set<String> fields)
     {
-        // Validate the search request
-        Assert.notNull(request, "A valid search request must be specified.");
+        // Validate the search request.
+        validateBusinessObjectDefinitionSearchRequest(request);
 
-        // Validate the business object definition search fields
+        // Validate the business object definition search fields.
         validateSearchResponseFields(fields);
 
+        BusinessObjectDefinitionSearchKey businessObjectDefinitionSearchKey = null;
+        List<TagEntity> tagEntities = new ArrayList<>();
+
+        if (null != request.getBusinessObjectDefinitionSearchFilters())
+        {
+            businessObjectDefinitionSearchKey = request.getBusinessObjectDefinitionSearchFilters().get(0).getBusinessObjectDefinitionSearchKeys().get(0);
+
+            TagEntity tagEntity = tagDaoHelper.getTagEntity(businessObjectDefinitionSearchKey.getTagKey());
+
+            // If includeTagHierarchy is true, get list of children tag entities down the hierarchy of the specified tag.
+            tagEntities.add(tagEntity);
+            if (BooleanUtils.isTrue(businessObjectDefinitionSearchKey.isIncludeTagHierarchy()))
+            {
+                tagEntities.addAll(tagDaoHelper.getTagChildrenEntities(tagEntity));
+            }
+        }
+
+        // Construct business object search response.
         BusinessObjectDefinitionSearchResponse searchResponse = new BusinessObjectDefinitionSearchResponse();
         List<BusinessObjectDefinition> businessObjectDefinitions = new ArrayList<>();
+        searchResponse.setBusinessObjectDefinitions(businessObjectDefinitions);
 
-        // Retrieve all business object definition entities and construct a list of business object definitions based on the requested fields
-        for (BusinessObjectDefinitionEntity businessObjectDefinition : businessObjectDefinitionDao.getBusinessObjectDefinitions())
+        // Retrieve all unique business object definition entities and construct a list of business object definitions based on the requested fields.
+        for (BusinessObjectDefinitionEntity businessObjectDefinition : ImmutableSet
+            .copyOf(businessObjectDefinitionDao.getBusinessObjectDefinitions(tagEntities)))
         {
             businessObjectDefinitions.add(createBusinessObjectDefinitionFromEntity(businessObjectDefinition, fields));
         }
-
-        // Construct business object search response and return it
-        searchResponse.setBusinessObjectDefinitions(businessObjectDefinitions);
 
         return searchResponse;
     }
@@ -342,9 +371,8 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     /**
      * Validates the business object definition create request. This method also trims request parameters.
      *
-     * @param request the request.
+     * @param request the request
      *
-     * @throws IllegalArgumentException if any validation errors were found.
      */
     private void validateBusinessObjectDefinitionCreateRequest(BusinessObjectDefinitionCreateRequest request)
     {
@@ -642,6 +670,44 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     public Set<String> getValidSearchResponseFields()
     {
         return ImmutableSet.of(DATA_PROVIDER_NAME_FIELD, SHORT_DESCRIPTION_FIELD, DISPLAY_NAME_FIELD);
+    }
+
+    /**
+     * Validate the business object definition search request. This method also trims the request parameters.
+     *
+     * @param businessObjectDefinitionSearchRequest the business object definition search request
+     */
+    private void validateBusinessObjectDefinitionSearchRequest(BusinessObjectDefinitionSearchRequest businessObjectDefinitionSearchRequest)
+    {
+        if (null != businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters())
+        {
+            if (org.apache.commons.collections4.CollectionUtils.size(businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters()) == 1 &&
+                businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters().get(0) != null)
+            {
+                // Get the business object definition search filter.
+                BusinessObjectDefinitionSearchFilter businessObjectDefinitionSearchFilter =
+                    businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters().get(0);
+
+                Assert.isTrue(
+                    org.apache.commons.collections4.CollectionUtils.size(businessObjectDefinitionSearchFilter.getBusinessObjectDefinitionSearchKeys()) == 1 &&
+                        businessObjectDefinitionSearchFilter.getBusinessObjectDefinitionSearchKeys().get(0) != null,
+                    "Exactly one business object definition search key must be specified.");
+
+                // Get the tag search key.
+                BusinessObjectDefinitionSearchKey businessObjectDefinitionSearchKey =
+                    businessObjectDefinitionSearchFilter.getBusinessObjectDefinitionSearchKeys().get(0);
+
+                tagHelper.validateTagKey(businessObjectDefinitionSearchKey.getTagKey());
+            }
+            else
+            {
+                Assert.isTrue(
+                    org.apache.commons.collections4.CollectionUtils.size(businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters()) ==
+                        1 && businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters().get(0) != null,
+                    "Exactly one business object definition search filter must be specified.");
+            }
+        }
+
     }
 
 }

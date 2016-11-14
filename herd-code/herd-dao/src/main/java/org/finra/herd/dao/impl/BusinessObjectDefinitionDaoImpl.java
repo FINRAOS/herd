@@ -33,8 +33,11 @@ import org.finra.herd.dao.BusinessObjectDefinitionDao;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity_;
+import org.finra.herd.model.jpa.BusinessObjectDefinitionTagEntity;
+import org.finra.herd.model.jpa.BusinessObjectDefinitionTagEntity_;
 import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.model.jpa.NamespaceEntity_;
+import org.finra.herd.model.jpa.TagEntity;
 
 @Repository
 public class BusinessObjectDefinitionDaoImpl extends AbstractHerdDao implements BusinessObjectDefinitionDao
@@ -130,7 +133,7 @@ public class BusinessObjectDefinitionDaoImpl extends AbstractHerdDao implements 
     }
 
     @Override
-    public List<BusinessObjectDefinitionEntity> getBusinessObjectDefinitions()
+    public List<BusinessObjectDefinitionEntity> getBusinessObjectDefinitions(List<TagEntity> tagEntities)
     {
         // Create the criteria builder and a tuple style criteria query.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
@@ -147,10 +150,26 @@ public class BusinessObjectDefinitionDaoImpl extends AbstractHerdDao implements 
         Path<String> namespaceCodeColumn = namespaceEntity.get(NamespaceEntity_.code);
         Path<String> businessObjectDefinitionNameColumn = businessObjectDefinitionEntityRoot.get(BusinessObjectDefinitionEntity_.name);
 
-        // Add all clauses to the query.
-        criteria.select(businessObjectDefinitionEntityRoot).orderBy(builder.asc(businessObjectDefinitionNameColumn), builder.asc(namespaceCodeColumn));
+        Predicate predicate;
 
-        // Run the query to get a list of business object definitions back and return them.
+        if (!org.apache.commons.collections4.CollectionUtils.isEmpty(tagEntities))
+        {
+            //join the business object definition tags
+            Join<BusinessObjectDefinitionEntity, BusinessObjectDefinitionTagEntity> businessObjectDefinitionTagEntityJoin =
+                businessObjectDefinitionEntityRoot.join(BusinessObjectDefinitionEntity_.businessObjectDefinitionTags);
+
+            // Create the standard restrictions (i.e. the standard where clauses).
+            predicate = getPredicateForInClause(builder, businessObjectDefinitionTagEntityJoin.get(BusinessObjectDefinitionTagEntity_.tag), tagEntities);
+
+            // Add all clauses to the query.
+            criteria.select(businessObjectDefinitionEntityRoot).where(predicate)
+                .orderBy(builder.asc(businessObjectDefinitionNameColumn), builder.asc(namespaceCodeColumn));
+        }
+        else
+        {
+            criteria.select(businessObjectDefinitionEntityRoot).orderBy(builder.asc(businessObjectDefinitionNameColumn), builder.asc(namespaceCodeColumn));
+        }
+        //Returns duplicate business object definition. When a bdef is associated with multiple tags.
         return entityManager.createQuery(criteria).getResultList();
     }
 }

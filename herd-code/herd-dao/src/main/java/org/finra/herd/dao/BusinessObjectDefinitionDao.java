@@ -19,6 +19,7 @@ import java.util.List;
 
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
+import org.finra.herd.model.jpa.TagEntity;
 
 public interface BusinessObjectDefinitionDao extends BaseJpaDao
 {
@@ -62,5 +63,5 @@ public interface BusinessObjectDefinitionDao extends BaseJpaDao
      *
      * @return the list of all business object definition entities.
      */
-    public List<BusinessObjectDefinitionEntity> getBusinessObjectDefinitions();
+    public List<BusinessObjectDefinitionEntity> getBusinessObjectDefinitions(List<TagEntity> tagEntities);
 }

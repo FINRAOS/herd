@@ -598,6 +598,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Boolean TAG_HAS_NO_CHILDREN = false;
 
+    public static final Boolean INCLUDE_TAG_HIERARCHY = true;
+
+    public static final Boolean NOT_INCLUDE_TAG_HIERARCHY = false;
+
     public static final String TAG_TYPE = "UT_TagType_1_" + RANDOM_SUFFIX;
 
     public static final String TAG_TYPE_2 = "UT_TagType_2_" + RANDOM_SUFFIX;
