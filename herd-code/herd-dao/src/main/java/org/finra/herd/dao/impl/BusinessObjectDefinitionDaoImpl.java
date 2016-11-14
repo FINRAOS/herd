@@ -26,6 +26,7 @@ import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Repository;
 
@@ -152,7 +153,7 @@ public class BusinessObjectDefinitionDaoImpl extends AbstractHerdDao implements 
 
         Predicate predicate;
 
-        if (!org.apache.commons.collections4.CollectionUtils.isEmpty(tagEntities))
+        if (!CollectionUtils.isEmpty(tagEntities))
         {
             //join the business object definition tags
             Join<BusinessObjectDefinitionEntity, BusinessObjectDefinitionTagEntity> businessObjectDefinitionTagEntityJoin =
@@ -169,6 +170,7 @@ public class BusinessObjectDefinitionDaoImpl extends AbstractHerdDao implements 
         {
             criteria.select(businessObjectDefinitionEntityRoot).orderBy(builder.asc(businessObjectDefinitionNameColumn), builder.asc(namespaceCodeColumn));
         }
+
         //Returns duplicate business object definition. When a bdef is associated with multiple tags.
         return entityManager.createQuery(criteria).getResultList();
     }

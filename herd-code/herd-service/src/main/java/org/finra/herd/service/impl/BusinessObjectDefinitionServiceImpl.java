@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.ImmutableSet;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +30,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
-import org.springframework.util.CollectionUtils;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.BusinessObjectDefinitionDao;
@@ -330,17 +330,17 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     @Override
     public BusinessObjectDefinitionSearchResponse searchBusinessObjectDefinitions(BusinessObjectDefinitionSearchRequest request, Set<String> fields)
     {
-        // Validate the search request.
-        validateBusinessObjectDefinitionSearchRequest(request);
-
         // Validate the business object definition search fields.
         validateSearchResponseFields(fields);
 
         BusinessObjectDefinitionSearchKey businessObjectDefinitionSearchKey = null;
         List<TagEntity> tagEntities = new ArrayList<>();
 
-        if (null != request.getBusinessObjectDefinitionSearchFilters())
+        if (!CollectionUtils.isEmpty(request.getBusinessObjectDefinitionSearchFilters()))
         {
+            // Validate the search request.
+            validateBusinessObjectDefinitionSearchRequest(request);
+
             businessObjectDefinitionSearchKey = request.getBusinessObjectDefinitionSearchFilters().get(0).getBusinessObjectDefinitionSearchKeys().get(0);
 
             TagEntity tagEntity = tagDaoHelper.getTagEntity(businessObjectDefinitionSearchKey.getTagKey());
@@ -662,7 +662,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     }
 
     /**
-     * Returns valid search respponse fields
+     * Returns valid search response fields
      *
      * @return the set of valid search response fields
      */
@@ -679,17 +679,14 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
      */
     private void validateBusinessObjectDefinitionSearchRequest(BusinessObjectDefinitionSearchRequest businessObjectDefinitionSearchRequest)
     {
-        if (null != businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters())
+        if (CollectionUtils.size(businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters()) == 1 &&
+            businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters().get(0) != null)
         {
-            if (org.apache.commons.collections4.CollectionUtils.size(businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters()) == 1 &&
-                businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters().get(0) != null)
-            {
                 // Get the business object definition search filter.
                 BusinessObjectDefinitionSearchFilter businessObjectDefinitionSearchFilter =
                     businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters().get(0);
 
-                Assert.isTrue(
-                    org.apache.commons.collections4.CollectionUtils.size(businessObjectDefinitionSearchFilter.getBusinessObjectDefinitionSearchKeys()) == 1 &&
+                Assert.isTrue(CollectionUtils.size(businessObjectDefinitionSearchFilter.getBusinessObjectDefinitionSearchKeys()) == 1 &&
                         businessObjectDefinitionSearchFilter.getBusinessObjectDefinitionSearchKeys().get(0) != null,
                     "Exactly one business object definition search key must be specified.");
 
@@ -698,16 +695,12 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
                     businessObjectDefinitionSearchFilter.getBusinessObjectDefinitionSearchKeys().get(0);
 
                 tagHelper.validateTagKey(businessObjectDefinitionSearchKey.getTagKey());
-            }
-            else
-            {
-                Assert.isTrue(
-                    org.apache.commons.collections4.CollectionUtils.size(businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters()) ==
+        }
+        else
+        {
+            Assert.isTrue(CollectionUtils.size(businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters()) ==
                         1 && businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters().get(0) != null,
                     "Exactly one business object definition search filter must be specified.");
-            }
         }
-
     }
-
 }
