@@ -229,7 +229,7 @@ public class BusinessObjectDefinitionDaoTestHelper
      *
      * @return the list of expected business object definition entities
      */
-    public List<BusinessObjectDefinitionEntity> createAndGetExpectedBusinessObjectDefinitionEntities()
+    public List<BusinessObjectDefinitionEntity> createExpectedBusinessObjectDefinitionEntities()
     {
         List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities = new ArrayList<>();
 

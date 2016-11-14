@@ -63,7 +63,7 @@ public class BusinessObjectDefinitionDaoTest extends AbstractDaoTest
     public void testGetBusinessObjectDefinitions()
     {
         // Create and get a list of business object definition entities
-        List<BusinessObjectDefinitionEntity> expectedEntities = businessObjectDefinitionDaoTestHelper.createAndGetExpectedBusinessObjectDefinitionEntities();
+        List<BusinessObjectDefinitionEntity> expectedEntities = businessObjectDefinitionDaoTestHelper.createExpectedBusinessObjectDefinitionEntities();
 
         // Retrieve the actual list of business object definitions
         List<BusinessObjectDefinitionEntity> actualEntities = businessObjectDefinitionDao.getBusinessObjectDefinitions();

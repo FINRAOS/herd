@@ -1216,7 +1216,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
     {
         // Create and retrieve a list of business object definition entities
         List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities =
-            businessObjectDefinitionDaoTestHelper.createAndGetExpectedBusinessObjectDefinitionEntities();
+            businessObjectDefinitionDaoTestHelper.createExpectedBusinessObjectDefinitionEntities();
 
         // Convert the entities into business object definition objects for easy comparison later
 
