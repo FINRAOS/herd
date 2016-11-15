@@ -49,6 +49,8 @@ import org.finra.herd.model.api.xml.DownloadBusinessObjectDefinitionSampleDataFi
 import org.finra.herd.model.api.xml.DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse;
 import org.finra.herd.model.api.xml.DownloadSingleInitiationResponse;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
+import org.finra.herd.model.api.xml.UploadBusinessObjectDefinitionSampleDataFileInitiationRequest;
+import org.finra.herd.model.api.xml.UploadBusinessObjectDefinitionSampleDataFileInitiationResponse;
 import org.finra.herd.model.api.xml.UploadSingleCredentialExtensionResponse;
 import org.finra.herd.model.api.xml.UploadSingleInitiationRequest;
 import org.finra.herd.model.api.xml.UploadSingleInitiationResponse;
@@ -71,6 +73,7 @@ import org.finra.herd.service.helper.AwsPolicyBuilder;
 import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionDaoHelper;
+import org.finra.herd.service.helper.BusinessObjectDefinitionHelper;
 import org.finra.herd.service.helper.BusinessObjectFormatDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectFormatHelper;
 import org.finra.herd.service.helper.KmsActions;
@@ -111,6 +114,9 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
 
     @Autowired
     private BusinessObjectDefinitionDaoHelper businessObjectDefinitionDaoHelper;
+    
+    @Autowired
+    private BusinessObjectDefinitionHelper businessObjectDefinitionHelper;
 
     @Autowired
     private ConfigurationHelper configurationHelper;
@@ -289,6 +295,12 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
             .build();
     }
 
+    @SuppressWarnings("PMD.CloseResource") // These are not SQL statements so they don't need to be closed.
+    private Policy createUploaderPolicyNoKmsKey(String s3BucketName, String s3Key)
+    {
+        return new AwsPolicyBuilder().withS3(s3BucketName, s3Key, S3Actions.PutObject).build();
+    }
+    
     /**
      * Creates a restricted policy JSON string which only allows GetObject to the given bucket name and object key, and allows Decrypt for the given key ID.
      *
@@ -800,4 +812,59 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
 
         return businessObjectDefinitionSampleDataFileEntity;
     }
+    
+    /**
+     * Validate upload business object definition sample file request
+     * 
+     * @param request
+     */
+    private void ValidateUploadBusinessObjectDefinitionSampleDataFileInitiationRequest(
+        UploadBusinessObjectDefinitionSampleDataFileInitiationRequest request)
+    {
+        Assert.notNull(request, "An upload initiation request must be specified.");
+        BusinessObjectDefinitionKey businessObjectDefinitionKey = request.getBusinessObjectDefinitionKey();
+        // Perform validation and trim.
+        businessObjectDefinitionHelper.validateBusinessObjectDefinitionKey(businessObjectDefinitionKey);
+    }
+
+    @Override
+    public UploadBusinessObjectDefinitionSampleDataFileInitiationResponse initiateUploadSampleFile(
+        UploadBusinessObjectDefinitionSampleDataFileInitiationRequest request)
+    {
+        ValidateUploadBusinessObjectDefinitionSampleDataFileInitiationRequest(request);
+
+        BusinessObjectDefinitionKey businessObjectDefinitionKey = request.getBusinessObjectDefinitionKey();
+        // Get the business object definition entity and ensure it exists.
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
+        businessObjectDefinitionKey.setNamespace(businessObjectDefinitionEntity.getNamespace().getCode());
+        businessObjectDefinitionKey.setBusinessObjectDefinitionName(businessObjectDefinitionEntity.getName());
+        
+        UploadBusinessObjectDefinitionSampleDataFileInitiationResponse response =
+                new UploadBusinessObjectDefinitionSampleDataFileInitiationResponse();
+        StorageEntity storageEntity = storageDaoHelper.getStorageEntity(StorageEntity.SAMPLE_DATA_FILE_STORAGE);
+
+        String s3BucketName = storageHelper.getStorageBucketName(storageEntity);
+        String s3EndPoint = storageHelper.getS3BucketAccessParams(storageEntity).getS3Endpoint();
+        String awsRoleArn = getStorageUploadRoleArn(storageEntity);
+        String sessionID = UUID.randomUUID().toString();
+        String s3KeyPrefix = s3KeyPrefixHelper.buildS3KeyPrefix(storageEntity, businessObjectDefinitionKey);
+        
+        Integer awsRoleDurationSeconds = getStorageUploadSessionDuration(storageEntity);
+
+        Credentials assumedSessionCredentials = stsDao
+                .getTemporarySecurityCredentials(awsHelper.getAwsParamsDto(), sessionID, awsRoleArn, awsRoleDurationSeconds,
+                        createUploaderPolicyNoKmsKey(s3BucketName, s3KeyPrefix));
+
+        response.setAwsAccessKey(assumedSessionCredentials.getAccessKeyId());
+        response.setAwsSecretKey(assumedSessionCredentials.getSecretAccessKey());
+        response.setAwsSessionToken(assumedSessionCredentials.getSessionToken());
+        response.setAwsSessionExpirationTime(HerdDateUtils.getXMLGregorianCalendarValue(assumedSessionCredentials.getExpiration()));
+
+        response.setAwsS3BucketName(s3BucketName);
+        response.setBusinessObjectDefinitionKey(businessObjectDefinitionKey);
+        response.setS3Endpoint(s3EndPoint);
+        response.setS3KeyPrefix(s3KeyPrefix);
+        return response;
+    }
+
 }
