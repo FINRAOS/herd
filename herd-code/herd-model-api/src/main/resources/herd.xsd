@@ -767,7 +767,7 @@
       <xs:all>
          <xs:element name="tagSearchFilters" type="tagSearchFilters">
             <xs:annotation>
-               <xs:documentation>A list of tag search filters. Only a single search filter is supported</xs:documentation>
+               <xs:documentation>A list of tag search filters. Only a single optional search filter is supported</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -1275,7 +1275,9 @@
 
    <xs:element name="businessObjectDefinitionColumnSearchRequest" type="businessObjectDefinitionColumnSearchRequest">
       <xs:annotation>
-         <xs:documentation>A wrapper for a business object definition column search request. The request will accept only a single search filter and a single search key</xs:documentation>
+         <xs:documentation>A wrapper for a business object definition column search request. The request will accept only a single search filter and a single
+            search key
+         </xs:documentation>
       </xs:annotation>
    </xs:element>
 
@@ -1340,7 +1342,9 @@
       <xs:all>
          <xs:element name="businessObjectDefinitionColumns" type="businessObjectDefinitionColumns">
             <xs:annotation>
-               <xs:documentation>An ordered list of business object definition columns. The list is sorted alphabetically by business object definition column name ascending</xs:documentation>
+               <xs:documentation>An ordered list of business object definition columns. The list is sorted alphabetically by business object definition column
+                  name ascending
+               </xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -4035,34 +4039,34 @@
       </xs:sequence>
    </xs:complexType>
 
-	<!-- ***** Business Object Definition Sampe File Upload ***** -->
-	<xs:element
-		name="uploadBusinessObjectDefinitionSampleDataFileInitiationRequest"
-		type="uploadBusinessObjectDefinitionSampleDataFileInitiationRequest" />
-	<xs:complexType
-		name="uploadBusinessObjectDefinitionSampleDataFileInitiationRequest">
-		<xs:sequence>
-			<xs:element name="businessObjectDefinitionKey" type="businessObjectDefinitionKey" />
-		</xs:sequence>
-	</xs:complexType>
+   <!-- ***** Business Object Definition Sampe File Upload ***** -->
+   <xs:element
+      name="uploadBusinessObjectDefinitionSampleDataFileInitiationRequest"
+      type="uploadBusinessObjectDefinitionSampleDataFileInitiationRequest"/>
+   <xs:complexType
+      name="uploadBusinessObjectDefinitionSampleDataFileInitiationRequest">
+      <xs:sequence>
+         <xs:element name="businessObjectDefinitionKey" type="businessObjectDefinitionKey"/>
+      </xs:sequence>
+   </xs:complexType>
 
-	<xs:element
-		name="uploadBusinessObjectDefinitionSampleDataFileInitiationResponse"
-		type="uploadBusinessObjectDefinitionSampleDataFileInitiationResponse" />
-	<xs:complexType
-		name="uploadBusinessObjectDefinitionSampleDataFileInitiationResponse">
-		<xs:sequence>
-			<xs:element name="businessObjectDefinitionKey" type="businessObjectDefinitionKey" />
-			<xs:element name="awsS3BucketName" type="xs:string" />
-			<xs:element name="s3Endpoint" type="xs:string" />
-			<xs:element name="s3KeyPrefix" type="xs:string" />
-            <xs:element name="awsAccessKey" type="xs:string"/>
-            <xs:element name="awsSecretKey" type="xs:string"/>
-            <xs:element name="awsSessionToken" type="xs:string"/>
-            <xs:element name="awsSessionExpirationTime" type="xs:dateTime"/>
-		</xs:sequence>
-	</xs:complexType>
-   
+   <xs:element
+      name="uploadBusinessObjectDefinitionSampleDataFileInitiationResponse"
+      type="uploadBusinessObjectDefinitionSampleDataFileInitiationResponse"/>
+   <xs:complexType
+      name="uploadBusinessObjectDefinitionSampleDataFileInitiationResponse">
+      <xs:sequence>
+         <xs:element name="businessObjectDefinitionKey" type="businessObjectDefinitionKey"/>
+         <xs:element name="awsS3BucketName" type="xs:string"/>
+         <xs:element name="s3Endpoint" type="xs:string"/>
+         <xs:element name="s3KeyPrefix" type="xs:string"/>
+         <xs:element name="awsAccessKey" type="xs:string"/>
+         <xs:element name="awsSecretKey" type="xs:string"/>
+         <xs:element name="awsSessionToken" type="xs:string"/>
+         <xs:element name="awsSessionExpirationTime" type="xs:dateTime"/>
+      </xs:sequence>
+   </xs:complexType>
+
    <!-- ***** System Job ***** -->
 
    <xs:element name="systemJobRunRequest" type="systemJobRunRequest"/>

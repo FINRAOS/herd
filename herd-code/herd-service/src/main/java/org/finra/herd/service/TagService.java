@@ -76,7 +76,7 @@ public interface TagService
      * any other top-level elements as specified by the "fields" query string parameter. The list of tags returned by this endpoint is sorted alphabetically by
      * tag's display name ascending.
      *
-     * @param request the tag search request. The request can only accept a single search filter and a single search key
+     * @param request the tag search request. The request can only accept at most one search filter and a single search key
      * @param fields the field options for the tag type search response
      *
      * @return the tag search response

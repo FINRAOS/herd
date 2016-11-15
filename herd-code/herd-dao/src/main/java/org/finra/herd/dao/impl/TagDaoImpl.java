@@ -117,6 +117,31 @@ public class TagDaoImpl extends AbstractHerdDao implements TagDao
     }
 
     @Override
+    public List<TagEntity> getTags()
+    {
+        // Create the criteria builder and the criteria.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<TagEntity> criteria = builder.createQuery(TagEntity.class);
+
+        // The criteria root is the tag entity.
+        Root<TagEntity> tagEntityRoot = criteria.from(TagEntity.class);
+
+        // Join on the other tables we can filter on.
+        Join<TagEntity, TagTypeEntity> tagTypeEntityJoin = tagEntityRoot.join(TagEntity_.tagType);
+
+        // Get the columns.
+        Path<String> displayNameColumn = tagEntityRoot.get(TagEntity_.displayName);
+        Path<Integer> tagTypeOrderNumberColumn = tagTypeEntityJoin.get(TagTypeEntity_.orderNumber);
+        Path<String> tagTypeCodeColumn = tagTypeEntityJoin.get(TagTypeEntity_.code);
+
+        // Add all clauses to the query.
+        criteria.select(tagEntityRoot).orderBy(builder.asc(tagTypeOrderNumberColumn), builder.asc(tagTypeCodeColumn), builder.asc(displayNameColumn));
+
+        // Run the query to get the results.
+        return entityManager.createQuery(criteria).getResultList();
+    }
+
+    @Override
     public List<TagChild> getTagsByTagTypeAndParentTagCode(String tagType, String parentTagCode)
     {
         // Create the criteria builder and the criteria.
