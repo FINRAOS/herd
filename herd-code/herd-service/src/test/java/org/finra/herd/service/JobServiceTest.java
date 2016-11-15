@@ -34,14 +34,21 @@ import java.util.Map;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import org.activiti.engine.history.HistoricProcessInstance;
+import org.activiti.engine.runtime.Execution;
+import org.activiti.engine.runtime.ProcessInstance;
+import org.activiti.engine.runtime.ProcessInstanceQuery;
 import org.activiti.engine.task.Task;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.junit.Assert;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import org.finra.herd.model.ObjectNotFoundException;
@@ -69,6 +76,8 @@ import org.finra.herd.model.jpa.JobDefinitionEntity;
  */
 public class JobServiceTest extends AbstractServiceTest
 {
+    private static Logger LOGGER = LoggerFactory.getLogger(JobServiceTest.class);
+
     @Test
     public void testCreateJob() throws Exception
     {
@@ -1360,6 +1369,124 @@ public class JobServiceTest extends AbstractServiceTest
             activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(job.getId()).singleResult();
         assertNotNull(historicProcessInstance);
         assertEquals(jobDeleteRequest.getDeleteReason(), historicProcessInstance.getDeleteReason());
+    }
+
+    @Test(expected = StackOverflowError.class)
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public void testDeleteJobMultipleSubProcesses() throws Exception
+    {
+        // Create and persist a test job definition.
+        executeJdbcTestHelper
+            .prepareHerdDatabaseForExecuteJdbcWithReceiveTaskTest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME, ACTIVITI_XML_TEST_MULTIPLE_SUB_PROCESSES);
+
+        try
+        {
+            // Get the job definition entity and ensure it exists.
+            JobDefinitionEntity jobDefinitionEntity = jobDefinitionDao.getJobDefinitionByAltKey(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME);
+            assertNotNull(jobDefinitionEntity);
+
+            // Get the process definition id.
+            String processDefinitionId = jobDefinitionEntity.getActivitiId();
+
+            // Build the parameters map.
+            Map<String, Object> parameters = new HashMap<>();
+            parameters.put("counter", 0);
+
+            // Start the job.
+            ProcessInstance processInstance = activitiService.startProcessInstanceByProcessDefinitionId(processDefinitionId, parameters);
+            assertNotNull(processInstance);
+
+            // Get the process instance id for this job.
+            String processInstanceId = processInstance.getProcessInstanceId();
+
+            // Wait for all processes to become active - we expect to have the main process along with 800 sub-processes.
+            waitUntilActiveProcessesThreshold(processDefinitionId, 801);
+
+            // Get the job and validate that it is RUNNING.
+            Job getJobResponse = jobService.getJob(processInstanceId, true);
+            assertNotNull(getJobResponse);
+            assertEquals(JobStatusEnum.RUNNING, getJobResponse.getStatus());
+
+            // The delete job call is expected to fail with a StackOverflowError exception.
+            // TODO: Delete the job and validate the response.
+            LOGGER.info("Calling jobService.deleteJob() ...");
+            Job deleteJobResponse = jobService.deleteJob(processInstanceId, new JobDeleteRequest(ACTIVITI_JOB_DELETE_REASON));
+            //LOGGER.info("Completed jobService.deleteJob()");
+            //assertEquals(JobStatusEnum.COMPLETED, deleteJobResponse.getStatus());
+            //assertEquals(ACTIVITI_JOB_DELETE_REASON, deleteJobResponse.getDeleteReason());
+
+            // TODO: Validate the historic process instance.
+            //HistoricProcessInstance historicProcessInstance =
+            //    activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(processInstanceId).singleResult();
+            //assertNotNull(historicProcessInstance);
+            //assertEquals(ACTIVITI_JOB_DELETE_REASON, historicProcessInstance.getDeleteReason());
+        }
+        finally
+        {
+            // Clean up the Herd database.
+            executeJdbcTestHelper.cleanUpHerdDatabaseAfterExecuteJdbcWithReceiveTaskTest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME);
+
+            // Clean up the Activiti.
+            deleteActivitiDeployments();
+        }
+    }
+
+    /**
+     * Blocks the current calling thread until number of active processes for the process definition id reaches the specified threshold. This method will
+     * timeout with an assertion error if the waiting takes longer than 15,000 ms. This is a reasonable amount of time for the JUnits that use this method.
+     *
+     * @param processDefinitionId the process definition id
+     * @param activeProcessesThreshold the threshold for the number of active processes
+     */
+    private void waitUntilActiveProcessesThreshold(String processDefinitionId, int activeProcessesThreshold) throws Exception
+    {
+        // Set the start time.
+        long startTime = System.currentTimeMillis();
+
+        // Create a process instance query for the active sub-processes.
+        ProcessInstanceQuery processInstanceQuery = activitiRuntimeService.createProcessInstanceQuery().processDefinitionId(processDefinitionId).active();
+
+        // Get the current count of the active processes.
+        long activeProcessesCount = processInstanceQuery.count();
+
+        // Run while there are less active processes than the specified threshold.
+        while (activeProcessesCount < activeProcessesThreshold)
+        {
+            // Get the elapsed time.
+            long currentTime = System.currentTimeMillis();
+            long elapsedTime = currentTime - startTime;
+
+            // If time spent waiting is longer than 15,000 ms
+            if (elapsedTime > 15000)
+            {
+                // Dump the current runtime variables into the error log to make it easier to debug
+                StringBuilder builder = new StringBuilder("Dumping workflow variables due to error:\n");
+                builder.append("Super process instance id: ").append(processDefinitionId).append('\n');
+                builder.append("Active processes threshold: ").append(activeProcessesThreshold).append('\n');
+                builder.append("Number of active processes: ").append(activeProcessesCount).append('\n');
+                List<Execution> executions = activitiRuntimeService.createExecutionQuery().list();
+                builder.append("Total number of active executions: ").append(executions.size()).append('\n');
+                for (Execution execution : executions)
+                {
+                    builder.append("Execution - ").append(execution).append(":\n");
+                    Map<String, Object> executionVariables = activitiRuntimeService.getVariables(execution.getId());
+                    for (Map.Entry<String, Object> variable : executionVariables.entrySet())
+                    {
+                        builder.append("    ").append(variable).append('\n');
+                    }
+                }
+                LOGGER.error(builder.toString());
+
+                // Fail assertion
+                fail("The test did not finished in the specified timeout (15s). See error logs for variable dump.");
+            }
+
+            // Sleep for 100 ms.
+            Thread.sleep(100);
+
+            // Update the current count of the active processes.
+            activeProcessesCount = processInstanceQuery.count();
+        }
     }
 
     /**

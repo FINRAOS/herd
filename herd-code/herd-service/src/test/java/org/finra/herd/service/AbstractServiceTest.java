@@ -69,6 +69,7 @@ import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.api.xml.StorageUnit;
 import org.finra.herd.model.api.xml.TagKey;
 import org.finra.herd.service.activiti.ActivitiHelper;
+import org.finra.herd.service.activiti.task.ExecuteJdbcTestHelper;
 import org.finra.herd.service.config.ServiceTestSpringModuleConfig;
 import org.finra.herd.service.helper.BusinessObjectDataAttributeDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDataAttributeHelper;
@@ -102,6 +103,8 @@ import org.finra.herd.service.helper.VelocityHelper;
 @ContextConfiguration(classes = ServiceTestSpringModuleConfig.class, inheritLocations = false)
 public abstract class AbstractServiceTest extends AbstractDaoTest
 {
+    public static final String ACTIVITI_JOB_DELETE_REASON = "UT_JobDeleteReason" + RANDOM_SUFFIX;
+
     public static final String ACTIVITI_XML_ADD_EMR_MASTER_SECURITY_GROUPS_WITH_CLASSPATH =
         "classpath:org/finra/herd/service/activitiWorkflowAddEmrMasterSecurityGroup.bpmn20.xml";
 
@@ -136,6 +139,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String ACTIVITI_XML_TERMINATE_CLUSTER_WITH_CLASSPATH =
         "classpath:org/finra/herd/service/activitiWorkflowTerminateEmrCluster.bpmn20.xml";
+
+    public static final String ACTIVITI_XML_TEST_MULTIPLE_SUB_PROCESSES = "classpath:org/finra/herd/service/testHerdMultipleSubProcessesWorkflow.bpmn20.xml";
 
     public static final String ACTIVITI_XML_TEST_RECEIVE_TASK_WITH_CLASSPATH = "classpath:org/finra/herd/service/testHerdReceiveTaskWorkflow.bpmn20.xml";
 
@@ -330,6 +335,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     protected RuntimeService activitiRuntimeService;
 
     @Autowired
+    protected ActivitiService activitiService;
+
+    @Autowired
     protected TaskService activitiTaskService;
 
     @Autowired
@@ -433,6 +441,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     @Autowired
     protected EmrStepHelperFactory emrStepHelperFactory;
+
+    @Autowired
+    protected ExecuteJdbcTestHelper executeJdbcTestHelper;
 
     @Autowired
     protected ExpectedPartitionValueService expectedPartitionValueService;
