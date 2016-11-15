@@ -177,7 +177,7 @@ public class BusinessObjectDefinitionRestController extends HerdBaseController
      *
      * @return the retrieved business object definition list
      */
-    @RequestMapping(value = "/businessObjectDefinitions/search", method = RequestMethod.POST)
+    @RequestMapping(value = "/businessObjectDefinitions/search", method = RequestMethod.POST, consumes = {"application/xml", "application/json"})
     @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DEFINITIONS_SEARCH_POST)
     public BusinessObjectDefinitionSearchResponse searchBusinessObjectDefinitions(
         @RequestParam(value = "fields", required = false, defaultValue = "") Set<String> fields, @RequestBody BusinessObjectDefinitionSearchRequest request)

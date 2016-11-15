@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.ImmutableSet;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +30,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
-import org.springframework.util.CollectionUtils;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.BusinessObjectDefinitionDao;
@@ -113,13 +113,13 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     private TagDaoHelper tagDaoHelper;
 
     // Constant to hold the data provider name option for the business object definition search
-    private static final String DATA_PROVIDER_NAME = "dataprovidername";
+    private static final String DATA_PROVIDER_NAME_FIELD = "dataprovidername";
 
     // Constant to hold the short description option for the business object definition search
-    private static final String SHORT_DESCRIPTION = "shortdescription";
+    private static final String SHORT_DESCRIPTION_FIELD = "shortdescription";
 
     // Constant to hold the display name option for the business object definition search
-    private static final String DISPLAY_NAME = "displayname";
+    private static final String DISPLAY_NAME_FIELD = "displayname";
 
     /**
      * Creates a new business object definition.
@@ -330,17 +330,17 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     @Override
     public BusinessObjectDefinitionSearchResponse searchBusinessObjectDefinitions(BusinessObjectDefinitionSearchRequest request, Set<String> fields)
     {
-        // Validate the search request.
-        validateBusinessObjectDefinitionSearchRequest(request);
-
         // Validate the business object definition search fields.
         validateSearchResponseFields(fields);
 
         BusinessObjectDefinitionSearchKey businessObjectDefinitionSearchKey = null;
         List<TagEntity> tagEntities = new ArrayList<>();
 
-        if (null != request.getBusinessObjectDefinitionSearchFilters())
+        if (!CollectionUtils.isEmpty(request.getBusinessObjectDefinitionSearchFilters()))
         {
+            // Validate the search request.
+            validateBusinessObjectDefinitionSearchRequest(request);
+
             businessObjectDefinitionSearchKey = request.getBusinessObjectDefinitionSearchFilters().get(0).getBusinessObjectDefinitionSearchKeys().get(0);
 
             TagEntity tagEntity = tagDaoHelper.getTagEntity(businessObjectDefinitionSearchKey.getTagKey());
@@ -627,17 +627,17 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         definition.setBusinessObjectDefinitionName(businessObjectDefinitionEntity.getName());
 
         //decorate object with only the required fields
-        if (fields.contains(DATA_PROVIDER_NAME))
+        if (fields.contains(DATA_PROVIDER_NAME_FIELD))
         {
             definition.setDataProviderName(businessObjectDefinitionEntity.getDataProvider().getName());
         }
 
-        if (fields.contains(SHORT_DESCRIPTION))
+        if (fields.contains(SHORT_DESCRIPTION_FIELD))
         {
             definition.setShortDescription(getShortDescription(businessObjectDefinitionEntity.getDescription()));
         }
 
-        if (fields.contains(DISPLAY_NAME))
+        if (fields.contains(DISPLAY_NAME_FIELD))
         {
             definition.setDisplayName(businessObjectDefinitionEntity.getDisplayName());
         }
@@ -655,21 +655,21 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     private String getShortDescription(String description)
     {
         // Get the configured value for short description's length
-        Integer shortDescMaxLength = configurationHelper.getProperty(ConfigurationValue.SHORT_DESCRIPTION_LENGTH, Integer.class);
+        Integer shortDescMaxLength = configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH, Integer.class);
 
         // Truncate and return
         return StringUtils.left(description, shortDescMaxLength);
     }
 
     /**
-     * Returns valid search respponse fields
+     * Returns valid search response fields
      *
      * @return the set of valid search response fields
      */
     @Override
     public Set<String> getValidSearchResponseFields()
     {
-        return ImmutableSet.of(DATA_PROVIDER_NAME, SHORT_DESCRIPTION, DISPLAY_NAME);
+        return ImmutableSet.of(DATA_PROVIDER_NAME_FIELD, SHORT_DESCRIPTION_FIELD, DISPLAY_NAME_FIELD);
     }
 
     /**
@@ -679,17 +679,14 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
      */
     private void validateBusinessObjectDefinitionSearchRequest(BusinessObjectDefinitionSearchRequest businessObjectDefinitionSearchRequest)
     {
-        if (null != businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters())
+        if (CollectionUtils.size(businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters()) == 1 &&
+            businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters().get(0) != null)
         {
-            if (org.apache.commons.collections4.CollectionUtils.size(businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters()) == 1 &&
-                businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters().get(0) != null)
-            {
                 // Get the business object definition search filter.
                 BusinessObjectDefinitionSearchFilter businessObjectDefinitionSearchFilter =
                     businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters().get(0);
 
-                Assert.isTrue(
-                    org.apache.commons.collections4.CollectionUtils.size(businessObjectDefinitionSearchFilter.getBusinessObjectDefinitionSearchKeys()) == 1 &&
+                Assert.isTrue(CollectionUtils.size(businessObjectDefinitionSearchFilter.getBusinessObjectDefinitionSearchKeys()) == 1 &&
                         businessObjectDefinitionSearchFilter.getBusinessObjectDefinitionSearchKeys().get(0) != null,
                     "Exactly one business object definition search key must be specified.");
 
@@ -698,16 +695,12 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
                     businessObjectDefinitionSearchFilter.getBusinessObjectDefinitionSearchKeys().get(0);
 
                 tagHelper.validateTagKey(businessObjectDefinitionSearchKey.getTagKey());
-            }
-            else
-            {
-                Assert.isTrue(
-                    org.apache.commons.collections4.CollectionUtils.size(businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters()) ==
+        }
+        else
+        {
+            Assert.isTrue(CollectionUtils.size(businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters()) ==
                         1 && businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters().get(0) != null,
                     "Exactly one business object definition search filter must be specified.");
-            }
         }
-
     }
-
 }

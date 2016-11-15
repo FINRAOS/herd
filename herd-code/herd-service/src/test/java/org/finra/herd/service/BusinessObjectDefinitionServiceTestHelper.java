@@ -84,7 +84,7 @@ public class BusinessObjectDefinitionServiceTestHelper
         businessObjectDefinition.setDataProviderName(businessObjectDefinitionEntity.getDataProvider().getName());
         businessObjectDefinition.setDisplayName(businessObjectDefinitionEntity.getDisplayName());
         businessObjectDefinition.setShortDescription(StringUtils.left(businessObjectDefinitionEntity.getDescription(),
-            configurationHelper.getProperty(ConfigurationValue.SHORT_DESCRIPTION_LENGTH, Integer.class)));
+            configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH, Integer.class)));
 
         return businessObjectDefinition;
     }

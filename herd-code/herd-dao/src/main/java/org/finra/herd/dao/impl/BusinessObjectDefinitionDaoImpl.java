@@ -26,6 +26,7 @@ import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Repository;
 
@@ -143,22 +144,24 @@ public class BusinessObjectDefinitionDaoImpl extends AbstractHerdDao implements 
         Root<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityRoot = criteria.from(BusinessObjectDefinitionEntity.class);
 
         // Join to the other tables we can filter on.
-        Join<BusinessObjectDefinitionEntity, BusinessObjectDefinitionTagEntity> businessObjectDefinitionTagEntityJoin =
-            businessObjectDefinitionEntityRoot.join(BusinessObjectDefinitionEntity_.businessObjectDefinitionTags);
         Join<BusinessObjectDefinitionEntity, NamespaceEntity> namespaceEntity =
             businessObjectDefinitionEntityRoot.join(BusinessObjectDefinitionEntity_.namespace);
-
 
         // Get the columns.
         Path<String> namespaceCodeColumn = namespaceEntity.get(NamespaceEntity_.code);
         Path<String> businessObjectDefinitionNameColumn = businessObjectDefinitionEntityRoot.get(BusinessObjectDefinitionEntity_.name);
 
-        // Create the standard restrictions (i.e. the standard where clauses).
         Predicate predicate;
 
-        if (tagEntities.size() > 0)
+        if (!CollectionUtils.isEmpty(tagEntities))
         {
+            //join the business object definition tags
+            Join<BusinessObjectDefinitionEntity, BusinessObjectDefinitionTagEntity> businessObjectDefinitionTagEntityJoin =
+                businessObjectDefinitionEntityRoot.join(BusinessObjectDefinitionEntity_.businessObjectDefinitionTags);
+
+            // Create the standard restrictions (i.e. the standard where clauses).
             predicate = getPredicateForInClause(builder, businessObjectDefinitionTagEntityJoin.get(BusinessObjectDefinitionTagEntity_.tag), tagEntities);
+
             // Add all clauses to the query.
             criteria.select(businessObjectDefinitionEntityRoot).where(predicate)
                 .orderBy(builder.asc(businessObjectDefinitionNameColumn), builder.asc(namespaceCodeColumn));
@@ -167,6 +170,7 @@ public class BusinessObjectDefinitionDaoImpl extends AbstractHerdDao implements 
         {
             criteria.select(businessObjectDefinitionEntityRoot).orderBy(builder.asc(businessObjectDefinitionNameColumn), builder.asc(namespaceCodeColumn));
         }
+
         //Returns duplicate business object definition. When a bdef is associated with multiple tags.
         return entityManager.createQuery(criteria).getResultList();
     }

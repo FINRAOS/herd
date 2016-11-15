@@ -1221,7 +1221,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
     {
         // Create and retrieve a list of business object definition entities
         List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities =
-            businessObjectDefinitionDaoTestHelper.createAndGetExpectedBusinessObjectDefinitionEntities();
+            businessObjectDefinitionDaoTestHelper.createExpectedBusinessObjectDefinitionEntities();
 
         // Create and persist a tag type entity.
         TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER);
@@ -1260,25 +1260,36 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
     }
 
     @Test
-    public void testSearchBusinessObjectDefinitionNoFilter()
+    public void testSearchBusinessObjectDefinitionEmptyFilter()
     {
         // Set up test data
         Set<BusinessObjectDefinition> expectedBusinessObjectDefinitions = setUpTestEntitiesForSearchTesting();
 
-        BusinessObjectDefinitionSearchRequest businessObjectDefinitionSearchRequest = new BusinessObjectDefinitionSearchRequest();
-
         // Retrieve the actual business object definition objects from the search response
         BusinessObjectDefinitionSearchResponse searchResponse = businessObjectDefinitionService
-            .searchBusinessObjectDefinitions(businessObjectDefinitionSearchRequest,
+            .searchBusinessObjectDefinitions(new BusinessObjectDefinitionSearchRequest(),
                 Sets.newHashSet(FIELD_DATA_PROVIDER_NAME, FIELD_DISPLAY_NAME, FIELD_SHORT_DESCRIPTION));
         Set<BusinessObjectDefinition> actualBusinessObjectDefinitions = new HashSet<>(searchResponse.getBusinessObjectDefinitions());
         assertEquals(expectedBusinessObjectDefinitions, actualBusinessObjectDefinitions);
     }
 
-
     @Test
     public void testSearchBusinessObjectDefinitionInvalidParams()
     {
+        //Try to search business object definition when empty search filter is specified
+        try
+        {
+            businessObjectDefinitionService
+                .searchBusinessObjectDefinitions(new BusinessObjectDefinitionSearchRequest(Arrays.asList(new BusinessObjectDefinitionSearchFilter())),
+                    NO_SEARCH_RESPONSE_FIELDS);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Exactly one business object definition search key must be specified.", e.getMessage());
+        }
+
+
         // Try to search business object definition when there are more than one business object definition search filter is specified.
         try
         {

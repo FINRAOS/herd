@@ -223,7 +223,7 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
 
         // Create and retrieve a list of business object definition entities
         List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities =
-            businessObjectDefinitionDaoTestHelper.createAndGetExpectedBusinessObjectDefinitionEntities();
+            businessObjectDefinitionDaoTestHelper.createExpectedBusinessObjectDefinitionEntities();
 
         // Create and persist a tag type entity.
         TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER);
