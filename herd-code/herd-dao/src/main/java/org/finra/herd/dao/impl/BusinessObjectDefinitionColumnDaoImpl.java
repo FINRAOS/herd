@@ -98,32 +98,4 @@ public class BusinessObjectDefinitionColumnDaoImpl extends AbstractHerdDao imple
                 " businessObjectDefinitionColumnName=\"%s\"}.", businessObjectDefinitionColumnKey.getNamespace(),
             businessObjectDefinitionColumnKey.getBusinessObjectDefinitionName(), businessObjectDefinitionColumnKey.getBusinessObjectDefinitionColumnName()));
     }
-
-    @Override
-    public List<BusinessObjectDefinitionColumnEntity> getBusinessObjectDefinitionColumnsByBusinessObjectDefinition(
-        BusinessObjectDefinitionEntity businessObjectDefinitionEntity)
-    {
-        // Create the criteria builder and the criteria.
-        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-        CriteriaQuery<BusinessObjectDefinitionColumnEntity> criteria = builder.createQuery(BusinessObjectDefinitionColumnEntity.class);
-
-        // The criteria root is the business object definition column.
-        Root<BusinessObjectDefinitionColumnEntity> businessObjectDefinitionColumnEntityRoot = criteria.from(BusinessObjectDefinitionColumnEntity.class);
-
-        // Join to the other tables we can filter on.
-        Join<BusinessObjectDefinitionColumnEntity, BusinessObjectDefinitionEntity> businessObjectDefinitionEntityJoin =
-            businessObjectDefinitionColumnEntityRoot.join(BusinessObjectDefinitionColumnEntity_.businessObjectDefinition);
-
-        // Create the standard restrictions (i.e. the standard where clauses).
-        List<Predicate> predicates = new ArrayList<>();
-        predicates.add(builder.equal(businessObjectDefinitionEntityJoin, businessObjectDefinitionEntity));
-
-        // Add the clauses for the query.
-        criteria.select(businessObjectDefinitionColumnEntityRoot).where(builder.and(predicates.toArray(new Predicate[predicates.size()])));
-
-        // Order by business object definition column name.
-        criteria.orderBy(builder.asc(businessObjectDefinitionColumnEntityRoot.get(BusinessObjectDefinitionColumnEntity_.name)));
-
-        return entityManager.createQuery(criteria).getResultList();
-    }
 }

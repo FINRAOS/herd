@@ -980,6 +980,34 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
         {
             assertEquals("Search response field \"invalid_field_option\" is not supported.", e.getMessage());
         }
+
+        // Try to search business object definition columns when an invalid BDEF_NAMESPACE is used.
+        try
+        {
+            businessObjectDefinitionColumnService.searchBusinessObjectDefinitionColumns(new BusinessObjectDefinitionColumnSearchRequest(Arrays.asList(
+                new BusinessObjectDefinitionColumnSearchFilter(
+                    Arrays.asList(new BusinessObjectDefinitionColumnSearchKey("INVALID BDEF NAMESPACE", BDEF_NAME))))),
+                Sets.newHashSet(SCHEMA_COLUMN_NAME_FIELD, DESCRIPTION_FIELD));
+            fail();
+        }
+        catch (ObjectNotFoundException e)
+        {
+            assertEquals("Business object definition with name \"" + BDEF_NAME + "\" doesn't exist for namespace \"INVALID BDEF NAMESPACE\".", e.getMessage());
+        }
+
+        // Try to search business object definition columns when an invalid BDEF_NAME is used.
+        try
+        {
+            businessObjectDefinitionColumnService.searchBusinessObjectDefinitionColumns(new BusinessObjectDefinitionColumnSearchRequest(Arrays.asList(
+                new BusinessObjectDefinitionColumnSearchFilter(
+                    Arrays.asList(new BusinessObjectDefinitionColumnSearchKey(BDEF_NAMESPACE, "INVALID BDEF NAME"))))),
+                Sets.newHashSet(SCHEMA_COLUMN_NAME_FIELD, DESCRIPTION_FIELD));
+            fail();
+        }
+        catch (ObjectNotFoundException e)
+        {
+            assertEquals("Business object definition with name \"INVALID BDEF NAME\" doesn't exist for namespace \"" + BDEF_NAMESPACE + "\".", e.getMessage());
+        }
     }
 
     @Test
@@ -1134,8 +1162,8 @@ public class BusinessObjectDefinitionColumnServiceTest extends AbstractServiceTe
 
         // Search the business object definition columns using added whitespace input parameters.
         BusinessObjectDefinitionColumnSearchResponse businessObjectDefinitionColumnSearchResponse = businessObjectDefinitionColumnService
-            .searchBusinessObjectDefinitionColumns(new BusinessObjectDefinitionColumnSearchRequest(Arrays
-                    .asList(new BusinessObjectDefinitionColumnSearchFilter(Arrays.asList(new BusinessObjectDefinitionColumnSearchKey(BDEF_NAMESPACE, BDEF_NAME))))),
+            .searchBusinessObjectDefinitionColumns(new BusinessObjectDefinitionColumnSearchRequest(Arrays.asList(new BusinessObjectDefinitionColumnSearchFilter(
+                    Arrays.asList(new BusinessObjectDefinitionColumnSearchKey(addWhitespace(BDEF_NAMESPACE), addWhitespace(BDEF_NAME)))))),
                 Sets.newHashSet(addWhitespace(SCHEMA_COLUMN_NAME_FIELD), addWhitespace(DESCRIPTION_FIELD)));
 
         // Validate the response object.
