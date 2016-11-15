@@ -1439,6 +1439,8 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
     public void testUploadBusinessObjectDefinitionSampleFile()
     {
         String s3_velocity_template = "$namespace/$businessObjectDefinitionName";
+        String expectedS3Keyprefix = NAMESPACE.toLowerCase() + "/" + BDEF_NAME.toLowerCase() + "/";
+        expectedS3Keyprefix = expectedS3Keyprefix.replace("_", "-");
    
         // Create a test storage.
         storageDaoTestHelper.createStorageEntity(StorageEntity.SAMPLE_DATA_FILE_STORAGE, Arrays
@@ -1458,6 +1460,7 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         UploadBusinessObjectDefinitionSampleDataFileInitiationResponse response = uploadDownloadService.initiateUploadSampleFile(request);
         assertEquals(response.getBusinessObjectDefinitionKey(), businessObjectDefinitionKey);
         assertEquals(response.getAwsS3BucketName(), S3_BUCKET_NAME);
+        assertEquals(response.getS3KeyPrefix(), expectedS3Keyprefix);
         assertEquals(response.getAwsAccessKey(), MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_ACCESS_KEY);
         assertEquals(response.getAwsSecretKey(), MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_SECRET_KEY);
         assertEquals(response.getAwsSessionToken(), MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_SESSION_TOKEN);

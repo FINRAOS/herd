@@ -22,6 +22,7 @@ import com.amazonaws.auth.policy.Policy;
 import com.amazonaws.auth.policy.actions.S3Actions;
 import com.amazonaws.services.securitytoken.model.Credentials;
 import org.apache.commons.collections4.IterableUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -849,7 +850,8 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         String awsRoleArn = getStorageUploadRoleArn(storageEntity);
         String sessionID = UUID.randomUUID().toString();
         String s3KeyPrefix = s3KeyPrefixHelper.buildS3KeyPrefix(storageEntity, businessObjectDefinitionKey);
-
+        s3KeyPrefix = StringUtils.appendIfMissing(s3KeyPrefix, "/");
+        
         Integer awsRoleDurationSeconds = getStorageUploadSessionDuration(storageEntity);
 
         Credentials assumedSessionCredentials = stsDao
