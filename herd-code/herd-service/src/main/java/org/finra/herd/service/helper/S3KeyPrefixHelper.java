@@ -189,8 +189,8 @@ public class S3KeyPrefixHelper
     
     /**
      * Build S3 key prefix for business object definition key
-     * @param storageEntity
-     * @param businessObjectDefinitionKey
+     * @param storageEntity storage entity
+     * @param businessObjectDefinitionKey business object definition key
      * @return S3KeyPrefix
      */
     public String buildS3KeyPrefix(StorageEntity storageEntity, BusinessObjectDefinitionKey businessObjectDefinitionKey)

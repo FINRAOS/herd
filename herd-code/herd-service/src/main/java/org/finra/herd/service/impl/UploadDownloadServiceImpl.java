@@ -818,7 +818,7 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
      * 
      * @param request
      */
-    private void ValidateUploadBusinessObjectDefinitionSampleDataFileInitiationRequest(
+    private void validateUploadBusinessObjectDefinitionSampleDataFileInitiationRequest(
         UploadBusinessObjectDefinitionSampleDataFileInitiationRequest request)
     {
         Assert.notNull(request, "An upload initiation request must be specified.");
@@ -831,14 +831,15 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
     public UploadBusinessObjectDefinitionSampleDataFileInitiationResponse initiateUploadSampleFile(
         UploadBusinessObjectDefinitionSampleDataFileInitiationRequest request)
     {
-        ValidateUploadBusinessObjectDefinitionSampleDataFileInitiationRequest(request);
+        validateUploadBusinessObjectDefinitionSampleDataFileInitiationRequest(request);
 
         BusinessObjectDefinitionKey businessObjectDefinitionKey = request.getBusinessObjectDefinitionKey();
         // Get the business object definition entity and ensure it exists.
-        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
+                businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
         businessObjectDefinitionKey.setNamespace(businessObjectDefinitionEntity.getNamespace().getCode());
         businessObjectDefinitionKey.setBusinessObjectDefinitionName(businessObjectDefinitionEntity.getName());
-        
+
         UploadBusinessObjectDefinitionSampleDataFileInitiationResponse response =
                 new UploadBusinessObjectDefinitionSampleDataFileInitiationResponse();
         StorageEntity storageEntity = storageDaoHelper.getStorageEntity(StorageEntity.SAMPLE_DATA_FILE_STORAGE);
@@ -848,7 +849,7 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         String awsRoleArn = getStorageUploadRoleArn(storageEntity);
         String sessionID = UUID.randomUUID().toString();
         String s3KeyPrefix = s3KeyPrefixHelper.buildS3KeyPrefix(storageEntity, businessObjectDefinitionKey);
-        
+
         Integer awsRoleDurationSeconds = getStorageUploadSessionDuration(storageEntity);
 
         Credentials assumedSessionCredentials = stsDao
