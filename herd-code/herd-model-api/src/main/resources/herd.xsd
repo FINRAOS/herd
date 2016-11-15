@@ -4035,6 +4035,34 @@
       </xs:sequence>
    </xs:complexType>
 
+	<!-- ***** Business Object Definition Sampe File Upload ***** -->
+	<xs:element
+		name="uploadBusinessObjectDefinitionSampleDataFileInitiationRequest"
+		type="uploadBusinessObjectDefinitionSampleDataFileInitiationRequest" />
+	<xs:complexType
+		name="uploadBusinessObjectDefinitionSampleDataFileInitiationRequest">
+		<xs:sequence>
+			<xs:element name="businessObjectDefinitionKey" type="businessObjectDefinitionKey" />
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:element
+		name="uploadBusinessObjectDefinitionSampleDataFileInitiationResponse"
+		type="uploadBusinessObjectDefinitionSampleDataFileInitiationResponse" />
+	<xs:complexType
+		name="uploadBusinessObjectDefinitionSampleDataFileInitiationResponse">
+		<xs:sequence>
+			<xs:element name="businessObjectDefinitionKey" type="businessObjectDefinitionKey" />
+			<xs:element name="awsS3BucketName" type="xs:string" />
+			<xs:element name="s3Endpoint" type="xs:string" />
+			<xs:element name="s3KeyPrefix" type="xs:string" />
+            <xs:element name="awsAccessKey" type="xs:string"/>
+            <xs:element name="awsSecretKey" type="xs:string"/>
+            <xs:element name="awsSessionToken" type="xs:string"/>
+            <xs:element name="awsSessionExpirationTime" type="xs:dateTime"/>
+		</xs:sequence>
+	</xs:complexType>
+   
    <!-- ***** System Job ***** -->
 
    <xs:element name="systemJobRunRequest" type="systemJobRunRequest"/>
