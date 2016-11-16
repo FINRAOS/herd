@@ -1624,4 +1624,42 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
                     .getMessage());
         }
     }
+    
+    @Test
+    public void testUploadBusinessObjectDefinitionSampleFileMissingTemplate()
+    {
+        //String s3_velocity_template = "$namespace/$businessObjectDefinitionName";
+        String expectedS3Keyprefix = NAMESPACE.toLowerCase() + "/" + BDEF_NAME.toLowerCase() + "/";
+        expectedS3Keyprefix = expectedS3Keyprefix.replace("_", "-");
+   
+        // Create a test storage.
+        storageDaoTestHelper.createStorageEntity(StorageEntity.SAMPLE_DATA_FILE_STORAGE, Arrays
+            .asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), S3_BUCKET_NAME),
+                new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_UPLOAD_ROLE_ARN), UPLOADER_ROLE_ARN)
+                //new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE), s3_velocity_template)
+            ));
+
+        // Create and persist a business object definition entity with sample data files.
+        businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME,
+                businessObjectDefinitionServiceTestHelper.getNewAttributes());
+        
+        UploadBusinessObjectDefinitionSampleDataFileInitiationRequest request = new UploadBusinessObjectDefinitionSampleDataFileInitiationRequest();
+        BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME);
+        request.setBusinessObjectDefinitionKey(businessObjectDefinitionKey);
+
+        try
+        {
+
+            uploadDownloadService.initiateUploadSampleFile(request);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(String.format("Storage \"%s\" has no S3 key prefix velocity template configured.", StorageEntity.SAMPLE_DATA_FILE_STORAGE),
+                    e.getMessage());
+        }
+        
+
+    }
 }

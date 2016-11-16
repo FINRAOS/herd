@@ -206,10 +206,14 @@ public class S3KeyPrefixHelper
         context.put("namespace", s3KeyPrefixFormat(businessObjectDefinitionKey.getNamespace()));
         context.put("businessObjectDefinitionName", s3KeyPrefixFormat(businessObjectDefinitionKey.getBusinessObjectDefinitionName()));
         
+        // Validate that S3 key prefix velocity template is configured.
+        Assert.isTrue(StringUtils.isNotBlank(s3KeyPrefixVelocityTemplate),
+            String.format("Storage \"%s\" has no S3 key prefix velocity template configured.", storageEntity.getName()));
+       
         // Process the velocity template.
         String s3KeyPrefix = velocityHelper
-            .evaluate(s3KeyPrefixVelocityTemplate, context, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE));
-
+            .evaluate(s3KeyPrefixVelocityTemplate, context, configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE)); 
+        
         // Validate that S3 key prefix is not blank.
         Assert.isTrue(StringUtils.isNotBlank(s3KeyPrefix), String
             .format("S3 key prefix velocity template \"%s\" configured for \"%s\" storage results in an empty S3 key prefix.", s3KeyPrefixVelocityTemplate,
