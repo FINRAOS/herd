@@ -175,9 +175,9 @@ public class UploadDownloadRestController extends HerdBaseController
     }
     
     /**
-     * Download a single business object definition sample file
-     * @param downloadBusinesObjectDefinitionSingleInitiationRequest
-     * @return the download business object definition response
+     * Provide the location and credentials prior to upload a Sample Data file
+     * @param uploadBusinessObjectDefinitionSampleDataFileInitiationRequest request to upload
+     * @return information necessary to upload sample data file
      */
     @RequestMapping(value = "/upload/businessObjectDefinitionSampleDataFile/initiation", method = RequestMethod.POST, consumes = {"application/xml",
         "application/json"})
