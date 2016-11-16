@@ -184,6 +184,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String DOWNLOADER_ROLE_ARN = "UT_DownloaderRoleArn" + RANDOM_SUFFIX;
 
+    public static final String UPLOADER_ROLE_ARN = "UT_UploaderRoleArn" + RANDOM_SUFFIX;
+    
     public static final String EC2_INSTANCE_ID = "UT_Ec2InstanceId" + RANDOM_SUFFIX;
 
     public static final String EC2_INSTANCE_TYPE = "UT_Ec2InstanceType" + RANDOM_SUFFIX;

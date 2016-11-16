@@ -755,7 +755,7 @@ public class TagServiceTest extends AbstractServiceTest
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals("Exactly one tag search filter must be specified.", e.getMessage());
+            assertEquals("At most one tag search filter must be specified.", e.getMessage());
         }
 
         // Try to search tags when there are more than one tag search key is specified.
@@ -836,7 +836,27 @@ public class TagServiceTest extends AbstractServiceTest
         // Create and persist database entities required for testing.
         createDatabaseEntitiesForTagSearchTesting();
 
-        // Search tags without specifying optional parameters.
+        // Search tags without specifying an optional tag search filter.
+        assertEquals(new TagSearchResponse(Arrays.asList(
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
+                NO_TAG_HAS_CHILDREN_FLAG),
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_3), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
+                NO_TAG_HAS_CHILDREN_FLAG),
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_2), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
+                NO_TAG_HAS_CHILDREN_FLAG))), tagService.searchTags(new TagSearchRequest(), NO_SEARCH_RESPONSE_FIELDS));
+
+        // Search tags when an optional tag search filter is set to null.
+        List<TagSearchFilter> tagSearchFilters = new ArrayList<>();
+        tagSearchFilters.add(null);
+        assertEquals(new TagSearchResponse(Arrays.asList(
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
+                NO_TAG_HAS_CHILDREN_FLAG),
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_3), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
+                NO_TAG_HAS_CHILDREN_FLAG),
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_2), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
+                NO_TAG_HAS_CHILDREN_FLAG))), tagService.searchTags(new TagSearchRequest(tagSearchFilters), NO_SEARCH_RESPONSE_FIELDS));
+
+        // Search tags without specifying optional parameters inside the tag search filter.
         assertEquals(new TagSearchResponse(Arrays.asList(
             new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
                 NO_TAG_HAS_CHILDREN_FLAG),
@@ -904,30 +924,6 @@ public class TagServiceTest extends AbstractServiceTest
         catch (IllegalArgumentException e)
         {
             assertEquals("A tag search request must be specified.", e.getMessage());
-        }
-
-        // Try to search tags when tag search filter is not specified.
-        try
-        {
-            tagService.searchTags(new TagSearchRequest(), NO_SEARCH_RESPONSE_FIELDS);
-            fail();
-        }
-        catch (IllegalArgumentException e)
-        {
-            assertEquals("Exactly one tag search filter must be specified.", e.getMessage());
-        }
-
-        // Try to search tags when tag search filter is set to null.
-        try
-        {
-            List<TagSearchFilter> tagSearchFilters = new ArrayList<>();
-            tagSearchFilters.add(null);
-            tagService.searchTags(new TagSearchRequest(tagSearchFilters), NO_SEARCH_RESPONSE_FIELDS);
-            fail();
-        }
-        catch (IllegalArgumentException e)
-        {
-            assertEquals("Exactly one tag search filter must be specified.", e.getMessage());
         }
 
         // Try to search tags when tag search key is not specified.

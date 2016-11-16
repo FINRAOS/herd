@@ -195,15 +195,27 @@ public class TagServiceImpl implements TagService, SearchableService
         // Validate and trim the search response fields.
         validateSearchResponseFields(fields);
 
-        // Get the tag search key.
-        TagSearchKey tagSearchKey = request.getTagSearchFilters().get(0).getTagSearchKeys().get(0);
+        // Prepare the result list.
+        List<TagEntity> tagEntities = new ArrayList<>();
 
-        // Retrieve and ensure that a tag type exists for the specified tag type code.
-        TagTypeEntity tagTypeEntity = tagTypeDaoHelper.getTagTypeEntity(new TagTypeKey(tagSearchKey.getTagTypeCode()));
+        // If search key is specified, use it to retrieve the tags.
+        if (CollectionUtils.isNotEmpty(request.getTagSearchFilters()) && request.getTagSearchFilters().get(0) != null)
+        {
+            // Get the tag search key.
+            TagSearchKey tagSearchKey = request.getTagSearchFilters().get(0).getTagSearchKeys().get(0);
 
-        // Retrieve the tag types.
-        List<TagEntity> tagEntities =
-            tagDao.getTagsByTagTypeEntityAndParentTagCode(tagTypeEntity, tagSearchKey.getParentTagCode(), tagSearchKey.isIsParentTagNull());
+            // Retrieve and ensure that a tag type exists for the specified tag type code.
+            TagTypeEntity tagTypeEntity = tagTypeDaoHelper.getTagTypeEntity(new TagTypeKey(tagSearchKey.getTagTypeCode()));
+
+            // Retrieve the tags.
+            tagEntities.addAll(tagDao.getTagsByTagTypeEntityAndParentTagCode(tagTypeEntity, tagSearchKey.getParentTagCode(), tagSearchKey.isIsParentTagNull()));
+        }
+        // The search key is not specified, so select all tags registered in the system.
+        else
+        {
+            // Retrieve the tags.
+            tagEntities.addAll(tagDao.getTags());
+        }
 
         // Build the list of tags.
         List<Tag> tags = new ArrayList<>();
@@ -396,28 +408,33 @@ public class TagServiceImpl implements TagService, SearchableService
     {
         Assert.notNull(tagSearchRequest, "A tag search request must be specified.");
 
-        Assert.isTrue(CollectionUtils.size(tagSearchRequest.getTagSearchFilters()) == 1 && tagSearchRequest.getTagSearchFilters().get(0) != null,
-            "Exactly one tag search filter must be specified.");
-
-        // Get the tag search filter.
-        TagSearchFilter tagSearchFilter = tagSearchRequest.getTagSearchFilters().get(0);
-
-        Assert.isTrue(CollectionUtils.size(tagSearchFilter.getTagSearchKeys()) == 1 && tagSearchFilter.getTagSearchKeys().get(0) != null,
-            "Exactly one tag search key must be specified.");
-
-        // Get the tag search key.
-        TagSearchKey tagSearchKey = tagSearchFilter.getTagSearchKeys().get(0);
-
-        tagSearchKey.setTagTypeCode(alternateKeyHelper.validateStringParameter("tag type code", tagSearchKey.getTagTypeCode()));
-
-        if (tagSearchKey.getParentTagCode() != null)
+        // Continue validation if the list of tag search filters is not empty.
+        if (CollectionUtils.isNotEmpty(tagSearchRequest.getTagSearchFilters()) && tagSearchRequest.getTagSearchFilters().get(0) != null)
         {
-            tagSearchKey.setParentTagCode(tagSearchKey.getParentTagCode().trim());
-        }
+            // Validate that there is only one tag search filter.
+            Assert.isTrue(CollectionUtils.size(tagSearchRequest.getTagSearchFilters()) == 1, "At most one tag search filter must be specified.");
 
-        // Fail validation when parent tag code is specified along with the isParentTagNull flag set to true.
-        Assert.isTrue(StringUtils.isBlank(tagSearchKey.getParentTagCode()) || BooleanUtils.isNotTrue(tagSearchKey.isIsParentTagNull()),
-            "A parent tag code can not be specified when isParentTagNull flag is set to true.");
+            // Get the tag search filter.
+            TagSearchFilter tagSearchFilter = tagSearchRequest.getTagSearchFilters().get(0);
+
+            // Validate that exactly one tag search key is specified.
+            Assert.isTrue(CollectionUtils.size(tagSearchFilter.getTagSearchKeys()) == 1 && tagSearchFilter.getTagSearchKeys().get(0) != null,
+                "Exactly one tag search key must be specified.");
+
+            // Get the tag search key.
+            TagSearchKey tagSearchKey = tagSearchFilter.getTagSearchKeys().get(0);
+
+            tagSearchKey.setTagTypeCode(alternateKeyHelper.validateStringParameter("tag type code", tagSearchKey.getTagTypeCode()));
+
+            if (tagSearchKey.getParentTagCode() != null)
+            {
+                tagSearchKey.setParentTagCode(tagSearchKey.getParentTagCode().trim());
+            }
+
+            // Fail validation when parent tag code is specified along with the isParentTagNull flag set to true.
+            Assert.isTrue(StringUtils.isBlank(tagSearchKey.getParentTagCode()) || BooleanUtils.isNotTrue(tagSearchKey.isIsParentTagNull()),
+                "A parent tag code can not be specified when isParentTagNull flag is set to true.");
+        }
     }
 
     /**

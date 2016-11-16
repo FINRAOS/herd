@@ -100,6 +100,23 @@ public class TagDaoTest extends AbstractDaoTest
     }
 
     @Test
+    public void testGetTags()
+    {
+        // Create two tag type entities with tag type order values in reverse order.
+        List<TagTypeEntity> tagTypeEntities = Arrays.asList(tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER_2),
+            tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE_2, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER));
+
+        // Create two root tag entities for each tag type with tag display name in reverse order.
+        List<TagEntity> tagEntities = Arrays.asList(tagDaoTestHelper.createTagEntity(tagTypeEntities.get(0), TAG_CODE, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION),
+            tagDaoTestHelper.createTagEntity(tagTypeEntities.get(0), TAG_CODE_2, TAG_DISPLAY_NAME, TAG_DESCRIPTION_2),
+            tagDaoTestHelper.createTagEntity(tagTypeEntities.get(1), TAG_CODE_3, TAG_DISPLAY_NAME_4, TAG_DESCRIPTION_3),
+            tagDaoTestHelper.createTagEntity(tagTypeEntities.get(1), TAG_CODE_4, TAG_DISPLAY_NAME_3, TAG_DESCRIPTION_4));
+
+        // Get all tags.
+        assertEquals(Arrays.asList(tagEntities.get(3), tagEntities.get(2), tagEntities.get(1), tagEntities.get(0)), tagDao.getTags());
+    }
+
+    @Test
     public void testGetTagsByTagTypeAndParentTagCode()
     {
         // Create a tag type entity.
