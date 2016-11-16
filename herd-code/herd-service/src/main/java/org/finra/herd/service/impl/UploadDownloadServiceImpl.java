@@ -851,12 +851,14 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         String sessionID = UUID.randomUUID().toString();
         String s3KeyPrefix = s3KeyPrefixHelper.buildS3KeyPrefix(storageEntity, businessObjectDefinitionKey);
         s3KeyPrefix = StringUtils.appendIfMissing(s3KeyPrefix, "/");
+        //need to add star for aws authorization
+        String s3Path = s3KeyPrefix + "*";
         
         Integer awsRoleDurationSeconds = getStorageUploadSessionDuration(storageEntity);
 
         Credentials assumedSessionCredentials = stsDao
                 .getTemporarySecurityCredentials(awsHelper.getAwsParamsDto(), sessionID, awsRoleArn, awsRoleDurationSeconds,
-                        createUploaderPolicyNoKmsKey(s3BucketName, s3KeyPrefix));
+                        createUploaderPolicyNoKmsKey(s3BucketName, s3Path));
 
         response.setAwsAccessKey(assumedSessionCredentials.getAccessKeyId());
         response.setAwsSecretKey(assumedSessionCredentials.getSecretAccessKey());
