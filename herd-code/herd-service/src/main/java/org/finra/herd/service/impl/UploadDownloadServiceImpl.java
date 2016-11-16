@@ -724,9 +724,10 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         String s3BucketName = storageHelper.getStorageBucketName(storageEntity);
         String s3ObjectKey = businessObjectDefinitionSampleDataFileKey.getDirectoryPath() + businessObjectDefinitionSampleDataFileKey.getFileName();
 
+        String sessionID = UUID.randomUUID().toString();
         // Get the temporary credentials.
         Credentials downloaderCredentials =
-            getDownloaderCredentialsNoKmsKey(storageEntity, String.valueOf(businessObjectDefinitionSampleDataFileEntity.getId()), s3ObjectKey);
+            getDownloaderCredentialsNoKmsKey(storageEntity, sessionID, s3ObjectKey);
 
         // Generate a pre-signed URL.
         Date expiration = downloaderCredentials.getExpiration();
