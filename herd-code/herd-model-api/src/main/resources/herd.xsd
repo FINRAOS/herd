@@ -765,7 +765,7 @@
 
    <xs:complexType name="tagSearchRequest">
       <xs:all>
-         <xs:element name="tagSearchFilters" type="tagSearchFilters">
+         <xs:element name="tagSearchFilters" type="tagSearchFilters" minOccurs="0">
             <xs:annotation>
                <xs:documentation>A list of tag search filters. Only a single optional search filter is supported</xs:documentation>
             </xs:annotation>
