@@ -15,6 +15,9 @@
 */
 package org.finra.herd.service.helper;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
@@ -106,8 +109,8 @@ public class TagDaoHelper
      * The parent tag should be be the same type of the updated tag.
      * The parent tag should not be on the children tree of the updated tag. 
      * No more than MAX_HIERARCHY_LEVEL is allowed to update parent-child relation.
-     * 
-     * @param tagEntity the tagEntity to be updated
+     *
+     * @param tagEntity the parentTagEntity to be updated
      * 
      * @param tagUpdateRequest the update request
      */
@@ -137,4 +140,30 @@ public class TagDaoHelper
         }   
     }
 
+
+    /**
+     * Create a list of tag entities along with all its children tags down the hierarchy up to maximum allowed tag nesting level.
+     *
+     * @param parentTagEntity the parent tag entity
+     *
+     * @return the list of tag children entities
+     */
+    public List<TagEntity> getTagChildrenEntities(TagEntity parentTagEntity)
+    {
+
+        // Get the maximum allowed tag nesting level.
+        Integer maxAllowedTagNesting = configurationHelper.getProperty(ConfigurationValue.MAX_ALLOWED_TAG_NESTING, Integer.class);
+
+        // Build a list of the specified tag along with all its children tags down the hierarchy up to maximum allowed tag nesting level.
+        List<TagEntity> parentTagEntities = new ArrayList<>();
+        parentTagEntities.add(parentTagEntity);
+        List<TagEntity> tagEntities = new ArrayList<>();
+        for (int level = 0; !parentTagEntities.isEmpty() && level < maxAllowedTagNesting; level++)
+        {
+            parentTagEntities = tagDao.getChildrenTags(parentTagEntities);
+            tagEntities.addAll(parentTagEntities);
+        }
+
+        return tagEntities;
+    }
 }

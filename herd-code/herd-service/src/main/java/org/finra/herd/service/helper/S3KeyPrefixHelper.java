@@ -27,6 +27,7 @@ import org.springframework.util.Assert;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormat;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
@@ -184,5 +185,45 @@ public class S3KeyPrefixHelper
     private String s3KeyPrefixFormat(String string)
     {
         return string.toLowerCase().replace('_', '-');
+    }
+    
+    /**
+     * Build S3 key prefix for business object definition key
+     * @param storageEntity storage entity
+     * @param businessObjectDefinitionKey business object definition key
+     * @return S3KeyPrefix
+     */
+    public String buildS3KeyPrefix(StorageEntity storageEntity, BusinessObjectDefinitionKey businessObjectDefinitionKey)
+    {
+        // Retrieve S3 key prefix velocity template storage attribute value and store it in memory.
+        // Please note that it is not required, so we pass in a "false" flag.
+        String s3KeyPrefixVelocityTemplate =
+                storageHelper
+                        .getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE),
+                                storageEntity,
+                                false);
+
+        Map<String, Object> context = new HashMap<>();
+        context.put("environment", s3KeyPrefixFormat(configurationHelper.getProperty(ConfigurationValue.HERD_ENVIRONMENT)));
+        context.put("namespace", s3KeyPrefixFormat(businessObjectDefinitionKey.getNamespace()));
+        context.put("businessObjectDefinitionName", s3KeyPrefixFormat(businessObjectDefinitionKey.getBusinessObjectDefinitionName()));
+
+        // Validate that S3 key prefix velocity template is configured.
+        Assert.isTrue(StringUtils.isNotBlank(s3KeyPrefixVelocityTemplate),
+                String.format("Storage \"%s\" has no S3 key prefix velocity template configured.", storageEntity.getName()));
+
+        // Process the velocity template.
+        String s3KeyPrefix =
+                velocityHelper
+                        .evaluate(s3KeyPrefixVelocityTemplate, context, configurationHelper
+                                .getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE));
+
+        // Validate that S3 key prefix is not blank.
+        Assert.isTrue(StringUtils.isNotBlank(s3KeyPrefix), String
+                .format("S3 key prefix velocity template \"%s\" configured for \"%s\" storage results in an empty S3 key prefix.", s3KeyPrefixVelocityTemplate,
+                        storageEntity.getName()));
+
+        // Return the S3 key prefix.
+        return s3KeyPrefix;
     }
 }

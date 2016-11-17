@@ -32,6 +32,8 @@ import org.finra.herd.model.api.xml.DownloadBusinessObjectDefinitionSampleDataFi
 import org.finra.herd.model.api.xml.DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse;
 import org.finra.herd.model.api.xml.DownloadSingleInitiationResponse;
 import org.finra.herd.model.api.xml.StorageUnit;
+import org.finra.herd.model.api.xml.UploadBusinessObjectDefinitionSampleDataFileInitiationRequest;
+import org.finra.herd.model.api.xml.UploadBusinessObjectDefinitionSampleDataFileInitiationResponse;
 import org.finra.herd.model.api.xml.UploadSingleCredentialExtensionResponse;
 import org.finra.herd.model.api.xml.UploadSingleInitiationRequest;
 import org.finra.herd.model.api.xml.UploadSingleInitiationResponse;
@@ -172,4 +174,17 @@ public class UploadDownloadRestController extends HerdBaseController
         return uploadDownloadService.initiateDownloadSingleSampleFile(downloadBusinesObjectDefinitionSingleInitiationRequest);
     }
     
+    /**
+     * Provide the location and credentials prior to upload a Sample Data file
+     * @param uploadBusinessObjectDefinitionSampleDataFileInitiationRequest request to upload
+     * @return information necessary to upload sample data file
+     */
+    @RequestMapping(value = "/upload/businessObjectDefinitionSampleDataFile/initiation", method = RequestMethod.POST, consumes = {"application/xml",
+        "application/json"})
+    @Secured(SecurityFunctions.FN_UPLOAD_BUSINESS_OBJECT_DEFINITION_SAMPLE_DATA_FILE_POST)
+    public UploadBusinessObjectDefinitionSampleDataFileInitiationResponse initiateUploadSampleFile(
+        @RequestBody UploadBusinessObjectDefinitionSampleDataFileInitiationRequest uploadBusinessObjectDefinitionSampleDataFileInitiationRequest)
+    {
+        return uploadDownloadService.initiateUploadSampleFile(uploadBusinessObjectDefinitionSampleDataFileInitiationRequest);
+    }
 }

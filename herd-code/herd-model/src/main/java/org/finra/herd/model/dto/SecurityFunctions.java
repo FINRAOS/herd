@@ -90,22 +90,15 @@ public class SecurityFunctions
 
     public static final String FN_BUSINESS_OBJECT_DEFINITIONS_DELETE = "FN_BUSINESS_OBJECT_DEFINITIONS_DELETE";
 
+    public static final String FN_BUSINESS_OBJECT_DEFINITIONS_DESCRIPTIVE_INFO_PUT = "FN_BUSINESS_OBJECT_DEFINITIONS_DESCRIPTIVE_INFO_PUT";
+
     public static final String FN_BUSINESS_OBJECT_DEFINITIONS_GET = "FN_BUSINESS_OBJECT_DEFINITIONS_GET";
 
     public static final String FN_BUSINESS_OBJECT_DEFINITIONS_POST = "FN_BUSINESS_OBJECT_DEFINITIONS_POST";
 
     public static final String FN_BUSINESS_OBJECT_DEFINITIONS_PUT = "FN_BUSINESS_OBJECT_DEFINITIONS_PUT";
 
-    public static final String FN_BUSINESS_OBJECT_DEFINITION_TAGS_BY_BUSINESS_OBJECT_DEFINITION_GET =
-        "FN_BUSINESS_OBJECT_DEFINITION_TAGS_BY_BUSINESS_OBJECT_DEFINITION_GET";
-
-    public static final String FN_BUSINESS_OBJECT_DEFINITION_TAGS_BY_TAG_GET = "FN_BUSINESS_OBJECT_DEFINITION_TAGS_BY_TAG_GET";
-
-    public static final String FN_BUSINESS_OBJECT_DEFINITION_TAGS_DELETE = "FN_BUSINESS_OBJECT_DEFINITION_TAGS_DELETE";
-
-    public static final String FN_BUSINESS_OBJECT_DEFINITION_TAGS_POST = "FN_BUSINESS_OBJECT_DEFINITION_TAGS_POST";
-
-    public static final String FN_BUSINESS_OBJECT_DEFINITIONS_DESCRIPTIVE_INFO_PUT = "FN_BUSINESS_OBJECT_DEFINITIONS_DESCRIPTIVE_INFO_PUT";
+    public static final String FN_BUSINESS_OBJECT_DEFINITIONS_SEARCH_POST = "FN_BUSINESS_OBJECT_DEFINITIONS_SEARCH_POST";
 
     public static final String FN_BUSINESS_OBJECT_DEFINITION_COLUMNS_ALL_GET = "FN_BUSINESS_OBJECT_DEFINITION_COLUMNS_ALL_GET";
 
@@ -116,6 +109,17 @@ public class SecurityFunctions
     public static final String FN_BUSINESS_OBJECT_DEFINITION_COLUMNS_POST = "FN_BUSINESS_OBJECT_DEFINITION_COLUMNS_POST";
 
     public static final String FN_BUSINESS_OBJECT_DEFINITION_COLUMNS_PUT = "FN_BUSINESS_OBJECT_DEFINITION_COLUMNS_PUT";
+
+    public static final String FN_BUSINESS_OBJECT_DEFINITION_COLUMNS_SEARCH_POST = "FN_BUSINESS_OBJECT_DEFINITION_COLUMNS_SEARCH_POST";
+
+    public static final String FN_BUSINESS_OBJECT_DEFINITION_TAGS_BY_BUSINESS_OBJECT_DEFINITION_GET =
+        "FN_BUSINESS_OBJECT_DEFINITION_TAGS_BY_BUSINESS_OBJECT_DEFINITION_GET";
+
+    public static final String FN_BUSINESS_OBJECT_DEFINITION_TAGS_BY_TAG_GET = "FN_BUSINESS_OBJECT_DEFINITION_TAGS_BY_TAG_GET";
+
+    public static final String FN_BUSINESS_OBJECT_DEFINITION_TAGS_DELETE = "FN_BUSINESS_OBJECT_DEFINITION_TAGS_DELETE";
+
+    public static final String FN_BUSINESS_OBJECT_DEFINITION_TAGS_POST = "FN_BUSINESS_OBJECT_DEFINITION_TAGS_POST";
 
     public static final String FN_BUSINESS_OBJECT_FORMATS_ALL_GET = "FN_BUSINESS_OBJECT_FORMATS_ALL_GET";
 
@@ -131,8 +135,6 @@ public class SecurityFunctions
 
     public static final String FN_BUSINESS_OBJECT_FORMATS_PUT = "FN_BUSINESS_OBJECT_FORMATS_PUT";
 
-    public static final String FN_DOWNLOAD_BUSINESS_OBJECT_DEFINITION_SAMPLE_DATA_FILE_POST = "FN_DOWNLOAD_BUSINESS_OBJECT_DEFINITION_SAMPLE_DATA_FILE_POST";
-    
     public static final String FN_CUSTOM_DDLS_ALL_GET = "FN_CUSTOM_DDLS_ALL_GET";
 
     public static final String FN_CUSTOM_DDLS_DELETE = "FN_CUSTOM_DDLS_DELETE";
@@ -153,6 +155,10 @@ public class SecurityFunctions
 
     public static final String FN_DISPLAY_HERD_UI = "FN_DISPLAY_HERD_UI";
 
+    public static final String FN_DOWNLOAD_BUSINESS_OBJECT_DEFINITION_SAMPLE_DATA_FILE_POST = "FN_DOWNLOAD_BUSINESS_OBJECT_DEFINITION_SAMPLE_DATA_FILE_POST";
+
+    public static final String FN_UPLOAD_BUSINESS_OBJECT_DEFINITION_SAMPLE_DATA_FILE_POST = "FN_UPLOAD_BUSINESS_OBJECT_DEFINITION_SAMPLE_DATA_FILE_POST";
+    
     public static final String FN_DOWNLOAD_GET = "FN_DOWNLOAD_GET";
 
     public static final String FN_EMR_CLUSTERS_DELETE = "FN_EMR_CLUSTERS_DELETE";
@@ -278,6 +284,30 @@ public class SecurityFunctions
 
     public static final String FN_SYSTEM_JOBS_POST = "FN_SYSTEM_JOBS_POST";
 
+    public static final String FN_TAGS_ALL_GET = "FN_TAGS_ALL_GET";
+
+    public static final String FN_TAGS_DELETE = "FN_TAGS_DELETE";
+
+    public static final String FN_TAGS_GET = "FN_TAGS_GET";
+
+    public static final String FN_TAGS_POST = "FN_TAGS_POST";
+
+    public static final String FN_TAGS_PUT = "FN_TAGS_PUT";
+
+    public static final String FN_TAGS_SEARCH_POST = "FN_TAGS_SEARCH_POST";
+
+    public static final String FN_TAG_TYPES_ALL_GET = "FN_TAG_TYPES_ALL_GET";
+
+    public static final String FN_TAG_TYPES_DELETE = "FN_TAG_TYPES_DELETE";
+
+    public static final String FN_TAG_TYPES_GET = "FN_TAG_TYPES_GET";
+
+    public static final String FN_TAG_TYPES_POST = "FN_TAG_TYPES_POST";
+
+    public static final String FN_TAG_TYPES_PUT = "FN_TAG_TYPES_PUT";
+
+    public static final String FN_TAG_TYPES_SEARCH_POST = "FN_TAG_TYPES_SEARCH_POST";
+
     public static final String FN_UPLOAD_EXTEND_CREDENTIALS_GET = "FN_UPLOAD_EXTEND_CREDENTIALS_GET";
 
     public static final String FN_UPLOAD_POST = "FN_UPLOAD_POST";
@@ -293,26 +323,6 @@ public class SecurityFunctions
     public static final String FN_USER_NAMESPACE_AUTHORIZATIONS_POST = "FN_USER_NAMESPACE_AUTHORIZATIONS_POST";
 
     public static final String FN_USER_NAMESPACE_AUTHORIZATIONS_PUT = "FN_USER_NAMESPACE_AUTHORIZATIONS_POST";
-
-    public static final String FN_TAG_TYPES_ALL_GET = "FN_TAG_TYPES_ALL_GET";
-
-    public static final String FN_TAG_TYPES_DELETE = "FN_TAG_TYPES_DELETE";
-
-    public static final String FN_TAG_TYPES_GET = "FN_TAG_TYPES_GET";
-
-    public static final String FN_TAG_TYPES_POST = "FN_TAG_TYPES_POST";
-
-    public static final String FN_TAG_TYPES_PUT = "FN_TAG_TYPES_PUT";
-
-    public static final String FN_TAGS_GET = "FN_TAGS_GET";
-
-    public static final String FN_TAGS_DELETE = "FN_TAGS_DELETE";
-
-    public static final String FN_TAGS_ALL_GET = "FN_TAGS_ALL_GET";
-
-    public static final String FN_TAGS_POST = "FN_TAGS_POST";
-
-    public static final String FN_TAGS_PUT = "FN_TAGS_PUT";
 
     /**
      * Returns all the functions sorted by function name.
