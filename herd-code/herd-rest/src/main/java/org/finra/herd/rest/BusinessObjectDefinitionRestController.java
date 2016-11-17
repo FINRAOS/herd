@@ -15,6 +15,8 @@
 */
 package org.finra.herd.rest;
 
+import java.util.Set;
+
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
@@ -22,6 +24,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import org.finra.herd.model.api.xml.BusinessObjectDefinition;
@@ -29,6 +32,8 @@ import org.finra.herd.model.api.xml.BusinessObjectDefinitionCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptiveInformationUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKeys;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionUpdateRequest;
 import org.finra.herd.model.dto.SecurityFunctions;
 import org.finra.herd.service.BusinessObjectDefinitionService;
@@ -161,5 +166,22 @@ public class BusinessObjectDefinitionRestController extends HerdBaseController
     public BusinessObjectDefinitionKeys getBusinessObjectDefinitions(@PathVariable("namespace") String namespace)
     {
         return businessObjectDefinitionService.getBusinessObjectDefinitions(namespace);
+    }
+
+    /**
+     * Searches across all business object definitions that are defined in the system per specified search filters and keys
+     *
+     * @param fields A comma-separated list of fields to be retrieved with each business object definition entity.
+     *               Valid options: dataProviderName, shortDescription, displayName
+     * @param request the information needed to search across the business object definitions
+     *
+     * @return the retrieved business object definition list
+     */
+    @RequestMapping(value = "/businessObjectDefinitions/search", method = RequestMethod.POST, consumes = {"application/xml", "application/json"})
+    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DEFINITIONS_SEARCH_POST)
+    public BusinessObjectDefinitionSearchResponse searchBusinessObjectDefinitions(
+        @RequestParam(value = "fields", required = false, defaultValue = "") Set<String> fields, @RequestBody BusinessObjectDefinitionSearchRequest request)
+    {
+        return businessObjectDefinitionService.searchBusinessObjectDefinitions(request, fields);
     }
 }

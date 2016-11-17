@@ -341,7 +341,7 @@ public class BusinessObjectFormatDaoTestHelper
     }
 
     /**
-     * Returns a list of test business object format keys expected to be returned by getBusinessObjectDefinitions() method.
+     * Returns a list of test business object format keys expected to be returned by getBusinessObjectDefinitionKeys() method.
      *
      * @return the list of expected business object format keys
      */
@@ -364,7 +364,7 @@ public class BusinessObjectFormatDaoTestHelper
     }
 
     /**
-     * Returns a list of test business object format keys expected to be returned by getBusinessObjectDefinitions() method with the
+     * Returns a list of test business object format keys expected to be returned by getBusinessObjectDefinitionKeys() method with the
      * latestBusinessObjectFormatVersion flag set to "true".
      *
      * @return the list of expected business object format keys

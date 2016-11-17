@@ -17,12 +17,16 @@ package org.finra.herd.dao;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import com.google.common.collect.ImmutableSet;
 import org.junit.Test;
 
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
+import org.finra.herd.model.jpa.TagEntity;
 
 public class BusinessObjectDefinitionDaoTest extends AbstractDaoTest
 {
@@ -43,7 +47,7 @@ public class BusinessObjectDefinitionDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void testGetBusinessObjectDefinitions() throws Exception
+    public void testGetBusinessObjectDefinitionKeys() throws Exception
     {
         // Create and persist business object definition entities.
         for (BusinessObjectDefinitionKey key : businessObjectDefinitionDaoTestHelper.getTestBusinessObjectDefinitionKeys())
@@ -53,9 +57,44 @@ public class BusinessObjectDefinitionDaoTest extends AbstractDaoTest
         }
 
         // Retrieve a list of business object definition keys for the specified namespace.
-        List<BusinessObjectDefinitionKey> resultKeys = businessObjectDefinitionDao.getBusinessObjectDefinitions(NAMESPACE);
+        List<BusinessObjectDefinitionKey> resultKeys = businessObjectDefinitionDao.getBusinessObjectDefinitionKeys(NAMESPACE);
 
         // Validate the returned object.
         assertEquals(businessObjectDefinitionDaoTestHelper.getExpectedBusinessObjectDefinitionKeys(), resultKeys);
     }
+
+    @Test
+    public void testGetBusinessObjectDefinitions() throws Exception
+    {
+        // Create and persist two business object definition entities.
+        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities =
+            businessObjectDefinitionDaoTestHelper.createExpectedBusinessObjectDefinitionEntities();
+
+        //Get the list of business object definitions when tag entities is empty
+        assertEquals(ImmutableSet.copyOf(businessObjectDefinitionEntities),
+            ImmutableSet.copyOf(businessObjectDefinitionDao.getBusinessObjectDefinitions(new ArrayList<>())));
+
+        // Create and persist root tag entity
+        TagEntity parentTagEntity = tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION, null);
+
+        // Create two children for the root tag
+        List<TagEntity> tagEntities = Arrays
+            .asList(parentTagEntity, tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE_3, TAG_DISPLAY_NAME_4, TAG_DESCRIPTION, parentTagEntity),
+                tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE_4, TAG_DISPLAY_NAME_3, TAG_DESCRIPTION, parentTagEntity));
+
+        //Create and persist two business object definition tag entities for the child tag entities.
+        for (BusinessObjectDefinitionEntity businessObjectDefinitionEntity : businessObjectDefinitionEntities)
+        {
+            for (TagEntity tagEntity : tagEntities)
+            {
+                businessObjectDefinitionTagDaoTestHelper.createBusinessObjectDefinitionTagEntity(businessObjectDefinitionEntity, tagEntity);
+            }
+        }
+
+        //filter duplicates and validate result
+        assertEquals(ImmutableSet.copyOf(businessObjectDefinitionEntities),
+            ImmutableSet.copyOf(businessObjectDefinitionDao.getBusinessObjectDefinitions(tagEntities)));
+    }
+
+
 }
