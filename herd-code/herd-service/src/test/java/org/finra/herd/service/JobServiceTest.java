@@ -1371,7 +1371,7 @@ public class JobServiceTest extends AbstractServiceTest
         assertEquals(jobDeleteRequest.getDeleteReason(), historicProcessInstance.getDeleteReason());
     }
 
-    @Test(expected = StackOverflowError.class)
+    @Test
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public void testDeleteJobMultipleSubProcesses() throws Exception
     {
@@ -1407,19 +1407,16 @@ public class JobServiceTest extends AbstractServiceTest
             assertNotNull(getJobResponse);
             assertEquals(JobStatusEnum.RUNNING, getJobResponse.getStatus());
 
-            // The delete job call is expected to fail with a StackOverflowError exception.
-            // TODO: Delete the job and validate the response.
-            LOGGER.info("Calling jobService.deleteJob() ...");
+            // Delete the job and validate the response.
             Job deleteJobResponse = jobService.deleteJob(processInstanceId, new JobDeleteRequest(ACTIVITI_JOB_DELETE_REASON));
-            //LOGGER.info("Completed jobService.deleteJob()");
-            //assertEquals(JobStatusEnum.COMPLETED, deleteJobResponse.getStatus());
-            //assertEquals(ACTIVITI_JOB_DELETE_REASON, deleteJobResponse.getDeleteReason());
+            assertEquals(JobStatusEnum.COMPLETED, deleteJobResponse.getStatus());
+            assertEquals(ACTIVITI_JOB_DELETE_REASON, deleteJobResponse.getDeleteReason());
 
-            // TODO: Validate the historic process instance.
-            //HistoricProcessInstance historicProcessInstance =
-            //    activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(processInstanceId).singleResult();
-            //assertNotNull(historicProcessInstance);
-            //assertEquals(ACTIVITI_JOB_DELETE_REASON, historicProcessInstance.getDeleteReason());
+            // Validate the historic process instance.
+            HistoricProcessInstance historicProcessInstance =
+                activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(processInstanceId).singleResult();
+            assertNotNull(historicProcessInstance);
+            assertEquals(ACTIVITI_JOB_DELETE_REASON, historicProcessInstance.getDeleteReason());
         }
         finally
         {
@@ -1461,14 +1458,20 @@ public class JobServiceTest extends AbstractServiceTest
             {
                 // Dump the current runtime variables into the error log to make it easier to debug
                 StringBuilder builder = new StringBuilder("Dumping workflow variables due to error:\n");
-                builder.append("Super process instance id: ").append(processDefinitionId).append('\n');
+                builder.append("Process definition id: ").append(processDefinitionId).append('\n');
                 builder.append("Active processes threshold: ").append(activeProcessesThreshold).append('\n');
                 builder.append("Number of active processes: ").append(activeProcessesCount).append('\n');
                 List<Execution> executions = activitiRuntimeService.createExecutionQuery().list();
-                builder.append("Total number of active executions: ").append(executions.size()).append('\n');
+                builder.append("Total number of executions: ").append(executions.size()).append('\n');
                 for (Execution execution : executions)
                 {
                     builder.append("Execution - ").append(execution).append(":\n");
+                    builder.append("    execution.getId():").append(execution.getId()).append('\n');
+                    builder.append("    execution.getActivityId():").append(execution.getActivityId()).append('\n');
+                    builder.append("    execution.getParentId():").append(execution.getParentId()).append('\n');
+                    builder.append("    execution.getProcessInstanceId():").append(execution.getProcessInstanceId()).append('\n');
+                    builder.append("    execution.isEnded():").append(execution.isEnded()).append('\n');
+                    builder.append("    execution.isSuspended():").append(execution.isSuspended()).append('\n');
                     Map<String, Object> executionVariables = activitiRuntimeService.getVariables(execution.getId());
                     for (Map.Entry<String, Object> variable : executionVariables.entrySet())
                     {
