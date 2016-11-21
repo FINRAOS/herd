@@ -1373,7 +1373,7 @@ public class JobServiceTest extends AbstractServiceTest
 
     @Test
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    public void testDeleteJobMultipleSubProcesses() throws Exception
+    public void testDeleteJobActiveJobWithMultipleSubProcesses() throws Exception
     {
         // Create and persist a test job definition.
         executeJdbcTestHelper
@@ -1408,6 +1408,71 @@ public class JobServiceTest extends AbstractServiceTest
             assertEquals(JobStatusEnum.RUNNING, getJobResponse.getStatus());
 
             // Delete the job and validate the response.
+            Job deleteJobResponse = jobService.deleteJob(processInstanceId, new JobDeleteRequest(ACTIVITI_JOB_DELETE_REASON));
+            assertEquals(JobStatusEnum.COMPLETED, deleteJobResponse.getStatus());
+            assertEquals(ACTIVITI_JOB_DELETE_REASON, deleteJobResponse.getDeleteReason());
+
+            // Validate the historic process instance.
+            HistoricProcessInstance historicProcessInstance =
+                activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(processInstanceId).singleResult();
+            assertNotNull(historicProcessInstance);
+            assertEquals(ACTIVITI_JOB_DELETE_REASON, historicProcessInstance.getDeleteReason());
+        }
+        finally
+        {
+            // Clean up the Herd database.
+            executeJdbcTestHelper.cleanUpHerdDatabaseAfterExecuteJdbcWithReceiveTaskTest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME);
+
+            // Clean up the Activiti.
+            deleteActivitiDeployments();
+        }
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public void testDeleteJobSuspendedJobWithMultipleSubProcesses() throws Exception
+    {
+        // Create and persist a test job definition.
+        executeJdbcTestHelper
+            .prepareHerdDatabaseForExecuteJdbcWithReceiveTaskTest(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME, ACTIVITI_XML_TEST_MULTIPLE_SUB_PROCESSES);
+
+        try
+        {
+            // Get the job definition entity and ensure it exists.
+            JobDefinitionEntity jobDefinitionEntity = jobDefinitionDao.getJobDefinitionByAltKey(TEST_ACTIVITI_NAMESPACE_CD, TEST_ACTIVITI_JOB_NAME);
+            assertNotNull(jobDefinitionEntity);
+
+            // Get the process definition id.
+            String processDefinitionId = jobDefinitionEntity.getActivitiId();
+
+            // Build the parameters map.
+            Map<String, Object> parameters = new HashMap<>();
+            parameters.put("counter", 0);
+
+            // Start the job.
+            ProcessInstance processInstance = activitiService.startProcessInstanceByProcessDefinitionId(processDefinitionId, parameters);
+            assertNotNull(processInstance);
+
+            // Get the process instance id for this job.
+            String processInstanceId = processInstance.getProcessInstanceId();
+
+            // Wait for all processes to become active - we expect to have the main process along with 800 sub-processes.
+            waitUntilActiveProcessesThreshold(processDefinitionId, 801);
+
+            // Get the job and validate that it is RUNNING.
+            Job getJobResponse = jobService.getJob(processInstanceId, true);
+            assertNotNull(getJobResponse);
+            assertEquals(JobStatusEnum.RUNNING, getJobResponse.getStatus());
+
+            // Suspend the job.
+            jobService.updateJob(processInstanceId, new JobUpdateRequest(JobActionEnum.SUSPEND));
+
+            // Get the job again and validate that it is now SUSPENDED.
+            getJobResponse = jobService.getJob(processInstanceId, true);
+            assertNotNull(getJobResponse);
+            assertEquals(JobStatusEnum.SUSPENDED, getJobResponse.getStatus());
+
+            // Delete the job in suspended state and validate the response.
             Job deleteJobResponse = jobService.deleteJob(processInstanceId, new JobDeleteRequest(ACTIVITI_JOB_DELETE_REASON));
             assertEquals(JobStatusEnum.COMPLETED, deleteJobResponse.getStatus());
             assertEquals(ACTIVITI_JOB_DELETE_REASON, deleteJobResponse.getDeleteReason());
