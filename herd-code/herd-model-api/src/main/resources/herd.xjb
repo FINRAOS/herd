@@ -71,6 +71,10 @@
       <jaxb:bindings node="//xs:complexType[@name='businessObjectDefinitionTagKeys']//xs:element[@name='businessObjectDefinitionTagKey']">
          <jaxb:property name="businessObjectDefinitionTagKeys"/>
       </jaxb:bindings>
+      <jaxb:bindings
+         node="//xs:complexType[@name='businessObjectDefinitionSubjectMatterExpertKeys']//xs:element[@name='businessObjectDefinitionSubjectMatterExpertKey']">
+         <jaxb:property name="businessObjectDefinitionSubjectMatterExpertKeys"/>
+      </jaxb:bindings>
       <jaxb:bindings node="//xs:complexType[@name='fileTypeKeys']//xs:element[@name='fileTypeKey']">
          <jaxb:property name="fileTypeKeys"/>
       </jaxb:bindings>

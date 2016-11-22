@@ -1415,6 +1415,67 @@
       </xs:all>
    </xs:complexType>
 
+   <!-- ***** Business Object Definition Subject Matter Expert ***** -->
+
+   <xs:element name="businessObjectDefinitionSubjectMatterExpertCreateRequest" type="businessObjectDefinitionSubjectMatterExpertCreateRequest"/>
+   <xs:complexType name="businessObjectDefinitionSubjectMatterExpertCreateRequest">
+      <xs:all>
+         <xs:element name="businessObjectDefinitionSubjectMatterExpertKey" type="businessObjectDefinitionSubjectMatterExpertKey">
+            <xs:annotation>
+               <xs:documentation>Values that uniquely identify a Business Object Definition Subject Matter Expert</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDefinitionSubjectMatterExpert" type="businessObjectDefinitionSubjectMatterExpert"/>
+   <xs:complexType name="businessObjectDefinitionSubjectMatterExpert">
+      <xs:all>
+         <xs:element name="id" type="xs:int">
+            <xs:annotation>
+               <xs:documentation>The internal Id that uniquely references a Business Object Definition Subject Matter Expert</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectDefinitionSubjectMatterExpertKey" type="businessObjectDefinitionSubjectMatterExpertKey">
+            <xs:annotation>
+               <xs:documentation>Values that uniquely identify a Business Object Definition Subject Matter Expert</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDefinitionSubjectMatterExpertKeys" type="businessObjectDefinitionSubjectMatterExpertKeys"/>
+   <xs:complexType name="businessObjectDefinitionSubjectMatterExpertKeys">
+      <xs:sequence>
+         <xs:element name="businessObjectDefinitionSubjectMatterExpertKey" type="businessObjectDefinitionSubjectMatterExpertKey" minOccurs="0"
+                     maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>Values that uniquely identify a Business Object Definition Subject Matter Expert</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDefinitionSubjectMatterExpertKey">
+      <xs:all>
+         <xs:element name="namespace" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The namespace of the Business Object Definition</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectDefinitionName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The name of the Business Object Definition</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="userId" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The user id of the Subject Matter Expert</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
    <!-- ***** File Type ***** -->
 
    <xs:element name="fileTypeKeys" type="fileTypeKeys"/>
@@ -4039,33 +4100,33 @@
       </xs:sequence>
    </xs:complexType>
 
-	<!-- ***** Business Object Definition Sampe File Upload ***** -->
-	<xs:element
-		name="uploadBusinessObjectDefinitionSampleDataFileInitiationRequest"
-		type="uploadBusinessObjectDefinitionSampleDataFileInitiationRequest" />
-	<xs:complexType
-		name="uploadBusinessObjectDefinitionSampleDataFileInitiationRequest">
-		<xs:all>
-			<xs:element name="businessObjectDefinitionKey" type="businessObjectDefinitionKey" />
-		</xs:all>
-	</xs:complexType>
+   <!-- ***** Business Object Definition Sampe File Upload ***** -->
+   <xs:element
+      name="uploadBusinessObjectDefinitionSampleDataFileInitiationRequest"
+      type="uploadBusinessObjectDefinitionSampleDataFileInitiationRequest"/>
+   <xs:complexType
+      name="uploadBusinessObjectDefinitionSampleDataFileInitiationRequest">
+      <xs:all>
+         <xs:element name="businessObjectDefinitionKey" type="businessObjectDefinitionKey"/>
+      </xs:all>
+   </xs:complexType>
 
-	<xs:element
-		name="uploadBusinessObjectDefinitionSampleDataFileInitiationResponse"
-		type="uploadBusinessObjectDefinitionSampleDataFileInitiationResponse" />
-	<xs:complexType
-		name="uploadBusinessObjectDefinitionSampleDataFileInitiationResponse">
-		<xs:all>
-			<xs:element name="businessObjectDefinitionKey" type="businessObjectDefinitionKey" />
-			<xs:element name="awsS3BucketName" type="xs:string" />
-			<xs:element name="s3Endpoint" type="xs:string" />
-			<xs:element name="s3KeyPrefix" type="xs:string" />
-			<xs:element name="awsAccessKey" type="xs:string" />
-			<xs:element name="awsSecretKey" type="xs:string" />
-			<xs:element name="awsSessionToken" type="xs:string" />
-			<xs:element name="awsSessionExpirationTime" type="xs:dateTime" />
-		</xs:all>
-	</xs:complexType>
+   <xs:element
+      name="uploadBusinessObjectDefinitionSampleDataFileInitiationResponse"
+      type="uploadBusinessObjectDefinitionSampleDataFileInitiationResponse"/>
+   <xs:complexType
+      name="uploadBusinessObjectDefinitionSampleDataFileInitiationResponse">
+      <xs:all>
+         <xs:element name="businessObjectDefinitionKey" type="businessObjectDefinitionKey"/>
+         <xs:element name="awsS3BucketName" type="xs:string"/>
+         <xs:element name="s3Endpoint" type="xs:string"/>
+         <xs:element name="s3KeyPrefix" type="xs:string"/>
+         <xs:element name="awsAccessKey" type="xs:string"/>
+         <xs:element name="awsSecretKey" type="xs:string"/>
+         <xs:element name="awsSessionToken" type="xs:string"/>
+         <xs:element name="awsSessionExpirationTime" type="xs:dateTime"/>
+      </xs:all>
+   </xs:complexType>
 
    <!-- ***** System Job ***** -->
 
