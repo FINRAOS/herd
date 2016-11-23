@@ -140,7 +140,7 @@ public class BusinessObjectDefinitionSubjectMatterExpertServiceTest extends Abst
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals("Business object definition subject matter expert name can not contain a forward slash character.", e.getMessage());
+            assertEquals("User id can not contain a forward slash character.", e.getMessage());
         }
     }
 
