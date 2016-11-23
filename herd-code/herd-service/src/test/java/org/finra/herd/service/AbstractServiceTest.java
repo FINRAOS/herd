@@ -404,6 +404,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     protected BusinessObjectDefinitionServiceTestHelper businessObjectDefinitionServiceTestHelper;
 
     @Autowired
+    protected BusinessObjectDefinitionSubjectMatterExpertService businessObjectDefinitionSubjectMatterExpertService;
+
+    @Autowired
     protected BusinessObjectDefinitionTagService businessObjectDefinitionTagService;
 
     @Autowired
