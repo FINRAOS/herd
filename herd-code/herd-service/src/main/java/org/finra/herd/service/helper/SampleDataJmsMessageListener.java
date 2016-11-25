@@ -30,6 +30,7 @@ import org.springframework.jms.config.JmsListenerEndpointRegistry;
 import org.springframework.jms.listener.MessageListenerContainer;
 import org.springframework.messaging.handler.annotation.Headers;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
 import org.finra.herd.core.ApplicationContextHolder;
@@ -37,6 +38,10 @@ import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.dto.ConfigurationValue;
 
+/**
+ * sample data jms message listener
+ */
+@Component
 public class SampleDataJmsMessageListener
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(StoragePolicyProcessorJmsMessageListener.class);
@@ -51,7 +56,7 @@ public class SampleDataJmsMessageListener
      * Periodically check the configuration and apply the action to the storage policy processor JMS message listener service, if needed.
      */
     @Scheduled(fixedDelay = 60000)
-    public void controlStoragePolicyProcessorJmsMessageListener()
+    public void controlSampleDataJmsMessageListener()
     {
         try
         {
@@ -98,7 +103,7 @@ public class SampleDataJmsMessageListener
      * @param allHeaders the JMS headers
      */
     @JmsListener(id = HerdJmsDestinationResolver.SQS_DESTINATION_SAMPLE_DATA_QUEUE,
-        containerFactory = "storagePolicyProcessorJmsListenerContainerFactory",
+        containerFactory = "sampleDataJmsListenerContainerFactory",
         destination = HerdJmsDestinationResolver.SQS_DESTINATION_SAMPLE_DATA_QUEUE)
     public void processMessage(String payload, @Headers Map<Object, Object> allHeaders)
     {
@@ -111,7 +116,7 @@ public class SampleDataJmsMessageListener
             S3EventNotification s3EventNotification = S3EventNotification.parseJson(payload);
             String objectKey = URLDecoder.decode(s3EventNotification.getRecords().get(0).getS3().getObject().getKey(), CharEncoding.UTF_8);
             //convert the S3 string back to normal format
-            objectKey = converts3KeyPrefixFormat(objectKey);
+            objectKey = converts3KeyFormat(objectKey);
             long fileSize = s3EventNotification.getRecords().get(0).getS3().getObject().getSizeAsLong();
             //parse the objectKey, it should be in the format of namespace/businessObjectDefinitionName/fileName
             String[] objectKeyArrays = objectKey.split("/");
@@ -131,14 +136,14 @@ public class SampleDataJmsMessageListener
     }
     
     /**
-     * Converts the specified string from the S3 key prefix format. This implies converting dashes to underscores.
+     * Converts the specified string from the S3 key format. This implies converting dashes to underscores.
      *
      * @param string string in S3 format
      *
      * @return the regular string
      */
-    private String converts3KeyPrefixFormat(String string)
+    private String converts3KeyFormat(String string)
     {
-        return string.toLowerCase().replace('-', '_');
+        return string.replace('-', '_');
     }
 }
