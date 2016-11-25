@@ -1653,4 +1653,49 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         //validate the file size is updated
         assertEquals(businessObjectDefinitionEntity.getSampleDataFiles().iterator().next().getFileSizeBytes().longValue(), fizeSize);
     }
+    
+
+    @Test
+    public void testUpdateBusinessObjectDefinitionSampleFilesMissingFileName()
+    {
+        // Create and persist database entities required for testing.
+        businessObjectDefinitionServiceTestHelper.createDatabaseEntitiesForBusinessObjectDefinitionTesting();
+
+        storageDaoTestHelper.createStorageEntity(StorageEntity.SAMPLE_DATA_FILE_STORAGE, Arrays
+                .asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), S3_BUCKET_NAME)));
+        
+        // Create a business object definition.
+        BusinessObjectDefinitionCreateRequest request =
+            new BusinessObjectDefinitionCreateRequest(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME,
+                businessObjectDefinitionServiceTestHelper.getNewAttributes());
+        businessObjectDefinitionService.createBusinessObjectDefinition(request);
+        BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME);
+        
+        String fileName = "";
+        long fizeSize = 1820L;
+        try
+        {
+            businessObjectDefinitionDaoHelper.updatedBusinessObjectDefinitionEntitySampleFiles(businessObjectDefinitionKey, fileName, fizeSize);
+        }
+        catch (IllegalArgumentException ex)
+        {
+            assertEquals(ex.getMessage(), "A file name must be specified.");
+        }        
+    }
+    
+    @Test
+    public void testUpdateBusinessObjectDefinitionSampleFilesBdefNotExists()
+    {
+        BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME);        
+        String fileName = "testfile.csv";
+        long fizeSize = 1820L;
+        try
+        {
+            businessObjectDefinitionDaoHelper.updatedBusinessObjectDefinitionEntitySampleFiles(businessObjectDefinitionKey, fileName, fizeSize);
+        }
+        catch (ObjectNotFoundException ex)
+        {
+            assertEquals(ex.getMessage(), String.format("Business object definition with name \"%s\" doesn't exist for namespace \"%s\".", BDEF_NAME, NAMESPACE));
+        }        
+    }
 }

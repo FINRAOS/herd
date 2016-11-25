@@ -19,6 +19,7 @@ import java.util.Collection;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 
 import org.finra.herd.dao.BusinessObjectDefinitionDao;
 import org.finra.herd.model.ObjectNotFoundException;
@@ -38,7 +39,10 @@ public class BusinessObjectDefinitionDaoHelper
     
     @Autowired
     private StorageDaoHelper storageDaoHelper;
-
+    
+    @Autowired
+    private BusinessObjectDefinitionHelper businessObjectDefinitionHelper;
+    
     /**
      * Retrieves a business object definition entity by it's key and ensure it exists.
      *
@@ -72,6 +76,12 @@ public class BusinessObjectDefinitionDaoHelper
     public void updatedBusinessObjectDefinitionEntitySampleFiles(BusinessObjectDefinitionKey businessObjectDefinitionKey, String fileName, long fileSize)
             throws ObjectNotFoundException
       {
+        //save path from the input parameter
+        String path = businessObjectDefinitionKey.getNamespace() + "/" + businessObjectDefinitionKey.getBusinessObjectDefinitionName() + "/";
+        //validate business object key
+        businessObjectDefinitionHelper.validateBusinessObjectDefinitionKey(businessObjectDefinitionKey);
+        //validate file name
+        Assert.hasText(fileName, "A file name must be specified.");
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity = getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
         Collection<BusinessObjectDefinitionSampleDataFileEntity> sampleFiles = businessObjectDefinitionEntity.getSampleDataFiles();
         boolean found = false;
@@ -85,14 +95,10 @@ public class BusinessObjectDefinitionDaoHelper
                {
                    sampleDataFieEntity.setFileSizeBytes(fileSize);
                    businessObjectDefinitionDao.saveAndRefresh(businessObjectDefinitionEntity);
-               }
-               
+               }              
                break;
            }
-        }
-       
-        String path = businessObjectDefinitionKey.getNamespace() + "/" + businessObjectDefinitionKey.getBusinessObjectDefinitionName() + "/";
-       
+        }      
         //create a new entity when not found
         if (!found)
         {
@@ -105,7 +111,6 @@ public class BusinessObjectDefinitionDaoHelper
             sampleDataFileEntity.setFileSizeBytes(fileSize);
             businessObjectDefinitionEntity.getSampleDataFiles().add(sampleDataFileEntity);
             businessObjectDefinitionDao.saveAndRefresh(businessObjectDefinitionEntity);
-        }
-      
+        }   
       }
 }
