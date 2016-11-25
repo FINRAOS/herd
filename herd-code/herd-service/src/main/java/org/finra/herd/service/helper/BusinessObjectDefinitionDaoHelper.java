@@ -15,6 +15,8 @@
 */
 package org.finra.herd.service.helper;
 
+import java.util.Collection;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -22,6 +24,8 @@ import org.finra.herd.dao.BusinessObjectDefinitionDao;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
+import org.finra.herd.model.jpa.BusinessObjectDefinitionSampleDataFileEntity;
+import org.finra.herd.model.jpa.StorageEntity;
 
 /**
  * Helper for data provider related operations which require DAO.
@@ -31,6 +35,9 @@ public class BusinessObjectDefinitionDaoHelper
 {
     @Autowired
     private BusinessObjectDefinitionDao businessObjectDefinitionDao;
+    
+    @Autowired
+    private StorageDaoHelper storageDaoHelper;
 
     /**
      * Retrieves a business object definition entity by it's key and ensure it exists.
@@ -54,4 +61,51 @@ public class BusinessObjectDefinitionDaoHelper
 
         return businessObjectDefinitionEntity;
     }
+    
+    /**
+     * Update business object definition sample files
+     * @param businessObjectDefinitionKey business object definition key
+     * @param fileName new file name
+     * @param fileSize file size
+     * @throws ObjectNotFoundException objection not found exception
+     */
+    public void updatedBusinessObjectDefinitionEntitySampleFiles(BusinessObjectDefinitionKey businessObjectDefinitionKey, String fileName, long fileSize)
+            throws ObjectNotFoundException
+      {
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
+        Collection<BusinessObjectDefinitionSampleDataFileEntity> sampleFiles = businessObjectDefinitionEntity.getSampleDataFiles();
+        boolean found = false;
+        for (BusinessObjectDefinitionSampleDataFileEntity sampleDataFieEntity: sampleFiles)
+        {
+           if (sampleDataFieEntity.getFileName().equals(fileName))
+           {
+               found = true;
+               //update the file size if they are different
+               if (sampleDataFieEntity.getFileSizeBytes() != fileSize)
+               {
+                   sampleDataFieEntity.setFileSizeBytes(fileSize);
+                   businessObjectDefinitionDao.saveAndRefresh(businessObjectDefinitionEntity);
+               }
+               
+               break;
+           }
+        }
+       
+        String path = businessObjectDefinitionKey.getNamespace() + "/" + businessObjectDefinitionKey.getBusinessObjectDefinitionName() + "/";
+       
+        //create a new entity when not found
+        if (!found)
+        {
+            StorageEntity storageEntity = storageDaoHelper.getStorageEntity(StorageEntity.SAMPLE_DATA_FILE_STORAGE);            
+            BusinessObjectDefinitionSampleDataFileEntity sampleDataFileEntity = new BusinessObjectDefinitionSampleDataFileEntity();
+            sampleDataFileEntity.setStorage(storageEntity);
+            sampleDataFileEntity.setBusinessObjectDefinition(businessObjectDefinitionEntity);
+            sampleDataFileEntity.setDirectoryPath(path);
+            sampleDataFileEntity.setFileName(fileName);
+            sampleDataFileEntity.setFileSizeBytes(fileSize);
+            businessObjectDefinitionEntity.getSampleDataFiles().add(sampleDataFileEntity);
+            businessObjectDefinitionDao.saveAndRefresh(businessObjectDefinitionEntity);
+        }
+      
+      }
 }
