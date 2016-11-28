@@ -718,34 +718,35 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
      */
     @Override
     public void updatedBusinessObjectDefinitionEntitySampleFile(BusinessObjectDefinitionKey businessObjectDefinitionKey, String fileName, long fileSize)
-      {
-        //save path from the input parameter
+    {
+        // save path from the input parameter
         String path = businessObjectDefinitionKey.getNamespace() + "/" + businessObjectDefinitionKey.getBusinessObjectDefinitionName() + "/";
-        //validate business object key
+        // validate business object key
         businessObjectDefinitionHelper.validateBusinessObjectDefinitionKey(businessObjectDefinitionKey);
-        //validate file name
+        // validate file name
         Assert.hasText(fileName, "A file name must be specified.");
-        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
+                businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
         Collection<BusinessObjectDefinitionSampleDataFileEntity> sampleFiles = businessObjectDefinitionEntity.getSampleDataFiles();
         boolean found = false;
-        for (BusinessObjectDefinitionSampleDataFileEntity sampleDataFieEntity: sampleFiles)
+        for (BusinessObjectDefinitionSampleDataFileEntity sampleDataFieEntity : sampleFiles)
         {
-           if (sampleDataFieEntity.getFileName().equals(fileName))
-           {
-               found = true;
-               //update the file size if they are different
-               if (sampleDataFieEntity.getFileSizeBytes() != fileSize)
-               {
-                   sampleDataFieEntity.setFileSizeBytes(fileSize);
-                   businessObjectDefinitionDao.saveAndRefresh(businessObjectDefinitionEntity);
-               }              
-               break;
-           }
-        }      
-        //create a new entity when not found
+            if (sampleDataFieEntity.getFileName().equals(fileName))
+            {
+                found = true;
+                // update the file size if they are different
+                if (sampleDataFieEntity.getFileSizeBytes() != fileSize)
+                {
+                    sampleDataFieEntity.setFileSizeBytes(fileSize);
+                    businessObjectDefinitionDao.saveAndRefresh(businessObjectDefinitionEntity);
+                }
+                break;
+            }
+        }
+        // create a new entity when not found
         if (!found)
         {
-            StorageEntity storageEntity = storageDaoHelper.getStorageEntity(StorageEntity.SAMPLE_DATA_FILE_STORAGE);            
+            StorageEntity storageEntity = storageDaoHelper.getStorageEntity(StorageEntity.SAMPLE_DATA_FILE_STORAGE);
             BusinessObjectDefinitionSampleDataFileEntity sampleDataFileEntity = new BusinessObjectDefinitionSampleDataFileEntity();
             sampleDataFileEntity.setStorage(storageEntity);
             sampleDataFileEntity.setBusinessObjectDefinition(businessObjectDefinitionEntity);
@@ -754,6 +755,6 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
             sampleDataFileEntity.setFileSizeBytes(fileSize);
             businessObjectDefinitionEntity.getSampleDataFiles().add(sampleDataFileEntity);
             businessObjectDefinitionDao.saveAndRefresh(businessObjectDefinitionEntity);
-        }   
-      }
+        }
+    }
 }
