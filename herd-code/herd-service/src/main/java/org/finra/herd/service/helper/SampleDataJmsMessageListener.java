@@ -103,7 +103,7 @@ public class SampleDataJmsMessageListener
      * @param allHeaders the JMS headers
      */
     @JmsListener(id = HerdJmsDestinationResolver.SQS_DESTINATION_SAMPLE_DATA_QUEUE,
-        containerFactory = "sampleDataJmsListenerContainerFactory",
+        containerFactory = "jmsListenerContainerFactory",
         destination = HerdJmsDestinationResolver.SQS_DESTINATION_SAMPLE_DATA_QUEUE)
     public void processMessage(String payload, @Headers Map<Object, Object> allHeaders)
     {
