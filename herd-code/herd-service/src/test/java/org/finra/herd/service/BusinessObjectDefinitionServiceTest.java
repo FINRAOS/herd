@@ -1573,7 +1573,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         String fileName = "testfile.csv";
         long fizeSize = 1820L;
         BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME);
-        businessObjectDefinitionDaoHelper.updatedBusinessObjectDefinitionEntitySampleFiles(businessObjectDefinitionKey, fileName, fizeSize);
+        businessObjectDefinitionServiceImpl.updatedBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey, fileName, fizeSize);
    
         BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionService.getBusinessObjectDefinition(businessObjectDefinitionKey);
         
@@ -1603,7 +1603,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         String fileName = "testfile.csv";
         long fizeSize = 1820L;
         BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME);
-        businessObjectDefinitionDaoHelper.updatedBusinessObjectDefinitionEntitySampleFiles(businessObjectDefinitionKey, fileName, fizeSize);
+        businessObjectDefinitionServiceImpl.updatedBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey, fileName, fizeSize);
    
         BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionService.getBusinessObjectDefinition(businessObjectDefinitionKey);
         List<SampleDataFile> updatedSampleDataFileList = businessObjectDefinitionServiceTestHelper.getTestSampleDataFiles();
@@ -1634,10 +1634,10 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         String fileName = "testfile.csv";
         long fizeSize = 1820L;
         BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME);
-        businessObjectDefinitionDaoHelper.updatedBusinessObjectDefinitionEntitySampleFiles(businessObjectDefinitionKey, fileName, fizeSize);
+        businessObjectDefinitionServiceImpl.updatedBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey, fileName, fizeSize);
    
         fizeSize = 1024L;
-        businessObjectDefinitionDaoHelper.updatedBusinessObjectDefinitionEntitySampleFiles(businessObjectDefinitionKey, fileName, fizeSize);
+        businessObjectDefinitionServiceImpl.updatedBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey, fileName, fizeSize);
         
         BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionService.getBusinessObjectDefinition(businessObjectDefinitionKey);
         
@@ -1675,7 +1675,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         long fizeSize = 1820L;
         try
         {
-            businessObjectDefinitionDaoHelper.updatedBusinessObjectDefinitionEntitySampleFiles(businessObjectDefinitionKey, fileName, fizeSize);
+            businessObjectDefinitionServiceImpl.updatedBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey, fileName, fizeSize);
         }
         catch (IllegalArgumentException ex)
         {
@@ -1691,7 +1691,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         long fizeSize = 1820L;
         try
         {
-            businessObjectDefinitionDaoHelper.updatedBusinessObjectDefinitionEntitySampleFiles(businessObjectDefinitionKey, fileName, fizeSize);
+            businessObjectDefinitionServiceImpl.updatedBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey, fileName, fizeSize);
         }
         catch (ObjectNotFoundException ex)
         {

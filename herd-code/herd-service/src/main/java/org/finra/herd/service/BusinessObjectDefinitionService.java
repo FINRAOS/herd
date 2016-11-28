@@ -49,4 +49,6 @@ public interface BusinessObjectDefinitionService
 
     public BusinessObjectDefinitionSearchResponse searchBusinessObjectDefinitions(BusinessObjectDefinitionSearchRequest businessObjectDefinitionSearchRequest,
         Set<String> fields);
+    
+    public void updatedBusinessObjectDefinitionEntitySampleFile(BusinessObjectDefinitionKey businessObjectDefinitionKey, String fileName, long fileSize);
 }

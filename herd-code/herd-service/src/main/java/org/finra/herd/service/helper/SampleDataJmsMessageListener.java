@@ -37,6 +37,7 @@ import org.finra.herd.core.ApplicationContextHolder;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.service.BusinessObjectDefinitionService;
 
 /**
  * sample data jms message listener
@@ -50,7 +51,7 @@ public class SampleDataJmsMessageListener
     private ConfigurationHelper configurationHelper;
 
     @Autowired
-    private BusinessObjectDefinitionDaoHelper businessObjectDefinitionDaoHelper;
+    private BusinessObjectDefinitionService businessObjectDefinitionService;
 
     /**
      * Periodically check the configuration and apply the action to the storage policy processor JMS message listener service, if needed.
@@ -126,7 +127,7 @@ public class SampleDataJmsMessageListener
             String businessObjectDefinitionName = objectKeyArrays[1];
             String fileName = objectKeyArrays[2];
             BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(namespace, businessObjectDefinitionName);            
-            businessObjectDefinitionDaoHelper.updatedBusinessObjectDefinitionEntitySampleFiles(businessObjectDefinitionKey, fileName, fileSize);
+            businessObjectDefinitionService.updatedBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey, fileName, fileSize);
         }
         catch (RuntimeException | IOException e)
         {
