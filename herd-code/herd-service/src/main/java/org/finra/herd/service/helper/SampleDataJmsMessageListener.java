@@ -44,7 +44,7 @@ import org.finra.herd.model.dto.ConfigurationValue;
 @Component
 public class SampleDataJmsMessageListener
 {
-    private static final Logger LOGGER = LoggerFactory.getLogger(StoragePolicyProcessorJmsMessageListener.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SampleDataJmsMessageListener.class);
 
     @Autowired
     private ConfigurationHelper configurationHelper;

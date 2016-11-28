@@ -19,6 +19,7 @@ import java.util.Collection;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import org.finra.herd.dao.BusinessObjectDefinitionDao;
@@ -73,6 +74,7 @@ public class BusinessObjectDefinitionDaoHelper
      * @param fileSize file size
      * @throws ObjectNotFoundException objection not found exception
      */
+    @Transactional
     public void updatedBusinessObjectDefinitionEntitySampleFiles(BusinessObjectDefinitionKey businessObjectDefinitionKey, String fileName, long fileSize)
             throws ObjectNotFoundException
       {
