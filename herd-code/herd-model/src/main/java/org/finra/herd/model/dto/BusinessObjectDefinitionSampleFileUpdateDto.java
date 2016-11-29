@@ -24,6 +24,12 @@ public class BusinessObjectDefinitionSampleFileUpdateDto
     private String fileName;
     private long fileSize;
 
+    /**
+     * constructor
+     * @param path path
+     * @param fileName file name
+     * @param fileSize file size
+     */
     public BusinessObjectDefinitionSampleFileUpdateDto(String path, String fileName, long fileSize)
     {
         this.path = path;
@@ -31,31 +37,55 @@ public class BusinessObjectDefinitionSampleFileUpdateDto
         this.fileSize = fileSize;
     }
     
+    /**
+     * get path
+     * @return path path
+     */
     public String getPath()
     {
         return path;
     }
 
+    /**
+     * set path
+     * @param path path
+     */
     public void setPath(String path)
     {
         this.path = path;
     }
 
+    /**
+     * get file name
+     * @return file name
+     */
     public String getFileName()
     {
         return fileName;
     }
 
+    /**
+     * set file name
+     * @param fileName file name
+     */
     public void setFileName(String fileName)
     {
         this.fileName = fileName;
     }
 
+    /**
+     * get file size
+     * @return file size
+     */
     public long getFileSize()
     {
         return fileSize;
     }
 
+    /**
+     * set file size
+     * @param fileSize file size
+     */
     public void setFileSize(long fileSize)
     {
         this.fileSize = fileSize;
