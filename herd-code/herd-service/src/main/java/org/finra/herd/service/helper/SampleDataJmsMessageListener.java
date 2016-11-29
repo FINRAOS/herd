@@ -37,6 +37,7 @@ import org.finra.herd.core.ApplicationContextHolder;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
+import org.finra.herd.model.dto.BusinessObjectDefinitionSampleFileUpdateDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.service.BusinessObjectDefinitionService;
 
@@ -125,6 +126,9 @@ public class SampleDataJmsMessageListener
             String namespace = objectKeyArrays[0];
             String businessObjectDefinitionName = objectKeyArrays[1];
             String fileName = objectKeyArrays[2];
+            String path = namespace + "/" + businessObjectDefinitionName + "/";
+            BusinessObjectDefinitionSampleFileUpdateDto businessObjectDefinitionSampleFileUpdateDto =
+                    new BusinessObjectDefinitionSampleFileUpdateDto(path, fileName, fileSize);
 
             String convertedNamespaece = converts3KeyFormat(namespace);
             String convertedBusinessObjectDefinitionName = converts3KeyFormat(businessObjectDefinitionName);
@@ -133,14 +137,16 @@ public class SampleDataJmsMessageListener
                     new BusinessObjectDefinitionKey(convertedNamespaece, convertedBusinessObjectDefinitionName);
             try
             {
-                businessObjectDefinitionService.updatedBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey, fileName, fileSize);
+                businessObjectDefinitionService.updatedBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey,
+                        businessObjectDefinitionSampleFileUpdateDto);
             }
             catch (ObjectNotFoundException ex)
             {
                 LOGGER.info("Failed to find the business object definition, next try the original namespace and business oject defination name " + ex);
                 // if Business object definition is not found, use the original name space and bdef name
                 businessObjectDefinitionKey = new BusinessObjectDefinitionKey(namespace, businessObjectDefinitionName);
-                businessObjectDefinitionService.updatedBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey, fileName, fileSize);
+                businessObjectDefinitionService.updatedBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey,
+                        businessObjectDefinitionSampleFileUpdateDto);
             }
         }
         catch (RuntimeException | IOException e)

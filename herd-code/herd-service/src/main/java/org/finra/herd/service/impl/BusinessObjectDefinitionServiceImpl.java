@@ -53,6 +53,7 @@ import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormat;
 import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormatUpdateRequest;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.api.xml.SampleDataFile;
+import org.finra.herd.model.dto.BusinessObjectDefinitionSampleFileUpdateDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionAttributeEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
@@ -713,14 +714,15 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     /**
      * Update business object definition sample file
      * @param businessObjectDefinitionKey business object definition key
-     * @param fileName new file name
-     * @param fileSize file size
      */
     @Override
-    public void updatedBusinessObjectDefinitionEntitySampleFile(BusinessObjectDefinitionKey businessObjectDefinitionKey, String fileName, long fileSize)
+    public void updatedBusinessObjectDefinitionEntitySampleFile(BusinessObjectDefinitionKey businessObjectDefinitionKey,
+        BusinessObjectDefinitionSampleFileUpdateDto businessObjectDefinitionSampleFileUpdateDto)
     {
-        // save path from the input parameter
-        String path = businessObjectDefinitionKey.getNamespace() + "/" + businessObjectDefinitionKey.getBusinessObjectDefinitionName() + "/";
+        String path = businessObjectDefinitionSampleFileUpdateDto.getPath();
+        String fileName = businessObjectDefinitionSampleFileUpdateDto.getFileName();
+        long fileSize = businessObjectDefinitionSampleFileUpdateDto.getFileSize();
+        
         // validate business object key
         businessObjectDefinitionHelper.validateBusinessObjectDefinitionKey(businessObjectDefinitionKey);
         // validate file name

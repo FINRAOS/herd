@@ -48,6 +48,7 @@ import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormat;
 import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormatUpdateRequest;
 import org.finra.herd.model.api.xml.SampleDataFile;
 import org.finra.herd.model.api.xml.TagKey;
+import org.finra.herd.model.dto.BusinessObjectDefinitionSampleFileUpdateDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.StorageEntity;
@@ -1572,8 +1573,10 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         String fileName = "testfile.csv";
         long fizeSize = 1820L;
+        String path = NAMESPACE + "/" + BDEF_NAME + "/";
+        BusinessObjectDefinitionSampleFileUpdateDto sampleFileUpdateDto = new BusinessObjectDefinitionSampleFileUpdateDto(path, fileName, fizeSize);
         BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME);
-        businessObjectDefinitionServiceImpl.updatedBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey, fileName, fizeSize);
+        businessObjectDefinitionServiceImpl.updatedBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey, sampleFileUpdateDto);
    
         BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionService.getBusinessObjectDefinition(businessObjectDefinitionKey);
         
@@ -1602,8 +1605,11 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         String fileName = "testfile.csv";
         long fizeSize = 1820L;
+        String path = NAMESPACE + "/" + BDEF_NAME + "/";
+        BusinessObjectDefinitionSampleFileUpdateDto sampleFileUpdateDto = new BusinessObjectDefinitionSampleFileUpdateDto(path, fileName, fizeSize);
+
         BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME);
-        businessObjectDefinitionServiceImpl.updatedBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey, fileName, fizeSize);
+        businessObjectDefinitionServiceImpl.updatedBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey, sampleFileUpdateDto);
    
         BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionService.getBusinessObjectDefinition(businessObjectDefinitionKey);
         List<SampleDataFile> updatedSampleDataFileList = businessObjectDefinitionServiceTestHelper.getTestSampleDataFiles();
@@ -1632,12 +1638,16 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         businessObjectDefinitionService.createBusinessObjectDefinition(request);
 
         String fileName = "testfile.csv";
-        long fizeSize = 1820L;
+        long fileSize = 1820L;
+        String path = NAMESPACE + "/" + BDEF_NAME + "/";
+        BusinessObjectDefinitionSampleFileUpdateDto sampleFileUpdateDto = new BusinessObjectDefinitionSampleFileUpdateDto(path, fileName, fileSize);
+
         BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME);
-        businessObjectDefinitionServiceImpl.updatedBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey, fileName, fizeSize);
+        businessObjectDefinitionServiceImpl.updatedBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey, sampleFileUpdateDto);
    
-        fizeSize = 1024L;
-        businessObjectDefinitionServiceImpl.updatedBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey, fileName, fizeSize);
+        fileSize = 1024L;
+        sampleFileUpdateDto.setFileSize(fileSize);
+        businessObjectDefinitionServiceImpl.updatedBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey, sampleFileUpdateDto);
         
         BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionService.getBusinessObjectDefinition(businessObjectDefinitionKey);
         
@@ -1651,7 +1661,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
         
         //validate the file size is updated
-        assertEquals(businessObjectDefinitionEntity.getSampleDataFiles().iterator().next().getFileSizeBytes().longValue(), fizeSize);
+        assertEquals(businessObjectDefinitionEntity.getSampleDataFiles().iterator().next().getFileSizeBytes().longValue(), fileSize);
     }
     
 
@@ -1672,10 +1682,13 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME);
         
         String fileName = "";
-        long fizeSize = 1820L;
+        long fileSize = 1820L;
+        String path = NAMESPACE + "/" + BDEF_NAME + "/";
+        BusinessObjectDefinitionSampleFileUpdateDto sampleFileUpdateDto = new BusinessObjectDefinitionSampleFileUpdateDto(path, fileName, fileSize);
+
         try
         {
-            businessObjectDefinitionServiceImpl.updatedBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey, fileName, fizeSize);
+            businessObjectDefinitionServiceImpl.updatedBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey, sampleFileUpdateDto);
         }
         catch (IllegalArgumentException ex)
         {
@@ -1688,10 +1701,13 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
     {
         BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME);        
         String fileName = "testfile.csv";
-        long fizeSize = 1820L;
+        long fileSize = 1820L;
+        String path = NAMESPACE + "/" + BDEF_NAME + "/";
+        BusinessObjectDefinitionSampleFileUpdateDto sampleFileUpdateDto = new BusinessObjectDefinitionSampleFileUpdateDto(path, fileName, fileSize);
+
         try
         {
-            businessObjectDefinitionServiceImpl.updatedBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey, fileName, fizeSize);
+            businessObjectDefinitionServiceImpl.updatedBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey, sampleFileUpdateDto);
         }
         catch (ObjectNotFoundException ex)
         {
