@@ -5973,6 +5973,17 @@
       </xs:all>
    </xs:complexType>
 
+   <xs:element name="businessObjectDataRetryStoragePolicyTransitionRequest" type="businessObjectDataRetryStoragePolicyTransitionRequest"/>
+   <xs:complexType name="businessObjectDataRetryStoragePolicyTransitionRequest">
+      <xs:all>
+         <xs:element name="storagePolicyKey" type="storagePolicyKey">
+            <xs:annotation>
+               <xs:documentation>Wrapper for the storage policy unique identifiers</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
    <!-- ***** Namespace IAM Role Authorization ***** -->
 
    <xs:element name="namespaceIamRoleAuthorizations" type="namespaceIamRoleAuthorizations"/>
