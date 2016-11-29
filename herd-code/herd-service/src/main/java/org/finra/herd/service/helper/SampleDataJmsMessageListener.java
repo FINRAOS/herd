@@ -35,6 +35,7 @@ import org.springframework.util.Assert;
 
 import org.finra.herd.core.ApplicationContextHolder;
 import org.finra.herd.core.helper.ConfigurationHelper;
+import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.service.BusinessObjectDefinitionService;
@@ -116,23 +117,36 @@ public class SampleDataJmsMessageListener
             // Process messages coming from S3 bucket.
             S3EventNotification s3EventNotification = S3EventNotification.parseJson(payload);
             String objectKey = URLDecoder.decode(s3EventNotification.getRecords().get(0).getS3().getObject().getKey(), CharEncoding.UTF_8);
-            //convert the S3 string back to normal format
-            objectKey = converts3KeyFormat(objectKey);
             long fileSize = s3EventNotification.getRecords().get(0).getS3().getObject().getSizeAsLong();
-            //parse the objectKey, it should be in the format of namespace/businessObjectDefinitionName/fileName
+            // parse the objectKey, it should be in the format of namespace/businessObjectDefinitionName/fileName
             String[] objectKeyArrays = objectKey.split("/");
             Assert.isTrue(objectKeyArrays.length == 3, String.format("S3 notification message %s is not in expected format", objectKey));
-            
+
             String namespace = objectKeyArrays[0];
             String businessObjectDefinitionName = objectKeyArrays[1];
             String fileName = objectKeyArrays[2];
-            BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(namespace, businessObjectDefinitionName);            
-            businessObjectDefinitionService.updatedBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey, fileName, fileSize);
+
+            String convertedNamespaece = converts3KeyFormat(namespace);
+            String convertedBusinessObjectDefinitionName = converts3KeyFormat(businessObjectDefinitionName);
+
+            BusinessObjectDefinitionKey businessObjectDefinitionKey =
+                    new BusinessObjectDefinitionKey(convertedNamespaece, convertedBusinessObjectDefinitionName);
+            try
+            {
+                businessObjectDefinitionService.updatedBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey, fileName, fileSize);
+            }
+            catch (ObjectNotFoundException ex)
+            {
+                LOGGER.info("Failed to find the business object definition, next try the original namespace and business oject defination name " + ex);
+                // if Business object definition is not found, use the original name space and bdef name
+                businessObjectDefinitionKey = new BusinessObjectDefinitionKey(namespace, businessObjectDefinitionName);
+                businessObjectDefinitionService.updatedBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey, fileName, fileSize);
+            }
         }
         catch (RuntimeException | IOException e)
         {
             LOGGER.error("Failed to process message from the JMS queue. jmsQueueName=\"{}\" jmsMessagePayload={}",
-                HerdJmsDestinationResolver.SQS_DESTINATION_SAMPLE_DATA_QUEUE, payload, e);
+                    HerdJmsDestinationResolver.SQS_DESTINATION_SAMPLE_DATA_QUEUE, payload, e);
         }
     }
     
