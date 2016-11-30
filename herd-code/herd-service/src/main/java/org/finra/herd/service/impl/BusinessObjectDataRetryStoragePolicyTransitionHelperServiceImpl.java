@@ -50,7 +50,6 @@ import org.finra.herd.service.NotificationEventService;
 import org.finra.herd.service.S3Service;
 import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
-import org.finra.herd.service.helper.StorageFileHelper;
 import org.finra.herd.service.helper.StorageHelper;
 import org.finra.herd.service.helper.StoragePolicyDaoHelper;
 import org.finra.herd.service.helper.StoragePolicyHelper;
@@ -91,9 +90,6 @@ public class BusinessObjectDataRetryStoragePolicyTransitionHelperServiceImpl imp
 
     @Autowired
     private StorageFileDao storageFileDao;
-
-    @Autowired
-    private StorageFileHelper storageFileHelper;
 
     @Autowired
     private StorageHelper storageHelper;
@@ -271,7 +267,7 @@ public class BusinessObjectDataRetryStoragePolicyTransitionHelperServiceImpl imp
             businessObjectDataHelper.businessObjectDataEntityAltKeyToString(businessObjectDataEntity)));
 
         // Construct the origin S3 key prefix by removing the origin S3 bucket name from the beginning of the Glacier storage unit storage directory path.
-        String originS3KeyPrefix = StringUtils.removeStart(originBucketName + "/", glacierStorageUnitEntity.getDirectoryPath());
+        String originS3KeyPrefix = StringUtils.removeStart(glacierStorageUnitEntity.getDirectoryPath(), originBucketName + "/");
 
         // Retrieve storage files registered with this business object data in the origin storage.
         int originStorageFilesCount = originStorageUnitEntity.getStorageFiles().size();
@@ -288,7 +284,7 @@ public class BusinessObjectDataRetryStoragePolicyTransitionHelperServiceImpl imp
             storageFileDao.getStorageFileCount(originStorageUnitEntity.getStorage().getName(), originS3KeyPrefixWithTrailingSlash);
 
         // Sanity check for the origin S3 key prefix.
-        if (!registeredStorageFilesMatchingS3KeyPrefixCount.equals(originStorageFilesCount))
+        if (registeredStorageFilesMatchingS3KeyPrefixCount.intValue() != originStorageFilesCount)
         {
             throw new IllegalArgumentException(String.format(
                 "Number of storage files (%d) registered for the business object data in \"%s\" storage is not equal to " +
@@ -417,13 +413,13 @@ public class BusinessObjectDataRetryStoragePolicyTransitionHelperServiceImpl imp
         {
             // Validate that Glacier storage unit is in "ARCHIVING" state.
             Assert.isTrue(StorageUnitStatusEntity.ARCHIVING.equals(glacierStorageUnitEntity.getStatus().getCode()), String
-                .format("Business object data is not currently being archived. Business object data: {%s}",
-                    businessObjectDataHelper.businessObjectDataEntityAltKeyToString(businessObjectDataEntity)));
+                .format("Business object data is not currently being archived to \"%s\" storage policy destination storage. Business object data: {%s}",
+                    glacierStorageEntity.getName(), businessObjectDataHelper.businessObjectDataEntityAltKeyToString(businessObjectDataEntity)));
 
             // Validate that Glacier storage unit has a non-blank storage directory path.
             Assert.isTrue(StringUtils.isNotBlank(glacierStorageUnitEntity.getDirectoryPath()), String
-                .format("Business object data has no storage directory path specified in \"%s\" storage. Business object data: {%s}",
-                    glacierStorageUnitEntity.getStorage().getName(),
+                .format("Business object data has no storage directory path specified in \"%s\" %s storage. Business object data: {%s}",
+                    glacierStorageUnitEntity.getStorage().getName(), StoragePlatformEntity.GLACIER,
                     businessObjectDataHelper.businessObjectDataEntityAltKeyToString(businessObjectDataEntity)));
         }
 
@@ -468,7 +464,7 @@ public class BusinessObjectDataRetryStoragePolicyTransitionHelperServiceImpl imp
      */
     private void validateBusinessObjectDataRetryStoragePolicyTransitionRequest(BusinessObjectDataRetryStoragePolicyTransitionRequest request)
     {
-        Assert.notNull(request, "A storage policy create request must be specified.");
+        Assert.notNull(request, "A business object data retry storage policy transition request must be specified.");
         storagePolicyHelper.validateStoragePolicyKey(request.getStoragePolicyKey());
     }
 }

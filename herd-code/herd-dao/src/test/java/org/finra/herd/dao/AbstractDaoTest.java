@@ -375,6 +375,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Boolean NO_PUBLISH_ATTRIBUTE = false;
 
+    public static final String NO_S3_BUCKET_NAME = null;
+
     public static final List<SampleDataFile> NO_SAMPLE_DATA_FILES = new ArrayList<>();
 
     public static final Schema NO_SCHEMA = null;

@@ -159,4 +159,63 @@ public class BusinessObjectDataRetryStoragePolicyTransitionDto
     {
         this.storagePolicyVersion = storagePolicyVersion;
     }
+
+    @Override
+    public boolean equals(Object object)
+    {
+        if (this == object)
+        {
+            return true;
+        }
+        if (!(object instanceof BusinessObjectDataRetryStoragePolicyTransitionDto))
+        {
+            return false;
+        }
+
+        BusinessObjectDataRetryStoragePolicyTransitionDto that = (BusinessObjectDataRetryStoragePolicyTransitionDto) object;
+
+        if (businessObjectDataKey != null ? !businessObjectDataKey.equals(that.businessObjectDataKey) : that.businessObjectDataKey != null)
+        {
+            return false;
+        }
+        if (glacierBucketName != null ? !glacierBucketName.equals(that.glacierBucketName) : that.glacierBucketName != null)
+        {
+            return false;
+        }
+        if (glacierS3KeyPrefix != null ? !glacierS3KeyPrefix.equals(that.glacierS3KeyPrefix) : that.glacierS3KeyPrefix != null)
+        {
+            return false;
+        }
+        if (glacierStorageName != null ? !glacierStorageName.equals(that.glacierStorageName) : that.glacierStorageName != null)
+        {
+            return false;
+        }
+        if (sqsQueueName != null ? !sqsQueueName.equals(that.sqsQueueName) : that.sqsQueueName != null)
+        {
+            return false;
+        }
+        if (storagePolicyKey != null ? !storagePolicyKey.equals(that.storagePolicyKey) : that.storagePolicyKey != null)
+        {
+            return false;
+        }
+        if (storagePolicyVersion != null ? !storagePolicyVersion.equals(that.storagePolicyVersion) : that.storagePolicyVersion != null)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int result = businessObjectDataKey != null ? businessObjectDataKey.hashCode() : 0;
+        result = 31 * result + (glacierBucketName != null ? glacierBucketName.hashCode() : 0);
+        result = 31 * result + (glacierS3KeyPrefix != null ? glacierS3KeyPrefix.hashCode() : 0);
+        result = 31 * result + (glacierStorageName != null ? glacierStorageName.hashCode() : 0);
+        result = 31 * result + (sqsQueueName != null ? sqsQueueName.hashCode() : 0);
+        result = 31 * result + (storagePolicyKey != null ? storagePolicyKey.hashCode() : 0);
+        result = 31 * result + (storagePolicyVersion != null ? storagePolicyVersion.hashCode() : 0);
+        return result;
+    }
 }

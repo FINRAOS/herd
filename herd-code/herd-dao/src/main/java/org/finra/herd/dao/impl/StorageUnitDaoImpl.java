@@ -108,8 +108,11 @@ public class StorageUnitDaoImpl extends AbstractHerdDao implements StorageUnitDa
         // Add the clauses for the query.
         criteria.select(storageUnitEntityRoot).where(builder.and(predicates.toArray(new Predicate[predicates.size()])));
 
-        // Execute the query and return the result.
-        return entityManager.createQuery(criteria).getSingleResult();
+        // Execute the query.
+        List<StorageUnitEntity> resultList = entityManager.createQuery(criteria).getResultList();
+
+        // Return single result or null.
+        return resultList.size() >= 1 ? resultList.get(0) : null;
     }
 
     @Override
