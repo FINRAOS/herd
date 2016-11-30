@@ -1662,6 +1662,11 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         
         //validate the file size is updated
         assertEquals(businessObjectDefinitionEntity.getSampleDataFiles().iterator().next().getFileSizeBytes().longValue(), fileSize);
+        //updated again, the file size is the same, so no database change is expected
+        businessObjectDefinitionServiceImpl.updatedBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey, sampleFileUpdateDto);      
+        businessObjectDefinitionEntity = businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
+        //validate the file size is updated
+        assertEquals(businessObjectDefinitionEntity.getSampleDataFiles().iterator().next().getFileSizeBytes().longValue(), fileSize);
     }
     
 

@@ -130,8 +130,8 @@ public class SampleDataJmsMessageListener
             BusinessObjectDefinitionSampleFileUpdateDto businessObjectDefinitionSampleFileUpdateDto =
                     new BusinessObjectDefinitionSampleFileUpdateDto(path, fileName, fileSize);
 
-            String convertedNamespaece = converts3KeyFormat(namespace);
-            String convertedBusinessObjectDefinitionName = converts3KeyFormat(businessObjectDefinitionName);
+            String convertedNamespaece = convertS3KeyFormat(namespace);
+            String convertedBusinessObjectDefinitionName = convertS3KeyFormat(businessObjectDefinitionName);
 
             BusinessObjectDefinitionKey businessObjectDefinitionKey =
                     new BusinessObjectDefinitionKey(convertedNamespaece, convertedBusinessObjectDefinitionName);
@@ -163,7 +163,7 @@ public class SampleDataJmsMessageListener
      *
      * @return the regular string
      */
-    private String converts3KeyFormat(String string)
+    private String convertS3KeyFormat(String string)
     {
         return string.replace('-', '_');
     }
