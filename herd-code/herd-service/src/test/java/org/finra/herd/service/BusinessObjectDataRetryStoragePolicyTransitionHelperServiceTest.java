@@ -998,6 +998,48 @@ public class BusinessObjectDataRetryStoragePolicyTransitionHelperServiceTest ext
     }
 
     @Test
+    public void testPrepareToRetryStoragePolicyTransitionOriginStorageUnitNotInStoragePolicySourceStorage()
+    {
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION);
+
+        // Create a storage policy key.
+        StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
+
+        // Create database entities required for testing.
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataServiceTestHelper
+            .createDatabaseEntitiesForRetryStoragePolicyTransitionTesting(businessObjectDataKey, storagePolicyKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN,
+                StorageUnitStatusEntity.ENABLED, STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER, StorageUnitStatusEntity.ARCHIVING,
+                S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX);
+
+        // Create an S3 storage unit for this business object data in a different S3 storage.
+        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, StoragePlatformEntity.S3, businessObjectDataEntity, StorageUnitStatusEntity.ENABLED, TEST_S3_KEY_PREFIX);
+
+        // Get the Glacier storage unit entity.
+        StorageUnitEntity glacierStorageUnitEntity = storageUnitDaoHelper.getStorageUnitEntity(STORAGE_NAME_GLACIER, businessObjectDataEntity);
+
+        // Set the origin storage unit.
+        glacierStorageUnitEntity.setParentStorageUnit(storageUnitEntity);
+
+        // Try to execute a before step for the retry storage policy transition when origin storage unit is not S3.
+        try
+        {
+            businessObjectDataRetryStoragePolicyTransitionHelperService
+                .prepareToRetryStoragePolicyTransition(businessObjectDataKey, new BusinessObjectDataRetryStoragePolicyTransitionRequest(storagePolicyKey));
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(String.format("Origin storage unit for the business object data Glacier storage unit does not belong to the storage policy storage. " +
+                "Glacier storage unit origin storage: {%s}, storage policy storage: {%s}, business object data: {%s}", STORAGE_NAME, STORAGE_NAME_ORIGIN,
+                businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
+        }
+    }
+
+    @Test
     public void testPrepareToRetryStoragePolicyTransitionOriginStorageUnitNotS3()
     {
         // Create a business object data key.
