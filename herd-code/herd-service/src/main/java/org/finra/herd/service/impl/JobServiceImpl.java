@@ -15,8 +15,10 @@
 */
 package org.finra.herd.service.impl;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -26,6 +28,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import org.activiti.engine.RuntimeService;
 import org.activiti.engine.history.HistoricActivityInstance;
 import org.activiti.engine.history.HistoricProcessInstance;
 import org.activiti.engine.repository.ProcessDefinition;
@@ -128,6 +131,9 @@ public class JobServiceImpl implements JobService
     @Autowired
     private StorageHelper storageHelper;
 
+    @Autowired
+    private RuntimeService activitiRuntimeService;
+
     @NamespacePermission(fields = "#request?.namespace", permissions = NamespacePermissionEnum.EXECUTE)
     @Override
     public Job createAndStartJob(JobCreateRequest request) throws Exception
@@ -172,19 +178,45 @@ public class JobServiceImpl implements JobService
         Assert.notNull(jobDeleteRequest, "jobDeleteRequest must be specified");
         Assert.hasText(jobDeleteRequest.getDeleteReason(), "deleteReason must be specified");
 
-        boolean jobFound = false;
-        ProcessInstance processInstance = activitiService.getProcessInstanceById(jobId);
-        if (processInstance != null)
-        {
-            checkPermissions(processInstance.getProcessDefinitionKey(), new NamespacePermissionEnum[] {NamespacePermissionEnum.EXECUTE});
+        ProcessInstance mainProcessInstance = activitiService.getProcessInstanceById(jobId);
 
-            activitiService.deleteProcessInstance(jobId, jobDeleteRequest.getDeleteReason());
-            jobFound = true;
+        if (mainProcessInstance != null)
+        {
+            checkPermissions(mainProcessInstance.getProcessDefinitionKey(), new NamespacePermissionEnum[] {NamespacePermissionEnum.EXECUTE});
+
+            // Load all processes (main process and sub-processes) into a deque to be later deleted.
+            Deque<String> processInstanceIds = new ArrayDeque<>();
+            processInstanceIds.push(mainProcessInstance.getProcessInstanceId());
+            Deque<String> superProcessInstanceIds = new ArrayDeque<>();
+            superProcessInstanceIds.push(mainProcessInstance.getProcessInstanceId());
+            while (!superProcessInstanceIds.isEmpty())
+            {
+                String superProcessInstanceId = superProcessInstanceIds.pop();
+
+                // Get all executions with the parent id equal to the super process instance id.
+                for (Execution execution : activitiRuntimeService.createExecutionQuery().parentId(superProcessInstanceId).list())
+                {
+                    processInstanceIds.push(execution.getId());
+                }
+
+                // Get all active sub-processes for the super process instance id.
+                for (ProcessInstance subProcessInstance : activitiRuntimeService.createProcessInstanceQuery().superProcessInstanceId(superProcessInstanceId)
+                    .active().list())
+                {
+                    processInstanceIds.push(subProcessInstance.getId());
+                    superProcessInstanceIds.push(subProcessInstance.getId());
+                }
+            }
+
+            // Delete all processes individually in LIFO order.
+            while (!processInstanceIds.isEmpty())
+            {
+                activitiService.deleteProcessInstance(processInstanceIds.pop(), jobDeleteRequest.getDeleteReason());
+            }
         }
-
-        if (!jobFound)
+        else
         {
-            throw new ObjectNotFoundException("Job with ID \"" + jobId + "\" does not exist or is already completed.");
+            throw new ObjectNotFoundException(String.format("Job with ID \"%s\" does not exist or is already completed.", jobId));
         }
 
         return getJob(jobId, false, false);
@@ -687,6 +719,23 @@ public class JobServiceImpl implements JobService
     }
 
     /**
+     * Gets a set of all currently suspended runtime process instance ids.
+     *
+     * @return the set of currently suspended process instance ids
+     */
+    private Set<String> getSuspendedProcessInstanceIds()
+    {
+        Set<String> suspendedProcessInstanceIds = new HashSet<>();
+
+        for (ProcessInstance suspendedProcessInstance : activitiService.getSuspendedProcessInstances())
+        {
+            suspendedProcessInstanceIds.add(suspendedProcessInstance.getId());
+        }
+
+        return suspendedProcessInstanceIds;
+    }
+
+    /**
      * Populates the job Object with workflow xml.
      *
      * @param job, the Job object
@@ -819,22 +868,5 @@ public class JobServiceImpl implements JobService
         // Remove leading and trailing spaces.
         request.setId(request.getId().trim());
         request.setReceiveTaskId(request.getReceiveTaskId().trim());
-    }
-
-    /**
-     * Gets a set of all currently suspended runtime process instance ids.
-     *
-     * @return the set of currently suspended process instance ids
-     */
-    private Set<String> getSuspendedProcessInstanceIds()
-    {
-        Set<String> suspendedProcessInstanceIds = new HashSet<>();
-
-        for (ProcessInstance suspendedProcessInstance : activitiService.getSuspendedProcessInstances())
-        {
-            suspendedProcessInstanceIds.add(suspendedProcessInstance.getId());
-        }
-
-        return suspendedProcessInstanceIds;
     }
 }

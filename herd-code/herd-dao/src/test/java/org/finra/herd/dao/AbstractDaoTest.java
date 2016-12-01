@@ -184,8 +184,6 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String DOWNLOADER_ROLE_ARN = "UT_DownloaderRoleArn" + RANDOM_SUFFIX;
 
-    public static final String UPLOADER_ROLE_ARN = "UT_UploaderRoleArn" + RANDOM_SUFFIX;
-    
     public static final String EC2_INSTANCE_ID = "UT_Ec2InstanceId" + RANDOM_SUFFIX;
 
     public static final String EC2_INSTANCE_TYPE = "UT_Ec2InstanceType" + RANDOM_SUFFIX;
@@ -243,6 +241,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String HTTP_PROXY_HOST = "UT_ProxyHost" + RANDOM_SUFFIX;
 
     public static final Integer HTTP_PROXY_PORT = (int) (Math.random() * Integer.MAX_VALUE);
+
+    public static final Boolean INCLUDE_TAG_HIERARCHY = true;
 
     public static final Integer INITIAL_DATA_VERSION = 0;
 
@@ -317,6 +317,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String NOTIFICATION_NAME_2 = "UT_Ntfcn_Name_2" + RANDOM_SUFFIX;
 
+    public static final Boolean NOT_INCLUDE_TAG_HIERARCHY = false;
+
     public static final Boolean NO_ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA = false;
 
     public static final List<Attribute> NO_ATTRIBUTES = new ArrayList<>();
@@ -372,6 +374,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String NO_PARTITION_KEY_GROUP = null;
 
     public static final Boolean NO_PUBLISH_ATTRIBUTE = false;
+
+    public static final String NO_S3_BUCKET_NAME = null;
 
     public static final List<SampleDataFile> NO_SAMPLE_DATA_FILES = new ArrayList<>();
 
@@ -600,10 +604,6 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Boolean TAG_HAS_NO_CHILDREN = false;
 
-    public static final Boolean INCLUDE_TAG_HIERARCHY = true;
-
-    public static final Boolean NOT_INCLUDE_TAG_HIERARCHY = false;
-
     public static final String TAG_TYPE = "UT_TagType_1_" + RANDOM_SUFFIX;
 
     public static final String TAG_TYPE_2 = "UT_TagType_2_" + RANDOM_SUFFIX;
@@ -637,6 +637,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final List<String> UNSORTED_PARTITION_VALUES =
         Arrays.asList("2014-04-02", "2014-04-04", "2014-04-03", "2014-04-02A", "2014-04-08", "2014-04-07", "2014-04-05", "2014-04-06");
+
+    public static final String UPLOADER_ROLE_ARN = "UT_UploaderRoleArn" + RANDOM_SUFFIX;
 
     public static final String USER_ID = "UT_User_Id_1_" + RANDOM_SUFFIX;
 
@@ -687,6 +689,12 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     @Autowired
     protected BusinessObjectDefinitionDaoTestHelper businessObjectDefinitionDaoTestHelper;
+
+    @Autowired
+    protected BusinessObjectDefinitionSubjectMatterExpertDao businessObjectDefinitionSubjectMatterExpertDao;
+
+    @Autowired
+    protected BusinessObjectDefinitionSubjectMatterExpertDaoTestHelper businessObjectDefinitionSubjectMatterExpertDaoTestHelper;
 
     @Autowired
     protected BusinessObjectDefinitionTagDao businessObjectDefinitionTagDao;

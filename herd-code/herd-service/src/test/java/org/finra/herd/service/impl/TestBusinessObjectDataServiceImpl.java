@@ -35,6 +35,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDataDdlRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.BusinessObjectDataRetryStoragePolicyTransitionRequest;
 import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
 
 /**
@@ -129,6 +130,18 @@ public class TestBusinessObjectDataServiceImpl extends BusinessObjectDataService
         BusinessObjectDataInvalidateUnregisteredRequest businessObjectDataInvalidateUnregisteredRequest)
     {
         return invalidateUnregisteredBusinessObjectDataImpl(businessObjectDataInvalidateUnregisteredRequest);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * This implementation keeps the current transaction context.
+     */
+    @Override
+    public BusinessObjectData retryStoragePolicyTransition(BusinessObjectDataKey businessObjectDataKey,
+        BusinessObjectDataRetryStoragePolicyTransitionRequest request)
+    {
+        return retryStoragePolicyTransitionImpl(businessObjectDataKey, request);
     }
 
     /**
