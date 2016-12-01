@@ -44,6 +44,16 @@ public class SampleDataJmsMessageListenerTest extends AbstractServiceTest
         @Bean(name = "org.springframework.jms.config.internalJmsListenerEndpointRegistry")
         JmsListenerEndpointRegistry registry()
         {
+            //if Mockito not found return null
+            try
+            {
+                Class.forName("org.mockito.Mockito");
+            }
+            catch (ClassNotFoundException ignored)
+            {
+                return null;
+            }
+
             return Mockito.mock(JmsListenerEndpointRegistry.class);
         } 
     }
