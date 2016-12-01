@@ -2,6 +2,8 @@ package org.finra.herd.service.helper;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,9 +14,16 @@ import com.amazonaws.services.s3.event.S3EventNotification.S3Entity;
 import com.amazonaws.services.s3.event.S3EventNotification.S3EventNotificationRecord;
 import com.amazonaws.services.s3.event.S3EventNotification.S3ObjectEntity;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.jms.config.JmsListenerEndpointRegistry;
+import org.springframework.jms.listener.MessageListenerContainer;
+import org.springframework.test.util.ReflectionTestUtils;
 
-import org.finra.herd.dao.helper.JsonHelper;
+import org.finra.herd.core.ApplicationContextHolder;
+import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.BusinessObjectDefinition;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionCreateRequest;
@@ -23,22 +32,19 @@ import org.finra.herd.model.api.xml.SampleDataFile;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.service.AbstractServiceTest;
-import org.finra.herd.service.BusinessObjectDefinitionService;
 
-
-
+@Configuration
 public class SampleDataJmsMessageListenerTest extends AbstractServiceTest
 {
     @Autowired
-    SampleDataJmsMessageListener sampleDataJmsMessageListener;
-
-    @Autowired
-    JsonHelper jsonHelper;
-
-    @Autowired
-    BusinessObjectDefinitionService businessObjectDefinitionService;
-   
-
+    private SampleDataJmsMessageListener sampleDataJmsMessageListener;
+    
+    @Bean(name = "org.springframework.jms.config.internalJmsListenerEndpointRegistry")
+    JmsListenerEndpointRegistry registry()
+    {
+        return Mockito.mock(JmsListenerEndpointRegistry.class);
+    }
+  
     @Test
     public void testS3Message() throws Exception
     {
@@ -108,6 +114,30 @@ public class SampleDataJmsMessageListenerTest extends AbstractServiceTest
             //this exception should be caught inside the processMessage method
             fail();
         }
+    }
+    
+    @Test
+    public void testControlListener()
+    {
+        configurationHelper = Mockito.mock(ConfigurationHelper.class);
+        
+        ReflectionTestUtils.setField(sampleDataJmsMessageListener, "configurationHelper", configurationHelper);
+        MessageListenerContainer mockMessageListenerContainer = Mockito.mock(MessageListenerContainer.class);
+        
+        when(configurationHelper.getProperty(ConfigurationValue.SAMPLE_DATA_JMS_LISTENER_ENABLED)).thenReturn("false");
+        JmsListenerEndpointRegistry registry = ApplicationContextHolder.getApplicationContext()
+                .getBean("org.springframework.jms.config.internalJmsListenerEndpointRegistry", JmsListenerEndpointRegistry.class);
+        
+        //the listener is running, but it is not enable, should stop
+        when(registry.getListenerContainer(HerdJmsDestinationResolver.SQS_DESTINATION_SAMPLE_DATA_QUEUE)).thenReturn(mockMessageListenerContainer);
+        when(mockMessageListenerContainer.isRunning()).thenReturn(true);
+        sampleDataJmsMessageListener.controlSampleDataJmsMessageListener();        
+        verify(mockMessageListenerContainer).stop();
+        //the listener is not running, but it is enabled, should start
+        when(configurationHelper.getProperty(ConfigurationValue.SAMPLE_DATA_JMS_LISTENER_ENABLED)).thenReturn("true");
+        when(mockMessageListenerContainer.isRunning()).thenReturn(false);
+        sampleDataJmsMessageListener.controlSampleDataJmsMessageListener();
+        verify(mockMessageListenerContainer).start(); 
     }
     
 }

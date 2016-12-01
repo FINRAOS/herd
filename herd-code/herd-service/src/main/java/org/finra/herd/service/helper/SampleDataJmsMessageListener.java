@@ -137,7 +137,7 @@ public class SampleDataJmsMessageListener
                     new BusinessObjectDefinitionKey(convertedNamespaece, convertedBusinessObjectDefinitionName);
             try
             {
-                businessObjectDefinitionService.updatedBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey,
+                businessObjectDefinitionService.updateBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey,
                         businessObjectDefinitionSampleFileUpdateDto);
             }
             catch (ObjectNotFoundException ex)
@@ -145,7 +145,7 @@ public class SampleDataJmsMessageListener
                 LOGGER.info("Failed to find the business object definition, next try the original namespace and business oject defination name " + ex);
                 // if Business object definition is not found, use the original name space and bdef name
                 businessObjectDefinitionKey = new BusinessObjectDefinitionKey(namespace, businessObjectDefinitionName);
-                businessObjectDefinitionService.updatedBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey,
+                businessObjectDefinitionService.updateBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey,
                         businessObjectDefinitionSampleFileUpdateDto);
             }
         }

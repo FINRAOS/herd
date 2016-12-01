@@ -712,11 +712,12 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     }
     
     /**
-     * Update business object definition sample file
-     * @param businessObjectDefinitionKey business object definition key
-     */
+    * Update business object definition sample file
+    * @param businessObjectDefinitionKey business object definition key
+    * @param BusinessObjectDefinitionSampleFileUpdateDto update dto
+    */
     @Override
-    public void updatedBusinessObjectDefinitionEntitySampleFile(BusinessObjectDefinitionKey businessObjectDefinitionKey,
+    public void updateBusinessObjectDefinitionEntitySampleFile(BusinessObjectDefinitionKey businessObjectDefinitionKey,
         BusinessObjectDefinitionSampleFileUpdateDto businessObjectDefinitionSampleFileUpdateDto)
     {
         String path = businessObjectDefinitionSampleFileUpdateDto.getPath();
@@ -733,15 +734,12 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         boolean found = false;
         for (BusinessObjectDefinitionSampleDataFileEntity sampleDataFieEntity : sampleFiles)
         {
+            //assume the path is the same for this business object definition
             if (sampleDataFieEntity.getFileName().equals(fileName))
             {
                 found = true;
-                // update the file size if they are different
-                if (sampleDataFieEntity.getFileSizeBytes() != fileSize)
-                {
-                    sampleDataFieEntity.setFileSizeBytes(fileSize);
-                    businessObjectDefinitionDao.saveAndRefresh(businessObjectDefinitionEntity);
-                }
+                sampleDataFieEntity.setFileSizeBytes(fileSize);
+                businessObjectDefinitionDao.saveAndRefresh(businessObjectDefinitionEntity);
                 break;
             }
         }

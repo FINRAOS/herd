@@ -1576,7 +1576,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         String path = NAMESPACE + "/" + BDEF_NAME + "/";
         BusinessObjectDefinitionSampleFileUpdateDto sampleFileUpdateDto = new BusinessObjectDefinitionSampleFileUpdateDto(path, fileName, fizeSize);
         BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME);
-        businessObjectDefinitionServiceImpl.updatedBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey, sampleFileUpdateDto);
+        businessObjectDefinitionServiceImpl.updateBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey, sampleFileUpdateDto);
    
         BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionService.getBusinessObjectDefinition(businessObjectDefinitionKey);
         
@@ -1609,7 +1609,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         BusinessObjectDefinitionSampleFileUpdateDto sampleFileUpdateDto = new BusinessObjectDefinitionSampleFileUpdateDto(path, fileName, fizeSize);
 
         BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME);
-        businessObjectDefinitionServiceImpl.updatedBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey, sampleFileUpdateDto);
+        businessObjectDefinitionServiceImpl.updateBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey, sampleFileUpdateDto);
    
         BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionService.getBusinessObjectDefinition(businessObjectDefinitionKey);
         List<SampleDataFile> updatedSampleDataFileList = businessObjectDefinitionServiceTestHelper.getTestSampleDataFiles();
@@ -1643,11 +1643,11 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         BusinessObjectDefinitionSampleFileUpdateDto sampleFileUpdateDto = new BusinessObjectDefinitionSampleFileUpdateDto(path, fileName, fileSize);
 
         BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME);
-        businessObjectDefinitionServiceImpl.updatedBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey, sampleFileUpdateDto);
+        businessObjectDefinitionServiceImpl.updateBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey, sampleFileUpdateDto);
    
         fileSize = 1024L;
         sampleFileUpdateDto.setFileSize(fileSize);
-        businessObjectDefinitionServiceImpl.updatedBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey, sampleFileUpdateDto);
+        businessObjectDefinitionServiceImpl.updateBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey, sampleFileUpdateDto);
         
         BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionService.getBusinessObjectDefinition(businessObjectDefinitionKey);
         
@@ -1660,11 +1660,6 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
         
-        //validate the file size is updated
-        assertEquals(businessObjectDefinitionEntity.getSampleDataFiles().iterator().next().getFileSizeBytes().longValue(), fileSize);
-        //updated again, the file size is the same, so no database change is expected
-        businessObjectDefinitionServiceImpl.updatedBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey, sampleFileUpdateDto);      
-        businessObjectDefinitionEntity = businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
         //validate the file size is updated
         assertEquals(businessObjectDefinitionEntity.getSampleDataFiles().iterator().next().getFileSizeBytes().longValue(), fileSize);
     }
@@ -1693,7 +1688,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         try
         {
-            businessObjectDefinitionServiceImpl.updatedBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey, sampleFileUpdateDto);
+            businessObjectDefinitionServiceImpl.updateBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey, sampleFileUpdateDto);
         }
         catch (IllegalArgumentException ex)
         {
@@ -1712,7 +1707,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         try
         {
-            businessObjectDefinitionServiceImpl.updatedBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey, sampleFileUpdateDto);
+            businessObjectDefinitionServiceImpl.updateBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey, sampleFileUpdateDto);
         }
         catch (ObjectNotFoundException ex)
         {
