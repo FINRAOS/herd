@@ -249,9 +249,10 @@ public class BusinessObjectDataRetryStoragePolicyTransitionHelperServiceImpl imp
 
         // Validate that source storage from the storage policy matches to the Glacier origin storage.
         Assert.isTrue(originStorageUnitEntity.getStorage().equals(storagePolicyEntity.getStorage()), String.format(
-            "Parent storage unit for the business object data Glacier storage unit does not belong to the storage policy storage. " +
-                "Glacier origin storage: {%s}, Storage policy storage: {%s}, business object data: {%s}", originStorageUnitEntity.getStorage().getName(),
-            storagePolicyEntity.getStorage().getName(), businessObjectDataHelper.businessObjectDataEntityAltKeyToString(businessObjectDataEntity)));
+            "Origin storage unit for the business object data Glacier storage unit does not belong to the storage policy storage. " +
+                "Glacier storage unit origin storage: {%s}, storage policy storage: {%s}, business object data: {%s}",
+            originStorageUnitEntity.getStorage().getName(), storagePolicyEntity.getStorage().getName(),
+            businessObjectDataHelper.businessObjectDataEntityAltKeyToString(businessObjectDataEntity)));
 
         // Validate that origin S3 storage has S3 bucket name configured.
         // Please note that since S3 bucket name attribute value is required we pass a "true" flag.
