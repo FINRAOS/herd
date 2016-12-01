@@ -528,6 +528,10 @@ public class MockS3OperationsImpl implements S3Operations
             amazonS3Exception.setErrorCode("NoSuchBucket");
             throw amazonS3Exception;
         }
+        else if (MOCK_S3_BUCKET_NAME_INTERNAL_ERROR.equals(bucketName))
+        {
+            throw new AmazonServiceException(S3Operations.ERROR_CODE_INTERNAL_ERROR);
+        }
 
         VersionListing versionListing = new VersionListing();
         versionListing.setBucketName(bucketName);

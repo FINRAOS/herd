@@ -629,6 +629,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String TEST_S3_KEY_PREFIX = "herd-dao-test-key-prefix" + RANDOM_SUFFIX;
 
+    public static final String TEST_S3_KEY_PREFIX_2 = "herd-dao-test-key-prefix-2-" + RANDOM_SUFFIX;
+
     public static final Integer THIRD_DATA_VERSION = 2;
 
     public static final Integer THIRD_FORMAT_VERSION = 2;

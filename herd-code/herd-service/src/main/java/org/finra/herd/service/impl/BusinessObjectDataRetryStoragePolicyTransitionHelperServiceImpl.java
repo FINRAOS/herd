@@ -288,8 +288,9 @@ public class BusinessObjectDataRetryStoragePolicyTransitionHelperServiceImpl imp
         {
             throw new IllegalArgumentException(String.format(
                 "Number of storage files (%d) registered for the business object data in \"%s\" storage is not equal to " +
-                    "the number of registered storage files (%d) matching \"%s\" S3 key prefix in the same storage.", originStorageFilesCount,
-                originStorageUnitEntity.getStorage().getName(), registeredStorageFilesMatchingS3KeyPrefixCount, originS3KeyPrefixWithTrailingSlash));
+                    "the number of registered storage files (%d) matching \"%s\" S3 key prefix in the same storage. Business object data: {%s}",
+                originStorageFilesCount, originStorageUnitEntity.getStorage().getName(), registeredStorageFilesMatchingS3KeyPrefixCount,
+                originS3KeyPrefixWithTrailingSlash, businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)));
         }
 
         // Validate that Glacier S3 storage has S3 bucket name configured.
