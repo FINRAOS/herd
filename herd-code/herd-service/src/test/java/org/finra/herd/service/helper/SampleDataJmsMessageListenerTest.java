@@ -18,8 +18,10 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.jms.config.JmsListenerEndpointRegistry;
 import org.springframework.jms.listener.MessageListenerContainer;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import org.finra.herd.core.ApplicationContextHolder;
@@ -34,6 +36,8 @@ import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.service.AbstractServiceTest;
 
 @Configuration
+@Profile("SampleDataJmsMessageListenerTest")
+@ActiveProfiles("SampleDataJmsMessageListenerTest")
 public class SampleDataJmsMessageListenerTest extends AbstractServiceTest
 {
     @Autowired
