@@ -48,6 +48,8 @@ import org.finra.herd.dao.SchemaColumnDaoTestHelper;
 import org.finra.herd.dao.StorageDao;
 import org.finra.herd.dao.StorageDaoTestHelper;
 import org.finra.herd.dao.StorageFileDaoTestHelper;
+import org.finra.herd.dao.StoragePolicyDao;
+import org.finra.herd.dao.StoragePolicyDaoTestHelper;
 import org.finra.herd.dao.StorageUnitDaoTestHelper;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.AttributeDefinition;
@@ -77,6 +79,7 @@ import org.finra.herd.model.api.xml.PartitionValueRange;
 import org.finra.herd.model.api.xml.SchemaColumn;
 import org.finra.herd.model.api.xml.StorageDirectory;
 import org.finra.herd.model.api.xml.StorageFile;
+import org.finra.herd.model.api.xml.StoragePolicyKey;
 import org.finra.herd.model.api.xml.StorageUnit;
 import org.finra.herd.model.api.xml.StorageUnitCreateRequest;
 import org.finra.herd.model.dto.BusinessObjectDataRestoreDto;
@@ -89,6 +92,9 @@ import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.FileTypeEntity;
 import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.StoragePlatformEntity;
+import org.finra.herd.model.jpa.StoragePolicyEntity;
+import org.finra.herd.model.jpa.StoragePolicyRuleTypeEntity;
+import org.finra.herd.model.jpa.StoragePolicyStatusEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
@@ -156,6 +162,12 @@ public class BusinessObjectDataServiceTestHelper
 
     @Autowired
     private StorageHelper storageHelper;
+
+    @Autowired
+    private StoragePolicyDao storagePolicyDao;
+
+    @Autowired
+    private StoragePolicyDaoTestHelper storagePolicyDaoTestHelper;
 
     @Autowired
     private StorageUnitDaoTestHelper storageUnitDaoTestHelper;
@@ -704,6 +716,124 @@ public class BusinessObjectDataServiceTestHelper
             storageFileDaoTestHelper
                 .createStorageFileEntity(originStorageUnitEntity, String.format("%s/%s", AbstractServiceTest.TEST_S3_KEY_PREFIX, relativeFilePath),
                     AbstractServiceTest.FILE_SIZE_1_KB, AbstractServiceTest.ROW_COUNT);
+        }
+
+        // Return the business object data entity.
+        return businessObjectDataEntity;
+    }
+
+    /**
+     * Create and persist database entities required for the retry storage policy transition testing.
+     *
+     * @param businessObjectDataKey the business object data key
+     * @param storagePolicyKey the storage policy key
+     *
+     * @return the business object data entity
+     */
+    public BusinessObjectDataEntity createDatabaseEntitiesForRetryStoragePolicyTransitionTesting(BusinessObjectDataKey businessObjectDataKey,
+        StoragePolicyKey storagePolicyKey)
+    {
+        return createDatabaseEntitiesForRetryStoragePolicyTransitionTesting(businessObjectDataKey, storagePolicyKey, AbstractServiceTest.STORAGE_NAME_ORIGIN,
+            AbstractServiceTest.S3_BUCKET_NAME_ORIGIN, StorageUnitStatusEntity.ENABLED, AbstractServiceTest.STORAGE_NAME_GLACIER,
+            AbstractServiceTest.S3_BUCKET_NAME_GLACIER, StorageUnitStatusEntity.ARCHIVING,
+            AbstractServiceTest.S3_BUCKET_NAME_ORIGIN + "/" + AbstractServiceTest.TEST_S3_KEY_PREFIX);
+    }
+
+    /**
+     * Create and persist database entities required for the retry storage policy transition testing.
+     *
+     * @param businessObjectDataKey the business object data key
+     * @param storagePolicyKey the storage policy key
+     * @param originStorageName the origin S3 storage name
+     * @param originBucketName the S3 bucket name for the origin storage
+     * @param originStorageUnitStatus the origin S3 storage unit status
+     * @param glacierStorageName the Glacier storage name
+     * @param glacierStorageBucketName the S3 bucket name for the Glacier storage
+     * @param glacierStorageUnitStatus the Glacier storage unit status
+     * @param glacierStorageDirectoryPath the storage directory path for the Glacier storage unit
+     *
+     * @return the business object data entity
+     */
+    public BusinessObjectDataEntity createDatabaseEntitiesForRetryStoragePolicyTransitionTesting(BusinessObjectDataKey businessObjectDataKey,
+        StoragePolicyKey storagePolicyKey, String originStorageName, String originBucketName, String originStorageUnitStatus, String glacierStorageName,
+        String glacierStorageBucketName, String glacierStorageUnitStatus, String glacierStorageDirectoryPath)
+    {
+        // Create and persist a business object data entity.
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
+            .createBusinessObjectDataEntity(businessObjectDataKey, AbstractServiceTest.LATEST_VERSION_FLAG_SET, AbstractServiceTest.BDATA_STATUS);
+
+        // If specified, create and persist an origin S3 storage entity along with an origin storage unit.
+        StorageUnitEntity originStorageUnitEntity = null;
+        if (StringUtils.isNotBlank(originStorageName))
+        {
+            StorageEntity originStorageEntity = storageDao.getStorageByName(originStorageName);
+            if (originStorageEntity == null)
+            {
+                // Create and persist an S3 storage entity.
+                List<Attribute> attributes = new ArrayList<>();
+                if (StringUtils.isNotBlank(originBucketName))
+                {
+                    attributes.add(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), originBucketName));
+                }
+                attributes
+                    .add(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_PATH_PREFIX), Boolean.TRUE.toString()));
+                attributes
+                    .add(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_FILE_EXISTENCE), Boolean.TRUE.toString()));
+                originStorageEntity = storageDaoTestHelper.createStorageEntity(originStorageName, StoragePlatformEntity.S3, attributes);
+            }
+
+            // Create and persist an S3 storage unit entity.
+            if (StringUtils.isNotBlank(originStorageUnitStatus))
+            {
+                originStorageUnitEntity = storageUnitDaoTestHelper
+                    .createStorageUnitEntity(originStorageEntity, businessObjectDataEntity, originStorageUnitStatus,
+                        AbstractServiceTest.NO_STORAGE_DIRECTORY_PATH);
+
+                // Create and add storage file entities to the origin storage unit.
+                for (String relativeFilePath : AbstractServiceTest.LOCAL_FILES)
+                {
+                    storageFileDaoTestHelper
+                        .createStorageFileEntity(originStorageUnitEntity, String.format("%s/%s", AbstractServiceTest.TEST_S3_KEY_PREFIX, relativeFilePath),
+                            AbstractServiceTest.FILE_SIZE_1_KB, AbstractServiceTest.ROW_COUNT);
+                }
+            }
+        }
+
+        // If specified, create and persist a Glacier storage entity along with a Glacier storage unit.
+        if (StringUtils.isNotBlank(glacierStorageName))
+        {
+            StorageEntity glacierStorageEntity = storageDao.getStorageByName(glacierStorageName);
+            if (glacierStorageEntity == null)
+            {
+                // Create and persist a Glacier storage entity.
+                List<Attribute> attributes = new ArrayList<>();
+                if (glacierStorageBucketName != null)
+                {
+                    attributes.add(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), glacierStorageBucketName));
+                }
+                glacierStorageEntity = storageDaoTestHelper.createStorageEntity(glacierStorageName, StoragePlatformEntity.GLACIER, attributes);
+            }
+
+            // Create and persist a Glacier storage unit entity.
+            if (StringUtils.isNotBlank(glacierStorageUnitStatus))
+            {
+                StorageUnitEntity glacierStorageUnitEntity = storageUnitDaoTestHelper
+                    .createStorageUnitEntity(glacierStorageEntity, businessObjectDataEntity, glacierStorageUnitStatus, glacierStorageDirectoryPath);
+
+                // Set a parent storage unit for the Glacier storage unit.
+                glacierStorageUnitEntity.setParentStorageUnit(originStorageUnitEntity);
+            }
+        }
+
+        // Create and persist a storage policy if needed.
+        StoragePolicyEntity storagePolicyEntity = storagePolicyDao.getStoragePolicyByAltKey(storagePolicyKey);
+        if (storagePolicyEntity == null)
+        {
+            storagePolicyDaoTestHelper
+                .createStoragePolicyEntity(storagePolicyKey, StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, AbstractServiceTest.BDATA_AGE_IN_DAYS,
+                    businessObjectDataKey.getNamespace(), businessObjectDataKey.getBusinessObjectDefinitionName(),
+                    businessObjectDataKey.getBusinessObjectFormatUsage(), businessObjectDataKey.getBusinessObjectFormatFileType(), originStorageName,
+                    glacierStorageName, StoragePolicyStatusEntity.ENABLED, AbstractServiceTest.INITIAL_VERSION, AbstractServiceTest.LATEST_VERSION_FLAG_SET);
         }
 
         // Return the business object data entity.

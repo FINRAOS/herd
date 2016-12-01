@@ -31,6 +31,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
+import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.StoragePlatformEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
@@ -82,27 +83,21 @@ public class StorageUnitDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void testGetStorageUnitByStorageNameAndDirectoryPath()
+    public void testGetStorageUnitByBusinessObjectDataAndStorage()
     {
-        // Create database entities required for testing.
         StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
             .createStorageUnitEntity(STORAGE_NAME, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS, STORAGE_UNIT_STATUS, STORAGE_DIRECTORY_PATH);
+        BusinessObjectDataEntity businessObjectDataEntity = storageUnitEntity.getBusinessObjectData();
+        StorageEntity storageEntity = storageUnitEntity.getStorage();
 
-        // Retrieve the relative storage file entities and validate the results.
-        assertEquals(storageUnitEntity, storageUnitDao.getStorageUnitByStorageNameAndDirectoryPath(STORAGE_NAME, STORAGE_DIRECTORY_PATH));
+        // Test retrieval by entities.
+        assertEquals(storageUnitEntity, storageUnitDao.getStorageUnitByBusinessObjectDataAndStorage(businessObjectDataEntity, storageEntity));
 
-        // Test case insensitivity for the storage name.
-        assertEquals(storageUnitEntity, storageUnitDao.getStorageUnitByStorageNameAndDirectoryPath(STORAGE_NAME.toUpperCase(), STORAGE_DIRECTORY_PATH));
-        assertEquals(storageUnitEntity, storageUnitDao.getStorageUnitByStorageNameAndDirectoryPath(STORAGE_NAME.toLowerCase(), STORAGE_DIRECTORY_PATH));
-
-        // Test case sensitivity of the storage directory path.
-        assertNull(storageUnitDao.getStorageUnitByStorageNameAndDirectoryPath(STORAGE_NAME, STORAGE_DIRECTORY_PATH.toUpperCase()));
-        assertNull(storageUnitDao.getStorageUnitByStorageNameAndDirectoryPath(STORAGE_NAME, STORAGE_DIRECTORY_PATH.toLowerCase()));
-
-        // Confirm negative results when using wrong input parameters.
-        assertNull(storageUnitDao.getStorageUnitByStorageNameAndDirectoryPath("I_DO_NOT_EXIST", TEST_S3_KEY_PREFIX));
-        assertNull(storageUnitDao.getStorageUnitByStorageNameAndDirectoryPath(STORAGE_NAME, "I_DO_NOT_EXIST"));
+        // Test retrieval failures.
+        assertNull(
+            storageUnitDao.getStorageUnitByBusinessObjectDataAndStorage(businessObjectDataDaoTestHelper.createBusinessObjectDataEntity(), storageEntity));
+        assertNull(storageUnitDao.getStorageUnitByBusinessObjectDataAndStorage(businessObjectDataEntity, storageDaoTestHelper.createStorageEntity()));
     }
 
     @Test
@@ -125,55 +120,27 @@ public class StorageUnitDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void testGetStorageUnitsByStorageAndBusinessObjectData()
+    public void testGetStorageUnitByStorageNameAndDirectoryPath()
     {
         // Create database entities required for testing.
         StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
             .createStorageUnitEntity(STORAGE_NAME, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS, STORAGE_UNIT_STATUS, TEST_S3_KEY_PREFIX);
+                SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS, STORAGE_UNIT_STATUS, STORAGE_DIRECTORY_PATH);
 
-        // Retrieve storage unit entities by storage and business object data.
-        List<StorageUnitEntity> resultStorageUnitEntities = storageUnitDao
-            .getStorageUnitsByStorageAndBusinessObjectData(storageUnitEntity.getStorage(), Arrays.asList(storageUnitEntity.getBusinessObjectData()));
+        // Retrieve the relative storage file entities and validate the results.
+        assertEquals(storageUnitEntity, storageUnitDao.getStorageUnitByStorageNameAndDirectoryPath(STORAGE_NAME, STORAGE_DIRECTORY_PATH));
 
-        // Validate the results.
-        assertNotNull(resultStorageUnitEntities);
-        assertEquals(1, resultStorageUnitEntities.size());
-        assertEquals(TEST_S3_KEY_PREFIX, resultStorageUnitEntities.get(0).getDirectoryPath());
-    }
+        // Test case insensitivity for the storage name.
+        assertEquals(storageUnitEntity, storageUnitDao.getStorageUnitByStorageNameAndDirectoryPath(STORAGE_NAME.toUpperCase(), STORAGE_DIRECTORY_PATH));
+        assertEquals(storageUnitEntity, storageUnitDao.getStorageUnitByStorageNameAndDirectoryPath(STORAGE_NAME.toLowerCase(), STORAGE_DIRECTORY_PATH));
 
-    @Test
-    public void testGetStorageUnitsByStoragePlatformAndBusinessObjectData()
-    {
-        // Create a business object data key.
-        BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                DATA_VERSION);
+        // Test case sensitivity of the storage directory path.
+        assertNull(storageUnitDao.getStorageUnitByStorageNameAndDirectoryPath(STORAGE_NAME, STORAGE_DIRECTORY_PATH.toUpperCase()));
+        assertNull(storageUnitDao.getStorageUnitByStorageNameAndDirectoryPath(STORAGE_NAME, STORAGE_DIRECTORY_PATH.toLowerCase()));
 
-        // Create and persist a business object data entity.
-        BusinessObjectDataEntity businessObjectDataEntity =
-            businessObjectDataDaoTestHelper.createBusinessObjectDataEntity(businessObjectDataKey, LATEST_VERSION_FLAG_SET, BDATA_STATUS);
-
-        // Create database entities required for testing.
-        List<StorageUnitEntity> storageUnitEntities = Arrays.asList(storageUnitDaoTestHelper
-            .createStorageUnitEntity(STORAGE_NAME_2, STORAGE_PLATFORM_CODE, businessObjectDataEntity, STORAGE_UNIT_STATUS, STORAGE_DIRECTORY_PATH),
-            storageUnitDaoTestHelper
-                .createStorageUnitEntity(STORAGE_NAME, STORAGE_PLATFORM_CODE, businessObjectDataEntity, STORAGE_UNIT_STATUS, STORAGE_DIRECTORY_PATH),
-            storageUnitDaoTestHelper
-                .createStorageUnitEntity(STORAGE_NAME_3, STORAGE_PLATFORM_CODE_2, businessObjectDataEntity, STORAGE_UNIT_STATUS, STORAGE_DIRECTORY_PATH));
-
-        // Retrieve storage unit entities by storage platform and business object data.
-        assertEquals(Arrays.asList(storageUnitEntities.get(1), storageUnitEntities.get(0)),
-            storageUnitDao.getStorageUnitsByStoragePlatformAndBusinessObjectData(STORAGE_PLATFORM_CODE, businessObjectDataEntity));
-
-        // Test case insensitivity of storage platform.
-        assertEquals(Arrays.asList(storageUnitEntities.get(1), storageUnitEntities.get(0)),
-            storageUnitDao.getStorageUnitsByStoragePlatformAndBusinessObjectData(STORAGE_PLATFORM_CODE.toUpperCase(), businessObjectDataEntity));
-        assertEquals(Arrays.asList(storageUnitEntities.get(1), storageUnitEntities.get(0)),
-            storageUnitDao.getStorageUnitsByStoragePlatformAndBusinessObjectData(STORAGE_PLATFORM_CODE.toLowerCase(), businessObjectDataEntity));
-
-        // Try to retrieve storage unit entities using invalid input parameters.
-        assertEquals(0, storageUnitDao.getStorageUnitsByStoragePlatformAndBusinessObjectData("I_DO_NOT_EXIST", businessObjectDataEntity).size());
+        // Confirm negative results when using wrong input parameters.
+        assertNull(storageUnitDao.getStorageUnitByStorageNameAndDirectoryPath("I_DO_NOT_EXIST", TEST_S3_KEY_PREFIX));
+        assertNull(storageUnitDao.getStorageUnitByStorageNameAndDirectoryPath(STORAGE_NAME, "I_DO_NOT_EXIST"));
     }
 
     @Test
@@ -323,5 +290,57 @@ public class StorageUnitDaoTest extends AbstractDaoTest
 
         // Validate the results.
         assertEquals(Arrays.asList(enabledStorageUnitEntity, disabledStorageUnitEntity), resultStorageUnitEntities);
+    }
+
+    @Test
+    public void testGetStorageUnitsByStorageAndBusinessObjectData()
+    {
+        // Create database entities required for testing.
+        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, INITIAL_FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, INITIAL_DATA_VERSION, true, BDATA_STATUS, STORAGE_UNIT_STATUS, TEST_S3_KEY_PREFIX);
+
+        // Retrieve storage unit entities by storage and business object data.
+        List<StorageUnitEntity> resultStorageUnitEntities = storageUnitDao
+            .getStorageUnitsByStorageAndBusinessObjectData(storageUnitEntity.getStorage(), Arrays.asList(storageUnitEntity.getBusinessObjectData()));
+
+        // Validate the results.
+        assertNotNull(resultStorageUnitEntities);
+        assertEquals(1, resultStorageUnitEntities.size());
+        assertEquals(TEST_S3_KEY_PREFIX, resultStorageUnitEntities.get(0).getDirectoryPath());
+    }
+
+    @Test
+    public void testGetStorageUnitsByStoragePlatformAndBusinessObjectData()
+    {
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION);
+
+        // Create and persist a business object data entity.
+        BusinessObjectDataEntity businessObjectDataEntity =
+            businessObjectDataDaoTestHelper.createBusinessObjectDataEntity(businessObjectDataKey, LATEST_VERSION_FLAG_SET, BDATA_STATUS);
+
+        // Create database entities required for testing.
+        List<StorageUnitEntity> storageUnitEntities = Arrays.asList(storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME_2, STORAGE_PLATFORM_CODE, businessObjectDataEntity, STORAGE_UNIT_STATUS, STORAGE_DIRECTORY_PATH),
+            storageUnitDaoTestHelper
+                .createStorageUnitEntity(STORAGE_NAME, STORAGE_PLATFORM_CODE, businessObjectDataEntity, STORAGE_UNIT_STATUS, STORAGE_DIRECTORY_PATH),
+            storageUnitDaoTestHelper
+                .createStorageUnitEntity(STORAGE_NAME_3, STORAGE_PLATFORM_CODE_2, businessObjectDataEntity, STORAGE_UNIT_STATUS, STORAGE_DIRECTORY_PATH));
+
+        // Retrieve storage unit entities by storage platform and business object data.
+        assertEquals(Arrays.asList(storageUnitEntities.get(1), storageUnitEntities.get(0)),
+            storageUnitDao.getStorageUnitsByStoragePlatformAndBusinessObjectData(STORAGE_PLATFORM_CODE, businessObjectDataEntity));
+
+        // Test case insensitivity of storage platform.
+        assertEquals(Arrays.asList(storageUnitEntities.get(1), storageUnitEntities.get(0)),
+            storageUnitDao.getStorageUnitsByStoragePlatformAndBusinessObjectData(STORAGE_PLATFORM_CODE.toUpperCase(), businessObjectDataEntity));
+        assertEquals(Arrays.asList(storageUnitEntities.get(1), storageUnitEntities.get(0)),
+            storageUnitDao.getStorageUnitsByStoragePlatformAndBusinessObjectData(STORAGE_PLATFORM_CODE.toLowerCase(), businessObjectDataEntity));
+
+        // Try to retrieve storage unit entities using invalid input parameters.
+        assertEquals(0, storageUnitDao.getStorageUnitsByStoragePlatformAndBusinessObjectData("I_DO_NOT_EXIST", businessObjectDataEntity).size());
     }
 }

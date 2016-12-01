@@ -290,6 +290,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String START_PARTITION_VALUE = "2014-04-02";
 
+    public static final String STORAGE_POLICY_SELECTOR_SQS_QUEUE_NAME = "STORAGE_POLICY_SELECTOR_SQS_QUEUE_NAME";
+
     /**
      * The test job name as per the above workflow XML file.
      */
@@ -375,6 +377,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     @Autowired
     protected BusinessObjectDataNotificationRegistrationService businessObjectDataNotificationRegistrationService;
+
+    @Autowired
+    protected BusinessObjectDataRetryStoragePolicyTransitionHelperService businessObjectDataRetryStoragePolicyTransitionHelperService;
 
     @Autowired
     protected BusinessObjectDataSearchHelper businessObjectDataSearchHelper;
