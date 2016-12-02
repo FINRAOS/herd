@@ -29,6 +29,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDataDdlCollectionRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataDdlRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.BusinessObjectDataRetryStoragePolicyTransitionRequest;
 
 public class BusinessObjectDataServiceTest extends AbstractServiceTest
 {
@@ -113,6 +114,16 @@ public class BusinessObjectDataServiceTest extends AbstractServiceTest
         catch (IllegalArgumentException e)
         {
             assertEquals("The namespace is required", e.getMessage());
+        }
+
+        try
+        {
+            businessObjectDataServiceImpl
+                .retryStoragePolicyTransition(new BusinessObjectDataKey(), new BusinessObjectDataRetryStoragePolicyTransitionRequest());
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("A namespace must be specified.", e.getMessage());
         }
 
         try

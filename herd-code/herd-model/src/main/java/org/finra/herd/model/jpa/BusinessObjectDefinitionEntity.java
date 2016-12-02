@@ -97,6 +97,10 @@ public class BusinessObjectDefinitionEntity extends AuditableEntity
     @OrderBy("file_nm,drcty_path_tx")
     private Collection<BusinessObjectDefinitionSampleDataFileEntity> sampleDataFiles;
 
+    @OneToMany(mappedBy = "businessObjectDefinition", orphanRemoval = true, cascade = {CascadeType.ALL})
+    @OrderBy("user_id")
+    private Collection<BusinessObjectDefinitionSubjectMatterExpertEntity> subjectMatterExperts;
+
     public Integer getId()
     {
         return id;
@@ -215,5 +219,15 @@ public class BusinessObjectDefinitionEntity extends AuditableEntity
     public void setSampleDataFiles(Collection<BusinessObjectDefinitionSampleDataFileEntity> sampleDataFiles)
     {
         this.sampleDataFiles = sampleDataFiles;
+    }
+
+    public Collection<BusinessObjectDefinitionSubjectMatterExpertEntity> getSubjectMatterExperts()
+    {
+        return subjectMatterExperts;
+    }
+
+    public void setSubjectMatterExperts(Collection<BusinessObjectDefinitionSubjectMatterExpertEntity> subjectMatterExperts)
+    {
+        this.subjectMatterExperts = subjectMatterExperts;
     }
 }

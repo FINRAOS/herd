@@ -282,4 +282,17 @@ public class StoragePolicyServiceTestHelper
         return String.format("namespace: \"%s\", storagePolicyName: \"%s\", storagePolicyVersion: \"%d\"", storagePolicyKey.getNamespace(),
             storagePolicyKey.getStoragePolicyName(), storagePolicyVersion);
     }
+
+    /**
+     * Returns an expected storage policy not found error message.
+     *
+     * @param storagePolicyKey the storage policy key
+     *
+     * @return the storage policy not found error message
+     */
+    public String getExpectedStoragePolicyNotFoundErrorMessage(StoragePolicyKey storagePolicyKey)
+    {
+        return String.format("Storage policy with name \"%s\" does not exist for \"%s\" namespace.", storagePolicyKey.getStoragePolicyName(),
+            storagePolicyKey.getNamespace());
+    }
 }

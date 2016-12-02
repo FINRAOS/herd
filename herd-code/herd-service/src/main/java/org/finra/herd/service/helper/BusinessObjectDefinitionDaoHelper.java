@@ -31,7 +31,8 @@ public class BusinessObjectDefinitionDaoHelper
 {
     @Autowired
     private BusinessObjectDefinitionDao businessObjectDefinitionDao;
-
+    
+    
     /**
      * Retrieves a business object definition entity by it's key and ensure it exists.
      *

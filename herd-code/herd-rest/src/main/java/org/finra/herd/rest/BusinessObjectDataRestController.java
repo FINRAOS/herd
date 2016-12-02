@@ -45,6 +45,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDataDownloadCredential;
 import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.BusinessObjectDataRetryStoragePolicyTransitionRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchResult;
 import org.finra.herd.model.api.xml.BusinessObjectDataUploadCredential;
@@ -570,6 +571,44 @@ public class BusinessObjectDataRestController extends HerdBaseController
                 businessObjectFormatVersion, partitionValue, getList(subPartitionValues), businessObjectDataVersion), storageName);
 
         return new BusinessObjectDataDownloadCredential(storageUnitDownloadCredential.getAwsCredential());
+    }
+
+    /**
+     * Retries a storage policy transition by forcing re-initiation of the archiving process for the specified business object data that is still in progress of
+     * a valid archiving operation. This endpoint is designed to be run only after confirmation that the business object data is stuck due to an error during
+     * archiving.
+     *
+     * @param namespace the namespace of the business object definition
+     * @param businessObjectDefinitionName the name of the business object definition
+     * @param businessObjectFormatUsage the usage of the business object format
+     * @param businessObjectFormatFileType the file type of the business object format
+     * @param businessObjectFormatVersion the version of the business object format
+     * @param partitionValue the primary partition value of the business object data
+     * @param businessObjectDataVersion the version of the business object data
+     * @param subPartitionValues the optional list of sub-partition values delimited by "|" (delimiter can be escaped by "\")
+     * @param request the information needed to retry a storage policy transition
+     *
+     * @return the business object data information
+     */
+    @RequestMapping(
+        value = "/businessObjectData/retryStoragePolicyTransition/namespaces/{namespace}/businessObjectDefinitionNames/{businessObjectDefinitionName}" +
+            "/businessObjectFormatUsages/{businessObjectFormatUsage}/businessObjectFormatFileTypes/{businessObjectFormatFileType}" +
+            "/businessObjectFormatVersions/{businessObjectFormatVersion}/partitionValues/{partitionValue}" +
+            "/businessObjectDataVersions/{businessObjectDataVersion}",
+        method = RequestMethod.POST, consumes = {"application/xml", "application/json"})
+    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_RETRY_STORAGE_POLICY_TRANSITION_POST)
+    public BusinessObjectData retryStoragePolicyTransition(@PathVariable("namespace") String namespace,
+        @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
+        @PathVariable("businessObjectFormatUsage") String businessObjectFormatUsage,
+        @PathVariable("businessObjectFormatFileType") String businessObjectFormatFileType,
+        @PathVariable("businessObjectFormatVersion") Integer businessObjectFormatVersion, @PathVariable("partitionValue") String partitionValue,
+        @PathVariable("businessObjectDataVersion") Integer businessObjectDataVersion,
+        @RequestParam(value = "subPartitionValues", required = false) DelimitedFieldValues subPartitionValues,
+        @RequestBody BusinessObjectDataRetryStoragePolicyTransitionRequest request)
+    {
+        return businessObjectDataService.retryStoragePolicyTransition(
+            new BusinessObjectDataKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
+                businessObjectFormatVersion, partitionValue, getList(subPartitionValues), businessObjectDataVersion), request);
     }
 
     /**

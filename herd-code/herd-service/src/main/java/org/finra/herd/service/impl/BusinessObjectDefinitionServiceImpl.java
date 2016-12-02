@@ -17,6 +17,7 @@ package org.finra.herd.service.impl;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -69,6 +70,7 @@ import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormat;
 import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormatUpdateRequest;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.api.xml.SampleDataFile;
+import org.finra.herd.model.dto.BusinessObjectDefinitionSampleFileUpdateDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionAttributeEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
@@ -76,6 +78,7 @@ import org.finra.herd.model.jpa.BusinessObjectDefinitionSampleDataFileEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.DataProviderEntity;
 import org.finra.herd.model.jpa.NamespaceEntity;
+import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.TagEntity;
 import org.finra.herd.service.BusinessObjectDefinitionService;
 import org.finra.herd.service.SearchableService;
@@ -86,6 +89,7 @@ import org.finra.herd.service.helper.BusinessObjectDefinitionHelper;
 import org.finra.herd.service.helper.BusinessObjectFormatDaoHelper;
 import org.finra.herd.service.helper.DataProviderDaoHelper;
 import org.finra.herd.service.helper.NamespaceDaoHelper;
+import org.finra.herd.service.helper.StorageDaoHelper;
 import org.finra.herd.service.helper.TagDaoHelper;
 import org.finra.herd.service.helper.TagHelper;
 
@@ -130,6 +134,9 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 
     @Autowired
     private TagDaoHelper tagDaoHelper;
+
+    @Autowired
+    private StorageDaoHelper storageDaoHelper;
 
     @Autowired
     private TransportClient transportClient;
@@ -325,7 +332,8 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 
         // If the index exists delete it
         final IndicesExistsResponse indicesExistsResponse = transportClient.admin().indices().prepareExists(indexName).execute().actionGet();
-        if (indicesExistsResponse.isExists()) {
+        if (indicesExistsResponse.isExists())
+        {
             final DeleteIndexRequestBuilder deleteIndexRequestBuilder = transportClient.admin().indices().prepareDelete(indexName);
             deleteIndexRequestBuilder.execute().actionGet();
         }
@@ -356,13 +364,15 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
             }
             catch (JsonProcessingException jsonProcessingException)
             {
-                LOGGER.warn("Could not parse BusinessObjectDefinitionEntity id={" + businessObjectDefinitionEntity.getId() + "} into JSON string. ", jsonProcessingException);
+                LOGGER.warn("Could not parse BusinessObjectDefinitionEntity id={" + businessObjectDefinitionEntity.getId() + "} into JSON string. ",
+                    jsonProcessingException);
                 // Skip this bdef because it can not be parsed into a JSON object
                 continue;
             }
 
             // For each BDef, index in elastic search
-            final IndexRequestBuilder indexRequestBuilder = transportClient.prepareIndex(indexName, documentType, businessObjectDefinitionEntity.getId().toString());
+            final IndexRequestBuilder indexRequestBuilder =
+                transportClient.prepareIndex(indexName, documentType, businessObjectDefinitionEntity.getId().toString());
             indexRequestBuilder.setSource(jsonString);
             indexRequestBuilder.execute().actionGet();
         }
@@ -406,28 +416,19 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         */
 
         // Query to match tag type code
-        QueryBuilder matchTagTypeCodeQueryBuilder = QueryBuilders.matchQuery(
-            "businessObjectDefinitionTags.tag.tagType.code", businessObjectDefinitionSearchKey.getTagKey().getTagTypeCode());
+        QueryBuilder matchTagTypeCodeQueryBuilder =
+            QueryBuilders.matchQuery("businessObjectDefinitionTags.tag.tagType.code", businessObjectDefinitionSearchKey.getTagKey().getTagTypeCode());
 
         // Query to match tag code
-        QueryBuilder matchTagCodeQueryBuilder = QueryBuilders.matchQuery(
-            "businessObjectDefinitionTags.tag.tagCode", businessObjectDefinitionSearchKey.getTagKey().getTagCode());
+        QueryBuilder matchTagCodeQueryBuilder =
+            QueryBuilders.matchQuery("businessObjectDefinitionTags.tag.tagCode", businessObjectDefinitionSearchKey.getTagKey().getTagCode());
 
         // Combined bool should match query for tag type code and tag code
-        QueryBuilder queryBuilder = QueryBuilders
-            .boolQuery()
-            .should(matchTagTypeCodeQueryBuilder)
-            .should(matchTagCodeQueryBuilder)
-            .minimumNumberShouldMatch(2);
+        QueryBuilder queryBuilder = QueryBuilders.boolQuery().should(matchTagTypeCodeQueryBuilder).should(matchTagCodeQueryBuilder).minimumNumberShouldMatch(2);
 
-        final SearchResponse searchResponse = transportClient.prepareSearch(indexName)
-            .setTypes(documentType)
-            .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
-            .setQuery(queryBuilder)
-            .setSize(10000)
-            .setFrom(0)
-            .execute()
-            .actionGet();
+        final SearchResponse searchResponse =
+            transportClient.prepareSearch(indexName).setTypes(documentType).setSearchType(SearchType.DFS_QUERY_THEN_FETCH).setQuery(queryBuilder).setSize(10000)
+                .setFrom(0).execute().actionGet();
 
         // Construct business object search response.
         Set<BusinessObjectDefinitionEntity> businessObjectDefinitionEntitySet = new HashSet<>();
@@ -453,7 +454,8 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 
         // Construct business object search response.
         List<BusinessObjectDefinition> businessObjectDefinitions = new ArrayList<>();
-        businessObjectDefinitionEntitySet.forEach( businessObjectDefinitionEntity -> businessObjectDefinitions.add(createBusinessObjectDefinitionFromEntity(businessObjectDefinitionEntity, fields)));
+        businessObjectDefinitionEntitySet.forEach(
+            businessObjectDefinitionEntity -> businessObjectDefinitions.add(createBusinessObjectDefinitionFromEntity(businessObjectDefinitionEntity, fields)));
         BusinessObjectDefinitionSearchResponse businessObjectDefinitionSearchResponse = new BusinessObjectDefinitionSearchResponse();
         businessObjectDefinitionSearchResponse.setBusinessObjectDefinitions(businessObjectDefinitions);
 
@@ -544,7 +546,6 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
      * Validates the business object definition create request. This method also trims request parameters.
      *
      * @param request the request
-     *
      */
     private void validateBusinessObjectDefinitionCreateRequest(BusinessObjectDefinitionCreateRequest request)
     {
@@ -818,6 +819,54 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     }
 
     /**
+     * Update business object definition sample file
+     *
+     * @param businessObjectDefinitionKey business object definition key
+     * @param businessObjectDefinitionSampleFileUpdateDto update dto
+     */
+    @Override
+    public void updateBusinessObjectDefinitionEntitySampleFile(BusinessObjectDefinitionKey businessObjectDefinitionKey,
+        BusinessObjectDefinitionSampleFileUpdateDto businessObjectDefinitionSampleFileUpdateDto)
+    {
+        String path = businessObjectDefinitionSampleFileUpdateDto.getPath();
+        String fileName = businessObjectDefinitionSampleFileUpdateDto.getFileName();
+        long fileSize = businessObjectDefinitionSampleFileUpdateDto.getFileSize();
+
+        // validate business object key
+        businessObjectDefinitionHelper.validateBusinessObjectDefinitionKey(businessObjectDefinitionKey);
+        // validate file name
+        Assert.hasText(fileName, "A file name must be specified.");
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
+            businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
+        Collection<BusinessObjectDefinitionSampleDataFileEntity> sampleFiles = businessObjectDefinitionEntity.getSampleDataFiles();
+        boolean found = false;
+        for (BusinessObjectDefinitionSampleDataFileEntity sampleDataFieEntity : sampleFiles)
+        {
+            //assume the path is the same for this business object definition
+            if (sampleDataFieEntity.getFileName().equals(fileName))
+            {
+                found = true;
+                sampleDataFieEntity.setFileSizeBytes(fileSize);
+                businessObjectDefinitionDao.saveAndRefresh(businessObjectDefinitionEntity);
+                break;
+            }
+        }
+        // create a new entity when not found
+        if (!found)
+        {
+            StorageEntity storageEntity = storageDaoHelper.getStorageEntity(StorageEntity.SAMPLE_DATA_FILE_STORAGE);
+            BusinessObjectDefinitionSampleDataFileEntity sampleDataFileEntity = new BusinessObjectDefinitionSampleDataFileEntity();
+            sampleDataFileEntity.setStorage(storageEntity);
+            sampleDataFileEntity.setBusinessObjectDefinition(businessObjectDefinitionEntity);
+            sampleDataFileEntity.setDirectoryPath(path);
+            sampleDataFileEntity.setFileName(fileName);
+            sampleDataFileEntity.setFileSizeBytes(fileSize);
+            businessObjectDefinitionEntity.getSampleDataFiles().add(sampleDataFileEntity);
+            businessObjectDefinitionDao.saveAndRefresh(businessObjectDefinitionEntity);
+        }
+    }
+
+    /**
      * Truncates the description field to a configurable value thereby producing a 'short description'
      *
      * @param description the specified description
@@ -854,25 +903,25 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         if (CollectionUtils.size(businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters()) == 1 &&
             businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters().get(0) != null)
         {
-                // Get the business object definition search filter.
-                BusinessObjectDefinitionSearchFilter businessObjectDefinitionSearchFilter =
-                    businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters().get(0);
+            // Get the business object definition search filter.
+            BusinessObjectDefinitionSearchFilter businessObjectDefinitionSearchFilter =
+                businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters().get(0);
 
-                Assert.isTrue(CollectionUtils.size(businessObjectDefinitionSearchFilter.getBusinessObjectDefinitionSearchKeys()) == 1 &&
-                        businessObjectDefinitionSearchFilter.getBusinessObjectDefinitionSearchKeys().get(0) != null,
-                    "Exactly one business object definition search key must be specified.");
+            Assert.isTrue(CollectionUtils.size(businessObjectDefinitionSearchFilter.getBusinessObjectDefinitionSearchKeys()) == 1 &&
+                    businessObjectDefinitionSearchFilter.getBusinessObjectDefinitionSearchKeys().get(0) != null,
+                "Exactly one business object definition search key must be specified.");
 
-                // Get the tag search key.
-                BusinessObjectDefinitionSearchKey businessObjectDefinitionSearchKey =
-                    businessObjectDefinitionSearchFilter.getBusinessObjectDefinitionSearchKeys().get(0);
+            // Get the tag search key.
+            BusinessObjectDefinitionSearchKey businessObjectDefinitionSearchKey =
+                businessObjectDefinitionSearchFilter.getBusinessObjectDefinitionSearchKeys().get(0);
 
-                tagHelper.validateTagKey(businessObjectDefinitionSearchKey.getTagKey());
+            tagHelper.validateTagKey(businessObjectDefinitionSearchKey.getTagKey());
         }
         else
         {
-            Assert.isTrue(CollectionUtils.size(businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters()) ==
-                        1 && businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters().get(0) != null,
-                    "Exactly one business object definition search filter must be specified.");
+            Assert.isTrue(CollectionUtils.size(businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters()) == 1 &&
+                    businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters().get(0) != null,
+                "Exactly one business object definition search filter must be specified.");
         }
     }
 

@@ -73,6 +73,21 @@ public class StoragePolicyDaoTestHelper
      * Creates and persists a storage policy entity.
      *
      * @param storagePolicyKey the storage policy key
+     *
+     * @return the newly created storage policy entity
+     */
+    public StoragePolicyEntity createStoragePolicyEntity(StoragePolicyKey storagePolicyKey)
+    {
+        return createStoragePolicyEntity(storagePolicyKey, StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, AbstractDaoTest.BDATA_AGE_IN_DAYS,
+            AbstractDaoTest.BDEF_NAMESPACE, AbstractDaoTest.BDEF_NAME, AbstractDaoTest.FORMAT_USAGE_CODE, AbstractDaoTest.FORMAT_FILE_TYPE_CODE,
+            AbstractDaoTest.STORAGE_NAME_ORIGIN, AbstractDaoTest.STORAGE_NAME_GLACIER, StoragePolicyStatusEntity.ENABLED, AbstractDaoTest.INITIAL_VERSION,
+            AbstractDaoTest.LATEST_VERSION_FLAG_SET);
+    }
+
+    /**
+     * Creates and persists a storage policy entity.
+     *
+     * @param storagePolicyKey the storage policy key
      * @param storagePolicyRuleType the storage policy rule type
      * @param storagePolicyRuleValue the storage policy rule value
      * @param businessObjectDefinitionNamespace the business object definition namespace

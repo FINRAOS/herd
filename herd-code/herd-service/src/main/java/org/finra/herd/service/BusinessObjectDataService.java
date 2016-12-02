@@ -28,9 +28,10 @@ import org.finra.herd.model.api.xml.BusinessObjectDataDdlRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
-import org.finra.herd.model.api.xml.BusinessObjectDataVersions;
+import org.finra.herd.model.api.xml.BusinessObjectDataRetryStoragePolicyTransitionRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchResult;
+import org.finra.herd.model.api.xml.BusinessObjectDataVersions;
 
 /**
  * The business object data service.
@@ -134,6 +135,18 @@ public interface BusinessObjectDataService
         BusinessObjectDataInvalidateUnregisteredRequest businessObjectDataInvalidateUnregisteredRequest);
 
     /**
+     * Retries a storage policy transition by forcing re-initiation of the archiving process for the specified business object data that is still in progress of
+     * a valid archiving operation.
+     *
+     * @param businessObjectDataKey the business object data key
+     * @param request the information needed to retry a storage policy transition
+     *
+     * @return the business object data information
+     */
+    public BusinessObjectData retryStoragePolicyTransition(BusinessObjectDataKey businessObjectDataKey,
+        BusinessObjectDataRetryStoragePolicyTransitionRequest request);
+
+    /**
      * Initiates a restore request for a currently archived business object data.
      *
      * @param businessObjectDataKey the business object data key
@@ -144,7 +157,9 @@ public interface BusinessObjectDataService
 
     /**
      * Search business object data based on the request
+     *
      * @param request search request
+     *
      * @return business data search result
      */
     public BusinessObjectDataSearchResult searchBusinessObjectData(BusinessObjectDataSearchRequest request);
