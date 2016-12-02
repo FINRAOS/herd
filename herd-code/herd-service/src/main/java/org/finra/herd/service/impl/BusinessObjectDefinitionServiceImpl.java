@@ -327,8 +327,8 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     public int indexAllBusinessObjectDefinitions()
     {
         // TODO: The index name and document type should be static final variables else where
-        final String indexName = "dm";
-        final String documentType = "bdef";
+        String indexName = "dm";
+        String documentType = "bdef";
 
         // If the index exists delete it
         final IndicesExistsResponse indicesExistsResponse = transportClient.admin().indices().prepareExists(indexName).execute().actionGet();
@@ -388,8 +388,9 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     @Override
     public BusinessObjectDefinitionSearchResponse indexSearchBusinessObjectDefinitions(BusinessObjectDefinitionSearchRequest request, Set<String> fields)
     {
-        final String indexName = "dm";
-        final String documentType = "bdef";
+        // TODO: The move to a private static final variable someplace that makes sense.
+        String indexName = "dm";
+        String documentType = "bdef";
 
         // Validate the business object definition search fields.
         validateSearchResponseFields(fields);
@@ -925,6 +926,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         }
     }
 
+    // TODO: THIS WILL BE MOVED TO A CONFIGURATION FILE OR DATABASE KEY
     private String getMappingJSON()
     {
         String mappingJSON = "{\n" +

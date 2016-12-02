@@ -50,12 +50,12 @@ public interface BusinessObjectDefinitionService
 
     public int indexAllBusinessObjectDefinitions();
 
-    public BusinessObjectDefinitionSearchResponse indexSearchBusinessObjectDefinitions(BusinessObjectDefinitionSearchRequest businessObjectDefinitionSearchRequest,
-        Set<String> fields);
+    public BusinessObjectDefinitionSearchResponse indexSearchBusinessObjectDefinitions(
+        BusinessObjectDefinitionSearchRequest businessObjectDefinitionSearchRequest, Set<String> fields);
 
     public BusinessObjectDefinitionSearchResponse searchBusinessObjectDefinitions(BusinessObjectDefinitionSearchRequest businessObjectDefinitionSearchRequest,
         Set<String> fields);
-    
+
     public void updateBusinessObjectDefinitionEntitySampleFile(BusinessObjectDefinitionKey businessObjectDefinitionKey,
         BusinessObjectDefinitionSampleFileUpdateDto businessObjectDefinitionSampleFileUpdateDto);
 }

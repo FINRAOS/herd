@@ -15,7 +15,6 @@
 */
 package org.finra.herd.rest;
 
-import java.util.List;
 import java.util.Set;
 
 import io.swagger.annotations.Api;
@@ -37,7 +36,6 @@ import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionUpdateRequest;
 import org.finra.herd.model.dto.SecurityFunctions;
-import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.service.BusinessObjectDefinitionService;
 import org.finra.herd.ui.constants.UiConstants;
 

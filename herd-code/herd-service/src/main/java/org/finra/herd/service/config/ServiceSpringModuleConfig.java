@@ -473,12 +473,18 @@ public class ServiceSpringModuleConfig
         return SQSConnectionFactory.builder().withClientConfiguration(clientConfiguration).build();
     }
 
+    /**
+     * Returns an elasticsearch transport client.
+     *
+     * @return TransportClient for the elasticsearch client is returned.
+     * @throws UnknownHostException is thrown if host can not be found.
+     */
     @Bean
     public TransportClient transportClient() throws UnknownHostException
     {
         // TODO: The elasticsearch host should be in a configuration file
         // TODO: There should be multiple connection points to clustered environment for availability
-        final String elasticSearchHost = "172.23.65.226";
+        String elasticSearchHost = "C02MM5U4FD57";
 
         Settings settings = Settings.builder().put("client.transport.sniff", true).build();
         TransportClient transportClient = new PreBuiltTransportClient(settings);
