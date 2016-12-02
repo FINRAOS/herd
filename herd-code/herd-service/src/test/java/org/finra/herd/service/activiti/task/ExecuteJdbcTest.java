@@ -49,9 +49,6 @@ public class ExecuteJdbcTest extends HerdActivitiServiceTaskTest
     private static final String JAVA_DELEGATE_CLASS_NAME = ExecuteJdbc.class.getCanonicalName();
 
     @Autowired
-    private ExecuteJdbcTestHelper executeJdbcTestHelper;
-
-    @Autowired
     private JdbcServiceTestHelper jdbcServiceTestHelper;
 
     @Test

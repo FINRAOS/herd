@@ -48,9 +48,13 @@ import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormat;
 import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormatUpdateRequest;
 import org.finra.herd.model.api.xml.SampleDataFile;
 import org.finra.herd.model.api.xml.TagKey;
+import org.finra.herd.model.dto.BusinessObjectDefinitionSampleFileUpdateDto;
+import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
+import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.TagEntity;
 import org.finra.herd.model.jpa.TagTypeEntity;
+import org.finra.herd.service.helper.BusinessObjectDefinitionDaoHelper;
 
 /**
  * This class tests various functionality within the business object definition REST controller.
@@ -69,6 +73,9 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
     // Constant to hold the display name option for the business object definition search
     public static final String FIELD_DISPLAY_NAME = "displayName";
+    
+    @Autowired
+    private BusinessObjectDefinitionDaoHelper businessObjectDefinitionDaoHelper;
 
     @Test
     public void testCreateBusinessObjectDefinition() throws Exception
@@ -1549,4 +1556,162 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         assertEquals(actualBusinessObjectDefinitions, expectedBusinessObjectDefinitions);
     }
 
+    @Test
+    public void testUpdateBusinessObjectDefinitionSampleFiles()
+    {
+        // Create and persist database entities required for testing.
+        businessObjectDefinitionServiceTestHelper.createDatabaseEntitiesForBusinessObjectDefinitionTesting();
+
+        storageDaoTestHelper.createStorageEntity(StorageEntity.SAMPLE_DATA_FILE_STORAGE, Arrays
+                .asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), S3_BUCKET_NAME)));
+        
+        // Create a business object definition.
+        BusinessObjectDefinitionCreateRequest request =
+            new BusinessObjectDefinitionCreateRequest(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME,
+                businessObjectDefinitionServiceTestHelper.getNewAttributes());
+        businessObjectDefinitionService.createBusinessObjectDefinition(request);
+
+        String fileName = "testfile.csv";
+        long fizeSize = 1820L;
+        String path = NAMESPACE + "/" + BDEF_NAME + "/";
+        BusinessObjectDefinitionSampleFileUpdateDto sampleFileUpdateDto = new BusinessObjectDefinitionSampleFileUpdateDto(path, fileName, fizeSize);
+        BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME);
+        businessObjectDefinitionServiceImpl.updateBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey, sampleFileUpdateDto);
+   
+        BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionService.getBusinessObjectDefinition(businessObjectDefinitionKey);
+        
+        List<SampleDataFile> samplDataFiles = Arrays.asList(new SampleDataFile(NAMESPACE + "/" + BDEF_NAME + "/", fileName));
+        
+        // Validate the returned object.
+        assertEquals(new BusinessObjectDefinition(updatedBusinessObjectDefinition.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
+            NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME, businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT,
+            samplDataFiles), updatedBusinessObjectDefinition);
+    }
+    
+    @Test
+    public void testUpdateBusinessObjectDefinitionSampleFilesAddFile()
+    {
+        // Create and persist database entities required for testing.
+        businessObjectDefinitionServiceTestHelper.createDatabaseEntitiesForBusinessObjectDefinitionTesting();
+
+        storageDaoTestHelper.createStorageEntity(StorageEntity.SAMPLE_DATA_FILE_STORAGE, Arrays
+                .asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), S3_BUCKET_NAME)));
+        
+        // Create and persist a business object definition entity.
+        businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME,
+                businessObjectDefinitionServiceTestHelper.getNewAttributes(), businessObjectDefinitionServiceTestHelper.getTestSampleDataFiles());
+
+
+        String fileName = "testfile.csv";
+        long fizeSize = 1820L;
+        String path = NAMESPACE + "/" + BDEF_NAME + "/";
+        BusinessObjectDefinitionSampleFileUpdateDto sampleFileUpdateDto = new BusinessObjectDefinitionSampleFileUpdateDto(path, fileName, fizeSize);
+
+        BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME);
+        businessObjectDefinitionServiceImpl.updateBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey, sampleFileUpdateDto);
+   
+        BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionService.getBusinessObjectDefinition(businessObjectDefinitionKey);
+        List<SampleDataFile> updatedSampleDataFileList = businessObjectDefinitionServiceTestHelper.getTestSampleDataFiles();
+        updatedSampleDataFileList.add(new SampleDataFile(NAMESPACE + "/" + BDEF_NAME + "/", fileName));
+        
+        // Validate the returned object.
+        assertEquals(new BusinessObjectDefinition(updatedBusinessObjectDefinition.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
+            NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME, businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT,
+            updatedSampleDataFileList), updatedBusinessObjectDefinition);
+    }
+    
+
+    @Test
+    public void testUpdateBusinessObjectDefinitionSampleFilesDifferentFileSize()
+    {
+        // Create and persist database entities required for testing.
+        businessObjectDefinitionServiceTestHelper.createDatabaseEntitiesForBusinessObjectDefinitionTesting();
+
+        storageDaoTestHelper.createStorageEntity(StorageEntity.SAMPLE_DATA_FILE_STORAGE, Arrays
+                .asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), S3_BUCKET_NAME)));
+        
+        // Create a business object definition.
+        BusinessObjectDefinitionCreateRequest request =
+            new BusinessObjectDefinitionCreateRequest(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME,
+                businessObjectDefinitionServiceTestHelper.getNewAttributes());
+        businessObjectDefinitionService.createBusinessObjectDefinition(request);
+
+        String fileName = "testfile.csv";
+        long fileSize = 1820L;
+        String path = NAMESPACE + "/" + BDEF_NAME + "/";
+        BusinessObjectDefinitionSampleFileUpdateDto sampleFileUpdateDto = new BusinessObjectDefinitionSampleFileUpdateDto(path, fileName, fileSize);
+
+        BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME);
+        businessObjectDefinitionServiceImpl.updateBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey, sampleFileUpdateDto);
+   
+        fileSize = 1024L;
+        sampleFileUpdateDto.setFileSize(fileSize);
+        businessObjectDefinitionServiceImpl.updateBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey, sampleFileUpdateDto);
+        
+        BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionService.getBusinessObjectDefinition(businessObjectDefinitionKey);
+        
+        List<SampleDataFile> samplDataFiles = Arrays.asList(new SampleDataFile(NAMESPACE + "/" + BDEF_NAME + "/", fileName));
+        
+        // Validate the returned object.
+        assertEquals(new BusinessObjectDefinition(updatedBusinessObjectDefinition.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
+            NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME, businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT,
+            samplDataFiles), updatedBusinessObjectDefinition);
+        
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
+        
+        //validate the file size is updated
+        assertEquals(businessObjectDefinitionEntity.getSampleDataFiles().iterator().next().getFileSizeBytes().longValue(), fileSize);
+    }
+    
+
+    @Test
+    public void testUpdateBusinessObjectDefinitionSampleFilesMissingFileName()
+    {
+        // Create and persist database entities required for testing.
+        businessObjectDefinitionServiceTestHelper.createDatabaseEntitiesForBusinessObjectDefinitionTesting();
+
+        storageDaoTestHelper.createStorageEntity(StorageEntity.SAMPLE_DATA_FILE_STORAGE, Arrays
+                .asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), S3_BUCKET_NAME)));
+        
+        // Create a business object definition.
+        BusinessObjectDefinitionCreateRequest request =
+            new BusinessObjectDefinitionCreateRequest(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME,
+                businessObjectDefinitionServiceTestHelper.getNewAttributes());
+        businessObjectDefinitionService.createBusinessObjectDefinition(request);
+        BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME);
+        
+        String fileName = "";
+        long fileSize = 1820L;
+        String path = NAMESPACE + "/" + BDEF_NAME + "/";
+        BusinessObjectDefinitionSampleFileUpdateDto sampleFileUpdateDto = new BusinessObjectDefinitionSampleFileUpdateDto(path, fileName, fileSize);
+
+        try
+        {
+            businessObjectDefinitionServiceImpl.updateBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey, sampleFileUpdateDto);
+        }
+        catch (IllegalArgumentException ex)
+        {
+            assertEquals(ex.getMessage(), "A file name must be specified.");
+        }        
+    }
+    
+    @Test
+    public void testUpdateBusinessObjectDefinitionSampleFilesBdefNotExists()
+    {
+        BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME);        
+        String fileName = "testfile.csv";
+        long fileSize = 1820L;
+        String path = NAMESPACE + "/" + BDEF_NAME + "/";
+        BusinessObjectDefinitionSampleFileUpdateDto sampleFileUpdateDto = new BusinessObjectDefinitionSampleFileUpdateDto(path, fileName, fileSize);
+
+        try
+        {
+            businessObjectDefinitionServiceImpl.updateBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey, sampleFileUpdateDto);
+        }
+        catch (ObjectNotFoundException ex)
+        {
+            assertEquals(ex.getMessage(), String.format("Business object definition with name \"%s\" doesn't exist for namespace \"%s\".", BDEF_NAME, NAMESPACE));
+        }        
+    }
 }

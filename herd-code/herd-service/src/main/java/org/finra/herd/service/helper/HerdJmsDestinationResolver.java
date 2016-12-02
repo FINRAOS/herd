@@ -35,6 +35,8 @@ public class HerdJmsDestinationResolver implements DestinationResolver
 
     public static final String SQS_DESTINATION_STORAGE_POLICY_SELECTOR_JOB_SQS_QUEUE = "storage_policy_selector_job_sqs_queue";
 
+    public static final String SQS_DESTINATION_SAMPLE_DATA_QUEUE = "sample_data_queue";
+    
     @Autowired
     private ConfigurationHelper configurationHelper;
 
@@ -53,7 +55,13 @@ public class HerdJmsDestinationResolver implements DestinationResolver
             // Get the storage policy selector job SQS queue name.
             sqsQueueName = getSqsQueueName(ConfigurationValue.STORAGE_POLICY_SELECTOR_JOB_SQS_QUEUE_NAME);
         }
-
+        else if (destinationName.equals(SQS_DESTINATION_SAMPLE_DATA_QUEUE))
+        {
+            // Get the storage policy selector job SQS queue name.
+            sqsQueueName = getSqsQueueName(ConfigurationValue.SAMPLE_DATA_SQS_QUEUE_NAME);
+        }
+        
+        
         Destination destination;
 
         try

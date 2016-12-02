@@ -20,6 +20,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
 import org.finra.herd.model.api.xml.StoragePolicyKey;
+import org.finra.herd.model.jpa.StoragePolicyEntity;
 
 /**
  * A helper class for storage policy operations.
@@ -29,6 +30,18 @@ public class StoragePolicyHelper
 {
     @Autowired
     private AlternateKeyHelper alternateKeyHelper;
+
+    /**
+     * Returns a storage policy key for the storage policy entity.
+     *
+     * @param storagePolicyEntity the storage policy entity
+     *
+     * @return the storage policy key for the storage policy entity
+     */
+    public StoragePolicyKey getStoragePolicyKey(StoragePolicyEntity storagePolicyEntity)
+    {
+        return new StoragePolicyKey(storagePolicyEntity.getNamespace().getCode(), storagePolicyEntity.getName());
+    }
 
     /**
      * Returns a string representation of the storage policy key along with the storage policy version.

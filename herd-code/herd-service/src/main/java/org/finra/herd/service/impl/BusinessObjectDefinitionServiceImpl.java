@@ -16,6 +16,7 @@
 package org.finra.herd.service.impl;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,6 +53,7 @@ import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormat;
 import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormatUpdateRequest;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.api.xml.SampleDataFile;
+import org.finra.herd.model.dto.BusinessObjectDefinitionSampleFileUpdateDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionAttributeEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
@@ -59,6 +61,7 @@ import org.finra.herd.model.jpa.BusinessObjectDefinitionSampleDataFileEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.DataProviderEntity;
 import org.finra.herd.model.jpa.NamespaceEntity;
+import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.TagEntity;
 import org.finra.herd.service.BusinessObjectDefinitionService;
 import org.finra.herd.service.SearchableService;
@@ -69,6 +72,7 @@ import org.finra.herd.service.helper.BusinessObjectDefinitionHelper;
 import org.finra.herd.service.helper.BusinessObjectFormatDaoHelper;
 import org.finra.herd.service.helper.DataProviderDaoHelper;
 import org.finra.herd.service.helper.NamespaceDaoHelper;
+import org.finra.herd.service.helper.StorageDaoHelper;
 import org.finra.herd.service.helper.TagDaoHelper;
 import org.finra.herd.service.helper.TagHelper;
 
@@ -111,6 +115,9 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 
     @Autowired
     private TagDaoHelper tagDaoHelper;
+    
+    @Autowired
+    private StorageDaoHelper storageDaoHelper;
 
     // Constant to hold the data provider name option for the business object definition search
     private static final String DATA_PROVIDER_NAME_FIELD = "dataprovidername";
@@ -701,6 +708,53 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
             Assert.isTrue(CollectionUtils.size(businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters()) ==
                         1 && businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters().get(0) != null,
                     "Exactly one business object definition search filter must be specified.");
+        }
+    }
+    
+    /**
+    * Update business object definition sample file
+    * @param businessObjectDefinitionKey business object definition key
+    * @param BusinessObjectDefinitionSampleFileUpdateDto update dto
+    */
+    @Override
+    public void updateBusinessObjectDefinitionEntitySampleFile(BusinessObjectDefinitionKey businessObjectDefinitionKey,
+        BusinessObjectDefinitionSampleFileUpdateDto businessObjectDefinitionSampleFileUpdateDto)
+    {
+        String path = businessObjectDefinitionSampleFileUpdateDto.getPath();
+        String fileName = businessObjectDefinitionSampleFileUpdateDto.getFileName();
+        long fileSize = businessObjectDefinitionSampleFileUpdateDto.getFileSize();
+        
+        // validate business object key
+        businessObjectDefinitionHelper.validateBusinessObjectDefinitionKey(businessObjectDefinitionKey);
+        // validate file name
+        Assert.hasText(fileName, "A file name must be specified.");
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
+                businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
+        Collection<BusinessObjectDefinitionSampleDataFileEntity> sampleFiles = businessObjectDefinitionEntity.getSampleDataFiles();
+        boolean found = false;
+        for (BusinessObjectDefinitionSampleDataFileEntity sampleDataFieEntity : sampleFiles)
+        {
+            //assume the path is the same for this business object definition
+            if (sampleDataFieEntity.getFileName().equals(fileName))
+            {
+                found = true;
+                sampleDataFieEntity.setFileSizeBytes(fileSize);
+                businessObjectDefinitionDao.saveAndRefresh(businessObjectDefinitionEntity);
+                break;
+            }
+        }
+        // create a new entity when not found
+        if (!found)
+        {
+            StorageEntity storageEntity = storageDaoHelper.getStorageEntity(StorageEntity.SAMPLE_DATA_FILE_STORAGE);
+            BusinessObjectDefinitionSampleDataFileEntity sampleDataFileEntity = new BusinessObjectDefinitionSampleDataFileEntity();
+            sampleDataFileEntity.setStorage(storageEntity);
+            sampleDataFileEntity.setBusinessObjectDefinition(businessObjectDefinitionEntity);
+            sampleDataFileEntity.setDirectoryPath(path);
+            sampleDataFileEntity.setFileName(fileName);
+            sampleDataFileEntity.setFileSizeBytes(fileSize);
+            businessObjectDefinitionEntity.getSampleDataFiles().add(sampleDataFileEntity);
+            businessObjectDefinitionDao.saveAndRefresh(businessObjectDefinitionEntity);
         }
     }
 }
