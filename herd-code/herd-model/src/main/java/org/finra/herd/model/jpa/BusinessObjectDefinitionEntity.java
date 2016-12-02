@@ -81,7 +81,7 @@ public class BusinessObjectDefinitionEntity extends AuditableEntity
     @OneToMany(mappedBy = "businessObjectDefinition", orphanRemoval = true, cascade = {CascadeType.ALL})
     @OrderBy("tag_id")
     private Collection<BusinessObjectDefinitionTagEntity> businessObjectDefinitionTags;
-    
+
     @ManyToOne
     @JoinColumn(name = "desc_bus_objct_frmt_id", referencedColumnName = "bus_objct_frmt_id", nullable = true)
     private BusinessObjectFormatEntity descriptiveBusinessObjectFormat;
@@ -89,6 +89,10 @@ public class BusinessObjectDefinitionEntity extends AuditableEntity
     @OneToMany(mappedBy = "businessObjectDefinition", orphanRemoval = true, cascade = {CascadeType.ALL})
     @OrderBy("file_nm,drcty_path_tx")
     private Collection<BusinessObjectDefinitionSampleDataFileEntity> sampleDataFiles;
+
+    @OneToMany(mappedBy = "businessObjectDefinition", orphanRemoval = true, cascade = {CascadeType.ALL})
+    @OrderBy("user_id")
+    private Collection<BusinessObjectDefinitionSubjectMatterExpertEntity> subjectMatterExperts;
 
     public Integer getId()
     {
@@ -208,5 +212,15 @@ public class BusinessObjectDefinitionEntity extends AuditableEntity
     public void setSampleDataFiles(Collection<BusinessObjectDefinitionSampleDataFileEntity> sampleDataFiles)
     {
         this.sampleDataFiles = sampleDataFiles;
+    }
+
+    public Collection<BusinessObjectDefinitionSubjectMatterExpertEntity> getSubjectMatterExperts()
+    {
+        return subjectMatterExperts;
+    }
+
+    public void setSubjectMatterExperts(Collection<BusinessObjectDefinitionSubjectMatterExpertEntity> subjectMatterExperts)
+    {
+        this.subjectMatterExperts = subjectMatterExperts;
     }
 }

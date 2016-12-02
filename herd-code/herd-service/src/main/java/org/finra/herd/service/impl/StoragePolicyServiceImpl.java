@@ -21,7 +21,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
-import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.StoragePolicyDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
@@ -36,12 +35,10 @@ import org.finra.herd.model.api.xml.StoragePolicyKey;
 import org.finra.herd.model.api.xml.StoragePolicyRule;
 import org.finra.herd.model.api.xml.StoragePolicyTransition;
 import org.finra.herd.model.api.xml.StoragePolicyUpdateRequest;
-import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.FileTypeEntity;
 import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.model.jpa.StorageEntity;
-import org.finra.herd.model.jpa.StoragePlatformEntity;
 import org.finra.herd.model.jpa.StoragePolicyEntity;
 import org.finra.herd.model.jpa.StoragePolicyRuleTypeEntity;
 import org.finra.herd.model.jpa.StoragePolicyStatusEntity;
@@ -50,7 +47,6 @@ import org.finra.herd.service.helper.BusinessObjectDefinitionDaoHelper;
 import org.finra.herd.service.helper.FileTypeDaoHelper;
 import org.finra.herd.service.helper.NamespaceDaoHelper;
 import org.finra.herd.service.helper.StorageDaoHelper;
-import org.finra.herd.service.helper.StorageHelper;
 import org.finra.herd.service.helper.StoragePolicyDaoHelper;
 import org.finra.herd.service.helper.StoragePolicyHelper;
 import org.finra.herd.service.helper.StoragePolicyRuleTypeDaoHelper;
@@ -67,9 +63,6 @@ public class StoragePolicyServiceImpl implements StoragePolicyService
     private BusinessObjectDefinitionDaoHelper businessObjectDefinitionDaoHelper;
 
     @Autowired
-    private ConfigurationHelper configurationHelper;
-
-    @Autowired
     private FileTypeDaoHelper fileTypeDaoHelper;
 
     @Autowired
@@ -77,9 +70,6 @@ public class StoragePolicyServiceImpl implements StoragePolicyService
 
     @Autowired
     private StorageDaoHelper storageDaoHelper;
-
-    @Autowired
-    private StorageHelper storageHelper;
 
     @Autowired
     private StoragePolicyDao storagePolicyDao;
@@ -144,13 +134,13 @@ public class StoragePolicyServiceImpl implements StoragePolicyService
         StorageEntity storageEntity = storageDaoHelper.getStorageEntity(storagePolicyFilter.getStorageName());
 
         // Validate the source storage.
-        validateSourceStorage(storageEntity);
+        storagePolicyDaoHelper.validateSourceStorage(storageEntity);
 
         // Retrieve and ensure that destination storage exists.
         StorageEntity destinationStorageEntity = storageDaoHelper.getStorageEntity(request.getStoragePolicyTransition().getDestinationStorageName());
 
         // Validate the destination storage.
-        validateDestinationStorage(destinationStorageEntity);
+        storagePolicyDaoHelper.validateDestinationStorage(destinationStorageEntity);
 
         // Retrieve and ensure that specified storage policy status exists.
         StoragePolicyStatusEntity storagePolicyStatusEntity = storagePolicyStatusDaoHelper.getStoragePolicyStatusEntity(request.getStatus());
@@ -205,13 +195,13 @@ public class StoragePolicyServiceImpl implements StoragePolicyService
         StorageEntity storageEntity = storageDaoHelper.getStorageEntity(storagePolicyFilter.getStorageName());
 
         // Validate the source storage.
-        validateSourceStorage(storageEntity);
+        storagePolicyDaoHelper.validateSourceStorage(storageEntity);
 
         // Retrieve and ensure that destination storage exists.
         StorageEntity destinationStorageEntity = storageDaoHelper.getStorageEntity(request.getStoragePolicyTransition().getDestinationStorageName());
 
         // Validate the destination storage.
-        validateDestinationStorage(destinationStorageEntity);
+        storagePolicyDaoHelper.validateDestinationStorage(destinationStorageEntity);
 
         // Retrieve and ensure that specified storage policy status exists.
         StoragePolicyStatusEntity storagePolicyStatusEntity = storagePolicyStatusDaoHelper.getStoragePolicyStatusEntity(request.getStatus());
@@ -365,54 +355,6 @@ public class StoragePolicyServiceImpl implements StoragePolicyService
 
         Assert.hasText(storagePolicyTransition.getDestinationStorageName(), "A destination storage name must be specified.");
         storagePolicyTransition.setDestinationStorageName(storagePolicyTransition.getDestinationStorageName().trim());
-    }
-
-    /**
-     * Validates the source storage.
-     *
-     * @param storageEntity the storage entity
-     */
-    private void validateSourceStorage(StorageEntity storageEntity)
-    {
-        // Validate that storage platform is S3 for the storage policy filter storage.
-        Assert.isTrue(StoragePlatformEntity.S3.equals(storageEntity.getStoragePlatform().getName()),
-            String.format("Storage platform for storage with name \"%s\" is not \"%s\".", storageEntity.getName(), StoragePlatformEntity.S3));
-
-        // Validate that storage policy filter storage has S3 bucket name configured.
-        // Please note that since S3 bucket name attribute value is required we pass a "true" flag.
-        storageHelper.getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), storageEntity, true);
-
-        // Validate that storage policy filter storage has the S3 path prefix validation enabled.
-        if (!storageHelper
-            .getBooleanStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_PATH_PREFIX), storageEntity,
-                false, true))
-        {
-            throw new IllegalStateException(String.format("Path prefix validation must be enabled on \"%s\" storage.", storageEntity.getName()));
-        }
-
-        // Validate that storage policy filter storage has the S3 file existence validation enabled.
-        if (!storageHelper
-            .getBooleanStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_VALIDATE_FILE_EXISTENCE), storageEntity,
-                false, true))
-        {
-            throw new IllegalStateException(String.format("File existence validation must be enabled on \"%s\" storage.", storageEntity.getName()));
-        }
-    }
-
-    /**
-     * Validates the destination storage.
-     *
-     * @param storageEntity the destination storage entity
-     */
-    private void validateDestinationStorage(StorageEntity storageEntity)
-    {
-        Assert.isTrue(StoragePlatformEntity.GLACIER.equals(storageEntity.getStoragePlatform().getName()),
-            String.format("Storage platform for destination storage with name \"%s\" is not \"%s\".", storageEntity.getName(), StoragePlatformEntity.GLACIER));
-
-        // Validate that storage policy transition destination storage has S3 bucket name configured for the "archive" S3 bucket.
-        // The "archive" S3 bucket is an S3 bucket that has an object lifecycle rule that moves data to Glacier after 0 days.
-        // Please note that since S3 bucket name attribute value is required we pass a "true" flag.
-        storageHelper.getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), storageEntity, true);
     }
 
     /**

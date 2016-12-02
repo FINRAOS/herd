@@ -51,6 +51,9 @@ public class PublishJmsMessagesAdviceTest extends AbstractServiceTest
         // Create a JMS message.
         JmsMessage jmsMessage = new JmsMessage(SQS_QUEUE_NAME, MESSAGE_TEXT);
 
+        // Clean up "in-memory" JMS message queue.
+        jmsMessageInMemoryQueue.clear();
+
         // Validate that "in-memory" JMS message queue is empty.
         assertTrue(jmsMessageInMemoryQueue.isEmpty());
 
@@ -101,6 +104,9 @@ public class PublishJmsMessagesAdviceTest extends AbstractServiceTest
     {
         // Create a JMS message with a mocked SQS queue name that causes an AWS service exception when trying to post a SQS message.
         JmsMessage jmsMessage = new JmsMessage(MockSqsOperationsImpl.MOCK_SQS_QUEUE_NOT_FOUND_NAME, MESSAGE_TEXT);
+
+        // Clean up "in-memory" JMS message queue.
+        jmsMessageInMemoryQueue.clear();
 
         // Validate that "in-memory" JMS message queue is empty.
         assertTrue(jmsMessageInMemoryQueue.isEmpty());
