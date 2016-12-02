@@ -24,6 +24,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 /**
  * Expected partition values entity.
  */
@@ -45,6 +47,7 @@ public class ExpectedPartitionValueEntity extends AuditableEntity
     /**
      * The partitionKeyGroup column.
      */
+    @JsonBackReference
     @ManyToOne
     @JoinColumn(name = "prtn_key_group_tx", referencedColumnName = "prtn_key_group_tx", nullable = false)
     private PartitionKeyGroupEntity partitionKeyGroup;

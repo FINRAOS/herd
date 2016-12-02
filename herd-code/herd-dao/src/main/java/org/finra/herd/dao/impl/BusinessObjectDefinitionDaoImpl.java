@@ -22,6 +22,7 @@ import javax.persistence.Tuple;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
+import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
@@ -43,6 +44,30 @@ import org.finra.herd.model.jpa.TagEntity;
 @Repository
 public class BusinessObjectDefinitionDaoImpl extends AbstractHerdDao implements BusinessObjectDefinitionDao
 {
+    @Override
+    public List<BusinessObjectDefinitionEntity> getAllBusinessObjectDefinitions()
+    {
+        // Create the criteria builder and a tuple style criteria query.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<BusinessObjectDefinitionEntity> criteria = builder.createQuery(BusinessObjectDefinitionEntity.class);
+
+        // The criteria root is the business object definition.
+        Root<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityRoot = criteria.from(BusinessObjectDefinitionEntity.class);
+
+        // Join to the other tables we can filter on.
+        Join<BusinessObjectDefinitionEntity, NamespaceEntity> namespaceEntity =
+            businessObjectDefinitionEntityRoot.join(BusinessObjectDefinitionEntity_.namespace);
+
+        // Get the columns.
+        Path<String> namespaceCodeColumn = namespaceEntity.get(NamespaceEntity_.code);
+        Path<String> businessObjectDefinitionNameColumn = businessObjectDefinitionEntityRoot.get(BusinessObjectDefinitionEntity_.name);
+
+        criteria.select(businessObjectDefinitionEntityRoot).orderBy(builder.asc(businessObjectDefinitionNameColumn), builder.asc(namespaceCodeColumn));
+
+        //Returns duplicate business object definition. When a bdef is associated with multiple tags.
+        return entityManager.createQuery(criteria).getResultList();
+    }
+
     @Override
     public BusinessObjectDefinitionEntity getBusinessObjectDefinitionByKey(BusinessObjectDefinitionKey businessObjectDefinitionKey)
     {

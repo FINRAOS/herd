@@ -83,6 +83,7 @@
       <swagger.version>1.5.9</swagger.version>
       <velocity.version>1.7</velocity.version>
       <woodstox.version>4.4.1</woodstox.version>
+      <elasticsearch.version>5.0.1</elasticsearch.version>
 
       <!-- Third Party Plugin Dependencies -->
       <jaxb.xew.plugin.version>1.6</jaxb.xew.plugin.version>

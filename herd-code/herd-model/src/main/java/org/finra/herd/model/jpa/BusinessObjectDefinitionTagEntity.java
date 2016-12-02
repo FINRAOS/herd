@@ -24,6 +24,9 @@ import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 /**
  * Tag associated with business object definition.
  */
@@ -42,10 +45,12 @@ public class BusinessObjectDefinitionTagEntity extends AuditableEntity
     @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq", allocationSize = 1)
     private Integer id;
 
+    @JsonBackReference(value="businessObjectDefinition-businessObjectDefinitionTags")
     @ManyToOne
     @JoinColumn(name = "bus_objct_dfntn_id", referencedColumnName = "bus_objct_dfntn_id", nullable = false)
     private BusinessObjectDefinitionEntity businessObjectDefinition;
 
+    @JsonBackReference(value="businessObjectDefinitionTags-tag")
     @ManyToOne
     @JoinColumn(name = "tag_id", referencedColumnName = "tag_id", nullable = false)
     private TagEntity tag;

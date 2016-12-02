@@ -15,6 +15,7 @@
 */
 package org.finra.herd.rest;
 
+import java.util.List;
 import java.util.Set;
 
 import io.swagger.annotations.Api;
@@ -36,6 +37,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionUpdateRequest;
 import org.finra.herd.model.dto.SecurityFunctions;
+import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.service.BusinessObjectDefinitionService;
 import org.finra.herd.ui.constants.UiConstants;
 
@@ -171,8 +173,8 @@ public class BusinessObjectDefinitionRestController extends HerdBaseController
     /**
      * Searches across all business object definitions that are defined in the system per specified search filters and keys
      *
-     * @param fields A comma-separated list of fields to be retrieved with each business object definition entity.
-     *               Valid options: dataProviderName, shortDescription, displayName
+     * @param fields A comma-separated list of fields to be retrieved with each business object definition entity. Valid options: dataProviderName,
+     * shortDescription, displayName
      * @param request the information needed to search across the business object definitions
      *
      * @return the retrieved business object definition list
@@ -183,5 +185,35 @@ public class BusinessObjectDefinitionRestController extends HerdBaseController
         @RequestParam(value = "fields", required = false, defaultValue = "") Set<String> fields, @RequestBody BusinessObjectDefinitionSearchRequest request)
     {
         return businessObjectDefinitionService.searchBusinessObjectDefinitions(request, fields);
+    }
+
+    /**
+     * Searches across all business object definitions that are defined in the system per specified search filters and keys
+     *
+     * @param fields A comma-separated list of fields to be retrieved with each business object definition entity. Valid options: dataProviderName,
+     * shortDescription, displayName
+     * @param request the information needed to search across the business object definitions
+     *
+     * @return the retrieved business object definition list
+     */
+    @RequestMapping(value = "/businessObjectDefinitions/indexsearch", method = RequestMethod.POST, consumes = {"application/xml", "application/json"})
+    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DEFINITIONS_SEARCH_POST)
+    public BusinessObjectDefinitionSearchResponse indexSearchBusinessObjectDefinitions(
+        @RequestParam(value = "fields", required = false, defaultValue = "") Set<String> fields, @RequestBody BusinessObjectDefinitionSearchRequest request)
+    {
+        return businessObjectDefinitionService.indexSearchBusinessObjectDefinitions(request, fields);
+    }
+
+    /**
+     * Index all business object definitions
+     *
+     * @return the retrieved business object definition list
+     */
+    @RequestMapping(value = "/businessObjectDefinitions/index", method = RequestMethod.GET, consumes = {"application/xml", "application/json"})
+    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DEFINITIONS_SEARCH_POST)
+    public BusinessObjectDefinitionSearchResponse indexBusinessObjectDefinitions()
+    {
+        businessObjectDefinitionService.indexAllBusinessObjectDefinitions();
+        return new BusinessObjectDefinitionSearchResponse();
     }
 }

@@ -47,6 +47,11 @@ public interface BusinessObjectDefinitionService
 
     public BusinessObjectDefinitionKeys getBusinessObjectDefinitions(String namespaceCode);
 
+    public int indexAllBusinessObjectDefinitions();
+
+    public BusinessObjectDefinitionSearchResponse indexSearchBusinessObjectDefinitions(BusinessObjectDefinitionSearchRequest businessObjectDefinitionSearchRequest,
+        Set<String> fields);
+
     public BusinessObjectDefinitionSearchResponse searchBusinessObjectDefinitions(BusinessObjectDefinitionSearchRequest businessObjectDefinitionSearchRequest,
         Set<String> fields);
 }

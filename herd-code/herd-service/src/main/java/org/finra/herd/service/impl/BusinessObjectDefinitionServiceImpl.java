@@ -15,16 +15,33 @@
 */
 package org.finra.herd.service.impl;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableSet;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
+import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequestBuilder;
+import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsResponse;
+import org.elasticsearch.action.index.IndexRequestBuilder;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.search.SearchType;
+import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.SearchHits;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -79,6 +96,8 @@ import org.finra.herd.service.helper.TagHelper;
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefinitionService, SearchableService
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BusinessObjectDefinitionServiceImpl.class);
+
     @Autowired
     private AlternateKeyHelper alternateKeyHelper;
 
@@ -111,6 +130,9 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 
     @Autowired
     private TagDaoHelper tagDaoHelper;
+
+    @Autowired
+    private TransportClient transportClient;
 
     // Constant to hold the data provider name option for the business object definition search
     private static final String DATA_PROVIDER_NAME_FIELD = "dataprovidername";
@@ -288,6 +310,156 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         // Create and return the business object definition object from the deleted entity.
         return createBusinessObjectDefinitionFromEntity(businessObjectDefinitionEntity);
     }
+
+    /**
+     * Gets the list of all business object definitions defined in the system.
+     *
+     * @return the business object definition list.
+     */
+    @Override
+    public int indexAllBusinessObjectDefinitions()
+    {
+        // TODO: The index name and document type should be static final variables else where
+        final String indexName = "dm";
+        final String documentType = "bdef";
+
+        // If the index exists delete it
+        final IndicesExistsResponse indicesExistsResponse = transportClient.admin().indices().prepareExists(indexName).execute().actionGet();
+        if (indicesExistsResponse.isExists()) {
+            final DeleteIndexRequestBuilder deleteIndexRequestBuilder = transportClient.admin().indices().prepareDelete(indexName);
+            deleteIndexRequestBuilder.execute().actionGet();
+        }
+
+        // Create the index and apply the JSON mapping file to the index
+        String mapping = getMappingJSON();
+        final CreateIndexRequestBuilder createIndexRequestBuilder = transportClient.admin().indices().prepareCreate(indexName);
+        createIndexRequestBuilder.addMapping(documentType, mapping);
+        createIndexRequestBuilder.execute().actionGet();
+
+        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList = businessObjectDefinitionDao.getAllBusinessObjectDefinitions();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        for (BusinessObjectDefinitionEntity businessObjectDefinitionEntity : businessObjectDefinitionEntityList)
+        {
+            // Fetch Join with .size()
+            businessObjectDefinitionEntity.getAttributes().size();
+            businessObjectDefinitionEntity.getBusinessObjectDefinitionTags().size();
+            businessObjectDefinitionEntity.getBusinessObjectFormats().size();
+            businessObjectDefinitionEntity.getColumns().size();
+            businessObjectDefinitionEntity.getSampleDataFiles().size();
+
+            //Object to JSON in String
+            String jsonString = "";
+            try
+            {
+                jsonString = objectMapper.writeValueAsString(businessObjectDefinitionEntity);
+            }
+            catch (JsonProcessingException jsonProcessingException)
+            {
+                LOGGER.warn("Could not parse BusinessObjectDefinitionEntity id={" + businessObjectDefinitionEntity.getId() + "} into JSON string. ", jsonProcessingException);
+                // Skip this bdef because it can not be parsed into a JSON object
+                continue;
+            }
+
+            // For each BDef, index in elastic search
+            final IndexRequestBuilder indexRequestBuilder = transportClient.prepareIndex(indexName, documentType, businessObjectDefinitionEntity.getId().toString());
+            indexRequestBuilder.setSource(jsonString);
+            indexRequestBuilder.execute().actionGet();
+        }
+
+        return businessObjectDefinitionEntityList.size();
+    }
+
+    /**
+     * Gets a list of all business object definitions defined in the system.
+     *
+     * @return the business object definitions.
+     */
+    @Override
+    public BusinessObjectDefinitionSearchResponse indexSearchBusinessObjectDefinitions(BusinessObjectDefinitionSearchRequest request, Set<String> fields)
+    {
+        final String indexName = "dm";
+        final String documentType = "bdef";
+
+        // Validate the business object definition search fields.
+        validateSearchResponseFields(fields);
+
+        BusinessObjectDefinitionSearchKey businessObjectDefinitionSearchKey = null;
+
+        if (!CollectionUtils.isEmpty(request.getBusinessObjectDefinitionSearchFilters()))
+        {
+            // Validate the search request.
+            validateBusinessObjectDefinitionSearchRequest(request);
+            businessObjectDefinitionSearchKey = request.getBusinessObjectDefinitionSearchFilters().get(0).getBusinessObjectDefinitionSearchKeys().get(0);
+        }
+
+        /*
+           "query": {
+            "bool": {
+              "should": [
+                { "match": { "businessObjectDefinitionTags.tag.tagType.code":  "BUS_CTGRY" }},
+                { "match": { "businessObjectDefinitionTags.tag.tagCode": "MNCPL" }}
+              ],
+              "minimum_should_match" : 2
+            }
+          }
+        */
+
+        // Query to match tag type code
+        QueryBuilder matchTagTypeCodeQueryBuilder = QueryBuilders.matchQuery(
+            "businessObjectDefinitionTags.tag.tagType.code", businessObjectDefinitionSearchKey.getTagKey().getTagTypeCode());
+
+        // Query to match tag code
+        QueryBuilder matchTagCodeQueryBuilder = QueryBuilders.matchQuery(
+            "businessObjectDefinitionTags.tag.tagCode", businessObjectDefinitionSearchKey.getTagKey().getTagCode());
+
+        // Combined bool should match query for tag type code and tag code
+        QueryBuilder queryBuilder = QueryBuilders
+            .boolQuery()
+            .should(matchTagTypeCodeQueryBuilder)
+            .should(matchTagCodeQueryBuilder)
+            .minimumNumberShouldMatch(2);
+
+        final SearchResponse searchResponse = transportClient.prepareSearch(indexName)
+            .setTypes(documentType)
+            .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
+            .setQuery(queryBuilder)
+            .setSize(10000)
+            .setFrom(0)
+            .execute()
+            .actionGet();
+
+        // Construct business object search response.
+        Set<BusinessObjectDefinitionEntity> businessObjectDefinitionEntitySet = new HashSet<>();
+        SearchHits searchHits = searchResponse.getHits();
+        for (SearchHit searchHit : searchHits)
+        {
+            String jsonInString = searchHit.getSourceAsString();
+
+            //JSON from String to Object
+            ObjectMapper objectMapper = new ObjectMapper();
+            try
+            {
+                businessObjectDefinitionEntitySet.add(objectMapper.readValue(jsonInString, BusinessObjectDefinitionEntity.class));
+            }
+            catch (IOException ioException)
+            {
+                LOGGER.warn("Could not parse BusinessObjectDefinitionEntity from JSON id={}.", searchHit.getId(), ioException);
+                // Skip this business object definition entity because it can not be parsed from a JSON object
+                continue;
+            }
+
+        }
+
+        // Construct business object search response.
+        List<BusinessObjectDefinition> businessObjectDefinitions = new ArrayList<>();
+        businessObjectDefinitionEntitySet.forEach( businessObjectDefinitionEntity -> businessObjectDefinitions.add(createBusinessObjectDefinitionFromEntity(businessObjectDefinitionEntity, fields)));
+        BusinessObjectDefinitionSearchResponse businessObjectDefinitionSearchResponse = new BusinessObjectDefinitionSearchResponse();
+        businessObjectDefinitionSearchResponse.setBusinessObjectDefinitions(businessObjectDefinitions);
+
+        return businessObjectDefinitionSearchResponse;
+    }
+
 
     /**
      * Gets the list of all business object definitions defined in the system.
@@ -702,5 +874,1374 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
                         1 && businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters().get(0) != null,
                     "Exactly one business object definition search filter must be specified.");
         }
+    }
+
+    private String getMappingJSON()
+    {
+        String mappingJSON = "{\n" +
+            "  \"properties\": {\n" +
+            "    \"attributes\": {\n" +
+            "      \"properties\": {\n" +
+            "        \"createdBy\": {\n" +
+            "          \"type\": \"text\",\n" +
+            "          \"store\": true,\n" +
+            "          \"fields\": {\n" +
+            "            \"keyword\": {\n" +
+            "              \"type\": \"keyword\",\n" +
+            "              \"ignore_above\": 256\n" +
+            "            }\n" +
+            "          }\n" +
+            "        },\n" +
+            "        \"createdOn\": {\n" +
+            "          \"include_in_all\": false,\n" +
+            "          \"ignore_malformed\": true,\n" +
+            "          \"type\": \"date\",\n" +
+            "          \"store\": true\n" +
+            "        },\n" +
+            "        \"id\": {\n" +
+            "          \"type\": \"long\"\n" +
+            "        },\n" +
+            "        \"name\": {\n" +
+            "          \"type\": \"text\",\n" +
+            "          \"store\": true,\n" +
+            "          \"fields\": {\n" +
+            "            \"keyword\": {\n" +
+            "              \"type\": \"keyword\",\n" +
+            "              \"ignore_above\": 256\n" +
+            "            }\n" +
+            "          }\n" +
+            "        },\n" +
+            "        \"updatedBy\": {\n" +
+            "          \"type\": \"text\",\n" +
+            "          \"store\": true,\n" +
+            "          \"fields\": {\n" +
+            "            \"keyword\": {\n" +
+            "              \"type\": \"keyword\",\n" +
+            "              \"ignore_above\": 256\n" +
+            "            }\n" +
+            "          }\n" +
+            "        },\n" +
+            "        \"updatedOn\": {\n" +
+            "          \"include_in_all\": false,\n" +
+            "          \"ignore_malformed\": true,\n" +
+            "          \"type\": \"date\",\n" +
+            "          \"store\": true\n" +
+            "        },\n" +
+            "        \"value\": {\n" +
+            "          \"type\": \"text\",\n" +
+            "          \"fields\": {\n" +
+            "            \"keyword\": {\n" +
+            "              \"type\": \"keyword\",\n" +
+            "              \"ignore_above\": 256\n" +
+            "            }\n" +
+            "          }\n" +
+            "        }\n" +
+            "      }\n" +
+            "    },\n" +
+            "    \"businessObjectDefinitionTags\": {\n" +
+            "      \"properties\": {\n" +
+            "        \"createdBy\": {\n" +
+            "          \"type\": \"text\",\n" +
+            "          \"fields\": {\n" +
+            "            \"keyword\": {\n" +
+            "              \"type\": \"keyword\",\n" +
+            "              \"ignore_above\": 256\n" +
+            "            }\n" +
+            "          }\n" +
+            "        },\n" +
+            "        \"createdOn\": {\n" +
+            "          \"include_in_all\": false,\n" +
+            "          \"ignore_malformed\": true,\n" +
+            "          \"type\": \"date\"\n" +
+            "        },\n" +
+            "        \"id\": {\n" +
+            "          \"type\": \"long\"\n" +
+            "        },\n" +
+            "        \"tag\": {\n" +
+            "          \"properties\": {\n" +
+            "            \"childrenTagEntities\": {\n" +
+            "              \"properties\": {\n" +
+            "                \"childrenTagEntities\": {\n" +
+            "                  \"properties\": {\n" +
+            "                    \"createdBy\": {\n" +
+            "                      \"type\": \"text\",\n" +
+            "                      \"fields\": {\n" +
+            "                        \"keyword\": {\n" +
+            "                          \"type\": \"keyword\",\n" +
+            "                          \"ignore_above\": 256\n" +
+            "                        }\n" +
+            "                      }\n" +
+            "                    },\n" +
+            "                    \"createdOn\": {\n" +
+            "                      \"include_in_all\": false,\n" +
+            "                      \"ignore_malformed\": true,\n" +
+            "                      \"type\": \"date\"\n" +
+            "                    },\n" +
+            "                    \"description\": {\n" +
+            "                      \"type\": \"text\",\n" +
+            "                      \"fields\": {\n" +
+            "                        \"keyword\": {\n" +
+            "                          \"type\": \"keyword\"\n" +
+            "                        }\n" +
+            "                      }\n" +
+            "                    },\n" +
+            "                    \"displayName\": {\n" +
+            "                      \"type\": \"text\",\n" +
+            "                      \"fields\": {\n" +
+            "                        \"keyword\": {\n" +
+            "                          \"type\": \"keyword\"\n" +
+            "                        }\n" +
+            "                      }\n" +
+            "                    },\n" +
+            "                    \"id\": {\n" +
+            "                      \"type\": \"long\"\n" +
+            "                    },\n" +
+            "                    \"tagCode\": {\n" +
+            "                      \"type\": \"text\",\n" +
+            "                      \"fields\": {\n" +
+            "                        \"keyword\": {\n" +
+            "                          \"type\": \"keyword\",\n" +
+            "                          \"ignore_above\": 256\n" +
+            "                        }\n" +
+            "                      }\n" +
+            "                    },\n" +
+            "                    \"tagType\": {\n" +
+            "                      \"properties\": {\n" +
+            "                        \"code\": {\n" +
+            "                          \"type\": \"text\",\n" +
+            "                          \"fields\": {\n" +
+            "                            \"keyword\": {\n" +
+            "                              \"type\": \"keyword\",\n" +
+            "                              \"ignore_above\": 256\n" +
+            "                            }\n" +
+            "                          }\n" +
+            "                        },\n" +
+            "                        \"createdBy\": {\n" +
+            "                          \"type\": \"text\",\n" +
+            "                          \"fields\": {\n" +
+            "                            \"keyword\": {\n" +
+            "                              \"type\": \"keyword\",\n" +
+            "                              \"ignore_above\": 256\n" +
+            "                            }\n" +
+            "                          }\n" +
+            "                        },\n" +
+            "                        \"createdOn\": {\n" +
+            "                          \"include_in_all\": false,\n" +
+            "                          \"ignore_malformed\": true,\n" +
+            "                          \"type\": \"date\"\n" +
+            "                        },\n" +
+            "                        \"displayName\": {\n" +
+            "                          \"type\": \"text\",\n" +
+            "                          \"fields\": {\n" +
+            "                            \"keyword\": {\n" +
+            "                              \"type\": \"keyword\"\n" +
+            "                            }\n" +
+            "                          }\n" +
+            "                        },\n" +
+            "                        \"orderNumber\": {\n" +
+            "                          \"type\": \"long\"\n" +
+            "                        },\n" +
+            "                        \"updatedBy\": {\n" +
+            "                          \"type\": \"text\",\n" +
+            "                          \"fields\": {\n" +
+            "                            \"keyword\": {\n" +
+            "                              \"type\": \"keyword\",\n" +
+            "                              \"ignore_above\": 256\n" +
+            "                            }\n" +
+            "                          }\n" +
+            "                        },\n" +
+            "                        \"updatedOn\": {\n" +
+            "                          \"include_in_all\": false,\n" +
+            "                          \"ignore_malformed\": true,\n" +
+            "                          \"type\": \"date\"\n" +
+            "                        }\n" +
+            "                      }\n" +
+            "                    },\n" +
+            "                    \"updatedBy\": {\n" +
+            "                      \"type\": \"text\",\n" +
+            "                      \"fields\": {\n" +
+            "                        \"keyword\": {\n" +
+            "                          \"type\": \"keyword\",\n" +
+            "                          \"ignore_above\": 256\n" +
+            "                        }\n" +
+            "                      }\n" +
+            "                    },\n" +
+            "                    \"updatedOn\": {\n" +
+            "                      \"include_in_all\": false,\n" +
+            "                      \"ignore_malformed\": true,\n" +
+            "                      \"type\": \"date\"\n" +
+            "                    }\n" +
+            "                  }\n" +
+            "                },\n" +
+            "                \"createdBy\": {\n" +
+            "                  \"type\": \"text\",\n" +
+            "                  \"fields\": {\n" +
+            "                    \"keyword\": {\n" +
+            "                      \"type\": \"keyword\",\n" +
+            "                      \"ignore_above\": 256\n" +
+            "                    }\n" +
+            "                  }\n" +
+            "                },\n" +
+            "                \"createdOn\": {\n" +
+            "                  \"include_in_all\": false,\n" +
+            "                  \"ignore_malformed\": true,\n" +
+            "                  \"type\": \"date\"\n" +
+            "                },\n" +
+            "                \"description\": {\n" +
+            "                  \"type\": \"text\",\n" +
+            "                  \"fields\": {\n" +
+            "                    \"keyword\": {\n" +
+            "                      \"type\": \"keyword\"\n" +
+            "                    }\n" +
+            "                  }\n" +
+            "                },\n" +
+            "                \"displayName\": {\n" +
+            "                  \"type\": \"text\",\n" +
+            "                  \"fields\": {\n" +
+            "                    \"keyword\": {\n" +
+            "                      \"type\": \"keyword\"\n" +
+            "                    }\n" +
+            "                  }\n" +
+            "                },\n" +
+            "                \"id\": {\n" +
+            "                  \"type\": \"long\"\n" +
+            "                },\n" +
+            "                \"tagCode\": {\n" +
+            "                  \"type\": \"text\",\n" +
+            "                  \"fields\": {\n" +
+            "                    \"keyword\": {\n" +
+            "                      \"type\": \"keyword\",\n" +
+            "                      \"ignore_above\": 256\n" +
+            "                    }\n" +
+            "                  }\n" +
+            "                },\n" +
+            "                \"tagType\": {\n" +
+            "                  \"properties\": {\n" +
+            "                    \"code\": {\n" +
+            "                      \"type\": \"text\",\n" +
+            "                      \"fields\": {\n" +
+            "                        \"keyword\": {\n" +
+            "                          \"type\": \"keyword\",\n" +
+            "                          \"ignore_above\": 256\n" +
+            "                        }\n" +
+            "                      }\n" +
+            "                    },\n" +
+            "                    \"createdBy\": {\n" +
+            "                      \"type\": \"text\",\n" +
+            "                      \"fields\": {\n" +
+            "                        \"keyword\": {\n" +
+            "                          \"type\": \"keyword\",\n" +
+            "                          \"ignore_above\": 256\n" +
+            "                        }\n" +
+            "                      }\n" +
+            "                    },\n" +
+            "                    \"createdOn\": {\n" +
+            "                      \"include_in_all\": false,\n" +
+            "                      \"ignore_malformed\": true,\n" +
+            "                      \"type\": \"date\"\n" +
+            "                    },\n" +
+            "                    \"displayName\": {\n" +
+            "                      \"type\": \"text\",\n" +
+            "                      \"fields\": {\n" +
+            "                        \"keyword\": {\n" +
+            "                          \"type\": \"keyword\"\n" +
+            "                        }\n" +
+            "                      }\n" +
+            "                    },\n" +
+            "                    \"orderNumber\": {\n" +
+            "                      \"type\": \"long\"\n" +
+            "                    },\n" +
+            "                    \"updatedBy\": {\n" +
+            "                      \"type\": \"text\",\n" +
+            "                      \"fields\": {\n" +
+            "                        \"keyword\": {\n" +
+            "                          \"type\": \"keyword\",\n" +
+            "                          \"ignore_above\": 256\n" +
+            "                        }\n" +
+            "                      }\n" +
+            "                    },\n" +
+            "                    \"updatedOn\": {\n" +
+            "                      \"include_in_all\": false,\n" +
+            "                      \"ignore_malformed\": true,\n" +
+            "                      \"type\": \"date\"\n" +
+            "                    }\n" +
+            "                  }\n" +
+            "                },\n" +
+            "                \"updatedBy\": {\n" +
+            "                  \"type\": \"text\",\n" +
+            "                  \"fields\": {\n" +
+            "                    \"keyword\": {\n" +
+            "                      \"type\": \"keyword\",\n" +
+            "                      \"ignore_above\": 256\n" +
+            "                    }\n" +
+            "                  }\n" +
+            "                },\n" +
+            "                \"updatedOn\": {\n" +
+            "                  \"include_in_all\": false,\n" +
+            "                  \"ignore_malformed\": true,\n" +
+            "                  \"type\": \"date\"\n" +
+            "                }\n" +
+            "              }\n" +
+            "            },\n" +
+            "            \"createdBy\": {\n" +
+            "              \"type\": \"text\",\n" +
+            "              \"fields\": {\n" +
+            "                \"keyword\": {\n" +
+            "                  \"type\": \"keyword\",\n" +
+            "                  \"ignore_above\": 256\n" +
+            "                }\n" +
+            "              }\n" +
+            "            },\n" +
+            "            \"createdOn\": {\n" +
+            "              \"include_in_all\": false,\n" +
+            "              \"ignore_malformed\": true,\n" +
+            "              \"type\": \"date\"\n" +
+            "            },\n" +
+            "            \"description\": {\n" +
+            "              \"type\": \"text\",\n" +
+            "              \"fields\": {\n" +
+            "                \"keyword\": {\n" +
+            "                  \"type\": \"keyword\"\n" +
+            "                }\n" +
+            "              }\n" +
+            "            },\n" +
+            "            \"displayName\": {\n" +
+            "              \"type\": \"text\",\n" +
+            "              \"fields\": {\n" +
+            "                \"keyword\": {\n" +
+            "                  \"type\": \"keyword\"\n" +
+            "                }\n" +
+            "              }\n" +
+            "            },\n" +
+            "            \"id\": {\n" +
+            "              \"type\": \"long\"\n" +
+            "            },\n" +
+            "            \"tagCode\": {\n" +
+            "              \"type\": \"text\",\n" +
+            "              \"fields\": {\n" +
+            "                \"keyword\": {\n" +
+            "                  \"type\": \"keyword\",\n" +
+            "                  \"ignore_above\": 256\n" +
+            "                }\n" +
+            "              }\n" +
+            "            },\n" +
+            "            \"tagType\": {\n" +
+            "              \"properties\": {\n" +
+            "                \"code\": {\n" +
+            "                  \"type\": \"text\",\n" +
+            "                  \"fields\": {\n" +
+            "                    \"keyword\": {\n" +
+            "                      \"type\": \"keyword\",\n" +
+            "                      \"ignore_above\": 256\n" +
+            "                    }\n" +
+            "                  }\n" +
+            "                },\n" +
+            "                \"createdBy\": {\n" +
+            "                  \"type\": \"text\",\n" +
+            "                  \"fields\": {\n" +
+            "                    \"keyword\": {\n" +
+            "                      \"type\": \"keyword\",\n" +
+            "                      \"ignore_above\": 256\n" +
+            "                    }\n" +
+            "                  }\n" +
+            "                },\n" +
+            "                \"createdOn\": {\n" +
+            "                  \"include_in_all\": false,\n" +
+            "                  \"ignore_malformed\": true,\n" +
+            "                  \"type\": \"date\"\n" +
+            "                },\n" +
+            "                \"displayName\": {\n" +
+            "                  \"type\": \"text\",\n" +
+            "                  \"fields\": {\n" +
+            "                    \"keyword\": {\n" +
+            "                      \"type\": \"keyword\"\n" +
+            "                    }\n" +
+            "                  }\n" +
+            "                },\n" +
+            "                \"orderNumber\": {\n" +
+            "                  \"type\": \"long\"\n" +
+            "                },\n" +
+            "                \"updatedBy\": {\n" +
+            "                  \"type\": \"text\",\n" +
+            "                  \"fields\": {\n" +
+            "                    \"keyword\": {\n" +
+            "                      \"type\": \"keyword\",\n" +
+            "                      \"ignore_above\": 256\n" +
+            "                    }\n" +
+            "                  }\n" +
+            "                },\n" +
+            "                \"updatedOn\": {\n" +
+            "                  \"include_in_all\": false,\n" +
+            "                  \"ignore_malformed\": true,\n" +
+            "                  \"type\": \"date\"\n" +
+            "                }\n" +
+            "              }\n" +
+            "            },\n" +
+            "            \"updatedBy\": {\n" +
+            "              \"type\": \"text\",\n" +
+            "              \"fields\": {\n" +
+            "                \"keyword\": {\n" +
+            "                  \"type\": \"keyword\",\n" +
+            "                  \"ignore_above\": 256\n" +
+            "                }\n" +
+            "              }\n" +
+            "            },\n" +
+            "            \"updatedOn\": {\n" +
+            "              \"include_in_all\": false,\n" +
+            "              \"ignore_malformed\": true,\n" +
+            "              \"type\": \"date\"\n" +
+            "            }\n" +
+            "          }\n" +
+            "        },\n" +
+            "        \"updatedBy\": {\n" +
+            "          \"type\": \"text\",\n" +
+            "          \"fields\": {\n" +
+            "            \"keyword\": {\n" +
+            "              \"type\": \"keyword\",\n" +
+            "              \"ignore_above\": 256\n" +
+            "            }\n" +
+            "          }\n" +
+            "        },\n" +
+            "        \"updatedOn\": {\n" +
+            "          \"include_in_all\": false,\n" +
+            "          \"ignore_malformed\": true,\n" +
+            "          \"type\": \"date\"\n" +
+            "        }\n" +
+            "      }\n" +
+            "    },\n" +
+            "    \"businessObjectFormats\": {\n" +
+            "      \"properties\": {\n" +
+            "        \"attributeDefinitions\": {\n" +
+            "          \"properties\": {\n" +
+            "            \"createdBy\": {\n" +
+            "              \"type\": \"text\",\n" +
+            "              \"fields\": {\n" +
+            "                \"keyword\": {\n" +
+            "                  \"type\": \"keyword\",\n" +
+            "                  \"ignore_above\": 256\n" +
+            "                }\n" +
+            "              }\n" +
+            "            },\n" +
+            "            \"createdOn\": {\n" +
+            "              \"include_in_all\": false,\n" +
+            "              \"ignore_malformed\": true,\n" +
+            "              \"type\": \"date\"\n" +
+            "            },\n" +
+            "            \"id\": {\n" +
+            "              \"type\": \"long\"\n" +
+            "            },\n" +
+            "            \"name\": {\n" +
+            "              \"type\": \"text\",\n" +
+            "              \"fields\": {\n" +
+            "                \"keyword\": {\n" +
+            "                  \"type\": \"keyword\",\n" +
+            "                  \"ignore_above\": 256\n" +
+            "                }\n" +
+            "              }\n" +
+            "            },\n" +
+            "            \"publish\": {\n" +
+            "              \"type\": \"boolean\"\n" +
+            "            },\n" +
+            "            \"required\": {\n" +
+            "              \"type\": \"boolean\"\n" +
+            "            },\n" +
+            "            \"updatedBy\": {\n" +
+            "              \"type\": \"text\",\n" +
+            "              \"fields\": {\n" +
+            "                \"keyword\": {\n" +
+            "                  \"type\": \"keyword\",\n" +
+            "                  \"ignore_above\": 256\n" +
+            "                }\n" +
+            "              }\n" +
+            "            },\n" +
+            "            \"updatedOn\": {\n" +
+            "              \"include_in_all\": false,\n" +
+            "              \"ignore_malformed\": true,\n" +
+            "              \"type\": \"date\"\n" +
+            "            }\n" +
+            "          }\n" +
+            "        },\n" +
+            "        \"attributes\": {\n" +
+            "          \"properties\": {\n" +
+            "            \"createdBy\": {\n" +
+            "              \"type\": \"text\",\n" +
+            "              \"fields\": {\n" +
+            "                \"keyword\": {\n" +
+            "                  \"type\": \"keyword\",\n" +
+            "                  \"ignore_above\": 256\n" +
+            "                }\n" +
+            "              }\n" +
+            "            },\n" +
+            "            \"createdOn\": {\n" +
+            "              \"include_in_all\": false,\n" +
+            "              \"ignore_malformed\": true,\n" +
+            "              \"type\": \"date\"\n" +
+            "            },\n" +
+            "            \"id\": {\n" +
+            "              \"type\": \"long\"\n" +
+            "            },\n" +
+            "            \"name\": {\n" +
+            "              \"type\": \"text\",\n" +
+            "              \"fields\": {\n" +
+            "                \"keyword\": {\n" +
+            "                  \"type\": \"keyword\",\n" +
+            "                  \"ignore_above\": 256\n" +
+            "                }\n" +
+            "              }\n" +
+            "            },\n" +
+            "            \"updatedBy\": {\n" +
+            "              \"type\": \"text\",\n" +
+            "              \"fields\": {\n" +
+            "                \"keyword\": {\n" +
+            "                  \"type\": \"keyword\",\n" +
+            "                  \"ignore_above\": 256\n" +
+            "                }\n" +
+            "              }\n" +
+            "            },\n" +
+            "            \"updatedOn\": {\n" +
+            "              \"include_in_all\": false,\n" +
+            "              \"ignore_malformed\": true,\n" +
+            "              \"type\": \"date\"\n" +
+            "            },\n" +
+            "            \"value\": {\n" +
+            "              \"type\": \"text\",\n" +
+            "              \"fields\": {\n" +
+            "                \"keyword\": {\n" +
+            "                  \"type\": \"keyword\",\n" +
+            "                  \"ignore_above\": 256\n" +
+            "                }\n" +
+            "              }\n" +
+            "            }\n" +
+            "          }\n" +
+            "        },\n" +
+            "        \"businessObjectFormatVersion\": {\n" +
+            "          \"type\": \"long\"\n" +
+            "        },\n" +
+            "        \"createdBy\": {\n" +
+            "          \"type\": \"text\",\n" +
+            "          \"fields\": {\n" +
+            "            \"keyword\": {\n" +
+            "              \"type\": \"keyword\",\n" +
+            "              \"ignore_above\": 256\n" +
+            "            }\n" +
+            "          }\n" +
+            "        },\n" +
+            "        \"createdOn\": {\n" +
+            "          \"include_in_all\": false,\n" +
+            "          \"ignore_malformed\": true,\n" +
+            "          \"type\": \"date\"\n" +
+            "        },\n" +
+            "        \"delimiter\": {\n" +
+            "          \"type\": \"text\",\n" +
+            "          \"fields\": {\n" +
+            "            \"keyword\": {\n" +
+            "              \"type\": \"keyword\",\n" +
+            "              \"ignore_above\": 256\n" +
+            "            }\n" +
+            "          }\n" +
+            "        },\n" +
+            "        \"description\": {\n" +
+            "          \"type\": \"text\",\n" +
+            "          \"fields\": {\n" +
+            "            \"keyword\": {\n" +
+            "              \"type\": \"keyword\"\n" +
+            "            }\n" +
+            "          }\n" +
+            "        },\n" +
+            "        \"escapeCharacter\": {\n" +
+            "          \"type\": \"text\",\n" +
+            "          \"fields\": {\n" +
+            "            \"keyword\": {\n" +
+            "              \"type\": \"keyword\",\n" +
+            "              \"ignore_above\": 256\n" +
+            "            }\n" +
+            "          }\n" +
+            "        },\n" +
+            "        \"fileType\": {\n" +
+            "          \"properties\": {\n" +
+            "            \"code\": {\n" +
+            "              \"type\": \"text\",\n" +
+            "              \"fields\": {\n" +
+            "                \"keyword\": {\n" +
+            "                  \"type\": \"keyword\",\n" +
+            "                  \"ignore_above\": 256\n" +
+            "                }\n" +
+            "              }\n" +
+            "            },\n" +
+            "            \"createdBy\": {\n" +
+            "              \"type\": \"text\",\n" +
+            "              \"fields\": {\n" +
+            "                \"keyword\": {\n" +
+            "                  \"type\": \"keyword\",\n" +
+            "                  \"ignore_above\": 256\n" +
+            "                }\n" +
+            "              }\n" +
+            "            },\n" +
+            "            \"createdOn\": {\n" +
+            "              \"include_in_all\": false,\n" +
+            "              \"ignore_malformed\": true,\n" +
+            "              \"type\": \"date\"\n" +
+            "            },\n" +
+            "            \"description\": {\n" +
+            "              \"type\": \"text\",\n" +
+            "              \"fields\": {\n" +
+            "                \"keyword\": {\n" +
+            "                  \"type\": \"keyword\"\n" +
+            "                }\n" +
+            "              }\n" +
+            "            },\n" +
+            "            \"updatedBy\": {\n" +
+            "              \"type\": \"text\",\n" +
+            "              \"fields\": {\n" +
+            "                \"keyword\": {\n" +
+            "                  \"type\": \"keyword\",\n" +
+            "                  \"ignore_above\": 256\n" +
+            "                }\n" +
+            "              }\n" +
+            "            },\n" +
+            "            \"updatedOn\": {\n" +
+            "              \"include_in_all\": false,\n" +
+            "              \"ignore_malformed\": true,\n" +
+            "              \"type\": \"date\"\n" +
+            "            }\n" +
+            "          }\n" +
+            "        },\n" +
+            "        \"id\": {\n" +
+            "          \"type\": \"long\"\n" +
+            "        },\n" +
+            "        \"latestVersion\": {\n" +
+            "          \"type\": \"boolean\"\n" +
+            "        },\n" +
+            "        \"nullValue\": {\n" +
+            "          \"type\": \"text\",\n" +
+            "          \"fields\": {\n" +
+            "            \"keyword\": {\n" +
+            "              \"type\": \"keyword\",\n" +
+            "              \"ignore_above\": 256\n" +
+            "            }\n" +
+            "          }\n" +
+            "        },\n" +
+            "        \"partitionKey\": {\n" +
+            "          \"type\": \"text\",\n" +
+            "          \"fields\": {\n" +
+            "            \"keyword\": {\n" +
+            "              \"type\": \"keyword\",\n" +
+            "              \"ignore_above\": 256\n" +
+            "            }\n" +
+            "          }\n" +
+            "        },\n" +
+            "        \"partitionKeyGroup\": {\n" +
+            "          \"properties\": {\n" +
+            "            \"createdBy\": {\n" +
+            "              \"type\": \"text\",\n" +
+            "              \"fields\": {\n" +
+            "                \"keyword\": {\n" +
+            "                  \"type\": \"keyword\",\n" +
+            "                  \"ignore_above\": 256\n" +
+            "                }\n" +
+            "              }\n" +
+            "            },\n" +
+            "            \"createdOn\": {\n" +
+            "              \"include_in_all\": false,\n" +
+            "              \"ignore_malformed\": true,\n" +
+            "              \"type\": \"date\"\n" +
+            "            },\n" +
+            "            \"expectedPartitionValues\": {\n" +
+            "              \"properties\": {\n" +
+            "                \"createdBy\": {\n" +
+            "                  \"type\": \"text\",\n" +
+            "                  \"fields\": {\n" +
+            "                    \"keyword\": {\n" +
+            "                      \"type\": \"keyword\",\n" +
+            "                      \"ignore_above\": 256\n" +
+            "                    }\n" +
+            "                  }\n" +
+            "                },\n" +
+            "                \"createdOn\": {\n" +
+            "                  \"include_in_all\": false,\n" +
+            "                  \"ignore_malformed\": true,\n" +
+            "                  \"type\": \"date\"\n" +
+            "                },\n" +
+            "                \"id\": {\n" +
+            "                  \"type\": \"long\"\n" +
+            "                },\n" +
+            "                \"partitionValue\": {\n" +
+            "                  \"ignore_malformed\": true,\n" +
+            "                  \"type\": \"date\"\n" +
+            "                },\n" +
+            "                \"updatedBy\": {\n" +
+            "                  \"type\": \"text\",\n" +
+            "                  \"fields\": {\n" +
+            "                    \"keyword\": {\n" +
+            "                      \"type\": \"keyword\",\n" +
+            "                      \"ignore_above\": 256\n" +
+            "                    }\n" +
+            "                  }\n" +
+            "                },\n" +
+            "                \"updatedOn\": {\n" +
+            "                  \"include_in_all\": false,\n" +
+            "                  \"ignore_malformed\": true,\n" +
+            "                  \"type\": \"date\"\n" +
+            "                }\n" +
+            "              }\n" +
+            "            },\n" +
+            "            \"partitionKeyGroupName\": {\n" +
+            "              \"type\": \"text\",\n" +
+            "              \"fields\": {\n" +
+            "                \"keyword\": {\n" +
+            "                  \"type\": \"keyword\",\n" +
+            "                  \"ignore_above\": 256\n" +
+            "                }\n" +
+            "              }\n" +
+            "            },\n" +
+            "            \"updatedBy\": {\n" +
+            "              \"type\": \"text\",\n" +
+            "              \"fields\": {\n" +
+            "                \"keyword\": {\n" +
+            "                  \"type\": \"keyword\",\n" +
+            "                  \"ignore_above\": 256\n" +
+            "                }\n" +
+            "              }\n" +
+            "            },\n" +
+            "            \"updatedOn\": {\n" +
+            "              \"include_in_all\": false,\n" +
+            "              \"ignore_malformed\": true,\n" +
+            "              \"type\": \"date\"\n" +
+            "            }\n" +
+            "          }\n" +
+            "        },\n" +
+            "        \"updatedBy\": {\n" +
+            "          \"type\": \"text\",\n" +
+            "          \"fields\": {\n" +
+            "            \"keyword\": {\n" +
+            "              \"type\": \"keyword\",\n" +
+            "              \"ignore_above\": 256\n" +
+            "            }\n" +
+            "          }\n" +
+            "        },\n" +
+            "        \"updatedOn\": {\n" +
+            "          \"include_in_all\": false,\n" +
+            "          \"ignore_malformed\": true,\n" +
+            "          \"type\": \"date\"\n" +
+            "        },\n" +
+            "        \"usage\": {\n" +
+            "          \"type\": \"text\",\n" +
+            "          \"fields\": {\n" +
+            "            \"keyword\": {\n" +
+            "              \"type\": \"keyword\",\n" +
+            "              \"ignore_above\": 256\n" +
+            "            }\n" +
+            "          }\n" +
+            "        }\n" +
+            "      }\n" +
+            "    },\n" +
+            "    \"columns\": {\n" +
+            "      \"properties\": {\n" +
+            "        \"createdBy\": {\n" +
+            "          \"type\": \"text\",\n" +
+            "          \"fields\": {\n" +
+            "            \"keyword\": {\n" +
+            "              \"type\": \"keyword\",\n" +
+            "              \"ignore_above\": 256\n" +
+            "            }\n" +
+            "          }\n" +
+            "        },\n" +
+            "        \"createdOn\": {\n" +
+            "          \"include_in_all\": false,\n" +
+            "          \"ignore_malformed\": true,\n" +
+            "          \"type\": \"date\"\n" +
+            "        },\n" +
+            "        \"description\": {\n" +
+            "          \"type\": \"text\",\n" +
+            "          \"fields\": {\n" +
+            "            \"keyword\": {\n" +
+            "              \"type\": \"keyword\"\n" +
+            "            }\n" +
+            "          }\n" +
+            "        },\n" +
+            "        \"id\": {\n" +
+            "          \"type\": \"long\"\n" +
+            "        },\n" +
+            "        \"name\": {\n" +
+            "          \"type\": \"text\",\n" +
+            "          \"fields\": {\n" +
+            "            \"keyword\": {\n" +
+            "              \"type\": \"keyword\",\n" +
+            "              \"ignore_above\": 256\n" +
+            "            }\n" +
+            "          }\n" +
+            "        },\n" +
+            "        \"updatedBy\": {\n" +
+            "          \"type\": \"text\",\n" +
+            "          \"fields\": {\n" +
+            "            \"keyword\": {\n" +
+            "              \"type\": \"keyword\",\n" +
+            "              \"ignore_above\": 256\n" +
+            "            }\n" +
+            "          }\n" +
+            "        },\n" +
+            "        \"updatedOn\": {\n" +
+            "          \"include_in_all\": false,\n" +
+            "          \"ignore_malformed\": true,\n" +
+            "          \"type\": \"date\"\n" +
+            "        }\n" +
+            "      }\n" +
+            "    },\n" +
+            "    \"createdBy\": {\n" +
+            "      \"type\": \"text\",\n" +
+            "      \"fields\": {\n" +
+            "        \"keyword\": {\n" +
+            "          \"type\": \"keyword\",\n" +
+            "          \"ignore_above\": 256\n" +
+            "        }\n" +
+            "      }\n" +
+            "    },\n" +
+            "    \"createdOn\": {\n" +
+            "      \"include_in_all\": false,\n" +
+            "      \"ignore_malformed\": true,\n" +
+            "      \"type\": \"date\"\n" +
+            "    },\n" +
+            "    \"dataProvider\": {\n" +
+            "      \"properties\": {\n" +
+            "        \"createdBy\": {\n" +
+            "          \"type\": \"text\",\n" +
+            "          \"fields\": {\n" +
+            "            \"keyword\": {\n" +
+            "              \"type\": \"keyword\",\n" +
+            "              \"ignore_above\": 256\n" +
+            "            }\n" +
+            "          }\n" +
+            "        },\n" +
+            "        \"createdOn\": {\n" +
+            "          \"include_in_all\": false,\n" +
+            "          \"ignore_malformed\": true,\n" +
+            "          \"type\": \"date\"\n" +
+            "        },\n" +
+            "        \"name\": {\n" +
+            "          \"type\": \"text\",\n" +
+            "          \"fields\": {\n" +
+            "            \"keyword\": {\n" +
+            "              \"type\": \"keyword\",\n" +
+            "              \"ignore_above\": 256\n" +
+            "            }\n" +
+            "          }\n" +
+            "        },\n" +
+            "        \"updatedBy\": {\n" +
+            "          \"type\": \"text\",\n" +
+            "          \"fields\": {\n" +
+            "            \"keyword\": {\n" +
+            "              \"type\": \"keyword\",\n" +
+            "              \"ignore_above\": 256\n" +
+            "            }\n" +
+            "          }\n" +
+            "        },\n" +
+            "        \"updatedOn\": {\n" +
+            "          \"include_in_all\": false,\n" +
+            "          \"ignore_malformed\": true,\n" +
+            "          \"type\": \"date\"\n" +
+            "        }\n" +
+            "      }\n" +
+            "    },\n" +
+            "    \"description\": {\n" +
+            "      \"type\": \"text\",\n" +
+            "      \"fields\": {\n" +
+            "        \"keyword\": {\n" +
+            "          \"type\": \"keyword\"\n" +
+            "        }\n" +
+            "      }\n" +
+            "    },\n" +
+            "    \"descriptiveBusinessObjectFormat\": {\n" +
+            "      \"properties\": {\n" +
+            "        \"businessObjectFormatVersion\": {\n" +
+            "          \"type\": \"long\"\n" +
+            "        },\n" +
+            "        \"createdBy\": {\n" +
+            "          \"type\": \"text\",\n" +
+            "          \"fields\": {\n" +
+            "            \"keyword\": {\n" +
+            "              \"type\": \"keyword\",\n" +
+            "              \"ignore_above\": 256\n" +
+            "            }\n" +
+            "          }\n" +
+            "        },\n" +
+            "        \"createdOn\": {\n" +
+            "          \"include_in_all\": false,\n" +
+            "          \"ignore_malformed\": true,\n" +
+            "          \"type\": \"date\"\n" +
+            "        },\n" +
+            "        \"delimiter\": {\n" +
+            "          \"type\": \"text\",\n" +
+            "          \"fields\": {\n" +
+            "            \"keyword\": {\n" +
+            "              \"type\": \"keyword\",\n" +
+            "              \"ignore_above\": 256\n" +
+            "            }\n" +
+            "          }\n" +
+            "        },\n" +
+            "        \"description\": {\n" +
+            "          \"type\": \"text\",\n" +
+            "          \"fields\": {\n" +
+            "            \"keyword\": {\n" +
+            "              \"type\": \"keyword\"\n" +
+            "            }\n" +
+            "          }\n" +
+            "        },\n" +
+            "        \"escapeCharacter\": {\n" +
+            "          \"type\": \"text\",\n" +
+            "          \"fields\": {\n" +
+            "            \"keyword\": {\n" +
+            "              \"type\": \"keyword\",\n" +
+            "              \"ignore_above\": 256\n" +
+            "            }\n" +
+            "          }\n" +
+            "        },\n" +
+            "        \"fileType\": {\n" +
+            "          \"properties\": {\n" +
+            "            \"code\": {\n" +
+            "              \"type\": \"text\",\n" +
+            "              \"fields\": {\n" +
+            "                \"keyword\": {\n" +
+            "                  \"type\": \"keyword\",\n" +
+            "                  \"ignore_above\": 256\n" +
+            "                }\n" +
+            "              }\n" +
+            "            },\n" +
+            "            \"createdBy\": {\n" +
+            "              \"type\": \"text\",\n" +
+            "              \"fields\": {\n" +
+            "                \"keyword\": {\n" +
+            "                  \"type\": \"keyword\",\n" +
+            "                  \"ignore_above\": 256\n" +
+            "                }\n" +
+            "              }\n" +
+            "            },\n" +
+            "            \"createdOn\": {\n" +
+            "              \"include_in_all\": false,\n" +
+            "              \"ignore_malformed\": true,\n" +
+            "              \"type\": \"date\"\n" +
+            "            },\n" +
+            "            \"description\": {\n" +
+            "              \"type\": \"text\",\n" +
+            "              \"fields\": {\n" +
+            "                \"keyword\": {\n" +
+            "                  \"type\": \"keyword\"\n" +
+            "                }\n" +
+            "              }\n" +
+            "            },\n" +
+            "            \"updatedBy\": {\n" +
+            "              \"type\": \"text\",\n" +
+            "              \"fields\": {\n" +
+            "                \"keyword\": {\n" +
+            "                  \"type\": \"keyword\",\n" +
+            "                  \"ignore_above\": 256\n" +
+            "                }\n" +
+            "              }\n" +
+            "            },\n" +
+            "            \"updatedOn\": {\n" +
+            "              \"include_in_all\": false,\n" +
+            "              \"ignore_malformed\": true,\n" +
+            "              \"type\": \"date\"\n" +
+            "            }\n" +
+            "          }\n" +
+            "        },\n" +
+            "        \"id\": {\n" +
+            "          \"type\": \"long\"\n" +
+            "        },\n" +
+            "        \"latestVersion\": {\n" +
+            "          \"type\": \"boolean\"\n" +
+            "        },\n" +
+            "        \"nullValue\": {\n" +
+            "          \"type\": \"text\",\n" +
+            "          \"fields\": {\n" +
+            "            \"keyword\": {\n" +
+            "              \"type\": \"keyword\",\n" +
+            "              \"ignore_above\": 256\n" +
+            "            }\n" +
+            "          }\n" +
+            "        },\n" +
+            "        \"partitionKey\": {\n" +
+            "          \"type\": \"text\",\n" +
+            "          \"fields\": {\n" +
+            "            \"keyword\": {\n" +
+            "              \"type\": \"keyword\",\n" +
+            "              \"ignore_above\": 256\n" +
+            "            }\n" +
+            "          }\n" +
+            "        },\n" +
+            "        \"partitionKeyGroup\": {\n" +
+            "          \"properties\": {\n" +
+            "            \"createdBy\": {\n" +
+            "              \"type\": \"text\",\n" +
+            "              \"fields\": {\n" +
+            "                \"keyword\": {\n" +
+            "                  \"type\": \"keyword\",\n" +
+            "                  \"ignore_above\": 256\n" +
+            "                }\n" +
+            "              }\n" +
+            "            },\n" +
+            "            \"createdOn\": {\n" +
+            "              \"include_in_all\": false,\n" +
+            "              \"ignore_malformed\": true,\n" +
+            "              \"type\": \"date\"\n" +
+            "            },\n" +
+            "            \"expectedPartitionValues\": {\n" +
+            "              \"properties\": {\n" +
+            "                \"createdBy\": {\n" +
+            "                  \"type\": \"text\",\n" +
+            "                  \"fields\": {\n" +
+            "                    \"keyword\": {\n" +
+            "                      \"type\": \"keyword\",\n" +
+            "                      \"ignore_above\": 256\n" +
+            "                    }\n" +
+            "                  }\n" +
+            "                },\n" +
+            "                \"createdOn\": {\n" +
+            "                  \"include_in_all\": false,\n" +
+            "                  \"ignore_malformed\": true,\n" +
+            "                  \"type\": \"date\"\n" +
+            "                },\n" +
+            "                \"id\": {\n" +
+            "                  \"type\": \"long\"\n" +
+            "                },\n" +
+            "                \"partitionValue\": {\n" +
+            "                  \"ignore_malformed\": true,\n" +
+            "                  \"type\": \"date\"\n" +
+            "                },\n" +
+            "                \"updatedBy\": {\n" +
+            "                  \"type\": \"text\",\n" +
+            "                  \"fields\": {\n" +
+            "                    \"keyword\": {\n" +
+            "                      \"type\": \"keyword\",\n" +
+            "                      \"ignore_above\": 256\n" +
+            "                    }\n" +
+            "                  }\n" +
+            "                },\n" +
+            "                \"updatedOn\": {\n" +
+            "                  \"include_in_all\": false,\n" +
+            "                  \"ignore_malformed\": true,\n" +
+            "                  \"type\": \"date\"\n" +
+            "                }\n" +
+            "              }\n" +
+            "            },\n" +
+            "            \"partitionKeyGroupName\": {\n" +
+            "              \"type\": \"text\",\n" +
+            "              \"fields\": {\n" +
+            "                \"keyword\": {\n" +
+            "                  \"type\": \"keyword\",\n" +
+            "                  \"ignore_above\": 256\n" +
+            "                }\n" +
+            "              }\n" +
+            "            },\n" +
+            "            \"updatedBy\": {\n" +
+            "              \"type\": \"text\",\n" +
+            "              \"fields\": {\n" +
+            "                \"keyword\": {\n" +
+            "                  \"type\": \"keyword\",\n" +
+            "                  \"ignore_above\": 256\n" +
+            "                }\n" +
+            "              }\n" +
+            "            },\n" +
+            "            \"updatedOn\": {\n" +
+            "              \"include_in_all\": false,\n" +
+            "              \"ignore_malformed\": true,\n" +
+            "              \"type\": \"date\"\n" +
+            "            }\n" +
+            "          }\n" +
+            "        },\n" +
+            "        \"updatedBy\": {\n" +
+            "          \"type\": \"text\",\n" +
+            "          \"fields\": {\n" +
+            "            \"keyword\": {\n" +
+            "              \"type\": \"keyword\",\n" +
+            "              \"ignore_above\": 256\n" +
+            "            }\n" +
+            "          }\n" +
+            "        },\n" +
+            "        \"updatedOn\": {\n" +
+            "          \"include_in_all\": false,\n" +
+            "          \"ignore_malformed\": true,\n" +
+            "          \"type\": \"date\"\n" +
+            "        },\n" +
+            "        \"usage\": {\n" +
+            "          \"type\": \"text\",\n" +
+            "          \"fields\": {\n" +
+            "            \"keyword\": {\n" +
+            "              \"type\": \"keyword\",\n" +
+            "              \"ignore_above\": 256\n" +
+            "            }\n" +
+            "          }\n" +
+            "        }\n" +
+            "      }\n" +
+            "    },\n" +
+            "    \"displayName\": {\n" +
+            "      \"type\": \"text\",\n" +
+            "      \"fields\": {\n" +
+            "        \"keyword\": {\n" +
+            "          \"type\": \"keyword\"\n" +
+            "        }\n" +
+            "      }\n" +
+            "    },\n" +
+            "    \"id\": {\n" +
+            "      \"type\": \"long\"\n" +
+            "    },\n" +
+            "    \"name\": {\n" +
+            "      \"type\": \"text\",\n" +
+            "      \"fields\": {\n" +
+            "        \"keyword\": {\n" +
+            "          \"type\": \"keyword\",\n" +
+            "          \"ignore_above\": 256\n" +
+            "        }\n" +
+            "      }\n" +
+            "    },\n" +
+            "    \"namespace\": {\n" +
+            "      \"properties\": {\n" +
+            "        \"code\": {\n" +
+            "          \"type\": \"text\",\n" +
+            "          \"fields\": {\n" +
+            "            \"keyword\": {\n" +
+            "              \"type\": \"keyword\",\n" +
+            "              \"ignore_above\": 256\n" +
+            "            }\n" +
+            "          }\n" +
+            "        },\n" +
+            "        \"createdBy\": {\n" +
+            "          \"type\": \"text\",\n" +
+            "          \"fields\": {\n" +
+            "            \"keyword\": {\n" +
+            "              \"type\": \"keyword\",\n" +
+            "              \"ignore_above\": 256\n" +
+            "            }\n" +
+            "          }\n" +
+            "        },\n" +
+            "        \"createdOn\": {\n" +
+            "          \"include_in_all\": false,\n" +
+            "          \"ignore_malformed\": true,\n" +
+            "          \"type\": \"date\"\n" +
+            "        },\n" +
+            "        \"updatedBy\": {\n" +
+            "          \"type\": \"text\",\n" +
+            "          \"fields\": {\n" +
+            "            \"keyword\": {\n" +
+            "              \"type\": \"keyword\",\n" +
+            "              \"ignore_above\": 256\n" +
+            "            }\n" +
+            "          }\n" +
+            "        },\n" +
+            "        \"updatedOn\": {\n" +
+            "          \"include_in_all\": false,\n" +
+            "          \"ignore_malformed\": true,\n" +
+            "          \"type\": \"date\"\n" +
+            "        }\n" +
+            "      }\n" +
+            "    },\n" +
+            "    \"sampleDataFiles\": {\n" +
+            "      \"properties\": {\n" +
+            "        \"createdBy\": {\n" +
+            "          \"type\": \"text\",\n" +
+            "          \"fields\": {\n" +
+            "            \"keyword\": {\n" +
+            "              \"type\": \"keyword\",\n" +
+            "              \"ignore_above\": 256\n" +
+            "            }\n" +
+            "          }\n" +
+            "        },\n" +
+            "        \"createdOn\": {\n" +
+            "          \"include_in_all\": false,\n" +
+            "          \"ignore_malformed\": true,\n" +
+            "          \"type\": \"date\"\n" +
+            "        },\n" +
+            "        \"directoryPath\": {\n" +
+            "          \"type\": \"text\",\n" +
+            "          \"fields\": {\n" +
+            "            \"keyword\": {\n" +
+            "              \"type\": \"keyword\",\n" +
+            "              \"ignore_above\": 256\n" +
+            "            }\n" +
+            "          }\n" +
+            "        },\n" +
+            "        \"fileName\": {\n" +
+            "          \"type\": \"text\",\n" +
+            "          \"fields\": {\n" +
+            "            \"keyword\": {\n" +
+            "              \"type\": \"keyword\",\n" +
+            "              \"ignore_above\": 256\n" +
+            "            }\n" +
+            "          }\n" +
+            "        },\n" +
+            "        \"fileSizeBytes\": {\n" +
+            "          \"type\": \"long\"\n" +
+            "        },\n" +
+            "        \"id\": {\n" +
+            "          \"type\": \"long\"\n" +
+            "        },\n" +
+            "        \"storage\": {\n" +
+            "          \"properties\": {\n" +
+            "            \"attributes\": {\n" +
+            "              \"properties\": {\n" +
+            "                \"createdBy\": {\n" +
+            "                  \"type\": \"text\",\n" +
+            "                  \"fields\": {\n" +
+            "                    \"keyword\": {\n" +
+            "                      \"type\": \"keyword\",\n" +
+            "                      \"ignore_above\": 256\n" +
+            "                    }\n" +
+            "                  }\n" +
+            "                },\n" +
+            "                \"createdOn\": {\n" +
+            "                  \"include_in_all\": false,\n" +
+            "                  \"ignore_malformed\": true,\n" +
+            "                  \"type\": \"date\"\n" +
+            "                },\n" +
+            "                \"id\": {\n" +
+            "                  \"type\": \"long\"\n" +
+            "                },\n" +
+            "                \"name\": {\n" +
+            "                  \"type\": \"text\",\n" +
+            "                  \"fields\": {\n" +
+            "                    \"keyword\": {\n" +
+            "                      \"type\": \"keyword\",\n" +
+            "                      \"ignore_above\": 256\n" +
+            "                    }\n" +
+            "                  }\n" +
+            "                },\n" +
+            "                \"updatedBy\": {\n" +
+            "                  \"type\": \"text\",\n" +
+            "                  \"fields\": {\n" +
+            "                    \"keyword\": {\n" +
+            "                      \"type\": \"keyword\",\n" +
+            "                      \"ignore_above\": 256\n" +
+            "                    }\n" +
+            "                  }\n" +
+            "                },\n" +
+            "                \"updatedOn\": {\n" +
+            "                  \"include_in_all\": false,\n" +
+            "                  \"ignore_malformed\": true,\n" +
+            "                  \"type\": \"date\"\n" +
+            "                },\n" +
+            "                \"value\": {\n" +
+            "                  \"type\": \"text\",\n" +
+            "                  \"fields\": {\n" +
+            "                    \"keyword\": {\n" +
+            "                      \"type\": \"keyword\",\n" +
+            "                      \"ignore_above\": 256\n" +
+            "                    }\n" +
+            "                  }\n" +
+            "                }\n" +
+            "              }\n" +
+            "            },\n" +
+            "            \"createdBy\": {\n" +
+            "              \"type\": \"text\",\n" +
+            "              \"fields\": {\n" +
+            "                \"keyword\": {\n" +
+            "                  \"type\": \"keyword\",\n" +
+            "                  \"ignore_above\": 256\n" +
+            "                }\n" +
+            "              }\n" +
+            "            },\n" +
+            "            \"createdOn\": {\n" +
+            "              \"include_in_all\": false,\n" +
+            "              \"ignore_malformed\": true,\n" +
+            "              \"type\": \"date\"\n" +
+            "            },\n" +
+            "            \"name\": {\n" +
+            "              \"type\": \"text\",\n" +
+            "              \"fields\": {\n" +
+            "                \"keyword\": {\n" +
+            "                  \"type\": \"keyword\",\n" +
+            "                  \"ignore_above\": 256\n" +
+            "                }\n" +
+            "              }\n" +
+            "            },\n" +
+            "            \"storagePlatform\": {\n" +
+            "              \"properties\": {\n" +
+            "                \"createdBy\": {\n" +
+            "                  \"type\": \"text\",\n" +
+            "                  \"fields\": {\n" +
+            "                    \"keyword\": {\n" +
+            "                      \"type\": \"keyword\",\n" +
+            "                      \"ignore_above\": 256\n" +
+            "                    }\n" +
+            "                  }\n" +
+            "                },\n" +
+            "                \"createdOn\": {\n" +
+            "                  \"include_in_all\": false,\n" +
+            "                  \"ignore_malformed\": true,\n" +
+            "                  \"type\": \"date\"\n" +
+            "                },\n" +
+            "                \"name\": {\n" +
+            "                  \"type\": \"text\",\n" +
+            "                  \"fields\": {\n" +
+            "                    \"keyword\": {\n" +
+            "                      \"type\": \"keyword\",\n" +
+            "                      \"ignore_above\": 256\n" +
+            "                    }\n" +
+            "                  }\n" +
+            "                },\n" +
+            "                \"updatedBy\": {\n" +
+            "                  \"type\": \"text\",\n" +
+            "                  \"fields\": {\n" +
+            "                    \"keyword\": {\n" +
+            "                      \"type\": \"keyword\",\n" +
+            "                      \"ignore_above\": 256\n" +
+            "                    }\n" +
+            "                  }\n" +
+            "                },\n" +
+            "                \"updatedOn\": {\n" +
+            "                  \"include_in_all\": false,\n" +
+            "                  \"ignore_malformed\": true,\n" +
+            "                  \"type\": \"date\"\n" +
+            "                }\n" +
+            "              }\n" +
+            "            },\n" +
+            "            \"updatedBy\": {\n" +
+            "              \"type\": \"text\",\n" +
+            "              \"fields\": {\n" +
+            "                \"keyword\": {\n" +
+            "                  \"type\": \"keyword\",\n" +
+            "                  \"ignore_above\": 256\n" +
+            "                }\n" +
+            "              }\n" +
+            "            },\n" +
+            "            \"updatedOn\": {\n" +
+            "              \"include_in_all\": false,\n" +
+            "              \"ignore_malformed\": true,\n" +
+            "              \"type\": \"date\"\n" +
+            "            }\n" +
+            "          }\n" +
+            "        },\n" +
+            "        \"updatedBy\": {\n" +
+            "          \"type\": \"text\",\n" +
+            "          \"fields\": {\n" +
+            "            \"keyword\": {\n" +
+            "              \"type\": \"keyword\",\n" +
+            "              \"ignore_above\": 256\n" +
+            "            }\n" +
+            "          }\n" +
+            "        },\n" +
+            "        \"updatedOn\": {\n" +
+            "          \"include_in_all\": false,\n" +
+            "          \"ignore_malformed\": true,\n" +
+            "          \"type\": \"date\"\n" +
+            "        }\n" +
+            "      }\n" +
+            "    },\n" +
+            "    \"updatedBy\": {\n" +
+            "      \"type\": \"text\",\n" +
+            "      \"fields\": {\n" +
+            "        \"keyword\": {\n" +
+            "          \"type\": \"keyword\",\n" +
+            "          \"ignore_above\": 256\n" +
+            "        }\n" +
+            "      }\n" +
+            "    },\n" +
+            "    \"updatedOn\": {\n" +
+            "      \"include_in_all\": false,\n" +
+            "      \"ignore_malformed\": true,\n" +
+            "      \"type\": \"date\"\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n";
+
+        return mappingJSON;
     }
 }

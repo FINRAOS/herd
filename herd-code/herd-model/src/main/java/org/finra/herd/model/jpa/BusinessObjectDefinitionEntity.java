@@ -29,6 +29,8 @@ import javax.persistence.OrderBy;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 /**
  * A business object definition.
  */
@@ -67,25 +69,30 @@ public class BusinessObjectDefinitionEntity extends AuditableEntity
     @JoinColumn(name = "name_space_cd", referencedColumnName = "name_space_cd", nullable = false)
     private NamespaceEntity namespace;
 
+    @JsonManagedReference(value="businessObjectDefinition-businessObjectFormats")
     @OneToMany(mappedBy = "businessObjectDefinition")
     private Collection<BusinessObjectFormatEntity> businessObjectFormats;
 
+    @JsonManagedReference(value="businessObjectDefinition-attributes")
     @OneToMany(mappedBy = "businessObjectDefinition", orphanRemoval = true, cascade = {CascadeType.ALL})
     @OrderBy("name")
     private Collection<BusinessObjectDefinitionAttributeEntity> attributes;
 
+    @JsonManagedReference(value="businessObjectDefinition-columns")
     @OneToMany(mappedBy = "businessObjectDefinition", orphanRemoval = true, cascade = {CascadeType.ALL})
     @OrderBy("name")
     private Collection<BusinessObjectDefinitionColumnEntity> columns;
 
+    @JsonManagedReference(value="businessObjectDefinition-businessObjectDefinitionTags")
     @OneToMany(mappedBy = "businessObjectDefinition", orphanRemoval = true, cascade = {CascadeType.ALL})
     @OrderBy("tag_id")
     private Collection<BusinessObjectDefinitionTagEntity> businessObjectDefinitionTags;
-    
+
     @ManyToOne
     @JoinColumn(name = "desc_bus_objct_frmt_id", referencedColumnName = "bus_objct_frmt_id", nullable = true)
     private BusinessObjectFormatEntity descriptiveBusinessObjectFormat;
 
+    @JsonManagedReference(value="businessObjectDefinition-sampleDataFiles")
     @OneToMany(mappedBy = "businessObjectDefinition", orphanRemoval = true, cascade = {CascadeType.ALL})
     @OrderBy("file_nm,drcty_path_tx")
     private Collection<BusinessObjectDefinitionSampleDataFileEntity> sampleDataFiles;

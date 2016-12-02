@@ -19,6 +19,8 @@ import static org.quartz.CronScheduleBuilder.cronSchedule;
 import static org.quartz.JobBuilder.newJob;
 import static org.quartz.TriggerBuilder.newTrigger;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -51,6 +53,10 @@ import org.activiti.spring.SpringCallerRunsRejectedJobsHandler;
 import org.activiti.spring.SpringProcessEngineConfiguration;
 import org.activiti.spring.SpringRejectedJobsHandler;
 import org.apache.commons.lang3.StringUtils;
+import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.transport.InetSocketTransportAddress;
+import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.quartz.CronTrigger;
 import org.quartz.JobDetail;
 import org.quartz.TriggerKey;
@@ -155,7 +161,7 @@ public class ServiceSpringModuleConfig
 
     /**
      * Activiti's dedicated TaskExecutor bean definition.
-     * 
+     *
      * @return TaskExecutor
      */
     @Bean
@@ -465,6 +471,20 @@ public class ServiceSpringModuleConfig
         }
 
         return SQSConnectionFactory.builder().withClientConfiguration(clientConfiguration).build();
+    }
+
+    @Bean
+    public TransportClient transportClient() throws UnknownHostException
+    {
+        // TODO: The elasticsearch host should be in a configuration file
+        // TODO: There should be multiple connection points to clustered environment for availability
+        final String elasticSearchHost = "172.23.65.226";
+
+        Settings settings = Settings.builder().put("client.transport.sniff", true).build();
+        TransportClient transportClient = new PreBuiltTransportClient(settings);
+        transportClient.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(elasticSearchHost), 9300));
+
+        return transportClient;
     }
 
     /**
