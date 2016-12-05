@@ -32,6 +32,7 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 /**
@@ -89,7 +90,7 @@ public class TagEntity extends AuditableEntity
     @OneToMany(mappedBy = "parentTagEntity")
     private List<TagEntity> childrenTagEntities;
 
-    @JsonManagedReference
+    @JsonIgnore
     @OneToMany(mappedBy = "tag", orphanRemoval = true, cascade = {CascadeType.ALL})
     @OrderBy("bus_objct_dfntn_id")
     private Collection<BusinessObjectDefinitionTagEntity> businessObjectDefinitionTags;

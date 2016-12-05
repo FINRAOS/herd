@@ -484,7 +484,7 @@ public class ServiceSpringModuleConfig
     {
         // TODO: The elasticsearch host should be in a configuration file
         // TODO: There should be multiple connection points to clustered environment for availability
-        String elasticSearchHost = "C02MM5U4FD57";
+        String elasticSearchHost = "localhost";
 
         Settings settings = Settings.builder().put("client.transport.sniff", true).build();
         TransportClient transportClient = new PreBuiltTransportClient(settings);
