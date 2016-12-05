@@ -97,6 +97,7 @@ public class BusinessObjectDefinitionEntity extends AuditableEntity
     @OrderBy("file_nm,drcty_path_tx")
     private Collection<BusinessObjectDefinitionSampleDataFileEntity> sampleDataFiles;
 
+    @JsonManagedReference(value="businessObjectDefinition-subjectMatterExperts")
     @OneToMany(mappedBy = "businessObjectDefinition", orphanRemoval = true, cascade = {CascadeType.ALL})
     @OrderBy("user_id")
     private Collection<BusinessObjectDefinitionSubjectMatterExpertEntity> subjectMatterExperts;

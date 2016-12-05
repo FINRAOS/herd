@@ -49,7 +49,6 @@ public class BusinessObjectDefinitionTagEntity extends AuditableEntity
     @JoinColumn(name = "bus_objct_dfntn_id", referencedColumnName = "bus_objct_dfntn_id", nullable = false)
     private BusinessObjectDefinitionEntity businessObjectDefinition;
 
-    @JsonBackReference(value="businessObjectDefinitionTags-tag")
     @ManyToOne
     @JoinColumn(name = "tag_id", referencedColumnName = "tag_id", nullable = false)
     private TagEntity tag;

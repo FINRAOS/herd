@@ -89,7 +89,7 @@ public class TagEntity extends AuditableEntity
     @OneToMany(mappedBy = "parentTagEntity")
     private List<TagEntity> childrenTagEntities;
 
-    @JsonManagedReference(value="businessObjectDefinitionTags-tag")
+    @JsonManagedReference
     @OneToMany(mappedBy = "tag", orphanRemoval = true, cascade = {CascadeType.ALL})
     @OrderBy("bus_objct_dfntn_id")
     private Collection<BusinessObjectDefinitionTagEntity> businessObjectDefinitionTags;
