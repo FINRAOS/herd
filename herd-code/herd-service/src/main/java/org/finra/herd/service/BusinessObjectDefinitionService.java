@@ -53,6 +53,8 @@ public interface BusinessObjectDefinitionService
     public BusinessObjectDefinitionSearchResponse indexSearchBusinessObjectDefinitions(
         BusinessObjectDefinitionSearchRequest businessObjectDefinitionSearchRequest, Set<String> fields);
 
+    public int indexValidateBusinessObjectDefinitions();
+
     public BusinessObjectDefinitionSearchResponse searchBusinessObjectDefinitions(BusinessObjectDefinitionSearchRequest businessObjectDefinitionSearchRequest,
         Set<String> fields);
 

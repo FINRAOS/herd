@@ -33,9 +33,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsResponse;
+import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchType;
+import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -463,6 +465,75 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         return businessObjectDefinitionSearchResponse;
     }
 
+
+    /**
+     * Gets the list of all business object definitions defined in the system.
+     *
+     * @return the business object definition list.
+     */
+    @Override
+    public int indexValidateBusinessObjectDefinitions()
+    {
+        // TODO: The index name and document type should be static final variables else where
+        String indexName = "dm";
+        String documentType = "bdef";
+
+        int doesNotEqualIndex = 0;
+
+        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList = businessObjectDefinitionDao.getAllBusinessObjectDefinitions();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        for (BusinessObjectDefinitionEntity businessObjectDefinitionEntity : businessObjectDefinitionEntityList)
+        {
+            // Fetch Join with .size()
+            businessObjectDefinitionEntity.getAttributes().size();
+            businessObjectDefinitionEntity.getBusinessObjectDefinitionTags().size();
+            businessObjectDefinitionEntity.getBusinessObjectFormats().size();
+            businessObjectDefinitionEntity.getColumns().size();
+            businessObjectDefinitionEntity.getSampleDataFiles().size();
+
+            //Object to JSON in String
+            String jsonString = "";
+            try
+            {
+                jsonString = objectMapper.writeValueAsString(businessObjectDefinitionEntity);
+            }
+            catch (JsonProcessingException jsonProcessingException)
+            {
+                LOGGER.warn("Could not parse BusinessObjectDefinitionEntity id={" + businessObjectDefinitionEntity.getId() + "} into JSON string. ",
+                    jsonProcessingException);
+                // Skip this BusinessObjectDefinitionEntity because it could not be parsed into a JSON object
+                continue;
+            }
+
+            GetResponse response = transportClient.prepareGet(indexName, documentType, businessObjectDefinitionEntity.getId().toString()).execute().actionGet();
+
+            String jsonStringFromIndex = response.getSourceAsString();
+
+            // If the Business Object Definition Entity does not exist in the index add it
+            if (StringUtils.isEmpty(jsonStringFromIndex))
+            {
+                // Create an index request
+                final IndexRequestBuilder indexRequestBuilder =
+                    transportClient.prepareIndex(indexName, documentType, businessObjectDefinitionEntity.getId().toString());
+                indexRequestBuilder.setSource(jsonString);
+                indexRequestBuilder.execute().actionGet();
+                doesNotEqualIndex++;
+            }
+            // If the JSON from the database does not match the JSON from the index
+            else if (!jsonString.equals(jsonStringFromIndex))
+            {
+                // Update the elastic search index
+                final UpdateRequestBuilder updateRequestBuilder =
+                    transportClient.prepareUpdate(indexName, documentType, businessObjectDefinitionEntity.getId().toString());
+                updateRequestBuilder.setDoc(jsonString);
+                updateRequestBuilder.execute().actionGet();
+                doesNotEqualIndex++;
+            }
+        }
+
+        return doesNotEqualIndex;
+    }
 
     /**
      * Gets the list of all business object definitions defined in the system.

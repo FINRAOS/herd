@@ -214,4 +214,17 @@ public class BusinessObjectDefinitionRestController extends HerdBaseController
         businessObjectDefinitionService.indexAllBusinessObjectDefinitions();
         return new BusinessObjectDefinitionSearchResponse();
     }
+
+    /**
+     * Index all business object definitions
+     *
+     * @return the retrieved business object definition list
+     */
+    @RequestMapping(value = "/businessObjectDefinitions/validateindex", method = RequestMethod.GET, consumes = {"application/xml", "application/json"})
+    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DEFINITIONS_SEARCH_POST)
+    public BusinessObjectDefinitionSearchResponse validateIndexBusinessObjectDefinitions()
+    {
+        businessObjectDefinitionService.indexValidateBusinessObjectDefinitions();
+        return new BusinessObjectDefinitionSearchResponse();
+    }
 }
