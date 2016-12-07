@@ -16,6 +16,7 @@
 package org.finra.herd.service.impl;
 
 import java.sql.Timestamp;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,7 +28,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -259,29 +259,19 @@ public class StoragePolicySelectorServiceImpl implements StoragePolicySelectorSe
      */
     public Date getDateFromString(String dateString)
     {
-        String dateStringLocal = dateString;
+        Date resultDate;
 
-        // Default the return port value to null.
-        Date resultDate = null;
-
-        if (StringUtils.isNotBlank(dateStringLocal))
+        // Try to convert the date string to a Date.
+        try
         {
-            // Trim the date string.
-            dateStringLocal = dateStringLocal.trim();
-
-            // Try to convert the date string to a Date.
-            try
-            {
-                // Use strict parsing to ensure our date is more definitive.
-                SimpleDateFormat simpleDateFormat = new SimpleDateFormat(AbstractHerdDao.DEFAULT_SINGLE_DAY_DATE_MASK, Locale.US);
-                simpleDateFormat.setLenient(false);
-                resultDate = simpleDateFormat.parse(dateStringLocal);
-            }
-            catch (Exception e)
-            {
-                // This assignment is here to pass PMD checks.
-                resultDate = null;
-            }
+            // Use strict parsing to ensure our date is more definitive.
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat(AbstractHerdDao.DEFAULT_SINGLE_DAY_DATE_MASK, Locale.US);
+            simpleDateFormat.setLenient(false);
+            resultDate = simpleDateFormat.parse(dateString);
+        }
+        catch (ParseException e)
+        {
+            resultDate = null;
         }
 
         return resultDate;
