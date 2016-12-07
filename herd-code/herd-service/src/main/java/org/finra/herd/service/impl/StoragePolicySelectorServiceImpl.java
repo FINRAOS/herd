@@ -163,7 +163,8 @@ public class StoragePolicySelectorServiceImpl implements StoragePolicySelectorSe
                             // based on the current database timestamp and storage policy rule value.
                             Timestamp createdOnThresholdTimestamp = HerdDateUtils.addDays(currentTimestamp, -storagePolicyEntity.getStoragePolicyRuleValue());
 
-                            // Select this business object data per this storage policy if it has "created on" timestamp before the threshold timestamp.
+                            // Select this business object data per this storage policy if it has
+                            // "created on" timestamp before or equal to the threshold timestamp.
                             createStoragePolicySelection = (businessObjectDataEntity.getCreatedOn().compareTo(createdOnThresholdTimestamp) <= 0);
                         }
                         else if (StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_PRIMARY_PARTITION_VALUE
@@ -173,7 +174,8 @@ public class StoragePolicySelectorServiceImpl implements StoragePolicySelectorSe
                             // data based on both it's primary partition value compared against storage policy rule value
                             // and "updated on" timestamp being below the threshold configured in the system.
 
-                            // For this storage policy rule, we ignore this business object data if it was updated less than the threshold value of days ago.
+                            // For this storage policy rule, we ignore this business object data
+                            // if it was updated earlier than the threshold value of days ago.
                             if (businessObjectDataEntity.getUpdatedOn().compareTo(updatedOnThresholdTimestamp) <= 0)
                             {
                                 // Try to convert business object data primary partition value to a timestamp.
@@ -188,7 +190,8 @@ public class StoragePolicySelectorServiceImpl implements StoragePolicySelectorSe
                                     Date primaryPartitionValueThresholdDate =
                                         new Date(HerdDateUtils.addDays(currentTimestamp, -storagePolicyEntity.getStoragePolicyRuleValue()).getTime());
 
-                                    // Select this business object data per this storage policy if it has primary partition value before the threshold date.
+                                    // Select this business object data per this storage policy if it has
+                                    // primary partition value before or equal to the threshold date.
                                     createStoragePolicySelection = (primaryPartitionValue.compareTo(primaryPartitionValueThresholdDate) <= 0);
                                 }
                             }
@@ -257,7 +260,7 @@ public class StoragePolicySelectorServiceImpl implements StoragePolicySelectorSe
      *
      * @return the date as a date or null if one wasn't specified or the conversion fails
      */
-    public Date getDateFromString(String dateString)
+    private Date getDateFromString(String dateString)
     {
         Date resultDate;
 
