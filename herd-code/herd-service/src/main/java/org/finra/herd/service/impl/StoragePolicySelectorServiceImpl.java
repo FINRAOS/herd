@@ -262,19 +262,24 @@ public class StoragePolicySelectorServiceImpl implements StoragePolicySelectorSe
      */
     private Date getDateFromString(String dateString)
     {
-        Date resultDate;
+        Date resultDate = null;
 
-        // Try to convert the date string to a Date.
-        try
+        // For strict date parsing, process the date string only if it has the required length.
+        if (dateString.length() == AbstractHerdDao.DEFAULT_SINGLE_DAY_DATE_MASK.length())
         {
-            // Use strict parsing to ensure our date is more definitive.
-            SimpleDateFormat simpleDateFormat = new SimpleDateFormat(AbstractHerdDao.DEFAULT_SINGLE_DAY_DATE_MASK, Locale.US);
-            simpleDateFormat.setLenient(false);
-            resultDate = simpleDateFormat.parse(dateString);
-        }
-        catch (ParseException e)
-        {
-            resultDate = null;
+            // Try to convert the date string to a Date.
+            try
+            {
+                // Use strict parsing to ensure our date is more definitive.
+                SimpleDateFormat simpleDateFormat = new SimpleDateFormat(AbstractHerdDao.DEFAULT_SINGLE_DAY_DATE_MASK, Locale.US);
+                simpleDateFormat.setLenient(false);
+                resultDate = simpleDateFormat.parse(dateString);
+            }
+            catch (ParseException e)
+            {
+                // This assignment is here to pass PMD checks.
+                resultDate = null;
+            }
         }
 
         return resultDate;
