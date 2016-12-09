@@ -298,7 +298,7 @@ public class TagServiceImpl implements TagService, SearchableService
      */
     private Tag createTagFromEntity(TagEntity tagEntity)
     {
-        return createTagFromEntity(tagEntity, true, true, true, true, false, true, true, false);
+        return createTagFromEntity(tagEntity, true, true, true, true, true, true, true, false);
     }
 
     /**
