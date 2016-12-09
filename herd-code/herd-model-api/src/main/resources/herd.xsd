@@ -5374,6 +5374,8 @@
       <xs:all>
          <xs:element name="id" type="xs:string" minOccurs="0"/>
          <xs:element name="status" type="xs:string" minOccurs="0"/>
+         <xs:element name="statusChangeReason" type="statusChangeReason" minOccurs="0"/>
+         <xs:element name="statusTimeline" type="statusTimeline" minOccurs="0"/>
          <xs:element name="namespace" type="xs:string"/>
          <xs:element name="emrClusterDefinitionName" type="xs:string"/>
          <xs:element name="emrClusterName" type="xs:string"/>
@@ -5383,6 +5385,21 @@
          <xs:element name="dryRun" type="xs:boolean" minOccurs="0"/>
          <xs:element name="emrClusterCreated" type="xs:boolean" minOccurs="0"/>
          <xs:element name="emrClusterDefinition" type="emrClusterDefinition" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="statusChangeReason">
+      <xs:all>
+         <xs:element name="code" type="xs:string" minOccurs="0"/>
+         <xs:element name="message" type="xs:string" minOccurs="0"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="statusTimeline">
+      <xs:all>
+         <xs:element name="creationTime" type="xs:dateTime" minOccurs="0" />
+         <xs:element name="readyTime" type="xs:dateTime" minOccurs="0"/>
+         <xs:element name="endTime" type="xs:dateTime" minOccurs="0"/>
       </xs:all>
    </xs:complexType>
 
