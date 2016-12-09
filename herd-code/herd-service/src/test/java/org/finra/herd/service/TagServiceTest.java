@@ -22,10 +22,11 @@ import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Sets;
-import org.junit.Assert;
 import org.junit.Test;
 
 import org.finra.herd.model.AlreadyExistsException;
@@ -40,6 +41,7 @@ import org.finra.herd.model.api.xml.TagSearchKey;
 import org.finra.herd.model.api.xml.TagSearchRequest;
 import org.finra.herd.model.api.xml.TagSearchResponse;
 import org.finra.herd.model.api.xml.TagUpdateRequest;
+import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.jpa.TagEntity;
 import org.finra.herd.model.jpa.TagTypeEntity;
 import org.finra.herd.service.impl.TagServiceImpl;
@@ -56,8 +58,8 @@ public class TagServiceTest extends AbstractServiceTest
         Tag tag = tagService.createTag(new TagCreateRequest(new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION, null));
 
         // Validate the tag which was created.
-        assertEquals(new Tag(tag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION, tag.getUserId(), tag.getUpdatedTime(), null, null),
-            tag);
+        assertEquals(new Tag(tag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION, tag.getUserId(), tag.getLastUpdatedByUserId(),
+            tag.getUpdatedTime(), NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG), tag);
     }
 
     @Test
@@ -104,6 +106,17 @@ public class TagServiceTest extends AbstractServiceTest
         {
             assertEquals("Tag code can not contain a forward slash character.", e.getMessage());
         }
+
+        // Try to create a tag with parent tag type is not the same as the requested.
+        try
+        {
+            tagService.createTag(new TagCreateRequest(new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION, new TagKey(TAG_TYPE_2, TAG_CODE_2)));
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Tag type code in parent tag key must match the tag type code in the request.", e.getMessage());
+        }
     }
 
     @Test
@@ -119,7 +132,7 @@ public class TagServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new Tag(resultTag.getId(), new TagKey(TAG_TYPE, TAG_CODE.toLowerCase()), TAG_DISPLAY_NAME.toLowerCase(), TAG_DESCRIPTION.toLowerCase(),
-            resultTag.getUserId(), resultTag.getUpdatedTime(), null, null), resultTag);
+            resultTag.getUserId(), resultTag.getLastUpdatedByUserId(), resultTag.getUpdatedTime(), NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG), resultTag);
     }
 
     @Test
@@ -132,7 +145,9 @@ public class TagServiceTest extends AbstractServiceTest
         Tag tag = tagService.createTag(new TagCreateRequest(new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, null, null));
 
         // Validate the tag which was created.
-        assertEquals(new Tag(tag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, null, tag.getUserId(), tag.getUpdatedTime(), null, null), tag);
+        assertEquals(
+            new Tag(tag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, null, tag.getUserId(), tag.getLastUpdatedByUserId(), tag.getUpdatedTime(),
+                null, null), tag);
     }
 
     @Test
@@ -145,8 +160,8 @@ public class TagServiceTest extends AbstractServiceTest
         Tag tag = tagService.createTag(new TagCreateRequest(new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, BLANK_TEXT, null));
 
         // Validate the tag which was created.
-        assertEquals(new Tag(tag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, BLANK_TEXT, tag.getUserId(), tag.getUpdatedTime(), null, null),
-            tag);
+        assertEquals(new Tag(tag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, BLANK_TEXT, tag.getUserId(), tag.getLastUpdatedByUserId(),
+            tag.getUpdatedTime(), NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG), tag);
     }
 
     @Test
@@ -207,19 +222,39 @@ public class TagServiceTest extends AbstractServiceTest
         Tag tag = tagService.createTag(new TagCreateRequest(new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, null, null));
 
         // Validate the tag which was created.
-        assertEquals(new Tag(tag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, null, tag.getUserId(), tag.getUpdatedTime(), null, null), tag);
+        assertEquals(
+            new Tag(tag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, null, tag.getUserId(), tag.getLastUpdatedByUserId(), tag.getUpdatedTime(),
+                null, null), tag);
     }
 
     @Test
-    public void testCreateTagTagCodeAlreadyExists()
+    public void testCreateTagParentTagNoExists()
+    {
+        // Create and persist a tag type entity.
+        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER);
+
+        // Try to create a tag with a non-existing parent tag.
+        try
+        {
+            tagService.createTag(new TagCreateRequest(new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION, new TagKey(TAG_TYPE, TAG_CODE_2)));
+            fail();
+        }
+        catch (ObjectNotFoundException e)
+        {
+            assertEquals(String.format("Tag with code \"%s\" doesn't exist for tag type \"%s\".", TAG_CODE_2, TAG_TYPE), e.getMessage());
+        }
+    }
+
+    @Test
+    public void testCreateTagTagAlreadyExists()
     {
         // Create and persist a tag entity.
-        tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+        tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE.toUpperCase(), TAG_DISPLAY_NAME, TAG_DESCRIPTION);
 
         // Try to create a duplicate tag (uses the same tag type and tag name).
         try
         {
-            tagService.createTag(new TagCreateRequest(new TagKey(TAG_TYPE, TAG_CODE.toLowerCase()), TAG_DISPLAY_NAME_2, TAG_DESCRIPTION, null));
+            tagService.createTag(new TagCreateRequest(new TagKey(TAG_TYPE, TAG_CODE.toLowerCase()), TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, NO_PARENT_TAG_KEY));
             fail();
         }
         catch (AlreadyExistsException e)
@@ -257,9 +292,8 @@ public class TagServiceTest extends AbstractServiceTest
                 null));
 
         // Validate the tag which was created.
-        assertEquals(
-            new Tag(tag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, addWhitespace(TAG_DESCRIPTION), tag.getUserId(), tag.getUpdatedTime(), null,
-                null), tag);
+        assertEquals(new Tag(tag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, addWhitespace(TAG_DESCRIPTION), tag.getUserId(),
+            tag.getLastUpdatedByUserId(), tag.getUpdatedTime(), NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG), tag);
     }
 
     @Test
@@ -275,7 +309,7 @@ public class TagServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new Tag(resultTag.getId(), new TagKey(TAG_TYPE, TAG_CODE.toUpperCase()), TAG_DISPLAY_NAME.toUpperCase(), TAG_DESCRIPTION.toUpperCase(),
-            resultTag.getUserId(), resultTag.getUpdatedTime(), null, null), resultTag);
+            resultTag.getUserId(), resultTag.getLastUpdatedByUserId(), resultTag.getUpdatedTime(), NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG), resultTag);
     }
 
     @Test
@@ -288,49 +322,15 @@ public class TagServiceTest extends AbstractServiceTest
         Tag tag = tagService.createTag(new TagCreateRequest(new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION, null));
 
         // Validate the tag which was created.
-        assertEquals(new Tag(tag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION, tag.getUserId(), tag.getUpdatedTime(), null, null),
-            tag);
+        assertEquals(new Tag(tag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION, tag.getUserId(), tag.getLastUpdatedByUserId(),
+            tag.getUpdatedTime(), NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG), tag);
 
         // Create a child tag
         Tag childTag =
             tagService.createTag(new TagCreateRequest(new TagKey(TAG_TYPE, TAG_CODE_2), TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, new TagKey(TAG_TYPE, TAG_CODE)));
 
-        assertEquals(
-            new Tag(childTag.getId(), new TagKey(TAG_TYPE, TAG_CODE_2), TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, childTag.getUserId(), childTag.getUpdatedTime(),
-                new TagKey(TAG_TYPE, TAG_CODE), null), childTag);
-    }
-
-    @Test
-    public void testCreateTagWithParentValidationError()
-    {
-        // Create and persist a tag type entity.
-        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, INTEGER_VALUE);
-
-        TagKey parentTagKey = new TagKey();
-        parentTagKey.setTagTypeCode(TAG_TYPE_2);
-        parentTagKey.setTagCode("NOT Matter");
-        try
-        {
-            // Create a tag with parent tag type is not the same as the requested
-            tagService.createTag(new TagCreateRequest(new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION, parentTagKey));
-            Assert.fail("should throw IllegalArgumentException, but it did not");
-        }
-        catch (IllegalArgumentException ex)
-        {
-            //as expected
-        }
-
-        try
-        {
-            // Create a tag with parent tag key not found
-            parentTagKey.setTagTypeCode(TAG_TYPE);
-            tagService.createTag(new TagCreateRequest(new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION, parentTagKey));
-            Assert.fail("should throw Object not found exception, but it did not");
-        }
-        catch (ObjectNotFoundException ex)
-        {
-            //as expected
-        }
+        assertEquals(new Tag(childTag.getId(), new TagKey(TAG_TYPE, TAG_CODE_2), TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, childTag.getUserId(),
+            tag.getLastUpdatedByUserId(), childTag.getUpdatedTime(), new TagKey(TAG_TYPE, TAG_CODE), null), childTag);
     }
 
     @Test
@@ -349,8 +349,8 @@ public class TagServiceTest extends AbstractServiceTest
         Tag deletedTag = tagService.deleteTag(new TagKey(TAG_TYPE, TAG_CODE));
 
         // Validate the returned object.
-        assertEquals(new Tag(deletedTag.getId(), tagKey, TAG_DISPLAY_NAME, TAG_DESCRIPTION, deletedTag.getUserId(), deletedTag.getUpdatedTime(), null, null),
-            deletedTag);
+        assertEquals(new Tag(deletedTag.getId(), tagKey, TAG_DISPLAY_NAME, TAG_DESCRIPTION, deletedTag.getUserId(), deletedTag.getLastUpdatedByUserId(),
+            deletedTag.getUpdatedTime(), NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG), deletedTag);
 
         // Ensure that this tag is no longer there.
         assertNull(tagDao.getTagByKey(tagKey));
@@ -372,8 +372,8 @@ public class TagServiceTest extends AbstractServiceTest
         Tag deletedTag = tagService.deleteTag(new TagKey(TAG_TYPE.toLowerCase(), TAG_CODE.toLowerCase()));
 
         // Validate the returned object.
-        assertEquals(new Tag(deletedTag.getId(), tagKey, TAG_DISPLAY_NAME, TAG_DESCRIPTION, deletedTag.getUserId(), deletedTag.getUpdatedTime(), null, null),
-            deletedTag);
+        assertEquals(new Tag(deletedTag.getId(), tagKey, TAG_DISPLAY_NAME, TAG_DESCRIPTION, deletedTag.getUserId(), deletedTag.getLastUpdatedByUserId(),
+            deletedTag.getUpdatedTime(), NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG), deletedTag);
 
         // Ensure that this tag is no longer there.
         assertNull(tagDao.getTagByKey(tagKey));
@@ -436,8 +436,8 @@ public class TagServiceTest extends AbstractServiceTest
         Tag deletedTag = tagService.deleteTag(new TagKey(addWhitespace(TAG_TYPE), addWhitespace(TAG_CODE)));
 
         // Validate the returned object.
-        assertEquals(new Tag(deletedTag.getId(), tagKey, TAG_DISPLAY_NAME, TAG_DESCRIPTION, deletedTag.getUserId(), deletedTag.getUpdatedTime(), null, null),
-            deletedTag);
+        assertEquals(new Tag(deletedTag.getId(), tagKey, TAG_DISPLAY_NAME, TAG_DESCRIPTION, deletedTag.getUserId(), deletedTag.getLastUpdatedByUserId(),
+            deletedTag.getUpdatedTime(), NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG), deletedTag);
 
         // Ensure that this tag is no longer there.
         assertNull(tagDao.getTagByKey(tagKey));
@@ -459,8 +459,8 @@ public class TagServiceTest extends AbstractServiceTest
         Tag deletedTag = tagService.deleteTag(new TagKey(TAG_TYPE.toUpperCase(), TAG_CODE.toUpperCase()));
 
         // Validate the returned object.
-        assertEquals(new Tag(deletedTag.getId(), tagKey, TAG_DISPLAY_NAME, TAG_DESCRIPTION, deletedTag.getUserId(), deletedTag.getUpdatedTime(), null, null),
-            deletedTag);
+        assertEquals(new Tag(deletedTag.getId(), tagKey, TAG_DISPLAY_NAME, TAG_DESCRIPTION, deletedTag.getUserId(), deletedTag.getLastUpdatedByUserId(),
+            deletedTag.getUpdatedTime(), NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG), deletedTag);
 
         // Ensure that this tag is no longer there.
         assertNull(tagDao.getTagByKey(tagKey));
@@ -476,9 +476,8 @@ public class TagServiceTest extends AbstractServiceTest
         Tag resultTag = tagService.getTag(new TagKey(TAG_TYPE, TAG_CODE));
 
         // Validate the returned object.
-        assertEquals(
-            new Tag(resultTag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION, resultTag.getUserId(), resultTag.getUpdatedTime(),
-                null, null), resultTag);
+        assertEquals(new Tag(resultTag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION, resultTag.getUserId(),
+            resultTag.getLastUpdatedByUserId(), resultTag.getUpdatedTime(), NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG), resultTag);
     }
 
     @Test
@@ -491,9 +490,8 @@ public class TagServiceTest extends AbstractServiceTest
         Tag resultTag = tagService.getTag(new TagKey(TAG_TYPE.toLowerCase(), TAG_CODE.toLowerCase()));
 
         // Validate the returned object.
-        assertEquals(
-            new Tag(resultTag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION, resultTag.getUserId(), resultTag.getUpdatedTime(),
-                null, null), resultTag);
+        assertEquals(new Tag(resultTag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION, resultTag.getUserId(),
+            resultTag.getLastUpdatedByUserId(), resultTag.getUpdatedTime(), NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG), resultTag);
     }
 
     @Test
@@ -547,9 +545,8 @@ public class TagServiceTest extends AbstractServiceTest
         Tag resultTag = tagService.getTag(new TagKey(addWhitespace(TAG_TYPE), addWhitespace(TAG_CODE)));
 
         // Validate the returned object.
-        assertEquals(
-            new Tag(resultTag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION, resultTag.getUserId(), resultTag.getUpdatedTime(),
-                null, null), resultTag);
+        assertEquals(new Tag(resultTag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION, resultTag.getUserId(),
+            resultTag.getLastUpdatedByUserId(), resultTag.getUpdatedTime(), NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG), resultTag);
     }
 
     @Test
@@ -562,9 +559,8 @@ public class TagServiceTest extends AbstractServiceTest
         Tag resultTag = tagService.getTag(new TagKey(TAG_TYPE.toUpperCase(), TAG_CODE.toUpperCase()));
 
         // Validate the returned object.
-        assertEquals(
-            new Tag(resultTag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION, resultTag.getUserId(), resultTag.getUpdatedTime(),
-                null, null), resultTag);
+        assertEquals(new Tag(resultTag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION, resultTag.getUserId(),
+            resultTag.getLastUpdatedByUserId(), resultTag.getUpdatedTime(), NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG), resultTag);
     }
 
     @Test
@@ -738,10 +734,10 @@ public class TagServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new TagSearchResponse(Arrays.asList(
-            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_3), TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_3, NO_USER_ID, NO_UPDATED_TIME, new TagKey(TAG_TYPE, TAG_CODE),
-                TAG_HAS_NO_CHILDREN),
-            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_2), TAG_DISPLAY_NAME_3, TAG_DESCRIPTION_2, NO_USER_ID, NO_UPDATED_TIME, new TagKey(TAG_TYPE, TAG_CODE),
-                TAG_HAS_NO_CHILDREN))), tagSearchResponse);
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_3), TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_3, NO_USER_ID, NO_USER_ID, NO_UPDATED_TIME,
+                new TagKey(TAG_TYPE, TAG_CODE), TAG_HAS_NO_CHILDREN),
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_2), TAG_DISPLAY_NAME_3, TAG_DESCRIPTION_2, NO_USER_ID, NO_USER_ID, NO_UPDATED_TIME,
+                new TagKey(TAG_TYPE, TAG_CODE), TAG_HAS_NO_CHILDREN))), tagSearchResponse);
     }
 
     @Test
@@ -824,10 +820,10 @@ public class TagServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new TagSearchResponse(Arrays.asList(
-            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_3), TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_3, NO_USER_ID, NO_UPDATED_TIME, new TagKey(TAG_TYPE, TAG_CODE),
-                TAG_HAS_NO_CHILDREN),
-            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_2), TAG_DISPLAY_NAME_3, TAG_DESCRIPTION_2, NO_USER_ID, NO_UPDATED_TIME, new TagKey(TAG_TYPE, TAG_CODE),
-                TAG_HAS_NO_CHILDREN))), tagSearchResponse);
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_3), TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_3, NO_USER_ID, NO_USER_ID, NO_UPDATED_TIME,
+                new TagKey(TAG_TYPE, TAG_CODE), TAG_HAS_NO_CHILDREN),
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_2), TAG_DISPLAY_NAME_3, TAG_DESCRIPTION_2, NO_USER_ID, NO_USER_ID, NO_UPDATED_TIME,
+                new TagKey(TAG_TYPE, TAG_CODE), TAG_HAS_NO_CHILDREN))), tagSearchResponse);
     }
 
     @Test
@@ -838,76 +834,76 @@ public class TagServiceTest extends AbstractServiceTest
 
         // Search tags without specifying an optional tag search filter.
         assertEquals(new TagSearchResponse(Arrays.asList(
-            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
                 NO_TAG_HAS_CHILDREN_FLAG),
-            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_3), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
-                NO_TAG_HAS_CHILDREN_FLAG),
-            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_2), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
-                NO_TAG_HAS_CHILDREN_FLAG))), tagService.searchTags(new TagSearchRequest(), NO_SEARCH_RESPONSE_FIELDS));
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_3), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_USER_ID, NO_UPDATED_TIME,
+                NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG),
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_2), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_USER_ID, NO_UPDATED_TIME,
+                NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG))), tagService.searchTags(new TagSearchRequest(), NO_SEARCH_RESPONSE_FIELDS));
 
         // Search tags when an optional tag search filter is set to null.
         List<TagSearchFilter> tagSearchFilters = new ArrayList<>();
         tagSearchFilters.add(null);
         assertEquals(new TagSearchResponse(Arrays.asList(
-            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
                 NO_TAG_HAS_CHILDREN_FLAG),
-            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_3), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
-                NO_TAG_HAS_CHILDREN_FLAG),
-            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_2), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
-                NO_TAG_HAS_CHILDREN_FLAG))), tagService.searchTags(new TagSearchRequest(tagSearchFilters), NO_SEARCH_RESPONSE_FIELDS));
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_3), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_USER_ID, NO_UPDATED_TIME,
+                NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG),
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_2), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_USER_ID, NO_UPDATED_TIME,
+                NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG))), tagService.searchTags(new TagSearchRequest(tagSearchFilters), NO_SEARCH_RESPONSE_FIELDS));
 
         // Search tags without specifying optional parameters inside the tag search filter.
         assertEquals(new TagSearchResponse(Arrays.asList(
-            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
                 NO_TAG_HAS_CHILDREN_FLAG),
-            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_3), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
-                NO_TAG_HAS_CHILDREN_FLAG),
-            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_2), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
-                NO_TAG_HAS_CHILDREN_FLAG))), tagService.searchTags(
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_3), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_USER_ID, NO_UPDATED_TIME,
+                NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG),
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_2), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_USER_ID, NO_UPDATED_TIME,
+                NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG))), tagService.searchTags(
             new TagSearchRequest(Arrays.asList(new TagSearchFilter(Arrays.asList(new TagSearchKey(TAG_TYPE, BLANK_TEXT, NO_IS_PARENT_TAG_NULL_FLAG))))),
             NO_SEARCH_RESPONSE_FIELDS));
 
         // Search tags without specifying optional parameters except for the display name field option.
         assertEquals(new TagSearchResponse(Arrays.asList(
-            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
                 NO_TAG_HAS_CHILDREN_FLAG),
-            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_3), TAG_DISPLAY_NAME_2, NO_TAG_DESCRIPTION, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_3), TAG_DISPLAY_NAME_2, NO_TAG_DESCRIPTION, NO_USER_ID, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
                 NO_TAG_HAS_CHILDREN_FLAG),
-            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_2), TAG_DISPLAY_NAME_3, NO_TAG_DESCRIPTION, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_2), TAG_DISPLAY_NAME_3, NO_TAG_DESCRIPTION, NO_USER_ID, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
                 NO_TAG_HAS_CHILDREN_FLAG))), tagService.searchTags(
             new TagSearchRequest(Arrays.asList(new TagSearchFilter(Arrays.asList(new TagSearchKey(TAG_TYPE, BLANK_TEXT, NO_IS_PARENT_TAG_NULL_FLAG))))),
             Sets.newHashSet(TagServiceImpl.DISPLAY_NAME_FIELD)));
 
         // Search tags without specifying optional parameters except for the description field option.
         assertEquals(new TagSearchResponse(Arrays.asList(
-            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE), NO_TAG_DISPLAY_NAME, TAG_DESCRIPTION, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE), NO_TAG_DISPLAY_NAME, TAG_DESCRIPTION, NO_USER_ID, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
                 NO_TAG_HAS_CHILDREN_FLAG),
-            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_3), NO_TAG_DISPLAY_NAME, TAG_DESCRIPTION_3, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_3), NO_TAG_DISPLAY_NAME, TAG_DESCRIPTION_3, NO_USER_ID, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
                 NO_TAG_HAS_CHILDREN_FLAG),
-            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_2), NO_TAG_DISPLAY_NAME, TAG_DESCRIPTION_2, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_2), NO_TAG_DISPLAY_NAME, TAG_DESCRIPTION_2, NO_USER_ID, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
                 NO_TAG_HAS_CHILDREN_FLAG))), tagService.searchTags(
             new TagSearchRequest(Arrays.asList(new TagSearchFilter(Arrays.asList(new TagSearchKey(TAG_TYPE, BLANK_TEXT, NO_IS_PARENT_TAG_NULL_FLAG))))),
             Sets.newHashSet(TagServiceImpl.DESCRIPTION_FIELD)));
 
         // Search tags without specifying optional parameters except for the parent tag key field option.
         assertEquals(new TagSearchResponse(Arrays.asList(
-            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
                 NO_TAG_HAS_CHILDREN_FLAG),
-            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_3), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_UPDATED_TIME,
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_3), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_USER_ID, NO_UPDATED_TIME,
                 new TagKey(TAG_TYPE, TAG_CODE), NO_TAG_HAS_CHILDREN_FLAG),
-            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_2), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_UPDATED_TIME,
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_2), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_USER_ID, NO_UPDATED_TIME,
                 new TagKey(TAG_TYPE, TAG_CODE), NO_TAG_HAS_CHILDREN_FLAG))), tagService.searchTags(
             new TagSearchRequest(Arrays.asList(new TagSearchFilter(Arrays.asList(new TagSearchKey(TAG_TYPE, BLANK_TEXT, NO_IS_PARENT_TAG_NULL_FLAG))))),
             Sets.newHashSet(TagServiceImpl.PARENT_TAG_KEY_FIELD)));
 
         // Search tags without specifying optional parameters except for the "has children" field option.
         assertEquals(new TagSearchResponse(Arrays.asList(
-            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
                 TAG_HAS_CHILDREN),
-            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_3), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
-                TAG_HAS_NO_CHILDREN),
-            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_2), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
-                TAG_HAS_NO_CHILDREN))), tagService.searchTags(
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_3), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_USER_ID, NO_UPDATED_TIME,
+                NO_PARENT_TAG_KEY, TAG_HAS_NO_CHILDREN),
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_2), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_USER_ID, NO_UPDATED_TIME,
+                NO_PARENT_TAG_KEY, TAG_HAS_NO_CHILDREN))), tagService.searchTags(
             new TagSearchRequest(Arrays.asList(new TagSearchFilter(Arrays.asList(new TagSearchKey(TAG_TYPE, BLANK_TEXT, NO_IS_PARENT_TAG_NULL_FLAG))))),
             Sets.newHashSet(TagServiceImpl.HAS_CHILDREN_FIELD)));
     }
@@ -978,10 +974,10 @@ public class TagServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new TagSearchResponse(Arrays.asList(
-            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_3), TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_3, NO_USER_ID, NO_UPDATED_TIME, new TagKey(TAG_TYPE, TAG_CODE),
-                TAG_HAS_NO_CHILDREN),
-            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_2), TAG_DISPLAY_NAME_3, TAG_DESCRIPTION_2, NO_USER_ID, NO_UPDATED_TIME, new TagKey(TAG_TYPE, TAG_CODE),
-                TAG_HAS_NO_CHILDREN))), tagSearchResponse);
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_3), TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_3, NO_USER_ID, NO_USER_ID, NO_UPDATED_TIME,
+                new TagKey(TAG_TYPE, TAG_CODE), TAG_HAS_NO_CHILDREN),
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_2), TAG_DISPLAY_NAME_3, TAG_DESCRIPTION_2, NO_USER_ID, NO_USER_ID, NO_UPDATED_TIME,
+                new TagKey(TAG_TYPE, TAG_CODE), TAG_HAS_NO_CHILDREN))), tagSearchResponse);
     }
 
     @Test
@@ -998,10 +994,10 @@ public class TagServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new TagSearchResponse(Arrays.asList(
-            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_3), TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_3, NO_USER_ID, NO_UPDATED_TIME, new TagKey(TAG_TYPE, TAG_CODE),
-                TAG_HAS_NO_CHILDREN),
-            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_2), TAG_DISPLAY_NAME_3, TAG_DESCRIPTION_2, NO_USER_ID, NO_UPDATED_TIME, new TagKey(TAG_TYPE, TAG_CODE),
-                TAG_HAS_NO_CHILDREN))), tagSearchResponse);
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_3), TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_3, NO_USER_ID, NO_USER_ID, NO_UPDATED_TIME,
+                new TagKey(TAG_TYPE, TAG_CODE), TAG_HAS_NO_CHILDREN),
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_2), TAG_DISPLAY_NAME_3, TAG_DESCRIPTION_2, NO_USER_ID, NO_USER_ID, NO_UPDATED_TIME,
+                new TagKey(TAG_TYPE, TAG_CODE), TAG_HAS_NO_CHILDREN))), tagSearchResponse);
     }
 
     @Test
@@ -1012,17 +1008,17 @@ public class TagServiceTest extends AbstractServiceTest
 
         // Get root tag entities (parent tag must not be set).
         assertEquals(new TagSearchResponse(Arrays.asList(
-            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
                 NO_TAG_HAS_CHILDREN_FLAG))), tagService.searchTags(
             new TagSearchRequest(Arrays.asList(new TagSearchFilter(Arrays.asList(new TagSearchKey(TAG_TYPE, NO_PARENT_TAG_CODE, PARENT_TAG_IS_NULL))))),
             NO_SEARCH_RESPONSE_FIELDS));
 
         // Get all non-root tag entities (parent tag must be set).
         assertEquals(new TagSearchResponse(Arrays.asList(
-            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_3), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
-                NO_TAG_HAS_CHILDREN_FLAG),
-            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_2), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_UPDATED_TIME, NO_PARENT_TAG_KEY,
-                NO_TAG_HAS_CHILDREN_FLAG))), tagService.searchTags(
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_3), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_USER_ID, NO_UPDATED_TIME,
+                NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG),
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_2), NO_TAG_DISPLAY_NAME, NO_TAG_DESCRIPTION, NO_USER_ID, NO_USER_ID, NO_UPDATED_TIME,
+                NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG))), tagService.searchTags(
             new TagSearchRequest(Arrays.asList(new TagSearchFilter(Arrays.asList(new TagSearchKey(TAG_TYPE, NO_PARENT_TAG_CODE, PARENT_TAG_IS_NOT_NULL))))),
             NO_SEARCH_RESPONSE_FIELDS));
     }
@@ -1038,7 +1034,7 @@ public class TagServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new Tag(tagEntity.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, updatedTag.getUserId(),
-            updatedTag.getUpdatedTime(), null, null), updatedTag);
+            updatedTag.getLastUpdatedByUserId(), updatedTag.getUpdatedTime(), NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG), updatedTag);
     }
 
     @Test
@@ -1055,7 +1051,7 @@ public class TagServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new Tag(updatedTag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, updatedTag.getUserId(),
-            updatedTag.getUpdatedTime(), null, null), updatedTag);
+            updatedTag.getLastUpdatedByUserId(), updatedTag.getUpdatedTime(), NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG), updatedTag);
     }
 
     @Test
@@ -1082,6 +1078,22 @@ public class TagServiceTest extends AbstractServiceTest
     }
 
     @Test
+    public void testUpdateTagInvalidParameters()
+    {
+        // Try to update a tag using a parent tag with a different tag type code.
+        try
+        {
+            tagService
+                .updateTag(new TagKey(TAG_TYPE, TAG_CODE), new TagUpdateRequest(TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, new TagKey(TAG_TYPE_2, TAG_CODE_2)));
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("Tag type code in parent tag key must match the tag type code in the request.", e.getMessage());
+        }
+    }
+
+    @Test
     public void testUpdateTagLowerCaseParameters()
     {
         // Create and persist a tag entity.
@@ -1093,7 +1105,7 @@ public class TagServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new Tag(updatedTag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME_2.toLowerCase(), TAG_DESCRIPTION_2.toLowerCase(),
-            updatedTag.getUserId(), updatedTag.getUpdatedTime(), null, null), updatedTag);
+            updatedTag.getUserId(), updatedTag.getLastUpdatedByUserId(), updatedTag.getUpdatedTime(), NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG), updatedTag);
     }
 
     @Test
@@ -1144,7 +1156,7 @@ public class TagServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new Tag(updatedTag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION_2, updatedTag.getUserId(),
-            updatedTag.getUpdatedTime(), null, null), updatedTag);
+            updatedTag.getLastUpdatedByUserId(), updatedTag.getUpdatedTime(), NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG), updatedTag);
     }
 
     @Test
@@ -1158,7 +1170,103 @@ public class TagServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new Tag(updatedTag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME.toLowerCase(), TAG_DESCRIPTION_2, updatedTag.getUserId(),
-            updatedTag.getUpdatedTime(), null, null), updatedTag);
+            updatedTag.getLastUpdatedByUserId(), updatedTag.getUpdatedTime(), NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG), updatedTag);
+    }
+
+    @Test
+    public void testUpdateTagParentTagIsChild()
+    {
+        // Create and persist a root tag entity.
+        TagEntity rootTagEntity = tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+
+        // Create a child tag entity.
+        TagEntity childTagEntity = tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE_2, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, rootTagEntity);
+
+        // Create a grandchild tag entity.
+        TagEntity grandchildTagEntity = tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE_3, TAG_DISPLAY_NAME_3, TAG_DESCRIPTION_3, childTagEntity);
+
+        // Try to update the root tag using a parent tag set to the tag itself and it's children.
+        for (TagEntity tagEntity : Arrays.asList(rootTagEntity, childTagEntity, grandchildTagEntity))
+        {
+            try
+            {
+                tagService.updateTag(new TagKey(TAG_TYPE, TAG_CODE),
+                    new TagUpdateRequest(TAG_DISPLAY_NAME_4, TAG_DESCRIPTION_4, new TagKey(tagEntity.getTagType().getCode(), tagEntity.getTagCode())));
+                fail();
+            }
+            catch (IllegalArgumentException e)
+            {
+                assertEquals("Parent tag key cannot be the requested tag key or any of its children’s tag keys.", e.getMessage());
+            }
+        }
+    }
+
+    @Test
+    public void testUpdateTagParentTagMaxAllowedNestingExceeds() throws Exception
+    {
+        // Create and persist a root tag entity.
+        TagEntity rootTagEntity = tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+
+        // Create a child tag entity.
+        TagEntity childTagEntity = tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE_2, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, rootTagEntity);
+
+        // Create a grandchild tag entity.
+        TagEntity grandchildTagEntity = tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE_3, TAG_DISPLAY_NAME_3, TAG_DESCRIPTION_3, childTagEntity);
+
+        // Override the configuration to set max allowed tag nesting to 1.
+        Map<String, Object> overrideMap = new HashMap<>();
+        overrideMap.put(ConfigurationValue.MAX_ALLOWED_TAG_NESTING.getKey(), 1);
+        modifyPropertySourceInEnvironment(overrideMap);
+
+        try
+        {
+            // Try to update the tag using it's child as a parent tag.
+            try
+            {
+                tagService.updateTag(new TagKey(TAG_TYPE, TAG_CODE), new TagUpdateRequest(TAG_DISPLAY_NAME_4, TAG_DESCRIPTION_4,
+                    new TagKey(childTagEntity.getTagType().getCode(), childTagEntity.getTagCode())));
+                fail();
+            }
+            catch (IllegalArgumentException e)
+            {
+                assertEquals("Parent tag key cannot be the requested tag key or any of its children’s tag keys.", e.getMessage());
+            }
+
+            // Try to update the tag using it's grandchild as a parent tag.
+            try
+            {
+                tagService.updateTag(new TagKey(TAG_TYPE, TAG_CODE), new TagUpdateRequest(TAG_DISPLAY_NAME_4, TAG_DESCRIPTION_4,
+                    new TagKey(grandchildTagEntity.getTagType().getCode(), grandchildTagEntity.getTagCode())));
+                fail();
+            }
+            catch (IllegalArgumentException e)
+            {
+                assertEquals("Exceeds maximum allowed tag nesting level of 1", e.getMessage());
+            }
+        }
+        finally
+        {
+            // Restore the property sources so we don't affect other tests.
+            restorePropertySourceInEnvironment();
+        }
+    }
+
+    @Test
+    public void testUpdateTagParentTagNoExists()
+    {
+        // Create and persist a tag entity.
+        tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+
+        // Try to update a tag using a non-existing parent tag.
+        try
+        {
+            tagService.updateTag(new TagKey(TAG_TYPE, TAG_CODE), new TagUpdateRequest(TAG_DISPLAY_NAME, TAG_DESCRIPTION, new TagKey(TAG_TYPE, TAG_CODE_2)));
+            fail();
+        }
+        catch (ObjectNotFoundException e)
+        {
+            assertEquals(String.format("Tag with code \"%s\" doesn't exist for tag type \"%s\".", TAG_CODE_2, TAG_TYPE), e.getMessage());
+        }
     }
 
     @Test
@@ -1188,7 +1296,7 @@ public class TagServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new Tag(updatedTag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME_2, addWhitespace(TAG_DESCRIPTION_2), updatedTag.getUserId(),
-            updatedTag.getUpdatedTime(), null, null), updatedTag);
+            updatedTag.getLastUpdatedByUserId(), updatedTag.getUpdatedTime(), NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG), updatedTag);
     }
 
     @Test
@@ -1203,7 +1311,7 @@ public class TagServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new Tag(updatedTag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME_2.toUpperCase(), TAG_DESCRIPTION_2.toUpperCase(),
-            updatedTag.getUserId(), updatedTag.getUpdatedTime(), null, null), updatedTag);
+            updatedTag.getUserId(), updatedTag.getLastUpdatedByUserId(), updatedTag.getUpdatedTime(), NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG), updatedTag);
     }
 
     @Test
@@ -1220,90 +1328,13 @@ public class TagServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new Tag(tagEntity.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, updatedTag.getUserId(),
-            updatedTag.getUpdatedTime(), new TagKey(TAG_TYPE, TAG_CODE_2), null), updatedTag);
+            updatedTag.getLastUpdatedByUserId(), updatedTag.getUpdatedTime(), new TagKey(TAG_TYPE, TAG_CODE_2), null), updatedTag);
 
         //set parent tag to null
         updatedTag = tagService.updateTag(new TagKey(TAG_TYPE, TAG_CODE), new TagUpdateRequest(TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, null));
 
         assertEquals(new Tag(tagEntity.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, updatedTag.getUserId(),
-            updatedTag.getUpdatedTime(), null, null), updatedTag);
-    }
-
-    @Test
-    public void testUpdateTagWithParentValidationError()
-    {
-        // Create and persist a tag entity.
-        tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
-
-        tagDaoTestHelper.createTagEntity(TAG_TYPE_2, TAG_CODE_2, TAG_DISPLAY_NAME + "x", TAG_DESCRIPTION_2 + "x");
-
-        try
-        {
-            // Try to update the tag.
-            tagService
-                .updateTag(new TagKey(TAG_TYPE, TAG_CODE), new TagUpdateRequest(TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, new TagKey(TAG_TYPE_2, TAG_CODE_2)));
-            Assert.fail("Update should fail because parent type key is different");
-        }
-        catch (IllegalArgumentException ex)
-        {
-            //as expected
-        }
-    }
-
-    @Test
-    public void testUpdateTagWithParentValidationError2()
-    {
-        // Create and persist a tag entity.
-        TagEntity root = tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
-
-        tagDaoTestHelper.createTagEntity(TAG_TYPE_2, TAG_CODE_2, TAG_DISPLAY_NAME + "x", TAG_DESCRIPTION_2 + "x", root);
-
-        try
-        {
-            // Try to update the tag.
-            tagService
-                .updateTag(new TagKey(TAG_TYPE, TAG_CODE), new TagUpdateRequest(TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, new TagKey(TAG_TYPE_2, TAG_CODE_2)));
-            Assert.fail("Update should fail because parent type key is different");
-        }
-        catch (IllegalArgumentException ex)
-        {
-            //as expected
-        }
-    }
-
-    @Test
-    public void testUpdateTagWithParentValidationErrorLooping()
-    {
-        // Create and persist a tag entity.
-        TagEntity root = tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
-
-        TagEntity child = tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE_2, TAG_DISPLAY_NAME + "x", TAG_DESCRIPTION_2 + "x", root);
-        tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE_2 + "y", TAG_DISPLAY_NAME_2 + "y", TAG_DESCRIPTION_2 + "y", child);
-
-        try
-        {
-            // Try to update the tag.
-            tagService.updateTag(new TagKey(TAG_TYPE, TAG_CODE), new TagUpdateRequest(TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, new TagKey(TAG_TYPE, TAG_CODE_2)));
-            Assert.fail("Update should fail, can not set itself as parent");
-        }
-        catch (IllegalArgumentException ex)
-        {
-            System.out.println(ex);
-            //as expected
-        }
-
-        try
-        {
-            // Try to update the tag.
-            tagService
-                .updateTag(new TagKey(TAG_TYPE, TAG_CODE), new TagUpdateRequest(TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, new TagKey(TAG_TYPE, TAG_CODE_2 + "y")));
-            Assert.fail("Update should fail, can not set itself as parent");
-        }
-        catch (IllegalArgumentException ex)
-        {
-            System.out.println(ex);
-            //as expected
-        }
+            updatedTag.getLastUpdatedByUserId(), updatedTag.getUpdatedTime(), NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG), updatedTag);
     }
 
     /**

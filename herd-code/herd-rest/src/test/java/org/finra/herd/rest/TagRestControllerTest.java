@@ -55,8 +55,8 @@ public class TagRestControllerTest extends AbstractRestTest
         Tag tag = tagRestController.createTag(new TagCreateRequest(new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION, null));
 
         // Validate the tag which was created.
-        assertEquals(new Tag(tag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION, tag.getUserId(), tag.getUpdatedTime(), null, null),
-            tag);
+        assertEquals(new Tag(tag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION, tag.getUserId(), tag.getLastUpdatedByUserId(),
+            tag.getUpdatedTime(), NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG), tag);
     }
 
     @Test
@@ -75,8 +75,8 @@ public class TagRestControllerTest extends AbstractRestTest
         Tag deletedTag = tagRestController.deleteTag(TAG_TYPE, TAG_CODE);
 
         // Validate the returned object.
-        assertEquals(new Tag(tagEntity.getId(), tagKey, TAG_DISPLAY_NAME, DESCRIPTION, deletedTag.getUserId(), deletedTag.getUpdatedTime(), null, null),
-            deletedTag);
+        assertEquals(new Tag(tagEntity.getId(), tagKey, TAG_DISPLAY_NAME, DESCRIPTION, deletedTag.getUserId(), deletedTag.getLastUpdatedByUserId(),
+            deletedTag.getUpdatedTime(), NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG), deletedTag);
 
         // Ensure that this tag is no longer there.
         assertNull(tagDao.getTagByKey(tagKey));
@@ -92,9 +92,8 @@ public class TagRestControllerTest extends AbstractRestTest
         Tag resultTag = tagRestController.getTag(TAG_TYPE, TAG_CODE);
 
         // Validate the returned object.
-        assertEquals(
-            new Tag(resultTag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION, resultTag.getUserId(), resultTag.getUpdatedTime(),
-                null, null), resultTag);
+        assertEquals(new Tag(resultTag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION, resultTag.getUserId(),
+            resultTag.getLastUpdatedByUserId(), resultTag.getUpdatedTime(), NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG), resultTag);
     }
 
     @Test
@@ -137,10 +136,10 @@ public class TagRestControllerTest extends AbstractRestTest
 
         // Validate the returned object.
         assertEquals(new TagSearchResponse(Arrays.asList(
-            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_3), TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_3, NO_USER_ID, NO_UPDATED_TIME, new TagKey(TAG_TYPE, TAG_CODE),
-                TAG_HAS_NO_CHILDREN),
-            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_2), TAG_DISPLAY_NAME_3, TAG_DESCRIPTION_2, NO_USER_ID, NO_UPDATED_TIME, new TagKey(TAG_TYPE, TAG_CODE),
-                TAG_HAS_NO_CHILDREN))), tagSearchResponse);
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_3), TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_3, NO_USER_ID, NO_USER_ID, NO_UPDATED_TIME,
+                new TagKey(TAG_TYPE, TAG_CODE), TAG_HAS_NO_CHILDREN),
+            new Tag(NO_ID, new TagKey(TAG_TYPE, TAG_CODE_2), TAG_DISPLAY_NAME_3, TAG_DESCRIPTION_2, NO_USER_ID, NO_USER_ID, NO_UPDATED_TIME,
+                new TagKey(TAG_TYPE, TAG_CODE), TAG_HAS_NO_CHILDREN))), tagSearchResponse);
     }
 
     @Test
@@ -154,6 +153,6 @@ public class TagRestControllerTest extends AbstractRestTest
 
         // Validate the returned object.
         assertEquals(new Tag(tagEntity.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, updatedTag.getUserId(),
-            updatedTag.getUpdatedTime(), null, null), updatedTag);
+            updatedTag.getLastUpdatedByUserId(), updatedTag.getUpdatedTime(), NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG), updatedTag);
     }
 }

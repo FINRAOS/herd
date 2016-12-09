@@ -21,27 +21,27 @@
    <xs:element name="buildInformation" type="buildInformation"/>
    <xs:complexType name="buildInformation">
       <xs:annotation>
-         <xs:documentation>The information about the current build of the application.</xs:documentation>
+         <xs:documentation>The information about the current build of the application</xs:documentation>
       </xs:annotation>
       <xs:all>
          <xs:element name="buildOs" type="xs:string">
             <xs:annotation>
-               <xs:documentation>The OS in which the current build was built.</xs:documentation>
+               <xs:documentation>The OS in which the current build was built</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="buildUser" type="xs:string">
             <xs:annotation>
-               <xs:documentation>The user ID of the user that performed the build.</xs:documentation>
+               <xs:documentation>The user ID of the user that performed the build</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="buildDate" type="xs:string">
             <xs:annotation>
-               <xs:documentation>The date/time when the build was performed.</xs:documentation>
+               <xs:documentation>The date/time when the build was performed</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="buildNumber" type="xs:string">
             <xs:annotation>
-               <xs:documentation>The version number (from Maven POM) of the current build.</xs:documentation>
+               <xs:documentation>The version number (from Maven POM) of the current build</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -136,7 +136,7 @@
       <xs:all>
          <xs:element name="noData" type="xs:string" minOccurs="0" maxOccurs="0">
             <xs:annotation>
-               <xs:documentation>There is nothing that is currently updated, but we will have something in the future.</xs:documentation>
+               <xs:documentation>There is nothing that is currently updated, but we will have something in the future</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -152,7 +152,7 @@
          </xs:element>
          <xs:element name="storagePlatformName" type="xs:string">
             <xs:annotation>
-               <xs:documentation>Name of Storage Platform (eg S3) associated with this Storage.</xs:documentation>
+               <xs:documentation>Name of Storage Platform (eg S3) associated with this Storage</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="attributes" type="attributes" minOccurs="0">
@@ -569,7 +569,7 @@
       <xs:all>
          <xs:element name="noData" type="xs:string" minOccurs="0" maxOccurs="0">
             <xs:annotation>
-               <xs:documentation>There is nothing that is currently being posted, but we will have something in the future.</xs:documentation>
+               <xs:documentation>There is nothing that is currently being posted, but we will have something in the future</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -608,22 +608,22 @@
       <xs:all>
          <xs:element name="tagKey" type="tagKey">
             <xs:annotation>
-               <xs:documentation>The tag's unique key.</xs:documentation>
+               <xs:documentation>The tag's unique key</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="displayName" type="xs:string">
             <xs:annotation>
-               <xs:documentation>The tag's name in plain text for human readability.</xs:documentation>
+               <xs:documentation>The tag's name in plain text for human readability</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="description" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>The tag's description.</xs:documentation>
+               <xs:documentation>An optional description</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="parentTagKey" type="tagKey" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>The tag's description.</xs:documentation>
+               <xs:documentation>An optional parent tag's unique key</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -634,17 +634,17 @@
       <xs:all>
          <xs:element name="displayName" type="xs:string">
             <xs:annotation>
-               <xs:documentation>The tag's name in plain text for human readability.</xs:documentation>
+               <xs:documentation>The tag's name in plain text for human readability</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="description" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>The tag's description.</xs:documentation>
+               <xs:documentation>An optional description</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="parentTagKey" type="tagKey" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>The tag's description.</xs:documentation>
+               <xs:documentation>An optional parent tag's unique key</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -655,37 +655,42 @@
       <xs:all>
          <xs:element name="id" type="xs:int" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>The internal identifier that uniquely references a Tag.</xs:documentation>
+               <xs:documentation>The internal identifier that uniquely references a Tag</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="tagKey" type="tagKey">
             <xs:annotation>
-               <xs:documentation>The tag's unique key.</xs:documentation>
+               <xs:documentation>The tag's unique key</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="displayName" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>The tag's name in plain text for human readability.</xs:documentation>
+               <xs:documentation>The tag's name in plain text for human readability</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="description" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>The tag's description.</xs:documentation>
+               <xs:documentation>The tag's description</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="userId" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>The User ID of the user who last updated.</xs:documentation>
+               <xs:documentation>The User ID of the user who created this tag</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="lastUpdatedByUserId" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The User ID of the user who last updated this tag</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="updatedTime" type="xs:dateTime" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>The timestamp of when it is last updated.</xs:documentation>
+               <xs:documentation>The timestamp of when it is last updated</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="parentTagKey" type="tagKey" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>The tag's description.</xs:documentation>
+               <xs:documentation>The parent tag's unique key</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="hasChildren" type="xs:boolean" minOccurs="0">
@@ -701,17 +706,17 @@
       <xs:all>
          <xs:element name="tagKey" type="tagKey" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>The tag's unique key.</xs:documentation>
+               <xs:documentation>The tag's unique key</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="parentTagKey" type="tagKey" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>The tag's unique key.</xs:documentation>
+               <xs:documentation>The parent tag's unique key</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="tagChildren" type="tagChildren" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>Children Tag Keys.</xs:documentation>
+               <xs:documentation>The list of children tags</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -721,7 +726,7 @@
       <xs:sequence>
          <xs:element name="tagChild" type="tagChild" minOccurs="0" maxOccurs="unbounded">
             <xs:annotation>
-               <xs:documentation>An ordered list of tag keys.</xs:documentation>
+               <xs:documentation>An ordered list of children tags</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:sequence>
@@ -731,7 +736,7 @@
       <xs:all>
          <xs:element name="tagKey" type="tagKey">
             <xs:annotation>
-               <xs:documentation>The tag's unique key.</xs:documentation>
+               <xs:documentation>The tag's unique key</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="hasChildren" type="xs:boolean">
@@ -746,12 +751,12 @@
       <xs:all>
          <xs:element name="tagTypeCode" type="xs:string">
             <xs:annotation>
-               <xs:documentation>The tag type reference code.</xs:documentation>
+               <xs:documentation>The tag type reference code</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="tagCode" type="xs:string">
             <xs:annotation>
-               <xs:documentation>The tag reference code.</xs:documentation>
+               <xs:documentation>The tag reference code</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -2158,7 +2163,7 @@
          </xs:element>
          <xs:element name="replaceColumns" type="xs:boolean" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>If true, an ALTER TABLE ... REPLACE COLUMNS will be generated.</xs:documentation>
+               <xs:documentation>If true, an ALTER TABLE ... REPLACE COLUMNS will be generated</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -2219,7 +2224,7 @@
          </xs:element>
          <xs:element name="ddl" type="xs:string">
             <xs:annotation>
-               <xs:documentation>A container for the generated DDL code which contains DDL for all the objects in the collection.</xs:documentation>
+               <xs:documentation>A container for the generated DDL code which contains DDL for all the objects in the collection</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -2318,7 +2323,7 @@
            -->
          <xs:element name="businessObjectFormatVersion" type="xs:int" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>The Business Object Format Version for a previously registered Business Object Format.</xs:documentation>
+               <xs:documentation>The Business Object Format Version for a previously registered Business Object Format</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="partitionKey" type="xs:string">
@@ -2469,7 +2474,7 @@
          </xs:element>
          <xs:element name="businessObjectFormatVersion" type="xs:int">
             <xs:annotation>
-               <xs:documentation>The Business Object Format Version for a previously registered Business Object Format.</xs:documentation>
+               <xs:documentation>The Business Object Format Version for a previously registered Business Object Format</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="partitionKey" type="xs:string">
@@ -2566,7 +2571,7 @@
          </xs:element>
          <xs:element name="storageDirectory" type="storageDirectory" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>A container for a Storage Directory that resides within a specific Storage Unit.</xs:documentation>
+               <xs:documentation>A container for a Storage Directory that resides within a specific Storage Unit</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="storageFiles" type="storageFiles" minOccurs="0">
@@ -2576,7 +2581,7 @@
          </xs:element>
          <xs:element name="storageUnitStatus" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>The status of this Storage Unit. One of the following values: ENABLED, DISABLED, ARCHIVING, or RESTORING.</xs:documentation>
+               <xs:documentation>The status of this Storage Unit. One of the following values: ENABLED, DISABLED, ARCHIVING, or RESTORING</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -2586,7 +2591,7 @@
       <xs:all>
          <xs:element name="directoryPath" type="xs:string">
             <xs:annotation>
-               <xs:documentation>The fully qualified storage directory path.</xs:documentation>
+               <xs:documentation>The fully qualified storage directory path</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -2655,7 +2660,7 @@
       <xs:sequence>
          <xs:element name="businessObjectDataKey" type="businessObjectDataKey" minOccurs="0" maxOccurs="unbounded">
             <xs:annotation>
-               <xs:documentation>Values that uniquely identify a Business Object Data.</xs:documentation>
+               <xs:documentation>Values that uniquely identify a Business Object Data</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:sequence>
@@ -2665,7 +2670,7 @@
       <xs:sequence>
          <xs:element name="businessObjectDataKey" type="businessObjectDataKey" minOccurs="0" maxOccurs="unbounded">
             <xs:annotation>
-               <xs:documentation>Values that uniquely identify a Business Object Data.</xs:documentation>
+               <xs:documentation>Values that uniquely identify a Business Object Data</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:sequence>
@@ -2703,7 +2708,7 @@
            -->
          <xs:element name="businessObjectFormatVersion" type="xs:int" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>The Business Object Format Version for a previously registered Business Object Format.</xs:documentation>
+               <xs:documentation>The Business Object Format Version for a previously registered Business Object Format</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="partitionValue" type="xs:string">
@@ -2718,7 +2723,7 @@
          </xs:element>
          <xs:element name="businessObjectDataVersion" type="xs:int" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>The numeric version of a Business Object Data.</xs:documentation>
+               <xs:documentation>The numeric version of a Business Object Data</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -2739,7 +2744,7 @@
       <xs:all>
          <xs:element name="businessObjectDataKey" type="businessObjectDataKey">
             <xs:annotation>
-               <xs:documentation>Values that uniquely identify a Business Object Data.</xs:documentation>
+               <xs:documentation>Values that uniquely identify a Business Object Data</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="status" type="xs:string">
@@ -3028,7 +3033,7 @@
            -->
          <xs:element name="businessObjectFormatVersion" type="xs:int" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>The Business Object Format Version for a previously registered Business Object Format.</xs:documentation>
+               <xs:documentation>The Business Object Format Version for a previously registered Business Object Format</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="partitionValue" type="xs:string">
@@ -3043,7 +3048,7 @@
          </xs:element>
          <xs:element name="businessObjectDataVersion" type="xs:int" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>The numeric version of a Business Object Data.</xs:documentation>
+               <xs:documentation>The numeric version of a Business Object Data</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="businessObjectDataAttributeName" type="xs:string">
@@ -3084,7 +3089,7 @@
          </xs:element>
          <xs:element name="businessObjectFormatVersion" type="xs:int" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>The Business Object Format Version for a previously registered Business Object Format.</xs:documentation>
+               <xs:documentation>The Business Object Format Version for a previously registered Business Object Format</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="partitionValueFilters" type="partitionValueFilters" minOccurs="0">
@@ -3102,7 +3107,7 @@
          </xs:element>
          <xs:element name="businessObjectDataVersion" type="xs:int" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>The numeric version of a Business Object Data.</xs:documentation>
+               <xs:documentation>The numeric version of a Business Object Data</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="storageNames" type="storageNames" minOccurs="0">
@@ -3276,7 +3281,7 @@
          </xs:element>
          <xs:element name="businessObjectFormatVersion" type="xs:int" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>The Business Object Format Version for a previously registered Business Object Format.</xs:documentation>
+               <xs:documentation>The Business Object Format Version for a previously registered Business Object Format</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="partitionValueFilters" type="partitionValueFilters" minOccurs="0">
@@ -3294,7 +3299,7 @@
          </xs:element>
          <xs:element name="businessObjectDataVersion" type="xs:int" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>The numeric version of a Business Object Data.</xs:documentation>
+               <xs:documentation>The numeric version of a Business Object Data</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="storageNames" type="storageNames" minOccurs="0">
@@ -3334,7 +3339,7 @@
       <xs:all>
          <xs:element name="businessObjectFormatVersion" type="xs:int" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>The Business Object Format Version for a previously registered Business Object Format.</xs:documentation>
+               <xs:documentation>The Business Object Format Version for a previously registered Business Object Format</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="partitionValue" type="xs:string">
@@ -3349,7 +3354,7 @@
          </xs:element>
          <xs:element name="businessObjectDataVersion" type="xs:int" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>The numeric version of a Business Object Data.</xs:documentation>
+               <xs:documentation>The numeric version of a Business Object Data</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="reason" type="xs:string" minOccurs="0">
@@ -3389,12 +3394,12 @@
          </xs:element>
          <xs:element name="isAllDataAvailable" type="xs:boolean">
             <xs:annotation>
-               <xs:documentation>Aggregate response indicating if all of the data covered in all requests in the collection is available.</xs:documentation>
+               <xs:documentation>Aggregate response indicating if all of the data covered in all requests in the collection is available</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="isAllDataNotAvailable" type="xs:boolean">
             <xs:annotation>
-               <xs:documentation>Aggregate response indicating if none of the data covered in any request in the collection is available.</xs:documentation>
+               <xs:documentation>Aggregate response indicating if none of the data covered in any request in the collection is available</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -3511,17 +3516,17 @@
    <xs:element name="businessObjectDataNotificationRegistrationCreateRequest" type="businessObjectDataNotificationRegistrationCreateRequest"/>
    <xs:complexType name="businessObjectDataNotificationRegistrationCreateRequest">
       <xs:annotation>
-         <xs:documentation>The request to create a business object data notification registration.</xs:documentation>
+         <xs:documentation>The request to create a business object data notification registration</xs:documentation>
       </xs:annotation>
       <xs:all>
          <xs:element name="businessObjectDataNotificationRegistrationKey" type="notificationRegistrationKey">
             <xs:annotation>
-               <xs:documentation>A unique identifier for a business object data notification registration.</xs:documentation>
+               <xs:documentation>A unique identifier for a business object data notification registration</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="businessObjectDataEventType" type="xs:string">
             <xs:annotation>
-               <xs:documentation>The type of business object data event in which this notification should trigger.</xs:documentation>
+               <xs:documentation>The type of business object data event in which this notification should trigger</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="businessObjectDataNotificationFilter" type="businessObjectDataNotificationFilter">
@@ -3532,12 +3537,12 @@
          </xs:element>
          <xs:element name="jobActions" type="jobActions">
             <xs:annotation>
-               <xs:documentation>The list of jobs to execute when this notification is triggered.</xs:documentation>
+               <xs:documentation>The list of jobs to execute when this notification is triggered</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="notificationRegistrationStatus" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>The status of the notification registration.</xs:documentation>
+               <xs:documentation>The status of the notification registration</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -3546,12 +3551,12 @@
    <xs:element name="businessObjectDataNotificationRegistrationUpdateRequest" type="businessObjectDataNotificationRegistrationUpdateRequest"/>
    <xs:complexType name="businessObjectDataNotificationRegistrationUpdateRequest">
       <xs:annotation>
-         <xs:documentation>The request to update a business object data notification registration.</xs:documentation>
+         <xs:documentation>The request to update a business object data notification registration</xs:documentation>
       </xs:annotation>
       <xs:all>
          <xs:element name="businessObjectDataEventType" type="xs:string">
             <xs:annotation>
-               <xs:documentation>The type of business object data event in which this notification should trigger.</xs:documentation>
+               <xs:documentation>The type of business object data event in which this notification should trigger</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="businessObjectDataNotificationFilter" type="businessObjectDataNotificationFilter">
@@ -3562,12 +3567,12 @@
          </xs:element>
          <xs:element name="jobActions" type="jobActions">
             <xs:annotation>
-               <xs:documentation>The list of jobs to execute when this notification is triggered.</xs:documentation>
+               <xs:documentation>The list of jobs to execute when this notification is triggered</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="notificationRegistrationStatus" type="xs:string">
             <xs:annotation>
-               <xs:documentation>The status of the notification registration.</xs:documentation>
+               <xs:documentation>The status of the notification registration</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -3576,37 +3581,37 @@
    <xs:element name="businessObjectDataNotificationRegistration" type="businessObjectDataNotificationRegistration"/>
    <xs:complexType name="businessObjectDataNotificationRegistration">
       <xs:annotation>
-         <xs:documentation>A notification registration for business object data events.</xs:documentation>
+         <xs:documentation>A notification registration for business object data events</xs:documentation>
       </xs:annotation>
       <xs:all>
          <xs:element name="id" type="xs:int">
             <xs:annotation>
-               <xs:documentation>A system unique ID of this registration.</xs:documentation>
+               <xs:documentation>A system unique ID of this registration</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="businessObjectDataNotificationRegistrationKey" type="notificationRegistrationKey">
             <xs:annotation>
-               <xs:documentation>A unique identifier for a business object data notification registration.</xs:documentation>
+               <xs:documentation>A unique identifier for a business object data notification registration</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="businessObjectDataEventType" type="xs:string">
             <xs:annotation>
-               <xs:documentation>The type of business object data event in which this notification should trigger.</xs:documentation>
+               <xs:documentation>The type of business object data event in which this notification should trigger</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="businessObjectDataNotificationFilter" type="businessObjectDataNotificationFilter">
             <xs:annotation>
-               <xs:documentation>The filter to use against business object data events.</xs:documentation>
+               <xs:documentation>The filter to use against business object data events</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="jobActions" type="jobActions">
             <xs:annotation>
-               <xs:documentation>The list of jobs to execute when this notification is triggered.</xs:documentation>
+               <xs:documentation>The list of jobs to execute when this notification is triggered</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="notificationRegistrationStatus" type="xs:string">
             <xs:annotation>
-               <xs:documentation>The status of the notification registration.</xs:documentation>
+               <xs:documentation>The status of the notification registration</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -3615,12 +3620,12 @@
    <xs:element name="notificationRegistrationStatusUpdateRequest" type="notificationRegistrationStatusUpdateRequest"/>
    <xs:complexType name="notificationRegistrationStatusUpdateRequest">
       <xs:annotation>
-         <xs:documentation>The request to update a notification registration status.</xs:documentation>
+         <xs:documentation>The request to update a notification registration status</xs:documentation>
       </xs:annotation>
       <xs:all>
          <xs:element name="notificationRegistrationStatus" type="xs:string">
             <xs:annotation>
-               <xs:documentation>The status of the notification registration.</xs:documentation>
+               <xs:documentation>The status of the notification registration</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -3629,17 +3634,17 @@
    <xs:element name="notificationRegistrationStatusUpdateResponse" type="notificationRegistrationStatusUpdateResponse"/>
    <xs:complexType name="notificationRegistrationStatusUpdateResponse">
       <xs:annotation>
-         <xs:documentation>The response to update a notification registration status.</xs:documentation>
+         <xs:documentation>The response to update a notification registration status</xs:documentation>
       </xs:annotation>
       <xs:all>
          <xs:element name="notificationRegistrationKey" type="notificationRegistrationKey">
             <xs:annotation>
-               <xs:documentation>A unique identifier for a notification registration.</xs:documentation>
+               <xs:documentation>A unique identifier for a notification registration</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="notificationRegistrationStatus" type="xs:string">
             <xs:annotation>
-               <xs:documentation>The status of the notification registration.</xs:documentation>
+               <xs:documentation>The status of the notification registration</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -3653,7 +3658,7 @@
    </xs:complexType>
    <xs:complexType name="notificationRegistrationKey">
       <xs:annotation>
-         <xs:documentation>The unique key to a notification registration.</xs:documentation>
+         <xs:documentation>The unique key to a notification registration</xs:documentation>
       </xs:annotation>
       <xs:all>
          <xs:element name="namespace" type="xs:string"/>
@@ -3663,47 +3668,47 @@
 
    <xs:complexType name="businessObjectDataNotificationFilter">
       <xs:annotation>
-         <xs:documentation>The filter of business object data notification registration.</xs:documentation>
+         <xs:documentation>The filter of business object data notification registration</xs:documentation>
       </xs:annotation>
       <xs:all>
          <xs:element name="namespace" type="xs:string">
             <xs:annotation>
-               <xs:documentation>The namespace of the business object definition.</xs:documentation>
+               <xs:documentation>The namespace of the business object definition</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="businessObjectDefinitionName" type="xs:string">
             <xs:annotation>
-               <xs:documentation>The business object definition name.</xs:documentation>
+               <xs:documentation>The business object definition name</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="businessObjectFormatUsage" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>The business object format usage.</xs:documentation>
+               <xs:documentation>The business object format usage</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="businessObjectFormatFileType" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>The business object format file type.</xs:documentation>
+               <xs:documentation>The business object format file type</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="businessObjectFormatVersion" type="xs:int" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>The business object format version.</xs:documentation>
+               <xs:documentation>The business object format version</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="storageName" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>The storage name.</xs:documentation>
+               <xs:documentation>The storage name</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="newBusinessObjectDataStatus" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>The new business object data status.</xs:documentation>
+               <xs:documentation>The new business object data status</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="oldBusinessObjectDataStatus" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>The old business object data status.</xs:documentation>
+               <xs:documentation>The old business object data status</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -3717,7 +3722,7 @@
 
    <xs:complexType name="jobAction">
       <xs:annotation>
-         <xs:documentation>A notification action which executes an Activiti job when triggered.</xs:documentation>
+         <xs:documentation>A notification action which executes an Activiti job when triggered</xs:documentation>
       </xs:annotation>
       <xs:all>
          <xs:element name="namespace" type="xs:string">
@@ -5082,19 +5087,19 @@
          </xs:element>
          <xs:element name="hadoopJarSteps" type="hadoopJarSteps" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>Hadoop jar steps that are added, to be executed once the cluster is started.</xs:documentation>
+               <xs:documentation>Hadoop jar steps that are added, to be executed once the cluster is started</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="additionalMasterSecurityGroups" type="additionalMasterSecurityGroups" minOccurs="0">
             <xs:annotation>
                <xs:documentation>List of additional master node security groups. The security group defined by the configuration value
-                  emr.herd.support.security.group will automatically be added whether this list is specified or not.
+                  emr.herd.support.security.group will automatically be added whether this list is specified or not
                </xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="additionalSlaveSecurityGroups" type="additionalSlaveSecurityGroups" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>List of additional slave node security groups.</xs:documentation>
+               <xs:documentation>List of additional slave node security groups</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -5259,13 +5264,13 @@
          <xs:element name="instanceType" type="xs:string"/>
          <xs:element name="instanceSpotPrice" type="xs:decimal" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>The instance bid price, in USD. If not specified, uses on-demand.</xs:documentation>
+               <xs:documentation>The instance bid price, in USD. If not specified, uses on-demand</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="instanceMaxSearchPrice" type="xs:decimal" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The maximum amount, in USD, to search for the best price. The best price search will only search for prices lower than this
-                  value. If a spot instance is selected by the search, this value will be the bid price.
+                  value. If a spot instance is selected by the search, this value will be the bid price
                </xs:documentation>
             </xs:annotation>
          </xs:element>

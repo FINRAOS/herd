@@ -221,7 +221,7 @@ public class TagServiceImpl implements TagService, SearchableService
         List<Tag> tags = new ArrayList<>();
         for (TagEntity tagEntity : tagEntities)
         {
-            tags.add(createTagFromEntity(tagEntity, false, fields.contains(DISPLAY_NAME_FIELD), fields.contains(DESCRIPTION_FIELD), false, false,
+            tags.add(createTagFromEntity(tagEntity, false, fields.contains(DISPLAY_NAME_FIELD), fields.contains(DESCRIPTION_FIELD), false, false, false,
                 fields.contains(PARENT_TAG_KEY_FIELD), fields.contains(HAS_CHILDREN_FIELD)));
         }
 
@@ -235,8 +235,8 @@ public class TagServiceImpl implements TagService, SearchableService
         // Perform validation and trim
         tagHelper.validateTagKey(tagKey);
 
-        // Perform validation and trim
-        validateTagUpdateRequest(tagUpdateRequest);
+        // Perform validation and trim.
+        validateTagUpdateRequest(tagKey, tagUpdateRequest);
 
         // Retrieve and ensure that a tag already exists with the specified key.
         TagEntity tagEntity = tagDaoHelper.getTagEntity(tagKey);
@@ -248,11 +248,19 @@ public class TagServiceImpl implements TagService, SearchableService
             tagDaoHelper.assertDisplayNameDoesNotExistForTag(tagKey.getTagTypeCode(), tagUpdateRequest.getDisplayName());
         }
 
-        //validate parent key if there is one
-        tagDaoHelper.validateUpdateTagParentKey(tagEntity, tagUpdateRequest);
+        // Validate the parent tag if one specified.
+        TagEntity parentTagEntity = null;
+        if (tagUpdateRequest.getParentTagKey() != null)
+        {
+            // Get parent tag entity and ensure it exists.
+            parentTagEntity = tagDaoHelper.getTagEntity(tagUpdateRequest.getParentTagKey());
+
+            // Validate the parent tag entity.
+            tagDaoHelper.validateParentTagEntity(tagEntity, parentTagEntity);
+        }
 
         // Update and persist the tag entity.
-        updateTagEntity(tagEntity, tagUpdateRequest);
+        updateTagEntity(tagEntity, tagUpdateRequest, parentTagEntity);
 
         // Create and return the tag object from the tag entity.
         return createTagFromEntity(tagEntity);
@@ -290,7 +298,7 @@ public class TagServiceImpl implements TagService, SearchableService
      */
     private Tag createTagFromEntity(TagEntity tagEntity)
     {
-        return createTagFromEntity(tagEntity, true, true, true, true, true, true, false);
+        return createTagFromEntity(tagEntity, true, true, true, true, false, true, true, false);
     }
 
     /**
@@ -300,15 +308,16 @@ public class TagServiceImpl implements TagService, SearchableService
      * @param includeId specifies to include the display name field
      * @param includeDisplayName specifies to include the display name field
      * @param includeDescription specifies to include the description field
-     * @param includeUserId specifies to include the display name field
-     * @param includeUpdatedTime specifies to include the display name field
+     * @param includeUserId specifies to include the user id of the user who created this tag
+     * @param includeLastUpdatedByUserId specifies to include the user id of the user who last updated this tag
+     * @param includeUpdatedTime specifies to include the timestamp of when this tag is last updated
      * @param includeParentTagKey specifies to include the parent tag key field
      * @param includeHasChildren specifies to include the hasChildren field
      *
      * @return the tag
      */
     private Tag createTagFromEntity(TagEntity tagEntity, boolean includeId, boolean includeDisplayName, boolean includeDescription, boolean includeUserId,
-        boolean includeUpdatedTime, boolean includeParentTagKey, boolean includeHasChildren)
+        boolean includeLastUpdatedByUserId, boolean includeUpdatedTime, boolean includeParentTagKey, boolean includeHasChildren)
     {
         Tag tag = new Tag();
 
@@ -332,6 +341,11 @@ public class TagServiceImpl implements TagService, SearchableService
         if (includeUserId)
         {
             tag.setUserId(tagEntity.getCreatedBy());
+        }
+
+        if (includeLastUpdatedByUserId)
+        {
+            tag.setLastUpdatedByUserId(tagEntity.getUpdatedBy());
         }
 
         if (includeUpdatedTime)
@@ -359,44 +373,35 @@ public class TagServiceImpl implements TagService, SearchableService
     /**
      * Updates and persists the tag entity per the specified update request.
      *
-     * @param tagEntity the specified tag entity.
-     * @param tagUpdateRequest the specified tag update request.
+     * @param tagEntity the tag entity
+     * @param request the tag update request
+     * @param parentTagEntity the parent tag entity, maybe null
      */
-    private void updateTagEntity(TagEntity tagEntity, TagUpdateRequest tagUpdateRequest)
+    private void updateTagEntity(TagEntity tagEntity, TagUpdateRequest request, TagEntity parentTagEntity)
     {
-        tagEntity.setDisplayName(tagUpdateRequest.getDisplayName());
-        tagEntity.setDescription(tagUpdateRequest.getDescription());
-
-        if (tagUpdateRequest.getParentTagKey() != null)
-        {
-            TagEntity parentTagEntity = tagDaoHelper.getTagEntity(tagUpdateRequest.getParentTagKey());
-            tagEntity.setParentTagEntity(parentTagEntity);
-        }
-        else
-        {
-            tagEntity.setParentTagEntity(null);
-        }
-
+        tagEntity.setDisplayName(request.getDisplayName());
+        tagEntity.setDescription(request.getDescription());
+        tagEntity.setParentTagEntity(parentTagEntity);
         tagDao.saveAndRefresh(tagEntity);
     }
 
     /**
      * Validate the tag create request. This method also trims the request parameters.
      *
-     * @param tagCreateRequest the tag create request.
+     * @param request the tag create request
      */
-    private void validateTagCreateRequest(TagCreateRequest tagCreateRequest)
+    private void validateTagCreateRequest(TagCreateRequest request)
     {
-        Assert.notNull(tagCreateRequest, "A tag create request must be specified.");
-        tagHelper.validateTagKey(tagCreateRequest.getTagKey());
+        Assert.notNull(request, "A tag create request must be specified.");
+        tagHelper.validateTagKey(request.getTagKey());
 
-        if (tagCreateRequest.getParentTagKey() != null)
+        if (request.getParentTagKey() != null)
         {
-            tagHelper.validateTagKey(tagCreateRequest.getParentTagKey());
+            tagHelper.validateTagKey(request.getParentTagKey());
+            tagDaoHelper.validateParentTagType(request.getTagKey().getTagTypeCode(), request.getParentTagKey().getTagTypeCode());
         }
 
-        tagCreateRequest.setDisplayName(alternateKeyHelper.validateStringParameter("display name", tagCreateRequest.getDisplayName()));
-        tagDaoHelper.validateCreateTagParentKey(tagCreateRequest);
+        request.setDisplayName(alternateKeyHelper.validateStringParameter("display name", request.getDisplayName()));
     }
 
     /**
@@ -440,16 +445,19 @@ public class TagServiceImpl implements TagService, SearchableService
     /**
      * Validates the tag update request. This method also trims the request parameters.
      *
-     * @param tagUpdateRequest the specified tag update request.
+     * @param tagKey the tag key
+     * @param request the specified tag update request
      */
-    private void validateTagUpdateRequest(TagUpdateRequest tagUpdateRequest)
+    private void validateTagUpdateRequest(TagKey tagKey, TagUpdateRequest request)
     {
-        Assert.notNull(tagUpdateRequest, "A tag update request must be specified.");
-        tagUpdateRequest.setDisplayName(alternateKeyHelper.validateStringParameter("display name", tagUpdateRequest.getDisplayName()));
+        Assert.notNull(request, "A tag update request must be specified.");
 
-        if (tagUpdateRequest.getParentTagKey() != null)
+        if (request.getParentTagKey() != null)
         {
-            tagHelper.validateTagKey(tagUpdateRequest.getParentTagKey());
+            tagHelper.validateTagKey(request.getParentTagKey());
+            tagDaoHelper.validateParentTagType(tagKey.getTagTypeCode(), request.getParentTagKey().getTagTypeCode());
         }
+
+        request.setDisplayName(alternateKeyHelper.validateStringParameter("display name", request.getDisplayName()));
     }
 }
