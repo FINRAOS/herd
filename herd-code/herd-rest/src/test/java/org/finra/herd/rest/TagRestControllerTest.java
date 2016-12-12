@@ -26,6 +26,7 @@ import java.util.List;
 import com.google.common.collect.Sets;
 import org.junit.Test;
 
+import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.model.api.xml.Tag;
 import org.finra.herd.model.api.xml.TagChild;
 import org.finra.herd.model.api.xml.TagCreateRequest;
@@ -49,14 +50,22 @@ public class TagRestControllerTest extends AbstractRestTest
     public void testCreateTag()
     {
         // Create and persist a tag type entity.
-        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, INTEGER_VALUE);
+        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER);
+
+        // Create a tag key.
+        TagKey tagKey = new TagKey(TAG_TYPE, TAG_CODE);
 
         // Create a tag.
-        Tag tag = tagRestController.createTag(new TagCreateRequest(new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION, null));
+        Tag tag = tagRestController.createTag(new TagCreateRequest(new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION, NO_PARENT_TAG_KEY));
 
-        // Validate the tag which was created.
-        assertEquals(new Tag(tag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION, tag.getUserId(), tag.getLastUpdatedByUserId(),
-            tag.getUpdatedTime(), NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG), tag);
+        // Get the tag entity.
+        TagEntity tagEntity = tagDao.getTagByKey(tagKey);
+        assertNotNull(tagEntity);
+
+        // Validate the response object.
+        assertEquals(
+            new Tag(tagEntity.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION, tagEntity.getCreatedBy(), tagEntity.getUpdatedBy(),
+                HerdDateUtils.getXMLGregorianCalendarValue(tagEntity.getUpdatedOn()), NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG), tag);
     }
 
     @Test
@@ -66,17 +75,18 @@ public class TagRestControllerTest extends AbstractRestTest
         TagKey tagKey = new TagKey(TAG_TYPE, TAG_CODE);
 
         // Create and persist a tag entity.
-        TagEntity tagEntity = tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME, DESCRIPTION);
+        tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
 
         // Validate that this tag exists.
-        assertNotNull(tagDao.getTagByKey(tagKey));
+        TagEntity tagEntity = tagDao.getTagByKey(tagKey);
+        assertNotNull(tagEntity);
 
         // Delete this tag.
         Tag deletedTag = tagRestController.deleteTag(TAG_TYPE, TAG_CODE);
 
         // Validate the returned object.
-        assertEquals(new Tag(tagEntity.getId(), tagKey, TAG_DISPLAY_NAME, DESCRIPTION, deletedTag.getUserId(), deletedTag.getLastUpdatedByUserId(),
-            deletedTag.getUpdatedTime(), NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG), deletedTag);
+        assertEquals(new Tag(tagEntity.getId(), tagKey, TAG_DISPLAY_NAME, TAG_DESCRIPTION, tagEntity.getCreatedBy(), tagEntity.getUpdatedBy(),
+            HerdDateUtils.getXMLGregorianCalendarValue(tagEntity.getUpdatedOn()), NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG), deletedTag);
 
         // Ensure that this tag is no longer there.
         assertNull(tagDao.getTagByKey(tagKey));
@@ -86,14 +96,15 @@ public class TagRestControllerTest extends AbstractRestTest
     public void testGetTag()
     {
         // Create and persist a tag entity.
-        tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+        TagEntity tagEntity = tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
 
         // Retrieve the tag.
         Tag resultTag = tagRestController.getTag(TAG_TYPE, TAG_CODE);
 
         // Validate the returned object.
-        assertEquals(new Tag(resultTag.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION, resultTag.getUserId(),
-            resultTag.getLastUpdatedByUserId(), resultTag.getUpdatedTime(), NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG), resultTag);
+        assertEquals(
+            new Tag(tagEntity.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION, tagEntity.getCreatedBy(), tagEntity.getUpdatedBy(),
+                HerdDateUtils.getXMLGregorianCalendarValue(tagEntity.getUpdatedOn()), NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG), resultTag);
     }
 
     @Test
@@ -104,7 +115,8 @@ public class TagRestControllerTest extends AbstractRestTest
         tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE_2, TAG_TYPE_DISPLAY_NAME_2, DESCRIPTION);
 
         // Retrieve a list of tag keys.
-        TagListResponse resultTagKeys = tagRestController.getTags(TAG_TYPE, null);
+        TagListResponse resultTagKeys = tagRestController.getTags(TAG_TYPE, NO_PARENT_TAG_CODE);
+
         // Retrieve a list of tag keys using uppercase input parameters.
         List<TagChild> tagChildren = new ArrayList<>();
         tagChildren.add(new TagChild(new TagKey(TAG_TYPE, TAG_CODE), false));
@@ -145,14 +157,23 @@ public class TagRestControllerTest extends AbstractRestTest
     @Test
     public void testUpdateTag()
     {
-        // Create and persist a tag entity.
-        TagEntity tagEntity = tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+        // Create a parent tag key.
+        TagKey parentTagKey = new TagKey(TAG_TYPE, TAG_CODE);
+
+        // Create a parent tag entity.
+        tagDaoTestHelper.createTagEntity(parentTagKey, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+
+        // Create a tag key.
+        TagKey tagKey = new TagKey(TAG_TYPE, TAG_CODE_2);
+
+        // Create and persist a tag entity without a parent tag.
+        TagEntity tagEntity = tagDaoTestHelper.createTagEntity(tagKey, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2);
 
         // Update the tag.
-        Tag updatedTag = tagRestController.updateTag(TAG_TYPE, TAG_CODE, new TagUpdateRequest(TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, null));
+        Tag updatedTag = tagRestController.updateTag(TAG_TYPE, TAG_CODE_2, new TagUpdateRequest(TAG_DISPLAY_NAME_3, TAG_DESCRIPTION_3, parentTagKey));
 
         // Validate the returned object.
-        assertEquals(new Tag(tagEntity.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, updatedTag.getUserId(),
-            updatedTag.getLastUpdatedByUserId(), updatedTag.getUpdatedTime(), NO_PARENT_TAG_KEY, NO_TAG_HAS_CHILDREN_FLAG), updatedTag);
+        assertEquals(new Tag(tagEntity.getId(), tagKey, TAG_DISPLAY_NAME_3, TAG_DESCRIPTION_3, tagEntity.getCreatedBy(), tagEntity.getUpdatedBy(),
+            HerdDateUtils.getXMLGregorianCalendarValue(tagEntity.getUpdatedOn()), parentTagKey, NO_TAG_HAS_CHILDREN_FLAG), updatedTag);
     }
 }
