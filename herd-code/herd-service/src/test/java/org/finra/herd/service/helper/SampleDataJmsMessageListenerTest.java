@@ -95,6 +95,46 @@ public class SampleDataJmsMessageListenerTest extends AbstractServiceTest
     }
     
     @Test
+    public void testS3MessageWithDashCharacterName() throws Exception
+    {
+        String nameSpace ="testnamespace-1";
+        String bdefName = "testbdefname-1";
+        
+        // Create and persist database entities required for testing.
+        businessObjectDefinitionServiceTestHelper.createDatabaseEntitiesForBusinessObjectDefinitionTesting(nameSpace, DATA_PROVIDER_NAME);
+
+        storageDaoTestHelper.createStorageEntity(StorageEntity.SAMPLE_DATA_FILE_STORAGE, Arrays
+                .asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), S3_BUCKET_NAME)));
+       
+        // Create a business object definition.
+        BusinessObjectDefinitionCreateRequest request =
+            new BusinessObjectDefinitionCreateRequest(nameSpace, bdefName, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME,
+                businessObjectDefinitionServiceTestHelper.getNewAttributes());
+        businessObjectDefinitionService.createBusinessObjectDefinition(request);
+        String fileName = "test1.csv";
+        String filePath = nameSpace + "/" + bdefName + "/" + fileName;
+        long fizeSize = 1024L;
+        S3Entity s3Entity = new S3Entity(null, null, new S3ObjectEntity(filePath, fizeSize, null, null), null);
+
+        List<S3EventNotificationRecord> records = new ArrayList<>();
+        records.add(new S3EventNotificationRecord(null, null, null, null, null, null, null, s3Entity, null));
+
+        S3EventNotification s3EventNotification = new S3EventNotification(records);
+
+        sampleDataJmsMessageListener.processMessage(jsonHelper.objectToJson(s3EventNotification), null);
+        BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(nameSpace, bdefName);
+        BusinessObjectDefinition updatedBusinessObjectDefinition = businessObjectDefinitionService.getBusinessObjectDefinition(businessObjectDefinitionKey);
+        
+        List<SampleDataFile> samplDataFiles = Arrays.asList(new SampleDataFile(nameSpace + "/" + bdefName + "/", fileName));
+        
+        // Validate the returned object.
+        assertEquals(new BusinessObjectDefinition(updatedBusinessObjectDefinition.getId(), nameSpace, bdefName, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
+            NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME, businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT,
+            samplDataFiles), updatedBusinessObjectDefinition);
+    }
+    
+    
+    @Test
     public void testS3MessageWithWrongFormat() throws Exception
     {
         // Create and persist database entities required for testing.
@@ -137,16 +177,28 @@ public class SampleDataJmsMessageListenerTest extends AbstractServiceTest
         ReflectionTestUtils.setField(sampleDataJmsMessageListener, "configurationHelper", configurationHelper);
         MessageListenerContainer mockMessageListenerContainer = Mockito.mock(MessageListenerContainer.class);
 
+        //The listener is not enabled
         when(configurationHelper.getProperty(ConfigurationValue.SAMPLE_DATA_JMS_LISTENER_ENABLED)).thenReturn("false");
         JmsListenerEndpointRegistry registry = ApplicationContextHolder.getApplicationContext()
                 .getBean("org.springframework.jms.config.internalJmsListenerEndpointRegistry", JmsListenerEndpointRegistry.class);
-        // the listener is running, but it is not enable, should stop
         when(registry.getListenerContainer(HerdJmsDestinationResolver.SQS_DESTINATION_SAMPLE_DATA_QUEUE)).thenReturn(mockMessageListenerContainer);
+        //the listener is not running, nothing happened
+        when(mockMessageListenerContainer.isRunning()).thenReturn(false);
+        sampleDataJmsMessageListener.controlSampleDataJmsMessageListener();
+        verify(mockMessageListenerContainer, Mockito.times(0)).stop();
+        verify(mockMessageListenerContainer, Mockito.times(0)).start();
+        // the listener is running, but it is not enable, should stop
         when(mockMessageListenerContainer.isRunning()).thenReturn(true);
         sampleDataJmsMessageListener.controlSampleDataJmsMessageListener();
         verify(mockMessageListenerContainer).stop();
-        // the listener is not running, but it is enabled, should start
+        
+        //The listener is enabled
         when(configurationHelper.getProperty(ConfigurationValue.SAMPLE_DATA_JMS_LISTENER_ENABLED)).thenReturn("true");
+        //the listener is running, should not call the start method
+        when(mockMessageListenerContainer.isRunning()).thenReturn(true);
+        sampleDataJmsMessageListener.controlSampleDataJmsMessageListener();
+        verify(mockMessageListenerContainer, Mockito.times(0)).start();     
+        // the listener is not running, but it is enabled, should start        
         when(mockMessageListenerContainer.isRunning()).thenReturn(false);
         sampleDataJmsMessageListener.controlSampleDataJmsMessageListener();
         verify(mockMessageListenerContainer).start();
