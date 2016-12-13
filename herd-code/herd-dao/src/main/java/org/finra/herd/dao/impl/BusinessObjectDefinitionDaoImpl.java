@@ -70,19 +70,13 @@ public class BusinessObjectDefinitionDaoImpl extends AbstractHerdDao implements 
     }
 
     @Override
-    public BusinessObjectDefinitionEntity getBusinessObjectDefinitionByKey(String namespace, String name)
-    {
-        return getBusinessObjectDefinitionByKey(new BusinessObjectDefinitionKey(namespace, name));
-    }
-
-    @Override
     public List<BusinessObjectDefinitionKey> getBusinessObjectDefinitionKeys()
     {
-        return getBusinessObjectDefinitionKeys(null);
+        return getBusinessObjectDefinitionKeysByNamespace(null);
     }
 
     @Override
-    public List<BusinessObjectDefinitionKey> getBusinessObjectDefinitionKeys(String namespaceCode)
+    public List<BusinessObjectDefinitionKey> getBusinessObjectDefinitionKeysByNamespace(String namespaceCode)
     {
         // Create the criteria builder and a tuple style criteria query.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
