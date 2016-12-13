@@ -4,3 +4,5 @@ install:
   - npm install -g bower
 script:
   - mvn clean install -q 2> /dev/null
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
