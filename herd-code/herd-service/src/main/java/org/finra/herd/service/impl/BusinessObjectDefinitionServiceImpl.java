@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Future;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -33,6 +34,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsResponse;
+import org.elasticsearch.action.bulk.BulkRequestBuilder;
+import org.elasticsearch.action.bulk.BulkResponse;
+import org.elasticsearch.action.delete.DeleteRequestBuilder;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
@@ -46,6 +50,8 @@ import org.elasticsearch.search.SearchHits;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -53,7 +59,9 @@ import org.springframework.util.Assert;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.BusinessObjectDefinitionDao;
+import org.finra.herd.dao.SqsDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
+import org.finra.herd.dao.helper.AwsHelper;
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.annotation.NamespacePermission;
 import org.finra.herd.model.api.xml.Attribute;
@@ -74,6 +82,7 @@ import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.api.xml.SampleDataFile;
 import org.finra.herd.model.dto.BusinessObjectDefinitionSampleFileUpdateDto;
 import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.model.dto.ElasticsearchIndexReplicationDto;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionAttributeEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionSampleDataFileEntity;
@@ -90,6 +99,7 @@ import org.finra.herd.service.helper.BusinessObjectDefinitionDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionHelper;
 import org.finra.herd.service.helper.BusinessObjectFormatDaoHelper;
 import org.finra.herd.service.helper.DataProviderDaoHelper;
+import org.finra.herd.service.helper.HerdJmsDestinationResolver;
 import org.finra.herd.service.helper.NamespaceDaoHelper;
 import org.finra.herd.service.helper.StorageDaoHelper;
 import org.finra.herd.service.helper.TagDaoHelper;
@@ -143,6 +153,12 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     @Autowired
     private TransportClient transportClient;
 
+    @Autowired
+    private AwsHelper awsHelper;
+
+    @Autowired
+    private SqsDao sqsDao;
+
     // Constant to hold the data provider name option for the business object definition search
     private static final String DATA_PROVIDER_NAME_FIELD = "dataprovidername";
 
@@ -189,6 +205,26 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         // Create a business object definition entity from the request information.
         businessObjectDefinitionEntity = createBusinessObjectDefinitionEntity(request, namespaceEntity, dataProviderEntity);
 
+        List<Integer> businessObjectDefinitionIds = new ArrayList<>();
+        businessObjectDefinitionIds.add(businessObjectDefinitionEntity.getId());
+
+        // TODO: This string constant should be stored as a public static final someplace
+        final String modificationUpdate = "INSERT";
+
+        // TODO: The following messaging code should be in a helper or util class it will be reused.
+        ElasticsearchIndexReplicationDto elasticsearchIndexReplicationDto = new ElasticsearchIndexReplicationDto(businessObjectDefinitionIds, modificationUpdate);
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        try
+        {
+            String messageText = objectMapper.writeValueAsString(elasticsearchIndexReplicationDto);
+            sqsDao.sendSqsTextMessage(awsHelper.getAwsParamsDto(), HerdJmsDestinationResolver.SQS_DESTINATION_SAMPLE_DATA_QUEUE, messageText);
+        }
+        catch (JsonProcessingException jsonProcessingException)
+        {
+            LOGGER.warn("Failed to parse elasticsearchIndexReplicationDto, queue message not sent.");
+        }
+
         // Create and return the business object definition object from the persisted entity.
         return createBusinessObjectDefinitionFromEntity(businessObjectDefinitionEntity);
     }
@@ -216,6 +252,26 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 
         // Update and persist the entity.
         updateBusinessObjectDefinitionEntity(businessObjectDefinitionEntity, request);
+
+        List<Integer> businessObjectDefinitionIds = new ArrayList<>();
+        businessObjectDefinitionIds.add(businessObjectDefinitionEntity.getId());
+
+        // TODO: This string constant should be stored as a public static final someplace
+        final String modificationUpdate = "UPDATE";
+
+        // TODO: The following messaging code should be in a helper or util class it will be reused.
+        ElasticsearchIndexReplicationDto elasticsearchIndexReplicationDto = new ElasticsearchIndexReplicationDto(businessObjectDefinitionIds, modificationUpdate);
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        try
+        {
+            String messageText = objectMapper.writeValueAsString(elasticsearchIndexReplicationDto);
+            sqsDao.sendSqsTextMessage(awsHelper.getAwsParamsDto(), HerdJmsDestinationResolver.SQS_DESTINATION_SAMPLE_DATA_QUEUE, messageText);
+        }
+        catch (JsonProcessingException jsonProcessingException)
+        {
+            LOGGER.warn("Failed to parse elasticsearchIndexReplicationDto, queue message not sent.");
+        }
 
         // Create and return the business object definition object from the persisted entity.
         return createBusinessObjectDefinitionFromEntity(businessObjectDefinitionEntity);
@@ -256,6 +312,26 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 
         // Update and persist the entity.
         updateBusinessObjectDefinitionEntityDescriptiveInformation(businessObjectDefinitionEntity, request);
+
+        List<Integer> businessObjectDefinitionIds = new ArrayList<>();
+        businessObjectDefinitionIds.add(businessObjectDefinitionEntity.getId());
+
+        // TODO: This string constant should be stored as a public static final someplace
+        final String modificationUpdate = "UPDATE";
+
+        // TODO: The following messaging code should be in a helper or util class it will be reused.
+        ElasticsearchIndexReplicationDto elasticsearchIndexReplicationDto = new ElasticsearchIndexReplicationDto(businessObjectDefinitionIds, modificationUpdate);
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        try
+        {
+            String messageText = objectMapper.writeValueAsString(elasticsearchIndexReplicationDto);
+            sqsDao.sendSqsTextMessage(awsHelper.getAwsParamsDto(), HerdJmsDestinationResolver.SQS_DESTINATION_SAMPLE_DATA_QUEUE, messageText);
+        }
+        catch (JsonProcessingException jsonProcessingException)
+        {
+            LOGGER.warn("Failed to parse elasticsearchIndexReplicationDto, queue message not sent.");
+        }
 
         // Create and return the business object definition object from the persisted entity.
         return createBusinessObjectDefinitionFromEntity(businessObjectDefinitionEntity);
@@ -313,8 +389,28 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
             businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
 
+        List<Integer> businessObjectDefinitionIds = new ArrayList<>();
+        businessObjectDefinitionIds.add(businessObjectDefinitionEntity.getId());
+
         // Delete the business object definition.
         businessObjectDefinitionDao.delete(businessObjectDefinitionEntity);
+
+        // TODO: This string constant should be stored as a public static final someplace
+        final String modificationUpdate = "DELETE";
+
+        // TODO: The following messaging code should be in a helper or util class it will be reused.
+        ElasticsearchIndexReplicationDto elasticsearchIndexReplicationDto = new ElasticsearchIndexReplicationDto(businessObjectDefinitionIds, modificationUpdate);
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        try
+        {
+            String messageText = objectMapper.writeValueAsString(elasticsearchIndexReplicationDto);
+            sqsDao.sendSqsTextMessage(awsHelper.getAwsParamsDto(), HerdJmsDestinationResolver.SQS_DESTINATION_SAMPLE_DATA_QUEUE, messageText);
+        }
+        catch (JsonProcessingException jsonProcessingException)
+        {
+            LOGGER.warn("Failed to parse elasticsearchIndexReplicationDto, queue message not sent.");
+        }
 
         // Create and return the business object definition object from the deleted entity.
         return createBusinessObjectDefinitionFromEntity(businessObjectDefinitionEntity);
@@ -326,7 +422,8 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
      * @return the business object definition list.
      */
     @Override
-    public int indexAllBusinessObjectDefinitions()
+    @Async
+    public Future<Void> indexAllBusinessObjectDefinitions()
     {
         // TODO: The index name and document type should be static final variables else where
         String indexName = "dm";
@@ -379,7 +476,9 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
             indexRequestBuilder.execute().actionGet();
         }
 
-        return businessObjectDefinitionEntityList.size();
+        // Return an AsyncResult so callers will know the future is "done". They can call "isDone" to know when this method has completed and they
+        // can call "get" to see if any exceptions were thrown.
+        return new AsyncResult<>(null);
     }
 
     /**
@@ -465,14 +564,99 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         return businessObjectDefinitionSearchResponse;
     }
 
+    @Override
+    public boolean indexSyncBusinessObjectDefinitions(String elasticsearchIndexReplicationDtoJSON)
+    {
+        boolean success = true;
+
+        // TODO: The index name and document type should be static final variables else where
+        final String indexName = "dm";
+        final String documentType = "bdef";
+
+        // TODO: These will be public static final strings someplace correct
+        final String modificationTypeUpdate = "UPDATE";
+        final String modificationTypeInsert = "INSERT";
+        final String modificationTypeDelete = "DELETE";
+
+        //JSON from String to Object
+        ObjectMapper objectMapper = new ObjectMapper();
+        try
+        {
+            ElasticsearchIndexReplicationDto elasticsearchIndexReplicationDto = objectMapper.readValue(elasticsearchIndexReplicationDtoJSON, ElasticsearchIndexReplicationDto.class);
+            String modificationType = elasticsearchIndexReplicationDto.getModificationType();
+            List<Integer> ids = elasticsearchIndexReplicationDto.getBusinessObjectDefinitionIds();
+            List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities = businessObjectDefinitionDao.getAllBusinessObjectDefinitionsByIds(ids);
+
+            BulkRequestBuilder bulkRequestBuilder = transportClient.prepareBulk();
+
+            if (modificationType.equals(modificationTypeDelete))
+            {
+                for (Integer id : ids)
+                {
+                    // Create a delete request
+                    final DeleteRequestBuilder deleteRequestBuilder = transportClient.prepareDelete(indexName, documentType, id.toString());
+                    bulkRequestBuilder.add(deleteRequestBuilder);
+                }
+            }
+            else
+            {
+                for (BusinessObjectDefinitionEntity businessObjectDefinitionEntity : businessObjectDefinitionEntities)
+                {
+                    // Fetch Join with .size()
+                    businessObjectDefinitionEntity.getAttributes().size();
+                    businessObjectDefinitionEntity.getBusinessObjectDefinitionTags().size();
+                    businessObjectDefinitionEntity.getBusinessObjectFormats().size();
+                    businessObjectDefinitionEntity.getColumns().size();
+                    businessObjectDefinitionEntity.getSampleDataFiles().size();
+
+                    String jsonString = objectMapper.writeValueAsString(businessObjectDefinitionEntity);
+
+                    switch (modificationType)
+                    {
+                        case modificationTypeUpdate:
+                            // Update the elastic search index
+                            final UpdateRequestBuilder updateRequestBuilder =
+                                transportClient.prepareUpdate(indexName, documentType, businessObjectDefinitionEntity.getId().toString());
+                            updateRequestBuilder.setDoc(jsonString);
+                            bulkRequestBuilder.add(updateRequestBuilder);
+                            break;
+                        case modificationTypeInsert:
+                            // Create an index request
+                            final IndexRequestBuilder indexRequestBuilder =
+                                transportClient.prepareIndex(indexName, documentType, businessObjectDefinitionEntity.getId().toString());
+                            indexRequestBuilder.setSource(jsonString);
+                            bulkRequestBuilder.add(indexRequestBuilder);
+                            break;
+                        default:
+                            LOGGER.warn("Unknown modification type received.");
+                            break;
+                    }
+                }
+            }
+
+            BulkResponse bulkResponse = bulkRequestBuilder.get();
+            if (bulkResponse.hasFailures())
+            {
+                LOGGER.error("Bulk Response Error.");
+            }
+        }
+        catch (IOException ioException)
+        {
+            LOGGER.warn("Could not parse jms message payload JSON to ElasticsearchIndexReplicationDto", ioException);
+            success = false;
+        }
+
+        return success;
+    }
 
     /**
-     * Gets the list of all business object definitions defined in the system.
+     * Validates the list of all business object definitions defined in the system.
      *
-     * @return the business object definition list.
+     * @return Future<Void>
      */
     @Override
-    public int indexValidateBusinessObjectDefinitions()
+    @Async
+    public Future<Void> indexValidateBusinessObjectDefinitions()
     {
         // TODO: The index name and document type should be static final variables else where
         String indexName = "dm";
@@ -532,7 +716,9 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
             }
         }
 
-        return doesNotEqualIndex;
+        // Return an AsyncResult so callers will know the future is "done". They can call "isDone" to know when this method has completed and they
+        // can call "get" to see if any exceptions were thrown.
+        return new AsyncResult<>(null);
     }
 
     /**

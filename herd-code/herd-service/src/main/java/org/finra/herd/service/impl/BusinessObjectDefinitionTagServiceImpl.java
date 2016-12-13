@@ -18,13 +18,19 @@ package org.finra.herd.service.impl;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import org.finra.herd.dao.BusinessObjectDefinitionTagDao;
+import org.finra.herd.dao.SqsDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
+import org.finra.herd.dao.helper.AwsHelper;
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
@@ -33,12 +39,14 @@ import org.finra.herd.model.api.xml.BusinessObjectDefinitionTagCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionTagKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionTagKeys;
 import org.finra.herd.model.api.xml.TagKey;
+import org.finra.herd.model.dto.ElasticsearchIndexReplicationDto;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionTagEntity;
 import org.finra.herd.model.jpa.TagEntity;
 import org.finra.herd.service.BusinessObjectDefinitionTagService;
 import org.finra.herd.service.helper.BusinessObjectDefinitionDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionHelper;
+import org.finra.herd.service.helper.HerdJmsDestinationResolver;
 import org.finra.herd.service.helper.TagDaoHelper;
 import org.finra.herd.service.helper.TagHelper;
 
@@ -49,6 +57,8 @@ import org.finra.herd.service.helper.TagHelper;
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 public class BusinessObjectDefinitionTagServiceImpl implements BusinessObjectDefinitionTagService
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BusinessObjectDefinitionTagServiceImpl.class);
+
     @Autowired
     private BusinessObjectDefinitionDaoHelper businessObjectDefinitionDaoHelper;
 
@@ -63,6 +73,12 @@ public class BusinessObjectDefinitionTagServiceImpl implements BusinessObjectDef
 
     @Autowired
     private TagHelper tagHelper;
+
+    @Autowired
+    private AwsHelper awsHelper;
+
+    @Autowired
+    private SqsDao sqsDao;
 
     @Override
     public BusinessObjectDefinitionTag createBusinessObjectDefinitionTag(BusinessObjectDefinitionTagCreateRequest request)
@@ -90,6 +106,8 @@ public class BusinessObjectDefinitionTagServiceImpl implements BusinessObjectDef
         BusinessObjectDefinitionTagEntity businessObjectDefinitionTagEntity =
             createBusinessObjectDefinitionTagEntity(businessObjectDefinitionEntity, tagEntity);
 
+        updateBusinessObjectDefinition(businessObjectDefinitionEntity.getId());
+
         // Create and return the business object definition tag object from the persisted entity.
         return createBusinessObjectDefinitionTagFromEntity(businessObjectDefinitionTagEntity);
     }
@@ -105,6 +123,11 @@ public class BusinessObjectDefinitionTagServiceImpl implements BusinessObjectDef
 
         // Delete this business object format.
         businessObjectDefinitionTagDao.delete(businessObjectDefinitionTagEntity);
+
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
+            businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionTagKey.getBusinessObjectDefinitionKey());
+
+        updateBusinessObjectDefinition(businessObjectDefinitionEntity.getId());
 
         // Create and return the business object definition tag object from the deleted entity.
         return createBusinessObjectDefinitionTagFromEntity(businessObjectDefinitionTagEntity);
@@ -232,5 +255,24 @@ public class BusinessObjectDefinitionTagServiceImpl implements BusinessObjectDef
         Assert.notNull(key, "A business object definition tag key must be specified.");
         businessObjectDefinitionHelper.validateBusinessObjectDefinitionKey(key.getBusinessObjectDefinitionKey());
         tagHelper.validateTagKey(key.getTagKey());
+    }
+
+    private void updateBusinessObjectDefinition(Integer id)
+    {
+        List<Integer> businessObjectDefinitionIds = new ArrayList<>();
+        businessObjectDefinitionIds.add(id);
+
+        ElasticsearchIndexReplicationDto elasticsearchIndexReplicationDto = new ElasticsearchIndexReplicationDto(businessObjectDefinitionIds, "UPDATE");
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        try
+        {
+            String messageText = objectMapper.writeValueAsString(elasticsearchIndexReplicationDto);
+            sqsDao.sendSqsTextMessage(awsHelper.getAwsParamsDto(), HerdJmsDestinationResolver.SQS_DESTINATION_SAMPLE_DATA_QUEUE, messageText);
+        }
+        catch (JsonProcessingException jsonProcessingException)
+        {
+            LOGGER.warn("Failed to parse elasticsearchIndexReplicationDto, queue message not sent.");
+        }
     }
 }

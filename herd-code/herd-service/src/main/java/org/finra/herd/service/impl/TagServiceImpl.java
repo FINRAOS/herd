@@ -19,18 +19,25 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableSet;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import org.finra.herd.core.HerdDateUtils;
+import org.finra.herd.dao.BusinessObjectDefinitionDao;
+import org.finra.herd.dao.SqsDao;
 import org.finra.herd.dao.TagDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
+import org.finra.herd.dao.helper.AwsHelper;
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.api.xml.Tag;
 import org.finra.herd.model.api.xml.TagChild;
@@ -43,11 +50,14 @@ import org.finra.herd.model.api.xml.TagSearchRequest;
 import org.finra.herd.model.api.xml.TagSearchResponse;
 import org.finra.herd.model.api.xml.TagTypeKey;
 import org.finra.herd.model.api.xml.TagUpdateRequest;
+import org.finra.herd.model.dto.ElasticsearchIndexReplicationDto;
+import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.TagEntity;
 import org.finra.herd.model.jpa.TagTypeEntity;
 import org.finra.herd.service.SearchableService;
 import org.finra.herd.service.TagService;
 import org.finra.herd.service.helper.AlternateKeyHelper;
+import org.finra.herd.service.helper.HerdJmsDestinationResolver;
 import org.finra.herd.service.helper.TagDaoHelper;
 import org.finra.herd.service.helper.TagHelper;
 import org.finra.herd.service.helper.TagTypeDaoHelper;
@@ -59,6 +69,8 @@ import org.finra.herd.service.helper.TagTypeDaoHelper;
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 public class TagServiceImpl implements TagService, SearchableService
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(TagServiceImpl.class);
+
     // Constant to hold the display name field option for the search response.
     public final static String DESCRIPTION_FIELD = "description".toLowerCase();
 
@@ -73,6 +85,15 @@ public class TagServiceImpl implements TagService, SearchableService
 
     @Autowired
     private AlternateKeyHelper alternateKeyHelper;
+
+    @Autowired
+    private AwsHelper awsHelper;
+
+    @Autowired
+    private BusinessObjectDefinitionDao businessObjectDefinitionDao;
+
+    @Autowired
+    private SqsDao sqsDao;
 
     @Autowired
     private TagDao tagDao;
@@ -253,6 +274,34 @@ public class TagServiceImpl implements TagService, SearchableService
 
         // Update and persist the tag entity.
         updateTagEntity(tagEntity, tagUpdateRequest);
+
+        // Create a list of tag entities.
+        List<TagEntity> tagEntities = new ArrayList<>();
+        tagEntities.add(tagEntity);
+
+        // Update the elastic search index
+        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities = businessObjectDefinitionDao.getBusinessObjectDefinitions(tagEntities);
+        List<Integer> businessObjectDefinitionIds = new ArrayList<>();
+        businessObjectDefinitionEntities.forEach( businessObjectDefinitionEntity ->
+            businessObjectDefinitionIds.add(businessObjectDefinitionEntity.getId())
+        );
+
+        // TODO: This string constant should be stored as a public static final someplace
+        final String modificationUpdate = "UPDATE";
+
+        // TODO: The following messaging code should be in a helper or util class it will be reused.
+        ElasticsearchIndexReplicationDto elasticsearchIndexReplicationDto = new ElasticsearchIndexReplicationDto(businessObjectDefinitionIds, modificationUpdate);
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        try
+        {
+            String messageText = objectMapper.writeValueAsString(elasticsearchIndexReplicationDto);
+            sqsDao.sendSqsTextMessage(awsHelper.getAwsParamsDto(), HerdJmsDestinationResolver.SQS_DESTINATION_SAMPLE_DATA_QUEUE, messageText);
+        }
+        catch (JsonProcessingException jsonProcessingException)
+        {
+            LOGGER.warn("Failed to parse elasticsearchIndexReplicationDto, queue message not sent.");
+        }
 
         // Create and return the tag object from the tag entity.
         return createTagFromEntity(tagEntity);

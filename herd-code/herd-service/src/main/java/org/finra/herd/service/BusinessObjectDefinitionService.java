@@ -16,6 +16,7 @@
 package org.finra.herd.service;
 
 import java.util.Set;
+import java.util.concurrent.Future;
 
 import org.finra.herd.model.api.xml.BusinessObjectDefinition;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionCreateRequest;
@@ -46,14 +47,16 @@ public interface BusinessObjectDefinitionService
 
     public BusinessObjectDefinitionKeys getBusinessObjectDefinitions();
 
+    public boolean indexSyncBusinessObjectDefinitions(String elasticsearchIndexReplicationDtoJSON);
+
     public BusinessObjectDefinitionKeys getBusinessObjectDefinitions(String namespaceCode);
 
-    public int indexAllBusinessObjectDefinitions();
+    public Future<Void> indexAllBusinessObjectDefinitions();
 
     public BusinessObjectDefinitionSearchResponse indexSearchBusinessObjectDefinitions(
         BusinessObjectDefinitionSearchRequest businessObjectDefinitionSearchRequest, Set<String> fields);
 
-    public int indexValidateBusinessObjectDefinitions();
+    public Future<Void> indexValidateBusinessObjectDefinitions();
 
     public BusinessObjectDefinitionSearchResponse searchBusinessObjectDefinitions(BusinessObjectDefinitionSearchRequest businessObjectDefinitionSearchRequest,
         Set<String> fields);

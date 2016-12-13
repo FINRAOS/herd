@@ -21,6 +21,7 @@ import java.util.List;
 import javax.persistence.Tuple;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
@@ -32,6 +33,7 @@ import org.springframework.stereotype.Repository;
 
 import org.finra.herd.dao.BusinessObjectDefinitionDao;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
+import org.finra.herd.model.jpa.BusinessObjectDataEntity_;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity_;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionTagEntity;
@@ -64,6 +66,25 @@ public class BusinessObjectDefinitionDaoImpl extends AbstractHerdDao implements 
         criteria.select(businessObjectDefinitionEntityRoot).orderBy(builder.asc(businessObjectDefinitionNameColumn), builder.asc(namespaceCodeColumn));
 
         //Returns duplicate business object definition. When a bdef is associated with multiple tags.
+        return entityManager.createQuery(criteria).getResultList();
+    }
+
+    @Override
+    public List<BusinessObjectDefinitionEntity> getAllBusinessObjectDefinitionsByIds(List<Integer> ids)
+    {
+        // Create the criteria builder and a tuple style criteria query.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<BusinessObjectDefinitionEntity> criteria = builder.createQuery(BusinessObjectDefinitionEntity.class);
+
+        // The criteria root is the business object definition.
+        Root<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityRoot = criteria.from(BusinessObjectDefinitionEntity.class);
+
+        // Create the standard restrictions (i.e. the standard where clauses).
+        Expression<Integer> expression = businessObjectDefinitionEntityRoot.get(BusinessObjectDefinitionEntity_.id);
+        Predicate queryRestriction = expression.in(ids);
+
+        criteria.select(businessObjectDefinitionEntityRoot).where(queryRestriction);
+
         return entityManager.createQuery(criteria).getResultList();
     }
 

@@ -18,12 +18,17 @@ package org.finra.herd.service.helper;
 
 import java.io.IOException;
 import java.net.URLDecoder;
+import java.util.List;
 import java.util.Map;
 
 import com.amazonaws.services.s3.event.S3EventNotification;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.CharEncoding;
+import org.elasticsearch.action.update.UpdateRequestBuilder;
+import org.elasticsearch.client.transport.TransportClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.jms.config.JmsListenerEndpointRegistry;
@@ -39,6 +44,8 @@ import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.dto.BusinessObjectDefinitionSampleFileUpdateDto;
 import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.model.dto.ElasticsearchIndexReplicationDto;
+import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.service.BusinessObjectDefinitionService;
 
 /**
@@ -55,6 +62,10 @@ public class SampleDataJmsMessageListener
     @Autowired
     private BusinessObjectDefinitionService businessObjectDefinitionService;
 
+    @Autowired
+    private TransportClient transportClient;
+
+
     /**
      * Periodically check the configuration and apply the action to the storage policy processor JMS message listener service, if needed.
      */
@@ -64,8 +75,8 @@ public class SampleDataJmsMessageListener
         try
         {
             // Get the configuration setting.
-            Boolean jmsMessageListenerEnabled =
-                Boolean.valueOf(configurationHelper.getProperty(ConfigurationValue.SAMPLE_DATA_JMS_LISTENER_ENABLED));
+            Boolean jmsMessageListenerEnabled = true;
+               // Boolean.valueOf(configurationHelper.getProperty(ConfigurationValue.SAMPLE_DATA_JMS_LISTENER_ENABLED));
 
             // Get the registry bean.
             JmsListenerEndpointRegistry registry = ApplicationContextHolder.getApplicationContext()
@@ -113,46 +124,56 @@ public class SampleDataJmsMessageListener
         LOGGER.info("Message received from the JMS queue. jmsQueueName=\"{}\" jmsMessageHeaders=\"{}\" jmsMessagePayload={}",
             HerdJmsDestinationResolver.SQS_DESTINATION_SAMPLE_DATA_QUEUE, allHeaders, payload);
 
-        try
+            boolean success = businessObjectDefinitionService.indexSyncBusinessObjectDefinitions(payload);
+
+        if (success)
         {
-            // Process messages coming from S3 bucket.
-            S3EventNotification s3EventNotification = S3EventNotification.parseJson(payload);
-            String objectKey = URLDecoder.decode(s3EventNotification.getRecords().get(0).getS3().getObject().getKey(), CharEncoding.UTF_8);
-            long fileSize = s3EventNotification.getRecords().get(0).getS3().getObject().getSizeAsLong();
-            // parse the objectKey, it should be in the format of namespace/businessObjectDefinitionName/fileName
-            String[] objectKeyArrays = objectKey.split("/");
-            Assert.isTrue(objectKeyArrays.length == 3, String.format("S3 notification message %s is not in expected format", objectKey));
-
-            String namespace = objectKeyArrays[0];
-            String businessObjectDefinitionName = objectKeyArrays[1];
-            String fileName = objectKeyArrays[2];
-            String path = namespace + "/" + businessObjectDefinitionName + "/";
-            BusinessObjectDefinitionSampleFileUpdateDto businessObjectDefinitionSampleFileUpdateDto =
-                    new BusinessObjectDefinitionSampleFileUpdateDto(path, fileName, fileSize);
-
-            String convertedNamespaece = convertS3KeyFormat(namespace);
-            String convertedBusinessObjectDefinitionName = convertS3KeyFormat(businessObjectDefinitionName);
-
-            BusinessObjectDefinitionKey businessObjectDefinitionKey =
-                    new BusinessObjectDefinitionKey(convertedNamespaece, convertedBusinessObjectDefinitionName);
+            LOGGER.info("Processed elastic search index update successfully.");
+        }
+        else
+        {
             try
             {
-                businessObjectDefinitionService.updateBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey,
+                // Process messages coming from S3 bucket.
+                S3EventNotification s3EventNotification = S3EventNotification.parseJson(payload);
+                String objectKey = URLDecoder.decode(s3EventNotification.getRecords().get(0).getS3().getObject().getKey(), CharEncoding.UTF_8);
+                long fileSize = s3EventNotification.getRecords().get(0).getS3().getObject().getSizeAsLong();
+                // parse the objectKey, it should be in the format of namespace/businessObjectDefinitionName/fileName
+                String[] objectKeyArrays = objectKey.split("/");
+                Assert.isTrue(objectKeyArrays.length == 3, String.format("S3 notification message %s is not in expected format", objectKey));
+
+                String namespace = objectKeyArrays[0];
+                String businessObjectDefinitionName = objectKeyArrays[1];
+                String fileName = objectKeyArrays[2];
+                String path = namespace + "/" + businessObjectDefinitionName + "/";
+                BusinessObjectDefinitionSampleFileUpdateDto businessObjectDefinitionSampleFileUpdateDto =
+                    new BusinessObjectDefinitionSampleFileUpdateDto(path, fileName, fileSize);
+
+                String convertedNamespaece = convertS3KeyFormat(namespace);
+                String convertedBusinessObjectDefinitionName = convertS3KeyFormat(businessObjectDefinitionName);
+
+                BusinessObjectDefinitionKey businessObjectDefinitionKey =
+                    new BusinessObjectDefinitionKey(convertedNamespaece, convertedBusinessObjectDefinitionName);
+                try
+                {
+                    businessObjectDefinitionService.updateBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey,
                         businessObjectDefinitionSampleFileUpdateDto);
+                }
+                catch (ObjectNotFoundException ex)
+                {
+                    LOGGER.info("Failed to find the business object definition, next try the original namespace and business oject defination name " + ex);
+                    // if Business object definition is not found, use the original name space and bdef name
+                    businessObjectDefinitionKey = new BusinessObjectDefinitionKey(namespace, businessObjectDefinitionName);
+                    businessObjectDefinitionService.updateBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey,
+                        businessObjectDefinitionSampleFileUpdateDto);
+                }
             }
-            catch (ObjectNotFoundException ex)
+            catch (RuntimeException | IOException e)
             {
-                LOGGER.info("Failed to find the business object definition, next try the original namespace and business oject defination name " + ex);
-                // if Business object definition is not found, use the original name space and bdef name
-                businessObjectDefinitionKey = new BusinessObjectDefinitionKey(namespace, businessObjectDefinitionName);
-                businessObjectDefinitionService.updateBusinessObjectDefinitionEntitySampleFile(businessObjectDefinitionKey,
-                        businessObjectDefinitionSampleFileUpdateDto);
-            }
-        }
-        catch (RuntimeException | IOException e)
-        {
-            LOGGER.error("Failed to process message from the JMS queue. jmsQueueName=\"{}\" jmsMessagePayload={}",
+                LOGGER.error("Failed to process message from the JMS queue. jmsQueueName=\"{}\" jmsMessagePayload={}",
                     HerdJmsDestinationResolver.SQS_DESTINATION_SAMPLE_DATA_QUEUE, payload, e);
+            }
+
         }
     }
     
