@@ -20,6 +20,7 @@ import java.util.List;
 import org.finra.herd.model.api.xml.TagChild;
 import org.finra.herd.model.api.xml.TagKey;
 import org.finra.herd.model.jpa.TagEntity;
+import org.finra.herd.model.jpa.TagTypeEntity;
 
 public interface TagDao extends BaseJpaDao
 {
@@ -52,6 +53,14 @@ public interface TagDao extends BaseJpaDao
     public TagEntity getTagByTagTypeAndDisplayName(String tagTypeCode, String displayName);
 
     /**
+     * Gets a list of all tag entities registered in the system. The list of tags returned by this method is sorted by tag type order number and by tag's
+     * display name ascending.
+     *
+     * @return list of tag entities
+     */
+    public List<TagEntity> getTags();
+
+    /**
      * Gets a list of tag child objects with children flags, whose parent tag code is the specified tag code.
      * <p/>
      * When tagCode is null, return tags of tagTypeCode whose have no parent (root tags).
@@ -62,4 +71,15 @@ public interface TagDao extends BaseJpaDao
      * @return list of tag child objects with children flags
      */
     public List<TagChild> getTagsByTagTypeAndParentTagCode(String tagTypeCode, String parentTagCode);
+
+    /**
+     * Gets a list of tag entities per specified parameters.
+     *
+     * @param tagTypeEntity the tag type entity
+     * @param parentTagCode the parent tag code, may be null
+     * @param isParentTagNull specifies if tags should have no parents (root tags). This flag is ignored when parent tag code is specified
+     *
+     * @return list of tag entities
+     */
+    public List<TagEntity> getTagsByTagTypeEntityAndParentTagCode(TagTypeEntity tagTypeEntity, String parentTagCode, Boolean isParentTagNull);
 }

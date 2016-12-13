@@ -19,7 +19,11 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
+import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.activiti.bpmn.converter.BpmnXMLConverter;
 import org.activiti.bpmn.model.BpmnModel;
@@ -63,7 +67,9 @@ import org.finra.herd.model.api.xml.SchemaColumn;
 import org.finra.herd.model.api.xml.StorageDirectory;
 import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.api.xml.StorageUnit;
+import org.finra.herd.model.api.xml.TagKey;
 import org.finra.herd.service.activiti.ActivitiHelper;
+import org.finra.herd.service.activiti.task.ExecuteJdbcTestHelper;
 import org.finra.herd.service.config.ServiceTestSpringModuleConfig;
 import org.finra.herd.service.helper.BusinessObjectDataAttributeDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDataAttributeHelper;
@@ -97,6 +103,8 @@ import org.finra.herd.service.helper.VelocityHelper;
 @ContextConfiguration(classes = ServiceTestSpringModuleConfig.class, inheritLocations = false)
 public abstract class AbstractServiceTest extends AbstractDaoTest
 {
+    public static final String ACTIVITI_JOB_DELETE_REASON = "UT_JobDeleteReason" + RANDOM_SUFFIX;
+
     public static final String ACTIVITI_XML_ADD_EMR_MASTER_SECURITY_GROUPS_WITH_CLASSPATH =
         "classpath:org/finra/herd/service/activitiWorkflowAddEmrMasterSecurityGroup.bpmn20.xml";
 
@@ -131,6 +139,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String ACTIVITI_XML_TERMINATE_CLUSTER_WITH_CLASSPATH =
         "classpath:org/finra/herd/service/activitiWorkflowTerminateEmrCluster.bpmn20.xml";
+
+    public static final String ACTIVITI_XML_TEST_MULTIPLE_SUB_PROCESSES = "classpath:org/finra/herd/service/testHerdMultipleSubProcessesWorkflow.bpmn20.xml";
 
     public static final String ACTIVITI_XML_TEST_RECEIVE_TASK_WITH_CLASSPATH = "classpath:org/finra/herd/service/testHerdReceiveTaskWorkflow.bpmn20.xml";
 
@@ -210,6 +220,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Long NO_FILE_SIZE = null;
 
+    public static final Integer NO_ID = null;
+
     public static final Boolean NO_INCLUDE_ALL_REGISTERED_SUBPARTITIONS = false;
 
     public static final Boolean NO_INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY = false;
@@ -226,6 +238,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final List<BusinessObjectDataStatus> NO_NOT_AVAILABLE_STATUSES = new ArrayList<>();
 
+    public static final TagKey NO_PARENT_TAG_KEY = null;
+
     public static final List<String> NO_PARTITION_VALUES = null;
 
     public static final List<PartitionValueFilter> NO_PARTITION_VALUE_FILTERS = new ArrayList<>();
@@ -233,6 +247,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final PartitionValueRange NO_PARTITION_VALUE_RANGE = null;
 
     public static final Long NO_ROW_COUNT = null;
+
+    public static final Set<String> NO_SEARCH_RESPONSE_FIELDS = new HashSet<>();
 
     public static final PartitionValueFilter NO_STANDALONE_PARTITION_VALUE_FILTER = null;
 
@@ -243,6 +259,10 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final List<StorageFile> NO_STORAGE_FILES = new ArrayList<>();
 
     public static final List<StorageUnit> NO_STORAGE_UNITS = new ArrayList<>();
+
+    public static final XMLGregorianCalendar NO_UPDATED_TIME = null;
+
+    public static final String NO_USER_ID = null;
 
     public static final List<String> PROCESS_DATE_AVAILABLE_PARTITION_VALUES = Arrays.asList("2014-04-02", "2014-04-03", "2014-04-08");
 
@@ -269,6 +289,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final String SQS_QUEUE_NAME = "UT_Sqs_Queue_Name_" + RANDOM_SUFFIX;
 
     public static final String START_PARTITION_VALUE = "2014-04-02";
+
+    public static final String STORAGE_POLICY_SELECTOR_SQS_QUEUE_NAME = "STORAGE_POLICY_SELECTOR_SQS_QUEUE_NAME";
 
     /**
      * The test job name as per the above workflow XML file.
@@ -315,6 +337,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     protected RuntimeService activitiRuntimeService;
 
     @Autowired
+    protected ActivitiService activitiService;
+
+    @Autowired
     protected TaskService activitiTaskService;
 
     @Autowired
@@ -354,6 +379,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     protected BusinessObjectDataNotificationRegistrationService businessObjectDataNotificationRegistrationService;
 
     @Autowired
+    protected BusinessObjectDataRetryStoragePolicyTransitionHelperService businessObjectDataRetryStoragePolicyTransitionHelperService;
+
+    @Autowired
     protected BusinessObjectDataSearchHelper businessObjectDataSearchHelper;
 
     @Autowired
@@ -379,6 +407,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     @Autowired
     protected BusinessObjectDefinitionServiceTestHelper businessObjectDefinitionServiceTestHelper;
+
+    @Autowired
+    protected BusinessObjectDefinitionSubjectMatterExpertService businessObjectDefinitionSubjectMatterExpertService;
 
     @Autowired
     protected BusinessObjectDefinitionTagService businessObjectDefinitionTagService;
@@ -418,6 +449,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     @Autowired
     protected EmrStepHelperFactory emrStepHelperFactory;
+
+    @Autowired
+    protected ExecuteJdbcTestHelper executeJdbcTestHelper;
 
     @Autowired
     protected ExpectedPartitionValueService expectedPartitionValueService;

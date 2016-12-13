@@ -144,7 +144,7 @@ public class BusinessObjectDataInitiateRestoreHelperServiceImpl implements Busin
             businessObjectDataHelper.businessObjectDataEntityAltKeyToString(businessObjectDataEntity)));
 
         // Construct the origin S3 key prefix by removing the origin S3 bucket name from the beginning of the Glacier storage unit storage directory path.
-        String originS3KeyPrefix = StringUtils.removeStart(originBucketName + "/", glacierStorageUnitEntity.getDirectoryPath());
+        String originS3KeyPrefix = StringUtils.removeStart(glacierStorageUnitEntity.getDirectoryPath(), originBucketName + "/");
 
         // Retrieve storage files registered with this business object data in the origin storage.
         List<StorageFile> originStorageFiles = storageFileHelper.createStorageFilesFromEntities(originStorageUnitEntity.getStorageFiles());

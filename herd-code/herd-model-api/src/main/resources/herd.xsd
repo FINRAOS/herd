@@ -525,12 +525,12 @@
                <xs:documentation>The tag type unique key</xs:documentation>
             </xs:annotation>
          </xs:element>
-         <xs:element name="displayName" type="xs:string">
+         <xs:element name="displayName" type="xs:string" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The tag type's name in plain text for human readability</xs:documentation>
             </xs:annotation>
          </xs:element>
-         <xs:element name="tagTypeOrder" type="xs:int">
+         <xs:element name="tagTypeOrder" type="xs:int" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The tag type's order relative to other tag types</xs:documentation>
             </xs:annotation>
@@ -543,7 +543,7 @@
       <xs:sequence>
          <xs:element name="tagTypeKey" type="tagTypeKey" minOccurs="0" maxOccurs="unbounded">
             <xs:annotation>
-               <xs:documentation>An ordered list of tag type reference codes</xs:documentation>
+               <xs:documentation>An ordered list of tag type keys</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:sequence>
@@ -557,6 +557,48 @@
             </xs:annotation>
          </xs:element>
       </xs:all>
+   </xs:complexType>
+
+   <xs:element name="tagTypeSearchRequest" type="tagTypeSearchRequest">
+      <xs:annotation>
+         <xs:documentation>A wrapper for tag type search request. The request does not take any search keys or filters</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="tagTypeSearchRequest">
+      <xs:all>
+         <xs:element name="noData" type="xs:string" minOccurs="0" maxOccurs="0">
+            <xs:annotation>
+               <xs:documentation>There is nothing that is currently being posted, but we will have something in the future.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="tagTypeSearchResponse" type="tagTypeSearchResponse">
+      <xs:annotation>
+         <xs:documentation>A wrapper for tag type search response</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="tagTypeSearchResponse">
+      <xs:all>
+         <xs:element name="tagTypes" type="tagTypes">
+            <xs:annotation>
+               <xs:documentation>An ordered list of tag types. The list is sorted alphabetically by tag type's order value ascending</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="tagTypes">
+      <xs:sequence>
+         <xs:element name="tagType" type="tagType" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>A wrapper for tag type information</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
    </xs:complexType>
 
    <!-- ***** Tag ***** -->
@@ -611,7 +653,7 @@
    <xs:element name="tag" type="tag"/>
    <xs:complexType name="tag">
       <xs:all>
-         <xs:element name="id" type="xs:int">
+         <xs:element name="id" type="xs:int" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The internal identifier that uniquely references a Tag.</xs:documentation>
             </xs:annotation>
@@ -621,7 +663,7 @@
                <xs:documentation>The tag's unique key.</xs:documentation>
             </xs:annotation>
          </xs:element>
-         <xs:element name="displayName" type="xs:string">
+         <xs:element name="displayName" type="xs:string" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The tag's name in plain text for human readability.</xs:documentation>
             </xs:annotation>
@@ -631,12 +673,12 @@
                <xs:documentation>The tag's description.</xs:documentation>
             </xs:annotation>
          </xs:element>
-         <xs:element name="userId" type="xs:string">
+         <xs:element name="userId" type="xs:string" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The User ID of the user who last updated.</xs:documentation>
             </xs:annotation>
          </xs:element>
-         <xs:element name="updatedTime" type="xs:dateTime">
+         <xs:element name="updatedTime" type="xs:dateTime" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The timestamp of when it is last updated.</xs:documentation>
             </xs:annotation>
@@ -644,6 +686,11 @@
          <xs:element name="parentTagKey" type="tagKey" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The tag's description.</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="hasChildren" type="xs:boolean" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A boolean flag that shows whether this tag has further children</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -689,8 +736,7 @@
          </xs:element>
          <xs:element name="hasChildren" type="xs:boolean">
             <xs:annotation>
-               <xs:documentation>A Y/N flag that shows if this Tag has further children
-               </xs:documentation>
+               <xs:documentation>A boolean flag that shows whether this tag has further children</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -709,6 +755,99 @@
             </xs:annotation>
          </xs:element>
       </xs:all>
+   </xs:complexType>
+
+   <xs:element name="tagSearchRequest" type="tagSearchRequest">
+      <xs:annotation>
+         <xs:documentation>A wrapper for tag search request. The request accept only a single search filter and a single search key</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="tagSearchRequest">
+      <xs:all>
+         <xs:element name="tagSearchFilters" type="tagSearchFilters" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A list of tag search filters. Only a single optional search filter is supported</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="tagSearchFilters">
+      <xs:sequence>
+         <xs:element name="tagSearchFilter" type="tagSearchFilter" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>A tag search filter</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="tagSearchFilter">
+      <xs:all>
+         <xs:element name="tagSearchKeys" type="tagSearchKeys">
+            <xs:annotation>
+               <xs:documentation>A list of tag search keys. Only a single search key is supported</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="tagSearchKeys">
+      <xs:sequence>
+         <xs:element name="tagSearchKey" type="tagSearchKey" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>A tag search key</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="tagSearchKey">
+      <xs:all>
+         <xs:element name="tagTypeCode" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The tag type reference code</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="parentTagCode" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An optional tag reference code of the parent tag</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="isParentTagNull" type="xs:boolean" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An optional boolean flag that specifies if parent tag should not be set for the tags that we want to retrieve
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="tagSearchResponse" type="tagSearchResponse">
+      <xs:annotation>
+         <xs:documentation>A wrapper for tag search response</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="tagSearchResponse">
+      <xs:all>
+         <xs:element name="tags" type="tags">
+            <xs:annotation>
+               <xs:documentation>An ordered list of tags. The list is sorted alphabetically by tag's display name ascending</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="tags">
+      <xs:sequence>
+         <xs:element name="tag" type="tag" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>A wrapper for tag information</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
    </xs:complexType>
 
    <!-- ***** Business Object Definition ***** -->
@@ -798,7 +937,7 @@
    <xs:element name="businessObjectDefinition" type="businessObjectDefinition"/>
    <xs:complexType name="businessObjectDefinition">
       <xs:all>
-         <xs:element name="id" type="xs:int">
+         <xs:element name="id" type="xs:int" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The internal identifier that uniquely references a Business Object Definition</xs:documentation>
             </xs:annotation>
@@ -813,7 +952,7 @@
                <xs:documentation>The name for this Business Object Definition</xs:documentation>
             </xs:annotation>
          </xs:element>
-         <xs:element name="dataProviderName" type="xs:string">
+         <xs:element name="dataProviderName" type="xs:string" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The name of a valid Data Provider known by the system</xs:documentation>
             </xs:annotation>
@@ -821,6 +960,13 @@
          <xs:element name="description" type="xs:string" minOccurs="0">
             <xs:annotation>
                <xs:documentation>An optional description</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="shortDescription" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>
+                  An optional short-description. This is actually the 'description' field truncated to a configurable number of characters.
+               </xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="displayName" type="xs:string" minOccurs="0">
@@ -950,6 +1096,92 @@
       </xs:all>
    </xs:complexType>
 
+   <!-- ***** Business Object Definition Search ***** -->
+
+   <xs:element name="businessObjectDefinitionSearchRequest" type="businessObjectDefinitionSearchRequest">
+      <xs:annotation>
+         <xs:documentation>A wrapper for business Object Definition search request. The request accept only a single search filter and a single search key
+         </xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="businessObjectDefinitionSearchRequest">
+      <xs:all>
+         <xs:element name="businessObjectDefinitionSearchFilters" type="businessObjectDefinitionSearchFilters" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A list of business Object Definition search filters. Only a single search filter is supported</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDefinitionSearchFilters">
+      <xs:sequence>
+         <xs:element name="businessObjectDefinitionSearchFilter" type="businessObjectDefinitionSearchFilter" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>A business Object Definition search filter</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDefinitionSearchFilter">
+      <xs:all>
+         <xs:element name="businessObjectDefinitionSearchKeys" type="businessObjectDefinitionSearchKeys">
+            <xs:annotation>
+               <xs:documentation>A list of business Object Definition search keys. Only a single search key is supported</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDefinitionSearchKeys">
+      <xs:sequence>
+         <xs:element name="businessObjectDefinitionSearchKey" type="businessObjectDefinitionSearchKey" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>A business Object Definition search key</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDefinitionSearchKey">
+      <xs:all>
+         <xs:element name="tagKey" type="tagKey">
+            <xs:annotation>
+               <xs:documentation>Values that uniquely identify a Tag</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="includeTagHierarchy" type="xs:boolean" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An optional boolean flag that specifies if business object definition associated with entire tag hierarchy is to be retrieved
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDefinitionSearchResponse" type="businessObjectDefinitionSearchResponse"/>
+   <xs:complexType name="businessObjectDefinitionSearchResponse">
+      <xs:all>
+         <xs:element name="businessObjectDefinitions" type="businessObjectDefinitions" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>
+                  Values that identify a business object definition search response.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDefinitions" type="businessObjectDefinitions"/>
+   <xs:complexType name="businessObjectDefinitions">
+      <xs:sequence>
+         <xs:element name="businessObjectDefinition" type="businessObjectDefinition" minOccurs="0" maxOccurs="unbounded">
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
    <!-- ***** Business Object Definition Column ***** -->
 
    <xs:element name="businessObjectDefinitionColumnCreateRequest" type="businessObjectDefinitionColumnCreateRequest"/>
@@ -987,7 +1219,7 @@
    <xs:element name="businessObjectDefinitionColumn" type="businessObjectDefinitionColumn"/>
    <xs:complexType name="businessObjectDefinitionColumn">
       <xs:all>
-         <xs:element name="id" type="xs:int">
+         <xs:element name="id" type="xs:int" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The internal Id that uniquely references a Business Object Definition Column</xs:documentation>
             </xs:annotation>
@@ -1041,6 +1273,93 @@
       </xs:all>
    </xs:complexType>
 
+   <xs:element name="businessObjectDefinitionColumnSearchRequest" type="businessObjectDefinitionColumnSearchRequest">
+      <xs:annotation>
+         <xs:documentation>A wrapper for a business object definition column search request. The request will accept only a single search filter and a single
+            search key
+         </xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="businessObjectDefinitionColumnSearchRequest">
+      <xs:sequence>
+         <xs:element name="businessObjectDefinitionColumnSearchFilters" type="businessObjectDefinitionColumnSearchFilters">
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDefinitionColumnSearchFilters">
+      <xs:sequence>
+         <xs:element name="businessObjectDefinitionColumnSearchFilter" type="businessObjectDefinitionColumnSearchFilter" minOccurs="1" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>A business object definition column search filter</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDefinitionColumnSearchFilter">
+      <xs:sequence>
+         <xs:element name="businessObjectDefinitionColumnSearchKeys" type="businessObjectDefinitionColumnSearchKeys">
+            <xs:annotation>
+               <xs:documentation>A list of business object definition column search keys. Only a single search key is supported</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDefinitionColumnSearchKeys">
+      <xs:sequence>
+         <xs:element name="businessObjectDefinitionColumnSearchKey" type="businessObjectDefinitionColumnSearchKey" minOccurs="1" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>A business object definition column search key</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDefinitionColumnSearchKey">
+      <xs:all>
+         <xs:element name="namespace" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The namespace to which a business object definition column is related</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectDefinitionName" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The name of the business object definition to which a business object definition column is related</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDefinitionColumnSearchResponse" type="businessObjectDefinitionColumnSearchResponse">
+      <xs:annotation>
+         <xs:documentation>A wrapper for business object definition column search response</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+   <xs:complexType name="businessObjectDefinitionColumnSearchResponse">
+      <xs:all>
+         <xs:element name="businessObjectDefinitionColumns" type="businessObjectDefinitionColumns">
+            <xs:annotation>
+               <xs:documentation>An ordered list of business object definition columns. The list is sorted alphabetically by business object definition column
+                  name ascending
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDefinitionColumns">
+      <xs:sequence>
+         <xs:element name="businessObjectDefinitionColumn" type="businessObjectDefinitionColumn" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>A wrapper for business object definition column information</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
    <!-- ***** Business Object Definition Tag ***** -->
 
    <xs:element name="businessObjectDefinitionTagCreateRequest" type="businessObjectDefinitionTagCreateRequest"/>
@@ -1091,6 +1410,67 @@
          <xs:element name="tagKey" type="tagKey">
             <xs:annotation>
                <xs:documentation>Values that uniquely identify a Tag</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <!-- ***** Business Object Definition Subject Matter Expert ***** -->
+
+   <xs:element name="businessObjectDefinitionSubjectMatterExpertCreateRequest" type="businessObjectDefinitionSubjectMatterExpertCreateRequest"/>
+   <xs:complexType name="businessObjectDefinitionSubjectMatterExpertCreateRequest">
+      <xs:all>
+         <xs:element name="businessObjectDefinitionSubjectMatterExpertKey" type="businessObjectDefinitionSubjectMatterExpertKey">
+            <xs:annotation>
+               <xs:documentation>Values that uniquely identify a Business Object Definition Subject Matter Expert</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDefinitionSubjectMatterExpert" type="businessObjectDefinitionSubjectMatterExpert"/>
+   <xs:complexType name="businessObjectDefinitionSubjectMatterExpert">
+      <xs:all>
+         <xs:element name="id" type="xs:int">
+            <xs:annotation>
+               <xs:documentation>The internal Id that uniquely references a Business Object Definition Subject Matter Expert</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectDefinitionSubjectMatterExpertKey" type="businessObjectDefinitionSubjectMatterExpertKey">
+            <xs:annotation>
+               <xs:documentation>Values that uniquely identify a Business Object Definition Subject Matter Expert</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDefinitionSubjectMatterExpertKeys" type="businessObjectDefinitionSubjectMatterExpertKeys"/>
+   <xs:complexType name="businessObjectDefinitionSubjectMatterExpertKeys">
+      <xs:sequence>
+         <xs:element name="businessObjectDefinitionSubjectMatterExpertKey" type="businessObjectDefinitionSubjectMatterExpertKey" minOccurs="0"
+                     maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>Values that uniquely identify a Business Object Definition Subject Matter Expert</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectDefinitionSubjectMatterExpertKey">
+      <xs:all>
+         <xs:element name="namespace" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The namespace of the Business Object Definition</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectDefinitionName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The name of the Business Object Definition</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="userId" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The user id of the Subject Matter Expert</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -3663,7 +4043,8 @@
    </xs:complexType>
 
    <!-- ***** Download Sample Business Data File ***** -->
-   <xs:element name="downloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse" type="downloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse"/>
+   <xs:element name="downloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse"
+               type="downloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse"/>
    <xs:complexType name="downloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse">
       <xs:sequence>
          <xs:element name="businessObjectDefinitionSampleDataFileKey" type="businessObjectDefinitionSampleDataFileKey"/>
@@ -3676,47 +4057,76 @@
       </xs:sequence>
    </xs:complexType>
 
-	<xs:element name="businessObjectDefinitionSampleDataFileKey"
-		type="businessObjectDefinitionSampleDataFileKey" />
-	<xs:complexType name="businessObjectDefinitionSampleDataFileKey">
-		<xs:sequence>
-			<xs:element name="namespace" type="xs:string">
-				<xs:annotation>
-					<xs:documentation>The namespace of the business object definition
-					</xs:documentation>
-				</xs:annotation>
-			</xs:element>
-			<xs:element name="businessObjectDefinitionName" type="xs:string">
-				<xs:annotation>
-					<xs:documentation>The business object definition name
-					</xs:documentation>
-				</xs:annotation>
-			</xs:element>
-			<xs:element name="directoryPath" type="xs:string">
-				<xs:annotation>
-					<xs:documentation>The directory path of the sample data file. Note
-						that directory path will contain a trailing "directory" separator,
-						thus the caller needs to concatenate the directory path and the
-						file name as is in order to construct a fully qualified path for
-						the sample data file
-					</xs:documentation>
-				</xs:annotation>
-			</xs:element>
-			<xs:element name="fileName" type="xs:string">
-				<xs:annotation>
-					<xs:documentation>The name of the sample data file
-					</xs:documentation>
-				</xs:annotation>
-			</xs:element>
-		</xs:sequence>
-	</xs:complexType>
-   
-   <xs:element name="downloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest" type="downloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest"/>
+   <xs:element name="businessObjectDefinitionSampleDataFileKey"
+               type="businessObjectDefinitionSampleDataFileKey"/>
+   <xs:complexType name="businessObjectDefinitionSampleDataFileKey">
+      <xs:sequence>
+         <xs:element name="namespace" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The namespace of the business object definition
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectDefinitionName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The business object definition name
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="directoryPath" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The directory path of the sample data file. Note
+                  that directory path will contain a trailing "directory" separator,
+                  thus the caller needs to concatenate the directory path and the
+                  file name as is in order to construct a fully qualified path for
+                  the sample data file
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="fileName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The name of the sample data file
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:element name="downloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest"
+               type="downloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest"/>
    <xs:complexType name="downloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest">
       <xs:sequence>
          <xs:element name="businessObjectDefinitionSampleDataFileKey" type="businessObjectDefinitionSampleDataFileKey"/>
       </xs:sequence>
-   </xs:complexType> 
+   </xs:complexType>
+
+   <!-- ***** Business Object Definition Sampe File Upload ***** -->
+   <xs:element
+      name="uploadBusinessObjectDefinitionSampleDataFileInitiationRequest"
+      type="uploadBusinessObjectDefinitionSampleDataFileInitiationRequest"/>
+   <xs:complexType
+      name="uploadBusinessObjectDefinitionSampleDataFileInitiationRequest">
+      <xs:all>
+         <xs:element name="businessObjectDefinitionKey" type="businessObjectDefinitionKey"/>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element
+      name="uploadBusinessObjectDefinitionSampleDataFileInitiationResponse"
+      type="uploadBusinessObjectDefinitionSampleDataFileInitiationResponse"/>
+   <xs:complexType
+      name="uploadBusinessObjectDefinitionSampleDataFileInitiationResponse">
+      <xs:all>
+         <xs:element name="businessObjectDefinitionKey" type="businessObjectDefinitionKey"/>
+         <xs:element name="awsS3BucketName" type="xs:string"/>
+         <xs:element name="s3Endpoint" type="xs:string"/>
+         <xs:element name="s3KeyPrefix" type="xs:string"/>
+         <xs:element name="awsAccessKey" type="xs:string"/>
+         <xs:element name="awsSecretKey" type="xs:string"/>
+         <xs:element name="awsSessionToken" type="xs:string"/>
+         <xs:element name="awsSessionExpirationTime" type="xs:dateTime"/>
+      </xs:all>
+   </xs:complexType>
 
    <!-- ***** System Job ***** -->
 
@@ -5558,6 +5968,17 @@
                <xs:documentation>The name of the destination storage. The storage with this name must already exist. Currently, only GLACIER storage platform
                   type is supported for the destination storage by the storage policies
                </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDataRetryStoragePolicyTransitionRequest" type="businessObjectDataRetryStoragePolicyTransitionRequest"/>
+   <xs:complexType name="businessObjectDataRetryStoragePolicyTransitionRequest">
+      <xs:all>
+         <xs:element name="storagePolicyKey" type="storagePolicyKey">
+            <xs:annotation>
+               <xs:documentation>Wrapper for the storage policy unique identifiers</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>

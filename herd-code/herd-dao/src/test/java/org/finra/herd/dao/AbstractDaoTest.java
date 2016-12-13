@@ -83,8 +83,6 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String AWS_ROLE_ARN = "UT_AwsRoleArn" + RANDOM_SUFFIX;
 
-    public static final String DOWNLOADER_ROLE_ARN = "UT_DownloaderRoleArn" + RANDOM_SUFFIX;
-
     public static final String BACKSLASH = "\\";
 
     public static final Integer BDATA_AGE_IN_DAYS = 1000;
@@ -126,6 +124,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String BDEF_NAME_2 = "UT_BusinessObjectDefinition_Name_2_" + RANDOM_SUFFIX;
 
     public static final String BDEF_NAME_3 = "UT_BusinessObjectDefinition_Name_3_" + RANDOM_SUFFIX;
+
+    public static final String BDEF_SHORT_DESCRIPTION = "UT_BusinessObjectDefinition_ShortDescription_" + RANDOM_SUFFIX;
+
+    public static final String BDEF_SHORT_DESCRIPTION_2 = "UT_BusinessObjectDefinition_ShortDescription_2_" + RANDOM_SUFFIX;
 
     public static final String COLUMN_DATA_TYPE = "UT_Column_Data_Type_1_" + RANDOM_SUFFIX;
 
@@ -179,6 +181,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String DESCRIPTION = "UT_Description_1_" + RANDOM_SUFFIX;
 
     public static final String DESCRIPTION_2 = "UT_Description_2_" + RANDOM_SUFFIX;
+
+    public static final String DOWNLOADER_ROLE_ARN = "UT_DownloaderRoleArn" + RANDOM_SUFFIX;
 
     public static final String EC2_INSTANCE_ID = "UT_Ec2InstanceId" + RANDOM_SUFFIX;
 
@@ -234,11 +238,11 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Integer FOURTH_FORMAT_VERSION = 3;
 
-    public static final Boolean HAS_CHILDREN_FLAG_SET = true;
-
     public static final String HTTP_PROXY_HOST = "UT_ProxyHost" + RANDOM_SUFFIX;
 
     public static final Integer HTTP_PROXY_PORT = (int) (Math.random() * Integer.MAX_VALUE);
+
+    public static final Boolean INCLUDE_TAG_HIERARCHY = true;
 
     public static final Integer INITIAL_DATA_VERSION = 0;
 
@@ -313,6 +317,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String NOTIFICATION_NAME_2 = "UT_Ntfcn_Name_2" + RANDOM_SUFFIX;
 
+    public static final Boolean NOT_INCLUDE_TAG_HIERARCHY = false;
+
     public static final Boolean NO_ALLOW_DUPLICATE_BUSINESS_OBJECT_DATA = false;
 
     public static final List<Attribute> NO_ATTRIBUTES = new ArrayList<>();
@@ -333,6 +339,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String NO_BDEF_NAMESPACE = null;
 
+    public static final String NO_BDEF_SHORT_DESCRIPTION = null;
+
     public static final String NO_COLUMN_NAME = null;
 
     public static final String NO_CUSTOM_DDL_NAME = null;
@@ -347,7 +355,7 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Integer NO_FORMAT_VERSION = null;
 
-    public static final Boolean NO_HAS_CHILDREN_FLAG_SET = false;
+    public static final Boolean NO_IS_PARENT_TAG_NULL_FLAG = null;
 
     public static final String NO_JOB_NAME = null;
 
@@ -357,6 +365,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String NO_NAMESPACE = null;
 
+    public static final String NO_PARENT_TAG_CODE = null;
+
     public static final List<SchemaColumn> NO_PARTITION_COLUMNS = null;
 
     public static final String NO_PARTITION_KEY = null;
@@ -364,6 +374,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String NO_PARTITION_KEY_GROUP = null;
 
     public static final Boolean NO_PUBLISH_ATTRIBUTE = false;
+
+    public static final String NO_S3_BUCKET_NAME = null;
 
     public static final List<SampleDataFile> NO_SAMPLE_DATA_FILES = new ArrayList<>();
 
@@ -383,7 +395,21 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final List<String> NO_SUBPARTITION_VALUES = new ArrayList<>();
 
+    public static final String NO_TAG_DESCRIPTION = null;
+
+    public static final String NO_TAG_DISPLAY_NAME = null;
+
+    public static final Boolean NO_TAG_HAS_CHILDREN_FLAG = null;
+
+    public static final String NO_TAG_TYPE_DISPLAY_NAME = null;
+
+    public static final Integer NO_TAG_TYPE_ORDER = null;
+
     public static final String OOZIE_WORKFLOW_LOCATION = "UT_Oozie_workflow_2" + RANDOM_SUFFIX;
+
+    public static final Boolean PARENT_TAG_IS_NOT_NULL = false;
+
+    public static final Boolean PARENT_TAG_IS_NULL = true;
 
     public static final String[][] PARTITION_COLUMNS =
         new String[][] {{"DATE", null}, {"STRING", null}, {"INT", null}, {"NUMBER", null}, {"BOOLEAN", null}, {"NUMBER", null}, {"NUMBER", null}};
@@ -558,6 +584,12 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String TAG_DESCRIPTION_2 = "UT_TagDescription_2_" + RANDOM_SUFFIX;
 
+    public static final String TAG_DESCRIPTION_3 = "UT_TagDescription_3_" + RANDOM_SUFFIX;
+
+    public static final String TAG_DESCRIPTION_4 = "UT_TagDescription_4_" + RANDOM_SUFFIX;
+
+    public static final String TAG_DESCRIPTION_5 = "UT_TagDescription_5_" + RANDOM_SUFFIX;
+
     public static final String TAG_DISPLAY_NAME = "UT_TagDisplayName_1_" + RANDOM_SUFFIX;
 
     public static final String TAG_DISPLAY_NAME_2 = "UT_TagDisplayName_2_" + RANDOM_SUFFIX;
@@ -568,6 +600,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String TAG_DISPLAY_NAME_5 = "UT_TagDisplayName_5_" + RANDOM_SUFFIX;
 
+    public static final Boolean TAG_HAS_CHILDREN = true;
+
+    public static final Boolean TAG_HAS_NO_CHILDREN = false;
+
     public static final String TAG_TYPE = "UT_TagType_1_" + RANDOM_SUFFIX;
 
     public static final String TAG_TYPE_2 = "UT_TagType_2_" + RANDOM_SUFFIX;
@@ -575,6 +611,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String TAG_TYPE_DISPLAY_NAME = "UT_TagTypeDisplayName_1_" + RANDOM_SUFFIX;
 
     public static final String TAG_TYPE_DISPLAY_NAME_2 = "UT_TagTypeDisplayName_2_" + RANDOM_SUFFIX;
+
+    public static final Integer TAG_TYPE_ORDER = 1;
+
+    public static final Integer TAG_TYPE_ORDER_2 = 2;
 
     public static final String TARGET_S3_KEY = "herd-dao-test-key-prefix" + RANDOM_SUFFIX + "/" + LOCAL_FILE;
 
@@ -589,6 +629,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String TEST_S3_KEY_PREFIX = "herd-dao-test-key-prefix" + RANDOM_SUFFIX;
 
+    public static final String TEST_S3_KEY_PREFIX_2 = "herd-dao-test-key-prefix-2-" + RANDOM_SUFFIX;
+
     public static final Integer THIRD_DATA_VERSION = 2;
 
     public static final Integer THIRD_FORMAT_VERSION = 2;
@@ -597,6 +639,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final List<String> UNSORTED_PARTITION_VALUES =
         Arrays.asList("2014-04-02", "2014-04-04", "2014-04-03", "2014-04-02A", "2014-04-08", "2014-04-07", "2014-04-05", "2014-04-06");
+
+    public static final String UPLOADER_ROLE_ARN = "UT_UploaderRoleArn" + RANDOM_SUFFIX;
 
     public static final String USER_ID = "UT_User_Id_1_" + RANDOM_SUFFIX;
 
@@ -647,6 +691,12 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     @Autowired
     protected BusinessObjectDefinitionDaoTestHelper businessObjectDefinitionDaoTestHelper;
+
+    @Autowired
+    protected BusinessObjectDefinitionSubjectMatterExpertDao businessObjectDefinitionSubjectMatterExpertDao;
+
+    @Autowired
+    protected BusinessObjectDefinitionSubjectMatterExpertDaoTestHelper businessObjectDefinitionSubjectMatterExpertDaoTestHelper;
 
     @Autowired
     protected BusinessObjectDefinitionTagDao businessObjectDefinitionTagDao;

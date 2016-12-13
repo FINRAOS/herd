@@ -15,12 +15,17 @@
 */
 package org.finra.herd.service;
 
+import java.util.Set;
+
 import org.finra.herd.model.api.xml.BusinessObjectDefinition;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptiveInformationUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKeys;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionUpdateRequest;
+import org.finra.herd.model.dto.BusinessObjectDefinitionSampleFileUpdateDto;
 
 /**
  * The business object definition service.
@@ -42,4 +47,10 @@ public interface BusinessObjectDefinitionService
     public BusinessObjectDefinitionKeys getBusinessObjectDefinitions();
 
     public BusinessObjectDefinitionKeys getBusinessObjectDefinitions(String namespaceCode);
+
+    public BusinessObjectDefinitionSearchResponse searchBusinessObjectDefinitions(BusinessObjectDefinitionSearchRequest businessObjectDefinitionSearchRequest,
+        Set<String> fields);
+    
+    public void updateBusinessObjectDefinitionEntitySampleFile(BusinessObjectDefinitionKey businessObjectDefinitionKey,
+        BusinessObjectDefinitionSampleFileUpdateDto businessObjectDefinitionSampleFileUpdateDto);
 }

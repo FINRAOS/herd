@@ -84,7 +84,7 @@ public class BusinessObjectDefinitionColumnDaoTest extends AbstractDaoTest
         catch (IllegalArgumentException e)
         {
             assertEquals(String.format("Found more than one business object definition column instance with parameters {namespace=\"%s\", " +
-                "businessObjectDefinitionName=\"%s\", businessObjectDefinitionColumnName=\"%s\"}.", BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME),
+                    "businessObjectDefinitionName=\"%s\", businessObjectDefinitionColumnName=\"%s\"}.", BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME),
                 e.getMessage());
         }
     }
@@ -144,7 +144,7 @@ public class BusinessObjectDefinitionColumnDaoTest extends AbstractDaoTest
         catch (IllegalArgumentException e)
         {
             assertEquals(String.format("Found more than one business object definition column instance with parameters {namespace=\"%s\", " +
-                "businessObjectDefinitionName=\"%s\", businessObjectDefinitionColumnName=\"%s\"}.", BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME),
+                    "businessObjectDefinitionName=\"%s\", businessObjectDefinitionColumnName=\"%s\"}.", BDEF_NAMESPACE, BDEF_NAME, BDEF_COLUMN_NAME),
                 e.getMessage());
         }
     }

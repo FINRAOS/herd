@@ -16,7 +16,6 @@
 package org.finra.herd.service.impl;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,9 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
-import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.BusinessObjectDefinitionTagDao;
-import org.finra.herd.dao.TagDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.ObjectNotFoundException;
@@ -36,7 +33,6 @@ import org.finra.herd.model.api.xml.BusinessObjectDefinitionTagCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionTagKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionTagKeys;
 import org.finra.herd.model.api.xml.TagKey;
-import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionTagEntity;
 import org.finra.herd.model.jpa.TagEntity;
@@ -61,12 +57,6 @@ public class BusinessObjectDefinitionTagServiceImpl implements BusinessObjectDef
 
     @Autowired
     private BusinessObjectDefinitionTagDao businessObjectDefinitionTagDao;
-
-    @Autowired
-    private ConfigurationHelper configurationHelper;
-
-    @Autowired
-    private TagDao tagDao;
 
     @Autowired
     private TagDaoHelper tagDaoHelper;
@@ -144,18 +134,10 @@ public class BusinessObjectDefinitionTagServiceImpl implements BusinessObjectDef
         // Get the tag entity and ensure it exists.
         TagEntity tagEntity = tagDaoHelper.getTagEntity(tagKey);
 
-        // Get the maximum allowed tag nesting level.
-        Integer maxAllowedTagNesting = configurationHelper.getProperty(ConfigurationValue.MAX_ALLOWED_TAG_NESTING, Integer.class);
-
-        // Build a list of the specified tag along with all its children tags down the hierarchy up to maximum allowed tag nesting level.
+        //Create a list of tag entities along with all its children tags down the hierarchy up to maximum allowed tag nesting level.
         List<TagEntity> tagEntities = new ArrayList<>();
         tagEntities.add(tagEntity);
-        List<TagEntity> singleLevelChildrenTags = Arrays.asList(tagEntity);
-        for (int level = 0; !singleLevelChildrenTags.isEmpty() && level < maxAllowedTagNesting; level++)
-        {
-            singleLevelChildrenTags = tagDao.getChildrenTags(singleLevelChildrenTags);
-            tagEntities.addAll(singleLevelChildrenTags);
-        }
+        tagEntities.addAll(tagDaoHelper.getTagChildrenEntities(tagEntity));
 
         // Retrieve and return a list of business object definition tag keys.
         return new BusinessObjectDefinitionTagKeys(businessObjectDefinitionTagDao.getBusinessObjectDefinitionTagsByTagEntities(tagEntities));

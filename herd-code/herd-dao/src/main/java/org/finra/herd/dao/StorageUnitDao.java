@@ -35,6 +35,16 @@ public interface StorageUnitDao extends BaseJpaDao
     public List<StorageUnitEntity> getGlacierStorageUnitsToRestore(int maxResult);
 
     /**
+     * Gets a storage unit identified by the given business object data entity and storage entity. Returns {@code null} if storage unit entity does not exist.
+     *
+     * @param businessObjectDataEntity the business object data entity
+     * @param storageEntity the storage entity
+     *
+     * @return {@link StorageUnitEntity} or {@code null}
+     */
+    public StorageUnitEntity getStorageUnitByBusinessObjectDataAndStorage(BusinessObjectDataEntity businessObjectDataEntity, StorageEntity storageEntity);
+
+    /**
      * Gets a storage unit identified by the given business object data entity and storage name. Returns {@code null} if storage does not exist.
      *
      * @param businessObjectDataEntity the business object data entity

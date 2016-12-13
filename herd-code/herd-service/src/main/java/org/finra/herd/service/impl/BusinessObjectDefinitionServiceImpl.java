@@ -16,18 +16,23 @@
 package org.finra.herd.service.impl;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import com.google.common.collect.ImmutableSet;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
-import org.springframework.util.CollectionUtils;
 
+import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.BusinessObjectDefinitionDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
@@ -38,19 +43,28 @@ import org.finra.herd.model.api.xml.BusinessObjectDefinitionCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptiveInformationUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKeys;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchFilter;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchKey;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormat;
 import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormatUpdateRequest;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.api.xml.SampleDataFile;
+import org.finra.herd.model.dto.BusinessObjectDefinitionSampleFileUpdateDto;
+import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionAttributeEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionSampleDataFileEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.DataProviderEntity;
 import org.finra.herd.model.jpa.NamespaceEntity;
+import org.finra.herd.model.jpa.StorageEntity;
+import org.finra.herd.model.jpa.TagEntity;
 import org.finra.herd.service.BusinessObjectDefinitionService;
+import org.finra.herd.service.SearchableService;
 import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.AttributeHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionDaoHelper;
@@ -58,13 +72,16 @@ import org.finra.herd.service.helper.BusinessObjectDefinitionHelper;
 import org.finra.herd.service.helper.BusinessObjectFormatDaoHelper;
 import org.finra.herd.service.helper.DataProviderDaoHelper;
 import org.finra.herd.service.helper.NamespaceDaoHelper;
+import org.finra.herd.service.helper.StorageDaoHelper;
+import org.finra.herd.service.helper.TagDaoHelper;
+import org.finra.herd.service.helper.TagHelper;
 
 /**
  * The business object definition service implementation.
  */
 @Service
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
-public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefinitionService
+public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefinitionService, SearchableService
 {
     @Autowired
     private AlternateKeyHelper alternateKeyHelper;
@@ -89,6 +106,27 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 
     @Autowired
     private NamespaceDaoHelper namespaceDaoHelper;
+
+    @Autowired
+    private ConfigurationHelper configurationHelper;
+
+    @Autowired
+    private TagHelper tagHelper;
+
+    @Autowired
+    private TagDaoHelper tagDaoHelper;
+    
+    @Autowired
+    private StorageDaoHelper storageDaoHelper;
+
+    // Constant to hold the data provider name option for the business object definition search
+    private static final String DATA_PROVIDER_NAME_FIELD = "dataprovidername";
+
+    // Constant to hold the short description option for the business object definition search
+    private static final String SHORT_DESCRIPTION_FIELD = "shortdescription";
+
+    // Constant to hold the display name option for the business object definition search
+    private static final String DISPLAY_NAME_FIELD = "displayname";
 
     /**
      * Creates a new business object definition.
@@ -188,10 +226,10 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
             businessObjectFormatKey.setNamespace(businessObjectDefinitionEntity.getNamespace().getCode());
             businessObjectFormatKey.setBusinessObjectFormatFileType(descriptiveFormat.getBusinessObjectFormatFileType());
             businessObjectFormatKey.setBusinessObjectFormatUsage(descriptiveFormat.getBusinessObjectFormatUsage());
-            businessObjectFormatEntity = businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey); 
+            businessObjectFormatEntity = businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey);
         }
         businessObjectDefinitionEntity.setDescriptiveBusinessObjectFormat(businessObjectFormatEntity);
-        
+
         // Update and persist the entity.
         updateBusinessObjectDefinitionEntityDescriptiveInformation(businessObjectDefinitionEntity, request);
 
@@ -267,7 +305,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     public BusinessObjectDefinitionKeys getBusinessObjectDefinitions()
     {
         BusinessObjectDefinitionKeys businessObjectDefinitionKeys = new BusinessObjectDefinitionKeys();
-        businessObjectDefinitionKeys.getBusinessObjectDefinitionKeys().addAll(businessObjectDefinitionDao.getBusinessObjectDefinitions());
+        businessObjectDefinitionKeys.getBusinessObjectDefinitionKeys().addAll(businessObjectDefinitionDao.getBusinessObjectDefinitionKeys());
         return businessObjectDefinitionKeys;
     }
 
@@ -286,16 +324,62 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 
         // Retrieve and return the list of business object definitions
         BusinessObjectDefinitionKeys businessObjectDefinitionKeys = new BusinessObjectDefinitionKeys();
-        businessObjectDefinitionKeys.getBusinessObjectDefinitionKeys().addAll(businessObjectDefinitionDao.getBusinessObjectDefinitions(namespaceCode.trim()));
+        businessObjectDefinitionKeys.getBusinessObjectDefinitionKeys()
+            .addAll(businessObjectDefinitionDao.getBusinessObjectDefinitionKeys(namespaceCode.trim()));
         return businessObjectDefinitionKeys;
+    }
+
+    /**
+     * Gets a list of all business object definitions defined in the system.
+     *
+     * @return the business object definitions.
+     */
+    @Override
+    public BusinessObjectDefinitionSearchResponse searchBusinessObjectDefinitions(BusinessObjectDefinitionSearchRequest request, Set<String> fields)
+    {
+        // Validate the business object definition search fields.
+        validateSearchResponseFields(fields);
+
+        BusinessObjectDefinitionSearchKey businessObjectDefinitionSearchKey = null;
+        List<TagEntity> tagEntities = new ArrayList<>();
+
+        if (!CollectionUtils.isEmpty(request.getBusinessObjectDefinitionSearchFilters()))
+        {
+            // Validate the search request.
+            validateBusinessObjectDefinitionSearchRequest(request);
+
+            businessObjectDefinitionSearchKey = request.getBusinessObjectDefinitionSearchFilters().get(0).getBusinessObjectDefinitionSearchKeys().get(0);
+
+            TagEntity tagEntity = tagDaoHelper.getTagEntity(businessObjectDefinitionSearchKey.getTagKey());
+
+            // If includeTagHierarchy is true, get list of children tag entities down the hierarchy of the specified tag.
+            tagEntities.add(tagEntity);
+            if (BooleanUtils.isTrue(businessObjectDefinitionSearchKey.isIncludeTagHierarchy()))
+            {
+                tagEntities.addAll(tagDaoHelper.getTagChildrenEntities(tagEntity));
+            }
+        }
+
+        // Construct business object search response.
+        BusinessObjectDefinitionSearchResponse searchResponse = new BusinessObjectDefinitionSearchResponse();
+        List<BusinessObjectDefinition> businessObjectDefinitions = new ArrayList<>();
+        searchResponse.setBusinessObjectDefinitions(businessObjectDefinitions);
+
+        // Retrieve all unique business object definition entities and construct a list of business object definitions based on the requested fields.
+        for (BusinessObjectDefinitionEntity businessObjectDefinition : ImmutableSet
+            .copyOf(businessObjectDefinitionDao.getBusinessObjectDefinitions(tagEntities)))
+        {
+            businessObjectDefinitions.add(createBusinessObjectDefinitionFromEntity(businessObjectDefinition, fields));
+        }
+
+        return searchResponse;
     }
 
     /**
      * Validates the business object definition create request. This method also trims request parameters.
      *
-     * @param request the request.
+     * @param request the request
      *
-     * @throws IllegalArgumentException if any validation errors were found.
      */
     private void validateBusinessObjectDefinitionCreateRequest(BusinessObjectDefinitionCreateRequest request)
     {
@@ -333,6 +417,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 
     /**
      * Validates the business object definition update request. This method also trims request parameters.
+     *
      * @param request the request.
      *
      * @throws IllegalArgumentException if any validation errors were found.
@@ -348,10 +433,10 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         {
             DescriptiveBusinessObjectFormatUpdateRequest descriptiveFormat = request.getDescriptiveBusinessObjectFormat();
 
-            descriptiveFormat.setBusinessObjectFormatUsage(alternateKeyHelper.validateStringParameter("business object format usage",
-                    descriptiveFormat.getBusinessObjectFormatUsage()));
+            descriptiveFormat.setBusinessObjectFormatUsage(
+                alternateKeyHelper.validateStringParameter("business object format usage", descriptiveFormat.getBusinessObjectFormatUsage()));
             descriptiveFormat.setBusinessObjectFormatFileType(
-                    alternateKeyHelper.validateStringParameter("business object format file type", descriptiveFormat.getBusinessObjectFormatFileType()));
+                alternateKeyHelper.validateStringParameter("business object format file type", descriptiveFormat.getBusinessObjectFormatFileType()));
         }
     }
 
@@ -530,5 +615,146 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         }
 
         return businessObjectDefinition;
+    }
+
+    /**
+     * Creates a light-weight business object definition from its persisted entity based on a set of requested fields.
+     *
+     * @param businessObjectDefinitionEntity the specified business object definition entity
+     * @param fields the set of requested fields
+     *
+     * @return the light-weight business object definition
+     */
+    private BusinessObjectDefinition createBusinessObjectDefinitionFromEntity(BusinessObjectDefinitionEntity businessObjectDefinitionEntity, Set<String> fields)
+    {
+        BusinessObjectDefinition definition = new BusinessObjectDefinition();
+
+        //populate namespace and business object definition name fields by default
+        definition.setNamespace(businessObjectDefinitionEntity.getNamespace().getCode());
+        definition.setBusinessObjectDefinitionName(businessObjectDefinitionEntity.getName());
+
+        //decorate object with only the required fields
+        if (fields.contains(DATA_PROVIDER_NAME_FIELD))
+        {
+            definition.setDataProviderName(businessObjectDefinitionEntity.getDataProvider().getName());
+        }
+
+        if (fields.contains(SHORT_DESCRIPTION_FIELD))
+        {
+            definition.setShortDescription(getShortDescription(businessObjectDefinitionEntity.getDescription()));
+        }
+
+        if (fields.contains(DISPLAY_NAME_FIELD))
+        {
+            definition.setDisplayName(businessObjectDefinitionEntity.getDisplayName());
+        }
+
+        return definition;
+    }
+
+    /**
+     * Truncates the description field to a configurable value thereby producing a 'short description'
+     *
+     * @param description the specified description
+     *
+     * @return truncated (short) description
+     */
+    private String getShortDescription(String description)
+    {
+        // Get the configured value for short description's length
+        Integer shortDescMaxLength = configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH, Integer.class);
+
+        // Truncate and return
+        return StringUtils.left(description, shortDescMaxLength);
+    }
+
+    /**
+     * Returns valid search response fields
+     *
+     * @return the set of valid search response fields
+     */
+    @Override
+    public Set<String> getValidSearchResponseFields()
+    {
+        return ImmutableSet.of(DATA_PROVIDER_NAME_FIELD, SHORT_DESCRIPTION_FIELD, DISPLAY_NAME_FIELD);
+    }
+
+    /**
+     * Validate the business object definition search request. This method also trims the request parameters.
+     *
+     * @param businessObjectDefinitionSearchRequest the business object definition search request
+     */
+    private void validateBusinessObjectDefinitionSearchRequest(BusinessObjectDefinitionSearchRequest businessObjectDefinitionSearchRequest)
+    {
+        if (CollectionUtils.size(businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters()) == 1 &&
+            businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters().get(0) != null)
+        {
+                // Get the business object definition search filter.
+                BusinessObjectDefinitionSearchFilter businessObjectDefinitionSearchFilter =
+                    businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters().get(0);
+
+                Assert.isTrue(CollectionUtils.size(businessObjectDefinitionSearchFilter.getBusinessObjectDefinitionSearchKeys()) == 1 &&
+                        businessObjectDefinitionSearchFilter.getBusinessObjectDefinitionSearchKeys().get(0) != null,
+                    "Exactly one business object definition search key must be specified.");
+
+                // Get the tag search key.
+                BusinessObjectDefinitionSearchKey businessObjectDefinitionSearchKey =
+                    businessObjectDefinitionSearchFilter.getBusinessObjectDefinitionSearchKeys().get(0);
+
+                tagHelper.validateTagKey(businessObjectDefinitionSearchKey.getTagKey());
+        }
+        else
+        {
+            Assert.isTrue(CollectionUtils.size(businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters()) ==
+                        1 && businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters().get(0) != null,
+                    "Exactly one business object definition search filter must be specified.");
+        }
+    }
+    
+    /**
+    * Update business object definition sample file
+    * @param businessObjectDefinitionKey business object definition key
+    * @param BusinessObjectDefinitionSampleFileUpdateDto update dto
+    */
+    @Override
+    public void updateBusinessObjectDefinitionEntitySampleFile(BusinessObjectDefinitionKey businessObjectDefinitionKey,
+        BusinessObjectDefinitionSampleFileUpdateDto businessObjectDefinitionSampleFileUpdateDto)
+    {
+        String path = businessObjectDefinitionSampleFileUpdateDto.getPath();
+        String fileName = businessObjectDefinitionSampleFileUpdateDto.getFileName();
+        long fileSize = businessObjectDefinitionSampleFileUpdateDto.getFileSize();
+        
+        // validate business object key
+        businessObjectDefinitionHelper.validateBusinessObjectDefinitionKey(businessObjectDefinitionKey);
+        // validate file name
+        Assert.hasText(fileName, "A file name must be specified.");
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
+                businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
+        Collection<BusinessObjectDefinitionSampleDataFileEntity> sampleFiles = businessObjectDefinitionEntity.getSampleDataFiles();
+        boolean found = false;
+        for (BusinessObjectDefinitionSampleDataFileEntity sampleDataFieEntity : sampleFiles)
+        {
+            //assume the path is the same for this business object definition
+            if (sampleDataFieEntity.getFileName().equals(fileName))
+            {
+                found = true;
+                sampleDataFieEntity.setFileSizeBytes(fileSize);
+                businessObjectDefinitionDao.saveAndRefresh(businessObjectDefinitionEntity);
+                break;
+            }
+        }
+        // create a new entity when not found
+        if (!found)
+        {
+            StorageEntity storageEntity = storageDaoHelper.getStorageEntity(StorageEntity.SAMPLE_DATA_FILE_STORAGE);
+            BusinessObjectDefinitionSampleDataFileEntity sampleDataFileEntity = new BusinessObjectDefinitionSampleDataFileEntity();
+            sampleDataFileEntity.setStorage(storageEntity);
+            sampleDataFileEntity.setBusinessObjectDefinition(businessObjectDefinitionEntity);
+            sampleDataFileEntity.setDirectoryPath(path);
+            sampleDataFileEntity.setFileName(fileName);
+            sampleDataFileEntity.setFileSizeBytes(fileSize);
+            businessObjectDefinitionEntity.getSampleDataFiles().add(sampleDataFileEntity);
+            businessObjectDefinitionDao.saveAndRefresh(businessObjectDefinitionEntity);
+        }
     }
 }

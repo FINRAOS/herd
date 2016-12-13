@@ -188,6 +188,11 @@ public enum ConfigurationValue
     STORAGE_POLICY_SELECTOR_JOB_SQS_QUEUE_NAME("storage.policy.selector.job.sqs.queue.name", null),
 
     /**
+     * AWS SQS queue name where sample data upload sends message
+     */
+    SAMPLE_DATA_SQS_QUEUE_NAME("sample.data.sqs.queue.name", null),
+    
+    /**
      * The maximum number of business object data instances to be selected per storage policies in a single run of the storage policy selector system job. The
      * default is 1000 business object data instances.
      */
@@ -417,6 +422,11 @@ public enum ConfigurationValue
     STORAGE_POLICY_PROCESSOR_JMS_LISTENER_ENABLED("storage.policy.processor.jms.listener.enabled", "true"),
 
     /**
+     * Indicates whether the sample data JMS message listener service is enabled or not. The default is "true" (enabled).
+     */
+    SAMPLE_DATA_JMS_LISTENER_ENABLED("sample.data.jms.listener.enabled", "true"),
+    
+    /**
      * Indicates whether the JMS message listener service is enabled or not. The default is "true" (enabled).
      */
     JMS_LISTENER_ENABLED("jms.listener.enabled", "true"),
@@ -598,8 +608,13 @@ public enum ConfigurationValue
     /**
      * The maximum number of nested tags allowed
      */
-    MAX_ALLOWED_TAG_NESTING("tag.max.nesting", 10);
-    
+    MAX_ALLOWED_TAG_NESTING("tag.max.nesting", 10),
+
+    /**
+     * The cut-off length of the short description
+     */
+    BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH("business.object.definition.short.description.max.length", 300);
+
     // Properties
     private String key;
 

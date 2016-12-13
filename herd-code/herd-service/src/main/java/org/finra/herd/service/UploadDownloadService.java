@@ -18,6 +18,8 @@ package org.finra.herd.service;
 import org.finra.herd.model.api.xml.DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest;
 import org.finra.herd.model.api.xml.DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse;
 import org.finra.herd.model.api.xml.DownloadSingleInitiationResponse;
+import org.finra.herd.model.api.xml.UploadBusinessObjectDefinitionSampleDataFileInitiationRequest;
+import org.finra.herd.model.api.xml.UploadBusinessObjectDefinitionSampleDataFileInitiationResponse;
 import org.finra.herd.model.api.xml.UploadSingleCredentialExtensionResponse;
 import org.finra.herd.model.api.xml.UploadSingleInitiationRequest;
 import org.finra.herd.model.api.xml.UploadSingleInitiationResponse;
@@ -89,4 +91,11 @@ public interface UploadDownloadService
     public DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationResponse initiateDownloadSingleSampleFile(
         DownloadBusinessObjectDefinitionSampleDataFileSingleInitiationRequest downloadRequest);
 
+    /**
+     * Return information required to upload file to S3
+     * @param uploadBusinessObjectDefinitionSampleDataFileInitiationRequest upload request
+     * @return information required to upload
+     */
+    public UploadBusinessObjectDefinitionSampleDataFileInitiationResponse initiateUploadSampleFile(
+       UploadBusinessObjectDefinitionSampleDataFileInitiationRequest uploadBusinessObjectDefinitionSampleDataFileInitiationRequest);
 }
