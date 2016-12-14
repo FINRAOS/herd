@@ -27,9 +27,13 @@ import org.finra.herd.model.api.xml.StatusTimeline;
 public class MockEmrJobFlow
 {
     private String jobFlowId;
+
     private String jobFlowName;
+
     private String status;
+
     private StatusChangeReason reason;
+
     private StatusTimeline timeline;
 
     private String jarLocation;
@@ -67,13 +71,25 @@ public class MockEmrJobFlow
         this.status = status;
     }
 
-    public StatusChangeReason getStatusChangeReason () {return reason;}
+    public StatusChangeReason getStatusChangeReason()
+    {
+        return reason;
+    }
 
-    public void setStatusChangeReason(StatusChangeReason reason) {this.reason = reason; }
+    public void setStatusChangeReason(StatusChangeReason reason)
+    {
+        this.reason = reason;
+    }
 
-    public StatusTimeline getStatusTimeline() {return this.timeline;}
+    public StatusTimeline getStatusTimeline()
+    {
+        return this.timeline;
+    }
 
-    public void setStatusTimeline(StatusTimeline timeline) { this.timeline = timeline;}
+    public void setStatusTimeline(StatusTimeline timeline)
+    {
+        this.timeline = timeline;
+    }
 
     public List<MockEmrJobFlow> getSteps()
     {
@@ -94,5 +110,4 @@ public class MockEmrJobFlow
     {
         this.jarLocation = jarLocation;
     }
-
 }

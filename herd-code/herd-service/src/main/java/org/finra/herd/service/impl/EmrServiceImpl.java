@@ -487,14 +487,8 @@ public class EmrServiceImpl implements EmrService
             emrClusterCreated = false;
         }
 
-        return createEmrClusterFromRequest(clusterId,
-            namespaceEntity.getCode(),
-            emrClusterDefinitionEntity.getName(),
-            emrClusterAlternateKeyDto.getEmrClusterName(),
-            emrClusterStatus,
-            emrClusterCreated,
-            request.isDryRun(),
-            emrClusterDefinition);
+        return createEmrClusterFromRequest(clusterId, namespaceEntity.getCode(), emrClusterDefinitionEntity.getName(),
+            emrClusterAlternateKeyDto.getEmrClusterName(), emrClusterStatus, emrClusterCreated, request.isDryRun(), emrClusterDefinition);
     }
 
     /**
@@ -1274,22 +1268,17 @@ public class EmrServiceImpl implements EmrService
     {
         Assert.notNull(key, "An EMR cluster key must be specified.");
         key.setNamespace(alternateKeyHelper.validateStringParameter("namespace", key.getNamespace()));
-        key.setEmrClusterDefinitionName(alternateKeyHelper.validateStringParameter("An",
-            "EMR cluster definition name",
-            key.getEmrClusterDefinitionName()));
-        key.setEmrClusterName(alternateKeyHelper.validateStringParameter("An",
-            "EMR cluster name",
-            key.getEmrClusterName()));
+        key.setEmrClusterDefinitionName(alternateKeyHelper.validateStringParameter("An", "EMR cluster definition name", key.getEmrClusterDefinitionName()));
+        key.setEmrClusterName(alternateKeyHelper.validateStringParameter("An", "EMR cluster name", key.getEmrClusterName()));
     }
 
     private void setEmrClusterStatus(EmrCluster cl, ClusterStatus amazonClusterStatus)
     {
         cl.setStatus(amazonClusterStatus.getState());
-        cl.setStatusChangeReason(new StatusChangeReason(amazonClusterStatus.getStateChangeReason().getCode(),
-            amazonClusterStatus.getStateChangeReason().getMessage() ));
+        cl.setStatusChangeReason(
+            new StatusChangeReason(amazonClusterStatus.getStateChangeReason().getCode(), amazonClusterStatus.getStateChangeReason().getMessage()));
         cl.setStatusTimeline(new StatusTimeline(toXmlGregorianCalendar(amazonClusterStatus.getTimeline().getCreationDateTime()),
             toXmlGregorianCalendar(amazonClusterStatus.getTimeline().getReadyDateTime()),
-            toXmlGregorianCalendar(amazonClusterStatus.getTimeline().getEndDateTime())
-        ));
+            toXmlGregorianCalendar(amazonClusterStatus.getTimeline().getEndDateTime())));
     }
 }

@@ -5402,7 +5402,7 @@
 
    <xs:complexType name="statusTimeline">
       <xs:all>
-         <xs:element name="creationTime" type="xs:dateTime" minOccurs="0" />
+         <xs:element name="creationTime" type="xs:dateTime" minOccurs="0"/>
          <xs:element name="readyTime" type="xs:dateTime" minOccurs="0"/>
          <xs:element name="endTime" type="xs:dateTime" minOccurs="0"/>
       </xs:all>
