@@ -18,15 +18,24 @@ package org.finra.herd.dao.impl;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.finra.herd.model.api.xml.StatusChangeReason;
+import org.finra.herd.model.api.xml.StatusTimeline;
+
 /**
  * Mock object to hold EMR job flow information.
  */
 public class MockEmrJobFlow
 {
     private String jobFlowId;
+
     private String jobFlowName;
+
     private String status;
-    
+
+    private StatusChangeReason reason;
+
+    private StatusTimeline timeline;
+
     private String jarLocation;
 
     // Steps added to the clusters
@@ -62,6 +71,26 @@ public class MockEmrJobFlow
         this.status = status;
     }
 
+    public StatusChangeReason getStatusChangeReason()
+    {
+        return reason;
+    }
+
+    public void setStatusChangeReason(StatusChangeReason reason)
+    {
+        this.reason = reason;
+    }
+
+    public StatusTimeline getStatusTimeline()
+    {
+        return this.timeline;
+    }
+
+    public void setStatusTimeline(StatusTimeline timeline)
+    {
+        this.timeline = timeline;
+    }
+
     public List<MockEmrJobFlow> getSteps()
     {
         return steps;
@@ -81,5 +110,4 @@ public class MockEmrJobFlow
     {
         this.jarLocation = jarLocation;
     }
-
 }

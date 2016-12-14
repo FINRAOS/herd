@@ -26,9 +26,7 @@ import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.TagDao;
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.ObjectNotFoundException;
-import org.finra.herd.model.api.xml.TagCreateRequest;
 import org.finra.herd.model.api.xml.TagKey;
-import org.finra.herd.model.api.xml.TagUpdateRequest;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.jpa.TagEntity;
 
@@ -36,11 +34,11 @@ import org.finra.herd.model.jpa.TagEntity;
 public class TagDaoHelper
 {
     @Autowired
-    private TagDao tagDao;
-    
+    private ConfigurationHelper configurationHelper;
+
     @Autowired
-    protected ConfigurationHelper configurationHelper;
-    
+    private TagDao tagDao;
+
     /**
      * Ensures that a tag entity does not exist for a specified tag type code and display name.
      *
@@ -60,9 +58,34 @@ public class TagDaoHelper
     }
 
     /**
+     * Create a list of tag entities along with all its children tags down the hierarchy up to maximum allowed tag nesting level.
+     *
+     * @param parentTagEntity the parent tag entity
+     *
+     * @return the list of tag children entities
+     */
+    public List<TagEntity> getTagChildrenEntities(TagEntity parentTagEntity)
+    {
+        // Get the maximum allowed tag nesting level.
+        Integer maxAllowedTagNesting = configurationHelper.getProperty(ConfigurationValue.MAX_ALLOWED_TAG_NESTING, Integer.class);
+
+        // Build a list of the specified tag along with all its children tags down the hierarchy up to maximum allowed tag nesting level.
+        List<TagEntity> parentTagEntities = new ArrayList<>();
+        parentTagEntities.add(parentTagEntity);
+        List<TagEntity> tagEntities = new ArrayList<>();
+        for (int level = 0; !parentTagEntities.isEmpty() && level < maxAllowedTagNesting; level++)
+        {
+            parentTagEntities = tagDao.getChildrenTags(parentTagEntities);
+            tagEntities.addAll(parentTagEntities);
+        }
+
+        return tagEntities;
+    }
+
+    /**
      * Gets a tag entity and ensure it exists.
      *
-     * @param tagKey the tag (case insensitive)
+     * @param tagKey the tag key (case insensitive)
      *
      * @return the tag entity
      * @throws org.finra.herd.model.ObjectNotFoundException if the tag entity doesn't exist
@@ -79,91 +102,39 @@ public class TagDaoHelper
 
         return tagEntity;
     }
-    
+
     /**
-     * Validate create tag request's parent tag key.
-     * 
-     * @param tagCreateRequest the create tag request.
-     */
-    public void validateCreateTagParentKey(TagCreateRequest tagCreateRequest)
-    {
-        if (tagCreateRequest.getParentTagKey() != null)
-        {
-            validateTagParentKeyType(tagCreateRequest.getTagKey(), tagCreateRequest.getParentTagKey());    
-        }
-    }
-    
-    /**
-     * validate parent tag Key
-     * @param tagKey requested tag key
-     * @param parentTagKey parent tag key
-     */
-    public void validateTagParentKeyType(TagKey tagKey, TagKey parentTagKey)
-    {
-        Assert.isTrue(tagKey.getTagTypeCode().equalsIgnoreCase(parentTagKey.getTagTypeCode()), 
-                "Tag type code in parent tag key must match the tag type code in the request.");      
-    }
-    
-    /**
-     * Validate update tag request's parent tag key.
-     * The parent tag should be be the same type of the updated tag.
-     * The parent tag should not be on the children tree of the updated tag. 
-     * No more than MAX_HIERARCHY_LEVEL is allowed to update parent-child relation.
+     * Validate the update tag request parent tag key. The parent tag should not be on the children tree of the updated tag. No more than MAX_HIERARCHY_LEVEL is
+     * allowed to update parent-child relation.
      *
-     * @param tagEntity the parentTagEntity to be updated
-     * 
-     * @param tagUpdateRequest the update request
+     * @param tagEntity the tag entity being updated
+     * @param parentTagEntity the tag update request
      */
-    public void validateUpdateTagParentKey(TagEntity tagEntity, TagUpdateRequest tagUpdateRequest)
+    public void validateParentTagEntity(TagEntity tagEntity, TagEntity parentTagEntity)
     {
-        TagKey parentTagKey = tagUpdateRequest.getParentTagKey();
-        if (parentTagKey != null)
-        {
-            validateTagParentKeyType(new TagKey(tagEntity.getTagType().getCode(), tagEntity.getTagCode()), tagUpdateRequest.getParentTagKey());
-
-            Integer maxAllowedTagNesting =
-                    configurationHelper.getProperty(ConfigurationValue.MAX_ALLOWED_TAG_NESTING, Integer.class);
-
-            int level = 0;
-            //ensure parent tag Exists
-            TagEntity parentTagEntity = getTagEntity(parentTagKey);
-            
-            while (parentTagEntity != null)
-            {
-                Assert.isTrue(!tagEntity.equals(parentTagEntity), "Parent tag key cannot be the requested tag key or any of its children’s tag keys.");
-                parentTagEntity = parentTagEntity.getParentTagEntity();
-                if (level++ >= maxAllowedTagNesting)
-                {
-                    throw new IllegalArgumentException("Exceeds maximum allowed tag nesting level of " + maxAllowedTagNesting);
-                }
-            }          
-        }   
-    }
-
-
-    /**
-     * Create a list of tag entities along with all its children tags down the hierarchy up to maximum allowed tag nesting level.
-     *
-     * @param parentTagEntity the parent tag entity
-     *
-     * @return the list of tag children entities
-     */
-    public List<TagEntity> getTagChildrenEntities(TagEntity parentTagEntity)
-    {
-
-        // Get the maximum allowed tag nesting level.
         Integer maxAllowedTagNesting = configurationHelper.getProperty(ConfigurationValue.MAX_ALLOWED_TAG_NESTING, Integer.class);
 
-        // Build a list of the specified tag along with all its children tags down the hierarchy up to maximum allowed tag nesting level.
-        List<TagEntity> parentTagEntities = new ArrayList<>();
-        parentTagEntities.add(parentTagEntity);
-        List<TagEntity> tagEntities = new ArrayList<>();
-        for (int level = 0; !parentTagEntities.isEmpty() && level < maxAllowedTagNesting; level++)
+        TagEntity localParentTagEntity = parentTagEntity;
+        int level = 0;
+        while (localParentTagEntity != null)
         {
-            parentTagEntities = tagDao.getChildrenTags(parentTagEntities);
-            tagEntities.addAll(parentTagEntities);
+            Assert.isTrue(!tagEntity.equals(localParentTagEntity), "Parent tag key cannot be the requested tag key or any of its children’s tag keys.");
+            localParentTagEntity = localParentTagEntity.getParentTagEntity();
+            if (level++ >= maxAllowedTagNesting)
+            {
+                throw new IllegalArgumentException("Exceeds maximum allowed tag nesting level of " + maxAllowedTagNesting);
+            }
         }
+    }
 
-        return tagEntities;
+    /**
+     * Validates parent tag type's code against the tag type's code.
+     *
+     * @param tagTypeCode the tag type's code
+     * @param parentTagTypeCode the parent tag type's code
+     */
+    public void validateParentTagType(String tagTypeCode, String parentTagTypeCode)
+    {
+        Assert.isTrue(tagTypeCode.equalsIgnoreCase(parentTagTypeCode), "Tag type code in parent tag key must match the tag type code in the request.");
     }
 }

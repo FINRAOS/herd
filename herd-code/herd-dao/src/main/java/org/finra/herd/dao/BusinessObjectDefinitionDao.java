@@ -33,16 +33,6 @@ public interface BusinessObjectDefinitionDao extends BaseJpaDao
     public BusinessObjectDefinitionEntity getBusinessObjectDefinitionByKey(BusinessObjectDefinitionKey businessObjectDefinitionKey);
 
     /**
-     * A shortcut for {@link #getBusinessObjectDefinitionByKey(BusinessObjectDefinitionKey)}
-     *
-     * @param namespace The business object definition namespace
-     * @param name The business object definition name
-     *
-     * @return Business object definition entity or null
-     */
-    public BusinessObjectDefinitionEntity getBusinessObjectDefinitionByKey(String namespace, String name);
-
-    /**
      * Gets all business object definition keys.
      *
      * @return the list of all business object definition keys
@@ -56,7 +46,7 @@ public interface BusinessObjectDefinitionDao extends BaseJpaDao
      *
      * @return the list of all business object definition keys
      */
-    public List<BusinessObjectDefinitionKey> getBusinessObjectDefinitionKeys(String namespaceCode);
+    public List<BusinessObjectDefinitionKey> getBusinessObjectDefinitionKeysByNamespace(String namespaceCode);
 
     /**
      * Gets a list of all business object definition entities for the specified namespace.

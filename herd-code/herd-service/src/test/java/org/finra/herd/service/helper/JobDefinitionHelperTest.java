@@ -16,6 +16,7 @@
 package org.finra.herd.service.helper;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
 import java.util.HashMap;
@@ -24,6 +25,7 @@ import java.util.regex.Pattern;
 
 import org.junit.Test;
 
+import org.finra.herd.model.api.xml.Parameter;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.JobDefinitionAlternateKeyDto;
 import org.finra.herd.service.AbstractServiceTest;
@@ -89,5 +91,21 @@ public class JobDefinitionHelperTest extends AbstractServiceTest
                 String.format("Process definition key \"%s\" does not match the expected pattern \"%s\".", testProcessDefinitionKey, pattern.toString()),
                 e.getMessage());
         }
+    }
+    
+    @Test
+    public void testMaskPassword()
+    {
+        Parameter parameter = new Parameter(null, null);
+        jobDefinitionHelper.maskPassword(parameter);
+        //name is still null
+        assertNull(parameter.getName());
+        parameter = new Parameter("name", "val");
+        //no mask is expected
+        jobDefinitionHelper.maskPassword(parameter);
+        assertEquals(parameter.getValue(), "val");
+        parameter = new Parameter("passWord", "val");
+        jobDefinitionHelper.maskPassword(parameter);
+        assertEquals(parameter.getValue(), "****");
     }
 }

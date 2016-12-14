@@ -97,10 +97,9 @@ public class BusinessObjectDataSearchHelper
             {
                 List<String> partitionValues = partitionValueFilter.getPartitionValues();
                 PartitionValueRange partitionValueRange = partitionValueFilter.getPartitionValueRange();
-
-                if ((partitionValues == null || partitionValues.isEmpty()) &&
-                    (partitionValueRange == null || partitionValueRange.getStartPartitionValue() == null ||
-                        partitionValueRange.getEndPartitionValue() == null))
+                //The partition values array should not be empty and partition vale range start and end value should not be empty
+                //as it is done above at businessObjectDataHelper.validatePartitionValueFilters
+                if ((partitionValues == null) && (partitionValueRange == null))
                 {
                     throw new IllegalArgumentException("Only partition values or partition range are supported in partition value filters.");
                 }

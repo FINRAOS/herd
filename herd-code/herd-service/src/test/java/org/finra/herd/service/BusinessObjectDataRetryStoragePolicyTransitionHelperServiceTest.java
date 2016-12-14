@@ -22,12 +22,16 @@ import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
+import org.finra.herd.dao.impl.MockS3OperationsImpl;
+import org.finra.herd.dao.impl.MockSqsOperationsImpl;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataRetryStoragePolicyTransitionRequest;
@@ -70,7 +74,7 @@ public class BusinessObjectDataRetryStoragePolicyTransitionHelperServiceTest ext
 
         try
         {
-            businessObjectDataRetryStoragePolicyTransitionHelperServiceImpl.executeAwsSpecificSteps(null);
+            businessObjectDataRetryStoragePolicyTransitionHelperServiceImpl.executeS3SpecificSteps(null);
             fail();
         }
         catch (NullPointerException e)
@@ -86,6 +90,71 @@ public class BusinessObjectDataRetryStoragePolicyTransitionHelperServiceTest ext
         catch (NullPointerException e)
         {
             assertNull(e.getMessage());
+        }
+    }
+
+    @Test
+    public void testExecuteRetryStoragePolicyTransitionAfterStepSqsOperationFails()
+    {
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION);
+
+        // Create a storage policy key.
+        StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
+
+        // Create database entities required for testing.
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForRetryStoragePolicyTransitionTesting(businessObjectDataKey, storagePolicyKey);
+
+        // Create a business object data retry storage policy transition DTO with
+        // the SQS queue name set to the mocked value that causes an exception.
+        BusinessObjectDataRetryStoragePolicyTransitionDto businessObjectDataRetryStoragePolicyTransitionDto =
+            new BusinessObjectDataRetryStoragePolicyTransitionDto(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION, STORAGE_NAME_GLACIER,
+                S3_BUCKET_NAME_GLACIER, S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX, MockSqsOperationsImpl.MOCK_SQS_QUEUE_NOT_FOUND_NAME);
+
+        // Try to execute AWS steps when an AWS service exception is expected.
+        try
+        {
+            businessObjectDataRetryStoragePolicyTransitionHelperService
+                .executeRetryStoragePolicyTransitionAfterStep(businessObjectDataRetryStoragePolicyTransitionDto);
+            fail();
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals(String.format("AWS SQS queue with \"%s\" name not found.", MockSqsOperationsImpl.MOCK_SQS_QUEUE_NOT_FOUND_NAME), e.getMessage());
+        }
+    }
+
+    @Test
+    public void testExecuteS3SpecificAmazonServiceException()
+    {
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION);
+
+        // Create a storage policy key.
+        StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
+
+        // Create a business object data retry storage policy transition DTO with
+        // the Glacier S3 bucket name set to the mocked value that causes an AmazonServiceException.
+        BusinessObjectDataRetryStoragePolicyTransitionDto businessObjectDataRetryStoragePolicyTransitionDto =
+            new BusinessObjectDataRetryStoragePolicyTransitionDto(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION, STORAGE_NAME_GLACIER,
+                MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_INTERNAL_ERROR, S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX,
+                STORAGE_POLICY_SELECTOR_SQS_QUEUE_NAME);
+
+        // Try to execute AWS steps when an AWS service exception is expected.
+        try
+        {
+            businessObjectDataRetryStoragePolicyTransitionHelperService.executeS3SpecificSteps(businessObjectDataRetryStoragePolicyTransitionDto);
+            fail();
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals(String.format("Failed to list keys/key versions with prefix \"%s/\" from bucket \"%s\". " +
+                "Reason: InternalError (Service: null; Status Code: 0; Error Code: null; Request ID: null)", S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX,
+                MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_INTERNAL_ERROR), e.getMessage());
         }
     }
 
@@ -201,6 +270,40 @@ public class BusinessObjectDataRetryStoragePolicyTransitionHelperServiceTest ext
                 "Storage directory path \"%s\" for business object data in \"%s\" %s storage does not start with the origin S3 bucket name. " +
                     "Origin S3 bucket name: {%s}, origin storage: {%s}, business object data: {%s}", TEST_S3_KEY_PREFIX, STORAGE_NAME_GLACIER,
                 StoragePlatformEntity.GLACIER, S3_BUCKET_NAME_ORIGIN, STORAGE_NAME_ORIGIN,
+                businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
+        }
+    }
+
+    @Test
+    public void testPrepareToRetryStoragePolicyTransitionGlacierStorageUnitDirectoryPathHasInvalidOriginS3keyPrefix()
+    {
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION);
+
+        // Create a storage policy key.
+        StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
+
+        // Create database entities required for testing with the Glacier storage unit directory path having an invalid origin S3 key prefix.
+        businessObjectDataServiceTestHelper
+            .createDatabaseEntitiesForRetryStoragePolicyTransitionTesting(businessObjectDataKey, storagePolicyKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN,
+                StorageUnitStatusEntity.ENABLED, STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER, StorageUnitStatusEntity.ARCHIVING,
+                S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX_2);
+
+        // Try to execute a before step for the retry storage policy transition
+        // when Glacier storage unit directory path contains an invalid origin S3 key prefix.
+        try
+        {
+            businessObjectDataRetryStoragePolicyTransitionHelperService
+                .prepareToRetryStoragePolicyTransition(businessObjectDataKey, new BusinessObjectDataRetryStoragePolicyTransitionRequest(storagePolicyKey));
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(String.format("Number of storage files (6) registered for the business object data in \"%s\" storage is not equal " +
+                "to the number of registered storage files (0) matching \"%s\" S3 key prefix in the same storage. " +
+                "Business object data: {%s}", STORAGE_NAME_ORIGIN, TEST_S3_KEY_PREFIX_2 + "/",
                 businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
         }
     }
@@ -718,6 +821,47 @@ public class BusinessObjectDataRetryStoragePolicyTransitionHelperServiceTest ext
     }
 
     @Test
+    public void testPrepareToRetryStoragePolicyTransitionNoSqsQueueName() throws Exception
+    {
+        Map<String, Object> overrideMap = new HashMap<>();
+        overrideMap.put(ConfigurationValue.STORAGE_POLICY_SELECTOR_JOB_SQS_QUEUE_NAME.getKey(), BLANK_TEXT);
+        modifyPropertySourceInEnvironment(overrideMap);
+        try
+        {
+            // Create a business object data key.
+            BusinessObjectDataKey businessObjectDataKey =
+                new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    SUBPARTITION_VALUES, DATA_VERSION);
+
+            // Create a storage policy key.
+            StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
+
+            // Create database entities required for testing with the Glacier storage unit directory path having an invalid origin S3 key prefix.
+            businessObjectDataServiceTestHelper
+                .createDatabaseEntitiesForRetryStoragePolicyTransitionTesting(businessObjectDataKey, storagePolicyKey, STORAGE_NAME_ORIGIN,
+                    S3_BUCKET_NAME_ORIGIN, StorageUnitStatusEntity.ENABLED, STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER, StorageUnitStatusEntity.ARCHIVING,
+                    S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX);
+
+            // Try to execute a before step for the retry storage policy transition when SQS queue name is not configured.
+            try
+            {
+                businessObjectDataRetryStoragePolicyTransitionHelperService
+                    .prepareToRetryStoragePolicyTransition(businessObjectDataKey, new BusinessObjectDataRetryStoragePolicyTransitionRequest(storagePolicyKey));
+                fail();
+            }
+            catch (IllegalStateException e)
+            {
+                assertEquals(String.format("SQS queue name not found. Ensure the \"%s\" configuration entry is configured.",
+                    ConfigurationValue.STORAGE_POLICY_SELECTOR_JOB_SQS_QUEUE_NAME.getKey()), e.getMessage());
+            }
+        }
+        finally
+        {
+            restorePropertySourceInEnvironment();
+        }
+    }
+
+    @Test
     public void testPrepareToRetryStoragePolicyTransitionOriginStorageNoBucketName()
     {
         // Create a business object data key.
@@ -854,6 +998,48 @@ public class BusinessObjectDataRetryStoragePolicyTransitionHelperServiceTest ext
                 .format("Origin S3 storage unit in \"%s\" storage must have \"%s\" status, but it actually has \"%s\" status. Business object data: {%s}",
                     STORAGE_NAME_ORIGIN, StorageUnitStatusEntity.ENABLED, STORAGE_UNIT_STATUS,
                     businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
+        }
+    }
+
+    @Test
+    public void testPrepareToRetryStoragePolicyTransitionOriginStorageUnitNotInStoragePolicySourceStorage()
+    {
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION);
+
+        // Create a storage policy key.
+        StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
+
+        // Create database entities required for testing.
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataServiceTestHelper
+            .createDatabaseEntitiesForRetryStoragePolicyTransitionTesting(businessObjectDataKey, storagePolicyKey, STORAGE_NAME_ORIGIN, S3_BUCKET_NAME_ORIGIN,
+                StorageUnitStatusEntity.ENABLED, STORAGE_NAME_GLACIER, S3_BUCKET_NAME_GLACIER, StorageUnitStatusEntity.ARCHIVING,
+                S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX);
+
+        // Create an S3 storage unit for this business object data in a different S3 storage.
+        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, StoragePlatformEntity.S3, businessObjectDataEntity, StorageUnitStatusEntity.ENABLED, TEST_S3_KEY_PREFIX);
+
+        // Get the Glacier storage unit entity.
+        StorageUnitEntity glacierStorageUnitEntity = storageUnitDaoHelper.getStorageUnitEntity(STORAGE_NAME_GLACIER, businessObjectDataEntity);
+
+        // Set the origin storage unit.
+        glacierStorageUnitEntity.setParentStorageUnit(storageUnitEntity);
+
+        // Try to execute a before step for the retry storage policy transition when origin storage unit is not S3.
+        try
+        {
+            businessObjectDataRetryStoragePolicyTransitionHelperService
+                .prepareToRetryStoragePolicyTransition(businessObjectDataKey, new BusinessObjectDataRetryStoragePolicyTransitionRequest(storagePolicyKey));
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(String.format("Origin storage unit for the business object data Glacier storage unit does not belong to the storage policy storage. " +
+                "Glacier storage unit origin storage: {%s}, storage policy storage: {%s}, business object data: {%s}", STORAGE_NAME, STORAGE_NAME_ORIGIN,
+                businessObjectDataServiceTestHelper.getExpectedBusinessObjectDataKeyAsString(businessObjectDataKey)), e.getMessage());
         }
     }
 

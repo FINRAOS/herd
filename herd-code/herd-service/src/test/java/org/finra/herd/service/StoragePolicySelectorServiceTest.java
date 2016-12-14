@@ -18,14 +18,21 @@ package org.finra.herd.service;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 import org.junit.Test;
 
+import org.finra.herd.dao.impl.AbstractHerdDao;
 import org.finra.herd.dao.impl.MockSqsOperationsImpl;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.StoragePolicyKey;
+import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.StoragePolicySelection;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
@@ -39,122 +46,6 @@ import org.finra.herd.model.jpa.StorageUnitStatusEntity;
  */
 public class StoragePolicySelectorServiceTest extends AbstractServiceTest
 {
-    @Test
-    public void testExecute() throws Exception
-    {
-        // Create a storage policy key.
-        StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
-
-        // Create and persist a storage policy entity.
-        storagePolicyDaoTestHelper
-            .createStoragePolicyEntity(storagePolicyKey, StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS, BDEF_NAMESPACE, BDEF_NAME,
-                FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION,
-                LATEST_VERSION_FLAG_SET);
-
-        // Create and persist a storage unit in the storage policy filter storage.
-        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
-            .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID, StorageUnitStatusEntity.ENABLED,
-                NO_STORAGE_DIRECTORY_PATH);
-
-        // Apply the offset in days to business object data "created on" value.
-        businessObjectDataDaoTestHelper.ageBusinessObjectData(storageUnitEntity.getBusinessObjectData(), BDATA_AGE_IN_DAYS + 1);
-
-        // Execute the storage policy selection.
-        List<StoragePolicySelection> resultStoragePolicySelections = storagePolicySelectorService.execute(SQS_QUEUE_NAME, MAX_RESULT);
-
-        // Validate the results.
-        assertEquals(Arrays.asList(new StoragePolicySelection(
-            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                DATA_VERSION), storagePolicyKey, INITIAL_VERSION)), resultStoragePolicySelections);
-    }
-
-    @Test
-    public void testExecuteWithInvalidSqsQueueName() throws Exception
-    {
-        // Create and persist a storage policy entity.
-        storagePolicyDaoTestHelper.createStoragePolicyEntity(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME),
-            StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-            STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
-
-        // Create and persist a storage unit in the storage policy filter storage.
-        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
-            .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID, StorageUnitStatusEntity.ENABLED,
-                NO_STORAGE_DIRECTORY_PATH);
-
-        // Apply the offset in days to business object data "created on" value.
-        businessObjectDataDaoTestHelper.ageBusinessObjectData(storageUnitEntity.getBusinessObjectData(), BDATA_AGE_IN_DAYS + 1);
-
-        // Try to execute the storage policy selection by passing an invalid SQS queue name.
-        try
-        {
-            storagePolicySelectorService.execute(MockSqsOperationsImpl.MOCK_SQS_QUEUE_NOT_FOUND_NAME, MAX_RESULT);
-            fail("Should throw an IllegalStateException when invalid SQS queue name is specified.");
-        }
-        catch (IllegalStateException e)
-        {
-            assertEquals(String.format("AWS SQS queue with \"%s\" name not found.", MockSqsOperationsImpl.MOCK_SQS_QUEUE_NOT_FOUND_NAME), e.getMessage());
-        }
-    }
-
-    @Test
-    public void testExecuteWithInvalidStoragePolicyRuleType() throws Exception
-    {
-        // Create and persist a storage policy entity with a non-supported storage policy type.
-        storagePolicyDaoTestHelper
-            .createStoragePolicyEntity(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME), STORAGE_POLICY_RULE_TYPE, BDATA_AGE_IN_DAYS,
-                BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED,
-                INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
-
-        // Create and persist a storage unit in the storage policy filter storage.
-        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
-            .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID, StorageUnitStatusEntity.ENABLED,
-                NO_STORAGE_DIRECTORY_PATH);
-
-        // Apply the offset in days to business object data "created on" value.
-        businessObjectDataDaoTestHelper.ageBusinessObjectData(storageUnitEntity.getBusinessObjectData(), BDATA_AGE_IN_DAYS + 1);
-
-        // Try to retrieve the business object data as matching to the storage policy.
-        try
-        {
-            storagePolicySelectorService.execute(SQS_QUEUE_NAME, MAX_RESULT);
-            fail("Should throw an IllegalStateException when a storage policy has an invalid storage policy rule type.");
-        }
-        catch (IllegalStateException e)
-        {
-            assertEquals(String.format("Storage policy type \"%s\" is not supported.", STORAGE_POLICY_RULE_TYPE), e.getMessage());
-        }
-    }
-
-    @Test
-    public void testExecuteBusinessObjectDataNotOldEnough()
-    {
-        // Create and persist a storage policy entity.
-        storagePolicyDaoTestHelper.createStoragePolicyEntity(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME),
-            StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-            STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
-
-        // Create and persist a storage unit in the storage policy filter storage.
-        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
-            .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID, STORAGE_UNIT_STATUS,
-                NO_STORAGE_DIRECTORY_PATH);
-
-        // Apply the offset in days to business object data "created on" value.
-        businessObjectDataDaoTestHelper.ageBusinessObjectData(storageUnitEntity.getBusinessObjectData(), BDATA_AGE_IN_DAYS + 1);
-
-        // Execute the storage policy selection and validate the results. One business object data matching to storage policy should get selected.
-        assertEquals(1, storagePolicySelectorService.execute(SQS_QUEUE_NAME, MAX_RESULT).size());
-
-        // Apply another offset in days to business object data "created on" value to make it one day not old enough for the storage policy.
-        businessObjectDataDaoTestHelper.ageBusinessObjectData(storageUnitEntity.getBusinessObjectData(), -2);
-
-        // Execute the storage policy selection and validate the results. No business object data matching to storage policy should get selected.
-        assertEquals(0, storagePolicySelectorService.execute(SQS_QUEUE_NAME, MAX_RESULT).size());
-    }
-
     @Test
     public void testExecuteBusinessObjectDataNotSelectedDueToHigherPriorityLevelStoragePolicy()
     {
@@ -225,6 +116,341 @@ public class StoragePolicySelectorServiceTest extends AbstractServiceTest
     }
 
     @Test
+    public void testExecuteInvalidSqsQueueName()
+    {
+        // Create and persist a storage policy entity.
+        storagePolicyDaoTestHelper.createStoragePolicyEntity(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME),
+            StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+            STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+
+        // Create and persist a storage unit in the storage policy filter storage.
+        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID, StorageUnitStatusEntity.ENABLED,
+                NO_STORAGE_DIRECTORY_PATH);
+
+        // Apply the offset in days to business object data "created on" value.
+        businessObjectDataDaoTestHelper.ageBusinessObjectData(storageUnitEntity.getBusinessObjectData(), BDATA_AGE_IN_DAYS + 1);
+
+        // Try to execute the storage policy selection by passing an invalid SQS queue name.
+        try
+        {
+            storagePolicySelectorService.execute(MockSqsOperationsImpl.MOCK_SQS_QUEUE_NOT_FOUND_NAME, MAX_RESULT);
+            fail("Should throw an IllegalStateException when invalid SQS queue name is specified.");
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals(String.format("AWS SQS queue with \"%s\" name not found.", MockSqsOperationsImpl.MOCK_SQS_QUEUE_NOT_FOUND_NAME), e.getMessage());
+        }
+    }
+
+    @Test
+    public void testExecuteInvalidStoragePolicyRuleType()
+    {
+        // Create and persist a storage policy entity with a non-supported storage policy type.
+        storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME), STORAGE_POLICY_RULE_TYPE, BDATA_AGE_IN_DAYS,
+                BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED,
+                INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+
+        // Create and persist a storage unit in the storage policy filter storage.
+        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID, StorageUnitStatusEntity.ENABLED,
+                NO_STORAGE_DIRECTORY_PATH);
+
+        // Apply the offset in days to business object data "created on" value.
+        businessObjectDataDaoTestHelper.ageBusinessObjectData(storageUnitEntity.getBusinessObjectData(), BDATA_AGE_IN_DAYS + 1);
+
+        // Try to retrieve the business object data as matching to the storage policy.
+        try
+        {
+            storagePolicySelectorService.execute(SQS_QUEUE_NAME, MAX_RESULT);
+            fail("Should throw an IllegalStateException when a storage policy has an invalid storage policy rule type.");
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals(String.format("Storage policy type \"%s\" is not supported.", STORAGE_POLICY_RULE_TYPE), e.getMessage());
+        }
+    }
+
+    @Test
+    public void testExecutePrimaryPartitionValueStoragePolicyRuleType() throws Exception
+    {
+        // Create a storage policy key.
+        StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
+
+        // Create and persist a storage policy entity.
+        storagePolicyDaoTestHelper.createStoragePolicyEntity(storagePolicyKey, StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_PRIMARY_PARTITION_VALUE,
+            BDATA_PARTITION_VALUE_AGE_IN_DAYS, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2,
+            StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+
+        // Create a partition value that would satisfy the primary partition value age check as per the storage policy rule.
+        String primaryPartitionValue = getTestPrimaryPartitionValue(BDATA_PARTITION_VALUE_AGE_IN_DAYS + 1);
+
+        // Create and persist a storage unit in the storage policy filter storage.
+        storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, primaryPartitionValue,
+                SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID, StorageUnitStatusEntity.ENABLED,
+                NO_STORAGE_DIRECTORY_PATH);
+
+        // Overwrite the "updated on" threshold for a newly created business object data to be selectable by the storage policy.
+        Map<String, Object> overrideMap = new HashMap<>();
+        overrideMap.put(ConfigurationValue.STORAGE_POLICY_PROCESSOR_BDATA_UPDATED_ON_THRESHOLD_DAYS.getKey(), -1);
+        modifyPropertySourceInEnvironment(overrideMap);
+        try
+        {
+            // Execute the storage policy selection.
+            List<StoragePolicySelection> resultStoragePolicySelections = storagePolicySelectorService.execute(SQS_QUEUE_NAME, MAX_RESULT);
+
+            // Validate the results.
+            assertEquals(Arrays.asList(new StoragePolicySelection(
+                new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, primaryPartitionValue,
+                    SUBPARTITION_VALUES, DATA_VERSION), storagePolicyKey, INITIAL_VERSION)), resultStoragePolicySelections);
+        }
+        finally
+        {
+            restorePropertySourceInEnvironment();
+        }
+    }
+
+    @Test
+    public void testExecutePrimaryPartitionValueStoragePolicyRuleTypeBusinessObjectDataUpdatedTooRecently() throws Exception
+    {
+        // Create a storage policy key.
+        StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
+
+        // Create and persist a storage policy entity.
+        storagePolicyDaoTestHelper.createStoragePolicyEntity(storagePolicyKey, StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_PRIMARY_PARTITION_VALUE,
+            BDATA_PARTITION_VALUE_AGE_IN_DAYS, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2,
+            StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+
+        // Create a partition value that would satisfy the primary partition value age check as per the storage policy rule.
+        String primaryPartitionValue = getTestPrimaryPartitionValue(BDATA_PARTITION_VALUE_AGE_IN_DAYS + 1);
+
+        // Create and persist a storage unit in the storage policy filter storage.
+        storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, primaryPartitionValue,
+                SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID, StorageUnitStatusEntity.ENABLED,
+                NO_STORAGE_DIRECTORY_PATH);
+
+        // Execute the storage policy selection and validate the results. Since the default value for "updated on"
+        // threshold is greater than 1 day, no newly created business object data instances can match the storage policy.
+        assertEquals(0, storagePolicySelectorService.execute(SQS_QUEUE_NAME, MAX_RESULT).size());
+
+        // Overwrite the "updated on" threshold for a newly created business object data to be selectable by the storage policy.
+        Map<String, Object> overrideMap = new HashMap<>();
+        overrideMap.put(ConfigurationValue.STORAGE_POLICY_PROCESSOR_BDATA_UPDATED_ON_THRESHOLD_DAYS.getKey(), -1);
+        modifyPropertySourceInEnvironment(overrideMap);
+        try
+        {
+            // Execute the storage policy selection and validate the results. One business object data matching to storage policy should get selected.
+            assertEquals(Arrays.asList(new StoragePolicySelection(
+                new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, primaryPartitionValue,
+                    SUBPARTITION_VALUES, DATA_VERSION), storagePolicyKey, INITIAL_VERSION)), storagePolicySelectorService.execute(SQS_QUEUE_NAME, MAX_RESULT));
+        }
+        finally
+        {
+            restorePropertySourceInEnvironment();
+        }
+    }
+
+    @Test
+    public void testExecutePrimaryPartitionValueStoragePolicyRuleTypePrimaryPartitionValueNotDate() throws Exception
+    {
+        // Create a storage policy key.
+        StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
+
+        // Create and persist a storage policy entity.
+        storagePolicyDaoTestHelper.createStoragePolicyEntity(storagePolicyKey, StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_PRIMARY_PARTITION_VALUE,
+            BDATA_PARTITION_VALUE_AGE_IN_DAYS, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2,
+            StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+
+        // Create a partition value that would satisfy the primary partition value age check as per the storage policy rule.
+        String primaryPartitionValue = getTestPrimaryPartitionValue(BDATA_PARTITION_VALUE_AGE_IN_DAYS + 1);
+
+        // Create and persist a storage unit in the storage policy filter storage.
+        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, primaryPartitionValue,
+                SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID, STORAGE_UNIT_STATUS,
+                NO_STORAGE_DIRECTORY_PATH);
+
+        // Overwrite the "updated on" threshold for a newly created business object data to be selectable by the storage policy.
+        Map<String, Object> overrideMap = new HashMap<>();
+        overrideMap.put(ConfigurationValue.STORAGE_POLICY_PROCESSOR_BDATA_UPDATED_ON_THRESHOLD_DAYS.getKey(), -1);
+        modifyPropertySourceInEnvironment(overrideMap);
+        try
+        {
+            // Execute the storage policy selection and validate the results. One business object data matching to storage policy should get selected.
+            assertEquals(Arrays.asList(new StoragePolicySelection(
+                new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, primaryPartitionValue,
+                    SUBPARTITION_VALUES, DATA_VERSION), storagePolicyKey, INITIAL_VERSION)), storagePolicySelectorService.execute(SQS_QUEUE_NAME, MAX_RESULT));
+
+            // Update this business object data, so it's primary partition value has the length of the date pattern,
+            // but cannot be converted to a date - we just use the single day date mask for such value.
+            storageUnitEntity.getBusinessObjectData().setPartitionValue(AbstractHerdDao.DEFAULT_SINGLE_DAY_DATE_MASK);
+            businessObjectDataDao.saveAndRefresh(storageUnitEntity.getBusinessObjectData());
+
+            // Execute the storage policy selection and validate the results. No business object data matching to storage policy should get selected.
+            assertEquals(0, storagePolicySelectorService.execute(SQS_QUEUE_NAME, MAX_RESULT).size());
+        }
+        finally
+        {
+            restorePropertySourceInEnvironment();
+        }
+    }
+
+    @Test
+    public void testExecutePrimaryPartitionValueStoragePolicyRuleTypePrimaryPartitionValueNotOldEnough() throws Exception
+    {
+        // Create a storage policy key.
+        StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
+
+        // Create and persist a storage policy entity.
+        storagePolicyDaoTestHelper.createStoragePolicyEntity(storagePolicyKey, StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_PRIMARY_PARTITION_VALUE,
+            BDATA_PARTITION_VALUE_AGE_IN_DAYS, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2,
+            StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+
+        // Create a partition value that would satisfy the primary partition value age check as per the storage policy rule.
+        String primaryPartitionValue = getTestPrimaryPartitionValue(BDATA_PARTITION_VALUE_AGE_IN_DAYS + 1);
+
+        // Create and persist a storage unit in the storage policy filter storage.
+        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, primaryPartitionValue,
+                SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID, STORAGE_UNIT_STATUS,
+                NO_STORAGE_DIRECTORY_PATH);
+
+        // Overwrite the "updated on" threshold for a newly created business object data to be selectable by the storage policy.
+        Map<String, Object> overrideMap = new HashMap<>();
+        overrideMap.put(ConfigurationValue.STORAGE_POLICY_PROCESSOR_BDATA_UPDATED_ON_THRESHOLD_DAYS.getKey(), -1);
+        modifyPropertySourceInEnvironment(overrideMap);
+        try
+        {
+            // Execute the storage policy selection and validate the results. One business object data matching to storage policy should get selected.
+            assertEquals(Arrays.asList(new StoragePolicySelection(
+                new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, primaryPartitionValue,
+                    SUBPARTITION_VALUES, DATA_VERSION), storagePolicyKey, INITIAL_VERSION)), storagePolicySelectorService.execute(SQS_QUEUE_NAME, MAX_RESULT));
+
+            // Update this business object data, so it's primary partition value is now after the storage policy threshold date.
+            storageUnitEntity.getBusinessObjectData().setPartitionValue(getTestPrimaryPartitionValue(BDATA_PARTITION_VALUE_AGE_IN_DAYS - 1));
+            businessObjectDataDao.saveAndRefresh(storageUnitEntity.getBusinessObjectData());
+
+            // Execute the storage policy selection and validate the results. No business object data matching to storage policy should get selected.
+            assertEquals(0, storagePolicySelectorService.execute(SQS_QUEUE_NAME, MAX_RESULT).size());
+        }
+        finally
+        {
+            restorePropertySourceInEnvironment();
+        }
+    }
+
+    @Test
+    public void testExecutePrimaryPartitionValueStoragePolicyRuleTypePrimaryPartitionValueSingleDayDateMaskSizeMismatch() throws Exception
+    {
+        // Create a storage policy key.
+        StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
+
+        // Create and persist a storage policy entity.
+        storagePolicyDaoTestHelper.createStoragePolicyEntity(storagePolicyKey, StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_PRIMARY_PARTITION_VALUE,
+            BDATA_PARTITION_VALUE_AGE_IN_DAYS, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2,
+            StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+
+        // Create a partition value that would satisfy the primary partition value age check as per the storage policy rule.
+        String primaryPartitionValue = getTestPrimaryPartitionValue(BDATA_PARTITION_VALUE_AGE_IN_DAYS + 1);
+
+        // Create and persist a storage unit in the storage policy filter storage.
+        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, primaryPartitionValue,
+                SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID, STORAGE_UNIT_STATUS,
+                NO_STORAGE_DIRECTORY_PATH);
+
+        // Overwrite the "updated on" threshold for a newly created business object data to be selectable by the storage policy.
+        Map<String, Object> overrideMap = new HashMap<>();
+        overrideMap.put(ConfigurationValue.STORAGE_POLICY_PROCESSOR_BDATA_UPDATED_ON_THRESHOLD_DAYS.getKey(), -1);
+        modifyPropertySourceInEnvironment(overrideMap);
+        try
+        {
+            // Execute the storage policy selection and validate the results. One business object data matching to storage policy should get selected.
+            assertEquals(Arrays.asList(new StoragePolicySelection(
+                new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, primaryPartitionValue,
+                    SUBPARTITION_VALUES, DATA_VERSION), storagePolicyKey, INITIAL_VERSION)), storagePolicySelectorService.execute(SQS_QUEUE_NAME, MAX_RESULT));
+
+            // Update this business object data, so it's primary partition value is now longer when the expected date pattern.
+            storageUnitEntity.getBusinessObjectData().setPartitionValue(primaryPartitionValue + "_");
+            businessObjectDataDao.saveAndRefresh(storageUnitEntity.getBusinessObjectData());
+
+            // Execute the storage policy selection and validate the results. No business object data matching to storage policy should get selected.
+            assertEquals(0, storagePolicySelectorService.execute(SQS_QUEUE_NAME, MAX_RESULT).size());
+        }
+        finally
+        {
+            restorePropertySourceInEnvironment();
+        }
+    }
+
+    @Test
+    public void testExecuteRegistrationDateStoragePolicyRuleType()
+    {
+        // Create a storage policy key.
+        StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
+
+        // Create and persist a storage policy entity.
+        storagePolicyDaoTestHelper
+            .createStoragePolicyEntity(storagePolicyKey, StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS, BDEF_NAMESPACE, BDEF_NAME,
+                FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION,
+                LATEST_VERSION_FLAG_SET);
+
+        // Create and persist a storage unit in the storage policy filter storage.
+        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID, StorageUnitStatusEntity.ENABLED,
+                NO_STORAGE_DIRECTORY_PATH);
+
+        // Apply the offset in days to business object data "created on" value.
+        businessObjectDataDaoTestHelper.ageBusinessObjectData(storageUnitEntity.getBusinessObjectData(), BDATA_AGE_IN_DAYS + 1);
+
+        // Execute the storage policy selection.
+        List<StoragePolicySelection> resultStoragePolicySelections = storagePolicySelectorService.execute(SQS_QUEUE_NAME, MAX_RESULT);
+
+        // Validate the results.
+        assertEquals(Arrays.asList(new StoragePolicySelection(
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION), storagePolicyKey, INITIAL_VERSION)), resultStoragePolicySelections);
+    }
+
+    @Test
+    public void testExecuteRegistrationDateStoragePolicyRuleTypeBusinessObjectDataNotOldEnough()
+    {
+        // Create a storage policy key.
+        StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
+
+        // Create and persist a storage policy entity.
+        storagePolicyDaoTestHelper.createStoragePolicyEntity(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME),
+            StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+            STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+
+        // Create and persist a storage unit in the storage policy filter storage.
+        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID, STORAGE_UNIT_STATUS,
+                NO_STORAGE_DIRECTORY_PATH);
+
+        // Apply the offset in days to business object data "created on" value.
+        businessObjectDataDaoTestHelper.ageBusinessObjectData(storageUnitEntity.getBusinessObjectData(), BDATA_AGE_IN_DAYS + 1);
+
+        // Execute the storage policy selection and validate the results. One business object data matching to storage policy should get selected.
+        assertEquals(Arrays.asList(new StoragePolicySelection(
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION), storagePolicyKey, INITIAL_VERSION)), storagePolicySelectorService.execute(SQS_QUEUE_NAME, MAX_RESULT));
+
+        // Apply another offset in days to business object data "created on" value to make it one day not old enough for the storage policy.
+        businessObjectDataDaoTestHelper.ageBusinessObjectData(storageUnitEntity.getBusinessObjectData(), -2);
+
+        // Execute the storage policy selection and validate the results. No business object data matching to storage policy should get selected.
+        assertEquals(0, storagePolicySelectorService.execute(SQS_QUEUE_NAME, MAX_RESULT).size());
+    }
+
+    @Test
     public void testExecuteTestingMaxResult()
     {
         // Create a storage policy key.
@@ -261,5 +487,24 @@ public class StoragePolicySelectorServiceTest extends AbstractServiceTest
         assertEquals(Arrays.asList(new StoragePolicySelection(
             new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE_2,
                 SUBPARTITION_VALUES, DATA_VERSION), storagePolicyKey, INITIAL_VERSION)), resultStoragePolicySelections);
+    }
+
+    /**
+     * Gets a primary partition value in "yyyy-MM-dd" format from the current date minus the specified number of days.
+     *
+     * @param offsetInDays the number of days to subtract from the current date to produce the primary partition value
+     *
+     * @return the primary partition value as a date in "yyyy-MM-dd" format
+     */
+    private String getTestPrimaryPartitionValue(long offsetInDays)
+    {
+        // Get the current timestamp from the database.
+        Timestamp currentTimestamp = herdDao.getCurrentTimestamp();
+
+        // Apply the offset in days to current timestamp.
+        Timestamp updatedTimestamp = new Timestamp(currentTimestamp.getTime() - offsetInDays * 86400000L);    // 24L * 60L * 60L * 1000L
+
+        // Return the primary partition value as a date in "yyyy-MM-dd" format.
+        return new SimpleDateFormat(AbstractHerdDao.DEFAULT_SINGLE_DAY_DATE_MASK, Locale.US).format(updatedTimestamp);
     }
 }
