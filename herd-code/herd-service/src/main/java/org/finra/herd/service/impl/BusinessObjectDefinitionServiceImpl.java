@@ -115,7 +115,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 
     @Autowired
     private TagDaoHelper tagDaoHelper;
-    
+
     @Autowired
     private StorageDaoHelper storageDaoHelper;
 
@@ -325,7 +325,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         // Retrieve and return the list of business object definitions
         BusinessObjectDefinitionKeys businessObjectDefinitionKeys = new BusinessObjectDefinitionKeys();
         businessObjectDefinitionKeys.getBusinessObjectDefinitionKeys()
-            .addAll(businessObjectDefinitionDao.getBusinessObjectDefinitionKeys(namespaceCode.trim()));
+            .addAll(businessObjectDefinitionDao.getBusinessObjectDefinitionKeysByNamespace(namespaceCode.trim()));
         return businessObjectDefinitionKeys;
     }
 
@@ -340,7 +340,6 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         // Validate the business object definition search fields.
         validateSearchResponseFields(fields);
 
-        BusinessObjectDefinitionSearchKey businessObjectDefinitionSearchKey = null;
         List<TagEntity> tagEntities = new ArrayList<>();
 
         if (!CollectionUtils.isEmpty(request.getBusinessObjectDefinitionSearchFilters()))
@@ -348,7 +347,8 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
             // Validate the search request.
             validateBusinessObjectDefinitionSearchRequest(request);
 
-            businessObjectDefinitionSearchKey = request.getBusinessObjectDefinitionSearchFilters().get(0).getBusinessObjectDefinitionSearchKeys().get(0);
+            BusinessObjectDefinitionSearchKey businessObjectDefinitionSearchKey =
+                request.getBusinessObjectDefinitionSearchFilters().get(0).getBusinessObjectDefinitionSearchKeys().get(0);
 
             TagEntity tagEntity = tagDaoHelper.getTagEntity(businessObjectDefinitionSearchKey.getTagKey());
 
@@ -379,7 +379,6 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
      * Validates the business object definition create request. This method also trims request parameters.
      *
      * @param request the request
-     *
      */
     private void validateBusinessObjectDefinitionCreateRequest(BusinessObjectDefinitionCreateRequest request)
     {
@@ -689,33 +688,34 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         if (CollectionUtils.size(businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters()) == 1 &&
             businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters().get(0) != null)
         {
-                // Get the business object definition search filter.
-                BusinessObjectDefinitionSearchFilter businessObjectDefinitionSearchFilter =
-                    businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters().get(0);
+            // Get the business object definition search filter.
+            BusinessObjectDefinitionSearchFilter businessObjectDefinitionSearchFilter =
+                businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters().get(0);
 
-                Assert.isTrue(CollectionUtils.size(businessObjectDefinitionSearchFilter.getBusinessObjectDefinitionSearchKeys()) == 1 &&
-                        businessObjectDefinitionSearchFilter.getBusinessObjectDefinitionSearchKeys().get(0) != null,
-                    "Exactly one business object definition search key must be specified.");
+            Assert.isTrue(CollectionUtils.size(businessObjectDefinitionSearchFilter.getBusinessObjectDefinitionSearchKeys()) == 1 &&
+                businessObjectDefinitionSearchFilter.getBusinessObjectDefinitionSearchKeys().get(0) != null,
+                "Exactly one business object definition search key must be specified.");
 
-                // Get the tag search key.
-                BusinessObjectDefinitionSearchKey businessObjectDefinitionSearchKey =
-                    businessObjectDefinitionSearchFilter.getBusinessObjectDefinitionSearchKeys().get(0);
+            // Get the tag search key.
+            BusinessObjectDefinitionSearchKey businessObjectDefinitionSearchKey =
+                businessObjectDefinitionSearchFilter.getBusinessObjectDefinitionSearchKeys().get(0);
 
-                tagHelper.validateTagKey(businessObjectDefinitionSearchKey.getTagKey());
+            tagHelper.validateTagKey(businessObjectDefinitionSearchKey.getTagKey());
         }
         else
         {
-            Assert.isTrue(CollectionUtils.size(businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters()) ==
-                        1 && businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters().get(0) != null,
-                    "Exactly one business object definition search filter must be specified.");
+            Assert.isTrue(CollectionUtils.size(businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters()) == 1 &&
+                businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters().get(0) != null,
+                "Exactly one business object definition search filter must be specified.");
         }
     }
-    
+
     /**
-    * Update business object definition sample file
-    * @param businessObjectDefinitionKey business object definition key
-    * @param BusinessObjectDefinitionSampleFileUpdateDto update dto
-    */
+     * Update business object definition sample file
+     *
+     * @param businessObjectDefinitionKey business object definition key
+     * @param BusinessObjectDefinitionSampleFileUpdateDto update dto
+     */
     @Override
     public void updateBusinessObjectDefinitionEntitySampleFile(BusinessObjectDefinitionKey businessObjectDefinitionKey,
         BusinessObjectDefinitionSampleFileUpdateDto businessObjectDefinitionSampleFileUpdateDto)
@@ -723,13 +723,13 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         String path = businessObjectDefinitionSampleFileUpdateDto.getPath();
         String fileName = businessObjectDefinitionSampleFileUpdateDto.getFileName();
         long fileSize = businessObjectDefinitionSampleFileUpdateDto.getFileSize();
-        
+
         // validate business object key
         businessObjectDefinitionHelper.validateBusinessObjectDefinitionKey(businessObjectDefinitionKey);
         // validate file name
         Assert.hasText(fileName, "A file name must be specified.");
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
-                businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
+            businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
         Collection<BusinessObjectDefinitionSampleDataFileEntity> sampleFiles = businessObjectDefinitionEntity.getSampleDataFiles();
         boolean found = false;
         for (BusinessObjectDefinitionSampleDataFileEntity sampleDataFieEntity : sampleFiles)
