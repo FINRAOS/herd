@@ -879,8 +879,8 @@
                <version>${maven.surefire.plugin.version}</version>
                <configuration>
                   <argLine>-Xms512m -Xmx1500m</argLine>
-                  <parallel>methods</parallel>
-                  <forkMode>pertest</forkMode>
+                  <useUnlimitedThreads>true</useUnlimitedThreads>
+                  <reuseForks>true</reuseForks>
                </configuration>
             </plugin>
             <plugin>
