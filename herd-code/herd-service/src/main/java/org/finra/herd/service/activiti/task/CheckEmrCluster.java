@@ -41,11 +41,11 @@ import org.finra.herd.model.dto.EmrClusterAlternateKeyDto;
 @Component
 public class CheckEmrCluster extends BaseEmrCluster
 {
-    private static final String VARIABLE_EMR_CLUSTER_STATUS_CHANGE_REASON_CODE = "emrClusterStatus_changeReasonCode";
-    private static final String VARIABLE_EMR_CLUSTER_STATUS_CHANGE_REASON_MESSAGE = "emrClusterStatus_changeReasonMessage";
-    private static final String VARIABLE_EMR_CLUSTER_CREATION_TIME = "emrClusterStatus_creationTime";
-    private static final String VARIABLE_EMR_CLUSTER_READY_TIME = "emrClusterStatus_readyTime";
-    private static final String VARIABLE_EMR_CLUSTER_END_TIME = "emrClusterStatus_endTime";
+    public static final String VARIABLE_EMR_CLUSTER_STATUS_CHANGE_REASON_CODE = "emrClusterStatus_changeReasonCode";
+    public static final String VARIABLE_EMR_CLUSTER_STATUS_CHANGE_REASON_MESSAGE = "emrClusterStatus_changeReasonMessage";
+    public static final String VARIABLE_EMR_CLUSTER_CREATION_TIME = "emrClusterStatus_creationTime";
+    public static final String VARIABLE_EMR_CLUSTER_READY_TIME = "emrClusterStatus_readyTime";
+    public static final String VARIABLE_EMR_CLUSTER_END_TIME = "emrClusterStatus_endTime";
     private Expression emrClusterId;
 
     private Expression emrStepId;

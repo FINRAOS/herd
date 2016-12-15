@@ -18,6 +18,7 @@ package org.finra.herd.service.activiti.task;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,6 +41,7 @@ import org.finra.herd.service.activiti.ActivitiRuntimeHelper;
  */
 public class CheckEmrClusterTest extends AbstractServiceTest
 {
+    public static final String taskName = "checkClusterServiceTask";
     /**
      * This method tests the check EMR cluster activiti task with cluster Id and step Id specified
      */
@@ -141,6 +143,22 @@ public class CheckEmrClusterTest extends AbstractServiceTest
         // Run a job with Activiti XML that will start cluster, check status and terminate.
         Job job = jobServiceTestHelper.createJobForCreateCluster(ACTIVITI_XML_CHECK_CLUSTER_WITH_CLASSPATH, getParameters(true, ""));
         assertNotNull(job);
+
+        HistoricProcessInstance hisInstance =
+            activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(job.getId()).includeProcessVariables().singleResult();
+        Map<String, Object> variables = hisInstance.getProcessVariables();
+
+        //check to be sure fields exist.  These should exist whether verbose is set or not
+        assertTrue(variables.containsKey(taskName + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + CheckEmrCluster.VARIABLE_EMR_CLUSTER_ID));
+        assertTrue(variables.containsKey(taskName + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + CheckEmrCluster.VARIABLE_EMR_CLUSTER_STATUS));
+        assertTrue(variables.containsKey(taskName + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + CheckEmrCluster.VARIABLE_EMR_CLUSTER_CREATION_TIME));
+        assertTrue(variables.containsKey(taskName + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + CheckEmrCluster.VARIABLE_EMR_CLUSTER_READY_TIME));
+        assertTrue(variables.containsKey(taskName + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + CheckEmrCluster.VARIABLE_EMR_CLUSTER_END_TIME));
+        assertTrue(variables.containsKey(taskName + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + CheckEmrCluster.VARIABLE_EMR_CLUSTER_STATUS_CHANGE_REASON_CODE));
+        assertTrue(variables.containsKey(taskName + ActivitiRuntimeHelper.TASK_VARIABLE_MARKER + CheckEmrCluster.VARIABLE_EMR_CLUSTER_STATUS_CHANGE_REASON_MESSAGE));
+
+
+
     }
 
     private List<Parameter> getParameters(boolean isShellStepRunning, String verbose)

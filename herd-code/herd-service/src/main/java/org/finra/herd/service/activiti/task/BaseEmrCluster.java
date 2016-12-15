@@ -32,10 +32,10 @@ import org.finra.herd.service.EmrService;
  */
 public abstract class BaseEmrCluster extends BaseJavaDelegate
 {
-    private static final String VARIABLE_EMR_CLUSTER_ID = "emrClusterId";
-    private static final String VARIABLE_EMR_CLUSTER_STATUS = "emrClusterStatus";
-    private static final String VARIABLE_EMR_CLUSTER_CREATED = "emrClusterCreated";
-    private static final String VARIABLE_EMR_CLUSTER_DEFINITION = "emrClusterDefinition";
+    protected static final String VARIABLE_EMR_CLUSTER_ID = "emrClusterId";
+    protected static final String VARIABLE_EMR_CLUSTER_STATUS = "emrClusterStatus";
+    protected static final String VARIABLE_EMR_CLUSTER_CREATED = "emrClusterCreated";
+    protected static final String VARIABLE_EMR_CLUSTER_DEFINITION = "emrClusterDefinition";
 
     protected Expression namespace;
     protected Expression emrClusterDefinitionName;
