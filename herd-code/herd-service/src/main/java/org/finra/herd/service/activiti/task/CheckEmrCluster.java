@@ -41,6 +41,11 @@ import org.finra.herd.model.dto.EmrClusterAlternateKeyDto;
 @Component
 public class CheckEmrCluster extends BaseEmrCluster
 {
+    private static final String VARIABLE_EMR_CLUSTER_STATUS_CHANGE_REASON_CODE = "emrClusterStatus_changeReasonCode";
+    private static final String VARIABLE_EMR_CLUSTER_STATUS_CHANGE_REASON_MESSAGE = "emrClusterStatus_changeReasonMessage";
+    private static final String VARIABLE_EMR_CLUSTER_CREATION_TIME = "emrClusterStatus_creationTime";
+    private static final String VARIABLE_EMR_CLUSTER_READY_TIME = "emrClusterStatus_readyTime";
+    private static final String VARIABLE_EMR_CLUSTER_END_TIME = "emrClusterStatus_endTime";
     private Expression emrClusterId;
 
     private Expression emrStepId;
@@ -64,6 +69,12 @@ public class CheckEmrCluster extends BaseEmrCluster
 
         // Set cluster id and status workflow variables based on the result EMR cluster.
         setIdStatusWorkflowVariables(execution, emrCluster);
+
+        setTaskWorkflowVariable(execution, VARIABLE_EMR_CLUSTER_STATUS_CHANGE_REASON_CODE, emrCluster.getStatusChangeReason().getCode());
+        setTaskWorkflowVariable(execution, VARIABLE_EMR_CLUSTER_STATUS_CHANGE_REASON_MESSAGE, emrCluster.getStatusChangeReason().getMessage());
+        setTaskWorkflowVariable(execution, VARIABLE_EMR_CLUSTER_CREATION_TIME, emrCluster.getStatusTimeline().getCreationTime());
+        setTaskWorkflowVariable(execution, VARIABLE_EMR_CLUSTER_READY_TIME, emrCluster.getStatusTimeline().getReadyTime());
+        setTaskWorkflowVariable(execution, VARIABLE_EMR_CLUSTER_END_TIME, emrCluster.getStatusTimeline().getEndTime());
 
         // Set the active step details in workflow variables
         if (emrCluster.getActiveStep() != null && emrCluster.getActiveStep().getId() != null)
