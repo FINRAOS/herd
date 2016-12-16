@@ -1244,8 +1244,8 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         BusinessObjectDataRetryStoragePolicyTransitionDto businessObjectDataRetryStoragePolicyTransitionDto =
             businessObjectDataRetryStoragePolicyTransitionHelperService.prepareToRetryStoragePolicyTransition(businessObjectDataKey, request);
 
-        // Execute AWS specific steps needed to retry a storage policy transition.
-        businessObjectDataRetryStoragePolicyTransitionHelperService.executeAwsSpecificSteps(businessObjectDataRetryStoragePolicyTransitionDto);
+        // Execute S3 specific steps needed to retry a storage policy transition.
+        businessObjectDataRetryStoragePolicyTransitionHelperService.executeS3SpecificSteps(businessObjectDataRetryStoragePolicyTransitionDto);
 
         // Execute the after step for the retry a storage policy transition and return the business object data information.
         return businessObjectDataRetryStoragePolicyTransitionHelperService

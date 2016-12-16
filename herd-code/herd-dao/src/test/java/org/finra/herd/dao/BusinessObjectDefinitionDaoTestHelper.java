@@ -210,21 +210,6 @@ public class BusinessObjectDefinitionDaoTestHelper
     }
 
     /**
-     * Returns a list of test business object definition keys expected to be returned by getBusinessObjectDefinitionKeys() method.
-     *
-     * @return the list of expected business object definition keys
-     */
-    public List<BusinessObjectDefinitionKey> getExpectedBusinessObjectDefinitionKeys()
-    {
-        List<BusinessObjectDefinitionKey> keys = new ArrayList<>();
-
-        keys.add(new BusinessObjectDefinitionKey(AbstractDaoTest.NAMESPACE, AbstractDaoTest.BDEF_NAME));
-        keys.add(new BusinessObjectDefinitionKey(AbstractDaoTest.NAMESPACE, AbstractDaoTest.BDEF_NAME_2));
-
-        return keys;
-    }
-
-    /**
      * Creates and returns a list of business object definition entities.
      *
      * @return the list of expected business object definition entities
@@ -244,6 +229,38 @@ public class BusinessObjectDefinitionDaoTestHelper
         businessObjectDefinitionEntities.add(businessObjectDefinitionEntityTwo);
 
         return businessObjectDefinitionEntities;
+    }
+
+    /**
+     * Returns a list of test business object definition keys expected to be returned by getBusinessObjectDefinitionKeys() method.
+     *
+     * @return the list of expected business object definition keys
+     */
+    public List<BusinessObjectDefinitionKey> getExpectedBusinessObjectDefinitionKeys()
+    {
+        List<BusinessObjectDefinitionKey> keys = new ArrayList<>();
+
+        keys.add(new BusinessObjectDefinitionKey(AbstractDaoTest.NAMESPACE, AbstractDaoTest.BDEF_NAME));
+        keys.add(new BusinessObjectDefinitionKey(AbstractDaoTest.NAMESPACE_2, AbstractDaoTest.BDEF_NAME));
+        keys.add(new BusinessObjectDefinitionKey(AbstractDaoTest.NAMESPACE, AbstractDaoTest.BDEF_NAME_2));
+        keys.add(new BusinessObjectDefinitionKey(AbstractDaoTest.NAMESPACE_2, AbstractDaoTest.BDEF_NAME_2));
+
+        return keys;
+    }
+
+    /**
+     * Returns a list of test business object definition keys expected to be returned by getBusinessObjectDefinitionKeysByNamespace() method.
+     *
+     * @return the list of expected business object definition keys
+     */
+    public List<BusinessObjectDefinitionKey> getExpectedBusinessObjectDefinitionKeysForNamespace()
+    {
+        List<BusinessObjectDefinitionKey> keys = new ArrayList<>();
+
+        keys.add(new BusinessObjectDefinitionKey(AbstractDaoTest.NAMESPACE, AbstractDaoTest.BDEF_NAME));
+        keys.add(new BusinessObjectDefinitionKey(AbstractDaoTest.NAMESPACE, AbstractDaoTest.BDEF_NAME_2));
+
+        return keys;
     }
 
     /**

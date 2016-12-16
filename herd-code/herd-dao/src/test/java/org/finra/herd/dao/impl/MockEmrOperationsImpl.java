@@ -16,6 +16,7 @@
 package org.finra.herd.dao.impl;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,8 +26,11 @@ import com.amazonaws.services.elasticmapreduce.AmazonElasticMapReduceClient;
 import com.amazonaws.services.elasticmapreduce.model.AddJobFlowStepsRequest;
 import com.amazonaws.services.elasticmapreduce.model.Cluster;
 import com.amazonaws.services.elasticmapreduce.model.ClusterState;
+import com.amazonaws.services.elasticmapreduce.model.ClusterStateChangeReason;
+import com.amazonaws.services.elasticmapreduce.model.ClusterStateChangeReasonCode;
 import com.amazonaws.services.elasticmapreduce.model.ClusterStatus;
 import com.amazonaws.services.elasticmapreduce.model.ClusterSummary;
+import com.amazonaws.services.elasticmapreduce.model.ClusterTimeline;
 import com.amazonaws.services.elasticmapreduce.model.DescribeClusterRequest;
 import com.amazonaws.services.elasticmapreduce.model.DescribeClusterResult;
 import com.amazonaws.services.elasticmapreduce.model.DescribeStepRequest;
@@ -49,9 +53,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.AbstractDaoTest;
 import org.finra.herd.dao.EmrOperations;
+import org.finra.herd.model.api.xml.StatusChangeReason;
+import org.finra.herd.model.api.xml.StatusTimeline;
 import org.finra.herd.model.dto.ConfigurationValue;
 
 /**
@@ -59,26 +66,28 @@ import org.finra.herd.model.dto.ConfigurationValue;
  */
 public class MockEmrOperationsImpl implements EmrOperations
 {
-    @Autowired
-    protected ConfigurationHelper configurationHelper;
-
     public static final String MOCK_CLUSTER_NAME = "mock_cluster_name";
-
-    public static final String MOCK_EMR_MAKER = "mock_cluster_marker";
 
     public static final String MOCK_CLUSTER_NOT_PROVISIONED_NAME = "mock_cluster_not_provisioned_name";
 
+    public static final String MOCK_EMR_MAKER = "mock_cluster_marker";
+
     public static final String MOCK_STEP_RUNNING_NAME = "mock_step_running_name";
 
+    @Autowired
+    protected ConfigurationHelper configurationHelper;
 
     // Created clusters
     private Map<String, MockEmrJobFlow> emrClusters = new HashMap<>();
-
 
     @Override
     public String runEmrJobFlow(AmazonElasticMapReduceClient emrClient, RunJobFlowRequest jobFlowRequest)
     {
         String clusterStatus = ClusterState.BOOTSTRAPPING.toString();
+
+        StatusChangeReason reason = new StatusChangeReason(ClusterStateChangeReasonCode.USER_REQUEST.toString(), "Started " + clusterStatus);
+        StatusTimeline timeline = new StatusTimeline();
+        timeline.setCreationTime(HerdDateUtils.getXMLGregorianCalendarValue(new Date()));
 
         if (StringUtils.isNotBlank(jobFlowRequest.getAmiVersion()))
         {
@@ -115,7 +124,8 @@ public class MockEmrOperationsImpl implements EmrOperations
             }
         }
 
-        return createNewCluster(jobFlowRequest, clusterStatus).getJobFlowId();
+
+        return createNewCluster(jobFlowRequest, clusterStatus, reason, timeline).getJobFlowId();
     }
 
     /**
@@ -170,8 +180,16 @@ public class MockEmrOperationsImpl implements EmrOperations
         MockEmrJobFlow cluster = getClusterById(describeClusterRequest.getClusterId());
         if (cluster != null)
         {
-            return new DescribeClusterResult().withCluster(
-                new Cluster().withId(cluster.getJobFlowId()).withName(cluster.getJobFlowName()).withStatus(new ClusterStatus().withState(cluster.getStatus())));
+            return new DescribeClusterResult().withCluster(new Cluster().withId(cluster.getJobFlowId()).withName(cluster.getJobFlowName()).withStatus(
+                new ClusterStatus().withState(cluster.getStatus()).withStateChangeReason(
+                    new ClusterStateChangeReason().withCode(cluster.getStatusChangeReason().getCode())
+                        .withMessage(cluster.getStatusChangeReason().getMessage())).withTimeline(new ClusterTimeline().withCreationDateTime(
+                    cluster.getStatusTimeline().getCreationTime() != null ? cluster.getStatusTimeline().getCreationTime().toGregorianCalendar().getTime() :
+                        null).withEndDateTime(
+                    cluster.getStatusTimeline().getEndTime() != null ? cluster.getStatusTimeline().getEndTime().toGregorianCalendar().getTime() : null)
+                    .withReadyDateTime(
+                        cluster.getStatusTimeline().getReadyTime() != null ? cluster.getStatusTimeline().getReadyTime().toGregorianCalendar().getTime() :
+                            null))));
         }
         else
         {
@@ -188,7 +206,15 @@ public class MockEmrOperationsImpl implements EmrOperations
             if (!listClustersRequest.getClusterStates().isEmpty() && listClustersRequest.getClusterStates().contains(cluster.getStatus()))
             {
                 ClusterSummary clusterSummary = new ClusterSummary();
-                clusterSummary.withId(cluster.getJobFlowId()).withName(cluster.getJobFlowName()).withStatus(new ClusterStatus().withState(cluster.getStatus()));
+                clusterSummary.withId(cluster.getJobFlowId()).withName(cluster.getJobFlowName()).withStatus(new ClusterStatus().withState(cluster.getStatus())
+                    .withStateChangeReason(new ClusterStateChangeReason().withCode(cluster.getStatusChangeReason().getCode())
+                        .withMessage(cluster.getStatusChangeReason().getMessage())).withTimeline(new ClusterTimeline().withCreationDateTime(
+                        cluster.getStatusTimeline().getCreationTime() != null ? cluster.getStatusTimeline().getCreationTime().toGregorianCalendar().getTime() :
+                            null).withEndDateTime(
+                        cluster.getStatusTimeline().getEndTime() != null ? cluster.getStatusTimeline().getEndTime().toGregorianCalendar().getTime() : null)
+                        .withReadyDateTime(
+                            cluster.getStatusTimeline().getReadyTime() != null ? cluster.getStatusTimeline().getReadyTime().toGregorianCalendar().getTime() :
+                                null)));
                 clusterSummaryList.add(clusterSummary);
             }
         }
@@ -220,12 +246,14 @@ public class MockEmrOperationsImpl implements EmrOperations
         return returnCluster;
     }
 
-    private MockEmrJobFlow createNewCluster(RunJobFlowRequest jobFlowRequest, String status)
+    private MockEmrJobFlow createNewCluster(RunJobFlowRequest jobFlowRequest, String status, StatusChangeReason reason, StatusTimeline timeline)
     {
         MockEmrJobFlow cluster = new MockEmrJobFlow();
         cluster.setJobFlowId(getNewJobFlowId());
         cluster.setJobFlowName(jobFlowRequest.getName());
         cluster.setStatus(status);
+        cluster.setStatusTimeline(timeline);
+        cluster.setStatusChangeReason(reason);
         emrClusters.put(cluster.getJobFlowId(), cluster);
 
         // Add the steps

@@ -87,6 +87,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Integer BDATA_AGE_IN_DAYS = 1000;
 
+    public static final Integer BDATA_PARTITION_VALUE_AGE_IN_DAYS = 1000;
+
     public static final String BDATA_STATUS = "UT_Status_1_" + RANDOM_SUFFIX;
 
     public static final String BDATA_STATUS_2 = "UT_Status_2_" + RANDOM_SUFFIX;
