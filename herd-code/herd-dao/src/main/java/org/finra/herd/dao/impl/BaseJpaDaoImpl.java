@@ -44,16 +44,34 @@ import org.finra.herd.model.jpa.ConfigurationEntity;
 @Repository
 public class BaseJpaDaoImpl implements BaseJpaDao
 {
-    @Autowired
-    private ConfigurationHelper configurationHelper;
-
     @PersistenceContext
     protected EntityManager entityManager;
 
+    @Autowired
+    private ConfigurationHelper configurationHelper;
+
     @Override
-    public EntityManager getEntityManager()
+    public <T> void delete(T entity)
     {
-        return entityManager;
+        Validate.notNull(entity);
+        entityManager.remove(entity);
+
+        // Flush to persist so we ensure that data integrity violations, etc. are thrown here rather than at the time of transaction commit.
+        entityManager.flush();
+    }
+
+    @Override
+    public <T> void detach(T entity)
+    {
+        Validate.notNull(entity);
+        entityManager.detach(entity);
+    }
+
+    @Override
+    public <T> List<T> findAll(Class<T> entityClass)
+    {
+        Validate.notNull(entityClass);
+        return query("select type from " + StringUtils.unqualify(entityClass.getName()) + " type");
     }
 
     @Override
@@ -62,13 +80,6 @@ public class BaseJpaDaoImpl implements BaseJpaDao
         Validate.notNull(entityClass);
         Validate.notNull(entityId);
         return entityManager.find(entityClass, entityId);
-    }
-
-    @Override
-    public <T> List<T> findAll(Class<T> entityClass)
-    {
-        Validate.notNull(entityClass);
-        return query("select type from " + StringUtils.unqualify(entityClass.getName()) + " type");
     }
 
     @Override
@@ -100,17 +111,28 @@ public class BaseJpaDaoImpl implements BaseJpaDao
         Validate.notNull(entityClass);
         Validate.notEmpty(params);
         List<T> resultList = findByNamedProperties(entityClass, params);
-        Validate.isTrue(resultList.isEmpty() || resultList.size() == 1,
+        Validate.isTrue(resultList.size() < 2,
             "Found more than one persistent instance of type " + StringUtils.unqualify(entityClass.getName() + " with parameters " + params.toString()));
         return resultList.size() == 1 ? resultList.get(0) : null;
     }
 
     @Override
-    public <T> List<T> queryByNamedParams(String queryString, Map<String, ?> params)
+    public Timestamp getCurrentTimestamp()
     {
-        Validate.notEmpty(queryString);
-        Validate.notEmpty(params);
-        return executeQueryWithNamedParams(entityManager.createQuery(queryString), params);
+        // Create the criteria builder and the criteria.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Timestamp> criteria = builder.createQuery(Timestamp.class);
+
+        // Add the clauses for the query.
+        criteria.select(builder.currentTimestamp()).from(ConfigurationEntity.class);
+
+        return entityManager.createQuery(criteria).getSingleResult();
+    }
+
+    @Override
+    public EntityManager getEntityManager()
+    {
+        return entityManager;
     }
 
     @SuppressWarnings({"unchecked"})
@@ -119,6 +141,14 @@ public class BaseJpaDaoImpl implements BaseJpaDao
     {
         Validate.notEmpty(queryString);
         return entityManager.createQuery(queryString).getResultList();
+    }
+
+    @Override
+    public <T> List<T> queryByNamedParams(String queryString, Map<String, ?> params)
+    {
+        Validate.notEmpty(queryString);
+        Validate.notEmpty(params);
+        return executeQueryWithNamedParams(entityManager.createQuery(queryString), params);
     }
 
     @Override
@@ -143,41 +173,23 @@ public class BaseJpaDaoImpl implements BaseJpaDao
         return entity;
     }
 
-    @Override
-    public <T> void delete(T entity)
-    {
-        Validate.notNull(entity);
-        entityManager.remove(entity);
-
-        // Flush to persist so we ensure that data integrity violations, etc. are thrown here rather than at the time of transaction commit.
-        entityManager.flush();
-    }
-
-    @Override
-    public <T> void detach(T entity)
-    {
-        Validate.notNull(entity);
-        entityManager.detach(entity);
-    }
-
     /**
-     * Executes a query with named parameters and returns the result list.
+     * Executes query, validates if result list contains no more than record and returns the query result.
      *
-     * @param query the query to execute.
-     * @param params the named parameters.
+     * @param <T> The type of the root entity class
+     * @param criteria the criteria select query to be executed
+     * @param message the exception message to use if the query returns fails
      *
-     * @return the list of results.
+     * @return the query result or null if 0 records were selected
      */
-    @SuppressWarnings({"unchecked"})
-    private <T> List<T> executeQueryWithNamedParams(Query query, Map<String, ?> params)
+    protected <T> T executeSingleResultQuery(CriteriaQuery<T> criteria, String message)
     {
-        Validate.notNull(query);
-        Validate.notNull(params);
-        for (Map.Entry<String, ?> entry : params.entrySet())
-        {
-            query.setParameter(entry.getKey(), entry.getValue());
-        }
-        return query.getResultList();
+        List<T> resultList = entityManager.createQuery(criteria).getResultList();
+
+        // Validate that the query returned no more than one record.
+        Validate.isTrue(resultList.size() < 2, message);
+
+        return resultList.size() == 1 ? resultList.get(0) : null;
     }
 
     /**
@@ -216,34 +228,22 @@ public class BaseJpaDaoImpl implements BaseJpaDao
     }
 
     /**
-     * Executes query, validates if result list contains no more than record and returns the query result.
+     * Executes a query with named parameters and returns the result list.
      *
-     * @param <T> The type of the root entity class
-     * @param criteria the criteria select query to be executed
-     * @param message the exception message to use if the query returns fails
+     * @param query the query to execute.
+     * @param params the named parameters.
      *
-     * @return the query result or null if 0 records were selected
+     * @return the list of results.
      */
-    protected <T> T executeSingleResultQuery(CriteriaQuery<T> criteria, String message)
+    @SuppressWarnings({"unchecked"})
+    private <T> List<T> executeQueryWithNamedParams(Query query, Map<String, ?> params)
     {
-        List<T> resultList = entityManager.createQuery(criteria).getResultList();
-
-        // Validate that the query returned no more than one record.
-        Validate.isTrue(resultList.size() < 2, message);
-
-        return resultList.size() == 1 ? resultList.get(0) : null;
-    }
-
-    @Override
-    public Timestamp getCurrentTimestamp()
-    {
-        // Create the criteria builder and the criteria.
-        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-        CriteriaQuery<Timestamp> criteria = builder.createQuery(Timestamp.class);
-
-        // Add the clauses for the query.
-        criteria.select(builder.currentTimestamp()).from(ConfigurationEntity.class);
-
-        return entityManager.createQuery(criteria).getSingleResult();
+        Validate.notNull(query);
+        Validate.notNull(params);
+        for (Map.Entry<String, ?> entry : params.entrySet())
+        {
+            query.setParameter(entry.getKey(), entry.getValue());
+        }
+        return query.getResultList();
     }
 }

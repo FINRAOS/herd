@@ -191,12 +191,18 @@ public enum ConfigurationValue
      * AWS SQS queue name where sample data upload sends message
      */
     SAMPLE_DATA_SQS_QUEUE_NAME("sample.data.sqs.queue.name", null),
-    
+
     /**
      * The maximum number of business object data instances to be selected per storage policies in a single run of the storage policy selector system job. The
      * default is 1000 business object data instances.
      */
     STORAGE_POLICY_SELECTOR_JOB_MAX_BDATA_INSTANCES("storage.policy.selector.job.max.business.object.data.instances", "1000"),
+
+    /**
+     * The threshold in days since business object data registration update for business object data to be selectable by a storage policy of the
+     * DAYS_SINCE_BDATA_PRIMARY_PARTITION_VALUE storage policy rule type. The default is 90 days.
+     */
+    STORAGE_POLICY_PROCESSOR_BDATA_UPDATED_ON_THRESHOLD_DAYS("storage.policy.processor.business.object.data.updated.on.threshold.days", 90),
 
     /**
      * The cron expression to schedule "businessObjectDataFinalizeRestore" system job. Default is to run the system job every 6 hours.
@@ -425,7 +431,7 @@ public enum ConfigurationValue
      * Indicates whether the sample data JMS message listener service is enabled or not. The default is "true" (enabled).
      */
     SAMPLE_DATA_JMS_LISTENER_ENABLED("sample.data.jms.listener.enabled", "true"),
-    
+
     /**
      * Indicates whether the JMS message listener service is enabled or not. The default is "true" (enabled).
      */

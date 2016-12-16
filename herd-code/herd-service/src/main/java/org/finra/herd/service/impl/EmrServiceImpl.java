@@ -23,6 +23,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.elasticmapreduce.model.Cluster;
+import com.amazonaws.services.elasticmapreduce.model.ClusterStatus;
 import com.amazonaws.services.elasticmapreduce.model.ClusterSummary;
 import com.amazonaws.services.elasticmapreduce.model.Step;
 import com.amazonaws.services.elasticmapreduce.model.StepSummary;
@@ -59,6 +60,8 @@ import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.api.xml.OozieWorkflowAction;
 import org.finra.herd.model.api.xml.OozieWorkflowJob;
 import org.finra.herd.model.api.xml.RunOozieWorkflowRequest;
+import org.finra.herd.model.api.xml.StatusChangeReason;
+import org.finra.herd.model.api.xml.StatusTimeline;
 import org.finra.herd.model.dto.AwsParamsDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.EmrClusterAlternateKeyDto;
@@ -192,7 +195,7 @@ public class EmrServiceImpl implements EmrService
                 Assert.isTrue(clusterName.equalsIgnoreCase(cluster.getName()),
                     "Cluster name of specified cluster id \"" + emrClusterId + "\" must match the name specified.");
                 emrCluster.setId(cluster.getId());
-                emrCluster.setStatus(cluster.getStatus().getState());
+                setEmrClusterStatus(emrCluster, cluster.getStatus());
             }
             else
             {
@@ -202,7 +205,7 @@ public class EmrServiceImpl implements EmrService
                 Assert.notNull(clusterSummary, "An EMR cluster must exists with the name \"" + clusterName + "\".");
 
                 emrCluster.setId(clusterSummary.getId());
-                emrCluster.setStatus(clusterSummary.getStatus().getState());
+                setEmrClusterStatus(emrCluster, clusterSummary.getStatus());
             }
 
             // Get active step details
@@ -420,6 +423,7 @@ public class EmrServiceImpl implements EmrService
         EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, replacedConfigXml);
 
         // Perform override if override is set
+
         overrideEmrClusterDefinition(emrClusterDefinition, request.getEmrClusterDefinitionOverride());
 
         // Perform the EMR cluster definition configuration validation.
@@ -765,7 +769,7 @@ public class EmrServiceImpl implements EmrService
         EmrClusterDefinitionEntity emrClusterDefinitionEntity = emrClusterDefinitionDaoHelper
             .getEmrClusterDefinitionEntity(stepHelper.getRequestNamespace(request), stepHelper.getRequestEmrClusterDefinitionName(request));
 
-        // Update the namespace and cluster definition name in request from database.  
+        // Update the namespace and cluster definition name in request from database.
         stepHelper.setRequestNamespace(request, namespaceEntity.getCode());
         stepHelper.setRequestEmrClusterDefinitionName(request, emrClusterDefinitionEntity.getName());
 
@@ -1266,5 +1270,15 @@ public class EmrServiceImpl implements EmrService
         key.setNamespace(alternateKeyHelper.validateStringParameter("namespace", key.getNamespace()));
         key.setEmrClusterDefinitionName(alternateKeyHelper.validateStringParameter("An", "EMR cluster definition name", key.getEmrClusterDefinitionName()));
         key.setEmrClusterName(alternateKeyHelper.validateStringParameter("An", "EMR cluster name", key.getEmrClusterName()));
+    }
+
+    private void setEmrClusterStatus(EmrCluster cl, ClusterStatus amazonClusterStatus)
+    {
+        cl.setStatus(amazonClusterStatus.getState());
+        cl.setStatusChangeReason(
+            new StatusChangeReason(amazonClusterStatus.getStateChangeReason().getCode(), amazonClusterStatus.getStateChangeReason().getMessage()));
+        cl.setStatusTimeline(new StatusTimeline(toXmlGregorianCalendar(amazonClusterStatus.getTimeline().getCreationDateTime()),
+            toXmlGregorianCalendar(amazonClusterStatus.getTimeline().getReadyDateTime()),
+            toXmlGregorianCalendar(amazonClusterStatus.getTimeline().getEndDateTime())));
     }
 }

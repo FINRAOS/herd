@@ -33,6 +33,11 @@ public class StoragePolicyRuleTypeEntity extends AuditableEntity
     public static final String DAYS_SINCE_BDATA_REGISTERED = "DAYS_SINCE_BDATA_REGISTERED";
 
     /**
+     * Storage policy rule type that uses business object data primary partition value field.
+     */
+    public static final String DAYS_SINCE_BDATA_PRIMARY_PARTITION_VALUE = "DAYS_SINCE_BDATA_PRIMARY_PARTITION_VALUE";
+
+    /**
      * The code column.
      */
     @Id

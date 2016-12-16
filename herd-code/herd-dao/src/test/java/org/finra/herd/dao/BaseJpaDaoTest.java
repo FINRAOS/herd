@@ -19,6 +19,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +29,8 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
+import org.finra.herd.model.api.xml.NamespaceKey;
+import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.model.jpa.StoragePlatformEntity;
 
 /**
@@ -35,11 +38,11 @@ import org.finra.herd.model.jpa.StoragePlatformEntity;
  */
 public class BaseJpaDaoTest extends AbstractDaoTest
 {
-    // The "name" property for the storage platform entity.
-    private static final String NAME_PROPERTY = "name";
-
     // The "createdBy" property for the auditable entities.
     private static final String CREATED_BY_PROPERTY = "createdBy";
+
+    // The "name" property for the storage platform entity.
+    private static final String NAME_PROPERTY = "name";
 
     // Although HerdDao extends BaseJpaDao, we will autowire it so we can use it directly and not take a chance that any base functionality is overridden.
     @Qualifier(value = "baseJpaDaoImpl")
@@ -47,9 +50,42 @@ public class BaseJpaDaoTest extends AbstractDaoTest
     protected BaseJpaDao baseJpaDao;
 
     @Test
-    public void testGetEntityManager()
+    public void testDelete()
     {
-        assertNotNull(baseJpaDao.getEntityManager());
+        // Create a namespace entity.
+        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
+
+        // Validate that this namespace entity exists.
+        assertNotNull(namespaceDao.getNamespaceByKey(new NamespaceKey(NAMESPACE)));
+
+        // Delete the namespace entity.
+        baseJpaDao.delete(namespaceEntity);
+
+        // Validate that this namespace entity does not exist.
+        assertNull(namespaceDao.getNamespaceByKey(new NamespaceKey(NAMESPACE)));
+    }
+
+    @Test
+    public void testDetach()
+    {
+        // Create a namespace entity.
+        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
+
+        // Validate that this namespace entity exists.
+        assertNotNull(namespaceDao.getNamespaceByKey(new NamespaceKey(NAMESPACE)));
+
+        // Detach the namespace entity.
+        baseJpaDao.detach(namespaceEntity);
+
+        // Try to delete a detached entity.
+        try
+        {
+            baseJpaDao.delete(namespaceEntity);
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(String.format("Removing a detached instance %s#%s", NamespaceEntity.class.getCanonicalName(), NAMESPACE), e.getMessage());
+        }
     }
 
     @Test
@@ -85,12 +121,43 @@ public class BaseJpaDaoTest extends AbstractDaoTest
     }
 
     @Test
+    public void testFindUniqueByNamedPropertiesMultipleEntitiesFound()
+    {
+        // Create two storage platform entities.
+        List<StoragePlatformEntity> storagePlatformEntities = Arrays.asList(storagePlatformDaoTestHelper.createStoragePlatformEntity(STORAGE_PLATFORM_CODE),
+            storagePlatformDaoTestHelper.createStoragePlatformEntity(STORAGE_PLATFORM_CODE_2));
+
+        // Assert that both entities have the same value for "created by" property.
+        assertEquals(storagePlatformEntities.get(0).getCreatedBy(), storagePlatformEntities.get(1).getCreatedBy());
+
+        // Try to get an unique entity using "created by" property.
+        Map<String, String> namedProperties = new HashMap<>();
+        namedProperties.put(CREATED_BY_PROPERTY, storagePlatformEntities.get(0).getCreatedBy());
+        try
+        {
+            baseJpaDao.findUniqueByNamedProperties(StoragePlatformEntity.class, namedProperties);
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(String
+                .format("Found more than one persistent instance of type %s with parameters {%s=%s}", StoragePlatformEntity.class.getSimpleName(),
+                    CREATED_BY_PROPERTY, storagePlatformEntities.get(0).getCreatedBy()), e.getMessage());
+        }
+    }
+
+    @Test
     public void testFindUniqueByNamedPropertiesNoExist()
     {
         Map<String, String> namedProperties = new HashMap<>();
         namedProperties.put(NAME_PROPERTY, UUID.randomUUID().toString()); // Search for a random entity name that doesn't exist.
         StoragePlatformEntity storagePlatformEntity = baseJpaDao.findUniqueByNamedProperties(StoragePlatformEntity.class, namedProperties);
         assertNull(storagePlatformEntity);
+    }
+
+    @Test
+    public void testGetEntityManager()
+    {
+        assertNotNull(baseJpaDao.getEntityManager());
     }
 
     /**

@@ -26,13 +26,6 @@ import org.finra.herd.model.dto.BusinessObjectDataRetryStoragePolicyTransitionDt
 public interface BusinessObjectDataRetryStoragePolicyTransitionHelperService
 {
     /**
-     * Executes AWS specific steps needed to retry a storage policy transition.
-     *
-     * @param businessObjectDataRetryStoragePolicyTransitionDto the DTO that holds various parameters needed to retry a storage policy transition
-     */
-    public void executeAwsSpecificSteps(BusinessObjectDataRetryStoragePolicyTransitionDto businessObjectDataRetryStoragePolicyTransitionDto);
-
-    /**
      * Executes the after step for the retry a storage policy transition and return the business object data information.
      *
      * @param businessObjectDataRetryStoragePolicyTransitionDto the DTO that holds various parameters needed to retry a storage policy transition
@@ -41,6 +34,13 @@ public interface BusinessObjectDataRetryStoragePolicyTransitionHelperService
      */
     public BusinessObjectData executeRetryStoragePolicyTransitionAfterStep(
         BusinessObjectDataRetryStoragePolicyTransitionDto businessObjectDataRetryStoragePolicyTransitionDto);
+
+    /**
+     * Executes S3 specific steps needed to retry a storage policy transition.
+     *
+     * @param businessObjectDataRetryStoragePolicyTransitionDto the DTO that holds various parameters needed to retry a storage policy transition
+     */
+    public void executeS3SpecificSteps(BusinessObjectDataRetryStoragePolicyTransitionDto businessObjectDataRetryStoragePolicyTransitionDto);
 
     /**
      * Prepares for the business object data retry storage policy transition by validating the input parameters along with the related database entities. The
