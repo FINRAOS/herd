@@ -81,6 +81,22 @@ public abstract class HerdActivitiServiceTaskTest extends AbstractServiceTest
         return createJobAndCheckTaskStatusSuccess(activitiXml, parameters, variableValuesToValidate);
     }
 
+    protected void testActiviTaskEnvironmentVariable(String implementation, List<FieldExtension> fieldExtensionList, List<Parameter> parameters,
+      String expectedValue) throws Exception
+    {
+        String activitiXml = buildActivitiXml(implementation, fieldExtensionList);
+
+        Job job = jobServiceTestHelper.createJobFromActivitiXml(activitiXml, parameters);
+        assertNotNull(job);
+
+        HistoricProcessInstance hisInstance =
+                activitiHistoryService.createHistoricProcessInstanceQuery().processInstanceId(job.getId()).includeProcessVariables().singleResult();
+        Map<String, Object> variables = hisInstance.getProcessVariables();
+
+        String taskEnvironment = (String) variables.get(getServiceTaskVariableName(ActivitiRuntimeHelper.VARIABLE_ENVIRONMENT));
+        assertEquals(expectedValue, taskEnvironment);
+    }
+    
     private Job createJobAndCheckTaskStatusSuccess(String activitiXml, List<Parameter> parameters, Map<String, Object> variableValuesToValidate)
         throws Exception
     {
