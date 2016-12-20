@@ -619,7 +619,53 @@ public enum ConfigurationValue
     /**
      * The cut-off length of the short description
      */
-    BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH("business.object.definition.short.description.max.length", 300);
+    BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH("business.object.definition.short.description.max.length", 300),
+
+    /**
+     * The url of the LDAP server. Utility method if only one server is used.
+     */
+    LDAP_URL("ldap.url", null),
+
+    /**
+     * The base suffix from which all LDAP operations should origin. If a base suffix is set, you will not have to (and, indeed, must not) specify the full
+     * distinguished names in any operations performed.
+     */
+    LDAP_BASE("ldap.base", null),
+
+    /**
+     * The LDAP user distinguished name (principal) to use for getting authenticated contexts.
+     */
+    LDAP_USER_DN("ldap.user.dn", ""),
+
+    /**
+     * The LDAP password (credentials) to use for getting authenticated contexts.
+     */
+    LDAP_PASSWORD("ldap.password", ""),
+
+    /**
+     * The LDAP attribute id for user's fully qualified username.
+     */
+    LDAP_ATTRIBUTE_USER_ID("ldap.attribute.user.id", "userPrincipalName"),
+
+    /**
+     * The LDAP attribute id for user's full name.
+     */
+    LDAP_ATTRIBUTE_USER_FULL_NAME("ldap.attribute.user.full.name", "name"),
+
+    /**
+     * The LDAP attribute id for user's job title.
+     */
+    LDAP_ATTRIBUTE_USER_JOB_TITLE("ldap.attribute.user.job.title", "title"),
+
+    /**
+     * The LDAP attribute id for user's e-mail address.
+     */
+    LDAP_ATTRIBUTE_USER_EMAIL_ADDRESS("ldap.attribute.user.email.address", "mail"),
+
+    /**
+     * The LDAP attribute id for user's telephone number.
+     */
+    LDAP_ATTRIBUTE_USER_TELEPHONE_NUMBER("ldap.attribute.user.telephone.number", "telephoneNumber");
 
     // Properties
     private String key;

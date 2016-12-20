@@ -1481,6 +1481,57 @@
       </xs:all>
    </xs:complexType>
 
+   <xs:element name="subjectMatterExpert" type="subjectMatterExpert"/>
+   <xs:complexType name="subjectMatterExpert">
+      <xs:all>
+         <xs:element name="subjectMatterExpertKey" type="subjectMatterExpertKey">
+            <xs:annotation>
+               <xs:documentation>Values that uniquely identify a Subject Matter Expert</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="contactDetails" type="subjectMatterExpertContactDetails">
+            <xs:annotation>
+               <xs:documentation>The contact details of the Subject Matter Expert</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="subjectMatterExpertKey">
+      <xs:all>
+         <xs:element name="userId" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The user id of the Subject Matter Expert</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="subjectMatterExpertContactDetails">
+      <xs:all>
+         <xs:element name="fullName" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The full name of the Subject Matter Expert</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="jobTitle" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The job title of the Subject Matter Expert</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="emailAddress" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The e-mail address of the Subject Matter Expert</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="telephoneNumber" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The telephone number of the Subject Matter Expert</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
    <!-- ***** File Type ***** -->
 
    <xs:element name="fileTypeKeys" type="fileTypeKeys"/>

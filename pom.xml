@@ -77,6 +77,7 @@
       <quartz.scheduler.version>2.2.2</quartz.scheduler.version>
       <roaster.version>2.18.2.Final</roaster.version>
       <slf4j.version>1.7.21</slf4j.version>
+      <spring.ldap.version>2.2.0.RELEASE</spring.ldap.version>
       <spring.security.version>4.0.3.RELEASE</spring.security.version>
       <spring.version>4.2.4.RELEASE</spring.version>
       <sun.jersey.version>1.19.1</sun.jersey.version>
@@ -560,6 +561,11 @@
             <groupId>org.springframework</groupId>
             <artifactId>spring-jms</artifactId>
             <version>${spring.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.springframework.ldap</groupId>
+            <artifactId>spring-ldap-core</artifactId>
+            <version>${spring.ldap.version}</version>
          </dependency>
          <dependency>
             <groupId>org.springframework.security</groupId>

@@ -127,6 +127,10 @@
          <groupId>org.springframework</groupId>
          <artifactId>spring-jms</artifactId>
       </dependency>
+      <dependency>
+         <groupId>org.springframework.ldap</groupId>
+         <artifactId>spring-ldap-core</artifactId>
+      </dependency>
 
       <!--
        These dependencies don't typically go in a dao tier, but are needed for the AwsExceptionRetryAdvice and HerdErrorInformationExceptionHandler in service tier
