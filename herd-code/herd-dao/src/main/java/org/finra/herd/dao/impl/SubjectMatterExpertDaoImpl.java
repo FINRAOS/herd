@@ -24,8 +24,6 @@ import javax.naming.directory.Attribute;
 import javax.naming.directory.Attributes;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ldap.core.AttributesMapper;
 import org.springframework.ldap.core.LdapTemplate;
@@ -41,8 +39,6 @@ import org.finra.herd.model.dto.ConfigurationValue;
 @Repository
 public class SubjectMatterExpertDaoImpl implements SubjectMatterExpertDao
 {
-    private static final Logger LOGGER = LoggerFactory.getLogger(SubjectMatterExpertDaoImpl.class);
-
     @Autowired
     private ConfigurationHelper configurationHelper;
 
