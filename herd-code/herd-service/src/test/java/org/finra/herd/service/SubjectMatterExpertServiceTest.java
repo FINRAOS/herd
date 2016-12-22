@@ -18,9 +18,10 @@ package org.finra.herd.service;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
+import org.finra.herd.dao.impl.MockLdapOperations;
+import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.SubjectMatterExpert;
 import org.finra.herd.model.api.xml.SubjectMatterExpertContactDetails;
 import org.finra.herd.model.api.xml.SubjectMatterExpertKey;
@@ -31,20 +32,20 @@ import org.finra.herd.model.api.xml.SubjectMatterExpertKey;
 public class SubjectMatterExpertServiceTest extends AbstractServiceTest
 {
     @Test
-    @Ignore
     public void testGetSubjectMatterExpert() throws Exception
     {
         // Get subject matter expert information.
         SubjectMatterExpert result = subjectMatterExpertService.getSubjectMatterExpert(new SubjectMatterExpertKey(USER_ID));
 
         // Validate the returned object.
-        assertEquals(new SubjectMatterExpert(new SubjectMatterExpertKey(USER_ID), new SubjectMatterExpertContactDetails()), result);
+        assertEquals(new SubjectMatterExpert(new SubjectMatterExpertKey(USER_ID),
+            new SubjectMatterExpertContactDetails(USER_FULL_NAME, USER_JOB_TITLE, USER_EMAIL_ADDRESS, USER_TELEPHONE_NUMBER)), result);
     }
 
     @Test
     public void testGetSubjectMatterExpertMissingRequiredParameters()
     {
-        // Try to get subject matter expert information when  subject matter expert user id is not specified.
+        // Try to get subject matter expert information when subject matter expert user id is not specified.
         try
         {
             subjectMatterExpertService.getSubjectMatterExpert(new SubjectMatterExpertKey(BLANK_TEXT));
@@ -57,13 +58,29 @@ public class SubjectMatterExpertServiceTest extends AbstractServiceTest
     }
 
     @Test
-    @Ignore
     public void testGetSubjectMatterExpertTrimParameters()
     {
         // Get subject matter expert information using input parameters with leading and trailing empty spaces.
         SubjectMatterExpert result = subjectMatterExpertService.getSubjectMatterExpert(new SubjectMatterExpertKey(addWhitespace(USER_ID)));
 
         // Validate the returned object.
-        assertEquals(new SubjectMatterExpert(new SubjectMatterExpertKey(USER_ID), new SubjectMatterExpertContactDetails()), result);
+        assertEquals(new SubjectMatterExpert(new SubjectMatterExpertKey(USER_ID),
+            new SubjectMatterExpertContactDetails(USER_FULL_NAME, USER_JOB_TITLE, USER_EMAIL_ADDRESS, USER_TELEPHONE_NUMBER)), result);
+    }
+
+    @Test
+    public void testGetSubjectMatterExpertUserNoExists()
+    {
+        // Try to get subject matter expert information when user does not exist.
+        try
+        {
+            subjectMatterExpertService.getSubjectMatterExpert(new SubjectMatterExpertKey(MockLdapOperations.MOCK_USER_ID_USER_NO_EXISTS));
+            fail();
+        }
+        catch (ObjectNotFoundException e)
+        {
+            assertEquals(String.format("The subject matter expert with user id \"%s\" does not exist.", MockLdapOperations.MOCK_USER_ID_USER_NO_EXISTS),
+                e.getMessage());
+        }
     }
 }

@@ -32,6 +32,7 @@ import org.springframework.ldap.core.LdapTemplate;
 import org.springframework.stereotype.Repository;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
+import org.finra.herd.dao.LdapOperations;
 import org.finra.herd.dao.SubjectMatterExpertDao;
 import org.finra.herd.model.api.xml.SubjectMatterExpertContactDetails;
 import org.finra.herd.model.api.xml.SubjectMatterExpertKey;
@@ -46,18 +47,21 @@ public class SubjectMatterExpertDaoImpl implements SubjectMatterExpertDao
     private ConfigurationHelper configurationHelper;
 
     @Autowired
+    private LdapOperations ldapOperations;
+
+    @Autowired
     private LdapTemplate ldapTemplate;
 
     @Override
     public SubjectMatterExpertContactDetails getSubjectMatterExpertByKey(SubjectMatterExpertKey subjectMatterExpertKey)
     {
-        List<SubjectMatterExpertContactDetails> subjectMatterExpertContactDetailsList = ldapTemplate
-            .search(query().where(configurationHelper.getProperty(ConfigurationValue.LDAP_ATTRIBUTE_USER_ID)).is(subjectMatterExpertKey.getUserId()),
-                new SubjectMatterExpertContactDetailsMapper(subjectMatterExpertKey.getUserId(),
-                    configurationHelper.getProperty(ConfigurationValue.LDAP_ATTRIBUTE_USER_FULL_NAME),
-                    configurationHelper.getProperty(ConfigurationValue.LDAP_ATTRIBUTE_USER_JOB_TITLE),
-                    configurationHelper.getProperty(ConfigurationValue.LDAP_ATTRIBUTE_USER_EMAIL_ADDRESS),
-                    configurationHelper.getProperty(ConfigurationValue.LDAP_ATTRIBUTE_USER_TELEPHONE_NUMBER)));
+        List<SubjectMatterExpertContactDetails> subjectMatterExpertContactDetailsList = ldapOperations.search(ldapTemplate,
+            query().where(configurationHelper.getProperty(ConfigurationValue.LDAP_ATTRIBUTE_USER_ID)).is(subjectMatterExpertKey.getUserId()),
+            new SubjectMatterExpertContactDetailsMapper(subjectMatterExpertKey.getUserId(),
+                configurationHelper.getProperty(ConfigurationValue.LDAP_ATTRIBUTE_USER_FULL_NAME),
+                configurationHelper.getProperty(ConfigurationValue.LDAP_ATTRIBUTE_USER_JOB_TITLE),
+                configurationHelper.getProperty(ConfigurationValue.LDAP_ATTRIBUTE_USER_EMAIL_ADDRESS),
+                configurationHelper.getProperty(ConfigurationValue.LDAP_ATTRIBUTE_USER_TELEPHONE_NUMBER)));
 
         return CollectionUtils.isNotEmpty(subjectMatterExpertContactDetailsList) ? subjectMatterExpertContactDetailsList.get(0) : null;
     }
@@ -131,21 +135,14 @@ public class SubjectMatterExpertDaoImpl implements SubjectMatterExpertDao
          *
          * @return the value of the attribute, or null if attribute value is not present
          */
-        private String getAttributeById(Attributes attributes, String attributeId)
+        private String getAttributeById(Attributes attributes, String attributeId) throws NamingException
         {
             String attributeValue = null;
 
             Attribute attribute = attributes.get(attributeId);
             if (attribute != null)
             {
-                try
-                {
-                    attributeValue = (String) attribute.get();
-                }
-                catch (NamingException e)
-                {
-                    LOGGER.warn("Caught exception while retrieving value for attribute \"{}\" for user with user id \"{}\".", attributeId, userId);
-                }
+                attributeValue = (String) attribute.get();
             }
 
             return attributeValue;
