@@ -53,8 +53,7 @@ public class SubjectMatterExpertDaoImpl implements SubjectMatterExpertDao
     {
         List<SubjectMatterExpertContactDetails> subjectMatterExpertContactDetailsList = ldapOperations.search(ldapTemplate,
             query().where(configurationHelper.getProperty(ConfigurationValue.LDAP_ATTRIBUTE_USER_ID)).is(subjectMatterExpertKey.getUserId()),
-            new SubjectMatterExpertContactDetailsMapper(subjectMatterExpertKey.getUserId(),
-                configurationHelper.getProperty(ConfigurationValue.LDAP_ATTRIBUTE_USER_FULL_NAME),
+            new SubjectMatterExpertContactDetailsMapper(configurationHelper.getProperty(ConfigurationValue.LDAP_ATTRIBUTE_USER_FULL_NAME),
                 configurationHelper.getProperty(ConfigurationValue.LDAP_ATTRIBUTE_USER_JOB_TITLE),
                 configurationHelper.getProperty(ConfigurationValue.LDAP_ATTRIBUTE_USER_EMAIL_ADDRESS),
                 configurationHelper.getProperty(ConfigurationValue.LDAP_ATTRIBUTE_USER_TELEPHONE_NUMBER)));
@@ -75,11 +74,6 @@ public class SubjectMatterExpertDaoImpl implements SubjectMatterExpertDao
         private String userFullNameAttribute;
 
         /**
-         * User if of the subject matter expert.
-         */
-        private String userId;
-
-        /**
          * The LDAP attribute id for user's job title
          */
         private String userJobTitleAttribute;
@@ -92,16 +86,14 @@ public class SubjectMatterExpertDaoImpl implements SubjectMatterExpertDao
         /**
          * Fully-initialising value constructor.
          *
-         * @param userId the user id of the subject matter expert
          * @param userFullNameAttribute the LDAP attribute id for user's full name
          * @param userJobTitleAttribute the LDAP attribute id for user's job title
          * @param userEmailAddressAttribute the LDAP attribute id for user's e-mail address
          * @param userTelephoneNumberAttribute the LDAP attribute id for user's telephone number
          */
-        public SubjectMatterExpertContactDetailsMapper(String userId, String userFullNameAttribute, String userJobTitleAttribute,
-            String userEmailAddressAttribute, String userTelephoneNumberAttribute)
+        public SubjectMatterExpertContactDetailsMapper(String userFullNameAttribute, String userJobTitleAttribute, String userEmailAddressAttribute,
+            String userTelephoneNumberAttribute)
         {
-            this.userId = userId;
             this.userFullNameAttribute = userFullNameAttribute;
             this.userJobTitleAttribute = userJobTitleAttribute;
             this.userEmailAddressAttribute = userEmailAddressAttribute;
