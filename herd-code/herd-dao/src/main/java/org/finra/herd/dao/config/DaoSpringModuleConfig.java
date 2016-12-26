@@ -332,7 +332,6 @@ public class DaoSpringModuleConfig implements CachingConfigurer
         contextSource.setBase(ldapBase);
         contextSource.setUserDn(ldapUserDn);
         contextSource.setPassword(configurationHelper.getProperty(ConfigurationValue.LDAP_PASSWORD));
-        contextSource.setReferral("follow");
         return contextSource;
     }
 
