@@ -61,4 +61,22 @@ public class ConfigurationDaoHelper
             throw new MethodNotAllowedException("The requested method is not allowed.");
         }
     }
+
+    /**
+     * Method used to return character large object configuration values
+     *
+     * @param configurationKey the configuration key used to obtain the CLOB
+     * @return String clob
+     */
+    public String getClobProperty(String configurationKey)
+    {
+        String clob = "";
+        ConfigurationEntity configurationEntity = configurationDao.getConfigurationByKey(configurationKey);
+        if (configurationEntity != null && StringUtils.isNotBlank(configurationEntity.getValueClob()))
+        {
+            clob = configurationEntity.getValueClob();
+        }
+
+        return clob;
+    }
 }

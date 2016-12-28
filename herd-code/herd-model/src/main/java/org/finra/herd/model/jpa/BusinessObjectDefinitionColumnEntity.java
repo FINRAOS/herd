@@ -27,6 +27,9 @@ import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 /**
  * Column associated with business object definition.
  */
@@ -45,6 +48,7 @@ public class BusinessObjectDefinitionColumnEntity extends AuditableEntity
     @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq", allocationSize = 1)
     private Integer id;
 
+    @JsonBackReference(value="businessObjectDefinition-columns")
     @ManyToOne
     @JoinColumn(name = "bus_objct_dfntn_id", referencedColumnName = "bus_objct_dfntn_id", nullable = false)
     private BusinessObjectDefinitionEntity businessObjectDefinition;
@@ -61,6 +65,7 @@ public class BusinessObjectDefinitionColumnEntity extends AuditableEntity
     @Column(name = "clmn_ds")
     private String description;
 
+    @JsonManagedReference
     @OneToMany(mappedBy = "businessObjectDefinitionColumn")
     private Collection<SchemaColumnEntity> schemaColumns;
 

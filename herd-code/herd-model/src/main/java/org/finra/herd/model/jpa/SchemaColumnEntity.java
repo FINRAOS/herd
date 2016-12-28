@@ -24,6 +24,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import org.hibernate.annotations.Type;
 
 /**
@@ -44,6 +45,7 @@ public class SchemaColumnEntity extends AuditableEntity
     @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq", allocationSize = 1)
     private Integer id;
 
+    @JsonBackReference(value="businessObjectFormat-schemaColumns")
     @ManyToOne
     @JoinColumn(name = "bus_objct_frmt_id", referencedColumnName = "bus_objct_frmt_id", nullable = false)
     private BusinessObjectFormatEntity businessObjectFormat;
@@ -83,6 +85,7 @@ public class SchemaColumnEntity extends AuditableEntity
     @Column(name = "clmn_ds")
     private String description;
 
+    @JsonBackReference
     @ManyToOne
     @JoinColumn(name = "bus_objct_dfntn_clmn_id", referencedColumnName = "bus_objct_dfntn_clmn_id")
     private BusinessObjectDefinitionColumnEntity businessObjectDefinitionColumn;
