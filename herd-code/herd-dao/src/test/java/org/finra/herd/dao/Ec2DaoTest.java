@@ -15,6 +15,7 @@
 */
 package org.finra.herd.dao;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
@@ -23,13 +24,16 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
 import com.amazonaws.services.ec2.model.DescribeSpotPriceHistoryRequest;
 import com.amazonaws.services.ec2.model.DescribeSpotPriceHistoryResult;
+import com.amazonaws.services.ec2.model.SpotPrice;
 import com.google.common.base.Objects;
+import org.apache.commons.collections4.CollectionUtils;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +42,8 @@ import org.springframework.test.annotation.DirtiesContext.ClassMode;
 
 import org.finra.herd.dao.helper.AwsHelper;
 import org.finra.herd.dao.impl.Ec2DaoImpl;
+import org.finra.herd.dao.impl.MockEc2OperationsImpl;
+import org.finra.herd.dao.impl.MockSpotPrice;
 import org.finra.herd.model.dto.AwsParamsDto;
 
 /**
@@ -46,34 +52,6 @@ import org.finra.herd.model.dto.AwsParamsDto;
 @DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
 public class Ec2DaoTest extends AbstractDaoTest
 {
-    /**
-     * Argument matcher which matches a DescribeSpotPriceHistoryRequest
-     */
-    private static class EqualsDescribeSpotPriceHistoryRequest extends ArgumentMatcher<DescribeSpotPriceHistoryRequest>
-    {
-        private String availabilityZone;
-
-        private Collection<String> instanceTypes;
-
-        private Collection<String> productDescriptions;
-
-        public EqualsDescribeSpotPriceHistoryRequest(String availabilityZone, Collection<String> instanceTypes, Collection<String> productDescriptions)
-        {
-            this.availabilityZone = availabilityZone;
-            this.instanceTypes = instanceTypes;
-            this.productDescriptions = productDescriptions;
-        }
-
-        @Override
-        public boolean matches(Object argument)
-        {
-            DescribeSpotPriceHistoryRequest describeSpotPriceHistoryRequest = (DescribeSpotPriceHistoryRequest) argument;
-            return Objects.equal(availabilityZone, describeSpotPriceHistoryRequest.getAvailabilityZone())
-                && Objects.equal(instanceTypes, describeSpotPriceHistoryRequest.getInstanceTypes())
-                && Objects.equal(productDescriptions, describeSpotPriceHistoryRequest.getProductDescriptions());
-        }
-    }
-
     @Autowired
     private AwsHelper awsHelper;
 
@@ -117,47 +95,98 @@ public class Ec2DaoTest extends AbstractDaoTest
     @Test
     public void testGetLatestSpotPricesAssertConstructsCorrectDescribeSpotPriceHistoryRequest()
     {
-        /*
-         * Initialize inputs
-         */
+        // Initialize inputs.
         String availabilityZone = "a";
         Collection<String> instanceTypes = Arrays.asList("a", "b", "c");
         Collection<String> productDescriptions = Arrays.asList("b", "c", "d");
-        AwsParamsDto awsParamsDto = new AwsParamsDto();
 
-        /*
-         * Set up mock
-         */
-        RetryPolicyFactory retryPolicyFactory = mock(RetryPolicyFactory.class);
+        // Set up mock.
+        mock(RetryPolicyFactory.class);
         Ec2Operations ec2Operations = mock(Ec2Operations.class);
-       
         ((Ec2DaoImpl) ec2Dao).setEc2Operations(ec2Operations);
-
         DescribeSpotPriceHistoryResult describeSpotPriceHistoryResult = new DescribeSpotPriceHistoryResult();
         when(ec2Operations.describeSpotPriceHistory(any(), any())).thenReturn(describeSpotPriceHistoryResult);
 
-        /*
-         * Execute MUT
-         */
-        ec2Dao.getLatestSpotPrices(availabilityZone, instanceTypes, productDescriptions, awsParamsDto);
+        // Execute MUT.
+        ec2Dao.getLatestSpotPrices(availabilityZone, instanceTypes, productDescriptions, new AwsParamsDto());
 
-        /*
-         * Verify that the dependency was called with the correct parameters
-         */
-        verify(ec2Operations).describeSpotPriceHistory(any(), equalsDescribeSpotPriceHistoryRequest(availabilityZone, instanceTypes, productDescriptions));  
-        }
+        // Verify that the dependency was called with the correct parameters.
+        verify(ec2Operations).describeSpotPriceHistory(any(), equalsDescribeSpotPriceHistoryRequest(availabilityZone, instanceTypes, productDescriptions));
+    }
+
+    @Test
+    public void testGetLatestSpotPricesSpotPriceHistoryContainDuplicateTypeInstances()
+    {
+        // Initialize inputs.
+        Collection<String> instanceTypes = Arrays.asList(MockEc2OperationsImpl.INSTANCE_TYPE_1, MockEc2OperationsImpl.INSTANCE_TYPE_2);
+        Collection<String> productDescriptions = Arrays.asList("b", "c");
+
+        // Set up mock.
+        mock(RetryPolicyFactory.class);
+        Ec2Operations ec2Operations = mock(Ec2Operations.class);
+        ((Ec2DaoImpl) ec2Dao).setEc2Operations(ec2Operations);
+        DescribeSpotPriceHistoryResult describeSpotPriceHistoryResult = new DescribeSpotPriceHistoryResult();
+        List<SpotPrice> spotPrices = new ArrayList<>();
+        spotPrices.add(
+            new MockSpotPrice(MockEc2OperationsImpl.INSTANCE_TYPE_1, MockEc2OperationsImpl.AVAILABILITY_ZONE_1, MockEc2OperationsImpl.SPOT_PRICE_HIGH)
+                .toAwsObject());
+        spotPrices.add(
+            new MockSpotPrice(MockEc2OperationsImpl.INSTANCE_TYPE_1, MockEc2OperationsImpl.AVAILABILITY_ZONE_2, MockEc2OperationsImpl.SPOT_PRICE_HIGH)
+                .toAwsObject());
+        describeSpotPriceHistoryResult.setSpotPriceHistory(spotPrices);
+        when(ec2Operations.describeSpotPriceHistory(any(), any())).thenReturn(describeSpotPriceHistoryResult);
+
+        // Execute MUT.
+        List<SpotPrice> result = ec2Dao.getLatestSpotPrices(MockEc2OperationsImpl.AVAILABILITY_ZONE_1, instanceTypes, productDescriptions, new AwsParamsDto());
+
+        // Verify that the dependency was called with the correct parameters.
+        verify(ec2Operations).describeSpotPriceHistory(any(),
+            equalsDescribeSpotPriceHistoryRequest(MockEc2OperationsImpl.AVAILABILITY_ZONE_1, instanceTypes, productDescriptions));
+
+        // Verify that result contains only one spot price entry.
+        assertEquals(1, CollectionUtils.size(result));
+    }
 
     /**
      * Returns a matcher proxy which matches a DescribeSpotPriceHistoryRequest with the given parameters.
-     * 
+     *
      * @param availabilityZone Availability zone
      * @param instanceTypes Instance types
      * @param productDescriptions Product descriptions
+     *
      * @return DescribeSpotPriceHistoryRequest matcher proxy
      */
     private DescribeSpotPriceHistoryRequest equalsDescribeSpotPriceHistoryRequest(String availabilityZone, Collection<String> instanceTypes,
         Collection<String> productDescriptions)
     {
         return argThat(new EqualsDescribeSpotPriceHistoryRequest(availabilityZone, instanceTypes, productDescriptions));
+    }
+
+    /**
+     * Argument matcher which matches a DescribeSpotPriceHistoryRequest
+     */
+    private static class EqualsDescribeSpotPriceHistoryRequest extends ArgumentMatcher<DescribeSpotPriceHistoryRequest>
+    {
+        private String availabilityZone;
+
+        private Collection<String> instanceTypes;
+
+        private Collection<String> productDescriptions;
+
+        public EqualsDescribeSpotPriceHistoryRequest(String availabilityZone, Collection<String> instanceTypes, Collection<String> productDescriptions)
+        {
+            this.availabilityZone = availabilityZone;
+            this.instanceTypes = instanceTypes;
+            this.productDescriptions = productDescriptions;
+        }
+
+        @Override
+        public boolean matches(Object argument)
+        {
+            DescribeSpotPriceHistoryRequest describeSpotPriceHistoryRequest = (DescribeSpotPriceHistoryRequest) argument;
+            return Objects.equal(availabilityZone, describeSpotPriceHistoryRequest.getAvailabilityZone()) &&
+                Objects.equal(instanceTypes, describeSpotPriceHistoryRequest.getInstanceTypes()) &&
+                Objects.equal(productDescriptions, describeSpotPriceHistoryRequest.getProductDescriptions());
+        }
     }
 }

@@ -103,7 +103,7 @@ public class BusinessObjectDataAttributeDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void testGetBusinessObjectDataAttributeByKeyDuplicateAttributes() throws Exception
+    public void testGetBusinessObjectDataAttributeByKeyDuplicateAttributes()
     {
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
@@ -122,7 +122,7 @@ public class BusinessObjectDataAttributeDaoTest extends AbstractDaoTest
             businessObjectDataAttributeDao.getBusinessObjectDataAttributeByKey(
                 new BusinessObjectDataAttributeKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                     SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE));
-            fail("Should throw an IllegalArgumentException.");
+            fail();
         }
         catch (IllegalArgumentException e)
         {
@@ -132,6 +132,38 @@ public class BusinessObjectDataAttributeDaoTest extends AbstractDaoTest
                 "businessObjectDataVersion=\"%d\", businessObjectDataAttributeName=\"%s\"}.", BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
                 FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, StringUtils.join(SUBPARTITION_VALUES, ","), DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE),
                 e.getMessage());
+        }
+    }
+
+    @Test
+    public void testGetBusinessObjectDataAttributeByKeyDuplicateAttributesNoSubPartitionValues()
+    {
+        // Create a business object data key without subpartition values.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, DATA_VERSION);
+
+        // Create duplicate business object data attributes.
+        businessObjectDataAttributeDaoTestHelper
+            .createBusinessObjectDataAttributeEntity(businessObjectDataKey, ATTRIBUTE_NAME_1_MIXED_CASE.toUpperCase(), ATTRIBUTE_VALUE_1);
+        businessObjectDataAttributeDaoTestHelper
+            .createBusinessObjectDataAttributeEntity(businessObjectDataKey, ATTRIBUTE_NAME_1_MIXED_CASE.toLowerCase(), ATTRIBUTE_VALUE_2);
+
+        // Try to get business object data attribute when business object data has duplicate attributes.
+        try
+        {
+            businessObjectDataAttributeDao.getBusinessObjectDataAttributeByKey(
+                new BusinessObjectDataAttributeKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    NO_SUBPARTITION_VALUES, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE));
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(String.format("Found more than one business object data attribute instance with parameters {namespace=\"%s\", " +
+                "businessObjectDefinitionName=\"%s\", businessObjectFormatUsage=\"%s\", businessObjectFormatFileType=\"%s\", " +
+                "businessObjectFormatVersion=\"%d\", businessObjectDataPartitionValue=\"%s\", businessObjectDataSubPartitionValues=\"\", " +
+                "businessObjectDataVersion=\"%d\", businessObjectDataAttributeName=\"%s\"}.", BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE,
+                FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE), e.getMessage());
         }
     }
 }

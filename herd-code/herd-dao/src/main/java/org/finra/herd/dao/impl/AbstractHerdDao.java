@@ -35,9 +35,9 @@ import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
 import javax.persistence.metamodel.SingularAttribute;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.CollectionUtils;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.helper.HerdDaoSecurityHelper;
@@ -166,7 +166,7 @@ public abstract class AbstractHerdDao extends BaseJpaDaoImpl
         Predicate predicate = builder.equal(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue), primaryPartitionValue);
 
         // Create and add standard restrictions on sub-partition values. Please note that the subpartition value columns are nullable.
-        int subPartitionValuesCount = getSubPartitionValuesCount(subPartitionValues);
+        int subPartitionValuesCount = CollectionUtils.size(subPartitionValues);
         for (int i = 0; i < BusinessObjectDataEntity.MAX_SUBPARTITIONS; i++)
         {
             predicate = builder.and(predicate, i < subPartitionValuesCount ?
@@ -175,19 +175,6 @@ public abstract class AbstractHerdDao extends BaseJpaDaoImpl
         }
 
         return predicate;
-    }
-
-    /**
-     * TODO This method may be bdata specific. Consider creating new abstract class to group all bdata related DAO. Returns number of sub-partition values in
-     * the specified business object data key.
-     *
-     * @param subPartitionValues the list of sub-partition values for business object data
-     *
-     * @return the number of sub-partition values
-     */
-    protected int getSubPartitionValuesCount(List<String> subPartitionValues)
-    {
-        return subPartitionValues == null ? 0 : subPartitionValues.size();
     }
 
     /**

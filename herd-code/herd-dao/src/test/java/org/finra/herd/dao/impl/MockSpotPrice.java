@@ -37,6 +37,28 @@ public class MockSpotPrice
      */
     private String spotPrice;
 
+    /**
+     * Default no-arg constructor.
+     */
+    public MockSpotPrice()
+    {
+        super();
+    }
+
+    /**
+     * Fully-initialising value constructor.
+     *
+     * @param type the type of the instance
+     * @param availabilityZone the availability zone
+     * @param spotPrice the spot price
+     */
+    public MockSpotPrice(final String type, final String availabilityZone, final String spotPrice)
+    {
+        this.type = type;
+        this.availabilityZone = availabilityZone;
+        this.spotPrice = spotPrice;
+    }
+
     public String getInstanceType()
     {
         return type;
@@ -69,7 +91,7 @@ public class MockSpotPrice
 
     /**
      * Converts this object into an AWS equivalent object.
-     * 
+     *
      * @return A new equivalent AWS object
      */
     public SpotPrice toAwsObject()
@@ -95,26 +117,40 @@ public class MockSpotPrice
     public boolean equals(Object obj)
     {
         if (this == obj)
+        {
             return true;
+        }
         if (obj == null)
+        {
             return false;
+        }
         if (getClass() != obj.getClass())
+        {
             return false;
+        }
         MockSpotPrice other = (MockSpotPrice) obj;
         if (availabilityZone == null)
         {
             if (other.availabilityZone != null)
+            {
                 return false;
+            }
         }
         else if (!availabilityZone.equals(other.availabilityZone))
+        {
             return false;
+        }
         if (type == null)
         {
             if (other.type != null)
+            {
                 return false;
+            }
         }
         else if (!type.equals(other.type))
+        {
             return false;
+        }
         return true;
     }
 }
