@@ -29,6 +29,8 @@ import javax.persistence.OrderBy;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import org.hibernate.annotations.Type;
 
 /**
@@ -49,6 +51,7 @@ public class BusinessObjectFormatEntity extends AuditableEntity
     @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq", allocationSize = 1)
     private Integer id;
 
+    @JsonBackReference(value="businessObjectDefinition-businessObjectFormats")
     @ManyToOne
     @JoinColumn(name = "bus_objct_dfntn_id", referencedColumnName = "bus_objct_dfntn_id", nullable = false)
     private BusinessObjectDefinitionEntity businessObjectDefinition;
@@ -76,6 +79,7 @@ public class BusinessObjectFormatEntity extends AuditableEntity
     @Column(name = "desc_tx")
     private String description;
 
+    @JsonManagedReference(value="businessObjectFormat-attributes")
     @OneToMany(mappedBy = "businessObjectFormat", orphanRemoval = true, cascade = {CascadeType.ALL})
     @OrderBy("name")
     private Collection<BusinessObjectFormatAttributeEntity> attributes;
@@ -96,10 +100,12 @@ public class BusinessObjectFormatEntity extends AuditableEntity
     @JoinColumn(name = "prtn_key_group_tx", referencedColumnName = "prtn_key_group_tx")
     private PartitionKeyGroupEntity partitionKeyGroup;
 
+    @JsonManagedReference(value="businessObjectFormat-attributeDefinitions")
     @OneToMany(mappedBy = "businessObjectFormat", orphanRemoval = true, cascade = {CascadeType.ALL})
     @OrderBy("name")
     private Collection<BusinessObjectDataAttributeDefinitionEntity> attributeDefinitions;
 
+    @JsonManagedReference(value="businessObjectFormat-schemaColumns")
     @OneToMany(mappedBy = "businessObjectFormat", orphanRemoval = true, cascade = {CascadeType.ALL})
     @OrderBy("position")
     private Collection<SchemaColumnEntity> schemaColumns;

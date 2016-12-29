@@ -30,6 +30,8 @@ import javax.persistence.OneToMany;
 import javax.persistence.OrderBy;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 /**
  * A storage.
  */
@@ -76,6 +78,7 @@ public class StorageEntity extends AuditableEntity
     @JoinColumn(name = "strge_pltfm_cd", referencedColumnName = "strge_pltfm_cd", nullable = false)
     private StoragePlatformEntity storagePlatform;
 
+    @JsonManagedReference
     @OneToMany(mappedBy = "storage", orphanRemoval = true, cascade = {CascadeType.ALL})
     @OrderBy("name")
     private Collection<StorageAttributeEntity> attributes;

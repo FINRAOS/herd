@@ -126,4 +126,69 @@ public class BusinessObjectDefinitionDaoTest extends AbstractDaoTest
         assertEquals(ImmutableSet.copyOf(businessObjectDefinitionEntities),
             ImmutableSet.copyOf(businessObjectDefinitionDao.getBusinessObjectDefinitions(tagEntities)));
     }
+
+    @Test
+    public void testGetAllBusinessObjectDefinitions()
+    {
+        // Create and persist two business object definition entities.
+        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities =
+            businessObjectDefinitionDaoTestHelper.createExpectedBusinessObjectDefinitionEntities();
+
+        // Get the list of all business object definitions
+        assertEquals(businessObjectDefinitionEntities, businessObjectDefinitionDao.getAllBusinessObjectDefinitions());
+    }
+
+    @Test
+    public void testGetPercentageOfAllBusinessObjectDefinitionsOneHundredPercent()
+    {
+        // Create and persist two business object definition entities.
+        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities =
+            businessObjectDefinitionDaoTestHelper.createExpectedBusinessObjectDefinitionEntities();
+
+        // Get the list of all business object definitions aka. 100%
+        assertEquals(businessObjectDefinitionEntities, businessObjectDefinitionDao.getPercentageOfAllBusinessObjectDefinitions(1.0));
+    }
+
+    @Test
+    public void testGetPercentageOfAllBusinessObjectDefinitionsZeroPercent()
+    {
+        // Create and persist two business object definition entities.
+        businessObjectDefinitionDaoTestHelper.createExpectedBusinessObjectDefinitionEntities();
+
+        // Create an empty list
+        List<BusinessObjectDefinitionEntity> emptyList = new ArrayList<>();
+
+        // Get the list of all business object definitions aka. 0%
+        assertEquals(emptyList, businessObjectDefinitionDao.getPercentageOfAllBusinessObjectDefinitions(0.0));
+    }
+
+    @Test
+    public void testGetMostRecentBusinessObjectDefinitions()
+    {
+        // Create and persist two business object definition entities.
+        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities = new ArrayList<>();
+        businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntity(AbstractDaoTest.NAMESPACE, AbstractDaoTest.BDEF_NAME, AbstractDaoTest.DATA_PROVIDER_NAME,
+                AbstractDaoTest.BDEF_DESCRIPTION);
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntityTwo = businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntity(AbstractDaoTest.NAMESPACE_2, AbstractDaoTest.BDEF_NAME_2, AbstractDaoTest.DATA_PROVIDER_NAME_2,
+                AbstractDaoTest.BDEF_DESCRIPTION_2);
+
+        // Only add the most recent 1 to the list
+        businessObjectDefinitionEntities.add(businessObjectDefinitionEntityTwo);
+
+        // Get the list of most recent 1 business object definitions
+        assertEquals(businessObjectDefinitionEntities, businessObjectDefinitionDao.getMostRecentBusinessObjectDefinitions(1));
+    }
+
+    @Test
+    public void testGetCountOfAllBusinessObjectDefinitions()
+    {
+        // Create and persist two business object definition entities.
+        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities =
+            businessObjectDefinitionDaoTestHelper.createExpectedBusinessObjectDefinitionEntities();
+
+        // Get the count of all business object definitions
+        assertEquals(businessObjectDefinitionEntities.size(), businessObjectDefinitionDao.getCountOfAllBusinessObjectDefinitions());
+    }
 }

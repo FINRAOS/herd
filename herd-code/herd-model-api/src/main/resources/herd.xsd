@@ -1187,6 +1187,46 @@
       </xs:sequence>
    </xs:complexType>
 
+   <xs:element name="businessObjectDefinitionIndexResponse" type="businessObjectDefinitionIndexResponse"/>
+   <xs:complexType name="businessObjectDefinitionIndexResponse">
+      <xs:all>
+         <xs:element name="indexStartTime" type="xs:dateTime" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The timestamp of when the index creation started</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="businessObjectDefinitionValidateResponse" type="businessObjectDefinitionValidateResponse"/>
+   <xs:complexType name="businessObjectDefinitionValidateResponse">
+      <xs:all>
+         <xs:element name="validateStartTime" type="xs:dateTime" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The timestamp of when the index validation started</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="sizeCheckPassed" type="xs:boolean">
+            <xs:annotation>
+               <xs:documentation>A Y/N flag that shows whether the total number of business object definitions in the database is the same as the total number in the index.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="spotCheckRandomPassed" type="xs:boolean">
+            <xs:annotation>
+               <xs:documentation>A Y/N flag that shows whether the spot check that verifies a percentage of random business object definitions in the database are the same as the indexed documents.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="spotCheckMostRecentPassed" type="xs:boolean">
+            <xs:annotation>
+               <xs:documentation>A Y/N flag that shows whether the spot check that verifies the most recently modified business object definitions in the database are the same as the indexed documents.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
    <!-- ***** Business Object Definition Column ***** -->
 
    <xs:element name="businessObjectDefinitionColumnCreateRequest" type="businessObjectDefinitionColumnCreateRequest"/>

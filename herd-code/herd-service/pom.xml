@@ -110,6 +110,19 @@
          <groupId>org.mockito</groupId>
          <artifactId>mockito-all</artifactId>
       </dependency>
+
+      <!-- Elastic search -->
+      <dependency>
+         <groupId>org.elasticsearch</groupId>
+         <artifactId>elasticsearch</artifactId>
+         <version>${elasticsearch.version}</version>
+      </dependency>
+      <dependency>
+         <groupId>org.elasticsearch.client</groupId>
+         <artifactId>transport</artifactId>
+         <version>${elasticsearch.version}</version>
+      </dependency>
+
    </dependencies>
 
 </project>

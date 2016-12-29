@@ -19,6 +19,8 @@ import static org.quartz.CronScheduleBuilder.cronSchedule;
 import static org.quartz.JobBuilder.newJob;
 import static org.quartz.TriggerBuilder.newTrigger;
 
+import java.io.IOException;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -30,6 +32,7 @@ import javax.sql.DataSource;
 
 import com.amazon.sqs.javamessaging.SQSConnectionFactory;
 import com.amazonaws.ClientConfiguration;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.activiti.engine.HistoryService;
 import org.activiti.engine.IdentityService;
 import org.activiti.engine.ManagementService;
@@ -51,6 +54,10 @@ import org.activiti.spring.SpringCallerRunsRejectedJobsHandler;
 import org.activiti.spring.SpringProcessEngineConfiguration;
 import org.activiti.spring.SpringRejectedJobsHandler;
 import org.apache.commons.lang3.StringUtils;
+import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.transport.InetSocketTransportAddress;
+import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.quartz.CronTrigger;
 import org.quartz.JobDetail;
 import org.quartz.TriggerKey;
@@ -77,6 +84,7 @@ import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.helper.AwsHelper;
 import org.finra.herd.model.dto.AwsParamsDto;
 import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.model.dto.ElasticsearchSettingsDto;
 import org.finra.herd.service.activiti.HerdCommandInvoker;
 import org.finra.herd.service.activiti.HerdDelegateInterceptor;
 import org.finra.herd.service.activiti.HerdProcessEngineConfigurator;
@@ -155,7 +163,7 @@ public class ServiceSpringModuleConfig
 
     /**
      * Activiti's dedicated TaskExecutor bean definition.
-     * 
+     *
      * @return TaskExecutor
      */
     @Bean
@@ -266,6 +274,17 @@ public class ServiceSpringModuleConfig
     private String getActivitiDbSchemaUpdateParamBeanName()
     {
         return (String) ApplicationContextHolder.getApplicationContext().getBean(ACTIVITI_DB_SCHEMA_UPDATE_PARAM_BEAN_NAME);
+    }
+
+    /**
+     * Returns a new object mapper.
+     *
+     * @return the object mapper.
+     */
+    @Bean
+    public ObjectMapper objectMapper()
+    {
+        return new ObjectMapper();
     }
 
     /**
@@ -465,6 +484,46 @@ public class ServiceSpringModuleConfig
         }
 
         return SQSConnectionFactory.builder().withClientConfiguration(clientConfiguration).build();
+    }
+
+    /**
+     * Returns an elasticsearch transport client.
+     *
+     * @return TransportClient for the elasticsearch client is returned.
+     * @throws IOException is thrown if host can not be found, or if settings object can not be mapped.
+     */
+    @Bean
+    public TransportClient transportClient() throws IOException
+    {
+        // Get the elasticsearch settings JSON string from the configuration
+        String elasticSearchSettingsJSON = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SETTINGS_JSON);
+        Integer port = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_DEFAULT_PORT, Integer.class);
+
+        // Create a new object mapper for mapping a JSON string to a data transfer object
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        // Map the JSON object to the elastic search setting data transfer object
+        ElasticsearchSettingsDto elasticsearchSettingsDto = objectMapper.readValue(elasticSearchSettingsJSON, ElasticsearchSettingsDto.class);
+
+        // Get the settings from the elasticsearch settings data transfer object
+        String elasticSearchCluster = elasticsearchSettingsDto.getElasticSearchCluster();
+        List<String> elasticSearchAddresses = elasticsearchSettingsDto.getClientTransportAddresses();
+        boolean clientTransportStiff = elasticsearchSettingsDto.isClientTransportSniff();
+
+        // Build the settings for the transport client
+        Settings settings = Settings.builder().put("client.transport.sniff", clientTransportStiff).put("cluster.name", elasticSearchCluster).build();
+
+        // Build the Transport client with the settings
+        TransportClient transportClient = new PreBuiltTransportClient(settings);
+
+        // For each elastic search address in the elastic search address list
+        for (String elasticSearchAddress : elasticSearchAddresses)
+        {
+            // Add the address to the transport client
+            transportClient.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(elasticSearchAddress), port));
+        }
+
+        return transportClient;
     }
 
     /**

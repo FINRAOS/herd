@@ -665,7 +665,44 @@ public enum ConfigurationValue
     /**
      * The LDAP attribute id for user's telephone number.
      */
-    LDAP_ATTRIBUTE_USER_TELEPHONE_NUMBER("ldap.attribute.user.telephone.number", "telephoneNumber");
+    LDAP_ATTRIBUTE_USER_TELEPHONE_NUMBER("ldap.attribute.user.telephone.number", "telephoneNumber"),
+
+    /*
+     * The elasticsearch index name
+     */
+    ELASTICSEARCH_BDEF_INDEX_NAME("elasticsearch.bdef.index.name", "bdef"),
+
+    /**
+     * The elasticsearch document type
+     */
+    ELASTICSEARCH_BDEF_DOCUMENT_TYPE("elasticsearch.bdef.document.type", "doc"),
+
+    /**
+     * The elasticsearch mappings JSON
+     */
+    ELASTICSEARCH_BDEF_MAPPINGS_JSON("elasticsearch.bdef.mappings.json",
+        "{\"properties\": { \"id\": { \"type\": \"long\" } } }"),
+
+    /**
+     * The elasticsearch settings JSON
+     */
+    ELASTICSEARCH_SETTINGS_JSON("elasticsearch.settings.json",
+        "{ \"clientTransportAddresses\": [\"localhost\"], \"clientTransportSniff\": true, \"elasticSearchCluster\": \"elasticsearch\" }"),
+
+    /**
+     * The elasticsearch default port
+     */
+    ELASTICSEARCH_DEFAULT_PORT("elasticsearch.default.port", 9300),
+
+    /**
+     * The elasticsearch spot check percentage
+     */
+    ELASTICSEARCH_BDEF_SPOT_CHECK_PERCENTAGE("elasticsearch.bdef.spot.check.percentage", 0.05),
+
+    /**
+     * The elasticsearch spot check most recent number
+     */
+    ELASTICSEARCH_BDEF_SPOT_CHECK_MOST_RECENT_NUMBER("elasticsearch.bdef.spot.check.most.recent.number", 100);
 
     // Properties
     private String key;

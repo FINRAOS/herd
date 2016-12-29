@@ -15,12 +15,15 @@
 */
 package org.finra.herd.dao.impl;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 import javax.persistence.Tuple;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
@@ -43,6 +46,29 @@ import org.finra.herd.model.jpa.TagEntity;
 @Repository
 public class BusinessObjectDefinitionDaoImpl extends AbstractHerdDao implements BusinessObjectDefinitionDao
 {
+    @Override
+    public List<BusinessObjectDefinitionEntity> getAllBusinessObjectDefinitions()
+    {
+        // Create the criteria builder and a tuple style criteria query.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<BusinessObjectDefinitionEntity> criteria = builder.createQuery(BusinessObjectDefinitionEntity.class);
+
+        // The criteria root is the business object definition.
+        Root<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityRoot = criteria.from(BusinessObjectDefinitionEntity.class);
+
+        // Join to the other tables we can filter on.
+        Join<BusinessObjectDefinitionEntity, NamespaceEntity> namespaceEntity =
+            businessObjectDefinitionEntityRoot.join(BusinessObjectDefinitionEntity_.namespace);
+
+        // Get the columns.
+        Path<String> namespaceCodeColumn = namespaceEntity.get(NamespaceEntity_.code);
+        Path<String> businessObjectDefinitionNameColumn = businessObjectDefinitionEntityRoot.get(BusinessObjectDefinitionEntity_.name);
+
+        criteria.select(businessObjectDefinitionEntityRoot).orderBy(builder.asc(businessObjectDefinitionNameColumn), builder.asc(namespaceCodeColumn));
+
+        return entityManager.createQuery(criteria).getResultList();
+    }
+
     @Override
     public BusinessObjectDefinitionEntity getBusinessObjectDefinitionByKey(BusinessObjectDefinitionKey businessObjectDefinitionKey)
     {
@@ -167,5 +193,80 @@ public class BusinessObjectDefinitionDaoImpl extends AbstractHerdDao implements 
 
         //Returns duplicate business object definition. When a bdef is associated with multiple tags.
         return entityManager.createQuery(criteria).getResultList();
+    }
+
+    @Override
+    public List<BusinessObjectDefinitionEntity> getPercentageOfAllBusinessObjectDefinitions(double percentage)
+    {
+        // Create the criteria builder and a tuple style criteria query.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Integer> criteria = builder.createQuery(Integer.class);
+
+        // The criteria root is the business object definition.
+        Root<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityRoot = criteria.from(BusinessObjectDefinitionEntity.class);
+
+        // Get the columns.
+        Path<Integer> idColumn = businessObjectDefinitionEntityRoot.get(BusinessObjectDefinitionEntity_.id);
+
+        criteria.select(idColumn);
+
+        List<Integer> allBusinessObjectDefinitionIdsList = entityManager.createQuery(criteria).getResultList();
+        List<Integer> percentageOfBusinessObjectDefinitionIdsList = new ArrayList<>();
+
+        allBusinessObjectDefinitionIdsList.forEach(id -> {
+            if (ThreadLocalRandom.current().nextDouble() < percentage)
+            {
+                percentageOfBusinessObjectDefinitionIdsList.add(id);
+            }
+        });
+
+        return getAllBusinessObjectDefinitionsByIds(percentageOfBusinessObjectDefinitionIdsList);
+    }
+
+    private List<BusinessObjectDefinitionEntity> getAllBusinessObjectDefinitionsByIds(List<Integer> ids)
+    {
+        // Create the criteria builder and a tuple style criteria query.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<BusinessObjectDefinitionEntity> criteria = builder.createQuery(BusinessObjectDefinitionEntity.class);
+
+        // The criteria root is the business object definition.
+        Root<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityRoot = criteria.from(BusinessObjectDefinitionEntity.class);
+
+        // Create the standard restrictions (i.e. the standard where clauses).
+        Expression<Integer> expression = businessObjectDefinitionEntityRoot.get(BusinessObjectDefinitionEntity_.id);
+        Predicate queryRestriction = expression.in(ids);
+
+        criteria.select(businessObjectDefinitionEntityRoot).where(queryRestriction);
+
+        return entityManager.createQuery(criteria).getResultList();
+    }
+
+    @Override
+    public List<BusinessObjectDefinitionEntity> getMostRecentBusinessObjectDefinitions(int numberOfResults)
+    {
+        // Create the criteria builder and a tuple style criteria query.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<BusinessObjectDefinitionEntity> criteria = builder.createQuery(BusinessObjectDefinitionEntity.class);
+
+        // The criteria root is the business object definition.
+        Root<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityRoot = criteria.from(BusinessObjectDefinitionEntity.class);
+
+        // Get the columns.
+        Path<Timestamp> businessObjectDefinitionUpdatedOnColumn = businessObjectDefinitionEntityRoot.get(BusinessObjectDefinitionEntity_.updatedOn);
+
+        // Select the business object definitions and order descending by the updated on column
+        criteria.select(businessObjectDefinitionEntityRoot).orderBy(builder.desc(businessObjectDefinitionUpdatedOnColumn));
+
+        return entityManager.createQuery(criteria).setMaxResults(numberOfResults).getResultList();
+    }
+
+    @Override
+    public long getCountOfAllBusinessObjectDefinitions()
+    {
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Long> criteria = builder.createQuery(Long.class);
+        Root<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityRoot = criteria.from(BusinessObjectDefinitionEntity.class);
+        criteria.select(builder.count(businessObjectDefinitionEntityRoot));
+        return entityManager.createQuery(criteria).getSingleResult();
     }
 }
