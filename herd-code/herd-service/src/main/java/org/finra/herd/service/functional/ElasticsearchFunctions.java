@@ -31,10 +31,12 @@ import org.elasticsearch.action.delete.DeleteRequestBuilder;
 import org.elasticsearch.action.get.GetRequestBuilder;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequestBuilder;
+import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.SearchHits;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -150,7 +152,8 @@ public class ElasticsearchFunctions implements SearchFunctions
      * The number of types in index function will take as arguments the index name and the document type and will return the number of documents in the index.
      */
     private final BiFunction<String, String, Long> numberOfTypesInIndexFunction = (indexName, documentType) -> {
-        final SearchResponse searchResponse = transportClient.prepareSearch(indexName).setTypes(documentType).execute().actionGet();
+        final SearchRequestBuilder searchRequestBuilder = transportClient.prepareSearch(indexName).setTypes(documentType);
+        final SearchResponse searchResponse = searchRequestBuilder.execute().actionGet();
         return searchResponse.getHits().getTotalHits();
     };
 
@@ -159,8 +162,11 @@ public class ElasticsearchFunctions implements SearchFunctions
      */
     private final BiFunction<String, String, List<String>> idsInIndexFunction = (indexName, documentType) -> {
         List<String> idList = new ArrayList<>();
-        final SearchResponse searchResponse = transportClient.prepareSearch().setQuery(matchAllQuery()).execute().actionGet();
-        for (SearchHit searchHit : searchResponse.getHits())
+        final SearchRequestBuilder searchRequestBuilder = transportClient.prepareSearch(indexName).setTypes(documentType).setQuery(matchAllQuery());
+        final SearchResponse searchResponse = searchRequestBuilder.execute().actionGet();
+        final SearchHits searchHits = searchResponse.getHits();
+        final SearchHit[] hits = searchHits.hits();
+        for (SearchHit searchHit : hits)
         {
             idList.add(searchHit.id());
         }
