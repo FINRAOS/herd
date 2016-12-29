@@ -401,7 +401,16 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
             return searchFunctions.getIsValidFunction().test(indexName, documentType, businessObjectDefinitionEntity.getId().toString(), jsonString);
         };
 
-        return businessObjectDefinitionEntityList.parallelStream().allMatch(validInIndexPredicate);
+        boolean isValid = true;
+        for (BusinessObjectDefinitionEntity businessObjectDefinitionEntity : businessObjectDefinitionEntityList)
+        {
+            if (!validInIndexPredicate.test(businessObjectDefinitionEntity))
+            {
+                isValid = false;
+            }
+        }
+
+        return isValid;
     }
 
     /**
