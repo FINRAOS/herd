@@ -1208,19 +1208,22 @@
          </xs:element>
          <xs:element name="sizeCheckPassed" type="xs:boolean">
             <xs:annotation>
-               <xs:documentation>A Y/N flag that shows whether the total number of business object definitions in the database is the same as the total number in the index.
+               <xs:documentation>A Y/N flag that shows whether the total number of business object definitions in the database is the same as the total number
+                  in the index.
                </xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="spotCheckRandomPassed" type="xs:boolean">
             <xs:annotation>
-               <xs:documentation>A Y/N flag that shows whether the spot check that verifies a percentage of random business object definitions in the database are the same as the indexed documents.
+               <xs:documentation>A Y/N flag that shows whether the spot check that verifies a percentage of random business object definitions in the database
+                  are the same as the indexed documents.
                </xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="spotCheckMostRecentPassed" type="xs:boolean">
             <xs:annotation>
-               <xs:documentation>A Y/N flag that shows whether the spot check that verifies the most recently modified business object definitions in the database are the same as the indexed documents.
+               <xs:documentation>A Y/N flag that shows whether the spot check that verifies the most recently modified business object definitions in the
+                  database are the same as the indexed documents.
                </xs:documentation>
             </xs:annotation>
          </xs:element>
@@ -1541,7 +1544,9 @@
       <xs:all>
          <xs:element name="userId" type="xs:string">
             <xs:annotation>
-               <xs:documentation>The user id of the Subject Matter Expert</xs:documentation>
+               <xs:documentation>The user id of the Subject Matter Expert. This must be a fully qualified name as the value will be utilized to look up contact
+                  information in LDAP
+               </xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
