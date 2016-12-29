@@ -118,7 +118,6 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         verify(businessObjectDefinitionDao, times(1)).getAllBusinessObjectDefinitions();
         verify(searchFunctions, times(1)).getIndexFunction();
         verify(searchFunctions, times(1)).getNumberOfTypesInIndexFunction();
-        verify(objectMapper, times(2)).writeValueAsString(any());
     }
 
     @Test
@@ -164,7 +163,6 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         verify(businessObjectDefinitionDao, times(1)).getAllBusinessObjectDefinitions();
         verify(searchFunctions, times(1)).getIndexFunction();
         verify(searchFunctions, times(1)).getNumberOfTypesInIndexFunction();
-        verify(objectMapper, times(2)).writeValueAsString(any());
     }
 
     @Test
@@ -210,7 +208,6 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         verify(businessObjectDefinitionDao, times(1)).getAllBusinessObjectDefinitions();
         verify(searchFunctions, times(1)).getIndexFunction();
         verify(searchFunctions, times(1)).getNumberOfTypesInIndexFunction();
-        verify(objectMapper, times(2)).writeValueAsString(any());
     }
 
     @Test
@@ -249,7 +246,6 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
 
         // Verify the calls to external methods
         verify(businessObjectDefinitionDao, times(1)).getAllBusinessObjectDefinitions();
-        verify(objectMapper, times(2)).writeValueAsString(any());
         verify(searchFunctions, times(1)).getValidateFunction();
         verify(configurationHelper, times(2)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         verify(configurationHelper, times(2)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
@@ -293,7 +289,6 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
 
         // Verify the calls to external methods
         verify(businessObjectDefinitionDao, times(1)).getAllBusinessObjectDefinitions();
-        verify(objectMapper, times(2)).writeValueAsString(any());
         verify(searchFunctions, times(1)).getValidateFunction();
         verify(configurationHelper, times(2)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         verify(configurationHelper, times(2)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
@@ -373,7 +368,6 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         verify(businessObjectDefinitionDao, times(1)).getPercentageOfAllBusinessObjectDefinitions(0.05);
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
-        verify(objectMapper, times(2)).writeValueAsString(any());
         verify(searchFunctions, times(2)).getIsValidFunction();
     }
 
@@ -407,7 +401,6 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         verify(businessObjectDefinitionDao, times(1)).getPercentageOfAllBusinessObjectDefinitions(0.05);
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
-        verify(objectMapper, times(2)).writeValueAsString(any());
         verify(searchFunctions, times(2)).getIsValidFunction();
     }
 
@@ -441,7 +434,6 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         verify(businessObjectDefinitionDao, times(1)).getPercentageOfAllBusinessObjectDefinitions(0.05);
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
-        verify(objectMapper, times(2)).writeValueAsString(any());
         verify(searchFunctions, times(2)).getIsValidFunction();
     }
 
@@ -475,7 +467,6 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         verify(businessObjectDefinitionDao, times(1)).getMostRecentBusinessObjectDefinitions(100);
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
-        verify(objectMapper, times(2)).writeValueAsString(any());
         verify(searchFunctions, times(2)).getIsValidFunction();
     }
 
@@ -509,7 +500,6 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         verify(businessObjectDefinitionDao, times(1)).getMostRecentBusinessObjectDefinitions(100);
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
-        verify(objectMapper, times(2)).writeValueAsString(any());
         verify(searchFunctions, times(2)).getIsValidFunction();
     }
 
@@ -543,7 +533,6 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         verify(businessObjectDefinitionDao, times(1)).getMostRecentBusinessObjectDefinitions(100);
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
-        verify(objectMapper, times(2)).writeValueAsString(any());
         verify(searchFunctions, times(2)).getIsValidFunction();
     }
 }
