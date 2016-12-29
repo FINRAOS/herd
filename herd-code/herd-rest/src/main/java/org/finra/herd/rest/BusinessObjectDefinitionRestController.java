@@ -209,7 +209,7 @@ public class BusinessObjectDefinitionRestController extends HerdBaseController
      * @return the business object definition validate index response
      */
     @RequestMapping(value = "/businessObjectDefinitions/validateindex", method = RequestMethod.GET, consumes = {"application/xml", "application/json"})
-    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DEFINITIONS_SEARCH_POST)
+    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DEFINITIONS_VALIDATE_INDEX_GET)
     public BusinessObjectDefinitionValidateResponse validateIndexBusinessObjectDefinitions()
     {
         businessObjectDefinitionService.indexValidateAllBusinessObjectDefinitions();
