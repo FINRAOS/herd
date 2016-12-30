@@ -24,7 +24,7 @@
 
    <groupId>org.finra.herd</groupId>
    <artifactId>herd</artifactId>
-   <version>0.33.0-SNAPSHOT</version>
+   <version>0.34.0-SNAPSHOT</version>
 
    <description>This is the base pom for the herd project.</description>
    <url>http://finraos.github.io/herd/</url>
@@ -77,12 +77,14 @@
       <quartz.scheduler.version>2.2.2</quartz.scheduler.version>
       <roaster.version>2.18.2.Final</roaster.version>
       <slf4j.version>1.7.21</slf4j.version>
+      <spring.ldap.version>2.2.0.RELEASE</spring.ldap.version>
       <spring.security.version>4.0.3.RELEASE</spring.security.version>
       <spring.version>4.2.4.RELEASE</spring.version>
       <sun.jersey.version>1.19.1</sun.jersey.version>
       <swagger.version>1.5.9</swagger.version>
       <velocity.version>1.7</velocity.version>
       <woodstox.version>4.4.1</woodstox.version>
+      <elasticsearch.version>5.1.1</elasticsearch.version>
 
       <!-- Third Party Plugin Dependencies -->
       <jaxb.xew.plugin.version>1.6</jaxb.xew.plugin.version>
@@ -562,6 +564,11 @@
             <version>${spring.version}</version>
          </dependency>
          <dependency>
+            <groupId>org.springframework.ldap</groupId>
+            <artifactId>spring-ldap-core</artifactId>
+            <version>${spring.ldap.version}</version>
+         </dependency>
+         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-web</artifactId>
             <version>${spring.security.version}</version>
@@ -877,6 +884,11 @@
                <groupId>org.apache.maven.plugins</groupId>
                <artifactId>maven-surefire-plugin</artifactId>
                <version>${maven.surefire.plugin.version}</version>
+               <configuration>
+                  <argLine>-Xms512m -Xmx1500m</argLine>
+                  <useUnlimitedThreads>true</useUnlimitedThreads>
+                  <reuseForks>true</reuseForks>
+               </configuration>
             </plugin>
             <plugin>
                <groupId>org.apache.maven.plugins</groupId>

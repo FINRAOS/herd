@@ -586,6 +586,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     protected StorageUnitStatusDaoHelper storageUnitStatusDaoHelper;
 
     @Autowired
+    protected SubjectMatterExpertService subjectMatterExpertService;
+
+    @Autowired
     protected SystemJobService systemJobService;
 
     @Autowired

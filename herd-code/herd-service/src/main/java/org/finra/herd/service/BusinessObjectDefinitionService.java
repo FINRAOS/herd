@@ -16,6 +16,7 @@
 package org.finra.herd.service;
 
 import java.util.Set;
+import java.util.concurrent.Future;
 
 import org.finra.herd.model.api.xml.BusinessObjectDefinition;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionCreateRequest;
@@ -48,9 +49,19 @@ public interface BusinessObjectDefinitionService
 
     public BusinessObjectDefinitionKeys getBusinessObjectDefinitions(String namespaceCode);
 
+    public Future<Void> indexAllBusinessObjectDefinitions();
+
+    public boolean indexSizeCheckValidationBusinessObjectDefinitions();
+
+    public boolean indexSpotCheckPercentageValidationBusinessObjectDefinitions();
+
+    public boolean indexSpotCheckMostRecentValidationBusinessObjectDefinitions();
+
+    public Future<Void> indexValidateAllBusinessObjectDefinitions();
+
     public BusinessObjectDefinitionSearchResponse searchBusinessObjectDefinitions(BusinessObjectDefinitionSearchRequest businessObjectDefinitionSearchRequest,
         Set<String> fields);
-    
+
     public void updateBusinessObjectDefinitionEntitySampleFile(BusinessObjectDefinitionKey businessObjectDefinitionKey,
         BusinessObjectDefinitionSampleFileUpdateDto businessObjectDefinitionSampleFileUpdateDto);
 }

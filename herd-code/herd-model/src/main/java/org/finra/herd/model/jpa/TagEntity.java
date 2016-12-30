@@ -31,6 +31,10 @@ import javax.persistence.OrderBy;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 /**
  * A tag entity.
  */
@@ -75,15 +79,18 @@ public class TagEntity extends AuditableEntity
     private String description;
 
     // This is the parent
+    @JsonBackReference(value="childrenTagEntities-parentTagEntity")
     @JoinTable(name = "tag_prnt", joinColumns = {@JoinColumn(name = TABLE_NAME + "_id", referencedColumnName = TABLE_NAME + "_id")},
         inverseJoinColumns = {@JoinColumn(name = "prnt_tag_id", referencedColumnName = TABLE_NAME + "_id")})
     @ManyToOne
     private TagEntity parentTagEntity;
 
     // These are the children.
+    @JsonManagedReference(value="childrenTagEntities-parentTagEntity")
     @OneToMany(mappedBy = "parentTagEntity")
     private List<TagEntity> childrenTagEntities;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "tag", orphanRemoval = true, cascade = {CascadeType.ALL})
     @OrderBy("bus_objct_dfntn_id")
     private Collection<BusinessObjectDefinitionTagEntity> businessObjectDefinitionTags;

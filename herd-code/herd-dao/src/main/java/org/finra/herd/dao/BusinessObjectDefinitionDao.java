@@ -24,6 +24,13 @@ import org.finra.herd.model.jpa.TagEntity;
 public interface BusinessObjectDefinitionDao extends BaseJpaDao
 {
     /**
+     * Gets a list of all business object definition entities
+     *
+     * @return the list of all business object definition entities.
+     */
+    public List<BusinessObjectDefinitionEntity> getAllBusinessObjectDefinitions();
+
+    /**
      * Gets a business object definition by key.
      *
      * @param businessObjectDefinitionKey the business object definition key (case-insensitive)
@@ -54,4 +61,27 @@ public interface BusinessObjectDefinitionDao extends BaseJpaDao
      * @return the list of all business object definition entities.
      */
     public List<BusinessObjectDefinitionEntity> getBusinessObjectDefinitions(List<TagEntity> tagEntities);
+
+    /**
+     * Gets a percentage of all business object definition entities
+     *
+     * @param percentage the percentage of all business object definitions to return
+     * @return the percentage of all business object definition entities.
+     */
+    public List<BusinessObjectDefinitionEntity> getPercentageOfAllBusinessObjectDefinitions(double percentage);
+
+    /**
+     * Gets the most recent of all business object definition entities
+     *
+     * @param numberOfResults the number of results to return
+     * @return the most recent of all business object definition entities.
+     */
+    public List<BusinessObjectDefinitionEntity> getMostRecentBusinessObjectDefinitions(int numberOfResults);
+
+    /**
+     * Gets a count of all business object definition entities
+     *
+     * @return the count of all business object definition entities.
+     */
+    public long getCountOfAllBusinessObjectDefinitions();
 }

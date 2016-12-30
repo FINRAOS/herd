@@ -15,6 +15,9 @@
 */
 package org.finra.herd.rest;
 
+import static org.finra.herd.core.HerdDateUtils.getXMLGregorianCalendarValue;
+
+import java.util.Date;
 import java.util.Set;
 
 import io.swagger.annotations.Api;
@@ -30,11 +33,13 @@ import org.springframework.web.bind.annotation.RestController;
 import org.finra.herd.model.api.xml.BusinessObjectDefinition;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptiveInformationUpdateRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionIndexResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKeys;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionUpdateRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionValidateResponse;
 import org.finra.herd.model.dto.SecurityFunctions;
 import org.finra.herd.service.BusinessObjectDefinitionService;
 import org.finra.herd.ui.constants.UiConstants;
@@ -171,8 +176,8 @@ public class BusinessObjectDefinitionRestController extends HerdBaseController
     /**
      * Searches across all business object definitions that are defined in the system per specified search filters and keys
      *
-     * @param fields A comma-separated list of fields to be retrieved with each business object definition entity.
-     *               Valid options: dataProviderName, shortDescription, displayName
+     * @param fields A comma-separated list of fields to be retrieved with each business object definition entity. Valid options: dataProviderName,
+     * shortDescription, displayName
      * @param request the information needed to search across the business object definitions
      *
      * @return the retrieved business object definition list
@@ -183,5 +188,34 @@ public class BusinessObjectDefinitionRestController extends HerdBaseController
         @RequestParam(value = "fields", required = false, defaultValue = "") Set<String> fields, @RequestBody BusinessObjectDefinitionSearchRequest request)
     {
         return businessObjectDefinitionService.searchBusinessObjectDefinitions(request, fields);
+    }
+
+    /**
+     * Index all business object definitions
+     *
+     * @return the business object definition index response
+     */
+    @RequestMapping(value = "/businessObjectDefinitions/index", method = RequestMethod.GET, consumes = {"application/xml", "application/json"})
+    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DEFINITIONS_INDEX_GET)
+    public BusinessObjectDefinitionIndexResponse indexBusinessObjectDefinitions()
+    {
+        businessObjectDefinitionService.indexAllBusinessObjectDefinitions();
+        return new BusinessObjectDefinitionIndexResponse(getXMLGregorianCalendarValue(new Date()));
+    }
+
+    /**
+     * Validate all business object definitions in the index
+     *
+     * @return the business object definition validate index response
+     */
+    @RequestMapping(value = "/businessObjectDefinitions/validateindex", method = RequestMethod.GET, consumes = {"application/xml", "application/json"})
+    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DEFINITIONS_VALIDATE_INDEX_GET)
+    public BusinessObjectDefinitionValidateResponse validateIndexBusinessObjectDefinitions()
+    {
+        businessObjectDefinitionService.indexValidateAllBusinessObjectDefinitions();
+        boolean sizeCheck = businessObjectDefinitionService.indexSizeCheckValidationBusinessObjectDefinitions();
+        boolean spotCheckPercentage = businessObjectDefinitionService.indexSpotCheckPercentageValidationBusinessObjectDefinitions();
+        boolean spotCheckMostRecent = businessObjectDefinitionService.indexSpotCheckMostRecentValidationBusinessObjectDefinitions();
+        return new BusinessObjectDefinitionValidateResponse(getXMLGregorianCalendarValue(new Date()), sizeCheck, spotCheckPercentage, spotCheckMostRecent);
     }
 }

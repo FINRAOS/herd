@@ -62,7 +62,7 @@ public class Ec2DaoImpl implements Ec2Dao
 
     @Autowired
     private AwsClientFactory awsClientFactory;
-    
+
     /**
      * Adds the security groups to an EC2 instance.
      *
@@ -113,7 +113,7 @@ public class Ec2DaoImpl implements Ec2Dao
     @Override
     public AmazonEC2Client getEc2Client(AwsParamsDto awsParamsDto)
     {
-        return  awsClientFactory.getEc2Client(awsParamsDto);
+        return awsClientFactory.getEc2Client(awsParamsDto);
     }
 
     /**
@@ -193,14 +193,13 @@ public class Ec2DaoImpl implements Ec2Dao
         }
     }
 
-    public Ec2Operations getEc2Operations()
-    {
-        return ec2Operations;
-    }
-
+    /**
+     * Sets implementation of the EC2 operations. This method is required for unit tests that use Mockito framework.
+     *
+     * @param ec2Operations the implementation of the EC2 operations
+     */
     public void setEc2Operations(Ec2Operations ec2Operations)
     {
         this.ec2Operations = ec2Operations;
     }
-
 }

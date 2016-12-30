@@ -26,6 +26,7 @@ import org.junit.Test;
 
 import org.finra.herd.model.api.xml.BusinessObjectFormat;
 import org.finra.herd.model.api.xml.Parameter;
+import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.service.activiti.ActivitiRuntimeHelper;
 
 /**
@@ -156,5 +157,48 @@ public class GetBusinessObjectFormatTest extends HerdActivitiServiceTaskTest
                 .getExpectedBusinessObjectFormatNotFoundErrorMessage(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION)));
             testActivitiServiceTaskFailure(GetBusinessObjectFormat.class.getCanonicalName(), fieldExtensionList, parameters, variableValuesToValidate);
         });
+    }
+    
+    /**
+     * This test is for task environment variable setting in BaseJavaDelegate class
+     * @throws Exception exception
+     */
+    @Test
+    public void testGetBusinessObjectFormatWithTaskEnvironmentVariable() throws Exception
+    {
+        try
+        {
+            Map<String, Object> overrideMap = new HashMap<>();
+            String taskEnviroment = "dev";
+            overrideMap.put(ConfigurationValue.HERD_ENVIRONMENT.getKey(), taskEnviroment);
+            modifyPropertySourceInEnvironment(overrideMap);
+            
+            // Create and persist a business object format.
+            businessObjectFormatServiceTestHelper.createTestBusinessObjectFormat();
+
+            List<FieldExtension> fieldExtensionList = new ArrayList<>();
+            fieldExtensionList.add(buildFieldExtension("namespace", "${namespace}"));
+            fieldExtensionList.add(buildFieldExtension("businessObjectDefinitionName", "${businessObjectDefinitionName}"));
+            fieldExtensionList.add(buildFieldExtension("businessObjectFormatUsage", "${businessObjectFormatUsage}"));
+            fieldExtensionList.add(buildFieldExtension("businessObjectFormatFileType", "${businessObjectFormatFileType}"));
+            fieldExtensionList.add(buildFieldExtension("businessObjectFormatVersion", "${businessObjectFormatVersion}"));
+
+            List<Parameter> parameters = new ArrayList<>();
+            parameters.add(buildParameter("namespace", NAMESPACE));
+            parameters.add(buildParameter("businessObjectDefinitionName", BDEF_NAME));
+            parameters.add(buildParameter("businessObjectFormatUsage", FORMAT_USAGE_CODE));
+            parameters.add(buildParameter("businessObjectFormatFileType", FORMAT_FILE_TYPE_CODE));
+            parameters.add(buildParameter("businessObjectFormatVersion", INITIAL_FORMAT_VERSION.toString()));
+
+            // Retrieve the business object format and validate the returned object.
+            Map<String, Object> variableValuesToValidate = new HashMap<>();
+            variableValuesToValidate.put(ActivitiRuntimeHelper.VARIABLE_ENVIRONMENT, taskEnviroment);
+            testActiviTaskEnvironmentVariable(GetBusinessObjectFormat.class.getCanonicalName(), fieldExtensionList, parameters, taskEnviroment);     
+        }
+        finally
+        {
+            // Restore the property sources so we don't affect other tests.
+            restorePropertySourceInEnvironment();
+        }
     }
 }
