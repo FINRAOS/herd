@@ -17,16 +17,25 @@ package org.finra.herd.service.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Future;
+import java.util.function.Predicate;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableSet;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -65,11 +74,14 @@ import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.TagEntity;
 import org.finra.herd.service.BusinessObjectDefinitionService;
 import org.finra.herd.service.SearchableService;
+import org.finra.herd.service.functional.QuadConsumer;
+import org.finra.herd.service.functional.SearchFunctions;
 import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.AttributeHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionHelper;
 import org.finra.herd.service.helper.BusinessObjectFormatDaoHelper;
+import org.finra.herd.service.helper.ConfigurationDaoHelper;
 import org.finra.herd.service.helper.DataProviderDaoHelper;
 import org.finra.herd.service.helper.NamespaceDaoHelper;
 import org.finra.herd.service.helper.StorageDaoHelper;
@@ -83,6 +95,8 @@ import org.finra.herd.service.helper.TagHelper;
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefinitionService, SearchableService
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BusinessObjectDefinitionServiceImpl.class);
+
     @Autowired
     private AlternateKeyHelper alternateKeyHelper;
 
@@ -109,6 +123,15 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 
     @Autowired
     private ConfigurationHelper configurationHelper;
+
+    @Autowired
+    private ConfigurationDaoHelper configurationDaoHelper;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Autowired
+    private SearchFunctions searchFunctions;
 
     @Autowired
     private TagHelper tagHelper;
@@ -167,6 +190,253 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 
         // Create and return the business object definition object from the persisted entity.
         return createBusinessObjectDefinitionFromEntity(businessObjectDefinitionEntity);
+    }
+
+    /**
+     * Index all business object definitions
+     *
+     * @return result of an asynchronous computation
+     */
+    @Override
+    @Async
+    public Future<Void> indexAllBusinessObjectDefinitions()
+    {
+        final String indexName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
+        final String documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
+        final String mapping = configurationDaoHelper.getClobProperty(ConfigurationValue.ELASTICSEARCH_BDEF_MAPPINGS_JSON.getKey());
+
+        // If the index exists delete it
+        if (searchFunctions.getIndexExistsFunction().test(indexName))
+        {
+            searchFunctions.getDeleteIndexFunction().accept(indexName);
+        }
+
+        // Create the index
+        searchFunctions.getCreateIndexFunction().accept(indexName, documentType, mapping);
+
+        // Get a list of all business object definitions
+        final List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList =
+            Collections.unmodifiableList(businessObjectDefinitionDao.getAllBusinessObjectDefinitions());
+
+        // Index all Business Object Definitions
+        executeFunctionForBusinessObjectDefinitionsInList(businessObjectDefinitionEntityList, searchFunctions.getIndexFunction());
+
+        // Simple count validation, index size should equal entity list size
+        final long indexSize = searchFunctions.getNumberOfTypesInIndexFunction().apply(indexName, documentType);
+        final long businessObjectDefinitionDatabaseTableSize = businessObjectDefinitionEntityList.size();
+        if (businessObjectDefinitionDatabaseTableSize != indexSize)
+        {
+            LOGGER.error("Index validation failed, business object definition database table size {}, does not equal index size {}.",
+                businessObjectDefinitionDatabaseTableSize, indexSize);
+        }
+
+        // Return an AsyncResult so callers will know the future is "done". They can call "isDone" to know when this method has completed and they
+        // can call "get" to see if any exceptions were thrown.
+        return new AsyncResult<>(null);
+    }
+
+    /**
+     * Checks the count of business object definitions in the database against the count of business object definitions in the index.
+     *
+     * @return result of an asynchronous computation
+     */
+    @Override
+    public boolean indexSizeCheckValidationBusinessObjectDefinitions()
+    {
+        final String indexName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
+        final String documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
+
+        // Simple count validation, index size should equal entity list size
+        final long indexSize = searchFunctions.getNumberOfTypesInIndexFunction().apply(indexName, documentType);
+        final long businessObjectDefinitionDatabaseTableSize = businessObjectDefinitionDao.getCountOfAllBusinessObjectDefinitions();
+        if (businessObjectDefinitionDatabaseTableSize != indexSize)
+        {
+            LOGGER.error("Index validation failed, business object definition database table size {}, does not equal index size {}.",
+                businessObjectDefinitionDatabaseTableSize, indexSize);
+        }
+
+        return businessObjectDefinitionDatabaseTableSize == indexSize;
+    }
+
+    /**
+     * Validate that the index contains all business object definitions
+     *
+     * @return result of an asynchronous computation
+     */
+    @Override
+    public boolean indexSpotCheckPercentageValidationBusinessObjectDefinitions()
+    {
+        final Double spotCheckPercentage = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_SPOT_CHECK_PERCENTAGE, Double.class);
+
+        // Get a list of all business object definitions
+        final List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList =
+            Collections.unmodifiableList(businessObjectDefinitionDao.getPercentageOfAllBusinessObjectDefinitions(spotCheckPercentage));
+
+        return indexValidateBusinessObjectDefinitionsList(businessObjectDefinitionEntityList);
+    }
+
+    /**
+     * Validate that the index contains all business object definitions
+     *
+     * @return result of an asynchronous computation
+     */
+    @Override
+    public boolean indexSpotCheckMostRecentValidationBusinessObjectDefinitions()
+    {
+        final Integer spotCheckMostRecentNumber =
+            configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_SPOT_CHECK_MOST_RECENT_NUMBER, Integer.class);
+
+        // Get a list of all business object definitions
+        final List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList =
+            Collections.unmodifiableList(businessObjectDefinitionDao.getMostRecentBusinessObjectDefinitions(spotCheckMostRecentNumber));
+
+        return indexValidateBusinessObjectDefinitionsList(businessObjectDefinitionEntityList);
+    }
+
+    /**
+     * Validate that the index contains all business object definitions
+     *
+     * @return result of an asynchronous computation
+     */
+    @Override
+    @Async
+    public Future<Void> indexValidateAllBusinessObjectDefinitions()
+    {
+        // Get a list of all business object definitions
+        final List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList =
+            Collections.unmodifiableList(businessObjectDefinitionDao.getAllBusinessObjectDefinitions());
+
+        // Validate all Business Object Definitions
+        executeFunctionForBusinessObjectDefinitionsInList(businessObjectDefinitionEntityList, searchFunctions.getValidateFunction());
+
+        // Remove any index documents that are not in the database
+        removeAnyIndexDocumentsThatAreNotInBusinessObjectsDefinitionsList(businessObjectDefinitionEntityList);
+
+        // Return an AsyncResult so callers will know the future is "done". They can call "isDone" to know when this method has completed and they
+        // can call "get" to see if any exceptions were thrown.
+        return new AsyncResult<>(null);
+    }
+
+    /**
+     * Method to remove business object definitions in the index that don't exist in the database
+     *
+     * @param businessObjectDefinitionEntityList list of business object definitions in the database
+     */
+    private void removeAnyIndexDocumentsThatAreNotInBusinessObjectsDefinitionsList(List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList)
+    {
+        final String indexName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
+        final String documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
+
+        // Get a list of business object definition ids from the list of business object definition entities in the database
+        List<String> databaseBusinessObjectDefinitionIdList = new ArrayList<>();
+        businessObjectDefinitionEntityList
+            .forEach(businessObjectDefinitionEntity -> databaseBusinessObjectDefinitionIdList.add(businessObjectDefinitionEntity.getId().toString()));
+
+        // Get a list of business object definition ids in the search index
+        List<String> indexDocumentBusinessObjectDefinitionIdList = searchFunctions.getIdsInIndexFunction().apply(indexName, documentType);
+
+        // Remove the database ids from the index ids
+        indexDocumentBusinessObjectDefinitionIdList.removeAll(databaseBusinessObjectDefinitionIdList);
+
+        // If there are any ids left in the index list they need to be removed
+        indexDocumentBusinessObjectDefinitionIdList.forEach(id -> searchFunctions.getDeleteDocumentByIdFunction().accept(indexName, documentType, id));
+    }
+
+    /**
+     * Method that executes a function for business object definitions in a list
+     *
+     * @param businessObjectDefinitionEntityList the list of business object definitions entities
+     * @param function the function to apply to all business object definitions
+     */
+    private void executeFunctionForBusinessObjectDefinitionsInList(final List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList,
+        final QuadConsumer<String, String, String, String> function)
+    {
+        final String indexName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
+        final String documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
+
+        // For each business object definition apply the passed in function
+        // The parallel streams use the default ForkJoinPool which has one less thread than the number of available processors.
+        businessObjectDefinitionEntityList.parallelStream().forEach(businessObjectDefinitionEntity -> {
+            // Fetch Join with .size()
+            businessObjectDefinitionEntity.getAttributes().size();
+            businessObjectDefinitionEntity.getBusinessObjectDefinitionTags().size();
+            businessObjectDefinitionEntity.getBusinessObjectFormats().size();
+            businessObjectDefinitionEntity.getColumns().size();
+            businessObjectDefinitionEntity.getSampleDataFiles().size();
+
+            // Convert the business object definition entity to a JSON string
+            final String jsonString = safeObjectMapperWriteValueAsString(businessObjectDefinitionEntity);
+
+            if (StringUtils.isNotEmpty(jsonString))
+            {
+                // Call the function that will process each business object definition entity against the index
+                function.accept(indexName, documentType, businessObjectDefinitionEntity.getId().toString(), jsonString);
+            }
+        });
+    }
+
+    /**
+     * A helper method that will validate a list of business object definitions
+     *
+     * @param businessObjectDefinitionEntityList the list of business object definitions that will be validated
+     *
+     * @return true all of the business object definitions are valid in the index
+     */
+    private boolean indexValidateBusinessObjectDefinitionsList(final List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList)
+    {
+        final String indexName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
+        final String documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
+
+        Predicate<BusinessObjectDefinitionEntity> validInIndexPredicate = businessObjectDefinitionEntity -> {
+            // Fetch Join with .size()
+            businessObjectDefinitionEntity.getAttributes().size();
+            businessObjectDefinitionEntity.getBusinessObjectDefinitionTags().size();
+            businessObjectDefinitionEntity.getBusinessObjectFormats().size();
+            businessObjectDefinitionEntity.getColumns().size();
+            businessObjectDefinitionEntity.getSampleDataFiles().size();
+
+            // Convert the business object definition entity to a JSON string
+            final String jsonString = safeObjectMapperWriteValueAsString(businessObjectDefinitionEntity);
+
+            return searchFunctions.getIsValidFunction().test(indexName, documentType, businessObjectDefinitionEntity.getId().toString(), jsonString);
+        };
+
+        boolean isValid = true;
+        for (BusinessObjectDefinitionEntity businessObjectDefinitionEntity : businessObjectDefinitionEntityList)
+        {
+            if (!validInIndexPredicate.test(businessObjectDefinitionEntity))
+            {
+                isValid = false;
+            }
+        }
+
+        return isValid;
+    }
+
+    /**
+     * Wrapper method that will safely call the object mapper write value as string method and handle the JsonProcessingException. This wrapper is needed so
+     * that we can do the object mapping within a Java stream.
+     *
+     * @param businessObjectDefinitionEntity the entity to convert to JSON
+     *
+     * @return JSON string value of the object
+     */
+    private String safeObjectMapperWriteValueAsString(final BusinessObjectDefinitionEntity businessObjectDefinitionEntity)
+    {
+        String jsonString = "";
+
+        try
+        {
+            // Convert the business object definition entity to a JSON string
+            jsonString = objectMapper.writeValueAsString(businessObjectDefinitionEntity);
+        }
+        catch (JsonProcessingException jsonProcessingException)
+        {
+            LOGGER.warn("Could not parse BusinessObjectDefinitionEntity id={" + businessObjectDefinitionEntity.getId() + "} into JSON string. ",
+                jsonProcessingException);
+        }
+
+        return jsonString;
     }
 
     /**
@@ -693,7 +963,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
                 businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters().get(0);
 
             Assert.isTrue(CollectionUtils.size(businessObjectDefinitionSearchFilter.getBusinessObjectDefinitionSearchKeys()) == 1 &&
-                businessObjectDefinitionSearchFilter.getBusinessObjectDefinitionSearchKeys().get(0) != null,
+                    businessObjectDefinitionSearchFilter.getBusinessObjectDefinitionSearchKeys().get(0) != null,
                 "Exactly one business object definition search key must be specified.");
 
             // Get the tag search key.
@@ -705,7 +975,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         else
         {
             Assert.isTrue(CollectionUtils.size(businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters()) == 1 &&
-                businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters().get(0) != null,
+                    businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters().get(0) != null,
                 "Exactly one business object definition search filter must be specified.");
         }
     }
@@ -714,7 +984,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
      * Update business object definition sample file
      *
      * @param businessObjectDefinitionKey business object definition key
-     * @param BusinessObjectDefinitionSampleFileUpdateDto update dto
+     * @param businessObjectDefinitionSampleFileUpdateDto update dto
      */
     @Override
     public void updateBusinessObjectDefinitionEntitySampleFile(BusinessObjectDefinitionKey businessObjectDefinitionKey,

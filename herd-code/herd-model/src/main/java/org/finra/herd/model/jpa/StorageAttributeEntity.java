@@ -24,6 +24,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 /**
  * Attribute associated with a storage.
  */
@@ -54,6 +56,7 @@ public class StorageAttributeEntity extends AuditableEntity
     @Column(name = "atrbt_value_tx", length = 4000)
     private String value;
 
+    @JsonBackReference
     @ManyToOne
     @JoinColumn(name = "strge_cd", referencedColumnName = "strge_cd", nullable = false)
     private StorageEntity storage;

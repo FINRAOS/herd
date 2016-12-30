@@ -121,6 +121,7 @@ public class BaseJavaDelegateTest extends AbstractServiceTest
         inOrder.verify(activitiService).getProcessDefinitionById(processDefinitionId);
         inOrder.verify(jobDefinitionDaoHelper).getJobDefinitionEntity(jobDefinitionNamespace, jobDefinitionName);
         inOrder.verify(userNamespaceAuthorizationHelper).buildNamespaceAuthorizations(applicationUserUserIdEq(updatedBy));
+        inOrder.verify(activitiRuntimeHelper).setTaskEnvironmentVarialbe(delegateExecution);
         inOrder.verify(activitiRuntimeHelper).setTaskSuccessInWorkflow(delegateExecution);
         inOrder.verifyNoMoreInteractions();
         verifyNoMoreInteractions(configurationDaoHelper, activitiService, jobDefinitionDaoHelper, userNamespaceAuthorizationHelper, activitiRuntimeHelper);

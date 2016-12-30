@@ -24,6 +24,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 /**
  * Attribute associated with business object definition.
  */
@@ -54,6 +56,7 @@ public class BusinessObjectDefinitionAttributeEntity extends AuditableEntity
     @Column(name = "atrbt_value_tx", length = 4000)
     private String value;
 
+    @JsonBackReference(value="businessObjectDefinition-attributes")
     @ManyToOne
     @JoinColumn(name = "bus_objct_dfntn_id", referencedColumnName = "bus_objct_dfntn_id", nullable = false)
     private BusinessObjectDefinitionEntity businessObjectDefinition;

@@ -407,6 +407,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Integer NO_TAG_TYPE_ORDER = null;
 
+    public static final String NO_USER_TELEPHONE_NUMBER = null;
+
     public static final String OOZIE_WORKFLOW_LOCATION = "UT_Oozie_workflow_2" + RANDOM_SUFFIX;
 
     public static final Boolean PARENT_TAG_IS_NOT_NULL = false;
@@ -644,11 +646,19 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String UPLOADER_ROLE_ARN = "UT_UploaderRoleArn" + RANDOM_SUFFIX;
 
+    public static final String USER_EMAIL_ADDRESS = "UT_User_Email_Address_" + RANDOM_SUFFIX;
+
+    public static final String USER_FULL_NAME = "UT_User_Full_Name_" + RANDOM_SUFFIX;
+
     public static final String USER_ID = "UT_User_Id_1_" + RANDOM_SUFFIX;
 
     public static final String USER_ID_2 = "UT_User_Id_2_" + RANDOM_SUFFIX;
 
     public static final String USER_ID_3 = "UT_User_Id_3_" + RANDOM_SUFFIX;
+
+    public static final String USER_JOB_TITLE = "UT_User_Job_Title_" + RANDOM_SUFFIX;
+
+    public static final String USER_TELEPHONE_NUMBER = "UT_User_Telephone_Number_" + RANDOM_SUFFIX;
 
     private static final String OVERRIDE_PROPERTY_SOURCE_MAP_NAME = "overrideMapPropertySource";
 
@@ -884,6 +894,9 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     @Autowired
     protected StsDao stsDao;
+
+    @Autowired
+    protected SubjectMatterExpertDao subjectMatterExpertDao;
 
     @Autowired
     protected TagDao tagDao;

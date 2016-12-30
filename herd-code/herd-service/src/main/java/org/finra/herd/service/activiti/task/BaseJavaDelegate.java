@@ -150,7 +150,9 @@ public abstract class BaseJavaDelegate implements JavaDelegate
 
             // Set the MDC property for the Activiti process instance ID.
             MDC.put(ACTIVITI_PROCESS_INSTANCE_ID_KEY, "activitiProcessInstanceId=" + execution.getProcessInstanceId());
-
+            
+            //add the environment variable
+            activitiRuntimeHelper.setTaskEnvironmentVarialbe(execution);
             // Perform the execution implementation handled in the sub-class.
             executeImpl(execution);
 

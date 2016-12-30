@@ -16,8 +16,9 @@
 package org.finra.herd.dao;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,161 +31,178 @@ import org.finra.herd.model.jpa.NamespaceEntity;
 
 public class JobDefinitionDaoTest extends AbstractDaoTest
 {
-    /**
-     * Tests the happy path scenario by providing all the parameters.
-     */
     @Test
     public void testGetJobDefinitionByAltKey()
     {
-        // Create namespace database entities.
+        // Create a namespace database entity.
         NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
 
         // Create and persist a job definition entity.
-        jobDefinitionDaoTestHelper.createJobDefinitionEntity(namespaceEntity, JOB_NAME, JOB_DESCRIPTION, ACTIVITI_ID);
+        JobDefinitionEntity jobDefinitionEntity = jobDefinitionDaoTestHelper.createJobDefinitionEntity(namespaceEntity, JOB_NAME, JOB_DESCRIPTION, ACTIVITI_ID);
 
-        // Call the API to query the newly added entity by providing the app and job details
-        JobDefinitionEntity jobDefinitionEntityResult = jobDefinitionDao.getJobDefinitionByAltKey(NAMESPACE, JOB_NAME);
+        // Retrieve the job definition by its key.
+        assertEquals(jobDefinitionEntity, jobDefinitionDao.getJobDefinitionByAltKey(NAMESPACE, JOB_NAME));
 
-        // Fail if there is any problem in the result
-        assertNotNull(jobDefinitionEntityResult);
-        assertEquals(NAMESPACE, jobDefinitionEntityResult.getNamespace().getCode());
-        assertEquals(JOB_NAME, jobDefinitionEntityResult.getName());
-        assertEquals(JOB_DESCRIPTION, jobDefinitionEntityResult.getDescription());
-        assertEquals(ACTIVITI_ID, jobDefinitionEntityResult.getActivitiId());
+        // Retrieve the job definition by its key in uppercase.
+        assertEquals(jobDefinitionEntity, jobDefinitionDao.getJobDefinitionByAltKey(NAMESPACE.toUpperCase(), JOB_NAME.toUpperCase()));
+
+        // Retrieve the job definition by its key in lowercase.
+        assertEquals(jobDefinitionEntity, jobDefinitionDao.getJobDefinitionByAltKey(NAMESPACE.toLowerCase(), JOB_NAME.toLowerCase()));
+
+        // Try to retrieve a job definition for a non-existing namespace.
+        assertNull(jobDefinitionDao.getJobDefinitionByAltKey("I_DO_NOT_EXIST", JOB_NAME));
+
+        // Try to retrieve a job definition for a non-existing job name.
+        assertNull(jobDefinitionDao.getJobDefinitionByAltKey(NAMESPACE, "I_DO_NOT_EXIST"));
     }
 
-    /**
-     * Tests the scenario by providing a job name that doesn't exist.
-     */
     @Test
-    public void testGetJobDefinitionByAltKeyJobNameNoExists()
-    {
-        // Create namespace database entities.
-        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-
-        // Create a job definition entity
-        jobDefinitionDaoTestHelper.createJobDefinitionEntity(namespaceEntity, JOB_NAME, JOB_DESCRIPTION, ACTIVITI_ID);
-
-        // Call the API to query the newly added entity by providing the app and a job name that doesn't exist.
-        JobDefinitionEntity jobDefinitionEntityResult = jobDefinitionDao.getJobDefinitionByAltKey(NAMESPACE, JOB_NAME_2);
-
-        // Validate the results.
-        assertNull(jobDefinitionEntityResult);
-    }
-
-    /**
-     * Tests the scenario by finding multiple job definition records.
-     */
-    @Test(expected = IllegalArgumentException.class)
     public void testGetJobDefinitionByAltKeyMultipleRecordsFound()
     {
-        // Create namespace database entities.
+        // Create a namespace database entity.
         NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
 
-        // Create two job definitions different.
+        // Create duplicate job definitions. Please note that we need to pass unique activity ID value.
         for (String jobName : Arrays.asList(JOB_NAME.toUpperCase(), JOB_NAME.toLowerCase()))
         {
-            // Create a job definition entity. Please note that we need to pass unique activity ID value.
             jobDefinitionDaoTestHelper.createJobDefinitionEntity(namespaceEntity, jobName, JOB_DESCRIPTION, jobName + ACTIVITI_ID);
         }
 
-        // Try to retrieve the the job definition.
-        jobDefinitionDao.getJobDefinitionByAltKey(NAMESPACE, JOB_NAME);
+        // Try to retrieve a job definition.
+        try
+        {
+            jobDefinitionDao.getJobDefinitionByAltKey(NAMESPACE, JOB_NAME);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(String.format("Found more than one Activiti job definition with parameters {namespace=\"%s\", jobName=\"%s\"}.", NAMESPACE, JOB_NAME),
+                e.getMessage());
+        }
     }
 
-    /**
-     * Tests the scenario by providing the wrong app name.
-     */
     @Test
-    public void testGetJobDefinitionByAltKeyNamespaceNoExists()
+    public void testGetJobDefinitionByProcessDefinitionId()
     {
-        // Create namespace database entities.
+        // Create a namespace database entity.
         NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
-        namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE_2);
 
-        // Create and persist a new job definition entity.
-        jobDefinitionDaoTestHelper.createJobDefinitionEntity(namespaceEntity, JOB_NAME, JOB_DESCRIPTION, ACTIVITI_ID);
+        // Create and persist a job definition entity.
+        JobDefinitionEntity jobDefinitionEntity = jobDefinitionDaoTestHelper.createJobDefinitionEntity(namespaceEntity, JOB_NAME, JOB_DESCRIPTION, ACTIVITI_ID);
 
-        // Call the API to query the newly added entity by providing an namespace code that doesn't exist and a job name that does exist.
-        JobDefinitionEntity jobDefinitionEntityResult = jobDefinitionDao.getJobDefinitionByAltKey(NAMESPACE_2, JOB_NAME);
+        // Retrieve the job definition by its process definition id.
+        assertEquals(jobDefinitionEntity, jobDefinitionDao.getJobDefinitionByProcessDefinitionId(ACTIVITI_ID));
 
-        // Validate the results.
-        assertNull(jobDefinitionEntityResult);
+        // Try to retrieve a job definition by its process definition id in uppercase.
+        assertNull(jobDefinitionDao.getJobDefinitionByProcessDefinitionId(ACTIVITI_ID.toUpperCase()));
+
+        // Try to retrieve a job definition by its process definition id in lowercase.
+        assertNull(jobDefinitionDao.getJobDefinitionByProcessDefinitionId(ACTIVITI_ID.toLowerCase()));
+
+        // Try to retrieve a job definition for a non-existing process definition id.
+        assertNull(jobDefinitionDao.getJobDefinitionByProcessDefinitionId("I_DO_NOT_EXIST"));
     }
 
-    /**
-     * Tests all possible combinations of input parameters.
-     */
     @Test
-    public void testGetJobDefinitionsByFilter()
+    public void testGetJobDefinitionByProcessDefinitionIdMultipleRecordsFound()
     {
         // Create a namespace database entity.
-        List<NamespaceEntity> namespaceEntities =
-            Arrays.asList(namespaceDaoTestHelper.createNamespaceEntity(JOB_NAMESPACE), namespaceDaoTestHelper.createNamespaceEntity(JOB_NAMESPACE_2));
+        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
 
-        // Create and persist job definition entities.
-        List<JobDefinitionEntity> jobDefinitionEntities = Arrays
-            .asList(jobDefinitionDaoTestHelper.createJobDefinitionEntity(namespaceEntities.get(0), JOB_NAME, JOB_DESCRIPTION, ACTIVITI_ID),
-                jobDefinitionDaoTestHelper.createJobDefinitionEntity(namespaceEntities.get(0), JOB_NAME_2, JOB_DESCRIPTION, ACTIVITI_ID_2),
-                jobDefinitionDaoTestHelper.createJobDefinitionEntity(namespaceEntities.get(1), JOB_NAME, JOB_DESCRIPTION, ACTIVITI_ID_3),
-                jobDefinitionDaoTestHelper.createJobDefinitionEntity(namespaceEntities.get(1), JOB_NAME_2, JOB_DESCRIPTION, ACTIVITI_ID_4));
+        // Create two job definitions with the same process definition id.
+        for (String jobName : Arrays.asList(JOB_NAME, JOB_NAME_2))
+        {
+            jobDefinitionDaoTestHelper.createJobDefinitionEntity(namespaceEntity, jobName, JOB_DESCRIPTION, ACTIVITI_ID);
+        }
 
-        List<JobDefinitionEntity> resultJobDefinitionEntities;
-
-        // Retrieve job definition by specifying both namespace and job name.
-        resultJobDefinitionEntities = jobDefinitionDao.getJobDefinitionsByFilter(JOB_NAMESPACE, JOB_NAME);
-        assertEquals(Arrays.asList(jobDefinitionEntities.get(0)), resultJobDefinitionEntities);
-
-        // Validate input parameters case insensitivity by specifying both namespace and job name in upper and lower case.
-        resultJobDefinitionEntities = jobDefinitionDao.getJobDefinitionsByFilter(JOB_NAMESPACE.toUpperCase(), JOB_NAME.toUpperCase());
-        assertEquals(Arrays.asList(jobDefinitionEntities.get(0)), resultJobDefinitionEntities);
-        resultJobDefinitionEntities = jobDefinitionDao.getJobDefinitionsByFilter(JOB_NAMESPACE.toLowerCase(), JOB_NAME.toLowerCase());
-        assertEquals(Arrays.asList(jobDefinitionEntities.get(0)), resultJobDefinitionEntities);
-
-        // Retrieve job definitions by specifying only namespace.
-        resultJobDefinitionEntities = jobDefinitionDao.getJobDefinitionsByFilter(JOB_NAMESPACE, NO_JOB_NAME);
-        assertEquals(Arrays.asList(jobDefinitionEntities.get(0), jobDefinitionEntities.get(1)), resultJobDefinitionEntities);
-
-        // Retrieve job definitions by specifying only job name.
-        resultJobDefinitionEntities = jobDefinitionDao.getJobDefinitionsByFilter(NO_JOB_NAMESPACE, JOB_NAME);
-        assertEquals(Arrays.asList(jobDefinitionEntities.get(0), jobDefinitionEntities.get(2)), resultJobDefinitionEntities);
-
-        // Retrieve job definitions by not specifying any input parameters.
-        resultJobDefinitionEntities = jobDefinitionDao.getJobDefinitionsByFilter(NO_JOB_NAMESPACE, NO_JOB_NAME);
-        assertEquals(jobDefinitionEntities, resultJobDefinitionEntities);
-
-        // Try to retrieve job definitions by specifying non-existing namespace and job name.
-        resultJobDefinitionEntities = jobDefinitionDao.getJobDefinitionsByFilter(JOB_NAMESPACE_3, JOB_NAME_3);
-        assertEquals(new ArrayList<>(), resultJobDefinitionEntities);
+        // Try to retrieve a job definition by its process definition id.
+        try
+        {
+            jobDefinitionDao.getJobDefinitionByProcessDefinitionId(ACTIVITI_ID);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals(String.format("Found more than one Activiti job definition with processDefinitionId = \"%s\".", ACTIVITI_ID), e.getMessage());
+        }
     }
 
-    /**
-     * Tests all possible combinations of input parameters.
-     */
     @Test
-    public void testGetJobDefinitionsByFilterWithMultiNamespace()
+    public void testGetJobDefinitionsByFilterWithMultipleNamespaces()
     {
-        // Create a namespace database entity.
-        List<NamespaceEntity> namespaceEntities =
-            Arrays.asList(namespaceDaoTestHelper.createNamespaceEntity(JOB_NAMESPACE), namespaceDaoTestHelper.createNamespaceEntity(JOB_NAMESPACE_2));
-
-        // Create and persist job definition entities.
+        // Create and persist job definition entities with namespaces and job names in reverse order to validate the order by clause.
         List<JobDefinitionEntity> jobDefinitionEntities = Arrays
-            .asList(jobDefinitionDaoTestHelper.createJobDefinitionEntity(namespaceEntities.get(0), JOB_NAME, JOB_DESCRIPTION, ACTIVITI_ID),
-                jobDefinitionDaoTestHelper.createJobDefinitionEntity(namespaceEntities.get(0), JOB_NAME_2, JOB_DESCRIPTION, ACTIVITI_ID_2),
-                jobDefinitionDaoTestHelper.createJobDefinitionEntity(namespaceEntities.get(1), JOB_NAME, JOB_DESCRIPTION, ACTIVITI_ID_3),
-                jobDefinitionDaoTestHelper.createJobDefinitionEntity(namespaceEntities.get(1), JOB_NAME_2, JOB_DESCRIPTION, ACTIVITI_ID_4));
+            .asList(jobDefinitionDaoTestHelper.createJobDefinitionEntity(JOB_NAMESPACE_2, JOB_NAME_2, JOB_DESCRIPTION, ACTIVITI_ID),
+                jobDefinitionDaoTestHelper.createJobDefinitionEntity(JOB_NAMESPACE_2, JOB_NAME, JOB_DESCRIPTION, ACTIVITI_ID_2),
+                jobDefinitionDaoTestHelper.createJobDefinitionEntity(JOB_NAMESPACE, JOB_NAME_2, JOB_DESCRIPTION, ACTIVITI_ID_3),
+                jobDefinitionDaoTestHelper.createJobDefinitionEntity(JOB_NAMESPACE, JOB_NAME, JOB_DESCRIPTION, ACTIVITI_ID_4));
 
-        List<JobDefinitionEntity> resultJobDefinitionEntities;
+        // Retrieve job definitions by specifying both namespaces and a job name.
+        assertEquals(Arrays.asList(jobDefinitionEntities.get(3), jobDefinitionEntities.get(1)),
+            jobDefinitionDao.getJobDefinitionsByFilter(Arrays.asList(JOB_NAMESPACE, JOB_NAMESPACE_2), JOB_NAME));
 
-        // Retrieve job definition by specifying both namespace and job name.
-        resultJobDefinitionEntities = jobDefinitionDao.getJobDefinitionsByFilter(Arrays.asList(JOB_NAMESPACE, JOB_NAMESPACE_2), JOB_NAME);
-        assertEquals(Arrays.asList(jobDefinitionEntities.get(0), jobDefinitionEntities.get(2)), resultJobDefinitionEntities);
+        // Retrieve job definitions by specifying a job name in uppercase.
+        assertEquals(Arrays.asList(jobDefinitionEntities.get(3), jobDefinitionEntities.get(1)),
+            jobDefinitionDao.getJobDefinitionsByFilter(Arrays.asList(JOB_NAMESPACE, JOB_NAMESPACE_2), JOB_NAME.toUpperCase()));
 
-        resultJobDefinitionEntities = jobDefinitionDao.getJobDefinitionsByFilter(Arrays.asList(), JOB_NAME);
-        assertEquals(Arrays.asList(jobDefinitionEntities.get(0), jobDefinitionEntities.get(2)), resultJobDefinitionEntities);
+        // Try to retrieve job definitions by specifying namespaces in uppercase.
+        assertTrue(jobDefinitionDao.getJobDefinitionsByFilter(Arrays.asList(JOB_NAMESPACE.toUpperCase(), JOB_NAMESPACE_2.toUpperCase()), JOB_NAME).isEmpty());
 
-        resultJobDefinitionEntities = jobDefinitionDao.getJobDefinitionsByFilter(Arrays.asList(JOB_NAMESPACE), null);
-        assertEquals(Arrays.asList(jobDefinitionEntities.get(0), jobDefinitionEntities.get(1)), resultJobDefinitionEntities);
+        // Retrieve job definitions by specifying a job name in lowercase.
+        assertEquals(Arrays.asList(jobDefinitionEntities.get(3), jobDefinitionEntities.get(1)),
+            jobDefinitionDao.getJobDefinitionsByFilter(Arrays.asList(JOB_NAMESPACE, JOB_NAMESPACE_2), JOB_NAME.toLowerCase()));
+
+        // Try to retrieve job definitions by specifying namespaces in lowercase.
+        assertTrue(jobDefinitionDao.getJobDefinitionsByFilter(Arrays.asList(JOB_NAMESPACE.toLowerCase(), JOB_NAMESPACE_2.toLowerCase()), JOB_NAME).isEmpty());
+
+        // Retrieve job definitions by specifying a job name without a namespace.
+        assertEquals(Arrays.asList(jobDefinitionEntities.get(3), jobDefinitionEntities.get(1)),
+            jobDefinitionDao.getJobDefinitionsByFilter(new ArrayList<>(), JOB_NAME));
+
+        // Retrieve job definitions by specifying a namespace without a job name.
+        assertEquals(Arrays.asList(jobDefinitionEntities.get(3), jobDefinitionEntities.get(2)),
+            jobDefinitionDao.getJobDefinitionsByFilter(Arrays.asList(JOB_NAMESPACE), NO_JOB_NAME));
+
+        // Try to retrieve job definitions by specifying a non-existing namespace.
+        assertTrue(jobDefinitionDao.getJobDefinitionsByFilter(Arrays.asList("I_DO_NOT_EXIST"), JOB_NAME).isEmpty());
+
+        // Try to retrieve job definitions by specifying a non-existing job name.
+        assertTrue(jobDefinitionDao.getJobDefinitionsByFilter(Arrays.asList(JOB_NAMESPACE), "I_DO_NOT_EXIST").isEmpty());
+    }
+
+    @Test
+    public void testGetJobDefinitionsByFilterWithSingleNamespace()
+    {
+        // Create and persist job definition entities with namespaces and job names in reverse order to validate the order by clause.
+        List<JobDefinitionEntity> jobDefinitionEntities = Arrays
+            .asList(jobDefinitionDaoTestHelper.createJobDefinitionEntity(JOB_NAMESPACE_2, JOB_NAME_2, JOB_DESCRIPTION, ACTIVITI_ID),
+                jobDefinitionDaoTestHelper.createJobDefinitionEntity(JOB_NAMESPACE_2, JOB_NAME, JOB_DESCRIPTION, ACTIVITI_ID_2),
+                jobDefinitionDaoTestHelper.createJobDefinitionEntity(JOB_NAMESPACE, JOB_NAME_2, JOB_DESCRIPTION, ACTIVITI_ID_3),
+                jobDefinitionDaoTestHelper.createJobDefinitionEntity(JOB_NAMESPACE, JOB_NAME, JOB_DESCRIPTION, ACTIVITI_ID_4));
+
+        // Retrieve job definitions by specifying both a namespace and a job name.
+        assertEquals(Arrays.asList(jobDefinitionEntities.get(3)), jobDefinitionDao.getJobDefinitionsByFilter(JOB_NAMESPACE, JOB_NAME));
+
+        // Retrieve job definitions by specifying both a namespace and a job name in uppercase.
+        assertEquals(Arrays.asList(jobDefinitionEntities.get(3)),
+            jobDefinitionDao.getJobDefinitionsByFilter(JOB_NAMESPACE.toUpperCase(), JOB_NAME.toUpperCase()));
+
+        // Retrieve job definitions by specifying both a namespace and a job name in lowercase.
+        assertEquals(Arrays.asList(jobDefinitionEntities.get(3)),
+            jobDefinitionDao.getJobDefinitionsByFilter(JOB_NAMESPACE.toLowerCase(), JOB_NAME.toLowerCase()));
+
+        // Retrieve job definitions by specifying a job name without a namespace.
+        assertEquals(Arrays.asList(jobDefinitionEntities.get(3), jobDefinitionEntities.get(1)),
+            jobDefinitionDao.getJobDefinitionsByFilter(NO_NAMESPACE, JOB_NAME));
+
+        // Retrieve job definitions by specifying a namespace without a job name.
+        assertEquals(Arrays.asList(jobDefinitionEntities.get(3), jobDefinitionEntities.get(2)),
+            jobDefinitionDao.getJobDefinitionsByFilter(JOB_NAMESPACE, NO_JOB_NAME));
+
+        // Try to retrieve job definitions by specifying a non-existing namespace.
+        assertTrue(jobDefinitionDao.getJobDefinitionsByFilter("I_DO_NOT_EXIST", JOB_NAME).isEmpty());
+
+        // Try to retrieve job definitions by specifying a non-existing job name.
+        assertTrue(jobDefinitionDao.getJobDefinitionsByFilter(JOB_NAMESPACE, "I_DO_NOT_EXIST").isEmpty());
     }
 }
