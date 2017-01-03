@@ -1209,21 +1209,21 @@
          <xs:element name="sizeCheckPassed" type="xs:boolean">
             <xs:annotation>
                <xs:documentation>A Y/N flag that shows whether the total number of business object definitions in the database is the same as the total number
-                  in the index.
+                  in the index
                </xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="spotCheckRandomPassed" type="xs:boolean">
             <xs:annotation>
                <xs:documentation>A Y/N flag that shows whether the spot check that verifies a percentage of random business object definitions in the database
-                  are the same as the indexed documents.
+                  are the same as the indexed documents
                </xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="spotCheckMostRecentPassed" type="xs:boolean">
             <xs:annotation>
                <xs:documentation>A Y/N flag that shows whether the spot check that verifies the most recently modified business object definitions in the
-                  database are the same as the indexed documents.
+                  database are the same as the indexed documents
                </xs:documentation>
             </xs:annotation>
          </xs:element>

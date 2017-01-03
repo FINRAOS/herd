@@ -667,7 +667,7 @@ public enum ConfigurationValue
      */
     LDAP_ATTRIBUTE_USER_TELEPHONE_NUMBER("ldap.attribute.user.telephone.number", "telephoneNumber"),
 
-    /*
+    /**
      * The elasticsearch index name
      */
     ELASTICSEARCH_BDEF_INDEX_NAME("elasticsearch.bdef.index.name", "bdef"),

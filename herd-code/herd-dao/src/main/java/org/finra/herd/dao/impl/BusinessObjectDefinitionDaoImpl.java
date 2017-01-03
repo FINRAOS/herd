@@ -213,6 +213,15 @@ public class BusinessObjectDefinitionDaoImpl extends AbstractHerdDao implements 
         List<Integer> allBusinessObjectDefinitionIdsList = entityManager.createQuery(criteria).getResultList();
         List<Integer> percentageOfBusinessObjectDefinitionIdsList = new ArrayList<>();
 
+        /*
+        * Gets a percentage of all business object definition entities.
+        * The percentage is randomly selected from all the business object definitions.
+        *
+        * For each business object id in the list of all business object definition ids, get a random double value between 0 and 1.
+        * If that value is below the percentage double value, also a number between 0 and 1 (inclusive),
+        * then add the business object id to the list of business object definition ids that will be used to return a random percentage
+        * of business object definition entities retrieved from the database.
+        */
         allBusinessObjectDefinitionIdsList.forEach(id -> {
             if (ThreadLocalRandom.current().nextDouble() < percentage)
             {

@@ -151,13 +151,6 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     // Constant to hold the display name option for the business object definition search
     private static final String DISPLAY_NAME_FIELD = "displayname";
 
-    /**
-     * Creates a new business object definition.
-     *
-     * @param request the business object definition create request.
-     *
-     * @return the created business object definition.
-     */
     @NamespacePermission(fields = "#request.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public BusinessObjectDefinition createBusinessObjectDefinition(BusinessObjectDefinitionCreateRequest request)
@@ -192,11 +185,6 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         return createBusinessObjectDefinitionFromEntity(businessObjectDefinitionEntity);
     }
 
-    /**
-     * Index all business object definitions
-     *
-     * @return result of an asynchronous computation
-     */
     @Override
     @Async
     public Future<Void> indexAllBusinessObjectDefinitions()
@@ -235,11 +223,6 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         return new AsyncResult<>(null);
     }
 
-    /**
-     * Checks the count of business object definitions in the database against the count of business object definitions in the index.
-     *
-     * @return result of an asynchronous computation
-     */
     @Override
     public boolean indexSizeCheckValidationBusinessObjectDefinitions()
     {
@@ -258,11 +241,6 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         return businessObjectDefinitionDatabaseTableSize == indexSize;
     }
 
-    /**
-     * Validate that the index contains all business object definitions
-     *
-     * @return result of an asynchronous computation
-     */
     @Override
     public boolean indexSpotCheckPercentageValidationBusinessObjectDefinitions()
     {
@@ -275,11 +253,6 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         return indexValidateBusinessObjectDefinitionsList(businessObjectDefinitionEntityList);
     }
 
-    /**
-     * Validate that the index contains all business object definitions
-     *
-     * @return result of an asynchronous computation
-     */
     @Override
     public boolean indexSpotCheckMostRecentValidationBusinessObjectDefinitions()
     {
@@ -293,11 +266,6 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         return indexValidateBusinessObjectDefinitionsList(businessObjectDefinitionEntityList);
     }
 
-    /**
-     * Validate that the index contains all business object definitions
-     *
-     * @return result of an asynchronous computation
-     */
     @Override
     @Async
     public Future<Void> indexValidateAllBusinessObjectDefinitions()
@@ -439,14 +407,6 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         return jsonString;
     }
 
-    /**
-     * Updates a business object definition.
-     *
-     * @param businessObjectDefinitionKey the business object definition key
-     * @param request the business object definition update request
-     *
-     * @return the updated business object definition
-     */
     @NamespacePermission(fields = "#businessObjectDefinitionKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public BusinessObjectDefinition updateBusinessObjectDefinition(BusinessObjectDefinitionKey businessObjectDefinitionKey,
@@ -467,14 +427,6 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         return createBusinessObjectDefinitionFromEntity(businessObjectDefinitionEntity);
     }
 
-    /**
-     * Updates a business object definition.
-     *
-     * @param businessObjectDefinitionKey the business object definition key
-     * @param request the business object definition update request
-     *
-     * @return the updated business object definition
-     */
     @Override
     public BusinessObjectDefinition updateBusinessObjectDefinitionDescriptiveInformation(BusinessObjectDefinitionKey businessObjectDefinitionKey,
         BusinessObjectDefinitionDescriptiveInformationUpdateRequest request)
@@ -507,13 +459,6 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         return createBusinessObjectDefinitionFromEntity(businessObjectDefinitionEntity);
     }
 
-    /**
-     * Gets a business object definition for the specified key. This method starts a new transaction.
-     *
-     * @param businessObjectDefinitionKey the business object definition key
-     *
-     * @return the business object definition.
-     */
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public BusinessObjectDefinition getBusinessObjectDefinition(BusinessObjectDefinitionKey businessObjectDefinitionKey)
@@ -541,13 +486,6 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         return createBusinessObjectDefinitionFromEntity(businessObjectDefinitionEntity);
     }
 
-    /**
-     * Deletes a business object definition for the specified name.
-     *
-     * @param businessObjectDefinitionKey the business object definition key
-     *
-     * @return the business object definition that was deleted.
-     */
     @NamespacePermission(fields = "#businessObjectDefinitionKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public BusinessObjectDefinition deleteBusinessObjectDefinition(BusinessObjectDefinitionKey businessObjectDefinitionKey)
@@ -566,11 +504,6 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         return createBusinessObjectDefinitionFromEntity(businessObjectDefinitionEntity);
     }
 
-    /**
-     * Gets the list of all business object definitions defined in the system.
-     *
-     * @return the business object definition keys.
-     */
     @Override
     public BusinessObjectDefinitionKeys getBusinessObjectDefinitions()
     {
@@ -579,13 +512,6 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         return businessObjectDefinitionKeys;
     }
 
-    /**
-     * Gets a list of all business object definitions defined in the system for a specified namespace.
-     *
-     * @param namespaceCode the namespace code
-     *
-     * @return the business object definition keys
-     */
     @Override
     public BusinessObjectDefinitionKeys getBusinessObjectDefinitions(String namespaceCode)
     {
@@ -599,11 +525,6 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         return businessObjectDefinitionKeys;
     }
 
-    /**
-     * Gets a list of all business object definitions defined in the system.
-     *
-     * @return the business object definitions.
-     */
     @Override
     public BusinessObjectDefinitionSearchResponse searchBusinessObjectDefinitions(BusinessObjectDefinitionSearchRequest request, Set<String> fields)
     {
@@ -937,11 +858,6 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         return StringUtils.left(description, shortDescMaxLength);
     }
 
-    /**
-     * Returns valid search response fields
-     *
-     * @return the set of valid search response fields
-     */
     @Override
     public Set<String> getValidSearchResponseFields()
     {
@@ -980,12 +896,6 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         }
     }
 
-    /**
-     * Update business object definition sample file
-     *
-     * @param businessObjectDefinitionKey business object definition key
-     * @param businessObjectDefinitionSampleFileUpdateDto update dto
-     */
     @Override
     public void updateBusinessObjectDefinitionEntitySampleFile(BusinessObjectDefinitionKey businessObjectDefinitionKey,
         BusinessObjectDefinitionSampleFileUpdateDto businessObjectDefinitionSampleFileUpdateDto)
