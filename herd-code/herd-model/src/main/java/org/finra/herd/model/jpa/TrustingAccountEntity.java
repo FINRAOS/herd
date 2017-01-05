@@ -36,7 +36,7 @@ public class TrustingAccountEntity extends AuditableEntity
      * The trusting AWS account number, without dashes.
      */
     @Id
-    @Column(name = TABLE_NAME + "_id")
+    @Column(name = TABLE_NAME + "_id_nb")
     private String id;
 
     /**
