@@ -324,13 +324,10 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         final String indexName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         final String documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
 
-        int countOfBusinessObjectDefinitionEntitiesProcessed = 0;
-
         LOGGER.info("Starting to process {} business object definitions with a search index function.", businessObjectDefinitionEntityList.size());
 
         // For each business object definition apply the passed in function
-        for (BusinessObjectDefinitionEntity businessObjectDefinitionEntity : businessObjectDefinitionEntityList)
-        {
+        businessObjectDefinitionEntityList.forEach(businessObjectDefinitionEntity -> {
             // Fetch Join with .size()
             businessObjectDefinitionEntity.getAttributes().size();
             businessObjectDefinitionEntity.getBusinessObjectDefinitionTags().size();
@@ -346,18 +343,9 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
                 // Call the function that will process each business object definition entity against the index
                 function.accept(indexName, documentType, businessObjectDefinitionEntity.getId().toString(), jsonString);
             }
+        });
 
-            countOfBusinessObjectDefinitionEntitiesProcessed++;
-
-            if (countOfBusinessObjectDefinitionEntitiesProcessed % FREQUENCY_OF_LOG_MESSAGES_WHEN_PROCESSING_SEARCH_INDEX_FUNCTIONS == 0)
-            {
-                LOGGER.info("Processed {} of {} business object definitions with a search index function.", countOfBusinessObjectDefinitionEntitiesProcessed,
-                    businessObjectDefinitionEntityList.size());
-            }
-        }
-
-        LOGGER.info("Finished processing {} of {} business object definitions with a search index function.", countOfBusinessObjectDefinitionEntitiesProcessed,
-            businessObjectDefinitionEntityList.size());
+        LOGGER.info("Finished processing {} business object definitions with a search index function.", businessObjectDefinitionEntityList.size());
     }
 
     /**
