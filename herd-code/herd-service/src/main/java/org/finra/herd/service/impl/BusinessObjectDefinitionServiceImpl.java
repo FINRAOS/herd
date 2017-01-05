@@ -95,6 +95,8 @@ import org.finra.herd.service.helper.TagHelper;
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefinitionService, SearchableService
 {
+    public static final int FREQUENCY_OF_LOG_MESSAGES_WHEN_PROCESSING_SEARCH_INDEX_FUNCTIONS = 100;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(BusinessObjectDefinitionServiceImpl.class);
 
     @Autowired
@@ -274,11 +276,11 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         final List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList =
             Collections.unmodifiableList(businessObjectDefinitionDao.getAllBusinessObjectDefinitions());
 
-        // Validate all Business Object Definitions
-        executeFunctionForBusinessObjectDefinitionsInList(businessObjectDefinitionEntityList, searchFunctions.getValidateFunction());
-
         // Remove any index documents that are not in the database
         removeAnyIndexDocumentsThatAreNotInBusinessObjectsDefinitionsList(businessObjectDefinitionEntityList);
+
+        // Validate all Business Object Definitions
+        executeFunctionForBusinessObjectDefinitionsInList(businessObjectDefinitionEntityList, searchFunctions.getValidateFunction());
 
         // Return an AsyncResult so callers will know the future is "done". They can call "isDone" to know when this method has completed and they
         // can call "get" to see if any exceptions were thrown.
@@ -322,9 +324,13 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         final String indexName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         final String documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
 
+        int countOfBusinessObjectDefinitionEntitiesProcessed = 0;
+
+        LOGGER.info("Starting to process {} business object definitions with a search index function.", businessObjectDefinitionEntityList.size());
+
         // For each business object definition apply the passed in function
-        // The parallel streams use the default ForkJoinPool which has one less thread than the number of available processors.
-        businessObjectDefinitionEntityList.parallelStream().forEach(businessObjectDefinitionEntity -> {
+        for (BusinessObjectDefinitionEntity businessObjectDefinitionEntity : businessObjectDefinitionEntityList)
+        {
             // Fetch Join with .size()
             businessObjectDefinitionEntity.getAttributes().size();
             businessObjectDefinitionEntity.getBusinessObjectDefinitionTags().size();
@@ -340,7 +346,18 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
                 // Call the function that will process each business object definition entity against the index
                 function.accept(indexName, documentType, businessObjectDefinitionEntity.getId().toString(), jsonString);
             }
-        });
+
+            countOfBusinessObjectDefinitionEntitiesProcessed++;
+
+            if (countOfBusinessObjectDefinitionEntitiesProcessed % FREQUENCY_OF_LOG_MESSAGES_WHEN_PROCESSING_SEARCH_INDEX_FUNCTIONS == 0)
+            {
+                LOGGER.info("Processed {} of {} business object definitions with a search index function.", countOfBusinessObjectDefinitionEntitiesProcessed,
+                    businessObjectDefinitionEntityList.size());
+            }
+        }
+
+        LOGGER.info("Finished processing {} of {} business object definitions with a search index function.", countOfBusinessObjectDefinitionEntitiesProcessed,
+            businessObjectDefinitionEntityList.size());
     }
 
     /**
