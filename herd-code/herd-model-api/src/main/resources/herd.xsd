@@ -5095,6 +5095,11 @@
                </xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="accountId" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The AWS account number, without dashes, to launch the Amazon EMR service in</xs:documentation>
+            </xs:annotation>
+         </xs:element>
          <xs:element name="serviceIamRole" type="xs:string" minOccurs="0">
             <xs:annotation>
                <xs:documentation>Launches the Amazon EMR service with the specified IAM role</xs:documentation>

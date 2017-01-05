@@ -18,15 +18,18 @@ package org.finra.herd.service.impl;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 import javax.xml.datatype.XMLGregorianCalendar;
 
 import com.amazonaws.AmazonServiceException;
+import com.amazonaws.auth.policy.Policy;
 import com.amazonaws.services.elasticmapreduce.model.Cluster;
 import com.amazonaws.services.elasticmapreduce.model.ClusterStatus;
 import com.amazonaws.services.elasticmapreduce.model.ClusterSummary;
 import com.amazonaws.services.elasticmapreduce.model.Step;
 import com.amazonaws.services.elasticmapreduce.model.StepSummary;
+import com.amazonaws.services.securitytoken.model.Credentials;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
 import org.apache.oozie.client.WorkflowAction;
@@ -42,6 +45,7 @@ import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.EmrDao;
 import org.finra.herd.dao.HerdDao;
 import org.finra.herd.dao.OozieDao;
+import org.finra.herd.dao.StsDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.dao.helper.EmrHelper;
 import org.finra.herd.dao.helper.EmrPricingHelper;
@@ -68,6 +72,7 @@ import org.finra.herd.model.dto.EmrClusterAlternateKeyDto;
 import org.finra.herd.model.jpa.EmrClusterCreationLogEntity;
 import org.finra.herd.model.jpa.EmrClusterDefinitionEntity;
 import org.finra.herd.model.jpa.NamespaceEntity;
+import org.finra.herd.model.jpa.TrustingAccountEntity;
 import org.finra.herd.service.EmrService;
 import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.EmrClusterDefinitionDaoHelper;
@@ -77,6 +82,7 @@ import org.finra.herd.service.helper.EmrStepHelperFactory;
 import org.finra.herd.service.helper.NamespaceDaoHelper;
 import org.finra.herd.service.helper.NamespaceIamRoleAuthorizationHelper;
 import org.finra.herd.service.helper.ParameterHelper;
+import org.finra.herd.service.helper.TrustingAccountDaoHelper;
 
 /**
  * The EMR service implementation.
@@ -126,6 +132,12 @@ public class EmrServiceImpl implements EmrService
 
     @Autowired
     private ParameterHelper parameterHelper;
+
+    @Autowired
+    private StsDao stsDao;
+
+    @Autowired
+    private TrustingAccountDaoHelper trustingAccountDaoHelper;
 
     @Autowired
     private XmlHelper xmlHelper;
@@ -422,8 +434,7 @@ public class EmrServiceImpl implements EmrService
         // Unmarshal definition xml into JAXB object.
         EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, replacedConfigXml);
 
-        // Perform override if override is set
-
+        // Perform override if override is set.
         overrideEmrClusterDefinition(emrClusterDefinition, request.getEmrClusterDefinitionOverride());
 
         // Perform the EMR cluster definition configuration validation.
@@ -452,6 +463,12 @@ public class EmrServiceImpl implements EmrService
                 emrHelper.buildEmrClusterName(namespaceEntity.getCode(), emrClusterDefinitionEntity.getName(), emrClusterAlternateKeyDto.getEmrClusterName());
             try
             {
+                // If a trusting account id is specified, update the AWS parameters DTO with the temporary credentials for the cross-account access.
+                if (StringUtils.isNotBlank(emrClusterDefinition.getAccountId()))
+                {
+                    updateAwsParamsForCrossAccountAccess(awsParamsDto, emrClusterDefinition.getAccountId().trim());
+                }
+
                 ClusterSummary clusterSummary = emrDao.getActiveEmrClusterByName(clusterName, awsParamsDto);
                 // If cluster does not already exist.
                 if (clusterSummary == null)
@@ -598,6 +615,10 @@ public class EmrServiceImpl implements EmrService
             {
                 emrClusterDefinition.setHadoopConfigurations(emrClusterDefinitionOverride.getHadoopConfigurations());
             }
+            if (emrClusterDefinitionOverride.getAccountId() != null)
+            {
+                emrClusterDefinition.setAccountId(emrClusterDefinitionOverride.getAccountId());
+            }
             if (emrClusterDefinitionOverride.getServiceIamRole() != null)
             {
                 emrClusterDefinition.setServiceIamRole(emrClusterDefinitionOverride.getServiceIamRole());
@@ -619,6 +640,27 @@ public class EmrServiceImpl implements EmrService
                 emrClusterDefinition.setAdditionalSlaveSecurityGroups(emrClusterDefinitionOverride.getAdditionalSlaveSecurityGroups());
             }
         }
+    }
+
+    /**
+     * Updates the AWS parameters DTO with the temporary credentials for the cross-account access.
+     *
+     * @param awsParamsDto the AWS connection parameters
+     * @param accountId the AWS account number
+     */
+    private void updateAwsParamsForCrossAccountAccess(AwsParamsDto awsParamsDto, String accountId)
+    {
+        // Retrieve the role ARN and make sure it exists.
+        TrustingAccountEntity trustingAccountEntity = trustingAccountDaoHelper.getTrustingAccountEntity(accountId.trim());
+        String roleArn = trustingAccountEntity.getRoleArn();
+
+        // Assume the role. Set the duration of the role session to 3600 seconds (1 hour).
+        Credentials credentials = stsDao.getTemporarySecurityCredentials(awsParamsDto, UUID.randomUUID().toString(), roleArn, 3600, new Policy());
+
+        // Update the AWS parameters DTO with the temporary credentials.
+        awsParamsDto.setAwsAccessKeyId(credentials.getAccessKeyId());
+        awsParamsDto.setAwsSecretKey(credentials.getSecretAccessKey());
+        awsParamsDto.setSessionToken(credentials.getSessionToken());
     }
 
     /**

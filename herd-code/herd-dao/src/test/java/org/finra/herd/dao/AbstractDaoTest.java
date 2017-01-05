@@ -79,6 +79,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String ATTRIBUTE_VALUE_4 = "Attribute Value 4";
 
+    public static final String AWS_ACCOUNT_ID = "UT_AwsAccountId_1_" + RANDOM_SUFFIX;
+
     public static final String AWS_REGION = "UT_Region" + RANDOM_SUFFIX;
 
     public static final String AWS_ROLE_ARN = "UT_AwsRoleArn" + RANDOM_SUFFIX;
@@ -909,6 +911,12 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     @Autowired
     protected TagTypeDaoTestHelper tagTypeDaoTestHelper;
+
+    @Autowired
+    protected TrustingAccountDao trustingAccountDao;
+
+    @Autowired
+    protected TrustingAccountDaoTestHelper trustingAccountDaoTestHelper;
 
     @Autowired
     protected UserDao userDao;
