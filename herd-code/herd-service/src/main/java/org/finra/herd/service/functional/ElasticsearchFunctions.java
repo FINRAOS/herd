@@ -33,8 +33,10 @@ import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.search.SearchScrollRequestBuilder;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.slf4j.Logger;
@@ -49,6 +51,13 @@ import org.springframework.stereotype.Component;
 @Component
 public class ElasticsearchFunctions implements SearchFunctions
 {
+    // Page size
+    public static final int ELASTIC_SEARCH_SCROLL_PAGE_SIZE = 100;
+
+    // Scroll keep alive in milliseconds
+    public static final int ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME = 60000;
+
+
     private static final Logger LOGGER = LoggerFactory.getLogger(ElasticsearchFunctions.class);
 
     /**
@@ -161,15 +170,37 @@ public class ElasticsearchFunctions implements SearchFunctions
      * The ids in index function will take as arguments the index name and the document type and will return a list of all the ids in the index.
      */
     private final BiFunction<String, String, List<String>> idsInIndexFunction = (indexName, documentType) -> {
+        // Create an array list for storing the ids
         List<String> idList = new ArrayList<>();
-        final SearchRequestBuilder searchRequestBuilder = transportClient.prepareSearch(indexName).setTypes(documentType).setQuery(matchAllQuery());
-        final SearchResponse searchResponse = searchRequestBuilder.execute().actionGet();
-        final SearchHits searchHits = searchResponse.getHits();
-        final SearchHit[] hits = searchHits.hits();
-        for (SearchHit searchHit : hits)
+
+        // Create a search request and set the scroll time and scroll size
+        final SearchRequestBuilder searchRequestBuilder = transportClient.prepareSearch(indexName);
+        searchRequestBuilder
+            .setTypes(documentType)
+            .setQuery(matchAllQuery())
+            .setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME))
+            .setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE);
+        SearchResponse searchResponse = searchRequestBuilder.execute().actionGet();
+        SearchHits searchHits = searchResponse.getHits();
+        SearchHit[] hits = searchHits.hits();
+
+        // While there are hits available, page through the results and add them to the id list
+        while(hits.length != 0)
         {
-            idList.add(searchHit.id());
+            for (SearchHit searchHit : hits)
+            {
+                idList.add(searchHit.id());
+            }
+
+            SearchScrollRequestBuilder searchScrollRequestBuilder = transportClient.prepareSearchScroll(searchResponse.getScrollId());
+            searchScrollRequestBuilder.setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME));
+            searchResponse = searchScrollRequestBuilder.execute().actionGet();
+            searchHits = searchResponse.getHits();
+            hits = searchHits.hits();
         }
+
+
+
         return idList;
     };
 

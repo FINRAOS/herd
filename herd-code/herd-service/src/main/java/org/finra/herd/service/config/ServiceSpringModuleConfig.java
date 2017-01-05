@@ -82,6 +82,7 @@ import org.finra.herd.core.ApplicationContextHolder;
 import org.finra.herd.core.AutowiringQuartzSpringBeanJobFactory;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.helper.AwsHelper;
+import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.dto.AwsParamsDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.ElasticsearchSettingsDto;
@@ -111,6 +112,16 @@ public class ServiceSpringModuleConfig
      */
     public static final String CREATE_QUARTZ_TABLES_BEAN_NAME = "createQuartzTables";
 
+    /**
+     * The Elasticsearch setting for client transport sniff
+     */
+    public static final String ELASTICSEARCH_SETTING_CLIENT_TRANSPORT_SNIFF = "client.transport.sniff";
+
+    /**
+     * The Elasticsearch setting for cluster name
+     */
+    public static final String ELASTICSEARCH_SETTING_CLUSTER_NAME = "cluster.name";
+
     @Autowired
     private DataSource herdDataSource;
 
@@ -137,6 +148,9 @@ public class ServiceSpringModuleConfig
 
     @Autowired
     private AwsHelper awsHelper;
+
+    @Autowired
+    private JsonHelper jsonHelper;
 
     /**
      * Returns a new "exception handler method resolver" that knows how to resolve exception handler methods based on the "herd error information exception
@@ -499,11 +513,8 @@ public class ServiceSpringModuleConfig
         String elasticSearchSettingsJSON = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SETTINGS_JSON);
         Integer port = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_DEFAULT_PORT, Integer.class);
 
-        // Create a new object mapper for mapping a JSON string to a data transfer object
-        ObjectMapper objectMapper = new ObjectMapper();
-
         // Map the JSON object to the elastic search setting data transfer object
-        ElasticsearchSettingsDto elasticsearchSettingsDto = objectMapper.readValue(elasticSearchSettingsJSON, ElasticsearchSettingsDto.class);
+        ElasticsearchSettingsDto elasticsearchSettingsDto = jsonHelper.unmarshallJsonToObject(ElasticsearchSettingsDto.class, elasticSearchSettingsJSON);
 
         // Get the settings from the elasticsearch settings data transfer object
         String elasticSearchCluster = elasticsearchSettingsDto.getElasticSearchCluster();
@@ -511,7 +522,10 @@ public class ServiceSpringModuleConfig
         boolean clientTransportStiff = elasticsearchSettingsDto.isClientTransportSniff();
 
         // Build the settings for the transport client
-        Settings settings = Settings.builder().put("client.transport.sniff", clientTransportStiff).put("cluster.name", elasticSearchCluster).build();
+        Settings settings = Settings.builder()
+            .put(ELASTICSEARCH_SETTING_CLIENT_TRANSPORT_SNIFF, clientTransportStiff)
+            .put(ELASTICSEARCH_SETTING_CLUSTER_NAME, elasticSearchCluster)
+            .build();
 
         // Build the Transport client with the settings
         TransportClient transportClient = new PreBuiltTransportClient(settings);
