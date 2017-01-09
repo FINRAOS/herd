@@ -15,120 +15,11 @@ import org.finra.herd.model.dto.AwsParamsDto;
 public class AwsClientFactoryTest extends AbstractDaoTest
 {
     @Autowired
+    private AwsClientFactory awsClientFactory;
+
+    @Autowired
     private CacheManager cacheManager;
 
-    
-    @Autowired
-    private AwsClientFactory awsClientFactory;
-    
-    @Test
-    public void getEmrClientCachingHit() throws Exception
-    {
-        String httpProxyHost = "";
-        Integer httpProxyPort = 1234;
-
-        AwsParamsDto awsParamsDto = new AwsParamsDto();
-        awsParamsDto.setHttpProxyHost(httpProxyHost);
-        awsParamsDto.setHttpProxyPort(httpProxyPort);
-       
-        AmazonElasticMapReduceClient amazonElasticMapReduceClient = awsClientFactory.getEmrClient(awsParamsDto);
-        
-        AwsParamsDto awsParamsDto2 = new AwsParamsDto();
-        awsParamsDto2.setHttpProxyHost(httpProxyHost);
-        awsParamsDto2.setHttpProxyPort(httpProxyPort);
-        
-        AmazonElasticMapReduceClient amazonElasticMapReduceClient2 = awsClientFactory.getEmrClient(awsParamsDto2);
-        
-        assertTrue(amazonElasticMapReduceClient == amazonElasticMapReduceClient2);
-    }
-    
-    @Test
-    public void getEmrClientCachingMiss() throws Exception
-    {
-        String httpProxyHost = "";
-        Integer httpProxyPort = 1234;
-
-        AwsParamsDto awsParamsDto = new AwsParamsDto();
-        awsParamsDto.setHttpProxyHost(httpProxyHost);
-        awsParamsDto.setHttpProxyPort(httpProxyPort);
-       
-        AmazonElasticMapReduceClient amazonElasticMapReduceClient = awsClientFactory.getEmrClient(awsParamsDto);
-        
-        AwsParamsDto awsParamsDto2 = new AwsParamsDto();
-        awsParamsDto2.setHttpProxyHost("anotherone");
-        awsParamsDto2.setHttpProxyPort(httpProxyPort);
-        
-        AmazonElasticMapReduceClient amazonElasticMapReduceClient2 = awsClientFactory.getEmrClient(awsParamsDto2);
-        
-        assertTrue(amazonElasticMapReduceClient != amazonElasticMapReduceClient2);
-    }
-    
-    @Test
-    public void getEmrClientCachingClear() throws Exception
-    {
-        String httpProxyHost = "";
-        Integer httpProxyPort = 1234;
-
-        AwsParamsDto awsParamsDto = new AwsParamsDto();
-        awsParamsDto.setHttpProxyHost(httpProxyHost);
-        awsParamsDto.setHttpProxyPort(httpProxyPort);
-              
-        AmazonElasticMapReduceClient amazonElasticMapReduceClient = awsClientFactory.getEmrClient(awsParamsDto);
-        
-        // Clear the cache and retrieve the functions again.
-        cacheManager.getCache(DaoSpringModuleConfig.HERD_CACHE_NAME).clear();
-        
-        AwsParamsDto awsParamsDto2 = new AwsParamsDto();
-        awsParamsDto2.setHttpProxyHost(httpProxyHost);
-        awsParamsDto2.setHttpProxyPort(httpProxyPort);
-        
-        AmazonElasticMapReduceClient amazonElasticMapReduceClient2 = awsClientFactory.getEmrClient(awsParamsDto2);
-        
-        assertNotEquals(amazonElasticMapReduceClient, amazonElasticMapReduceClient2);
-    }
-    
-    @Test
-    public void getEC2ClientCachingHit() throws Exception
-    {
-        String httpProxyHost = "";
-        Integer httpProxyPort = 1234;
-
-        AwsParamsDto awsParamsDto = new AwsParamsDto();
-        awsParamsDto.setHttpProxyHost(httpProxyHost);
-        awsParamsDto.setHttpProxyPort(httpProxyPort);
-       
-        AmazonEC2Client amazonEC2Client = awsClientFactory.getEc2Client(awsParamsDto);
-        
-        AwsParamsDto awsParamsDto2 = new AwsParamsDto();
-        awsParamsDto2.setHttpProxyHost(httpProxyHost);
-        awsParamsDto2.setHttpProxyPort(httpProxyPort);
-        
-        AmazonEC2Client amazonEC2Client2 = awsClientFactory.getEc2Client(awsParamsDto2);
-        
-        assertTrue(amazonEC2Client == amazonEC2Client2);
-    }
-    
-    @Test
-    public void getEC2ClientCachingHitMiss() throws Exception
-    {
-        String httpProxyHost = "";
-        Integer httpProxyPort = 1234;
-
-        AwsParamsDto awsParamsDto = new AwsParamsDto();
-        awsParamsDto.setHttpProxyHost(httpProxyHost);
-        awsParamsDto.setHttpProxyPort(httpProxyPort);
-       
-        AmazonEC2Client amazonEC2Client = awsClientFactory.getEc2Client(awsParamsDto);
-        
-        AwsParamsDto awsParamsDto2 = new AwsParamsDto();
-        awsParamsDto2.setHttpProxyHost("anotherone");
-        awsParamsDto2.setHttpProxyPort(httpProxyPort);
-        
-        AmazonEC2Client amazonEC2Client2 = awsClientFactory.getEc2Client(awsParamsDto2);
-        
-        assertTrue(amazonEC2Client != amazonEC2Client2);
-    }
-    
     @Test
     public void getEC2ClientCachingClear() throws Exception
     {
@@ -138,18 +29,150 @@ public class AwsClientFactoryTest extends AbstractDaoTest
         AwsParamsDto awsParamsDto = new AwsParamsDto();
         awsParamsDto.setHttpProxyHost(httpProxyHost);
         awsParamsDto.setHttpProxyPort(httpProxyPort);
-              
+
         AmazonEC2Client ec2Client = awsClientFactory.getEc2Client(awsParamsDto);
-       
+
         // Clear the cache and retrieve the functions again.
         cacheManager.getCache(DaoSpringModuleConfig.HERD_CACHE_NAME).clear();
-        
+
         AwsParamsDto awsParamsDto2 = new AwsParamsDto();
         awsParamsDto2.setHttpProxyHost(httpProxyHost);
         awsParamsDto2.setHttpProxyPort(httpProxyPort);
-        
+
         AmazonEC2Client ec2Client2 = awsClientFactory.getEc2Client(awsParamsDto2);
-        
+
         assertNotEquals(ec2Client, ec2Client2);
+    }
+
+    @Test
+    public void getEC2ClientCachingHit() throws Exception
+    {
+        String httpProxyHost = "";
+        Integer httpProxyPort = 1234;
+
+        AwsParamsDto awsParamsDto = new AwsParamsDto();
+        awsParamsDto.setHttpProxyHost(httpProxyHost);
+        awsParamsDto.setHttpProxyPort(httpProxyPort);
+
+        AmazonEC2Client amazonEC2Client = awsClientFactory.getEc2Client(awsParamsDto);
+
+        AwsParamsDto awsParamsDto2 = new AwsParamsDto();
+        awsParamsDto2.setHttpProxyHost(httpProxyHost);
+        awsParamsDto2.setHttpProxyPort(httpProxyPort);
+
+        AmazonEC2Client amazonEC2Client2 = awsClientFactory.getEc2Client(awsParamsDto2);
+
+        assertTrue(amazonEC2Client == amazonEC2Client2);
+    }
+
+    @Test
+    public void getEC2ClientCachingHitMiss() throws Exception
+    {
+        String httpProxyHost = "";
+        Integer httpProxyPort = 1234;
+
+        AwsParamsDto awsParamsDto = new AwsParamsDto();
+        awsParamsDto.setHttpProxyHost(httpProxyHost);
+        awsParamsDto.setHttpProxyPort(httpProxyPort);
+
+        AmazonEC2Client amazonEC2Client = awsClientFactory.getEc2Client(awsParamsDto);
+
+        AwsParamsDto awsParamsDto2 = new AwsParamsDto();
+        awsParamsDto2.setHttpProxyHost("anotherone");
+        awsParamsDto2.setHttpProxyPort(httpProxyPort);
+
+        AmazonEC2Client amazonEC2Client2 = awsClientFactory.getEc2Client(awsParamsDto2);
+
+        assertTrue(amazonEC2Client != amazonEC2Client2);
+    }
+
+    @Test
+    public void getEmrClientCachingClear() throws Exception
+    {
+        String httpProxyHost = "";
+        Integer httpProxyPort = 1234;
+
+        AwsParamsDto awsParamsDto = new AwsParamsDto();
+        awsParamsDto.setHttpProxyHost(httpProxyHost);
+        awsParamsDto.setHttpProxyPort(httpProxyPort);
+
+        AmazonElasticMapReduceClient amazonElasticMapReduceClient = awsClientFactory.getEmrClient(awsParamsDto);
+
+        // Clear the cache and retrieve the functions again.
+        cacheManager.getCache(DaoSpringModuleConfig.HERD_CACHE_NAME).clear();
+
+        AwsParamsDto awsParamsDto2 = new AwsParamsDto();
+        awsParamsDto2.setHttpProxyHost(httpProxyHost);
+        awsParamsDto2.setHttpProxyPort(httpProxyPort);
+
+        AmazonElasticMapReduceClient amazonElasticMapReduceClient2 = awsClientFactory.getEmrClient(awsParamsDto2);
+
+        assertNotEquals(amazonElasticMapReduceClient, amazonElasticMapReduceClient2);
+    }
+
+    @Test
+    public void getEmrClientCachingHit() throws Exception
+    {
+        String httpProxyHost = "";
+        Integer httpProxyPort = 1234;
+
+        AwsParamsDto awsParamsDto = new AwsParamsDto();
+        awsParamsDto.setHttpProxyHost(httpProxyHost);
+        awsParamsDto.setHttpProxyPort(httpProxyPort);
+
+        AmazonElasticMapReduceClient amazonElasticMapReduceClient = awsClientFactory.getEmrClient(awsParamsDto);
+
+        AwsParamsDto awsParamsDto2 = new AwsParamsDto();
+        awsParamsDto2.setHttpProxyHost(httpProxyHost);
+        awsParamsDto2.setHttpProxyPort(httpProxyPort);
+
+        AmazonElasticMapReduceClient amazonElasticMapReduceClient2 = awsClientFactory.getEmrClient(awsParamsDto2);
+
+        assertTrue(amazonElasticMapReduceClient == amazonElasticMapReduceClient2);
+    }
+
+    @Test
+    public void getEmrClientCachingMissDueToAwsCredentials() throws Exception
+    {
+        String httpProxyHost = "";
+        Integer httpProxyPort = 1234;
+
+        AwsParamsDto awsParamsDto = new AwsParamsDto();
+        awsParamsDto.setHttpProxyHost(httpProxyHost);
+        awsParamsDto.setHttpProxyPort(httpProxyPort);
+
+        AmazonElasticMapReduceClient amazonElasticMapReduceClient = awsClientFactory.getEmrClient(awsParamsDto);
+
+        AwsParamsDto awsParamsDto2 = new AwsParamsDto();
+        awsParamsDto2.setHttpProxyHost(httpProxyHost);
+        awsParamsDto2.setHttpProxyPort(httpProxyPort);
+        awsParamsDto2.setAwsAccessKeyId(AWS_ASSUMED_ROLE_ACCESS_KEY);
+        awsParamsDto2.setAwsSecretKey(AWS_ASSUMED_ROLE_SECRET_KEY);
+        awsParamsDto2.setSessionToken(AWS_ASSUMED_ROLE_SESSION_TOKEN);
+
+        AmazonElasticMapReduceClient amazonElasticMapReduceClient2 = awsClientFactory.getEmrClient(awsParamsDto2);
+
+        assertTrue(amazonElasticMapReduceClient != amazonElasticMapReduceClient2);
+    }
+
+    @Test
+    public void getEmrClientCachingMissDueToHttpProxySettings() throws Exception
+    {
+        String httpProxyHost = "";
+        Integer httpProxyPort = 1234;
+
+        AwsParamsDto awsParamsDto = new AwsParamsDto();
+        awsParamsDto.setHttpProxyHost(httpProxyHost);
+        awsParamsDto.setHttpProxyPort(httpProxyPort);
+
+        AmazonElasticMapReduceClient amazonElasticMapReduceClient = awsClientFactory.getEmrClient(awsParamsDto);
+
+        AwsParamsDto awsParamsDto2 = new AwsParamsDto();
+        awsParamsDto2.setHttpProxyHost("anotherone");
+        awsParamsDto2.setHttpProxyPort(httpProxyPort);
+
+        AmazonElasticMapReduceClient amazonElasticMapReduceClient2 = awsClientFactory.getEmrClient(awsParamsDto2);
+
+        assertTrue(amazonElasticMapReduceClient != amazonElasticMapReduceClient2);
     }
 }
