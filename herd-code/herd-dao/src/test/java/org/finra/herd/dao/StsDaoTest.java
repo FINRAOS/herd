@@ -68,4 +68,26 @@ public class StsDaoTest extends AbstractDaoTest
         // Using >= here just to avoid a race condition.
         assertTrue((System.currentTimeMillis() + 1000 * testAwsRoleDurationSeconds) >= resultCredentials.getExpiration().getTime());
     }
+
+    /**
+     * Tests the scenario where the job is run.
+     */
+    @Test
+    public void testGetTemporarySecurityCredentialsNoTemporaryPolicy()
+    {
+        // Retrieve the temporary security credentials.
+        AwsParamsDto testAwsParamsDto = new AwsParamsDto();
+        testAwsParamsDto.setHttpProxyHost(HTTP_PROXY_HOST);
+        testAwsParamsDto.setHttpProxyPort(HTTP_PROXY_PORT);
+        int testAwsRoleDurationSeconds = INTEGER_VALUE;
+        Credentials resultCredentials = stsDao.getTemporarySecurityCredentials(testAwsParamsDto, SESSION_NAME, AWS_ROLE_ARN, testAwsRoleDurationSeconds, null);
+
+        // Validate the results.
+        assertNotNull(resultCredentials);
+        Assert.assertEquals(MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_ACCESS_KEY, resultCredentials.getAccessKeyId());
+        assertEquals(MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_SECRET_KEY, resultCredentials.getSecretAccessKey());
+        assertEquals(MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_SESSION_TOKEN, resultCredentials.getSessionToken());
+        // Using >= here just to avoid a race condition.
+        assertTrue((System.currentTimeMillis() + 1000 * testAwsRoleDurationSeconds) >= resultCredentials.getExpiration().getTime());
+    }
 }

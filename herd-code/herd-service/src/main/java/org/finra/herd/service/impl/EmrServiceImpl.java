@@ -23,7 +23,6 @@ import java.util.UUID;
 import javax.xml.datatype.XMLGregorianCalendar;
 
 import com.amazonaws.AmazonServiceException;
-import com.amazonaws.auth.policy.Policy;
 import com.amazonaws.services.elasticmapreduce.model.Cluster;
 import com.amazonaws.services.elasticmapreduce.model.ClusterStatus;
 import com.amazonaws.services.elasticmapreduce.model.ClusterSummary;
@@ -655,7 +654,7 @@ public class EmrServiceImpl implements EmrService
         String roleArn = trustingAccountEntity.getRoleArn();
 
         // Assume the role. Set the duration of the role session to 3600 seconds (1 hour).
-        Credentials credentials = stsDao.getTemporarySecurityCredentials(awsParamsDto, UUID.randomUUID().toString(), roleArn, 3600, new Policy());
+        Credentials credentials = stsDao.getTemporarySecurityCredentials(awsParamsDto, UUID.randomUUID().toString(), roleArn, 3600, null);
 
         // Update the AWS parameters DTO with the temporary credentials.
         awsParamsDto.setAwsAccessKeyId(credentials.getAccessKeyId());
