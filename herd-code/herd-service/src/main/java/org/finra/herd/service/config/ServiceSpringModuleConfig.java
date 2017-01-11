@@ -32,7 +32,6 @@ import javax.sql.DataSource;
 
 import com.amazon.sqs.javamessaging.SQSConnectionFactory;
 import com.amazonaws.ClientConfiguration;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.activiti.engine.HistoryService;
 import org.activiti.engine.IdentityService;
 import org.activiti.engine.ManagementService;
@@ -288,17 +287,6 @@ public class ServiceSpringModuleConfig
     private String getActivitiDbSchemaUpdateParamBeanName()
     {
         return (String) ApplicationContextHolder.getApplicationContext().getBean(ACTIVITI_DB_SCHEMA_UPDATE_PARAM_BEAN_NAME);
-    }
-
-    /**
-     * Returns a new object mapper.
-     *
-     * @return the object mapper.
-     */
-    @Bean
-    public ObjectMapper objectMapper()
-    {
-        return new ObjectMapper();
     }
 
     /**

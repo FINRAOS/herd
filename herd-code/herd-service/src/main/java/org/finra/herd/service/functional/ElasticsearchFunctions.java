@@ -19,14 +19,19 @@ import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
+import com.google.common.base.Joiner;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsResponse;
+import org.elasticsearch.action.bulk.BulkRequestBuilder;
+import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequestBuilder;
 import org.elasticsearch.action.get.GetRequestBuilder;
 import org.elasticsearch.action.get.GetResponse;
@@ -139,6 +144,34 @@ public class ElasticsearchFunctions implements SearchFunctions
     };
 
     /**
+     * The create index documents function will take as arguments the index name, document type, and a map of new documents. The document map key is the
+     * document id, and the value is the document as a JSON string.
+     */
+    private final TriConsumer<String, String, Map<String, String>> createIndexDocumentsFunction = (indexName, documentType, documentMap) -> {
+        LOGGER.info("Creating Elasticsearch index documents, indexName={}, documentType={}, documentMap={}.", indexName, documentType,
+            Joiner.on(",").withKeyValueSeparator("=").join(documentMap));
+
+        // Prepare a bulk request builder
+        final BulkRequestBuilder bulkRequestBuilder = transportClient.prepareBulk();
+
+        // For each document prepare an insert request and add it to the bulk request builder
+        documentMap.forEach((id, jsonString) -> {
+            final IndexRequestBuilder indexRequestBuilder = transportClient.prepareIndex(indexName, documentType, id);
+            indexRequestBuilder.setSource(jsonString);
+            bulkRequestBuilder.add(indexRequestBuilder);
+        });
+
+        // Execute the bulk update request
+        final BulkResponse bulkResponse = bulkRequestBuilder.get();
+
+        // If there are failures log them
+        if (bulkResponse.hasFailures())
+        {
+            LOGGER.error("Bulk response error = {}", bulkResponse.buildFailureMessage());
+        }
+    };
+
+    /**
      * The create index function will take as arguments the index name, document type, and mapping and will create a new index.
      */
     private final TriConsumer<String, String, String> createIndexFunction = (indexName, documentType, mapping) -> {
@@ -155,6 +188,32 @@ public class ElasticsearchFunctions implements SearchFunctions
         LOGGER.info("Deleting Elasticsearch document from index, indexName={}, documentType={}, id={}.", indexName, documentType, id);
         final DeleteRequestBuilder deleteRequestBuilder = transportClient.prepareDelete(indexName, documentType, id);
         deleteRequestBuilder.execute().actionGet();
+    };
+
+    /**
+     * The delete index documents function will delete a list of document in the index by a list of document ids.
+     */
+    private final TriConsumer<String, String, List<Integer>> deleteIndexDocumentsFunction = (indexName, documentType, ids) -> {
+        LOGGER.info("Deleting Elasticsearch documents from index, indexName={}, documentType={}, ids={}.", indexName, documentType,
+            ids.stream().map(Object::toString).collect(Collectors.joining(",")));
+
+        // Prepare a bulk request builder
+        final BulkRequestBuilder bulkRequestBuilder = transportClient.prepareBulk();
+
+        // For each document prepare a delete request and add it to the bulk request builder
+        ids.forEach(id -> {
+            final DeleteRequestBuilder deleteRequestBuilder = transportClient.prepareDelete(indexName, documentType, id.toString());
+            bulkRequestBuilder.add(deleteRequestBuilder);
+        });
+
+        // Execute the bulk update request
+        final BulkResponse bulkResponse = bulkRequestBuilder.get();
+
+        // If there are failures log them
+        if (bulkResponse.hasFailures())
+        {
+            LOGGER.error("Bulk response error = {}", bulkResponse.buildFailureMessage());
+        }
     };
 
     /**
@@ -175,17 +234,14 @@ public class ElasticsearchFunctions implements SearchFunctions
 
         // Create a search request and set the scroll time and scroll size
         final SearchRequestBuilder searchRequestBuilder = transportClient.prepareSearch(indexName);
-        searchRequestBuilder
-            .setTypes(documentType)
-            .setQuery(matchAllQuery())
-            .setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME))
+        searchRequestBuilder.setTypes(documentType).setQuery(matchAllQuery()).setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME))
             .setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE);
         SearchResponse searchResponse = searchRequestBuilder.execute().actionGet();
         SearchHits searchHits = searchResponse.getHits();
         SearchHit[] hits = searchHits.hits();
 
         // While there are hits available, page through the results and add them to the id list
-        while(hits.length != 0)
+        while (hits.length != 0)
         {
             for (SearchHit searchHit : hits)
             {
@@ -199,9 +255,35 @@ public class ElasticsearchFunctions implements SearchFunctions
             hits = searchHits.hits();
         }
 
-
-
         return idList;
+    };
+
+    /**
+     * The update index documents function will take as arguments the index name, document type, and a map of documents to update. The document map key is the
+     * document id, and the value is the document as a JSON string.
+     */
+    private final TriConsumer<String, String, Map<String, String>> updateIndexDocumentsFunction = (indexName, documentType, documentMap) -> {
+        LOGGER.info("Updating Elasticsearch index documents, indexName={}, documentType={}, documentMap={}.", indexName, documentType,
+            Joiner.on(",").withKeyValueSeparator("=").join(documentMap));
+
+        // Prepare a bulk request builder
+        final BulkRequestBuilder bulkRequestBuilder = transportClient.prepareBulk();
+
+        // For each document prepare an update request and add it to the bulk request builder
+        documentMap.forEach((id, jsonString) -> {
+            final UpdateRequestBuilder updateRequestBuilder = transportClient.prepareUpdate(indexName, documentType, id);
+            updateRequestBuilder.setDoc(jsonString);
+            bulkRequestBuilder.add(updateRequestBuilder);
+        });
+
+        // Execute the bulk update request
+        final BulkResponse bulkResponse = bulkRequestBuilder.get();
+
+        // If there are failures log them
+        if (bulkResponse.hasFailures())
+        {
+            LOGGER.error("Bulk response error = {}", bulkResponse.buildFailureMessage());
+        }
     };
 
     @Override
@@ -235,6 +317,12 @@ public class ElasticsearchFunctions implements SearchFunctions
     }
 
     @Override
+    public TriConsumer<String, String, Map<String, String>> getCreateIndexDocumentsFunction()
+    {
+        return createIndexDocumentsFunction;
+    }
+
+    @Override
     public TriConsumer<String, String, String> getCreateIndexFunction()
     {
         return createIndexFunction;
@@ -247,6 +335,12 @@ public class ElasticsearchFunctions implements SearchFunctions
     }
 
     @Override
+    public TriConsumer<String, String, List<Integer>> getDeleteIndexDocumentsFunction()
+    {
+        return deleteIndexDocumentsFunction;
+    }
+
+    @Override
     public BiFunction<String, String, Long> getNumberOfTypesInIndexFunction()
     {
         return numberOfTypesInIndexFunction;
@@ -256,5 +350,11 @@ public class ElasticsearchFunctions implements SearchFunctions
     public BiFunction<String, String, List<String>> getIdsInIndexFunction()
     {
         return idsInIndexFunction;
+    }
+
+    @Override
+    public TriConsumer<String, String, Map<String, String>> getUpdateIndexDocumentsFunction()
+    {
+        return updateIndexDocumentsFunction;
     }
 }

@@ -15,6 +15,8 @@
 */
 package org.finra.herd.service.impl;
 
+import static org.finra.herd.model.dto.SearchIndexUpdateDto.SEARCH_INDEX_UPDATE_TYPE_UPDATE;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -41,6 +43,7 @@ import org.finra.herd.dao.BusinessObjectDefinitionDao;
 import org.finra.herd.dao.BusinessObjectFormatDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.annotation.NamespacePermission;
+import org.finra.herd.model.annotation.PublishJmsMessages;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.AttributeDefinition;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
@@ -77,6 +80,7 @@ import org.finra.herd.service.helper.DdlGenerator;
 import org.finra.herd.service.helper.DdlGeneratorFactory;
 import org.finra.herd.service.helper.FileTypeDaoHelper;
 import org.finra.herd.service.helper.PartitionKeyGroupDaoHelper;
+import org.finra.herd.service.helper.SearchIndexUpdateHelper;
 
 /**
  * The business object format service implementation.
@@ -102,7 +106,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
 
     @Autowired
     private BusinessObjectDefinitionDaoHelper businessObjectDefinitionDaoHelper;
-    
+
     @Autowired
     private BusinessObjectDefinitionDao businessObjectDefinitionDao;
 
@@ -130,6 +134,9 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
     @Autowired
     private PartitionKeyGroupDaoHelper partitionKeyGroupDaoHelper;
 
+    @Autowired
+    private SearchIndexUpdateHelper searchIndexUpdateHelper;
+
     /**
      * Creates a new business object format.
      *
@@ -137,6 +144,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
      *
      * @return the created business object format.
      */
+    @PublishJmsMessages
     @NamespacePermission(fields = "#request.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public BusinessObjectFormat createBusinessObjectFormat(BusinessObjectFormatCreateRequest request)
@@ -174,7 +182,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
             latestVersionBusinessObjectFormatEntity.setLatestVersion(false);
             businessObjectFormatDao.saveAndRefresh(latestVersionBusinessObjectFormatEntity);
         }
-       
+
         // Create a business object format entity from the request information.
         Integer businessObjectFormatVersion =
             latestVersionBusinessObjectFormatEntity == null ? 0 : latestVersionBusinessObjectFormatEntity.getBusinessObjectFormatVersion() + 1;
@@ -182,12 +190,15 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
             createBusinessObjectFormatEntity(request, businessObjectDefinitionEntity, fileTypeEntity, businessObjectFormatVersion);
         //latest version format is the descriptive format for the bdef, update the bdef descriptive format to the newly created one
         if (latestVersionBusinessObjectFormatEntity != null &&
-                latestVersionBusinessObjectFormatEntity.equals(businessObjectDefinitionEntity.getDescriptiveBusinessObjectFormat()))
+            latestVersionBusinessObjectFormatEntity.equals(businessObjectDefinitionEntity.getDescriptiveBusinessObjectFormat()))
         {
             businessObjectDefinitionEntity.setDescriptiveBusinessObjectFormat(newBusinessObjectFormatEntity);
             businessObjectDefinitionDao.saveAndRefresh(businessObjectDefinitionEntity);
         }
-        
+
+        // Notify the search index that a business object definition must be updated.
+        searchIndexUpdateHelper.modifyBusinessObjectDefinitionInSearchIndex(businessObjectDefinitionEntity, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
+
         // Create and return the business object format object from the persisted entity.
         return businessObjectFormatHelper.createBusinessObjectFormatFromEntity(newBusinessObjectFormatEntity);
     }
@@ -200,6 +211,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
      *
      * @return the updated business object format.
      */
+    @PublishJmsMessages
     @NamespacePermission(fields = "#businessObjectFormatKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public BusinessObjectFormat updateBusinessObjectFormat(BusinessObjectFormatKey businessObjectFormatKey, BusinessObjectFormatUpdateRequest request)
@@ -313,6 +325,10 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         // Persist and refresh the entity.
         businessObjectFormatEntity = businessObjectFormatDao.saveAndRefresh(businessObjectFormatEntity);
 
+        // Notify the search index that a business object definition must be updated.
+        searchIndexUpdateHelper
+            .modifyBusinessObjectDefinitionInSearchIndex(businessObjectFormatEntity.getBusinessObjectDefinition(), SEARCH_INDEX_UPDATE_TYPE_UPDATE);
+
         // Create and return the business object format object from the persisted entity.
         return businessObjectFormatHelper.createBusinessObjectFormatFromEntity(businessObjectFormatEntity);
     }
@@ -357,6 +373,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
      *
      * @return the business object format that was deleted
      */
+    @PublishJmsMessages
     @NamespacePermission(fields = "#businessObjectFormatKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public BusinessObjectFormat deleteBusinessObjectFormat(BusinessObjectFormatKey businessObjectFormatKey)
@@ -366,6 +383,9 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
 
         // Retrieve and ensure that a business object format exists.
         BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey);
+
+        // Get the associated Business Object Definition so we can update the search index
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectFormatEntity.getBusinessObjectDefinition();
 
         // Check if we are allowed to delete this business object format.
         if (businessObjectDataDao.getBusinessObjectDataCount(businessObjectFormatKey) > 0L)
@@ -398,6 +418,9 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
                 businessObjectFormatDao.saveAndRefresh(previousVersionBusinessObjectFormatEntity);
             }
         }
+
+        // Notify the search index that a business object definition must be updated.
+        searchIndexUpdateHelper.modifyBusinessObjectDefinitionInSearchIndex(businessObjectDefinitionEntity, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
 
         // Create and return the business object format object from the deleted entity.
         return businessObjectFormatHelper.createBusinessObjectFormatFromEntity(businessObjectFormatEntity);
@@ -717,13 +740,13 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         // Validate that there are no changes to the delimiter character, which is a an optional parameter.
         // Please note that null and an empty string values are both stored in the database as NULL.
         Assert.isTrue(oldSchema.getDelimiter() == null ? newSchema.getDelimiter() == null || newSchema.getDelimiter().isEmpty() :
-            oldSchema.getDelimiter().equals(newSchema.getDelimiter()),
+                oldSchema.getDelimiter().equals(newSchema.getDelimiter()),
             String.format("%s New format version delimiter character does not match to the previous format version delimiter character.", mainErrorMessage));
 
         // Validate that there are no changes to the escape character, which is a an optional parameter.
         // Please note that null and an empty string values are both stored in the database as NULL.
         Assert.isTrue(oldSchema.getEscapeCharacter() == null ? newSchema.getEscapeCharacter() == null || newSchema.getEscapeCharacter().isEmpty() :
-            oldSchema.getEscapeCharacter().equals(newSchema.getEscapeCharacter()),
+                oldSchema.getEscapeCharacter().equals(newSchema.getEscapeCharacter()),
             String.format("%s New format version escape character does not match to the previous format version escape character.", mainErrorMessage));
 
         // Validate that there are no non-additive changes to partition columns.
@@ -733,7 +756,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         // Validate that there are no non-additive changes to the previous format version regular columns.
         // No null check is needed on schema columns, since at least one column is required if format schema is specified.
         Assert.isTrue((oldSchema.getColumns().size() <= newSchema.getColumns().size()) &&
-            validateNewSchemaColumnsAreAdditiveToOldSchemaColumns(newSchema.getColumns().subList(0, oldSchema.getColumns().size()), oldSchema.getColumns()),
+                validateNewSchemaColumnsAreAdditiveToOldSchemaColumns(newSchema.getColumns().subList(0, oldSchema.getColumns().size()), oldSchema.getColumns()),
             String.format("%s Non-additive changes detected to the previously defined regular (non-partitioning) columns.", mainErrorMessage));
     }
 

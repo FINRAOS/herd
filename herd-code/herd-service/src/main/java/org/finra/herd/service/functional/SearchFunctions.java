@@ -16,6 +16,7 @@
 package org.finra.herd.service.functional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -52,6 +53,12 @@ public interface SearchFunctions
     Consumer<String> getDeleteIndexFunction();
 
     /**
+     * The create index documents function will take as arguments the index name, document type, and a map of new documents. The document map key is the
+     * document id, and the value is the document as a JSON string.
+     */
+    TriConsumer<String, String, Map<String, String>> getCreateIndexDocumentsFunction();
+
+    /**
      * The create index function will take as arguments the index name, document type, and mapping and will create a new index.
      */
     TriConsumer<String, String, String> getCreateIndexFunction();
@@ -62,6 +69,11 @@ public interface SearchFunctions
     TriConsumer<String, String, String> getDeleteDocumentByIdFunction();
 
     /**
+     * The delete index documents function will delete a list of document in the index by a list of document ids.
+     */
+    TriConsumer<String, String, List<Integer>> getDeleteIndexDocumentsFunction();
+
+    /**
      * The number of types in index function will take as arguments the index name and the document type and will return the number of documents in the index.
      */
     BiFunction<String, String, Long> getNumberOfTypesInIndexFunction();
@@ -70,4 +82,10 @@ public interface SearchFunctions
      * The ids in index function will take as arguments the index name and the document type and will return a list of all the ids in the index.
      */
     BiFunction<String, String, List<String>> getIdsInIndexFunction();
+
+    /**
+     * The update index documents function will take as arguments the index name, document type, and a map of documents to update. The document map key is the
+     * document id, and the value is the document as a JSON string.
+     */
+    TriConsumer<String, String, Map<String, String>> getUpdateIndexDocumentsFunction();
 }

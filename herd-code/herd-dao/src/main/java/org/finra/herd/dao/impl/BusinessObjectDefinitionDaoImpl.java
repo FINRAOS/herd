@@ -70,6 +70,25 @@ public class BusinessObjectDefinitionDaoImpl extends AbstractHerdDao implements 
     }
 
     @Override
+    public List<BusinessObjectDefinitionEntity> getAllBusinessObjectDefinitionsByIds(List<Integer> ids)
+    {
+        // Create the criteria builder and a tuple style criteria query.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<BusinessObjectDefinitionEntity> criteria = builder.createQuery(BusinessObjectDefinitionEntity.class);
+
+        // The criteria root is the business object definition.
+        Root<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityRoot = criteria.from(BusinessObjectDefinitionEntity.class);
+
+        // Create the standard restrictions (i.e. the standard where clauses).
+        Expression<Integer> expression = businessObjectDefinitionEntityRoot.get(BusinessObjectDefinitionEntity_.id);
+        Predicate queryRestriction = expression.in(ids);
+
+        criteria.select(businessObjectDefinitionEntityRoot).where(queryRestriction);
+
+        return entityManager.createQuery(criteria).getResultList();
+    }
+
+    @Override
     public BusinessObjectDefinitionEntity getBusinessObjectDefinitionByKey(BusinessObjectDefinitionKey businessObjectDefinitionKey)
     {
         // Create the criteria builder and the criteria.
@@ -230,24 +249,6 @@ public class BusinessObjectDefinitionDaoImpl extends AbstractHerdDao implements 
         });
 
         return getAllBusinessObjectDefinitionsByIds(percentageOfBusinessObjectDefinitionIdsList);
-    }
-
-    private List<BusinessObjectDefinitionEntity> getAllBusinessObjectDefinitionsByIds(List<Integer> ids)
-    {
-        // Create the criteria builder and a tuple style criteria query.
-        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-        CriteriaQuery<BusinessObjectDefinitionEntity> criteria = builder.createQuery(BusinessObjectDefinitionEntity.class);
-
-        // The criteria root is the business object definition.
-        Root<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityRoot = criteria.from(BusinessObjectDefinitionEntity.class);
-
-        // Create the standard restrictions (i.e. the standard where clauses).
-        Expression<Integer> expression = businessObjectDefinitionEntityRoot.get(BusinessObjectDefinitionEntity_.id);
-        Predicate queryRestriction = expression.in(ids);
-
-        criteria.select(businessObjectDefinitionEntityRoot).where(queryRestriction);
-
-        return entityManager.createQuery(criteria).getResultList();
     }
 
     @Override

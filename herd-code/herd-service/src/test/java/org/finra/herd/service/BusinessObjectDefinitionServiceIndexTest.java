@@ -31,7 +31,6 @@ import java.util.concurrent.Future;
 
 import com.fasterxml.jackson.core.JsonLocation;
 import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -40,6 +39,7 @@ import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.BusinessObjectDefinitionDao;
+import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.service.functional.SearchFunctions;
@@ -67,7 +67,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
     private BusinessObjectDefinitionDao businessObjectDefinitionDao;
 
     @Mock
-    private ObjectMapper objectMapper;
+    private JsonHelper jsonHelper;
 
     @Before
     public void before()
@@ -99,7 +99,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         when(searchFunctions.getIndexFunction()).thenReturn((indexName, documentType, id, json) -> {
         });
         when(searchFunctions.getNumberOfTypesInIndexFunction()).thenReturn((indexName, documentType) -> 2L);
-        when(objectMapper.writeValueAsString(any())).thenReturn("JSON_STRING");
+        when(jsonHelper.objectToJson(any())).thenReturn("JSON_STRING");
 
         // Call the method under test
         Future<Void> future = businessObjectDefinitionService.indexAllBusinessObjectDefinitions();
@@ -118,7 +118,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         verify(businessObjectDefinitionDao, times(1)).getAllBusinessObjectDefinitions();
         verify(searchFunctions, times(1)).getIndexFunction();
         verify(searchFunctions, times(1)).getNumberOfTypesInIndexFunction();
-        verify(objectMapper, times(2)).writeValueAsString(any());
+        verify(jsonHelper, times(2)).objectToJson(any());
     }
 
     @Test
@@ -145,7 +145,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         when(searchFunctions.getIndexFunction()).thenReturn((indexName, documentType, id, json) -> {
         });
         when(searchFunctions.getNumberOfTypesInIndexFunction()).thenReturn((indexName, documentType) -> 1L);
-        when(objectMapper.writeValueAsString(any())).thenReturn("JSON_STRING");
+        when(jsonHelper.objectToJson(any())).thenReturn("JSON_STRING");
 
         // Call the method under test
         Future<Void> future = businessObjectDefinitionService.indexAllBusinessObjectDefinitions();
@@ -164,7 +164,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         verify(businessObjectDefinitionDao, times(1)).getAllBusinessObjectDefinitions();
         verify(searchFunctions, times(1)).getIndexFunction();
         verify(searchFunctions, times(1)).getNumberOfTypesInIndexFunction();
-        verify(objectMapper, times(2)).writeValueAsString(any());
+        verify(jsonHelper, times(2)).objectToJson(any());
     }
 
     @Test
@@ -191,7 +191,8 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         when(searchFunctions.getIndexFunction()).thenReturn((indexName, documentType, id, json) -> {
         });
         when(searchFunctions.getNumberOfTypesInIndexFunction()).thenReturn((indexName, documentType) -> 2L);
-        when(objectMapper.writeValueAsString(any())).thenThrow(new JsonParseException("Failed to Parse", new JsonLocation("SRC", 100L, 1, 2)));
+        when(jsonHelper.objectToJson(any()))
+            .thenThrow(new IllegalStateException(new JsonParseException("Failed to Parse", new JsonLocation("SRC", 100L, 1, 2))));
 
         // Call the method under test
         Future<Void> future = businessObjectDefinitionService.indexAllBusinessObjectDefinitions();
@@ -210,7 +211,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         verify(businessObjectDefinitionDao, times(1)).getAllBusinessObjectDefinitions();
         verify(searchFunctions, times(1)).getIndexFunction();
         verify(searchFunctions, times(1)).getNumberOfTypesInIndexFunction();
-        verify(objectMapper, times(2)).writeValueAsString(any());
+        verify(jsonHelper, times(2)).objectToJson(any());
     }
 
     @Test
@@ -231,7 +232,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
 
         // Mock the call to external methods
         when(businessObjectDefinitionDao.getAllBusinessObjectDefinitions()).thenReturn(businessObjectDefinitionEntityList);
-        when(objectMapper.writeValueAsString(any())).thenReturn("JSON_STRING");
+        when(jsonHelper.objectToJson(any())).thenReturn("JSON_STRING");
         when(searchFunctions.getValidateFunction()).thenReturn((indexName, documentType, id, json) -> {
         });
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class)).thenReturn("INDEX_NAME");
@@ -249,7 +250,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
 
         // Verify the calls to external methods
         verify(businessObjectDefinitionDao, times(1)).getAllBusinessObjectDefinitions();
-        verify(objectMapper, times(2)).writeValueAsString(any());
+        verify(jsonHelper, times(2)).objectToJson(any());
         verify(searchFunctions, times(1)).getValidateFunction();
         verify(configurationHelper, times(2)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         verify(configurationHelper, times(2)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
@@ -275,7 +276,8 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
 
         // Mock the call to external methods
         when(businessObjectDefinitionDao.getAllBusinessObjectDefinitions()).thenReturn(businessObjectDefinitionEntityList);
-        when(objectMapper.writeValueAsString(any())).thenThrow(new JsonParseException("Failed to Parse", new JsonLocation("SRC", 100L, 1, 2)));
+        when(jsonHelper.objectToJson(any()))
+            .thenThrow(new IllegalStateException(new JsonParseException("Failed to Parse", new JsonLocation("SRC", 100L, 1, 2))));
         when(searchFunctions.getValidateFunction()).thenReturn((indexName, documentType, id, json) -> {
         });
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class)).thenReturn("INDEX_NAME");
@@ -293,7 +295,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
 
         // Verify the calls to external methods
         verify(businessObjectDefinitionDao, times(1)).getAllBusinessObjectDefinitions();
-        verify(objectMapper, times(2)).writeValueAsString(any());
+        verify(jsonHelper, times(2)).objectToJson(any());
         verify(searchFunctions, times(1)).getValidateFunction();
         verify(configurationHelper, times(2)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         verify(configurationHelper, times(2)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
@@ -359,7 +361,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         when(businessObjectDefinitionDao.getPercentageOfAllBusinessObjectDefinitions(0.05)).thenReturn(businessObjectDefinitionEntityList);
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class)).thenReturn("INDEX_NAME");
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
-        when(objectMapper.writeValueAsString(any())).thenReturn("JSON_STRING");
+        when(jsonHelper.objectToJson(any())).thenReturn("JSON_STRING");
         when(searchFunctions.getIsValidFunction()).thenReturn((indexName, documentType, id, json) -> true);
 
         // Call the method under test
@@ -373,7 +375,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         verify(businessObjectDefinitionDao, times(1)).getPercentageOfAllBusinessObjectDefinitions(0.05);
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
-        verify(objectMapper, times(2)).writeValueAsString(any());
+        verify(jsonHelper, times(2)).objectToJson(any());
         verify(searchFunctions, times(2)).getIsValidFunction();
     }
 
@@ -393,7 +395,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         when(businessObjectDefinitionDao.getPercentageOfAllBusinessObjectDefinitions(0.05)).thenReturn(businessObjectDefinitionEntityList);
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class)).thenReturn("INDEX_NAME");
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
-        when(objectMapper.writeValueAsString(any())).thenReturn("JSON_STRING");
+        when(jsonHelper.objectToJson(any())).thenReturn("JSON_STRING");
         when(searchFunctions.getIsValidFunction()).thenReturn((indexName, documentType, id, json) -> false);
 
         // Call the method under test
@@ -407,7 +409,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         verify(businessObjectDefinitionDao, times(1)).getPercentageOfAllBusinessObjectDefinitions(0.05);
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
-        verify(objectMapper, times(2)).writeValueAsString(any());
+        verify(jsonHelper, times(2)).objectToJson(any());
         verify(searchFunctions, times(2)).getIsValidFunction();
     }
 
@@ -427,7 +429,8 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         when(businessObjectDefinitionDao.getPercentageOfAllBusinessObjectDefinitions(0.05)).thenReturn(businessObjectDefinitionEntityList);
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class)).thenReturn("INDEX_NAME");
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
-        when(objectMapper.writeValueAsString(any())).thenThrow(new JsonParseException("Failed to Parse", new JsonLocation("SRC", 100L, 1, 2)));
+        when(jsonHelper.objectToJson(any()))
+            .thenThrow(new IllegalStateException(new JsonParseException("Failed to Parse", new JsonLocation("SRC", 100L, 1, 2))));
         when(searchFunctions.getIsValidFunction()).thenReturn((indexName, documentType, id, json) -> false);
 
         // Call the method under test
@@ -441,7 +444,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         verify(businessObjectDefinitionDao, times(1)).getPercentageOfAllBusinessObjectDefinitions(0.05);
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
-        verify(objectMapper, times(2)).writeValueAsString(any());
+        verify(jsonHelper, times(2)).objectToJson(any());
         verify(searchFunctions, times(2)).getIsValidFunction();
     }
 
@@ -461,7 +464,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         when(businessObjectDefinitionDao.getMostRecentBusinessObjectDefinitions(100)).thenReturn(businessObjectDefinitionEntityList);
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class)).thenReturn("INDEX_NAME");
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
-        when(objectMapper.writeValueAsString(any())).thenReturn("JSON_STRING");
+        when(jsonHelper.objectToJson(any())).thenReturn("JSON_STRING");
         when(searchFunctions.getIsValidFunction()).thenReturn((indexName, documentType, id, json) -> true);
 
         // Call the method under test
@@ -475,7 +478,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         verify(businessObjectDefinitionDao, times(1)).getMostRecentBusinessObjectDefinitions(100);
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
-        verify(objectMapper, times(2)).writeValueAsString(any());
+        verify(jsonHelper, times(2)).objectToJson(any());
         verify(searchFunctions, times(2)).getIsValidFunction();
     }
 
@@ -495,7 +498,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         when(businessObjectDefinitionDao.getMostRecentBusinessObjectDefinitions(100)).thenReturn(businessObjectDefinitionEntityList);
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class)).thenReturn("INDEX_NAME");
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
-        when(objectMapper.writeValueAsString(any())).thenReturn("JSON_STRING");
+        when(jsonHelper.objectToJson(any())).thenReturn("JSON_STRING");
         when(searchFunctions.getIsValidFunction()).thenReturn((indexName, documentType, id, json) -> false);
 
         // Call the method under test
@@ -509,7 +512,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         verify(businessObjectDefinitionDao, times(1)).getMostRecentBusinessObjectDefinitions(100);
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
-        verify(objectMapper, times(2)).writeValueAsString(any());
+        verify(jsonHelper, times(2)).objectToJson(any());
         verify(searchFunctions, times(2)).getIsValidFunction();
     }
 
@@ -529,7 +532,8 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         when(businessObjectDefinitionDao.getMostRecentBusinessObjectDefinitions(100)).thenReturn(businessObjectDefinitionEntityList);
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class)).thenReturn("INDEX_NAME");
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
-        when(objectMapper.writeValueAsString(any())).thenThrow(new JsonParseException("Failed to Parse", new JsonLocation("SRC", 100L, 1, 2)));
+        when(jsonHelper.objectToJson(any()))
+            .thenThrow(new IllegalStateException(new JsonParseException("Failed to Parse", new JsonLocation("SRC", 100L, 1, 2))));
         when(searchFunctions.getIsValidFunction()).thenReturn((indexName, documentType, id, json) -> false);
 
         // Call the method under test
@@ -543,7 +547,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         verify(businessObjectDefinitionDao, times(1)).getMostRecentBusinessObjectDefinitions(100);
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
-        verify(objectMapper, times(2)).writeValueAsString(any());
+        verify(jsonHelper, times(2)).objectToJson(any());
         verify(searchFunctions, times(2)).getIsValidFunction();
     }
 }

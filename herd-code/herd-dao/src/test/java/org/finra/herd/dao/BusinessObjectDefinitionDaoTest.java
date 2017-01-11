@@ -139,6 +139,21 @@ public class BusinessObjectDefinitionDaoTest extends AbstractDaoTest
     }
 
     @Test
+    public void testGetAllBusinessObjectDefinitionsByIds()
+    {
+        // Create and persist two business object definition entities.
+        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities =
+            businessObjectDefinitionDaoTestHelper.createExpectedBusinessObjectDefinitionEntities();
+
+        List<Integer> businessObjectDefinitionIds = new ArrayList<>();
+
+        businessObjectDefinitionEntities.forEach(businessObjectDefinitionEntity -> businessObjectDefinitionIds.add(businessObjectDefinitionEntity.getId()));
+
+        // Get the list of all business object definitions
+        assertEquals(businessObjectDefinitionEntities, businessObjectDefinitionDao.getAllBusinessObjectDefinitionsByIds(businessObjectDefinitionIds));
+    }
+
+    @Test
     public void testGetPercentageOfAllBusinessObjectDefinitionsOneHundredPercent()
     {
         // Create and persist two business object definition entities.

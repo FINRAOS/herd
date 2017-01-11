@@ -149,4 +149,11 @@ public interface BusinessObjectDefinitionService
      */
     public void updateBusinessObjectDefinitionEntitySampleFile(BusinessObjectDefinitionKey businessObjectDefinitionKey,
         BusinessObjectDefinitionSampleFileUpdateDto businessObjectDefinitionSampleFileUpdateDto);
+
+    /**
+     * Updates the search index document representation of the business object definition.
+     *
+     * @param searchIndexUpdateDtoJSON the JSON string representation of the SearchIndexUpdateDto object
+     */
+    public void updateSearchIndexDocumentBusinessObjectDefinition(String searchIndexUpdateDtoJSON);
 }

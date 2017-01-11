@@ -702,7 +702,17 @@ public enum ConfigurationValue
     /**
      * The elasticsearch spot check most recent number
      */
-    ELASTICSEARCH_BDEF_SPOT_CHECK_MOST_RECENT_NUMBER("elasticsearch.bdef.spot.check.most.recent.number", 100);
+    ELASTICSEARCH_BDEF_SPOT_CHECK_MOST_RECENT_NUMBER("elasticsearch.bdef.spot.check.most.recent.number", 100),
+
+    /**
+     * The search index update queue name
+     */
+    SEARCH_INDEX_UPDATE_SQS_QUEUE_NAME("search.index.update.sqs.queue.name", null),
+
+    /**
+     * Indicates whether the sample data JMS message listener service is enabled or not. The default is "true" (enabled).
+     */
+    SEARCH_INDEX_UPDATE_JMS_LISTENER_ENABLED("search.index.update.jms.listener.enabled", "true");
 
     // Properties
     private String key;
