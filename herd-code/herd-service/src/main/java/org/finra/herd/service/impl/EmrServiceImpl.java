@@ -426,7 +426,6 @@ public class EmrServiceImpl implements EmrService
             .getEmrClusterDefinitionEntity(emrClusterAlternateKeyDto.getNamespace(), emrClusterAlternateKeyDto.getEmrClusterDefinitionName());
 
         // Replace all S3 managed location variables in xml
-
         String toReplace = getS3ManagedReplaceString();
         String replacedConfigXml = emrClusterDefinitionEntity.getConfiguration().replaceAll(toReplace, emrHelper.getS3StagingLocation());
 
@@ -439,11 +438,18 @@ public class EmrServiceImpl implements EmrService
         // Perform the EMR cluster definition configuration validation.
         emrClusterDefinitionHelper.validateEmrClusterDefinitionConfiguration(emrClusterDefinition);
 
+        // Check permissions.
         namespaceIamRoleAuthorizationHelper.checkPermissions(emrClusterDefinitionEntity.getNamespace(), emrClusterDefinition.getServiceIamRole(),
             emrClusterDefinition.getEc2NodeIamProfileName());
 
-        // Find best price and update definition
-        emrPricingHelper.updateEmrClusterDefinitionWithBestPrice(emrClusterAlternateKeyDto, emrClusterDefinition);
+        // If a trusting account id is specified, update the AWS parameters DTO with the temporary credentials for the cross-account access.
+        if (StringUtils.isNotBlank(emrClusterDefinition.getAccountId()))
+        {
+            updateAwsParamsForCrossAccountAccess(awsParamsDto, emrClusterDefinition.getAccountId().trim());
+        }
+
+        // Find best price and update definition.
+        emrPricingHelper.updateEmrClusterDefinitionWithBestPrice(emrClusterAlternateKeyDto, emrClusterDefinition, awsParamsDto);
 
         String clusterId = null; // The cluster ID record.
         String emrClusterStatus = null;
@@ -462,13 +468,9 @@ public class EmrServiceImpl implements EmrService
                 emrHelper.buildEmrClusterName(namespaceEntity.getCode(), emrClusterDefinitionEntity.getName(), emrClusterAlternateKeyDto.getEmrClusterName());
             try
             {
-                // If a trusting account id is specified, update the AWS parameters DTO with the temporary credentials for the cross-account access.
-                if (StringUtils.isNotBlank(emrClusterDefinition.getAccountId()))
-                {
-                    updateAwsParamsForCrossAccountAccess(awsParamsDto, emrClusterDefinition.getAccountId().trim());
-                }
-
+                // Try to get an active EMR cluster by its name.
                 ClusterSummary clusterSummary = emrDao.getActiveEmrClusterByName(clusterName, awsParamsDto);
+
                 // If cluster does not already exist.
                 if (clusterSummary == null)
                 {
