@@ -153,7 +153,7 @@ public interface BusinessObjectDefinitionService
     /**
      * Updates the search index document representation of the business object definition.
      *
-     * @param searchIndexUpdateDtoJSON the JSON string representation of the SearchIndexUpdateDto object
+     * @param searchIndexUpdateDtoJson the JSON string representation of the SearchIndexUpdateDto object
      */
-    public void updateSearchIndexDocumentBusinessObjectDefinition(String searchIndexUpdateDtoJSON);
+    public void updateSearchIndexDocumentBusinessObjectDefinition(String searchIndexUpdateDtoJson);
 }

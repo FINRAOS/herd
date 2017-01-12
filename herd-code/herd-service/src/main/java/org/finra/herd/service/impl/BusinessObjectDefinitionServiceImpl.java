@@ -972,7 +972,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     }
 
     @Override
-    public void updateSearchIndexDocumentBusinessObjectDefinition(String searchIndexUpdateDtoJSON)
+    public void updateSearchIndexDocumentBusinessObjectDefinition(String searchIndexUpdateDtoJson)
     {
         final String indexName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         final String documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
@@ -980,7 +980,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         try
         {
             // Unmarshall the SearchIndexUpdateDto from a JSON string to a SearchIndexUpdateDto object
-            SearchIndexUpdateDto searchIndexUpdateDto = jsonHelper.unmarshallJsonToObject(SearchIndexUpdateDto.class, searchIndexUpdateDtoJSON);
+            SearchIndexUpdateDto searchIndexUpdateDto = jsonHelper.unmarshallJsonToObject(SearchIndexUpdateDto.class, searchIndexUpdateDtoJson);
             String modificationType = searchIndexUpdateDto.getModificationType();
             List<Integer> ids = searchIndexUpdateDto.getBusinessObjectDefinitionIds();
 
