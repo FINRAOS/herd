@@ -83,7 +83,17 @@ public class AwsClientFactory
             clientConfiguration.withProxyHost(awsParamsDto.getHttpProxyHost()).withProxyPort(awsParamsDto.getHttpProxyPort());
         }
 
-        // Return the client.
-        return new AmazonEC2Client(clientConfiguration);
+        // If specified, use the AWS credentials passed in.
+        if (StringUtils.isNotBlank(awsParamsDto.getAwsAccessKeyId()))
+        {
+            return new AmazonEC2Client(
+                new BasicSessionCredentials(awsParamsDto.getAwsAccessKeyId(), awsParamsDto.getAwsSecretKey(), awsParamsDto.getSessionToken()),
+                clientConfiguration);
+        }
+        // Otherwise, use the default AWS credentials provider chain.
+        else
+        {
+            return new AmazonEC2Client(clientConfiguration);
+        }
     }
 }
