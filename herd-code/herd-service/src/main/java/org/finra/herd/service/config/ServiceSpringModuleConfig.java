@@ -20,8 +20,14 @@ import static org.quartz.JobBuilder.newJob;
 import static org.quartz.TriggerBuilder.newTrigger;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.net.InetAddress;
+import java.security.KeyStore;
+import java.security.Provider;
+import java.security.cert.Certificate;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,7 +61,9 @@ import org.activiti.spring.SpringCallerRunsRejectedJobsHandler;
 import org.activiti.spring.SpringProcessEngineConfiguration;
 import org.activiti.spring.SpringRejectedJobsHandler;
 import org.apache.commons.lang3.StringUtils;
+import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.cluster.health.ClusterIndexHealth;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
@@ -63,6 +71,8 @@ import org.quartz.CronTrigger;
 import org.quartz.JobDetail;
 import org.quartz.TriggerKey;
 import org.quartz.impl.StdSchedulerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -104,6 +114,8 @@ import org.finra.pet.JCredStashFX;
     excludeFilters = @ComponentScan.Filter(type = FilterType.REGEX, pattern = "org\\.finra\\.herd\\.service\\.config\\..*"))
 public class ServiceSpringModuleConfig
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ServiceSpringModuleConfig.class);
+
     /**
      * The Activiti DB schema update param bean name.
      */
@@ -153,6 +165,11 @@ public class ServiceSpringModuleConfig
      * The Credstash credential name index value, part of the credential string
      */
     public static final int CREDSTASH_CREDENTIAL_NAME = 3;
+
+    /**
+     * Java Keystore type
+     */
+    public static final String JAVA_KEYSTORE_TYPE = "JKS";
 
     @Autowired
     private DataSource herdDataSource;
@@ -530,6 +547,8 @@ public class ServiceSpringModuleConfig
     @Bean
     public TransportClient transportClient() throws Exception
     {
+        LOGGER.debug("Initializing transport client bean.");
+
         // Get the elasticsearch settings JSON string from the configuration
         String elasticSearchSettingsJSON = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SETTINGS_JSON);
         Integer port = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_DEFAULT_PORT, Integer.class);
@@ -542,6 +561,8 @@ public class ServiceSpringModuleConfig
         List<String> elasticSearchAddresses = elasticsearchSettingsDto.getClientTransportAddresses();
         boolean clientTransportStiff = elasticsearchSettingsDto.isClientTransportSniff();
         boolean isElasticsearchSearchGuardEnabled = Boolean.valueOf(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_ENABLED));
+
+        LOGGER.debug("isElasticsearchSearchGuardEnabled={}", isElasticsearchSearchGuardEnabled);
 
         // Build the Transport client with the settings
         Settings settings;
@@ -559,6 +580,10 @@ public class ServiceSpringModuleConfig
             String keystoreCredentialName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_KEYSTORE_CREDENTIAL_NAME);
             String truststoreCredentialName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_TRUSTSTORE_CREDENTIAL_NAME);
 
+            LOGGER.debug("credstashTableName={}", credstashTableName);
+            LOGGER.debug("keystoreCredentialName={}", keystoreCredentialName);
+            LOGGER.debug("truststoreCredentialName={}", truststoreCredentialName);
+
             // Split on a period because the credential names are in the form: AGS.component.sdlc.credentialName
             String[] keystoreCredentialNameSplit = keystoreCredentialName.split("\\.");
             String[] truststoreCredentialNameSplit = truststoreCredentialName.split("\\.");
@@ -566,32 +591,36 @@ public class ServiceSpringModuleConfig
             // Get the keystore and truststore passwords from Credstash
             JCredStashFX credstash = new JCredStashFX();
 
-            String keystorePassword = credstash.getCredential(
-                keystoreCredentialNameSplit[CREDSTASH_CREDENTIAL_NAME],
-                keystoreCredentialNameSplit[CREDSTASH_AGS],
-                keystoreCredentialNameSplit[CREDSTASH_SDLC],
-                keystoreCredentialNameSplit[CREDSTASH_COMPONENT],
-                credstashTableName);
+            String keystorePassword = credstash
+                .getCredential(keystoreCredentialNameSplit[CREDSTASH_CREDENTIAL_NAME], keystoreCredentialNameSplit[CREDSTASH_AGS],
+                    keystoreCredentialNameSplit[CREDSTASH_SDLC], keystoreCredentialNameSplit[CREDSTASH_COMPONENT], credstashTableName);
+            logKeystoreInformation(pathToKeystoreFile, keystorePassword);
 
-            String truststorePassword = credstash.getCredential(
-                truststoreCredentialNameSplit[CREDSTASH_CREDENTIAL_NAME],
-                truststoreCredentialNameSplit[CREDSTASH_AGS],
-                truststoreCredentialNameSplit[CREDSTASH_SDLC],
-                truststoreCredentialNameSplit[CREDSTASH_COMPONENT],
-                credstashTableName);
+            String truststorePassword = credstash
+                .getCredential(truststoreCredentialNameSplit[CREDSTASH_CREDENTIAL_NAME], truststoreCredentialNameSplit[CREDSTASH_AGS],
+                    truststoreCredentialNameSplit[CREDSTASH_SDLC], truststoreCredentialNameSplit[CREDSTASH_COMPONENT], credstashTableName);
+            logKeystoreInformation(pathToTruststoreFile, truststorePassword);
+
+            File keystoreFile = new File(pathToKeystoreFile);
+            LOGGER.debug("keystoreFile.name={}, keystoreFile.exists={}, keystoreFile.canRead={}", keystoreFile.getName(), keystoreFile.exists(),
+                keystoreFile.canRead());
+
+            File truststoreFile = new File(pathToTruststoreFile);
+            LOGGER.debug("truststoreFile.name={}, truststoreFile.exists={}, truststoreFile.canRead={}", truststoreFile.getName(), truststoreFile.exists(),
+                truststoreFile.canRead());
 
             // Build the settings for the transport client
-            settings = Settings.builder()
-                .put(ELASTICSEARCH_SETTING_CLIENT_TRANSPORT_SNIFF, clientTransportStiff)
-                .put(ELASTICSEARCH_SETTING_CLUSTER_NAME, elasticSearchCluster)
-                .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_KEYSTORE_FILEPATH, new File(pathToKeystoreFile))
-                .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_TRUSTSTORE_FILEPATH, new File(pathToTruststoreFile))
+            settings = Settings.builder().put(ELASTICSEARCH_SETTING_CLIENT_TRANSPORT_SNIFF, clientTransportStiff)
+                .put(ELASTICSEARCH_SETTING_CLUSTER_NAME, elasticSearchCluster).put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_KEYSTORE_FILEPATH, keystoreFile)
+                .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_TRUSTSTORE_FILEPATH, truststoreFile)
                 .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_KEYSTORE_PASSWORD, keystorePassword)
                 .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_TRUSTSTORE_PASSWORD, truststorePassword)
                 .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_ENFORCE_HOSTNAME_VERIFICATION, false)
                 .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_ENFORCE_HOSTNAME_VERIFICATION_RESOLVE_HOST_NAME, false)
-                .put(ELASTICSEARCH_SETTING_PATH_HOME, ELASTICSEARCH_SETTING_PATH_HOME_PATH)
-                .build();
+                .put(ELASTICSEARCH_SETTING_PATH_HOME, ELASTICSEARCH_SETTING_PATH_HOME_PATH).build();
+
+            LOGGER.debug("Transport Client Settings:  clientTransportStiff={}, elasticSearchCluster={}, pathToKeystoreFile={}, pathToTruststoreFile={}",
+                clientTransportStiff, elasticSearchCluster, pathToKeystoreFile, pathToTruststoreFile);
 
             // Build the Transport client with the settings
             transportClient = new PreBuiltTransportClient(settings, SearchGuardSSLPlugin.class);
@@ -599,10 +628,11 @@ public class ServiceSpringModuleConfig
         else
         {
             // Build the settings for the transport client
-            settings = Settings.builder()
-                .put(ELASTICSEARCH_SETTING_CLIENT_TRANSPORT_SNIFF, clientTransportStiff)
-                .put(ELASTICSEARCH_SETTING_CLUSTER_NAME, elasticSearchCluster)
-                .build();
+            settings = Settings.builder().put(ELASTICSEARCH_SETTING_CLIENT_TRANSPORT_SNIFF, clientTransportStiff)
+                .put(ELASTICSEARCH_SETTING_CLUSTER_NAME, elasticSearchCluster).build();
+
+            LOGGER.debug("Transport Client Settings:  clientTransportStiff={}, elasticSearchCluster={}, pathToKeystoreFile={}, pathToTruststoreFile={}",
+                clientTransportStiff, elasticSearchCluster);
 
             // Build the Transport client with the settings
             transportClient = new PreBuiltTransportClient(settings);
@@ -611,9 +641,13 @@ public class ServiceSpringModuleConfig
         // For each elastic search address in the elastic search address list
         for (String elasticSearchAddress : elasticSearchAddresses)
         {
+            LOGGER.debug("TransportClient add transport address elasticSearchAddress={}", elasticSearchAddress);
             // Add the address to the transport client
             transportClient.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(elasticSearchAddress), port));
         }
+
+        // Log the cluster health
+        logClusterHealth(transportClient);
 
         return transportClient;
     }
@@ -634,5 +668,56 @@ public class ServiceSpringModuleConfig
         }
 
         return quartzDelegateClass;
+    }
+
+    /**
+     * Private method to log keystore file information.
+     * @param pathToKeystoreFile the path the the keystore file
+     * @param keystorePassword the password that will open the keystore file
+     * @throws Exception a potential exception when getting the keystore
+     */
+    private void logKeystoreInformation(String pathToKeystoreFile, String keystorePassword) throws Exception
+    {
+
+        final KeyStore keyStore = KeyStore.getInstance(JAVA_KEYSTORE_TYPE);
+
+        try (final InputStream is = new FileInputStream(pathToKeystoreFile))
+        {
+            keyStore.load(is, keystorePassword.toCharArray());
+        }
+
+        Provider provider = keyStore.getProvider();
+
+        LOGGER.debug("Keystore file={}", pathToKeystoreFile);
+        LOGGER.debug("keystoreType={}", keyStore.getType());
+        LOGGER.debug("providerName={}", provider.getName());
+        LOGGER.debug("providerInfo={}", provider.getInfo());
+
+        Enumeration<String> aliases = keyStore.aliases();
+        while (aliases.hasMoreElements())
+        {
+            String alias = aliases.nextElement();
+            LOGGER.debug("certificate alias={}", alias);
+            Certificate certificate = keyStore.getCertificate(alias);
+            LOGGER.debug("certificate publicKey={}", certificate.getPublicKey());
+        }
+    }
+
+    /**
+     * Private method to log the cluster health.
+     * @param transportClient the transport client connection to the search index
+     */
+    private void logClusterHealth(TransportClient transportClient)
+    {
+        // Check the health of the cluster
+        ClusterHealthResponse clusterHealthResponse = transportClient.admin().cluster().prepareHealth().get();
+        LOGGER.info("clusterName={}, numberOfDataNodes={}, numberOfNodes={}", clusterHealthResponse.getClusterName(),
+            clusterHealthResponse.getNumberOfDataNodes(), clusterHealthResponse.getNumberOfNodes());
+
+        for (ClusterIndexHealth clusterIndexHealth : clusterHealthResponse.getIndices().values())
+        {
+            LOGGER.info("index={}, numberOfShards={}, numberOfReplicas={}, status={}", clusterIndexHealth.getIndex(), clusterIndexHealth.getNumberOfShards(),
+                clusterIndexHealth.getNumberOfReplicas(), clusterIndexHealth.getStatus());
+        }
     }
 }
