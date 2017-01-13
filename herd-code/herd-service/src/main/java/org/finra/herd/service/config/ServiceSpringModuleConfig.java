@@ -134,6 +134,26 @@ public class ServiceSpringModuleConfig
      */
     public static final String ELASTICSEARCH_SETTING_PATH_HOME_PATH = ".";
 
+    /**
+     * The Credstash AGS index value, part of the credential string
+     */
+    public static final int CREDSTASH_AGS = 0;
+
+    /**
+     * The Credstash component index value, part of the credential string
+     */
+    public static final int CREDSTASH_COMPONENT = 1;
+
+    /**
+     * The Credstash SDLC index value, part of the credential string
+     */
+    public static final int CREDSTASH_SDLC = 2;
+
+    /**
+     * The Credstash credential name index value, part of the credential string
+     */
+    public static final int CREDSTASH_CREDENTIAL_NAME = 3;
+
     @Autowired
     private DataSource herdDataSource;
 
@@ -545,12 +565,20 @@ public class ServiceSpringModuleConfig
 
             // Get the keystore and truststore passwords from Credstash
             JCredStashFX credstash = new JCredStashFX();
-            String keystorePassword = credstash
-                .getCredential(keystoreCredentialNameSplit[3], keystoreCredentialNameSplit[0], keystoreCredentialNameSplit[2], keystoreCredentialNameSplit[1],
-                    credstashTableName);
-            String truststorePassword = credstash
-                .getCredential(truststoreCredentialNameSplit[3], truststoreCredentialNameSplit[0], truststoreCredentialNameSplit[2],
-                    truststoreCredentialNameSplit[1], credstashTableName);
+
+            String keystorePassword = credstash.getCredential(
+                keystoreCredentialNameSplit[CREDSTASH_CREDENTIAL_NAME],
+                keystoreCredentialNameSplit[CREDSTASH_AGS],
+                keystoreCredentialNameSplit[CREDSTASH_SDLC],
+                keystoreCredentialNameSplit[CREDSTASH_COMPONENT],
+                credstashTableName);
+
+            String truststorePassword = credstash.getCredential(
+                truststoreCredentialNameSplit[CREDSTASH_CREDENTIAL_NAME],
+                truststoreCredentialNameSplit[CREDSTASH_AGS],
+                truststoreCredentialNameSplit[CREDSTASH_SDLC],
+                truststoreCredentialNameSplit[CREDSTASH_COMPONENT],
+                credstashTableName);
 
             // Build the settings for the transport client
             settings = Settings.builder()
