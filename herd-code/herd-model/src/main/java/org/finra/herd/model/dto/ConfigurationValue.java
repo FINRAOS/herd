@@ -705,6 +705,32 @@ public enum ConfigurationValue
     ELASTICSEARCH_BDEF_SPOT_CHECK_MOST_RECENT_NUMBER("elasticsearch.bdef.spot.check.most.recent.number", 100),
 
     /**
+     * The elasticsearch search guard enabled
+     */
+    ELASTICSEARCH_SEARCH_GUARD_ENABLED("elasticsearch.search.guard.enabled", "false"),
+
+    /**
+     * The elasticsearch search guard keystore credential name
+     */
+    ELASTICSEARCH_SEARCH_GUARD_KEYSTORE_CREDENTIAL_NAME("elasticsearch.search.guard.keystore.credential.name", "AGS.component.sdlc.keystoreCredentialName"),
+
+    /**
+     * The elasticsearch search guard truststore credential name
+     */
+    ELASTICSEARCH_SEARCH_GUARD_TRUSTSTORE_CREDENTIAL_NAME("elasticsearch.search.guard.truststore.credential.name",
+        "AGS.component.sdlc.truststoreCredentialName"),
+
+    /**
+     * The elasticsearch search guard keystore path
+     */
+    ELASTICSEARCH_SEARCH_GUARD_KEYSTORE_PATH("elasticsearch.search.guard.keystore.path", "/path/to/keystore.jks"),
+
+    /**
+     * The elasticsearch search guard truststore file path
+     */
+    ELASTICSEARCH_SEARCH_GUARD_TRUSTSTORE_PATH("elasticsearch.search.guard.truststore.path", "/path/to/truststore.jks"),
+
+    /**
      * The search index update queue name
      */
     SEARCH_INDEX_UPDATE_SQS_QUEUE_NAME("search.index.update.sqs.queue.name", null),
@@ -712,7 +738,12 @@ public enum ConfigurationValue
     /**
      * Indicates whether the sample data JMS message listener service is enabled or not. The default is "true" (enabled).
      */
-    SEARCH_INDEX_UPDATE_JMS_LISTENER_ENABLED("search.index.update.jms.listener.enabled", "true");
+    SEARCH_INDEX_UPDATE_JMS_LISTENER_ENABLED("search.index.update.jms.listener.enabled", "true"),
+
+    /**
+     * The name of the Credstash table where credentials are stored.
+     */
+    CREDSTASH_TABLE_NAME("credstash.table.name", "credential-store");
 
     // Properties
     private String key;

@@ -19,7 +19,7 @@ import static org.quartz.CronScheduleBuilder.cronSchedule;
 import static org.quartz.JobBuilder.newJob;
 import static org.quartz.TriggerBuilder.newTrigger;
 
-import java.io.IOException;
+import java.io.File;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,6 +32,8 @@ import javax.sql.DataSource;
 
 import com.amazon.sqs.javamessaging.SQSConnectionFactory;
 import com.amazonaws.ClientConfiguration;
+import com.floragunn.searchguard.ssl.SearchGuardSSLPlugin;
+import com.floragunn.searchguard.ssl.util.SSLConfigConstants;
 import org.activiti.engine.HistoryService;
 import org.activiti.engine.IdentityService;
 import org.activiti.engine.ManagementService;
@@ -91,6 +93,7 @@ import org.finra.herd.service.activiti.HerdProcessEngineConfigurator;
 import org.finra.herd.service.helper.HerdErrorInformationExceptionHandler;
 import org.finra.herd.service.helper.HerdJmsDestinationResolver;
 import org.finra.herd.service.systemjobs.AbstractSystemJob;
+import org.finra.pet.JCredStashFX;
 
 /**
  * Service Spring module configuration.
@@ -120,6 +123,16 @@ public class ServiceSpringModuleConfig
      * The Elasticsearch setting for cluster name
      */
     public static final String ELASTICSEARCH_SETTING_CLUSTER_NAME = "cluster.name";
+
+    /**
+     * The Elasticsearch setting for path home
+     */
+    public static final String ELASTICSEARCH_SETTING_PATH_HOME = "path.home";
+
+    /**
+     * The Elasticsearch setting for path
+     */
+    public static final String ELASTICSEARCH_SETTING_PATH_HOME_PATH = ".";
 
     @Autowired
     private DataSource herdDataSource;
@@ -492,10 +505,10 @@ public class ServiceSpringModuleConfig
      * Returns an elasticsearch transport client.
      *
      * @return TransportClient for the elasticsearch client is returned.
-     * @throws IOException is thrown if host can not be found, or if settings object can not be mapped.
+     * @throws Exception is thrown if host can not be found, or if settings object can not be mapped.
      */
     @Bean
-    public TransportClient transportClient() throws IOException
+    public TransportClient transportClient() throws Exception
     {
         // Get the elasticsearch settings JSON string from the configuration
         String elasticSearchSettingsJSON = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SETTINGS_JSON);
@@ -508,15 +521,64 @@ public class ServiceSpringModuleConfig
         String elasticSearchCluster = elasticsearchSettingsDto.getElasticSearchCluster();
         List<String> elasticSearchAddresses = elasticsearchSettingsDto.getClientTransportAddresses();
         boolean clientTransportStiff = elasticsearchSettingsDto.isClientTransportSniff();
-
-        // Build the settings for the transport client
-        Settings settings = Settings.builder()
-            .put(ELASTICSEARCH_SETTING_CLIENT_TRANSPORT_SNIFF, clientTransportStiff)
-            .put(ELASTICSEARCH_SETTING_CLUSTER_NAME, elasticSearchCluster)
-            .build();
+        boolean isElasticsearchSearchGuardEnabled = Boolean.valueOf(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_ENABLED));
 
         // Build the Transport client with the settings
-        TransportClient transportClient = new PreBuiltTransportClient(settings);
+        Settings settings;
+        TransportClient transportClient;
+
+        // If search guard is enabled then setup the keystore and truststore
+        if (isElasticsearchSearchGuardEnabled)
+        {
+            // Get the paths to the keystore and truststore files
+            String pathToKeystoreFile = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_KEYSTORE_PATH);
+            String pathToTruststoreFile = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_TRUSTSTORE_PATH);
+
+            // Get the credstash table name and credential names for the keystore and truststore
+            String credstashTableName = configurationHelper.getProperty(ConfigurationValue.CREDSTASH_TABLE_NAME);
+            String keystoreCredentialName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_KEYSTORE_CREDENTIAL_NAME);
+            String truststoreCredentialName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_TRUSTSTORE_CREDENTIAL_NAME);
+
+            // Split on a period because the credential names are in the form: AGS.component.sdlc.credentialName
+            String[] keystoreCredentialNameSplit = keystoreCredentialName.split("\\.");
+            String[] truststoreCredentialNameSplit = truststoreCredentialName.split("\\.");
+
+            // Get the keystore and truststore passwords from Credstash
+            JCredStashFX credstash = new JCredStashFX();
+            String keystorePassword = credstash
+                .getCredential(keystoreCredentialNameSplit[3], keystoreCredentialNameSplit[0], keystoreCredentialNameSplit[2], keystoreCredentialNameSplit[1],
+                    credstashTableName);
+            String truststorePassword = credstash
+                .getCredential(truststoreCredentialNameSplit[3], truststoreCredentialNameSplit[0], truststoreCredentialNameSplit[2],
+                    truststoreCredentialNameSplit[1], credstashTableName);
+
+            // Build the settings for the transport client
+            settings = Settings.builder()
+                .put(ELASTICSEARCH_SETTING_CLIENT_TRANSPORT_SNIFF, clientTransportStiff)
+                .put(ELASTICSEARCH_SETTING_CLUSTER_NAME, elasticSearchCluster)
+                .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_KEYSTORE_FILEPATH, new File(pathToKeystoreFile))
+                .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_TRUSTSTORE_FILEPATH, new File(pathToTruststoreFile))
+                .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_KEYSTORE_PASSWORD, keystorePassword)
+                .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_TRUSTSTORE_PASSWORD, truststorePassword)
+                .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_ENFORCE_HOSTNAME_VERIFICATION, false)
+                .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_ENFORCE_HOSTNAME_VERIFICATION_RESOLVE_HOST_NAME, false)
+                .put(ELASTICSEARCH_SETTING_PATH_HOME, ELASTICSEARCH_SETTING_PATH_HOME_PATH)
+                .build();
+
+            // Build the Transport client with the settings
+            transportClient = new PreBuiltTransportClient(settings, SearchGuardSSLPlugin.class);
+        }
+        else
+        {
+            // Build the settings for the transport client
+            settings = Settings.builder()
+                .put(ELASTICSEARCH_SETTING_CLIENT_TRANSPORT_SNIFF, clientTransportStiff)
+                .put(ELASTICSEARCH_SETTING_CLUSTER_NAME, elasticSearchCluster)
+                .build();
+
+            // Build the Transport client with the settings
+            transportClient = new PreBuiltTransportClient(settings);
+        }
 
         // For each elastic search address in the elastic search address list
         for (String elasticSearchAddress : elasticSearchAddresses)
