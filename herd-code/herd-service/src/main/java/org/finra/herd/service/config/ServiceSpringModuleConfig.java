@@ -61,9 +61,7 @@ import org.activiti.spring.SpringCallerRunsRejectedJobsHandler;
 import org.activiti.spring.SpringProcessEngineConfiguration;
 import org.activiti.spring.SpringRejectedJobsHandler;
 import org.apache.commons.lang3.StringUtils;
-import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.client.transport.TransportClient;
-import org.elasticsearch.cluster.health.ClusterIndexHealth;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
@@ -646,9 +644,6 @@ public class ServiceSpringModuleConfig
             transportClient.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(elasticSearchAddress), port));
         }
 
-        // Log the cluster health
-        logClusterHealth(transportClient);
-
         return transportClient;
     }
 
@@ -700,24 +695,6 @@ public class ServiceSpringModuleConfig
             LOGGER.debug("certificate alias={}", alias);
             Certificate certificate = keyStore.getCertificate(alias);
             LOGGER.debug("certificate publicKey={}", certificate.getPublicKey());
-        }
-    }
-
-    /**
-     * Private method to log the cluster health.
-     * @param transportClient the transport client connection to the search index
-     */
-    private void logClusterHealth(TransportClient transportClient)
-    {
-        // Check the health of the cluster
-        ClusterHealthResponse clusterHealthResponse = transportClient.admin().cluster().prepareHealth().get();
-        LOGGER.info("clusterName={}, numberOfDataNodes={}, numberOfNodes={}", clusterHealthResponse.getClusterName(),
-            clusterHealthResponse.getNumberOfDataNodes(), clusterHealthResponse.getNumberOfNodes());
-
-        for (ClusterIndexHealth clusterIndexHealth : clusterHealthResponse.getIndices().values())
-        {
-            LOGGER.info("index={}, numberOfShards={}, numberOfReplicas={}, status={}", clusterIndexHealth.getIndex(), clusterIndexHealth.getNumberOfShards(),
-                clusterIndexHealth.getNumberOfReplicas(), clusterIndexHealth.getStatus());
         }
     }
 }
