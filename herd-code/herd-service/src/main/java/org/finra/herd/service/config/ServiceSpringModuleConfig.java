@@ -545,7 +545,7 @@ public class ServiceSpringModuleConfig
     @Bean
     public TransportClient transportClient() throws Exception
     {
-        LOGGER.debug("Initializing transport client bean.");
+        LOGGER.info("Initializing transport client bean.");
 
         // Get the elasticsearch settings JSON string from the configuration
         String elasticSearchSettingsJSON = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SETTINGS_JSON);
@@ -560,7 +560,7 @@ public class ServiceSpringModuleConfig
         boolean clientTransportStiff = elasticsearchSettingsDto.isClientTransportSniff();
         boolean isElasticsearchSearchGuardEnabled = Boolean.valueOf(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_ENABLED));
 
-        LOGGER.debug("isElasticsearchSearchGuardEnabled={}", isElasticsearchSearchGuardEnabled);
+        LOGGER.info("isElasticsearchSearchGuardEnabled={}", isElasticsearchSearchGuardEnabled);
 
         // Build the Transport client with the settings
         Settings settings;
@@ -578,9 +578,9 @@ public class ServiceSpringModuleConfig
             String keystoreCredentialName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_KEYSTORE_CREDENTIAL_NAME);
             String truststoreCredentialName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_TRUSTSTORE_CREDENTIAL_NAME);
 
-            LOGGER.debug("credstashTableName={}", credstashTableName);
-            LOGGER.debug("keystoreCredentialName={}", keystoreCredentialName);
-            LOGGER.debug("truststoreCredentialName={}", truststoreCredentialName);
+            LOGGER.info("credstashTableName={}", credstashTableName);
+            LOGGER.info("keystoreCredentialName={}", keystoreCredentialName);
+            LOGGER.info("truststoreCredentialName={}", truststoreCredentialName);
 
             // Split on a period because the credential names are in the form: AGS.component.sdlc.credentialName
             String[] keystoreCredentialNameSplit = keystoreCredentialName.split("\\.");
@@ -600,11 +600,11 @@ public class ServiceSpringModuleConfig
             logKeystoreInformation(pathToTruststoreFile, truststorePassword);
 
             File keystoreFile = new File(pathToKeystoreFile);
-            LOGGER.debug("keystoreFile.name={}, keystoreFile.exists={}, keystoreFile.canRead={}", keystoreFile.getName(), keystoreFile.exists(),
+            LOGGER.info("keystoreFile.name={}, keystoreFile.exists={}, keystoreFile.canRead={}", keystoreFile.getName(), keystoreFile.exists(),
                 keystoreFile.canRead());
 
             File truststoreFile = new File(pathToTruststoreFile);
-            LOGGER.debug("truststoreFile.name={}, truststoreFile.exists={}, truststoreFile.canRead={}", truststoreFile.getName(), truststoreFile.exists(),
+            LOGGER.info("truststoreFile.name={}, truststoreFile.exists={}, truststoreFile.canRead={}", truststoreFile.getName(), truststoreFile.exists(),
                 truststoreFile.canRead());
 
             // Build the settings for the transport client
@@ -617,7 +617,7 @@ public class ServiceSpringModuleConfig
                 .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_ENFORCE_HOSTNAME_VERIFICATION_RESOLVE_HOST_NAME, false)
                 .put(ELASTICSEARCH_SETTING_PATH_HOME, ELASTICSEARCH_SETTING_PATH_HOME_PATH).build();
 
-            LOGGER.debug("Transport Client Settings:  clientTransportStiff={}, elasticSearchCluster={}, pathToKeystoreFile={}, pathToTruststoreFile={}",
+            LOGGER.info("Transport Client Settings:  clientTransportStiff={}, elasticSearchCluster={}, pathToKeystoreFile={}, pathToTruststoreFile={}",
                 clientTransportStiff, elasticSearchCluster, pathToKeystoreFile, pathToTruststoreFile);
 
             // Build the Transport client with the settings
@@ -629,7 +629,7 @@ public class ServiceSpringModuleConfig
             settings = Settings.builder().put(ELASTICSEARCH_SETTING_CLIENT_TRANSPORT_SNIFF, clientTransportStiff)
                 .put(ELASTICSEARCH_SETTING_CLUSTER_NAME, elasticSearchCluster).build();
 
-            LOGGER.debug("Transport Client Settings:  clientTransportStiff={}, elasticSearchCluster={}, pathToKeystoreFile={}, pathToTruststoreFile={}",
+            LOGGER.info("Transport Client Settings:  clientTransportStiff={}, elasticSearchCluster={}, pathToKeystoreFile={}, pathToTruststoreFile={}",
                 clientTransportStiff, elasticSearchCluster);
 
             // Build the Transport client with the settings
@@ -639,7 +639,7 @@ public class ServiceSpringModuleConfig
         // For each elastic search address in the elastic search address list
         for (String elasticSearchAddress : elasticSearchAddresses)
         {
-            LOGGER.debug("TransportClient add transport address elasticSearchAddress={}", elasticSearchAddress);
+            LOGGER.info("TransportClient add transport address elasticSearchAddress={}", elasticSearchAddress);
             // Add the address to the transport client
             transportClient.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(elasticSearchAddress), port));
         }
@@ -683,18 +683,18 @@ public class ServiceSpringModuleConfig
 
         Provider provider = keyStore.getProvider();
 
-        LOGGER.debug("Keystore file={}", pathToKeystoreFile);
-        LOGGER.debug("keystoreType={}", keyStore.getType());
-        LOGGER.debug("providerName={}", provider.getName());
-        LOGGER.debug("providerInfo={}", provider.getInfo());
+        LOGGER.info("Keystore file={}", pathToKeystoreFile);
+        LOGGER.info("keystoreType={}", keyStore.getType());
+        LOGGER.info("providerName={}", provider.getName());
+        LOGGER.info("providerInfo={}", provider.getInfo());
 
         Enumeration<String> aliases = keyStore.aliases();
         while (aliases.hasMoreElements())
         {
             String alias = aliases.nextElement();
-            LOGGER.debug("certificate alias={}", alias);
+            LOGGER.info("certificate alias={}", alias);
             Certificate certificate = keyStore.getCertificate(alias);
-            LOGGER.debug("certificate publicKey={}", certificate.getPublicKey());
+            LOGGER.info("certificate publicKey={}", certificate.getPublicKey());
         }
     }
 }
