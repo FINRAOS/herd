@@ -15,6 +15,8 @@
 */
 package org.finra.herd.service.functional;
 
+import static org.finra.herd.service.functional.ElasticsearchFunctions.ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME;
+import static org.finra.herd.service.functional.ElasticsearchFunctions.ELASTIC_SEARCH_SCROLL_PAGE_SIZE;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
@@ -26,12 +28,17 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import org.elasticsearch.action.ListenableActionFuture;
+import org.elasticsearch.action.bulk.BulkRequestBuilder;
+import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequestBuilder;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetRequestBuilder;
@@ -40,9 +47,11 @@ import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.search.SearchScrollRequestBuilder;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.junit.Before;
@@ -344,6 +353,64 @@ public class ElasticsearchFunctionsTest
     }
 
     @Test
+    public void testCreateIndexDocumentsFunction()
+    {
+        TriConsumer<String, String, Map<String, String>> createIndexDocumentsFunction = searchFunctions.getCreateIndexDocumentsFunction();
+        assertThat("Function is null.", createIndexDocumentsFunction, not(nullValue()));
+        assertThat("Create index documents function is not an instance of TriConsumer.", createIndexDocumentsFunction, instanceOf(TriConsumer.class));
+
+        BulkRequestBuilder bulkRequestBuilder = mock(BulkRequestBuilder.class);
+        IndexRequestBuilder indexRequestBuilder = mock(IndexRequestBuilder.class);
+        BulkResponse bulkResponse = mock(BulkResponse.class);
+
+        // Mock the call to external methods
+        when(transportClient.prepareBulk()).thenReturn(bulkRequestBuilder);
+        when(transportClient.prepareIndex("INDEX_NAME", "DOCUMENT_TYPE", "1")).thenReturn(indexRequestBuilder);
+        when(bulkRequestBuilder.get()).thenReturn(bulkResponse);
+        when(bulkResponse.hasFailures()).thenReturn(false);
+
+        // Call the method under test
+        Map<String, String> documentMap = new HashMap<>();
+        documentMap.put("1", "JSON");
+        createIndexDocumentsFunction.accept("INDEX_NAME", "DOCUMENT_TYPE", documentMap);
+
+        // Verify the calls to external methods
+        verify(transportClient, times(1)).prepareBulk();
+        verify(transportClient, times(1)).prepareIndex("INDEX_NAME", "DOCUMENT_TYPE", "1");
+        verify(bulkRequestBuilder, times(1)).get();
+        verify(bulkResponse, times(1)).hasFailures();
+    }
+
+    @Test
+    public void testCreateIndexDocumentsFunctionWithFailures()
+    {
+        TriConsumer<String, String, Map<String, String>> createIndexDocumentsFunction = searchFunctions.getCreateIndexDocumentsFunction();
+        assertThat("Function is null.", createIndexDocumentsFunction, not(nullValue()));
+        assertThat("Create index documents function is not an instance of TriConsumer.", createIndexDocumentsFunction, instanceOf(TriConsumer.class));
+
+        BulkRequestBuilder bulkRequestBuilder = mock(BulkRequestBuilder.class);
+        IndexRequestBuilder indexRequestBuilder = mock(IndexRequestBuilder.class);
+        BulkResponse bulkResponse = mock(BulkResponse.class);
+
+        // Mock the call to external methods
+        when(transportClient.prepareBulk()).thenReturn(bulkRequestBuilder);
+        when(transportClient.prepareIndex("INDEX_NAME", "DOCUMENT_TYPE", "1")).thenReturn(indexRequestBuilder);
+        when(bulkRequestBuilder.get()).thenReturn(bulkResponse);
+        when(bulkResponse.hasFailures()).thenReturn(true);
+
+        // Call the method under test
+        Map<String, String> documentMap = new HashMap<>();
+        documentMap.put("1", "JSON");
+        createIndexDocumentsFunction.accept("INDEX_NAME", "DOCUMENT_TYPE", documentMap);
+
+        // Verify the calls to external methods
+        verify(transportClient, times(1)).prepareBulk();
+        verify(transportClient, times(1)).prepareIndex("INDEX_NAME", "DOCUMENT_TYPE", "1");
+        verify(bulkRequestBuilder, times(1)).get();
+        verify(bulkResponse, times(1)).hasFailures();
+    }
+
+    @Test
     public void testDeleteDocumentByIdFunction()
     {
         TriConsumer<String, String, String> deleteDocumentByIdFunction = searchFunctions.getDeleteDocumentByIdFunction();
@@ -364,6 +431,64 @@ public class ElasticsearchFunctionsTest
         // Verify the calls to external methods
         verify(transportClient, times(1)).prepareDelete("INDEX_NAME", "DOCUMENT_TYPE", "ID");
         verify(deleteRequestBuilder, times(1)).execute();
+    }
+
+    @Test
+    public void testDeleteIndexDocumentsFunction()
+    {
+        TriConsumer<String, String, List<Integer>> deleteIndexDocumentsFunction = searchFunctions.getDeleteIndexDocumentsFunction();
+        assertThat("Function is null.", deleteIndexDocumentsFunction, not(nullValue()));
+        assertThat("Delete index documents function is not an instance of TriConsumer.", deleteIndexDocumentsFunction, instanceOf(TriConsumer.class));
+
+        BulkRequestBuilder bulkRequestBuilder = mock(BulkRequestBuilder.class);
+        DeleteRequestBuilder deleteRequestBuilder = mock(DeleteRequestBuilder.class);
+        BulkResponse bulkResponse = mock(BulkResponse.class);
+
+        // Mock the call to external methods
+        when(transportClient.prepareBulk()).thenReturn(bulkRequestBuilder);
+        when(transportClient.prepareDelete("INDEX_NAME", "DOCUMENT_TYPE", "1")).thenReturn(deleteRequestBuilder);
+        when(bulkRequestBuilder.get()).thenReturn(bulkResponse);
+        when(bulkResponse.hasFailures()).thenReturn(false);
+
+        // Call the method under test
+        List<Integer> businessObjectDefinitionIds = new ArrayList<>();
+        businessObjectDefinitionIds.add(1);
+        deleteIndexDocumentsFunction.accept("INDEX_NAME", "DOCUMENT_TYPE", businessObjectDefinitionIds);
+
+        // Verify the calls to external methods
+        verify(transportClient, times(1)).prepareBulk();
+        verify(transportClient, times(1)).prepareDelete("INDEX_NAME", "DOCUMENT_TYPE", "1");
+        verify(bulkRequestBuilder, times(1)).get();
+        verify(bulkResponse, times(1)).hasFailures();
+    }
+
+    @Test
+    public void testDeleteIndexDocumentsFunctionWithFailures()
+    {
+        TriConsumer<String, String, List<Integer>> deleteIndexDocumentsFunction = searchFunctions.getDeleteIndexDocumentsFunction();
+        assertThat("Function is null.", deleteIndexDocumentsFunction, not(nullValue()));
+        assertThat("Delete index documents function is not an instance of TriConsumer.", deleteIndexDocumentsFunction, instanceOf(TriConsumer.class));
+
+        BulkRequestBuilder bulkRequestBuilder = mock(BulkRequestBuilder.class);
+        DeleteRequestBuilder deleteRequestBuilder = mock(DeleteRequestBuilder.class);
+        BulkResponse bulkResponse = mock(BulkResponse.class);
+
+        // Mock the call to external methods
+        when(transportClient.prepareBulk()).thenReturn(bulkRequestBuilder);
+        when(transportClient.prepareDelete("INDEX_NAME", "DOCUMENT_TYPE", "1")).thenReturn(deleteRequestBuilder);
+        when(bulkRequestBuilder.get()).thenReturn(bulkResponse);
+        when(bulkResponse.hasFailures()).thenReturn(true);
+
+        // Call the method under test
+        List<Integer> businessObjectDefinitionIds = new ArrayList<>();
+        businessObjectDefinitionIds.add(1);
+        deleteIndexDocumentsFunction.accept("INDEX_NAME", "DOCUMENT_TYPE", businessObjectDefinitionIds);
+
+        // Verify the calls to external methods
+        verify(transportClient, times(1)).prepareBulk();
+        verify(transportClient, times(1)).prepareDelete("INDEX_NAME", "DOCUMENT_TYPE", "1");
+        verify(bulkRequestBuilder, times(1)).get();
+        verify(bulkResponse, times(1)).hasFailures();
     }
 
     @Test
@@ -413,25 +538,40 @@ public class ElasticsearchFunctionsTest
         SearchRequestBuilder searchRequestBuilder = mock(SearchRequestBuilder.class);
         SearchRequestBuilder searchRequestBuilderWithTypes = mock(SearchRequestBuilder.class);
         SearchRequestBuilder searchRequestBuilderWithQuery = mock(SearchRequestBuilder.class);
+        SearchRequestBuilder searchRequestBuilderWithScroll = mock(SearchRequestBuilder.class);
+        SearchRequestBuilder searchRequestBuilderWithSize = mock(SearchRequestBuilder.class);
         SearchResponse searchResponse = mock(SearchResponse.class);
         SearchHits searchHits = mock(SearchHits.class);
         SearchHit searchHit1 = mock(SearchHit.class);
         SearchHit searchHit2 = mock(SearchHit.class);
+        SearchScrollRequestBuilder searchScrollRequestBuilder = mock(SearchScrollRequestBuilder.class);
         SearchHit[] searchHitArray = new SearchHit[2];
         searchHitArray[0] = searchHit1;
         searchHitArray[1] = searchHit2;
+        SearchResponse searchResponseScroll = mock(SearchResponse.class);
+        SearchHits searchHitsScroll = mock(SearchHits.class);
+        SearchHit[] searchHitArrayScroll = new SearchHit[0];
 
         @SuppressWarnings("unchecked")
         ListenableActionFuture<SearchResponse> listenableActionFuture = mock(ListenableActionFuture.class);
+        @SuppressWarnings("unchecked")
+        ListenableActionFuture<SearchResponse> listenableActionFutureScroll = mock(ListenableActionFuture.class);
 
         // Mock the call to external methods
         when(transportClient.prepareSearch("INDEX_NAME")).thenReturn(searchRequestBuilder);
         when(searchRequestBuilder.setTypes("DOCUMENT_TYPE")).thenReturn(searchRequestBuilderWithTypes);
         when(searchRequestBuilderWithTypes.setQuery(any())).thenReturn(searchRequestBuilderWithQuery);
-        when(searchRequestBuilderWithQuery.execute()).thenReturn(listenableActionFuture);
+        when(searchRequestBuilderWithQuery.setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME))).thenReturn(searchRequestBuilderWithScroll);
+        when(searchRequestBuilderWithScroll.setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE)).thenReturn(searchRequestBuilderWithSize);
+        when(searchRequestBuilder.execute()).thenReturn(listenableActionFuture);
         when(listenableActionFuture.actionGet()).thenReturn(searchResponse);
         when(searchResponse.getHits()).thenReturn(searchHits);
         when(searchHits.hits()).thenReturn(searchHitArray);
+        when(transportClient.prepareSearchScroll(any())).thenReturn(searchScrollRequestBuilder);
+        when(searchScrollRequestBuilder.execute()).thenReturn(listenableActionFutureScroll);
+        when(listenableActionFutureScroll.actionGet()).thenReturn(searchResponseScroll);
+        when(searchResponseScroll.getHits()).thenReturn(searchHitsScroll);
+        when(searchHitsScroll.hits()).thenReturn(searchHitArrayScroll);
 
         // Call the method under test
         List<String> idsInIndex = idsInIndexFunction.apply("INDEX_NAME", "DOCUMENT_TYPE");
@@ -442,8 +582,74 @@ public class ElasticsearchFunctionsTest
         verify(transportClient, times(1)).prepareSearch("INDEX_NAME");
         verify(searchRequestBuilder, times(1)).setTypes("DOCUMENT_TYPE");
         verify(searchRequestBuilderWithTypes, times(1)).setQuery(any());
-        verify(searchRequestBuilderWithQuery, times(1)).execute();
+        verify(searchRequestBuilderWithQuery, times(1)).setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME));
+        verify(searchRequestBuilderWithScroll, times(1)).setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE);
+        verify(searchRequestBuilder, times(1)).execute();
         verify(listenableActionFuture, times(1)).actionGet();
         verify(searchResponse, times(1)).getHits();
+        verify(searchHits, times(1)).hits();
+        verify(transportClient, times(1)).prepareSearchScroll(any());
+        verify(searchScrollRequestBuilder, times(1)).execute();
+        verify(listenableActionFutureScroll, times(1)).actionGet();
+        verify(searchResponseScroll, times(1)).getHits();
+        verify(searchHitsScroll, times(1)).hits();
+    }
+
+    @Test
+    public void testUpdateIndexDocumentsFunction()
+    {
+        TriConsumer<String, String, Map<String, String>> updateIndexDocumentsFunction = searchFunctions.getUpdateIndexDocumentsFunction();
+        assertThat("Function is null.", updateIndexDocumentsFunction, not(nullValue()));
+        assertThat("Create index documents function is not an instance of TriConsumer.", updateIndexDocumentsFunction, instanceOf(TriConsumer.class));
+
+        BulkRequestBuilder bulkRequestBuilder = mock(BulkRequestBuilder.class);
+        UpdateRequestBuilder updateRequestBuilder = mock(UpdateRequestBuilder.class);
+        BulkResponse bulkResponse = mock(BulkResponse.class);
+
+        // Mock the call to external methods
+        when(transportClient.prepareBulk()).thenReturn(bulkRequestBuilder);
+        when(transportClient.prepareUpdate("INDEX_NAME", "DOCUMENT_TYPE", "1")).thenReturn(updateRequestBuilder);
+        when(bulkRequestBuilder.get()).thenReturn(bulkResponse);
+        when(bulkResponse.hasFailures()).thenReturn(false);
+
+        // Call the method under test
+        Map<String, String> documentMap = new HashMap<>();
+        documentMap.put("1", "JSON");
+        updateIndexDocumentsFunction.accept("INDEX_NAME", "DOCUMENT_TYPE", documentMap);
+
+        // Verify the calls to external methods
+        verify(transportClient, times(1)).prepareBulk();
+        verify(transportClient, times(1)).prepareUpdate("INDEX_NAME", "DOCUMENT_TYPE", "1");
+        verify(bulkRequestBuilder, times(1)).get();
+        verify(bulkResponse, times(1)).hasFailures();
+    }
+
+    @Test
+    public void testUpdateIndexDocumentsFunctionWithFailures()
+    {
+        TriConsumer<String, String, Map<String, String>> updateIndexDocumentsFunction = searchFunctions.getUpdateIndexDocumentsFunction();
+        assertThat("Function is null.", updateIndexDocumentsFunction, not(nullValue()));
+        assertThat("Create index documents function is not an instance of TriConsumer.", updateIndexDocumentsFunction, instanceOf(TriConsumer.class));
+
+        BulkRequestBuilder bulkRequestBuilder = mock(BulkRequestBuilder.class);
+        UpdateRequestBuilder updateRequestBuilder = mock(UpdateRequestBuilder.class);
+        BulkResponse bulkResponse = mock(BulkResponse.class);
+
+        // Mock the call to external methods
+        when(transportClient.prepareBulk()).thenReturn(bulkRequestBuilder);
+        when(transportClient.prepareUpdate("INDEX_NAME", "DOCUMENT_TYPE", "1")).thenReturn(updateRequestBuilder);
+        when(bulkRequestBuilder.get()).thenReturn(bulkResponse);
+        when(bulkResponse.hasFailures()).thenReturn(true);
+
+        // Call the method under test
+        Map<String, String> documentMap = new HashMap<>();
+        documentMap.put("1", "JSON");
+        updateIndexDocumentsFunction.accept("INDEX_NAME", "DOCUMENT_TYPE", documentMap);
+
+        // Verify the calls to external methods
+        verify(transportClient, times(1)).prepareBulk();
+        verify(transportClient, times(1)).prepareUpdate("INDEX_NAME", "DOCUMENT_TYPE", "1");
+        verify(bulkRequestBuilder, times(1)).get();
+        verify(bulkResponse, times(1)).hasFailures();
     }
 }

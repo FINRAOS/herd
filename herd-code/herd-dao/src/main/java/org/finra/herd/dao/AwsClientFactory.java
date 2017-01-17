@@ -16,6 +16,7 @@
 package org.finra.herd.dao;
 
 import com.amazonaws.ClientConfiguration;
+import com.amazonaws.auth.BasicSessionCredentials;
 import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.elasticmapreduce.AmazonElasticMapReduceClient;
 import org.apache.commons.lang3.StringUtils;
@@ -31,7 +32,7 @@ public class AwsClientFactory
 {
     @Autowired
     private RetryPolicyFactory retryPolicyFactory;
-    
+
     /**
      * Create the EMR client with the given proxy and access key details.
      *
@@ -42,7 +43,6 @@ public class AwsClientFactory
     @Cacheable(DaoSpringModuleConfig.HERD_CACHE_NAME)
     public AmazonElasticMapReduceClient getEmrClient(AwsParamsDto awsParamsDto)
     {
-
         ClientConfiguration clientConfiguration = new ClientConfiguration().withRetryPolicy(retryPolicyFactory.getRetryPolicy());
 
         // Create an EMR client with HTTP proxy information.
@@ -51,10 +51,20 @@ public class AwsClientFactory
             clientConfiguration.withProxyHost(awsParamsDto.getHttpProxyHost()).withProxyPort(awsParamsDto.getHttpProxyPort());
         }
 
-        // Return the client.
-        return new AmazonElasticMapReduceClient(clientConfiguration);
+        // If specified, use the AWS credentials passed in.
+        if (StringUtils.isNotBlank(awsParamsDto.getAwsAccessKeyId()))
+        {
+            return new AmazonElasticMapReduceClient(
+                new BasicSessionCredentials(awsParamsDto.getAwsAccessKeyId(), awsParamsDto.getAwsSecretKey(), awsParamsDto.getSessionToken()),
+                clientConfiguration);
+        }
+        // Otherwise, use the default AWS credentials provider chain.
+        else
+        {
+            return new AmazonElasticMapReduceClient(clientConfiguration);
+        }
     }
-    
+
     /**
      * Create the EC2 client with the given proxy and access key details This is the main AmazonEC2Client object
      *
@@ -73,7 +83,17 @@ public class AwsClientFactory
             clientConfiguration.withProxyHost(awsParamsDto.getHttpProxyHost()).withProxyPort(awsParamsDto.getHttpProxyPort());
         }
 
-        // Return the client.
-        return new AmazonEC2Client(clientConfiguration);
+        // If specified, use the AWS credentials passed in.
+        if (StringUtils.isNotBlank(awsParamsDto.getAwsAccessKeyId()))
+        {
+            return new AmazonEC2Client(
+                new BasicSessionCredentials(awsParamsDto.getAwsAccessKeyId(), awsParamsDto.getAwsSecretKey(), awsParamsDto.getSessionToken()),
+                clientConfiguration);
+        }
+        // Otherwise, use the default AWS credentials provider chain.
+        else
+        {
+            return new AmazonEC2Client(clientConfiguration);
+        }
     }
 }

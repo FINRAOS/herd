@@ -15,6 +15,8 @@
 */
 package org.finra.herd.service.impl;
 
+import static org.finra.herd.model.dto.SearchIndexUpdateDto.SEARCH_INDEX_UPDATE_TYPE_UPDATE;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -29,9 +31,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import org.finra.herd.core.HerdDateUtils;
+import org.finra.herd.dao.BusinessObjectDefinitionDao;
 import org.finra.herd.dao.TagDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
+import org.finra.herd.model.annotation.PublishJmsMessages;
 import org.finra.herd.model.api.xml.Tag;
 import org.finra.herd.model.api.xml.TagChild;
 import org.finra.herd.model.api.xml.TagCreateRequest;
@@ -48,6 +52,7 @@ import org.finra.herd.model.jpa.TagTypeEntity;
 import org.finra.herd.service.SearchableService;
 import org.finra.herd.service.TagService;
 import org.finra.herd.service.helper.AlternateKeyHelper;
+import org.finra.herd.service.helper.SearchIndexUpdateHelper;
 import org.finra.herd.service.helper.TagDaoHelper;
 import org.finra.herd.service.helper.TagHelper;
 import org.finra.herd.service.helper.TagTypeDaoHelper;
@@ -73,6 +78,12 @@ public class TagServiceImpl implements TagService, SearchableService
 
     @Autowired
     private AlternateKeyHelper alternateKeyHelper;
+
+    @Autowired
+    private BusinessObjectDefinitionDao businessObjectDefinitionDao;
+
+    @Autowired
+    private SearchIndexUpdateHelper searchIndexUpdateHelper;
 
     @Autowired
     private TagDao tagDao;
@@ -229,6 +240,7 @@ public class TagServiceImpl implements TagService, SearchableService
         return new TagSearchResponse(tags);
     }
 
+    @PublishJmsMessages
     @Override
     public Tag updateTag(TagKey tagKey, TagUpdateRequest tagUpdateRequest)
     {
@@ -261,6 +273,12 @@ public class TagServiceImpl implements TagService, SearchableService
 
         // Update and persist the tag entity.
         updateTagEntity(tagEntity, tagUpdateRequest, parentTagEntity);
+
+        // Notify the search index that a business object definition must be updated.
+        List<TagEntity> tagEntities = new ArrayList<>();
+        tagEntities.add(tagEntity);
+        searchIndexUpdateHelper.modifyBusinessObjectDefinitionsInSearchIndex(businessObjectDefinitionDao.getBusinessObjectDefinitions(tagEntities),
+            SEARCH_INDEX_UPDATE_TYPE_UPDATE);
 
         // Create and return the tag object from the tag entity.
         return createTagFromEntity(tagEntity);

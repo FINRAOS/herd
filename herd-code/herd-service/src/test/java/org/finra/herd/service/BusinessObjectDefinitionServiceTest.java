@@ -1027,6 +1027,24 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
     }
 
     @Test
+    public void testGetBusinessObjectDefinitionsNoParameters() throws Exception
+    {
+        // Create and persist business object definition entities.
+        for (BusinessObjectDefinitionKey key : businessObjectDefinitionDaoTestHelper.getTestBusinessObjectDefinitionKeys())
+        {
+            businessObjectDefinitionDaoTestHelper
+                .createBusinessObjectDefinitionEntity(key.getNamespace(), key.getBusinessObjectDefinitionName(), DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
+                    NO_ATTRIBUTES);
+        }
+
+        // Retrieve a list of business object definition keys for the specified namespace.
+        BusinessObjectDefinitionKeys resultKeys = businessObjectDefinitionService.getBusinessObjectDefinitions();
+
+        // Validate the returned object.
+        assertEquals(businessObjectDefinitionDaoTestHelper.getExpectedBusinessObjectDefinitionKeys(), resultKeys.getBusinessObjectDefinitionKeys());
+    }
+
+    @Test
     public void testGetBusinessObjectDefinitionsTrimParameters()
     {
         // Create and persist business object definition entities.

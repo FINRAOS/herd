@@ -42,6 +42,7 @@ import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.EmrClusterDefinition;
 import org.finra.herd.model.api.xml.InstanceDefinition;
 import org.finra.herd.model.api.xml.MasterInstanceDefinition;
+import org.finra.herd.model.dto.AwsParamsDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.Ec2PriceDto;
 import org.finra.herd.model.dto.EmrClusterAlternateKeyDto;
@@ -61,6 +62,9 @@ public class EmrPricingHelper extends AwsHelper
     private Ec2Dao ec2Dao;
 
     @Autowired
+    private EmrVpcPricingStateFormatter emrVpcPricingStateFormatter;
+
+    @Autowired
     private HerdStringHelper herdStringHelper;
 
     @Autowired
@@ -68,9 +72,6 @@ public class EmrPricingHelper extends AwsHelper
 
     @Autowired
     private OnDemandPriceDao onDemandPriceDao;
-
-    @Autowired
-    private EmrVpcPricingStateFormatter emrVpcPricingStateFormatter;
 
     /**
      * Finds the best price for each master and core instances based on the subnets and master and core instance search parameters given in the definition.
@@ -83,10 +84,13 @@ public class EmrPricingHelper extends AwsHelper
      * replaced by a single subnet ID.
      * <p/>
      * The definition's instanceMaxSearchPrice and instanceOnDemandThreshold will be removed by this operation.
+     *
      * @param emrClusterAlternateKeyDto EMR cluster alternate key
-     * @param emrClusterDefinition The EMR cluster definition with search criteria, and the definition that will be updated.
+     * @param emrClusterDefinition The EMR cluster definition with search criteria, and the definition that will be updated
+     * @param awsParamsDto the AWS related parameters for access/secret keys and proxy details
      */
-    public void updateEmrClusterDefinitionWithBestPrice(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, EmrClusterDefinition emrClusterDefinition)
+    public void updateEmrClusterDefinitionWithBestPrice(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, EmrClusterDefinition emrClusterDefinition,
+        AwsParamsDto awsParamsDto)
     {
         EmrVpcPricingState emrVpcPricingState = new EmrVpcPricingState();
 
@@ -94,7 +98,7 @@ public class EmrPricingHelper extends AwsHelper
         int totalInstanceCount = getTotalInstanceCount(emrClusterDefinition);
 
         // Get the subnet information
-        List<Subnet> subnets = getSubnets(emrClusterDefinition);
+        List<Subnet> subnets = getSubnets(emrClusterDefinition, awsParamsDto);
         for (Subnet subnet : subnets)
         {
             emrVpcPricingState.getSubnetAvailableIpAddressCounts().put(subnet.getSubnetId(), subnet.getAvailableIpAddressCount());
@@ -104,15 +108,14 @@ public class EmrPricingHelper extends AwsHelper
 
         if (subnets.isEmpty())
         {
-            LOGGER.info(String.format(
-                "Insufficient IP availability. namespace=\"%s\" emrClusterDefinitionName=\"%s\" emrClusterName=\"%s\" "
-                    + "totalRequestedInstanceCount=%s emrVpcPricingState=%s",
-                emrClusterAlternateKeyDto.getNamespace(), emrClusterAlternateKeyDto.getEmrClusterDefinitionName(),
-                emrClusterAlternateKeyDto.getEmrClusterName(), totalInstanceCount, jsonHelper.objectToJson(emrVpcPricingState)));
+            LOGGER.info(String.format("Insufficient IP availability. namespace=\"%s\" emrClusterDefinitionName=\"%s\" emrClusterName=\"%s\" " +
+                "totalRequestedInstanceCount=%s emrVpcPricingState=%s", emrClusterAlternateKeyDto.getNamespace(),
+                emrClusterAlternateKeyDto.getEmrClusterDefinitionName(), emrClusterAlternateKeyDto.getEmrClusterName(), totalInstanceCount,
+                jsonHelper.objectToJson(emrVpcPricingState)));
             throw new ObjectNotFoundException(String.format(
-                "There are no subnets in the current VPC which have sufficient IP addresses available to run your "
-                    + "clusters. Try expanding the list of subnets or try again later. requestedInstanceCount=%s%n%s",
-                totalInstanceCount, emrVpcPricingStateFormatter.format(emrVpcPricingState)));
+                "There are no subnets in the current VPC which have sufficient IP addresses available to run your " +
+                    "clusters. Try expanding the list of subnets or try again later. requestedInstanceCount=%s%n%s", totalInstanceCount,
+                emrVpcPricingStateFormatter.format(emrVpcPricingState)));
         }
 
         // Best prices are accumulated in this list
@@ -140,7 +143,7 @@ public class EmrPricingHelper extends AwsHelper
         }
 
         // Get AZs for the subnets
-        for (AvailabilityZone availabilityZone : getAvailabilityZones(subnets))
+        for (AvailabilityZone availabilityZone : getAvailabilityZones(subnets, awsParamsDto))
         {
             // Create a mapping of instance types to prices for more efficient, in-memory lookup
             Map<String, BigDecimal> instanceTypeSpotPrices = null;
@@ -150,7 +153,7 @@ public class EmrPricingHelper extends AwsHelper
             // when selecting the lowest price.
             try
             {
-                instanceTypeSpotPrices = getInstanceTypeSpotPrices(availabilityZone, requestedInstanceTypes);
+                instanceTypeSpotPrices = getInstanceTypeSpotPrices(availabilityZone, requestedInstanceTypes, awsParamsDto);
             }
             catch (ObjectNotFoundException objectNotFoundException)
             {
@@ -201,13 +204,13 @@ public class EmrPricingHelper extends AwsHelper
 
         if (emrClusterPrices.isEmpty())
         {
-            LOGGER.info(String.format(
-                "No subnets which satisfied the best price search criteria. namespace=\"%s\" emrClusterDefinitionName=\"%s\" "
-                    + "emrClusterName=\"%s\" emrVpcPricingState=%s",
-                emrClusterAlternateKeyDto.getNamespace(), emrClusterAlternateKeyDto.getEmrClusterDefinitionName(),
-                emrClusterAlternateKeyDto.getEmrClusterName(), jsonHelper.objectToJson(emrVpcPricingState)));
-            throw new ObjectNotFoundException(String.format("There were no subnets which satisfied your best price search criteria. Try setting the max price "
-                + "or the on-demand threshold to a higher value.%n%s", emrVpcPricingStateFormatter.format(emrVpcPricingState)));
+            LOGGER.info(String.format("No subnets which satisfied the best price search criteria. namespace=\"%s\" emrClusterDefinitionName=\"%s\" " +
+                "emrClusterName=\"%s\" emrVpcPricingState=%s", emrClusterAlternateKeyDto.getNamespace(),
+                emrClusterAlternateKeyDto.getEmrClusterDefinitionName(), emrClusterAlternateKeyDto.getEmrClusterName(),
+                jsonHelper.objectToJson(emrVpcPricingState)));
+            throw new ObjectNotFoundException(String.format(
+                "There were no subnets which satisfied your best price search criteria. Try setting the max price " +
+                    "or the on-demand threshold to a higher value.%n%s", emrVpcPricingStateFormatter.format(emrVpcPricingState)));
         }
 
         // Find the best prices from the result list
@@ -223,9 +226,9 @@ public class EmrPricingHelper extends AwsHelper
     /**
      * Returns the total number of requested instances. Returns the sum of master, core, and task instance counts. Task instance is optional.
      *
-     * @param emrClusterDefinition The EMR cluster definition containing the instance definitions
+     * @param emrClusterDefinition the EMR cluster definition containing the instance definitions
      *
-     * @return the total instance count.
+     * @return the total instance count
      */
     private int getTotalInstanceCount(EmrClusterDefinition emrClusterDefinition)
     {
@@ -252,9 +255,9 @@ public class EmrPricingHelper extends AwsHelper
      * Sets the subnet with the given subnet ID. Removes any maxSearchPrice and onDemandThreshold that were set. Sets the spotPrice only if the given cluster
      * price is a spot.
      *
-     * @param emrClusterDefinition The definition to update
-     * @param bestEmrClusterSubnet The subnet to use
-     * @param bestEmrClusterPrice The EMR pricing information for each instance
+     * @param emrClusterDefinition the definition to update
+     * @param bestEmrClusterSubnet the subnet to use
+     * @param bestEmrClusterPrice the EMR pricing information for each instance
      */
     private void updateInstanceDefinitionsWithBestPrice(EmrClusterDefinition emrClusterDefinition, Subnet bestEmrClusterSubnet,
         EmrClusterPriceDto bestEmrClusterPrice)
@@ -276,9 +279,9 @@ public class EmrPricingHelper extends AwsHelper
     /**
      * Returns the bid price based on the given pricing information. Returns the given price's bid price if the pricing is spot. Returns null otherwise.
      *
-     * @param ec2Price The EC2 pricing information.
+     * @param ec2Price the EC2 pricing information
      *
-     * @return The bid price, or null
+     * @return the bid price, or null
      */
     private BigDecimal getSpotBidPrice(Ec2PriceDto ec2Price)
     {
@@ -295,10 +298,10 @@ public class EmrPricingHelper extends AwsHelper
      * available IP addresses in the subnet. A subnet with more availability is preferred. If multiple subnets have same IP availability, then the result subnet
      * is arbitrarily chosen.
      *
-     * @param availabilityZone The availability zone in which the subnet belongs to
-     * @param subnets The list of subnet to select from
+     * @param availabilityZone the availability zone in which the subnet belongs to
+     * @param subnets the list of subnet to select from
      *
-     * @return The subnet with the most number of available IPs
+     * @return the subnet with the most number of available IPs
      */
     private Subnet getBestSubnetForAvailabilityZone(String availabilityZone, List<Subnet> subnets)
     {
@@ -332,10 +335,10 @@ public class EmrPricingHelper extends AwsHelper
     /**
      * Selects the first element after sorting the list using the given comparator. Returns null if the list is empty.
      *
-     * @param list The list to select from.
-     * @param comparator The comparator to use to sort
+     * @param list the list to select from
+     * @param comparator the comparator to use to sort
      *
-     * @return The first element after sorting, or null
+     * @return the first element after sorting, or null
      */
     private <T> T getTop(List<T> list, Comparator<T> comparator)
     {
@@ -346,9 +349,9 @@ public class EmrPricingHelper extends AwsHelper
     /**
      * Selects the EMR cluster pricing with the lowest total cost. Returns null if the given list is empty
      *
-     * @param emrClusterPrices The list of pricing to select from.
+     * @param emrClusterPrices the list of pricing to select from
      *
-     * @return The pricing with the lowest total cost.
+     * @return the pricing with the lowest total cost
      */
     private EmrClusterPriceDto getEmrClusterPriceWithLowestTotalCost(List<EmrClusterPriceDto> emrClusterPrices)
     {
@@ -370,9 +373,9 @@ public class EmrPricingHelper extends AwsHelper
      * Gets the total cost of the given pricing. The total cost is the sum of master, core, and task prices - each multiplied by their instance count. Task
      * price is optional and will be ignored if not specified.
      *
-     * @param emrClusterPrice The pricing information
+     * @param emrClusterPrice the pricing information
      *
-     * @return The total cost
+     * @return the total cost
      */
     private BigDecimal getEmrClusterTotalCost(EmrClusterPriceDto emrClusterPrice)
     {
@@ -399,8 +402,8 @@ public class EmrPricingHelper extends AwsHelper
     /**
      * Updates the given list of subnets to remove subnets with number of available IPs less than the given value.
      *
-     * @param subnets List of subnets
-     * @param availableIps The number of available IPs to filter by
+     * @param subnets the list of subnets
+     * @param availableIps the number of available IPs to filter by
      */
     private void removeSubnetsWithAvailableIpsLessThan(List<Subnet> subnets, int availableIps)
     {
@@ -418,12 +421,12 @@ public class EmrPricingHelper extends AwsHelper
     /**
      * Creates a new {@link EmrClusterPriceDto} object from the given parameters.
      *
-     * @param availabilityZone The AZ
-     * @param masterPrice The master instance's price
-     * @param corePrice The core instance's price
-     * @param taskPrice The task instance's price
+     * @param availabilityZone the AZ
+     * @param masterPrice the master instance's price
+     * @param corePrice the core instance's price
+     * @param taskPrice the task instance's price
      *
-     * @return A new {@link EmrClusterPriceDto}
+     * @return the new {@link EmrClusterPriceDto}
      */
     private EmrClusterPriceDto createEmrClusterPrice(AvailabilityZone availabilityZone, Ec2PriceDto masterPrice, Ec2PriceDto corePrice, Ec2PriceDto taskPrice)
     {
@@ -442,11 +445,11 @@ public class EmrPricingHelper extends AwsHelper
      * spot, on-demand prices, maxSearchPrice, and optionally, onDemandThreshold to return the best result. This may return null if neither spot or on-demand
      * price matched the given criteria. If neither spotBidPrice or maxSearchPrice is set, returns the pricing as the on-demand price.
      *
-     * @param spotPrice The current spot price for the instance type
-     * @param onDemandPrice The current on-demand price for the instance type
-     * @param instanceDefinition The instance definition containing search criteria
+     * @param spotPrice the current spot price for the instance type
+     * @param onDemandPrice the current on-demand price for the instance type
+     * @param instanceDefinition the instance definition containing search criteria
      *
-     * @return A new {@link Ec2PriceDto} with the pricing information
+     * @return the new {@link Ec2PriceDto} with the pricing information
      */
     private Ec2PriceDto getBestInstancePrice(BigDecimal spotPrice, BigDecimal onDemandPrice, InstanceDefinition instanceDefinition)
     {
@@ -523,9 +526,9 @@ public class EmrPricingHelper extends AwsHelper
     /**
      * Returns the core instance definition.
      *
-     * @param emrClusterDefinition The EMR cluster definition
+     * @param emrClusterDefinition the EMR cluster definition
      *
-     * @return The core instance definition.
+     * @return the core instance definition
      */
     private InstanceDefinition getCoreInstanceDefinition(EmrClusterDefinition emrClusterDefinition)
     {
@@ -540,9 +543,9 @@ public class EmrPricingHelper extends AwsHelper
     /**
      * Returns the task instance definition. Returns null if no task definition is specified.
      *
-     * @param emrClusterDefinition The EMR cluster definition
+     * @param emrClusterDefinition the EMR cluster definition
      *
-     * @return The task instance definition, or null
+     * @return the task instance definition, or null
      */
     private InstanceDefinition getTaskInstanceDefinition(EmrClusterDefinition emrClusterDefinition)
     {
@@ -553,9 +556,9 @@ public class EmrPricingHelper extends AwsHelper
      * Returns the master instance definition. Copies the {@link MasterInstanceDefinition} to a {@link InstanceDefinition} to keep the class type consistent
      * with the core instance.
      *
-     * @param emrClusterDefinition The EMR cluster definition
+     * @param emrClusterDefinition the EMR cluster definition
      *
-     * @return The master instance definition.
+     * @return the master instance definition
      */
     private InstanceDefinition getMasterInstanceDefinition(EmrClusterDefinition emrClusterDefinition)
     {
@@ -574,10 +577,10 @@ public class EmrPricingHelper extends AwsHelper
      * Returns a mapping of instance types to on-demand prices for the given AZ and instance types. The on-demand prices are retrieved from database
      * configurations. The on-demand prices are looked up by the AZ's region name.
      *
-     * @param availabilityZone The availability zone of the on-demand instances.
-     * @param instanceTypes The sizes of the on-demand instances.
+     * @param availabilityZone the availability zone of the on-demand instances
+     * @param instanceTypes the sizes of the on-demand instances
      *
-     * @return A map of instance type to on-demand price.
+     * @return the map of instance type to on-demand price
      * @throws ObjectNotFoundException when any of the instance type was not found in the given region
      */
     private Map<String, BigDecimal> getInstanceTypeOnDemandPrices(AvailabilityZone availabilityZone, Set<String> instanceTypes)
@@ -604,16 +607,17 @@ public class EmrPricingHelper extends AwsHelper
      * <p/>
      * This method also validates that the given instance types are real instance types supported by AWS.
      *
-     * @param availabilityZone The AZ of the spot instances.
-     * @param instanceTypes The size of the spot instances.
+     * @param availabilityZone the AZ of the spot instances
+     * @param instanceTypes the size of the spot instances
+     * @param awsParamsDto the AWS related parameters for access/secret keys and proxy details
      *
-     * @return A mapping of instance type to spot prices.
+     * @return the mapping of instance type to spot prices
      * @throws ObjectNotFoundException when any of the instance type does not exist in AWS
      */
-    private Map<String, BigDecimal> getInstanceTypeSpotPrices(AvailabilityZone availabilityZone, Set<String> instanceTypes)
+    private Map<String, BigDecimal> getInstanceTypeSpotPrices(AvailabilityZone availabilityZone, Set<String> instanceTypes, AwsParamsDto awsParamsDto)
     {
         List<String> productDescriptions = herdStringHelper.getDelimitedConfigurationValue(ConfigurationValue.EMR_SPOT_PRICE_HISTORY_PRODUCT_DESCRIPTIONS);
-        List<SpotPrice> spotPrices = ec2Dao.getLatestSpotPrices(availabilityZone.getZoneName(), instanceTypes, productDescriptions, getAwsParamsDto());
+        List<SpotPrice> spotPrices = ec2Dao.getLatestSpotPrices(availabilityZone.getZoneName(), instanceTypes, productDescriptions, awsParamsDto);
 
         Map<String, BigDecimal> instanceTypeSpotPrices = new HashMap<>();
         for (SpotPrice spotPrice : spotPrices)
@@ -637,13 +641,14 @@ public class EmrPricingHelper extends AwsHelper
     /**
      * Returns a list of AZ's which the given list of subnets belong to.
      *
-     * @param subnets List of subnets in the AZ
+     * @param subnets the list of subnets in the AZ
+     * @param awsParamsDto the AWS related parameters for access/secret keys and proxy details
      *
-     * @return A list of AZ's
+     * @return the list of AZ's
      */
-    private List<AvailabilityZone> getAvailabilityZones(List<Subnet> subnets)
+    private List<AvailabilityZone> getAvailabilityZones(List<Subnet> subnets, AwsParamsDto awsParamsDto)
     {
-        return ec2Dao.getAvailabilityZonesForSubnetIds(subnets, getAwsParamsDto());
+        return ec2Dao.getAvailabilityZonesForSubnetIds(subnets, awsParamsDto);
     }
 
     /**
@@ -651,11 +656,12 @@ public class EmrPricingHelper extends AwsHelper
      * subnet from AWS, and returns the list. If the subnet is not specified or empty, all subnets in the current VPC is returned. This is AWS's default
      * behavior. All subnet IDs will be trimmed, and ignored if empty.
      *
-     * @param emrClusterDefinition The definition specifying the subnet IDs
+     * @param emrClusterDefinition the definition specifying the subnet IDs
+     * @param awsParamsDto the AWS related parameters for access/secret keys and proxy details
      *
-     * @return List of subnets
+     * @return the list of subnets
      */
-    private List<Subnet> getSubnets(EmrClusterDefinition emrClusterDefinition)
+    private List<Subnet> getSubnets(EmrClusterDefinition emrClusterDefinition, AwsParamsDto awsParamsDto)
     {
         String definitionSubnetId = emrClusterDefinition.getSubnetId();
 
@@ -665,16 +671,16 @@ public class EmrPricingHelper extends AwsHelper
             subnetIds = herdStringHelper.splitAndTrim(definitionSubnetId, ",");
         }
 
-        return ec2Dao.getSubnets(subnetIds, getAwsParamsDto());
+        return ec2Dao.getSubnets(subnetIds, awsParamsDto);
     }
 
     /**
      * Returns the total cost per hour to run the requested number of instances for the given price. Returns the instance price multiplied by the number of
      * instances.
      *
-     * @param ec2Price The EC2 pricing information
+     * @param ec2Price the EC2 pricing information
      *
-     * @return USD per hour
+     * @return the USD per hour
      */
     public BigDecimal getTotalCost(Ec2PriceDto ec2Price)
     {

@@ -195,7 +195,7 @@ public class BusinessObjectDefinitionRestController extends HerdBaseController
      *
      * @return the business object definition index response
      */
-    @RequestMapping(value = "/businessObjectDefinitions/index", method = RequestMethod.GET, consumes = {"application/xml", "application/json"})
+    @RequestMapping(value = "/businessObjectDefinitions/index", method = RequestMethod.GET)
     @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DEFINITIONS_INDEX_GET)
     public BusinessObjectDefinitionIndexResponse indexBusinessObjectDefinitions()
     {
@@ -208,7 +208,7 @@ public class BusinessObjectDefinitionRestController extends HerdBaseController
      *
      * @return the business object definition validate index response
      */
-    @RequestMapping(value = "/businessObjectDefinitions/validateindex", method = RequestMethod.GET, consumes = {"application/xml", "application/json"})
+    @RequestMapping(value = "/businessObjectDefinitions/validateindex", method = RequestMethod.GET)
     @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DEFINITIONS_VALIDATE_INDEX_GET)
     public BusinessObjectDefinitionValidateResponse validateIndexBusinessObjectDefinitions()
     {

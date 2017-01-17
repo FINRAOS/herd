@@ -70,6 +70,25 @@ public class BusinessObjectDefinitionDaoImpl extends AbstractHerdDao implements 
     }
 
     @Override
+    public List<BusinessObjectDefinitionEntity> getAllBusinessObjectDefinitionsByIds(List<Integer> ids)
+    {
+        // Create the criteria builder and a tuple style criteria query.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<BusinessObjectDefinitionEntity> criteria = builder.createQuery(BusinessObjectDefinitionEntity.class);
+
+        // The criteria root is the business object definition.
+        Root<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityRoot = criteria.from(BusinessObjectDefinitionEntity.class);
+
+        // Create the standard restrictions (i.e. the standard where clauses).
+        Expression<Integer> expression = businessObjectDefinitionEntityRoot.get(BusinessObjectDefinitionEntity_.id);
+        Predicate queryRestriction = expression.in(ids);
+
+        criteria.select(businessObjectDefinitionEntityRoot).where(queryRestriction);
+
+        return entityManager.createQuery(criteria).getResultList();
+    }
+
+    @Override
     public BusinessObjectDefinitionEntity getBusinessObjectDefinitionByKey(BusinessObjectDefinitionKey businessObjectDefinitionKey)
     {
         // Create the criteria builder and the criteria.
@@ -213,6 +232,15 @@ public class BusinessObjectDefinitionDaoImpl extends AbstractHerdDao implements 
         List<Integer> allBusinessObjectDefinitionIdsList = entityManager.createQuery(criteria).getResultList();
         List<Integer> percentageOfBusinessObjectDefinitionIdsList = new ArrayList<>();
 
+        /*
+        * Gets a percentage of all business object definition entities.
+        * The percentage is randomly selected from all the business object definitions.
+        *
+        * For each business object id in the list of all business object definition ids, get a random double value between 0 and 1.
+        * If that value is below the percentage double value, also a number between 0 and 1 (inclusive),
+        * then add the business object id to the list of business object definition ids that will be used to return a random percentage
+        * of business object definition entities retrieved from the database.
+        */
         allBusinessObjectDefinitionIdsList.forEach(id -> {
             if (ThreadLocalRandom.current().nextDouble() < percentage)
             {
@@ -221,24 +249,6 @@ public class BusinessObjectDefinitionDaoImpl extends AbstractHerdDao implements 
         });
 
         return getAllBusinessObjectDefinitionsByIds(percentageOfBusinessObjectDefinitionIdsList);
-    }
-
-    private List<BusinessObjectDefinitionEntity> getAllBusinessObjectDefinitionsByIds(List<Integer> ids)
-    {
-        // Create the criteria builder and a tuple style criteria query.
-        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-        CriteriaQuery<BusinessObjectDefinitionEntity> criteria = builder.createQuery(BusinessObjectDefinitionEntity.class);
-
-        // The criteria root is the business object definition.
-        Root<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityRoot = criteria.from(BusinessObjectDefinitionEntity.class);
-
-        // Create the standard restrictions (i.e. the standard where clauses).
-        Expression<Integer> expression = businessObjectDefinitionEntityRoot.get(BusinessObjectDefinitionEntity_.id);
-        Predicate queryRestriction = expression.in(ids);
-
-        criteria.select(businessObjectDefinitionEntityRoot).where(queryRestriction);
-
-        return entityManager.createQuery(criteria).getResultList();
     }
 
     @Override

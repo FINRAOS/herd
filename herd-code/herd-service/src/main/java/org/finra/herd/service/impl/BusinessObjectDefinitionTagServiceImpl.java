@@ -15,6 +15,8 @@
 */
 package org.finra.herd.service.impl;
 
+import static org.finra.herd.model.dto.SearchIndexUpdateDto.SEARCH_INDEX_UPDATE_TYPE_UPDATE;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,6 +29,7 @@ import org.finra.herd.dao.BusinessObjectDefinitionTagDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.ObjectNotFoundException;
+import org.finra.herd.model.annotation.PublishJmsMessages;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionTag;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionTagCreateRequest;
@@ -39,6 +42,7 @@ import org.finra.herd.model.jpa.TagEntity;
 import org.finra.herd.service.BusinessObjectDefinitionTagService;
 import org.finra.herd.service.helper.BusinessObjectDefinitionDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionHelper;
+import org.finra.herd.service.helper.SearchIndexUpdateHelper;
 import org.finra.herd.service.helper.TagDaoHelper;
 import org.finra.herd.service.helper.TagHelper;
 
@@ -59,11 +63,15 @@ public class BusinessObjectDefinitionTagServiceImpl implements BusinessObjectDef
     private BusinessObjectDefinitionTagDao businessObjectDefinitionTagDao;
 
     @Autowired
+    private SearchIndexUpdateHelper searchIndexUpdateHelper;
+
+    @Autowired
     private TagDaoHelper tagDaoHelper;
 
     @Autowired
     private TagHelper tagHelper;
 
+    @PublishJmsMessages
     @Override
     public BusinessObjectDefinitionTag createBusinessObjectDefinitionTag(BusinessObjectDefinitionTagCreateRequest request)
     {
@@ -90,10 +98,14 @@ public class BusinessObjectDefinitionTagServiceImpl implements BusinessObjectDef
         BusinessObjectDefinitionTagEntity businessObjectDefinitionTagEntity =
             createBusinessObjectDefinitionTagEntity(businessObjectDefinitionEntity, tagEntity);
 
+        // Notify the search index that a business object definition must be updated.
+        searchIndexUpdateHelper.modifyBusinessObjectDefinitionInSearchIndex(businessObjectDefinitionEntity, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
+
         // Create and return the business object definition tag object from the persisted entity.
         return createBusinessObjectDefinitionTagFromEntity(businessObjectDefinitionTagEntity);
     }
 
+    @PublishJmsMessages
     @Override
     public BusinessObjectDefinitionTag deleteBusinessObjectDefinitionTag(BusinessObjectDefinitionTagKey businessObjectDefinitionTagKey)
     {
@@ -105,6 +117,11 @@ public class BusinessObjectDefinitionTagServiceImpl implements BusinessObjectDef
 
         // Delete this business object format.
         businessObjectDefinitionTagDao.delete(businessObjectDefinitionTagEntity);
+
+        // Notify the search index that a business object definition must be updated.
+        searchIndexUpdateHelper.modifyBusinessObjectDefinitionInSearchIndex(
+            businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionTagKey.getBusinessObjectDefinitionKey()),
+            SEARCH_INDEX_UPDATE_TYPE_UPDATE);
 
         // Create and return the business object definition tag object from the deleted entity.
         return createBusinessObjectDefinitionTagFromEntity(businessObjectDefinitionTagEntity);

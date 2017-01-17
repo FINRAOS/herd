@@ -34,6 +34,7 @@ import org.finra.herd.model.api.xml.EmrClusterDefinition;
 import org.finra.herd.model.api.xml.InstanceDefinition;
 import org.finra.herd.model.api.xml.InstanceDefinitions;
 import org.finra.herd.model.api.xml.MasterInstanceDefinition;
+import org.finra.herd.model.dto.AwsParamsDto;
 import org.finra.herd.model.dto.EmrClusterAlternateKeyDto;
 
 /**
@@ -42,11 +43,17 @@ import org.finra.herd.model.dto.EmrClusterAlternateKeyDto;
 public class EmrPricingHelperTest extends AbstractDaoTest
 {
     private static final BigDecimal ONE_UNIT = new BigDecimal("0.00001");
+
     private static final BigDecimal ON_DEMAND = BigDecimal.ONE;
+
     private static final BigDecimal ON_DEMAND_LESS_ONE = ON_DEMAND.subtract(ONE_UNIT);
+
     private static final BigDecimal SPOT_PRICE_LOW = new BigDecimal(MockEc2OperationsImpl.SPOT_PRICE_LOW);
+
     private static final BigDecimal SPOT_PRICE_LOW_LESS_ONE = SPOT_PRICE_LOW.subtract(ONE_UNIT);
+
     private static final BigDecimal SPOT_PRICE_LOW_PLUS_ONE = SPOT_PRICE_LOW.add(ONE_UNIT);
+
     private static final BigDecimal SPOT_PRICE_VERY_HIGH = new BigDecimal(MockEc2OperationsImpl.SPOT_PRICE_VERY_HIGH);
 
     @Autowired
@@ -413,7 +420,7 @@ public class EmrPricingHelperTest extends AbstractDaoTest
 
         assertBestPriceCriteriaRemoved(emrClusterDefinition);
         assertEquals("master instance bid price", SPOT_PRICE_VERY_HIGH,
-                emrClusterDefinition.getInstanceDefinitions().getMasterInstances().getInstanceSpotPrice());
+            emrClusterDefinition.getInstanceDefinitions().getMasterInstances().getInstanceSpotPrice());
         assertEquals("core instance bid price", ON_DEMAND, emrClusterDefinition.getInstanceDefinitions().getCoreInstances().getInstanceSpotPrice());
         assertEquals("task instance bid price", ON_DEMAND, emrClusterDefinition.getInstanceDefinitions().getTaskInstances().getInstanceSpotPrice());
 
@@ -452,7 +459,7 @@ public class EmrPricingHelperTest extends AbstractDaoTest
 
         assertBestPriceCriteriaRemoved(emrClusterDefinition);
         assertEquals("master instance bid price", SPOT_PRICE_VERY_HIGH,
-                emrClusterDefinition.getInstanceDefinitions().getMasterInstances().getInstanceSpotPrice());
+            emrClusterDefinition.getInstanceDefinitions().getMasterInstances().getInstanceSpotPrice());
         assertEquals("core instance bid price", ON_DEMAND, emrClusterDefinition.getInstanceDefinitions().getCoreInstances().getInstanceSpotPrice());
         assertEquals("task instance bid price", ON_DEMAND, emrClusterDefinition.getInstanceDefinitions().getTaskInstances().getInstanceSpotPrice());
 
@@ -494,7 +501,7 @@ public class EmrPricingHelperTest extends AbstractDaoTest
 
         assertBestPriceCriteriaRemoved(emrClusterDefinition);
         assertEquals("master instance bid price", SPOT_PRICE_VERY_HIGH,
-                emrClusterDefinition.getInstanceDefinitions().getMasterInstances().getInstanceSpotPrice());
+            emrClusterDefinition.getInstanceDefinitions().getMasterInstances().getInstanceSpotPrice());
         assertEquals("core instance bid price", ON_DEMAND, emrClusterDefinition.getInstanceDefinitions().getCoreInstances().getInstanceSpotPrice());
         assertEquals("task instance bid price", ON_DEMAND, emrClusterDefinition.getInstanceDefinitions().getTaskInstances().getInstanceSpotPrice());
 
@@ -563,9 +570,8 @@ public class EmrPricingHelperTest extends AbstractDaoTest
     }
 
     /**
-     * Tests case where instance type was not found in the spot list because AWS does not have a
-     * spot price for the given instance type in the given AZ.
-     * But there is another AZ available for that does have a all spot prices available.
+     * Tests case where instance type was not found in the spot list because AWS does not have a spot price for the given instance type in the given AZ. But
+     * there is another AZ available for that does have a all spot prices available.
      */
     @Test
     public void testBestPriceSpotInstanceNotFoundBecauseSpotPriceIsNotAvailable()
@@ -583,7 +589,7 @@ public class EmrPricingHelperTest extends AbstractDaoTest
         InstanceDefinition taskInstanceDefinition = null;
 
         EmrClusterDefinition emrClusterDefinition =
-                updateEmrClusterDefinitionWithBestPrice(subnetId, masterInstanceDefinition, coreInstanceDefinition, taskInstanceDefinition);
+            updateEmrClusterDefinitionWithBestPrice(subnetId, masterInstanceDefinition, coreInstanceDefinition, taskInstanceDefinition);
 
 
         assertBestPriceCriteriaRemoved(emrClusterDefinition);
@@ -848,7 +854,7 @@ public class EmrPricingHelperTest extends AbstractDaoTest
         instanceDefinitions.setTaskInstances(taskInstanceDefinition);
         emrClusterDefinition.setInstanceDefinitions(instanceDefinitions);
 
-        emrPricingHelper.updateEmrClusterDefinitionWithBestPrice(new EmrClusterAlternateKeyDto(), emrClusterDefinition);
+        emrPricingHelper.updateEmrClusterDefinitionWithBestPrice(new EmrClusterAlternateKeyDto(), emrClusterDefinition, new AwsParamsDto());
 
         return emrClusterDefinition;
     }

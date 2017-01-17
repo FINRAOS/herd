@@ -84,7 +84,10 @@ public class StsDaoImpl implements StsDao
         assumeRoleRequest.setRoleSessionName(sessionName);
         assumeRoleRequest.setRoleArn(awsRoleArn);
         assumeRoleRequest.setDurationSeconds(awsRoleDurationSeconds);
-        assumeRoleRequest.setPolicy(policy.toJson());
+        if (policy != null)
+        {
+            assumeRoleRequest.setPolicy(policy.toJson());
+        }
 
         // Get the temporary security credentials.
         AssumeRoleResult assumeRoleResult = stsOperations.assumeRole(awsSecurityTokenServiceClient, assumeRoleRequest);

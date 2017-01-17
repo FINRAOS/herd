@@ -21,7 +21,7 @@
    <parent>
       <groupId>org.finra.herd</groupId>
       <artifactId>herd-code</artifactId>
-      <version>0.34.0-SNAPSHOT</version>
+      <version>0.35.0-SNAPSHOT</version>
    </parent>
 
    <name>herd service</name>
@@ -121,6 +121,33 @@
          <groupId>org.elasticsearch.client</groupId>
          <artifactId>transport</artifactId>
          <version>${elasticsearch.version}</version>
+      </dependency>
+      <dependency>
+         <groupId>com.floragunn</groupId>
+         <artifactId>search-guard-ssl</artifactId>
+         <version>${sgssl.version}</version>
+      </dependency>
+      <dependency>
+         <groupId>org.finra.pet</groupId>
+         <artifactId>jcredstash-fx</artifactId>
+         <version>${jcredstash-fx.version}</version>
+      </dependency>
+      <dependency>
+         <groupId>com.amazonaws</groupId>
+         <artifactId>aws-java-sdk-core</artifactId>
+         <version>${aws.sdk.version}</version>
+         <!-- We are using jcl-over-slf4j so commons-logging isn't needed. -->
+         <exclusions>
+            <exclusion>
+               <groupId>commons-logging</groupId>
+               <artifactId>commons-logging</artifactId>
+            </exclusion>
+         </exclusions>
+      </dependency>
+      <dependency>
+         <groupId>com.amazonaws</groupId>
+         <artifactId>aws-java-sdk</artifactId>
+         <version>${aws.sdk.version}</version>
       </dependency>
 
    </dependencies>

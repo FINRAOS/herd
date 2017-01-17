@@ -1145,8 +1145,8 @@ public class EmrServiceTest extends AbstractServiceTest
 
         // Create a new EMR cluster create request
         EmrClusterCreateRequest request = getNewEmrClusterCreateRequest();
+        emrService.createCluster(request);
         EmrCluster emrCluster = emrService.createCluster(request);
-        emrCluster = emrService.createCluster(request);
 
         // Validate the returned object against the input.
         assertNotNull(emrCluster);
@@ -1160,6 +1160,72 @@ public class EmrServiceTest extends AbstractServiceTest
 
         // should throw if not unique
         validateEmrClusterCreationLogUnique(emrCluster, expectedEmrClusterDefinition);
+    }
+
+    @Test
+    public void testCreateEmrClusterWithAccountId() throws Exception
+    {
+        // Create the namespace entity.
+        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
+
+        // Create a trusting AWS account.
+        trustingAccountDaoTestHelper.createTrustingAccountEntity(AWS_ACCOUNT_ID, AWS_ROLE_ARN);
+
+        String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
+        EmrClusterDefinition expectedEmrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
+        emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME, definitionXml);
+
+        // Create a new EMR cluster create request and add an account id to the EMR cluster definition override.
+        EmrClusterCreateRequest request = getNewEmrClusterCreateRequest();
+        EmrClusterDefinition emrClusterDefinitionOverride = new EmrClusterDefinition();
+        request.setEmrClusterDefinitionOverride(emrClusterDefinitionOverride);
+        emrClusterDefinitionOverride.setAccountId(AWS_ACCOUNT_ID);
+
+        // Create an EMR cluster.
+        EmrCluster emrCluster = emrService.createCluster(request);
+
+        // Update the expected EMR cluster definition with the account id.
+        expectedEmrClusterDefinition.setAccountId(AWS_ACCOUNT_ID);
+
+        // Validate the returned object against the input.
+        assertNotNull(emrCluster);
+        assertTrue(emrCluster.getNamespace().equals(request.getNamespace()));
+        assertTrue(emrCluster.getEmrClusterDefinitionName().equals(request.getEmrClusterDefinitionName()));
+        assertTrue(emrCluster.getEmrClusterName().equals(request.getEmrClusterName()));
+        assertNotNull(emrCluster.getId());
+        assertNull(emrCluster.isDryRun());
+        assertNotNull(emrCluster.getEmrClusterDefinition());
+        assertTrue(emrCluster.isEmrClusterCreated());
+        assertEquals(expectedEmrClusterDefinition, emrCluster.getEmrClusterDefinition());
+
+        validateEmrClusterCreationLogUnique(emrCluster, expectedEmrClusterDefinition);
+    }
+
+    @Test
+    public void testCreateEmrClusterWithAccountIdAccountNoExists() throws Exception
+    {
+        // Create the namespace entity.
+        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
+
+        String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
+        EmrClusterDefinition expectedEmrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
+        emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME, definitionXml);
+
+        // Create a new EMR cluster create request and add an account id to the EMR cluster definition override.
+        EmrClusterCreateRequest emrClusterCreateRequest = getNewEmrClusterCreateRequest();
+        EmrClusterDefinition emrClusterDefinitionOverride = new EmrClusterDefinition();
+        emrClusterCreateRequest.setEmrClusterDefinitionOverride(emrClusterDefinitionOverride);
+        emrClusterDefinitionOverride.setAccountId(AWS_ACCOUNT_ID);
+
+        // Try to create an EMR cluster using a non-existing AWS account.
+        try
+        {
+            emrService.createCluster(emrClusterCreateRequest);
+        }
+        catch (ObjectNotFoundException e)
+        {
+            assertEquals(String.format("Trusting AWS account with id \"%s\" doesn't exist.", AWS_ACCOUNT_ID), e.getMessage());
+        }
     }
 
     /**
