@@ -34,6 +34,7 @@ import org.finra.herd.model.api.xml.JobAction;
 import org.finra.herd.model.api.xml.JobDefinition;
 import org.finra.herd.model.api.xml.NotificationRegistrationKey;
 import org.finra.herd.model.api.xml.Parameter;
+import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
@@ -98,6 +99,7 @@ public class NotificationEventServiceTest extends AbstractServiceTest
                 new Parameter("notification_namespace", NAMESPACE), new Parameter("notification_businessObjectData",
                 jsonHelper.objectToJson(businessObjectDataHelper.createBusinessObjectDataFromEntity(businessObjectDataEntity))),
                 new Parameter("notification_businessObjectFormatUsage", FORMAT_USAGE_CODE),
+                new Parameter(HERD_WORKFLOW_ENVIRONMENT, configurationHelper.getProperty(ConfigurationValue.HERD_ENVIRONMENT)),
                 new Parameter("notification_businessObjectDefinitionNamespace", BDEF_NAMESPACE),
                 new Parameter("notification_newBusinessObjectDataStatus", BDATA_STATUS), new Parameter(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1),
                 new Parameter("notification_businessObjectDataVersion", DATA_VERSION.toString()), new Parameter("notification_name", NOTIFICATION_NAME),
@@ -433,6 +435,7 @@ public class NotificationEventServiceTest extends AbstractServiceTest
                 new Parameter("notification_namespace", NAMESPACE), new Parameter("notification_businessObjectData",
                 jsonHelper.objectToJson(businessObjectDataHelper.createBusinessObjectDataFromEntity(businessObjectDataEntity))),
                 new Parameter("notification_businessObjectFormatUsage", FORMAT_USAGE_CODE),
+                new Parameter(HERD_WORKFLOW_ENVIRONMENT, configurationHelper.getProperty(ConfigurationValue.HERD_ENVIRONMENT)),
                 new Parameter("notification_businessObjectDefinitionNamespace", BDEF_NAMESPACE),
                 new Parameter("notification_newBusinessObjectDataStatus", BusinessObjectDataStatusEntity.VALID),
                 new Parameter(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1), new Parameter("notification_businessObjectDataVersion", DATA_VERSION.toString()),
@@ -488,6 +491,7 @@ public class NotificationEventServiceTest extends AbstractServiceTest
                 new Parameter("notification_namespace", NAMESPACE), new Parameter("notification_businessObjectData",
                 jsonHelper.objectToJson(businessObjectDataHelper.createBusinessObjectDataFromEntity(businessObjectDataEntity))),
                 new Parameter("notification_businessObjectFormatUsage", FORMAT_USAGE_CODE),
+                new Parameter(HERD_WORKFLOW_ENVIRONMENT, configurationHelper.getProperty(ConfigurationValue.HERD_ENVIRONMENT)),
                 new Parameter("notification_businessObjectDefinitionNamespace", BDEF_NAMESPACE), new Parameter(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1),
                 new Parameter("notification_storageUnitEventType", NotificationEventTypeEntity.EventTypesStorageUnit.STRGE_UNIT_STTS_CHG.name()),
                 new Parameter("notification_oldStorageUnitStatus", StorageUnitStatusEntity.DISABLED),
