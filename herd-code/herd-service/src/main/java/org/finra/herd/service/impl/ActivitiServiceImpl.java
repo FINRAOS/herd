@@ -18,6 +18,7 @@ package org.finra.herd.service.impl;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -38,7 +39,9 @@ import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.model.api.xml.JobStatusEnum;
+import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.service.ActivitiService;
 
 /**
@@ -59,6 +62,11 @@ public class ActivitiServiceImpl implements ActivitiService
     @Autowired
     private RuntimeService activitiRuntimeService;
 
+    @Autowired
+    private ConfigurationHelper configurationHelper;
+
+    private static final String HERD_WORKFLOW_ENVIRONMENT = "herd_workflowEnvironment";
+
     @Override
     public ProcessDefinition getProcessDefinitionById(String processDefinitionId)
     {
@@ -68,6 +76,15 @@ public class ActivitiServiceImpl implements ActivitiService
     @Override
     public ProcessInstance startProcessInstanceByProcessDefinitionId(String processDefinitionId, Map<String, Object> variables)
     {
+        String workflowEnvironment = configurationHelper.getProperty(ConfigurationValue.HERD_ENVIRONMENT);
+        if (workflowEnvironment != null)
+        {
+            if (variables == null)
+            {
+                variables = new HashMap<>();
+            }
+        }
+        variables.put(HERD_WORKFLOW_ENVIRONMENT, workflowEnvironment);
         return activitiRuntimeService.startProcessInstanceById(processDefinitionId, variables);
     }
 

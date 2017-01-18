@@ -315,6 +315,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String ZERO_COLUMN_SIZE = "0";
 
+    public static final String HERD_WORKFLOW_ENVIRONMENT = "herd_workflowEnvironment";
+
     @Autowired
     protected SpringProcessEngineConfiguration activitiConfiguration;
 
