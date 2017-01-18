@@ -260,6 +260,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final List<StorageUnit> NO_STORAGE_UNITS = new ArrayList<>();
 
+    public static final Boolean NO_SUPPRESS_SCAN_FOR_UNREGISTERED_SUBPARTITIONS = false;
+
     public static final XMLGregorianCalendar NO_UPDATED_TIME = null;
 
     public static final String NO_USER_ID = null;
@@ -291,6 +293,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final String START_PARTITION_VALUE = "2014-04-02";
 
     public static final String STORAGE_POLICY_SELECTOR_SQS_QUEUE_NAME = "STORAGE_POLICY_SELECTOR_SQS_QUEUE_NAME";
+
+    public static final Boolean SUPPRESS_SCAN_FOR_UNREGISTERED_SUBPARTITIONS = true;
 
     /**
      * The test job name as per the above workflow XML file.
