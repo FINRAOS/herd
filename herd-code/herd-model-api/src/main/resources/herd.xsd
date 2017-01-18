@@ -3538,7 +3538,18 @@
                <xs:documentation>Specifies to perform an exhaustive search to return availability for ALL registered sub-partitions (registered as individual
                   business object data instances) except for the ones with "DELETED" status. This parameter has no impact when business object data version is
                   specified. Default value is false, which means that this endpoint ignores any "not available" registered sub-partitions when it finds at least
-                  one "VALID" registered sub-partitions for a requested business object data partition value
+                  one "VALID" registered sub-partition for a requested business object data partition value.
+                  If true, the call would fail with a "Not Found" (status code 404) error when it finds at least one "not available" (except for "DELETED")
+                  registered sub-partition for a requested business object data partition value
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="suppressScanForUnregisteredSubPartitions" type="xs:boolean" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Specifies to suppress scanning of registered storage files to discover sub-partitions and instead of that relies on business
+                  object data registration information to extract primary and sub-partition (if any) values required to identify Hive table partitions. Default
+                  value is false. If true, the call would fail with a "Bad Request" (status code 400) error when number of partitions in any of the discovered
+                  business object data instances does not match to the number of partition columns in the business object format being used to generate the DDL
                </xs:documentation>
             </xs:annotation>
          </xs:element>
