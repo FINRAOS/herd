@@ -117,6 +117,11 @@
       <!-- Profile which does not run npm tests -->
       <profile>
          <id>npm-skip-test</id>
+         <activation>
+            <property>
+               <name>skipTests</name>
+            </property>
+         </activation>
       </profile>
       <!-- Profile which runs the npm test -->
       <profile>
