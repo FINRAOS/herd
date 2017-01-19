@@ -336,6 +336,11 @@ public enum ConfigurationValue
     MAX_EMR_INSTANCES_COUNT("max.emr.instance.count", 0),
 
     /**
+     * Tar file for the installation of Oozie. This is required so there is no default.
+     */
+    EMR_OOZIE_TAR_FILE("emr.oozie.tar", null),
+
+    /**
      * The mandatory AWS tags for instances. This is required so there is no default.
      */
     MANDATORY_AWS_TAGS("mandatory.aws.tags", null),
