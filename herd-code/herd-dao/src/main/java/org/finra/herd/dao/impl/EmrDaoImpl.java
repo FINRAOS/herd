@@ -198,7 +198,8 @@ public class EmrDaoImpl implements EmrDao
     @Override
     public String createEmrCluster(String clusterName, EmrClusterDefinition emrClusterDefinition, AwsParamsDto awsParams)
     {
-        return emrOperations.runEmrJobFlow(getEmrClient(awsParams), getRunJobFlowRequest(clusterName, emrClusterDefinition));
+        return emrOperations.runEmrJobFlow(getEmrClient(awsParams),
+            getRunJobFlowRequest(clusterName, emrClusterDefinition, StringUtils.isNotBlank(awsParams.getAwsAccessKeyId())));
     }
 
     /**
@@ -436,17 +437,26 @@ public class EmrDaoImpl implements EmrDao
     /**
      * Create the job flow instance configuration which contains all the job flow configuration details.
      *
-     * @param emrClusterDefinition the EMR cluster definition that contains all the EMR parameters.
+     * @param emrClusterDefinition the EMR cluster definition that contains all the EMR parameters
+     * @param crossAccountAccess specifies whether the EMR cluster will be created in another AWS account
      *
-     * @return the job flow instance configuration.
+     * @return the job flow instance configuration
      */
-    private JobFlowInstancesConfig getJobFlowInstancesConfig(EmrClusterDefinition emrClusterDefinition)
+    private JobFlowInstancesConfig getJobFlowInstancesConfig(EmrClusterDefinition emrClusterDefinition, boolean crossAccountAccess)
     {
         // Create a new job flow instance config object
         JobFlowInstancesConfig jobFlowInstancesConfig = new JobFlowInstancesConfig();
 
-        // Add the herd EMR support security group as additional group to master node.
-        jobFlowInstancesConfig.setAdditionalMasterSecurityGroups(getAdditionalMasterSecurityGroups(emrClusterDefinition));
+        // We do not add herd EMR support security group as an additional group to master node when cluster is getting started in other AWS account.
+        if (crossAccountAccess)
+        {
+            jobFlowInstancesConfig.setAdditionalMasterSecurityGroups(emrClusterDefinition.getAdditionalMasterSecurityGroups());
+        }
+        else
+        {
+            // Add the herd EMR support security group as additional group to master node.
+            jobFlowInstancesConfig.setAdditionalMasterSecurityGroups(getAdditionalMasterSecurityGroups(emrClusterDefinition));
+        }
 
         jobFlowInstancesConfig.setAdditionalSlaveSecurityGroups(emrClusterDefinition.getAdditionalSlaveSecurityGroups());
 
@@ -799,15 +809,16 @@ public class EmrDaoImpl implements EmrDao
     /**
      * Create the run job flow request object.
      *
-     * @param emrClusterDefinition the EMR definition name value.
-     * @param clusterName the EMR cluster name.
+     * @param emrClusterDefinition the EMR definition name value
+     * @param clusterName the EMR cluster name
+     * @param crossAccountAccess specifies whether the EMR cluster will be created in another AWS account
      *
-     * @return run job flow request for the given configuration.
+     * @return the run job flow request for the given configuration
      */
-    private RunJobFlowRequest getRunJobFlowRequest(String clusterName, EmrClusterDefinition emrClusterDefinition)
+    private RunJobFlowRequest getRunJobFlowRequest(String clusterName, EmrClusterDefinition emrClusterDefinition, boolean crossAccountAccess)
     {
         // Create the object
-        RunJobFlowRequest runJobFlowRequest = new RunJobFlowRequest(clusterName, getJobFlowInstancesConfig(emrClusterDefinition));
+        RunJobFlowRequest runJobFlowRequest = new RunJobFlowRequest(clusterName, getJobFlowInstancesConfig(emrClusterDefinition, crossAccountAccess));
 
         // Set release label
         if (StringUtils.isNotBlank(emrClusterDefinition.getReleaseLabel()))
