@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import com.amazonaws.services.elasticmapreduce.AmazonElasticMapReduceClient;
 import com.amazonaws.services.elasticmapreduce.model.ActionOnFailure;
@@ -724,25 +723,6 @@ public class EmrDaoImpl implements EmrDao
 
         String hadoopJarForShellScript = configurationHelper.getProperty(ConfigurationValue.EMR_SHELL_SCRIPT_JAR);
 
-        // Add step to copy herd oozie wrapper workflow to HDFS.
-        String wrapperWorkflowS3Location = getS3LocationForConfiguration(emrHelper.getEmrOozieHerdWorkflowS3LocationConfiguration());
-
-        String wrapperWorkflowHdfsLocation = configurationHelper.getProperty(ConfigurationValue.EMR_OOZIE_HERD_WRAPPER_WORKFLOW_HDFS_LOCATION);
-
-        List<String> s3ToHdfsCopyScriptArgsList = new ArrayList<>();
-
-        s3ToHdfsCopyScriptArgsList.add(wrapperWorkflowS3Location + emrHelper.getS3HdfsCopyScriptName());
-
-        // 1. Source S3 location
-        // 2. Target HDFS location.
-        // 3. Temp folder to use on local node.
-        s3ToHdfsCopyScriptArgsList.add(wrapperWorkflowS3Location);
-        s3ToHdfsCopyScriptArgsList.add(wrapperWorkflowHdfsLocation);
-        s3ToHdfsCopyScriptArgsList.add(UUID.randomUUID().toString());
-
-        HadoopJarStepConfig copyWrapperJarConfig = new HadoopJarStepConfig(hadoopJarForShellScript).withArgs(s3ToHdfsCopyScriptArgsList);
-        appSteps.add(new StepConfig().withName("Copy herd oozie wrapper").withHadoopJarStep(copyWrapperJarConfig));
-
         // Create install hive step and add to the StepConfig list
         if (StringUtils.isNotBlank(emrClusterDefinition.getHiveVersion()))
         {
@@ -789,17 +769,6 @@ public class EmrDaoImpl implements EmrDao
         }
 
         return appSteps;
-    }
-
-    /**
-     * Get the absolute S3 location for given configuration key.
-     *
-     * @return location of the configuration key on S3.
-     */
-    private String getS3LocationForConfiguration(ConfigurationValue configurationValue)
-    {
-        return getS3StagingLocation() + configurationHelper.getProperty(ConfigurationValue.S3_URL_PATH_DELIMITER) +
-            configurationHelper.getProperty(configurationValue);
     }
 
     /**
