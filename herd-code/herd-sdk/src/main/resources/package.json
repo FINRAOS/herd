@@ -2,5 +2,5 @@
   "name": "herd-sdk-ts-ng",
   "version": "${project.version}",
   "description": "This is a Angular 1.x based TypeScript SDK client for consuming the HERD REST API",
-  "license": "Apache 2.0"
+  "license": "Apache-2.0"
 }

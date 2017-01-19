@@ -184,7 +184,7 @@
                         <apiPackage>api</apiPackage>
                         <modelPackage>models</modelPackage>
                         <invokerPackage>invoker</invokerPackage>
-                        <projectLicenseName>Apache 2.0</projectLicenseName>
+                        <projectLicenseName>Apache-2.0</projectLicenseName>
                         <projectDescription>This is a NodeJS based JavaScript SDK client for consuming the HERD REST API</projectDescription>
                      </configOptions>
                   </configuration>
