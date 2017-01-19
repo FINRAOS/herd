@@ -91,7 +91,7 @@ public class EmrDaoImpl implements EmrDao
 
     @Autowired
     private EmrOperations emrOperations;
-    
+
     @Autowired
     private AwsClientFactory awsClientFactory;
 
@@ -350,8 +350,8 @@ public class EmrDaoImpl implements EmrDao
      */
     @Override
     public AmazonElasticMapReduceClient getEmrClient(AwsParamsDto awsParamsDto)
-    {   
-        return  awsClientFactory.getEmrClient(awsParamsDto);
+    {
+        return awsClientFactory.getEmrClient(awsParamsDto);
     }
 
     private String[] getActiveEmrClusterStates()
@@ -551,20 +551,6 @@ public class EmrDaoImpl implements EmrDao
     }
 
     /**
-     * Get the Oozie installation script location from the bucket name and Oozie installation script location.
-     *
-     * @return location of the Oozie installation script.
-     */
-    private String getOozieScriptLocation()
-    {
-        // Oozie is currently not supported by Amazon as a bootstrapping step
-        // So, we are using our own Oozie installation script on the Master node to install Oozie
-        // Once Amazon rolls out Oozie support, this can be removed and AWS Ooize steps can be added later
-        return getS3StagingLocation() + configurationHelper.getProperty(ConfigurationValue.S3_URL_PATH_DELIMITER) +
-            configurationHelper.getProperty(ConfigurationValue.EMR_OOZIE_SCRIPT);
-    }
-
-    /**
      * Create the bootstrap action configuration List from all the bootstrapping scripts specified.
      *
      * @param emrClusterDefinition the EMR definition name value.
@@ -761,20 +747,6 @@ public class EmrDaoImpl implements EmrDao
             appSteps.add(installPig);
         }
 
-        // Add Oozie support if needed
-        if (emrClusterDefinition.isInstallOozie() != null && emrClusterDefinition.isInstallOozie())
-        {
-            String oozieShellArg = getS3StagingLocation() + configurationHelper.getProperty(ConfigurationValue.S3_URL_PATH_DELIMITER) +
-                configurationHelper.getProperty(ConfigurationValue.EMR_OOZIE_TAR_FILE);
-
-            List<String> argsList = new ArrayList<>();
-            argsList.add(getOozieScriptLocation());
-            argsList.add(oozieShellArg);
-
-            HadoopJarStepConfig jarConfig = new HadoopJarStepConfig(hadoopJarForShellScript).withArgs(argsList);
-            appSteps.add(new StepConfig().withName("Oozie").withHadoopJarStep(jarConfig));
-        }
-
         // Add the hadoop jar steps that need to be added.
         if (!CollectionUtils.isEmpty(emrClusterDefinition.getHadoopJarSteps()))
         {
@@ -830,8 +802,8 @@ public class EmrDaoImpl implements EmrDao
     /**
      * Create the run job flow request object.
      *
-     * @param emrClusterDefinition the EMR definition name value.
-     * @param clusterName the EMR cluster name.
+     * @param emrClusterDefinition the EMR definition name value
+     * @param clusterName the EMR cluster name
      *
      * @return run job flow request for the given configuration.
      */
@@ -965,7 +937,7 @@ public class EmrDaoImpl implements EmrDao
      */
     public Map<String, String> getMap(List<Parameter> parameters)
     {
-        HashMap<String, String> map = new HashMap<String, String>();
+        HashMap<String, String> map = new HashMap<>();
         for (Parameter parameter : parameters)
         {
             map.put(parameter.getName(), parameter.getValue());
