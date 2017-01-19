@@ -18,7 +18,6 @@ package org.finra.herd.service.impl;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -77,13 +76,6 @@ public class ActivitiServiceImpl implements ActivitiService
     public ProcessInstance startProcessInstanceByProcessDefinitionId(String processDefinitionId, Map<String, Object> variables)
     {
         String workflowEnvironment = configurationHelper.getProperty(ConfigurationValue.HERD_ENVIRONMENT);
-        if (workflowEnvironment != null)
-        {
-            if (variables == null)
-            {
-                variables = new HashMap<>();
-            }
-        }
         variables.put(HERD_WORKFLOW_ENVIRONMENT, workflowEnvironment);
         return activitiRuntimeService.startProcessInstanceById(processDefinitionId, variables);
     }
