@@ -192,28 +192,6 @@
             </executions>
          </plugin>
 
-         <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-antrun-plugin</artifactId>
-            <executions>
-               <execution>
-                  <id>copy-ts-config</id>
-                  <phase>generate-resources</phase>
-                  <configuration>
-                     <target>
-                        <!--process package.json to be in the output typescript angular sdk. this adds the herd sdk version-->
-                        <copy file="${project.build.outputDirectory}/package.json"
-                        toFile="${project.build.directory}/generated-sources/typescript-angular/package.json">
-                        </copy>
-                     </target>
-                  </configuration>
-                  <goals>
-                     <goal>run</goal>
-                  </goals>
-               </execution>
-            </executions>
-         </plugin>
-
          <!-- Exclude the auto-generated java files from the main jar. -->
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
@@ -275,6 +253,29 @@
                <target>1.5</target>
             </configuration>
          </plugin>
+
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <executions>
+               <execution>
+                  <id>copy-ts-config</id>
+                  <phase>process-resources</phase>
+                  <configuration>
+                     <tasks>
+                        <!--process package.json to be in the output typescript angular sdk. this adds the herd sdk version-->
+                        <copy file="${project.build.outputDirectory}/package.json"
+                              toFile="${project.build.directory}/generated-sources/typescript-angular/package.json">
+                        </copy>
+                     </tasks>
+                  </configuration>
+                  <goals>
+                     <goal>run</goal>
+                  </goals>
+               </execution>
+            </executions>
+         </plugin>
+
 
       </plugins>
 
