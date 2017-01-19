@@ -49,6 +49,7 @@ import org.finra.herd.model.api.xml.NamespaceAuthorization;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.api.xml.Parameter;
 import org.finra.herd.model.dto.ApplicationUser;
+import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.SecurityUserWrapper;
 
 /**
@@ -80,10 +81,13 @@ public class JobRestControllerTest extends AbstractRestTest
         assertTrue(!resultJob.getId().isEmpty());
         assertEquals(TEST_ACTIVITI_NAMESPACE_CD, resultJob.getNamespace());
         assertEquals(TEST_ACTIVITI_JOB_NAME, resultJob.getJobName());
-        assertEquals(jobDefinitionCreateRequest.getParameters().size() + jobCreateRequest.getParameters().size(), resultJob.getParameters().size());
+        assertEquals(jobDefinitionCreateRequest.getParameters().size() + jobCreateRequest.getParameters().size() + 1, resultJob.getParameters().size());
         List<String> expectedParameters = new ArrayList<>();
         expectedParameters.addAll(parametersToStringList(jobDefinitionCreateRequest.getParameters()));
         expectedParameters.addAll(parametersToStringList(jobCreateRequest.getParameters()));
+        expectedParameters.addAll(parametersToStringList(
+            Arrays.asList(new Parameter(HERD_WORKFLOW_ENVIRONMENT, configurationHelper.getProperty(ConfigurationValue.HERD_ENVIRONMENT)))));
+
         List<String> resultParameters = parametersToStringList(resultJob.getParameters());
         assertTrue(expectedParameters.containsAll(resultParameters));
         assertTrue(resultParameters.containsAll(expectedParameters));
@@ -156,13 +160,19 @@ public class JobRestControllerTest extends AbstractRestTest
         // Create the job.
         Job resultJob = jobRestController.createJob(jobCreateRequest);
 
+        //expected default parameter
+        List<Parameter> expectedParameters =
+            Arrays.asList(new Parameter(HERD_WORKFLOW_ENVIRONMENT, configurationHelper.getProperty(ConfigurationValue.HERD_ENVIRONMENT)));
+
         // Validate the results.
         assertNotNull(resultJob);
         assertNotNull(resultJob.getId());
         assertTrue(!resultJob.getId().isEmpty());
         assertEquals(TEST_ACTIVITI_NAMESPACE_CD, resultJob.getNamespace());
         assertEquals(TEST_ACTIVITI_JOB_NAME, resultJob.getJobName());
-        assertNull(resultJob.getParameters());
+        assertNotNull(resultJob.getParameters());
+        assertTrue(resultJob.getParameters().size() == 1);
+        assertTrue(expectedParameters.containsAll(resultJob.getParameters()));
     }
 
     @Test(expected = IllegalArgumentException.class)

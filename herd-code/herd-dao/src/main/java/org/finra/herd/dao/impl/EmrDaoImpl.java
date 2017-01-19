@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import com.amazonaws.services.elasticmapreduce.AmazonElasticMapReduceClient;
 import com.amazonaws.services.elasticmapreduce.model.ActionOnFailure;
@@ -91,7 +90,7 @@ public class EmrDaoImpl implements EmrDao
 
     @Autowired
     private EmrOperations emrOperations;
-    
+
     @Autowired
     private AwsClientFactory awsClientFactory;
 
@@ -199,7 +198,8 @@ public class EmrDaoImpl implements EmrDao
     @Override
     public String createEmrCluster(String clusterName, EmrClusterDefinition emrClusterDefinition, AwsParamsDto awsParams)
     {
-        return emrOperations.runEmrJobFlow(getEmrClient(awsParams), getRunJobFlowRequest(clusterName, emrClusterDefinition));
+        return emrOperations.runEmrJobFlow(getEmrClient(awsParams),
+            getRunJobFlowRequest(clusterName, emrClusterDefinition, StringUtils.isNotBlank(awsParams.getAwsAccessKeyId())));
     }
 
     /**
@@ -350,8 +350,8 @@ public class EmrDaoImpl implements EmrDao
      */
     @Override
     public AmazonElasticMapReduceClient getEmrClient(AwsParamsDto awsParamsDto)
-    {   
-        return  awsClientFactory.getEmrClient(awsParamsDto);
+    {
+        return awsClientFactory.getEmrClient(awsParamsDto);
     }
 
     private String[] getActiveEmrClusterStates()
@@ -437,17 +437,26 @@ public class EmrDaoImpl implements EmrDao
     /**
      * Create the job flow instance configuration which contains all the job flow configuration details.
      *
-     * @param emrClusterDefinition the EMR cluster definition that contains all the EMR parameters.
+     * @param emrClusterDefinition the EMR cluster definition that contains all the EMR parameters
+     * @param crossAccountAccess specifies whether the EMR cluster will be created in another AWS account
      *
-     * @return the job flow instance configuration.
+     * @return the job flow instance configuration
      */
-    private JobFlowInstancesConfig getJobFlowInstancesConfig(EmrClusterDefinition emrClusterDefinition)
+    private JobFlowInstancesConfig getJobFlowInstancesConfig(EmrClusterDefinition emrClusterDefinition, boolean crossAccountAccess)
     {
         // Create a new job flow instance config object
         JobFlowInstancesConfig jobFlowInstancesConfig = new JobFlowInstancesConfig();
 
-        // Add the herd EMR support security group as additional group to master node.
-        jobFlowInstancesConfig.setAdditionalMasterSecurityGroups(getAdditionalMasterSecurityGroups(emrClusterDefinition));
+        // We do not add herd EMR support security group as an additional group to master node when cluster is getting started in other AWS account.
+        if (crossAccountAccess)
+        {
+            jobFlowInstancesConfig.setAdditionalMasterSecurityGroups(emrClusterDefinition.getAdditionalMasterSecurityGroups());
+        }
+        else
+        {
+            // Add the herd EMR support security group as additional group to master node.
+            jobFlowInstancesConfig.setAdditionalMasterSecurityGroups(getAdditionalMasterSecurityGroups(emrClusterDefinition));
+        }
 
         jobFlowInstancesConfig.setAdditionalSlaveSecurityGroups(emrClusterDefinition.getAdditionalSlaveSecurityGroups());
 
@@ -724,25 +733,6 @@ public class EmrDaoImpl implements EmrDao
 
         String hadoopJarForShellScript = configurationHelper.getProperty(ConfigurationValue.EMR_SHELL_SCRIPT_JAR);
 
-        // Add step to copy herd oozie wrapper workflow to HDFS.
-        String wrapperWorkflowS3Location = getS3LocationForConfiguration(emrHelper.getEmrOozieHerdWorkflowS3LocationConfiguration());
-
-        String wrapperWorkflowHdfsLocation = configurationHelper.getProperty(ConfigurationValue.EMR_OOZIE_HERD_WRAPPER_WORKFLOW_HDFS_LOCATION);
-
-        List<String> s3ToHdfsCopyScriptArgsList = new ArrayList<>();
-
-        s3ToHdfsCopyScriptArgsList.add(wrapperWorkflowS3Location + emrHelper.getS3HdfsCopyScriptName());
-
-        // 1. Source S3 location
-        // 2. Target HDFS location.
-        // 3. Temp folder to use on local node.
-        s3ToHdfsCopyScriptArgsList.add(wrapperWorkflowS3Location);
-        s3ToHdfsCopyScriptArgsList.add(wrapperWorkflowHdfsLocation);
-        s3ToHdfsCopyScriptArgsList.add(UUID.randomUUID().toString());
-
-        HadoopJarStepConfig copyWrapperJarConfig = new HadoopJarStepConfig(hadoopJarForShellScript).withArgs(s3ToHdfsCopyScriptArgsList);
-        appSteps.add(new StepConfig().withName("Copy herd oozie wrapper").withHadoopJarStep(copyWrapperJarConfig));
-
         // Create install hive step and add to the StepConfig list
         if (StringUtils.isNotBlank(emrClusterDefinition.getHiveVersion()))
         {
@@ -792,17 +782,6 @@ public class EmrDaoImpl implements EmrDao
     }
 
     /**
-     * Get the absolute S3 location for given configuration key.
-     *
-     * @return location of the configuration key on S3.
-     */
-    private String getS3LocationForConfiguration(ConfigurationValue configurationValue)
-    {
-        return getS3StagingLocation() + configurationHelper.getProperty(ConfigurationValue.S3_URL_PATH_DELIMITER) +
-            configurationHelper.getProperty(configurationValue);
-    }
-
-    /**
      * Create the tag list for the EMR nodes.
      *
      * @param emrClusterDefinition the EMR definition name value.
@@ -830,15 +809,16 @@ public class EmrDaoImpl implements EmrDao
     /**
      * Create the run job flow request object.
      *
-     * @param emrClusterDefinition the EMR definition name value.
-     * @param clusterName the EMR cluster name.
+     * @param emrClusterDefinition the EMR definition name value
+     * @param clusterName the EMR cluster name
+     * @param crossAccountAccess specifies whether the EMR cluster will be created in another AWS account
      *
-     * @return run job flow request for the given configuration.
+     * @return the run job flow request for the given configuration
      */
-    private RunJobFlowRequest getRunJobFlowRequest(String clusterName, EmrClusterDefinition emrClusterDefinition)
+    private RunJobFlowRequest getRunJobFlowRequest(String clusterName, EmrClusterDefinition emrClusterDefinition, boolean crossAccountAccess)
     {
         // Create the object
-        RunJobFlowRequest runJobFlowRequest = new RunJobFlowRequest(clusterName, getJobFlowInstancesConfig(emrClusterDefinition));
+        RunJobFlowRequest runJobFlowRequest = new RunJobFlowRequest(clusterName, getJobFlowInstancesConfig(emrClusterDefinition, crossAccountAccess));
 
         // Set release label
         if (StringUtils.isNotBlank(emrClusterDefinition.getReleaseLabel()))
