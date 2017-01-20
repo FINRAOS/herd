@@ -65,15 +65,6 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
     @Qualifier(value = "businessObjectDefinitionServiceImpl")
     private BusinessObjectDefinitionService businessObjectDefinitionServiceImpl;
 
-    // Constant to hold the data provider name option for the business object definition search
-    public static final String FIELD_DATA_PROVIDER_NAME = "dataProviderName";
-
-    // Constant to hold the short description option for the business object definition search
-    public static final String FIELD_SHORT_DESCRIPTION = "shortDescription";
-
-    // Constant to hold the display name option for the business object definition search
-    public static final String FIELD_DISPLAY_NAME = "displayName";
-
     @Autowired
     private BusinessObjectDefinitionDaoHelper businessObjectDefinitionDaoHelper;
 

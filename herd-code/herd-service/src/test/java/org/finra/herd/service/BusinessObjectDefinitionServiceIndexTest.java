@@ -23,6 +23,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -31,10 +32,12 @@ import static org.mockito.Mockito.when;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Future;
 
 import com.fasterxml.jackson.core.JsonLocation;
 import com.fasterxml.jackson.core.JsonParseException;
+import com.google.common.collect.Sets;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -44,11 +47,19 @@ import org.mockito.MockitoAnnotations;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.BusinessObjectDefinitionDao;
 import org.finra.herd.dao.helper.JsonHelper;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchFilter;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchKey;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchResponse;
+import org.finra.herd.model.api.xml.TagKey;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.SearchIndexUpdateDto;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
+import org.finra.herd.model.jpa.TagEntity;
 import org.finra.herd.service.functional.SearchFunctions;
 import org.finra.herd.service.helper.ConfigurationDaoHelper;
+import org.finra.herd.service.helper.TagDaoHelper;
+import org.finra.herd.service.helper.TagHelper;
 import org.finra.herd.service.impl.BusinessObjectDefinitionServiceImpl;
 
 /**
@@ -60,7 +71,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
     private BusinessObjectDefinitionServiceImpl businessObjectDefinitionService;
 
     @Mock
-    private SearchFunctions searchFunctions;
+    private BusinessObjectDefinitionDao businessObjectDefinitionDao;
 
     @Mock
     private ConfigurationHelper configurationHelper;
@@ -69,10 +80,16 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
     private ConfigurationDaoHelper configurationDaoHelper;
 
     @Mock
-    private BusinessObjectDefinitionDao businessObjectDefinitionDao;
+    private JsonHelper jsonHelper;
 
     @Mock
-    private JsonHelper jsonHelper;
+    private SearchFunctions searchFunctions;
+
+    @Mock
+    private TagDaoHelper tagDaoHelper;
+
+    @Mock
+    private TagHelper tagHelper;
 
     @Before
     public void before()
@@ -598,6 +615,240 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
         verify(jsonHelper, times(2)).objectToJson(any());
         verify(searchFunctions, times(2)).getIsValidFunction();
+    }
+
+    @Test
+    public void testIndexSearchBusinessObjectDefinitionsIncludeTagHierarchy()
+    {
+        // Create a new tag key with a tag type and a tag code
+        TagKey tagKey = new TagKey(TAG_TYPE, TAG_CODE);
+
+        // Create  a new business object definition search key for use in the business object definition search key list
+        BusinessObjectDefinitionSearchKey businessObjectDefinitionSearchKey = new BusinessObjectDefinitionSearchKey(tagKey, INCLUDE_TAG_HIERARCHY);
+
+        // Create a new business object definition search key list with the tag key and the include tag hierarchy boolean flag
+        List<BusinessObjectDefinitionSearchKey> businessObjectDefinitionSearchKeyList = new ArrayList<>();
+        businessObjectDefinitionSearchKeyList.add(businessObjectDefinitionSearchKey);
+
+        // Create a new business object definition search filter list with the new business object definition search key list
+        List<BusinessObjectDefinitionSearchFilter> businessObjectDefinitionSearchFilterList = new ArrayList<>();
+        businessObjectDefinitionSearchFilterList.add(new BusinessObjectDefinitionSearchFilter(businessObjectDefinitionSearchKeyList));
+
+        // Create a new business object definition search request that will be used when testing the index search business object definitions method
+        BusinessObjectDefinitionSearchRequest businessObjectDefinitionSearchRequest =
+            new BusinessObjectDefinitionSearchRequest(businessObjectDefinitionSearchFilterList);
+
+        // Create a new fields set that will be used when testing the index search business object definitions method
+        Set<String> fields = Sets.newHashSet(FIELD_DATA_PROVIDER_NAME, FIELD_DISPLAY_NAME, FIELD_SHORT_DESCRIPTION);
+
+        // Create a tag entity to return from the tag dao helper get tag entity method
+        TagEntity tagEntity = new TagEntity();
+        tagEntity.setTagCode(TAG_CODE);
+
+        // Create a tag child entity to enter into the tag children entities list
+        TagEntity tagChildEntity = new TagEntity();
+        tagChildEntity.setTagCode(TAG_CODE_2);
+
+        // Create a tag children entity list to return from the tag dao helper tag children entities method
+        List<TagEntity> tagChildrenEntityList = new ArrayList<>();
+        tagChildrenEntityList.add(tagChildEntity);
+
+        // Create a business object definition entity list to return from the search business object definitions by tags function
+        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList = new ArrayList<>();
+        businessObjectDefinitionEntityList.add(businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
+                businessObjectDefinitionServiceTestHelper.getNewAttributes()));
+        businessObjectDefinitionEntityList.add(businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME_2, DATA_PROVIDER_NAME_2, BDEF_DESCRIPTION_2,
+                businessObjectDefinitionServiceTestHelper.getNewAttributes()));
+
+        // Mock the call to external methods
+        when(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH, Integer.class))
+            .thenReturn(SHORT_DESCRIPTION_LENGTH);
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class)).thenReturn("INDEX_NAME");
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
+        when(tagDaoHelper.getTagEntity(businessObjectDefinitionSearchKey.getTagKey())).thenReturn(tagEntity);
+        when(tagDaoHelper.getTagChildrenEntities(tagEntity)).thenReturn(tagChildrenEntityList);
+        when(searchFunctions.getSearchBusinessObjectDefinitionsByTagsFunction())
+            .thenReturn((indexName, documentType, tagEntities) -> businessObjectDefinitionEntityList);
+
+        // Call the method under test
+        BusinessObjectDefinitionSearchResponse businessObjectDefinitionSearchResponse =
+            businessObjectDefinitionService.indexSearchBusinessObjectDefinitions(businessObjectDefinitionSearchRequest, fields);
+
+        assertThat("Business object definition service index search business object definitions method response is null, but it should not be.",
+            businessObjectDefinitionSearchResponse, not(nullValue()));
+
+        assertThat("The first business object definition name in the search response is not correct.",
+            businessObjectDefinitionSearchResponse.getBusinessObjectDefinitions().get(0).getBusinessObjectDefinitionName(), is(BDEF_NAME));
+
+        assertThat("The second business object definition name in the search response is not correct.",
+            businessObjectDefinitionSearchResponse.getBusinessObjectDefinitions().get(1).getBusinessObjectDefinitionName(), is(BDEF_NAME_2));
+
+        // Verify the calls to external methods
+        verify(configurationHelper, times(2)).getProperty(ConfigurationValue.BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH, Integer.class);
+        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
+        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
+        verify(tagHelper, times(1)).validateTagKey(tagKey);
+        verify(tagDaoHelper, times(1)).getTagEntity(businessObjectDefinitionSearchKey.getTagKey());
+        verify(tagDaoHelper, times(1)).getTagChildrenEntities(tagEntity);
+        verify(searchFunctions, times(1)).getSearchBusinessObjectDefinitionsByTagsFunction();
+    }
+
+    @Test
+    public void testIndexSearchBusinessObjectDefinitionsDoNotIncludeTagHierarchy()
+    {
+        // Create a new tag key with a tag type and a tag code
+        TagKey tagKey = new TagKey(TAG_TYPE, TAG_CODE);
+
+        // Create  a new business object definition search key for use in the business object definition search key list
+        BusinessObjectDefinitionSearchKey businessObjectDefinitionSearchKey = new BusinessObjectDefinitionSearchKey(tagKey, NOT_INCLUDE_TAG_HIERARCHY);
+
+        // Create a new business object definition search key list with the tag key and the include tag hierarchy boolean flag
+        List<BusinessObjectDefinitionSearchKey> businessObjectDefinitionSearchKeyList = new ArrayList<>();
+        businessObjectDefinitionSearchKeyList.add(businessObjectDefinitionSearchKey);
+
+        // Create a new business object definition search filter list with the new business object definition search key list
+        List<BusinessObjectDefinitionSearchFilter> businessObjectDefinitionSearchFilterList = new ArrayList<>();
+        businessObjectDefinitionSearchFilterList.add(new BusinessObjectDefinitionSearchFilter(businessObjectDefinitionSearchKeyList));
+
+        // Create a new business object definition search request that will be used when testing the index search business object definitions method
+        BusinessObjectDefinitionSearchRequest businessObjectDefinitionSearchRequest =
+            new BusinessObjectDefinitionSearchRequest(businessObjectDefinitionSearchFilterList);
+
+        // Create a new fields set that will be used when testing the index search business object definitions method
+        Set<String> fields = Sets.newHashSet(FIELD_DATA_PROVIDER_NAME, FIELD_DISPLAY_NAME, FIELD_SHORT_DESCRIPTION);
+
+        // Create a business object definition entity list to return from the search business object definitions by tags function
+        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList = new ArrayList<>();
+        businessObjectDefinitionEntityList.add(businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
+                businessObjectDefinitionServiceTestHelper.getNewAttributes()));
+        businessObjectDefinitionEntityList.add(businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME_2, DATA_PROVIDER_NAME_2, BDEF_DESCRIPTION_2,
+                businessObjectDefinitionServiceTestHelper.getNewAttributes()));
+
+        // Mock the call to external methods
+        when(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH, Integer.class))
+            .thenReturn(SHORT_DESCRIPTION_LENGTH);
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class)).thenReturn("INDEX_NAME");
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
+        when(searchFunctions.getSearchBusinessObjectDefinitionsByTagCodeAndTagTypeFunction())
+            .thenReturn((indexName, documentType, tagCode, tagTypeCode) -> businessObjectDefinitionEntityList);
+
+        // Call the method under test
+        BusinessObjectDefinitionSearchResponse businessObjectDefinitionSearchResponse =
+            businessObjectDefinitionService.indexSearchBusinessObjectDefinitions(businessObjectDefinitionSearchRequest, fields);
+
+        assertThat("Business object definition service index search business object definitions method response is null, but it should not be.",
+            businessObjectDefinitionSearchResponse, not(nullValue()));
+
+        assertThat("The first business object definition name in the search response is not correct.",
+            businessObjectDefinitionSearchResponse.getBusinessObjectDefinitions().get(0).getBusinessObjectDefinitionName(), is(BDEF_NAME));
+
+        assertThat("The second business object definition name in the search response is not correct.",
+            businessObjectDefinitionSearchResponse.getBusinessObjectDefinitions().get(1).getBusinessObjectDefinitionName(), is(BDEF_NAME_2));
+
+        // Verify the calls to external methods
+        verify(configurationHelper, times(2)).getProperty(ConfigurationValue.BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH, Integer.class);
+        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
+        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
+        verify(tagHelper, times(1)).validateTagKey(tagKey);
+        verify(tagDaoHelper, times(0)).getTagEntity(businessObjectDefinitionSearchKey.getTagKey());
+        verify(tagDaoHelper, times(0)).getTagChildrenEntities(any());
+        verify(searchFunctions, times(1)).getSearchBusinessObjectDefinitionsByTagCodeAndTagTypeFunction();
+    }
+
+    @Test
+    public void testIndexSearchBusinessObjectDefinitionsNoSearchFilters()
+    {
+        // Create a new business object definition search filter list with the new business object definition search key list
+        List<BusinessObjectDefinitionSearchFilter> businessObjectDefinitionSearchFilterList = new ArrayList<>();
+
+        // Create a new business object definition search request that will be used when testing the index search business object definitions method
+        BusinessObjectDefinitionSearchRequest businessObjectDefinitionSearchRequest =
+            new BusinessObjectDefinitionSearchRequest(businessObjectDefinitionSearchFilterList);
+
+        // Create a new fields set that will be used when testing the index search business object definitions method
+        Set<String> fields = Sets.newHashSet(FIELD_DATA_PROVIDER_NAME, FIELD_DISPLAY_NAME, FIELD_SHORT_DESCRIPTION);
+
+        // Mock the call to external methods
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class)).thenReturn("INDEX_NAME");
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
+
+        // Call the method under test
+        BusinessObjectDefinitionSearchResponse businessObjectDefinitionSearchResponse =
+            businessObjectDefinitionService.indexSearchBusinessObjectDefinitions(businessObjectDefinitionSearchRequest, fields);
+
+        assertThat("Business object definition service index search business object definitions method response is null, but it should not be.",
+            businessObjectDefinitionSearchResponse, not(nullValue()));
+
+        assertThat("The business object definition search response size should be zero.",
+            businessObjectDefinitionSearchResponse.getBusinessObjectDefinitions().size(), is(0));
+
+        // Verify the calls to external methods
+        verify(configurationHelper, times(0)).getProperty(ConfigurationValue.BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH, Integer.class);
+        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
+        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
+        verify(tagHelper, times(0)).validateTagKey(any());
+        verify(tagDaoHelper, times(0)).getTagEntity(any());
+        verify(tagDaoHelper, times(0)).getTagChildrenEntities(any());
+        verify(searchFunctions, times(0)).getSearchBusinessObjectDefinitionsByTagsFunction();
+        verify(searchFunctions, times(0)).getSearchBusinessObjectDefinitionsByTagCodeAndTagTypeFunction();
+    }
+
+    @Test
+    public void testIndexSearchBusinessObjectDefinitionsTooManySearchFilters()
+    {
+        // Create a new tag key with a tag type and a tag code
+        TagKey tagKey = new TagKey(TAG_TYPE, TAG_CODE);
+
+        // Create  a new business object definition search key for use in the business object definition search key list
+        BusinessObjectDefinitionSearchKey businessObjectDefinitionSearchKey = new BusinessObjectDefinitionSearchKey(tagKey, NOT_INCLUDE_TAG_HIERARCHY);
+
+        // Create a new business object definition search key list with the tag key and the include tag hierarchy boolean flag
+        List<BusinessObjectDefinitionSearchKey> businessObjectDefinitionSearchKeyList = new ArrayList<>();
+        businessObjectDefinitionSearchKeyList.add(businessObjectDefinitionSearchKey);
+
+        // Create a new business object definition search filter list with the new business object definition search key list
+        List<BusinessObjectDefinitionSearchFilter> businessObjectDefinitionSearchFilterList = new ArrayList<>();
+        businessObjectDefinitionSearchFilterList.add(new BusinessObjectDefinitionSearchFilter(businessObjectDefinitionSearchKeyList));
+
+        // Add too many search filters
+        businessObjectDefinitionSearchFilterList.add(new BusinessObjectDefinitionSearchFilter(businessObjectDefinitionSearchKeyList));
+
+        // Create a new business object definition search request that will be used when testing the index search business object definitions method
+        BusinessObjectDefinitionSearchRequest businessObjectDefinitionSearchRequest =
+            new BusinessObjectDefinitionSearchRequest(businessObjectDefinitionSearchFilterList);
+
+        // Create a new fields set that will be used when testing the index search business object definitions method
+        Set<String> fields = Sets.newHashSet(FIELD_DATA_PROVIDER_NAME, FIELD_DISPLAY_NAME, FIELD_SHORT_DESCRIPTION);
+
+        // Mock the call to external methods
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class)).thenReturn("INDEX_NAME");
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
+
+        // Call the method under test
+        try
+        {
+            businessObjectDefinitionService.indexSearchBusinessObjectDefinitions(businessObjectDefinitionSearchRequest, fields);
+            fail("Should have caught an exception.");
+        }
+        catch (IllegalArgumentException illegalArgumentException)
+        {
+            assertThat("The IllegalArgumentException message is not correct.", illegalArgumentException.getMessage(),
+                is("Exactly one business object definition search filter must be specified."));
+        }
+
+        // Verify the calls to external methods
+        verify(configurationHelper, times(0)).getProperty(ConfigurationValue.BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH, Integer.class);
+        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
+        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
+        verify(tagHelper, times(0)).validateTagKey(any());
+        verify(tagDaoHelper, times(0)).getTagEntity(any());
+        verify(tagDaoHelper, times(0)).getTagChildrenEntities(any());
+        verify(searchFunctions, times(0)).getSearchBusinessObjectDefinitionsByTagsFunction();
+        verify(searchFunctions, times(0)).getSearchBusinessObjectDefinitionsByTagCodeAndTagTypeFunction();
     }
 
     @Test

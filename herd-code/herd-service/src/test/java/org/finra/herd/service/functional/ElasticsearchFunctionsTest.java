@@ -28,6 +28,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -60,6 +61,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import org.finra.herd.dao.helper.HerdStringHelper;
+import org.finra.herd.dao.helper.JsonHelper;
+import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
+import org.finra.herd.model.jpa.TagEntity;
+
 /**
  * ElasticsearchFunctionsTest
  */
@@ -67,6 +73,12 @@ public class ElasticsearchFunctionsTest
 {
     @InjectMocks
     private ElasticsearchFunctions searchFunctions;
+
+    @Mock
+    private HerdStringHelper herdStringHelper;
+
+    @Mock
+    private JsonHelper jsonHelper;
 
     @Mock
     private TransportClient transportClient;
@@ -593,6 +605,298 @@ public class ElasticsearchFunctionsTest
         verify(listenableActionFutureScroll, times(1)).actionGet();
         verify(searchResponseScroll, times(1)).getHits();
         verify(searchHitsScroll, times(1)).hits();
+    }
+
+    @Test
+    public void testSearchBusinessObjectDefinitionsByTagCodeAndTagTypeCodeFunction() throws Exception
+    {
+        QuadFunction<String, String, String, String, List<BusinessObjectDefinitionEntity>> searchBusinessObjectDefinitionsByTagCodeAndTagTypeFunction =
+            searchFunctions.getSearchBusinessObjectDefinitionsByTagCodeAndTagTypeFunction();
+        assertThat("Function is null.", searchBusinessObjectDefinitionsByTagCodeAndTagTypeFunction, not(nullValue()));
+        assertThat("Search business object definitions by tag code and tag type code function not an instance of QuadFunction.",
+            searchBusinessObjectDefinitionsByTagCodeAndTagTypeFunction, instanceOf(QuadFunction.class));
+
+        SearchRequestBuilder searchRequestBuilder = mock(SearchRequestBuilder.class);
+        SearchRequestBuilder searchRequestBuilderWithTypes = mock(SearchRequestBuilder.class);
+        SearchRequestBuilder searchRequestBuilderWithQuery = mock(SearchRequestBuilder.class);
+        SearchRequestBuilder searchRequestBuilderWithScroll = mock(SearchRequestBuilder.class);
+        SearchRequestBuilder searchRequestBuilderWithSize = mock(SearchRequestBuilder.class);
+        SearchResponse searchResponse = mock(SearchResponse.class);
+        SearchHits searchHits = mock(SearchHits.class);
+        SearchHit searchHit1 = mock(SearchHit.class);
+        SearchHit searchHit2 = mock(SearchHit.class);
+        SearchScrollRequestBuilder searchScrollRequestBuilder = mock(SearchScrollRequestBuilder.class);
+        SearchHit[] searchHitArray = new SearchHit[2];
+        searchHitArray[0] = searchHit1;
+        searchHitArray[1] = searchHit2;
+        SearchResponse searchResponseScroll = mock(SearchResponse.class);
+        SearchHits searchHitsScroll = mock(SearchHits.class);
+        SearchHit[] searchHitArrayScroll = new SearchHit[0];
+
+        @SuppressWarnings("unchecked")
+        ListenableActionFuture<SearchResponse> listenableActionFuture = mock(ListenableActionFuture.class);
+        @SuppressWarnings("unchecked")
+        ListenableActionFuture<SearchResponse> listenableActionFutureScroll = mock(ListenableActionFuture.class);
+
+        // Mock the call to external methods
+        when(transportClient.prepareSearch("INDEX_NAME")).thenReturn(searchRequestBuilder);
+        when(searchRequestBuilder.setTypes("DOCUMENT_TYPE")).thenReturn(searchRequestBuilderWithTypes);
+        when(searchRequestBuilderWithTypes.setQuery(any())).thenReturn(searchRequestBuilderWithQuery);
+        when(searchRequestBuilderWithQuery.setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME))).thenReturn(searchRequestBuilderWithScroll);
+        when(searchRequestBuilderWithScroll.setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE)).thenReturn(searchRequestBuilderWithSize);
+        when(searchRequestBuilder.execute()).thenReturn(listenableActionFuture);
+        when(listenableActionFuture.actionGet()).thenReturn(searchResponse);
+        when(searchResponse.getHits()).thenReturn(searchHits);
+        when(searchHits.hits()).thenReturn(searchHitArray);
+        when(transportClient.prepareSearchScroll(any())).thenReturn(searchScrollRequestBuilder);
+        when(searchScrollRequestBuilder.execute()).thenReturn(listenableActionFutureScroll);
+        when(listenableActionFutureScroll.actionGet()).thenReturn(searchResponseScroll);
+        when(searchResponseScroll.getHits()).thenReturn(searchHitsScroll);
+        when(searchHitsScroll.hits()).thenReturn(searchHitArrayScroll);
+        when(jsonHelper.unmarshallJsonToObject(any(), any())).thenReturn(new BusinessObjectDefinitionEntity());
+
+        // Call the method under test
+        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList =
+            searchBusinessObjectDefinitionsByTagCodeAndTagTypeFunction.apply("INDEX_NAME", "DOCUMENT_TYPE", "TAG_CODE", "TAG_TYPE_CODE");
+
+        assertThat("Business object definition entity list is null.", businessObjectDefinitionEntityList, not(nullValue()));
+
+        // Verify the calls to external methods
+        verify(transportClient, times(1)).prepareSearch("INDEX_NAME");
+        verify(searchRequestBuilder, times(1)).setTypes("DOCUMENT_TYPE");
+        verify(searchRequestBuilderWithTypes, times(1)).setQuery(any());
+        verify(searchRequestBuilderWithQuery, times(1)).setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME));
+        verify(searchRequestBuilderWithScroll, times(1)).setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE);
+        verify(searchRequestBuilder, times(1)).execute();
+        verify(listenableActionFuture, times(1)).actionGet();
+        verify(searchResponse, times(1)).getHits();
+        verify(searchHits, times(1)).hits();
+        verify(transportClient, times(1)).prepareSearchScroll(any());
+        verify(searchScrollRequestBuilder, times(1)).execute();
+        verify(listenableActionFutureScroll, times(1)).actionGet();
+        verify(searchResponseScroll, times(1)).getHits();
+        verify(searchHitsScroll, times(1)).hits();
+        verify(jsonHelper, times(2)).unmarshallJsonToObject(any(), any());
+    }
+
+    @Test
+    public void testSearchBusinessObjectDefinitionsByTagCodeAndTagTypeCodeFunctionException() throws Exception
+    {
+        QuadFunction<String, String, String, String, List<BusinessObjectDefinitionEntity>> searchBusinessObjectDefinitionsByTagCodeAndTagTypeFunction =
+            searchFunctions.getSearchBusinessObjectDefinitionsByTagCodeAndTagTypeFunction();
+        assertThat("Function is null.", searchBusinessObjectDefinitionsByTagCodeAndTagTypeFunction, not(nullValue()));
+        assertThat("Search business object definitions by tag code and tag type code function not an instance of QuadFunction.",
+            searchBusinessObjectDefinitionsByTagCodeAndTagTypeFunction, instanceOf(QuadFunction.class));
+
+        SearchRequestBuilder searchRequestBuilder = mock(SearchRequestBuilder.class);
+        SearchRequestBuilder searchRequestBuilderWithTypes = mock(SearchRequestBuilder.class);
+        SearchRequestBuilder searchRequestBuilderWithQuery = mock(SearchRequestBuilder.class);
+        SearchRequestBuilder searchRequestBuilderWithScroll = mock(SearchRequestBuilder.class);
+        SearchRequestBuilder searchRequestBuilderWithSize = mock(SearchRequestBuilder.class);
+        SearchResponse searchResponse = mock(SearchResponse.class);
+        SearchHits searchHits = mock(SearchHits.class);
+        SearchHit searchHit1 = mock(SearchHit.class);
+        SearchHit searchHit2 = mock(SearchHit.class);
+        SearchScrollRequestBuilder searchScrollRequestBuilder = mock(SearchScrollRequestBuilder.class);
+        SearchHit[] searchHitArray = new SearchHit[2];
+        searchHitArray[0] = searchHit1;
+        searchHitArray[1] = searchHit2;
+        SearchResponse searchResponseScroll = mock(SearchResponse.class);
+        SearchHits searchHitsScroll = mock(SearchHits.class);
+        SearchHit[] searchHitArrayScroll = new SearchHit[0];
+
+        @SuppressWarnings("unchecked")
+        ListenableActionFuture<SearchResponse> listenableActionFuture = mock(ListenableActionFuture.class);
+        @SuppressWarnings("unchecked")
+        ListenableActionFuture<SearchResponse> listenableActionFutureScroll = mock(ListenableActionFuture.class);
+
+        // Mock the call to external methods
+        when(transportClient.prepareSearch("INDEX_NAME")).thenReturn(searchRequestBuilder);
+        when(searchRequestBuilder.setTypes("DOCUMENT_TYPE")).thenReturn(searchRequestBuilderWithTypes);
+        when(searchRequestBuilderWithTypes.setQuery(any())).thenReturn(searchRequestBuilderWithQuery);
+        when(searchRequestBuilderWithQuery.setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME))).thenReturn(searchRequestBuilderWithScroll);
+        when(searchRequestBuilderWithScroll.setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE)).thenReturn(searchRequestBuilderWithSize);
+        when(searchRequestBuilder.execute()).thenReturn(listenableActionFuture);
+        when(listenableActionFuture.actionGet()).thenReturn(searchResponse);
+        when(searchResponse.getHits()).thenReturn(searchHits);
+        when(searchHits.hits()).thenReturn(searchHitArray);
+        when(transportClient.prepareSearchScroll(any())).thenReturn(searchScrollRequestBuilder);
+        when(searchScrollRequestBuilder.execute()).thenReturn(listenableActionFutureScroll);
+        when(listenableActionFutureScroll.actionGet()).thenReturn(searchResponseScroll);
+        when(searchResponseScroll.getHits()).thenReturn(searchHitsScroll);
+        when(searchHitsScroll.hits()).thenReturn(searchHitArrayScroll);
+        when(jsonHelper.unmarshallJsonToObject(any(), any())).thenThrow(new IOException());
+
+        // Call the method under test
+        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList =
+            searchBusinessObjectDefinitionsByTagCodeAndTagTypeFunction.apply("INDEX_NAME", "DOCUMENT_TYPE", "TAG_CODE", "TAG_TYPE_CODE");
+
+        assertThat("Business object definition entity list is null.", businessObjectDefinitionEntityList, not(nullValue()));
+
+        // Verify the calls to external methods
+        verify(transportClient, times(1)).prepareSearch("INDEX_NAME");
+        verify(searchRequestBuilder, times(1)).setTypes("DOCUMENT_TYPE");
+        verify(searchRequestBuilderWithTypes, times(1)).setQuery(any());
+        verify(searchRequestBuilderWithQuery, times(1)).setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME));
+        verify(searchRequestBuilderWithScroll, times(1)).setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE);
+        verify(searchRequestBuilder, times(1)).execute();
+        verify(listenableActionFuture, times(1)).actionGet();
+        verify(searchResponse, times(1)).getHits();
+        verify(searchHits, times(1)).hits();
+        verify(transportClient, times(1)).prepareSearchScroll(any());
+        verify(searchScrollRequestBuilder, times(1)).execute();
+        verify(listenableActionFutureScroll, times(1)).actionGet();
+        verify(searchResponseScroll, times(1)).getHits();
+        verify(searchHitsScroll, times(1)).hits();
+        verify(jsonHelper, times(2)).unmarshallJsonToObject(any(), any());
+    }
+
+    @Test
+    public void testSearchBusinessObjectDefinitionsByTagsFunction() throws Exception
+    {
+        TriFunction<String, String, List<TagEntity>, List<BusinessObjectDefinitionEntity>> searchBusinessObjectDefinitionsByTagsFunction =
+            searchFunctions.getSearchBusinessObjectDefinitionsByTagsFunction();
+        assertThat("Function is null.", searchBusinessObjectDefinitionsByTagsFunction, not(nullValue()));
+        assertThat("Search business object definitions by tags function not an instance of TriFunction.", searchBusinessObjectDefinitionsByTagsFunction,
+            instanceOf(TriFunction.class));
+
+        SearchRequestBuilder searchRequestBuilder = mock(SearchRequestBuilder.class);
+        SearchRequestBuilder searchRequestBuilderWithTypes = mock(SearchRequestBuilder.class);
+        SearchRequestBuilder searchRequestBuilderWithQuery = mock(SearchRequestBuilder.class);
+        SearchRequestBuilder searchRequestBuilderWithScroll = mock(SearchRequestBuilder.class);
+        SearchRequestBuilder searchRequestBuilderWithSize = mock(SearchRequestBuilder.class);
+        SearchResponse searchResponse = mock(SearchResponse.class);
+        SearchHits searchHits = mock(SearchHits.class);
+        SearchHit searchHit1 = mock(SearchHit.class);
+        SearchHit searchHit2 = mock(SearchHit.class);
+        SearchScrollRequestBuilder searchScrollRequestBuilder = mock(SearchScrollRequestBuilder.class);
+        SearchHit[] searchHitArray = new SearchHit[2];
+        searchHitArray[0] = searchHit1;
+        searchHitArray[1] = searchHit2;
+        SearchResponse searchResponseScroll = mock(SearchResponse.class);
+        SearchHits searchHitsScroll = mock(SearchHits.class);
+        SearchHit[] searchHitArrayScroll = new SearchHit[0];
+
+        @SuppressWarnings("unchecked")
+        ListenableActionFuture<SearchResponse> listenableActionFuture = mock(ListenableActionFuture.class);
+        @SuppressWarnings("unchecked")
+        ListenableActionFuture<SearchResponse> listenableActionFutureScroll = mock(ListenableActionFuture.class);
+
+        // Mock the call to external methods
+        when(transportClient.prepareSearch("INDEX_NAME")).thenReturn(searchRequestBuilder);
+        when(searchRequestBuilder.setTypes("DOCUMENT_TYPE")).thenReturn(searchRequestBuilderWithTypes);
+        when(searchRequestBuilderWithTypes.setQuery(any())).thenReturn(searchRequestBuilderWithQuery);
+        when(searchRequestBuilderWithQuery.setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME))).thenReturn(searchRequestBuilderWithScroll);
+        when(searchRequestBuilderWithScroll.setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE)).thenReturn(searchRequestBuilderWithSize);
+        when(searchRequestBuilder.execute()).thenReturn(listenableActionFuture);
+        when(listenableActionFuture.actionGet()).thenReturn(searchResponse);
+        when(searchResponse.getHits()).thenReturn(searchHits);
+        when(searchHits.hits()).thenReturn(searchHitArray);
+        when(transportClient.prepareSearchScroll(any())).thenReturn(searchScrollRequestBuilder);
+        when(searchScrollRequestBuilder.execute()).thenReturn(listenableActionFutureScroll);
+        when(listenableActionFutureScroll.actionGet()).thenReturn(searchResponseScroll);
+        when(searchResponseScroll.getHits()).thenReturn(searchHitsScroll);
+        when(searchHitsScroll.hits()).thenReturn(searchHitArrayScroll);
+        when(herdStringHelper.join(new ArrayList<>(), ",", "\\")).thenReturn("JOINED_STRING");
+        when(jsonHelper.unmarshallJsonToObject(any(), any())).thenReturn(new BusinessObjectDefinitionEntity());
+
+        // Call the method under test
+        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList =
+            searchBusinessObjectDefinitionsByTagsFunction.apply("INDEX_NAME", "DOCUMENT_TYPE", new ArrayList<>());
+
+        assertThat("Business object definition entity list is null.", businessObjectDefinitionEntityList, not(nullValue()));
+
+        // Verify the calls to external methods
+        verify(transportClient, times(1)).prepareSearch("INDEX_NAME");
+        verify(searchRequestBuilder, times(1)).setTypes("DOCUMENT_TYPE");
+        verify(searchRequestBuilderWithTypes, times(1)).setQuery(any());
+        verify(searchRequestBuilderWithQuery, times(1)).setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME));
+        verify(searchRequestBuilderWithScroll, times(1)).setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE);
+        verify(searchRequestBuilder, times(1)).execute();
+        verify(listenableActionFuture, times(1)).actionGet();
+        verify(searchResponse, times(1)).getHits();
+        verify(searchHits, times(1)).hits();
+        verify(transportClient, times(1)).prepareSearchScroll(any());
+        verify(searchScrollRequestBuilder, times(1)).execute();
+        verify(listenableActionFutureScroll, times(1)).actionGet();
+        verify(searchResponseScroll, times(1)).getHits();
+        verify(searchHitsScroll, times(1)).hits();
+        verify(herdStringHelper, times(1)).join(new ArrayList<>(), ",", "\\");
+        verify(jsonHelper, times(2)).unmarshallJsonToObject(any(), any());
+    }
+
+    @Test
+    public void testSearchBusinessObjectDefinitionsByTagsFunctionException() throws Exception
+    {
+        TriFunction<String, String, List<TagEntity>, List<BusinessObjectDefinitionEntity>> searchBusinessObjectDefinitionsByTagsFunction =
+            searchFunctions.getSearchBusinessObjectDefinitionsByTagsFunction();
+        assertThat("Function is null.", searchBusinessObjectDefinitionsByTagsFunction, not(nullValue()));
+        assertThat("Search business object definitions by tags function not an instance of TriFunction.", searchBusinessObjectDefinitionsByTagsFunction,
+            instanceOf(TriFunction.class));
+
+        SearchRequestBuilder searchRequestBuilder = mock(SearchRequestBuilder.class);
+        SearchRequestBuilder searchRequestBuilderWithTypes = mock(SearchRequestBuilder.class);
+        SearchRequestBuilder searchRequestBuilderWithQuery = mock(SearchRequestBuilder.class);
+        SearchRequestBuilder searchRequestBuilderWithScroll = mock(SearchRequestBuilder.class);
+        SearchRequestBuilder searchRequestBuilderWithSize = mock(SearchRequestBuilder.class);
+        SearchResponse searchResponse = mock(SearchResponse.class);
+        SearchHits searchHits = mock(SearchHits.class);
+        SearchHit searchHit1 = mock(SearchHit.class);
+        SearchHit searchHit2 = mock(SearchHit.class);
+        SearchScrollRequestBuilder searchScrollRequestBuilder = mock(SearchScrollRequestBuilder.class);
+        SearchHit[] searchHitArray = new SearchHit[2];
+        searchHitArray[0] = searchHit1;
+        searchHitArray[1] = searchHit2;
+        SearchResponse searchResponseScroll = mock(SearchResponse.class);
+        SearchHits searchHitsScroll = mock(SearchHits.class);
+        SearchHit[] searchHitArrayScroll = new SearchHit[0];
+
+        @SuppressWarnings("unchecked")
+        ListenableActionFuture<SearchResponse> listenableActionFuture = mock(ListenableActionFuture.class);
+        @SuppressWarnings("unchecked")
+        ListenableActionFuture<SearchResponse> listenableActionFutureScroll = mock(ListenableActionFuture.class);
+
+        // Mock the call to external methods
+        when(transportClient.prepareSearch("INDEX_NAME")).thenReturn(searchRequestBuilder);
+        when(searchRequestBuilder.setTypes("DOCUMENT_TYPE")).thenReturn(searchRequestBuilderWithTypes);
+        when(searchRequestBuilderWithTypes.setQuery(any())).thenReturn(searchRequestBuilderWithQuery);
+        when(searchRequestBuilderWithQuery.setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME))).thenReturn(searchRequestBuilderWithScroll);
+        when(searchRequestBuilderWithScroll.setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE)).thenReturn(searchRequestBuilderWithSize);
+        when(searchRequestBuilder.execute()).thenReturn(listenableActionFuture);
+        when(listenableActionFuture.actionGet()).thenReturn(searchResponse);
+        when(searchResponse.getHits()).thenReturn(searchHits);
+        when(searchHits.hits()).thenReturn(searchHitArray);
+        when(transportClient.prepareSearchScroll(any())).thenReturn(searchScrollRequestBuilder);
+        when(searchScrollRequestBuilder.execute()).thenReturn(listenableActionFutureScroll);
+        when(listenableActionFutureScroll.actionGet()).thenReturn(searchResponseScroll);
+        when(searchResponseScroll.getHits()).thenReturn(searchHitsScroll);
+        when(searchHitsScroll.hits()).thenReturn(searchHitArrayScroll);
+        when(herdStringHelper.join(new ArrayList<>(), ",", "\\")).thenReturn("JOINED_STRING");
+        when(jsonHelper.unmarshallJsonToObject(any(), any())).thenThrow(new IOException());
+
+        // Call the method under test
+        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList =
+            searchBusinessObjectDefinitionsByTagsFunction.apply("INDEX_NAME", "DOCUMENT_TYPE", new ArrayList<>());
+
+        assertThat("Business object definition entity list is null.", businessObjectDefinitionEntityList, not(nullValue()));
+
+        // Verify the calls to external methods
+        verify(transportClient, times(1)).prepareSearch("INDEX_NAME");
+        verify(searchRequestBuilder, times(1)).setTypes("DOCUMENT_TYPE");
+        verify(searchRequestBuilderWithTypes, times(1)).setQuery(any());
+        verify(searchRequestBuilderWithQuery, times(1)).setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME));
+        verify(searchRequestBuilderWithScroll, times(1)).setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE);
+        verify(searchRequestBuilder, times(1)).execute();
+        verify(listenableActionFuture, times(1)).actionGet();
+        verify(searchResponse, times(1)).getHits();
+        verify(searchHits, times(1)).hits();
+        verify(transportClient, times(1)).prepareSearchScroll(any());
+        verify(searchScrollRequestBuilder, times(1)).execute();
+        verify(listenableActionFutureScroll, times(1)).actionGet();
+        verify(searchResponseScroll, times(1)).getHits();
+        verify(searchHitsScroll, times(1)).hits();
+        verify(herdStringHelper, times(1)).join(new ArrayList<>(), ",", "\\");
+        verify(jsonHelper, times(2)).unmarshallJsonToObject(any(), any());
     }
 
     @Test

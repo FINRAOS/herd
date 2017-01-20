@@ -162,6 +162,21 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final int EXPECTED_UUID_SIZE = 36;
 
+    /**
+     * Constant to hold the data provider name option for the business object definition search
+     */
+    public static final String FIELD_DATA_PROVIDER_NAME = "dataProviderName";
+
+    /**
+     * Constant to hold the short description option for the business object definition search
+     */
+    public static final String FIELD_SHORT_DESCRIPTION = "shortDescription";
+
+    /**
+     * Constant to hold the display name option for the business object definition search
+     */
+    public static final String FIELD_DISPLAY_NAME = "displayName";
+
     public static final String FILE_NAME = "UT_FileName_1_" + RANDOM_SUFFIX;
 
     public static final String FILE_NAME_2 = "UT_FileName_2_" + RANDOM_SUFFIX;
@@ -287,6 +302,11 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
             "#end";
 
     public static final String SECOND_PARTITION_COLUMN_NAME = "PRTN_CLMN002";
+
+    /**
+     * The length of a business object definition short description
+     */
+    public static final int SHORT_DESCRIPTION_LENGTH = 300;
 
     public static final String SQS_QUEUE_NAME = "UT_Sqs_Queue_Name_" + RANDOM_SUFFIX;
 

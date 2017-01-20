@@ -555,6 +555,70 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     }
 
     @Override
+    public BusinessObjectDefinitionSearchResponse indexSearchBusinessObjectDefinitions(BusinessObjectDefinitionSearchRequest request, Set<String> fields)
+    {
+        // Get the configured values for index name and document type
+        final String indexName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
+        final String documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
+
+        // Validate the business object definition search fields
+        validateSearchResponseFields(fields);
+
+        // Create a new array list to hold the business object definition entities found in the index search
+        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList = new ArrayList<>();
+
+        // If the request contains search filters
+        if (!CollectionUtils.isEmpty(request.getBusinessObjectDefinitionSearchFilters()))
+        {
+            // Validate the search request.
+            validateBusinessObjectDefinitionSearchRequest(request);
+
+            // Get the first filter only
+            BusinessObjectDefinitionSearchKey businessObjectDefinitionSearchKey =
+                request.getBusinessObjectDefinitionSearchFilters().get(0).getBusinessObjectDefinitionSearchKeys().get(0);
+
+            // If includeTagHierarchy is true, get list of children tag entities down the hierarchy of the specified tag
+            if (BooleanUtils.isTrue(businessObjectDefinitionSearchKey.isIncludeTagHierarchy()))
+            {
+                // Need to get the list of children tag entities down the hierarchy before the search on the index
+                TagEntity tagEntity = tagDaoHelper.getTagEntity(businessObjectDefinitionSearchKey.getTagKey());
+                List<TagEntity> tagEntities = new ArrayList<>();
+                tagEntities.add(tagEntity);
+                tagEntities.addAll(tagDaoHelper.getTagChildrenEntities(tagEntity));
+
+                // Use the tag type entities list to search in the search index for business object definitions
+                businessObjectDefinitionEntityList =
+                    searchFunctions.getSearchBusinessObjectDefinitionsByTagsFunction().apply(indexName, documentType, tagEntities);
+            }
+            // If includeTagHierarchy is false, simply use the tag code and tag type code to search the search index for business object definitions
+            else
+            {
+                // Search the index based on the tag code and tag type code
+                businessObjectDefinitionEntityList = searchFunctions.getSearchBusinessObjectDefinitionsByTagCodeAndTagTypeFunction()
+                    .apply(indexName, documentType, businessObjectDefinitionSearchKey.getTagKey().getTagCode(),
+                        businessObjectDefinitionSearchKey.getTagKey().getTagTypeCode());
+            }
+        }
+
+        // Create a list to hold the business object definitions that will be returned as part of the search response
+        List<BusinessObjectDefinition> businessObjectDefinitions = new ArrayList<>();
+
+        // Retrieve all unique business object definition entities and construct a list of business object definitions based on the requested fields.
+        for (BusinessObjectDefinitionEntity businessObjectDefinition : ImmutableSet.copyOf(businessObjectDefinitionEntityList))
+        {
+            // Convert the business object definition entity to a business object definition and add it to the list of business object definitions that will be
+            // returned as a part of the search response
+            businessObjectDefinitions.add(createBusinessObjectDefinitionFromEntity(businessObjectDefinition, fields));
+        }
+
+        // Construct business object search response.
+        BusinessObjectDefinitionSearchResponse searchResponse = new BusinessObjectDefinitionSearchResponse();
+        searchResponse.setBusinessObjectDefinitions(businessObjectDefinitions);
+
+        return searchResponse;
+    }
+
+    @Override
     public BusinessObjectDefinitionSearchResponse searchBusinessObjectDefinitions(BusinessObjectDefinitionSearchRequest request, Set<String> fields)
     {
         // Validate the business object definition search fields.
