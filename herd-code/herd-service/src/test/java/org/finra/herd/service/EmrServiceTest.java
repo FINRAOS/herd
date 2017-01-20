@@ -1534,7 +1534,7 @@ public class EmrServiceTest extends AbstractServiceTest
         String buildEmrClusterNameResult = "buildEmrClusterNameResult";
         when(mockEmrHelper.buildEmrClusterName(any(), any(), any())).thenReturn(buildEmrClusterNameResult);
 
-        when(mockEmrHelper.getActiveEmrClusterId(any(), any())).thenReturn(buildEmrClusterNameResult);
+        when(mockEmrHelper.getActiveEmrClusterId(any(), any(), null)).thenReturn(buildEmrClusterNameResult);
 
         when(mockEmrDao.getEmrClusterStatusById(any(), any())).thenReturn(buildEmrClusterNameResult);
 
@@ -1549,7 +1549,7 @@ public class EmrServiceTest extends AbstractServiceTest
             .getEmrClusterDefinitionEntity(emrClusterAlternateKeyDto.getNamespace(), emrClusterAlternateKeyDto.getEmrClusterDefinitionName());
         verify(mockEmrHelper)
             .buildEmrClusterName(namespaceEntity.getCode(), emrClusterDefinitionEntity.getName(), emrClusterAlternateKeyDto.getEmrClusterName());
-        verify(mockEmrHelper).getActiveEmrClusterId(emrClusterId, buildEmrClusterNameResult);
+        verify(mockEmrHelper).getActiveEmrClusterId(emrClusterId, buildEmrClusterNameResult, null);
         verify(mockEmrDao).terminateEmrCluster(buildEmrClusterNameResult, overrideTerminationProtection, awsParamsDto);
         verify(mockEmrDao).getEmrClusterStatusById(buildEmrClusterNameResult, awsParamsDto);
         verifyNoMoreInteractions(mockEmrHelper, mockNamespaceDaoHelper, mockEmrClusterDefinitionDaoHelper, mockEmrDao);

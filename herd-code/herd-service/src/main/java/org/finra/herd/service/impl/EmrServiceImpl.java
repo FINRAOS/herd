@@ -18,7 +18,6 @@ package org.finra.herd.service.impl;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 
 import javax.xml.datatype.XMLGregorianCalendar;
 
@@ -28,7 +27,6 @@ import com.amazonaws.services.elasticmapreduce.model.ClusterStatus;
 import com.amazonaws.services.elasticmapreduce.model.ClusterSummary;
 import com.amazonaws.services.elasticmapreduce.model.Step;
 import com.amazonaws.services.elasticmapreduce.model.StepSummary;
-import com.amazonaws.services.securitytoken.model.Credentials;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
 import org.apache.oozie.client.WorkflowAction;
@@ -44,7 +42,6 @@ import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.EmrDao;
 import org.finra.herd.dao.HerdDao;
 import org.finra.herd.dao.OozieDao;
-import org.finra.herd.dao.StsDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.dao.helper.EmrHelper;
 import org.finra.herd.dao.helper.EmrPricingHelper;
@@ -71,7 +68,6 @@ import org.finra.herd.model.dto.EmrClusterAlternateKeyDto;
 import org.finra.herd.model.jpa.EmrClusterCreationLogEntity;
 import org.finra.herd.model.jpa.EmrClusterDefinitionEntity;
 import org.finra.herd.model.jpa.NamespaceEntity;
-import org.finra.herd.model.jpa.TrustingAccountEntity;
 import org.finra.herd.service.EmrService;
 import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.EmrClusterDefinitionDaoHelper;
@@ -81,7 +77,6 @@ import org.finra.herd.service.helper.EmrStepHelperFactory;
 import org.finra.herd.service.helper.NamespaceDaoHelper;
 import org.finra.herd.service.helper.NamespaceIamRoleAuthorizationHelper;
 import org.finra.herd.service.helper.ParameterHelper;
-import org.finra.herd.service.helper.TrustingAccountDaoHelper;
 
 /**
  * The EMR service implementation.
@@ -133,12 +128,6 @@ public class EmrServiceImpl implements EmrService
     private ParameterHelper parameterHelper;
 
     @Autowired
-    private StsDao stsDao;
-
-    @Autowired
-    private TrustingAccountDaoHelper trustingAccountDaoHelper;
-
-    @Autowired
     private XmlHelper xmlHelper;
 
     /**
@@ -176,7 +165,7 @@ public class EmrServiceImpl implements EmrService
     protected EmrCluster getClusterImpl(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, String emrClusterId, String emrStepId, boolean verbose,
         boolean retrieveOozieJobs, String accountId) throws Exception
     {
-        AwsParamsDto  awsParamsDto = getAwsparamsDtoByAcccountId(accountId);
+        AwsParamsDto  awsParamsDto = emrHelper.getAwsparamsDtoByAcccountId(accountId);
         
         // Perform the request validation.
         validateEmrClusterKey(emrClusterAlternateKeyDto);
@@ -411,8 +400,6 @@ public class EmrServiceImpl implements EmrService
      */
     protected EmrCluster createClusterImpl(EmrClusterCreateRequest request) throws Exception
     {
-        AwsParamsDto awsParamsDto = emrHelper.getAwsParamsDto();
-
         // Extract EMR cluster alternate key from the create request.
         EmrClusterAlternateKeyDto emrClusterAlternateKeyDto = getEmrClusterAlternateKey(request);
 
@@ -443,12 +430,8 @@ public class EmrServiceImpl implements EmrService
         namespaceIamRoleAuthorizationHelper.checkPermissions(emrClusterDefinitionEntity.getNamespace(), emrClusterDefinition.getServiceIamRole(),
             emrClusterDefinition.getEc2NodeIamProfileName());
 
-        // If a trusting account id is specified, update the AWS parameters DTO with the temporary credentials for the cross-account access.
-        if (StringUtils.isNotBlank(emrClusterDefinition.getAccountId()))
-        {
-            updateAwsParamsForCrossAccountAccess(awsParamsDto, emrClusterDefinition.getAccountId().trim());
-        }
-
+        AwsParamsDto awsParamsDto = emrHelper.getAwsparamsDtoByAcccountId(emrClusterDefinition.getAccountId());
+        
         // Find best price and update definition.
         emrPricingHelper.updateEmrClusterDefinitionWithBestPrice(emrClusterAlternateKeyDto, emrClusterDefinition, awsParamsDto);
 
@@ -644,26 +627,6 @@ public class EmrServiceImpl implements EmrService
         }
     }
 
-    /**
-     * Updates the AWS parameters DTO with the temporary credentials for the cross-account access.
-     *
-     * @param awsParamsDto the AWS connection parameters
-     * @param accountId the AWS account number
-     */
-    private void updateAwsParamsForCrossAccountAccess(AwsParamsDto awsParamsDto, String accountId)
-    {
-        // Retrieve the role ARN and make sure it exists.
-        TrustingAccountEntity trustingAccountEntity = trustingAccountDaoHelper.getTrustingAccountEntity(accountId.trim());
-        String roleArn = trustingAccountEntity.getRoleArn();
-
-        // Assume the role. Set the duration of the role session to 3600 seconds (1 hour).
-        Credentials credentials = stsDao.getTemporarySecurityCredentials(awsParamsDto, UUID.randomUUID().toString(), roleArn, 3600, null);
-
-        // Update the AWS parameters DTO with the temporary credentials.
-        awsParamsDto.setAwsAccessKeyId(credentials.getAccessKeyId());
-        awsParamsDto.setAwsSecretKey(credentials.getSecretAccessKey());
-        awsParamsDto.setSessionToken(credentials.getSessionToken());
-    }
 
     /**
      * Terminates the EMR Cluster. Creates its own transaction.
@@ -696,7 +659,7 @@ public class EmrServiceImpl implements EmrService
     protected EmrCluster terminateClusterImpl(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, boolean overrideTerminationProtection, String emrClusterId,
         String accountId) throws Exception
     {
-        AwsParamsDto awsParamsDto = getAwsparamsDtoByAcccountId(accountId);
+        AwsParamsDto awsParamsDto = emrHelper.getAwsparamsDtoByAcccountId(accountId);
 
         // Perform the request validation.
         validateEmrClusterKey(emrClusterAlternateKeyDto);
@@ -713,7 +676,7 @@ public class EmrServiceImpl implements EmrService
             emrHelper.buildEmrClusterName(namespaceEntity.getCode(), emrClusterDefinitionEntity.getName(), emrClusterAlternateKeyDto.getEmrClusterName());
         try
         {
-            clusterId = emrHelper.getActiveEmrClusterId(emrClusterId, clusterName);
+            clusterId = emrHelper.getActiveEmrClusterId(emrClusterId, clusterName, accountId);
             emrDao.terminateEmrCluster(clusterId, overrideTerminationProtection, awsParamsDto);
         }
         catch (AmazonServiceException ex)
@@ -808,7 +771,7 @@ public class EmrServiceImpl implements EmrService
         
         //get accountId and awsParamDto
         String accountId = stepHelper.getRequestAccountId(request);
-        AwsParamsDto awsParamsDto = getAwsparamsDtoByAcccountId(accountId);
+        AwsParamsDto awsParamsDto = emrHelper.getAwsparamsDtoByAcccountId(accountId);
 
         // Get the namespace and ensure it exists.
         NamespaceEntity namespaceEntity = namespaceDaoHelper.getNamespaceEntity(stepHelper.getRequestNamespace(request));
@@ -827,7 +790,8 @@ public class EmrServiceImpl implements EmrService
 
         try
         {
-            String clusterId = emrHelper.getActiveEmrClusterId(stepHelper.getRequestEmrClusterId(request), clusterName);
+            String clusterId =
+                    emrHelper.getActiveEmrClusterId(stepHelper.getRequestEmrClusterId(request), clusterName, stepHelper.getRequestAccountId(request));
             stepHelper.setRequestEmrClusterId(request, clusterId);
             String stepId = emrDao.addEmrStep(clusterId, stepHelper.getEmrStepConfig(emrStep), awsParamsDto);
             stepHelper.setStepId(emrStep, stepId);
@@ -902,7 +866,7 @@ public class EmrServiceImpl implements EmrService
         
         // Get account and AwsParamDto
         String accountId = request.getAccountId();
-        AwsParamsDto awsParamsDto = getAwsparamsDtoByAcccountId(accountId);
+        AwsParamsDto awsParamsDto = emrHelper.getAwsparamsDtoByAcccountId(accountId);
 
         // Get the namespace and ensure it exists.
         NamespaceEntity namespaceEntity = namespaceDaoHelper.getNamespaceEntity(request.getNamespace());
@@ -915,8 +879,9 @@ public class EmrServiceImpl implements EmrService
         String clusterName = emrHelper.buildEmrClusterName(namespaceEntity.getCode(), emrClusterDefinitionEntity.getName(), request.getEmrClusterName());
         try
         {
-            groupIds = emrDao.addEmrMasterSecurityGroups(emrHelper.getActiveEmrClusterId(request.getEmrClusterId(), clusterName), request.getSecurityGroupIds(),
-                    awsParamsDto);
+            groupIds =
+                    emrDao.addEmrMasterSecurityGroups(emrHelper.getActiveEmrClusterId(request.getEmrClusterId(), clusterName, request.getAccountId()), request
+                            .getSecurityGroupIds(), awsParamsDto);
         }
         catch (AmazonServiceException ex)
         {
@@ -1043,7 +1008,7 @@ public class EmrServiceImpl implements EmrService
      */
     private String getEmrClusterMasterIpAddress(String emrClusterId, String accountId) throws Exception
     {
-        AwsParamsDto awsParamsDto = getAwsparamsDtoByAcccountId(accountId);
+        AwsParamsDto awsParamsDto = emrHelper.getAwsparamsDtoByAcccountId(accountId);
         return emrDao.getEmrMasterInstance(emrClusterId, awsParamsDto).getPrivateIpAddress();
     }
 
@@ -1064,7 +1029,7 @@ public class EmrServiceImpl implements EmrService
         NamespaceEntity namespaceEntity = namespaceDaoHelper.getNamespaceEntity(namespace);
         
         // Get the AwsParamsDto
-        AwsParamsDto awsParamDto = getAwsparamsDtoByAcccountId(accountId);
+        AwsParamsDto awsParamDto = emrHelper.getAwsparamsDtoByAcccountId(accountId);
 
         // Get the EMR cluster definition and ensure it exists.
         EmrClusterDefinitionEntity emrClusterDefinitionEntity =
@@ -1337,22 +1302,5 @@ public class EmrServiceImpl implements EmrService
         cl.setStatusTimeline(new StatusTimeline(toXmlGregorianCalendar(amazonClusterStatus.getTimeline().getCreationDateTime()),
             toXmlGregorianCalendar(amazonClusterStatus.getTimeline().getReadyDateTime()),
             toXmlGregorianCalendar(amazonClusterStatus.getTimeline().getEndDateTime())));
-    }
-    
-    /**
-     * Get the AWS Params DTO for the account Id
-     * if no account id is specified, use the default
-     * @param accountId account Id
-     * @return AwsParamsDto
-     */
-    private AwsParamsDto getAwsparamsDtoByAcccountId(String accountId)
-    {
-        AwsParamsDto awsParamsDto = emrHelper.getAwsParamsDto();
-        if (StringUtils.isNotBlank(accountId))
-        {
-            updateAwsParamsForCrossAccountAccess(awsParamsDto, accountId.trim());
-        }
-        
-        return awsParamsDto;
     }
 }

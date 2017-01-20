@@ -19,12 +19,14 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import com.amazonaws.services.elasticmapreduce.model.ActionOnFailure;
 import com.amazonaws.services.elasticmapreduce.model.Cluster;
 import com.amazonaws.services.elasticmapreduce.model.ClusterSummary;
 import com.amazonaws.services.elasticmapreduce.model.HadoopJarStepConfig;
 import com.amazonaws.services.elasticmapreduce.model.StepConfig;
+import com.amazonaws.services.securitytoken.model.Credentials;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.oozie.client.WorkflowAction;
 import org.apache.oozie.client.WorkflowJob;
@@ -34,8 +36,11 @@ import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
 import org.finra.herd.dao.EmrDao;
+import org.finra.herd.dao.StsDao;
 import org.finra.herd.dao.impl.OozieDaoImpl;
+import org.finra.herd.model.dto.AwsParamsDto;
 import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.model.jpa.TrustingAccountEntity;
 
 /**
  * A helper class that provides EMR functions.
@@ -46,6 +51,12 @@ public class EmrHelper extends AwsHelper
     @Autowired
     private EmrDao emrDao;
 
+    @Autowired
+    private TrustingAccountDaoHelper trustingAccountDaoHelper;
+    
+    @Autowired
+    private StsDao stsDao;
+    
     /**
      * Returns EMR cluster name constructed according to the template defined.
      *
@@ -250,23 +261,24 @@ public class EmrHelper extends AwsHelper
      *
      * @param emrClusterId EMR cluster ID
      * @param emrClusterName EMR cluster name
-     *
+     * @param accountId the account Id that EMR cluster is running under
      * @return The cluster ID
      */
-    public String getActiveEmrClusterId(String emrClusterId, String emrClusterName)
+    public String getActiveEmrClusterId(String emrClusterId, String emrClusterName, String accountId)
     {
         boolean emrClusterIdSpecified = StringUtils.isNotBlank(emrClusterId);
         boolean emrClusterNameSpecified = StringUtils.isNotBlank(emrClusterName);
-
+        
         Assert.isTrue(emrClusterIdSpecified || emrClusterNameSpecified, "One of EMR cluster ID or EMR cluster name must be specified.");
-
+        AwsParamsDto awsParamsDto = getAwsparamsDtoByAcccountId(accountId);
+        
         // Get cluster by ID first
         if (emrClusterIdSpecified)
         {
             String emrClusterIdTrimmed = emrClusterId.trim();
 
             // Assert cluster exists
-            Cluster cluster = emrDao.getEmrClusterById(emrClusterIdTrimmed, getAwsParamsDto());
+            Cluster cluster = emrDao.getEmrClusterById(emrClusterIdTrimmed, awsParamsDto);
             Assert.notNull(cluster, String.format("The cluster with ID \"%s\" does not exist.", emrClusterIdTrimmed));
 
             // Assert the cluster's state is active
@@ -289,7 +301,7 @@ public class EmrHelper extends AwsHelper
         else
         {
             String emrClusterNameTrimmed = emrClusterName.trim();
-            ClusterSummary clusterSummary = emrDao.getActiveEmrClusterByName(emrClusterNameTrimmed, getAwsParamsDto());
+            ClusterSummary clusterSummary = emrDao.getActiveEmrClusterByName(emrClusterNameTrimmed, awsParamsDto);
             Assert.notNull(clusterSummary, String.format("The cluster with name \"%s\" does not exist.", emrClusterNameTrimmed));
             return clusterSummary.getId();
         }
@@ -303,5 +315,43 @@ public class EmrHelper extends AwsHelper
     public void setEmrDao(EmrDao emrDao)
     {
         this.emrDao = emrDao;
+    }
+    
+    /**
+     * Get the AWS Params DTO for the account Id
+     * if no account id is specified, use the default
+     * @param accountId account Id
+     * @return AwsParamsDto
+     */
+    public AwsParamsDto getAwsparamsDtoByAcccountId(String accountId)
+    {
+        AwsParamsDto awsParamsDto = getAwsParamsDto();
+        if (StringUtils.isNotBlank(accountId))
+        {
+            updateAwsParamsForCrossAccountAccess(awsParamsDto, accountId.trim());
+        }
+        
+        return awsParamsDto;
+    }
+    
+    /**
+     * Updates the AWS parameters DTO with the temporary credentials for the cross-account access.
+     *
+     * @param awsParamsDto the AWS connection parameters
+     * @param accountId the AWS account number
+     */
+    private void updateAwsParamsForCrossAccountAccess(AwsParamsDto awsParamsDto, String accountId)
+    {
+        // Retrieve the role ARN and make sure it exists.
+        TrustingAccountEntity trustingAccountEntity = trustingAccountDaoHelper.getTrustingAccountEntity(accountId.trim());
+        String roleArn = trustingAccountEntity.getRoleArn();
+
+        // Assume the role. Set the duration of the role session to 3600 seconds (1 hour).
+        Credentials credentials = stsDao.getTemporarySecurityCredentials(awsParamsDto, UUID.randomUUID().toString(), roleArn, 3600, null);
+
+        // Update the AWS parameters DTO with the temporary credentials.
+        awsParamsDto.setAwsAccessKeyId(credentials.getAccessKeyId());
+        awsParamsDto.setAwsSecretKey(credentials.getSecretAccessKey());
+        awsParamsDto.setSessionToken(credentials.getSessionToken());
     }
 }
