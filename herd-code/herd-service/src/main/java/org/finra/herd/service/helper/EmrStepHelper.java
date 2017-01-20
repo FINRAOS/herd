@@ -222,4 +222,22 @@ public abstract class EmrStepHelper
             throw new IllegalArgumentException("Script location must be specified.");
         }
     }
+    
+    /**
+     * Gets Request accountId
+     *
+     * @param stepRequest The step request
+     *
+     * @return The Request account Id
+     */
+    public abstract String getRequestAccountId(Object stepRequest);
+    
+    /**
+     * Sets Request accountID.
+     *
+     * @param stepRequest The step request
+     * @param accountId The account ID
+     */
+    public abstract void setRequestAccountId(Object stepRequest, String accountId);
+
 }

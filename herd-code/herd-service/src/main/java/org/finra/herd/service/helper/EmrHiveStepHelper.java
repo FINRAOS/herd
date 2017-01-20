@@ -201,4 +201,16 @@ public class EmrHiveStepHelper extends EmrStepHelper
         validateStepName(hiveStepRequest.getStepName());
         validateScriptLocation(hiveStepRequest.getScriptLocation());
     }
+
+    @Override
+    public String getRequestAccountId(Object stepRequest)
+    {
+       return ((EmrHiveStepAddRequest) stepRequest).getAccountId();
+    }
+
+    @Override
+    public void setRequestAccountId(Object stepRequest, String accountId)
+    {
+        ((EmrHiveStepAddRequest) stepRequest).setAccountId(accountId);  
+    }
 }

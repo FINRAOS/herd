@@ -17,10 +17,10 @@ package org.finra.herd.rest;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyBoolean;
-import static org.mockito.Mockito.argThat;
-import static org.mockito.Mockito.eq;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.argThat;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -60,6 +60,8 @@ import org.finra.herd.service.EmrService;
  */
 public class EmrRestControllerTest extends AbstractRestTest
 {
+    private String defaultAccountId = null;
+    
     private static class EqualsEmrClusterAlternateKeyDto extends ArgumentMatcher<EmrClusterAlternateKeyDto>
     {
         private String namespace;
@@ -67,7 +69,7 @@ public class EmrRestControllerTest extends AbstractRestTest
         private String emrClusterDefinitionName;
 
         private String emrClusterName;
-
+        
         private EqualsEmrClusterAlternateKeyDto(String namespace, String emrClusterDefinitionName, String emrClusterName)
         {
             this.namespace = namespace;
@@ -91,7 +93,7 @@ public class EmrRestControllerTest extends AbstractRestTest
     @Test(expected = ObjectNotFoundException.class)
     public void testGetEmrCluster() throws Exception
     {
-        emrRestController.getEmrCluster(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, "cluster_no_exist", null, null, false, false);
+        emrRestController.getEmrCluster(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, "cluster_no_exist", null, null, false, false, defaultAccountId);
     }
 
     /**
@@ -128,13 +130,13 @@ public class EmrRestControllerTest extends AbstractRestTest
         String emrClusterId = "emrClusterId";
 
         EmrCluster emrCluster = new EmrCluster();
-        when(emrService.terminateCluster(any(), anyBoolean(), any())).thenReturn(emrCluster);
+        when(emrService.terminateCluster(any(), anyBoolean(), any(), null)).thenReturn(emrCluster);
 
         assertEquals(emrCluster,
-            emrRestController.terminateEmrCluster(namespace, emrClusterDefinitionName, emrClusterName, overrideTerminationProtection, emrClusterId));
+            emrRestController.terminateEmrCluster(namespace, emrClusterDefinitionName, emrClusterName, overrideTerminationProtection, emrClusterId, defaultAccountId));
 
         verify(emrService).terminateCluster(argThat(new EqualsEmrClusterAlternateKeyDto(namespace, emrClusterDefinitionName, emrClusterName)),
-            eq(overrideTerminationProtection), eq(emrClusterId));
+            eq(overrideTerminationProtection), eq(emrClusterId), null);
         verifyNoMoreInteractions(emrService);
     }
 
@@ -167,7 +169,7 @@ public class EmrRestControllerTest extends AbstractRestTest
 
         EmrCluster emrClusterStatus = emrRestController
             .getEmrCluster(emrCluster.getNamespace(), emrCluster.getEmrClusterDefinitionName(), emrCluster.getEmrClusterName(), emrCluster.getId(),
-                emrShellStep.getId(), false, false);
+                emrShellStep.getId(), false, false, null);
         assertEquals(emrShellStep.getId(), emrClusterStatus.getStep().getId());
 
 
@@ -187,7 +189,7 @@ public class EmrRestControllerTest extends AbstractRestTest
         Assert.notNull(emrHiveStep.getId());
         emrClusterStatus = emrRestController
             .getEmrCluster(emrCluster.getNamespace(), emrCluster.getEmrClusterDefinitionName(), emrCluster.getEmrClusterName(), emrCluster.getId(),
-                emrHiveStep.getId(), false, false);
+                emrHiveStep.getId(), false, false, null);
         assertEquals(emrHiveStep.getId(), emrClusterStatus.getStep().getId());
 
         // Create a EmrPigStepAddRequest entry to pass it to RestController
@@ -207,7 +209,7 @@ public class EmrRestControllerTest extends AbstractRestTest
 
         emrClusterStatus = emrRestController
             .getEmrCluster(emrCluster.getNamespace(), emrCluster.getEmrClusterDefinitionName(), emrCluster.getEmrClusterName(), emrCluster.getId(),
-                emrPigStep.getId(), false, false);
+                emrPigStep.getId(), false, false, null);
         assertEquals(emrPigStep.getId(), emrClusterStatus.getStep().getId());
 
         // Create a EmrOozieStepAddRequest entry to pass it to RestController
@@ -228,7 +230,7 @@ public class EmrRestControllerTest extends AbstractRestTest
 
         emrClusterStatus = emrRestController
             .getEmrCluster(emrCluster.getNamespace(), emrCluster.getEmrClusterDefinitionName(), emrCluster.getEmrClusterName(), emrCluster.getId(),
-                emrOozieStep.getId(), false, false);
+                emrOozieStep.getId(), false, false, defaultAccountId);
         assertEquals(emrOozieStep.getId(), emrClusterStatus.getStep().getId());
 
         // Create a EmrHadoopJarStepAddRequest entry to pass it to RestController
@@ -248,7 +250,7 @@ public class EmrRestControllerTest extends AbstractRestTest
 
         emrClusterStatus = emrRestController
             .getEmrCluster(emrCluster.getNamespace(), emrCluster.getEmrClusterDefinitionName(), emrCluster.getEmrClusterName(), emrCluster.getId(),
-                emrHadoopJarStep.getId(), false, false);
+                emrHadoopJarStep.getId(), false, false, defaultAccountId);
         assertEquals(emrHadoopJarStep.getId(), emrClusterStatus.getStep().getId());
     }
 
@@ -273,7 +275,7 @@ public class EmrRestControllerTest extends AbstractRestTest
     {
         // Create a RunOozieWorkflowRequest entry to pass it to RestController
         RunOozieWorkflowRequest runOozieWorkflowRequest =
-            new RunOozieWorkflowRequest(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, "test_cluster", OOZIE_WORKFLOW_LOCATION, null, null);
+            new RunOozieWorkflowRequest(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, "test_cluster", OOZIE_WORKFLOW_LOCATION, null, null, defaultAccountId);
 
         try
         {
@@ -294,7 +296,7 @@ public class EmrRestControllerTest extends AbstractRestTest
     {
         try
         {
-            emrRestController.getEmrOozieWorkflow(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, EMR_CLUSTER_NAME, "test_oozieWorkflowJobId", false, null);
+            emrRestController.getEmrOozieWorkflow(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, EMR_CLUSTER_NAME, "test_oozieWorkflowJobId", false, null, defaultAccountId);
             fail("Should throw an ObjectNotFoundException.");
         }
         catch (ObjectNotFoundException ex)

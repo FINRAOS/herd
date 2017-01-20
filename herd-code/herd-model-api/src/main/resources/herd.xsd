@@ -4260,6 +4260,7 @@
          <xs:element name="scriptArguments" type="scriptArguments" minOccurs="0"/>
          <xs:element name="continueOnError" type="xs:boolean" minOccurs="0"/>
          <xs:element name="emrClusterId" type="xs:string" minOccurs="0"/>
+         <xs:element name="accountId" type="xs:string" minOccurs="0"/>
       </xs:all>
    </xs:complexType>
 
@@ -4274,6 +4275,7 @@
          <xs:element name="scriptArguments" type="scriptArguments" minOccurs="0"/>
          <xs:element name="continueOnError" type="xs:boolean" minOccurs="0"/>
          <xs:element name="emrClusterId" type="xs:string" minOccurs="0"/>
+         <xs:element name="accountId" type="xs:string" minOccurs="0"/>
       </xs:all>
    </xs:complexType>
 
@@ -4288,6 +4290,7 @@
          <xs:element name="scriptArguments" type="scriptArguments" minOccurs="0"/>
          <xs:element name="continueOnError" type="xs:boolean" minOccurs="0"/>
          <xs:element name="emrClusterId" type="xs:string" minOccurs="0"/>
+         <xs:element name="accountId" type="xs:string" minOccurs="0"/>
       </xs:all>
    </xs:complexType>
 
@@ -4302,6 +4305,7 @@
          <xs:element name="ooziePropertiesFileLocation" type="xs:string"/>
          <xs:element name="continueOnError" type="xs:boolean" minOccurs="0"/>
          <xs:element name="emrClusterId" type="xs:string" minOccurs="0"/>
+         <xs:element name="accountId" type="xs:string" minOccurs="0"/>
       </xs:all>
    </xs:complexType>
 
@@ -4317,6 +4321,7 @@
          <xs:element name="scriptArguments" type="scriptArguments" minOccurs="0"/>
          <xs:element name="continueOnError" type="xs:boolean" minOccurs="0"/>
          <xs:element name="emrClusterId" type="xs:string" minOccurs="0"/>
+         <xs:element name="accountId" type="xs:string" minOccurs="0"/>
       </xs:all>
    </xs:complexType>
 
@@ -4335,6 +4340,7 @@
          <xs:element name="workflowLocation" type="xs:string"/>
          <xs:element name="parameters" type="parameters" minOccurs="0"/>
          <xs:element name="emrClusterId" type="xs:string" minOccurs="0"/>
+         <xs:element name="accountId" type="xs:string" minOccurs="0"/>
       </xs:all>
    </xs:complexType>
 
@@ -4463,6 +4469,7 @@
          <xs:element name="emrClusterName" type="xs:string"/>
          <xs:element name="securityGroupIds" type="securityGroupIds"/>
          <xs:element name="emrClusterId" type="xs:string" minOccurs="0"/>
+         <xs:element name="accountId" type="xs:string" minOccurs="0"/>
       </xs:all>
    </xs:complexType>
 
