@@ -130,13 +130,13 @@ public class EmrRestControllerTest extends AbstractRestTest
         String emrClusterId = "emrClusterId";
 
         EmrCluster emrCluster = new EmrCluster();
-        when(emrService.terminateCluster(any(), anyBoolean(), any(), null)).thenReturn(emrCluster);
+        when(emrService.terminateCluster(any(), anyBoolean(), any(), any())).thenReturn(emrCluster);
 
         assertEquals(emrCluster,
             emrRestController.terminateEmrCluster(namespace, emrClusterDefinitionName, emrClusterName, overrideTerminationProtection, emrClusterId, defaultAccountId));
 
         verify(emrService).terminateCluster(argThat(new EqualsEmrClusterAlternateKeyDto(namespace, emrClusterDefinitionName, emrClusterName)),
-            eq(overrideTerminationProtection), eq(emrClusterId), null);
+            eq(overrideTerminationProtection), eq(emrClusterId), eq(defaultAccountId));
         verifyNoMoreInteractions(emrService);
     }
 
