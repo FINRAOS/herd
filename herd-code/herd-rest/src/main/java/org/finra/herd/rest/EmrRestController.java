@@ -69,6 +69,7 @@ public class EmrRestController extends HerdBaseController
      * @param emrStepId the step id of the step to get details
      * @param verbose parameter for whether to return detailed information
      * @param retrieveOozieJobs parameter for whether to retrieve oozie job information
+     * @param accountId the account Id
      *
      * @return the EMR Cluster object with details.
      * @throws Exception if there was an error getting the EMR cluster.
@@ -80,12 +81,13 @@ public class EmrRestController extends HerdBaseController
         @PathVariable("emrClusterName") String emrClusterName, @RequestParam(value = "emrClusterId", required = false) String emrClusterId,
         @RequestParam(value = "emrStepId", required = false) String emrStepId,
         @RequestParam(value = "verbose", required = false, defaultValue = "false") Boolean verbose,
-        @RequestParam(value = "retrieveOozieJobs", required = false, defaultValue = "false") Boolean retrieveOozieJobs) throws Exception
+        @RequestParam(value = "retrieveOozieJobs", required = false, defaultValue = "false") Boolean retrieveOozieJobs,
+        @RequestParam(value = "accountId", required = false) String accountId) throws Exception
     {
         EmrClusterAlternateKeyDto alternateKey =
             EmrClusterAlternateKeyDto.builder().namespace(namespace).emrClusterDefinitionName(emrClusterDefinitionName).emrClusterName(emrClusterName).build();
 
-        return emrService.getCluster(alternateKey, emrClusterId, emrStepId, verbose, retrieveOozieJobs);
+        return emrService.getCluster(alternateKey, emrClusterId, emrStepId, verbose, retrieveOozieJobs, accountId);
     }
 
     /**
@@ -112,6 +114,7 @@ public class EmrRestController extends HerdBaseController
      * @param emrClusterName the EMR cluster name
      * @param overrideTerminationProtection parameter for whether to override termination protection
      * @param emrClusterId EMR cluster ID
+     * @param accountId account Id
      *
      * @return the EMR cluster that was terminated
      * @throws Exception if there was an error terminating the EMR cluster.
@@ -122,12 +125,13 @@ public class EmrRestController extends HerdBaseController
     public EmrCluster terminateEmrCluster(@PathVariable("namespace") String namespace,
         @PathVariable("emrClusterDefinitionName") String emrClusterDefinitionName, @PathVariable("emrClusterName") String emrClusterName,
         @RequestParam(value = "overrideTerminationProtection", required = false, defaultValue = "false") Boolean overrideTerminationProtection,
-        @RequestParam(value = "emrClusterId", required = false) String emrClusterId) throws Exception
+        @RequestParam(value = "emrClusterId", required = false) String emrClusterId,
+        @RequestParam(value = "accountId", required = false) String accountId) throws Exception
     {
         EmrClusterAlternateKeyDto alternateKey =
             EmrClusterAlternateKeyDto.builder().namespace(namespace).emrClusterDefinitionName(emrClusterDefinitionName).emrClusterName(emrClusterName).build();
 
-        return emrService.terminateCluster(alternateKey, overrideTerminationProtection, emrClusterId);
+        return emrService.terminateCluster(alternateKey, overrideTerminationProtection, emrClusterId, accountId);
     }
 
     /**
@@ -248,7 +252,7 @@ public class EmrRestController extends HerdBaseController
      * @param oozieWorkflowJobId Oozie workflow job ID
      * @param verbose true to return more detailed information, false or null otherwise
      * @param emrClusterId The EMR cluster ID
-     *
+     * @param accountId the account Id
      * @return the Oozie workflow job information
      * @throws Exception when errors occur, whether user or system
      */
@@ -260,8 +264,9 @@ public class EmrRestController extends HerdBaseController
         @PathVariable("emrClusterDefinitionName") String emrClusterDefinitionName, @PathVariable("emrClusterName") String emrClusterName,
         @PathVariable("oozieWorkflowJobId") String oozieWorkflowJobId,
         @RequestParam(value = "verbose", required = false, defaultValue = "false") Boolean verbose,
-        @RequestParam(value = "emrClusterId", required = false) String emrClusterId) throws Exception
+        @RequestParam(value = "emrClusterId", required = false) String emrClusterId,
+        @RequestParam(value = "accountId", required = false) String accountId) throws Exception
     {
-        return emrService.getEmrOozieWorkflowJob(namespace, emrClusterDefinitionName, emrClusterName, oozieWorkflowJobId, verbose, emrClusterId);
+        return emrService.getEmrOozieWorkflowJob(namespace, emrClusterDefinitionName, emrClusterName, oozieWorkflowJobId, verbose, emrClusterId, accountId);
     }
 }

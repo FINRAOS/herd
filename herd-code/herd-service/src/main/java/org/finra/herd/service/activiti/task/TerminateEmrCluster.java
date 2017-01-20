@@ -43,6 +43,7 @@ public class TerminateEmrCluster extends BaseEmrCluster
 
     private Expression overrideTerminationProtection;
     private Expression emrClusterId;
+    private Expression accountId;
 
     @Override
     public void executeImpl(DelegateExecution execution) throws Exception
@@ -52,9 +53,11 @@ public class TerminateEmrCluster extends BaseEmrCluster
         boolean overrideTerminationProtectionBoolean =
             activitiHelper.getExpressionVariableAsBoolean(overrideTerminationProtection, execution, "overrideTerminationProtection", false, false);
         String emrClusterIdString = activitiHelper.getExpressionVariableAsString(emrClusterId, execution);
-
+        String accountIdString = activitiHelper.getExpressionVariableAsString(accountId, execution);
+        
         // Terminate the EMR cluster.
-        EmrCluster emrCluster = emrService.terminateCluster(emrClusterAlternateKeyDto, overrideTerminationProtectionBoolean, emrClusterIdString);
+        EmrCluster emrCluster =
+                emrService.terminateCluster(emrClusterAlternateKeyDto, overrideTerminationProtectionBoolean, emrClusterIdString, accountIdString);
 
         // Set workflow variables based on the result EMR cluster that was terminated.
         setIdStatusWorkflowVariables(execution, emrCluster);

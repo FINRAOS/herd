@@ -43,6 +43,7 @@ public class RunOozieWorkflow extends BaseJavaDelegate
 
     private Expression contentType;
     private Expression runOozieWorkflowRequest;
+    private Expression accountId;
 
     @Autowired
     private EmrService emrService;
@@ -55,7 +56,8 @@ public class RunOozieWorkflow extends BaseJavaDelegate
             activitiHelper.getRequiredExpressionVariableAsString(runOozieWorkflowRequest, execution, "RunOozieWorkflowRequest").trim();
 
         RunOozieWorkflowRequest request = getRequestObject(contentTypeString, requestString, RunOozieWorkflowRequest.class);
-
+        request.setAccountId(activitiHelper.getExpressionVariableAsString(accountId, execution));
+        
         // Run the oozie job.
         OozieWorkflowJob oozieWorkflowJob = emrService.runOozieWorkflow(request);
 
