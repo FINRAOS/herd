@@ -181,7 +181,7 @@ public class EmrServiceImpl implements EmrService
 
         EmrCluster emrCluster =
             createEmrClusterFromRequest(null, namespaceEntity.getCode(), emrClusterDefinitionEntity.getName(), emrClusterAlternateKeyDto.getEmrClusterName(),
-                null, null, null, null, null);
+                accountId, null, null, null, null);
         String clusterName =
             emrHelper.buildEmrClusterName(namespaceEntity.getCode(), emrClusterDefinitionEntity.getName(), emrClusterAlternateKeyDto.getEmrClusterName());
         try
@@ -692,7 +692,7 @@ public class EmrServiceImpl implements EmrService
         }
 
         return createEmrClusterFromRequest(clusterId, namespaceEntity.getCode(), emrClusterDefinitionEntity.getName(),
-            emrClusterAlternateKeyDto.getEmrClusterName(), null, emrDao.getEmrClusterStatusById(clusterId, awsParamsDto), null, null, null);
+            emrClusterAlternateKeyDto.getEmrClusterName(), accountId, emrDao.getEmrClusterStatusById(clusterId, awsParamsDto), null, null, null);
     }
 
     /**

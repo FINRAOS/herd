@@ -154,7 +154,7 @@ public class EmrServiceWithAccountIdTest extends EmrServiceTest
         assertTrue(emrCluster.getEmrClusterDefinitionName().equals(emrClusterGet.getEmrClusterDefinitionName()));
         assertTrue(emrCluster.getEmrClusterName().equals(emrClusterGet.getEmrClusterName()));
         assertEquals(emrCluster.getEmrClusterDefinition().getAccountId(), AWS_ACCOUNT_ID);
-
+        assertEquals(AWS_ACCOUNT_ID, emrCluster.getAccountId());
         // Validate the oozie jobs
         assertNotNull(emrClusterGet.getOozieWorkflowJobs());
         assertTrue(emrClusterGet.getOozieWorkflowJobs().size() ==
@@ -431,6 +431,7 @@ public class EmrServiceWithAccountIdTest extends EmrServiceTest
         assertTrue(emrCluster.getNamespace().equals(emrClusterTerminated.getNamespace()));
         assertTrue(emrCluster.getEmrClusterDefinitionName().equals(emrClusterTerminated.getEmrClusterDefinitionName()));
         assertTrue(emrCluster.getEmrClusterName().equals(emrClusterTerminated.getEmrClusterName()));
+        assertEquals(AWS_ACCOUNT_ID, emrCluster.getAccountId());
     }
 
     @Test
