@@ -52,6 +52,8 @@ import com.amazonaws.services.elasticmapreduce.model.StepSummary;
 import com.amazonaws.services.elasticmapreduce.model.Tag;
 import com.amazonaws.services.elasticmapreduce.util.StepFactory;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.CollectionUtils;
@@ -63,6 +65,7 @@ import org.finra.herd.dao.EmrDao;
 import org.finra.herd.dao.EmrOperations;
 import org.finra.herd.dao.helper.EmrHelper;
 import org.finra.herd.dao.helper.HerdStringHelper;
+import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.api.xml.ConfigurationFile;
 import org.finra.herd.model.api.xml.ConfigurationFiles;
 import org.finra.herd.model.api.xml.EmrClusterDefinition;
@@ -84,24 +87,28 @@ import org.finra.herd.model.dto.ConfigurationValue;
 @Repository
 public class EmrDaoImpl implements EmrDao
 {
-    // Environment for accessing DB properties
-    @Autowired
-    private ConfigurationHelper configurationHelper;
-
-    @Autowired
-    private EmrOperations emrOperations;
+    private static final Logger LOGGER = LoggerFactory.getLogger(EmrDaoImpl.class);
 
     @Autowired
     private AwsClientFactory awsClientFactory;
 
     @Autowired
+    private ConfigurationHelper configurationHelper;
+
+    @Autowired
     private Ec2Dao ec2Dao;
+
+    @Autowired
+    private EmrHelper emrHelper;
+
+    @Autowired
+    private EmrOperations emrOperations;
 
     @Autowired
     private HerdStringHelper herdStringHelper;
 
     @Autowired
-    private EmrHelper emrHelper;
+    private JsonHelper jsonHelper;
 
     /**
      * Add an EMR Step. This method adds the step to EMR cluster based on the input.
@@ -198,8 +205,11 @@ public class EmrDaoImpl implements EmrDao
     @Override
     public String createEmrCluster(String clusterName, EmrClusterDefinition emrClusterDefinition, AwsParamsDto awsParams)
     {
-        return emrOperations.runEmrJobFlow(getEmrClient(awsParams),
-            getRunJobFlowRequest(clusterName, emrClusterDefinition, StringUtils.isNotBlank(awsParams.getAwsAccessKeyId())));
+        RunJobFlowRequest runJobFlowRequest = getRunJobFlowRequest(clusterName, emrClusterDefinition, StringUtils.isNotBlank(awsParams.getAwsAccessKeyId()));
+        LOGGER.info("runJobFlowRequest={}", jsonHelper.objectToJson(runJobFlowRequest));
+        String clusterId = emrOperations.runEmrJobFlow(getEmrClient(awsParams), runJobFlowRequest);
+        LOGGER.info("EMR cluster started. emrClusterId=\"{}\"", clusterId);
+        return clusterId;
     }
 
     /**
