@@ -48,8 +48,8 @@ public class EmrServiceWithAccountIdTest extends EmrServiceTest
 
     @Autowired
     private EmrOperations emrOperations;
-    
-    
+
+
     @Test
     public void testCreateEmrClusterWithAccountId() throws Exception
     {
@@ -80,6 +80,7 @@ public class EmrServiceWithAccountIdTest extends EmrServiceTest
         assertTrue(emrCluster.getNamespace().equals(request.getNamespace()));
         assertTrue(emrCluster.getEmrClusterDefinitionName().equals(request.getEmrClusterDefinitionName()));
         assertTrue(emrCluster.getEmrClusterName().equals(request.getEmrClusterName()));
+        assertEquals(AWS_ACCOUNT_ID, emrCluster.getAccountId());
         assertNotNull(emrCluster.getId());
         assertNull(emrCluster.isDryRun());
         assertNotNull(emrCluster.getEmrClusterDefinition());
@@ -115,8 +116,8 @@ public class EmrServiceWithAccountIdTest extends EmrServiceTest
             assertEquals(String.format("Trusting AWS account with id \"%s\" doesn't exist.", AWS_ACCOUNT_ID), e.getMessage());
         }
     }
-    
-    
+
+
     @Test
     public void testGetEmrClusterById() throws Exception
     {
@@ -125,7 +126,7 @@ public class EmrServiceWithAccountIdTest extends EmrServiceTest
 
         // Create a trusting AWS account.
         trustingAccountDaoTestHelper.createTrustingAccountEntity(AWS_ACCOUNT_ID, AWS_ROLE_ARN);
-        
+
         String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream());
 
         EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
@@ -153,7 +154,7 @@ public class EmrServiceWithAccountIdTest extends EmrServiceTest
         assertTrue(emrCluster.getEmrClusterDefinitionName().equals(emrClusterGet.getEmrClusterDefinitionName()));
         assertTrue(emrCluster.getEmrClusterName().equals(emrClusterGet.getEmrClusterName()));
         assertEquals(emrCluster.getEmrClusterDefinition().getAccountId(), AWS_ACCOUNT_ID);
-        
+
         // Validate the oozie jobs
         assertNotNull(emrClusterGet.getOozieWorkflowJobs());
         assertTrue(emrClusterGet.getOozieWorkflowJobs().size() ==
@@ -191,7 +192,7 @@ public class EmrServiceWithAccountIdTest extends EmrServiceTest
         assertTrue(emrCluster.getEmrClusterName().equals(emrClusterGet.getEmrClusterName()));
         assertEquals(emrCluster.getEmrClusterDefinition().getAccountId(), AWS_ACCOUNT_ID);
     }
-    
+
     /**
      * This method tests the happy path scenario by testing all the step types
      */
@@ -203,7 +204,7 @@ public class EmrServiceWithAccountIdTest extends EmrServiceTest
 
         // Create a trusting AWS account.
         trustingAccountDaoTestHelper.createTrustingAccountEntity(AWS_ACCOUNT_ID, AWS_ROLE_ARN);
-        
+
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
 
@@ -288,11 +289,10 @@ public class EmrServiceWithAccountIdTest extends EmrServiceTest
             assertEquals(stepHelper.isRequestContinueOnError(emrStepAddRequest), emrStepIsContinueOnError);
         }
     }
-    
-    
+
+
     /**
-     * This method fills-up the parameters required for the EMR cluster create request,
-     * with overridden AWS account Id.
+     * This method fills-up the parameters required for the EMR cluster create request, with overridden AWS account Id.
      */
     private EmrClusterCreateRequest getNewEmrClusterCreateRequestWithAccountId() throws Exception
     {
@@ -307,10 +307,10 @@ public class EmrServiceWithAccountIdTest extends EmrServiceTest
         EmrClusterDefinition emrClusterDefinitionOverride = new EmrClusterDefinition();
         request.setEmrClusterDefinitionOverride(emrClusterDefinitionOverride);
         emrClusterDefinitionOverride.setAccountId(AWS_ACCOUNT_ID);
-        
+
         return request;
     }
-    
+
     /**
      * This method tests the happy path scenario for adding security groups
      */
@@ -322,7 +322,7 @@ public class EmrServiceWithAccountIdTest extends EmrServiceTest
 
         // Create a trusting AWS account.
         trustingAccountDaoTestHelper.createTrustingAccountEntity(AWS_ACCOUNT_ID, AWS_ROLE_ARN);
-        
+
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME,
             IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream()));
 
@@ -339,7 +339,7 @@ public class EmrServiceWithAccountIdTest extends EmrServiceTest
         assertTrue(emrMasterSecurityGroup.getEmrClusterDefinitionName().equals(request.getEmrClusterDefinitionName()));
         assertTrue(emrMasterSecurityGroup.getEmrClusterName().equals(request.getEmrClusterName()));
     }
-    
+
     /**
      * This method fills-up the parameters required for the EMR add steps request. This is called from all the other test methods.
      */
@@ -361,8 +361,8 @@ public class EmrServiceWithAccountIdTest extends EmrServiceTest
         request.setAccountId(AWS_ACCOUNT_ID);
         return request;
     }
-    
-    
+
+
     /**
      * This method tests the Oozie job submission.
      */
@@ -399,7 +399,7 @@ public class EmrServiceWithAccountIdTest extends EmrServiceTest
         assertTrue(oozieWorkflowJob.getEmrClusterDefinitionName().equals(request.getEmrClusterDefinitionName()));
         assertTrue(oozieWorkflowJob.getEmrClusterName().equals(request.getEmrClusterName()));
     }
-    
+
     /**
      * This method tests the happy path scenario by providing all the parameters
      */
@@ -414,7 +414,7 @@ public class EmrServiceWithAccountIdTest extends EmrServiceTest
 
         // Create a trusting AWS account.
         trustingAccountDaoTestHelper.createTrustingAccountEntity(AWS_ACCOUNT_ID, AWS_ROLE_ARN);
-        
+
         // Create a new EMR cluster create request
         EmrClusterCreateRequest request = getNewEmrClusterCreateRequestWithAccountId();
         EmrCluster emrCluster = emrService.createCluster(request);
@@ -432,16 +432,16 @@ public class EmrServiceWithAccountIdTest extends EmrServiceTest
         assertTrue(emrCluster.getEmrClusterDefinitionName().equals(emrClusterTerminated.getEmrClusterDefinitionName()));
         assertTrue(emrCluster.getEmrClusterName().equals(emrClusterTerminated.getEmrClusterName()));
     }
-    
+
     @Test
     public void testGetEmrOozieWorkflowJobWithClusterId() throws Exception
     {
         String oozieWorkflowJobId = MockOozieOperationsImpl.CASE_1_JOB_ID;
         Boolean verbose = null;
-        
+
         // Create a trusting AWS account.
         trustingAccountDaoTestHelper.createTrustingAccountEntity(AWS_ACCOUNT_ID, AWS_ROLE_ARN);
-        
+
         EmrCluster emrCluster = createEmrClusterInWaitingStateWithAccountId(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME);
 
         OozieWorkflowJob oozieWorkflowJob = emrService
@@ -456,14 +456,14 @@ public class EmrServiceWithAccountIdTest extends EmrServiceTest
         assertNull("job end time is not null", oozieWorkflowJob.getEndTime());
         assertNull("actions is not null", oozieWorkflowJob.getWorkflowActions());
     }
-    
+
     private EmrCluster createEmrClusterInWaitingStateWithAccountId(String namespace, String emrClusterDefinitionName)
     {
         String amiVersion = MockAwsOperationsHelper.AMAZON_CLUSTER_STATUS_WAITING;
-        
+
         return createEmrClusterWithAccountId(namespace, emrClusterDefinitionName, amiVersion);
     }
-    
+
     /**
      * Creates a new EMR cluster along with the specified namespace and definition name. A AMI version may be specified to hint the mock for certain behaviors.
      * This method uses the cluster definition specified by EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH.

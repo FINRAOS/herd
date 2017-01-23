@@ -111,7 +111,7 @@ public class EmrServiceTest extends AbstractServiceTest
 
     @Autowired
     private EmrOperations emrOperations;
-    
+
     private String defaultAccountId = null;
 
     /**
@@ -243,6 +243,7 @@ public class EmrServiceTest extends AbstractServiceTest
         assertTrue(emrCluster.getNamespace().equals(request.getNamespace()));
         assertTrue(emrCluster.getEmrClusterDefinitionName().equals(request.getEmrClusterDefinitionName()));
         assertTrue(emrCluster.getEmrClusterName().equals(request.getEmrClusterName()));
+        assertNull(emrCluster.getAccountId());
         assertNotNull(emrCluster.getId());
         assertNull(emrCluster.isDryRun());
         assertNotNull(emrCluster.getEmrClusterDefinition());
@@ -1163,7 +1164,6 @@ public class EmrServiceTest extends AbstractServiceTest
         validateEmrClusterCreationLogUnique(emrCluster, expectedEmrClusterDefinition);
     }
 
-    
 
     /**
      * This method fills-up the parameters required for the EMR cluster create request. This is called from all the other test methods.
@@ -1180,8 +1180,7 @@ public class EmrServiceTest extends AbstractServiceTest
 
         return request;
     }
-    
-   
+
 
     /**
      * This method tests the happy path scenario by providing all the parameters
@@ -1256,8 +1255,7 @@ public class EmrServiceTest extends AbstractServiceTest
         assertTrue(emrCluster.getEmrClusterName().equals(emrClusterGet.getEmrClusterName()));
     }
 
-    
-    
+
     /**
      * This method tests the scenario when cluster specified does not exists.
      */
@@ -1843,7 +1841,8 @@ public class EmrServiceTest extends AbstractServiceTest
         // Try to run oozie job when cluster definition name is not specified.
         try
         {
-            RunOozieWorkflowRequest runOozieRequest = new RunOozieWorkflowRequest(NAMESPACE, BLANK_TEXT, "test_cluster", OOZIE_WORKFLOW_LOCATION, null, null, defaultAccountId);
+            RunOozieWorkflowRequest runOozieRequest =
+                new RunOozieWorkflowRequest(NAMESPACE, BLANK_TEXT, "test_cluster", OOZIE_WORKFLOW_LOCATION, null, null, defaultAccountId);
             emrService.runOozieWorkflow(runOozieRequest);
             fail("Should throw an IllegalArgumentException when cluster definition name is not specified.");
         }
@@ -1919,7 +1918,8 @@ public class EmrServiceTest extends AbstractServiceTest
             parameters.add(new Parameter("PARAM_NAME", ""));
 
             RunOozieWorkflowRequest runOozieRequest =
-                new RunOozieWorkflowRequest(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, "test_cluster", OOZIE_WORKFLOW_LOCATION, parameters, null, defaultAccountId);
+                new RunOozieWorkflowRequest(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, "test_cluster", OOZIE_WORKFLOW_LOCATION, parameters, null,
+                    defaultAccountId);
             emrService.runOozieWorkflow(runOozieRequest);
             fail("Should throw an IllegalArgumentException when duplicate parameters are specified.");
         }
@@ -1959,7 +1959,8 @@ public class EmrServiceTest extends AbstractServiceTest
             emrCluster = emrService.createCluster(request);
 
             RunOozieWorkflowRequest runOozieRequest =
-                new RunOozieWorkflowRequest(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, emrCluster.getEmrClusterName(), OOZIE_WORKFLOW_LOCATION, null, null, defaultAccountId);
+                new RunOozieWorkflowRequest(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, emrCluster.getEmrClusterName(), OOZIE_WORKFLOW_LOCATION, null, null,
+                    defaultAccountId);
             emrService.runOozieWorkflow(runOozieRequest);
             fail("Should throw an ObjectNotFoundException when specified cluster is not in running or waiting state.");
         }
@@ -2457,6 +2458,6 @@ public class EmrServiceTest extends AbstractServiceTest
         query.select(emrClusterCreationLogEntity).where(builder.and(namespacePredicate, definitionNamePredicate, clusterNamePredicate));
         return entityManager.createQuery(query).getResultList();
     }
-    
-  
+
+
 }
