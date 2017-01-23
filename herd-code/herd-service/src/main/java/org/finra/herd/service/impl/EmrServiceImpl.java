@@ -132,6 +132,7 @@ public class EmrServiceImpl implements EmrService
 
     /**
      * Gets details of an existing EMR Cluster. Creates its own transaction.
+     *
      * @param emrClusterId the cluster id of the cluster to get details
      * @param emrStepId the step id of the step to get details
      * @param verbose parameter for whether to return detailed information
@@ -158,15 +159,16 @@ public class EmrServiceImpl implements EmrService
      * @param emrStepId the step id of the step to get details
      * @param verbose parameter for whether to return detailed information
      * @param retrieveOozieJobs parameter for whether to retrieve oozie job information
-     * @param accountId TODO
+     * @param accountId the optional AWS account that EMR cluster is running in
+     *
      * @return the EMR Cluster object with details.
      * @throws Exception if an error occurred while getting the cluster.
      */
     protected EmrCluster getClusterImpl(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, String emrClusterId, String emrStepId, boolean verbose,
         boolean retrieveOozieJobs, String accountId) throws Exception
     {
-        AwsParamsDto  awsParamsDto = emrHelper.getAwsparamsDtoByAcccountId(accountId);
-        
+        AwsParamsDto awsParamsDto = emrHelper.getAwsparamsDtoByAcccountId(accountId);
+
         // Perform the request validation.
         validateEmrClusterKey(emrClusterAlternateKeyDto);
 
@@ -179,7 +181,7 @@ public class EmrServiceImpl implements EmrService
 
         EmrCluster emrCluster =
             createEmrClusterFromRequest(null, namespaceEntity.getCode(), emrClusterDefinitionEntity.getName(), emrClusterAlternateKeyDto.getEmrClusterName(),
-                null, null, null, null);
+                null, null, null, null, null);
         String clusterName =
             emrHelper.buildEmrClusterName(namespaceEntity.getCode(), emrClusterDefinitionEntity.getName(), emrClusterAlternateKeyDto.getEmrClusterName());
         try
@@ -257,6 +259,7 @@ public class EmrServiceImpl implements EmrService
      *
      * @param clusterId the cluster Id
      * @param accountId the account Id
+     *
      * @return the List of running oozie workflow jobs on the cluster.
      * @throws Exception
      */
@@ -431,12 +434,13 @@ public class EmrServiceImpl implements EmrService
             emrClusterDefinition.getEc2NodeIamProfileName());
 
         AwsParamsDto awsParamsDto = emrHelper.getAwsparamsDtoByAcccountId(emrClusterDefinition.getAccountId());
-        
+
         // Find best price and update definition.
         emrPricingHelper.updateEmrClusterDefinitionWithBestPrice(emrClusterAlternateKeyDto, emrClusterDefinition, awsParamsDto);
 
         String clusterId = null; // The cluster ID record.
         String emrClusterStatus = null;
+        String accountId = null;
         Boolean emrClusterCreated = null; // Was cluster created?
 
         // If the dryRun flag is null or false. This is the default option if no flag is given.
@@ -459,6 +463,7 @@ public class EmrServiceImpl implements EmrService
                 if (clusterSummary == null)
                 {
                     clusterId = emrDao.createEmrCluster(clusterName, emrClusterDefinition, awsParamsDto);
+                    accountId = emrClusterDefinition.getAccountId();
                     emrClusterCreated = true;
 
                     EmrClusterCreationLogEntity emrClusterCreationLogEntity = new EmrClusterCreationLogEntity();
@@ -473,6 +478,7 @@ public class EmrServiceImpl implements EmrService
                 else
                 {
                     clusterId = clusterSummary.getId();
+                    accountId = null;
                     emrClusterCreated = false;
                     emrClusterDefinition = null; // Do not include definition in response
                 }
@@ -490,7 +496,7 @@ public class EmrServiceImpl implements EmrService
         }
 
         return createEmrClusterFromRequest(clusterId, namespaceEntity.getCode(), emrClusterDefinitionEntity.getName(),
-            emrClusterAlternateKeyDto.getEmrClusterName(), emrClusterStatus, emrClusterCreated, request.isDryRun(), emrClusterDefinition);
+            emrClusterAlternateKeyDto.getEmrClusterName(), accountId, emrClusterStatus, emrClusterCreated, request.isDryRun(), emrClusterDefinition);
     }
 
     /**
@@ -633,6 +639,7 @@ public class EmrServiceImpl implements EmrService
      *
      * @param emrClusterAlternateKeyDto the EMR cluster alternate key
      * @param overrideTerminationProtection parameter for whether to override termination protection
+     *
      * @return the terminated EMR cluster object
      * @throws Exception if there were any errors while terminating the cluster.
      */
@@ -652,7 +659,7 @@ public class EmrServiceImpl implements EmrService
      * @param overrideTerminationProtection parameter for whether to override termination protection
      * @param emrClusterId The EMR cluster ID
      * @param accountId The account Id
-     * 
+     *
      * @return the terminated EMR cluster object
      * @throws Exception if there were any errors while terminating the cluster.
      */
@@ -685,7 +692,7 @@ public class EmrServiceImpl implements EmrService
         }
 
         return createEmrClusterFromRequest(clusterId, namespaceEntity.getCode(), emrClusterDefinitionEntity.getName(),
-            emrClusterAlternateKeyDto.getEmrClusterName(), emrDao.getEmrClusterStatusById(clusterId, awsParamsDto), null, null, null);
+            emrClusterAlternateKeyDto.getEmrClusterName(), null, emrDao.getEmrClusterStatusById(clusterId, awsParamsDto), null, null, null);
     }
 
     /**
@@ -709,6 +716,7 @@ public class EmrServiceImpl implements EmrService
      * @param namespaceCd the namespace Code
      * @param clusterDefinitionName the cluster definition
      * @param clusterName the cluster name
+     * @param accountId the optional AWS account that EMR cluster is running in
      * @param clusterStatus the cluster status
      * @param emrClusterCreated whether EMR cluster was created.
      * @param dryRun The dry run flag.
@@ -716,8 +724,8 @@ public class EmrServiceImpl implements EmrService
      *
      * @return the created EMR cluster object
      */
-    private EmrCluster createEmrClusterFromRequest(String clusterId, String namespaceCd, String clusterDefinitionName, String clusterName, String clusterStatus,
-        Boolean emrClusterCreated, Boolean dryRun, EmrClusterDefinition emrClusterDefinition)
+    private EmrCluster createEmrClusterFromRequest(String clusterId, String namespaceCd, String clusterDefinitionName, String clusterName, String accountId,
+        String clusterStatus, Boolean emrClusterCreated, Boolean dryRun, EmrClusterDefinition emrClusterDefinition)
     {
         // Create the EMR cluster.
         EmrCluster emrCluster = new EmrCluster();
@@ -725,6 +733,7 @@ public class EmrServiceImpl implements EmrService
         emrCluster.setNamespace(namespaceCd);
         emrCluster.setEmrClusterDefinitionName(clusterDefinitionName);
         emrCluster.setEmrClusterName(clusterName);
+        emrCluster.setAccountId(accountId);
         emrCluster.setStatus(clusterStatus);
         emrCluster.setDryRun(dryRun);
         emrCluster.setEmrClusterCreated(emrClusterCreated);
@@ -768,7 +777,7 @@ public class EmrServiceImpl implements EmrService
 
         // Perform the step specific validation
         stepHelper.validateAddStepRequest(request);
-        
+
         //get accountId and awsParamDto
         String accountId = stepHelper.getRequestAccountId(request);
         AwsParamsDto awsParamsDto = emrHelper.getAwsparamsDtoByAcccountId(accountId);
@@ -791,7 +800,7 @@ public class EmrServiceImpl implements EmrService
         try
         {
             String clusterId =
-                    emrHelper.getActiveEmrClusterId(stepHelper.getRequestEmrClusterId(request), clusterName, stepHelper.getRequestAccountId(request));
+                emrHelper.getActiveEmrClusterId(stepHelper.getRequestEmrClusterId(request), clusterName, stepHelper.getRequestAccountId(request));
             stepHelper.setRequestEmrClusterId(request, clusterId);
             String stepId = emrDao.addEmrStep(clusterId, stepHelper.getEmrStepConfig(emrStep), awsParamsDto);
             stepHelper.setStepId(emrStep, stepId);
@@ -863,7 +872,7 @@ public class EmrServiceImpl implements EmrService
     {
         // Perform the request validation.
         validateAddSecurityGroupsToClusterMasterRequest(request);
-        
+
         // Get account and AwsParamDto
         String accountId = request.getAccountId();
         AwsParamsDto awsParamsDto = emrHelper.getAwsparamsDtoByAcccountId(accountId);
@@ -879,9 +888,8 @@ public class EmrServiceImpl implements EmrService
         String clusterName = emrHelper.buildEmrClusterName(namespaceEntity.getCode(), emrClusterDefinitionEntity.getName(), request.getEmrClusterName());
         try
         {
-            groupIds =
-                    emrDao.addEmrMasterSecurityGroups(emrHelper.getActiveEmrClusterId(request.getEmrClusterId(), clusterName, request.getAccountId()), request
-                            .getSecurityGroupIds(), awsParamsDto);
+            groupIds = emrDao.addEmrMasterSecurityGroups(emrHelper.getActiveEmrClusterId(request.getEmrClusterId(), clusterName, request.getAccountId()),
+                request.getSecurityGroupIds(), awsParamsDto);
         }
         catch (AmazonServiceException ex)
         {
@@ -1001,7 +1009,7 @@ public class EmrServiceImpl implements EmrService
      * Get the EMR master private IP address.
      *
      * @param emrClusterId the cluster id
-     * @param accountId TODO
+     * @param accountId the optional AWS account that EMR cluster is running in
      *
      * @return the master node private IP address
      * @throws Exception Exception
@@ -1020,14 +1028,15 @@ public class EmrServiceImpl implements EmrService
      * @param emrClusterName emrClusterName
      * @param emrClusterId The EMR cluster ID
      * @param accountId The account Id
+     *
      * @return The actual EMR cluster ID
      */
-    private String getRunningOrWaitingEmrCluster(String namespace, String emrClusterDefinitionName, String emrClusterName, String emrClusterId, 
+    private String getRunningOrWaitingEmrCluster(String namespace, String emrClusterDefinitionName, String emrClusterName, String emrClusterId,
         String accountId)
     {
         // Get the namespace and ensure it exists.
         NamespaceEntity namespaceEntity = namespaceDaoHelper.getNamespaceEntity(namespace);
-        
+
         // Get the AwsParamsDto
         AwsParamsDto awsParamDto = emrHelper.getAwsparamsDtoByAcccountId(accountId);
 
@@ -1084,6 +1093,7 @@ public class EmrServiceImpl implements EmrService
      * @param oozieWorkflowJobId the ooxie workflow Id.
      * @param verbose the flag to indicate whether to return verbose information
      * @param emrClusterId The EMR cluster ID
+     *
      * @return OozieWorkflowJob OozieWorkflowJob
      * @throws Exception Exception
      */
@@ -1106,6 +1116,7 @@ public class EmrServiceImpl implements EmrService
      * @param verbose the flag to indicate whether to return verbose information
      * @param emrClusterId The EMR cluster ID
      * @param accountId The account Id
+     *
      * @return OozieWorkflowJob OozieWorkflowJob
      * @throws Exception Exception
      */
