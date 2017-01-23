@@ -4,6 +4,6 @@
   "description": "This is a Angular 1.x based TypeScript SDK client for consuming the HERD REST API",
   "license": "Apache-2.0",
   "publishConfig": {
-    "registry": "http://artifactory.finra.org/artifactory/api/npm/npm-internal/"
+    "registry": "https://artifactory.finra.org/artifactory/api/npm/npm-internal/"
   }
 }
