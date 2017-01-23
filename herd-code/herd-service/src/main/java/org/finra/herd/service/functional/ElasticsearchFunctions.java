@@ -385,6 +385,21 @@ public class ElasticsearchFunctions implements SearchFunctions
         };
 
     /**
+     * The find all business object definitions function will return all business object definition entities in the search index.
+     */
+    private final BiFunction<String, String, List<BusinessObjectDefinitionEntity>> findAllBusinessObjectDefinitionsFunction = (indexName, documentType) -> {
+
+        LOGGER.info("Elasticsearch get all business object definition documents from index, indexName={} and documentType={}.", indexName, documentType);
+
+        // Create a search request and set the scroll time and scroll size
+        final SearchRequestBuilder searchRequestBuilder = transportClient.prepareSearch(indexName);
+        searchRequestBuilder.setTypes(documentType).setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME)).setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE);
+        searchRequestBuilder.addSort(SortBuilders.fieldSort(BUSINESS_OBJECT_DEFINITION_SORT_FIELD).order(SortOrder.ASC));
+
+        return scrollSearchResultsIntoBusinessObjectDefinitionEntityList(searchRequestBuilder);
+    };
+
+    /**
      * Private method to create a String representation of the list of tag entities for logging.
      *
      * @param tagEntityList the list of tag entities
@@ -538,6 +553,12 @@ public class ElasticsearchFunctions implements SearchFunctions
     public BiFunction<String, String, List<String>> getIdsInIndexFunction()
     {
         return idsInIndexFunction;
+    }
+
+    @Override
+    public BiFunction<String, String, List<BusinessObjectDefinitionEntity>> getFindAllBusinessObjectDefinitionsFunction()
+    {
+        return findAllBusinessObjectDefinitionsFunction;
     }
 
     @Override

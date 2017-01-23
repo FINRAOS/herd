@@ -565,7 +565,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         validateSearchResponseFields(fields);
 
         // Create a new array list to hold the business object definition entities found in the index search
-        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList = new ArrayList<>();
+        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList;
 
         // If the request contains search filters
         if (!CollectionUtils.isEmpty(request.getBusinessObjectDefinitionSearchFilters()))
@@ -598,6 +598,11 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
                     .apply(indexName, documentType, businessObjectDefinitionSearchKey.getTagKey().getTagCode(),
                         businessObjectDefinitionSearchKey.getTagKey().getTagTypeCode());
             }
+        }
+        else
+        {
+            // Else get all of the business object definitions
+            businessObjectDefinitionEntityList = searchFunctions.getFindAllBusinessObjectDefinitionsFunction().apply(indexName, documentType);
         }
 
         // Create a list to hold the business object definitions that will be returned as part of the search response

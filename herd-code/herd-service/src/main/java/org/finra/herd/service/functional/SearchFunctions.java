@@ -87,6 +87,11 @@ public interface SearchFunctions
     BiFunction<String, String, List<String>> getIdsInIndexFunction();
 
     /**
+     * The find all business object definitions function will return all business object definition entities in the search index.
+     */
+    BiFunction<String, String, List<BusinessObjectDefinitionEntity>> getFindAllBusinessObjectDefinitionsFunction();
+
+    /**
      * The search business object definitions by tag code and tag type function will take a tag code and tag type code and return a list of business object
      * definition entities. The function will search the search index based on tag code and tag type code.
      */
