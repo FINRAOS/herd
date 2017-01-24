@@ -440,7 +440,7 @@ public class EmrServiceImpl implements EmrService
 
         String clusterId = null; // The cluster ID record.
         String emrClusterStatus = null;
-        String accountId = null;
+        String accountId = emrClusterDefinition.getAccountId();
         Boolean emrClusterCreated = null; // Was cluster created?
 
         // If the dryRun flag is null or false. This is the default option if no flag is given.
@@ -463,7 +463,6 @@ public class EmrServiceImpl implements EmrService
                 if (clusterSummary == null)
                 {
                     clusterId = emrDao.createEmrCluster(clusterName, emrClusterDefinition, awsParamsDto);
-                    accountId = emrClusterDefinition.getAccountId();
                     emrClusterCreated = true;
 
                     EmrClusterCreationLogEntity emrClusterCreationLogEntity = new EmrClusterCreationLogEntity();
@@ -478,7 +477,6 @@ public class EmrServiceImpl implements EmrService
                 else
                 {
                     clusterId = clusterSummary.getId();
-                    accountId = null;
                     emrClusterCreated = false;
                     emrClusterDefinition = null; // Do not include definition in response
                 }
