@@ -742,7 +742,17 @@ public enum ConfigurationValue
     /**
      * The name of the Credstash table where credentials are stored.
      */
-    CREDSTASH_TABLE_NAME("credstash.table.name", "credential-store");
+    CREDSTASH_TABLE_NAME("credstash.table.name", "credential-store"),
+
+    /**
+     * The Credstash encryption context key value map.
+     */
+    CREDSTASH_ENCRYPTION_CONTEXT("credstash.encryption.context", "{\"AGS\":\"DATAMGT\",\"SDLC\":\"dev\",\"Component\":\"es\"}"),
+
+    /**
+     * The Credstash aws region name.
+     */
+    CREDSTASH_AWS_REGION_NAME("credstash.aws.region.name", "us-east-1");
 
     // Properties
     private String key;

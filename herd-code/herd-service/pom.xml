@@ -129,10 +129,6 @@
          <artifactId>search-guard-ssl</artifactId>
       </dependency>
       <dependency>
-         <groupId>org.finra.pet</groupId>
-         <artifactId>jcredstash-fx</artifactId>
-      </dependency>
-      <dependency>
          <groupId>com.amazonaws</groupId>
          <artifactId>aws-java-sdk-core</artifactId>
          <!-- We are using jcl-over-slf4j so commons-logging isn't needed. -->
@@ -146,6 +142,10 @@
       <dependency>
          <groupId>com.amazonaws</groupId>
          <artifactId>aws-java-sdk</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>co.wrisk.jcredstash</groupId>
+         <artifactId>jcredstash</artifactId>
       </dependency>
 
    </dependencies>

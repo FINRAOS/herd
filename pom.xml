@@ -87,7 +87,7 @@
       <woodstox.version>4.4.1</woodstox.version>
       <elasticsearch.version>5.1.1</elasticsearch.version>
       <search-guard-ssl.version>5.1.1-19</search-guard-ssl.version>
-      <jcredstash-fx.version>1.3</jcredstash-fx.version>
+      <jcredstash.version>0.0.3</jcredstash.version>
 
       <!-- Third Party Plugin Dependencies -->
       <jaxb.xew.plugin.version>1.6</jaxb.xew.plugin.version>
@@ -831,9 +831,9 @@
             <version>${search-guard-ssl.version}</version>
          </dependency>
          <dependency>
-            <groupId>org.finra.pet</groupId>
-            <artifactId>jcredstash-fx</artifactId>
-            <version>${jcredstash-fx.version}</version>
+            <groupId>co.wrisk.jcredstash</groupId>
+            <artifactId>jcredstash</artifactId>
+            <version>${jcredstash.version}</version>
          </dependency>
 
       </dependencies>
