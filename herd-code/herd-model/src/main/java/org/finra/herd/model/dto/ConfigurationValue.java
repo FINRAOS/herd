@@ -747,7 +747,7 @@ public enum ConfigurationValue
     /**
      * The Credstash encryption context key value map.
      */
-    CREDSTASH_ENCRYPTION_CONTEXT("credstash.encryption.context", "{\"AGS\":\"DATAMGT\",\"SDLC\":\"dev\",\"Component\":\"es\"}"),
+    CREDSTASH_ENCRYPTION_CONTEXT("credstash.encryption.context", "{\"AGS\":\"AGS_VALUE\",\"SDLC\":\"SDLC_VALUE\",\"Component\":\"COMPONENT_VALUE\"}"),
 
     /**
      * The Credstash aws region name.
