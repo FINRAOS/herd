@@ -68,6 +68,7 @@ import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormat;
 import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormatUpdateRequest;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.api.xml.SampleDataFile;
+import org.finra.herd.model.dto.BusinessObjectDefinitionIndexSearchResponseDto;
 import org.finra.herd.model.dto.BusinessObjectDefinitionSampleFileUpdateDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.SearchIndexUpdateDto;
@@ -566,7 +567,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         validateSearchResponseFields(fields);
 
         // Create a new array list to hold the business object definition entities found in the index search
-        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList;
+        List<BusinessObjectDefinitionIndexSearchResponseDto> businessObjectDefinitionIndexSearchResponseDtoList;
 
         // If the request contains search filters
         if (!CollectionUtils.isEmpty(request.getBusinessObjectDefinitionSearchFilters()))
@@ -590,23 +591,25 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
             }
 
             // Use the tag type entities list to search in the search index for business object definitions
-            businessObjectDefinitionEntityList = searchFunctions.getSearchBusinessObjectDefinitionsByTagsFunction().apply(indexName, documentType, tagEntities);
+            businessObjectDefinitionIndexSearchResponseDtoList =
+                searchFunctions.getSearchBusinessObjectDefinitionsByTagsFunction().apply(indexName, documentType, tagEntities);
         }
         else
         {
             // Else get all of the business object definitions
-            businessObjectDefinitionEntityList = searchFunctions.getFindAllBusinessObjectDefinitionsFunction().apply(indexName, documentType);
+            businessObjectDefinitionIndexSearchResponseDtoList = searchFunctions.getFindAllBusinessObjectDefinitionsFunction().apply(indexName, documentType);
         }
 
         // Create a list to hold the business object definitions that will be returned as part of the search response
         List<BusinessObjectDefinition> businessObjectDefinitions = new ArrayList<>();
 
         // Retrieve all unique business object definition entities and construct a list of business object definitions based on the requested fields.
-        for (BusinessObjectDefinitionEntity businessObjectDefinition : ImmutableSet.copyOf(businessObjectDefinitionEntityList))
+        for (BusinessObjectDefinitionIndexSearchResponseDto businessObjectDefinitionIndexSearchResponseDto : ImmutableSet
+            .copyOf(businessObjectDefinitionIndexSearchResponseDtoList))
         {
             // Convert the business object definition entity to a business object definition and add it to the list of business object definitions that will be
             // returned as a part of the search response
-            businessObjectDefinitions.add(createBusinessObjectDefinitionFromEntity(businessObjectDefinition, fields));
+            businessObjectDefinitions.add(createBusinessObjectDefinitionFromDto(businessObjectDefinitionIndexSearchResponseDto, fields));
         }
 
         // Construct business object search response.
@@ -1107,5 +1110,41 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         });
 
         return businessObjectDefinitionJSONMap;
+    }
+
+    /**
+     * Creates a light-weight business object definition from a dto based on a set of requested fields.
+     *
+     * @param businessObjectDefinitionIndexSearchResponseDto the specified business object definition index search dto
+     * @param fields the set of requested fields
+     *
+     * @return the light-weight business object definition
+     */
+    private BusinessObjectDefinition createBusinessObjectDefinitionFromDto(
+        BusinessObjectDefinitionIndexSearchResponseDto businessObjectDefinitionIndexSearchResponseDto, Set<String> fields)
+    {
+        BusinessObjectDefinition definition = new BusinessObjectDefinition();
+
+        //populate namespace and business object definition name fields by default
+        definition.setNamespace(businessObjectDefinitionIndexSearchResponseDto.getNamespace().getCode());
+        definition.setBusinessObjectDefinitionName(businessObjectDefinitionIndexSearchResponseDto.getName());
+
+        //decorate object with only the required fields
+        if (fields.contains(DATA_PROVIDER_NAME_FIELD))
+        {
+            definition.setDataProviderName(businessObjectDefinitionIndexSearchResponseDto.getDataProvider().getName());
+        }
+
+        if (fields.contains(SHORT_DESCRIPTION_FIELD))
+        {
+            definition.setShortDescription(getShortDescription(businessObjectDefinitionIndexSearchResponseDto.getDescription()));
+        }
+
+        if (fields.contains(DISPLAY_NAME_FIELD))
+        {
+            definition.setDisplayName(businessObjectDefinitionIndexSearchResponseDto.getDisplayName());
+        }
+
+        return definition;
     }
 }

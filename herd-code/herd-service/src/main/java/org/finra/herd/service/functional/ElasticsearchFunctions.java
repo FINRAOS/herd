@@ -58,7 +58,7 @@ import org.springframework.stereotype.Component;
 
 import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.dao.helper.JsonHelper;
-import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
+import org.finra.herd.model.dto.BusinessObjectDefinitionIndexSearchResponseDto;
 import org.finra.herd.model.jpa.TagEntity;
 
 
@@ -82,16 +82,6 @@ public class ElasticsearchFunctions implements SearchFunctions
      * Sort the business object definition by name
      */
     public static final String BUSINESS_OBJECT_DEFINITION_SORT_FIELD = "name.keyword";
-
-    /**
-     * The tag code search index key
-     */
-    public static final String SEARCH_INDEX_BUSINESS_OBJECT_DEFINITION_TAG_CODE_KEY = "businessObjectDefinitionTags.tag.tagCode";
-
-    /**
-     * The tag type code search index key
-     */
-    public static final String SEARCH_INDEX_BUSINESS_OBJECT_DEFINITION_TAG_TYPE_CODE_KEY = "businessObjectDefinitionTags.tag.tagType.code";
 
     /**
      * The business object definition id search index key
@@ -334,114 +324,76 @@ public class ElasticsearchFunctions implements SearchFunctions
     };
 
     /**
-     * The search business object definitions by tag code and tag type function will take a tag code and tag type code and return a list of business object
-     * definition entities. The function will search the search index based on tag code and tag type code.
-     */
-    private final QuadFunction<String, String, String, String, List<BusinessObjectDefinitionEntity>>
-        searchBusinessObjectDefinitionsByTagCodeAndTagTypeFunction = (indexName, documentType, tagCode, tagTypeCode) -> {
-
-        LOGGER.info(
-            "Searching Elasticsearch business object definition documents from index, indexName={} and documentType={}, by tagCode={} and tagTypeCode={}.",
-            indexName, documentType, tagCode, tagTypeCode);
-
-        /* Example of the corresponding query in the ElasticSearch query language
-             "query": {
-                "bool": {
-                    "should": [
-                        { "match": { "businessObjectDefinitionTags.tag.tagType.code":  "TAG_TYPE_CODE" }},
-                        { "match": { "businessObjectDefinitionTags.tag.tagCode": "TAG_CODE" }}
-                    ]
-                }
-            }
-        */
-
-        // Query to match tag code
-        QueryBuilder matchTagCodeQueryBuilder = QueryBuilders.matchQuery(SEARCH_INDEX_BUSINESS_OBJECT_DEFINITION_TAG_CODE_KEY, tagCode);
-
-        // Query to match tag type code
-        QueryBuilder matchTagTypeCodeQueryBuilder = QueryBuilders.matchQuery(SEARCH_INDEX_BUSINESS_OBJECT_DEFINITION_TAG_TYPE_CODE_KEY, tagTypeCode);
-
-        // Combined bool should match query for tag type code and tag code
-        QueryBuilder queryBuilder = QueryBuilders.boolQuery().must(matchTagTypeCodeQueryBuilder).must(matchTagCodeQueryBuilder);
-
-        // Create a search request and set the scroll time and scroll size
-        final SearchRequestBuilder searchRequestBuilder = transportClient.prepareSearch(indexName);
-        searchRequestBuilder.setTypes(documentType).setQuery(queryBuilder).setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME))
-            .setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE);
-        searchRequestBuilder.addSort(SortBuilders.fieldSort(BUSINESS_OBJECT_DEFINITION_SORT_FIELD).order(SortOrder.ASC));
-
-        return scrollSearchResultsIntoBusinessObjectDefinitionEntityList(searchRequestBuilder);
-    };
-
-    /**
      * The search business object definitions by tags function will take a list of tag entities and return a list of business object definition entities. The
      * function will search the search index based on tag code and tag type code.
      */
-    private final TriFunction<String, String, List<TagEntity>, List<BusinessObjectDefinitionEntity>> searchBusinessObjectDefinitionsByTagsFunction =
-        (indexName, documentType, tagEntityList) -> {
+    private final TriFunction<String, String, List<TagEntity>, List<BusinessObjectDefinitionIndexSearchResponseDto>>
+        searchBusinessObjectDefinitionsByTagsFunction = (indexName, documentType, tagEntityList) -> {
 
-            LOGGER.info("Searching Elasticsearch business object definition documents from index, indexName={} and documentType={}, by tagEntityList={}.",
-                indexName, documentType, tagEntityListToString(tagEntityList));
+        LOGGER
+            .info("Searching Elasticsearch business object definition documents from index, indexName={} and documentType={}, by tagEntityList={}.", indexName,
+                documentType, tagEntityListToString(tagEntityList));
 
-            List<QueryBuilder> queryBuilderList = new ArrayList<>();
+        List<QueryBuilder> queryBuilderList = new ArrayList<>();
 
-            // For each tag entity get the list of business object definition tag entities and then add the business object definition id to the query
-            tagEntityList.forEach(tagEntity -> tagEntity.getBusinessObjectDefinitionTags().forEach(businessObjectDefinitionTagEntity -> {
-                // Build a query
-                QueryBuilder queryBuilder = QueryBuilders
-                    .matchQuery(SEARCH_INDEX_BUSINESS_OBJECT_DEFINITION_ID_KEY, businessObjectDefinitionTagEntity.getBusinessObjectDefinition().getId());
+        // For each tag entity get the list of business object definition tag entities and then add the business object definition id to the query
+        tagEntityList.forEach(tagEntity -> tagEntity.getBusinessObjectDefinitionTags().forEach(businessObjectDefinitionTagEntity -> {
+            // Build a query
+            QueryBuilder queryBuilder = QueryBuilders
+                .matchQuery(SEARCH_INDEX_BUSINESS_OBJECT_DEFINITION_ID_KEY, businessObjectDefinitionTagEntity.getBusinessObjectDefinition().getId());
 
-                // Add the query to the list of queries
-                queryBuilderList.add(queryBuilder);
-            }));
+            // Add the query to the list of queries
+            queryBuilderList.add(queryBuilder);
+        }));
 
-            List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList = new ArrayList<>();
+        List<BusinessObjectDefinitionIndexSearchResponseDto> businessObjectDefinitionIndexSearchResponseDtoList = new ArrayList<>();
 
-            // Only perform the query if there is at least one query builder
-            if (queryBuilderList.size() > 0)
-            {
-                // Combined bool should match query for tag type code and tag code
-                BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+        // Only perform the query if there is at least one query builder
+        if (queryBuilderList.size() > 0)
+        {
+            // Combined bool should match query for tag type code and tag code
+            BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
-                // For each query in the query list add it to the bool query
-                queryBuilderList.forEach(boolQueryBuilder::should);
+            // For each query in the query list add it to the bool query
+            queryBuilderList.forEach(boolQueryBuilder::should);
 
-                SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-                searchSourceBuilder
-                    .fetchSource(new String[] {DATA_PROVIDER_NAME_SOURCE, DESCRIPTION_SOURCE, DISPLAY_NAME_SOURCE, NAME_SOURCE, NAMESPACE_CODE_SOURCE}, null);
-                searchSourceBuilder.query(boolQueryBuilder);
+            SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+            searchSourceBuilder
+                .fetchSource(new String[] {DATA_PROVIDER_NAME_SOURCE, DESCRIPTION_SOURCE, DISPLAY_NAME_SOURCE, NAME_SOURCE, NAMESPACE_CODE_SOURCE}, null);
+            searchSourceBuilder.query(boolQueryBuilder);
 
-                // Create a search request and set the scroll time and scroll size
-                final SearchRequestBuilder searchRequestBuilder = transportClient.prepareSearch(indexName);
-                searchRequestBuilder.setTypes(documentType).setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME))
-                    .setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE).setSource(searchSourceBuilder);
-                searchRequestBuilder.addSort(SortBuilders.fieldSort(BUSINESS_OBJECT_DEFINITION_SORT_FIELD).order(SortOrder.ASC));
+            // Create a search request and set the scroll time and scroll size
+            final SearchRequestBuilder searchRequestBuilder = transportClient.prepareSearch(indexName);
+            searchRequestBuilder.setTypes(documentType).setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME)).setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE)
+                .setSource(searchSourceBuilder);
+            searchRequestBuilder.addSort(SortBuilders.fieldSort(BUSINESS_OBJECT_DEFINITION_SORT_FIELD).order(SortOrder.ASC));
 
-                businessObjectDefinitionEntityList = scrollSearchResultsIntoBusinessObjectDefinitionEntityList(searchRequestBuilder);
-            }
+            businessObjectDefinitionIndexSearchResponseDtoList = scrollSearchResultsIntoBusinessObjectDefinitionEntityList(searchRequestBuilder);
+        }
 
-            return businessObjectDefinitionEntityList;
-        };
+        return businessObjectDefinitionIndexSearchResponseDtoList;
+    };
 
     /**
      * The find all business object definitions function will return all business object definition entities in the search index.
      */
-    private final BiFunction<String, String, List<BusinessObjectDefinitionEntity>> findAllBusinessObjectDefinitionsFunction = (indexName, documentType) -> {
+    private final BiFunction<String, String, List<BusinessObjectDefinitionIndexSearchResponseDto>> findAllBusinessObjectDefinitionsFunction =
+        (indexName, documentType) -> {
 
-        LOGGER.info("Elasticsearch get all business object definition documents from index, indexName={} and documentType={}.", indexName, documentType);
+            LOGGER.info("Elasticsearch get all business object definition documents from index, indexName={} and documentType={}.", indexName, documentType);
 
-        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-        searchSourceBuilder
-            .fetchSource(new String[] {DATA_PROVIDER_NAME_SOURCE, DESCRIPTION_SOURCE, DISPLAY_NAME_SOURCE, NAME_SOURCE, NAMESPACE_CODE_SOURCE}, null);
+            SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+            searchSourceBuilder
+                .fetchSource(new String[] {DATA_PROVIDER_NAME_SOURCE, DESCRIPTION_SOURCE, DISPLAY_NAME_SOURCE, NAME_SOURCE, NAMESPACE_CODE_SOURCE}, null);
 
-        // Create a search request and set the scroll time and scroll size
-        final SearchRequestBuilder searchRequestBuilder = transportClient.prepareSearch(indexName);
-        searchRequestBuilder.setTypes(documentType).setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME)).setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE)
-            .setSource(searchSourceBuilder);
-        searchRequestBuilder.addSort(SortBuilders.fieldSort(BUSINESS_OBJECT_DEFINITION_SORT_FIELD).order(SortOrder.ASC));
+            // Create a search request and set the scroll time and scroll size
+            final SearchRequestBuilder searchRequestBuilder = transportClient.prepareSearch(indexName);
+            searchRequestBuilder.setTypes(documentType).setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME)).setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE)
+                .setSource(searchSourceBuilder);
+            searchRequestBuilder.addSort(SortBuilders.fieldSort(BUSINESS_OBJECT_DEFINITION_SORT_FIELD).order(SortOrder.ASC));
 
-        return scrollSearchResultsIntoBusinessObjectDefinitionEntityList(searchRequestBuilder);
-    };
+            return scrollSearchResultsIntoBusinessObjectDefinitionEntityList(searchRequestBuilder);
+        };
 
     /**
      * Private method to create a String representation of the list of tag entities for logging.
@@ -467,13 +419,14 @@ public class ElasticsearchFunctions implements SearchFunctions
      *
      * @return list of business object definition entities
      */
-    private List<BusinessObjectDefinitionEntity> scrollSearchResultsIntoBusinessObjectDefinitionEntityList(final SearchRequestBuilder searchRequestBuilder)
+    private List<BusinessObjectDefinitionIndexSearchResponseDto> scrollSearchResultsIntoBusinessObjectDefinitionEntityList(
+        final SearchRequestBuilder searchRequestBuilder)
     {
         // Retrieve the search response
         SearchResponse searchResponse = searchRequestBuilder.execute().actionGet();
 
         // Create an array list for storing the BusinessObjectDefinitionEntities
-        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList = new ArrayList<>();
+        List<BusinessObjectDefinitionIndexSearchResponseDto> businessObjectDefinitionIndexSearchResponseDtoList = new ArrayList<>();
 
         SearchHits searchHits = searchResponse.getHits();
         SearchHit[] hits = searchHits.hits();
@@ -487,7 +440,8 @@ public class ElasticsearchFunctions implements SearchFunctions
 
                 try
                 {
-                    businessObjectDefinitionEntityList.add(jsonHelper.unmarshallJsonToObject(BusinessObjectDefinitionEntity.class, jsonInString));
+                    businessObjectDefinitionIndexSearchResponseDtoList
+                        .add(jsonHelper.unmarshallJsonToObject(BusinessObjectDefinitionIndexSearchResponseDto.class, jsonInString));
                 }
                 catch (IOException ioException)
                 {
@@ -502,7 +456,7 @@ public class ElasticsearchFunctions implements SearchFunctions
             hits = searchHits.hits();
         }
 
-        return businessObjectDefinitionEntityList;
+        return businessObjectDefinitionIndexSearchResponseDtoList;
     }
 
     /**
@@ -600,19 +554,13 @@ public class ElasticsearchFunctions implements SearchFunctions
     }
 
     @Override
-    public BiFunction<String, String, List<BusinessObjectDefinitionEntity>> getFindAllBusinessObjectDefinitionsFunction()
+    public BiFunction<String, String, List<BusinessObjectDefinitionIndexSearchResponseDto>> getFindAllBusinessObjectDefinitionsFunction()
     {
         return findAllBusinessObjectDefinitionsFunction;
     }
 
     @Override
-    public QuadFunction<String, String, String, String, List<BusinessObjectDefinitionEntity>> getSearchBusinessObjectDefinitionsByTagCodeAndTagTypeFunction()
-    {
-        return searchBusinessObjectDefinitionsByTagCodeAndTagTypeFunction;
-    }
-
-    @Override
-    public TriFunction<String, String, List<TagEntity>, List<BusinessObjectDefinitionEntity>> getSearchBusinessObjectDefinitionsByTagsFunction()
+    public TriFunction<String, String, List<TagEntity>, List<BusinessObjectDefinitionIndexSearchResponseDto>> getSearchBusinessObjectDefinitionsByTagsFunction()
     {
         return searchBusinessObjectDefinitionsByTagsFunction;
     }

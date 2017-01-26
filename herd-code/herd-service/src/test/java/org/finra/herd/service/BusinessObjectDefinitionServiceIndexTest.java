@@ -52,6 +52,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchResponse;
 import org.finra.herd.model.api.xml.TagKey;
+import org.finra.herd.model.dto.BusinessObjectDefinitionIndexSearchResponseDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.SearchIndexUpdateDto;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
@@ -653,14 +654,13 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         List<TagEntity> tagChildrenEntityList = new ArrayList<>();
         tagChildrenEntityList.add(tagChildEntity);
 
-        // Create a business object definition entity list to return from the search business object definitions by tags function
-        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList = new ArrayList<>();
-        businessObjectDefinitionEntityList.add(businessObjectDefinitionDaoTestHelper
-            .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
-                businessObjectDefinitionServiceTestHelper.getNewAttributes()));
-        businessObjectDefinitionEntityList.add(businessObjectDefinitionDaoTestHelper
-            .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME_2, DATA_PROVIDER_NAME_2, BDEF_DESCRIPTION_2,
-                businessObjectDefinitionServiceTestHelper.getNewAttributes()));
+        List<BusinessObjectDefinitionIndexSearchResponseDto> businessObjectDefinitionIndexSearchResponseDtoList = new ArrayList<>();
+        BusinessObjectDefinitionIndexSearchResponseDto businessObjectDefinitionIndexSearchResponseDto1 =
+            new BusinessObjectDefinitionIndexSearchResponseDto(DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME, BDEF_NAME, NAMESPACE);
+        BusinessObjectDefinitionIndexSearchResponseDto businessObjectDefinitionIndexSearchResponseDto2 =
+            new BusinessObjectDefinitionIndexSearchResponseDto(DATA_PROVIDER_NAME_2, BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2, BDEF_NAME_2, NAMESPACE);
+        businessObjectDefinitionIndexSearchResponseDtoList.add(businessObjectDefinitionIndexSearchResponseDto1);
+        businessObjectDefinitionIndexSearchResponseDtoList.add(businessObjectDefinitionIndexSearchResponseDto2);
 
         // Mock the call to external methods
         when(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH, Integer.class))
@@ -670,7 +670,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         when(tagDaoHelper.getTagEntity(businessObjectDefinitionSearchKey.getTagKey())).thenReturn(tagEntity);
         when(tagDaoHelper.getTagChildrenEntities(tagEntity)).thenReturn(tagChildrenEntityList);
         when(searchFunctions.getSearchBusinessObjectDefinitionsByTagsFunction())
-            .thenReturn((indexName, documentType, tagEntities) -> businessObjectDefinitionEntityList);
+            .thenReturn((indexName, documentType, tagEntities) -> businessObjectDefinitionIndexSearchResponseDtoList);
 
         // Call the method under test
         BusinessObjectDefinitionSearchResponse businessObjectDefinitionSearchResponse =
@@ -723,14 +723,13 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         TagEntity tagEntity = new TagEntity();
         tagEntity.setTagCode(TAG_CODE);
 
-        // Create a business object definition entity list to return from the search business object definitions by tags function
-        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList = new ArrayList<>();
-        businessObjectDefinitionEntityList.add(businessObjectDefinitionDaoTestHelper
-            .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
-                businessObjectDefinitionServiceTestHelper.getNewAttributes()));
-        businessObjectDefinitionEntityList.add(businessObjectDefinitionDaoTestHelper
-            .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME_2, DATA_PROVIDER_NAME_2, BDEF_DESCRIPTION_2,
-                businessObjectDefinitionServiceTestHelper.getNewAttributes()));
+        List<BusinessObjectDefinitionIndexSearchResponseDto> businessObjectDefinitionIndexSearchResponseDtoList = new ArrayList<>();
+        BusinessObjectDefinitionIndexSearchResponseDto businessObjectDefinitionIndexSearchResponseDto1 =
+            new BusinessObjectDefinitionIndexSearchResponseDto(DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME, BDEF_NAME, NAMESPACE);
+        BusinessObjectDefinitionIndexSearchResponseDto businessObjectDefinitionIndexSearchResponseDto2 =
+            new BusinessObjectDefinitionIndexSearchResponseDto(DATA_PROVIDER_NAME_2, BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2, BDEF_NAME_2, NAMESPACE);
+        businessObjectDefinitionIndexSearchResponseDtoList.add(businessObjectDefinitionIndexSearchResponseDto1);
+        businessObjectDefinitionIndexSearchResponseDtoList.add(businessObjectDefinitionIndexSearchResponseDto2);
 
         // Mock the call to external methods
         when(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH, Integer.class))
@@ -739,7 +738,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
         when(tagDaoHelper.getTagEntity(businessObjectDefinitionSearchKey.getTagKey())).thenReturn(tagEntity);
         when(searchFunctions.getSearchBusinessObjectDefinitionsByTagsFunction())
-            .thenReturn((indexName, documentType, tagEntities) -> businessObjectDefinitionEntityList);
+            .thenReturn((indexName, documentType, tagEntities) -> businessObjectDefinitionIndexSearchResponseDtoList);
 
         // Call the method under test
         BusinessObjectDefinitionSearchResponse businessObjectDefinitionSearchResponse =
@@ -777,21 +776,21 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         // Create a new fields set that will be used when testing the index search business object definitions method
         Set<String> fields = Sets.newHashSet(FIELD_DATA_PROVIDER_NAME, FIELD_DISPLAY_NAME, FIELD_SHORT_DESCRIPTION);
 
-        // Create a business object definition entity list to return from the search business object definitions by tags function
-        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList = new ArrayList<>();
-        businessObjectDefinitionEntityList.add(businessObjectDefinitionDaoTestHelper
-            .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
-                businessObjectDefinitionServiceTestHelper.getNewAttributes()));
-        businessObjectDefinitionEntityList.add(businessObjectDefinitionDaoTestHelper
-            .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME_2, DATA_PROVIDER_NAME_2, BDEF_DESCRIPTION_2,
-                businessObjectDefinitionServiceTestHelper.getNewAttributes()));
+        List<BusinessObjectDefinitionIndexSearchResponseDto> businessObjectDefinitionIndexSearchResponseDtoList = new ArrayList<>();
+        BusinessObjectDefinitionIndexSearchResponseDto businessObjectDefinitionIndexSearchResponseDto1 =
+            new BusinessObjectDefinitionIndexSearchResponseDto(DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME, BDEF_NAME, NAMESPACE);
+        BusinessObjectDefinitionIndexSearchResponseDto businessObjectDefinitionIndexSearchResponseDto2 =
+            new BusinessObjectDefinitionIndexSearchResponseDto(DATA_PROVIDER_NAME_2, BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2, BDEF_NAME_2, NAMESPACE);
+        businessObjectDefinitionIndexSearchResponseDtoList.add(businessObjectDefinitionIndexSearchResponseDto1);
+        businessObjectDefinitionIndexSearchResponseDtoList.add(businessObjectDefinitionIndexSearchResponseDto2);
 
         // Mock the call to external methods
         when(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH, Integer.class))
             .thenReturn(SHORT_DESCRIPTION_LENGTH);
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class)).thenReturn("INDEX_NAME");
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
-        when(searchFunctions.getFindAllBusinessObjectDefinitionsFunction()).thenReturn((indexName, documentType) -> businessObjectDefinitionEntityList);
+        when(searchFunctions.getFindAllBusinessObjectDefinitionsFunction())
+            .thenReturn((indexName, documentType) -> businessObjectDefinitionIndexSearchResponseDtoList);
 
         // Call the method under test
         BusinessObjectDefinitionSearchResponse businessObjectDefinitionSearchResponse =
@@ -814,7 +813,6 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         verify(tagDaoHelper, times(0)).getTagEntity(any());
         verify(tagDaoHelper, times(0)).getTagChildrenEntities(any());
         verify(searchFunctions, times(0)).getSearchBusinessObjectDefinitionsByTagsFunction();
-        verify(searchFunctions, times(0)).getSearchBusinessObjectDefinitionsByTagCodeAndTagTypeFunction();
         verify(searchFunctions, times(1)).getFindAllBusinessObjectDefinitionsFunction();
     }
 
@@ -869,7 +867,6 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         verify(tagDaoHelper, times(0)).getTagEntity(any());
         verify(tagDaoHelper, times(0)).getTagChildrenEntities(any());
         verify(searchFunctions, times(0)).getSearchBusinessObjectDefinitionsByTagsFunction();
-        verify(searchFunctions, times(0)).getSearchBusinessObjectDefinitionsByTagCodeAndTagTypeFunction();
     }
 
     @Test
