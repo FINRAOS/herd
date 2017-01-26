@@ -21,6 +21,9 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
+import org.finra.herd.model.dto.BusinessObjectDefinitionIndexSearchResponseDto;
+import org.finra.herd.model.jpa.TagEntity;
+
 /**
  * SearchFunctions interface used to provide search index functionality
  */
@@ -82,6 +85,17 @@ public interface SearchFunctions
      * The ids in index function will take as arguments the index name and the document type and will return a list of all the ids in the index.
      */
     BiFunction<String, String, List<String>> getIdsInIndexFunction();
+
+    /**
+     * The find all business object definitions function will return all business object definition entities in the search index.
+     */
+    BiFunction<String, String, List<BusinessObjectDefinitionIndexSearchResponseDto>> getFindAllBusinessObjectDefinitionsFunction();
+
+    /**
+     * The search business object definitions by tags function will take a list of tag entities and return a list of business object definition entities. The
+     * function will search the search index based on tag code and tag type code.
+     */
+    TriFunction<String, String, List<TagEntity>, List<BusinessObjectDefinitionIndexSearchResponseDto>> getSearchBusinessObjectDefinitionsByTagsFunction();
 
     /**
      * The update index documents function will take as arguments the index name, document type, and a map of documents to update. The document map key is the

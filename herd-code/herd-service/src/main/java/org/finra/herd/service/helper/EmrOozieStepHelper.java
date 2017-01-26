@@ -223,4 +223,16 @@ public class EmrOozieStepHelper extends EmrStepHelper
             throw new IllegalArgumentException("Oozie properties file location must be specified.");
         }
     }
+
+    @Override
+    public String getRequestAccountId(Object stepRequest)
+    {
+        return ((EmrOozieStepAddRequest) stepRequest).getAccountId();
+    }
+
+    @Override
+    public void setRequestAccountId(Object stepRequest, String accountId)
+    {
+        ((EmrOozieStepAddRequest) stepRequest).setAccountId(accountId);
+    }
 }

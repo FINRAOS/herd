@@ -24,7 +24,7 @@
 
    <groupId>org.finra.herd</groupId>
    <artifactId>herd</artifactId>
-   <version>0.35.0-SNAPSHOT</version>
+   <version>0.36.0-SNAPSHOT</version>
 
    <description>This is the base pom for the herd project.</description>
    <url>http://finraos.github.io/herd/</url>
@@ -80,13 +80,14 @@
       <spring.ldap.version>2.2.0.RELEASE</spring.ldap.version>
       <spring.security.version>4.0.3.RELEASE</spring.security.version>
       <spring.version>4.2.4.RELEASE</spring.version>
+      <spring-retry.version>1.1.2.RELEASE</spring-retry.version>
       <sun.jersey.version>1.19.1</sun.jersey.version>
       <swagger.version>1.5.9</swagger.version>
       <velocity.version>1.7</velocity.version>
       <woodstox.version>4.4.1</woodstox.version>
       <elasticsearch.version>5.1.1</elasticsearch.version>
-      <sgssl.version>5.1.1-19</sgssl.version>
-      <jcredstash-fx.version>1.3</jcredstash-fx.version>
+      <search-guard-ssl.version>5.1.1-19</search-guard-ssl.version>
+      <jcredstash.version>0.0.3</jcredstash.version>
 
       <!-- Third Party Plugin Dependencies -->
       <jaxb.xew.plugin.version>1.6</jaxb.xew.plugin.version>
@@ -312,6 +313,11 @@
          <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-sqs</artifactId>
+            <version>${aws.sdk.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk</artifactId>
             <version>${aws.sdk.version}</version>
          </dependency>
          <dependency>
@@ -581,6 +587,11 @@
             <version>${spring.security.version}</version>
          </dependency>
          <dependency>
+            <groupId>org.springframework.retry</groupId>
+            <artifactId>spring-retry</artifactId>
+            <version>${spring-retry.version}</version>
+         </dependency>
+         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
             <version>${jackson.version}</version>
@@ -801,6 +812,28 @@
             <groupId>com.brsanthu</groupId>
             <artifactId>migbase64</artifactId>
             <version>${migbase64.version}</version>
+         </dependency>
+
+         <!-- Elastic search -->
+         <dependency>
+            <groupId>org.elasticsearch</groupId>
+            <artifactId>elasticsearch</artifactId>
+            <version>${elasticsearch.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.elasticsearch.client</groupId>
+            <artifactId>transport</artifactId>
+            <version>${elasticsearch.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>com.floragunn</groupId>
+            <artifactId>search-guard-ssl</artifactId>
+            <version>${search-guard-ssl.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>co.wrisk.jcredstash</groupId>
+            <artifactId>jcredstash</artifactId>
+            <version>${jcredstash.version}</version>
          </dependency>
 
       </dependencies>

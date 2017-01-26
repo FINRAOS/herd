@@ -199,4 +199,16 @@ public class EmrShellStepHelper extends EmrStepHelper
         validateStepName(shellStep.getStepName());
         validateScriptLocation(shellStep.getScriptLocation());
     }
+
+    @Override
+    public String getRequestAccountId(Object stepRequest)
+    {
+        return ((EmrShellStepAddRequest) stepRequest).getAccountId();
+    }
+
+    @Override
+    public void setRequestAccountId(Object stepRequest, String accountId)
+    {
+        ((EmrShellStepAddRequest) stepRequest).setAccountId(accountId);
+    }
 }

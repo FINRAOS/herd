@@ -44,6 +44,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
+import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.BusinessObjectDefinitionDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
@@ -67,6 +68,7 @@ import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormat;
 import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormatUpdateRequest;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.api.xml.SampleDataFile;
+import org.finra.herd.model.dto.BusinessObjectDefinitionIndexSearchResponseDto;
 import org.finra.herd.model.dto.BusinessObjectDefinitionSampleFileUpdateDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.SearchIndexUpdateDto;
@@ -555,6 +557,69 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     }
 
     @Override
+    public BusinessObjectDefinitionSearchResponse indexSearchBusinessObjectDefinitions(BusinessObjectDefinitionSearchRequest request, Set<String> fields)
+    {
+        // Get the configured values for index name and document type
+        final String indexName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
+        final String documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
+
+        // Validate the business object definition search fields
+        validateSearchResponseFields(fields);
+
+        // Create a new array list to hold the business object definition entities found in the index search
+        List<BusinessObjectDefinitionIndexSearchResponseDto> businessObjectDefinitionIndexSearchResponseDtoList;
+
+        // If the request contains search filters
+        if (!CollectionUtils.isEmpty(request.getBusinessObjectDefinitionSearchFilters()))
+        {
+            // Validate the search request.
+            validateBusinessObjectDefinitionSearchRequest(request);
+
+            // Get the first filter only
+            BusinessObjectDefinitionSearchKey businessObjectDefinitionSearchKey =
+                request.getBusinessObjectDefinitionSearchFilters().get(0).getBusinessObjectDefinitionSearchKeys().get(0);
+
+            // Need to get the list of children tag entities down the hierarchy before the search on the index
+            TagEntity tagEntity = tagDaoHelper.getTagEntity(businessObjectDefinitionSearchKey.getTagKey());
+            List<TagEntity> tagEntities = new ArrayList<>();
+            tagEntities.add(tagEntity);
+
+            // If includeTagHierarchy is true, get list of children tag entities down the hierarchy of the specified tag.
+            if (BooleanUtils.isTrue(businessObjectDefinitionSearchKey.isIncludeTagHierarchy()))
+            {
+                tagEntities.addAll(tagDaoHelper.getTagChildrenEntities(tagEntity));
+            }
+
+            // Use the tag type entities list to search in the search index for business object definitions
+            businessObjectDefinitionIndexSearchResponseDtoList =
+                searchFunctions.getSearchBusinessObjectDefinitionsByTagsFunction().apply(indexName, documentType, tagEntities);
+        }
+        else
+        {
+            // Else get all of the business object definitions
+            businessObjectDefinitionIndexSearchResponseDtoList = searchFunctions.getFindAllBusinessObjectDefinitionsFunction().apply(indexName, documentType);
+        }
+
+        // Create a list to hold the business object definitions that will be returned as part of the search response
+        List<BusinessObjectDefinition> businessObjectDefinitions = new ArrayList<>();
+
+        // Retrieve all unique business object definition entities and construct a list of business object definitions based on the requested fields.
+        for (BusinessObjectDefinitionIndexSearchResponseDto businessObjectDefinitionIndexSearchResponseDto : ImmutableSet
+            .copyOf(businessObjectDefinitionIndexSearchResponseDtoList))
+        {
+            // Convert the business object definition entity to a business object definition and add it to the list of business object definitions that will be
+            // returned as a part of the search response
+            businessObjectDefinitions.add(createBusinessObjectDefinitionFromDto(businessObjectDefinitionIndexSearchResponseDto, fields));
+        }
+
+        // Construct business object search response.
+        BusinessObjectDefinitionSearchResponse searchResponse = new BusinessObjectDefinitionSearchResponse();
+        searchResponse.setBusinessObjectDefinitions(businessObjectDefinitions);
+
+        return searchResponse;
+    }
+
+    @Override
     public BusinessObjectDefinitionSearchResponse searchBusinessObjectDefinitions(BusinessObjectDefinitionSearchRequest request, Set<String> fields)
     {
         // Validate the business object definition search fields.
@@ -833,6 +898,11 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
             sampleDataFiles.add(new SampleDataFile(sampleDataFileEntity.getDirectoryPath(), sampleDataFileEntity.getFileName()));
         }
 
+        // Add auditable fields.
+        businessObjectDefinition.setCreatedByUserId(businessObjectDefinitionEntity.getCreatedBy());
+        businessObjectDefinition.setLastUpdatedByUserId(businessObjectDefinitionEntity.getUpdatedBy());
+        businessObjectDefinition.setLastUpdatedOn(HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn()));
+
         return businessObjectDefinition;
     }
 
@@ -1040,5 +1110,41 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         });
 
         return businessObjectDefinitionJSONMap;
+    }
+
+    /**
+     * Creates a light-weight business object definition from a dto based on a set of requested fields.
+     *
+     * @param businessObjectDefinitionIndexSearchResponseDto the specified business object definition index search dto
+     * @param fields the set of requested fields
+     *
+     * @return the light-weight business object definition
+     */
+    private BusinessObjectDefinition createBusinessObjectDefinitionFromDto(
+        BusinessObjectDefinitionIndexSearchResponseDto businessObjectDefinitionIndexSearchResponseDto, Set<String> fields)
+    {
+        BusinessObjectDefinition definition = new BusinessObjectDefinition();
+
+        //populate namespace and business object definition name fields by default
+        definition.setNamespace(businessObjectDefinitionIndexSearchResponseDto.getNamespace().getCode());
+        definition.setBusinessObjectDefinitionName(businessObjectDefinitionIndexSearchResponseDto.getName());
+
+        //decorate object with only the required fields
+        if (fields.contains(DATA_PROVIDER_NAME_FIELD))
+        {
+            definition.setDataProviderName(businessObjectDefinitionIndexSearchResponseDto.getDataProvider().getName());
+        }
+
+        if (fields.contains(SHORT_DESCRIPTION_FIELD))
+        {
+            definition.setShortDescription(getShortDescription(businessObjectDefinitionIndexSearchResponseDto.getDescription()));
+        }
+
+        if (fields.contains(DISPLAY_NAME_FIELD))
+        {
+            definition.setDisplayName(businessObjectDefinitionIndexSearchResponseDto.getDisplayName());
+        }
+
+        return definition;
     }
 }

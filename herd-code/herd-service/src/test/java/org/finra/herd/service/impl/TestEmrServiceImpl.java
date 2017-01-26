@@ -37,10 +37,10 @@ import org.finra.herd.model.dto.EmrClusterAlternateKeyDto;
 public class TestEmrServiceImpl extends EmrServiceImpl
 {
     @Override
-    public EmrCluster getCluster(EmrClusterAlternateKeyDto alternateKey, String emrClusterId, String emrStepId, boolean verbose, boolean retrieveOozieJobs)
+    public EmrCluster getCluster(EmrClusterAlternateKeyDto alternateKey, String emrClusterId, String emrStepId, boolean verbose, boolean retrieveOozieJobs, String accountId)
         throws Exception
     {
-        return getClusterImpl(alternateKey, emrClusterId, emrStepId, verbose, retrieveOozieJobs);
+        return getClusterImpl(alternateKey, emrClusterId, emrStepId, verbose, retrieveOozieJobs, null);
     }
 
     @Override
@@ -68,16 +68,16 @@ public class TestEmrServiceImpl extends EmrServiceImpl
     }
 
     @Override
-    public EmrCluster terminateCluster(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, boolean overrideTerminationProtection, String emrClusterId)
+    public EmrCluster terminateCluster(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, boolean overrideTerminationProtection, String emrClusterId, String accountId)
         throws Exception
     {
-        return terminateClusterImpl(emrClusterAlternateKeyDto, overrideTerminationProtection, emrClusterId);
+        return terminateClusterImpl(emrClusterAlternateKeyDto, overrideTerminationProtection, emrClusterId, null);
     }
 
     @Override
     public OozieWorkflowJob getEmrOozieWorkflowJob(String namespace, String emrClusterDefinitionName, String emrClusterName, String oozieWorkflowJobId,
-        Boolean verbose, String emrClusterId) throws Exception
+        Boolean verbose, String emrClusterId, String accountId) throws Exception
     {
-        return getEmrOozieWorkflowJobImpl(namespace, emrClusterDefinitionName, emrClusterName, oozieWorkflowJobId, verbose, emrClusterId);
+        return getEmrOozieWorkflowJobImpl(namespace, emrClusterDefinitionName, emrClusterName, oozieWorkflowJobId, verbose, emrClusterId, null);
     }
 }

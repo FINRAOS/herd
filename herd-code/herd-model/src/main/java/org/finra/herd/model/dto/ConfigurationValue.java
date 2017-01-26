@@ -680,8 +680,7 @@ public enum ConfigurationValue
     /**
      * The elasticsearch mappings JSON
      */
-    ELASTICSEARCH_BDEF_MAPPINGS_JSON("elasticsearch.bdef.mappings.json",
-        "{\"properties\": { \"id\": { \"type\": \"long\" } } }"),
+    ELASTICSEARCH_BDEF_MAPPINGS_JSON("elasticsearch.bdef.mappings.json", "{\"properties\": { \"id\": { \"type\": \"long\" } } }"),
 
     /**
      * The elasticsearch settings JSON
@@ -743,7 +742,17 @@ public enum ConfigurationValue
     /**
      * The name of the Credstash table where credentials are stored.
      */
-    CREDSTASH_TABLE_NAME("credstash.table.name", "credential-store");
+    CREDSTASH_TABLE_NAME("credstash.table.name", "credential-store"),
+
+    /**
+     * The Credstash encryption context key value map.
+     */
+    CREDSTASH_ENCRYPTION_CONTEXT("credstash.encryption.context", "{\"AGS\":\"AGS_VALUE\",\"SDLC\":\"SDLC_VALUE\",\"Component\":\"COMPONENT_VALUE\"}"),
+
+    /**
+     * The Credstash aws region name.
+     */
+    CREDSTASH_AWS_REGION_NAME("credstash.aws.region.name", "us-east-1");
 
     // Properties
     private String key;

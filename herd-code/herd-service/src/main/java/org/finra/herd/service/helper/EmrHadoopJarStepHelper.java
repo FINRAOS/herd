@@ -191,4 +191,16 @@ public class EmrHadoopJarStepHelper extends EmrStepHelper
             throw new IllegalArgumentException("Hadoop JAR location must be specified.");
         }
     }
+
+    @Override
+    public String getRequestAccountId(Object stepRequest)
+    {
+        return ((EmrHadoopJarStepAddRequest) stepRequest).getAccountId();
+    }
+
+    @Override
+    public void setRequestAccountId(Object stepRequest, String accountId)
+    {
+        ((EmrHadoopJarStepAddRequest) stepRequest).setAccountId(accountId);
+    }
 }

@@ -134,12 +134,20 @@ public interface BusinessObjectDefinitionService
     public Future<Void> indexValidateAllBusinessObjectDefinitions();
 
     /**
-     * Gets a list of all business object definitions defined in the system.
+     * Searches across all business object definitions that are defined in the system per specified search filters and keys
      *
-     * @return the business object definitions.
+     * @return the retrieved business object definition list
      */
     public BusinessObjectDefinitionSearchResponse searchBusinessObjectDefinitions(BusinessObjectDefinitionSearchRequest businessObjectDefinitionSearchRequest,
         Set<String> fields);
+
+    /**
+     * Searches across all business object definitions that are in search index per specified search filters and keys
+     *
+     * @return the retrieved business object definition list
+     */
+    public BusinessObjectDefinitionSearchResponse indexSearchBusinessObjectDefinitions(
+        BusinessObjectDefinitionSearchRequest businessObjectDefinitionSearchRequest, Set<String> fields);
 
     /**
      * Update business object definition sample file

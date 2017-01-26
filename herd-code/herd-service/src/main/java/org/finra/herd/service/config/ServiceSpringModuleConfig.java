@@ -40,6 +40,7 @@ import com.amazon.sqs.javamessaging.SQSConnectionFactory;
 import com.amazonaws.ClientConfiguration;
 import com.floragunn.searchguard.ssl.SearchGuardSSLPlugin;
 import com.floragunn.searchguard.ssl.util.SSLConfigConstants;
+import com.google.common.collect.ImmutableMap;
 import org.activiti.engine.HistoryService;
 import org.activiti.engine.IdentityService;
 import org.activiti.engine.ManagementService;
@@ -82,6 +83,9 @@ import org.springframework.core.task.TaskExecutor;
 import org.springframework.jdbc.datasource.init.DatabasePopulatorUtils;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 import org.springframework.jms.config.DefaultJmsListenerContainerFactory;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.EnableRetry;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -98,20 +102,25 @@ import org.finra.herd.model.dto.ElasticsearchSettingsDto;
 import org.finra.herd.service.activiti.HerdCommandInvoker;
 import org.finra.herd.service.activiti.HerdDelegateInterceptor;
 import org.finra.herd.service.activiti.HerdProcessEngineConfigurator;
+import org.finra.herd.service.credstash.JCredStashWrapper;
+import org.finra.herd.service.exception.CredStashGetCredentialFailedException;
 import org.finra.herd.service.helper.HerdErrorInformationExceptionHandler;
 import org.finra.herd.service.helper.HerdJmsDestinationResolver;
 import org.finra.herd.service.systemjobs.AbstractSystemJob;
-import org.finra.pet.JCredStashFX;
 
 /**
  * Service Spring module configuration.
  */
+@EnableRetry
 @Configuration
 // Component scan all packages, but exclude the configuration ones since they are explicitly specified.
 @ComponentScan(value = "org.finra.herd.service",
     excludeFilters = @ComponentScan.Filter(type = FilterType.REGEX, pattern = "org\\.finra\\.herd\\.service\\.config\\..*"))
 public class ServiceSpringModuleConfig
 {
+    /**
+     * Logger for the ServiceSpringModuleConfig class
+     */
     private static final Logger LOGGER = LoggerFactory.getLogger(ServiceSpringModuleConfig.class);
 
     /**
@@ -145,29 +154,19 @@ public class ServiceSpringModuleConfig
     public static final String ELASTICSEARCH_SETTING_PATH_HOME_PATH = ".";
 
     /**
-     * The Credstash AGS index value, part of the credential string
-     */
-    public static final int CREDSTASH_AGS = 0;
-
-    /**
-     * The Credstash component index value, part of the credential string
-     */
-    public static final int CREDSTASH_COMPONENT = 1;
-
-    /**
-     * The Credstash SDLC index value, part of the credential string
-     */
-    public static final int CREDSTASH_SDLC = 2;
-
-    /**
-     * The Credstash credential name index value, part of the credential string
-     */
-    public static final int CREDSTASH_CREDENTIAL_NAME = 3;
-
-    /**
      * Java Keystore type
      */
     public static final String JAVA_KEYSTORE_TYPE = "JKS";
+
+    /**
+     * Keystore key value
+     */
+    public static final String KEYSTORE_KEY = "KEYSTORE";
+
+    /**
+     * Truststore key value
+     */
+    public static final String TRUSTSTORE_KEY = "TRUSTSTORE";
 
     @Autowired
     private DataSource herdDataSource;
@@ -559,7 +558,6 @@ public class ServiceSpringModuleConfig
         List<String> elasticSearchAddresses = elasticsearchSettingsDto.getClientTransportAddresses();
         boolean clientTransportStiff = elasticsearchSettingsDto.isClientTransportSniff();
         boolean isElasticsearchSearchGuardEnabled = Boolean.valueOf(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_ENABLED));
-
         LOGGER.info("isElasticsearchSearchGuardEnabled={}", isElasticsearchSearchGuardEnabled);
 
         // Build the Transport client with the settings
@@ -573,30 +571,15 @@ public class ServiceSpringModuleConfig
             String pathToKeystoreFile = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_KEYSTORE_PATH);
             String pathToTruststoreFile = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_TRUSTSTORE_PATH);
 
-            // Get the credstash table name and credential names for the keystore and truststore
-            String credstashTableName = configurationHelper.getProperty(ConfigurationValue.CREDSTASH_TABLE_NAME);
-            String keystoreCredentialName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_KEYSTORE_CREDENTIAL_NAME);
-            String truststoreCredentialName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_TRUSTSTORE_CREDENTIAL_NAME);
+            // Get the keystore and truststore passwords from Cred Stash
+            Map<String, String> keystoreTruststorePasswordMap = getKeystoreAndTruststoreFromCredStash();
 
-            LOGGER.info("credstashTableName={}", credstashTableName);
-            LOGGER.info("keystoreCredentialName={}", keystoreCredentialName);
-            LOGGER.info("truststoreCredentialName={}", truststoreCredentialName);
+            // Retreive the keystore password and truststore password from the keystore trustStore password map
+            String keystorePassword = keystoreTruststorePasswordMap.get(KEYSTORE_KEY);
+            String truststorePassword = keystoreTruststorePasswordMap.get(TRUSTSTORE_KEY);
 
-            // Split on a period because the credential names are in the form: AGS.component.sdlc.credentialName
-            String[] keystoreCredentialNameSplit = keystoreCredentialName.split("\\.");
-            String[] truststoreCredentialNameSplit = truststoreCredentialName.split("\\.");
-
-            // Get the keystore and truststore passwords from Credstash
-            JCredStashFX credstash = new JCredStashFX();
-
-            String keystorePassword = credstash
-                .getCredential(keystoreCredentialNameSplit[CREDSTASH_CREDENTIAL_NAME], keystoreCredentialNameSplit[CREDSTASH_AGS],
-                    keystoreCredentialNameSplit[CREDSTASH_SDLC], keystoreCredentialNameSplit[CREDSTASH_COMPONENT], credstashTableName);
+            // Log the keystore and truststore information
             logKeystoreInformation(pathToKeystoreFile, keystorePassword);
-
-            String truststorePassword = credstash
-                .getCredential(truststoreCredentialNameSplit[CREDSTASH_CREDENTIAL_NAME], truststoreCredentialNameSplit[CREDSTASH_AGS],
-                    truststoreCredentialNameSplit[CREDSTASH_SDLC], truststoreCredentialNameSplit[CREDSTASH_COMPONENT], credstashTableName);
             logKeystoreInformation(pathToTruststoreFile, truststorePassword);
 
             File keystoreFile = new File(pathToKeystoreFile);
@@ -648,6 +631,63 @@ public class ServiceSpringModuleConfig
     }
 
     /**
+     * Private method to obtain the keystore and truststore passwords from cred stash. This method will attempt to obtain the credentials up to 3 times with a 5
+     * second, 10 second, and 20 second back off
+     *
+     * @return a map containing the keystore and truststore passwords
+     * @throws CredStashGetCredentialFailedException
+     */
+    @Retryable(maxAttempts = 3, value = CredStashGetCredentialFailedException.class, backoff = @Backoff(delay = 5000, multiplier = 2))
+    private Map<String, String> getKeystoreAndTruststoreFromCredStash() throws CredStashGetCredentialFailedException
+    {
+        // Get the credstash table name and credential names for the keystore and truststore
+        String credstashEncryptionContext = configurationHelper.getProperty(ConfigurationValue.CREDSTASH_ENCRYPTION_CONTEXT);
+        String credstashAwsRegion = configurationHelper.getProperty(ConfigurationValue.CREDSTASH_AWS_REGION_NAME);
+        String credstashTableName = configurationHelper.getProperty(ConfigurationValue.CREDSTASH_TABLE_NAME);
+        String keystoreCredentialName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_KEYSTORE_CREDENTIAL_NAME);
+        String truststoreCredentialName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_TRUSTSTORE_CREDENTIAL_NAME);
+
+        LOGGER.info("credstashTableName={}", credstashTableName);
+        LOGGER.info("keystoreCredentialName={}", keystoreCredentialName);
+        LOGGER.info("truststoreCredentialName={}", truststoreCredentialName);
+
+        // Get the keystore and truststore passwords from Credstash
+        JCredStashWrapper credstash = new JCredStashWrapper(credstashAwsRegion, credstashTableName);
+
+        String keystorePassword = null;
+        String truststorePassword = null;
+
+        // Try to obtain the credentials from cred stash
+        try
+        {
+            // Convert the JSON config file version of the encryption context to a Java Map class
+            @SuppressWarnings("unchecked")
+            Map<String, String> credstashEncryptionContextMap = jsonHelper.unmarshallJsonToObject(Map.class, credstashEncryptionContext);
+
+            // Get the keystore and truststore passwords from credstash
+            keystorePassword = credstash.getCredential(keystoreCredentialName, credstashEncryptionContextMap);
+            truststorePassword = credstash.getCredential(truststoreCredentialName, credstashEncryptionContextMap);
+        }
+        catch (Exception exception)
+        {
+            LOGGER.error("Caught exception when attempting to get a credential value from CredStash", exception);
+        }
+
+        // If either the keystorePassword or truststorePassword values are empty and could not be obtained as credentials from cred stash,
+        // then throw a new CredStashGetCredentialFailedException
+        if (StringUtils.isEmpty(keystorePassword) || StringUtils.isEmpty(truststorePassword))
+        {
+            throw new CredStashGetCredentialFailedException("Failed to obtain the keystore or truststore credential from cred stash.");
+        }
+
+        // Return the keystore and truststore passwords in a map
+        return ImmutableMap.<String, String>builder().
+            put(KEYSTORE_KEY, keystorePassword).
+            put(TRUSTSTORE_KEY, truststorePassword).
+            build();
+    }
+
+    /**
      * The quartz driver delegate class, that works with the quartz database. Throws {@link IllegalStateException} if undefined.
      *
      * @return the quartz driver delegate class.
@@ -667,8 +707,10 @@ public class ServiceSpringModuleConfig
 
     /**
      * Private method to log keystore file information.
+     *
      * @param pathToKeystoreFile the path the the keystore file
      * @param keystorePassword the password that will open the keystore file
+     *
      * @throws Exception a potential exception when getting the keystore
      */
     private void logKeystoreInformation(String pathToKeystoreFile, String keystorePassword) throws Exception
