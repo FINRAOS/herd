@@ -578,27 +578,19 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
             BusinessObjectDefinitionSearchKey businessObjectDefinitionSearchKey =
                 request.getBusinessObjectDefinitionSearchFilters().get(0).getBusinessObjectDefinitionSearchKeys().get(0);
 
-            // If includeTagHierarchy is true, get list of children tag entities down the hierarchy of the specified tag
+            // Need to get the list of children tag entities down the hierarchy before the search on the index
+            TagEntity tagEntity = tagDaoHelper.getTagEntity(businessObjectDefinitionSearchKey.getTagKey());
+            List<TagEntity> tagEntities = new ArrayList<>();
+            tagEntities.add(tagEntity);
+
+            // If includeTagHierarchy is true, get list of children tag entities down the hierarchy of the specified tag.
             if (BooleanUtils.isTrue(businessObjectDefinitionSearchKey.isIncludeTagHierarchy()))
             {
-                // Need to get the list of children tag entities down the hierarchy before the search on the index
-                TagEntity tagEntity = tagDaoHelper.getTagEntity(businessObjectDefinitionSearchKey.getTagKey());
-                List<TagEntity> tagEntities = new ArrayList<>();
-                tagEntities.add(tagEntity);
                 tagEntities.addAll(tagDaoHelper.getTagChildrenEntities(tagEntity));
+            }
 
-                // Use the tag type entities list to search in the search index for business object definitions
-                businessObjectDefinitionEntityList =
-                    searchFunctions.getSearchBusinessObjectDefinitionsByTagsFunction().apply(indexName, documentType, tagEntities);
-            }
-            // If includeTagHierarchy is false, simply use the tag code and tag type code to search the search index for business object definitions
-            else
-            {
-                // Search the index based on the tag code and tag type code
-                businessObjectDefinitionEntityList = searchFunctions.getSearchBusinessObjectDefinitionsByTagCodeAndTagTypeFunction()
-                    .apply(indexName, documentType, businessObjectDefinitionSearchKey.getTagKey().getTagCode(),
-                        businessObjectDefinitionSearchKey.getTagKey().getTagTypeCode());
-            }
+            // Use the tag type entities list to search in the search index for business object definitions
+            businessObjectDefinitionEntityList = searchFunctions.getSearchBusinessObjectDefinitionsByTagsFunction().apply(indexName, documentType, tagEntities);
         }
         else
         {
@@ -983,7 +975,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
                 businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters().get(0);
 
             Assert.isTrue(CollectionUtils.size(businessObjectDefinitionSearchFilter.getBusinessObjectDefinitionSearchKeys()) == 1 &&
-                businessObjectDefinitionSearchFilter.getBusinessObjectDefinitionSearchKeys().get(0) != null,
+                    businessObjectDefinitionSearchFilter.getBusinessObjectDefinitionSearchKeys().get(0) != null,
                 "Exactly one business object definition search key must be specified.");
 
             // Get the tag search key.
@@ -995,7 +987,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         else
         {
             Assert.isTrue(CollectionUtils.size(businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters()) == 1 &&
-                businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters().get(0) != null,
+                    businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters().get(0) != null,
                 "Exactly one business object definition search filter must be specified.");
         }
     }

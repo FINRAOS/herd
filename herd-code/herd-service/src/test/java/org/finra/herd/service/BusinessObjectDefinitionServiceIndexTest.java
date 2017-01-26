@@ -719,6 +719,10 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         // Create a new fields set that will be used when testing the index search business object definitions method
         Set<String> fields = Sets.newHashSet(FIELD_DATA_PROVIDER_NAME, FIELD_DISPLAY_NAME, FIELD_SHORT_DESCRIPTION);
 
+        // Create a tag entity to return from the tag dao helper get tag entity method
+        TagEntity tagEntity = new TagEntity();
+        tagEntity.setTagCode(TAG_CODE);
+
         // Create a business object definition entity list to return from the search business object definitions by tags function
         List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList = new ArrayList<>();
         businessObjectDefinitionEntityList.add(businessObjectDefinitionDaoTestHelper
@@ -733,8 +737,9 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
             .thenReturn(SHORT_DESCRIPTION_LENGTH);
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class)).thenReturn("INDEX_NAME");
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
-        when(searchFunctions.getSearchBusinessObjectDefinitionsByTagCodeAndTagTypeFunction())
-            .thenReturn((indexName, documentType, tagCode, tagTypeCode) -> businessObjectDefinitionEntityList);
+        when(tagDaoHelper.getTagEntity(businessObjectDefinitionSearchKey.getTagKey())).thenReturn(tagEntity);
+        when(searchFunctions.getSearchBusinessObjectDefinitionsByTagsFunction())
+            .thenReturn((indexName, documentType, tagEntities) -> businessObjectDefinitionEntityList);
 
         // Call the method under test
         BusinessObjectDefinitionSearchResponse businessObjectDefinitionSearchResponse =
@@ -754,9 +759,9 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
         verify(tagHelper, times(1)).validateTagKey(tagKey);
-        verify(tagDaoHelper, times(0)).getTagEntity(businessObjectDefinitionSearchKey.getTagKey());
+        verify(tagDaoHelper, times(1)).getTagEntity(businessObjectDefinitionSearchKey.getTagKey());
         verify(tagDaoHelper, times(0)).getTagChildrenEntities(any());
-        verify(searchFunctions, times(1)).getSearchBusinessObjectDefinitionsByTagCodeAndTagTypeFunction();
+        verify(searchFunctions, times(1)).getSearchBusinessObjectDefinitionsByTagsFunction();
     }
 
     @Test

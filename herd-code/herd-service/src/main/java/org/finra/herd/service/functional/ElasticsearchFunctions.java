@@ -369,19 +369,27 @@ public class ElasticsearchFunctions implements SearchFunctions
                 queryBuilderList.add(queryBuilder);
             }));
 
-            // Combined bool should match query for tag type code and tag code
-            BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+            List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList = new ArrayList<>();
 
-            // For each query in the query list add it to the bool query
-            queryBuilderList.forEach(boolQueryBuilder::should);
+            // Only perform the query if there is at least one query builder
+            if (queryBuilderList.size() > 0)
+            {
+                // Combined bool should match query for tag type code and tag code
+                BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
-            // Create a search request and set the scroll time and scroll size
-            final SearchRequestBuilder searchRequestBuilder = transportClient.prepareSearch(indexName);
-            searchRequestBuilder.setTypes(documentType).setQuery(boolQueryBuilder).setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME))
-                .setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE);
-            searchRequestBuilder.addSort(SortBuilders.fieldSort(BUSINESS_OBJECT_DEFINITION_SORT_FIELD).order(SortOrder.ASC));
+                // For each query in the query list add it to the bool query
+                queryBuilderList.forEach(boolQueryBuilder::should);
 
-            return scrollSearchResultsIntoBusinessObjectDefinitionEntityList(searchRequestBuilder);
+                // Create a search request and set the scroll time and scroll size
+                final SearchRequestBuilder searchRequestBuilder = transportClient.prepareSearch(indexName);
+                searchRequestBuilder.setTypes(documentType).setQuery(boolQueryBuilder).setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME))
+                    .setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE);
+                searchRequestBuilder.addSort(SortBuilders.fieldSort(BUSINESS_OBJECT_DEFINITION_SORT_FIELD).order(SortOrder.ASC));
+
+                businessObjectDefinitionEntityList = scrollSearchResultsIntoBusinessObjectDefinitionEntityList(searchRequestBuilder);
+            }
+
+            return businessObjectDefinitionEntityList;
         };
 
     /**
