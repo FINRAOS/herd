@@ -48,6 +48,7 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
@@ -96,6 +97,31 @@ public class ElasticsearchFunctions implements SearchFunctions
      * The business object definition id search index key
      */
     public static final String SEARCH_INDEX_BUSINESS_OBJECT_DEFINITION_ID_KEY = "id";
+
+    /**
+     * Source string for the dataProvider name
+     */
+    public static final String DATA_PROVIDER_NAME_SOURCE = "dataProvider.name";
+
+    /**
+     * Source string for the description
+     */
+    public static final String DESCRIPTION_SOURCE = "description";
+
+    /**
+     * Source string for the display name
+     */
+    public static final String DISPLAY_NAME_SOURCE = "displayName";
+
+    /**
+     * Source string for the name
+     */
+    public static final String NAME_SOURCE = "name";
+
+    /**
+     * Source string for the namespace code
+     */
+    public static final String NAMESPACE_CODE_SOURCE = "namespace.code";
 
     /**
      * The logger used to write messages to the log
@@ -380,10 +406,15 @@ public class ElasticsearchFunctions implements SearchFunctions
                 // For each query in the query list add it to the bool query
                 queryBuilderList.forEach(boolQueryBuilder::should);
 
+                SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+                searchSourceBuilder
+                    .fetchSource(new String[] {DATA_PROVIDER_NAME_SOURCE, DESCRIPTION_SOURCE, DISPLAY_NAME_SOURCE, NAME_SOURCE, NAMESPACE_CODE_SOURCE}, null);
+                searchSourceBuilder.query(boolQueryBuilder);
+
                 // Create a search request and set the scroll time and scroll size
                 final SearchRequestBuilder searchRequestBuilder = transportClient.prepareSearch(indexName);
-                searchRequestBuilder.setTypes(documentType).setQuery(boolQueryBuilder).setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME))
-                    .setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE);
+                searchRequestBuilder.setTypes(documentType).setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME))
+                    .setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE).setSource(searchSourceBuilder);
                 searchRequestBuilder.addSort(SortBuilders.fieldSort(BUSINESS_OBJECT_DEFINITION_SORT_FIELD).order(SortOrder.ASC));
 
                 businessObjectDefinitionEntityList = scrollSearchResultsIntoBusinessObjectDefinitionEntityList(searchRequestBuilder);
@@ -399,9 +430,14 @@ public class ElasticsearchFunctions implements SearchFunctions
 
         LOGGER.info("Elasticsearch get all business object definition documents from index, indexName={} and documentType={}.", indexName, documentType);
 
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        searchSourceBuilder
+            .fetchSource(new String[] {DATA_PROVIDER_NAME_SOURCE, DESCRIPTION_SOURCE, DISPLAY_NAME_SOURCE, NAME_SOURCE, NAMESPACE_CODE_SOURCE}, null);
+
         // Create a search request and set the scroll time and scroll size
         final SearchRequestBuilder searchRequestBuilder = transportClient.prepareSearch(indexName);
-        searchRequestBuilder.setTypes(documentType).setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME)).setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE);
+        searchRequestBuilder.setTypes(documentType).setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME)).setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE)
+            .setSource(searchSourceBuilder);
         searchRequestBuilder.addSort(SortBuilders.fieldSort(BUSINESS_OBJECT_DEFINITION_SORT_FIELD).order(SortOrder.ASC));
 
         return scrollSearchResultsIntoBusinessObjectDefinitionEntityList(searchRequestBuilder);
