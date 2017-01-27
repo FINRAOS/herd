@@ -2,5 +2,8 @@ jdk:
   - oraclejdk8
 install:
   - npm install -g bower
+before_script:
+  - "echo $JAVA_OPTS"
+  - "export JAVA_OPTS=-Xmx2048m"
 script:
   - mvn clean install -q 2> /dev/null
