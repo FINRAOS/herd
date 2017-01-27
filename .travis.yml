@@ -4,6 +4,7 @@ install:
   - npm install -g bower
 before_script:
   - "echo $JAVA_OPTS"
-  - "export JAVA_OPTS=-Xmx2048m"
+  - "export JAVA_OPTS=-Xmx4096m"
+  - "export MAVEN_OPTS='-Xmx4096m -XX:MaxPermSize=2048m'"
 script:
   - mvn clean install -q 2> /dev/null
