@@ -15,9 +15,21 @@
 */
 package org.finra.herd.service.helper;
 
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import javax.jms.Destination;
+import javax.jms.Queue;
+import javax.jms.Session;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -82,5 +94,80 @@ public class HerdJmsDestinationResolverTest extends AbstractServiceTest
             // Restore the property sources so we don't affect other tests.
             restorePropertySourceInEnvironment();
         }
+    }
+
+    @Test
+    public void testResolveDestinationHerdIncoming() throws Exception
+    {
+        Session session = mock(Session.class);
+        Queue queue = mock(Queue.class);
+
+        // Mock the call to external methods
+        when(session.createQueue(any())).thenReturn(queue);
+
+        // Call the method under test
+        Destination destination = herdJmsDestinationResolver.resolveDestinationName(session, HerdJmsDestinationResolver.SQS_DESTINATION_HERD_INCOMING, false);
+
+        assertThat("Destination is null.", destination, not(nullValue()));
+
+        // Verify the calls to external methods
+        verify(session, times(1)).createQueue(any());
+    }
+
+    @Test
+    public void testResolveDestinationStoragePolicy() throws Exception
+    {
+        Session session = mock(Session.class);
+        Queue queue = mock(Queue.class);
+
+        // Mock the call to external methods
+        when(session.createQueue(any())).thenReturn(queue);
+
+        // Call the method under test
+        Destination destination =
+            herdJmsDestinationResolver.resolveDestinationName(session, HerdJmsDestinationResolver.SQS_DESTINATION_STORAGE_POLICY_SELECTOR_JOB_SQS_QUEUE, false);
+
+        assertThat("Destination is null.", destination, not(nullValue()));
+
+        // Verify the calls to external methods
+        verify(session, times(1)).createQueue(any());
+    }
+
+    @Test
+    public void testResolveDestinationSampleData() throws Exception
+    {
+        Session session = mock(Session.class);
+        Queue queue = mock(Queue.class);
+
+        // Mock the call to external methods
+        when(session.createQueue(any())).thenReturn(queue);
+
+        // Call the method under test
+        Destination destination =
+            herdJmsDestinationResolver.resolveDestinationName(session, HerdJmsDestinationResolver.SQS_DESTINATION_SAMPLE_DATA_QUEUE, false);
+
+        assertThat("Destination is null.", destination, not(nullValue()));
+
+        // Verify the calls to external methods
+        verify(session, times(1)).createQueue(any());
+    }
+
+    @Test
+    public void testResolveDestinationSearchIndexUpdate() throws Exception
+    {
+        Session session = mock(Session.class);
+        Queue queue = mock(Queue.class);
+
+        // Mock the call to external methods
+        when(session.createQueue(any())).thenReturn(queue);
+
+        // Call the method under test
+        Destination destination =
+            herdJmsDestinationResolver.resolveDestinationName(session, HerdJmsDestinationResolver.SQS_DESTINATION_SEARCH_INDEX_UPDATE_QUEUE, false);
+
+        assertThat("Destination is null.", destination, not(nullValue()));
+
+        // Verify the calls to external methods
+        verify(session, times(1)).createQueue(any());
     }
 }

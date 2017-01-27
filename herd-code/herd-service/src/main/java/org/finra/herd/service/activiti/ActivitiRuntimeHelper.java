@@ -24,8 +24,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import org.finra.herd.core.helper.ConfigurationHelper;
-import org.finra.herd.model.dto.ConfigurationValue;
 
 /**
  * A helper for activiti's {@link RuntimeService}.
@@ -47,7 +45,6 @@ public class ActivitiRuntimeHelper
     private static final Logger LOGGER = LoggerFactory.getLogger(ActivitiRuntimeHelper.class);
 
     public static final String VARIABLE_STATUS = "taskStatus";
-    public static final String VARIABLE_ENVIRONMENT = "taskEnvironment";
     public static final String VARIABLE_ERROR_MESSAGE = "taskErrorMessage";
     public static final String TASK_STATUS_SUCCESS = "SUCCESS";
     public static final String TASK_STATUS_ERROR = "ERROR";
@@ -55,9 +52,6 @@ public class ActivitiRuntimeHelper
 
     @Autowired
     private RuntimeService runtimeService;
-    
-    @Autowired
-    private ConfigurationHelper configurationHelper;
 
     /**
      * Signals a task by its process instance ID and the ID of the task to signal.
@@ -145,15 +139,5 @@ public class ActivitiRuntimeHelper
     public String buildTaskWorkflowVariableName(String activitiId, String variableName)
     {
         return activitiId + TASK_VARIABLE_MARKER + variableName;
-    }
-    
-    /**
-     * Sets the task environment variable
-     * @param execution the workflow execution.
-     */
-    public void setTaskEnvironmentVarialbe(DelegateExecution execution)
-    {
-        String taskEnvironment = configurationHelper.getProperty(ConfigurationValue.HERD_ENVIRONMENT);
-        setTaskWorkflowVariable(execution, VARIABLE_ENVIRONMENT, taskEnvironment);
     }
 }

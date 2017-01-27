@@ -38,12 +38,14 @@ import org.finra.herd.service.activiti.ActivitiRuntimeHelper;
  */
 public class RunOozieWorkflowTest extends AbstractServiceTest
 {
+    private String defaultAccountId = null;
+    
     @Test
     public void testRunOozieWorkflowXml() throws Exception
     {
         String clusterName = "testCluster" + Math.random();
         RunOozieWorkflowRequest runOozieRequest =
-            new RunOozieWorkflowRequest(TEST_ACTIVITI_NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME, clusterName, OOZIE_WORKFLOW_LOCATION, null, null);
+            new RunOozieWorkflowRequest(TEST_ACTIVITI_NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME, clusterName, OOZIE_WORKFLOW_LOCATION, null, null, defaultAccountId);
 
         List<Parameter> parameters = new ArrayList<>();
 
@@ -73,7 +75,7 @@ public class RunOozieWorkflowTest extends AbstractServiceTest
     {
         String clusterName = "testCluster" + Math.random();
         RunOozieWorkflowRequest runOozieRequest =
-            new RunOozieWorkflowRequest(TEST_ACTIVITI_NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME, clusterName, OOZIE_WORKFLOW_LOCATION, null, null);
+            new RunOozieWorkflowRequest(TEST_ACTIVITI_NAMESPACE_CD, EMR_CLUSTER_DEFINITION_NAME, clusterName, OOZIE_WORKFLOW_LOCATION, null, null, defaultAccountId);
 
         List<Parameter> parameters = new ArrayList<>();
 

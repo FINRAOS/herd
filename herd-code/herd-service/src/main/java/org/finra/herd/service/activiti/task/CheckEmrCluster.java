@@ -53,6 +53,8 @@ public class CheckEmrCluster extends BaseEmrCluster
     private Expression verbose;
 
     private Expression retrieveOozieJobs;
+    
+    private Expression accountId;
 
     @Override
     public void executeImpl(DelegateExecution execution) throws Exception
@@ -63,9 +65,12 @@ public class CheckEmrCluster extends BaseEmrCluster
         String emrClusterIdString = activitiHelper.getExpressionVariableAsString(emrClusterId, execution);
         boolean verboseBoolean = activitiHelper.getExpressionVariableAsBoolean(verbose, execution, "verbose", false, false);
         boolean retrieveOozieJobsBoolean = activitiHelper.getExpressionVariableAsBoolean(retrieveOozieJobs, execution, "retrieveOozieJobs", false, false);
-
+        String accountIdString = activitiHelper.getExpressionVariableAsString(accountId, execution);
+        
         // Gets the EMR cluster details.
-        EmrCluster emrCluster = emrService.getCluster(emrClusterAlternateKeyDto, emrClusterIdString, emrStepIdString, verboseBoolean, retrieveOozieJobsBoolean);
+        EmrCluster emrCluster =
+                emrService
+                        .getCluster(emrClusterAlternateKeyDto, emrClusterIdString, emrStepIdString, verboseBoolean, retrieveOozieJobsBoolean, accountIdString);
 
         // Set cluster id and status workflow variables based on the result EMR cluster.
         setIdStatusWorkflowVariables(execution, emrCluster);

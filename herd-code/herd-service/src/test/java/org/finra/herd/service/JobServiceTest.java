@@ -44,6 +44,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -51,6 +52,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
+import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.Job;
 import org.finra.herd.model.api.xml.JobActionEnum;
@@ -68,6 +70,7 @@ import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.api.xml.Parameter;
 import org.finra.herd.model.api.xml.S3PropertiesLocation;
 import org.finra.herd.model.dto.ApplicationUser;
+import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.SecurityUserWrapper;
 import org.finra.herd.model.jpa.JobDefinitionEntity;
 
@@ -77,6 +80,9 @@ import org.finra.herd.model.jpa.JobDefinitionEntity;
 public class JobServiceTest extends AbstractServiceTest
 {
     private static Logger LOGGER = LoggerFactory.getLogger(JobServiceTest.class);
+
+    @Autowired
+    private ConfigurationHelper configurationHelper;
 
     @Test
     public void testCreateJob() throws Exception
@@ -102,10 +108,12 @@ public class JobServiceTest extends AbstractServiceTest
         assertTrue(!resultJob.getId().isEmpty());
         assertEquals(TEST_ACTIVITI_NAMESPACE_CD, resultJob.getNamespace());
         assertEquals(TEST_ACTIVITI_JOB_NAME, resultJob.getJobName());
-        assertEquals(jobDefinitionCreateRequest.getParameters().size() + jobCreateRequest.getParameters().size(), resultJob.getParameters().size());
+        assertEquals(jobDefinitionCreateRequest.getParameters().size() + jobCreateRequest.getParameters().size() + 1, resultJob.getParameters().size());
         List<String> expectedParameters = new ArrayList<>();
         expectedParameters.addAll(parametersToStringList(jobDefinitionCreateRequest.getParameters()));
         expectedParameters.addAll(parametersToStringList(jobCreateRequest.getParameters()));
+        expectedParameters.addAll(parametersToStringList(
+            Arrays.asList(new Parameter(HERD_WORKFLOW_ENVIRONMENT, configurationHelper.getProperty(ConfigurationValue.HERD_ENVIRONMENT)))));
         List<String> resultParameters = parametersToStringList(resultJob.getParameters());
         assertTrue(expectedParameters.containsAll(resultParameters));
         assertTrue(resultParameters.containsAll(expectedParameters));
@@ -131,13 +139,18 @@ public class JobServiceTest extends AbstractServiceTest
         // Create the job.
         Job resultJob = jobService.createAndStartJob(jobCreateRequest);
 
+        //expected default parameter
+        List<Parameter> expectedParameters =
+            Arrays.asList(new Parameter(HERD_WORKFLOW_ENVIRONMENT, configurationHelper.getProperty(ConfigurationValue.HERD_ENVIRONMENT)));
+
         // Validate the results.
         assertNotNull(resultJob);
         assertNotNull(resultJob.getId());
         assertTrue(!resultJob.getId().isEmpty());
         assertEquals(TEST_ACTIVITI_NAMESPACE_CD, resultJob.getNamespace());
         assertEquals(TEST_ACTIVITI_JOB_NAME, resultJob.getJobName());
-        assertNull(resultJob.getParameters());
+        assertTrue(resultJob.getParameters().size() == 1);
+        assertTrue(expectedParameters.containsAll(resultJob.getParameters()));
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -1337,7 +1350,7 @@ public class JobServiceTest extends AbstractServiceTest
         // Create the job.
         Job resultJob = jobService.createAndStartJob(jobCreateRequest);
 
-        Assert.assertNull("resultJob parameters", resultJob.getParameters());
+        Assert.assertNotNull("resultJob parameters", resultJob.getParameters());
     }
 
     /**

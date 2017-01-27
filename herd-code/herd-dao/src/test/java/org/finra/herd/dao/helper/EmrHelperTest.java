@@ -251,7 +251,7 @@ public class EmrHelperTest extends AbstractDaoTest
             when(mockEmrDao.getEmrClusterById(any(), any())).thenReturn(
                 new Cluster().withId(expectedEmrClusterId).withName(emrClusterName).withStatus(new ClusterStatus().withState(ClusterState.RUNNING)));
 
-            assertEquals(expectedEmrClusterId, emrHelper.getActiveEmrClusterId(emrClusterId, emrClusterName));
+            assertEquals(expectedEmrClusterId, emrHelper.getActiveEmrClusterId(emrClusterId, emrClusterName, null));
 
             verify(mockEmrDao).getEmrClusterById(eq(emrClusterId.trim()), any());
             verifyNoMoreInteractions(mockEmrDao);
@@ -281,7 +281,7 @@ public class EmrHelperTest extends AbstractDaoTest
 
             try
             {
-                emrHelper.getActiveEmrClusterId(emrClusterId, emrClusterName);
+                emrHelper.getActiveEmrClusterId(emrClusterId, emrClusterName, null);
                 fail();
             }
             catch (IllegalArgumentException e)
@@ -317,7 +317,7 @@ public class EmrHelperTest extends AbstractDaoTest
             when(mockEmrDao.getEmrClusterById(any(), any())).thenReturn(
                 new Cluster().withId(expectedEmrClusterId).withName(actualEmrClusterName).withStatus(new ClusterStatus().withState(ClusterState.RUNNING)));
 
-            assertEquals(expectedEmrClusterId, emrHelper.getActiveEmrClusterId(emrClusterId, emrClusterName));
+            assertEquals(expectedEmrClusterId, emrHelper.getActiveEmrClusterId(emrClusterId, emrClusterName, null));
 
             verify(mockEmrDao).getEmrClusterById(eq(emrClusterId), any());
             verifyNoMoreInteractions(mockEmrDao);
@@ -347,7 +347,7 @@ public class EmrHelperTest extends AbstractDaoTest
 
             try
             {
-                emrHelper.getActiveEmrClusterId(emrClusterId, emrClusterName);
+                emrHelper.getActiveEmrClusterId(emrClusterId, emrClusterName, null);
                 fail();
             }
             catch (IllegalArgumentException e)
@@ -381,7 +381,7 @@ public class EmrHelperTest extends AbstractDaoTest
 
             try
             {
-                emrHelper.getActiveEmrClusterId(emrClusterId, emrClusterName);
+                emrHelper.getActiveEmrClusterId(emrClusterId, emrClusterName, null);
                 fail();
             }
             catch (IllegalArgumentException e)
@@ -415,7 +415,7 @@ public class EmrHelperTest extends AbstractDaoTest
                 new Cluster().withId(expectedEmrClusterId).withName(emrClusterName).withStatus(new ClusterStatus().withState(ClusterState.RUNNING)));
 
             assertEquals(expectedEmrClusterId,
-                emrHelper.getActiveEmrClusterId(StringUtils.wrap(emrClusterId, BLANK_TEXT), StringUtils.wrap(emrClusterName, BLANK_TEXT)));
+                emrHelper.getActiveEmrClusterId(StringUtils.wrap(emrClusterId, BLANK_TEXT), StringUtils.wrap(emrClusterName, BLANK_TEXT), null));
 
             verify(mockEmrDao).getEmrClusterById(eq(emrClusterId.trim()), any());
             verifyNoMoreInteractions(mockEmrDao);
@@ -442,7 +442,7 @@ public class EmrHelperTest extends AbstractDaoTest
             when(mockEmrDao.getEmrClusterById(any(), any())).thenReturn(
                 new Cluster().withId(expectedEmrClusterId).withName(emrClusterName).withStatus(new ClusterStatus().withState(ClusterState.RUNNING)));
 
-            assertEquals(expectedEmrClusterId, emrHelper.getActiveEmrClusterId(StringUtils.upperCase(emrClusterId), StringUtils.upperCase(emrClusterName)));
+            assertEquals(expectedEmrClusterId, emrHelper.getActiveEmrClusterId(StringUtils.upperCase(emrClusterId), StringUtils.upperCase(emrClusterName), null));
 
             verify(mockEmrDao).getEmrClusterById(eq(StringUtils.upperCase(emrClusterId)), any());
             verifyNoMoreInteractions(mockEmrDao);
@@ -468,7 +468,7 @@ public class EmrHelperTest extends AbstractDaoTest
 
             when(mockEmrDao.getActiveEmrClusterByName(any(), any())).thenReturn(new ClusterSummary().withId(expectedEmrClusterId).withName(emrClusterName));
 
-            assertEquals(expectedEmrClusterId, emrHelper.getActiveEmrClusterId(emrClusterId, emrClusterName));
+            assertEquals(expectedEmrClusterId, emrHelper.getActiveEmrClusterId(emrClusterId, emrClusterName, null));
 
             verify(mockEmrDao).getActiveEmrClusterByName(eq(emrClusterName), any());
             verifyNoMoreInteractions(mockEmrDao);
@@ -495,7 +495,7 @@ public class EmrHelperTest extends AbstractDaoTest
 
             try
             {
-                emrHelper.getActiveEmrClusterId(emrClusterId, emrClusterName);
+                emrHelper.getActiveEmrClusterId(emrClusterId, emrClusterName, null);
                 fail();
             }
             catch (IllegalArgumentException e)
@@ -526,7 +526,7 @@ public class EmrHelperTest extends AbstractDaoTest
 
             try
             {
-                emrHelper.getActiveEmrClusterId(emrClusterId, emrClusterName);
+                emrHelper.getActiveEmrClusterId(emrClusterId, emrClusterName, null);
                 fail();
             }
             catch (IllegalArgumentException e)

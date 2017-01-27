@@ -21,7 +21,7 @@
    <parent>
       <groupId>org.finra.herd</groupId>
       <artifactId>herd-code</artifactId>
-      <version>0.34.0-SNAPSHOT</version>
+      <version>0.36.0-SNAPSHOT</version>
    </parent>
 
    <name>herd sdk</name>
@@ -79,6 +79,20 @@
          <resource>
             <directory>target/generated-sources/swagger/src/main/java</directory>
          </resource>
+         <resource>
+            <directory>src/main/resources</directory>
+            <filtering>true</filtering>
+            <includes>
+               <include>**/package.json</include>
+            </includes>
+         </resource>
+         <resource>
+            <directory>src/main/resources</directory>
+            <filtering>false</filtering>
+            <excludes>
+               <exclude>**/package.json</exclude>
+            </excludes>
+         </resource>
       </resources>
 
       <plugins>
@@ -129,6 +143,7 @@
                   <goals>
                      <goal>generate</goal>
                   </goals>
+                  <id>JAVA-Generation</id>
                   <phase>generate-resources</phase>
                   <configuration>
                      <inputSpec>${project.build.directory}/generated-resources/herd-docs-swagger-${project.version}/docs/rest/herd.swagger.yaml</inputSpec>
@@ -139,6 +154,39 @@
                      <apiPackage>org.finra.herd.sdk.api</apiPackage>
                      <modelPackage>org.finra.herd.sdk.model</modelPackage>
                      <invokerPackage>org.finra.herd.sdk.invoker</invokerPackage>
+                  </configuration>
+               </execution>
+               <execution>
+                  <goals>
+                     <goal>generate</goal>
+                  </goals>
+                  <id>TS-Generation</id>
+                  <phase>generate-resources</phase>
+                  <configuration>
+                     <inputSpec>${project.build.directory}/generated-resources/herd-docs-swagger-${project.version}/docs/rest/herd.swagger.yaml</inputSpec>
+                     <output>${project.build.directory}/generated-sources/typescript-angular</output>
+                     <language>typescript-angular</language>
+                  </configuration>
+               </execution>
+               <execution>
+                  <goals>
+                     <goal>generate</goal>
+                  </goals>
+                  <id>JS-Generation</id>
+                  <phase>generate-resources</phase>
+                  <configuration>
+                     <inputSpec>${project.build.directory}/generated-resources/herd-docs-swagger-${project.version}/docs/rest/herd.swagger.yaml</inputSpec>
+                     <output>${project.build.directory}/generated-sources/javascript-node</output>
+                     <addCompileSourceRoot>false</addCompileSourceRoot>
+                     <language>javascript</language>
+                     <configOptions>
+                        <projectName>herd-sdk-js-node</projectName>
+                        <apiPackage>api</apiPackage>
+                        <modelPackage>models</modelPackage>
+                        <invokerPackage>invoker</invokerPackage>
+                        <projectLicenseName>Apache-2.0</projectLicenseName>
+                        <projectDescription>This is a NodeJS based JavaScript SDK client for consuming the HERD REST API</projectDescription>
+                     </configOptions>
                   </configuration>
                </execution>
             </executions>
@@ -205,6 +253,29 @@
                <target>1.5</target>
             </configuration>
          </plugin>
+
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <executions>
+               <execution>
+                  <id>copy-ts-config</id>
+                  <phase>process-resources</phase>
+                  <configuration>
+                     <tasks>
+                        <!--process package.json to be in the output typescript angular sdk. this adds the herd sdk version-->
+                        <copy file="${project.build.outputDirectory}/package.json"
+                              toFile="${project.build.directory}/generated-sources/typescript-angular/package.json">
+                        </copy>
+                     </tasks>
+                  </configuration>
+                  <goals>
+                     <goal>run</goal>
+                  </goals>
+               </execution>
+            </executions>
+         </plugin>
+
 
       </plugins>
 

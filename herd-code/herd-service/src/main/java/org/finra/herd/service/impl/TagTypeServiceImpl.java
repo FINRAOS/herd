@@ -15,6 +15,8 @@
 */
 package org.finra.herd.service.impl;
 
+import static org.finra.herd.model.dto.SearchIndexUpdateDto.SEARCH_INDEX_UPDATE_TYPE_UPDATE;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -26,9 +28,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
+import org.finra.herd.dao.BusinessObjectDefinitionDao;
+import org.finra.herd.dao.TagDao;
 import org.finra.herd.dao.TagTypeDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
+import org.finra.herd.model.annotation.PublishJmsMessages;
 import org.finra.herd.model.api.xml.TagType;
 import org.finra.herd.model.api.xml.TagTypeCreateRequest;
 import org.finra.herd.model.api.xml.TagTypeKey;
@@ -36,10 +41,12 @@ import org.finra.herd.model.api.xml.TagTypeKeys;
 import org.finra.herd.model.api.xml.TagTypeSearchRequest;
 import org.finra.herd.model.api.xml.TagTypeSearchResponse;
 import org.finra.herd.model.api.xml.TagTypeUpdateRequest;
+import org.finra.herd.model.jpa.TagEntity;
 import org.finra.herd.model.jpa.TagTypeEntity;
 import org.finra.herd.service.SearchableService;
 import org.finra.herd.service.TagTypeService;
 import org.finra.herd.service.helper.AlternateKeyHelper;
+import org.finra.herd.service.helper.SearchIndexUpdateHelper;
 import org.finra.herd.service.helper.TagTypeDaoHelper;
 import org.finra.herd.service.helper.TagTypeHelper;
 
@@ -58,6 +65,15 @@ public class TagTypeServiceImpl implements TagTypeService, SearchableService
 
     @Autowired
     private AlternateKeyHelper alternateKeyHelper;
+
+    @Autowired
+    private BusinessObjectDefinitionDao businessObjectDefinitionDao;
+
+    @Autowired
+    private SearchIndexUpdateHelper searchIndexUpdateHelper;
+
+    @Autowired
+    private TagDao tagDao;
 
     @Autowired
     private TagTypeDao tagTypeDao;
@@ -156,6 +172,7 @@ public class TagTypeServiceImpl implements TagTypeService, SearchableService
         return new TagTypeSearchResponse(tagTypes);
     }
 
+    @PublishJmsMessages
     @Override
     public TagType updateTagType(TagTypeKey tagTypeKey, TagTypeUpdateRequest request)
     {
@@ -177,6 +194,11 @@ public class TagTypeServiceImpl implements TagTypeService, SearchableService
 
         // Update and persist the tag type entity.
         updateTagTypeEntity(tagTypeEntity, request);
+
+        // Notify the search index that a business object definition must be updated.
+        List<TagEntity> tagEntities = tagDao.getTagsByTagTypeEntityAndParentTagCode(tagTypeEntity, null, null);
+        searchIndexUpdateHelper.modifyBusinessObjectDefinitionsInSearchIndex(businessObjectDefinitionDao.getBusinessObjectDefinitions(tagEntities),
+            SEARCH_INDEX_UPDATE_TYPE_UPDATE);
 
         // Create and return the tag type from the persisted entity.
         return createTagTypeFromEntity(tagTypeEntity);

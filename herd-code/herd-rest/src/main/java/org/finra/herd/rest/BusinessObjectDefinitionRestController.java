@@ -191,11 +191,28 @@ public class BusinessObjectDefinitionRestController extends HerdBaseController
     }
 
     /**
+     * Searches across all business object definitions that are in search index per specified search filters and keys
+     *
+     * @param fields A comma-separated list of fields to be retrieved with each business object definition entity. Valid options: dataProviderName,
+     * shortDescription, displayName
+     * @param request the information needed to search across the business object definitions
+     *
+     * @return the retrieved business object definition list
+     */
+    @RequestMapping(value = "/businessObjectDefinitions/indexSearch", method = RequestMethod.POST, consumes = {"application/xml", "application/json"})
+    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DEFINITIONS_INDEX_SEARCH_POST)
+    public BusinessObjectDefinitionSearchResponse indexSearchBusinessObjectDefinitions(
+        @RequestParam(value = "fields", required = false, defaultValue = "") Set<String> fields, @RequestBody BusinessObjectDefinitionSearchRequest request)
+    {
+        return businessObjectDefinitionService.indexSearchBusinessObjectDefinitions(request, fields);
+    }
+
+    /**
      * Index all business object definitions
      *
      * @return the business object definition index response
      */
-    @RequestMapping(value = "/businessObjectDefinitions/index", method = RequestMethod.GET, consumes = {"application/xml", "application/json"})
+    @RequestMapping(value = "/businessObjectDefinitions/index", method = RequestMethod.GET)
     @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DEFINITIONS_INDEX_GET)
     public BusinessObjectDefinitionIndexResponse indexBusinessObjectDefinitions()
     {
@@ -208,7 +225,7 @@ public class BusinessObjectDefinitionRestController extends HerdBaseController
      *
      * @return the business object definition validate index response
      */
-    @RequestMapping(value = "/businessObjectDefinitions/validateindex", method = RequestMethod.GET, consumes = {"application/xml", "application/json"})
+    @RequestMapping(value = "/businessObjectDefinitions/validateindex", method = RequestMethod.GET)
     @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DEFINITIONS_VALIDATE_INDEX_GET)
     public BusinessObjectDefinitionValidateResponse validateIndexBusinessObjectDefinitions()
     {

@@ -667,7 +667,7 @@ public enum ConfigurationValue
      */
     LDAP_ATTRIBUTE_USER_TELEPHONE_NUMBER("ldap.attribute.user.telephone.number", "telephoneNumber"),
 
-    /*
+    /**
      * The elasticsearch index name
      */
     ELASTICSEARCH_BDEF_INDEX_NAME("elasticsearch.bdef.index.name", "bdef"),
@@ -680,8 +680,7 @@ public enum ConfigurationValue
     /**
      * The elasticsearch mappings JSON
      */
-    ELASTICSEARCH_BDEF_MAPPINGS_JSON("elasticsearch.bdef.mappings.json",
-        "{\"properties\": { \"id\": { \"type\": \"long\" } } }"),
+    ELASTICSEARCH_BDEF_MAPPINGS_JSON("elasticsearch.bdef.mappings.json", "{\"properties\": { \"id\": { \"type\": \"long\" } } }"),
 
     /**
      * The elasticsearch settings JSON
@@ -702,7 +701,58 @@ public enum ConfigurationValue
     /**
      * The elasticsearch spot check most recent number
      */
-    ELASTICSEARCH_BDEF_SPOT_CHECK_MOST_RECENT_NUMBER("elasticsearch.bdef.spot.check.most.recent.number", 100);
+    ELASTICSEARCH_BDEF_SPOT_CHECK_MOST_RECENT_NUMBER("elasticsearch.bdef.spot.check.most.recent.number", 100),
+
+    /**
+     * The elasticsearch search guard enabled
+     */
+    ELASTICSEARCH_SEARCH_GUARD_ENABLED("elasticsearch.search.guard.enabled", "false"),
+
+    /**
+     * The elasticsearch search guard keystore credential name
+     */
+    ELASTICSEARCH_SEARCH_GUARD_KEYSTORE_CREDENTIAL_NAME("elasticsearch.search.guard.keystore.credential.name", "AGS.component.sdlc.keystoreCredentialName"),
+
+    /**
+     * The elasticsearch search guard truststore credential name
+     */
+    ELASTICSEARCH_SEARCH_GUARD_TRUSTSTORE_CREDENTIAL_NAME("elasticsearch.search.guard.truststore.credential.name",
+        "AGS.component.sdlc.truststoreCredentialName"),
+
+    /**
+     * The elasticsearch search guard keystore path
+     */
+    ELASTICSEARCH_SEARCH_GUARD_KEYSTORE_PATH("elasticsearch.search.guard.keystore.path", "/path/to/keystore.jks"),
+
+    /**
+     * The elasticsearch search guard truststore file path
+     */
+    ELASTICSEARCH_SEARCH_GUARD_TRUSTSTORE_PATH("elasticsearch.search.guard.truststore.path", "/path/to/truststore.jks"),
+
+    /**
+     * The search index update queue name
+     */
+    SEARCH_INDEX_UPDATE_SQS_QUEUE_NAME("search.index.update.sqs.queue.name", null),
+
+    /**
+     * Indicates whether the sample data JMS message listener service is enabled or not. The default is "true" (enabled).
+     */
+    SEARCH_INDEX_UPDATE_JMS_LISTENER_ENABLED("search.index.update.jms.listener.enabled", "true"),
+
+    /**
+     * The name of the Credstash table where credentials are stored.
+     */
+    CREDSTASH_TABLE_NAME("credstash.table.name", "credential-store"),
+
+    /**
+     * The Credstash encryption context key value map.
+     */
+    CREDSTASH_ENCRYPTION_CONTEXT("credstash.encryption.context", "{\"AGS\":\"AGS_VALUE\",\"SDLC\":\"SDLC_VALUE\",\"Component\":\"COMPONENT_VALUE\"}"),
+
+    /**
+     * The Credstash aws region name.
+     */
+    CREDSTASH_AWS_REGION_NAME("credstash.aws.region.name", "us-east-1");
 
     // Properties
     private String key;

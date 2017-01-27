@@ -27,6 +27,7 @@ import java.util.List;
 import com.google.common.collect.Sets;
 import org.junit.Test;
 
+import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.dao.helper.HerdDaoSecurityHelper;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.BusinessObjectDefinition;
@@ -70,14 +71,16 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
                 businessObjectDefinitionServiceTestHelper.getNewAttributes());
         BusinessObjectDefinition resultBusinessObjectDefinition = businessObjectDefinitionRestController.createBusinessObjectDefinition(request);
 
+        // Get the business object definition entity.
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
+            businessObjectDefinitionDao.getBusinessObjectDefinitionByKey(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME));
+        assertNotNull(businessObjectDefinitionEntity);
+
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinition(resultBusinessObjectDefinition.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
             NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME, businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT,
-            NO_SAMPLE_DATA_FILES), resultBusinessObjectDefinition);
-
-        // Retrieve the newly created business object definition and validate the created by field.
-        BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
-            businessObjectDefinitionDao.getBusinessObjectDefinitionByKey(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME));
+            NO_SAMPLE_DATA_FILES, businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
+            HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn())), resultBusinessObjectDefinition);
 
         // Validate that the newly created entity uses system username for the relative auditable fields.
         assertEquals(resultBusinessObjectDefinition.getId(), businessObjectDefinitionEntity.getId());
@@ -100,7 +103,9 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION_2,
             NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME_2, businessObjectDefinitionServiceTestHelper.getNewAttributes2(),
-            NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT, NO_SAMPLE_DATA_FILES), updatedBusinessObjectDefinition);
+            NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT, NO_SAMPLE_DATA_FILES, businessObjectDefinitionEntity.getCreatedBy(),
+            businessObjectDefinitionEntity.getUpdatedBy(), HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn())),
+            updatedBusinessObjectDefinition);
     }
 
     @Test
@@ -119,7 +124,9 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BLANK_TEXT,
             NO_BDEF_SHORT_DESCRIPTION, EMPTY_STRING, Collections.singletonList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, BLANK_TEXT)),
-            NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT, NO_SAMPLE_DATA_FILES), updatedBusinessObjectDefinition);
+            NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT, NO_SAMPLE_DATA_FILES, businessObjectDefinitionEntity.getCreatedBy(),
+            businessObjectDefinitionEntity.getUpdatedBy(), HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn())),
+            updatedBusinessObjectDefinition);
     }
 
     @Test
@@ -136,8 +143,9 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
 
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, null, null, null,
-            Collections.singletonList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, null)), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT, NO_SAMPLE_DATA_FILES),
-            updatedBusinessObjectDefinition);
+            Collections.singletonList(new Attribute(ATTRIBUTE_NAME_1_MIXED_CASE, null)), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT, NO_SAMPLE_DATA_FILES,
+            businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
+            HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn())), updatedBusinessObjectDefinition);
     }
 
     @Test
@@ -155,8 +163,9 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
 
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION_2,
-            NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME_2, NO_ATTRIBUTES, NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT, NO_SAMPLE_DATA_FILES),
-            updatedBusinessObjectDefinition);
+            NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME_2, NO_ATTRIBUTES, NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT, NO_SAMPLE_DATA_FILES,
+            businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
+            HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn())), updatedBusinessObjectDefinition);
     }
 
     @Test
@@ -173,7 +182,9 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
             NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME, businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT,
-            businessObjectDefinitionServiceTestHelper.getTestSampleDataFiles()), resultBusinessObjectDefinition);
+            businessObjectDefinitionServiceTestHelper.getTestSampleDataFiles(), businessObjectDefinitionEntity.getCreatedBy(),
+            businessObjectDefinitionEntity.getUpdatedBy(), HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn())),
+            resultBusinessObjectDefinition);
     }
 
     @Test
@@ -212,17 +223,17 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
         // Validate the returned object.
         assertEquals(new BusinessObjectDefinition(businessObjectDefinitionEntity.getId(), NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
             NO_BDEF_SHORT_DESCRIPTION, BDEF_DISPLAY_NAME, businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_DESCRIPTIVE_BUSINESS_OBJECT_FORMAT,
-            NO_SAMPLE_DATA_FILES), deletedBusinessObjectDefinition);
+            NO_SAMPLE_DATA_FILES, businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
+            HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn())), deletedBusinessObjectDefinition);
 
         // Ensure that this business object definition is no longer there.
         assertNull(businessObjectDefinitionDao.getBusinessObjectDefinitionByKey(businessObjectDefinitionKey));
     }
 
     @Test
-    public void testSearchBusinessObjectDefinition() throws Exception
+    public void testSearchBusinessObjectDefinition()
     {
-
-        // Create and retrieve a list of business object definition entities
+        // Create and retrieve a list of business object definition entities.
         List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities =
             businessObjectDefinitionDaoTestHelper.createExpectedBusinessObjectDefinitionEntities();
 
@@ -232,14 +243,13 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
         // Create a root tag entity for the tag type.
         TagEntity rootTagEntity = tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
 
-        // Create two children for the root tag
+        // Create two children for the root tag.
         TagEntity childTagEntity1 = tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_2, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, rootTagEntity);
         TagEntity childTagEntity2 = tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_3, TAG_DISPLAY_NAME_3, TAG_DESCRIPTION_3, rootTagEntity);
 
-        //Create association between business object definition and tag
+        // Create association between business object definition and tag.
         businessObjectDefinitionTagDaoTestHelper.createBusinessObjectDefinitionTagEntity(businessObjectDefinitionEntities.get(0), childTagEntity1);
         businessObjectDefinitionTagDaoTestHelper.createBusinessObjectDefinitionTagEntity(businessObjectDefinitionEntities.get(1), childTagEntity2);
-
 
         List<BusinessObjectDefinition> actualBusinessObjectDefinitions = new ArrayList<>();
         for (BusinessObjectDefinitionEntity businessObjectDefinitionEntity : businessObjectDefinitionEntities)
@@ -247,24 +257,20 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
             actualBusinessObjectDefinitions.add(
                 new BusinessObjectDefinition(null, businessObjectDefinitionEntity.getNamespace().getCode(), businessObjectDefinitionEntity.getName(),
                     businessObjectDefinitionEntity.getDataProvider().getName(), NO_BDEF_DESCRIPTION, businessObjectDefinitionEntity.getDescription(), null,
-                    null, null, null));
+                    null, null, null, null, null, null));
         }
 
-        //tests with tag filter
+        // Tests with tag filter.
         BusinessObjectDefinitionSearchResponse businessObjectDefinitionSearchResponse = businessObjectDefinitionRestController
             .searchBusinessObjectDefinitions(Sets.newHashSet(FIELD_DATA_PROVIDER_NAME, FIELD_DISPLAY_NAME, FIELD_SHORT_DESCRIPTION),
                 new BusinessObjectDefinitionSearchRequest(Arrays.asList(new BusinessObjectDefinitionSearchFilter(
                     Arrays.asList(new BusinessObjectDefinitionSearchKey(new TagKey(TAG_TYPE, TAG_CODE), INCLUDE_TAG_HIERARCHY))))));
-
         assertEquals(actualBusinessObjectDefinitions, businessObjectDefinitionSearchResponse.getBusinessObjectDefinitions());
 
-        //Tests without tag filter
+        // Tests without tag filter.
         businessObjectDefinitionSearchResponse = businessObjectDefinitionRestController
             .searchBusinessObjectDefinitions(Sets.newHashSet(FIELD_DATA_PROVIDER_NAME, FIELD_DISPLAY_NAME, FIELD_SHORT_DESCRIPTION),
                 new BusinessObjectDefinitionSearchRequest());
-
         assertEquals(actualBusinessObjectDefinitions, businessObjectDefinitionSearchResponse.getBusinessObjectDefinitions());
-
     }
-
 }

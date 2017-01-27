@@ -24,10 +24,16 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
 import javax.xml.datatype.XMLGregorianCalendar;
 
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -35,8 +41,15 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.scheduling.annotation.AsyncResult;
 
+import org.finra.herd.model.api.xml.BusinessObjectDefinition;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionIndexResponse;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchFilter;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchKey;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionValidateResponse;
+import org.finra.herd.model.api.xml.TagKey;
+import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.service.BusinessObjectDefinitionService;
 
 /**
@@ -76,6 +89,81 @@ public class BusinessObjectDefinitionRestControllerIndexTest extends AbstractRes
             not(nullValue()));
         assertThat("Business object definition index response index start time was not an instance of XMLGregorianCalendar.class.",
             businessObjectDefinitionIndexResponse.getIndexStartTime(), instanceOf(XMLGregorianCalendar.class));
+    }
+
+    @Test
+    public void testIndexSearchBusinessObjectDefinitions()
+    {
+        // Create a new tag key with a tag type and a tag code
+        TagKey tagKey = new TagKey(TAG_TYPE, TAG_CODE);
+
+        // Create  a new business object definition search key for use in the business object definition search key list
+        BusinessObjectDefinitionSearchKey businessObjectDefinitionSearchKey = new BusinessObjectDefinitionSearchKey(tagKey, INCLUDE_TAG_HIERARCHY);
+
+        // Create a new business object definition search key list with the tag key and the include tag hierarchy boolean flag
+        List<BusinessObjectDefinitionSearchKey> businessObjectDefinitionSearchKeyList = new ArrayList<>();
+        businessObjectDefinitionSearchKeyList.add(businessObjectDefinitionSearchKey);
+
+        // Create a new business object definition search filter list with the new business object definition search key list
+        List<BusinessObjectDefinitionSearchFilter> businessObjectDefinitionSearchFilterList = new ArrayList<>();
+        businessObjectDefinitionSearchFilterList.add(new BusinessObjectDefinitionSearchFilter(businessObjectDefinitionSearchKeyList));
+
+        // Create a new business object definition search request that will be used when testing the index search business object definitions method
+        BusinessObjectDefinitionSearchRequest businessObjectDefinitionSearchRequest =
+            new BusinessObjectDefinitionSearchRequest(businessObjectDefinitionSearchFilterList);
+
+        // Create a new fields set that will be used when testing the index search business object definitions method
+        Set<String> fields = Sets.newHashSet(FIELD_DATA_PROVIDER_NAME, FIELD_DISPLAY_NAME, FIELD_SHORT_DESCRIPTION);
+
+        // Create a business object definition entity list to return from the search business object definitions by tags function
+        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList = new ArrayList<>();
+        businessObjectDefinitionEntityList.add(businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
+                businessObjectDefinitionServiceTestHelper.getNewAttributes()));
+        businessObjectDefinitionEntityList.add(businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME_2, DATA_PROVIDER_NAME_2, BDEF_DESCRIPTION_2,
+                businessObjectDefinitionServiceTestHelper.getNewAttributes()));
+
+        // Create a list to hold the business object definitions that will be returned as part of the search response
+        List<BusinessObjectDefinition> businessObjectDefinitions = new ArrayList<>();
+
+        // Retrieve all unique business object definition entities and construct a list of business object definitions based on the requested fields.
+        for (BusinessObjectDefinitionEntity businessObjectDefinitionEntity : ImmutableSet.copyOf(businessObjectDefinitionEntityList))
+        {
+            // Convert the business object definition entity to a business object definition and add it to the list of business object definitions that will be
+            // returned as a part of the search response
+            BusinessObjectDefinition businessObjectDefinition = new BusinessObjectDefinition();
+
+            // Populate the business object definition
+            businessObjectDefinition.setNamespace(businessObjectDefinitionEntity.getNamespace().getCode());
+            businessObjectDefinition.setBusinessObjectDefinitionName(businessObjectDefinitionEntity.getName());
+            businessObjectDefinition.setDataProviderName(businessObjectDefinitionEntity.getDataProvider().getName());
+            businessObjectDefinition.setShortDescription(StringUtils.left(businessObjectDefinitionEntity.getDescription(), SHORT_DESCRIPTION_LENGTH));
+            businessObjectDefinition.setDisplayName(businessObjectDefinitionEntity.getDisplayName());
+            businessObjectDefinitions.add(businessObjectDefinition);
+        }
+
+        // Construct business object search response.
+        BusinessObjectDefinitionSearchResponse businessObjectDefinitionSearchResponse = new BusinessObjectDefinitionSearchResponse();
+        businessObjectDefinitionSearchResponse.setBusinessObjectDefinitions(businessObjectDefinitions);
+
+        // Mock the call to the business object definition service
+        when(businessObjectDefinitionService.indexSearchBusinessObjectDefinitions(businessObjectDefinitionSearchRequest, fields))
+            .thenReturn(businessObjectDefinitionSearchResponse);
+
+        // Create a business object definition.
+        BusinessObjectDefinitionSearchResponse businessObjectDefinitionSearchResponseFromRestCall =
+            businessObjectDefinitionRestController.indexSearchBusinessObjectDefinitions(fields, businessObjectDefinitionSearchRequest);
+
+        // Verify the method call to businessObjectDefinitionService.indexAllBusinessObjectDefinitions()
+        verify(businessObjectDefinitionService, times(1)).indexSearchBusinessObjectDefinitions(businessObjectDefinitionSearchRequest, fields);
+
+        // Validate the returned object.
+        assertThat("Business object definition index search response was null.", businessObjectDefinitionSearchResponseFromRestCall, not(nullValue()));
+        assertThat("Business object definition index search response was not correct.", businessObjectDefinitionSearchResponseFromRestCall,
+            is(businessObjectDefinitionSearchResponse));
+        assertThat("Business object definition index search response was not an instance of BusinessObjectDefinitionSearchResponse.class.",
+            businessObjectDefinitionSearchResponseFromRestCall, instanceOf(BusinessObjectDefinitionSearchResponse.class));
     }
 
     @Test

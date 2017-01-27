@@ -1000,6 +1000,21 @@
                </xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="createdByUserId" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The User ID of the user who created this business object definition</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="lastUpdatedByUserId" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The User ID of the user who last updated this business object definition</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="lastUpdatedOn" type="xs:dateTime" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The timestamp when this business object definition was last updated on</xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
@@ -1209,21 +1224,21 @@
          <xs:element name="sizeCheckPassed" type="xs:boolean">
             <xs:annotation>
                <xs:documentation>A Y/N flag that shows whether the total number of business object definitions in the database is the same as the total number
-                  in the index.
+                  in the index
                </xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="spotCheckRandomPassed" type="xs:boolean">
             <xs:annotation>
                <xs:documentation>A Y/N flag that shows whether the spot check that verifies a percentage of random business object definitions in the database
-                  are the same as the indexed documents.
+                  are the same as the indexed documents
                </xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="spotCheckMostRecentPassed" type="xs:boolean">
             <xs:annotation>
                <xs:documentation>A Y/N flag that shows whether the spot check that verifies the most recently modified business object definitions in the
-                  database are the same as the indexed documents.
+                  database are the same as the indexed documents
                </xs:documentation>
             </xs:annotation>
          </xs:element>
@@ -3538,7 +3553,18 @@
                <xs:documentation>Specifies to perform an exhaustive search to return availability for ALL registered sub-partitions (registered as individual
                   business object data instances) except for the ones with "DELETED" status. This parameter has no impact when business object data version is
                   specified. Default value is false, which means that this endpoint ignores any "not available" registered sub-partitions when it finds at least
-                  one "VALID" registered sub-partitions for a requested business object data partition value
+                  one "VALID" registered sub-partition for a requested business object data partition value.
+                  If true, the call would fail with a "Not Found" (status code 404) error when it finds at least one "not available" (except for "DELETED")
+                  registered sub-partition for a requested business object data partition value
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="suppressScanForUnregisteredSubPartitions" type="xs:boolean" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Specifies to suppress scanning of registered storage files to discover sub-partitions and instead of that relies on business
+                  object data registration information to extract primary and sub-partition (if any) values required to identify Hive table partitions. Default
+                  value is false. If true, the call would fail with a "Bad Request" (status code 400) error when number of partitions in any of the discovered
+                  business object data instances does not match to the number of partition columns in the business object format being used to generate the DDL
                </xs:documentation>
             </xs:annotation>
          </xs:element>
@@ -4260,6 +4286,7 @@
          <xs:element name="scriptArguments" type="scriptArguments" minOccurs="0"/>
          <xs:element name="continueOnError" type="xs:boolean" minOccurs="0"/>
          <xs:element name="emrClusterId" type="xs:string" minOccurs="0"/>
+         <xs:element name="accountId" type="xs:string" minOccurs="0"/>
       </xs:all>
    </xs:complexType>
 
@@ -4274,6 +4301,7 @@
          <xs:element name="scriptArguments" type="scriptArguments" minOccurs="0"/>
          <xs:element name="continueOnError" type="xs:boolean" minOccurs="0"/>
          <xs:element name="emrClusterId" type="xs:string" minOccurs="0"/>
+         <xs:element name="accountId" type="xs:string" minOccurs="0"/>
       </xs:all>
    </xs:complexType>
 
@@ -4288,6 +4316,7 @@
          <xs:element name="scriptArguments" type="scriptArguments" minOccurs="0"/>
          <xs:element name="continueOnError" type="xs:boolean" minOccurs="0"/>
          <xs:element name="emrClusterId" type="xs:string" minOccurs="0"/>
+         <xs:element name="accountId" type="xs:string" minOccurs="0"/>
       </xs:all>
    </xs:complexType>
 
@@ -4302,6 +4331,7 @@
          <xs:element name="ooziePropertiesFileLocation" type="xs:string"/>
          <xs:element name="continueOnError" type="xs:boolean" minOccurs="0"/>
          <xs:element name="emrClusterId" type="xs:string" minOccurs="0"/>
+         <xs:element name="accountId" type="xs:string" minOccurs="0"/>
       </xs:all>
    </xs:complexType>
 
@@ -4317,6 +4347,7 @@
          <xs:element name="scriptArguments" type="scriptArguments" minOccurs="0"/>
          <xs:element name="continueOnError" type="xs:boolean" minOccurs="0"/>
          <xs:element name="emrClusterId" type="xs:string" minOccurs="0"/>
+         <xs:element name="accountId" type="xs:string" minOccurs="0"/>
       </xs:all>
    </xs:complexType>
 
@@ -4335,6 +4366,7 @@
          <xs:element name="workflowLocation" type="xs:string"/>
          <xs:element name="parameters" type="parameters" minOccurs="0"/>
          <xs:element name="emrClusterId" type="xs:string" minOccurs="0"/>
+         <xs:element name="accountId" type="xs:string" minOccurs="0"/>
       </xs:all>
    </xs:complexType>
 
@@ -4463,6 +4495,7 @@
          <xs:element name="emrClusterName" type="xs:string"/>
          <xs:element name="securityGroupIds" type="securityGroupIds"/>
          <xs:element name="emrClusterId" type="xs:string" minOccurs="0"/>
+         <xs:element name="accountId" type="xs:string" minOccurs="0"/>
       </xs:all>
    </xs:complexType>
 
@@ -5095,6 +5128,11 @@
                </xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="accountId" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The AWS account number, without dashes, to launch the Amazon EMR service in</xs:documentation>
+            </xs:annotation>
+         </xs:element>
          <xs:element name="serviceIamRole" type="xs:string" minOccurs="0">
             <xs:annotation>
                <xs:documentation>Launches the Amazon EMR service with the specified IAM role</xs:documentation>
@@ -5492,6 +5530,11 @@
          <xs:element name="namespace" type="xs:string"/>
          <xs:element name="emrClusterDefinitionName" type="xs:string"/>
          <xs:element name="emrClusterName" type="xs:string"/>
+         <xs:element name="accountId" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The AWS account number, without dashes, where Amazon EMR service is running in</xs:documentation>
+            </xs:annotation>
+         </xs:element>
          <xs:element name="activeStep" type="emrStep" minOccurs="0"/>
          <xs:element name="step" type="emrStep" minOccurs="0"/>
          <xs:element name="oozieWorkflowJobs" type="oozieWorkflowJobs" minOccurs="0"/>

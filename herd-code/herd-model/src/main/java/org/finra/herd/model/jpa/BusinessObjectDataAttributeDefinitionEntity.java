@@ -25,6 +25,7 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.hibernate.annotations.Type;
 
 /**
@@ -86,6 +87,7 @@ public class BusinessObjectDataAttributeDefinitionEntity extends AuditableEntity
      *
      * @return True if the attribute is required or false if not.
      */
+    @JsonIgnore
     public boolean isRequired()
     {
         return true;

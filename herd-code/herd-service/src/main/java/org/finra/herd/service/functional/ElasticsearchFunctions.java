@@ -17,30 +17,49 @@ package org.finra.herd.service.functional;
 
 import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
+import com.google.common.base.Joiner;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsResponse;
+import org.elasticsearch.action.bulk.BulkRequestBuilder;
+import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequestBuilder;
 import org.elasticsearch.action.get.GetRequestBuilder;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.search.SearchScrollRequestBuilder;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.sort.SortBuilders;
+import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import org.finra.herd.dao.helper.HerdStringHelper;
+import org.finra.herd.dao.helper.JsonHelper;
+import org.finra.herd.model.dto.BusinessObjectDefinitionIndexSearchResponseDto;
+import org.finra.herd.model.jpa.TagEntity;
 
 
 /**
@@ -49,6 +68,54 @@ import org.springframework.stereotype.Component;
 @Component
 public class ElasticsearchFunctions implements SearchFunctions
 {
+    /**
+     * Page size
+     */
+    public static final int ELASTIC_SEARCH_SCROLL_PAGE_SIZE = 100;
+
+    /**
+     * Scroll keep alive in milliseconds
+     */
+    public static final int ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME = 60000;
+
+    /**
+     * Sort the business object definition by name
+     */
+    public static final String BUSINESS_OBJECT_DEFINITION_SORT_FIELD = "name.keyword";
+
+    /**
+     * The business object definition id search index key
+     */
+    public static final String SEARCH_INDEX_BUSINESS_OBJECT_DEFINITION_ID_KEY = "id";
+
+    /**
+     * Source string for the dataProvider name
+     */
+    public static final String DATA_PROVIDER_NAME_SOURCE = "dataProvider.name";
+
+    /**
+     * Source string for the description
+     */
+    public static final String DESCRIPTION_SOURCE = "description";
+
+    /**
+     * Source string for the display name
+     */
+    public static final String DISPLAY_NAME_SOURCE = "displayName";
+
+    /**
+     * Source string for the name
+     */
+    public static final String NAME_SOURCE = "name";
+
+    /**
+     * Source string for the namespace code
+     */
+    public static final String NAMESPACE_CODE_SOURCE = "namespace.code";
+
+    /**
+     * The logger used to write messages to the log
+     */
     private static final Logger LOGGER = LoggerFactory.getLogger(ElasticsearchFunctions.class);
 
     /**
@@ -56,6 +123,18 @@ public class ElasticsearchFunctions implements SearchFunctions
      */
     @Autowired
     private TransportClient transportClient;
+
+    /**
+     * A helper class for JSON functionality
+     */
+    @Autowired
+    private JsonHelper jsonHelper;
+
+    /**
+     * A helper class for working with Strings
+     */
+    @Autowired
+    private HerdStringHelper herdStringHelper;
 
     /**
      * The index function will take as arguments indexName, documentType, id, json and add the document to the index.
@@ -130,6 +209,34 @@ public class ElasticsearchFunctions implements SearchFunctions
     };
 
     /**
+     * The create index documents function will take as arguments the index name, document type, and a map of new documents. The document map key is the
+     * document id, and the value is the document as a JSON string.
+     */
+    private final TriConsumer<String, String, Map<String, String>> createIndexDocumentsFunction = (indexName, documentType, documentMap) -> {
+        LOGGER.info("Creating Elasticsearch index documents, indexName={}, documentType={}, documentMap={}.", indexName, documentType,
+            Joiner.on(",").withKeyValueSeparator("=").join(documentMap));
+
+        // Prepare a bulk request builder
+        final BulkRequestBuilder bulkRequestBuilder = transportClient.prepareBulk();
+
+        // For each document prepare an insert request and add it to the bulk request builder
+        documentMap.forEach((id, jsonString) -> {
+            final IndexRequestBuilder indexRequestBuilder = transportClient.prepareIndex(indexName, documentType, id);
+            indexRequestBuilder.setSource(jsonString);
+            bulkRequestBuilder.add(indexRequestBuilder);
+        });
+
+        // Execute the bulk update request
+        final BulkResponse bulkResponse = bulkRequestBuilder.get();
+
+        // If there are failures log them
+        if (bulkResponse.hasFailures())
+        {
+            LOGGER.error("Bulk response error = {}", bulkResponse.buildFailureMessage());
+        }
+    };
+
+    /**
      * The create index function will take as arguments the index name, document type, and mapping and will create a new index.
      */
     private final TriConsumer<String, String, String> createIndexFunction = (indexName, documentType, mapping) -> {
@@ -149,6 +256,32 @@ public class ElasticsearchFunctions implements SearchFunctions
     };
 
     /**
+     * The delete index documents function will delete a list of document in the index by a list of document ids.
+     */
+    private final TriConsumer<String, String, List<Integer>> deleteIndexDocumentsFunction = (indexName, documentType, ids) -> {
+        LOGGER.info("Deleting Elasticsearch documents from index, indexName={}, documentType={}, ids={}.", indexName, documentType,
+            ids.stream().map(Object::toString).collect(Collectors.joining(",")));
+
+        // Prepare a bulk request builder
+        final BulkRequestBuilder bulkRequestBuilder = transportClient.prepareBulk();
+
+        // For each document prepare a delete request and add it to the bulk request builder
+        ids.forEach(id -> {
+            final DeleteRequestBuilder deleteRequestBuilder = transportClient.prepareDelete(indexName, documentType, id.toString());
+            bulkRequestBuilder.add(deleteRequestBuilder);
+        });
+
+        // Execute the bulk update request
+        final BulkResponse bulkResponse = bulkRequestBuilder.get();
+
+        // If there are failures log them
+        if (bulkResponse.hasFailures())
+        {
+            LOGGER.error("Bulk response error = {}", bulkResponse.buildFailureMessage());
+        }
+    };
+
+    /**
      * The number of types in index function will take as arguments the index name and the document type and will return the number of documents in the index.
      */
     private final BiFunction<String, String, Long> numberOfTypesInIndexFunction = (indexName, documentType) -> {
@@ -161,16 +294,197 @@ public class ElasticsearchFunctions implements SearchFunctions
      * The ids in index function will take as arguments the index name and the document type and will return a list of all the ids in the index.
      */
     private final BiFunction<String, String, List<String>> idsInIndexFunction = (indexName, documentType) -> {
+        // Create an array list for storing the ids
         List<String> idList = new ArrayList<>();
-        final SearchRequestBuilder searchRequestBuilder = transportClient.prepareSearch(indexName).setTypes(documentType).setQuery(matchAllQuery());
-        final SearchResponse searchResponse = searchRequestBuilder.execute().actionGet();
-        final SearchHits searchHits = searchResponse.getHits();
-        final SearchHit[] hits = searchHits.hits();
-        for (SearchHit searchHit : hits)
+
+        // Create a search request and set the scroll time and scroll size
+        final SearchRequestBuilder searchRequestBuilder = transportClient.prepareSearch(indexName);
+        searchRequestBuilder.setTypes(documentType).setQuery(matchAllQuery()).setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME))
+            .setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE);
+        SearchResponse searchResponse = searchRequestBuilder.execute().actionGet();
+        SearchHits searchHits = searchResponse.getHits();
+        SearchHit[] hits = searchHits.hits();
+
+        // While there are hits available, page through the results and add them to the id list
+        while (hits.length != 0)
         {
-            idList.add(searchHit.id());
+            for (SearchHit searchHit : hits)
+            {
+                idList.add(searchHit.id());
+            }
+
+            SearchScrollRequestBuilder searchScrollRequestBuilder = transportClient.prepareSearchScroll(searchResponse.getScrollId());
+            searchScrollRequestBuilder.setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME));
+            searchResponse = searchScrollRequestBuilder.execute().actionGet();
+            searchHits = searchResponse.getHits();
+            hits = searchHits.hits();
         }
+
         return idList;
+    };
+
+    /**
+     * The search business object definitions by tags function will take a list of tag entities and return a list of business object definition entities. The
+     * function will search the search index based on tag code and tag type code.
+     */
+    private final TriFunction<String, String, List<TagEntity>, List<BusinessObjectDefinitionIndexSearchResponseDto>>
+        searchBusinessObjectDefinitionsByTagsFunction = (indexName, documentType, tagEntityList) -> {
+
+        LOGGER
+            .info("Searching Elasticsearch business object definition documents from index, indexName={} and documentType={}, by tagEntityList={}.", indexName,
+                documentType, tagEntityListToString(tagEntityList));
+
+        List<QueryBuilder> queryBuilderList = new ArrayList<>();
+
+        // For each tag entity get the list of business object definition tag entities and then add the business object definition id to the query
+        tagEntityList.forEach(tagEntity -> tagEntity.getBusinessObjectDefinitionTags().forEach(businessObjectDefinitionTagEntity -> {
+            // Build a query
+            QueryBuilder queryBuilder = QueryBuilders
+                .matchQuery(SEARCH_INDEX_BUSINESS_OBJECT_DEFINITION_ID_KEY, businessObjectDefinitionTagEntity.getBusinessObjectDefinition().getId());
+
+            // Add the query to the list of queries
+            queryBuilderList.add(queryBuilder);
+        }));
+
+        List<BusinessObjectDefinitionIndexSearchResponseDto> businessObjectDefinitionIndexSearchResponseDtoList = new ArrayList<>();
+
+        // Only perform the query if there is at least one query builder
+        if (queryBuilderList.size() > 0)
+        {
+            // Combined bool should match query for tag type code and tag code
+            BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+
+            // For each query in the query list add it to the bool query
+            queryBuilderList.forEach(boolQueryBuilder::should);
+
+            SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+            searchSourceBuilder
+                .fetchSource(new String[] {DATA_PROVIDER_NAME_SOURCE, DESCRIPTION_SOURCE, DISPLAY_NAME_SOURCE, NAME_SOURCE, NAMESPACE_CODE_SOURCE}, null);
+            searchSourceBuilder.query(boolQueryBuilder);
+
+            // Create a search request and set the scroll time and scroll size
+            final SearchRequestBuilder searchRequestBuilder = transportClient.prepareSearch(indexName);
+            searchRequestBuilder.setTypes(documentType).setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME)).setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE)
+                .setSource(searchSourceBuilder);
+            searchRequestBuilder.addSort(SortBuilders.fieldSort(BUSINESS_OBJECT_DEFINITION_SORT_FIELD).order(SortOrder.ASC));
+
+            businessObjectDefinitionIndexSearchResponseDtoList = scrollSearchResultsIntoBusinessObjectDefinitionEntityList(searchRequestBuilder);
+        }
+
+        return businessObjectDefinitionIndexSearchResponseDtoList;
+    };
+
+    /**
+     * The find all business object definitions function will return all business object definition entities in the search index.
+     */
+    private final BiFunction<String, String, List<BusinessObjectDefinitionIndexSearchResponseDto>> findAllBusinessObjectDefinitionsFunction =
+        (indexName, documentType) -> {
+
+            LOGGER.info("Elasticsearch get all business object definition documents from index, indexName={} and documentType={}.", indexName, documentType);
+
+            SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+            searchSourceBuilder
+                .fetchSource(new String[] {DATA_PROVIDER_NAME_SOURCE, DESCRIPTION_SOURCE, DISPLAY_NAME_SOURCE, NAME_SOURCE, NAMESPACE_CODE_SOURCE}, null);
+
+            // Create a search request and set the scroll time and scroll size
+            final SearchRequestBuilder searchRequestBuilder = transportClient.prepareSearch(indexName);
+            searchRequestBuilder.setTypes(documentType).setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME)).setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE)
+                .setSource(searchSourceBuilder);
+            searchRequestBuilder.addSort(SortBuilders.fieldSort(BUSINESS_OBJECT_DEFINITION_SORT_FIELD).order(SortOrder.ASC));
+
+            return scrollSearchResultsIntoBusinessObjectDefinitionEntityList(searchRequestBuilder);
+        };
+
+    /**
+     * Private method to create a String representation of the list of tag entities for logging.
+     *
+     * @param tagEntityList the list of tag entities
+     *
+     * @return the String representation of the tag entity list
+     */
+    private String tagEntityListToString(List<TagEntity> tagEntityList)
+    {
+        List<String> tagEntityTagCodeAndTagTypeCode = new ArrayList<>();
+
+        tagEntityList.forEach(tagEntity -> tagEntityTagCodeAndTagTypeCode
+            .add("TagCode={" + tagEntity.getTagCode() + "} and TagTypeCode={" + tagEntity.getTagType().getCode() + "}"));
+
+        return herdStringHelper.join(tagEntityTagCodeAndTagTypeCode, ",", "\\");
+    }
+
+    /**
+     * Private method to handle scrolling through the results from the search request and adding them to a business object definition entity list.
+     *
+     * @param searchRequestBuilder the the search request to scroll through
+     *
+     * @return list of business object definition entities
+     */
+    private List<BusinessObjectDefinitionIndexSearchResponseDto> scrollSearchResultsIntoBusinessObjectDefinitionEntityList(
+        final SearchRequestBuilder searchRequestBuilder)
+    {
+        // Retrieve the search response
+        SearchResponse searchResponse = searchRequestBuilder.execute().actionGet();
+
+        // Create an array list for storing the BusinessObjectDefinitionEntities
+        List<BusinessObjectDefinitionIndexSearchResponseDto> businessObjectDefinitionIndexSearchResponseDtoList = new ArrayList<>();
+
+        SearchHits searchHits = searchResponse.getHits();
+        SearchHit[] hits = searchHits.hits();
+
+        // While there are hits available, page through the results and add them to the id list
+        while (hits.length != 0)
+        {
+            for (SearchHit searchHit : hits)
+            {
+                String jsonInString = searchHit.getSourceAsString();
+
+                try
+                {
+                    businessObjectDefinitionIndexSearchResponseDtoList
+                        .add(jsonHelper.unmarshallJsonToObject(BusinessObjectDefinitionIndexSearchResponseDto.class, jsonInString));
+                }
+                catch (IOException ioException)
+                {
+                    LOGGER.warn("Could not convert JSON document id={} into BusinessObjectDefinition object. ", searchHit.id(), ioException);
+                }
+            }
+
+            SearchScrollRequestBuilder searchScrollRequestBuilder = transportClient.prepareSearchScroll(searchResponse.getScrollId());
+            searchScrollRequestBuilder.setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME));
+            searchResponse = searchScrollRequestBuilder.execute().actionGet();
+            searchHits = searchResponse.getHits();
+            hits = searchHits.hits();
+        }
+
+        return businessObjectDefinitionIndexSearchResponseDtoList;
+    }
+
+    /**
+     * The update index documents function will take as arguments the index name, document type, and a map of documents to update. The document map key is the
+     * document id, and the value is the document as a JSON string.
+     */
+    private final TriConsumer<String, String, Map<String, String>> updateIndexDocumentsFunction = (indexName, documentType, documentMap) -> {
+        LOGGER.info("Updating Elasticsearch index documents, indexName={}, documentType={}, documentMap={}.", indexName, documentType,
+            Joiner.on(",").withKeyValueSeparator("=").join(documentMap));
+
+        // Prepare a bulk request builder
+        final BulkRequestBuilder bulkRequestBuilder = transportClient.prepareBulk();
+
+        // For each document prepare an update request and add it to the bulk request builder
+        documentMap.forEach((id, jsonString) -> {
+            final UpdateRequestBuilder updateRequestBuilder = transportClient.prepareUpdate(indexName, documentType, id);
+            updateRequestBuilder.setDoc(jsonString);
+            bulkRequestBuilder.add(updateRequestBuilder);
+        });
+
+        // Execute the bulk update request
+        final BulkResponse bulkResponse = bulkRequestBuilder.get();
+
+        // If there are failures log them
+        if (bulkResponse.hasFailures())
+        {
+            LOGGER.error("Bulk response error = {}", bulkResponse.buildFailureMessage());
+        }
     };
 
     @Override
@@ -204,6 +518,12 @@ public class ElasticsearchFunctions implements SearchFunctions
     }
 
     @Override
+    public TriConsumer<String, String, Map<String, String>> getCreateIndexDocumentsFunction()
+    {
+        return createIndexDocumentsFunction;
+    }
+
+    @Override
     public TriConsumer<String, String, String> getCreateIndexFunction()
     {
         return createIndexFunction;
@@ -216,6 +536,12 @@ public class ElasticsearchFunctions implements SearchFunctions
     }
 
     @Override
+    public TriConsumer<String, String, List<Integer>> getDeleteIndexDocumentsFunction()
+    {
+        return deleteIndexDocumentsFunction;
+    }
+
+    @Override
     public BiFunction<String, String, Long> getNumberOfTypesInIndexFunction()
     {
         return numberOfTypesInIndexFunction;
@@ -225,5 +551,23 @@ public class ElasticsearchFunctions implements SearchFunctions
     public BiFunction<String, String, List<String>> getIdsInIndexFunction()
     {
         return idsInIndexFunction;
+    }
+
+    @Override
+    public BiFunction<String, String, List<BusinessObjectDefinitionIndexSearchResponseDto>> getFindAllBusinessObjectDefinitionsFunction()
+    {
+        return findAllBusinessObjectDefinitionsFunction;
+    }
+
+    @Override
+    public TriFunction<String, String, List<TagEntity>, List<BusinessObjectDefinitionIndexSearchResponseDto>> getSearchBusinessObjectDefinitionsByTagsFunction()
+    {
+        return searchBusinessObjectDefinitionsByTagsFunction;
+    }
+
+    @Override
+    public TriConsumer<String, String, Map<String, String>> getUpdateIndexDocumentsFunction()
+    {
+        return updateIndexDocumentsFunction;
     }
 }

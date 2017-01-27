@@ -21,7 +21,7 @@
    <parent>
       <groupId>org.finra.herd</groupId>
       <artifactId>herd-code</artifactId>
-      <version>0.34.0-SNAPSHOT</version>
+      <version>0.36.0-SNAPSHOT</version>
    </parent>
 
    <name>herd service</name>
@@ -72,6 +72,10 @@
          <groupId>org.springframework</groupId>
          <artifactId>spring-tx</artifactId>
       </dependency>
+      <dependency>
+         <groupId>org.springframework.retry</groupId>
+         <artifactId>spring-retry</artifactId>
+      </dependency>
 
       <dependency>
          <groupId>org.apache.commons</groupId>
@@ -115,12 +119,33 @@
       <dependency>
          <groupId>org.elasticsearch</groupId>
          <artifactId>elasticsearch</artifactId>
-         <version>${elasticsearch.version}</version>
       </dependency>
       <dependency>
          <groupId>org.elasticsearch.client</groupId>
          <artifactId>transport</artifactId>
-         <version>${elasticsearch.version}</version>
+      </dependency>
+      <dependency>
+         <groupId>com.floragunn</groupId>
+         <artifactId>search-guard-ssl</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>com.amazonaws</groupId>
+         <artifactId>aws-java-sdk-core</artifactId>
+         <!-- We are using jcl-over-slf4j so commons-logging isn't needed. -->
+         <exclusions>
+            <exclusion>
+               <groupId>commons-logging</groupId>
+               <artifactId>commons-logging</artifactId>
+            </exclusion>
+         </exclusions>
+      </dependency>
+      <dependency>
+         <groupId>com.amazonaws</groupId>
+         <artifactId>aws-java-sdk</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>co.wrisk.jcredstash</groupId>
+         <artifactId>jcredstash</artifactId>
       </dependency>
 
    </dependencies>

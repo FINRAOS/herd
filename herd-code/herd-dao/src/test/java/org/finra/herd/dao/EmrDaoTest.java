@@ -18,7 +18,6 @@ package org.finra.herd.dao;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -49,7 +48,6 @@ import com.amazonaws.services.elasticmapreduce.model.DescribeClusterRequest;
 import com.amazonaws.services.elasticmapreduce.model.DescribeClusterResult;
 import com.amazonaws.services.elasticmapreduce.model.DescribeStepRequest;
 import com.amazonaws.services.elasticmapreduce.model.DescribeStepResult;
-import com.amazonaws.services.elasticmapreduce.model.HadoopJarStepConfig;
 import com.amazonaws.services.elasticmapreduce.model.Instance;
 import com.amazonaws.services.elasticmapreduce.model.InstanceGroupConfig;
 import com.amazonaws.services.elasticmapreduce.model.JobFlowInstancesConfig;
@@ -110,7 +108,7 @@ public class EmrDaoTest extends AbstractDaoTest
 
     /**
      * Intialize mocks and inject.
-     * 
+     * <p/>
      * Normally this would be handled by Spring's IOC, but at the moment other unit tests may be affected if we completely replace the mocked implementations.
      */
     @Before
@@ -322,23 +320,12 @@ public class EmrDaoTest extends AbstractDaoTest
                     assertEquals(20, instanceGroupConfig.getInstanceCount().intValue());
                     assertEquals("coreInstanceType", instanceGroupConfig.getInstanceType());
                 }
-                assertEquals(herdStringHelper.getRequiredConfigurationValue(ConfigurationValue.EMR_DEFAULT_EC2_NODE_IAM_PROFILE_NAME), runJobFlowRequest
-                    .getJobFlowRole());
-                assertEquals(herdStringHelper.getRequiredConfigurationValue(ConfigurationValue.EMR_DEFAULT_SERVICE_IAM_ROLE_NAME), runJobFlowRequest
-                    .getServiceRole());
+                assertEquals(herdStringHelper.getRequiredConfigurationValue(ConfigurationValue.EMR_DEFAULT_EC2_NODE_IAM_PROFILE_NAME),
+                    runJobFlowRequest.getJobFlowRole());
+                assertEquals(herdStringHelper.getRequiredConfigurationValue(ConfigurationValue.EMR_DEFAULT_SERVICE_IAM_ROLE_NAME),
+                    runJobFlowRequest.getServiceRole());
                 List<StepConfig> stepConfigs = runJobFlowRequest.getSteps();
-                assertEquals(1, stepConfigs.size());
-                {
-                    StepConfig stepConfig = stepConfigs.get(0);
-                    assertEquals("Copy herd oozie wrapper", stepConfig.getName());
-                    HadoopJarStepConfig hadoopJarStepConfig = stepConfig.getHadoopJarStep();
-                    assertEquals(configurationHelper.getProperty(ConfigurationValue.EMR_SHELL_SCRIPT_JAR), hadoopJarStepConfig.getJar());
-                    assertEquals(4, hadoopJarStepConfig.getArgs().size());
-                    assertEquals("s3:////HERD_SCRIPTS/emr/bootstrap/herd_oozie_wrapper/s3_hdfs_copy_script.sh", hadoopJarStepConfig.getArgs().get(0));
-                    assertEquals("s3:////HERD_SCRIPTS/emr/bootstrap/herd_oozie_wrapper/", hadoopJarStepConfig.getArgs().get(1));
-                    assertEquals("/user/hadoop/datamgmt/oozie_wrapper/", hadoopJarStepConfig.getArgs().get(2));
-                    assertTrue(isUuid(hadoopJarStepConfig.getArgs().get(3)));
-                }
+                assertEquals(0, stepConfigs.size());
                 List<Tag> tags = runJobFlowRequest.getTags();
                 assertEquals(1, tags.size());
                 {
@@ -386,8 +373,8 @@ public class EmrDaoTest extends AbstractDaoTest
             emrClusterDefinitionApplication.setName("applicationName2");
             emrClusterDefinitionApplication.setVersion("applicationVersion2");
             emrClusterDefinitionApplication.setArgs(Arrays.asList("applicationArg2"));
-            emrClusterDefinitionApplication.setAdditionalInfoList(Arrays.asList(new Parameter("applicationAdditionalInfoName2",
-                "applicationAdditionalInfoValue2")));
+            emrClusterDefinitionApplication
+                .setAdditionalInfoList(Arrays.asList(new Parameter("applicationAdditionalInfoName2", "applicationAdditionalInfoValue2")));
             emrClusterDefinition.getApplications().add(emrClusterDefinitionApplication);
         }
         emrClusterDefinition.setConfigurations(new ArrayList<>());
@@ -525,8 +512,8 @@ public class EmrDaoTest extends AbstractDaoTest
                     assertEquals("emr.aws.configure.hadoop", bootstrapActionConfig.getName());
                     ScriptBootstrapActionConfig scriptBootstrapAction = bootstrapActionConfig.getScriptBootstrapAction();
                     assertEquals("s3://us-east-1.elasticmapreduce/bootstrap-actions/configure-hadoop", scriptBootstrapAction.getPath());
-                    assertEquals(Arrays.asList("fileNameShortcut", "configFileLocation", "keyValueShortcut", "attribKey=attribVal"), scriptBootstrapAction
-                        .getArgs());
+                    assertEquals(Arrays.asList("fileNameShortcut", "configFileLocation", "keyValueShortcut", "attribKey=attribVal"),
+                        scriptBootstrapAction.getArgs());
                 }
                 {
                     BootstrapActionConfig bootstrapActionConfig = runJobFlowRequest.getBootstrapActions().get(3);
@@ -545,8 +532,8 @@ public class EmrDaoTest extends AbstractDaoTest
                     assertEquals("scriptDefinitionMasterName1", bootstrapActionConfig.getName());
                     ScriptBootstrapActionConfig scriptBootstrapAction = bootstrapActionConfig.getScriptBootstrapAction();
                     assertEquals("s3://elasticmapreduce/bootstrap-actions/run-if", scriptBootstrapAction.getPath());
-                    assertEquals(Arrays.asList("instance.isMaster=true", "scriptDefinitionMasterLocation1", "scriptDefinitionMasterArg1"), scriptBootstrapAction
-                        .getArgs());
+                    assertEquals(Arrays.asList("instance.isMaster=true", "scriptDefinitionMasterLocation1", "scriptDefinitionMasterArg1"),
+                        scriptBootstrapAction.getArgs());
                 }
                 {
                     BootstrapActionConfig bootstrapActionConfig = runJobFlowRequest.getBootstrapActions().get(6);
@@ -630,7 +617,8 @@ public class EmrDaoTest extends AbstractDaoTest
                 public String answer(InvocationOnMock invocation) throws Throwable
                 {
                     RunJobFlowRequest runJobFlowRequest = invocation.getArgumentAt(1, RunJobFlowRequest.class);
-                    assertEquals(Arrays.asList("additionalMasterSecurityGroup","EMR_HERD_SUPPORT_SECURITY_GROUP"), runJobFlowRequest.getInstances().getAdditionalMasterSecurityGroups());
+                    assertEquals(Arrays.asList("additionalMasterSecurityGroup", "EMR_HERD_SUPPORT_SECURITY_GROUP"),
+                        runJobFlowRequest.getInstances().getAdditionalMasterSecurityGroups());
                     return clusterId;
                 }
             });
@@ -700,8 +688,8 @@ public class EmrDaoTest extends AbstractDaoTest
             public String answer(InvocationOnMock invocation) throws Throwable
             {
                 RunJobFlowRequest runJobFlowRequest = invocation.getArgumentAt(1, RunJobFlowRequest.class);
-                // There should only be the default step. The oozie step should be skipped.
-                assertEquals(1, runJobFlowRequest.getSteps().size());
+                // The oozie step should be skipped.
+                assertEquals(0, runJobFlowRequest.getSteps().size());
                 return clusterId;
             }
         });

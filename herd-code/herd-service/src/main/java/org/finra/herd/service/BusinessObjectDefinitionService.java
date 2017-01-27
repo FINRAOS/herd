@@ -33,35 +33,135 @@ import org.finra.herd.model.dto.BusinessObjectDefinitionSampleFileUpdateDto;
  */
 public interface BusinessObjectDefinitionService
 {
+    /**
+     * Creates a new business object definition.
+     *
+     * @param businessObjectDefinitionCreateRequest the business object definition create request.
+     *
+     * @return the created business object definition.
+     */
     public BusinessObjectDefinition createBusinessObjectDefinition(BusinessObjectDefinitionCreateRequest businessObjectDefinitionCreateRequest);
 
+    /**
+     * Updates a business object definition.
+     *
+     * @param businessObjectDefinitionKey the business object definition key
+     * @param businessObjectDefinitionUpdateRequest the business object definition update request
+     *
+     * @return the updated business object definition
+     */
     public BusinessObjectDefinition updateBusinessObjectDefinition(BusinessObjectDefinitionKey businessObjectDefinitionKey,
         BusinessObjectDefinitionUpdateRequest businessObjectDefinitionUpdateRequest);
 
+    /**
+     * Updates a business object definition descriptive information.
+     *
+     * @param businessObjectDefinitionKey the business object definition key
+     * @param businessObjectDefinitionDescriptiveInformationUpdateRequest the business object definition descriptive information update request
+     *
+     * @return the updated business object definition
+     */
     public BusinessObjectDefinition updateBusinessObjectDefinitionDescriptiveInformation(BusinessObjectDefinitionKey businessObjectDefinitionKey,
         BusinessObjectDefinitionDescriptiveInformationUpdateRequest businessObjectDefinitionDescriptiveInformationUpdateRequest);
 
+    /**
+     * Gets a business object definition for the specified key. This method starts a new transaction.
+     *
+     * @param businessObjectDefinitionKey the business object definition key
+     *
+     * @return the business object definition.
+     */
     public BusinessObjectDefinition getBusinessObjectDefinition(BusinessObjectDefinitionKey businessObjectDefinitionKey);
 
+    /**
+     * Deletes a business object definition for the specified name.
+     *
+     * @param businessObjectDefinitionKey the business object definition key
+     *
+     * @return the business object definition that was deleted.
+     */
     public BusinessObjectDefinition deleteBusinessObjectDefinition(BusinessObjectDefinitionKey businessObjectDefinitionKey);
 
+    /**
+     * Gets the list of all business object definitions defined in the system.
+     *
+     * @return the business object definition keys.
+     */
     public BusinessObjectDefinitionKeys getBusinessObjectDefinitions();
 
+    /**
+     * Gets a list of all business object definitions defined in the system for a specified namespace.
+     *
+     * @param namespaceCode the namespace code
+     *
+     * @return the business object definition keys
+     */
     public BusinessObjectDefinitionKeys getBusinessObjectDefinitions(String namespaceCode);
 
+    /**
+     * Index all business object definitions
+     *
+     * @return result of an asynchronous computation
+     */
     public Future<Void> indexAllBusinessObjectDefinitions();
 
+    /**
+     * Checks the count of business object definitions in the database against the count of business object definitions in the index.
+     *
+     * @return boolean value true for valid, false otherwise
+     */
     public boolean indexSizeCheckValidationBusinessObjectDefinitions();
 
+    /**
+     * Spot check a random percentage of business object definitions in the search index
+     *
+     * @return boolean value true for valid, false otherwise
+     */
     public boolean indexSpotCheckPercentageValidationBusinessObjectDefinitions();
 
+    /**
+     * Spot check the most recent business object definitions in the search index
+     *
+     * @return boolean value true for valid, false otherwise
+     */
     public boolean indexSpotCheckMostRecentValidationBusinessObjectDefinitions();
 
+    /**
+     * Validate that the search index contains all business object definitions
+     *
+     * @return result of an asynchronous computation
+     */
     public Future<Void> indexValidateAllBusinessObjectDefinitions();
 
+    /**
+     * Searches across all business object definitions that are defined in the system per specified search filters and keys
+     *
+     * @return the retrieved business object definition list
+     */
     public BusinessObjectDefinitionSearchResponse searchBusinessObjectDefinitions(BusinessObjectDefinitionSearchRequest businessObjectDefinitionSearchRequest,
         Set<String> fields);
 
+    /**
+     * Searches across all business object definitions that are in search index per specified search filters and keys
+     *
+     * @return the retrieved business object definition list
+     */
+    public BusinessObjectDefinitionSearchResponse indexSearchBusinessObjectDefinitions(
+        BusinessObjectDefinitionSearchRequest businessObjectDefinitionSearchRequest, Set<String> fields);
+
+    /**
+     * Update business object definition sample file
+     *
+     * @param businessObjectDefinitionKey business object definition key
+     * @param businessObjectDefinitionSampleFileUpdateDto update dto
+     */
     public void updateBusinessObjectDefinitionEntitySampleFile(BusinessObjectDefinitionKey businessObjectDefinitionKey,
         BusinessObjectDefinitionSampleFileUpdateDto businessObjectDefinitionSampleFileUpdateDto);
+
+    /**
+     * Updates the search index document representation of the business object definition.
+     *
+     * @param searchIndexUpdateDtoJson the JSON string representation of the SearchIndexUpdateDto object
+     */
+    public void updateSearchIndexDocumentBusinessObjectDefinition(String searchIndexUpdateDtoJson);
 }

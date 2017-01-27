@@ -31,6 +31,15 @@ public interface BusinessObjectDefinitionDao extends BaseJpaDao
     public List<BusinessObjectDefinitionEntity> getAllBusinessObjectDefinitions();
 
     /**
+     * Gets a list of business object definition entities by a list of ids
+     *
+     * @param ids a list of business object definition ids
+     *
+     * @return the list of all business object definition entities.
+     */
+    public List<BusinessObjectDefinitionEntity> getAllBusinessObjectDefinitionsByIds(List<Integer> ids);
+
+    /**
      * Gets a business object definition by key.
      *
      * @param businessObjectDefinitionKey the business object definition key (case-insensitive)
@@ -63,10 +72,13 @@ public interface BusinessObjectDefinitionDao extends BaseJpaDao
     public List<BusinessObjectDefinitionEntity> getBusinessObjectDefinitions(List<TagEntity> tagEntities);
 
     /**
-     * Gets a percentage of all business object definition entities
+     * Gets a percentage of all business object definition entities. The percentage is randomly selected from all the business object definitions. The random
+     * selection is done by assigning a random number between 0 and 1 for each business object definition and if that number is below the percentage value
+     * passed in as an argument, also between 0 and 1, then the business object definition is selected.
      *
-     * @param percentage the percentage of all business object definitions to return
-     * @return the percentage of all business object definition entities.
+     * @param percentage the percentage of all business object definitions to return. Value between 0 and 1 (inclusive).
+     *
+     * @return the percentage of all business object definition entities
      */
     public List<BusinessObjectDefinitionEntity> getPercentageOfAllBusinessObjectDefinitions(double percentage);
 
@@ -74,6 +86,7 @@ public interface BusinessObjectDefinitionDao extends BaseJpaDao
      * Gets the most recent of all business object definition entities
      *
      * @param numberOfResults the number of results to return
+     *
      * @return the most recent of all business object definition entities.
      */
     public List<BusinessObjectDefinitionEntity> getMostRecentBusinessObjectDefinitions(int numberOfResults);
