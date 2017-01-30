@@ -30,13 +30,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
-import org.jsoup.Jsoup;
 import com.google.common.collect.ImmutableSet;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.jsoup.Jsoup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -610,15 +609,15 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
             }
 
             // Use the tag type entities list to search in the search index for business object definitions
-            elasticsearchResponseDto =
-                searchFunctions.getSearchBusinessObjectDefinitionsByTagsFunction().apply(indexName, documentType, tagEntities, validateFacetFields(request));
+            elasticsearchResponseDto = searchFunctions.getSearchBusinessObjectDefinitionsByTagsFunction()
+                .apply(indexName, documentType, tagEntities, validateFacetFields(new HashSet<String>(request.getFacetFields())));
         }
         else
         {
 
             // Else get all of the business object definitions
-            elasticsearchResponseDto =
-                searchFunctions.getFindAllBusinessObjectDefinitionsFunction().apply(indexName, documentType, validateFacetFields(request));
+            elasticsearchResponseDto = searchFunctions.getFindAllBusinessObjectDefinitionsFunction()
+                .apply(indexName, documentType, validateFacetFields(new HashSet<String>(request.getFacetFields())));
         }
 
 
@@ -666,16 +665,6 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         return searchResponse;
     }
 
-    private Set<String> validateFacetFields(BusinessObjectDefinitionIndexSearchRequest request)
-    {
-        Set<String> facetFields = new HashSet<>();
-        if (!CollectionUtils.isEmpty(request.getFacetFields()))
-        {
-            validateFacetFields(new HashSet<String>(request.getFacetFields()));
-            facetFields = request.getFacetFields().stream().map(s -> s.toUpperCase()).collect(Collectors.toSet());
-        }
-        return facetFields;
-    }
 
     @Override
     public BusinessObjectDefinitionSearchResponse searchBusinessObjectDefinitions(BusinessObjectDefinitionSearchRequest request, Set<String> fields)

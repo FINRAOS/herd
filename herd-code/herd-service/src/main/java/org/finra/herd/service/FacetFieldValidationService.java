@@ -38,7 +38,7 @@ public interface FacetFieldValidationService
      *
      * @param facetFields the facet fields to be validated
      */
-    default void validateFacetFields(Set<String> facetFields)
+    default Set<String> validateFacetFields(Set<String> facetFields)
     {
         // Create a local copy of the fields set so that we can stream it to modify the fields set
         Set<String> localCopy = new HashSet<>(facetFields);
@@ -51,5 +51,7 @@ public interface FacetFieldValidationService
 
         // Validate the field names
         facetFields.forEach(field -> Assert.isTrue(getValidFacetFields().contains(field), String.format("Facet field \"%s\" is not supported.", field)));
+
+        return facetFields;
     }
 }
