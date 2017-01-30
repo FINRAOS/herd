@@ -15,6 +15,7 @@
 */
 package org.finra.herd.rest;
 
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -26,7 +27,7 @@ import java.util.List;
 
 import com.google.common.collect.Sets;
 import org.junit.Test;
-
+import org.jsoup.Jsoup;
 import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.dao.helper.HerdDaoSecurityHelper;
 import org.finra.herd.model.api.xml.Attribute;
@@ -246,17 +247,19 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
         // Create two children for the root tag.
         TagEntity childTagEntity1 = tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_2, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, rootTagEntity);
         TagEntity childTagEntity2 = tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_3, TAG_DISPLAY_NAME_3, TAG_DESCRIPTION_3, rootTagEntity);
+        TagEntity childTagEntity3 = tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_4, TAG_DISPLAY_NAME_4, TAG_DESCRIPTION_4, rootTagEntity);
 
         // Create association between business object definition and tag.
         businessObjectDefinitionTagDaoTestHelper.createBusinessObjectDefinitionTagEntity(businessObjectDefinitionEntities.get(0), childTagEntity1);
         businessObjectDefinitionTagDaoTestHelper.createBusinessObjectDefinitionTagEntity(businessObjectDefinitionEntities.get(1), childTagEntity2);
+        businessObjectDefinitionTagDaoTestHelper.createBusinessObjectDefinitionTagEntity(businessObjectDefinitionEntities.get(2), childTagEntity3);
 
         List<BusinessObjectDefinition> actualBusinessObjectDefinitions = new ArrayList<>();
         for (BusinessObjectDefinitionEntity businessObjectDefinitionEntity : businessObjectDefinitionEntities)
         {
             actualBusinessObjectDefinitions.add(
                 new BusinessObjectDefinition(null, businessObjectDefinitionEntity.getNamespace().getCode(), businessObjectDefinitionEntity.getName(),
-                    businessObjectDefinitionEntity.getDataProvider().getName(), NO_BDEF_DESCRIPTION, businessObjectDefinitionEntity.getDescription(), null,
+                    businessObjectDefinitionEntity.getDataProvider().getName(), NO_BDEF_DESCRIPTION, Jsoup.parseBodyFragment(businessObjectDefinitionEntity.getDescription()).body().text(), null,
                     null, null, null, null, null, null));
         }
 
