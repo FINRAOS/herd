@@ -224,9 +224,13 @@ public class BusinessObjectDefinitionDaoTestHelper
         BusinessObjectDefinitionEntity businessObjectDefinitionEntityTwo =
             createBusinessObjectDefinitionEntity(AbstractDaoTest.NAMESPACE_2, AbstractDaoTest.BDEF_NAME_2, AbstractDaoTest.DATA_PROVIDER_NAME_2,
                 AbstractDaoTest.BDEF_DESCRIPTION_2);
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntityThree =
+            createBusinessObjectDefinitionEntity(AbstractDaoTest.NAMESPACE_3, AbstractDaoTest.BDEF_NAME_3, AbstractDaoTest.DATA_PROVIDER_NAME,
+                AbstractDaoTest.BDEF_DESCRIPTION_WITH_HTML_AND_CARROT_VALUES);
 
         businessObjectDefinitionEntities.add(businessObjectDefinitionEntityOne);
         businessObjectDefinitionEntities.add(businessObjectDefinitionEntityTwo);
+        businessObjectDefinitionEntities.add(businessObjectDefinitionEntityThree);
 
         return businessObjectDefinitionEntities;
     }
