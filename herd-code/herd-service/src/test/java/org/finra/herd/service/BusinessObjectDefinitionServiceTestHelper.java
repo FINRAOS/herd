@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.jsoup.Jsoup;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -83,7 +84,7 @@ public class BusinessObjectDefinitionServiceTestHelper
         businessObjectDefinition.setBusinessObjectDefinitionName(businessObjectDefinitionEntity.getName());
         businessObjectDefinition.setDataProviderName(businessObjectDefinitionEntity.getDataProvider().getName());
         businessObjectDefinition.setDisplayName(businessObjectDefinitionEntity.getDisplayName());
-        businessObjectDefinition.setShortDescription(StringUtils.left(businessObjectDefinitionEntity.getDescription(),
+        businessObjectDefinition.setShortDescription(StringUtils.left(Jsoup.parseBodyFragment(businessObjectDefinitionEntity.getDescription()).body().text(),
             configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH, Integer.class)));
 
         return businessObjectDefinition;

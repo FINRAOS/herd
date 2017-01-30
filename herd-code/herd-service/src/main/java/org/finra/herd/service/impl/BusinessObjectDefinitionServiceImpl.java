@@ -32,6 +32,7 @@ import java.util.concurrent.Future;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import org.jsoup.Jsoup;
 import com.google.common.collect.ImmutableSet;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
@@ -1010,8 +1011,9 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         // Get the configured value for short description's length
         Integer shortDescMaxLength = configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH, Integer.class);
 
-        // Truncate and return
-        return StringUtils.left(description, shortDescMaxLength);
+        // Parse out only html tags, truncate and return
+        // Do a partial HTML parse just in case there are some elements that don't have ending tags or the like
+        return StringUtils.left(Jsoup.parseBodyFragment(description).body().text(), shortDescMaxLength);
     }
 
     @Override
