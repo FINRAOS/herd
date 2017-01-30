@@ -48,7 +48,10 @@ import org.finra.herd.model.api.xml.BusinessObjectDefinitionIndexSearchResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchFilter;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionValidateResponse;
+import org.finra.herd.model.api.xml.Facet;
 import org.finra.herd.model.api.xml.TagKey;
+import org.finra.herd.model.dto.TagIndexSearchResponseDto;
+import org.finra.herd.model.dto.TagTypeIndexSearchResponsedto;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.service.BusinessObjectDefinitionService;
 
@@ -108,9 +111,13 @@ public class BusinessObjectDefinitionRestControllerIndexTest extends AbstractRes
         List<BusinessObjectDefinitionSearchFilter> businessObjectDefinitionSearchFilterList = new ArrayList<>();
         businessObjectDefinitionSearchFilterList.add(new BusinessObjectDefinitionSearchFilter(businessObjectDefinitionSearchKeyList));
 
+
+        //Create a list of facet fields
+        List<String> facetFields = new ArrayList<>();
+        facetFields.add("Invalid");
         // Create a new business object definition search request that will be used when testing the index search business object definitions method
         BusinessObjectDefinitionIndexSearchRequest businessObjectDefinitionSearchRequest =
-            new BusinessObjectDefinitionIndexSearchRequest(businessObjectDefinitionSearchFilterList, new ArrayList<>());
+            new BusinessObjectDefinitionIndexSearchRequest(businessObjectDefinitionSearchFilterList, facetFields);
 
         // Create a new fields set that will be used when testing the index search business object definitions method
         Set<String> fields = Sets.newHashSet(FIELD_DATA_PROVIDER_NAME, FIELD_DISPLAY_NAME, FIELD_SHORT_DESCRIPTION);
@@ -143,9 +150,37 @@ public class BusinessObjectDefinitionRestControllerIndexTest extends AbstractRes
             businessObjectDefinitions.add(businessObjectDefinition);
         }
 
+        List<TagTypeIndexSearchResponsedto> tagTypeIndexSearchResponsedtos = new ArrayList<>();
+        List<TagIndexSearchResponseDto> tagIndexSearchResponseDtos = new ArrayList<>();
+        tagIndexSearchResponseDtos.add(new TagIndexSearchResponseDto(TAG_CODE, TAG_COUNT, TAG_DISPLAY_NAME));
+        tagIndexSearchResponseDtos.add(new TagIndexSearchResponseDto(TAG_CODE_2, TAG_COUNT, TAG_DISPLAY_NAME_2));
+        TagTypeIndexSearchResponsedto tagTypeIndexSearchResponsedto =
+            new TagTypeIndexSearchResponsedto(TAG_TYPE, TAG_TYPE_COUNT, tagIndexSearchResponseDtos, TAG_TYPE_DISPLAY_NAME);
+        tagTypeIndexSearchResponsedtos.add(tagTypeIndexSearchResponsedto);
+
+        List<Facet> tagTypeFacets = new ArrayList<>();
+        for (TagTypeIndexSearchResponsedto tagTypeIndexSearchResponse : ImmutableSet.copyOf(tagTypeIndexSearchResponsedtos))
+        {
+
+            List<Facet> tagFacets = new ArrayList<>();
+
+            for (TagIndexSearchResponseDto tagIndexSearchResponseDto : tagTypeIndexSearchResponse.getTagIndexSearchResponseDtos())
+            {
+                Facet tagFacet =
+                    new Facet(tagIndexSearchResponseDto.getTagDisplayName(), tagIndexSearchResponseDto.getCount(), tagIndexSearchResponseDto.getFacetType(),
+                        tagIndexSearchResponseDto.getTagCode(), null);
+                tagFacets.add(tagFacet);
+            }
+
+            tagTypeFacets.add(
+                new Facet(tagTypeIndexSearchResponse.getDisplayName(), tagTypeIndexSearchResponse.getCount(), tagTypeIndexSearchResponse.getFacetType(),
+                    tagTypeIndexSearchResponse.getCode(), tagFacets));
+        }
+
         // Construct business object search response.
         BusinessObjectDefinitionIndexSearchResponse businessObjectDefinitionSearchResponse = new BusinessObjectDefinitionIndexSearchResponse();
         businessObjectDefinitionSearchResponse.setBusinessObjectDefinitions(businessObjectDefinitions);
+        businessObjectDefinitionSearchResponse.setFacets(tagTypeFacets);
 
         // Mock the call to the business object definition service
         when(businessObjectDefinitionService.indexSearchBusinessObjectDefinitions(businessObjectDefinitionSearchRequest, fields))

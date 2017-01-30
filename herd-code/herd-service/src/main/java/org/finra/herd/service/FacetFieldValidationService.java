@@ -44,8 +44,7 @@ public interface FacetFieldValidationService
         Set<String> localCopy = new HashSet<>(facetFields);
 
         // Clear the fields set
-        //facetFields.clear();
-        facetFields = new HashSet<>();
+        facetFields.clear();
 
         // Add to the fields set field the strings both trimmed and lower cased and filter out empty and null strings
         localCopy.stream().filter(StringUtils::isNotBlank).map(String::trim).map(String::toLowerCase).forEachOrdered(facetFields::add);

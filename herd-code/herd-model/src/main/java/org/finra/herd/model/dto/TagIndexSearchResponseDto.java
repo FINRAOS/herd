@@ -1,7 +1,24 @@
+/*
+* Copyright 2015 herd contributors
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+
+
 package org.finra.herd.model.dto;
 
 /**
- * Created by k26425 on 1/26/2017.
+ * Holds the tag facet response
  */
 public class TagIndexSearchResponseDto
 {
@@ -13,15 +30,38 @@ public class TagIndexSearchResponseDto
 
     private static String facetType = "Tag";
 
+    /**
+     * Empty constructor
+     */
     public TagIndexSearchResponseDto()
     {
-
+        //Empty constructor
     }
 
+    /**
+     * Constructor for DTO.
+     *
+     * @param tagCode the tag code string
+     * @param count the tag count long
+     */
     public TagIndexSearchResponseDto(String tagCode, long count)
     {
         this.tagCode = tagCode;
         this.count = count;
+    }
+
+    /**
+     * Constructor for DTO.
+     *
+     * @param tagCode the tag code string
+     * @param count the tag count long
+     * @param tagDisplayName the tag display name string
+     */
+    public TagIndexSearchResponseDto(String tagCode, long count, String tagDisplayName)
+    {
+        this.tagCode = tagCode;
+        this.count = count;
+        this.tagDisplayName = tagDisplayName;
     }
 
     public String getTagCode()
