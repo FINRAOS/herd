@@ -628,6 +628,10 @@ public class EmrServiceImpl implements EmrService
             {
                 emrClusterDefinition.setAdditionalSlaveSecurityGroups(emrClusterDefinitionOverride.getAdditionalSlaveSecurityGroups());
             }
+            if (emrClusterDefinitionOverride.getSecurityConfiguration() != null)
+            {
+                emrClusterDefinition.setSecurityConfiguration(emrClusterDefinitionOverride.getSecurityConfiguration());
+            }
         }
     }
 
