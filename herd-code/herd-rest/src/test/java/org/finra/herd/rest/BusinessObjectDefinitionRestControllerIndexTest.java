@@ -110,7 +110,7 @@ public class BusinessObjectDefinitionRestControllerIndexTest extends AbstractRes
 
         // Create a new business object definition search request that will be used when testing the index search business object definitions method
         BusinessObjectDefinitionIndexSearchRequest businessObjectDefinitionSearchRequest =
-            new BusinessObjectDefinitionIndexSearchRequest(businessObjectDefinitionSearchFilterList, null);
+            new BusinessObjectDefinitionIndexSearchRequest(businessObjectDefinitionSearchFilterList, new ArrayList<>());
 
         // Create a new fields set that will be used when testing the index search business object definitions method
         Set<String> fields = Sets.newHashSet(FIELD_DATA_PROVIDER_NAME, FIELD_DISPLAY_NAME, FIELD_SHORT_DESCRIPTION);
