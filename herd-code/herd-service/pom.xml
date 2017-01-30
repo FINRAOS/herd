@@ -144,6 +144,12 @@
          <artifactId>aws-java-sdk</artifactId>
       </dependency>
       <dependency>
+         <!-- jsoup HTML parser library @ http://jsoup.org/ -->
+         <groupId>org.jsoup</groupId>
+         <artifactId>jsoup</artifactId>
+         <version>${jsoup.version}</version>
+      </dependency>
+      <dependency>
          <groupId>co.wrisk.jcredstash</groupId>
          <artifactId>jcredstash</artifactId>
       </dependency>
