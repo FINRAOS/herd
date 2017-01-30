@@ -586,7 +586,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         validateSearchResponseFields(fields);
 
         // Create a new object to hold the responses found in the index search
-        ElasticsearchResponseDto elasticsearchResponseDto = new ElasticsearchResponseDto();
+        ElasticsearchResponseDto elasticsearchResponseDto;
 
         // If the request contains search filters
         if (!CollectionUtils.isEmpty(request.getBusinessObjectDefinitionSearchFilters()))
@@ -635,14 +635,13 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         }
 
         List<Facet> tagTypeFacets = null;
-        if (!CollectionUtils.isEmpty(request.getFacetFields()))
+        if (!CollectionUtils.isEmpty(request.getFacetFields()) && elasticsearchResponseDto.getTagTypeIndexSearchResponsedtos() != null)
         {
 
             //construct a list of facet information
             tagTypeFacets = new ArrayList<>();
 
-            for (TagTypeIndexSearchResponsedto tagTypeIndexSearchResponsedto : ImmutableSet
-                .copyOf(elasticsearchResponseDto.getTagTypeIndexSearchResponsedtos()))
+            for (TagTypeIndexSearchResponsedto tagTypeIndexSearchResponsedto : elasticsearchResponseDto.getTagTypeIndexSearchResponsedtos())
             {
 
                 List<Facet> tagFacets = new ArrayList<>();
