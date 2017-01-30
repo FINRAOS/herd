@@ -582,6 +582,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String TABLE_NAME = "Test_Table" + RANDOM_SUFFIX;
 
+    public static final long TAG_COUNT = 120;
+
+    public static final long TAG_TYPE_COUNT = 240;
+
     public static final String TAG_CODE = "UT_TagCode_1_" + RANDOM_SUFFIX;
 
     public static final String TAG_CODE_2 = "UT_TagCode_2_" + RANDOM_SUFFIX;

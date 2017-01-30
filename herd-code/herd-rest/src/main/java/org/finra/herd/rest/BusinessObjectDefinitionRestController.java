@@ -34,6 +34,8 @@ import org.finra.herd.model.api.xml.BusinessObjectDefinition;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptiveInformationUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionIndexResponse;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionIndexSearchRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionIndexSearchResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKeys;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchRequest;
@@ -201,8 +203,9 @@ public class BusinessObjectDefinitionRestController extends HerdBaseController
      */
     @RequestMapping(value = "/businessObjectDefinitions/indexSearch", method = RequestMethod.POST, consumes = {"application/xml", "application/json"})
     @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DEFINITIONS_INDEX_SEARCH_POST)
-    public BusinessObjectDefinitionSearchResponse indexSearchBusinessObjectDefinitions(
-        @RequestParam(value = "fields", required = false, defaultValue = "") Set<String> fields, @RequestBody BusinessObjectDefinitionSearchRequest request)
+    public BusinessObjectDefinitionIndexSearchResponse indexSearchBusinessObjectDefinitions(
+        @RequestParam(value = "fields", required = false, defaultValue = "") Set<String> fields,
+        @RequestBody BusinessObjectDefinitionIndexSearchRequest request)
     {
         return businessObjectDefinitionService.indexSearchBusinessObjectDefinitions(request, fields);
     }

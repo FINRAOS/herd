@@ -1125,6 +1125,29 @@
       </xs:annotation>
    </xs:element>
 
+   <xs:element name="businessObjectDefinitionIndexSearchRequest" type="businessObjectDefinitionIndexSearchRequest">
+      <xs:annotation>
+         <xs:documentation>A wrapper for business Object Definition indexed search request. The request accept only a single search filter and a single search
+            key
+         </xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="businessObjectDefinitionIndexSearchRequest">
+      <xs:all>
+         <xs:element name="businessObjectDefinitionSearchFilters" type="businessObjectDefinitionSearchFilters" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A list of business Object Definition indexed search filters. Only a single search filter is supported</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="facetFields" type="facetFields" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A list of Facet Fields to be included with the response. Only Tag facet information is supported</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
    <xs:complexType name="businessObjectDefinitionSearchRequest">
       <xs:all>
          <xs:element name="businessObjectDefinitionSearchFilters" type="businessObjectDefinitionSearchFilters" minOccurs="0">
@@ -1194,6 +1217,37 @@
       </xs:all>
    </xs:complexType>
 
+   <xs:element name="businessObjectDefinitionIndexSearchResponse" type="businessObjectDefinitionIndexSearchResponse"/>
+   <xs:complexType name="businessObjectDefinitionIndexSearchResponse">
+      <xs:all>
+         <xs:element name="businessObjectDefinitions" type="businessObjectDefinitions" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>
+                  Values that identify a business object definition search response.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="facets" type="facets" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>
+                  Values that identifies a list of facet information response.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="facets" type="facets"/>
+   <xs:complexType name="facets">
+      <xs:sequence>
+         <xs:element name="facet" type="facet" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>facet information</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
    <xs:element name="businessObjectDefinitions" type="businessObjectDefinitions"/>
    <xs:complexType name="businessObjectDefinitions">
       <xs:sequence>
@@ -1201,6 +1255,49 @@
          </xs:element>
       </xs:sequence>
    </xs:complexType>
+
+   <xs:complexType name="facetFields">
+      <xs:sequence>
+         <xs:element name="facetField" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>The Facet field information to be included with the response. Only Tag facet field is supported.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:element name="facet" type="facet"/>
+   <xs:complexType name="facet">
+      <xs:all>
+         <xs:element name="facetDisplayName" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Display name of the facet</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="facetCount" type="xs:long" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>count of the facet</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="facetType" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Type of the facet</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="facetId" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>unique identifier of the facet</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="facets" type="facets" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>list of facets</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
 
    <xs:element name="businessObjectDefinitionIndexResponse" type="businessObjectDefinitionIndexResponse"/>
    <xs:complexType name="businessObjectDefinitionIndexResponse">

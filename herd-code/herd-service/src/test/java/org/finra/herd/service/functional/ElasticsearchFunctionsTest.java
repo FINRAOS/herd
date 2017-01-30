@@ -31,8 +31,10 @@ import static org.mockito.Mockito.when;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -55,6 +57,10 @@ import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.aggregations.AggregationBuilder;
+import org.elasticsearch.search.aggregations.bucket.nested.Nested;
+import org.elasticsearch.search.aggregations.bucket.terms.Terms;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -64,6 +70,7 @@ import org.mockito.MockitoAnnotations;
 import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.dto.BusinessObjectDefinitionIndexSearchResponseDto;
+import org.finra.herd.model.dto.ElasticsearchResponseDto;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.TagEntity;
 
@@ -611,7 +618,7 @@ public class ElasticsearchFunctionsTest
     @Test
     public void testFindAllBusinessObjectDefinitionsFunction() throws Exception
     {
-        BiFunction<String, String, List<BusinessObjectDefinitionIndexSearchResponseDto>> findAllBusinessObjectDefinitionsFunction =
+        TriFunction<String, String, Set<String>, ElasticsearchResponseDto> findAllBusinessObjectDefinitionsFunction =
             searchFunctions.getFindAllBusinessObjectDefinitionsFunction();
         assertThat("Function is null.", findAllBusinessObjectDefinitionsFunction, not(nullValue()));
         assertThat("Find all business object definitions function not an instance of BiFunction.", findAllBusinessObjectDefinitionsFunction,
@@ -621,6 +628,7 @@ public class ElasticsearchFunctionsTest
         SearchRequestBuilder searchRequestBuilderWithTypes = mock(SearchRequestBuilder.class);
         SearchRequestBuilder searchRequestBuilderWithScroll = mock(SearchRequestBuilder.class);
         SearchRequestBuilder searchRequestBuilderWithSize = mock(SearchRequestBuilder.class);
+        SearchRequestBuilder searchRequestBuilderWithAgg = mock(SearchRequestBuilder.class);
         SearchResponse searchResponse = mock(SearchResponse.class);
         SearchHits searchHits = mock(SearchHits.class);
         SearchHit searchHit1 = mock(SearchHit.class);
@@ -632,6 +640,24 @@ public class ElasticsearchFunctionsTest
         SearchResponse searchResponseScroll = mock(SearchResponse.class);
         SearchHits searchHitsScroll = mock(SearchHits.class);
         SearchHit[] searchHitArrayScroll = new SearchHit[0];
+        AggregationBuilder aggregationBuilder = mock(AggregationBuilder.class);
+
+        Nested aggregation = mock(Nested.class);
+        Terms tagTypeTerms = mock(Terms.class);
+        Terms.Bucket tagTypeBucket1 = mock(Terms.Bucket.class);
+        List<Terms.Bucket> tagTypeBucketList = new ArrayList<>();
+        tagTypeBucketList.add(tagTypeBucket1);
+
+        Terms tagTerms = mock(Terms.class);
+        Terms.Bucket tagBucket1 = mock(Terms.Bucket.class);
+        List<Terms.Bucket> tagBucketList = new ArrayList<>();
+        tagBucketList.add(tagBucket1);
+
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        searchSourceBuilder
+            .fetchSource(new String[] {"DATA_PROVIDER_NAME_SOURCE", "DESCRIPTION_SOURCE", "DISPLAY_NAME_SOURCE", "NAME_SOURCE", "NAMESPACE_CODE_SOURCE"}, null);
+
+
 
         @SuppressWarnings("unchecked")
         ListenableActionFuture<SearchResponse> listenableActionFuture = mock(ListenableActionFuture.class);
@@ -643,10 +669,23 @@ public class ElasticsearchFunctionsTest
         when(searchRequestBuilder.setTypes("DOCUMENT_TYPE")).thenReturn(searchRequestBuilderWithTypes);
         when(searchRequestBuilderWithTypes.setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME))).thenReturn(searchRequestBuilderWithScroll);
         when(searchRequestBuilderWithScroll.setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE)).thenReturn(searchRequestBuilderWithSize);
+
+
+        when(searchRequestBuilderWithSize.addAggregation(aggregationBuilder)).thenReturn(searchRequestBuilderWithAgg);
+
         when(searchRequestBuilder.execute()).thenReturn(listenableActionFuture);
         when(listenableActionFuture.actionGet()).thenReturn(searchResponse);
+
+        when(searchResponse.getAggregations().get("bdefTag")).thenReturn(aggregation);
+        when(aggregation.getAggregations().get("tagType")).thenReturn(tagTypeTerms);
+        when(tagTypeTerms.getBuckets()).thenReturn(tagTypeBucketList);
+        when(tagTypeBucket1.getAggregations().get("tag")).thenReturn(tagTerms);
+        when(tagTerms.getBuckets()).thenReturn(tagBucketList);
+
+
         when(searchResponse.getHits()).thenReturn(searchHits);
         when(searchHits.hits()).thenReturn(searchHitArray);
+
         when(transportClient.prepareSearchScroll(any())).thenReturn(searchScrollRequestBuilder);
         when(searchScrollRequestBuilder.execute()).thenReturn(listenableActionFutureScroll);
         when(listenableActionFutureScroll.actionGet()).thenReturn(searchResponseScroll);
@@ -654,11 +693,15 @@ public class ElasticsearchFunctionsTest
         when(searchHitsScroll.hits()).thenReturn(searchHitArrayScroll);
         when(jsonHelper.unmarshallJsonToObject(any(), any())).thenReturn(new BusinessObjectDefinitionEntity());
 
+
         // Call the method under test
+        ElasticsearchResponseDto elasticsearchResponseDto = findAllBusinessObjectDefinitionsFunction.apply("INDEX_NAME", "DOCUMENT_TYPE", new HashSet<>());
         List<BusinessObjectDefinitionIndexSearchResponseDto> businessObjectDefinitionEntityList =
-            findAllBusinessObjectDefinitionsFunction.apply("INDEX_NAME", "DOCUMENT_TYPE");
+            elasticsearchResponseDto.getBusinessObjectDefinitionIndexSearchResponseDtos();
 
         assertThat("Business object definition entity list is null.", businessObjectDefinitionEntityList, not(nullValue()));
+        assertThat("Tag Type response is null ", elasticsearchResponseDto.getTagTypeIndexSearchResponsedtos(), not(nullValue()));
+        //assertThat("Tag response is null ", elasticsearchResponseDto.getTagIndexSearchResponseDtos(), not(nullValue()));
 
         // Verify the calls to external methods
         verify(transportClient, times(1)).prepareSearch("INDEX_NAME");
@@ -680,7 +723,7 @@ public class ElasticsearchFunctionsTest
     @Test
     public void testFindAllBusinessObjectDefinitionsFunctionException() throws Exception
     {
-        BiFunction<String, String, List<BusinessObjectDefinitionIndexSearchResponseDto>> findAllBusinessObjectDefinitionsFunction =
+        TriFunction<String, String, Set<String>, ElasticsearchResponseDto> findAllBusinessObjectDefinitionsFunction =
             searchFunctions.getFindAllBusinessObjectDefinitionsFunction();
         assertThat("Function is null.", findAllBusinessObjectDefinitionsFunction, not(nullValue()));
         assertThat("Find all business object definitions function not an instance of BiFunction.", findAllBusinessObjectDefinitionsFunction,
@@ -725,7 +768,7 @@ public class ElasticsearchFunctionsTest
 
         // Call the method under test
         List<BusinessObjectDefinitionIndexSearchResponseDto> businessObjectDefinitionEntityList =
-            findAllBusinessObjectDefinitionsFunction.apply("INDEX_NAME", "DOCUMENT_TYPE");
+            findAllBusinessObjectDefinitionsFunction.apply("INDEX_NAME", "DOCUMENT_TYPE", new HashSet<>()).getBusinessObjectDefinitionIndexSearchResponseDtos();
 
         assertThat("Business object definition entity list is null.", businessObjectDefinitionEntityList, not(nullValue()));
 
@@ -749,7 +792,7 @@ public class ElasticsearchFunctionsTest
     @Test
     public void testSearchBusinessObjectDefinitionsByTagsFunction() throws Exception
     {
-        TriFunction<String, String, List<TagEntity>, List<BusinessObjectDefinitionIndexSearchResponseDto>> searchBusinessObjectDefinitionsByTagsFunction =
+        QuadFunction<String, String, List<TagEntity>, Set<String>, ElasticsearchResponseDto> searchBusinessObjectDefinitionsByTagsFunction =
             searchFunctions.getSearchBusinessObjectDefinitionsByTagsFunction();
         assertThat("Function is null.", searchBusinessObjectDefinitionsByTagsFunction, not(nullValue()));
         assertThat("Search business object definitions by tags function not an instance of TriFunction.", searchBusinessObjectDefinitionsByTagsFunction,
@@ -757,7 +800,8 @@ public class ElasticsearchFunctionsTest
 
         // Call the method under test
         List<BusinessObjectDefinitionIndexSearchResponseDto> businessObjectDefinitionEntityList =
-            searchBusinessObjectDefinitionsByTagsFunction.apply("INDEX_NAME", "DOCUMENT_TYPE", new ArrayList<>());
+            searchBusinessObjectDefinitionsByTagsFunction.apply("INDEX_NAME", "DOCUMENT_TYPE", new ArrayList<>(), new HashSet<>())
+                .getBusinessObjectDefinitionIndexSearchResponseDtos();
 
         assertThat("Business object definition entity list is null.", businessObjectDefinitionEntityList, not(nullValue()));
     }

@@ -73,4 +73,5 @@ public class BusinessObjectDefinitionHelper
         key.setBusinessObjectDefinitionName(
             alternateKeyHelper.validateStringParameter("business object definition name", key.getBusinessObjectDefinitionName()));
     }
+
 }

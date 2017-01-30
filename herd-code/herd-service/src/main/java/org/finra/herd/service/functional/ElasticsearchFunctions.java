@@ -21,12 +21,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Joiner;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequestBuilder;
@@ -48,6 +50,9 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.bucket.nested.Nested;
+import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
@@ -59,7 +64,11 @@ import org.springframework.stereotype.Component;
 import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.dto.BusinessObjectDefinitionIndexSearchResponseDto;
+import org.finra.herd.model.dto.ElasticsearchResponseDto;
+import org.finra.herd.model.dto.TagIndexSearchResponseDto;
+import org.finra.herd.model.dto.TagTypeIndexSearchResponsedto;
 import org.finra.herd.model.jpa.TagEntity;
+
 
 
 /**
@@ -117,6 +126,61 @@ public class ElasticsearchFunctions implements SearchFunctions
      * The logger used to write messages to the log
      */
     private static final Logger LOGGER = LoggerFactory.getLogger(ElasticsearchFunctions.class);
+
+    /**
+     * The nested path of business object definition tags
+     */
+    public static final String NESTED_BDEFTAGS_PATH = "businessObjectDefinitionTags.tag";
+
+    /**
+     * The tag type code field
+     */
+    public static final String TAGTYPE_CODE_FIELD = NESTED_BDEFTAGS_PATH + ".tagType.code.keyword";
+
+    /**
+     * The tag type display name field
+     */
+    public static final String TAGTYPE_NAME_FIELD = NESTED_BDEFTAGS_PATH + ".tagType.displayName.keyword";
+
+    /**
+     * The tag code field
+     */
+    public static final String TAG_CODE_FIELD = NESTED_BDEFTAGS_PATH + ".tagCode.keyword";
+
+    /**
+     * The tag display name field
+     */
+    public static final String TAG_NAME_FIELD = NESTED_BDEFTAGS_PATH + ".displayName.keyword";
+
+    /**
+     * The nested aggregation name. User defined.
+     */
+    public static final String BDEFTAGS_AGGREGATION = "businessObjectDefinitionTags";
+
+    /**
+     * The user defined tag type code sub aggregation name.
+     */
+    public static final String TAGTYPE_CODE_AGGREGATION = "tagTypeCodes";
+
+    /**
+     * The user defined tag type display name sub aggregation name.
+     */
+    public static final String TAGTYPE_NAME_AGGREGATION = "tagTypeDisplayNames";
+
+    /**
+     * The user defined tag code sub aggregation name.
+     */
+    public static final String TAG_CODE_AGGREGATION = "tagCodes";
+
+    /**
+     * The user defined tag display name sub aggregation name.
+     */
+    public static final String TAG_NAME_AGGREGATION = "tagDisplayNames";
+
+    /**
+     * The tag Facet Field  name
+     */
+    public static final String TAG_FACET = "TAG";
 
     /**
      * The transport client is a connection to the elasticsearch index
@@ -325,12 +389,12 @@ public class ElasticsearchFunctions implements SearchFunctions
 
     /**
      * The search business object definitions by tags function will take a list of tag entities and return a list of business object definition entities. The
-     * function will search the search index based on tag code and tag type code.
+     * function will search the search index based on tag code and tag type code. The function will retrieve the facet information based on the facet field.
      */
-    private final TriFunction<String, String, List<TagEntity>, List<BusinessObjectDefinitionIndexSearchResponseDto>>
-        searchBusinessObjectDefinitionsByTagsFunction = (indexName, documentType, tagEntityList) -> {
+    private final QuadFunction<String, String, List<TagEntity>, Set<String>, ElasticsearchResponseDto> searchBusinessObjectDefinitionsByTagsFunction =
+        (indexName, documentType, tagEntityList, facetFieldsList) -> {
 
-        LOGGER
+            LOGGER
             .info("Searching Elasticsearch business object definition documents from index, indexName={} and documentType={}, by tagEntityList={}.", indexName,
                 documentType, tagEntityListToString(tagEntityList));
 
@@ -346,10 +410,9 @@ public class ElasticsearchFunctions implements SearchFunctions
             queryBuilderList.add(queryBuilder);
         }));
 
-        List<BusinessObjectDefinitionIndexSearchResponseDto> businessObjectDefinitionIndexSearchResponseDtoList = new ArrayList<>();
-
-        // Only perform the query if there is at least one query builder
-        if (queryBuilderList.size() > 0)
+        ElasticsearchResponseDto elasticsearchResponseDto = new ElasticsearchResponseDto();
+            // Only perform the query if there is at least one query builder.
+            if (queryBuilderList.size() > 0)
         {
             // Combined bool should match query for tag type code and tag code
             BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
@@ -368,17 +431,35 @@ public class ElasticsearchFunctions implements SearchFunctions
                 .setSource(searchSourceBuilder);
             searchRequestBuilder.addSort(SortBuilders.fieldSort(BUSINESS_OBJECT_DEFINITION_SORT_FIELD).order(SortOrder.ASC));
 
-            businessObjectDefinitionIndexSearchResponseDtoList = scrollSearchResultsIntoBusinessObjectDefinitionEntityList(searchRequestBuilder);
+            //Add aggregation builder if facet fields are present
+            if (!CollectionUtils.isEmpty(facetFieldsList))
+            {
+                //tag facet field
+                if (facetFieldsList.contains(TAG_FACET))
+                {
+                    searchRequestBuilder.addAggregation(AggregationBuilders.nested(BDEFTAGS_AGGREGATION, NESTED_BDEFTAGS_PATH).subAggregation(
+                        AggregationBuilders.terms(TAGTYPE_CODE_AGGREGATION).field(TAGTYPE_CODE_FIELD).subAggregation(
+                            AggregationBuilders.terms(TAGTYPE_NAME_AGGREGATION).field(TAGTYPE_NAME_FIELD).subAggregation(
+                                AggregationBuilders.terms(TAG_CODE_AGGREGATION).field(TAG_CODE_FIELD)
+                                    .subAggregation(AggregationBuilders.terms(TAG_NAME_AGGREGATION).field(TAG_NAME_FIELD))))));
+
+                    elasticsearchResponseDto.setTagTypeIndexSearchResponsedtos(searchResponseIntoFacetInformation(searchRequestBuilder));
+                }
+            }
+
+            elasticsearchResponseDto
+                .setBusinessObjectDefinitionIndexSearchResponseDtos(scrollSearchResultsIntoBusinessObjectDefinitionDto(searchRequestBuilder));
+            return elasticsearchResponseDto;
         }
 
-        return businessObjectDefinitionIndexSearchResponseDtoList;
-    };
+        return new ElasticsearchResponseDto();
+        };
 
     /**
      * The find all business object definitions function will return all business object definition entities in the search index.
      */
-    private final BiFunction<String, String, List<BusinessObjectDefinitionIndexSearchResponseDto>> findAllBusinessObjectDefinitionsFunction =
-        (indexName, documentType) -> {
+    private final TriFunction<String, String, Set<String>, ElasticsearchResponseDto> findAllBusinessObjectDefinitionsFunction =
+        (indexName, documentType, facetFieldsList) -> {
 
             LOGGER.info("Elasticsearch get all business object definition documents from index, indexName={} and documentType={}.", indexName, documentType);
 
@@ -386,14 +467,79 @@ public class ElasticsearchFunctions implements SearchFunctions
             searchSourceBuilder
                 .fetchSource(new String[] {DATA_PROVIDER_NAME_SOURCE, DESCRIPTION_SOURCE, DISPLAY_NAME_SOURCE, NAME_SOURCE, NAMESPACE_CODE_SOURCE}, null);
 
+            ElasticsearchResponseDto elasticsearchResponseDto = new ElasticsearchResponseDto();
+
             // Create a search request and set the scroll time and scroll size
             final SearchRequestBuilder searchRequestBuilder = transportClient.prepareSearch(indexName);
             searchRequestBuilder.setTypes(documentType).setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME)).setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE)
                 .setSource(searchSourceBuilder);
             searchRequestBuilder.addSort(SortBuilders.fieldSort(BUSINESS_OBJECT_DEFINITION_SORT_FIELD).order(SortOrder.ASC));
 
-            return scrollSearchResultsIntoBusinessObjectDefinitionEntityList(searchRequestBuilder);
+            //Add aggregation builder if facet fields are present
+            if (!CollectionUtils.isEmpty(facetFieldsList))
+            {
+                //tag facet field
+                if (facetFieldsList.contains(TAG_FACET))
+                {
+                    searchRequestBuilder.addAggregation(AggregationBuilders.nested(BDEFTAGS_AGGREGATION, NESTED_BDEFTAGS_PATH).subAggregation(
+                        AggregationBuilders.terms(TAGTYPE_CODE_AGGREGATION).field(TAGTYPE_CODE_FIELD).subAggregation(
+                            AggregationBuilders.terms(TAGTYPE_NAME_AGGREGATION).field(TAGTYPE_NAME_FIELD).subAggregation(
+                                AggregationBuilders.terms(TAG_CODE_AGGREGATION).field(TAG_CODE_FIELD)
+                                    .subAggregation(AggregationBuilders.terms(TAG_NAME_AGGREGATION).field(TAG_NAME_FIELD))))));
+
+                    elasticsearchResponseDto.setTagTypeIndexSearchResponsedtos(searchResponseIntoFacetInformation(searchRequestBuilder));
+                }
+            }
+
+            elasticsearchResponseDto
+                .setBusinessObjectDefinitionIndexSearchResponseDtos(scrollSearchResultsIntoBusinessObjectDefinitionDto(searchRequestBuilder));
+
+            return elasticsearchResponseDto;
         };
+
+    private List<TagTypeIndexSearchResponsedto> searchResponseIntoFacetInformation(final SearchRequestBuilder searchRequestBuilder)
+    {
+
+        // Retrieve the search response
+        SearchResponse searchResponse = searchRequestBuilder.execute().actionGet();
+
+        Nested aggregation = searchResponse.getAggregations().get(BDEFTAGS_AGGREGATION);
+        Terms tagTypeCodeAgg = aggregation.getAggregations().get(TAGTYPE_CODE_AGGREGATION);
+
+        List<TagTypeIndexSearchResponsedto> tagTypeIndexSearchResponsedtos = new ArrayList<>();
+
+        for (Terms.Bucket tagTypeCodeEntry : tagTypeCodeAgg.getBuckets())
+        {
+            List<TagIndexSearchResponseDto> tagIndexSearchResponseDtos = new ArrayList<>();
+            ;
+            TagTypeIndexSearchResponsedto tagTypeIndexSearchResponsedto =
+                new TagTypeIndexSearchResponsedto(tagTypeCodeEntry.getKeyAsString(), tagTypeCodeEntry.getDocCount(), tagIndexSearchResponseDtos);
+            tagTypeIndexSearchResponsedtos.add(tagTypeIndexSearchResponsedto);
+
+            Terms tagTypeDisplayNameAggs = tagTypeCodeEntry.getAggregations().get(TAGTYPE_NAME_AGGREGATION);
+            for (Terms.Bucket tagTypeDisplayNameEntry : tagTypeDisplayNameAggs.getBuckets())
+            {
+                tagTypeIndexSearchResponsedto.setDisplayName(tagTypeDisplayNameEntry.getKeyAsString());
+
+                Terms tagCodeAggs = tagTypeDisplayNameEntry.getAggregations().get(TAG_CODE_AGGREGATION);
+                TagIndexSearchResponseDto tagIndexSearchResponseDto;
+
+                for (Terms.Bucket tagCodeEntry : tagCodeAggs.getBuckets())
+                {
+                    tagIndexSearchResponseDto = new TagIndexSearchResponseDto(tagCodeEntry.getKeyAsString(), tagCodeEntry.getDocCount());
+                    tagIndexSearchResponseDtos.add(tagIndexSearchResponseDto);
+
+                    Terms tagNameAggs = tagCodeEntry.getAggregations().get(TAG_NAME_AGGREGATION);
+                    for (Terms.Bucket tagNameEntry : tagNameAggs.getBuckets())
+                    {
+                        tagIndexSearchResponseDto.setTagDisplayName(tagNameEntry.getKeyAsString());
+                    }
+                }
+            }
+        }
+
+        return tagTypeIndexSearchResponsedtos;
+    }
 
     /**
      * Private method to create a String representation of the list of tag entities for logging.
@@ -419,8 +565,7 @@ public class ElasticsearchFunctions implements SearchFunctions
      *
      * @return list of business object definition entities
      */
-    private List<BusinessObjectDefinitionIndexSearchResponseDto> scrollSearchResultsIntoBusinessObjectDefinitionEntityList(
-        final SearchRequestBuilder searchRequestBuilder)
+    private List<BusinessObjectDefinitionIndexSearchResponseDto> scrollSearchResultsIntoBusinessObjectDefinitionDto(final SearchRequestBuilder searchRequestBuilder)
     {
         // Retrieve the search response
         SearchResponse searchResponse = searchRequestBuilder.execute().actionGet();
@@ -486,6 +631,8 @@ public class ElasticsearchFunctions implements SearchFunctions
             LOGGER.error("Bulk response error = {}", bulkResponse.buildFailureMessage());
         }
     };
+
+
 
     @Override
     public QuadConsumer<String, String, String, String> getIndexFunction()
@@ -554,13 +701,13 @@ public class ElasticsearchFunctions implements SearchFunctions
     }
 
     @Override
-    public BiFunction<String, String, List<BusinessObjectDefinitionIndexSearchResponseDto>> getFindAllBusinessObjectDefinitionsFunction()
+    public TriFunction<String, String, Set<String>, ElasticsearchResponseDto> getFindAllBusinessObjectDefinitionsFunction()
     {
         return findAllBusinessObjectDefinitionsFunction;
     }
 
     @Override
-    public TriFunction<String, String, List<TagEntity>, List<BusinessObjectDefinitionIndexSearchResponseDto>> getSearchBusinessObjectDefinitionsByTagsFunction()
+    public QuadFunction<String, String, List<TagEntity>, Set<String>, ElasticsearchResponseDto> getSearchBusinessObjectDefinitionsByTagsFunction()
     {
         return searchBusinessObjectDefinitionsByTagsFunction;
     }

@@ -43,10 +43,10 @@ import org.springframework.scheduling.annotation.AsyncResult;
 
 import org.finra.herd.model.api.xml.BusinessObjectDefinition;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionIndexResponse;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionIndexSearchRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionIndexSearchResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchFilter;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchKey;
-import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchRequest;
-import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionValidateResponse;
 import org.finra.herd.model.api.xml.TagKey;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
@@ -109,8 +109,8 @@ public class BusinessObjectDefinitionRestControllerIndexTest extends AbstractRes
         businessObjectDefinitionSearchFilterList.add(new BusinessObjectDefinitionSearchFilter(businessObjectDefinitionSearchKeyList));
 
         // Create a new business object definition search request that will be used when testing the index search business object definitions method
-        BusinessObjectDefinitionSearchRequest businessObjectDefinitionSearchRequest =
-            new BusinessObjectDefinitionSearchRequest(businessObjectDefinitionSearchFilterList);
+        BusinessObjectDefinitionIndexSearchRequest businessObjectDefinitionSearchRequest =
+            new BusinessObjectDefinitionIndexSearchRequest(businessObjectDefinitionSearchFilterList, null);
 
         // Create a new fields set that will be used when testing the index search business object definitions method
         Set<String> fields = Sets.newHashSet(FIELD_DATA_PROVIDER_NAME, FIELD_DISPLAY_NAME, FIELD_SHORT_DESCRIPTION);
@@ -144,7 +144,7 @@ public class BusinessObjectDefinitionRestControllerIndexTest extends AbstractRes
         }
 
         // Construct business object search response.
-        BusinessObjectDefinitionSearchResponse businessObjectDefinitionSearchResponse = new BusinessObjectDefinitionSearchResponse();
+        BusinessObjectDefinitionIndexSearchResponse businessObjectDefinitionSearchResponse = new BusinessObjectDefinitionIndexSearchResponse();
         businessObjectDefinitionSearchResponse.setBusinessObjectDefinitions(businessObjectDefinitions);
 
         // Mock the call to the business object definition service
@@ -152,7 +152,7 @@ public class BusinessObjectDefinitionRestControllerIndexTest extends AbstractRes
             .thenReturn(businessObjectDefinitionSearchResponse);
 
         // Create a business object definition.
-        BusinessObjectDefinitionSearchResponse businessObjectDefinitionSearchResponseFromRestCall =
+        BusinessObjectDefinitionIndexSearchResponse businessObjectDefinitionSearchResponseFromRestCall =
             businessObjectDefinitionRestController.indexSearchBusinessObjectDefinitions(fields, businessObjectDefinitionSearchRequest);
 
         // Verify the method call to businessObjectDefinitionService.indexAllBusinessObjectDefinitions()
@@ -163,7 +163,7 @@ public class BusinessObjectDefinitionRestControllerIndexTest extends AbstractRes
         assertThat("Business object definition index search response was not correct.", businessObjectDefinitionSearchResponseFromRestCall,
             is(businessObjectDefinitionSearchResponse));
         assertThat("Business object definition index search response was not an instance of BusinessObjectDefinitionSearchResponse.class.",
-            businessObjectDefinitionSearchResponseFromRestCall, instanceOf(BusinessObjectDefinitionSearchResponse.class));
+            businessObjectDefinitionSearchResponseFromRestCall, instanceOf(BusinessObjectDefinitionIndexSearchResponse.class));
     }
 
     @Test
