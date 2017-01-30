@@ -471,7 +471,7 @@ public class ElasticsearchFunctions implements SearchFunctions
             searchRequestBuilder.addSort(SortBuilders.fieldSort(BUSINESS_OBJECT_DEFINITION_SORT_FIELD).order(SortOrder.ASC));
 
             //Add aggregation builder if facet fields are present
-            if (!CollectionUtils.isEmpty(facetFieldsList) && (facetFieldsList.contains(TAG_FACET))
+            if (!CollectionUtils.isEmpty(facetFieldsList) && (facetFieldsList.contains(TAG_FACET)))
             {
                 searchRequestBuilder.addAggregation(AggregationBuilders.nested(BDEFTAGS_AGGREGATION, NESTED_BDEFTAGS_PATH).subAggregation(
                     AggregationBuilders.terms(TAGTYPE_CODE_AGGREGATION).field(TAGTYPE_CODE_FIELD).subAggregation(
