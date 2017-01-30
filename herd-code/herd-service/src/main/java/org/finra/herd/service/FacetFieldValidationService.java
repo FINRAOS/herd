@@ -37,6 +37,7 @@ public interface FacetFieldValidationService
      * Validates a set of facet fields. This method also trims and lowers the fields.
      *
      * @param facetFields the facet fields to be validated
+     * @return the set of facet fields
      */
     default Set<String> validateFacetFields(Set<String> facetFields)
     {
