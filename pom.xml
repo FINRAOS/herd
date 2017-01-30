@@ -121,6 +121,7 @@
       <versions.maven.plugin.version>2.2</versions.maven.plugin.version>
       <mockito.version>1.10.19</mockito.version>
       <nexus.staging.maven.plugin.version>1.6.7</nexus.staging.maven.plugin.version>
+      <jsoup.version>1.10.2</jsoup.version>
 
       <!-- Compiler Information -->
       <maven.compiler.source>1.8</maven.compiler.source>
@@ -835,6 +836,12 @@
             <artifactId>jcredstash</artifactId>
             <version>${jcredstash.version}</version>
          </dependency>
+         <dependency>
+            <!-- jsoup HTML parser library @ http://jsoup.org/ -->
+            <groupId>org.jsoup</groupId>
+            <artifactId>jsoup</artifactId>
+            <version>${jsoup.version}</version>
+         </dependency>
 
       </dependencies>
 
@@ -1131,6 +1138,17 @@
          <organizationUrl>http://www.finra.org</organizationUrl>
          <roles>
             <role>database administrator</role>
+         </roles>
+      </developer>
+      <developer>
+         <id>kenneths</id>
+         <name>Kenneth Steward</name>
+         <email>keni.steward@gmail.com</email>
+         <url>https://github.com/kenisteward</url>
+         <organization>FINRA</organization>
+         <organizationUrl>https://www.linkedin.com/in/kenisteward</organizationUrl>
+         <roles>
+            <role>developer</role>
          </roles>
       </developer>
       <developer>
