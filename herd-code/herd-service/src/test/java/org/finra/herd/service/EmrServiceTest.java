@@ -463,6 +463,30 @@ public class EmrServiceTest extends AbstractServiceTest
     }
 
     /**
+     * This method tests security configuration.
+     */
+    @Test
+    public void testCreateEmrClusterSecurityConfiguration() throws Exception
+    {
+        // Create the namespace entity.
+        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
+
+        String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream());
+
+        EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
+
+        // Set the security configuration.
+        emrClusterDefinition.setSecurityConfiguration("securityConfiguration");
+        configXml = xmlHelper.objectToXml(emrClusterDefinition);
+
+        emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME, configXml);
+
+        // Create a new EMR cluster create request.
+        EmrClusterCreateRequest request = getNewEmrClusterCreateRequest();
+        emrService.createCluster(request);
+    }
+
+    /**
      * This method tests additionalInfo
      */
     @Test
@@ -907,6 +931,8 @@ public class EmrServiceTest extends AbstractServiceTest
         expectedEmrClusterDefinition.setSubnetId(emrClusterDefinitionOverride.getSubnetId());
         emrClusterDefinitionOverride.setSupportedProduct("test" + Math.random());
         expectedEmrClusterDefinition.setSupportedProduct(emrClusterDefinitionOverride.getSupportedProduct());
+        emrClusterDefinitionOverride.setSecurityConfiguration("test" + Math.random());
+        expectedEmrClusterDefinition.setSecurityConfiguration(emrClusterDefinitionOverride.getSecurityConfiguration());
         emrClusterDefinitionOverride.setTerminationProtection(!expectedEmrClusterDefinition.isTerminationProtection());
         expectedEmrClusterDefinition.setTerminationProtection(emrClusterDefinitionOverride.isTerminationProtection());
         emrClusterDefinitionOverride.setVisibleToAll(!expectedEmrClusterDefinition.isVisibleToAll());
