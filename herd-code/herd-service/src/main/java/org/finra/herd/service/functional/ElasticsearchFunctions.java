@@ -179,7 +179,7 @@ public class ElasticsearchFunctions implements SearchFunctions
     /**
      * The tag Facet Field  name
      */
-    public static final String TAG_FACET = "TAG";
+    public static final String TAG_FACET = "tag";
 
     /**
      * The transport client is a connection to the elasticsearch index

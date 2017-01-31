@@ -587,6 +587,12 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         // Create a new object to hold the responses found in the index search
         ElasticsearchResponseDto elasticsearchResponseDto;
 
+        Set<String> facetFields = new HashSet<>();
+        if (!CollectionUtils.isEmpty(request.getFacetFields()))
+        {
+            facetFields = validateFacetFields(new HashSet<String>(request.getFacetFields()));
+        }
+
         // If the request contains search filters
         if (!CollectionUtils.isEmpty(request.getBusinessObjectDefinitionSearchFilters()))
         {
@@ -610,14 +616,13 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 
             // Use the tag type entities list to search in the search index for business object definitions
             elasticsearchResponseDto = searchFunctions.getSearchBusinessObjectDefinitionsByTagsFunction()
-                .apply(indexName, documentType, tagEntities, validateFacetFields(new HashSet<String>(request.getFacetFields())));
+                .apply(indexName, documentType, tagEntities, facetFields);
         }
         else
         {
 
             // Else get all of the business object definitions
-            elasticsearchResponseDto = searchFunctions.getFindAllBusinessObjectDefinitionsFunction()
-                .apply(indexName, documentType, validateFacetFields(new HashSet<String>(request.getFacetFields())));
+            elasticsearchResponseDto = searchFunctions.getFindAllBusinessObjectDefinitionsFunction().apply(indexName, documentType, facetFields);
         }
 
 
