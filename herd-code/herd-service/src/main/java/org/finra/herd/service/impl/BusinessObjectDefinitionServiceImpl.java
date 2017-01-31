@@ -615,8 +615,8 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
             }
 
             // Use the tag type entities list to search in the search index for business object definitions
-            elasticsearchResponseDto = searchFunctions.getSearchBusinessObjectDefinitionsByTagsFunction()
-                .apply(indexName, documentType, tagEntities, facetFields);
+            elasticsearchResponseDto =
+                searchFunctions.getSearchBusinessObjectDefinitionsByTagsFunction().apply(indexName, documentType, tagEntities, facetFields);
         }
         else
         {
@@ -635,7 +635,8 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
             for (BusinessObjectDefinitionIndexSearchResponseDto businessObjectDefinitionIndexSearchResponseDto : ImmutableSet
                 .copyOf(elasticsearchResponseDto.getBusinessObjectDefinitionIndexSearchResponseDtos()))
             {
-                // Convert the business object definition entity to a business object definition and add it to the list of business object definitions that will be
+                // Convert the business object definition entity to a business object definition and
+                // add it to the list of business object definitions that will be
                 // returned as a part of the search response
                 businessObjectDefinitions.add(createBusinessObjectDefinitionFromDto(businessObjectDefinitionIndexSearchResponseDto, fields));
             }
