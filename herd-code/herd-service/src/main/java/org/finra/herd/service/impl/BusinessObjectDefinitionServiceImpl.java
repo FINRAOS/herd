@@ -630,21 +630,22 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         List<BusinessObjectDefinition> businessObjectDefinitions = new ArrayList<>();
 
         // Retrieve all unique business object definition entities and construct a list of business object definitions based on the requested fields.
-        for (BusinessObjectDefinitionIndexSearchResponseDto businessObjectDefinitionIndexSearchResponseDto : ImmutableSet
-            .copyOf(elasticsearchResponseDto.getBusinessObjectDefinitionIndexSearchResponseDtos()))
+        if (elasticsearchResponseDto.getBusinessObjectDefinitionIndexSearchResponseDtos() != null)
         {
-            // Convert the business object definition entity to a business object definition and add it to the list of business object definitions that will be
-            // returned as a part of the search response
-            businessObjectDefinitions.add(createBusinessObjectDefinitionFromDto(businessObjectDefinitionIndexSearchResponseDto, fields));
+            for (BusinessObjectDefinitionIndexSearchResponseDto businessObjectDefinitionIndexSearchResponseDto : ImmutableSet
+                .copyOf(elasticsearchResponseDto.getBusinessObjectDefinitionIndexSearchResponseDtos()))
+            {
+                // Convert the business object definition entity to a business object definition and add it to the list of business object definitions that will be
+                // returned as a part of the search response
+                businessObjectDefinitions.add(createBusinessObjectDefinitionFromDto(businessObjectDefinitionIndexSearchResponseDto, fields));
+            }
         }
 
         List<Facet> tagTypeFacets = null;
         if (!CollectionUtils.isEmpty(request.getFacetFields()) && elasticsearchResponseDto.getTagTypeIndexSearchResponsedtos() != null)
         {
-
-            //construct a list of facet information
             tagTypeFacets = new ArrayList<>();
-
+            //construct a list of facet information
             for (TagTypeIndexSearchResponsedto tagTypeIndexSearchResponsedto : elasticsearchResponseDto.getTagTypeIndexSearchResponsedtos())
             {
 
