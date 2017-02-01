@@ -152,9 +152,9 @@ public class ElasticsearchFunctions implements SearchFunctions
     public static final String TAG_NAME_FIELD = NESTED_BDEFTAGS_PATH + ".displayName.keyword";
 
     /**
-     * The nested aggregation name. User defined.
+     * The nested aggregation name for tag facet. User defined.
      */
-    public static final String BDEFTAGS_AGGREGATION = "businessObjectDefinitionTags";
+    public static final String TAG_FACET_AGGS = "tagFacet";
 
     /**
      * The user defined tag type code sub aggregation name.
@@ -180,6 +180,31 @@ public class ElasticsearchFunctions implements SearchFunctions
      * The tag Facet Field  name
      */
     public static final String TAG_FACET = "tag";
+
+    /**
+     * The user defined agg name for tag type facet.
+     */
+    public static final String TAG_TYPE_FACET_AGGS = "tagTypeFacet";
+
+    /**
+     * The namespace code sub agg
+     */
+    public static final String NAMESPACE_CODE_AGGS = "namespaceCodes";
+
+    /**
+     * The business object definition name sub agg
+     */
+    public static final String BDEF_NAME_AGGS = "bdefName";
+
+    /**
+     * namespace field
+     */
+    public static final String NAMESPACE_FIELD = "namespace.code.keyword";
+
+    /**
+     * business object definition name field
+     */
+    public static final String BDEF_NAME_FIELD = "name.keyword";
 
     /**
      * The transport client is a connection to the elasticsearch index
@@ -430,17 +455,7 @@ public class ElasticsearchFunctions implements SearchFunctions
                 searchRequestBuilder.addSort(SortBuilders.fieldSort(BUSINESS_OBJECT_DEFINITION_SORT_FIELD).order(SortOrder.ASC));
 
                 //Add aggregation builder if facet fields are present
-                if (!CollectionUtils.isEmpty(facetFieldsList) && (facetFieldsList.contains(TAG_FACET)))
-            {
-
-                searchRequestBuilder.addAggregation(AggregationBuilders.nested(BDEFTAGS_AGGREGATION, NESTED_BDEFTAGS_PATH).subAggregation(
-                    AggregationBuilders.terms(TAGTYPE_CODE_AGGREGATION).field(TAGTYPE_CODE_FIELD).subAggregation(
-                        AggregationBuilders.terms(TAGTYPE_NAME_AGGREGATION).field(TAGTYPE_NAME_FIELD).subAggregation(
-                            AggregationBuilders.terms(TAG_CODE_AGGREGATION).field(TAG_CODE_FIELD)
-                                .subAggregation(AggregationBuilders.terms(TAG_NAME_AGGREGATION).field(TAG_NAME_FIELD))))));
-
-                elasticsearchResponseDto.setTagTypeIndexSearchResponsedtos(searchResponseIntoFacetInformation(searchRequestBuilder));
-            }
+                addFacetFieldAggregations(facetFieldsList, elasticsearchResponseDto, searchRequestBuilder);
 
                 elasticsearchResponseDto
                     .setBusinessObjectDefinitionIndexSearchResponseDtos(scrollSearchResultsIntoBusinessObjectDefinitionDto(searchRequestBuilder));
@@ -449,6 +464,28 @@ public class ElasticsearchFunctions implements SearchFunctions
 
             return new ElasticsearchResponseDto();
         };
+
+    private void addFacetFieldAggregations(Set<String> facetFieldsList, ElasticsearchResponseDto elasticsearchResponseDto,
+        SearchRequestBuilder searchRequestBuilder)
+    {
+        if (!CollectionUtils.isEmpty(facetFieldsList) && (facetFieldsList.contains(TAG_FACET)))
+        {
+
+            searchRequestBuilder.addAggregation(AggregationBuilders.nested(TAG_FACET_AGGS, NESTED_BDEFTAGS_PATH).subAggregation(
+                AggregationBuilders.terms(TAGTYPE_CODE_AGGREGATION).field(TAGTYPE_CODE_FIELD).subAggregation(
+                    AggregationBuilders.terms(TAGTYPE_NAME_AGGREGATION).field(TAGTYPE_NAME_FIELD).subAggregation(
+                        AggregationBuilders.terms(TAG_CODE_AGGREGATION).field(TAG_CODE_FIELD)
+                            .subAggregation(AggregationBuilders.terms(TAG_NAME_AGGREGATION).field(TAG_NAME_FIELD))))));
+
+            searchRequestBuilder.addAggregation(AggregationBuilders.terms(TAG_TYPE_FACET_AGGS).field(TAGTYPE_CODE_FIELD).subAggregation(
+                AggregationBuilders.terms(NAMESPACE_CODE_AGGS).field(NAMESPACE_FIELD)
+                    .subAggregation(AggregationBuilders.terms(BDEF_NAME_AGGS).field(BDEF_NAME_FIELD))));
+
+            elasticsearchResponseDto.setTagTypeIndexSearchResponsedtos(searchResponseIntoFacetInformation(searchRequestBuilder));
+
+
+        }
+    }
 
     /**
      * The find all business object definitions function will return all business object definition entities in the search index.
@@ -471,17 +508,7 @@ public class ElasticsearchFunctions implements SearchFunctions
             searchRequestBuilder.addSort(SortBuilders.fieldSort(BUSINESS_OBJECT_DEFINITION_SORT_FIELD).order(SortOrder.ASC));
 
             //Add aggregation builder if facet fields are present
-            if (!CollectionUtils.isEmpty(facetFieldsList) && (facetFieldsList.contains(TAG_FACET)))
-            {
-                searchRequestBuilder.addAggregation(AggregationBuilders.nested(BDEFTAGS_AGGREGATION, NESTED_BDEFTAGS_PATH).subAggregation(
-                    AggregationBuilders.terms(TAGTYPE_CODE_AGGREGATION).field(TAGTYPE_CODE_FIELD).subAggregation(
-                        AggregationBuilders.terms(TAGTYPE_NAME_AGGREGATION).field(TAGTYPE_NAME_FIELD).subAggregation(
-                            AggregationBuilders.terms(TAG_CODE_AGGREGATION).field(TAG_CODE_FIELD)
-                                .subAggregation(AggregationBuilders.terms(TAG_NAME_AGGREGATION).field(TAG_NAME_FIELD))))));
-
-                elasticsearchResponseDto.setTagTypeIndexSearchResponsedtos(searchResponseIntoFacetInformation(searchRequestBuilder));
-
-            }
+            addFacetFieldAggregations(facetFieldsList, elasticsearchResponseDto, searchRequestBuilder);
 
             elasticsearchResponseDto
                 .setBusinessObjectDefinitionIndexSearchResponseDtos(scrollSearchResultsIntoBusinessObjectDefinitionDto(searchRequestBuilder));
@@ -495,8 +522,10 @@ public class ElasticsearchFunctions implements SearchFunctions
         // Retrieve the search response
         SearchResponse searchResponse = searchRequestBuilder.execute().actionGet();
 
-        Nested aggregation = searchResponse.getAggregations().get(BDEFTAGS_AGGREGATION);
+        Nested aggregation = searchResponse.getAggregations().get(TAG_FACET_AGGS);
         Terms tagTypeCodeAgg = aggregation.getAggregations().get(TAGTYPE_CODE_AGGREGATION);
+
+        Terms tagTypeFacetAgg = searchResponse.getAggregations().get(TAG_TYPE_FACET_AGGS);
 
         List<TagTypeIndexSearchResponsedto> tagTypeIndexSearchResponsedtos = new ArrayList<>();
 
@@ -505,7 +534,8 @@ public class ElasticsearchFunctions implements SearchFunctions
             List<TagIndexSearchResponseDto> tagIndexSearchResponseDtos = new ArrayList<>();
 
             TagTypeIndexSearchResponsedto tagTypeIndexSearchResponsedto =
-                new TagTypeIndexSearchResponsedto(tagTypeCodeEntry.getKeyAsString(), tagTypeCodeEntry.getDocCount(), tagIndexSearchResponseDtos);
+                new TagTypeIndexSearchResponsedto(tagTypeCodeEntry.getKeyAsString(),
+                    tagTypeFacetAgg.getBucketByKey(tagTypeCodeEntry.getKeyAsString()).getDocCount(), tagIndexSearchResponseDtos);
             tagTypeIndexSearchResponsedtos.add(tagTypeIndexSearchResponsedto);
 
             Terms tagTypeDisplayNameAggs = tagTypeCodeEntry.getAggregations().get(TAGTYPE_NAME_AGGREGATION);

@@ -773,77 +773,30 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
     }
 
     @Test
-    public void testIndexSearchBusinessObjectDefinitionsNoSearchFilters()
+    public void testIndexSearchBusinessObjectDefinitionWithFacetFieldTag()
     {
-        // Create a new business object definition search filter list with the new business object definition search key list
-        List<BusinessObjectDefinitionSearchFilter> businessObjectDefinitionSearchFilterList = new ArrayList<>();
-
         //Create a list of facet fields
         List<String> facetFields = new ArrayList<>();
         facetFields.add("TAG");
+        indexSearchBusinessObjectDefinitionsFacetFields(facetFields);
+    }
 
-        // Create a new business object definition search request that will be used when testing the index search business object definitions method
-        BusinessObjectDefinitionIndexSearchRequest businessObjectDefinitionIndexSearchRequest =
-            new BusinessObjectDefinitionIndexSearchRequest(businessObjectDefinitionSearchFilterList, facetFields);
+    @Test
+    public void testIndexSearchBusinessObjectDefinitionWithFacetFieldTagWhiteSpace()
+    {
+        //Create a list of facet fields
+        List<String> facetFields = new ArrayList<>();
+        facetFields.add(addWhitespace("TAG"));
+        indexSearchBusinessObjectDefinitionsFacetFields(facetFields);
+    }
 
-        // Create a new fields set that will be used when testing the index search business object definitions method
-        Set<String> fields = Sets.newHashSet(FIELD_DATA_PROVIDER_NAME, FIELD_DISPLAY_NAME, FIELD_SHORT_DESCRIPTION);
-
-        List<BusinessObjectDefinitionIndexSearchResponseDto> businessObjectDefinitionIndexSearchResponseDtoList = new ArrayList<>();
-        BusinessObjectDefinitionIndexSearchResponseDto businessObjectDefinitionIndexSearchResponseDto1 =
-            new BusinessObjectDefinitionIndexSearchResponseDto(DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME, BDEF_NAME, NAMESPACE);
-        BusinessObjectDefinitionIndexSearchResponseDto businessObjectDefinitionIndexSearchResponseDto2 =
-            new BusinessObjectDefinitionIndexSearchResponseDto(DATA_PROVIDER_NAME_2, BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2, BDEF_NAME_2, NAMESPACE);
-        businessObjectDefinitionIndexSearchResponseDtoList.add(businessObjectDefinitionIndexSearchResponseDto1);
-        businessObjectDefinitionIndexSearchResponseDtoList.add(businessObjectDefinitionIndexSearchResponseDto2);
-
-        List<TagTypeIndexSearchResponsedto> tagTypeIndexSearchResponsedtos = new ArrayList<>();
-        List<TagIndexSearchResponseDto> tagIndexSearchResponseDtos = new ArrayList<>();
-        tagIndexSearchResponseDtos.add(new TagIndexSearchResponseDto(TAG_CODE, TAG_COUNT, TAG_DISPLAY_NAME));
-        tagIndexSearchResponseDtos.add(new TagIndexSearchResponseDto(TAG_CODE_2, TAG_COUNT, TAG_DISPLAY_NAME_2));
-        TagTypeIndexSearchResponsedto tagTypeIndexSearchResponsedto =
-            new TagTypeIndexSearchResponsedto(TAG_TYPE, TAG_TYPE_COUNT, tagIndexSearchResponseDtos, TAG_TYPE_DISPLAY_NAME);
-        tagTypeIndexSearchResponsedtos.add(tagTypeIndexSearchResponsedto);
-
-        ElasticsearchResponseDto elasticsearchResponseDto = new ElasticsearchResponseDto();
-        elasticsearchResponseDto.setBusinessObjectDefinitionIndexSearchResponseDtos(businessObjectDefinitionIndexSearchResponseDtoList);
-        elasticsearchResponseDto.setTagTypeIndexSearchResponsedtos(tagTypeIndexSearchResponsedtos);
-
-        // Mock the call to external methods
-        when(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH, Integer.class))
-            .thenReturn(SHORT_DESCRIPTION_LENGTH);
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class)).thenReturn("INDEX_NAME");
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
-        when(searchFunctions.getFindAllBusinessObjectDefinitionsFunction()).thenReturn((indexName, documentType, facetFieldList) -> elasticsearchResponseDto);
-
-        // Call the method under test
-        BusinessObjectDefinitionIndexSearchResponse businessObjectDefinitionSearchResponse =
-            businessObjectDefinitionService.indexSearchBusinessObjectDefinitions(businessObjectDefinitionIndexSearchRequest, fields);
-
-        assertThat("Business object definition service index search business object definitions method response is null, but it should not be.",
-            businessObjectDefinitionSearchResponse, not(nullValue()));
-
-        assertThat("The first business object definition name in the search response is not correct.",
-            businessObjectDefinitionSearchResponse.getBusinessObjectDefinitions().get(0).getBusinessObjectDefinitionName(), is(BDEF_NAME));
-
-        assertThat("The second business object definition name in the search response is not correct.",
-            businessObjectDefinitionSearchResponse.getBusinessObjectDefinitions().get(1).getBusinessObjectDefinitionName(), is(BDEF_NAME_2));
-
-        assertThat("The tag type code in the search response is not correct.", businessObjectDefinitionSearchResponse.getFacets().get(0).getFacetId(),
-            is(TAG_TYPE));
-
-        assertThat("The tag code in the search response is not correct.",
-            businessObjectDefinitionSearchResponse.getFacets().get(0).getFacets().get(0).getFacetId(), is(TAG_CODE));
-
-        // Verify the calls to external methods
-        verify(configurationHelper, times(2)).getProperty(ConfigurationValue.BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH, Integer.class);
-        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
-        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
-        verify(tagHelper, times(0)).validateTagKey(any());
-        verify(tagDaoHelper, times(0)).getTagEntity(any());
-        verify(tagDaoHelper, times(0)).getTagChildrenEntities(any());
-        verify(searchFunctions, times(0)).getSearchBusinessObjectDefinitionsByTagsFunction();
-        verify(searchFunctions, times(1)).getFindAllBusinessObjectDefinitionsFunction();
+    @Test
+    public void testIndexSearchBusinessObjectDefinitionWithFacetFieldTagMixedCase()
+    {
+        //Create a list of facet fields
+        List<String> facetFields = new ArrayList<>();
+        facetFields.add(("TaG"));
+        indexSearchBusinessObjectDefinitionsFacetFields(facetFields);
     }
 
     @Test
@@ -896,15 +849,11 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         verify(searchFunctions, times(0)).getSearchBusinessObjectDefinitionsByTagsFunction();
     }
 
-    @Test
-    public void testIndexSearchBusinessObjectDefinitionsTagFacetWhiteSpace()
+
+    private void indexSearchBusinessObjectDefinitionsFacetFields(List<String> facetFields)
     {
         // Create a new business object definition search filter list with the new business object definition search key list
         List<BusinessObjectDefinitionSearchFilter> businessObjectDefinitionSearchFilterList = new ArrayList<>();
-
-        //Create a list of facet fields
-        List<String> facetFields = new ArrayList<>();
-        facetFields.add(addWhitespace("TAG"));
 
         // Create a new business object definition search request that will be used when testing the index search business object definitions method
         BusinessObjectDefinitionIndexSearchRequest businessObjectDefinitionIndexSearchRequest =
@@ -958,6 +907,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
 
         assertThat("The tag code in the search response is not correct.",
             businessObjectDefinitionSearchResponse.getFacets().get(0).getFacets().get(0).getFacetId(), is(TAG_CODE));
+
 
         // Verify the calls to external methods
         verify(configurationHelper, times(2)).getProperty(ConfigurationValue.BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH, Integer.class);
