@@ -226,7 +226,7 @@ public class BusinessObjectDefinitionDaoTestHelper
                 AbstractDaoTest.BDEF_DESCRIPTION_2);
         BusinessObjectDefinitionEntity businessObjectDefinitionEntityThree =
             createBusinessObjectDefinitionEntity(AbstractDaoTest.NAMESPACE_3, AbstractDaoTest.BDEF_NAME_3, AbstractDaoTest.DATA_PROVIDER_NAME,
-                AbstractDaoTest.BDEF_DESCRIPTION_WITH_HTML_AND_CARROT_VALUES);
+                AbstractDaoTest.BDEF_DESCRIPTION_WITH_HTML_AND_CARETT_VALUES);
 
         businessObjectDefinitionEntities.add(businessObjectDefinitionEntityOne);
         businessObjectDefinitionEntities.add(businessObjectDefinitionEntityTwo);

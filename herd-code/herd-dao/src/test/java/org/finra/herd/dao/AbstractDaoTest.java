@@ -119,7 +119,7 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String BDEF_DESCRIPTION_2 = "UT_BusinessObjectDefinition_Description_" + RANDOM_SUFFIX_2;
 
-    public static final String BDEF_DESCRIPTION_WITH_HTML_AND_CARROT_VALUES = "Test Description. Value should be <30> <div> <p> value should be <40> </p>";
+    public static final String BDEF_DESCRIPTION_WITH_HTML_AND_CARETT_VALUES = "Test Description. Value should be <30> <div> <p> value should be <40> </p>";
 
     public static final String BDEF_DISPLAY_NAME = "UT_BusinessObjectDefinition_Display_Name_1_" + RANDOM_SUFFIX;
 
