@@ -84,7 +84,8 @@ public class BusinessObjectDefinitionServiceTestHelper
         businessObjectDefinition.setBusinessObjectDefinitionName(businessObjectDefinitionEntity.getName());
         businessObjectDefinition.setDataProviderName(businessObjectDefinitionEntity.getDataProvider().getName());
         businessObjectDefinition.setDisplayName(businessObjectDefinitionEntity.getDisplayName());
-        businessObjectDefinition.setShortDescription(StringUtils.left(Jsoup.parseBodyFragment(businessObjectDefinitionEntity.getDescription()).body().text(),
+        String toParse = businessObjectDefinitionEntity.getDescription() != null ? businessObjectDefinitionEntity.getDescription() : "";
+        businessObjectDefinition.setShortDescription(StringUtils.left(Jsoup.parseBodyFragment(toParse).body().text(),
             configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH, Integer.class)));
 
         return businessObjectDefinition;

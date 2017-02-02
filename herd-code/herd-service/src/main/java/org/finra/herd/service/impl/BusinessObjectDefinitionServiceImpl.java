@@ -1009,7 +1009,8 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 
         // Parse out only html tags, truncate and return
         // Do a partial HTML parse just in case there are some elements that don't have ending tags or the like
-        return StringUtils.left(Jsoup.parseBodyFragment(description).body().text(), shortDescMaxLength);
+        String toParse = description != null ? description : "";
+        return StringUtils.left(Jsoup.parseBodyFragment(toParse).body().text(), shortDescMaxLength);
     }
 
     @Override

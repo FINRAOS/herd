@@ -257,9 +257,10 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
         List<BusinessObjectDefinition> actualBusinessObjectDefinitions = new ArrayList<>();
         for (BusinessObjectDefinitionEntity businessObjectDefinitionEntity : businessObjectDefinitionEntities)
         {
+            String toParse = businessObjectDefinitionEntity.getDescription() != null ? businessObjectDefinitionEntity.getDescription() : "";
             actualBusinessObjectDefinitions.add(
                 new BusinessObjectDefinition(null, businessObjectDefinitionEntity.getNamespace().getCode(), businessObjectDefinitionEntity.getName(),
-                    businessObjectDefinitionEntity.getDataProvider().getName(), NO_BDEF_DESCRIPTION, Jsoup.parseBodyFragment(businessObjectDefinitionEntity.getDescription()).body().text(), null,
+                    businessObjectDefinitionEntity.getDataProvider().getName(), NO_BDEF_DESCRIPTION, Jsoup.parseBodyFragment(toParse).body().text(), null,
                     null, null, null, null, null, null));
         }
 
