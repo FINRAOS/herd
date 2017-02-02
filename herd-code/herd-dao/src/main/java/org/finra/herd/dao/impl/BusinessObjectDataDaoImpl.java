@@ -942,6 +942,16 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         return predicate;
     }
     
+    /**
+     * Create attribute value filters
+     * @param businessDataSearchKey business object search key
+     * @param businessObjectDataEntity business object data entity
+     * @param builder query build
+     * @param predicatePram predicate
+     * @param attributeNameParamSet attribute name parameter set
+     * @param attributeValueParamList attribute value prameter list
+     * @return predicate with added attribute value filters
+     */
     private Predicate createAttriubteValueFilters(BusinessObjectDataSearchKey businessDataSearchKey, Root<BusinessObjectDataEntity> businessObjectDataEntity,
         CriteriaBuilder builder, Predicate predicatePram, Set<String> attributeNameParamSet, List<String> attributeValueParamList)
     {
@@ -976,6 +986,13 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         return predicate;
     }
     
+    /**
+     * get query result list from entity list
+     * @param entitityArray entity array from query
+     * @param attributeNameParamSet attribute name parameter set
+     * @param attributeValueParamList attribute value parameter list
+     * @return business object data list
+     */
     private List<BusinessObjectData> getQueryResultListFromEntityList(List<BusinessObjectDataEntity> entitityArray, Set<String> attributeNameParamSet,
         List<String> attributeValueParamList)
     {
