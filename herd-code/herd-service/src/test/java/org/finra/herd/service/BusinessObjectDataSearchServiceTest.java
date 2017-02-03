@@ -1,5 +1,7 @@
 package org.finra.herd.service;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
@@ -8,6 +10,7 @@ import java.util.List;
 import org.junit.Test;
 import org.springframework.util.Assert;
 
+import org.finra.herd.model.api.xml.AttributeValueFilter;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchFilter;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchKey;
@@ -118,5 +121,211 @@ public class BusinessObjectDataSearchServiceTest extends AbstractServiceTest
         {
         }
 
+    }
+    
+    @Test
+    public void testSearchBusinessObjectDataWithAttributeFilterBadRequest()
+    {
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataSearchTesting();
+
+        BusinessObjectDataSearchRequest request = new BusinessObjectDataSearchRequest();
+        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
+        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
+        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
+        key.setNamespace(NAMESPACE);
+        key.setBusinessObjectDefinitionName(BDEF_NAME);
+        List<AttributeValueFilter> attributeValueFilters = new ArrayList<>();
+        //null attribute name and value
+        attributeValueFilters.add(new AttributeValueFilter(null, null));
+        key.setAttributeValueFilters(attributeValueFilters);
+
+        businessObjectDataSearchKeys.add(key);
+
+        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
+        filters.add(filter);
+        request.setBusinessObjectDataSearchFilters(filters);
+
+        try
+        {
+            businessObjectDataService.searchBusinessObjectData(request);
+            fail("Should not get here, as IllegalArgumentException should be thrown");
+        }
+        catch (IllegalArgumentException ex)
+        {
+            assertEquals("Either attribute name or value filter must exist.", ex.getMessage());
+        }
+        
+        //empty attribute name and null attribute value
+        attributeValueFilters = new ArrayList<>();
+        attributeValueFilters.add(new AttributeValueFilter(" ", null));
+        key.setAttributeValueFilters(attributeValueFilters);
+        try
+        {
+            businessObjectDataService.searchBusinessObjectData(request);
+            fail("Should not get here, as IllegalArgumentException should be thrown");
+        }
+        catch (IllegalArgumentException ex)
+        {
+            assertEquals("Either attribute name or value filter must exist.", ex.getMessage());
+        }
+        
+       //empty attribute name and empty attribute value
+        attributeValueFilters = new ArrayList<>();
+        attributeValueFilters.add(new AttributeValueFilter(" ", ""));
+        key.setAttributeValueFilters(attributeValueFilters);
+        try
+        {
+            businessObjectDataService.searchBusinessObjectData(request);
+            fail("Should not get here, as IllegalArgumentException should be thrown");
+        }
+        catch (IllegalArgumentException ex)
+        {
+            assertEquals("Either attribute name or value filter must exist.", ex.getMessage());
+        }
+    }
+    
+    @Test
+    public void testSearchBusinessObjectDataWithAttributeFilterValues()
+    {
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataSearchTesting();
+
+       businessObjectDataAttributeDaoTestHelper
+                .createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    null, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1);
+        
+        BusinessObjectDataSearchRequest request = new BusinessObjectDataSearchRequest();
+        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
+        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
+        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
+        key.setNamespace(NAMESPACE);
+        key.setBusinessObjectDefinitionName(BDEF_NAME);
+
+        List<AttributeValueFilter> attributeValueFilters = new ArrayList<>();
+        attributeValueFilters.add(new AttributeValueFilter(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1));
+
+        key.setAttributeValueFilters(attributeValueFilters);
+        businessObjectDataSearchKeys.add(key);
+
+        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
+        filters.add(filter);
+        request.setBusinessObjectDataSearchFilters(filters);
+
+        BusinessObjectDataSearchResult result = this.businessObjectDataService.searchBusinessObjectData(request);      
+        List<BusinessObjectData> resultList = result.getBusinessObjectDataElements();
+        assertEquals(1, resultList.size());
+
+        for (BusinessObjectData data : resultList)
+        {
+            Assert.isTrue(NAMESPACE.equals(data.getNamespace()));
+            Assert.isTrue(BDEF_NAME.equals(data.getBusinessObjectDefinitionName()));
+            Assert.isTrue(ATTRIBUTE_NAME_1_MIXED_CASE.equals(data.getAttributes().get(0).getName()));
+            Assert.isTrue(ATTRIBUTE_VALUE_1.equals(data.getAttributes().get(0).getValue()));
+        }
+    }
+    
+    @Test
+    public void testSearchBusinessObjectDataWithAttributeFilterValuesWithMixedCaseAndSpace()
+    {
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataSearchTesting();
+
+        businessObjectDataAttributeDaoTestHelper
+                .createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    null, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1);
+        
+        BusinessObjectDataSearchRequest request = new BusinessObjectDataSearchRequest();
+        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
+        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
+        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
+        key.setNamespace(NAMESPACE);
+        key.setBusinessObjectDefinitionName(BDEF_NAME);
+
+        List<AttributeValueFilter> attributeValueFilters = new ArrayList<>();
+        attributeValueFilters.add(new AttributeValueFilter("  " + ATTRIBUTE_NAME_1_MIXED_CASE.toLowerCase() + "  ", ATTRIBUTE_VALUE_1));
+
+        key.setAttributeValueFilters(attributeValueFilters);
+        businessObjectDataSearchKeys.add(key);
+
+        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
+        filters.add(filter);
+        request.setBusinessObjectDataSearchFilters(filters);
+
+        BusinessObjectDataSearchResult result = this.businessObjectDataService.searchBusinessObjectData(request);      
+        List<BusinessObjectData> resultList = result.getBusinessObjectDataElements();
+        assertEquals(1, resultList.size());
+
+        for (BusinessObjectData data : resultList)
+        {
+            Assert.isTrue(NAMESPACE.equals(data.getNamespace()));
+            Assert.isTrue(BDEF_NAME.equals(data.getBusinessObjectDefinitionName()));
+            Assert.isTrue(ATTRIBUTE_NAME_1_MIXED_CASE.equals(data.getAttributes().get(0).getName()));
+            Assert.isTrue(ATTRIBUTE_VALUE_1.equals(data.getAttributes().get(0).getValue()));
+        }
+    }
+    
+    @Test
+    public void testSearchBusinessObjectDataWithAttributeFilterValuesWithMultipleFilters()
+    {
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForBusinessObjectDataSearchTesting();
+
+        businessObjectDataAttributeDaoTestHelper
+                .createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    null, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1);
+        
+        businessObjectDataAttributeDaoTestHelper
+        .createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            null, DATA_VERSION, ATTRIBUTE_NAME_2_MIXED_CASE, ATTRIBUTE_VALUE_2);
+        
+        businessObjectDataAttributeDaoTestHelper
+        .createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            null, DATA_VERSION, ATTRIBUTE_NAME_3_MIXED_CASE, ATTRIBUTE_VALUE_3);
+        
+        businessObjectDataAttributeDaoTestHelper
+        .createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+            null, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1);
+        
+        BusinessObjectDataSearchRequest request = new BusinessObjectDataSearchRequest();
+        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
+        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
+        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
+        key.setNamespace(NAMESPACE);
+        key.setBusinessObjectDefinitionName(BDEF_NAME);
+
+        List<AttributeValueFilter> attributeValueFilters = new ArrayList<>();
+        attributeValueFilters.add(new AttributeValueFilter(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1));
+        attributeValueFilters.add(new AttributeValueFilter(ATTRIBUTE_NAME_2_MIXED_CASE, null));
+        
+        key.setAttributeValueFilters(attributeValueFilters);
+        businessObjectDataSearchKeys.add(key);
+
+        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
+        filters.add(filter);
+        request.setBusinessObjectDataSearchFilters(filters);
+
+        BusinessObjectDataSearchResult result = this.businessObjectDataService.searchBusinessObjectData(request);      
+        List<BusinessObjectData> resultList = result.getBusinessObjectDataElements();
+        assertEquals(1, resultList.size());
+
+        for (BusinessObjectData data : resultList)
+        {
+            Assert.isTrue(NAMESPACE.equals(data.getNamespace()));
+            Assert.isTrue(BDEF_NAME.equals(data.getBusinessObjectDefinitionName()));
+            
+            assertEquals(2, data.getAttributes().size());
+            boolean foundCase1 = false, foundCase2 = false;
+            for (int i = 0; i < data.getAttributes().size(); i++)
+            {
+               if (ATTRIBUTE_NAME_1_MIXED_CASE.equals(data.getAttributes().get(i).getName()))
+               {
+                   assertEquals(ATTRIBUTE_VALUE_1, data.getAttributes().get(i).getValue());
+                   foundCase1 = true;
+               }
+               if (ATTRIBUTE_NAME_2_MIXED_CASE.equals(data.getAttributes().get(i).getName()))
+               {
+                   assertEquals(ATTRIBUTE_VALUE_2, data.getAttributes().get(i).getValue());
+                   foundCase2 = true;
+               }              
+            }
+            assertTrue(foundCase1 && foundCase2);
+          }
     }
 }

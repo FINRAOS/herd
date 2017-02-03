@@ -17,16 +17,20 @@ package org.finra.herd.dao.impl;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.persistence.Tuple;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Join;
+import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
@@ -39,6 +43,8 @@ import org.springframework.util.CollectionUtils;
 
 import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.dao.BusinessObjectDataDao;
+import org.finra.herd.model.api.xml.Attribute;
+import org.finra.herd.model.api.xml.AttributeValueFilter;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchFilter;
@@ -48,6 +54,8 @@ import org.finra.herd.model.api.xml.PartitionValueFilter;
 import org.finra.herd.model.api.xml.PartitionValueRange;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.StoragePolicyPriorityLevel;
+import org.finra.herd.model.jpa.BusinessObjectDataAttributeEntity;
+import org.finra.herd.model.jpa.BusinessObjectDataAttributeEntity_;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity_;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
@@ -824,9 +832,23 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         }
 
         predicate = createPartitionValueFilters(businessDataSearchKey, businessObjectDataEntity, businessObjectFormatEntity, builder, predicate);
-
+       
+        Set<String> attributeNameParamSet = new HashSet<>();
+        List<String> attributeValueParamList = new ArrayList<>();
+        
+        List<AttributeValueFilter>  attibuteValueFilters = businessDataSearchKey.getAttributeValueFilters();
+        
+        //actively pull attributes when the attribute filters exist
+        if (attibuteValueFilters != null && !attibuteValueFilters.isEmpty())
+        {
+            predicate =
+                    createAttriubteValueFilters(businessDataSearchKey, businessObjectDataEntity, builder, predicate, attributeNameParamSet,
+                            attributeValueParamList);
+           businessObjectDataEntity.fetch("attributes", JoinType.INNER);
+        }
+    
         criteria.select(businessObjectDataEntity).where(predicate);
-
+        
         //order by
         List<Order> orderList = new ArrayList<>();
         orderList.add(builder.asc(businessObjectDefinitionEntity.get(BusinessObjectDefinitionEntity_.namespace)));
@@ -843,50 +865,11 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
         criteria.orderBy(orderList);
 
-        List<BusinessObjectData> businessObjectDataList = new ArrayList<>();
-
         List<BusinessObjectDataEntity> entitityArray =
             entityManager.createQuery(criteria).setMaxResults(businessObjectDataSearchMaxResultsPerPage).getResultList();
-        for (BusinessObjectDataEntity dataEntity : entitityArray)
-        {
-            BusinessObjectData businessObjectData = new BusinessObjectData();
-            businessObjectData.setId(dataEntity.getId());
-            businessObjectData.setPartitionValue(dataEntity.getPartitionValue());
-            businessObjectData.setVersion(dataEntity.getVersion());
-            businessObjectData.setLatestVersion(dataEntity.getLatestVersion());
-            BusinessObjectFormatEntity formatEntity = dataEntity.getBusinessObjectFormat();
-            businessObjectData.setNamespace(formatEntity.getBusinessObjectDefinition().getNamespace().getCode());
-            businessObjectData.setBusinessObjectDefinitionName(formatEntity.getBusinessObjectDefinition().getName());
-            businessObjectData.setBusinessObjectFormatUsage(formatEntity.getUsage());
-            businessObjectData.setBusinessObjectFormatFileType(formatEntity.getFileType().getCode());
-            businessObjectData.setBusinessObjectFormatVersion(formatEntity.getBusinessObjectFormatVersion());
-            businessObjectData.setPartitionKey(formatEntity.getPartitionKey());
-
-            List<String> subpartitions = new ArrayList<>();
-            if (dataEntity.getPartitionValue2() != null)
-            {
-                subpartitions.add(dataEntity.getPartitionValue2());
-            }
-            if (dataEntity.getPartitionValue3() != null)
-            {
-                subpartitions.add(dataEntity.getPartitionValue3());
-            }
-            if (dataEntity.getPartitionValue4() != null)
-            {
-                subpartitions.add(dataEntity.getPartitionValue4());
-            }
-            if (dataEntity.getPartitionValue5() != null)
-            {
-                subpartitions.add(dataEntity.getPartitionValue5());
-            }
-            if (subpartitions.size() > 0)
-            {
-                businessObjectData.setSubPartitionValues(subpartitions);
-            }
-
-            businessObjectDataList.add(businessObjectData);
-        }
-
+        
+        List<BusinessObjectData> businessObjectDataList = getQueryResultListFromEntityList(entitityArray, attributeNameParamSet, attributeValueParamList);
+        
         return businessObjectDataList;
     }
 
@@ -958,4 +941,131 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
         return predicate;
     }
+    
+    /**
+     * Create attribute value filters
+     * @param businessDataSearchKey business object search key
+     * @param businessObjectDataEntity business object data entity
+     * @param builder query build
+     * @param predicatePram predicate
+     * @param attributeNameParamSet attribute name parameter set
+     * @param attributeValueParamList attribute value prameter list
+     * @return predicate with added attribute value filters
+     */
+    private Predicate createAttriubteValueFilters(BusinessObjectDataSearchKey businessDataSearchKey, Root<BusinessObjectDataEntity> businessObjectDataEntity,
+        CriteriaBuilder builder, Predicate predicatePram, Set<String> attributeNameParamSet, List<String> attributeValueParamList)
+    {
+        Predicate predicate = predicatePram;
+
+        if (businessDataSearchKey.getAttributeValueFilters() != null && !businessDataSearchKey.getAttributeValueFilters().isEmpty())
+        {
+            for (AttributeValueFilter attributeValueFilter : businessDataSearchKey.getAttributeValueFilters())
+            {
+                Join<BusinessObjectDataEntity, BusinessObjectDataAttributeEntity> dataAttributeEntity =
+                        businessObjectDataEntity.join(BusinessObjectDataEntity_.attributes);
+                
+                String attributeName = attributeValueFilter.getAttributeName();
+                String attributeValue = attributeValueFilter.getAttributeValue();
+
+                if (!StringUtils.isEmpty(attributeName))
+                {
+                    predicate =
+                            builder.and(predicate, builder.equal(builder.upper(dataAttributeEntity.get(BusinessObjectDataAttributeEntity_.name)), attributeName
+                                    .toUpperCase()));
+                    attributeNameParamSet.add(attributeName);
+                }
+                if (!StringUtils.isEmpty(attributeValue))
+                {
+                    predicate = builder
+                            .and(predicate, builder.like(dataAttributeEntity.get(BusinessObjectDataAttributeEntity_.value), "%" + attributeValue + "%"));
+                    attributeValueParamList.add(attributeValue);
+                }
+            }
+        }
+
+        return predicate;
+    }
+    
+    /**
+     * get query result list from entity list
+     * @param entitityArray entity array from query
+     * @param attributeNameParamSet attribute name parameter set
+     * @param attributeValueParamList attribute value parameter list
+     * @return business object data list
+     */
+    private List<BusinessObjectData> getQueryResultListFromEntityList(List<BusinessObjectDataEntity> entitityArray, Set<String> attributeNameParamSet,
+        List<String> attributeValueParamList)
+    {
+        List<BusinessObjectData> businessObjectDataList = new ArrayList<>();
+
+       for (BusinessObjectDataEntity dataEntity : entitityArray)
+        {
+            BusinessObjectData businessObjectData = new BusinessObjectData();
+            businessObjectData.setId(dataEntity.getId());
+            businessObjectData.setPartitionValue(dataEntity.getPartitionValue());
+            businessObjectData.setVersion(dataEntity.getVersion());
+            businessObjectData.setLatestVersion(dataEntity.getLatestVersion());
+            BusinessObjectFormatEntity formatEntity = dataEntity.getBusinessObjectFormat();
+            businessObjectData.setNamespace(formatEntity.getBusinessObjectDefinition().getNamespace().getCode());
+            businessObjectData.setBusinessObjectDefinitionName(formatEntity.getBusinessObjectDefinition().getName());
+            businessObjectData.setBusinessObjectFormatUsage(formatEntity.getUsage());
+            businessObjectData.setBusinessObjectFormatFileType(formatEntity.getFileType().getCode());
+            businessObjectData.setBusinessObjectFormatVersion(formatEntity.getBusinessObjectFormatVersion());
+            businessObjectData.setPartitionKey(formatEntity.getPartitionKey());
+
+            List<String> subpartitions = new ArrayList<>();
+            if (dataEntity.getPartitionValue2() != null)
+            {
+                subpartitions.add(dataEntity.getPartitionValue2());
+            }
+            if (dataEntity.getPartitionValue3() != null)
+            {
+                subpartitions.add(dataEntity.getPartitionValue3());
+            }
+            if (dataEntity.getPartitionValue4() != null)
+            {
+                subpartitions.add(dataEntity.getPartitionValue4());
+            }
+            if (dataEntity.getPartitionValue5() != null)
+            {
+                subpartitions.add(dataEntity.getPartitionValue5());
+            }
+            if (subpartitions.size() > 0)
+            {
+                businessObjectData.setSubPartitionValues(subpartitions);
+            }
+
+            //add attribute name and values in the request to the response
+            if (!attributeNameParamSet.isEmpty() || !attributeValueParamList.isEmpty())
+            {
+                businessObjectData.setAttributes(new ArrayList<Attribute>());
+                Collection<BusinessObjectDataAttributeEntity> dataAttributeColection = dataEntity.getAttributes();
+                for (BusinessObjectDataAttributeEntity attributeEntity : dataAttributeColection)
+                {
+                    if (attributeNameParamSet.contains(attributeEntity.getName()))
+                    {
+                        businessObjectData.getAttributes().add(new Attribute(attributeEntity.getName(), attributeEntity.getValue()));
+                    }
+                    else
+                    {
+                        for (String attributeValParam : attributeValueParamList)
+                        {
+                            //the attribute value contains the attribute value parameter
+                            if (attributeEntity.getValue().indexOf(attributeValParam) != -1)
+                            {
+                                businessObjectData.getAttributes().add(new Attribute(attributeEntity.getName(), attributeEntity.getValue()));
+                                break;
+                            }
+                        }
+                    }            
+                }
+            }
+            
+            
+            businessObjectDataList.add(businessObjectData);
+        }
+       
+       return businessObjectDataList;
+    }
+
 }
