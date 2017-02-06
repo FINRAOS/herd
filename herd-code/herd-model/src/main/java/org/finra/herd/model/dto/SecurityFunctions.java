@@ -174,6 +174,14 @@ public class SecurityFunctions
 
     public static final String FN_DOWNLOAD_GET = "FN_DOWNLOAD_GET";
 
+    public static final String FN_ELASTICSEARCH_INDEXES_ALL_GET = "FN_ELASTICSEARCH_INDEXES_ALL_GET";
+
+    public static final String FN_ELASTICSEARCH_INDEXES_DELETE = "FN_ELASTICSEARCH_INDEXES_DELETE";
+
+    public static final String FN_ELASTICSEARCH_INDEXES_GET = "FN_ELASTICSEARCH_INDEXES_GET";
+
+    public static final String FN_ELASTICSEARCH_INDEXES_POST = "FN_ELASTICSEARCH_INDEXES_POST";
+
     public static final String FN_EMR_CLUSTERS_DELETE = "FN_EMR_CLUSTERS_DELETE";
 
     public static final String FN_EMR_CLUSTERS_GET = "FN_EMR_CLUSTERS_GET";

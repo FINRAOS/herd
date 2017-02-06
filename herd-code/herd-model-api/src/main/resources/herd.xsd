@@ -6398,4 +6398,63 @@
       </xs:sequence>
    </xs:complexType>
 
+   <!-- ***** Elasticsearch Index ***** -->
+
+   <xs:element name="elasticsearchIndexCreateRequest" type="elasticsearchIndexCreateRequest"/>
+   <xs:complexType name="elasticsearchIndexCreateRequest">
+      <xs:all>
+         <xs:element name="elasticsearchIndexKey" type="elasticsearchIndexKey">
+            <xs:annotation>
+               <xs:documentation>A wrapper for the values that uniquely identify an Elasticsearch Index</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="elasticsearchIndexType" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The type of this Elasticsearch Index</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="elasticsearchIndex" type="elasticsearchIndex"/>
+   <xs:complexType name="elasticsearchIndex">
+      <xs:all>
+         <xs:element name="elasticsearchIndexKey" type="elasticsearchIndexKey">
+            <xs:annotation>
+               <xs:documentation>A wrapper for the values that uniquely identify an Elasticsearch index</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="elasticsearchIndexType" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The type of this Elasticsearch Index</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="elasticsearchIndexKeys" type="elasticsearchIndexKeys">
+      <xs:annotation>
+         <xs:documentation>The list of Elasticsearch index keys</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+   <xs:complexType name="elasticsearchIndexKeys">
+      <xs:sequence>
+         <xs:element name="elasticsearchIndexKey" type="elasticsearchIndexKey" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>A wrapper for the values that uniquely identify an Elasticsearch index</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="elasticsearchIndexKey">
+      <xs:all>
+         <xs:element name="elasticsearchIndexName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The name of this Elasticsearch Index</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
 </xs:schema>
