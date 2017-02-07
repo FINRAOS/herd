@@ -837,9 +837,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         if (attibuteValueFilters != null && !attibuteValueFilters.isEmpty())
         {
             predicate =
-                    createAttriubteValueFilters(businessDataSearchKey, businessObjectDataEntity, builder, predicate);
-            
-            businessObjectDataEntity.fetch("attributes", JoinType.INNER);
+                    createAttriubteValueFilters(businessDataSearchKey, businessObjectDataEntity, builder, predicate);      
         }
     
         criteria.select(businessObjectDataEntity).where(predicate);
@@ -944,7 +942,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
      * @param builder query build
      * @param predicatePram predicate
      * @param attributeNameParamSet attribute name parameter set
-     * @param attributeValueParamList attribute value prameter list
+     * @param attributeValueParamList attribute value parameter list
      * @return predicate with added attribute value filters
      */
     private Predicate createAttriubteValueFilters(BusinessObjectDataSearchKey businessDataSearchKey, Root<BusinessObjectDataEntity> businessObjectDataEntity,
@@ -957,8 +955,9 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
             for (AttributeValueFilter attributeValueFilter : businessDataSearchKey.getAttributeValueFilters())
             {
                 Join<BusinessObjectDataEntity, BusinessObjectDataAttributeEntity> dataAttributeEntity =
-                        businessObjectDataEntity.join(BusinessObjectDataEntity_.attributes);
-                
+                        (Join<BusinessObjectDataEntity, BusinessObjectDataAttributeEntity>) businessObjectDataEntity.fetch(
+                                BusinessObjectDataEntity_.attributes, JoinType.INNER);
+
                 String attributeName = attributeValueFilter.getAttributeName();
                 String attributeValue = attributeValueFilter.getAttributeValue();
 
