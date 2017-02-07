@@ -6431,7 +6431,12 @@
          </xs:element>
          <xs:element name="searchIndexStatus" type="xs:string">
             <xs:annotation>
-               <xs:documentation>The status of this Search Index</xs:documentation>
+               <xs:documentation>The status of this Search Index. One of the following values: BUILDING, READY</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="searchIndexSettings" type="searchIndexSettings" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A wrapper for the search index settings retrieved from the index</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="createdByUserId" type="xs:string" minOccurs="0">
@@ -6442,6 +6447,41 @@
          <xs:element name="createdOn" type="xs:dateTime" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The timestamp when this Search Index was created on</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="lastUpdatedOn" type="xs:dateTime" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The timestamp when this Search Index was last updated on</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="searchIndexSettings">
+      <xs:all>
+         <xs:element name="indexCreationDate" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The index creation date (millisecond value)</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="indexNumberOfReplicas" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The number of replica shards for this index</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="indexNumberOfShards" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The number of primary shards for this index</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="indexProvidedName" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The provided name of the index</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="indexUuid" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The UUID of the index</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>

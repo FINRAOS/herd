@@ -15,24 +15,26 @@
 */
 package org.finra.herd.service.impl;
 
-import org.elasticsearch.action.admin.cluster.stats.ClusterStatsIndices;
+import java.util.Map;
+
 import org.elasticsearch.client.transport.TransportClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.elasticsearch.cluster.metadata.IndexMetaData;
+import org.elasticsearch.common.settings.Settings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
+import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.SearchIndexDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
-import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.api.xml.SearchIndex;
 import org.finra.herd.model.api.xml.SearchIndexCreateRequest;
 import org.finra.herd.model.api.xml.SearchIndexKey;
 import org.finra.herd.model.api.xml.SearchIndexKeys;
+import org.finra.herd.model.api.xml.SearchIndexSettings;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.jpa.SearchIndexEntity;
 import org.finra.herd.model.jpa.SearchIndexStatusEntity;
@@ -52,8 +54,6 @@ import org.finra.herd.service.helper.SearchIndexTypeDaoHelper;
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 public class SearchIndexServiceImpl implements SearchIndexService
 {
-    private static final Logger LOGGER = LoggerFactory.getLogger(SearchIndexServiceImpl.class);
-
     @Autowired
     private AlternateKeyHelper alternateKeyHelper;
 
@@ -62,9 +62,6 @@ public class SearchIndexServiceImpl implements SearchIndexService
 
     @Autowired
     private ConfigurationHelper configurationHelper;
-
-    @Autowired
-    private JsonHelper jsonHelper;
 
     @Autowired
     private SearchFunctions searchFunctions;
@@ -81,9 +78,6 @@ public class SearchIndexServiceImpl implements SearchIndexService
     @Autowired
     private SearchIndexTypeDaoHelper searchIndexTypeDaoHelper;
 
-    /**
-     * The transport client is a connection to the search index
-     */
     @Autowired
     private TransportClient transportClient;
 
@@ -154,13 +148,26 @@ public class SearchIndexServiceImpl implements SearchIndexService
         return createSearchIndexFromEntity(searchIndexEntity);
         */
 
-        ClusterStatsIndices clusterStatsIndices = transportClient.admin().cluster().prepareClusterStats().execute().actionGet().getIndicesStats();
+        Settings getSettingsResponse =
+            transportClient.admin().indices().prepareGetIndex().setIndices(searchIndexKey.getSearchIndexName()).execute().actionGet().getSettings()
+                .get(searchIndexKey.getSearchIndexName());
 
-        LOGGER.info("clusterStatsIndices={}", jsonHelper.objectToJson(clusterStatsIndices));
+        SearchIndexSettings searchIndexSettings = new SearchIndexSettings();
+        if (getSettingsResponse != null)
+        {
+            Map<String, String> indexSettings = getSettingsResponse.getAsMap();
+            searchIndexSettings.setIndexCreationDate(indexSettings.get(IndexMetaData.SETTING_CREATION_DATE));
+            searchIndexSettings.setIndexNumberOfReplicas(indexSettings.get(IndexMetaData.SETTING_NUMBER_OF_REPLICAS));
+            searchIndexSettings.setIndexNumberOfShards(indexSettings.get(IndexMetaData.SETTING_NUMBER_OF_SHARDS));
+            searchIndexSettings.setIndexProvidedName(indexSettings.get(IndexMetaData.SETTING_INDEX_PROVIDED_NAME));
+            searchIndexSettings.setIndexUuid(indexSettings.get(IndexMetaData.SETTING_INDEX_UUID));
+        }
 
         SearchIndex searchIndex = new SearchIndex();
         searchIndex.setSearchIndexKey(searchIndexKey);
-        searchIndex.setSearchIndexType("");
+        searchIndex.setSearchIndexType(SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name());
+        searchIndex.setSearchIndexStatus(SearchIndexStatusEntity.SearchIndexStatuses.BUILDING.name());
+        searchIndex.setSearchIndexSettings(searchIndexSettings);
 
         return searchIndex;
     }
@@ -236,6 +243,10 @@ public class SearchIndexServiceImpl implements SearchIndexService
         SearchIndex searchIndex = new SearchIndex();
         searchIndex.setSearchIndexKey(new SearchIndexKey(searchIndexEntity.getName()));
         searchIndex.setSearchIndexType(searchIndexEntity.getType().getCode());
+        searchIndex.setSearchIndexStatus(searchIndexEntity.getStatus().getCode());
+        searchIndex.setCreatedByUserId(searchIndexEntity.getCreatedBy());
+        searchIndex.setCreatedOn(HerdDateUtils.getXMLGregorianCalendarValue(searchIndexEntity.getCreatedOn()));
+        searchIndex.setLastUpdatedOn(HerdDateUtils.getXMLGregorianCalendarValue(searchIndexEntity.getUpdatedOn()));
         return searchIndex;
     }
 
