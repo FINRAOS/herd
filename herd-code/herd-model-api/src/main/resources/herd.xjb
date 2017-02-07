@@ -104,8 +104,8 @@
       <jaxb:bindings node="//xs:complexType[@name='businessObjectDataSearchKeys']//xs:element[@name='businessObjectDataSearchKey']">
          <jaxb:property name="businessObjectDataSearchKeys"/>
       </jaxb:bindings>
-      <jaxb:bindings node="//xs:complexType[@name='elasticsearchIndexKeys']//xs:element[@name='elasticsearchIndexKey']">
-         <jaxb:property name="elasticsearchIndexKeys"/>
+      <jaxb:bindings node="//xs:complexType[@name='searchIndexKeys']//xs:element[@name='searchIndexKey']">
+         <jaxb:property name="searchIndexKeys"/>
       </jaxb:bindings>
 
       <!-- Add custom XmlCDATA annotations. The below bindings will add XmlCDATA annotations to the auto-generated classes specified below

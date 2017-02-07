@@ -17,24 +17,24 @@ package org.finra.herd.dao;
 
 import java.util.List;
 
-import org.finra.herd.model.api.xml.ElasticsearchIndexKey;
-import org.finra.herd.model.jpa.ElasticsearchIndexEntity;
+import org.finra.herd.model.api.xml.SearchIndexKey;
+import org.finra.herd.model.jpa.SearchIndexEntity;
 
-public interface ElasticsearchIndexDao extends BaseJpaDao
+public interface SearchIndexDao extends BaseJpaDao
 {
     /**
-     * Gets an Elasticsearch index by it's key.
+     * Gets a search index by its key.
      *
-     * @param elasticsearchIndexKey the Elasticsearch index key (case-insensitive)
+     * @param searchIndexKey the search index key (case-sensitive)
      *
-     * @return the Elasticsearch index for the specified key
+     * @return the search index for the specified key
      */
-    public ElasticsearchIndexEntity getElasticsearchIndexByKey(ElasticsearchIndexKey elasticsearchIndexKey);
+    public SearchIndexEntity getSearchIndexByKey(SearchIndexKey searchIndexKey);
 
     /**
-     * Gets a list of Elasticsearch index keys for all Elasticsearch indexes defined in the system.
+     * Gets a list of search index keys for all search indexes defined in the system.
      *
-     * @return the list of Elasticsearch index keys
+     * @return the list of search index keys
      */
-    public List<ElasticsearchIndexKey> getElasticsearchIndexes();
+    public List<SearchIndexKey> getSearchIndexes();
 }

@@ -23,25 +23,25 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 /**
- * An Elasticsearch index.
+ * A search index.
  */
-@Table(name = "elastic_srch_idx")
+@Table(name = "srch_idx")
 @Entity
-public class ElasticsearchIndexEntity extends AuditableEntity
+public class SearchIndexEntity extends AuditableEntity
 {
     /**
-     * The Elasticsearch index name column.
+     * The search index name column.
      */
     @Id
-    @Column(name = "elastic_srch_idx_nm")
+    @Column(name = "srch_idx_nm")
     private String name;
 
     /**
-     * The Elasticsearch index type column.
+     * The search index type column.
      */
     @ManyToOne
-    @JoinColumn(name = "elastic_srch_idx_type_cd", referencedColumnName = "elastic_srch_idx_type_cd", nullable = false)
-    private ElasticsearchIndexTypeEntity type;
+    @JoinColumn(name = "srch_idx_type_cd", referencedColumnName = "srch_idx_type_cd", nullable = false)
+    private SearchIndexTypeEntity type;
 
     public String getName()
     {
@@ -53,12 +53,12 @@ public class ElasticsearchIndexEntity extends AuditableEntity
         this.name = name;
     }
 
-    public ElasticsearchIndexTypeEntity getType()
+    public SearchIndexTypeEntity getType()
     {
         return type;
     }
 
-    public void setType(ElasticsearchIndexTypeEntity type)
+    public void setType(SearchIndexTypeEntity type)
     {
         this.type = type;
     }

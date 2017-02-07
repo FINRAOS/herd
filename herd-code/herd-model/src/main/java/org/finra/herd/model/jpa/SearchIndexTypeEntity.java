@@ -21,17 +21,17 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 /**
- * An Elasticsearch index type.
+ * A search index type.
  */
-@Table(name = "elastic_srch_idx_type")
+@Table(name = "srch_idx_type")
 @Entity
-public class ElasticsearchIndexTypeEntity extends AuditableEntity
+public class SearchIndexTypeEntity extends AuditableEntity
 {
     /**
      * The code column.
      */
     @Id
-    @Column(name = "elastic_srch_idx_type_cd")
+    @Column(name = "srch_idx_type_cd")
     private String code;
 
     public String getCode()
@@ -45,9 +45,9 @@ public class ElasticsearchIndexTypeEntity extends AuditableEntity
     }
 
     /**
-     * Supported Elasticsearch index types.
+     * Supported search index types.
      */
-    public static enum ElasticsearchIndexTypes
+    public static enum SearchIndexTypes
     {
         BUS_OBJCT_DFNTN;
     }

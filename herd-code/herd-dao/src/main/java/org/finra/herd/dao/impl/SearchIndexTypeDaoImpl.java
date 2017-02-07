@@ -22,30 +22,30 @@ import javax.persistence.criteria.Root;
 
 import org.springframework.stereotype.Repository;
 
-import org.finra.herd.dao.ElasticsearchIndexTypeDao;
-import org.finra.herd.model.jpa.ElasticsearchIndexTypeEntity;
-import org.finra.herd.model.jpa.ElasticsearchIndexTypeEntity_;
+import org.finra.herd.dao.SearchIndexTypeDao;
+import org.finra.herd.model.jpa.SearchIndexTypeEntity;
+import org.finra.herd.model.jpa.SearchIndexTypeEntity_;
 
 @Repository
-public class ElasticsearchIndexTypeDaoImpl extends AbstractHerdDao implements ElasticsearchIndexTypeDao
+public class SearchIndexTypeDaoImpl extends AbstractHerdDao implements SearchIndexTypeDao
 {
     @Override
-    public ElasticsearchIndexTypeEntity getElasticsearchIndexTypeByCode(String code)
+    public SearchIndexTypeEntity getSearchIndexTypeByCode(String code)
     {
         // Create the criteria builder and the criteria.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-        CriteriaQuery<ElasticsearchIndexTypeEntity> criteria = builder.createQuery(ElasticsearchIndexTypeEntity.class);
+        CriteriaQuery<SearchIndexTypeEntity> criteria = builder.createQuery(SearchIndexTypeEntity.class);
 
-        // The criteria root is the Elasticsearch index type.
-        Root<ElasticsearchIndexTypeEntity> elasticsearchIndexTypeEntityRoot = criteria.from(ElasticsearchIndexTypeEntity.class);
+        // The criteria root is the search index type.
+        Root<SearchIndexTypeEntity> searchIndexTypeEntityRoot = criteria.from(SearchIndexTypeEntity.class);
 
         // Create the standard restrictions (i.e. the standard where clauses).
-        Predicate predicate = builder.equal(builder.upper(elasticsearchIndexTypeEntityRoot.get(ElasticsearchIndexTypeEntity_.code)), code.toUpperCase());
+        Predicate predicate = builder.equal(builder.upper(searchIndexTypeEntityRoot.get(SearchIndexTypeEntity_.code)), code.toUpperCase());
 
         // Add all clauses to the query.
-        criteria.select(elasticsearchIndexTypeEntityRoot).where(predicate);
+        criteria.select(searchIndexTypeEntityRoot).where(predicate);
 
         // Execute the query and return the result.
-        return executeSingleResultQuery(criteria, String.format("Found more than one Elasticsearch index type with code \"%s\".", code));
+        return executeSingleResultQuery(criteria, String.format("Found more than one search index type with code \"%s\".", code));
     }
 }

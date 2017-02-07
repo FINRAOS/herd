@@ -15,16 +15,16 @@
 */
 package org.finra.herd.dao;
 
-import org.finra.herd.model.jpa.ElasticsearchIndexTypeEntity;
+import org.finra.herd.model.jpa.SearchIndexTypeEntity;
 
-public interface ElasticsearchIndexTypeDao extends BaseJpaDao
+public interface SearchIndexTypeDao extends BaseJpaDao
 {
     /**
-     * Gets an Elasticsearch index type by it's code.
+     * Gets a search index type by its code.
      *
-     * @param code the Elasticsearch index type code (case-insensitive)
+     * @param code the search index type code (case-insensitive)
      *
-     * @return the Elasticsearch index type for the specified code
+     * @return the search index type for the specified code
      */
-    public ElasticsearchIndexTypeEntity getElasticsearchIndexTypeByCode(String code);
+    public SearchIndexTypeEntity getSearchIndexTypeByCode(String code);
 }

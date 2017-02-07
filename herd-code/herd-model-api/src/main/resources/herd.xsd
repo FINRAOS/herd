@@ -6398,60 +6398,70 @@
       </xs:sequence>
    </xs:complexType>
 
-   <!-- ***** Elasticsearch Index ***** -->
+   <!-- ***** Search Index ***** -->
 
-   <xs:element name="elasticsearchIndexCreateRequest" type="elasticsearchIndexCreateRequest"/>
-   <xs:complexType name="elasticsearchIndexCreateRequest">
+   <xs:element name="searchIndexCreateRequest" type="searchIndexCreateRequest"/>
+   <xs:complexType name="searchIndexCreateRequest">
       <xs:all>
-         <xs:element name="elasticsearchIndexKey" type="elasticsearchIndexKey">
+         <xs:element name="searchIndexKey" type="searchIndexKey">
             <xs:annotation>
-               <xs:documentation>A wrapper for the values that uniquely identify an Elasticsearch Index</xs:documentation>
+               <xs:documentation>A wrapper for the values that uniquely identify a Search Index</xs:documentation>
             </xs:annotation>
          </xs:element>
-         <xs:element name="elasticsearchIndexType" type="xs:string">
+         <xs:element name="searchIndexType" type="xs:string">
             <xs:annotation>
-               <xs:documentation>The type of this Elasticsearch Index</xs:documentation>
+               <xs:documentation>The type of this Search Index</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
    </xs:complexType>
 
-   <xs:element name="elasticsearchIndex" type="elasticsearchIndex"/>
-   <xs:complexType name="elasticsearchIndex">
+   <xs:element name="searchIndex" type="searchIndex"/>
+   <xs:complexType name="searchIndex">
       <xs:all>
-         <xs:element name="elasticsearchIndexKey" type="elasticsearchIndexKey">
+         <xs:element name="searchIndexKey" type="searchIndexKey">
             <xs:annotation>
-               <xs:documentation>A wrapper for the values that uniquely identify an Elasticsearch index</xs:documentation>
+               <xs:documentation>A wrapper for the values that uniquely identify a Search Index</xs:documentation>
             </xs:annotation>
          </xs:element>
-         <xs:element name="elasticsearchIndexType" type="xs:string">
+         <xs:element name="searchIndexType" type="xs:string">
             <xs:annotation>
-               <xs:documentation>The type of this Elasticsearch Index</xs:documentation>
+               <xs:documentation>The type of this Search Index</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="createdByUserId" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The User ID of the user who created this Search Index</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="createdOn" type="xs:dateTime" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The timestamp when this Search Index was created on</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
    </xs:complexType>
 
-   <xs:element name="elasticsearchIndexKeys" type="elasticsearchIndexKeys">
+   <xs:element name="searchIndexKeys" type="searchIndexKeys">
       <xs:annotation>
-         <xs:documentation>The list of Elasticsearch index keys</xs:documentation>
+         <xs:documentation>The list of Search Index keys</xs:documentation>
       </xs:annotation>
    </xs:element>
-   <xs:complexType name="elasticsearchIndexKeys">
+   <xs:complexType name="searchIndexKeys">
       <xs:sequence>
-         <xs:element name="elasticsearchIndexKey" type="elasticsearchIndexKey" minOccurs="0" maxOccurs="unbounded">
+         <xs:element name="searchIndexKey" type="searchIndexKey" minOccurs="0" maxOccurs="unbounded">
             <xs:annotation>
-               <xs:documentation>A wrapper for the values that uniquely identify an Elasticsearch index</xs:documentation>
+               <xs:documentation>A wrapper for the values that uniquely identify a Search Index</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:sequence>
    </xs:complexType>
 
-   <xs:complexType name="elasticsearchIndexKey">
+   <xs:complexType name="searchIndexKey">
       <xs:all>
-         <xs:element name="elasticsearchIndexName" type="xs:string">
+         <xs:element name="searchIndexName" type="xs:string">
             <xs:annotation>
-               <xs:documentation>The name of this Elasticsearch Index</xs:documentation>
+               <xs:documentation>The name of this Search Index</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
