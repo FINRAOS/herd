@@ -22,6 +22,7 @@ import org.finra.herd.dao.SearchIndexDao;
 import org.finra.herd.model.ObjectNotFoundException;
 import org.finra.herd.model.api.xml.SearchIndexKey;
 import org.finra.herd.model.jpa.SearchIndexEntity;
+import org.finra.herd.model.jpa.SearchIndexStatusEntity;
 
 /**
  * Helper for search index related operations which require DAO.
@@ -31,6 +32,9 @@ public class SearchIndexDaoHelper
 {
     @Autowired
     private SearchIndexDao searchIndexDao;
+
+    @Autowired
+    private SearchIndexStatusDaoHelper searchIndexStatusDaoHelper;
 
     /**
      * Gets a search index entity by its key and ensure it exists.
@@ -50,5 +54,28 @@ public class SearchIndexDaoHelper
         }
 
         return searchIndexEntity;
+    }
+
+    /**
+     * Gets a search index entity by its key and ensure it exists.
+     *
+     * @param searchIndexKey the search index key (case sensitive)
+     * @param searchIndexStatus the status of the search index (case insensitive)
+     *
+     * @throws org.finra.herd.model.ObjectNotFoundException if the search index entity or search index status entity doesn't exist
+     */
+    public void updateSearchIndexStatus(SearchIndexKey searchIndexKey, String searchIndexStatus) throws ObjectNotFoundException
+    {
+        // Get the search index entity and ensure that it exists.
+        SearchIndexEntity searchIndexEntity = getSearchIndexEntity(searchIndexKey);
+
+        // Get the search index status entity and ensure that it exists.
+        SearchIndexStatusEntity searchIndexStatusEntity = searchIndexStatusDaoHelper.getSearchIndexStatusEntity(searchIndexStatus);
+
+        // Update the search index status.
+        searchIndexEntity.setStatus(searchIndexStatusEntity);
+
+        // Persist the entity.
+        searchIndexDao.saveAndRefresh(searchIndexEntity);
     }
 }

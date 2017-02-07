@@ -91,7 +91,6 @@ import org.finra.herd.model.jpa.TagEntity;
 import org.finra.herd.service.BusinessObjectDefinitionService;
 import org.finra.herd.service.FacetFieldValidationService;
 import org.finra.herd.service.SearchableService;
-import org.finra.herd.service.functional.QuadConsumer;
 import org.finra.herd.service.functional.SearchFunctions;
 import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.AttributeHelper;
@@ -234,7 +233,8 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
             Collections.unmodifiableList(businessObjectDefinitionDao.getAllBusinessObjectDefinitions());
 
         // Index all Business Object Definitions
-        executeFunctionForBusinessObjectDefinitionsInList(businessObjectDefinitionEntityList, searchFunctions.getIndexFunction());
+        businessObjectDefinitionHelper.executeFunctionForBusinessObjectDefinitionEntities(indexName, documentType, businessObjectDefinitionEntityList,
+            searchFunctions.getIndexFunction());
 
         // Simple count validation, index size should equal entity list size
         final long indexSize = searchFunctions.getNumberOfTypesInIndexFunction().apply(indexName, documentType);
@@ -297,15 +297,19 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     @Async
     public Future<Void> indexValidateAllBusinessObjectDefinitions()
     {
+        final String indexName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
+        final String documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
+
         // Get a list of all business object definitions
         final List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList =
             Collections.unmodifiableList(businessObjectDefinitionDao.getAllBusinessObjectDefinitions());
 
         // Remove any index documents that are not in the database
-        removeAnyIndexDocumentsThatAreNotInBusinessObjectsDefinitionsList(businessObjectDefinitionEntityList);
+        removeAnyIndexDocumentsThatAreNotInBusinessObjectsDefinitionsList(indexName, documentType, businessObjectDefinitionEntityList);
 
         // Validate all Business Object Definitions
-        executeFunctionForBusinessObjectDefinitionsInList(businessObjectDefinitionEntityList, searchFunctions.getValidateFunction());
+        businessObjectDefinitionHelper.executeFunctionForBusinessObjectDefinitionEntities(indexName, documentType, businessObjectDefinitionEntityList,
+            searchFunctions.getValidateFunction());
 
         // Return an AsyncResult so callers will know the future is "done". They can call "isDone" to know when this method has completed and they
         // can call "get" to see if any exceptions were thrown.
@@ -315,13 +319,13 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     /**
      * Method to remove business object definitions in the index that don't exist in the database
      *
+     * @param indexName the name of the index
+     * @param documentType the document type
      * @param businessObjectDefinitionEntityList list of business object definitions in the database
      */
-    private void removeAnyIndexDocumentsThatAreNotInBusinessObjectsDefinitionsList(List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList)
+    private void removeAnyIndexDocumentsThatAreNotInBusinessObjectsDefinitionsList(final String indexName, final String documentType,
+        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList)
     {
-        final String indexName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
-        final String documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
-
         // Get a list of business object definition ids from the list of business object definition entities in the database
         List<String> databaseBusinessObjectDefinitionIdList = new ArrayList<>();
         businessObjectDefinitionEntityList
@@ -335,42 +339,6 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 
         // If there are any ids left in the index list they need to be removed
         indexDocumentBusinessObjectDefinitionIdList.forEach(id -> searchFunctions.getDeleteDocumentByIdFunction().accept(indexName, documentType, id));
-    }
-
-    /**
-     * Method that executes a function for business object definitions in a list
-     *
-     * @param businessObjectDefinitionEntityList the list of business object definitions entities
-     * @param function the function to apply to all business object definitions
-     */
-    private void executeFunctionForBusinessObjectDefinitionsInList(final List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList,
-        final QuadConsumer<String, String, String, String> function)
-    {
-        final String indexName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
-        final String documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
-
-        LOGGER.info("Starting to process {} business object definitions with a search index function.", businessObjectDefinitionEntityList.size());
-
-        // For each business object definition apply the passed in function
-        businessObjectDefinitionEntityList.forEach(businessObjectDefinitionEntity -> {
-            // Fetch Join with .size()
-            businessObjectDefinitionEntity.getAttributes().size();
-            businessObjectDefinitionEntity.getBusinessObjectDefinitionTags().size();
-            businessObjectDefinitionEntity.getBusinessObjectFormats().size();
-            businessObjectDefinitionEntity.getColumns().size();
-            businessObjectDefinitionEntity.getSampleDataFiles().size();
-
-            // Convert the business object definition entity to a JSON string
-            final String jsonString = safeObjectMapperWriteValueAsString(businessObjectDefinitionEntity);
-
-            if (StringUtils.isNotEmpty(jsonString))
-            {
-                // Call the function that will process each business object definition entity against the index
-                function.accept(indexName, documentType, businessObjectDefinitionEntity.getId().toString(), jsonString);
-            }
-        });
-
-        LOGGER.info("Finished processing {} business object definitions with a search index function.", businessObjectDefinitionEntityList.size());
     }
 
     /**
@@ -1034,7 +1002,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
                 businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters().get(0);
 
             Assert.isTrue(CollectionUtils.size(businessObjectDefinitionSearchFilter.getBusinessObjectDefinitionSearchKeys()) == 1 &&
-                    businessObjectDefinitionSearchFilter.getBusinessObjectDefinitionSearchKeys().get(0) != null,
+                businessObjectDefinitionSearchFilter.getBusinessObjectDefinitionSearchKeys().get(0) != null,
                 "Exactly one business object definition search key must be specified.");
 
             // Get the tag search key.
@@ -1046,7 +1014,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         else
         {
             Assert.isTrue(CollectionUtils.size(businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters()) == 1 &&
-                    businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters().get(0) != null,
+                businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters().get(0) != null,
                 "Exactly one business object definition search filter must be specified.");
         }
     }
@@ -1067,7 +1035,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
                 businessObjectDefinitionIndexSearchRequest.getBusinessObjectDefinitionSearchFilters().get(0);
 
             Assert.isTrue(CollectionUtils.size(businessObjectDefinitionSearchFilter.getBusinessObjectDefinitionSearchKeys()) == 1 &&
-                    businessObjectDefinitionSearchFilter.getBusinessObjectDefinitionSearchKeys().get(0) != null,
+                businessObjectDefinitionSearchFilter.getBusinessObjectDefinitionSearchKeys().get(0) != null,
                 "Exactly one business object definition search key must be specified.");
 
             // Get the tag search key.
@@ -1079,7 +1047,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         else
         {
             Assert.isTrue(CollectionUtils.size(businessObjectDefinitionIndexSearchRequest.getBusinessObjectDefinitionSearchFilters()) == 1 &&
-                    businessObjectDefinitionIndexSearchRequest.getBusinessObjectDefinitionSearchFilters().get(0) != null,
+                businessObjectDefinitionIndexSearchRequest.getBusinessObjectDefinitionSearchFilters().get(0) != null,
                 "Exactly one business object definition search filter must be specified.");
         }
 
