@@ -43,6 +43,13 @@ public class SearchIndexEntity extends AuditableEntity
     @JoinColumn(name = "srch_idx_type_cd", referencedColumnName = "srch_idx_type_cd", nullable = false)
     private SearchIndexTypeEntity type;
 
+    /**
+     * The search index status column.
+     */
+    @ManyToOne
+    @JoinColumn(name = "srch_idx_stts_cd", referencedColumnName = "srch_idx_stts_cd", nullable = false)
+    private SearchIndexStatusEntity status;
+
     public String getName()
     {
         return name;
@@ -61,5 +68,15 @@ public class SearchIndexEntity extends AuditableEntity
     public void setType(SearchIndexTypeEntity type)
     {
         this.type = type;
+    }
+
+    public SearchIndexStatusEntity getStatus()
+    {
+        return status;
+    }
+
+    public void setStatus(SearchIndexStatusEntity status)
+    {
+        this.status = status;
     }
 }

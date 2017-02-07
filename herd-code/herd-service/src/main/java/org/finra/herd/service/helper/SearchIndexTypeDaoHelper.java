@@ -37,7 +37,7 @@ public class SearchIndexTypeDaoHelper
      * @param code the search index type code (case insensitive)
      *
      * @return the search index type entity
-     * @throws org.finra.herd.model.ObjectNotFoundException if the Search index type entity doesn't exist
+     * @throws org.finra.herd.model.ObjectNotFoundException if the search index type entity doesn't exist
      */
     public SearchIndexTypeEntity getSearchIndexTypeEntity(String code) throws ObjectNotFoundException
     {

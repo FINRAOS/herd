@@ -6429,6 +6429,11 @@
                <xs:documentation>The type of this Search Index</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="searchIndexStatus" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The status of this Search Index</xs:documentation>
+            </xs:annotation>
+         </xs:element>
          <xs:element name="createdByUserId" type="xs:string" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The User ID of the user who created this Search Index</xs:documentation>

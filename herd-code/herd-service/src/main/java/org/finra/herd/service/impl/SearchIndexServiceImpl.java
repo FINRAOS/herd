@@ -35,12 +35,14 @@ import org.finra.herd.model.api.xml.SearchIndexKey;
 import org.finra.herd.model.api.xml.SearchIndexKeys;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.jpa.SearchIndexEntity;
+import org.finra.herd.model.jpa.SearchIndexStatusEntity;
 import org.finra.herd.model.jpa.SearchIndexTypeEntity;
 import org.finra.herd.service.SearchIndexService;
 import org.finra.herd.service.functional.SearchFunctions;
 import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.ConfigurationDaoHelper;
 import org.finra.herd.service.helper.SearchIndexDaoHelper;
+import org.finra.herd.service.helper.SearchIndexStatusDaoHelper;
 import org.finra.herd.service.helper.SearchIndexTypeDaoHelper;
 
 /**
@@ -74,6 +76,9 @@ public class SearchIndexServiceImpl implements SearchIndexService
     private SearchIndexDaoHelper searchIndexDaoHelper;
 
     @Autowired
+    private SearchIndexStatusDaoHelper searchIndexStatusDaoHelper;
+
+    @Autowired
     private SearchIndexTypeDaoHelper searchIndexTypeDaoHelper;
 
     /**
@@ -96,19 +101,23 @@ public class SearchIndexServiceImpl implements SearchIndexService
                 String.format("Unable to create Search index with name \"%s\" because it already exists.", request.getSearchIndexKey().getSearchIndexName()));
         }
 
-        // Get the Search index type and ensure it exists.
+        // Get the search index type and ensure it exists.
         SearchIndexTypeEntity searchIndexTypeEntity = searchIndexTypeDaoHelper.getSearchIndexTypeEntity(request.getSearchIndexType());
 
-        // Create the Search index.
+        // Get the BUILDING search index status entity and ensure it exists.
+        SearchIndexStatusEntity searchIndexStatusEntity =
+            searchIndexStatusDaoHelper.getSearchIndexStatusEntity(SearchIndexStatusEntity.SearchIndexStatuses.BUILDING.name());
+
+        // Create the search index.
         createSearchIndex(request.getSearchIndexKey().getSearchIndexName(), searchIndexTypeEntity.getCode());
 
         // Creates the relative Search index entity from the request information.
-        searchIndexEntity = createSearchIndexEntity(request, searchIndexTypeEntity);
+        searchIndexEntity = createSearchIndexEntity(request, searchIndexTypeEntity, searchIndexStatusEntity);
 
         // Persist the new entity.
         searchIndexEntity = searchIndexDao.saveAndRefresh(searchIndexEntity);
 
-        // Create and return the Search index object from the persisted entity.
+        // Create and return the search index object from the persisted entity.
         return createSearchIndexFromEntity(searchIndexEntity);
     }
 
@@ -124,10 +133,10 @@ public class SearchIndexServiceImpl implements SearchIndexService
         // If the index exists delete it.
         deleteSearchIndex(searchIndexEntity.getName());
 
-        // Delete the Search index.
+        // Delete the search index.
         searchIndexDao.delete(searchIndexEntity);
 
-        // Create and return the Search index object from the deleted entity.
+        // Create and return the search index object from the deleted entity.
         return createSearchIndexFromEntity(searchIndexEntity);
     }
 
@@ -141,7 +150,7 @@ public class SearchIndexServiceImpl implements SearchIndexService
         // Retrieve and ensure that a search index already exists with the specified key.
         SearchIndexEntity searchIndexEntity = searchIndexDaoHelper.getSearchIndexEntity(searchIndexKey);
 
-        // Create and return the Search index object from the persisted entity.
+        // Create and return the search index object from the persisted entity.
         return createSearchIndexFromEntity(searchIndexEntity);
         */
 
@@ -167,8 +176,8 @@ public class SearchIndexServiceImpl implements SearchIndexService
     /**
      * Creates a search index.
      *
-     * @param searchIndexName the name of the Search index
-     * @param searchIndexType the type of the Search index
+     * @param searchIndexName the name of the search index
+     * @param searchIndexType the type of the search index
      */
     private void createSearchIndex(String searchIndexName, String searchIndexType)
     {
@@ -200,24 +209,27 @@ public class SearchIndexServiceImpl implements SearchIndexService
      * Creates a new Search index entity from the request information.
      *
      * @param request the information needed to create a search index
-     * @param searchIndexTypeEntity the Search index type entity
+     * @param searchIndexTypeEntity the search index type entity
+     * @param searchIndexStatusEntity the search index status entity
      *
      * @return the newly created Search index entity
      */
-    private SearchIndexEntity createSearchIndexEntity(SearchIndexCreateRequest request, SearchIndexTypeEntity searchIndexTypeEntity)
+    private SearchIndexEntity createSearchIndexEntity(SearchIndexCreateRequest request, SearchIndexTypeEntity searchIndexTypeEntity,
+        SearchIndexStatusEntity searchIndexStatusEntity)
     {
         SearchIndexEntity searchIndexEntity = new SearchIndexEntity();
         searchIndexEntity.setName(request.getSearchIndexKey().getSearchIndexName());
         searchIndexEntity.setType(searchIndexTypeEntity);
+        searchIndexEntity.setStatus(searchIndexStatusEntity);
         return searchIndexEntity;
     }
 
     /**
      * Creates a search index object from the persisted entity.
      *
-     * @param searchIndexEntity the Search index entity
+     * @param searchIndexEntity the search index entity
      *
-     * @return the Search index
+     * @return the search index
      */
     private SearchIndex createSearchIndexFromEntity(SearchIndexEntity searchIndexEntity)
     {
@@ -230,7 +242,7 @@ public class SearchIndexServiceImpl implements SearchIndexService
     /**
      * Deletes a search index if it exists.
      *
-     * @param searchIndexName the name of the Search index
+     * @param searchIndexName the name of the search index
      */
     private void deleteSearchIndex(String searchIndexName)
     {
@@ -242,7 +254,7 @@ public class SearchIndexServiceImpl implements SearchIndexService
     }
 
     /**
-     * Validates the Search index create request. This method also trims request parameters.
+     * Validates the search index create request. This method also trims request parameters.
      *
      * @param request the request
      *
