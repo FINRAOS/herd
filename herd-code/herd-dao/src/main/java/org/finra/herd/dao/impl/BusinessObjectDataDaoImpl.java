@@ -952,11 +952,19 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
         if (businessDataSearchKey.getAttributeValueFilters() != null && !businessDataSearchKey.getAttributeValueFilters().isEmpty())
         {
+            int count = 0;
             for (AttributeValueFilter attributeValueFilter : businessDataSearchKey.getAttributeValueFilters())
-            {
-                Join<BusinessObjectDataEntity, BusinessObjectDataAttributeEntity> dataAttributeEntity =
-                        (Join<BusinessObjectDataEntity, BusinessObjectDataAttributeEntity>) businessObjectDataEntity.fetch(
-                                BusinessObjectDataEntity_.attributes, JoinType.INNER);
+            {   
+                Join<BusinessObjectDataEntity, BusinessObjectDataAttributeEntity> dataAttributeEntity = null;
+                if (count++ == 0)
+                {
+                    dataAttributeEntity =  (Join<BusinessObjectDataEntity, BusinessObjectDataAttributeEntity>) businessObjectDataEntity.fetch(
+                            BusinessObjectDataEntity_.attributes, JoinType.INNER); 
+                }
+                else
+                {
+                    dataAttributeEntity = businessObjectDataEntity.join(BusinessObjectDataEntity_.attributes);
+                }
 
                 String attributeName = attributeValueFilter.getAttributeName();
                 String attributeValue = attributeValueFilter.getAttributeValue();
