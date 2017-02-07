@@ -135,8 +135,8 @@ public class EmrClusterDefinitionHelper
         {
             final DefaultArtifactVersion securityConfigurationMinEmrVersion = new DefaultArtifactVersion("4.8.0");
             Assert.isTrue(StringUtils.isNotBlank(emrClusterDefinition.getReleaseLabel()) &&
-                securityConfigurationMinEmrVersion.compareTo(new DefaultArtifactVersion(emrClusterDefinition.getReleaseLabel())) <= 0,
-                "EMR security configuration is not supported prior to EMR release 4.8.0.");
+                securityConfigurationMinEmrVersion.compareTo(new DefaultArtifactVersion(emrClusterDefinition.getReleaseLabel().replaceFirst("^(emr-)", ""))) <=
+                    0, "EMR security configuration is not supported prior to EMR release 4.8.0.");
         }
     }
 

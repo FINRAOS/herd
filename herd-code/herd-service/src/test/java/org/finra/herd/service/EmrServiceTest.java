@@ -489,6 +489,29 @@ public class EmrServiceTest extends AbstractServiceTest
     }
 
     @Test
+    public void testCreateEmrClusterSecurityConfigurationReleaseLabelWithPrefix() throws Exception
+    {
+        // Create the namespace entity.
+        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
+
+        String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream());
+
+        EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
+
+        // Set the security configuration along with the EMR release label starting with an "emr-" prefix.
+        // This is needed since security configuration is not supported prior to EMR version 4.8.0.
+        emrClusterDefinition.setSecurityConfiguration("securityConfiguration");
+        emrClusterDefinition.setReleaseLabel("emr-4.8.0");
+        configXml = xmlHelper.objectToXml(emrClusterDefinition);
+
+        emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME, configXml);
+
+        // Create a new EMR cluster create request.
+        EmrClusterCreateRequest request = getNewEmrClusterCreateRequest();
+        emrService.createCluster(request);
+    }
+
+    @Test
     public void testCreateEmrClusterSecurityConfigurationNoReleaseLabel() throws Exception
     {
         // Create the namespace entity.
