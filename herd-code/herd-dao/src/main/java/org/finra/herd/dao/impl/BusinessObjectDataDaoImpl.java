@@ -19,11 +19,9 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.persistence.Tuple;
 import javax.persistence.criteria.CriteriaBuilder;
@@ -832,9 +830,6 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         }
 
         predicate = createPartitionValueFilters(businessDataSearchKey, businessObjectDataEntity, businessObjectFormatEntity, builder, predicate);
-       
-        Set<String> attributeNameParamSet = new HashSet<>();
-        List<String> attributeValueParamList = new ArrayList<>();
         
         List<AttributeValueFilter>  attibuteValueFilters = businessDataSearchKey.getAttributeValueFilters();
         
@@ -842,9 +837,9 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         if (attibuteValueFilters != null && !attibuteValueFilters.isEmpty())
         {
             predicate =
-                    createAttriubteValueFilters(businessDataSearchKey, businessObjectDataEntity, builder, predicate, attributeNameParamSet,
-                            attributeValueParamList);
-           businessObjectDataEntity.fetch("attributes", JoinType.INNER);
+                    createAttriubteValueFilters(businessDataSearchKey, businessObjectDataEntity, builder, predicate);
+            
+            businessObjectDataEntity.fetch("attributes", JoinType.INNER);
         }
     
         criteria.select(businessObjectDataEntity).where(predicate);
@@ -868,7 +863,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         List<BusinessObjectDataEntity> entitityArray =
             entityManager.createQuery(criteria).setMaxResults(businessObjectDataSearchMaxResultsPerPage).getResultList();
         
-        List<BusinessObjectData> businessObjectDataList = getQueryResultListFromEntityList(entitityArray, attributeNameParamSet, attributeValueParamList);
+        List<BusinessObjectData> businessObjectDataList = getQueryResultListFromEntityList(entitityArray, attibuteValueFilters);
         
         return businessObjectDataList;
     }
@@ -953,7 +948,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
      * @return predicate with added attribute value filters
      */
     private Predicate createAttriubteValueFilters(BusinessObjectDataSearchKey businessDataSearchKey, Root<BusinessObjectDataEntity> businessObjectDataEntity,
-        CriteriaBuilder builder, Predicate predicatePram, Set<String> attributeNameParamSet, List<String> attributeValueParamList)
+        CriteriaBuilder builder, Predicate predicatePram)
     {
         Predicate predicate = predicatePram;
 
@@ -972,13 +967,11 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
                     predicate =
                             builder.and(predicate, builder.equal(builder.upper(dataAttributeEntity.get(BusinessObjectDataAttributeEntity_.name)), attributeName
                                     .toUpperCase()));
-                    attributeNameParamSet.add(attributeName);
                 }
                 if (!StringUtils.isEmpty(attributeValue))
                 {
                     predicate = builder
                             .and(predicate, builder.like(dataAttributeEntity.get(BusinessObjectDataAttributeEntity_.value), "%" + attributeValue + "%"));
-                    attributeValueParamList.add(attributeValue);
                 }
             }
         }
@@ -993,8 +986,8 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
      * @param attributeValueParamList attribute value parameter list
      * @return business object data list
      */
-    private List<BusinessObjectData> getQueryResultListFromEntityList(List<BusinessObjectDataEntity> entitityArray, Set<String> attributeNameParamSet,
-        List<String> attributeValueParamList)
+    private List<BusinessObjectData> getQueryResultListFromEntityList(List<BusinessObjectDataEntity> entitityArray,
+        List<AttributeValueFilter> attributeValueList)
     {
         List<BusinessObjectData> businessObjectDataList = new ArrayList<>();
 
@@ -1036,28 +1029,16 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
             }
 
             //add attribute name and values in the request to the response
-            if (!attributeNameParamSet.isEmpty() || !attributeValueParamList.isEmpty())
+            if (attributeValueList != null && !attributeValueList.isEmpty())
             {
                 businessObjectData.setAttributes(new ArrayList<Attribute>());
                 Collection<BusinessObjectDataAttributeEntity> dataAttributeColection = dataEntity.getAttributes();
                 for (BusinessObjectDataAttributeEntity attributeEntity : dataAttributeColection)
                 {
-                    if (attributeNameParamSet.contains(attributeEntity.getName()))
+                    if (shouldIncludeAttributeInReponse(attributeEntity, attributeValueList))
                     {
-                        businessObjectData.getAttributes().add(new Attribute(attributeEntity.getName(), attributeEntity.getValue()));
+                        businessObjectData.getAttributes().add(new Attribute(attributeEntity.getName(), attributeEntity.getValue()));  
                     }
-                    else
-                    {
-                        for (String attributeValParam : attributeValueParamList)
-                        {
-                            //the attribute value contains the attribute value parameter
-                            if (attributeEntity.getValue().indexOf(attributeValParam) != -1)
-                            {
-                                businessObjectData.getAttributes().add(new Attribute(attributeEntity.getName(), attributeEntity.getValue()));
-                                break;
-                            }
-                        }
-                    }            
                 }
             }
             
@@ -1067,5 +1048,55 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
        
        return businessObjectDataList;
     }
+    
+    /**
+     * check if the attribute should be returned based on the attribute value query list
+     *       if attribute name supplied, match attribute name case in sensitive
+     *       if attribute value supplied, match attribute value case sensitive with contain logic
+     *       if both attribute name and value supplied, match both
+     * @param attributeEntity the database attribute entity
+     * @param attributeQueryList the attribute query list
+     * @return true for returning in response; false for not.
+     */
+    private boolean shouldIncludeAttributeInReponse(BusinessObjectDataAttributeEntity attributeEntity, List<AttributeValueFilter> attributeQueryList)
+    {
+        String attributeName = attributeEntity.getName();
+        String attributeValue = attributeEntity.getValue();
+        
+        for (AttributeValueFilter valueFiler : attributeQueryList)
+        {
+            String queryAttributeName = valueFiler.getAttributeName();
+            String queryAttributeValue = valueFiler.getAttributeValue();
+            Boolean matchAttributeName = false;
+            Boolean matchAttributeValue = false;
+            
+            if (attributeName != null && attributeName.equalsIgnoreCase(queryAttributeName))
+            {
+                matchAttributeName = true;
+            }
+            
+            if (attributeValue != null && queryAttributeValue!= null && attributeValue.contains(queryAttributeValue))
+            {
+                matchAttributeValue = true;
+            }
+                
+            if (!StringUtils.isEmpty(queryAttributeName) && !StringUtils.isEmpty(queryAttributeValue))
+            {
+                if (matchAttributeName &&  matchAttributeValue)
+                {
+                    return true;
+                }
+            }       
+            else if (!StringUtils.isEmpty(queryAttributeName) && matchAttributeName)
+            {
+               return true;
+            }
+            else if (!StringUtils.isEmpty(queryAttributeValue) && matchAttributeValue)
+            {
+               return true;
+            }   
+        }
 
+        return false;
+    }
 }

@@ -112,9 +112,8 @@ public class BusinessObjectDataSearchHelper
         List<AttributeValueFilter> attributeValueFilters = key.getAttributeValueFilters();
         if (attributeValueFilters != null && !attributeValueFilters.isEmpty())
         {
-            for (int i = 0; i < attributeValueFilters.size(); i++)
+            for (AttributeValueFilter attributeValueFilter : attributeValueFilters)
             {
-                AttributeValueFilter attributeValueFilter = attributeValueFilters.get(i);
                 String attributeName = attributeValueFilter.getAttributeName();
                 String attributeValue = attributeValueFilter.getAttributeValue();
                 if (attributeName!= null)
