@@ -64,6 +64,7 @@ import org.finra.herd.model.api.xml.PartitionValueFilter;
 import org.finra.herd.model.api.xml.PartitionValueRange;
 import org.finra.herd.model.api.xml.Schema;
 import org.finra.herd.model.api.xml.SchemaColumn;
+import org.finra.herd.model.api.xml.SearchIndexSettings;
 import org.finra.herd.model.api.xml.StorageDirectory;
 import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.api.xml.StorageUnit;
@@ -88,6 +89,9 @@ import org.finra.herd.service.helper.NotificationRegistrationDaoHelper;
 import org.finra.herd.service.helper.NotificationRegistrationStatusDaoHelper;
 import org.finra.herd.service.helper.S3KeyPrefixHelper;
 import org.finra.herd.service.helper.S3PropertiesLocationHelper;
+import org.finra.herd.service.helper.SearchIndexDaoHelper;
+import org.finra.herd.service.helper.SearchIndexStatusDaoHelper;
+import org.finra.herd.service.helper.SearchIndexTypeDaoHelper;
 import org.finra.herd.service.helper.SqsMessageBuilder;
 import org.finra.herd.service.helper.StorageDaoHelper;
 import org.finra.herd.service.helper.StorageFileHelper;
@@ -168,14 +172,14 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final String FIELD_DATA_PROVIDER_NAME = "dataProviderName";
 
     /**
-     * Constant to hold the short description option for the business object definition search
-     */
-    public static final String FIELD_SHORT_DESCRIPTION = "shortDescription";
-
-    /**
      * Constant to hold the display name option for the business object definition search
      */
     public static final String FIELD_DISPLAY_NAME = "displayName";
+
+    /**
+     * Constant to hold the short description option for the business object definition search
+     */
+    public static final String FIELD_SHORT_DESCRIPTION = "shortDescription";
 
     public static final String FILE_NAME = "UT_FileName_1_" + RANDOM_SUFFIX;
 
@@ -186,6 +190,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final Long FILE_SIZE = (long) (Math.random() * Long.MAX_VALUE);
 
     public static final Long FILE_SIZE_2 = (long) (Math.random() * Long.MAX_VALUE);
+
+    public static final String HERD_WORKFLOW_ENVIRONMENT = "herd_workflowEnvironment";
 
     public static final Boolean INCLUDE_ALL_REGISTERED_SUBPARTITIONS = true;
 
@@ -263,6 +269,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Long NO_ROW_COUNT = null;
 
+    public static final SearchIndexSettings NO_SEARCH_INDEX_SETTINGS = null;
+
     public static final Set<String> NO_SEARCH_RESPONSE_FIELDS = new HashSet<>();
 
     public static final PartitionValueFilter NO_STANDALONE_PARTITION_VALUE_FILTER = null;
@@ -338,8 +346,6 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final String TEST_SQS_MESSAGE_CORRELATION_ID = "testCorrelationId";
 
     public static final String ZERO_COLUMN_SIZE = "0";
-
-    public static final String HERD_WORKFLOW_ENVIRONMENT = "herd_workflowEnvironment";
 
     @Autowired
     protected SpringProcessEngineConfiguration activitiConfiguration;
@@ -559,6 +565,15 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     @Autowired
     protected S3Service s3Service;
+
+    @Autowired
+    protected SearchIndexDaoHelper searchIndexDaoHelper;
+
+    @Autowired
+    protected SearchIndexStatusDaoHelper searchIndexStatusDaoHelper;
+
+    @Autowired
+    protected SearchIndexTypeDaoHelper searchIndexTypeDaoHelper;
 
     @Autowired
     protected SqsMessageBuilder sqsMessageBuilder;
