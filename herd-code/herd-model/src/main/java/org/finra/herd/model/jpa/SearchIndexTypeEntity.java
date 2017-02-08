@@ -23,7 +23,7 @@ import javax.persistence.Table;
 /**
  * A search index type.
  */
-@Table(name = "srch_idx_type")
+@Table(name = "srch_idx_type_cd_lk")
 @Entity
 public class SearchIndexTypeEntity extends AuditableEntity
 {
