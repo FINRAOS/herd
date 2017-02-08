@@ -1820,6 +1820,8 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
             Assert.isTrue(FORMAT_FILE_TYPE_CODE.equals(data.getBusinessObjectFormatFileType()));
             Assert.isTrue(FORMAT_VERSION == data.getBusinessObjectFormatVersion());
             assertEquals(data.getAttributes().size(), 2);
+            Assert.isTrue(ATTRIBUTE_NAME_1_MIXED_CASE.equals(data.getAttributes().get(0).getName()));
+            Assert.isTrue(ATTRIBUTE_NAME_2_MIXED_CASE.equals(data.getAttributes().get(1).getName()));
             Assert.isTrue(ATTRIBUTE_VALUE_1.equals(data.getAttributes().get(0).getValue()));
         }
     }
