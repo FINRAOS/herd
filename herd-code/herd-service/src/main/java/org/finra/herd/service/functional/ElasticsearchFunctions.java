@@ -15,7 +15,9 @@
 */
 package org.finra.herd.service.functional;
 
+import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
+import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -46,7 +48,7 @@ import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.ConstantScoreQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
@@ -120,6 +122,11 @@ public class ElasticsearchFunctions implements SearchFunctions
      * Source string for the namespace code
      */
     public static final String NAMESPACE_CODE_SOURCE = "namespace.code";
+
+    /**
+     * Raw field for the namespace code
+     */
+    public static final String NAMESPACE_CODE_SORT_FIELD = "namespace.code.keyword";
 
     /**
      * The logger used to write messages to the log
@@ -412,58 +419,88 @@ public class ElasticsearchFunctions implements SearchFunctions
     };
 
     /**
-     * The search business object definitions by tags function will take a list of tag entities and return a list of business object definition entities. The
-     * function will search the search index based on tag code and tag type code. The function will retrieve the facet information based on the facet field.
+     * Accepts a list of tag entity lists and returns a list of business object definition entities related to them.
+     * <p>
+     * Each list of tag entities comes from a single search filter which are OR-ed together while searching on the index. All such lists come from individual
+     * search filters which are AND-ed together. This function performs a 'constant-score term query' on the index based on tag code and tag type code. The
+     * function also retrieves a term-aggregation type facet information based on the facet field(s) if requested.
      */
-    private final QuadFunction<String, String, List<TagEntity>, Set<String>, ElasticsearchResponseDto> searchBusinessObjectDefinitionsByTagsFunction =
-        (indexName, documentType, tagEntityList, facetFieldsList) -> {
-
-            LOGGER.info("Searching Elasticsearch business object definition documents from index, indexName={} and documentType={}, by tagEntityList={}.",
-                indexName, documentType, tagEntityListToString(tagEntityList));
-
-            List<QueryBuilder> queryBuilderList = new ArrayList<>();
-
-            // For each tag entity get the list of business object definition tag entities and then add the business object definition id to the query
-            tagEntityList.forEach(tagEntity -> tagEntity.getBusinessObjectDefinitionTags().forEach(businessObjectDefinitionTagEntity -> {
-                // Build a query
-                QueryBuilder queryBuilder = QueryBuilders
-                    .matchQuery(SEARCH_INDEX_BUSINESS_OBJECT_DEFINITION_ID_KEY, businessObjectDefinitionTagEntity.getBusinessObjectDefinition().getId());
-
-                // Add the query to the list of queries
-                queryBuilderList.add(queryBuilder);
-            }));
+    private final QuadFunction<String, String, List<List<TagEntity>>, Set<String>, ElasticsearchResponseDto> searchBusinessObjectDefinitionsByTagsFunction =
+        (indexName, documentType, nestedTagEntityLists, facetFieldsList) -> {
 
             ElasticsearchResponseDto elasticsearchResponseDto = new ElasticsearchResponseDto();
-            // Only perform the query if there is at least one query builder.
-            if (queryBuilderList.size() > 0)
+
+            // Short-circuit and return empty response if no tag entities (tag-keys) are found to search on.
+            if (CollectionUtils.isEmpty(flattenTagEntitiesList(nestedTagEntityLists)))
             {
-                // Combined bool should match query for tag type code and tag code
-                BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
-
-                // For each query in the query list add it to the bool query
-                queryBuilderList.forEach(boolQueryBuilder::should);
-
-                SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-                searchSourceBuilder
-                    .fetchSource(new String[] {DATA_PROVIDER_NAME_SOURCE, DESCRIPTION_SOURCE, DISPLAY_NAME_SOURCE, NAME_SOURCE, NAMESPACE_CODE_SOURCE}, null);
-                searchSourceBuilder.query(boolQueryBuilder);
-
-                // Create a search request and set the scroll time and scroll size
-                final SearchRequestBuilder searchRequestBuilder = transportClient.prepareSearch(indexName);
-                searchRequestBuilder.setTypes(documentType).setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME))
-                    .setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE).setSource(searchSourceBuilder);
-                searchRequestBuilder.addSort(SortBuilders.fieldSort(BUSINESS_OBJECT_DEFINITION_SORT_FIELD).order(SortOrder.ASC));
-
-                //Add aggregation builder if facet fields are present
-                addFacetFieldAggregations(facetFieldsList, elasticsearchResponseDto, searchRequestBuilder);
-
-                elasticsearchResponseDto
-                    .setBusinessObjectDefinitionIndexSearchResponseDtos(scrollSearchResultsIntoBusinessObjectDefinitionDto(searchRequestBuilder));
                 return elasticsearchResponseDto;
             }
 
-            return new ElasticsearchResponseDto();
+            LOGGER.info("Searching Elasticsearch business object definition documents from index, indexName={} and documentType={}, by tagEntityList={}",
+                indexName, documentType, tagEntityListToString(flattenTagEntitiesList(nestedTagEntityLists)));
+
+            BoolQueryBuilder compoundSearchFiltersQueryBuilder = new BoolQueryBuilder();
+
+            for (List<TagEntity> tagEntities : nestedTagEntityLists)
+            {
+                BoolQueryBuilder searchFilterQueryBuilder = new BoolQueryBuilder();
+
+                for (TagEntity tagEntity : tagEntities)
+                {
+                    // Add constant-score term queries for tagType-code and tag-code from the tag-key.
+                    ConstantScoreQueryBuilder searchKeyQueryBuilder = QueryBuilders.constantScoreQuery(
+                        boolQuery()
+                            .must(termQuery(TAGTYPE_CODE_FIELD, tagEntity.getTagType().getCode()))
+                            .must(termQuery(TAG_CODE_FIELD, tagEntity.getTagCode()))
+                    );
+
+                    // Individual tag-keys are OR-ed
+                    searchFilterQueryBuilder.should(searchKeyQueryBuilder);
+                }
+
+                // Individual search-filters are AND-ed
+                compoundSearchFiltersQueryBuilder.must(searchFilterQueryBuilder);
+            }
+
+            SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+
+            // Fetch only the required fields
+            searchSourceBuilder
+                .fetchSource(new String[] {DATA_PROVIDER_NAME_SOURCE, DESCRIPTION_SOURCE, DISPLAY_NAME_SOURCE, NAME_SOURCE, NAMESPACE_CODE_SOURCE}, null);
+            searchSourceBuilder.query(compoundSearchFiltersQueryBuilder);
+
+            // Create a search request and set the scroll time and scroll size
+            final SearchRequestBuilder searchRequestBuilder = transportClient.prepareSearch(indexName);
+
+            // Construct scroll query
+            searchRequestBuilder.setTypes(documentType)
+                .setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME))
+                .setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE)
+                .setSource(searchSourceBuilder);
+
+            // Add sorting criteria.
+            // First, sort in ascending order on business object definition name
+            // then sort in ascending order on namespace code
+            searchRequestBuilder
+                .addSort(SortBuilders.fieldSort(BUSINESS_OBJECT_DEFINITION_SORT_FIELD).order(SortOrder.ASC))
+                .addSort(SortBuilders.fieldSort(NAMESPACE_CODE_SORT_FIELD).order(SortOrder.ASC));
+
+            //Add aggregation builder if facet fields are present
+            if (CollectionUtils.isNotEmpty(facetFieldsList))
+            {
+                addFacetFieldAggregations(facetFieldsList, elasticsearchResponseDto, searchRequestBuilder);
+            }
+
+            // Log the actual search query
+            LOGGER.info("bdefIndexSearchQuery={}", searchRequestBuilder.toString());
+
+            elasticsearchResponseDto
+                .setBusinessObjectDefinitionIndexSearchResponseDtos(scrollSearchResultsIntoBusinessObjectDefinitionDto(searchRequestBuilder));
+
+
+            return elasticsearchResponseDto;
         };
+
 
     private void addFacetFieldAggregations(Set<String> facetFieldsList, ElasticsearchResponseDto elasticsearchResponseDto,
         SearchRequestBuilder searchRequestBuilder)
@@ -482,7 +519,6 @@ public class ElasticsearchFunctions implements SearchFunctions
                     .subAggregation(AggregationBuilders.terms(BDEF_NAME_AGGS).field(BDEF_NAME_FIELD))));
 
             elasticsearchResponseDto.setTagTypeIndexSearchResponsedtos(searchResponseIntoFacetInformation(searchRequestBuilder));
-
 
         }
     }
@@ -561,6 +597,22 @@ public class ElasticsearchFunctions implements SearchFunctions
         }
 
         return tagTypeIndexSearchResponsedtos;
+    }
+
+    /**
+     * Flattens out a list of tag entity lists.
+     *
+     * @param nestedTagEntities the list of tag entity lists
+     *
+     * @return flattened list of tag entities
+     */
+    private List<TagEntity> flattenTagEntitiesList(List<List<TagEntity>> nestedTagEntities)
+    {
+        List<TagEntity> tagEntityList = new ArrayList<>();
+
+        nestedTagEntities.forEach(tagEntityList::addAll);
+
+        return tagEntityList;
     }
 
     /**
@@ -729,7 +781,7 @@ public class ElasticsearchFunctions implements SearchFunctions
     }
 
     @Override
-    public QuadFunction<String, String, List<TagEntity>, Set<String>, ElasticsearchResponseDto> getSearchBusinessObjectDefinitionsByTagsFunction()
+    public QuadFunction<String, String, List<List<TagEntity>>, Set<String>, ElasticsearchResponseDto> getSearchBusinessObjectDefinitionsByTagsFunction()
     {
         return searchBusinessObjectDefinitionsByTagsFunction;
     }

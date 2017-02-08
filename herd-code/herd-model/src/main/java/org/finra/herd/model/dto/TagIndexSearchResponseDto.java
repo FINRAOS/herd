@@ -28,7 +28,7 @@ public class TagIndexSearchResponseDto
 
     private long count;
 
-    private static String facetType = "Tag";
+    private static final String FACET_TYPE = "Tag";
 
     /**
      * Empty constructor
@@ -97,7 +97,7 @@ public class TagIndexSearchResponseDto
 
     public static String getFacetType()
     {
-        return facetType;
+        return FACET_TYPE;
     }
 
 

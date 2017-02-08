@@ -54,7 +54,7 @@ public class SearchIndexRestController extends HerdBaseController
      */
     @RequestMapping(value = SEARCH_INDEXES_URI_PREFIX, method = RequestMethod.POST, consumes = {"application/xml", "application/json"})
     @Secured(SecurityFunctions.FN_SEARCH_INDEXES_POST)
-    public SearchIndex createSearchIndexes(@RequestBody SearchIndexCreateRequest request)
+    public SearchIndex createSearchIndex(@RequestBody SearchIndexCreateRequest request)
     {
         return searchIndexService.createSearchIndex(request);
     }

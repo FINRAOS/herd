@@ -791,7 +791,7 @@ public class ElasticsearchFunctionsTest
     @Test
     public void testSearchBusinessObjectDefinitionsByTagsFunction() throws Exception
     {
-        QuadFunction<String, String, List<TagEntity>, Set<String>, ElasticsearchResponseDto> searchBusinessObjectDefinitionsByTagsFunction =
+        QuadFunction<String, String, List<List<TagEntity>>, Set<String>, ElasticsearchResponseDto> searchBusinessObjectDefinitionsByTagsFunction =
             searchFunctions.getSearchBusinessObjectDefinitionsByTagsFunction();
         assertThat("Function is null.", searchBusinessObjectDefinitionsByTagsFunction, not(nullValue()));
         assertThat("Search business object definitions by tags function not an instance of TriFunction.", searchBusinessObjectDefinitionsByTagsFunction,
