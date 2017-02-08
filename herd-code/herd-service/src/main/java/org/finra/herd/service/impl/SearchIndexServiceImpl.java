@@ -120,14 +120,14 @@ public class SearchIndexServiceImpl implements SearchIndexService
         SearchIndexStatusEntity searchIndexStatusEntity =
             searchIndexStatusDaoHelper.getSearchIndexStatusEntity(SearchIndexStatusEntity.SearchIndexStatuses.BUILDING.name());
 
-        // Create the search index.
-        createSearchIndex(request.getSearchIndexKey(), searchIndexTypeEntity.getCode());
-
         // Creates the relative Search index entity from the request information.
         searchIndexEntity = createSearchIndexEntity(request, searchIndexTypeEntity, searchIndexStatusEntity);
 
         // Persist the new entity.
         searchIndexEntity = searchIndexDao.saveAndRefresh(searchIndexEntity);
+
+        // Create the search index.
+        createSearchIndex(request.getSearchIndexKey(), searchIndexTypeEntity.getCode());
 
         // Create and return the search index object from the persisted entity.
         return createSearchIndexFromEntity(searchIndexEntity);
