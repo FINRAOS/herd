@@ -19,16 +19,17 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.persistence.Tuple;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Join;
-import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
@@ -838,6 +839,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         {
             predicate =
                     createAttriubteValueFilters(businessDataSearchKey, businessObjectDataEntity, builder, predicate);      
+            businessObjectDataEntity.fetch("attributes");
         }
     
         criteria.select(businessObjectDataEntity).where(predicate);
@@ -952,19 +954,10 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
         if (businessDataSearchKey.getAttributeValueFilters() != null && !businessDataSearchKey.getAttributeValueFilters().isEmpty())
         {
-            int count = 0;
             for (AttributeValueFilter attributeValueFilter : businessDataSearchKey.getAttributeValueFilters())
             {   
-                Join<BusinessObjectDataEntity, BusinessObjectDataAttributeEntity> dataAttributeEntity = null;
-                if (count++ == 0)
-                {
-                    dataAttributeEntity =  (Join<BusinessObjectDataEntity, BusinessObjectDataAttributeEntity>) businessObjectDataEntity.fetch(
-                            BusinessObjectDataEntity_.attributes, JoinType.INNER); 
-                }
-                else
-                {
-                    dataAttributeEntity = businessObjectDataEntity.join(BusinessObjectDataEntity_.attributes);
-                }
+                Join<BusinessObjectDataEntity, BusinessObjectDataAttributeEntity> dataAttributeEntity = businessObjectDataEntity.join(
+                        BusinessObjectDataEntity_.attributes);
 
                 String attributeName = attributeValueFilter.getAttributeName();
                 String attributeValue = attributeValueFilter.getAttributeValue();
@@ -1038,18 +1031,18 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
             //add attribute name and values in the request to the response
             if (attributeValueList != null && !attributeValueList.isEmpty())
             {
-                businessObjectData.setAttributes(new ArrayList<Attribute>());
                 Collection<BusinessObjectDataAttributeEntity> dataAttributeColection = dataEntity.getAttributes();
+                Set<Attribute> atttributeSet = new HashSet<>();
                 for (BusinessObjectDataAttributeEntity attributeEntity : dataAttributeColection)
                 {
-                    if (shouldIncludeAttributeInReponse(attributeEntity, attributeValueList))
+                    Attribute attribute= new Attribute(attributeEntity.getName(), attributeEntity.getValue());
+                    if (shouldIncludeAttributeInReponse(attributeEntity, attributeValueList) && !atttributeSet.contains(attribute))
                     {
-                        businessObjectData.getAttributes().add(new Attribute(attributeEntity.getName(), attributeEntity.getValue()));  
+                        atttributeSet.add(attribute);
                     }
                 }
-            }
-            
-            
+                businessObjectData.setAttributes(new ArrayList<Attribute>(atttributeSet));
+            }        
             businessObjectDataList.add(businessObjectData);
         }
        
