@@ -19,11 +19,9 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.persistence.Tuple;
 import javax.persistence.criteria.CriteriaBuilder;
@@ -1032,16 +1030,16 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
             if (attributeValueList != null && !attributeValueList.isEmpty())
             {
                 Collection<BusinessObjectDataAttributeEntity> dataAttributeColection = dataEntity.getAttributes();
-                Set<Attribute> atttributeSet = new HashSet<>();
+                List<Attribute> attributeList = new ArrayList<>();
                 for (BusinessObjectDataAttributeEntity attributeEntity : dataAttributeColection)
                 {
                     Attribute attribute= new Attribute(attributeEntity.getName(), attributeEntity.getValue());
-                    if (shouldIncludeAttributeInReponse(attributeEntity, attributeValueList) && !atttributeSet.contains(attribute))
+                    if (shouldIncludeAttributeInReponse(attributeEntity, attributeValueList) && !attributeList.contains(attribute))
                     {
-                        atttributeSet.add(attribute);
+                        attributeList.add(attribute);
                     }
                 }
-                businessObjectData.setAttributes(new ArrayList<Attribute>(atttributeSet));
+                businessObjectData.setAttributes(attributeList);
             }        
             businessObjectDataList.add(businessObjectData);
         }
