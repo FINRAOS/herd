@@ -421,9 +421,10 @@ public class ElasticsearchFunctions implements SearchFunctions
     /**
      * Accepts a list of tag entity lists and returns a list of business object definition entities related to them.
      * <p>
-     * Each list of tag entities comes from a single search filter which are OR-ed together while searching on the index. All such lists come from individual
-     * search filters which are AND-ed together. This function performs a 'constant-score term query' on the index based on tag code and tag type code. The
-     * function also retrieves a term-aggregation type facet information based on the facet field(s) if requested.
+     * Each list of tag entities comes from a single search filter, all of which are OR-ed together in a boolean term query for searching on the index. All such
+     * lists come from individual search filters which are then AND-ed together and form a compound boolean query. This function performs a 'constant-score term
+     * query' on the index based on tag code and tag type code because it is only a filtering query and no analysis/scoring is needed. The function also
+     * retrieves a term-aggregation type facet information based on the facet field(s) if requested.
      */
     private final QuadFunction<String, String, List<List<TagEntity>>, Set<String>, ElasticsearchResponseDto> searchBusinessObjectDefinitionsByTagsFunction =
         (indexName, documentType, nestedTagEntityLists, facetFieldsList) -> {
@@ -539,9 +540,16 @@ public class ElasticsearchFunctions implements SearchFunctions
 
             // Create a search request and set the scroll time and scroll size
             final SearchRequestBuilder searchRequestBuilder = transportClient.prepareSearch(indexName);
+
             searchRequestBuilder.setTypes(documentType).setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME)).setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE)
                 .setSource(searchSourceBuilder);
-            searchRequestBuilder.addSort(SortBuilders.fieldSort(BUSINESS_OBJECT_DEFINITION_SORT_FIELD).order(SortOrder.ASC));
+
+            // Set sort options.
+            // First, sort on business object definition name
+            // then sort on namespace code
+            searchRequestBuilder
+                .addSort(SortBuilders.fieldSort(BUSINESS_OBJECT_DEFINITION_SORT_FIELD).order(SortOrder.ASC))
+                .addSort(SortBuilders.fieldSort(NAMESPACE_CODE_SORT_FIELD).order(SortOrder.ASC));
 
             //Add aggregation builder if facet fields are present
             addFacetFieldAggregations(facetFieldsList, elasticsearchResponseDto, searchRequestBuilder);
