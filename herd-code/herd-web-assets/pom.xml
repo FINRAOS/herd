@@ -118,6 +118,7 @@
       <profile>
          <id>npm-skip-test</id>
          <activation>
+            <activeByDefault>true</activeByDefault>
             <property>
                <name>skipTests</name>
             </property>
@@ -127,7 +128,7 @@
       <profile>
          <id>npm-test</id>
          <activation>
-            <activeByDefault>true</activeByDefault>
+            <activeByDefault>false</activeByDefault>
          </activation>
          <build>
             <plugins>
