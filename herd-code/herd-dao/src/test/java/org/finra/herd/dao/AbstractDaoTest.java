@@ -481,6 +481,18 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String SCHEMA_PARTITION_COLUMN_NAME_PREFIX = "Prtn-Clmn-Name";
 
+    public static final String SEARCH_INDEX_NAME = "UT_SearchIndexName_1_" + RANDOM_SUFFIX;
+
+    public static final String SEARCH_INDEX_NAME_2 = "UT_SearchIndexName_2_" + RANDOM_SUFFIX;
+
+    public static final String SEARCH_INDEX_STATUS = "UT_SearchIndexStatus_1_" + RANDOM_SUFFIX;
+
+    public static final String SEARCH_INDEX_STATUS_2 = "UT_SearchIndexStatus_2_" + RANDOM_SUFFIX;
+
+    public static final String SEARCH_INDEX_TYPE = "UT_SearchIndexType_1_" + RANDOM_SUFFIX;
+
+    public static final String SEARCH_INDEX_TYPE_2 = "UT_SearchIndexType_2_" + RANDOM_SUFFIX;
+
     public static final Integer SECOND_DATA_VERSION = 1;
 
     public static final Integer SECOND_FORMAT_VERSION = 1;
@@ -584,10 +596,6 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String TABLE_NAME = "Test_Table" + RANDOM_SUFFIX;
 
-    public static final long TAG_COUNT = 120;
-
-    public static final long TAG_TYPE_COUNT = 240;
-
     public static final String TAG_CODE = "UT_TagCode_1_" + RANDOM_SUFFIX;
 
     public static final String TAG_CODE_2 = "UT_TagCode_2_" + RANDOM_SUFFIX;
@@ -597,6 +605,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String TAG_CODE_4 = "UT_TagCode_4_" + RANDOM_SUFFIX;
 
     public static final String TAG_CODE_5 = "UT_TagCode_5_" + RANDOM_SUFFIX;
+
+    public static final long TAG_COUNT = 120;
 
     public static final String TAG_DESCRIPTION = "UT_TagDescription_1_" + RANDOM_SUFFIX;
 
@@ -625,6 +635,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String TAG_TYPE = "UT_TagType_1_" + RANDOM_SUFFIX;
 
     public static final String TAG_TYPE_2 = "UT_TagType_2_" + RANDOM_SUFFIX;
+
+    public static final long TAG_TYPE_COUNT = 240;
 
     public static final String TAG_TYPE_DISPLAY_NAME = "UT_TagTypeDisplayName_1_" + RANDOM_SUFFIX;
 
@@ -851,6 +863,24 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     @Autowired
     protected SchemaColumnDaoTestHelper schemaColumnDaoTestHelper;
+
+    @Autowired
+    protected SearchIndexDao searchIndexDao;
+
+    @Autowired
+    protected SearchIndexDaoTestHelper searchIndexDaoTestHelper;
+
+    @Autowired
+    protected SearchIndexStatusDao searchIndexStatusDao;
+
+    @Autowired
+    protected SearchIndexStatusDaoTestHelper searchIndexStatusDaoTestHelper;
+
+    @Autowired
+    protected SearchIndexTypeDao searchIndexTypeDao;
+
+    @Autowired
+    protected SearchIndexTypeDaoTestHelper searchIndexTypeDaoTestHelper;
 
     @Autowired
     protected SecurityFunctionDao securityFunctionDao;
