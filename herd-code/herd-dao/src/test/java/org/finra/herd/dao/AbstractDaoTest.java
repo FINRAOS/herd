@@ -15,6 +15,7 @@
 */
 package org.finra.herd.dao;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -361,6 +362,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String NO_COLUMN_NAME = null;
 
+    public static final XMLGregorianCalendar NO_CREATED_ON = null;
+
+    public static final Timestamp NO_CREATED_ON_TIMESTAMP = null;
+
     public static final String NO_CUSTOM_DDL_NAME = null;
 
     public static final Integer NO_DATA_VERSION = null;
@@ -422,6 +427,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String NO_TAG_TYPE_DISPLAY_NAME = null;
 
     public static final Integer NO_TAG_TYPE_ORDER = null;
+
+    public static final XMLGregorianCalendar NO_UPDATED_ON = null;
+
+    public static final Timestamp NO_UPDATED_ON_TIMESTAMP = null;
 
     public static final String NO_USER_TELEPHONE_NUMBER = null;
 
@@ -488,6 +497,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String SCHEMA_PARTITION_COLUMN_NAME_PREFIX = "Prtn-Clmn-Name";
 
     public static final String SEARCH_INDEX_NAME = "UT_SearchIndexName_1_" + RANDOM_SUFFIX;
+
+    public static final String SEARCH_INDEX_DOCUMENT_TYPE = "UT_SearchIndex_DocumentType_" + RANDOM_SUFFIX;
+
+    public static final String SEARCH_INDEX_MAPPING = "UT_SearchIndex_Mapping_" + RANDOM_SUFFIX;
 
     public static final String SEARCH_INDEX_NAME_2 = "UT_SearchIndexName_2_" + RANDOM_SUFFIX;
 
