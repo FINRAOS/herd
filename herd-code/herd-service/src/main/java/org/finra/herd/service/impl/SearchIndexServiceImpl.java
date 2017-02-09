@@ -15,26 +15,17 @@
 */
 package org.finra.herd.service.impl;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Future;
 
-import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.cluster.metadata.IndexMetaData;
 import org.elasticsearch.common.settings.Settings;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.core.helper.ConfigurationHelper;
-import org.finra.herd.dao.BusinessObjectDefinitionDao;
 import org.finra.herd.dao.SearchIndexDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
@@ -44,14 +35,13 @@ import org.finra.herd.model.api.xml.SearchIndexKey;
 import org.finra.herd.model.api.xml.SearchIndexKeys;
 import org.finra.herd.model.api.xml.SearchIndexSettings;
 import org.finra.herd.model.dto.ConfigurationValue;
-import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.SearchIndexEntity;
 import org.finra.herd.model.jpa.SearchIndexStatusEntity;
 import org.finra.herd.model.jpa.SearchIndexTypeEntity;
+import org.finra.herd.service.SearchIndexHelperService;
 import org.finra.herd.service.SearchIndexService;
 import org.finra.herd.service.functional.SearchFunctions;
 import org.finra.herd.service.helper.AlternateKeyHelper;
-import org.finra.herd.service.helper.BusinessObjectDefinitionHelper;
 import org.finra.herd.service.helper.ConfigurationDaoHelper;
 import org.finra.herd.service.helper.SearchIndexDaoHelper;
 import org.finra.herd.service.helper.SearchIndexStatusDaoHelper;
@@ -64,16 +54,8 @@ import org.finra.herd.service.helper.SearchIndexTypeDaoHelper;
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 public class SearchIndexServiceImpl implements SearchIndexService
 {
-    private static final Logger LOGGER = LoggerFactory.getLogger(SearchIndexServiceImpl.class);
-
     @Autowired
     private AlternateKeyHelper alternateKeyHelper;
-
-    @Autowired
-    private BusinessObjectDefinitionDao businessObjectDefinitionDao;
-
-    @Autowired
-    private BusinessObjectDefinitionHelper businessObjectDefinitionHelper;
 
     @Autowired
     private ConfigurationDaoHelper configurationDaoHelper;
@@ -91,13 +73,13 @@ public class SearchIndexServiceImpl implements SearchIndexService
     private SearchIndexDaoHelper searchIndexDaoHelper;
 
     @Autowired
+    private SearchIndexHelperService searchIndexHelperService;
+
+    @Autowired
     private SearchIndexStatusDaoHelper searchIndexStatusDaoHelper;
 
     @Autowired
     private SearchIndexTypeDaoHelper searchIndexTypeDaoHelper;
-
-    @Autowired
-    private TransportClient transportClient;
 
     @Override
     public SearchIndex createSearchIndex(SearchIndexCreateRequest request)
@@ -143,7 +125,7 @@ public class SearchIndexServiceImpl implements SearchIndexService
         SearchIndexEntity searchIndexEntity = searchIndexDaoHelper.getSearchIndexEntity(searchIndexKey);
 
         // If the index exists delete it.
-        deleteSearchIndex(searchIndexEntity.getName());
+        deleteSearchIndexHelper(searchIndexEntity.getName());
 
         // Delete the search index.
         searchIndexDao.delete(searchIndexEntity);
@@ -164,23 +146,23 @@ public class SearchIndexServiceImpl implements SearchIndexService
         // Create the search index object from the persisted entity.
         SearchIndex searchIndex = createSearchIndexFromEntity(searchIndexEntity);
 
-        // Try to retrieve index settings from the actual search index.
+        // Retrieve index settings from the actual search index.
         Settings getSettingsResponse =
-            transportClient.admin().indices().prepareGetIndex().setIndices(searchIndexKey.getSearchIndexName()).execute().actionGet().getSettings()
-                .get(searchIndexKey.getSearchIndexName());
+            searchIndexHelperService.getAdminClient().indices().prepareGetIndex().setIndices(searchIndexKey.getSearchIndexName()).execute().actionGet()
+                .getSettings().get(searchIndexKey.getSearchIndexName());
 
         // Update the search index settings.
         SearchIndexSettings searchIndexSettings = new SearchIndexSettings();
         searchIndex.setSearchIndexSettings(searchIndexSettings);
-        if (getSettingsResponse != null)
-        {
-            Map<String, String> indexSettings = getSettingsResponse.getAsMap();
-            searchIndexSettings.setIndexCreationDate(indexSettings.get(IndexMetaData.SETTING_CREATION_DATE));
-            searchIndexSettings.setIndexNumberOfReplicas(indexSettings.get(IndexMetaData.SETTING_NUMBER_OF_REPLICAS));
-            searchIndexSettings.setIndexNumberOfShards(indexSettings.get(IndexMetaData.SETTING_NUMBER_OF_SHARDS));
-            searchIndexSettings.setIndexProvidedName(indexSettings.get(IndexMetaData.SETTING_INDEX_PROVIDED_NAME));
-            searchIndexSettings.setIndexUuid(indexSettings.get(IndexMetaData.SETTING_INDEX_UUID));
-        }
+
+        // If we got here, the get settings response returned by the above call cannot be null.
+        // A non-existing search index name results in a "no such index" internal server error.
+        Map<String, String> indexSettings = getSettingsResponse.getAsMap();
+        searchIndexSettings.setIndexCreationDate(indexSettings.get(IndexMetaData.SETTING_CREATION_DATE));
+        searchIndexSettings.setIndexNumberOfReplicas(indexSettings.get(IndexMetaData.SETTING_NUMBER_OF_REPLICAS));
+        searchIndexSettings.setIndexNumberOfShards(indexSettings.get(IndexMetaData.SETTING_NUMBER_OF_SHARDS));
+        searchIndexSettings.setIndexProvidedName(indexSettings.get(IndexMetaData.SETTING_INDEX_PROVIDED_NAME));
+        searchIndexSettings.setIndexUuid(indexSettings.get(IndexMetaData.SETTING_INDEX_UUID));
 
         return searchIndex;
     }
@@ -216,16 +198,13 @@ public class SearchIndexServiceImpl implements SearchIndexService
         }
 
         // If the index exists delete it.
-        if (searchFunctions.getIndexExistsFunction().test(searchIndexKey.getSearchIndexName()))
-        {
-            searchFunctions.getDeleteIndexFunction().accept(searchIndexKey.getSearchIndexName());
-        }
+        deleteSearchIndexHelper(searchIndexKey.getSearchIndexName());
 
         // Create the index.
         searchFunctions.getCreateIndexFunction().accept(searchIndexKey.getSearchIndexName(), documentType, mapping);
 
         // Asynchronously index all business object definitions. Since we got here, this search index is for business object definitions.
-        indexAllBusinessObjectDefinitions(searchIndexKey, documentType);
+        searchIndexHelperService.indexAllBusinessObjectDefinitions(searchIndexKey, documentType);
     }
 
     /**
@@ -271,48 +250,13 @@ public class SearchIndexServiceImpl implements SearchIndexService
      *
      * @param searchIndexName the name of the search index
      */
-    private void deleteSearchIndex(String searchIndexName)
+    private void deleteSearchIndexHelper(String searchIndexName)
     {
         // If the index exists delete it.
         if (searchFunctions.getIndexExistsFunction().test(searchIndexName))
         {
             searchFunctions.getDeleteIndexFunction().accept(searchIndexName);
         }
-    }
-
-    /**
-     * Asynchronously indexes all business object definitions defined in the system.
-     *
-     * @param searchIndexKey the key of the search index
-     * @param documentType the document type
-     */
-    @Async
-    private Future<Void> indexAllBusinessObjectDefinitions(SearchIndexKey searchIndexKey, String documentType)
-    {
-        // Get a list of all business object definitions.
-        final List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities =
-            Collections.unmodifiableList(businessObjectDefinitionDao.getAllBusinessObjectDefinitions());
-
-        // Index all business object definitions.
-        businessObjectDefinitionHelper
-            .executeFunctionForBusinessObjectDefinitionEntities(searchIndexKey.getSearchIndexName(), documentType, businessObjectDefinitionEntities,
-                searchFunctions.getIndexFunction());
-
-        // Simple count validation, index size should equal entity list size.
-        final long indexSize = searchFunctions.getNumberOfTypesInIndexFunction().apply(searchIndexKey.getSearchIndexName(), documentType);
-        final long businessObjectDefinitionDatabaseTableSize = businessObjectDefinitionEntities.size();
-        if (businessObjectDefinitionDatabaseTableSize != indexSize)
-        {
-            LOGGER.error("Index validation failed, business object definition database table size {}, does not equal index size {}.",
-                businessObjectDefinitionDatabaseTableSize, indexSize);
-        }
-
-        // Update search index status to READY.
-        searchIndexDaoHelper.updateSearchIndexStatus(searchIndexKey, SearchIndexStatusEntity.SearchIndexStatuses.READY.name());
-
-        // Return an AsyncResult so callers will know the future is "done". They can call "isDone" to know when this method has completed and they can call
-        // "get" to see if any exceptions were thrown.
-        return new AsyncResult<>(null);
     }
 
     /**
