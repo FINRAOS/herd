@@ -51,7 +51,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDefinitionValidateResponse;
 import org.finra.herd.model.api.xml.Facet;
 import org.finra.herd.model.api.xml.TagKey;
 import org.finra.herd.model.dto.TagIndexSearchResponseDto;
-import org.finra.herd.model.dto.TagTypeIndexSearchResponsedto;
+import org.finra.herd.model.dto.TagTypeIndexSearchResponseDto;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.service.BusinessObjectDefinitionService;
 
@@ -150,16 +150,16 @@ public class BusinessObjectDefinitionRestControllerIndexTest extends AbstractRes
             businessObjectDefinitions.add(businessObjectDefinition);
         }
 
-        List<TagTypeIndexSearchResponsedto> tagTypeIndexSearchResponsedtos = new ArrayList<>();
+        List<TagTypeIndexSearchResponseDto> tagTypeIndexSearchResponseDtos = new ArrayList<>();
         List<TagIndexSearchResponseDto> tagIndexSearchResponseDtos = new ArrayList<>();
         tagIndexSearchResponseDtos.add(new TagIndexSearchResponseDto(TAG_CODE, TAG_COUNT, TAG_DISPLAY_NAME));
         tagIndexSearchResponseDtos.add(new TagIndexSearchResponseDto(TAG_CODE_2, TAG_COUNT, TAG_DISPLAY_NAME_2));
-        TagTypeIndexSearchResponsedto tagTypeIndexSearchResponsedto =
-            new TagTypeIndexSearchResponsedto(TAG_TYPE, TAG_TYPE_COUNT, tagIndexSearchResponseDtos, TAG_TYPE_DISPLAY_NAME);
-        tagTypeIndexSearchResponsedtos.add(tagTypeIndexSearchResponsedto);
+        TagTypeIndexSearchResponseDto tagTypeIndexSearchResponseDto =
+            new TagTypeIndexSearchResponseDto(TAG_TYPE, TAG_TYPE_COUNT, tagIndexSearchResponseDtos, TAG_TYPE_DISPLAY_NAME);
+        tagTypeIndexSearchResponseDtos.add(tagTypeIndexSearchResponseDto);
 
         List<Facet> tagTypeFacets = new ArrayList<>();
-        for (TagTypeIndexSearchResponsedto tagTypeIndexSearchResponse : ImmutableSet.copyOf(tagTypeIndexSearchResponsedtos))
+        for (TagTypeIndexSearchResponseDto tagTypeIndexSearchResponse : ImmutableSet.copyOf(tagTypeIndexSearchResponseDtos))
         {
 
             List<Facet> tagFacets = new ArrayList<>();
@@ -167,13 +167,13 @@ public class BusinessObjectDefinitionRestControllerIndexTest extends AbstractRes
             for (TagIndexSearchResponseDto tagIndexSearchResponseDto : tagTypeIndexSearchResponse.getTagIndexSearchResponseDtos())
             {
                 Facet tagFacet =
-                    new Facet(tagIndexSearchResponseDto.getTagDisplayName(), tagIndexSearchResponseDto.getCount(), tagIndexSearchResponseDto.getFacetType(),
+                    new Facet(tagIndexSearchResponseDto.getTagDisplayName(), tagIndexSearchResponseDto.getCount(), TagIndexSearchResponseDto.getFacetType(),
                         tagIndexSearchResponseDto.getTagCode(), null);
                 tagFacets.add(tagFacet);
             }
 
             tagTypeFacets.add(
-                new Facet(tagTypeIndexSearchResponse.getDisplayName(), tagTypeIndexSearchResponse.getCount(), tagTypeIndexSearchResponse.getFacetType(),
+                new Facet(tagTypeIndexSearchResponse.getDisplayName(), tagTypeIndexSearchResponse.getCount(), TagTypeIndexSearchResponseDto.getFacetType(),
                     tagTypeIndexSearchResponse.getCode(), tagFacets));
         }
 

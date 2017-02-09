@@ -25,7 +25,7 @@ public class ElasticsearchResponseDto
 {
     private List<BusinessObjectDefinitionIndexSearchResponseDto> businessObjectDefinitionIndexSearchResponseDtos;
 
-    private List<TagTypeIndexSearchResponsedto> tagTypeIndexSearchResponsedtos;
+    private List<TagTypeIndexSearchResponseDto> tagTypeIndexSearchResponseDtos;
 
     /**
      * Empty constructor
@@ -37,23 +37,23 @@ public class ElasticsearchResponseDto
 
     /**
      * @param businessObjectDefinitionIndexSearchResponseDtos the list of business object definition index search responses
-     * @param tagTypeIndexSearchResponsedtos the list of tag types and their associated tags
+     * @param tagTypeIndexSearchResponseDtos the list of tag types and their associated tags
      */
     public ElasticsearchResponseDto(List<BusinessObjectDefinitionIndexSearchResponseDto> businessObjectDefinitionIndexSearchResponseDtos,
-        List<TagTypeIndexSearchResponsedto> tagTypeIndexSearchResponsedtos)
+        List<TagTypeIndexSearchResponseDto> tagTypeIndexSearchResponseDtos)
     {
         this.businessObjectDefinitionIndexSearchResponseDtos = businessObjectDefinitionIndexSearchResponseDtos;
-        this.tagTypeIndexSearchResponsedtos = tagTypeIndexSearchResponsedtos;
+        this.tagTypeIndexSearchResponseDtos = tagTypeIndexSearchResponseDtos;
     }
 
-    public List<TagTypeIndexSearchResponsedto> getTagTypeIndexSearchResponsedtos()
+    public List<TagTypeIndexSearchResponseDto> getTagTypeIndexSearchResponseDtos()
     {
-        return tagTypeIndexSearchResponsedtos;
+        return tagTypeIndexSearchResponseDtos;
     }
 
-    public void setTagTypeIndexSearchResponsedtos(List<TagTypeIndexSearchResponsedto> tagTypeIndexSearchResponsedtos)
+    public void setTagTypeIndexSearchResponseDtos(List<TagTypeIndexSearchResponseDto> tagTypeIndexSearchResponseDtos)
     {
-        this.tagTypeIndexSearchResponsedtos = tagTypeIndexSearchResponsedtos;
+        this.tagTypeIndexSearchResponseDtos = tagTypeIndexSearchResponseDtos;
     }
 
     public List<BusinessObjectDefinitionIndexSearchResponseDto> getBusinessObjectDefinitionIndexSearchResponseDtos()
@@ -72,7 +72,7 @@ public class ElasticsearchResponseDto
     {
         return "ElasticsearchResponseDto{" +
             "businessObjectDefinitionIndexSearchResponseDtos=" + businessObjectDefinitionIndexSearchResponseDtos +
-            ", tagTypeIndexSearchResponsedtos=" + tagTypeIndexSearchResponsedtos +
+            ", tagTypeIndexSearchResponseDtos=" + tagTypeIndexSearchResponseDtos +
             '}';
     }
 

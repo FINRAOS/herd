@@ -58,7 +58,7 @@ import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.ElasticsearchResponseDto;
 import org.finra.herd.model.dto.SearchIndexUpdateDto;
 import org.finra.herd.model.dto.TagIndexSearchResponseDto;
-import org.finra.herd.model.dto.TagTypeIndexSearchResponsedto;
+import org.finra.herd.model.dto.TagTypeIndexSearchResponseDto;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.TagEntity;
 import org.finra.herd.service.functional.SearchFunctions;
@@ -794,17 +794,17 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         businessObjectDefinitionIndexSearchResponseDtoList.add(businessObjectDefinitionIndexSearchResponseDto1);
         businessObjectDefinitionIndexSearchResponseDtoList.add(businessObjectDefinitionIndexSearchResponseDto2);
 
-        List<TagTypeIndexSearchResponsedto> tagTypeIndexSearchResponsedtos = new ArrayList<>();
+        List<TagTypeIndexSearchResponseDto> tagTypeIndexSearchResponseDtos = new ArrayList<>();
         List<TagIndexSearchResponseDto> tagIndexSearchResponseDtos = new ArrayList<>();
         tagIndexSearchResponseDtos.add(new TagIndexSearchResponseDto(TAG_CODE, TAG_COUNT, TAG_DISPLAY_NAME));
         tagIndexSearchResponseDtos.add(new TagIndexSearchResponseDto(TAG_CODE_2, TAG_COUNT, TAG_DISPLAY_NAME_2));
-        TagTypeIndexSearchResponsedto tagTypeIndexSearchResponsedto =
-            new TagTypeIndexSearchResponsedto(TAG_TYPE, TAG_TYPE_COUNT, tagIndexSearchResponseDtos, TAG_TYPE_DISPLAY_NAME);
-        tagTypeIndexSearchResponsedtos.add(tagTypeIndexSearchResponsedto);
+        TagTypeIndexSearchResponseDto tagTypeIndexSearchResponseDto =
+            new TagTypeIndexSearchResponseDto(TAG_TYPE, TAG_TYPE_COUNT, tagIndexSearchResponseDtos, TAG_TYPE_DISPLAY_NAME);
+        tagTypeIndexSearchResponseDtos.add(tagTypeIndexSearchResponseDto);
 
         ElasticsearchResponseDto elasticsearchResponseDto = new ElasticsearchResponseDto();
         elasticsearchResponseDto.setBusinessObjectDefinitionIndexSearchResponseDtos(businessObjectDefinitionIndexSearchResponseDtoList);
-        elasticsearchResponseDto.setTagTypeIndexSearchResponsedtos(tagTypeIndexSearchResponsedtos);
+        elasticsearchResponseDto.setTagTypeIndexSearchResponseDtos(tagTypeIndexSearchResponseDtos);
 
         // Mock the call to external methods
         when(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH, Integer.class))

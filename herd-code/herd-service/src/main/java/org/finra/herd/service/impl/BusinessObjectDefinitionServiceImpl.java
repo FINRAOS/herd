@@ -79,7 +79,7 @@ import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.ElasticsearchResponseDto;
 import org.finra.herd.model.dto.SearchIndexUpdateDto;
 import org.finra.herd.model.dto.TagIndexSearchResponseDto;
-import org.finra.herd.model.dto.TagTypeIndexSearchResponsedto;
+import org.finra.herd.model.dto.TagTypeIndexSearchResponseDto;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionAttributeEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionSampleDataFileEntity;
@@ -621,16 +621,16 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         }
 
         List<Facet> tagTypeFacets = null;
-        if (CollectionUtils.isNotEmpty(searchRequest.getFacetFields()) && elasticsearchResponseDto.getTagTypeIndexSearchResponsedtos() != null)
+        if (CollectionUtils.isNotEmpty(searchRequest.getFacetFields()) && elasticsearchResponseDto.getTagTypeIndexSearchResponseDtos() != null)
         {
             tagTypeFacets = new ArrayList<>();
             //construct a list of facet information
-            for (TagTypeIndexSearchResponsedto tagTypeIndexSearchResponsedto : elasticsearchResponseDto.getTagTypeIndexSearchResponsedtos())
+            for (TagTypeIndexSearchResponseDto tagTypeIndexSearchResponseDto : elasticsearchResponseDto.getTagTypeIndexSearchResponseDtos())
             {
 
                 List<Facet> tagFacets = new ArrayList<>();
 
-                for (TagIndexSearchResponseDto tagIndexSearchResponseDto : tagTypeIndexSearchResponsedto.getTagIndexSearchResponseDtos())
+                for (TagIndexSearchResponseDto tagIndexSearchResponseDto : tagTypeIndexSearchResponseDto.getTagIndexSearchResponseDtos())
                 {
                     Facet tagFacet =
                         new Facet(tagIndexSearchResponseDto.getTagDisplayName(), tagIndexSearchResponseDto.getCount(), TagIndexSearchResponseDto.getFacetType(),
@@ -638,8 +638,8 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
                     tagFacets.add(tagFacet);
                 }
 
-                tagTypeFacets.add(new Facet(tagTypeIndexSearchResponsedto.getDisplayName(), tagTypeIndexSearchResponsedto.getCount(),
-                    TagTypeIndexSearchResponsedto.getFacetType(), tagTypeIndexSearchResponsedto.getCode(), tagFacets));
+                tagTypeFacets.add(new Facet(tagTypeIndexSearchResponseDto.getDisplayName(), tagTypeIndexSearchResponseDto.getCount(),
+                    TagTypeIndexSearchResponseDto.getFacetType(), tagTypeIndexSearchResponseDto.getCode(), tagFacets));
             }
         }
 

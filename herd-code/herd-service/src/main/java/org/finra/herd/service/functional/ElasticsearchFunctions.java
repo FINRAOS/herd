@@ -68,7 +68,7 @@ import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.dto.BusinessObjectDefinitionIndexSearchResponseDto;
 import org.finra.herd.model.dto.ElasticsearchResponseDto;
 import org.finra.herd.model.dto.TagIndexSearchResponseDto;
-import org.finra.herd.model.dto.TagTypeIndexSearchResponsedto;
+import org.finra.herd.model.dto.TagTypeIndexSearchResponseDto;
 import org.finra.herd.model.jpa.TagEntity;
 
 
@@ -477,12 +477,11 @@ public class ElasticsearchFunctions implements SearchFunctions
             searchRequestBuilder.setTypes(documentType)
                 .setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME))
                 .setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE)
-                .setSource(searchSourceBuilder);
+                .setSource(searchSourceBuilder)
 
             // Add sorting criteria.
             // First, sort in ascending order on business object definition name
             // then sort in ascending order on namespace code
-            searchRequestBuilder
                 .addSort(SortBuilders.fieldSort(BUSINESS_OBJECT_DEFINITION_SORT_FIELD).order(SortOrder.ASC))
                 .addSort(SortBuilders.fieldSort(NAMESPACE_CODE_SORT_FIELD).order(SortOrder.ASC));
 
@@ -519,7 +518,7 @@ public class ElasticsearchFunctions implements SearchFunctions
                 AggregationBuilders.terms(NAMESPACE_CODE_AGGS).field(NAMESPACE_FIELD)
                     .subAggregation(AggregationBuilders.terms(BDEF_NAME_AGGS).field(BDEF_NAME_FIELD))));
 
-            elasticsearchResponseDto.setTagTypeIndexSearchResponsedtos(searchResponseIntoFacetInformation(searchRequestBuilder));
+            elasticsearchResponseDto.setTagTypeIndexSearchResponseDtos(searchResponseIntoFacetInformation(searchRequestBuilder));
 
         }
     }
@@ -541,13 +540,14 @@ public class ElasticsearchFunctions implements SearchFunctions
             // Create a search request and set the scroll time and scroll size
             final SearchRequestBuilder searchRequestBuilder = transportClient.prepareSearch(indexName);
 
-            searchRequestBuilder.setTypes(documentType).setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME)).setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE)
-                .setSource(searchSourceBuilder);
+            searchRequestBuilder.setTypes(documentType)
+                .setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME))
+                .setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE)
+                .setSource(searchSourceBuilder)
 
-            // Set sort options.
-            // First, sort on business object definition name
-            // then sort on namespace code
-            searchRequestBuilder
+                // Set sort options.
+                // First, sort on business object definition name
+                // then sort on namespace code
                 .addSort(SortBuilders.fieldSort(BUSINESS_OBJECT_DEFINITION_SORT_FIELD).order(SortOrder.ASC))
                 .addSort(SortBuilders.fieldSort(NAMESPACE_CODE_SORT_FIELD).order(SortOrder.ASC));
 
@@ -560,7 +560,7 @@ public class ElasticsearchFunctions implements SearchFunctions
             return elasticsearchResponseDto;
         };
 
-    private List<TagTypeIndexSearchResponsedto> searchResponseIntoFacetInformation(final SearchRequestBuilder searchRequestBuilder)
+    private List<TagTypeIndexSearchResponseDto> searchResponseIntoFacetInformation(final SearchRequestBuilder searchRequestBuilder)
     {
 
         // Retrieve the search response
@@ -571,21 +571,21 @@ public class ElasticsearchFunctions implements SearchFunctions
 
         Terms tagTypeFacetAgg = searchResponse.getAggregations().get(TAG_TYPE_FACET_AGGS);
 
-        List<TagTypeIndexSearchResponsedto> tagTypeIndexSearchResponsedtos = new ArrayList<>();
+        List<TagTypeIndexSearchResponseDto> tagTypeIndexSearchResponseDtos = new ArrayList<>();
 
         for (Terms.Bucket tagTypeCodeEntry : tagTypeCodeAgg.getBuckets())
         {
             List<TagIndexSearchResponseDto> tagIndexSearchResponseDtos = new ArrayList<>();
 
-            TagTypeIndexSearchResponsedto tagTypeIndexSearchResponsedto =
-                new TagTypeIndexSearchResponsedto(tagTypeCodeEntry.getKeyAsString(),
+            TagTypeIndexSearchResponseDto tagTypeIndexSearchResponseDto =
+                new TagTypeIndexSearchResponseDto(tagTypeCodeEntry.getKeyAsString(),
                     tagTypeFacetAgg.getBucketByKey(tagTypeCodeEntry.getKeyAsString()).getDocCount(), tagIndexSearchResponseDtos);
-            tagTypeIndexSearchResponsedtos.add(tagTypeIndexSearchResponsedto);
+            tagTypeIndexSearchResponseDtos.add(tagTypeIndexSearchResponseDto);
 
             Terms tagTypeDisplayNameAggs = tagTypeCodeEntry.getAggregations().get(TAGTYPE_NAME_AGGREGATION);
             for (Terms.Bucket tagTypeDisplayNameEntry : tagTypeDisplayNameAggs.getBuckets())
             {
-                tagTypeIndexSearchResponsedto.setDisplayName(tagTypeDisplayNameEntry.getKeyAsString());
+                tagTypeIndexSearchResponseDto.setDisplayName(tagTypeDisplayNameEntry.getKeyAsString());
 
                 Terms tagCodeAggs = tagTypeDisplayNameEntry.getAggregations().get(TAG_CODE_AGGREGATION);
                 TagIndexSearchResponseDto tagIndexSearchResponseDto;
@@ -604,7 +604,7 @@ public class ElasticsearchFunctions implements SearchFunctions
             }
         }
 
-        return tagTypeIndexSearchResponsedtos;
+        return tagTypeIndexSearchResponseDtos;
     }
 
     /**
