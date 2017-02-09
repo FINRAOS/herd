@@ -125,7 +125,7 @@ public class SearchIndexServiceImpl implements SearchIndexService
         SearchIndexEntity searchIndexEntity = searchIndexDaoHelper.getSearchIndexEntity(searchIndexKey);
 
         // If the index exists delete it.
-        deleteSearchIndex(searchIndexEntity.getName());
+        deleteSearchIndexHelper(searchIndexEntity.getName());
 
         // Delete the search index.
         searchIndexDao.delete(searchIndexEntity);
@@ -146,7 +146,7 @@ public class SearchIndexServiceImpl implements SearchIndexService
         // Create the search index object from the persisted entity.
         SearchIndex searchIndex = createSearchIndexFromEntity(searchIndexEntity);
 
-        // Try to retrieve index settings from the actual search index.
+        // Retrieve index settings from the actual search index.
         Settings getSettingsResponse =
             searchIndexHelperService.getAdminClient().indices().prepareGetIndex().setIndices(searchIndexKey.getSearchIndexName()).execute().actionGet()
                 .getSettings().get(searchIndexKey.getSearchIndexName());
@@ -154,15 +154,15 @@ public class SearchIndexServiceImpl implements SearchIndexService
         // Update the search index settings.
         SearchIndexSettings searchIndexSettings = new SearchIndexSettings();
         searchIndex.setSearchIndexSettings(searchIndexSettings);
-        if (getSettingsResponse != null)
-        {
-            Map<String, String> indexSettings = getSettingsResponse.getAsMap();
-            searchIndexSettings.setIndexCreationDate(indexSettings.get(IndexMetaData.SETTING_CREATION_DATE));
-            searchIndexSettings.setIndexNumberOfReplicas(indexSettings.get(IndexMetaData.SETTING_NUMBER_OF_REPLICAS));
-            searchIndexSettings.setIndexNumberOfShards(indexSettings.get(IndexMetaData.SETTING_NUMBER_OF_SHARDS));
-            searchIndexSettings.setIndexProvidedName(indexSettings.get(IndexMetaData.SETTING_INDEX_PROVIDED_NAME));
-            searchIndexSettings.setIndexUuid(indexSettings.get(IndexMetaData.SETTING_INDEX_UUID));
-        }
+
+        // If we got here, the get settings response returned by the above call cannot be null.
+        // A non-existing search index name results in a "no such index" internal server error.
+        Map<String, String> indexSettings = getSettingsResponse.getAsMap();
+        searchIndexSettings.setIndexCreationDate(indexSettings.get(IndexMetaData.SETTING_CREATION_DATE));
+        searchIndexSettings.setIndexNumberOfReplicas(indexSettings.get(IndexMetaData.SETTING_NUMBER_OF_REPLICAS));
+        searchIndexSettings.setIndexNumberOfShards(indexSettings.get(IndexMetaData.SETTING_NUMBER_OF_SHARDS));
+        searchIndexSettings.setIndexProvidedName(indexSettings.get(IndexMetaData.SETTING_INDEX_PROVIDED_NAME));
+        searchIndexSettings.setIndexUuid(indexSettings.get(IndexMetaData.SETTING_INDEX_UUID));
 
         return searchIndex;
     }
@@ -198,10 +198,7 @@ public class SearchIndexServiceImpl implements SearchIndexService
         }
 
         // If the index exists delete it.
-        if (searchFunctions.getIndexExistsFunction().test(searchIndexKey.getSearchIndexName()))
-        {
-            searchFunctions.getDeleteIndexFunction().accept(searchIndexKey.getSearchIndexName());
-        }
+        deleteSearchIndexHelper(searchIndexKey.getSearchIndexName());
 
         // Create the index.
         searchFunctions.getCreateIndexFunction().accept(searchIndexKey.getSearchIndexName(), documentType, mapping);
@@ -253,7 +250,7 @@ public class SearchIndexServiceImpl implements SearchIndexService
      *
      * @param searchIndexName the name of the search index
      */
-    private void deleteSearchIndex(String searchIndexName)
+    private void deleteSearchIndexHelper(String searchIndexName)
     {
         // If the index exists delete it.
         if (searchFunctions.getIndexExistsFunction().test(searchIndexName))

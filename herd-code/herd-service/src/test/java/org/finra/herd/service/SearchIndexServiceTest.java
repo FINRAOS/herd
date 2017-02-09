@@ -118,15 +118,37 @@ public class SearchIndexServiceTest extends AbstractServiceTest
         SearchIndex response = searchIndexService.createSearchIndex(searchIndexCreateRequest);
     }
 
-    @Ignore
     @Test
     public void testDeleteSearchIndex()
     {
         // Create a search index key.
         SearchIndexKey searchIndexKey = new SearchIndexKey(SEARCH_INDEX_NAME);
 
+        // Create the search index entity.
+        SearchIndexEntity searchIndexEntity = createTestSearchIndexEntity();
+
+        // Mock the external calls.
+        when(alternateKeyHelper.validateStringParameter("Search index name", SEARCH_INDEX_NAME)).thenReturn(SEARCH_INDEX_NAME);
+        when(searchIndexDaoHelper.getSearchIndexEntity(searchIndexKey)).thenReturn(searchIndexEntity);
+        when(searchFunctions.getIndexExistsFunction()).thenReturn(SEARCH_INDEX_NAME -> true);
+        when(searchFunctions.getDeleteIndexFunction()).thenReturn(SEARCH_INDEX_NAME -> {
+        });
+
         // Delete a search index.
         SearchIndex response = searchIndexService.deleteSearchIndex(searchIndexKey);
+
+        // Verify the external calls.
+        verify(alternateKeyHelper).validateStringParameter("Search index name", SEARCH_INDEX_NAME);
+        verify(searchIndexDaoHelper).getSearchIndexEntity(searchIndexKey);
+        verify(searchFunctions).getIndexExistsFunction();
+        verify(searchFunctions).getDeleteIndexFunction();
+        verify(searchIndexDao).delete(searchIndexEntity);
+        verifyNoMoreInteractions(alternateKeyHelper, businessObjectDefinitionDao, businessObjectDefinitionHelper, configurationDaoHelper, configurationHelper,
+            searchFunctions, searchIndexDao, searchIndexDaoHelper, searchIndexHelperService, searchIndexStatusDaoHelper, searchIndexTypeDaoHelper);
+
+        // Validate the returned object.
+        assertEquals(new SearchIndex(searchIndexKey, SEARCH_INDEX_TYPE, SEARCH_INDEX_STATUS, NO_SEARCH_INDEX_SETTINGS, USER_ID, CREATED_ON, UPDATED_ON),
+            response);
     }
 
     @Test
@@ -135,18 +157,8 @@ public class SearchIndexServiceTest extends AbstractServiceTest
         // Create a search index key.
         SearchIndexKey searchIndexKey = new SearchIndexKey(SEARCH_INDEX_NAME);
 
-        // Create the relative search index entities.
-        SearchIndexTypeEntity searchIndexTypeEntity = new SearchIndexTypeEntity();
-        searchIndexTypeEntity.setCode(SEARCH_INDEX_TYPE);
-        SearchIndexStatusEntity searchIndexStatusEntity = new SearchIndexStatusEntity();
-        searchIndexStatusEntity.setCode(SEARCH_INDEX_STATUS);
-        SearchIndexEntity searchIndexEntity = new SearchIndexEntity();
-        searchIndexEntity.setName(SEARCH_INDEX_NAME);
-        searchIndexEntity.setType(searchIndexTypeEntity);
-        searchIndexEntity.setStatus(searchIndexStatusEntity);
-        searchIndexEntity.setCreatedBy(USER_ID);
-        searchIndexEntity.setCreatedOn(new Timestamp(CREATED_ON.toGregorianCalendar().getTimeInMillis()));
-        searchIndexEntity.setUpdatedOn(new Timestamp(UPDATED_ON.toGregorianCalendar().getTimeInMillis()));
+        // Create the search index entity.
+        SearchIndexEntity searchIndexEntity = createTestSearchIndexEntity();
 
         // Mock some of the external call responses.
         AdminClient mockedAdminClient = mock(AdminClient.class);
@@ -210,5 +222,29 @@ public class SearchIndexServiceTest extends AbstractServiceTest
 
         // Validate the returned object.
         assertEquals(new SearchIndexKeys(searchIndexKeys), response);
+    }
+
+    /**
+     * Creates a test search index entity along with the relative database entities.
+     *
+     * @return the search index entity
+     */
+    private SearchIndexEntity createTestSearchIndexEntity()
+    {
+        SearchIndexTypeEntity searchIndexTypeEntity = new SearchIndexTypeEntity();
+        searchIndexTypeEntity.setCode(SEARCH_INDEX_TYPE);
+
+        SearchIndexStatusEntity searchIndexStatusEntity = new SearchIndexStatusEntity();
+        searchIndexStatusEntity.setCode(SEARCH_INDEX_STATUS);
+
+        SearchIndexEntity searchIndexEntity = new SearchIndexEntity();
+        searchIndexEntity.setName(SEARCH_INDEX_NAME);
+        searchIndexEntity.setType(searchIndexTypeEntity);
+        searchIndexEntity.setStatus(searchIndexStatusEntity);
+        searchIndexEntity.setCreatedBy(USER_ID);
+        searchIndexEntity.setCreatedOn(new Timestamp(CREATED_ON.toGregorianCalendar().getTimeInMillis()));
+        searchIndexEntity.setUpdatedOn(new Timestamp(UPDATED_ON.toGregorianCalendar().getTimeInMillis()));
+
+        return searchIndexEntity;
     }
 }
