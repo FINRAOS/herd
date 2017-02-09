@@ -309,6 +309,16 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
             "#end" +
             "#end";
 
+    public static final String SEARCH_INDEX_SETTING_CREATION_DATE = "UT_SearchIndexSetting_CreationDate_" + RANDOM_SUFFIX;
+
+    public static final String SEARCH_INDEX_SETTING_INDEX_PROVIDED_NAME = "UT_SearchIndexSetting_ProvidedName_" + RANDOM_SUFFIX;
+
+    public static final String SEARCH_INDEX_SETTING_INDEX_UUID = "UT_SearchIndexSetting_Uuid_" + RANDOM_SUFFIX;
+
+    public static final String SEARCH_INDEX_SETTING_NUMBER_OF_REPLICAS = "UT_SearchIndexSetting_NumberOfReplicas_" + RANDOM_SUFFIX;
+
+    public static final String SEARCH_INDEX_SETTING_NUMBER_OF_SHARDS = "UT_SearchIndexSetting_NumberOfShards_" + RANDOM_SUFFIX;
+
     public static final String SECOND_PARTITION_COLUMN_NAME = "PRTN_CLMN002";
 
     /**

@@ -124,7 +124,7 @@ public class SearchIndexRestControllerTest extends AbstractRestTest
     @Test
     public void testGetSearchIndexes()
     {
-        // Create a list of search index keys.
+        // Create a get search indexes response.
         SearchIndexKeys searchIndexKeys = new SearchIndexKeys(Arrays.asList(new SearchIndexKey(SEARCH_INDEX_NAME), new SearchIndexKey(SEARCH_INDEX_NAME_2)));
 
         // Mock the call to the search index service.
