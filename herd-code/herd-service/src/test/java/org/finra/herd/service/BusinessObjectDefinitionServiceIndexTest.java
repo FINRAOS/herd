@@ -32,6 +32,8 @@ import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Future;
@@ -39,6 +41,7 @@ import java.util.concurrent.Future;
 import com.fasterxml.jackson.core.JsonLocation;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.google.common.collect.Sets;
+import org.apache.commons.collections.CollectionUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -721,6 +724,254 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         List<String> facetFields = new ArrayList<>();
         facetFields.add(("TaG"));
         indexSearchBusinessObjectDefinitionsFacetFields(facetFields);
+    }
+
+    @Test
+    public void testIndexSearchBusinessObjectDefinitionReturnsEmptyResponseForEmptyTagEntities()
+    {
+        // Create  a new business object definition search key for use in the business object definition search key list with an empty tag key
+        BusinessObjectDefinitionSearchKey businessObjectDefinitionSearchKey = new BusinessObjectDefinitionSearchKey(new TagKey(), NOT_INCLUDE_TAG_HIERARCHY);
+
+        // Create a new business object definition search key list with the tag key and the include tag hierarchy boolean flag
+        List<BusinessObjectDefinitionSearchKey> businessObjectDefinitionSearchKeyList = new ArrayList<>();
+        businessObjectDefinitionSearchKeyList.add(businessObjectDefinitionSearchKey);
+
+        // Create a new business object definition search filter list with the new business object definition search key list
+        List<BusinessObjectDefinitionSearchFilter> businessObjectDefinitionSearchFilterList = new ArrayList<>();
+        businessObjectDefinitionSearchFilterList.add(new BusinessObjectDefinitionSearchFilter(businessObjectDefinitionSearchKeyList));
+
+        // Create a new business object definition search request that will be used when testing the index search business object definitions method
+        BusinessObjectDefinitionIndexSearchRequest businessObjectDefinitionIndexSearchRequest =
+            new BusinessObjectDefinitionIndexSearchRequest(businessObjectDefinitionSearchFilterList, new ArrayList<>());
+
+
+        // Mock the call to external methods
+        when(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH, Integer.class))
+            .thenReturn(SHORT_DESCRIPTION_LENGTH);
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class)).thenReturn("INDEX_NAME");
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
+        when(searchFunctions.getSearchBusinessObjectDefinitionsByTagsFunction())
+            .thenReturn((indexName, documentType, tagEntities, facetFieldList) -> new ElasticsearchResponseDto());
+
+        // Call the method under test
+        BusinessObjectDefinitionIndexSearchResponse businessObjectDefinitionSearchResponse =
+            businessObjectDefinitionService.indexSearchBusinessObjectDefinitions(businessObjectDefinitionIndexSearchRequest, new HashSet<>());
+
+        assertThat("Expected empty response", CollectionUtils.isEmpty(businessObjectDefinitionSearchResponse.getBusinessObjectDefinitions()));
+
+        // Verify the calls to external methods
+        verify(configurationHelper, times(0)).getProperty(ConfigurationValue.BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH, Integer.class);
+        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
+        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
+    }
+
+    @Test
+    public void testIndexSearchBusinessObjectDefinitionWithFacetsReturnsEmptyResponseForEmptyTagEntities()
+    {
+        // Create  a new business object definition search key for use in the business object definition search key list with an empty tag key
+        BusinessObjectDefinitionSearchKey businessObjectDefinitionSearchKey = new BusinessObjectDefinitionSearchKey(new TagKey(), NOT_INCLUDE_TAG_HIERARCHY);
+
+        // Create a new business object definition search key list with the tag key and the include tag hierarchy boolean flag
+        List<BusinessObjectDefinitionSearchKey> businessObjectDefinitionSearchKeyList = new ArrayList<>();
+        businessObjectDefinitionSearchKeyList.add(businessObjectDefinitionSearchKey);
+
+        // Create a new business object definition search filter list with the new business object definition search key list
+        List<BusinessObjectDefinitionSearchFilter> businessObjectDefinitionSearchFilterList = new ArrayList<>();
+        businessObjectDefinitionSearchFilterList.add(new BusinessObjectDefinitionSearchFilter(businessObjectDefinitionSearchKeyList));
+
+        // Create a new business object definition search request that will be used when testing the index search business object definitions method
+        BusinessObjectDefinitionIndexSearchRequest businessObjectDefinitionIndexSearchRequest =
+            new BusinessObjectDefinitionIndexSearchRequest(businessObjectDefinitionSearchFilterList, Collections.singletonList("TAG"));
+
+        // Mock the call to external methods
+        when(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH, Integer.class))
+            .thenReturn(SHORT_DESCRIPTION_LENGTH);
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class)).thenReturn("INDEX_NAME");
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
+        when(searchFunctions.getSearchBusinessObjectDefinitionsByTagsFunction())
+            .thenReturn((indexName, documentType, tagEntities, facetFieldList) -> new ElasticsearchResponseDto());
+
+        // Call the method under test
+        BusinessObjectDefinitionIndexSearchResponse businessObjectDefinitionSearchResponse =
+            businessObjectDefinitionService.indexSearchBusinessObjectDefinitions(businessObjectDefinitionIndexSearchRequest, new HashSet<>());
+
+        assertThat("Expected empty response", CollectionUtils.isEmpty(businessObjectDefinitionSearchResponse.getBusinessObjectDefinitions()));
+
+        // Verify the calls to external methods
+        verify(configurationHelper, times(0)).getProperty(ConfigurationValue.BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH, Integer.class);
+        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
+        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
+    }
+
+    @Test
+    public void testIndexSearchBusinessObjectDefinitionsWithMultipleTagsIncludeTagHierarchy()
+    {
+        // Create new tag keys
+        TagKey tagKey = new TagKey(TAG_TYPE, TAG_CODE);
+        TagKey tagKeyTwo = new TagKey(TAG_TYPE_2, TAG_CODE_2);
+
+        // Create a new business object definition search key for use in the business object definition search key list
+        BusinessObjectDefinitionSearchKey businessObjectDefinitionSearchKey = new BusinessObjectDefinitionSearchKey(tagKey, INCLUDE_TAG_HIERARCHY);
+
+        // Create another new business object definition search key for use in the business object definition search key list
+        BusinessObjectDefinitionSearchKey businessObjectDefinitionSearchKeyTwo = new BusinessObjectDefinitionSearchKey(tagKeyTwo, INCLUDE_TAG_HIERARCHY);
+
+        // Create a new business object definition search key list with both the tag keys and the include tag hierarchy boolean flag
+        List<BusinessObjectDefinitionSearchKey> businessObjectDefinitionSearchKeyList = new ArrayList<>();
+        businessObjectDefinitionSearchKeyList.add(businessObjectDefinitionSearchKey);
+        businessObjectDefinitionSearchKeyList.add(businessObjectDefinitionSearchKeyTwo);
+
+        // Create a new business object definition search filter list with the new business object definition search key list
+        List<BusinessObjectDefinitionSearchFilter> businessObjectDefinitionSearchFilterList = new ArrayList<>();
+        businessObjectDefinitionSearchFilterList.add(new BusinessObjectDefinitionSearchFilter(businessObjectDefinitionSearchKeyList));
+
+        // Create a new business object definition search request that will be used when testing the index search business object definitions method
+        BusinessObjectDefinitionIndexSearchRequest businessObjectDefinitionIndexSearchRequest =
+            new BusinessObjectDefinitionIndexSearchRequest(businessObjectDefinitionSearchFilterList, new ArrayList<>());
+
+        // Create a new fields set that will be used when testing the index search business object definitions method
+        Set<String> fields = Sets.newHashSet(FIELD_DATA_PROVIDER_NAME, FIELD_DISPLAY_NAME, FIELD_SHORT_DESCRIPTION);
+
+        // Create a tag entity to return from the tag dao helper get tag entity method
+        TagEntity tagEntity = new TagEntity();
+        tagEntity.setTagCode(TAG_CODE);
+
+        // Create a tag entity to return from the tag dao helper get tag entity method
+        TagEntity tagEntityTwo = new TagEntity();
+        tagEntity.setTagCode(TAG_CODE_2);
+
+        // Create a tag child entity to enter into the tag children entities list
+        TagEntity tagChildEntity = new TagEntity();
+        tagChildEntity.setTagCode(TAG_CODE_2);
+
+        // Create a tag children entity list to return from the tag dao helper tag children entities method
+        List<TagEntity> tagChildrenEntityList = new ArrayList<>();
+        tagChildrenEntityList.add(tagChildEntity);
+
+        List<BusinessObjectDefinitionIndexSearchResponseDto> businessObjectDefinitionIndexSearchResponseDtoList = new ArrayList<>();
+        BusinessObjectDefinitionIndexSearchResponseDto businessObjectDefinitionIndexSearchResponseDto1 =
+            new BusinessObjectDefinitionIndexSearchResponseDto(DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME, BDEF_NAME, NAMESPACE);
+        BusinessObjectDefinitionIndexSearchResponseDto businessObjectDefinitionIndexSearchResponseDto2 =
+            new BusinessObjectDefinitionIndexSearchResponseDto(DATA_PROVIDER_NAME_2, BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2, BDEF_NAME_2, NAMESPACE);
+        businessObjectDefinitionIndexSearchResponseDtoList.add(businessObjectDefinitionIndexSearchResponseDto1);
+        businessObjectDefinitionIndexSearchResponseDtoList.add(businessObjectDefinitionIndexSearchResponseDto2);
+
+        ElasticsearchResponseDto elasticsearchResponseDto = new ElasticsearchResponseDto();
+        elasticsearchResponseDto.setBusinessObjectDefinitionIndexSearchResponseDtos(businessObjectDefinitionIndexSearchResponseDtoList);
+
+        // Mock the call to external methods
+        when(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH, Integer.class))
+            .thenReturn(SHORT_DESCRIPTION_LENGTH);
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class)).thenReturn("INDEX_NAME");
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
+        when(tagDaoHelper.getTagEntity(businessObjectDefinitionSearchKey.getTagKey())).thenReturn(tagEntity);
+        when(tagDaoHelper.getTagEntity(businessObjectDefinitionSearchKeyTwo.getTagKey())).thenReturn(tagEntityTwo);
+        when(tagDaoHelper.getTagChildrenEntities(tagEntity)).thenReturn(tagChildrenEntityList);
+        when(searchFunctions.getSearchBusinessObjectDefinitionsByTagsFunction())
+            .thenReturn((indexName, documentType, tagEntities, facetFieldList) -> elasticsearchResponseDto);
+
+        // Call the method under test
+        BusinessObjectDefinitionIndexSearchResponse businessObjectDefinitionSearchResponse =
+            businessObjectDefinitionService.indexSearchBusinessObjectDefinitions(businessObjectDefinitionIndexSearchRequest, fields);
+
+        assertThat("Business object definition service index search business object definitions method response is null, but it should not be.",
+            businessObjectDefinitionSearchResponse, not(nullValue()));
+
+        assertThat("The first business object definition name in the search response is not correct.",
+            businessObjectDefinitionSearchResponse.getBusinessObjectDefinitions().get(0).getBusinessObjectDefinitionName(), is(BDEF_NAME));
+
+        assertThat("The second business object definition name in the search response is not correct.",
+            businessObjectDefinitionSearchResponse.getBusinessObjectDefinitions().get(1).getBusinessObjectDefinitionName(), is(BDEF_NAME_2));
+
+        // Verify the calls to external methods
+        verify(configurationHelper, times(2)).getProperty(ConfigurationValue.BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH, Integer.class);
+        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
+        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
+        verify(tagHelper, times(1)).validateTagKey(tagKey);
+        verify(tagDaoHelper, times(1)).getTagEntity(businessObjectDefinitionSearchKey.getTagKey());
+        verify(tagDaoHelper, times(1)).getTagChildrenEntities(tagEntity);
+        verify(searchFunctions, times(1)).getSearchBusinessObjectDefinitionsByTagsFunction();
+    }
+
+    @Test
+    public void testIndexSearchBusinessObjectDefinitionsWithMultipleTagsDoNotIncludeTagHierarchy()
+    {
+        // Create new tag keys
+        TagKey tagKey = new TagKey(TAG_TYPE, TAG_CODE);
+        TagKey tagKeyTwo = new TagKey(TAG_TYPE_2, TAG_CODE_2);
+
+        // Create a new business object definition search key for use in the business object definition search key list
+        BusinessObjectDefinitionSearchKey businessObjectDefinitionSearchKey = new BusinessObjectDefinitionSearchKey(tagKey, NOT_INCLUDE_TAG_HIERARCHY);
+
+        // Create another new business object definition search key for use in the business object definition search key list
+        BusinessObjectDefinitionSearchKey businessObjectDefinitionSearchKeyTwo = new BusinessObjectDefinitionSearchKey(tagKeyTwo, NOT_INCLUDE_TAG_HIERARCHY);
+
+        // Create a new business object definition search key list with both the tag keys and the include tag hierarchy boolean flag
+        List<BusinessObjectDefinitionSearchKey> businessObjectDefinitionSearchKeyList = new ArrayList<>();
+        businessObjectDefinitionSearchKeyList.add(businessObjectDefinitionSearchKey);
+        businessObjectDefinitionSearchKeyList.add(businessObjectDefinitionSearchKeyTwo);
+
+        // Create a new business object definition search filter list with the new business object definition search key list
+        List<BusinessObjectDefinitionSearchFilter> businessObjectDefinitionSearchFilterList = new ArrayList<>();
+        businessObjectDefinitionSearchFilterList.add(new BusinessObjectDefinitionSearchFilter(businessObjectDefinitionSearchKeyList));
+
+        // Create a new business object definition search request that will be used when testing the index search business object definitions method
+        BusinessObjectDefinitionIndexSearchRequest businessObjectDefinitionIndexSearchRequest =
+            new BusinessObjectDefinitionIndexSearchRequest(businessObjectDefinitionSearchFilterList, new ArrayList<>());
+
+        // Create a new fields set that will be used when testing the index search business object definitions method
+        Set<String> fields = Sets.newHashSet(FIELD_DATA_PROVIDER_NAME, FIELD_DISPLAY_NAME, FIELD_SHORT_DESCRIPTION);
+
+        // Create a tag entity to return from the tag dao helper get tag entity method
+        TagEntity tagEntity = new TagEntity();
+        tagEntity.setTagCode(TAG_CODE);
+
+        // Create a tag entity to return from the tag dao helper get tag entity method
+        TagEntity tagEntityTwo = new TagEntity();
+        tagEntity.setTagCode(TAG_CODE_2);
+
+        List<BusinessObjectDefinitionIndexSearchResponseDto> businessObjectDefinitionIndexSearchResponseDtoList = new ArrayList<>();
+        BusinessObjectDefinitionIndexSearchResponseDto businessObjectDefinitionIndexSearchResponseDto1 =
+            new BusinessObjectDefinitionIndexSearchResponseDto(DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME, BDEF_NAME, NAMESPACE);
+        BusinessObjectDefinitionIndexSearchResponseDto businessObjectDefinitionIndexSearchResponseDto2 =
+            new BusinessObjectDefinitionIndexSearchResponseDto(DATA_PROVIDER_NAME_2, BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2, BDEF_NAME_2, NAMESPACE);
+        businessObjectDefinitionIndexSearchResponseDtoList.add(businessObjectDefinitionIndexSearchResponseDto1);
+        businessObjectDefinitionIndexSearchResponseDtoList.add(businessObjectDefinitionIndexSearchResponseDto2);
+
+        ElasticsearchResponseDto elasticsearchResponseDto = new ElasticsearchResponseDto();
+        elasticsearchResponseDto.setBusinessObjectDefinitionIndexSearchResponseDtos(businessObjectDefinitionIndexSearchResponseDtoList);
+
+        // Mock the call to external methods
+        when(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH, Integer.class))
+            .thenReturn(SHORT_DESCRIPTION_LENGTH);
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class)).thenReturn("INDEX_NAME");
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
+        when(tagDaoHelper.getTagEntity(businessObjectDefinitionSearchKey.getTagKey())).thenReturn(tagEntity);
+        when(tagDaoHelper.getTagEntity(businessObjectDefinitionSearchKeyTwo.getTagKey())).thenReturn(tagEntityTwo);
+        when(searchFunctions.getSearchBusinessObjectDefinitionsByTagsFunction())
+            .thenReturn((indexName, documentType, tagEntities, facetFieldList) -> elasticsearchResponseDto);
+
+        // Call the method under test
+        BusinessObjectDefinitionIndexSearchResponse businessObjectDefinitionSearchResponse =
+            businessObjectDefinitionService.indexSearchBusinessObjectDefinitions(businessObjectDefinitionIndexSearchRequest, fields);
+
+        assertThat("Business object definition service index search business object definitions method response is null, but it should not be.",
+            businessObjectDefinitionSearchResponse, not(nullValue()));
+
+        assertThat("The first business object definition name in the search response is not correct.",
+            businessObjectDefinitionSearchResponse.getBusinessObjectDefinitions().get(0).getBusinessObjectDefinitionName(), is(BDEF_NAME));
+
+        assertThat("The second business object definition name in the search response is not correct.",
+            businessObjectDefinitionSearchResponse.getBusinessObjectDefinitions().get(1).getBusinessObjectDefinitionName(), is(BDEF_NAME_2));
+
+        // Verify the calls to external methods
+        verify(configurationHelper, times(2)).getProperty(ConfigurationValue.BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH, Integer.class);
+        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
+        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
+        verify(tagHelper, times(1)).validateTagKey(tagKey);
+        verify(tagDaoHelper, times(1)).getTagEntity(businessObjectDefinitionSearchKey.getTagKey());
+        verify(tagDaoHelper, times(0)).getTagChildrenEntities(tagEntity);
+        verify(searchFunctions, times(1)).getSearchBusinessObjectDefinitionsByTagsFunction();
     }
 
     @Test
