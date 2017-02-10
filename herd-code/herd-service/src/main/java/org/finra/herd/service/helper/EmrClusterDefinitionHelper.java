@@ -21,6 +21,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
@@ -128,6 +129,15 @@ public class EmrClusterDefinitionHelper
 
         emrClusterDefinition
             .setAdditionalSlaveSecurityGroups(assertNotBlankAndTrim(emrClusterDefinition.getAdditionalSlaveSecurityGroups(), "additionalSlaveSecurityGroup"));
+
+        // Fail if security configuration is specified for EMR version less than 4.8.0.
+        if (StringUtils.isNotBlank(emrClusterDefinition.getSecurityConfiguration()))
+        {
+            final DefaultArtifactVersion securityConfigurationMinEmrVersion = new DefaultArtifactVersion("4.8.0");
+            Assert.isTrue(StringUtils.isNotBlank(emrClusterDefinition.getReleaseLabel()) &&
+                securityConfigurationMinEmrVersion.compareTo(new DefaultArtifactVersion(emrClusterDefinition.getReleaseLabel().replaceFirst("^(emr-)", ""))) <=
+                    0, "EMR security configuration is not supported prior to EMR release 4.8.0.");
+        }
     }
 
     /**

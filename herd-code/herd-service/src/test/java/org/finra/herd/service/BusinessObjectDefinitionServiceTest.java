@@ -18,6 +18,7 @@ package org.finra.herd.service;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.Arrays;
@@ -27,6 +28,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
+import org.apache.commons.collections4.CollectionUtils;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -992,7 +994,26 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
             businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
             HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn())), resultBusinessObjectDefinition);
     }
+    @Test
+    public void testBusinessObjectDefinitionNoHtmlInShortDescription()
+    {
+        // Set up test data.
+        setUpTestEntitiesForSearchTesting();
 
+        // Retrieve the actual business object definition objects from the search response.
+        BusinessObjectDefinitionSearchResponse searchResponse = businessObjectDefinitionService.searchBusinessObjectDefinitions(
+            new BusinessObjectDefinitionSearchRequest(Arrays.asList(new BusinessObjectDefinitionSearchFilter(
+                Arrays.asList(new BusinessObjectDefinitionSearchKey(new TagKey(TAG_TYPE, TAG_CODE_4), INCLUDE_TAG_HIERARCHY))))),
+            Sets.newHashSet(FIELD_SHORT_DESCRIPTION));
+        Set<BusinessObjectDefinition> actualBusinessObjectDefinitions = new HashSet<>(searchResponse.getBusinessObjectDefinitions());
+
+        assertEquals(1, actualBusinessObjectDefinitions.size());
+
+        for(BusinessObjectDefinition actualBdef: actualBusinessObjectDefinitions) {
+            assertEquals("Test Description. Value should be <30> value should be <40>", actualBdef.getShortDescription());
+            break;
+        }
+    }
     @Test
     public void testGetBusinessObjectDefinitionNoExists() throws Exception
     {
@@ -1318,13 +1339,15 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
         // Create a root tag entity for the tag type.
         TagEntity rootTagEntity = tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
 
-        // Create two children for the root tag.
+        // Create three children for the root tag.
         TagEntity childTagEntity1 = tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_2, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, rootTagEntity);
         TagEntity childTagEntity2 = tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_3, TAG_DISPLAY_NAME_3, TAG_DESCRIPTION_3, rootTagEntity);
+        TagEntity childTagEntity3 = tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_4, TAG_DISPLAY_NAME_4, TAG_DESCRIPTION_4, rootTagEntity);
 
         // Create association between business object definition and tag.
         businessObjectDefinitionTagDaoTestHelper.createBusinessObjectDefinitionTagEntity(businessObjectDefinitionEntities.get(0), childTagEntity1);
         businessObjectDefinitionTagDaoTestHelper.createBusinessObjectDefinitionTagEntity(businessObjectDefinitionEntities.get(1), childTagEntity2);
+        businessObjectDefinitionTagDaoTestHelper.createBusinessObjectDefinitionTagEntity(businessObjectDefinitionEntities.get(2), childTagEntity3);
 
         // Convert the entities into business object definition objects for easy comparison later.
         return businessObjectDefinitionEntities.stream()
@@ -1530,7 +1553,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
     public void testSearchBusinessObjectDefinitionsOnlyShortDescription()
     {
         // Set up test data.
-        Set<BusinessObjectDefinition> expectedBusinessObjectDefinitions = setUpTestEntitiesForSearchTesting();
+        Set<BusinessObjectDefinition> expectedBusinessObjectDefinitions = new HashSet<>(setUpTestEntitiesForSearchTesting());
 
         // Remove fields which are not expected from the expected business object definition objects.
         for (BusinessObjectDefinition businessObjectDefinition : expectedBusinessObjectDefinitions)
@@ -1546,7 +1569,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
             Sets.newHashSet(FIELD_SHORT_DESCRIPTION));
         Set<BusinessObjectDefinition> actualBusinessObjectDefinitions = new HashSet<>(searchResponse.getBusinessObjectDefinitions());
 
-        assertEquals(actualBusinessObjectDefinitions, expectedBusinessObjectDefinitions);
+        assertTrue(CollectionUtils.isEqualCollection(expectedBusinessObjectDefinitions, actualBusinessObjectDefinitions));
     }
 
     @Test

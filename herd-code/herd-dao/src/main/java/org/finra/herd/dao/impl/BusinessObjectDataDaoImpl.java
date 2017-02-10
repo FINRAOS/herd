@@ -17,6 +17,7 @@ package org.finra.herd.dao.impl;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -39,6 +40,8 @@ import org.springframework.util.CollectionUtils;
 
 import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.dao.BusinessObjectDataDao;
+import org.finra.herd.model.api.xml.Attribute;
+import org.finra.herd.model.api.xml.AttributeValueFilter;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchFilter;
@@ -48,6 +51,8 @@ import org.finra.herd.model.api.xml.PartitionValueFilter;
 import org.finra.herd.model.api.xml.PartitionValueRange;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.StoragePolicyPriorityLevel;
+import org.finra.herd.model.jpa.BusinessObjectDataAttributeEntity;
+import org.finra.herd.model.jpa.BusinessObjectDataAttributeEntity_;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity_;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
@@ -824,9 +829,19 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         }
 
         predicate = createPartitionValueFilters(businessDataSearchKey, businessObjectDataEntity, businessObjectFormatEntity, builder, predicate);
-
+        
+        List<AttributeValueFilter>  attibuteValueFilters = businessDataSearchKey.getAttributeValueFilters();
+        
+        //actively pull attributes when the attribute filters exist
+        if (attibuteValueFilters != null && !attibuteValueFilters.isEmpty())
+        {
+            predicate =
+                    createAttriubteValueFilters(businessDataSearchKey, businessObjectDataEntity, builder, predicate);      
+            businessObjectDataEntity.fetch("attributes");
+        }
+    
         criteria.select(businessObjectDataEntity).where(predicate);
-
+        
         //order by
         List<Order> orderList = new ArrayList<>();
         orderList.add(builder.asc(businessObjectDefinitionEntity.get(BusinessObjectDefinitionEntity_.namespace)));
@@ -843,50 +858,11 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
         criteria.orderBy(orderList);
 
-        List<BusinessObjectData> businessObjectDataList = new ArrayList<>();
-
         List<BusinessObjectDataEntity> entitityArray =
             entityManager.createQuery(criteria).setMaxResults(businessObjectDataSearchMaxResultsPerPage).getResultList();
-        for (BusinessObjectDataEntity dataEntity : entitityArray)
-        {
-            BusinessObjectData businessObjectData = new BusinessObjectData();
-            businessObjectData.setId(dataEntity.getId());
-            businessObjectData.setPartitionValue(dataEntity.getPartitionValue());
-            businessObjectData.setVersion(dataEntity.getVersion());
-            businessObjectData.setLatestVersion(dataEntity.getLatestVersion());
-            BusinessObjectFormatEntity formatEntity = dataEntity.getBusinessObjectFormat();
-            businessObjectData.setNamespace(formatEntity.getBusinessObjectDefinition().getNamespace().getCode());
-            businessObjectData.setBusinessObjectDefinitionName(formatEntity.getBusinessObjectDefinition().getName());
-            businessObjectData.setBusinessObjectFormatUsage(formatEntity.getUsage());
-            businessObjectData.setBusinessObjectFormatFileType(formatEntity.getFileType().getCode());
-            businessObjectData.setBusinessObjectFormatVersion(formatEntity.getBusinessObjectFormatVersion());
-            businessObjectData.setPartitionKey(formatEntity.getPartitionKey());
-
-            List<String> subpartitions = new ArrayList<>();
-            if (dataEntity.getPartitionValue2() != null)
-            {
-                subpartitions.add(dataEntity.getPartitionValue2());
-            }
-            if (dataEntity.getPartitionValue3() != null)
-            {
-                subpartitions.add(dataEntity.getPartitionValue3());
-            }
-            if (dataEntity.getPartitionValue4() != null)
-            {
-                subpartitions.add(dataEntity.getPartitionValue4());
-            }
-            if (dataEntity.getPartitionValue5() != null)
-            {
-                subpartitions.add(dataEntity.getPartitionValue5());
-            }
-            if (subpartitions.size() > 0)
-            {
-                businessObjectData.setSubPartitionValues(subpartitions);
-            }
-
-            businessObjectDataList.add(businessObjectData);
-        }
-
+        
+        List<BusinessObjectData> businessObjectDataList = getQueryResultListFromEntityList(entitityArray, attibuteValueFilters);
+        
         return businessObjectDataList;
     }
 
@@ -957,5 +933,168 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         }
 
         return predicate;
+    }
+    
+    /**
+     * Create attribute value filters
+     * @param businessDataSearchKey business object search key
+     * @param businessObjectDataEntity business object data entity
+     * @param builder query build
+     * @param predicatePram predicate
+     * @param attributeNameParamSet attribute name parameter set
+     * @param attributeValueParamList attribute value parameter list
+     * @return predicate with added attribute value filters
+     */
+    private Predicate createAttriubteValueFilters(BusinessObjectDataSearchKey businessDataSearchKey, Root<BusinessObjectDataEntity> businessObjectDataEntity,
+        CriteriaBuilder builder, Predicate predicatePram)
+    {
+        Predicate predicate = predicatePram;
+
+        if (businessDataSearchKey.getAttributeValueFilters() != null && !businessDataSearchKey.getAttributeValueFilters().isEmpty())
+        {
+            for (AttributeValueFilter attributeValueFilter : businessDataSearchKey.getAttributeValueFilters())
+            {   
+                Join<BusinessObjectDataEntity, BusinessObjectDataAttributeEntity> dataAttributeEntity = businessObjectDataEntity.join(
+                        BusinessObjectDataEntity_.attributes);
+
+                String attributeName = attributeValueFilter.getAttributeName();
+                String attributeValue = attributeValueFilter.getAttributeValue();
+
+                if (!StringUtils.isEmpty(attributeName))
+                {
+                    predicate =
+                            builder.and(predicate, builder.equal(builder.upper(dataAttributeEntity.get(BusinessObjectDataAttributeEntity_.name)), attributeName
+                                    .toUpperCase()));
+                }
+                if (!StringUtils.isEmpty(attributeValue))
+                {
+                    predicate = builder
+                            .and(predicate, builder.like(dataAttributeEntity.get(BusinessObjectDataAttributeEntity_.value), "%" + attributeValue + "%"));
+                }
+            }
+        }
+
+        return predicate;
+    }
+    
+    /**
+     * get query result list from entity list
+     * @param entitityArray entity array from query
+     * @param attributeNameParamSet attribute name parameter set
+     * @param attributeValueParamList attribute value parameter list
+     * @return business object data list
+     */
+    private List<BusinessObjectData> getQueryResultListFromEntityList(List<BusinessObjectDataEntity> entitityArray,
+        List<AttributeValueFilter> attributeValueList)
+    {
+        List<BusinessObjectData> businessObjectDataList = new ArrayList<>();
+
+       for (BusinessObjectDataEntity dataEntity : entitityArray)
+        {
+            BusinessObjectData businessObjectData = new BusinessObjectData();
+            businessObjectData.setId(dataEntity.getId());
+            businessObjectData.setPartitionValue(dataEntity.getPartitionValue());
+            businessObjectData.setVersion(dataEntity.getVersion());
+            businessObjectData.setLatestVersion(dataEntity.getLatestVersion());
+            BusinessObjectFormatEntity formatEntity = dataEntity.getBusinessObjectFormat();
+            businessObjectData.setNamespace(formatEntity.getBusinessObjectDefinition().getNamespace().getCode());
+            businessObjectData.setBusinessObjectDefinitionName(formatEntity.getBusinessObjectDefinition().getName());
+            businessObjectData.setBusinessObjectFormatUsage(formatEntity.getUsage());
+            businessObjectData.setBusinessObjectFormatFileType(formatEntity.getFileType().getCode());
+            businessObjectData.setBusinessObjectFormatVersion(formatEntity.getBusinessObjectFormatVersion());
+            businessObjectData.setPartitionKey(formatEntity.getPartitionKey());
+
+            List<String> subpartitions = new ArrayList<>();
+            if (dataEntity.getPartitionValue2() != null)
+            {
+                subpartitions.add(dataEntity.getPartitionValue2());
+            }
+            if (dataEntity.getPartitionValue3() != null)
+            {
+                subpartitions.add(dataEntity.getPartitionValue3());
+            }
+            if (dataEntity.getPartitionValue4() != null)
+            {
+                subpartitions.add(dataEntity.getPartitionValue4());
+            }
+            if (dataEntity.getPartitionValue5() != null)
+            {
+                subpartitions.add(dataEntity.getPartitionValue5());
+            }
+            if (subpartitions.size() > 0)
+            {
+                businessObjectData.setSubPartitionValues(subpartitions);
+            }
+
+            //add attribute name and values in the request to the response
+            if (attributeValueList != null && !attributeValueList.isEmpty())
+            {
+                Collection<BusinessObjectDataAttributeEntity> dataAttributeColection = dataEntity.getAttributes();
+                List<Attribute> attributeList = new ArrayList<>();
+                for (BusinessObjectDataAttributeEntity attributeEntity : dataAttributeColection)
+                {
+                    Attribute attribute= new Attribute(attributeEntity.getName(), attributeEntity.getValue());
+                    if (shouldIncludeAttributeInReponse(attributeEntity, attributeValueList) && !attributeList.contains(attribute))
+                    {
+                        attributeList.add(attribute);
+                    }
+                }
+                businessObjectData.setAttributes(attributeList);
+            }        
+            businessObjectDataList.add(businessObjectData);
+        }
+       
+       return businessObjectDataList;
+    }
+    
+    /**
+     * check if the attribute should be returned based on the attribute value query list
+     *       if attribute name supplied, match attribute name case in sensitive
+     *       if attribute value supplied, match attribute value case sensitive with contain logic
+     *       if both attribute name and value supplied, match both
+     * @param attributeEntity the database attribute entity
+     * @param attributeQueryList the attribute query list
+     * @return true for returning in response; false for not.
+     */
+    private boolean shouldIncludeAttributeInReponse(BusinessObjectDataAttributeEntity attributeEntity, List<AttributeValueFilter> attributeQueryList)
+    {
+        String attributeName = attributeEntity.getName();
+        String attributeValue = attributeEntity.getValue();
+        
+        for (AttributeValueFilter valueFiler : attributeQueryList)
+        {
+            String queryAttributeName = valueFiler.getAttributeName();
+            String queryAttributeValue = valueFiler.getAttributeValue();
+            Boolean matchAttributeName = false;
+            Boolean matchAttributeValue = false;
+            
+            if (attributeName != null && attributeName.equalsIgnoreCase(queryAttributeName))
+            {
+                matchAttributeName = true;
+            }
+            
+            if (attributeValue != null && queryAttributeValue!= null && attributeValue.contains(queryAttributeValue))
+            {
+                matchAttributeValue = true;
+            }
+                
+            if (!StringUtils.isEmpty(queryAttributeName) && !StringUtils.isEmpty(queryAttributeValue))
+            {
+                if (matchAttributeName &&  matchAttributeValue)
+                {
+                    return true;
+                }
+            }       
+            else if (!StringUtils.isEmpty(queryAttributeName) && matchAttributeName)
+            {
+               return true;
+            }
+            else if (!StringUtils.isEmpty(queryAttributeValue) && matchAttributeValue)
+            {
+               return true;
+            }   
+        }
+
+        return false;
     }
 }

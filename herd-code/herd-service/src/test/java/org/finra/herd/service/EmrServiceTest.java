@@ -463,6 +463,109 @@ public class EmrServiceTest extends AbstractServiceTest
     }
 
     /**
+     * This method tests security configuration.
+     */
+    @Test
+    public void testCreateEmrClusterSecurityConfiguration() throws Exception
+    {
+        // Create the namespace entity.
+        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
+
+        String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream());
+
+        EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
+
+        // Set the security configuration along with the EMR release label.
+        // This is needed since security configuration is not supported prior to EMR version 4.8.0.
+        emrClusterDefinition.setSecurityConfiguration("securityConfiguration");
+        emrClusterDefinition.setReleaseLabel("4.8.0");
+        configXml = xmlHelper.objectToXml(emrClusterDefinition);
+
+        emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME, configXml);
+
+        // Create a new EMR cluster create request.
+        EmrClusterCreateRequest request = getNewEmrClusterCreateRequest();
+        emrService.createCluster(request);
+    }
+
+    @Test
+    public void testCreateEmrClusterSecurityConfigurationReleaseLabelWithPrefix() throws Exception
+    {
+        // Create the namespace entity.
+        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
+
+        String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream());
+
+        EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
+
+        // Set the security configuration along with the EMR release label starting with an "emr-" prefix.
+        // This is needed since security configuration is not supported prior to EMR version 4.8.0.
+        emrClusterDefinition.setSecurityConfiguration("securityConfiguration");
+        emrClusterDefinition.setReleaseLabel("emr-4.8.0");
+        configXml = xmlHelper.objectToXml(emrClusterDefinition);
+
+        emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME, configXml);
+
+        // Create a new EMR cluster create request.
+        EmrClusterCreateRequest request = getNewEmrClusterCreateRequest();
+        emrService.createCluster(request);
+    }
+
+    @Test
+    public void testCreateEmrClusterSecurityConfigurationNoReleaseLabel() throws Exception
+    {
+        // Create the namespace entity.
+        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
+
+        String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream());
+
+        EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
+
+        // Set the security configuration without an EMR release label.
+        emrClusterDefinition.setSecurityConfiguration("securityConfiguration");
+        emrClusterDefinition.setReleaseLabel(BLANK_TEXT);
+        configXml = xmlHelper.objectToXml(emrClusterDefinition);
+        emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME, configXml);
+
+        // Try to create a new EMR cluster.
+        try
+        {
+            emrService.createCluster(getNewEmrClusterCreateRequest());
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("EMR security configuration is not supported prior to EMR release 4.8.0.", e.getMessage());
+        }
+    }
+
+    @Test
+    public void testCreateEmrClusterSecurityConfigurationInvalidReleaseLabel() throws Exception
+    {
+        // Create the namespace entity.
+        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
+
+        String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_MINIMAL_CLASSPATH).getInputStream());
+
+        EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
+
+        // Set the security configuration without an EMR release label less than 4.8.0.
+        emrClusterDefinition.setSecurityConfiguration("securityConfiguration");
+        emrClusterDefinition.setReleaseLabel("4.7.9");
+        configXml = xmlHelper.objectToXml(emrClusterDefinition);
+        emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME, configXml);
+
+        // Try to create a new EMR cluster.
+        try
+        {
+            emrService.createCluster(getNewEmrClusterCreateRequest());
+        }
+        catch (IllegalArgumentException e)
+        {
+            assertEquals("EMR security configuration is not supported prior to EMR release 4.8.0.", e.getMessage());
+        }
+    }
+
+    /**
      * This method tests additionalInfo
      */
     @Test
@@ -877,7 +980,7 @@ public class EmrServiceTest extends AbstractServiceTest
         EmrClusterCreateRequest request = getNewEmrClusterCreateRequest();
 
         EmrClusterDefinition emrClusterDefinitionOverride = new EmrClusterDefinition();
-        emrClusterDefinitionOverride.setReleaseLabel("test" + Math.random());
+        emrClusterDefinitionOverride.setReleaseLabel("4.8.0." + Math.random());  // Security configuration is not supported prior to EMR version 4.8.0.
         expectedEmrClusterDefinition.setReleaseLabel(emrClusterDefinitionOverride.getReleaseLabel());
         emrClusterDefinitionOverride.setAdditionalInfo("test" + Math.random());
         expectedEmrClusterDefinition.setAdditionalInfo(emrClusterDefinitionOverride.getAdditionalInfo());
@@ -907,6 +1010,8 @@ public class EmrServiceTest extends AbstractServiceTest
         expectedEmrClusterDefinition.setSubnetId(emrClusterDefinitionOverride.getSubnetId());
         emrClusterDefinitionOverride.setSupportedProduct("test" + Math.random());
         expectedEmrClusterDefinition.setSupportedProduct(emrClusterDefinitionOverride.getSupportedProduct());
+        emrClusterDefinitionOverride.setSecurityConfiguration("test" + Math.random());
+        expectedEmrClusterDefinition.setSecurityConfiguration(emrClusterDefinitionOverride.getSecurityConfiguration());
         emrClusterDefinitionOverride.setTerminationProtection(!expectedEmrClusterDefinition.isTerminationProtection());
         expectedEmrClusterDefinition.setTerminationProtection(emrClusterDefinitionOverride.isTerminationProtection());
         emrClusterDefinitionOverride.setVisibleToAll(!expectedEmrClusterDefinition.isVisibleToAll());

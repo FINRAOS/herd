@@ -24,15 +24,18 @@ import static org.junit.Assert.fail;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.collections4.IterableUtils;
 import org.junit.Test;
 import org.springframework.util.Assert;
 
 import org.finra.herd.dao.impl.AbstractHerdDao;
+import org.finra.herd.model.api.xml.AttributeValueFilter;
 import org.finra.herd.model.api.xml.BusinessObjectData;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchFilter;
@@ -43,6 +46,7 @@ import org.finra.herd.model.api.xml.PartitionValueRange;
 import org.finra.herd.model.api.xml.SchemaColumn;
 import org.finra.herd.model.api.xml.StoragePolicyKey;
 import org.finra.herd.model.dto.StoragePolicyPriorityLevel;
+import org.finra.herd.model.jpa.BusinessObjectDataAttributeEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
@@ -1435,7 +1439,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         return businessObjectDataEntity;
     }
 
-
+    
     @Test
     public void testBusinessObjectDataSearchWithPartitionValueAndRangeFilters()
     {
@@ -1492,4 +1496,333 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         }
     }
 
+
+    @Test
+    public void testBusinessObjectDataSearchWithAttributeValueFilters()
+    {
+        // Create and persist an attribute for the business object data
+        BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity = businessObjectDataAttributeDaoTestHelper
+            .createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                null, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1);
+    
+        businessObjectDataAttributeDaoTestHelper
+                .createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    null, DATA_VERSION, ATTRIBUTE_NAME_2_MIXED_CASE, ATTRIBUTE_VALUE_2);
+        
+        businessObjectDataAttributeDaoTestHelper
+                .createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION_2, PARTITION_VALUE,
+                    null, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1);
+        
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataAttributeEntity.getBusinessObjectData();
+        
+        String namespace = businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectDefinition().getNamespace().getCode();
+        String bDefName = businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectDefinition().getName();
+        String usage = businessObjectDataEntity.getBusinessObjectFormat().getUsage();
+        String fileTypeCode = businessObjectDataEntity.getBusinessObjectFormat().getFileType().getCode();
+        int formatVersion = businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectFormatVersion();
+
+        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
+        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
+        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
+
+        List<AttributeValueFilter> attributeValueFilters = new ArrayList<>();
+        attributeValueFilters.add(new AttributeValueFilter(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1));
+
+        key.setAttributeValueFilters(attributeValueFilters);
+
+        key.setNamespace(namespace);
+        key.setBusinessObjectDefinitionName(bDefName);
+        key.setBusinessObjectFormatUsage(usage);
+        key.setBusinessObjectFormatFileType(fileTypeCode);
+        key.setBusinessObjectFormatVersion(formatVersion);
+        businessObjectDataSearchKeys.add(key);
+
+        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
+        filters.add(filter);
+
+        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(filters);
+        assertEquals(1, result.size());
+
+        for (BusinessObjectData data : result)
+        {
+            Assert.isTrue(NAMESPACE.equals(data.getNamespace()));
+            Assert.isTrue(BDEF_NAME.equals(data.getBusinessObjectDefinitionName()));
+            Assert.isTrue(FORMAT_USAGE_CODE.equals(data.getBusinessObjectFormatUsage()));
+            Assert.isTrue(FORMAT_FILE_TYPE_CODE.equals(data.getBusinessObjectFormatFileType()));
+            Assert.isTrue(FORMAT_VERSION == data.getBusinessObjectFormatVersion());
+            Assert.isTrue(ATTRIBUTE_NAME_1_MIXED_CASE.equals(data.getAttributes().get(0).getName()));
+            Assert.isTrue(ATTRIBUTE_VALUE_1.equals(data.getAttributes().get(0).getValue()));
+        }
+    }
+    
+    @Test
+    public void testBusinessObjectDataSearchWithAttributeValueFiltersWithAttributeName()
+    {
+        // Create and persist an attribute for the business object data
+        BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity = businessObjectDataAttributeDaoTestHelper
+            .createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                null, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1);
+    
+        businessObjectDataAttributeDaoTestHelper
+                .createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    null, DATA_VERSION, ATTRIBUTE_NAME_2_MIXED_CASE, ATTRIBUTE_VALUE_2);
+        
+        businessObjectDataAttributeDaoTestHelper
+                .createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION_2, PARTITION_VALUE,
+                    null, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1);
+        
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataAttributeEntity.getBusinessObjectData();
+        
+        String namespace = businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectDefinition().getNamespace().getCode();
+        String bDefName = businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectDefinition().getName();
+        String usage = businessObjectDataEntity.getBusinessObjectFormat().getUsage();
+        String fileTypeCode = businessObjectDataEntity.getBusinessObjectFormat().getFileType().getCode();
+        int formatVersion = businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectFormatVersion();
+
+        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
+        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
+        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
+
+        List<AttributeValueFilter> attributeValueFilters = new ArrayList<>();
+        attributeValueFilters.add(new AttributeValueFilter(ATTRIBUTE_NAME_1_MIXED_CASE, null));
+
+        key.setAttributeValueFilters(attributeValueFilters);
+
+        key.setNamespace(namespace);
+        key.setBusinessObjectDefinitionName(bDefName);
+        key.setBusinessObjectFormatUsage(usage);
+        key.setBusinessObjectFormatFileType(fileTypeCode);
+        key.setBusinessObjectFormatVersion(formatVersion);
+        businessObjectDataSearchKeys.add(key);
+
+        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
+        filters.add(filter);
+
+        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(filters);
+        assertEquals(1, result.size());
+
+        for (BusinessObjectData data : result)
+        {
+            Assert.isTrue(NAMESPACE.equals(data.getNamespace()));
+            Assert.isTrue(BDEF_NAME.equals(data.getBusinessObjectDefinitionName()));
+            Assert.isTrue(FORMAT_USAGE_CODE.equals(data.getBusinessObjectFormatUsage()));
+            Assert.isTrue(FORMAT_FILE_TYPE_CODE.equals(data.getBusinessObjectFormatFileType()));
+            Assert.isTrue(FORMAT_VERSION == data.getBusinessObjectFormatVersion());
+            Assert.isTrue(ATTRIBUTE_NAME_1_MIXED_CASE.equals(data.getAttributes().get(0).getName()));
+            Assert.isTrue(ATTRIBUTE_VALUE_1.equals(data.getAttributes().get(0).getValue()));
+        }
+    }
+    
+    @Test
+    public void testBusinessObjectDataSearchWithAttributeValueFiltersWithAttributeValue()
+    {
+        // Create and persist an attribute for the business object data
+        BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity = businessObjectDataAttributeDaoTestHelper
+            .createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                null, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1);
+    
+        businessObjectDataAttributeDaoTestHelper
+                .createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    null, DATA_VERSION, ATTRIBUTE_NAME_2_MIXED_CASE, ATTRIBUTE_VALUE_1);       
+        
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataAttributeEntity.getBusinessObjectData();
+        
+        String namespace = businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectDefinition().getNamespace().getCode();
+        String bDefName = businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectDefinition().getName();
+        String usage = businessObjectDataEntity.getBusinessObjectFormat().getUsage();
+        String fileTypeCode = businessObjectDataEntity.getBusinessObjectFormat().getFileType().getCode();
+        int formatVersion = businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectFormatVersion();
+
+        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
+        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
+        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
+
+        List<AttributeValueFilter> attributeValueFilters = new ArrayList<>();
+        attributeValueFilters.add(new AttributeValueFilter(null, ATTRIBUTE_VALUE_1));
+
+        key.setAttributeValueFilters(attributeValueFilters);
+
+        key.setNamespace(namespace);
+        key.setBusinessObjectDefinitionName(bDefName);
+        key.setBusinessObjectFormatUsage(usage);
+        key.setBusinessObjectFormatFileType(fileTypeCode);
+        key.setBusinessObjectFormatVersion(formatVersion);
+        businessObjectDataSearchKeys.add(key);
+
+        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
+        filters.add(filter);
+
+        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(filters);
+        assertEquals(1, result.size());
+        Set<String> expectedAttributeNames = new HashSet<String>(Arrays.asList(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_NAME_2_MIXED_CASE));
+        for (BusinessObjectData data : result)
+        {
+            Assert.isTrue(NAMESPACE.equals(data.getNamespace()));
+            Assert.isTrue(BDEF_NAME.equals(data.getBusinessObjectDefinitionName()));
+            Assert.isTrue(FORMAT_USAGE_CODE.equals(data.getBusinessObjectFormatUsage()));
+            Assert.isTrue(FORMAT_FILE_TYPE_CODE.equals(data.getBusinessObjectFormatFileType()));
+            Assert.isTrue(FORMAT_VERSION == data.getBusinessObjectFormatVersion());
+            assertEquals(data.getAttributes().size(), 2);
+            Assert.isTrue(expectedAttributeNames.contains((data.getAttributes().get(0).getName())));
+            Assert.isTrue(expectedAttributeNames.contains((data.getAttributes().get(1).getName())));
+        }
+    }
+    
+    @Test
+    public void testBusinessObjectDataSearchWithAttributeValueFiltersWithNoAttributeValueFilter()
+    {
+        // Create and persist an attribute for the business object data
+        BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity = businessObjectDataAttributeDaoTestHelper
+            .createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                null, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1);
+        
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataAttributeEntity.getBusinessObjectData();
+        
+        String namespace = businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectDefinition().getNamespace().getCode();
+        String bDefName = businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectDefinition().getName();
+        String usage = businessObjectDataEntity.getBusinessObjectFormat().getUsage();
+        String fileTypeCode = businessObjectDataEntity.getBusinessObjectFormat().getFileType().getCode();
+        int formatVersion = businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectFormatVersion();
+
+        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
+        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
+        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
+        
+        key.setNamespace(namespace);
+        key.setBusinessObjectDefinitionName(bDefName);
+        key.setBusinessObjectFormatUsage(usage);
+        key.setBusinessObjectFormatFileType(fileTypeCode);
+        key.setBusinessObjectFormatVersion(formatVersion);
+        businessObjectDataSearchKeys.add(key);
+
+        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
+        filters.add(filter);
+
+        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(filters);
+        assertEquals(1, result.size());
+
+        for (BusinessObjectData data : result)
+        {
+            Assert.isTrue(NAMESPACE.equals(data.getNamespace()));
+            Assert.isTrue(BDEF_NAME.equals(data.getBusinessObjectDefinitionName()));
+            Assert.isTrue(FORMAT_USAGE_CODE.equals(data.getBusinessObjectFormatUsage()));
+            Assert.isTrue(FORMAT_FILE_TYPE_CODE.equals(data.getBusinessObjectFormatFileType()));
+            Assert.isTrue(FORMAT_VERSION == data.getBusinessObjectFormatVersion());
+            Assert.isNull(data.getAttributes());
+        }
+    }
+    
+    @Test
+    public void testBusinessObjectDataSearchWithAttributeValueFiltersPartialAttributeValueMatch()
+    {
+        // Create and persist an attribute for the business object data
+        BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity = businessObjectDataAttributeDaoTestHelper
+            .createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                null, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1);
+    
+        businessObjectDataAttributeDaoTestHelper
+                .createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    null, DATA_VERSION, ATTRIBUTE_NAME_2_MIXED_CASE, ATTRIBUTE_VALUE_2);
+        
+        businessObjectDataAttributeDaoTestHelper
+                .createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION_2, PARTITION_VALUE,
+                    null, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1);
+        
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataAttributeEntity.getBusinessObjectData();
+        
+        String namespace = businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectDefinition().getNamespace().getCode();
+        String bDefName = businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectDefinition().getName();
+        String usage = businessObjectDataEntity.getBusinessObjectFormat().getUsage();
+        String fileTypeCode = businessObjectDataEntity.getBusinessObjectFormat().getFileType().getCode();
+        int formatVersion = businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectFormatVersion();
+
+        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
+        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
+        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
+
+        List<AttributeValueFilter> attributeValueFilters = new ArrayList<>();
+        attributeValueFilters.add(new AttributeValueFilter(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1.substring(2,5)));
+
+        key.setAttributeValueFilters(attributeValueFilters);
+
+        key.setNamespace(namespace);
+        key.setBusinessObjectDefinitionName(bDefName);
+        key.setBusinessObjectFormatUsage(usage);
+        key.setBusinessObjectFormatFileType(fileTypeCode);
+        key.setBusinessObjectFormatVersion(formatVersion);
+        businessObjectDataSearchKeys.add(key);
+
+        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
+        filters.add(filter);
+
+        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(filters);
+        assertEquals(1, result.size());
+
+        for (BusinessObjectData data : result)
+        {
+            Assert.isTrue(NAMESPACE.equals(data.getNamespace()));
+            Assert.isTrue(BDEF_NAME.equals(data.getBusinessObjectDefinitionName()));
+            Assert.isTrue(FORMAT_USAGE_CODE.equals(data.getBusinessObjectFormatUsage()));
+            Assert.isTrue(FORMAT_FILE_TYPE_CODE.equals(data.getBusinessObjectFormatFileType()));
+            Assert.isTrue(FORMAT_VERSION == data.getBusinessObjectFormatVersion());
+            Assert.isTrue(ATTRIBUTE_NAME_1_MIXED_CASE.equals(data.getAttributes().get(0).getName()));
+            Assert.isTrue(ATTRIBUTE_VALUE_1.equals(data.getAttributes().get(0).getValue()));
+        }
+    }
+    
+    @Test
+    public void testBusinessObjectDataSearchWithAttributeValueFiltersResponseCheckMatch()
+    {
+        // Create and persist an attribute for the business object data
+        BusinessObjectDataAttributeEntity businessObjectDataAttributeEntity = businessObjectDataAttributeDaoTestHelper
+            .createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                null, DATA_VERSION, ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1);
+    
+        businessObjectDataAttributeDaoTestHelper
+                .createBusinessObjectDataAttributeEntity(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                    null, DATA_VERSION, ATTRIBUTE_NAME_2_MIXED_CASE, ATTRIBUTE_VALUE_1);
+                
+        BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataAttributeEntity.getBusinessObjectData();
+        
+        String namespace = businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectDefinition().getNamespace().getCode();
+        String bDefName = businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectDefinition().getName();
+        String usage = businessObjectDataEntity.getBusinessObjectFormat().getUsage();
+        String fileTypeCode = businessObjectDataEntity.getBusinessObjectFormat().getFileType().getCode();
+        int formatVersion = businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectFormatVersion();
+
+        List<BusinessObjectDataSearchFilter> filters = new ArrayList<>();
+        List<BusinessObjectDataSearchKey> businessObjectDataSearchKeys = new ArrayList<>();
+        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
+
+        List<AttributeValueFilter> attributeValueFilters = new ArrayList<>();
+        attributeValueFilters.add(new AttributeValueFilter(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1));
+        attributeValueFilters.add(new AttributeValueFilter(ATTRIBUTE_NAME_2_MIXED_CASE, ATTRIBUTE_VALUE_1));
+        key.setAttributeValueFilters(attributeValueFilters);
+
+        key.setNamespace(namespace);
+        key.setBusinessObjectDefinitionName(bDefName);
+        key.setBusinessObjectFormatUsage(usage);
+        key.setBusinessObjectFormatFileType(fileTypeCode);
+        key.setBusinessObjectFormatVersion(formatVersion);
+        businessObjectDataSearchKeys.add(key);
+
+        BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
+        filters.add(filter);
+
+        List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(filters);
+        assertEquals(1, result.size());
+
+        for (BusinessObjectData data : result)
+        {
+            Assert.isTrue(NAMESPACE.equals(data.getNamespace()));
+            Assert.isTrue(BDEF_NAME.equals(data.getBusinessObjectDefinitionName()));
+            Assert.isTrue(FORMAT_USAGE_CODE.equals(data.getBusinessObjectFormatUsage()));
+            Assert.isTrue(FORMAT_FILE_TYPE_CODE.equals(data.getBusinessObjectFormatFileType()));
+            Assert.isTrue(FORMAT_VERSION == data.getBusinessObjectFormatVersion());
+            assertEquals(data.getAttributes().size(), 2);
+            Assert.isTrue(ATTRIBUTE_NAME_1_MIXED_CASE.equals(data.getAttributes().get(0).getName()));
+            Assert.isTrue(ATTRIBUTE_NAME_2_MIXED_CASE.equals(data.getAttributes().get(1).getName()));
+            Assert.isTrue(ATTRIBUTE_VALUE_1.equals(data.getAttributes().get(0).getValue()));
+        }
+    }
 }

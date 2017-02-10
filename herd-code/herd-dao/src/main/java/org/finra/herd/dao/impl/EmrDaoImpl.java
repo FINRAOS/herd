@@ -914,6 +914,12 @@ public class EmrDaoImpl implements EmrDao
             runJobFlowRequest.setSupportedProducts(supportedProducts);
         }
 
+        // Assign security configuration.
+        if (StringUtils.isNotBlank(emrClusterDefinition.getSecurityConfiguration()))
+        {
+            runJobFlowRequest.setSecurityConfiguration(emrClusterDefinition.getSecurityConfiguration());
+        }
+
         // Return the object
         return runJobFlowRequest;
     }

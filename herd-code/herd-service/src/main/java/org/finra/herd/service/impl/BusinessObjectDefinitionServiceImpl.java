@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -34,6 +35,7 @@ import com.google.common.collect.ImmutableSet;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.jsoup.Jsoup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,6 +58,8 @@ import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.BusinessObjectDefinition;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptiveInformationUpdateRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionIndexSearchRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionIndexSearchResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKeys;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchFilter;
@@ -66,12 +70,16 @@ import org.finra.herd.model.api.xml.BusinessObjectDefinitionUpdateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormat;
 import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormatUpdateRequest;
+import org.finra.herd.model.api.xml.Facet;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.api.xml.SampleDataFile;
 import org.finra.herd.model.dto.BusinessObjectDefinitionIndexSearchResponseDto;
 import org.finra.herd.model.dto.BusinessObjectDefinitionSampleFileUpdateDto;
 import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.model.dto.ElasticsearchResponseDto;
 import org.finra.herd.model.dto.SearchIndexUpdateDto;
+import org.finra.herd.model.dto.TagIndexSearchResponseDto;
+import org.finra.herd.model.dto.TagTypeIndexSearchResponseDto;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionAttributeEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionSampleDataFileEntity;
@@ -81,8 +89,8 @@ import org.finra.herd.model.jpa.NamespaceEntity;
 import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.TagEntity;
 import org.finra.herd.service.BusinessObjectDefinitionService;
+import org.finra.herd.service.FacetFieldValidationService;
 import org.finra.herd.service.SearchableService;
-import org.finra.herd.service.functional.QuadConsumer;
 import org.finra.herd.service.functional.SearchFunctions;
 import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.AttributeHelper;
@@ -102,7 +110,7 @@ import org.finra.herd.service.helper.TagHelper;
  */
 @Service
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
-public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefinitionService, SearchableService
+public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefinitionService, SearchableService, FacetFieldValidationService
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(BusinessObjectDefinitionServiceImpl.class);
 
@@ -162,6 +170,8 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 
     // Constant to hold the display name option for the business object definition search
     private static final String DISPLAY_NAME_FIELD = "displayname";
+
+    private static final String TAG_FACET_FIELD = "tag";
 
     @PublishJmsMessages
     @NamespacePermission(fields = "#request.namespace", permissions = NamespacePermissionEnum.WRITE)
@@ -223,7 +233,8 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
             Collections.unmodifiableList(businessObjectDefinitionDao.getAllBusinessObjectDefinitions());
 
         // Index all Business Object Definitions
-        executeFunctionForBusinessObjectDefinitionsInList(businessObjectDefinitionEntityList, searchFunctions.getIndexFunction());
+        businessObjectDefinitionHelper.executeFunctionForBusinessObjectDefinitionEntities(indexName, documentType, businessObjectDefinitionEntityList,
+            searchFunctions.getIndexFunction());
 
         // Simple count validation, index size should equal entity list size
         final long indexSize = searchFunctions.getNumberOfTypesInIndexFunction().apply(indexName, documentType);
@@ -286,15 +297,19 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     @Async
     public Future<Void> indexValidateAllBusinessObjectDefinitions()
     {
+        final String indexName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
+        final String documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
+
         // Get a list of all business object definitions
         final List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList =
             Collections.unmodifiableList(businessObjectDefinitionDao.getAllBusinessObjectDefinitions());
 
         // Remove any index documents that are not in the database
-        removeAnyIndexDocumentsThatAreNotInBusinessObjectsDefinitionsList(businessObjectDefinitionEntityList);
+        removeAnyIndexDocumentsThatAreNotInBusinessObjectsDefinitionsList(indexName, documentType, businessObjectDefinitionEntityList);
 
         // Validate all Business Object Definitions
-        executeFunctionForBusinessObjectDefinitionsInList(businessObjectDefinitionEntityList, searchFunctions.getValidateFunction());
+        businessObjectDefinitionHelper.executeFunctionForBusinessObjectDefinitionEntities(indexName, documentType, businessObjectDefinitionEntityList,
+            searchFunctions.getValidateFunction());
 
         // Return an AsyncResult so callers will know the future is "done". They can call "isDone" to know when this method has completed and they
         // can call "get" to see if any exceptions were thrown.
@@ -304,13 +319,13 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     /**
      * Method to remove business object definitions in the index that don't exist in the database
      *
+     * @param indexName the name of the index
+     * @param documentType the document type
      * @param businessObjectDefinitionEntityList list of business object definitions in the database
      */
-    private void removeAnyIndexDocumentsThatAreNotInBusinessObjectsDefinitionsList(List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList)
+    private void removeAnyIndexDocumentsThatAreNotInBusinessObjectsDefinitionsList(final String indexName, final String documentType,
+        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList)
     {
-        final String indexName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
-        final String documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
-
         // Get a list of business object definition ids from the list of business object definition entities in the database
         List<String> databaseBusinessObjectDefinitionIdList = new ArrayList<>();
         businessObjectDefinitionEntityList
@@ -324,42 +339,6 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 
         // If there are any ids left in the index list they need to be removed
         indexDocumentBusinessObjectDefinitionIdList.forEach(id -> searchFunctions.getDeleteDocumentByIdFunction().accept(indexName, documentType, id));
-    }
-
-    /**
-     * Method that executes a function for business object definitions in a list
-     *
-     * @param businessObjectDefinitionEntityList the list of business object definitions entities
-     * @param function the function to apply to all business object definitions
-     */
-    private void executeFunctionForBusinessObjectDefinitionsInList(final List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList,
-        final QuadConsumer<String, String, String, String> function)
-    {
-        final String indexName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
-        final String documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
-
-        LOGGER.info("Starting to process {} business object definitions with a search index function.", businessObjectDefinitionEntityList.size());
-
-        // For each business object definition apply the passed in function
-        businessObjectDefinitionEntityList.forEach(businessObjectDefinitionEntity -> {
-            // Fetch Join with .size()
-            businessObjectDefinitionEntity.getAttributes().size();
-            businessObjectDefinitionEntity.getBusinessObjectDefinitionTags().size();
-            businessObjectDefinitionEntity.getBusinessObjectFormats().size();
-            businessObjectDefinitionEntity.getColumns().size();
-            businessObjectDefinitionEntity.getSampleDataFiles().size();
-
-            // Convert the business object definition entity to a JSON string
-            final String jsonString = safeObjectMapperWriteValueAsString(businessObjectDefinitionEntity);
-
-            if (StringUtils.isNotEmpty(jsonString))
-            {
-                // Call the function that will process each business object definition entity against the index
-                function.accept(indexName, documentType, businessObjectDefinitionEntity.getId().toString(), jsonString);
-            }
-        });
-
-        LOGGER.info("Finished processing {} business object definitions with a search index function.", businessObjectDefinitionEntityList.size());
     }
 
     /**
@@ -557,67 +536,120 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     }
 
     @Override
-    public BusinessObjectDefinitionSearchResponse indexSearchBusinessObjectDefinitions(BusinessObjectDefinitionSearchRequest request, Set<String> fields)
+    public Set<String> getValidFacetFields()
+    {
+        return ImmutableSet.of(TAG_FACET_FIELD);
+    }
+
+    @Override
+    public BusinessObjectDefinitionIndexSearchResponse indexSearchBusinessObjectDefinitions(BusinessObjectDefinitionIndexSearchRequest searchRequest,
+        Set<String> fieldsRequested)
     {
         // Get the configured values for index name and document type
         final String indexName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         final String documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
 
         // Validate the business object definition search fields
-        validateSearchResponseFields(fields);
+        validateSearchResponseFields(fieldsRequested);
 
-        // Create a new array list to hold the business object definition entities found in the index search
-        List<BusinessObjectDefinitionIndexSearchResponseDto> businessObjectDefinitionIndexSearchResponseDtoList;
+        // Create a new object to hold the search index response
+        ElasticsearchResponseDto elasticsearchResponseDto;
+
+        Set<String> facetFields = new HashSet<>();
+        if (CollectionUtils.isNotEmpty(searchRequest.getFacetFields()))
+        {
+            facetFields.addAll(validateFacetFields(new HashSet<>(searchRequest.getFacetFields())));
+        }
 
         // If the request contains search filters
-        if (!CollectionUtils.isEmpty(request.getBusinessObjectDefinitionSearchFilters()))
+        if (CollectionUtils.isNotEmpty(searchRequest.getBusinessObjectDefinitionSearchFilters()))
         {
             // Validate the search request.
-            validateBusinessObjectDefinitionSearchRequest(request);
+            validateBusinessObjectDefinitionIndexSearchRequest(searchRequest);
 
-            // Get the first filter only
-            BusinessObjectDefinitionSearchKey businessObjectDefinitionSearchKey =
-                request.getBusinessObjectDefinitionSearchFilters().get(0).getBusinessObjectDefinitionSearchKeys().get(0);
+            List<List<TagEntity>> tagEntitiesPerSearchFilter = new ArrayList<>();
 
-            // Need to get the list of children tag entities down the hierarchy before the search on the index
-            TagEntity tagEntity = tagDaoHelper.getTagEntity(businessObjectDefinitionSearchKey.getTagKey());
-            List<TagEntity> tagEntities = new ArrayList<>();
-            tagEntities.add(tagEntity);
-
-            // If includeTagHierarchy is true, get list of children tag entities down the hierarchy of the specified tag.
-            if (BooleanUtils.isTrue(businessObjectDefinitionSearchKey.isIncludeTagHierarchy()))
+            // Iterate through all search filters and extract tag keys
+            for (BusinessObjectDefinitionSearchFilter searchFilter : searchRequest.getBusinessObjectDefinitionSearchFilters())
             {
-                tagEntities.addAll(tagDaoHelper.getTagChildrenEntities(tagEntity));
+                List<TagEntity> tagEntities = new ArrayList<>();
+
+                for (BusinessObjectDefinitionSearchKey searchKey : searchFilter.getBusinessObjectDefinitionSearchKeys())
+                {
+                    // Get the actual tag entity from its key.
+                    // todo: bulk fetch tags and their children from the search index after we start indexing tags
+                    TagEntity tagEntity = tagDaoHelper.getTagEntity(searchKey.getTagKey());
+                    tagEntities.add(tagEntity);
+
+                    // If includeTagHierarchy is true, get list of children tag entities down the hierarchy of the specified tag.
+                    if (BooleanUtils.isTrue(searchKey.isIncludeTagHierarchy()))
+                    {
+                        tagEntities.addAll(tagDaoHelper.getTagChildrenEntities(tagEntity));
+                    }
+                }
+
+                // Collect all tag entities and their children (if included) into separate lists
+                tagEntitiesPerSearchFilter.add(new ArrayList<>(tagEntities));
             }
 
-            // Use the tag type entities list to search in the search index for business object definitions
-            businessObjectDefinitionIndexSearchResponseDtoList =
-                searchFunctions.getSearchBusinessObjectDefinitionsByTagsFunction().apply(indexName, documentType, tagEntities);
+            // Use the tag type entities lists to search in the search index for business object definitions
+            elasticsearchResponseDto =
+                searchFunctions.getSearchBusinessObjectDefinitionsByTagsFunction().apply(indexName, documentType, tagEntitiesPerSearchFilter, facetFields);
         }
         else
         {
+
             // Else get all of the business object definitions
-            businessObjectDefinitionIndexSearchResponseDtoList = searchFunctions.getFindAllBusinessObjectDefinitionsFunction().apply(indexName, documentType);
+            elasticsearchResponseDto = searchFunctions.getFindAllBusinessObjectDefinitionsFunction().apply(indexName, documentType, facetFields);
         }
+
 
         // Create a list to hold the business object definitions that will be returned as part of the search response
         List<BusinessObjectDefinition> businessObjectDefinitions = new ArrayList<>();
 
         // Retrieve all unique business object definition entities and construct a list of business object definitions based on the requested fields.
-        for (BusinessObjectDefinitionIndexSearchResponseDto businessObjectDefinitionIndexSearchResponseDto : ImmutableSet
-            .copyOf(businessObjectDefinitionIndexSearchResponseDtoList))
+        if (elasticsearchResponseDto.getBusinessObjectDefinitionIndexSearchResponseDtos() != null)
         {
-            // Convert the business object definition entity to a business object definition and add it to the list of business object definitions that will be
-            // returned as a part of the search response
-            businessObjectDefinitions.add(createBusinessObjectDefinitionFromDto(businessObjectDefinitionIndexSearchResponseDto, fields));
+            for (BusinessObjectDefinitionIndexSearchResponseDto businessObjectDefinitionIndexSearchResponseDto : ImmutableSet
+                .copyOf(elasticsearchResponseDto.getBusinessObjectDefinitionIndexSearchResponseDtos()))
+            {
+                // Convert the business object definition entity to a business object definition and
+                // add it to the list of business object definitions that will be
+                // returned as a part of the search response
+                businessObjectDefinitions.add(createBusinessObjectDefinitionFromDto(businessObjectDefinitionIndexSearchResponseDto, fieldsRequested));
+            }
+        }
+
+        List<Facet> tagTypeFacets = null;
+        if (CollectionUtils.isNotEmpty(searchRequest.getFacetFields()) && elasticsearchResponseDto.getTagTypeIndexSearchResponseDtos() != null)
+        {
+            tagTypeFacets = new ArrayList<>();
+            //construct a list of facet information
+            for (TagTypeIndexSearchResponseDto tagTypeIndexSearchResponseDto : elasticsearchResponseDto.getTagTypeIndexSearchResponseDtos())
+            {
+
+                List<Facet> tagFacets = new ArrayList<>();
+
+                for (TagIndexSearchResponseDto tagIndexSearchResponseDto : tagTypeIndexSearchResponseDto.getTagIndexSearchResponseDtos())
+                {
+                    Facet tagFacet =
+                        new Facet(tagIndexSearchResponseDto.getTagDisplayName(), tagIndexSearchResponseDto.getCount(), TagIndexSearchResponseDto.getFacetType(),
+                            tagIndexSearchResponseDto.getTagCode(), null);
+                    tagFacets.add(tagFacet);
+                }
+
+                tagTypeFacets.add(new Facet(tagTypeIndexSearchResponseDto.getDisplayName(), tagTypeIndexSearchResponseDto.getCount(),
+                    TagTypeIndexSearchResponseDto.getFacetType(), tagTypeIndexSearchResponseDto.getCode(), tagFacets));
+            }
         }
 
         // Construct business object search response.
-        BusinessObjectDefinitionSearchResponse searchResponse = new BusinessObjectDefinitionSearchResponse();
+        BusinessObjectDefinitionIndexSearchResponse searchResponse = new BusinessObjectDefinitionIndexSearchResponse();
         searchResponse.setBusinessObjectDefinitions(businessObjectDefinitions);
-
+        searchResponse.setFacets(tagTypeFacets);
         return searchResponse;
     }
+
 
     @Override
     public BusinessObjectDefinitionSearchResponse searchBusinessObjectDefinitions(BusinessObjectDefinitionSearchRequest request, Set<String> fields)
@@ -953,8 +985,10 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         // Get the configured value for short description's length
         Integer shortDescMaxLength = configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH, Integer.class);
 
-        // Truncate and return
-        return StringUtils.left(description, shortDescMaxLength);
+        // Parse out only html tags, truncate and return
+        // Do a partial HTML parse just in case there are some elements that don't have ending tags or the like
+        String toParse = description != null ? description : "";
+        return StringUtils.left(Jsoup.parseBodyFragment(toParse).body().text(), shortDescMaxLength);
     }
 
     @Override
@@ -978,7 +1012,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
                 businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters().get(0);
 
             Assert.isTrue(CollectionUtils.size(businessObjectDefinitionSearchFilter.getBusinessObjectDefinitionSearchKeys()) == 1 &&
-                    businessObjectDefinitionSearchFilter.getBusinessObjectDefinitionSearchKeys().get(0) != null,
+                businessObjectDefinitionSearchFilter.getBusinessObjectDefinitionSearchKeys().get(0) != null,
                 "Exactly one business object definition search key must be specified.");
 
             // Get the tag search key.
@@ -990,8 +1024,32 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         else
         {
             Assert.isTrue(CollectionUtils.size(businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters()) == 1 &&
-                    businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters().get(0) != null,
+                businessObjectDefinitionSearchRequest.getBusinessObjectDefinitionSearchFilters().get(0) != null,
                 "Exactly one business object definition search filter must be specified.");
+        }
+    }
+
+    /**
+     * Validate the business object definition index search request. This method also trims the request parameters.
+     *
+     * @param businessObjectDefinitionIndexSearchRequest the business object definition search request
+     */
+    private void validateBusinessObjectDefinitionIndexSearchRequest(BusinessObjectDefinitionIndexSearchRequest businessObjectDefinitionIndexSearchRequest)
+    {
+        if (CollectionUtils.isNotEmpty(businessObjectDefinitionIndexSearchRequest.getBusinessObjectDefinitionSearchFilters()))
+        {
+            // Iterate through the search-filters and validate tag-keys.
+            for (BusinessObjectDefinitionSearchFilter searchFilter : businessObjectDefinitionIndexSearchRequest.getBusinessObjectDefinitionSearchFilters())
+            {
+                // Validate that all search-filters have at least one search-key.
+                Assert.isTrue(CollectionUtils.isNotEmpty(searchFilter.getBusinessObjectDefinitionSearchKeys()), "At least one search key must be specified.");
+
+                // Validate all tag-keys for each search-key.
+                for (BusinessObjectDefinitionSearchKey searchKey : searchFilter.getBusinessObjectDefinitionSearchKeys())
+                {
+                    tagHelper.validateTagKey(searchKey.getTagKey());
+                }
+            }
         }
     }
 
