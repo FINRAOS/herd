@@ -1036,16 +1036,19 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
      */
     private void validateBusinessObjectDefinitionIndexSearchRequest(BusinessObjectDefinitionIndexSearchRequest businessObjectDefinitionIndexSearchRequest)
     {
-        // Iterate through the search-filters and validate tag-keys.
-        for (BusinessObjectDefinitionSearchFilter searchFilter : businessObjectDefinitionIndexSearchRequest.getBusinessObjectDefinitionSearchFilters())
+        if (CollectionUtils.isNotEmpty(businessObjectDefinitionIndexSearchRequest.getBusinessObjectDefinitionSearchFilters()))
         {
-            // Validate that all search-filters have at least one search-key.
-            Assert.isTrue(CollectionUtils.isNotEmpty(searchFilter.getBusinessObjectDefinitionSearchKeys()), "At least one search key must be specified.");
-
-            // Validate all tag-keys for each search-key.
-            for (BusinessObjectDefinitionSearchKey searchKey : searchFilter.getBusinessObjectDefinitionSearchKeys())
+            // Iterate through the search-filters and validate tag-keys.
+            for (BusinessObjectDefinitionSearchFilter searchFilter : businessObjectDefinitionIndexSearchRequest.getBusinessObjectDefinitionSearchFilters())
             {
-                tagHelper.validateTagKey(searchKey.getTagKey());
+                // Validate that all search-filters have at least one search-key.
+                Assert.isTrue(CollectionUtils.isNotEmpty(searchFilter.getBusinessObjectDefinitionSearchKeys()), "At least one search key must be specified.");
+
+                // Validate all tag-keys for each search-key.
+                for (BusinessObjectDefinitionSearchKey searchKey : searchFilter.getBusinessObjectDefinitionSearchKeys())
+                {
+                    tagHelper.validateTagKey(searchKey.getTagKey());
+                }
             }
         }
     }
