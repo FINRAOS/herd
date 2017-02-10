@@ -328,7 +328,7 @@
    <xs:element name="namespacePermissions" type="namespacePermissions"/>
    <xs:complexType name="namespacePermissions">
       <xs:sequence>
-         <xs:element ref="namespacePermission" minOccurs="0" maxOccurs="unbounded">
+         <xs:element name="namespacePermission" type="namespacePermissionEnum" minOccurs="0" maxOccurs="unbounded">
             <xs:annotation>
                <xs:documentation>The namespace permission. Supported values are: READ, WRITE, EXECUTE, GRANT</xs:documentation>
             </xs:annotation>
@@ -336,16 +336,16 @@
       </xs:sequence>
    </xs:complexType>
 
-   <xs:element name="namespacePermission">
-      <xs:simpleType>
-         <xs:restriction base="xs:string">
-            <xs:enumeration value="READ"/>
-            <xs:enumeration value="WRITE"/>
-            <xs:enumeration value="EXECUTE"/>
-            <xs:enumeration value="GRANT"/>
-         </xs:restriction>
-      </xs:simpleType>
-   </xs:element>
+
+   <xs:simpleType name="namespacePermissionEnum">
+      <xs:restriction base="xs:string">
+         <xs:enumeration value="READ"/>
+         <xs:enumeration value="WRITE"/>
+         <xs:enumeration value="EXECUTE"/>
+         <xs:enumeration value="GRANT"/>
+      </xs:restriction>
+   </xs:simpleType>
+
 
    <!-- ***** User Namespace Authorization ***** -->
 
@@ -1125,6 +1125,29 @@
       </xs:annotation>
    </xs:element>
 
+   <xs:element name="businessObjectDefinitionIndexSearchRequest" type="businessObjectDefinitionIndexSearchRequest">
+      <xs:annotation>
+         <xs:documentation>A wrapper for business Object Definition indexed search request. The request accepts multiple search filters and a multiple search
+            keys
+         </xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="businessObjectDefinitionIndexSearchRequest">
+      <xs:all>
+         <xs:element name="businessObjectDefinitionSearchFilters" type="businessObjectDefinitionSearchFilters" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A list of business Object Definition indexed search filters. Multiple search filters are supported</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="facetFields" type="facetFields" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A list of Facet Fields to be included with the response. Only Tag facet information is supported</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
    <xs:complexType name="businessObjectDefinitionSearchRequest">
       <xs:all>
          <xs:element name="businessObjectDefinitionSearchFilters" type="businessObjectDefinitionSearchFilters" minOccurs="0">
@@ -1149,7 +1172,7 @@
       <xs:all>
          <xs:element name="businessObjectDefinitionSearchKeys" type="businessObjectDefinitionSearchKeys">
             <xs:annotation>
-               <xs:documentation>A list of business Object Definition search keys. Only a single search key is supported</xs:documentation>
+               <xs:documentation>A list of business Object Definition search keys.</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -1194,6 +1217,37 @@
       </xs:all>
    </xs:complexType>
 
+   <xs:element name="businessObjectDefinitionIndexSearchResponse" type="businessObjectDefinitionIndexSearchResponse"/>
+   <xs:complexType name="businessObjectDefinitionIndexSearchResponse">
+      <xs:all>
+         <xs:element name="businessObjectDefinitions" type="businessObjectDefinitions" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>
+                  Values that identify a business object definition search response.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="facets" type="facets" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>
+                  Values that identifies a list of facet information response.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="facets" type="facets"/>
+   <xs:complexType name="facets">
+      <xs:sequence>
+         <xs:element name="facet" type="facet" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>facet information</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
    <xs:element name="businessObjectDefinitions" type="businessObjectDefinitions"/>
    <xs:complexType name="businessObjectDefinitions">
       <xs:sequence>
@@ -1201,6 +1255,49 @@
          </xs:element>
       </xs:sequence>
    </xs:complexType>
+
+   <xs:complexType name="facetFields">
+      <xs:sequence>
+         <xs:element name="facetField" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>The Facet field information to be included with the response. Only Tag facet field is supported.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:element name="facet" type="facet"/>
+   <xs:complexType name="facet">
+      <xs:all>
+         <xs:element name="facetDisplayName" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Display name of the facet</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="facetCount" type="xs:long" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>count of the facet</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="facetType" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>Type of the facet</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="facetId" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>unique identifier of the facet</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="facets" type="facets" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>list of facets</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
 
    <xs:element name="businessObjectDefinitionIndexResponse" type="businessObjectDefinitionIndexResponse"/>
    <xs:complexType name="businessObjectDefinitionIndexResponse">
@@ -2240,7 +2337,7 @@
                <xs:documentation>The numeric version of a Business Object Format. If not supplied, the latest version will be used</xs:documentation>
             </xs:annotation>
          </xs:element>
-         <xs:element ref="outputFormat">
+         <xs:element name="outputFormat" type="businessObjectDataDdlOutputFormatEnum">
             <xs:annotation>
                <xs:documentation>The output format for the generated DDL. The only format currently supported is HIVE_13_DDL</xs:documentation>
             </xs:annotation>
@@ -2316,7 +2413,7 @@
                <xs:documentation>The numeric version of a Business Object Format. If not supplied, the latest version will be used</xs:documentation>
             </xs:annotation>
          </xs:element>
-         <xs:element ref="outputFormat">
+         <xs:element name="outputFormat" type="businessObjectDataDdlOutputFormatEnum">
             <xs:annotation>
                <xs:documentation>The output format for the generated DDL. The only format currently supported is HIVE_13_DDL</xs:documentation>
             </xs:annotation>
@@ -2936,6 +3033,11 @@
                <xs:documentation>A container for Partition Value Filters</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="attributeValueFilters" type="attributeValueFilters" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A container for Attribute Value Filters</xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
@@ -3476,6 +3578,33 @@
       </xs:all>
    </xs:complexType>
 
+    <xs:complexType name="attributeValueFilters">
+      <xs:sequence>
+         <xs:element name="attributeValueFilter" type="attributeValueFilter" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>A container for the Attribute Value Filter
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="attributeValueFilter">
+      <xs:all>
+          <xs:element name="attributeName" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The Attribute Name</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="attributeValue" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The Attribute Value</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+
    <!-- ***** Business Object Data Availability Collection ***** -->
 
    <xs:element name="businessObjectDataAvailabilityCollectionRequest" type="businessObjectDataAvailabilityCollectionRequest"/>
@@ -3541,7 +3670,7 @@
          <xs:element name="businessObjectDataVersion" type="xs:int" minOccurs="0"/>
          <xs:element name="storageNames" type="storageNames" minOccurs="0"/>
          <xs:element name="storageName" type="xs:string" minOccurs="0"/>
-         <xs:element ref="outputFormat"/>
+         <xs:element name="outputFormat" type="businessObjectDataDdlOutputFormatEnum"/>
          <xs:element name="tableName" type="xs:string"/>
          <xs:element name="customDdlName" type="xs:string" minOccurs="0"/>
          <xs:element name="includeDropTableStatement" type="xs:boolean" minOccurs="0"/>
@@ -3584,25 +3713,18 @@
          <xs:element name="businessObjectDataVersion" type="xs:int" minOccurs="0"/>
          <xs:element name="storageNames" type="storageNames" minOccurs="0"/>
          <xs:element name="storageName" type="xs:string" minOccurs="0"/>
-         <xs:element ref="outputFormat"/>
+         <xs:element name="outputFormat" type="businessObjectDataDdlOutputFormatEnum"/>
          <xs:element name="tableName" type="xs:string"/>
          <xs:element name="customDdlName" type="xs:string" minOccurs="0"/>
          <xs:element name="ddl" type="xs:string"/>
       </xs:all>
    </xs:complexType>
 
-   <xs:element name="outputFormat">
-      <xs:simpleType>
-         <xs:restriction base="xs:string">
-            <!--
-             To more easily support JSON, we should ensure that values chosen here produce a BusinessObjectDataDdlOutputFormatEnum class without a constructor.
-             In other words, we should ensure that the enum name and enum value are the same. Otherwise, passing JSON would require the entire object
-             to be specified.
-             -->
-            <xs:enumeration value="HIVE_13_DDL"/>
-         </xs:restriction>
-      </xs:simpleType>
-   </xs:element>
+   <xs:simpleType name="businessObjectDataDdlOutputFormatEnum">
+      <xs:restriction base="xs:string">
+         <xs:enumeration value="HIVE_13_DDL"/>
+      </xs:restriction>
+   </xs:simpleType>
 
    <!-- ***** Business Object Data DDL Collection ***** -->
 
@@ -4695,7 +4817,7 @@
    <xs:element name="jobUpdateRequest" type="jobUpdateRequest"/>
    <xs:complexType name="jobUpdateRequest">
       <xs:all>
-         <xs:element ref="action">
+         <xs:element name="action" type="jobActionEnum">
             <xs:annotation>
                <xs:documentation>
                   The action to take for the job. One of the following values: SUSPEND, RESUME
@@ -4715,7 +4837,7 @@
                </xs:documentation>
             </xs:annotation>
          </xs:element>
-         <xs:element ref="status" minOccurs="0">
+         <xs:element name="status" type="jobStatusEnum" minOccurs="0">
             <xs:annotation>
                <xs:documentation>
                   The status of the job. One of the following values: RUNNING, SUSPENDED, COMPLETED
@@ -4907,24 +5029,20 @@
       </xs:all>
    </xs:complexType>
 
-   <xs:element name="status">
-      <xs:simpleType>
-         <xs:restriction base="xs:string">
-            <xs:enumeration value="RUNNING"/>
-            <xs:enumeration value="SUSPENDED"/>
-            <xs:enumeration value="COMPLETED"/>
-         </xs:restriction>
-      </xs:simpleType>
-   </xs:element>
+   <xs:simpleType name="jobStatusEnum">
+      <xs:restriction base="xs:string">
+         <xs:enumeration value="RUNNING"/>
+         <xs:enumeration value="SUSPENDED"/>
+         <xs:enumeration value="COMPLETED"/>
+      </xs:restriction>
+   </xs:simpleType>
 
-   <xs:element name="action">
-      <xs:simpleType>
-         <xs:restriction base="xs:string">
-            <xs:enumeration value="SUSPEND"/>
-            <xs:enumeration value="RESUME"/>
-         </xs:restriction>
-      </xs:simpleType>
-   </xs:element>
+   <xs:simpleType name="jobActionEnum">
+      <xs:restriction base="xs:string">
+         <xs:enumeration value="SUSPEND"/>
+         <xs:enumeration value="RESUME"/>
+      </xs:restriction>
+   </xs:simpleType>
 
    <xs:element name="jobSummaries" type="jobSummaries"/>
    <xs:complexType name="jobSummaries">
@@ -4980,7 +5098,7 @@
                </xs:documentation>
             </xs:annotation>
          </xs:element>
-         <xs:element ref="status" minOccurs="0">
+         <xs:element name="status" type="jobStatusEnum" minOccurs="0">
             <xs:annotation>
                <xs:documentation>
                   The status of the job. One of the following values: RUNNING, COMPLETED
@@ -5234,6 +5352,11 @@
          <xs:element name="additionalSlaveSecurityGroups" type="additionalSlaveSecurityGroups" minOccurs="0">
             <xs:annotation>
                <xs:documentation>List of additional slave node security groups</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="securityConfiguration" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The name of a security configuration to apply to the cluster</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -6262,6 +6385,120 @@
             </xs:annotation>
          </xs:element>
       </xs:sequence>
+   </xs:complexType>
+
+   <!-- ***** Search Index ***** -->
+
+   <xs:element name="searchIndexCreateRequest" type="searchIndexCreateRequest"/>
+   <xs:complexType name="searchIndexCreateRequest">
+      <xs:all>
+         <xs:element name="searchIndexKey" type="searchIndexKey">
+            <xs:annotation>
+               <xs:documentation>A wrapper for the values that uniquely identify a Search Index</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="searchIndexType" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The type of this Search Index</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="searchIndex" type="searchIndex"/>
+   <xs:complexType name="searchIndex">
+      <xs:all>
+         <xs:element name="searchIndexKey" type="searchIndexKey">
+            <xs:annotation>
+               <xs:documentation>A wrapper for the values that uniquely identify a Search Index</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="searchIndexType" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The type of this Search Index</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="searchIndexStatus" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The status of this Search Index. One of the following values: BUILDING, READY</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="searchIndexSettings" type="searchIndexSettings" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A wrapper for the search index settings retrieved from the index</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="createdByUserId" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The User ID of the user who created this Search Index</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="createdOn" type="xs:dateTime" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The timestamp when this Search Index was created on</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="lastUpdatedOn" type="xs:dateTime" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The timestamp when this Search Index was last updated on</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="searchIndexSettings">
+      <xs:all>
+         <xs:element name="indexCreationDate" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The index creation date (millisecond value)</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="indexNumberOfReplicas" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The number of replica shards for this index</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="indexNumberOfShards" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The number of primary shards for this index</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="indexProvidedName" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The provided name of the index</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="indexUuid" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The UUID of the index</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="searchIndexKeys" type="searchIndexKeys">
+      <xs:annotation>
+         <xs:documentation>The list of Search Index keys</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+   <xs:complexType name="searchIndexKeys">
+      <xs:sequence>
+         <xs:element name="searchIndexKey" type="searchIndexKey" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>A wrapper for the values that uniquely identify a Search Index</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="searchIndexKey">
+      <xs:all>
+         <xs:element name="searchIndexName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The name of this Search Index</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
    </xs:complexType>
 
 </xs:schema>

@@ -21,6 +21,8 @@ import java.util.concurrent.Future;
 import org.finra.herd.model.api.xml.BusinessObjectDefinition;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptiveInformationUpdateRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionIndexSearchRequest;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionIndexSearchResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKeys;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchRequest;
@@ -146,8 +148,8 @@ public interface BusinessObjectDefinitionService
      *
      * @return the retrieved business object definition list
      */
-    public BusinessObjectDefinitionSearchResponse indexSearchBusinessObjectDefinitions(
-        BusinessObjectDefinitionSearchRequest businessObjectDefinitionSearchRequest, Set<String> fields);
+    public BusinessObjectDefinitionIndexSearchResponse indexSearchBusinessObjectDefinitions(
+        BusinessObjectDefinitionIndexSearchRequest businessObjectDefinitionIndexSearchRequest, Set<String> fields);
 
     /**
      * Update business object definition sample file

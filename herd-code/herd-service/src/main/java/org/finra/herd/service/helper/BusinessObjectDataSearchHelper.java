@@ -17,15 +17,18 @@ package org.finra.herd.service.helper;
 
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
+import org.finra.herd.model.api.xml.AttributeValueFilter;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchFilter;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchRequest;
 import org.finra.herd.model.api.xml.PartitionValueFilter;
 import org.finra.herd.model.api.xml.PartitionValueRange;
+
 
 /*
  * a helper class Business Object Data Search 
@@ -106,5 +109,23 @@ public class BusinessObjectDataSearchHelper
             }
         }
 
+        List<AttributeValueFilter> attributeValueFilters = key.getAttributeValueFilters();
+        if (attributeValueFilters != null && !attributeValueFilters.isEmpty())
+        {
+            for (AttributeValueFilter attributeValueFilter : attributeValueFilters)
+            {
+                String attributeName = attributeValueFilter.getAttributeName();
+                String attributeValue = attributeValueFilter.getAttributeValue();
+                if (attributeName!= null)
+                { 
+                    attributeName = attributeName.trim();
+                    attributeValueFilter.setAttributeName(attributeName);
+                }
+                if (StringUtils.isEmpty(attributeName)  && StringUtils.isEmpty(attributeValue))
+                {
+                    throw new IllegalArgumentException("Either attribute name or value filter must exist.");
+                }
+            }
+        }
     }
 }

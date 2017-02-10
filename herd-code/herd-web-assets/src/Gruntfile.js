@@ -34,7 +34,7 @@ module.exports = function(grunt)
 
         /*
          * JSHint configurations.
-         * 
+         *
          * Delegates options to '.jshintrc' file.
          */
         jshint : {
@@ -136,6 +136,6 @@ module.exports = function(grunt)
         }
     });
 
-    grunt.registerTask('test', [ 'jshint', 'csslint', 'ngtemplates', 'karma' ]);
+    // grunt.registerTask('test', [ 'jshint', 'csslint', 'ngtemplates', 'karma' ]);
     grunt.registerTask('build', [ 'jshint', 'csslint', 'cssmin', 'ngtemplates', 'ngAnnotate', 'uglify' ]);
 };

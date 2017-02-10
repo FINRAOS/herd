@@ -433,6 +433,7 @@ public class EmrDaoTest extends AbstractDaoTest
         emrClusterDefinition.setInstallOozie(true);
         emrClusterDefinition.setHadoopJarSteps(Arrays.asList(new HadoopJarStep("stepName", "jarLocation", "mainClass", null, true)));
         emrClusterDefinition.setSupportedProduct("supportedProduct");
+        emrClusterDefinition.setSecurityConfiguration("securityConfiguration");
 
         String clusterId = "clusterId";
 
@@ -541,6 +542,7 @@ public class EmrDaoTest extends AbstractDaoTest
                     assertEquals(Arrays.asList("instance.isMaster=true", "scriptDefinitionMasterLocation2"), scriptBootstrapAction.getArgs());
                 }
                 assertEquals(Arrays.asList("supportedProduct"), runJobFlowRequest.getSupportedProducts());
+                assertEquals("securityConfiguration", runJobFlowRequest.getSecurityConfiguration());
 
                 return clusterId;
             }

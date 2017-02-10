@@ -21,7 +21,7 @@
    <parent>
       <groupId>org.finra.herd</groupId>
       <artifactId>herd-code</artifactId>
-      <version>0.36.0-SNAPSHOT</version>
+      <version>0.37.0-SNAPSHOT</version>
    </parent>
 
    <name>herd web assets</name>
@@ -118,6 +118,7 @@
       <profile>
          <id>npm-skip-test</id>
          <activation>
+            <activeByDefault>true</activeByDefault>
             <property>
                <name>skipTests</name>
             </property>
@@ -127,7 +128,7 @@
       <profile>
          <id>npm-test</id>
          <activation>
-            <activeByDefault>true</activeByDefault>
+            <activeByDefault>false</activeByDefault>
          </activation>
          <build>
             <plugins>

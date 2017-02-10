@@ -92,7 +92,7 @@ public class JCredStashWrapper
         catch (RuntimeException e)
         {
             // Credential not found
-            LOGGER.error("Credential " + name + " not found. ");
+            LOGGER.error("Credential " + name + " not found. ", e);
         }
 
         return credential;
