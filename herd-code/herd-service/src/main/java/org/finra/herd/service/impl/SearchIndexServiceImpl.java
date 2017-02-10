@@ -109,7 +109,7 @@ public class SearchIndexServiceImpl implements SearchIndexService
         searchIndexEntity = searchIndexDao.saveAndRefresh(searchIndexEntity);
 
         // Create the search index.
-        createSearchIndex(request.getSearchIndexKey(), searchIndexTypeEntity.getCode());
+        createSearchIndexHelper(request.getSearchIndexKey(), searchIndexTypeEntity.getCode());
 
         // Create and return the search index object from the persisted entity.
         return createSearchIndexFromEntity(searchIndexEntity);
@@ -176,12 +176,50 @@ public class SearchIndexServiceImpl implements SearchIndexService
     }
 
     /**
+     * Creates a new Search index entity from the request information.
+     *
+     * @param request the information needed to create a search index
+     * @param searchIndexTypeEntity the search index type entity
+     * @param searchIndexStatusEntity the search index status entity
+     *
+     * @return the newly created Search index entity
+     */
+    protected SearchIndexEntity createSearchIndexEntity(SearchIndexCreateRequest request, SearchIndexTypeEntity searchIndexTypeEntity,
+        SearchIndexStatusEntity searchIndexStatusEntity)
+    {
+        SearchIndexEntity searchIndexEntity = new SearchIndexEntity();
+        searchIndexEntity.setName(request.getSearchIndexKey().getSearchIndexName());
+        searchIndexEntity.setType(searchIndexTypeEntity);
+        searchIndexEntity.setStatus(searchIndexStatusEntity);
+        return searchIndexEntity;
+    }
+
+    /**
+     * Creates a search index object from the persisted entity.
+     *
+     * @param searchIndexEntity the search index entity
+     *
+     * @return the search index
+     */
+    protected SearchIndex createSearchIndexFromEntity(SearchIndexEntity searchIndexEntity)
+    {
+        SearchIndex searchIndex = new SearchIndex();
+        searchIndex.setSearchIndexKey(new SearchIndexKey(searchIndexEntity.getName()));
+        searchIndex.setSearchIndexType(searchIndexEntity.getType().getCode());
+        searchIndex.setSearchIndexStatus(searchIndexEntity.getStatus().getCode());
+        searchIndex.setCreatedByUserId(searchIndexEntity.getCreatedBy());
+        searchIndex.setCreatedOn(HerdDateUtils.getXMLGregorianCalendarValue(searchIndexEntity.getCreatedOn()));
+        searchIndex.setLastUpdatedOn(HerdDateUtils.getXMLGregorianCalendarValue(searchIndexEntity.getUpdatedOn()));
+        return searchIndex;
+    }
+
+    /**
      * Creates a search index.
      *
      * @param searchIndexKey the key of the search index
      * @param searchIndexType the type of the search index
      */
-    private void createSearchIndex(SearchIndexKey searchIndexKey, String searchIndexType)
+    protected void createSearchIndexHelper(SearchIndexKey searchIndexKey, String searchIndexType)
     {
         String documentType;
         String mapping;
@@ -208,49 +246,11 @@ public class SearchIndexServiceImpl implements SearchIndexService
     }
 
     /**
-     * Creates a new Search index entity from the request information.
-     *
-     * @param request the information needed to create a search index
-     * @param searchIndexTypeEntity the search index type entity
-     * @param searchIndexStatusEntity the search index status entity
-     *
-     * @return the newly created Search index entity
-     */
-    private SearchIndexEntity createSearchIndexEntity(SearchIndexCreateRequest request, SearchIndexTypeEntity searchIndexTypeEntity,
-        SearchIndexStatusEntity searchIndexStatusEntity)
-    {
-        SearchIndexEntity searchIndexEntity = new SearchIndexEntity();
-        searchIndexEntity.setName(request.getSearchIndexKey().getSearchIndexName());
-        searchIndexEntity.setType(searchIndexTypeEntity);
-        searchIndexEntity.setStatus(searchIndexStatusEntity);
-        return searchIndexEntity;
-    }
-
-    /**
-     * Creates a search index object from the persisted entity.
-     *
-     * @param searchIndexEntity the search index entity
-     *
-     * @return the search index
-     */
-    private SearchIndex createSearchIndexFromEntity(SearchIndexEntity searchIndexEntity)
-    {
-        SearchIndex searchIndex = new SearchIndex();
-        searchIndex.setSearchIndexKey(new SearchIndexKey(searchIndexEntity.getName()));
-        searchIndex.setSearchIndexType(searchIndexEntity.getType().getCode());
-        searchIndex.setSearchIndexStatus(searchIndexEntity.getStatus().getCode());
-        searchIndex.setCreatedByUserId(searchIndexEntity.getCreatedBy());
-        searchIndex.setCreatedOn(HerdDateUtils.getXMLGregorianCalendarValue(searchIndexEntity.getCreatedOn()));
-        searchIndex.setLastUpdatedOn(HerdDateUtils.getXMLGregorianCalendarValue(searchIndexEntity.getUpdatedOn()));
-        return searchIndex;
-    }
-
-    /**
      * Deletes a search index if it exists.
      *
      * @param searchIndexName the name of the search index
      */
-    private void deleteSearchIndexHelper(String searchIndexName)
+    protected void deleteSearchIndexHelper(String searchIndexName)
     {
         // If the index exists delete it.
         if (searchFunctions.getIndexExistsFunction().test(searchIndexName))
