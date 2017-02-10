@@ -661,11 +661,6 @@ public class ElasticsearchFunctionsTest
         List<Terms.Bucket> tagTypeCodeBucketList = new ArrayList<>();
         tagTypeCodeBucketList.add(tagTypeCodeBucket);
 
-        //        Terms tagTerms = mock(Terms.class);
-        //        Terms.Bucket tagBucket1 = mock(Terms.Bucket.class);
-        //        List<Terms.Bucket> tagBucketList = new ArrayList<>();
-        //        tagBucketList.add(tagBucket1);
-
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         searchSourceBuilder
             .fetchSource(new String[] {"DATA_PROVIDER_NAME_SOURCE", "DESCRIPTION_SOURCE", "DISPLAY_NAME_SOURCE", "NAME_SOURCE", "NAMESPACE_CODE_SOURCE"}, null);
@@ -689,13 +684,6 @@ public class ElasticsearchFunctionsTest
 
         when(searchRequestBuilder.execute()).thenReturn(listenableActionFuture);
         when(listenableActionFuture.actionGet()).thenReturn(searchResponse);
-
-        //                when(searchResponse.getAggregations().get(BDEFTAGS_AGGREGATION)).thenReturn(aggregation);
-        //                when(aggregation.getAggregations().get(TAG_CODE_AGGREGATION)).thenReturn(tagTypeCodeTerms);
-        //                when(tagTypeCodeTerms.getBuckets()).thenReturn(tagTypeCodeBucketList);
-        //                when(tagTypeBucket1.getAggregations().get("tag")).thenReturn(tagTerms);
-        //                when(tagTerms.getBuckets()).thenReturn(tagBucketList);
-
 
         when(searchResponse.getHits()).thenReturn(searchHits);
         when(searchHits.hits()).thenReturn(searchHitArray);
