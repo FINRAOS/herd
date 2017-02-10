@@ -15,6 +15,7 @@
 */
 package org.finra.herd.dao;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -24,6 +25,7 @@ import java.util.Map;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.MapPropertySource;
@@ -32,6 +34,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.finra.herd.core.AbstractCoreTest;
+import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.dao.config.DaoTestSpringModuleConfig;
 import org.finra.herd.dao.helper.HerdCollectionHelper;
@@ -177,6 +180,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String CORRELATION_DATA_3 = "UT_Correlation_Data_3" + RANDOM_SUFFIX;
 
+    public static final XMLGregorianCalendar CREATED_ON = HerdDateUtils.getXMLGregorianCalendarValue(getRandomDate());
+
     public static final String CUSTOM_DDL_NAME = "UT_CustomDdl" + RANDOM_SUFFIX;
 
     public static final String CUSTOM_DDL_NAME_2 = "UT_CustomDdl_2" + RANDOM_SUFFIX;
@@ -270,6 +275,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Integer INVALID_FORMAT_VERSION = -1 * FORMAT_VERSION;
 
+    public static final String I_DO_NOT_EXIST = "I_DO_NOT_EXIST";
+
     public static final String JMS_QUEUE_NAME = "UT_JmsQueueName" + RANDOM_SUFFIX;
 
     public static final String JMS_QUEUE_NAME_2 = "UT_JmsQueueName_2" + RANDOM_SUFFIX;
@@ -355,6 +362,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String NO_COLUMN_NAME = null;
 
+    public static final XMLGregorianCalendar NO_CREATED_ON = null;
+
+    public static final Timestamp NO_CREATED_ON_TIMESTAMP = null;
+
     public static final String NO_CUSTOM_DDL_NAME = null;
 
     public static final Integer NO_DATA_VERSION = null;
@@ -416,6 +427,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String NO_TAG_TYPE_DISPLAY_NAME = null;
 
     public static final Integer NO_TAG_TYPE_ORDER = null;
+
+    public static final XMLGregorianCalendar NO_UPDATED_ON = null;
+
+    public static final Timestamp NO_UPDATED_ON_TIMESTAMP = null;
 
     public static final String NO_USER_TELEPHONE_NUMBER = null;
 
@@ -482,6 +497,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String SCHEMA_PARTITION_COLUMN_NAME_PREFIX = "Prtn-Clmn-Name";
 
     public static final String SEARCH_INDEX_NAME = "UT_SearchIndexName_1_" + RANDOM_SUFFIX;
+
+    public static final String SEARCH_INDEX_DOCUMENT_TYPE = "UT_SearchIndex_DocumentType_" + RANDOM_SUFFIX;
+
+    public static final String SEARCH_INDEX_MAPPING = "UT_SearchIndex_Mapping_" + RANDOM_SUFFIX;
 
     public static final String SEARCH_INDEX_NAME_2 = "UT_SearchIndexName_2_" + RANDOM_SUFFIX;
 
@@ -669,6 +688,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final List<String> UNSORTED_PARTITION_VALUES =
         Arrays.asList("2014-04-02", "2014-04-04", "2014-04-03", "2014-04-02A", "2014-04-08", "2014-04-07", "2014-04-05", "2014-04-06");
+
+    public static final XMLGregorianCalendar UPDATED_ON = HerdDateUtils.getXMLGregorianCalendarValue(getRandomDate());
 
     public static final String UPLOADER_ROLE_ARN = "UT_UploaderRoleArn" + RANDOM_SUFFIX;
 

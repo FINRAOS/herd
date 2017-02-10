@@ -1127,8 +1127,8 @@
 
    <xs:element name="businessObjectDefinitionIndexSearchRequest" type="businessObjectDefinitionIndexSearchRequest">
       <xs:annotation>
-         <xs:documentation>A wrapper for business Object Definition indexed search request. The request accept only a single search filter and a single search
-            key
+         <xs:documentation>A wrapper for business Object Definition indexed search request. The request accepts multiple search filters and a multiple search
+            keys
          </xs:documentation>
       </xs:annotation>
    </xs:element>
@@ -1137,7 +1137,7 @@
       <xs:all>
          <xs:element name="businessObjectDefinitionSearchFilters" type="businessObjectDefinitionSearchFilters" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>A list of business Object Definition indexed search filters. Only a single search filter is supported</xs:documentation>
+               <xs:documentation>A list of business Object Definition indexed search filters. Multiple search filters are supported</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="facetFields" type="facetFields" minOccurs="0">
@@ -1172,7 +1172,7 @@
       <xs:all>
          <xs:element name="businessObjectDefinitionSearchKeys" type="businessObjectDefinitionSearchKeys">
             <xs:annotation>
-               <xs:documentation>A list of business Object Definition search keys. Only a single search key is supported</xs:documentation>
+               <xs:documentation>A list of business Object Definition search keys.</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>

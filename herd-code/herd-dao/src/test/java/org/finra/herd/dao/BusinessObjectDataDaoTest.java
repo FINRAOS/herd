@@ -24,9 +24,11 @@ import static org.junit.Assert.fail;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.collections4.IterableUtils;
 import org.junit.Test;
@@ -1652,7 +1654,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
 
         List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(filters);
         assertEquals(1, result.size());
-
+        Set<String> expectedAttributeNames = new HashSet<String>(Arrays.asList(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_NAME_2_MIXED_CASE));
         for (BusinessObjectData data : result)
         {
             Assert.isTrue(NAMESPACE.equals(data.getNamespace()));
@@ -1661,7 +1663,8 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
             Assert.isTrue(FORMAT_FILE_TYPE_CODE.equals(data.getBusinessObjectFormatFileType()));
             Assert.isTrue(FORMAT_VERSION == data.getBusinessObjectFormatVersion());
             assertEquals(data.getAttributes().size(), 2);
-            Assert.isTrue(ATTRIBUTE_NAME_1_MIXED_CASE.equals(data.getAttributes().get(0).getName()));
+            Assert.isTrue(expectedAttributeNames.contains((data.getAttributes().get(0).getName())));
+            Assert.isTrue(expectedAttributeNames.contains((data.getAttributes().get(1).getName())));
         }
     }
     
@@ -1793,7 +1796,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
 
         List<AttributeValueFilter> attributeValueFilters = new ArrayList<>();
         attributeValueFilters.add(new AttributeValueFilter(ATTRIBUTE_NAME_1_MIXED_CASE, ATTRIBUTE_VALUE_1));
-
+        attributeValueFilters.add(new AttributeValueFilter(ATTRIBUTE_NAME_2_MIXED_CASE, ATTRIBUTE_VALUE_1));
         key.setAttributeValueFilters(attributeValueFilters);
 
         key.setNamespace(namespace);
@@ -1816,8 +1819,9 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
             Assert.isTrue(FORMAT_USAGE_CODE.equals(data.getBusinessObjectFormatUsage()));
             Assert.isTrue(FORMAT_FILE_TYPE_CODE.equals(data.getBusinessObjectFormatFileType()));
             Assert.isTrue(FORMAT_VERSION == data.getBusinessObjectFormatVersion());
-            assertEquals(data.getAttributes().size(), 1);
+            assertEquals(data.getAttributes().size(), 2);
             Assert.isTrue(ATTRIBUTE_NAME_1_MIXED_CASE.equals(data.getAttributes().get(0).getName()));
+            Assert.isTrue(ATTRIBUTE_NAME_2_MIXED_CASE.equals(data.getAttributes().get(1).getName()));
             Assert.isTrue(ATTRIBUTE_VALUE_1.equals(data.getAttributes().get(0).getValue()));
         }
     }

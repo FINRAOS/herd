@@ -22,7 +22,7 @@ import java.util.List;
 /**
  * Holds the tag type facet response
  */
-public class TagTypeIndexSearchResponsedto
+public class TagTypeIndexSearchResponseDto
 {
     private String code;
 
@@ -30,14 +30,14 @@ public class TagTypeIndexSearchResponsedto
 
     private long count;
 
-    private static String facetType = "TagType";
+    private static final String FACET_TYPE = "TagType";
 
     private List<TagIndexSearchResponseDto> tagIndexSearchResponseDtos;
 
     /**
      * Empty constructor
      */
-    public TagTypeIndexSearchResponsedto()
+    public TagTypeIndexSearchResponseDto()
     {
         //Empty constructor
     }
@@ -49,7 +49,7 @@ public class TagTypeIndexSearchResponsedto
      * @param count the tag type count long
      * @param tagIndexSearchResponseDtos the list of tags
      */
-    public TagTypeIndexSearchResponsedto(String code, long count, List<TagIndexSearchResponseDto> tagIndexSearchResponseDtos)
+    public TagTypeIndexSearchResponseDto(String code, long count, List<TagIndexSearchResponseDto> tagIndexSearchResponseDtos)
     {
         this.code = code;
         this.count = count;
@@ -64,7 +64,7 @@ public class TagTypeIndexSearchResponsedto
      * @param tagIndexSearchResponseDtos the list of tags
      * @param displayName the tag display name string
      */
-    public TagTypeIndexSearchResponsedto(String code, long count, List<TagIndexSearchResponseDto> tagIndexSearchResponseDtos, String displayName)
+    public TagTypeIndexSearchResponseDto(String code, long count, List<TagIndexSearchResponseDto> tagIndexSearchResponseDtos, String displayName)
     {
         this.code = code;
         this.count = count;
@@ -115,13 +115,13 @@ public class TagTypeIndexSearchResponsedto
 
     public static String getFacetType()
     {
-        return facetType;
+        return FACET_TYPE;
     }
 
     @Override
     public String toString()
     {
-        return "TagTypeIndexSearchResponsedto{" +
+        return "TagTypeIndexSearchResponseDto{" +
             "code='" + code + '\'' +
             ", displayName='" + displayName + '\'' +
             ", count=" + count +

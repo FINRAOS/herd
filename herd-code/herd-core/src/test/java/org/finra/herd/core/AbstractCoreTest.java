@@ -24,8 +24,10 @@ import java.io.StringWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
@@ -97,6 +99,15 @@ public abstract class AbstractCoreTest
     public static String getRandomSuffix()
     {
         return String.format("%.5f", Math.random()).substring(2, 7);
+    }
+
+    /**
+     * Returns a random date.
+     */
+    public static Date getRandomDate()
+    {
+        Random rnd = new Random();
+        return new Date(Math.abs(System.currentTimeMillis() - rnd.nextLong()));
     }
 
     @Before
