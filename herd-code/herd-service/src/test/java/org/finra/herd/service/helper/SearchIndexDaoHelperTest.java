@@ -39,7 +39,7 @@ public class SearchIndexDaoHelperTest extends AbstractServiceTest
         // Retrieve the search index entity.
         assertEquals(searchIndexEntity, searchIndexDaoHelper.getSearchIndexEntity(new SearchIndexKey(SEARCH_INDEX_NAME)));
 
-        // Try to retrieve a non existing search index .
+        // Try to retrieve a non-existing search index.
         try
         {
             searchIndexDaoHelper.getSearchIndexEntity(new SearchIndexKey(I_DO_NOT_EXIST));
@@ -49,5 +49,21 @@ public class SearchIndexDaoHelperTest extends AbstractServiceTest
         {
             assertEquals(String.format("Search index with name \"%s\" doesn't exist.", I_DO_NOT_EXIST), e.getMessage());
         }
+    }
+
+    @Test
+    public void testUpdateSearchIndexStatus()
+    {
+        // Create and persist a search index entity.
+        SearchIndexEntity searchIndexEntity = searchIndexDaoTestHelper.createSearchIndexEntity(SEARCH_INDEX_NAME, SEARCH_INDEX_TYPE, SEARCH_INDEX_STATUS);
+
+        // Create and persist a search index status entity.
+        searchIndexStatusDaoTestHelper.createSearchIndexStatusEntity(SEARCH_INDEX_STATUS_2);
+
+        // Update the status of the search index entity.
+        searchIndexDaoHelper.updateSearchIndexStatus(new SearchIndexKey(SEARCH_INDEX_NAME), SEARCH_INDEX_STATUS_2);
+
+        // Validate the results.
+        assertEquals(SEARCH_INDEX_STATUS_2, searchIndexEntity.getStatus().getCode());
     }
 }

@@ -82,14 +82,8 @@ public class SearchIndexHelperServiceImpl implements SearchIndexHelperService
             .executeFunctionForBusinessObjectDefinitionEntities(searchIndexKey.getSearchIndexName(), documentType, businessObjectDefinitionEntities,
                 searchFunctions.getIndexFunction());
 
-        // Simple count validation, index size should equal entity list size.
-        final long indexSize = searchFunctions.getNumberOfTypesInIndexFunction().apply(searchIndexKey.getSearchIndexName(), documentType);
-        final long businessObjectDefinitionDatabaseTableSize = businessObjectDefinitionEntities.size();
-        if (businessObjectDefinitionDatabaseTableSize != indexSize)
-        {
-            LOGGER.error("Index validation failed, business object definition database table size {}, does not equal index size {}.",
-                businessObjectDefinitionDatabaseTableSize, indexSize);
-        }
+        // Perform a simple count validation, index size should equal entity list size.
+        validateSearchIndexSize(searchIndexKey.getSearchIndexName(), documentType, businessObjectDefinitionEntities.size());
 
         // Update search index status to READY.
         searchIndexDaoHelper.updateSearchIndexStatus(searchIndexKey, SearchIndexStatusEntity.SearchIndexStatuses.READY.name());
@@ -97,5 +91,28 @@ public class SearchIndexHelperServiceImpl implements SearchIndexHelperService
         // Return an AsyncResult so callers will know the future is "done". They can call "isDone" to know when this method has completed and they can call
         // "get" to see if any exceptions were thrown.
         return new AsyncResult<>(null);
+    }
+
+    /**
+     * Performs a simple count validation on the specified search index.
+     *
+     * @param indexName the name of the index
+     * @param documentType the document type
+     * @param expectedIndexSize the expected index size
+     *
+     * @return true if index size matches the expected size, false otherwise
+     */
+    protected boolean validateSearchIndexSize(String indexName, String documentType, int expectedIndexSize)
+    {
+        final long indexSize = searchFunctions.getNumberOfTypesInIndexFunction().apply(indexName, documentType);
+
+        boolean result = true;
+        if (indexSize != expectedIndexSize)
+        {
+            LOGGER.error("Index validation failed, expected index size {}, does not equal actual index size {}.", expectedIndexSize, indexSize);
+            result = false;
+        }
+
+        return result;
     }
 }
