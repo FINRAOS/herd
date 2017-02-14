@@ -19,6 +19,8 @@ import java.util.Map;
 
 import org.elasticsearch.cluster.metadata.IndexMetaData;
 import org.elasticsearch.common.settings.Settings;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +30,7 @@ import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.SearchIndexDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
+import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.api.xml.SearchIndex;
 import org.finra.herd.model.api.xml.SearchIndexCreateRequest;
@@ -54,6 +57,8 @@ import org.finra.herd.service.helper.SearchIndexTypeDaoHelper;
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 public class SearchIndexServiceImpl implements SearchIndexService
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SearchIndexServiceImpl.class);
+
     @Autowired
     private AlternateKeyHelper alternateKeyHelper;
 
@@ -62,6 +67,9 @@ public class SearchIndexServiceImpl implements SearchIndexService
 
     @Autowired
     private ConfigurationHelper configurationHelper;
+
+    @Autowired
+    private JsonHelper jsonHelper;
 
     @Autowired
     private SearchFunctions searchFunctions;
@@ -147,7 +155,21 @@ public class SearchIndexServiceImpl implements SearchIndexService
         SearchIndex searchIndex = createSearchIndexFromEntity(searchIndexEntity);
 
         // Retrieve index settings from the actual search index.
-        Settings getSettingsResponse =
+        Settings debugSettings =
+            searchIndexHelperService.getAdminClient().indices().prepareGetSettings(searchIndexKey.getSearchIndexName()).execute().actionGet()
+                .getIndexToSettings().get(searchIndexKey.getSearchIndexName());
+        Map<String, String> debugSettingsAsMap = debugSettings.getAsMap();
+        LOGGER.info("debugSettingsAsMap={}", jsonHelper.objectToJson(debugSettingsAsMap));
+
+        // Retrieve index settings from the actual search index.
+        Settings debugSettings2 = searchIndexHelperService.getAdminClient().indices().prepareGetSettings(searchIndexKey.getSearchIndexName())
+            .setNames(IndexMetaData.SETTING_CREATION_DATE_STRING, IndexMetaData.SETTING_CREATION_DATE).execute().actionGet().getIndexToSettings()
+            .get(searchIndexKey.getSearchIndexName());
+        Map<String, String> debugSettingsAsMap2 = debugSettings2.getAsMap();
+        LOGGER.info("debugSettingsAsMap2={}", jsonHelper.objectToJson(debugSettingsAsMap2));
+
+        // Retrieve index settings from the actual search index.
+        Settings settings =
             searchIndexHelperService.getAdminClient().indices().prepareGetIndex().setIndices(searchIndexKey.getSearchIndexName()).execute().actionGet()
                 .getSettings().get(searchIndexKey.getSearchIndexName());
 
@@ -157,12 +179,12 @@ public class SearchIndexServiceImpl implements SearchIndexService
 
         // If we got here, the get settings response returned by the above call cannot be null.
         // A non-existing search index name results in a "no such index" internal server error.
-        Map<String, String> indexSettings = getSettingsResponse.getAsMap();
-        searchIndexSettings.setIndexCreationDate(indexSettings.get(IndexMetaData.SETTING_CREATION_DATE));
-        searchIndexSettings.setIndexNumberOfReplicas(indexSettings.get(IndexMetaData.SETTING_NUMBER_OF_REPLICAS));
-        searchIndexSettings.setIndexNumberOfShards(indexSettings.get(IndexMetaData.SETTING_NUMBER_OF_SHARDS));
-        searchIndexSettings.setIndexProvidedName(indexSettings.get(IndexMetaData.SETTING_INDEX_PROVIDED_NAME));
-        searchIndexSettings.setIndexUuid(indexSettings.get(IndexMetaData.SETTING_INDEX_UUID));
+        Map<String, String> settingsAsMap = settings.getAsMap();
+        searchIndexSettings.setIndexCreationDate(settingsAsMap.get(IndexMetaData.SETTING_CREATION_DATE));
+        searchIndexSettings.setIndexNumberOfReplicas(settingsAsMap.get(IndexMetaData.SETTING_NUMBER_OF_REPLICAS));
+        searchIndexSettings.setIndexNumberOfShards(settingsAsMap.get(IndexMetaData.SETTING_NUMBER_OF_SHARDS));
+        searchIndexSettings.setIndexProvidedName(settingsAsMap.get(IndexMetaData.SETTING_INDEX_PROVIDED_NAME));
+        searchIndexSettings.setIndexUuid(settingsAsMap.get(IndexMetaData.SETTING_INDEX_UUID));
 
         return searchIndex;
     }
