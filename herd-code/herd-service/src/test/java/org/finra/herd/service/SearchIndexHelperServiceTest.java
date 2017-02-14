@@ -24,6 +24,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -87,8 +88,12 @@ public class SearchIndexHelperServiceTest extends AbstractServiceTest
             .createBusinessObjectDefinitionEntity(BDEF_NAMESPACE_2, BDEF_NAME_2, DATA_PROVIDER_NAME_2, BDEF_DESCRIPTION_2,
                 businessObjectDefinitionServiceTestHelper.getNewAttributes2())));
 
+        // Get a chunk size.
+        int chunkSize = SearchIndexHelperServiceImpl.BUSINESS_OBJECT_DEFINITIONS_CHUNK_SIZE;
+
         // Mock the external calls. Please note that we mock index size to be equal to the business object definition entity list size.
-        when(businessObjectDefinitionDao.getAllBusinessObjectDefinitions()).thenReturn(businessObjectDefinitionEntities);
+        when(businessObjectDefinitionDao.getAllBusinessObjectDefinitions(0, chunkSize)).thenReturn(businessObjectDefinitionEntities);
+        when(businessObjectDefinitionDao.getAllBusinessObjectDefinitions(chunkSize, chunkSize)).thenReturn(new ArrayList<>());
         when(searchFunctions.getIndexFunction()).thenReturn((indexName, documentType, id, json) -> {
         });
         when(searchFunctions.getNumberOfTypesInIndexFunction()).thenReturn((indexName, documentType) -> 2L);
@@ -97,7 +102,8 @@ public class SearchIndexHelperServiceTest extends AbstractServiceTest
         Future<Void> response = searchIndexHelperService.indexAllBusinessObjectDefinitions(searchIndexKey, SEARCH_INDEX_DOCUMENT_TYPE);
 
         // Verify the external calls.
-        verify(businessObjectDefinitionDao).getAllBusinessObjectDefinitions();
+        verify(businessObjectDefinitionDao).getAllBusinessObjectDefinitions(0, chunkSize);
+        verify(businessObjectDefinitionDao).getAllBusinessObjectDefinitions(chunkSize, chunkSize);
         verify(searchFunctions).getIndexFunction();
         verify(businessObjectDefinitionHelper)
             .executeFunctionForBusinessObjectDefinitionEntities(eq(SEARCH_INDEX_NAME), eq(SEARCH_INDEX_DOCUMENT_TYPE), eq(businessObjectDefinitionEntities),

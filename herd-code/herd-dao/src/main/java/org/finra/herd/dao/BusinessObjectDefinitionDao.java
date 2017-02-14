@@ -24,11 +24,21 @@ import org.finra.herd.model.jpa.TagEntity;
 public interface BusinessObjectDefinitionDao extends BaseJpaDao
 {
     /**
-     * Gets a list of all business object definition entities
+     * Gets a list of all business object definition entities defined in the system.
      *
-     * @return the list of all business object definition entities.
+     * @return the list of business object definition entities
      */
     public List<BusinessObjectDefinitionEntity> getAllBusinessObjectDefinitions();
+
+    /**
+     * Gets a chunk of business object definition entities defined in the system per specified parameters.
+     *
+     * @param startPosition the position of the first result, numbered from 0
+     * @param maxResult the maximum number of results to retrieve
+     *
+     * @return the list of business object definition entities
+     */
+    public List<BusinessObjectDefinitionEntity> getAllBusinessObjectDefinitions(Integer startPosition, Integer maxResult);
 
     /**
      * Gets a list of business object definition entities by a list of ids
