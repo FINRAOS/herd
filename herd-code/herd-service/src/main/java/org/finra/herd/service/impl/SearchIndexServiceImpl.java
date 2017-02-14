@@ -17,6 +17,16 @@ package org.finra.herd.service.impl;
 
 import java.util.Map;
 
+import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
+import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
+import org.elasticsearch.action.admin.cluster.state.ClusterStateRequest;
+import org.elasticsearch.action.admin.cluster.state.ClusterStateResponse;
+import org.elasticsearch.action.admin.indices.settings.get.GetSettingsResponse;
+import org.elasticsearch.action.admin.indices.stats.IndicesStatsRequest;
+import org.elasticsearch.action.admin.indices.stats.IndicesStatsResponse;
+import org.elasticsearch.action.support.IndicesOptions;
+import org.elasticsearch.client.Requests;
+import org.elasticsearch.cluster.ClusterState;
 import org.elasticsearch.cluster.metadata.IndexMetaData;
 import org.elasticsearch.common.settings.Settings;
 import org.slf4j.Logger;
@@ -155,18 +165,32 @@ public class SearchIndexServiceImpl implements SearchIndexService
         SearchIndex searchIndex = createSearchIndexFromEntity(searchIndexEntity);
 
         // Retrieve index settings from the actual search index.
-        Settings debugSettings =
-            searchIndexHelperService.getAdminClient().indices().prepareGetSettings(searchIndexKey.getSearchIndexName()).execute().actionGet()
-                .getIndexToSettings().get(searchIndexKey.getSearchIndexName());
-        Map<String, String> debugSettingsAsMap = debugSettings.getAsMap();
-        LOGGER.info("debugSettingsAsMap={}", jsonHelper.objectToJson(debugSettingsAsMap));
+        GetSettingsResponse getSettingsResponse =
+            searchIndexHelperService.getAdminClient().indices().prepareGetSettings(searchIndexKey.getSearchIndexName()).execute().actionGet();
+        LOGGER.info("getSettingsResponse={}", jsonHelper.objectToJson(getSettingsResponse));
 
-        // Retrieve index settings from the actual search index.
-        Settings debugSettings2 = searchIndexHelperService.getAdminClient().indices().prepareGetSettings(searchIndexKey.getSearchIndexName())
-            .setNames(IndexMetaData.SETTING_CREATION_DATE_STRING, IndexMetaData.SETTING_CREATION_DATE).execute().actionGet().getIndexToSettings()
-            .get(searchIndexKey.getSearchIndexName());
-        Map<String, String> debugSettingsAsMap2 = debugSettings2.getAsMap();
-        LOGGER.info("debugSettingsAsMap2={}", jsonHelper.objectToJson(debugSettingsAsMap2));
+        // Retrieve cluster state information.
+        final ClusterStateRequest clusterStateRequest = new ClusterStateRequest();
+        clusterStateRequest.clear().indices(searchIndexKey.getSearchIndexName()).metaData(true);
+        final IndicesOptions strictExpandIndicesOptions = IndicesOptions.strictExpand();
+        clusterStateRequest.indicesOptions(strictExpandIndicesOptions);
+        ClusterStateResponse clusterStateResponse = searchIndexHelperService.getAdminClient().cluster().state(new ClusterStateRequest()).actionGet();
+        LOGGER.info("clusterStateResponse={}", jsonHelper.objectToJson(clusterStateResponse));
+        ClusterState clusterState = clusterStateResponse.getState();
+        LOGGER.info("clusterState={}", jsonHelper.objectToJson(clusterState));
+
+        // Retrieve cluster health information.
+        ClusterHealthRequest clusterHealthRequest = Requests.clusterHealthRequest(searchIndexKey.getSearchIndexName());
+        ClusterHealthResponse clusterHealthResponse = searchIndexHelperService.getAdminClient().cluster().health(clusterHealthRequest).actionGet();
+        LOGGER.info("clusterHealthResponse={}", jsonHelper.objectToJson(clusterHealthResponse));
+
+        // Retrieve indices level stats.
+        IndicesStatsRequest indicesStatsRequest = new IndicesStatsRequest();
+        indicesStatsRequest.indices(searchIndexKey.getSearchIndexName());
+        indicesStatsRequest.indicesOptions(strictExpandIndicesOptions);
+        indicesStatsRequest.all();
+        IndicesStatsResponse indicesStatsResponse = searchIndexHelperService.getAdminClient().indices().stats(indicesStatsRequest).actionGet();
+        LOGGER.info("indicesStatsResponse={}", jsonHelper.objectToJson(indicesStatsResponse));
 
         // Retrieve index settings from the actual search index.
         Settings settings =
