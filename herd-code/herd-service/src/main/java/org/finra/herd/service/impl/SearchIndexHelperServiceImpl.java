@@ -76,6 +76,7 @@ public class SearchIndexHelperServiceImpl implements SearchIndexHelperService
     {
         // Index all business object definitions defined in the system using pagination.
         int startPosition = 0;
+        int processedBusinessObjectDefinitionsCount = 0;
         List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities;
         while ((businessObjectDefinitionEntities =
             businessObjectDefinitionDao.getAllBusinessObjectDefinitions(startPosition, BUSINESS_OBJECT_DEFINITIONS_CHUNK_SIZE)).size() > 0)
@@ -84,8 +85,14 @@ public class SearchIndexHelperServiceImpl implements SearchIndexHelperService
             indexBusinessObjectDefinitions(searchIndexKey, documentType, businessObjectDefinitionEntities);
 
             // Increment the offset.
-            startPosition = startPosition + BUSINESS_OBJECT_DEFINITIONS_CHUNK_SIZE;
+            startPosition += BUSINESS_OBJECT_DEFINITIONS_CHUNK_SIZE;
+
+            // Increment the total count of processed business object definition entities.
+            processedBusinessObjectDefinitionsCount += businessObjectDefinitionEntities.size();
         }
+
+        // Perform a simple count validation, index size should equal entity list size.
+        validateSearchIndexSize(searchIndexKey.getSearchIndexName(), documentType, processedBusinessObjectDefinitionsCount);
 
         // Return an AsyncResult so callers will know the future is "done". They can call "isDone" to know when this method has completed and they can call
         // "get" to see if any exceptions were thrown.
@@ -129,9 +136,6 @@ public class SearchIndexHelperServiceImpl implements SearchIndexHelperService
         businessObjectDefinitionHelper
             .executeFunctionForBusinessObjectDefinitionEntities(searchIndexKey.getSearchIndexName(), documentType, businessObjectDefinitionEntities,
                 searchFunctions.getIndexFunction());
-
-        // Perform a simple count validation, index size should equal entity list size.
-        validateSearchIndexSize(searchIndexKey.getSearchIndexName(), documentType, businessObjectDefinitionEntities.size());
 
         // Update search index status to READY.
         searchIndexDaoHelper.updateSearchIndexStatus(searchIndexKey, SearchIndexStatusEntity.SearchIndexStatuses.READY.name());
