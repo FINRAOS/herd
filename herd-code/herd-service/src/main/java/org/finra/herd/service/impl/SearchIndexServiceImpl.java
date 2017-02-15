@@ -17,16 +17,10 @@ package org.finra.herd.service.impl;
 
 import java.util.Map;
 
-import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
-import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
-import org.elasticsearch.action.admin.cluster.state.ClusterStateRequest;
-import org.elasticsearch.action.admin.cluster.state.ClusterStateResponse;
-import org.elasticsearch.action.admin.indices.settings.get.GetSettingsResponse;
+import org.elasticsearch.action.admin.indices.stats.IndexStats;
 import org.elasticsearch.action.admin.indices.stats.IndicesStatsRequest;
 import org.elasticsearch.action.admin.indices.stats.IndicesStatsResponse;
 import org.elasticsearch.action.support.IndicesOptions;
-import org.elasticsearch.client.Requests;
-import org.elasticsearch.cluster.ClusterState;
 import org.elasticsearch.cluster.metadata.IndexMetaData;
 import org.elasticsearch.common.settings.Settings;
 import org.slf4j.Logger;
@@ -164,33 +158,72 @@ public class SearchIndexServiceImpl implements SearchIndexService
         // Create the search index object from the persisted entity.
         SearchIndex searchIndex = createSearchIndexFromEntity(searchIndexEntity);
 
-        // Retrieve index settings from the actual search index.
-        GetSettingsResponse getSettingsResponse =
-            searchIndexHelperService.getAdminClient().indices().prepareGetSettings(searchIndexKey.getSearchIndexName()).execute().actionGet();
-        LOGGER.info("getSettingsResponse={}", jsonHelper.objectToJson(getSettingsResponse));
-
-        // Retrieve cluster state information.
-        final ClusterStateRequest clusterStateRequest = new ClusterStateRequest();
-        clusterStateRequest.clear().indices(searchIndexKey.getSearchIndexName()).metaData(true);
-        final IndicesOptions strictExpandIndicesOptions = IndicesOptions.strictExpand();
-        clusterStateRequest.indicesOptions(strictExpandIndicesOptions);
-        ClusterStateResponse clusterStateResponse = searchIndexHelperService.getAdminClient().cluster().state(new ClusterStateRequest()).actionGet();
-        LOGGER.info("clusterStateResponse={}", jsonHelper.objectToJson(clusterStateResponse));
-        ClusterState clusterState = clusterStateResponse.getState();
-        LOGGER.info("clusterState={}", jsonHelper.objectToJson(clusterState));
-
-        // Retrieve cluster health information.
-        ClusterHealthRequest clusterHealthRequest = Requests.clusterHealthRequest(searchIndexKey.getSearchIndexName());
-        ClusterHealthResponse clusterHealthResponse = searchIndexHelperService.getAdminClient().cluster().health(clusterHealthRequest).actionGet();
-        LOGGER.info("clusterHealthResponse={}", jsonHelper.objectToJson(clusterHealthResponse));
+        // Retrieve indices level stats.
+        try
+        {
+            IndicesStatsRequest indicesStatsRequest = new IndicesStatsRequest();
+            indicesStatsRequest.indices(searchIndexKey.getSearchIndexName());
+            final IndicesOptions strictExpandIndicesOptions = IndicesOptions.strictExpand();
+            indicesStatsRequest.indicesOptions(strictExpandIndicesOptions);
+            IndicesStatsResponse indicesStatsResponse = searchIndexHelperService.getAdminClient().indices().stats(indicesStatsRequest).actionGet();
+            LOGGER.info("default: indicesStatsResponse={}", jsonHelper.objectToJson(indicesStatsResponse));
+        }
+        catch (RuntimeException e)
+        {
+            LOGGER.error("default: Got exception while retrieving indices level stats.", e);
+        }
 
         // Retrieve indices level stats.
-        IndicesStatsRequest indicesStatsRequest = new IndicesStatsRequest();
-        indicesStatsRequest.indices(searchIndexKey.getSearchIndexName());
-        indicesStatsRequest.indicesOptions(strictExpandIndicesOptions);
-        indicesStatsRequest.all();
-        IndicesStatsResponse indicesStatsResponse = searchIndexHelperService.getAdminClient().indices().stats(indicesStatsRequest).actionGet();
-        LOGGER.info("indicesStatsResponse={}", jsonHelper.objectToJson(indicesStatsResponse));
+        try
+        {
+            IndicesStatsRequest indicesStatsRequest = new IndicesStatsRequest();
+            indicesStatsRequest.clear().indices(searchIndexKey.getSearchIndexName());
+            final IndicesOptions strictExpandIndicesOptions = IndicesOptions.strictExpand();
+            indicesStatsRequest.indicesOptions(strictExpandIndicesOptions);
+            indicesStatsRequest.docs(true);
+            IndicesStatsResponse indicesStatsResponse = searchIndexHelperService.getAdminClient().indices().stats(indicesStatsRequest).actionGet();
+            LOGGER.info("indicesStatsRequest.docs(true): indicesStatsResponse={}", jsonHelper.objectToJson(indicesStatsResponse));
+        }
+        catch (RuntimeException e)
+        {
+            LOGGER.error("indicesStatsRequest.docs(true): Got exception while retrieving indices level stats.", e);
+        }
+
+        // Retrieve indices level stats.
+        try
+        {
+            IndicesStatsRequest indicesStatsRequest = new IndicesStatsRequest();
+            indicesStatsRequest.indices(searchIndexKey.getSearchIndexName());
+            final IndicesOptions strictExpandIndicesOptions = IndicesOptions.strictExpand();
+            indicesStatsRequest.indicesOptions(strictExpandIndicesOptions);
+            indicesStatsRequest.all();
+            IndicesStatsResponse indicesStatsResponse = searchIndexHelperService.getAdminClient().indices().stats(indicesStatsRequest).actionGet();
+            LOGGER.info("indicesStatsRequest.all(): indicesStatsResponse={}", jsonHelper.objectToJson(indicesStatsResponse));
+        }
+        catch (RuntimeException e)
+        {
+            LOGGER.error("indicesStatsRequest.all(): Got exception while retrieving indices level stats.", e);
+        }
+
+        // Retrieve indices level stats.
+        try
+        {
+            IndicesStatsRequest indicesStatsRequest = new IndicesStatsRequest();
+            indicesStatsRequest.clear().indices(searchIndexKey.getSearchIndexName());
+            final IndicesOptions strictExpandIndicesOptions = IndicesOptions.strictExpand();
+            indicesStatsRequest.indicesOptions(strictExpandIndicesOptions);
+            indicesStatsRequest.docs(true);
+            IndicesStatsResponse indicesStatsResponse = searchIndexHelperService.getAdminClient().indices().stats(indicesStatsRequest).actionGet();
+            IndexStats indexStats = indicesStatsResponse.getIndex(searchIndexKey.getSearchIndexName());
+            LOGGER.info(String.format("indicesStatsRequest.docs(true): indexStats.getPrimaries().getDocs().getCount()=%d"),
+                indexStats.getPrimaries().getDocs().getCount());
+            LOGGER.info(String.format("indicesStatsRequest.docs(true): indexStats.getPrimaries().getDocs().getDeleted()=%d"),
+                indexStats.getPrimaries().getDocs().getDeleted());
+        }
+        catch (RuntimeException e)
+        {
+            LOGGER.error("indicesStatsRequest.docs(true) + getDocs(): Got exception while retrieving indices level stats.", e);
+        }
 
         // Retrieve index settings from the actual search index.
         Settings settings =
