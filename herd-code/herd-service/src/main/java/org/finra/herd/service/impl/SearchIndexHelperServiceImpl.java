@@ -15,7 +15,6 @@
 */
 package org.finra.herd.service.impl;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Future;
 
@@ -49,6 +48,8 @@ import org.finra.herd.service.helper.TagDaoHelper;
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 public class SearchIndexHelperServiceImpl implements SearchIndexHelperService
 {
+    public static final int BUSINESS_OBJECT_DEFINITIONS_CHUNK_SIZE = 100;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(SearchIndexHelperServiceImpl.class);
 
     @Autowired
@@ -82,30 +83,71 @@ public class SearchIndexHelperServiceImpl implements SearchIndexHelperService
     @Async
     public Future<Void> indexAllBusinessObjectDefinitions(SearchIndexKey searchIndexKey, String documentType)
     {
-        // Get a list of all business object definitions.
-        final List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities =
-            Collections.unmodifiableList(businessObjectDefinitionDao.getAllBusinessObjectDefinitions());
-
-        // Index all business object definitions.
-        businessObjectDefinitionHelper
-            .executeFunctionForBusinessObjectDefinitionEntities(searchIndexKey.getSearchIndexName(), documentType, businessObjectDefinitionEntities,
-                searchFunctions.getIndexFunction());
-
-        // Simple count validation, index size should equal entity list size.
-        final long indexSize = searchFunctions.getNumberOfTypesInIndexFunction().apply(searchIndexKey.getSearchIndexName(), documentType);
-        final long businessObjectDefinitionDatabaseTableSize = businessObjectDefinitionEntities.size();
-        if (businessObjectDefinitionDatabaseTableSize != indexSize)
+        // Index all business object definitions defined in the system using pagination.
+        int startPosition = 0;
+        int processedBusinessObjectDefinitionsCount = 0;
+        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities;
+        while ((businessObjectDefinitionEntities =
+            businessObjectDefinitionDao.getAllBusinessObjectDefinitions(startPosition, BUSINESS_OBJECT_DEFINITIONS_CHUNK_SIZE)).size() > 0)
         {
-            LOGGER.error("Index validation failed, business object definition database table size {}, does not equal index size {}.",
-                businessObjectDefinitionDatabaseTableSize, indexSize);
+            // Indexes selected business object definition entities.
+            indexBusinessObjectDefinitions(searchIndexKey, documentType, businessObjectDefinitionEntities);
+
+            // Increment the offset.
+            startPosition += BUSINESS_OBJECT_DEFINITIONS_CHUNK_SIZE;
+
+            // Increment the total count of processed business object definition entities.
+            processedBusinessObjectDefinitionsCount += businessObjectDefinitionEntities.size();
         }
 
-        // Update search index status to READY.
-        searchIndexDaoHelper.updateSearchIndexStatus(searchIndexKey, SearchIndexStatusEntity.SearchIndexStatuses.READY.name());
+        // Perform a simple count validation, index size should equal entity list size.
+        validateSearchIndexSize(searchIndexKey.getSearchIndexName(), documentType, processedBusinessObjectDefinitionsCount);
 
         // Return an AsyncResult so callers will know the future is "done". They can call "isDone" to know when this method has completed and they can call
         // "get" to see if any exceptions were thrown.
         return new AsyncResult<>(null);
+    }
+
+    /**
+     * Performs a simple count validation on the specified search index.
+     *
+     * @param indexName the name of the index
+     * @param documentType the document type
+     * @param expectedIndexSize the expected index size
+     *
+     * @return true if index size matches the expected size, false otherwise
+     */
+    protected boolean validateSearchIndexSize(String indexName, String documentType, int expectedIndexSize)
+    {
+        final long indexSize = searchFunctions.getNumberOfTypesInIndexFunction().apply(indexName, documentType);
+
+        boolean result = true;
+        if (indexSize != expectedIndexSize)
+        {
+            LOGGER.error("Index validation failed, expected index size {}, does not equal actual index size {}.", expectedIndexSize, indexSize);
+            result = false;
+        }
+
+        return result;
+    }
+
+    /**
+     * Indexes business object definitions.
+     *
+     * @param searchIndexKey the key of the search index
+     * @param documentType the document type
+     * @param businessObjectDefinitionEntities the list of business object definition entities
+     */
+    private void indexBusinessObjectDefinitions(SearchIndexKey searchIndexKey, String documentType,
+        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities)
+    {
+        // Index business object definitions.
+        businessObjectDefinitionHelper
+            .executeFunctionForBusinessObjectDefinitionEntities(searchIndexKey.getSearchIndexName(), documentType, businessObjectDefinitionEntities,
+                searchFunctions.getIndexFunction());
+
+        // Update search index status to READY.
+        searchIndexDaoHelper.updateSearchIndexStatus(searchIndexKey, SearchIndexStatusEntity.SearchIndexStatuses.READY.name());
     }
 
     @Override

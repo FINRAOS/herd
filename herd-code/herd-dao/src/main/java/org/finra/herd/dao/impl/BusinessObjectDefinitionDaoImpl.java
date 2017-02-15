@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 import javax.persistence.Tuple;
+import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Expression;
@@ -49,6 +50,12 @@ public class BusinessObjectDefinitionDaoImpl extends AbstractHerdDao implements 
     @Override
     public List<BusinessObjectDefinitionEntity> getAllBusinessObjectDefinitions()
     {
+        return getAllBusinessObjectDefinitions(null, null);
+    }
+
+    @Override
+    public List<BusinessObjectDefinitionEntity> getAllBusinessObjectDefinitions(Integer startPosition, Integer maxResult)
+    {
         // Create the criteria builder and a tuple style criteria query.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
         CriteriaQuery<BusinessObjectDefinitionEntity> criteria = builder.createQuery(BusinessObjectDefinitionEntity.class);
@@ -64,9 +71,26 @@ public class BusinessObjectDefinitionDaoImpl extends AbstractHerdDao implements 
         Path<String> namespaceCodeColumn = namespaceEntity.get(NamespaceEntity_.code);
         Path<String> businessObjectDefinitionNameColumn = businessObjectDefinitionEntityRoot.get(BusinessObjectDefinitionEntity_.name);
 
+        // Add all clauses to the query.
         criteria.select(businessObjectDefinitionEntityRoot).orderBy(builder.asc(businessObjectDefinitionNameColumn), builder.asc(namespaceCodeColumn));
 
-        return entityManager.createQuery(criteria).getResultList();
+        // Get an instance of the query ready for execution.
+        TypedQuery<BusinessObjectDefinitionEntity> query = entityManager.createQuery(criteria);
+
+        // If start position is specified, set it for the query.
+        if (startPosition != null)
+        {
+            query.setFirstResult(startPosition.intValue());
+        }
+
+        // If start position is specified, set it for the query.
+        if (maxResult != null)
+        {
+            query.setMaxResults(maxResult.intValue());
+        }
+
+        // Execute the query and return the results.
+        return query.getResultList();
     }
 
     @Override

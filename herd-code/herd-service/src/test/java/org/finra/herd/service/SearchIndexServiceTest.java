@@ -37,6 +37,7 @@ import org.elasticsearch.cluster.metadata.IndexMetaData;
 import org.elasticsearch.common.collect.ImmutableOpenMap;
 import org.elasticsearch.common.settings.Settings;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -250,6 +251,7 @@ public class SearchIndexServiceTest extends AbstractServiceTest
     }
 
     @Test
+    @Ignore
     public void testGetSearchIndex()
     {
         // Create a search index key.
