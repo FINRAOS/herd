@@ -36,6 +36,7 @@ import org.mockito.MockitoAnnotations;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.BusinessObjectDefinitionDao;
 import org.finra.herd.dao.SearchIndexDao;
+import org.finra.herd.dao.TagDao;
 import org.finra.herd.model.api.xml.SearchIndex;
 import org.finra.herd.model.api.xml.SearchIndexCreateRequest;
 import org.finra.herd.model.api.xml.SearchIndexKey;
@@ -93,6 +94,9 @@ public class SearchIndexServiceImplTest extends AbstractServiceTest
 
     @Mock
     private SearchIndexTypeDaoHelper searchIndexTypeDaoHelper;
+
+    @Mock
+    private TagDao tagDao;
 
     @Before
     public void before()
@@ -207,6 +211,43 @@ public class SearchIndexServiceImplTest extends AbstractServiceTest
         verify(searchFunctions).getCreateIndexFunction();
         verify(searchIndexHelperService).indexAllBusinessObjectDefinitions(searchIndexKey, SEARCH_INDEX_DOCUMENT_TYPE);
         verifyNoMoreInteractions(alternateKeyHelper, businessObjectDefinitionDao, businessObjectDefinitionHelper, configurationDaoHelper, configurationHelper,
+            searchFunctions, searchIndexDao, searchIndexDaoHelper, searchIndexHelperService, searchIndexStatusDaoHelper, searchIndexTypeDaoHelper);
+    }
+
+    @Test
+    public void testTagCreateSearchIndexHelper()
+    {
+        // Create a search index key.
+        SearchIndexKey searchIndexKey = new SearchIndexKey(SEARCH_INDEX_NAME);
+
+        // Get the search index type value.
+        String searchIndexType = SearchIndexTypeEntity.SearchIndexTypes.TAG.name();
+
+        // Mock some of the external call responses.
+        @SuppressWarnings("unchecked")
+        Future<Void> mockedFuture = mock(Future.class);
+
+        // Mock the external calls.
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn(SEARCH_INDEX_DOCUMENT_TYPE);
+        when(configurationDaoHelper.getClobProperty(ConfigurationValue.ELASTICSEARCH_TAG_MAPPINGS_JSON.getKey())).thenReturn(SEARCH_INDEX_MAPPING);
+        when(searchFunctions.getIndexExistsFunction()).thenReturn(indexName -> true);
+        when(searchFunctions.getDeleteIndexFunction()).thenReturn(indexName -> {
+        });
+        when(searchFunctions.getCreateIndexFunction()).thenReturn((indexName, documentType, mapping) -> {
+        });
+        when(searchIndexHelperService.indexAllTags(searchIndexKey, SEARCH_INDEX_DOCUMENT_TYPE)).thenReturn(mockedFuture);
+
+        // Create a search index.
+        searchIndexServiceImpl.createSearchIndexHelper(searchIndexKey, searchIndexType);
+
+        // Verify the external calls.
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
+        verify(configurationDaoHelper).getClobProperty(ConfigurationValue.ELASTICSEARCH_TAG_MAPPINGS_JSON.getKey());
+        verify(searchFunctions).getIndexExistsFunction();
+        verify(searchFunctions).getDeleteIndexFunction();
+        verify(searchFunctions).getCreateIndexFunction();
+        verify(searchIndexHelperService).indexAllTags(searchIndexKey, SEARCH_INDEX_DOCUMENT_TYPE);
+        verifyNoMoreInteractions(alternateKeyHelper, tagDao, configurationDaoHelper, configurationHelper,
             searchFunctions, searchIndexDao, searchIndexDaoHelper, searchIndexHelperService, searchIndexStatusDaoHelper, searchIndexTypeDaoHelper);
     }
 

@@ -224,11 +224,18 @@ public class SearchIndexServiceImpl implements SearchIndexService
         String documentType;
         String mapping;
 
-        // Currently, only search index for business object definitions is supported.
+        // Currently, only search index for business object definitions and tag are supported.
         if (SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name().equalsIgnoreCase(searchIndexType))
         {
             documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
             mapping = configurationDaoHelper.getClobProperty(ConfigurationValue.ELASTICSEARCH_BDEF_MAPPINGS_JSON.getKey());
+
+        }
+        else if (SearchIndexTypeEntity.SearchIndexTypes.TAG.name().equalsIgnoreCase(searchIndexType))
+        {
+
+            documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
+            mapping = configurationDaoHelper.getClobProperty(ConfigurationValue.ELASTICSEARCH_TAG_MAPPINGS_JSON.getKey());
         }
         else
         {
@@ -238,11 +245,21 @@ public class SearchIndexServiceImpl implements SearchIndexService
         // If the index exists delete it.
         deleteSearchIndexHelper(searchIndexKey.getSearchIndexName());
 
-        // Create the index.
+        // Create the mapping for the index
         searchFunctions.getCreateIndexFunction().accept(searchIndexKey.getSearchIndexName(), documentType, mapping);
 
-        // Asynchronously index all business object definitions. Since we got here, this search index is for business object definitions.
-        searchIndexHelperService.indexAllBusinessObjectDefinitions(searchIndexKey, documentType);
+        //Fetch data from database and index them
+        if (SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name().equalsIgnoreCase(searchIndexType))
+        {
+            // Asynchronously index all business object definitions.
+            searchIndexHelperService.indexAllBusinessObjectDefinitions(searchIndexKey, documentType);
+
+        }
+        else
+        {
+            // Asynchronously index all tags. If we got to this point, it is tags
+            searchIndexHelperService.indexAllTags(searchIndexKey, documentType);
+        }
     }
 
     /**

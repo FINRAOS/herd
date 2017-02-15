@@ -225,7 +225,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
             searchFunctions.getDeleteIndexFunction().accept(indexName);
         }
 
-        // Create the index
+        // Create the mapping
         searchFunctions.getCreateIndexFunction().accept(indexName, documentType, mapping);
 
         // Get a list of all business object definitions

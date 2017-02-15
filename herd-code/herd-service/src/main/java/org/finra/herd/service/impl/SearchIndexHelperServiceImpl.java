@@ -30,14 +30,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.finra.herd.dao.BusinessObjectDefinitionDao;
+import org.finra.herd.dao.TagDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.api.xml.SearchIndexKey;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.SearchIndexStatusEntity;
+import org.finra.herd.model.jpa.TagEntity;
 import org.finra.herd.service.SearchIndexHelperService;
 import org.finra.herd.service.functional.SearchFunctions;
 import org.finra.herd.service.helper.BusinessObjectDefinitionHelper;
 import org.finra.herd.service.helper.SearchIndexDaoHelper;
+import org.finra.herd.service.helper.TagDaoHelper;
 
 /**
  * An implementation of the helper service class for the search index service.
@@ -62,6 +65,12 @@ public class SearchIndexHelperServiceImpl implements SearchIndexHelperService
 
     @Autowired
     private TransportClient transportClient;
+
+    @Autowired
+    private TagDao tagDao;
+
+    @Autowired
+    private TagDaoHelper tagDaoHelper;
 
     @Override
     public AdminClient getAdminClient()
@@ -89,6 +98,32 @@ public class SearchIndexHelperServiceImpl implements SearchIndexHelperService
         {
             LOGGER.error("Index validation failed, business object definition database table size {}, does not equal index size {}.",
                 businessObjectDefinitionDatabaseTableSize, indexSize);
+        }
+
+        // Update search index status to READY.
+        searchIndexDaoHelper.updateSearchIndexStatus(searchIndexKey, SearchIndexStatusEntity.SearchIndexStatuses.READY.name());
+
+        // Return an AsyncResult so callers will know the future is "done". They can call "isDone" to know when this method has completed and they can call
+        // "get" to see if any exceptions were thrown.
+        return new AsyncResult<>(null);
+    }
+
+    @Override
+    @Async
+    public Future<Void> indexAllTags(SearchIndexKey searchIndexKey, String documentType)
+    {
+        // Get a list of all tags
+        final List<TagEntity> tagEntities = Collections.unmodifiableList(tagDao.getTags());
+
+        // Index all tags.
+        tagDaoHelper.executeFunctionForTagEntities(searchIndexKey.getSearchIndexName(), documentType, tagEntities, searchFunctions.getIndexFunction());
+
+        // Simple count validation, index size should equal entity list size.
+        final long indexSize = searchFunctions.getNumberOfTypesInIndexFunction().apply(searchIndexKey.getSearchIndexName(), documentType);
+        final long tagDatabaseTableSize = tagEntities.size();
+        if (tagDatabaseTableSize != indexSize)
+        {
+            LOGGER.error("Index validation failed, tag database table size {}, does not equal index size {}.", tagDatabaseTableSize, indexSize);
         }
 
         // Update search index status to READY.
