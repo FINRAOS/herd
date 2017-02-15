@@ -15,6 +15,7 @@
 */
 package org.finra.herd.service.impl;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Future;
 
@@ -161,12 +162,7 @@ public class SearchIndexHelperServiceImpl implements SearchIndexHelperService
         tagDaoHelper.executeFunctionForTagEntities(searchIndexKey.getSearchIndexName(), documentType, tagEntities, searchFunctions.getIndexFunction());
 
         // Simple count validation, index size should equal entity list size.
-        final long indexSize = searchFunctions.getNumberOfTypesInIndexFunction().apply(searchIndexKey.getSearchIndexName(), documentType);
-        final long tagDatabaseTableSize = tagEntities.size();
-        if (tagDatabaseTableSize != indexSize)
-        {
-            LOGGER.error("Index validation failed, tag database table size {}, does not equal index size {}.", tagDatabaseTableSize, indexSize);
-        }
+        validateSearchIndexSize(searchIndexKey.getSearchIndexName(), documentType, tagEntities.size());
 
         // Update search index status to READY.
         searchIndexDaoHelper.updateSearchIndexStatus(searchIndexKey, SearchIndexStatusEntity.SearchIndexStatuses.READY.name());
