@@ -76,7 +76,7 @@ public class SearchIndexHelperServiceTest extends AbstractServiceTest
     }
 
     @Test
-    public void testCreateSearchIndex()
+    public void testIndexAllBusinessObjectDefinitions()
     {
         // Create a search index key.
         SearchIndexKey searchIndexKey = new SearchIndexKey(SEARCH_INDEX_NAME);
