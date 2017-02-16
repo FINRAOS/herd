@@ -272,6 +272,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final SearchIndexStatistics NO_SEARCH_INDEX_STATISTICS = null;
 
+    public static final XMLGregorianCalendar NO_SEARCH_INDEX_STATISTICS_CREATION_DATE = null;
+
     public static final Set<String> NO_SEARCH_RESPONSE_FIELDS = new HashSet<>();
 
     public static final PartitionValueFilter NO_STANDALONE_PARTITION_VALUE_FILTER = null;

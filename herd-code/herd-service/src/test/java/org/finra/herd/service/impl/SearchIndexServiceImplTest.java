@@ -27,6 +27,10 @@ import static org.mockito.Mockito.when;
 import java.sql.Timestamp;
 import java.util.concurrent.Future;
 
+import org.elasticsearch.cluster.metadata.IndexMetaData;
+import org.elasticsearch.common.collect.ImmutableOpenMap;
+import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.index.shard.DocsStats;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -40,6 +44,7 @@ import org.finra.herd.dao.TagDao;
 import org.finra.herd.model.api.xml.SearchIndex;
 import org.finra.herd.model.api.xml.SearchIndexCreateRequest;
 import org.finra.herd.model.api.xml.SearchIndexKey;
+import org.finra.herd.model.api.xml.SearchIndexStatistics;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.jpa.SearchIndexEntity;
 import org.finra.herd.model.jpa.SearchIndexStatusEntity;
@@ -231,6 +236,30 @@ public class SearchIndexServiceImplTest extends AbstractServiceTest
         // Verify the external calls.
         verifyNoMoreInteractions(alternateKeyHelper, businessObjectDefinitionDao, businessObjectDefinitionHelper, configurationDaoHelper, configurationHelper,
             searchFunctions, searchIndexDao, searchIndexDaoHelper, searchIndexHelperService, searchIndexStatusDaoHelper, searchIndexTypeDaoHelper);
+    }
+
+    @Test
+    public void testCreateSearchIndexStatisticsNoIndexCreationDate()
+    {
+        // Create a search index get settings response without the index creation date setting.
+        ImmutableOpenMap<String, Settings> getIndexResponseSettings = ImmutableOpenMap.<String, Settings>builder()
+            .fPut(SEARCH_INDEX_NAME, Settings.builder().put(IndexMetaData.SETTING_INDEX_UUID, SEARCH_INDEX_STATISTICS_INDEX_UUID).build()).build();
+
+        // Mock an index docs stats object.
+        DocsStats mockedDocsStats = mock(DocsStats.class);
+        when(mockedDocsStats.getCount()).thenReturn(SEARCH_INDEX_STATISTICS_NUMBER_OF_ACTIVE_DOCUMENTS);
+        when(mockedDocsStats.getDeleted()).thenReturn(SEARCH_INDEX_STATISTICS_NUMBER_OF_DELETED_DOCUMENTS);
+
+        // Get a search index settings created.
+        SearchIndexStatistics response = searchIndexServiceImpl.createSearchIndexStatistics(getIndexResponseSettings.get(SEARCH_INDEX_NAME), mockedDocsStats);
+
+        // Verify the external calls.
+        verifyNoMoreInteractions(alternateKeyHelper, businessObjectDefinitionDao, businessObjectDefinitionHelper, configurationDaoHelper, configurationHelper,
+            searchFunctions, searchIndexDao, searchIndexDaoHelper, searchIndexHelperService, searchIndexStatusDaoHelper, searchIndexTypeDaoHelper);
+
+        // Validate the returned object.
+        assertEquals(new SearchIndexStatistics(NO_SEARCH_INDEX_STATISTICS_CREATION_DATE, SEARCH_INDEX_STATISTICS_NUMBER_OF_ACTIVE_DOCUMENTS,
+            SEARCH_INDEX_STATISTICS_NUMBER_OF_DELETED_DOCUMENTS, SEARCH_INDEX_STATISTICS_INDEX_UUID), response);
     }
 
     @Test
