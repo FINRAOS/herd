@@ -66,13 +66,13 @@ public class SearchIndexHelperServiceImpl implements SearchIndexHelperService
     private SearchIndexDaoHelper searchIndexDaoHelper;
 
     @Autowired
-    private TransportClient transportClient;
-
-    @Autowired
     private TagDao tagDao;
 
     @Autowired
     private TagDaoHelper tagDaoHelper;
+
+    @Autowired
+    private TransportClient transportClient;
 
     @Override
     public AdminClient getAdminClient()
@@ -91,8 +91,10 @@ public class SearchIndexHelperServiceImpl implements SearchIndexHelperService
         while ((businessObjectDefinitionEntities =
             businessObjectDefinitionDao.getAllBusinessObjectDefinitions(startPosition, BUSINESS_OBJECT_DEFINITIONS_CHUNK_SIZE)).size() > 0)
         {
-            // Indexes selected business object definition entities.
-            indexBusinessObjectDefinitions(searchIndexKey, documentType, businessObjectDefinitionEntities);
+            // Index business object definitions selected for processing.
+            businessObjectDefinitionHelper
+                .executeFunctionForBusinessObjectDefinitionEntities(searchIndexKey.getSearchIndexName(), documentType, businessObjectDefinitionEntities,
+                    searchFunctions.getIndexFunction());
 
             // Increment the offset.
             startPosition += BUSINESS_OBJECT_DEFINITIONS_CHUNK_SIZE;
@@ -103,6 +105,30 @@ public class SearchIndexHelperServiceImpl implements SearchIndexHelperService
 
         // Perform a simple count validation, index size should equal entity list size.
         validateSearchIndexSize(searchIndexKey.getSearchIndexName(), documentType, processedBusinessObjectDefinitionsCount);
+
+        // Update search index status to READY.
+        searchIndexDaoHelper.updateSearchIndexStatus(searchIndexKey, SearchIndexStatusEntity.SearchIndexStatuses.READY.name());
+
+        // Return an AsyncResult so callers will know the future is "done". They can call "isDone" to know when this method has completed and they can call
+        // "get" to see if any exceptions were thrown.
+        return new AsyncResult<>(null);
+    }
+
+    @Override
+    @Async
+    public Future<Void> indexAllTags(SearchIndexKey searchIndexKey, String documentType)
+    {
+        // Get a list of all tags
+        final List<TagEntity> tagEntities = Collections.unmodifiableList(tagDao.getTags());
+
+        // Index all tags.
+        tagDaoHelper.executeFunctionForTagEntities(searchIndexKey.getSearchIndexName(), documentType, tagEntities, searchFunctions.getIndexFunction());
+
+        // Simple count validation, index size should equal entity list size.
+        validateSearchIndexSize(searchIndexKey.getSearchIndexName(), documentType, tagEntities.size());
+
+        // Update search index status to READY.
+        searchIndexDaoHelper.updateSearchIndexStatus(searchIndexKey, SearchIndexStatusEntity.SearchIndexStatuses.READY.name());
 
         // Return an AsyncResult so callers will know the future is "done". They can call "isDone" to know when this method has completed and they can call
         // "get" to see if any exceptions were thrown.
@@ -130,45 +156,5 @@ public class SearchIndexHelperServiceImpl implements SearchIndexHelperService
         }
 
         return result;
-    }
-
-    /**
-     * Indexes business object definitions.
-     *
-     * @param searchIndexKey the key of the search index
-     * @param documentType the document type
-     * @param businessObjectDefinitionEntities the list of business object definition entities
-     */
-    private void indexBusinessObjectDefinitions(SearchIndexKey searchIndexKey, String documentType,
-        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities)
-    {
-        // Index business object definitions.
-        businessObjectDefinitionHelper
-            .executeFunctionForBusinessObjectDefinitionEntities(searchIndexKey.getSearchIndexName(), documentType, businessObjectDefinitionEntities,
-                searchFunctions.getIndexFunction());
-
-        // Update search index status to READY.
-        searchIndexDaoHelper.updateSearchIndexStatus(searchIndexKey, SearchIndexStatusEntity.SearchIndexStatuses.READY.name());
-    }
-
-    @Override
-    @Async
-    public Future<Void> indexAllTags(SearchIndexKey searchIndexKey, String documentType)
-    {
-        // Get a list of all tags
-        final List<TagEntity> tagEntities = Collections.unmodifiableList(tagDao.getTags());
-
-        // Index all tags.
-        tagDaoHelper.executeFunctionForTagEntities(searchIndexKey.getSearchIndexName(), documentType, tagEntities, searchFunctions.getIndexFunction());
-
-        // Simple count validation, index size should equal entity list size.
-        validateSearchIndexSize(searchIndexKey.getSearchIndexName(), documentType, tagEntities.size());
-
-        // Update search index status to READY.
-        searchIndexDaoHelper.updateSearchIndexStatus(searchIndexKey, SearchIndexStatusEntity.SearchIndexStatuses.READY.name());
-
-        // Return an AsyncResult so callers will know the future is "done". They can call "isDone" to know when this method has completed and they can call
-        // "get" to see if any exceptions were thrown.
-        return new AsyncResult<>(null);
     }
 }

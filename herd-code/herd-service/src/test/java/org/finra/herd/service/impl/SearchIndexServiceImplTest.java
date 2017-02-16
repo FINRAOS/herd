@@ -173,7 +173,7 @@ public class SearchIndexServiceImplTest extends AbstractServiceTest
             searchFunctions, searchIndexDao, searchIndexDaoHelper, searchIndexHelperService, searchIndexStatusDaoHelper, searchIndexTypeDaoHelper);
 
         // Validate the returned object.
-        assertEquals(new SearchIndex(searchIndexKey, SEARCH_INDEX_TYPE, SEARCH_INDEX_STATUS, NO_SEARCH_INDEX_SETTINGS, USER_ID, CREATED_ON, UPDATED_ON),
+        assertEquals(new SearchIndex(searchIndexKey, SEARCH_INDEX_TYPE, SEARCH_INDEX_STATUS, NO_SEARCH_INDEX_STATISTICS, USER_ID, CREATED_ON, UPDATED_ON),
             searchIndex);
     }
 
@@ -211,43 +211,6 @@ public class SearchIndexServiceImplTest extends AbstractServiceTest
         verify(searchFunctions).getCreateIndexFunction();
         verify(searchIndexHelperService).indexAllBusinessObjectDefinitions(searchIndexKey, SEARCH_INDEX_DOCUMENT_TYPE);
         verifyNoMoreInteractions(alternateKeyHelper, businessObjectDefinitionDao, businessObjectDefinitionHelper, configurationDaoHelper, configurationHelper,
-            searchFunctions, searchIndexDao, searchIndexDaoHelper, searchIndexHelperService, searchIndexStatusDaoHelper, searchIndexTypeDaoHelper);
-    }
-
-    @Test
-    public void testTagCreateSearchIndexHelper()
-    {
-        // Create a search index key.
-        SearchIndexKey searchIndexKey = new SearchIndexKey(SEARCH_INDEX_NAME);
-
-        // Get the search index type value.
-        String searchIndexType = SearchIndexTypeEntity.SearchIndexTypes.TAG.name();
-
-        // Mock some of the external call responses.
-        @SuppressWarnings("unchecked")
-        Future<Void> mockedFuture = mock(Future.class);
-
-        // Mock the external calls.
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn(SEARCH_INDEX_DOCUMENT_TYPE);
-        when(configurationDaoHelper.getClobProperty(ConfigurationValue.ELASTICSEARCH_TAG_MAPPINGS_JSON.getKey())).thenReturn(SEARCH_INDEX_MAPPING);
-        when(searchFunctions.getIndexExistsFunction()).thenReturn(indexName -> true);
-        when(searchFunctions.getDeleteIndexFunction()).thenReturn(indexName -> {
-        });
-        when(searchFunctions.getCreateIndexFunction()).thenReturn((indexName, documentType, mapping) -> {
-        });
-        when(searchIndexHelperService.indexAllTags(searchIndexKey, SEARCH_INDEX_DOCUMENT_TYPE)).thenReturn(mockedFuture);
-
-        // Create a search index.
-        searchIndexServiceImpl.createSearchIndexHelper(searchIndexKey, searchIndexType);
-
-        // Verify the external calls.
-        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
-        verify(configurationDaoHelper).getClobProperty(ConfigurationValue.ELASTICSEARCH_TAG_MAPPINGS_JSON.getKey());
-        verify(searchFunctions).getIndexExistsFunction();
-        verify(searchFunctions).getDeleteIndexFunction();
-        verify(searchFunctions).getCreateIndexFunction();
-        verify(searchIndexHelperService).indexAllTags(searchIndexKey, SEARCH_INDEX_DOCUMENT_TYPE);
-        verifyNoMoreInteractions(alternateKeyHelper, tagDao, configurationDaoHelper, configurationHelper,
             searchFunctions, searchIndexDao, searchIndexDaoHelper, searchIndexHelperService, searchIndexStatusDaoHelper, searchIndexTypeDaoHelper);
     }
 
@@ -299,5 +262,42 @@ public class SearchIndexServiceImplTest extends AbstractServiceTest
         verify(searchFunctions).getIndexExistsFunction();
         verifyNoMoreInteractions(alternateKeyHelper, businessObjectDefinitionDao, businessObjectDefinitionHelper, configurationDaoHelper, configurationHelper,
             searchFunctions, searchIndexDao, searchIndexDaoHelper, searchIndexHelperService, searchIndexStatusDaoHelper, searchIndexTypeDaoHelper);
+    }
+
+    @Test
+    public void testTagCreateSearchIndexHelper()
+    {
+        // Create a search index key.
+        SearchIndexKey searchIndexKey = new SearchIndexKey(SEARCH_INDEX_NAME);
+
+        // Get the search index type value.
+        String searchIndexType = SearchIndexTypeEntity.SearchIndexTypes.TAG.name();
+
+        // Mock some of the external call responses.
+        @SuppressWarnings("unchecked")
+        Future<Void> mockedFuture = mock(Future.class);
+
+        // Mock the external calls.
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn(SEARCH_INDEX_DOCUMENT_TYPE);
+        when(configurationDaoHelper.getClobProperty(ConfigurationValue.ELASTICSEARCH_TAG_MAPPINGS_JSON.getKey())).thenReturn(SEARCH_INDEX_MAPPING);
+        when(searchFunctions.getIndexExistsFunction()).thenReturn(indexName -> true);
+        when(searchFunctions.getDeleteIndexFunction()).thenReturn(indexName -> {
+        });
+        when(searchFunctions.getCreateIndexFunction()).thenReturn((indexName, documentType, mapping) -> {
+        });
+        when(searchIndexHelperService.indexAllTags(searchIndexKey, SEARCH_INDEX_DOCUMENT_TYPE)).thenReturn(mockedFuture);
+
+        // Create a search index.
+        searchIndexServiceImpl.createSearchIndexHelper(searchIndexKey, searchIndexType);
+
+        // Verify the external calls.
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
+        verify(configurationDaoHelper).getClobProperty(ConfigurationValue.ELASTICSEARCH_TAG_MAPPINGS_JSON.getKey());
+        verify(searchFunctions).getIndexExistsFunction();
+        verify(searchFunctions).getDeleteIndexFunction();
+        verify(searchFunctions).getCreateIndexFunction();
+        verify(searchIndexHelperService).indexAllTags(searchIndexKey, SEARCH_INDEX_DOCUMENT_TYPE);
+        verifyNoMoreInteractions(alternateKeyHelper, tagDao, configurationDaoHelper, configurationHelper, searchFunctions, searchIndexDao, searchIndexDaoHelper,
+            searchIndexHelperService, searchIndexStatusDaoHelper, searchIndexTypeDaoHelper);
     }
 }
