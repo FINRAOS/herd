@@ -159,7 +159,7 @@ public class TagDaoHelper
     public void executeFunctionForTagEntities(final String indexName, final String documentType, final List<TagEntity> tagEntities,
         final QuadConsumer<String, String, String, String> function)
     {
-        // For each business object definition apply the passed in function
+        // For each tag apply the passed in function
         tagEntities.forEach(tagEntity -> {
             // Fetch Join with .size()
             tagEntity.getChildrenTagEntities().size();
@@ -169,7 +169,7 @@ public class TagDaoHelper
 
             if (StringUtils.isNotEmpty(jsonString))
             {
-                // Call the function that will process each business object definition entity against the index
+                // Call the function that will process each tag entity against the index
                 function.accept(indexName, documentType, tagEntity.getId().toString(), jsonString);
             }
         });
@@ -191,7 +191,7 @@ public class TagDaoHelper
 
         try
         {
-            // Convert the business object definition entity to a JSON string
+            // Convert the tag entity to a JSON string
             jsonString = jsonHelper.objectToJson(tagEntity);
         }
         catch (IllegalStateException illegalStateException)
