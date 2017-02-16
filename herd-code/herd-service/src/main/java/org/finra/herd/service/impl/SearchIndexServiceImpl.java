@@ -88,12 +88,12 @@ public class SearchIndexServiceImpl implements SearchIndexService
         // Perform validation and trim.
         validateSearchIndexCreateRequest(request);
 
-        // Ensure that Search index with the specified Search index key doesn't already exist.
+        // Ensure that search index with the specified search index key doesn't already exist.
         SearchIndexEntity searchIndexEntity = searchIndexDao.getSearchIndexByKey(request.getSearchIndexKey());
         if (searchIndexEntity != null)
         {
             throw new AlreadyExistsException(
-                String.format("Unable to create Search index with name \"%s\" because it already exists.", request.getSearchIndexKey().getSearchIndexName()));
+                String.format("Unable to create search index with name \"%s\" because it already exists.", request.getSearchIndexKey().getSearchIndexName()));
         }
 
         // Get the search index type and ensure it exists.
@@ -103,7 +103,7 @@ public class SearchIndexServiceImpl implements SearchIndexService
         SearchIndexStatusEntity searchIndexStatusEntity =
             searchIndexStatusDaoHelper.getSearchIndexStatusEntity(SearchIndexStatusEntity.SearchIndexStatuses.BUILDING.name());
 
-        // Creates the relative Search index entity from the request information.
+        // Creates the relative search index entity from the request information.
         searchIndexEntity = createSearchIndexEntity(request, searchIndexTypeEntity, searchIndexStatusEntity);
 
         // Persist the new entity.
@@ -157,18 +157,8 @@ public class SearchIndexServiceImpl implements SearchIndexService
             searchIndexHelperService.getAdminClient().indices().prepareStats(searchIndexKey.getSearchIndexName()).clear().setDocs(true).execute().actionGet()
                 .getIndex(searchIndexKey.getSearchIndexName()).getPrimaries().getDocs();
 
-        // Update the search index settings.
-        SearchIndexStatistics searchIndexStatistics = new SearchIndexStatistics();
-        searchIndex.setSearchIndexStatistics(searchIndexStatistics);
-        Long creationDate = settings.getAsLong(IndexMetaData.SETTING_CREATION_DATE, -1L);
-        if (creationDate.longValue() != -1L)
-        {
-            DateTime creationDateTime = new DateTime(creationDate, DateTimeZone.UTC);
-            searchIndexStatistics.setIndexCreationDate(HerdDateUtils.getXMLGregorianCalendarValue(creationDateTime.toDate()));
-        }
-        searchIndexStatistics.setIndexNumberOfActiveDocuments(docsStats.getCount());
-        searchIndexStatistics.setIndexNumberOfDeletedDocuments(docsStats.getDeleted());
-        searchIndexStatistics.setIndexUuid(settings.get(IndexMetaData.SETTING_INDEX_UUID));
+        // Update the search index statistics.
+        searchIndex.setSearchIndexStatistics(createSearchIndexStatistics(settings, docsStats));
 
         return searchIndex;
     }
@@ -182,13 +172,13 @@ public class SearchIndexServiceImpl implements SearchIndexService
     }
 
     /**
-     * Creates a new Search index entity from the request information.
+     * Creates a new search index entity from the request information.
      *
      * @param request the information needed to create a search index
      * @param searchIndexTypeEntity the search index type entity
      * @param searchIndexStatusEntity the search index status entity
      *
-     * @return the newly created Search index entity
+     * @return the newly created search index entity
      */
     protected SearchIndexEntity createSearchIndexEntity(SearchIndexCreateRequest request, SearchIndexTypeEntity searchIndexTypeEntity,
         SearchIndexStatusEntity searchIndexStatusEntity)
@@ -266,6 +256,32 @@ public class SearchIndexServiceImpl implements SearchIndexService
             // Asynchronously index all tags. If we got to this point, it is tags
             searchIndexHelperService.indexAllTags(searchIndexKey, documentType);
         }
+    }
+
+    /**
+     * Creates a new search index statistics objects per specified parameters.
+     *
+     * @param settings the search index settings
+     * @param docsStats the search index docs stats
+     *
+     * @return the newly created search index statistics object
+     */
+    protected SearchIndexStatistics createSearchIndexStatistics(Settings settings, DocsStats docsStats)
+    {
+        SearchIndexStatistics searchIndexStatistics = new SearchIndexStatistics();
+
+        Long creationDate = settings.getAsLong(IndexMetaData.SETTING_CREATION_DATE, -1L);
+        if (creationDate.longValue() != -1L)
+        {
+            DateTime creationDateTime = new DateTime(creationDate, DateTimeZone.UTC);
+            searchIndexStatistics.setIndexCreationDate(HerdDateUtils.getXMLGregorianCalendarValue(creationDateTime.toDate()));
+        }
+
+        searchIndexStatistics.setIndexNumberOfActiveDocuments(docsStats.getCount());
+        searchIndexStatistics.setIndexNumberOfDeletedDocuments(docsStats.getDeleted());
+        searchIndexStatistics.setIndexUuid(settings.get(IndexMetaData.SETTING_INDEX_UUID));
+
+        return searchIndexStatistics;
     }
 
     /**

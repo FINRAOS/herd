@@ -212,7 +212,7 @@ public class SearchIndexServiceTest extends AbstractServiceTest
         }
         catch (AlreadyExistsException e)
         {
-            assertEquals(String.format("Unable to create Search index with name \"%s\" because it already exists.", SEARCH_INDEX_NAME), e.getMessage());
+            assertEquals(String.format("Unable to create search index with name \"%s\" because it already exists.", SEARCH_INDEX_NAME), e.getMessage());
         }
 
         // Verify the external calls.
