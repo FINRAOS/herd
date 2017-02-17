@@ -96,7 +96,8 @@ public class TagDaoTestHelper
         TagTypeEntity tagTypeEntity = tagTypeDao.getTagTypeByKey(new TagTypeKey(tagType));
         if (tagTypeEntity == null)
         {
-            tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(tagType, AbstractDaoTest.TAG_TYPE_DISPLAY_NAME, AbstractDaoTest.TAG_TYPE_ORDER);
+            tagTypeEntity = tagTypeDaoTestHelper
+                .createTagTypeEntity(tagType, AbstractDaoTest.TAG_TYPE_DISPLAY_NAME, AbstractDaoTest.TAG_TYPE_ORDER, AbstractDaoTest.TAG_TYPE_DESCRIPTION);
         }
 
         return createTagEntity(tagTypeEntity, tagCode, tagDisplayName, tagDescription, parentTagEntity);

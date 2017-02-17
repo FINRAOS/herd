@@ -493,6 +493,11 @@
                <xs:documentation>The tag type's order relative to other tag types</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="description" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An optional description of this tag type</xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
@@ -514,6 +519,11 @@
                <xs:documentation>The tag type's order relative to other tag types</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="description" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An optional description of this tag type</xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
@@ -533,6 +543,11 @@
          <xs:element name="tagTypeOrder" type="xs:int" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The tag type's order relative to other tag types</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="description" type="xs:string" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The tag type's description</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>

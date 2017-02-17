@@ -64,13 +64,13 @@ import org.finra.herd.service.helper.TagTypeDaoHelper;
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 public class TagServiceImpl implements TagService, SearchableService
 {
-    // Constant to hold the display name field option for the search response.
+    // Constant to hold the description field option for the search response.
     public final static String DESCRIPTION_FIELD = "description".toLowerCase();
 
     // Constant to hold the display name field option for the search response.
     public final static String DISPLAY_NAME_FIELD = "displayName".toLowerCase();
 
-    // Constant to hold the hasChildren field option for the search response.
+    // Constant to hold the has children field option for the search response.
     public final static String HAS_CHILDREN_FIELD = "hasChildren".toLowerCase();
 
     // Constant to hold the parent tag key field option for the search response.
@@ -107,8 +107,7 @@ public class TagServiceImpl implements TagService, SearchableService
         TagTypeEntity tagTypeEntity = tagTypeDaoHelper.getTagTypeEntity(new TagTypeKey(request.getTagKey().getTagTypeCode()));
 
         // Validate that the tag entity does not already exist.
-        TagEntity tagEntity = tagDao.getTagByKey(request.getTagKey());
-        if (tagEntity != null)
+        if (tagDao.getTagByKey(request.getTagKey()) != null)
         {
             throw new AlreadyExistsException(String
                 .format("Unable to create tag with tag type code \"%s\" and tag code \"%s\" because it already exists.", request.getTagKey().getTagTypeCode(),
@@ -124,7 +123,7 @@ public class TagServiceImpl implements TagService, SearchableService
         }
 
         // Create and persist a new tag entity from the information in the request.
-        tagEntity = createTagEntity(tagTypeEntity, request.getTagKey().getTagCode(), request.getDisplayName(), request.getDescription(), parentTagEntity);
+        TagEntity tagEntity = createTagEntity(request, tagTypeEntity, parentTagEntity);
 
         // Create and return the tag object from the persisted entity.
         return createTagFromEntity(tagEntity);
@@ -287,21 +286,20 @@ public class TagServiceImpl implements TagService, SearchableService
     /**
      * Creates and persists a new Tag entity.
      *
+     * @param request the tag create request
      * @param tagTypeEntity the specified tag type entity.
-     * @param displayName the specified display name.
-     * @param description the specified description.
      * @param parentTagEntity the specified parent tag entity
      *
      * @return the newly created tag entity.
      */
-    private TagEntity createTagEntity(TagTypeEntity tagTypeEntity, String tagCode, String displayName, String description, TagEntity parentTagEntity)
+    private TagEntity createTagEntity(TagCreateRequest request, TagTypeEntity tagTypeEntity, TagEntity parentTagEntity)
     {
         TagEntity tagEntity = new TagEntity();
 
         tagEntity.setTagType(tagTypeEntity);
-        tagEntity.setTagCode(tagCode);
-        tagEntity.setDisplayName(displayName);
-        tagEntity.setDescription(description);
+        tagEntity.setTagCode(request.getTagKey().getTagCode());
+        tagEntity.setDisplayName(request.getDisplayName());
+        tagEntity.setDescription(request.getDescription());
         tagEntity.setParentTagEntity(parentTagEntity);
 
         return tagDao.saveAndRefresh(tagEntity);

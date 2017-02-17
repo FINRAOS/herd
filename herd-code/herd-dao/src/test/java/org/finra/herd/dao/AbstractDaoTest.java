@@ -426,6 +426,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Boolean NO_TAG_HAS_CHILDREN_FLAG = null;
 
+    public static final String NO_TAG_TYPE_DESCRIPTION = null;
+
     public static final String NO_TAG_TYPE_DISPLAY_NAME = null;
 
     public static final Integer NO_TAG_TYPE_ORDER = null;
@@ -658,6 +660,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String TAG_TYPE_2 = "UT_TagType_2_" + RANDOM_SUFFIX;
 
     public static final long TAG_TYPE_COUNT = 240;
+
+    public static final String TAG_TYPE_DESCRIPTION = "UT_TagTypeDescription_1_" + RANDOM_SUFFIX;
+
+    public static final String TAG_TYPE_DESCRIPTION_2 = "UT_TagTypeDescription_2_" + RANDOM_SUFFIX;
 
     public static final String TAG_TYPE_DISPLAY_NAME = "UT_TagTypeDisplayName_1_" + RANDOM_SUFFIX;
 
