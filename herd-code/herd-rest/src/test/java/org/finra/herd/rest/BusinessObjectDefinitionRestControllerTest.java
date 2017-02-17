@@ -26,8 +26,9 @@ import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Sets;
-import org.junit.Test;
 import org.jsoup.Jsoup;
+import org.junit.Test;
+
 import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.dao.helper.HerdDaoSecurityHelper;
 import org.finra.herd.model.api.xml.Attribute;
@@ -239,7 +240,7 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
             businessObjectDefinitionDaoTestHelper.createExpectedBusinessObjectDefinitionEntities();
 
         // Create and persist a tag type entity.
-        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER);
+        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER, TAG_TYPE_DESCRIPTION);
 
         // Create a root tag entity for the tag type.
         TagEntity rootTagEntity = tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
@@ -260,8 +261,8 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
             String toParse = businessObjectDefinitionEntity.getDescription() != null ? businessObjectDefinitionEntity.getDescription() : "";
             actualBusinessObjectDefinitions.add(
                 new BusinessObjectDefinition(null, businessObjectDefinitionEntity.getNamespace().getCode(), businessObjectDefinitionEntity.getName(),
-                    businessObjectDefinitionEntity.getDataProvider().getName(), NO_BDEF_DESCRIPTION, Jsoup.parseBodyFragment(toParse).body().text(), null,
-                    null, null, null, null, null, null));
+                    businessObjectDefinitionEntity.getDataProvider().getName(), NO_BDEF_DESCRIPTION, Jsoup.parseBodyFragment(toParse).body().text(), null, null,
+                    null, null, null, null, null));
         }
 
         // Tests with tag filter.
