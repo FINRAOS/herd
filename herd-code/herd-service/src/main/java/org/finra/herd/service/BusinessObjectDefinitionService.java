@@ -102,13 +102,6 @@ public interface BusinessObjectDefinitionService
     public BusinessObjectDefinitionKeys getBusinessObjectDefinitions(String namespaceCode);
 
     /**
-     * Index all business object definitions
-     *
-     * @return result of an asynchronous computation
-     */
-    public Future<Void> indexAllBusinessObjectDefinitions();
-
-    /**
      * Checks the count of business object definitions in the database against the count of business object definitions in the index.
      *
      * @return boolean value true for valid, false otherwise

@@ -42,7 +42,6 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.scheduling.annotation.AsyncResult;
 
 import org.finra.herd.model.api.xml.BusinessObjectDefinition;
-import org.finra.herd.model.api.xml.BusinessObjectDefinitionIndexResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionIndexSearchRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionIndexSearchResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchFilter;
@@ -71,27 +70,6 @@ public class BusinessObjectDefinitionRestControllerIndexTest extends AbstractRes
     public void before()
     {
         MockitoAnnotations.initMocks(this);
-    }
-
-
-    @Test
-    public void testIndexBusinessObjectDefinitions()
-    {
-        // Mock the call to the business object definition service
-        when(businessObjectDefinitionService.indexAllBusinessObjectDefinitions()).thenReturn(new AsyncResult<>(null));
-
-        // Create a business object definition.
-        BusinessObjectDefinitionIndexResponse businessObjectDefinitionIndexResponse = businessObjectDefinitionRestController.indexBusinessObjectDefinitions();
-
-        // Verify the method call to businessObjectDefinitionService.indexAllBusinessObjectDefinitions()
-        verify(businessObjectDefinitionService, times(1)).indexAllBusinessObjectDefinitions();
-
-        // Validate the returned object.
-        assertThat("Business object definition index response was null.", businessObjectDefinitionIndexResponse, not(nullValue()));
-        assertThat("Business object definition index response index start time was null.", businessObjectDefinitionIndexResponse.getIndexStartTime(),
-            not(nullValue()));
-        assertThat("Business object definition index response index start time was not an instance of XMLGregorianCalendar.class.",
-            businessObjectDefinitionIndexResponse.getIndexStartTime(), instanceOf(XMLGregorianCalendar.class));
     }
 
     @Test
