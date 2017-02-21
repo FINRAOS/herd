@@ -203,6 +203,9 @@ public class TagTypeServiceImpl implements TagTypeService, SearchableService
         searchIndexUpdateHelper.modifyBusinessObjectDefinitionsInSearchIndex(businessObjectDefinitionDao.getBusinessObjectDefinitions(tagEntities),
             SEARCH_INDEX_UPDATE_TYPE_UPDATE);
 
+        // Notify the tag search index that tags must be updated.
+        searchIndexUpdateHelper.modifyTagsInSearchIndex(tagEntities, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
+
         // Create and return the tag type from the persisted entity.
         return createTagTypeFromEntity(tagTypeEntity);
     }

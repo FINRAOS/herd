@@ -19,6 +19,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -115,6 +116,28 @@ public class TagDaoTest extends AbstractDaoTest
 
         // Get all tags.
         assertEquals(Arrays.asList(tagEntities.get(3), tagEntities.get(2), tagEntities.get(1), tagEntities.get(0)), tagDao.getTags());
+    }
+
+    @Test
+    public void testGetTagsByIds()
+    {
+        // Create two tag type entities
+        List<TagTypeEntity> tagTypeEntities = Arrays.asList(
+            tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER, TAG_DESCRIPTION),
+            tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE_2, TAG_TYPE_DISPLAY_NAME_2, TAG_TYPE_ORDER_2, TAG_DESCRIPTION_2));
+
+        // Create two root tag entities for each tag type
+        List<TagEntity> tagEntities = Arrays.asList(tagDaoTestHelper.createTagEntity(tagTypeEntities.get(0), TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION),
+            tagDaoTestHelper.createTagEntity(tagTypeEntities.get(0), TAG_CODE_2, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2),
+            tagDaoTestHelper.createTagEntity(tagTypeEntities.get(1), TAG_CODE_3, TAG_DISPLAY_NAME_3, TAG_DESCRIPTION_3),
+            tagDaoTestHelper.createTagEntity(tagTypeEntities.get(1), TAG_CODE_4, TAG_DISPLAY_NAME_4, TAG_DESCRIPTION_4));
+
+        List<Integer> tagIds = new ArrayList<>();
+
+        tagEntities.forEach(tagEntity -> tagIds.add(tagEntity.getId()));
+
+        // Get all tags.
+        assertEquals(Arrays.asList(tagEntities.get(0), tagEntities.get(1), tagEntities.get(2), tagEntities.get(3)), tagDao.getTagsByIds(tagIds));
     }
 
     @Test

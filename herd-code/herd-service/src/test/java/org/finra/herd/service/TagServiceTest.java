@@ -516,6 +516,53 @@ public class TagServiceTest extends AbstractServiceTest
     }
 
     @Test
+    public void testDeleteTagWithParent()
+    {
+        // Create and persist a tag type entity.
+        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER, TAG_TYPE_DESCRIPTION);
+
+        // Create a tag key.
+        TagKey parentTagKey = new TagKey(TAG_TYPE, TAG_CODE);
+
+        // Create a parent tag.
+        Tag parentTag = tagService.createTag(new TagCreateRequest(parentTagKey, TAG_DISPLAY_NAME, TAG_DESCRIPTION, NO_PARENT_TAG_KEY));
+
+        // Get the parent tag entity.
+        TagEntity parentTagEntity = tagDao.getTagByKey(parentTagKey);
+        assertNotNull(parentTagEntity);
+
+        // Validate the response object.
+        assertEquals(new Tag(parentTagEntity.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION, parentTagEntity.getCreatedBy(),
+            parentTagEntity.getUpdatedBy(), HerdDateUtils.getXMLGregorianCalendarValue(parentTagEntity.getUpdatedOn()), NO_PARENT_TAG_KEY,
+            NO_TAG_HAS_CHILDREN_FLAG), parentTag);
+
+        // Create a tag key.
+        TagKey childTagKey = new TagKey(TAG_TYPE, TAG_CODE_2);
+
+        // Create a child tag.
+        Tag childTag = tagService.createTag(new TagCreateRequest(childTagKey, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, parentTagKey));
+
+        // Get the child tag entity.
+        TagEntity childTagEntity = tagDao.getTagByKey(childTagKey);
+        assertNotNull(childTagEntity);
+
+        assertEquals(
+            new Tag(childTagEntity.getId(), childTagKey, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, childTagEntity.getCreatedBy(), childTagEntity.getUpdatedBy(),
+                HerdDateUtils.getXMLGregorianCalendarValue(childTagEntity.getUpdatedOn()), parentTagKey, NO_TAG_HAS_CHILDREN_FLAG), childTag);
+
+        // Delete this tag.
+        Tag deletedTag = tagService.deleteTag(childTagKey);
+
+        // Validate the returned object.
+        assertEquals(new Tag(childTagEntity.getId(), childTagKey, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, childTagEntity.getCreatedBy(),
+            childTagEntity.getUpdatedBy(), HerdDateUtils.getXMLGregorianCalendarValue(childTagEntity.getUpdatedOn()), parentTagKey,
+            NO_TAG_HAS_CHILDREN_FLAG), deletedTag);
+
+        // Ensure that this tag is no longer there.
+        assertNull(tagDao.getTagByKey(childTagKey));
+    }
+
+    @Test
     public void testGetTag()
     {
         // Create and persist a tag entity.

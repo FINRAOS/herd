@@ -19,7 +19,6 @@ import static org.finra.herd.model.dto.SearchIndexUpdateDto.SEARCH_INDEX_UPDATE_
 import static org.finra.herd.model.dto.SearchIndexUpdateDto.SEARCH_INDEX_UPDATE_TYPE_DELETE;
 import static org.finra.herd.model.dto.SearchIndexUpdateDto.SEARCH_INDEX_UPDATE_TYPE_UPDATE;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -1100,43 +1099,34 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     }
 
     @Override
-    public void updateSearchIndexDocumentBusinessObjectDefinition(String searchIndexUpdateDtoJson)
+    public void updateSearchIndexDocumentBusinessObjectDefinition(SearchIndexUpdateDto searchIndexUpdateDto)
     {
         final String indexName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         final String documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
 
-        try
-        {
-            // Unmarshall the SearchIndexUpdateDto from a JSON string to a SearchIndexUpdateDto object
-            SearchIndexUpdateDto searchIndexUpdateDto = jsonHelper.unmarshallJsonToObject(SearchIndexUpdateDto.class, searchIndexUpdateDtoJson);
-            String modificationType = searchIndexUpdateDto.getModificationType();
-            List<Integer> ids = searchIndexUpdateDto.getBusinessObjectDefinitionIds();
+        String modificationType = searchIndexUpdateDto.getModificationType();
+        List<Integer> ids = searchIndexUpdateDto.getBusinessObjectDefinitionIds();
 
-            // Switch on the type of CRUD modification to be done
-            switch (modificationType)
-            {
-                case SEARCH_INDEX_UPDATE_TYPE_CREATE:
-                    // Create a search index document
-                    searchFunctions.getCreateIndexDocumentsFunction().accept(indexName, documentType,
-                        convertBusinessObjectDefinitionEntityListToJSONStringMap(businessObjectDefinitionDao.getAllBusinessObjectDefinitionsByIds(ids)));
-                    break;
-                case SEARCH_INDEX_UPDATE_TYPE_UPDATE:
-                    // Update a search index document
-                    searchFunctions.getUpdateIndexDocumentsFunction().accept(indexName, documentType,
-                        convertBusinessObjectDefinitionEntityListToJSONStringMap(businessObjectDefinitionDao.getAllBusinessObjectDefinitionsByIds(ids)));
-                    break;
-                case SEARCH_INDEX_UPDATE_TYPE_DELETE:
-                    // Delete a search index document
-                    searchFunctions.getDeleteIndexDocumentsFunction().accept(indexName, documentType, ids);
-                    break;
-                default:
-                    LOGGER.warn("Unknown modification type received.");
-                    break;
-            }
-        }
-        catch (IOException ioException)
+        // Switch on the type of CRUD modification to be done
+        switch (modificationType)
         {
-            LOGGER.warn("Could not unmarshall JSON to SearchIndexUpdateDto object.", ioException);
+            case SEARCH_INDEX_UPDATE_TYPE_CREATE:
+                // Create a search index document
+                searchFunctions.getCreateIndexDocumentsFunction().accept(indexName, documentType,
+                    convertBusinessObjectDefinitionEntityListToJSONStringMap(businessObjectDefinitionDao.getAllBusinessObjectDefinitionsByIds(ids)));
+                break;
+            case SEARCH_INDEX_UPDATE_TYPE_UPDATE:
+                // Update a search index document
+                searchFunctions.getUpdateIndexDocumentsFunction().accept(indexName, documentType,
+                    convertBusinessObjectDefinitionEntityListToJSONStringMap(businessObjectDefinitionDao.getAllBusinessObjectDefinitionsByIds(ids)));
+                break;
+            case SEARCH_INDEX_UPDATE_TYPE_DELETE:
+                // Delete a search index document
+                searchFunctions.getDeleteIndexDocumentsFunction().accept(indexName, documentType, ids);
+                break;
+            default:
+                LOGGER.warn("Unknown modification type received.");
+                break;
         }
     }
 
