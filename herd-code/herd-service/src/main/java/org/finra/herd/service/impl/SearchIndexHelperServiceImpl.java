@@ -40,7 +40,7 @@ import org.finra.herd.service.SearchIndexHelperService;
 import org.finra.herd.service.functional.SearchFunctions;
 import org.finra.herd.service.helper.BusinessObjectDefinitionHelper;
 import org.finra.herd.service.helper.SearchIndexDaoHelper;
-import org.finra.herd.service.helper.TagDaoHelper;
+import org.finra.herd.service.helper.TagHelper;
 
 /**
  * An implementation of the helper service class for the search index service.
@@ -69,7 +69,7 @@ public class SearchIndexHelperServiceImpl implements SearchIndexHelperService
     private TagDao tagDao;
 
     @Autowired
-    private TagDaoHelper tagDaoHelper;
+    private TagHelper tagHelper;
 
     @Autowired
     private TransportClient transportClient;
@@ -122,7 +122,7 @@ public class SearchIndexHelperServiceImpl implements SearchIndexHelperService
         final List<TagEntity> tagEntities = Collections.unmodifiableList(tagDao.getTags());
 
         // Index all tags.
-        tagDaoHelper.executeFunctionForTagEntities(searchIndexKey.getSearchIndexName(), documentType, tagEntities, searchFunctions.getIndexFunction());
+        tagHelper.executeFunctionForTagEntities(searchIndexKey.getSearchIndexName(), documentType, tagEntities, searchFunctions.getIndexFunction());
 
         // Simple count validation, index size should equal entity list size.
         validateSearchIndexSize(searchIndexKey.getSearchIndexName(), documentType, tagEntities.size());

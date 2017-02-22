@@ -38,12 +38,15 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.dao.BusinessObjectDefinitionDao;
+import org.finra.herd.dao.TagDao;
 import org.finra.herd.model.api.xml.SearchIndexKey;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.SearchIndexStatusEntity;
+import org.finra.herd.model.jpa.TagEntity;
 import org.finra.herd.service.functional.SearchFunctions;
 import org.finra.herd.service.helper.BusinessObjectDefinitionHelper;
 import org.finra.herd.service.helper.SearchIndexDaoHelper;
+import org.finra.herd.service.helper.TagHelper;
 import org.finra.herd.service.impl.SearchIndexHelperServiceImpl;
 
 /**
@@ -65,6 +68,12 @@ public class SearchIndexHelperServiceTest extends AbstractServiceTest
 
     @InjectMocks
     private SearchIndexHelperServiceImpl searchIndexHelperService;
+
+    @Mock
+    private TagDao tagDao;
+
+    @Mock
+    private TagHelper tagHelper;
 
     @Mock
     private TransportClient transportClient;
@@ -91,7 +100,7 @@ public class SearchIndexHelperServiceTest extends AbstractServiceTest
         // Get a chunk size.
         int chunkSize = SearchIndexHelperServiceImpl.BUSINESS_OBJECT_DEFINITIONS_CHUNK_SIZE;
 
-        // Mock the external calls. Please note that we mock index size to be equal to the business object definition entity list size.
+        // Mock the external calls. Please note that we mock index size is set to be equal to the business object definition entity list size.
         when(businessObjectDefinitionDao.getAllBusinessObjectDefinitions(0, chunkSize)).thenReturn(businessObjectDefinitionEntities);
         when(businessObjectDefinitionDao.getAllBusinessObjectDefinitions(chunkSize, chunkSize)).thenReturn(new ArrayList<>());
         when(searchFunctions.getIndexFunction()).thenReturn((indexName, documentType, id, json) -> {
@@ -110,7 +119,42 @@ public class SearchIndexHelperServiceTest extends AbstractServiceTest
                 any());
         verify(searchFunctions).getNumberOfTypesInIndexFunction();
         verify(searchIndexDaoHelper).updateSearchIndexStatus(searchIndexKey, SearchIndexStatusEntity.SearchIndexStatuses.READY.name());
-        verifyNoMoreInteractions(businessObjectDefinitionDao, businessObjectDefinitionHelper, searchFunctions, searchIndexDaoHelper, transportClient);
+        verifyNoMoreInteractions(businessObjectDefinitionDao, businessObjectDefinitionHelper, searchFunctions, searchIndexDaoHelper, tagDao, tagHelper,
+            transportClient);
+
+        // Validate the results.
+        assertNotNull(response);
+        assertThat(response, instanceOf(Future.class));
+    }
+
+    @Test
+    public void testIndexAllTags()
+    {
+        // Create a search index key.
+        SearchIndexKey searchIndexKey = new SearchIndexKey(SEARCH_INDEX_NAME);
+
+        // Create a list of tag entities.
+        final List<TagEntity> tagEntities = Collections.unmodifiableList(Arrays
+            .asList(tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION),
+                tagDaoTestHelper.createTagEntity(TAG_TYPE_2, TAG_CODE_2, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2)));
+
+        // Mock the external calls. Please note that we mock index size is set to be equal to the tag entity list size.
+        when(tagDao.getTags()).thenReturn(tagEntities);
+        when(searchFunctions.getIndexFunction()).thenReturn((indexName, documentType, id, json) -> {
+        });
+        when(searchFunctions.getNumberOfTypesInIndexFunction()).thenReturn((indexName, documentType) -> 2L);
+
+        // Index all tags defined in the system.
+        Future<Void> response = searchIndexHelperService.indexAllTags(searchIndexKey, SEARCH_INDEX_DOCUMENT_TYPE);
+
+        // Verify the external calls.
+        verify(tagDao).getTags();
+        verify(searchFunctions).getIndexFunction();
+        verify(tagHelper).executeFunctionForTagEntities(eq(SEARCH_INDEX_NAME), eq(SEARCH_INDEX_DOCUMENT_TYPE), eq(tagEntities), any());
+        verify(searchFunctions).getNumberOfTypesInIndexFunction();
+        verify(searchIndexDaoHelper).updateSearchIndexStatus(searchIndexKey, SearchIndexStatusEntity.SearchIndexStatuses.READY.name());
+        verifyNoMoreInteractions(businessObjectDefinitionDao, businessObjectDefinitionHelper, searchFunctions, searchIndexDaoHelper, tagDao, tagHelper,
+            transportClient);
 
         // Validate the results.
         assertNotNull(response);

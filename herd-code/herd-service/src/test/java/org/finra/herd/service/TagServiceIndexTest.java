@@ -40,13 +40,13 @@ import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.SearchIndexUpdateDto;
 import org.finra.herd.model.jpa.TagEntity;
 import org.finra.herd.service.functional.SearchFunctions;
-import org.finra.herd.service.helper.TagDaoHelper;
+import org.finra.herd.service.helper.TagHelper;
 import org.finra.herd.service.impl.TagServiceImpl;
 
 /**
  * TagServiceIndexTest
  */
-public class TagServiceIndexTest  extends AbstractServiceTest
+public class TagServiceIndexTest extends AbstractServiceTest
 {
     @InjectMocks
     private TagServiceImpl tagService;
@@ -61,7 +61,7 @@ public class TagServiceIndexTest  extends AbstractServiceTest
     private TagDao tagDao;
 
     @Mock
-    private TagDaoHelper tagDaoHelper;
+    private TagHelper tagHelper;
 
     @Before
     public void before()
@@ -82,15 +82,13 @@ public class TagServiceIndexTest  extends AbstractServiceTest
         tagEntityList.forEach(tagEntity -> tagIds.add(tagEntity.getId()));
 
         // Create a document on the search index
-        SearchIndexUpdateDto searchIndexUpdateDto =
-            new SearchIndexUpdateDto(MESSAGE_TYPE_TAG_UPDATE, tagIds, SEARCH_INDEX_UPDATE_TYPE_CREATE);
+        SearchIndexUpdateDto searchIndexUpdateDto = new SearchIndexUpdateDto(MESSAGE_TYPE_TAG_UPDATE, tagIds, SEARCH_INDEX_UPDATE_TYPE_CREATE);
 
         // Mock the call to external methods
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
         when(tagDao.getTagsByIds(tagIds)).thenReturn(tagEntityList);
-        when(tagDaoHelper.safeObjectMapperWriteValueAsString(any(TagEntity.class))).thenReturn("JSON_STRING");
-        when(searchFunctions.getCreateIndexDocumentsFunction()).thenReturn((indexName, documentType, map) ->
-        {
+        when(tagHelper.safeObjectMapperWriteValueAsString(any(TagEntity.class))).thenReturn("JSON_STRING");
+        when(searchFunctions.getCreateIndexDocumentsFunction()).thenReturn((indexName, documentType, map) -> {
         });
 
         // Call the method under test
@@ -99,7 +97,7 @@ public class TagServiceIndexTest  extends AbstractServiceTest
         // Verify the calls to external methods
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
         verify(tagDao, times(1)).getTagsByIds(tagIds);
-        verify(tagDaoHelper, times(2)).safeObjectMapperWriteValueAsString(any(TagEntity.class));
+        verify(tagHelper, times(2)).safeObjectMapperWriteValueAsString(any(TagEntity.class));
         verify(searchFunctions, times(1)).getCreateIndexDocumentsFunction();
     }
 
@@ -116,15 +114,13 @@ public class TagServiceIndexTest  extends AbstractServiceTest
         tagEntityList.forEach(tagEntity -> tagIds.add(tagEntity.getId()));
 
         // Create a document on the search index
-        SearchIndexUpdateDto searchIndexUpdateDto =
-            new SearchIndexUpdateDto(MESSAGE_TYPE_TAG_UPDATE, tagIds, SEARCH_INDEX_UPDATE_TYPE_CREATE);
+        SearchIndexUpdateDto searchIndexUpdateDto = new SearchIndexUpdateDto(MESSAGE_TYPE_TAG_UPDATE, tagIds, SEARCH_INDEX_UPDATE_TYPE_CREATE);
 
         // Mock the call to external methods
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
         when(tagDao.getTagsByIds(tagIds)).thenReturn(tagEntityList);
-        when(tagDaoHelper.safeObjectMapperWriteValueAsString(any(TagEntity.class))).thenReturn("");
-        when(searchFunctions.getCreateIndexDocumentsFunction()).thenReturn((indexName, documentType, map) ->
-        {
+        when(tagHelper.safeObjectMapperWriteValueAsString(any(TagEntity.class))).thenReturn("");
+        when(searchFunctions.getCreateIndexDocumentsFunction()).thenReturn((indexName, documentType, map) -> {
         });
 
         // Call the method under test
@@ -133,7 +129,7 @@ public class TagServiceIndexTest  extends AbstractServiceTest
         // Verify the calls to external methods
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
         verify(tagDao, times(1)).getTagsByIds(tagIds);
-        verify(tagDaoHelper, times(2)).safeObjectMapperWriteValueAsString(any(TagEntity.class));
+        verify(tagHelper, times(2)).safeObjectMapperWriteValueAsString(any(TagEntity.class));
         verify(searchFunctions, times(1)).getCreateIndexDocumentsFunction();
     }
 
@@ -150,15 +146,13 @@ public class TagServiceIndexTest  extends AbstractServiceTest
         tagEntityList.forEach(tagEntity -> tagIds.add(tagEntity.getId()));
 
         // Create a document on the search index
-        SearchIndexUpdateDto searchIndexUpdateDto =
-            new SearchIndexUpdateDto(MESSAGE_TYPE_TAG_UPDATE, tagIds, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
+        SearchIndexUpdateDto searchIndexUpdateDto = new SearchIndexUpdateDto(MESSAGE_TYPE_TAG_UPDATE, tagIds, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
 
         // Mock the call to external methods
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
         when(tagDao.getTagsByIds(tagIds)).thenReturn(tagEntityList);
-        when(tagDaoHelper.safeObjectMapperWriteValueAsString(any(TagEntity.class))).thenReturn("JSON_STRING");
-        when(searchFunctions.getUpdateIndexDocumentsFunction()).thenReturn((indexName, documentType, map) ->
-        {
+        when(tagHelper.safeObjectMapperWriteValueAsString(any(TagEntity.class))).thenReturn("JSON_STRING");
+        when(searchFunctions.getUpdateIndexDocumentsFunction()).thenReturn((indexName, documentType, map) -> {
         });
 
         // Call the method under test
@@ -167,7 +161,7 @@ public class TagServiceIndexTest  extends AbstractServiceTest
         // Verify the calls to external methods
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
         verify(tagDao, times(1)).getTagsByIds(tagIds);
-        verify(tagDaoHelper, times(2)).safeObjectMapperWriteValueAsString(any(TagEntity.class));
+        verify(tagHelper, times(2)).safeObjectMapperWriteValueAsString(any(TagEntity.class));
         verify(searchFunctions, times(1)).getUpdateIndexDocumentsFunction();
     }
 
@@ -184,15 +178,13 @@ public class TagServiceIndexTest  extends AbstractServiceTest
         tagEntityList.forEach(tagEntity -> tagIds.add(tagEntity.getId()));
 
         // Create a document on the search index
-        SearchIndexUpdateDto searchIndexUpdateDto =
-            new SearchIndexUpdateDto(MESSAGE_TYPE_TAG_UPDATE, tagIds, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
+        SearchIndexUpdateDto searchIndexUpdateDto = new SearchIndexUpdateDto(MESSAGE_TYPE_TAG_UPDATE, tagIds, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
 
         // Mock the call to external methods
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
         when(tagDao.getTagsByIds(tagIds)).thenReturn(tagEntityList);
-        when(tagDaoHelper.safeObjectMapperWriteValueAsString(any(TagEntity.class))).thenReturn("");
-        when(searchFunctions.getUpdateIndexDocumentsFunction()).thenReturn((indexName, documentType, map) ->
-        {
+        when(tagHelper.safeObjectMapperWriteValueAsString(any(TagEntity.class))).thenReturn("");
+        when(searchFunctions.getUpdateIndexDocumentsFunction()).thenReturn((indexName, documentType, map) -> {
         });
 
         // Call the method under test
@@ -201,7 +193,7 @@ public class TagServiceIndexTest  extends AbstractServiceTest
         // Verify the calls to external methods
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
         verify(tagDao, times(1)).getTagsByIds(tagIds);
-        verify(tagDaoHelper, times(2)).safeObjectMapperWriteValueAsString(any(TagEntity.class));
+        verify(tagHelper, times(2)).safeObjectMapperWriteValueAsString(any(TagEntity.class));
         verify(searchFunctions, times(1)).getUpdateIndexDocumentsFunction();
     }
 
@@ -218,13 +210,11 @@ public class TagServiceIndexTest  extends AbstractServiceTest
         tagEntityList.forEach(tagEntity -> tagIds.add(tagEntity.getId()));
 
         // Delete from the search index
-        SearchIndexUpdateDto searchIndexUpdateDto =
-            new SearchIndexUpdateDto(MESSAGE_TYPE_TAG_UPDATE, tagIds, SEARCH_INDEX_UPDATE_TYPE_DELETE);
+        SearchIndexUpdateDto searchIndexUpdateDto = new SearchIndexUpdateDto(MESSAGE_TYPE_TAG_UPDATE, tagIds, SEARCH_INDEX_UPDATE_TYPE_DELETE);
 
         // Mock the call to external methods
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
-        when(searchFunctions.getDeleteIndexDocumentsFunction()).thenReturn((indexName, documentType, map) ->
-        {
+        when(searchFunctions.getDeleteIndexDocumentsFunction()).thenReturn((indexName, documentType, map) -> {
         });
 
         // Call the method under test
@@ -248,8 +238,7 @@ public class TagServiceIndexTest  extends AbstractServiceTest
         tagEntityList.forEach(tagEntity -> tagIds.add(tagEntity.getId()));
 
         // Unknown modification type
-        SearchIndexUpdateDto searchIndexUpdateDto =
-            new SearchIndexUpdateDto(MESSAGE_TYPE_TAG_UPDATE, tagIds, "UNKNOWN");
+        SearchIndexUpdateDto searchIndexUpdateDto = new SearchIndexUpdateDto(MESSAGE_TYPE_TAG_UPDATE, tagIds, "UNKNOWN");
 
         // Mock the call to external methods
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
@@ -260,5 +249,4 @@ public class TagServiceIndexTest  extends AbstractServiceTest
         // Verify the calls to external methods
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
     }
-
 }

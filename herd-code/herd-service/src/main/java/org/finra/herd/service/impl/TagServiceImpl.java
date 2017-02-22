@@ -293,13 +293,13 @@ public class TagServiceImpl implements TagService, SearchableService
         {
             case SEARCH_INDEX_UPDATE_TYPE_CREATE:
                 // Create a search index document
-                searchFunctions.getCreateIndexDocumentsFunction().accept(indexName, documentType,
-                    convertTagEntityListToJSONStringMap(tagDao.getTagsByIds(ids)));
+                searchFunctions.getCreateIndexDocumentsFunction()
+                    .accept(indexName, documentType, convertTagEntityListToJSONStringMap(tagDao.getTagsByIds(ids)));
                 break;
             case SEARCH_INDEX_UPDATE_TYPE_UPDATE:
                 // Update a search index document
-                searchFunctions.getUpdateIndexDocumentsFunction().accept(indexName, documentType,
-                    convertTagEntityListToJSONStringMap(tagDao.getTagsByIds(ids)));
+                searchFunctions.getUpdateIndexDocumentsFunction()
+                    .accept(indexName, documentType, convertTagEntityListToJSONStringMap(tagDao.getTagsByIds(ids)));
                 break;
             case SEARCH_INDEX_UPDATE_TYPE_DELETE:
                 // Delete a search index document
@@ -484,7 +484,7 @@ public class TagServiceImpl implements TagService, SearchableService
         Map<String, String> tagJSONMap = new HashMap<>();
 
         tagEntities.forEach(tagEntity -> {
-            String jsonString = tagDaoHelper.safeObjectMapperWriteValueAsString(tagEntity);
+            String jsonString = tagHelper.safeObjectMapperWriteValueAsString(tagEntity);
 
             if (StringUtils.isNotEmpty(jsonString))
             {
