@@ -238,10 +238,10 @@ public class SearchIndexServiceImpl implements SearchIndexService
             throw new IllegalArgumentException(String.format("Search index type with code \"%s\" is not supported.", searchIndexType));
         }
 
-        // If the index exists delete it.
+        // Delete the index if it already exists.
         deleteSearchIndexHelper(searchIndexKey.getSearchIndexName());
 
-        // Create the mapping for the index
+        // Create the index.
         searchFunctions.getCreateIndexFunction().accept(searchIndexKey.getSearchIndexName(), documentType, mapping);
 
         //Fetch data from database and index them
