@@ -42,4 +42,14 @@ public interface SearchIndexHelperService
      * @return result of an asynchronous computation
      */
     public Future<Void> indexAllBusinessObjectDefinitions(SearchIndexKey searchIndexKey, String documentType);
+
+    /**
+     * Indexes all tags defined in the system.
+     *
+     * @param searchIndexKey the key of the search index
+     * @param documentType the document type
+     *
+     * @return result of an asynchronous computation
+     */
+    public Future<Void> indexAllTags(SearchIndexKey searchIndexKey, String documentType);
 }

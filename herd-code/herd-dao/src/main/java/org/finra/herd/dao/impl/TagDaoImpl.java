@@ -20,6 +20,7 @@ import java.util.List;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
@@ -138,6 +139,25 @@ public class TagDaoImpl extends AbstractHerdDao implements TagDao
         criteria.select(tagEntityRoot).orderBy(builder.asc(tagTypeOrderNumberColumn), builder.asc(tagTypeCodeColumn), builder.asc(displayNameColumn));
 
         // Run the query to get the results.
+        return entityManager.createQuery(criteria).getResultList();
+    }
+
+    @Override
+    public List<TagEntity> getTagsByIds(List<Integer> ids)
+    {
+        // Create the criteria builder and a tuple style criteria query.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<TagEntity> criteria = builder.createQuery(TagEntity.class);
+
+        // The criteria root is the tag entity.
+        Root<TagEntity> tagEntityRoot = criteria.from(TagEntity.class);
+
+        // Create the standard restrictions (i.e. the standard where clauses).
+        Expression<Integer> expression = tagEntityRoot.get(TagEntity_.id);
+        Predicate queryRestriction = expression.in(ids);
+
+        criteria.select(tagEntityRoot).where(queryRestriction);
+
         return entityManager.createQuery(criteria).getResultList();
     }
 

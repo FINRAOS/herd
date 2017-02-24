@@ -49,6 +49,7 @@ public class SearchIndexTypeEntity extends AuditableEntity
      */
     public static enum SearchIndexTypes
     {
-        BUS_OBJCT_DFNTN;
+        BUS_OBJCT_DFNTN,
+        TAG;
     }
 }

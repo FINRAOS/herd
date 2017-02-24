@@ -36,15 +36,17 @@ public class TagTypeDaoTestHelper
      * @param typeCode the tag type code
      * @param displayName the display name
      * @param orderNumber the sorting number
+     * @param description the description
      *
      * @return the newly created tag type entity.
      */
-    public TagTypeEntity createTagTypeEntity(String typeCode, String displayName, Integer orderNumber)
+    public TagTypeEntity createTagTypeEntity(String typeCode, String displayName, Integer orderNumber, String description)
     {
         TagTypeEntity tagTypeEntity = new TagTypeEntity();
         tagTypeEntity.setCode(typeCode);
         tagTypeEntity.setOrderNumber(orderNumber);
         tagTypeEntity.setDisplayName(displayName);
+        tagTypeEntity.setDescription(description);
         return tagTypeDao.saveAndRefresh(tagTypeEntity);
     }
 

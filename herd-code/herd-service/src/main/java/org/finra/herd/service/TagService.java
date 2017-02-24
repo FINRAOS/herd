@@ -24,6 +24,7 @@ import org.finra.herd.model.api.xml.TagListResponse;
 import org.finra.herd.model.api.xml.TagSearchRequest;
 import org.finra.herd.model.api.xml.TagSearchResponse;
 import org.finra.herd.model.api.xml.TagUpdateRequest;
+import org.finra.herd.model.dto.SearchIndexUpdateDto;
 
 /**
  * The tag service
@@ -82,6 +83,13 @@ public interface TagService
      * @return the tag search response
      */
     public TagSearchResponse searchTags(TagSearchRequest request, Set<String> fields);
+
+    /**
+     * Updates the search index document representation of the tag.
+     *
+     * @param searchIndexUpdateDto the SearchIndexUpdateDto object
+     */
+    public void updateSearchIndexDocumentTag(SearchIndexUpdateDto searchIndexUpdateDto);
 
     /**
      * Updates an existing tag.

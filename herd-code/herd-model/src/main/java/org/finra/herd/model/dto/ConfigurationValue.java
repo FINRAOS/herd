@@ -683,6 +683,11 @@ public enum ConfigurationValue
     ELASTICSEARCH_BDEF_MAPPINGS_JSON("elasticsearch.bdef.mappings.json", "{\"properties\": { \"id\": { \"type\": \"long\" } } }"),
 
     /**
+     * The elasticsearch tag mappings JSON
+     */
+    ELASTICSEARCH_TAG_MAPPINGS_JSON("elasticsearch.tag.mappings.json", "{\"properties\": { \"id\": { \"type\": \"long\" } } }"),
+
+    /**
      * The elasticsearch settings JSON
      */
     ELASTICSEARCH_SETTINGS_JSON("elasticsearch.settings.json",

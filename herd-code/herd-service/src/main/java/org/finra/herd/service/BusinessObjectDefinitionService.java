@@ -29,6 +29,7 @@ import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionSearchResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionUpdateRequest;
 import org.finra.herd.model.dto.BusinessObjectDefinitionSampleFileUpdateDto;
+import org.finra.herd.model.dto.SearchIndexUpdateDto;
 
 /**
  * The business object definition service.
@@ -101,13 +102,6 @@ public interface BusinessObjectDefinitionService
     public BusinessObjectDefinitionKeys getBusinessObjectDefinitions(String namespaceCode);
 
     /**
-     * Index all business object definitions
-     *
-     * @return result of an asynchronous computation
-     */
-    public Future<Void> indexAllBusinessObjectDefinitions();
-
-    /**
      * Checks the count of business object definitions in the database against the count of business object definitions in the index.
      *
      * @return boolean value true for valid, false otherwise
@@ -163,7 +157,7 @@ public interface BusinessObjectDefinitionService
     /**
      * Updates the search index document representation of the business object definition.
      *
-     * @param searchIndexUpdateDtoJson the JSON string representation of the SearchIndexUpdateDto object
+     * @param searchIndexUpdateDto the SearchIndexUpdateDto object
      */
-    public void updateSearchIndexDocumentBusinessObjectDefinition(String searchIndexUpdateDtoJson);
+    public void updateSearchIndexDocumentBusinessObjectDefinition(SearchIndexUpdateDto searchIndexUpdateDto);
 }
