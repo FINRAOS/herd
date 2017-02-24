@@ -19,6 +19,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -31,11 +32,16 @@ import java.util.concurrent.Future;
 import org.elasticsearch.action.ListenableActionFuture;
 import org.elasticsearch.action.admin.indices.get.GetIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.get.GetIndexResponse;
+import org.elasticsearch.action.admin.indices.stats.CommonStats;
+import org.elasticsearch.action.admin.indices.stats.IndexStats;
+import org.elasticsearch.action.admin.indices.stats.IndicesStatsRequestBuilder;
+import org.elasticsearch.action.admin.indices.stats.IndicesStatsResponse;
 import org.elasticsearch.client.AdminClient;
 import org.elasticsearch.client.IndicesAdminClient;
 import org.elasticsearch.cluster.metadata.IndexMetaData;
 import org.elasticsearch.common.collect.ImmutableOpenMap;
 import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.index.shard.DocsStats;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -50,7 +56,7 @@ import org.finra.herd.model.api.xml.SearchIndex;
 import org.finra.herd.model.api.xml.SearchIndexCreateRequest;
 import org.finra.herd.model.api.xml.SearchIndexKey;
 import org.finra.herd.model.api.xml.SearchIndexKeys;
-import org.finra.herd.model.api.xml.SearchIndexSettings;
+import org.finra.herd.model.api.xml.SearchIndexStatistics;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.jpa.SearchIndexEntity;
 import org.finra.herd.model.jpa.SearchIndexStatusEntity;
@@ -183,7 +189,8 @@ public class SearchIndexServiceTest extends AbstractServiceTest
             searchFunctions, searchIndexDao, searchIndexDaoHelper, searchIndexHelperService, searchIndexStatusDaoHelper, searchIndexTypeDaoHelper);
 
         // Validate the returned object.
-        assertEquals(new SearchIndex(searchIndexKey, searchIndexType, searchIndexStatus, NO_SEARCH_INDEX_SETTINGS, USER_ID, CREATED_ON, UPDATED_ON), response);
+        assertEquals(new SearchIndex(searchIndexKey, searchIndexType, searchIndexStatus, NO_SEARCH_INDEX_STATISTICS, USER_ID, CREATED_ON, UPDATED_ON),
+            response);
     }
 
     @Test
@@ -205,7 +212,7 @@ public class SearchIndexServiceTest extends AbstractServiceTest
         }
         catch (AlreadyExistsException e)
         {
-            assertEquals(String.format("Unable to create Search index with name \"%s\" because it already exists.", SEARCH_INDEX_NAME), e.getMessage());
+            assertEquals(String.format("Unable to create search index with name \"%s\" because it already exists.", SEARCH_INDEX_NAME), e.getMessage());
         }
 
         // Verify the external calls.
@@ -245,7 +252,7 @@ public class SearchIndexServiceTest extends AbstractServiceTest
             searchFunctions, searchIndexDao, searchIndexDaoHelper, searchIndexHelperService, searchIndexStatusDaoHelper, searchIndexTypeDaoHelper);
 
         // Validate the returned object.
-        assertEquals(new SearchIndex(searchIndexKey, SEARCH_INDEX_TYPE, SEARCH_INDEX_STATUS, NO_SEARCH_INDEX_SETTINGS, USER_ID, CREATED_ON, UPDATED_ON),
+        assertEquals(new SearchIndex(searchIndexKey, SEARCH_INDEX_TYPE, SEARCH_INDEX_STATUS, NO_SEARCH_INDEX_STATISTICS, USER_ID, CREATED_ON, UPDATED_ON),
             response);
     }
 
@@ -263,16 +270,20 @@ public class SearchIndexServiceTest extends AbstractServiceTest
         IndicesAdminClient mockedIndiciesAdminClient = mock(IndicesAdminClient.class);
         GetIndexRequestBuilder mockedGetIndexRequestBuilder = mock(GetIndexRequestBuilder.class);
         @SuppressWarnings("unchecked")
-        ListenableActionFuture<GetIndexResponse> mockedListenableActionFutureActionResponse = mock(ListenableActionFuture.class);
+        ListenableActionFuture<GetIndexResponse> mockedListenableActionFutureGetIndexResponse = mock(ListenableActionFuture.class);
         GetIndexResponse mockedGetIndexResponse = mock(GetIndexResponse.class);
+        IndicesStatsRequestBuilder mockedIndicesStatsRequestBuilder = mock(IndicesStatsRequestBuilder.class);
+        @SuppressWarnings("unchecked")
+        ListenableActionFuture<IndicesStatsResponse> mockedListenableActionFutureIndicesStatsResponse = mock(ListenableActionFuture.class);
+        IndicesStatsResponse mockedIndicesStatsResponse = mock(IndicesStatsResponse.class);
+        IndexStats mockedIndexStats = mock(IndexStats.class);
+        CommonStats mockedCommonStats = mock(CommonStats.class);
+        DocsStats mockedDocsStats = mock(DocsStats.class);
 
         // Create a search index get settings response.
         ImmutableOpenMap<String, Settings> getIndexResponseSettings = ImmutableOpenMap.<String, Settings>builder().fPut(SEARCH_INDEX_NAME,
-            Settings.builder().put(IndexMetaData.SETTING_CREATION_DATE, SEARCH_INDEX_SETTING_CREATION_DATE)
-                .put(IndexMetaData.SETTING_NUMBER_OF_REPLICAS, SEARCH_INDEX_SETTING_NUMBER_OF_REPLICAS)
-                .put(IndexMetaData.SETTING_NUMBER_OF_SHARDS, SEARCH_INDEX_SETTING_NUMBER_OF_SHARDS)
-                .put(IndexMetaData.SETTING_INDEX_PROVIDED_NAME, SEARCH_INDEX_SETTING_INDEX_PROVIDED_NAME)
-                .put(IndexMetaData.SETTING_INDEX_UUID, SEARCH_INDEX_SETTING_INDEX_UUID).build()).build();
+            Settings.builder().put(IndexMetaData.SETTING_CREATION_DATE, SEARCH_INDEX_STATISTICS_CREATION_DATE.toGregorianCalendar().getTimeInMillis())
+                .put(IndexMetaData.SETTING_INDEX_UUID, SEARCH_INDEX_STATISTICS_INDEX_UUID).build()).build();
 
         // Mock the external calls.
         when(alternateKeyHelper.validateStringParameter("Search index name", SEARCH_INDEX_NAME)).thenReturn(SEARCH_INDEX_NAME);
@@ -281,9 +292,19 @@ public class SearchIndexServiceTest extends AbstractServiceTest
         when(mockedAdminClient.indices()).thenReturn(mockedIndiciesAdminClient);
         when(mockedIndiciesAdminClient.prepareGetIndex()).thenReturn(mockedGetIndexRequestBuilder);
         when(mockedGetIndexRequestBuilder.setIndices(SEARCH_INDEX_NAME)).thenReturn(mockedGetIndexRequestBuilder);
-        when(mockedGetIndexRequestBuilder.execute()).thenReturn(mockedListenableActionFutureActionResponse);
-        when(mockedListenableActionFutureActionResponse.actionGet()).thenReturn(mockedGetIndexResponse);
+        when(mockedGetIndexRequestBuilder.execute()).thenReturn(mockedListenableActionFutureGetIndexResponse);
+        when(mockedListenableActionFutureGetIndexResponse.actionGet()).thenReturn(mockedGetIndexResponse);
         when(mockedGetIndexResponse.getSettings()).thenReturn(getIndexResponseSettings);
+        when(mockedIndiciesAdminClient.prepareStats(SEARCH_INDEX_NAME)).thenReturn(mockedIndicesStatsRequestBuilder);
+        when(mockedIndicesStatsRequestBuilder.clear()).thenReturn(mockedIndicesStatsRequestBuilder);
+        when(mockedIndicesStatsRequestBuilder.setDocs(true)).thenReturn(mockedIndicesStatsRequestBuilder);
+        when(mockedIndicesStatsRequestBuilder.execute()).thenReturn(mockedListenableActionFutureIndicesStatsResponse);
+        when(mockedListenableActionFutureIndicesStatsResponse.actionGet()).thenReturn(mockedIndicesStatsResponse);
+        when(mockedIndicesStatsResponse.getIndex(SEARCH_INDEX_NAME)).thenReturn(mockedIndexStats);
+        when(mockedIndexStats.getPrimaries()).thenReturn(mockedCommonStats);
+        when(mockedCommonStats.getDocs()).thenReturn(mockedDocsStats);
+        when(mockedDocsStats.getCount()).thenReturn(SEARCH_INDEX_STATISTICS_NUMBER_OF_ACTIVE_DOCUMENTS);
+        when(mockedDocsStats.getDeleted()).thenReturn(SEARCH_INDEX_STATISTICS_NUMBER_OF_DELETED_DOCUMENTS);
 
         // Get a search index.
         SearchIndex response = searchIndexService.getSearchIndex(searchIndexKey);
@@ -291,14 +312,14 @@ public class SearchIndexServiceTest extends AbstractServiceTest
         // Verify the external calls.
         verify(alternateKeyHelper).validateStringParameter("Search index name", SEARCH_INDEX_NAME);
         verify(searchIndexDaoHelper).getSearchIndexEntity(searchIndexKey);
-        verify(searchIndexHelperService).getAdminClient();
+        verify(searchIndexHelperService, times(2)).getAdminClient();
         verifyNoMoreInteractions(alternateKeyHelper, businessObjectDefinitionDao, businessObjectDefinitionHelper, configurationDaoHelper, configurationHelper,
             searchFunctions, searchIndexDao, searchIndexDaoHelper, searchIndexHelperService, searchIndexStatusDaoHelper, searchIndexTypeDaoHelper);
 
         // Validate the returned object.
         assertEquals(new SearchIndex(searchIndexKey, SEARCH_INDEX_TYPE, SEARCH_INDEX_STATUS,
-            new SearchIndexSettings(SEARCH_INDEX_SETTING_CREATION_DATE, SEARCH_INDEX_SETTING_NUMBER_OF_REPLICAS, SEARCH_INDEX_SETTING_NUMBER_OF_SHARDS,
-                SEARCH_INDEX_SETTING_INDEX_PROVIDED_NAME, SEARCH_INDEX_SETTING_INDEX_UUID), USER_ID, CREATED_ON, UPDATED_ON), response);
+            new SearchIndexStatistics(SEARCH_INDEX_STATISTICS_CREATION_DATE, SEARCH_INDEX_STATISTICS_NUMBER_OF_ACTIVE_DOCUMENTS,
+                SEARCH_INDEX_STATISTICS_NUMBER_OF_DELETED_DOCUMENTS, SEARCH_INDEX_STATISTICS_INDEX_UUID), USER_ID, CREATED_ON, UPDATED_ON), response);
     }
 
     @Test

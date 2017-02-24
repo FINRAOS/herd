@@ -43,6 +43,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ContextConfiguration;
 
+import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.dao.AbstractDaoTest;
 import org.finra.herd.dao.TagDaoTestHelper;
 import org.finra.herd.dao.TagTypeDaoTestHelper;
@@ -64,7 +65,7 @@ import org.finra.herd.model.api.xml.PartitionValueFilter;
 import org.finra.herd.model.api.xml.PartitionValueRange;
 import org.finra.herd.model.api.xml.Schema;
 import org.finra.herd.model.api.xml.SchemaColumn;
-import org.finra.herd.model.api.xml.SearchIndexSettings;
+import org.finra.herd.model.api.xml.SearchIndexStatistics;
 import org.finra.herd.model.api.xml.StorageDirectory;
 import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.api.xml.StorageUnit;
@@ -269,7 +270,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Long NO_ROW_COUNT = null;
 
-    public static final SearchIndexSettings NO_SEARCH_INDEX_SETTINGS = null;
+    public static final SearchIndexStatistics NO_SEARCH_INDEX_STATISTICS = null;
+
+    public static final XMLGregorianCalendar NO_SEARCH_INDEX_STATISTICS_CREATION_DATE = null;
 
     public static final Set<String> NO_SEARCH_RESPONSE_FIELDS = new HashSet<>();
 
@@ -309,15 +312,13 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
             "#end" +
             "#end";
 
-    public static final String SEARCH_INDEX_SETTING_CREATION_DATE = "UT_SearchIndexSetting_CreationDate_" + RANDOM_SUFFIX;
+    public static final XMLGregorianCalendar SEARCH_INDEX_STATISTICS_CREATION_DATE = HerdDateUtils.getXMLGregorianCalendarValue(getRandomDate());
 
-    public static final String SEARCH_INDEX_SETTING_INDEX_PROVIDED_NAME = "UT_SearchIndexSetting_ProvidedName_" + RANDOM_SUFFIX;
+    public static final String SEARCH_INDEX_STATISTICS_INDEX_UUID = "UT_SearchIndexSetting_Uuid_" + RANDOM_SUFFIX;
 
-    public static final String SEARCH_INDEX_SETTING_INDEX_UUID = "UT_SearchIndexSetting_Uuid_" + RANDOM_SUFFIX;
+    public static final Long SEARCH_INDEX_STATISTICS_NUMBER_OF_ACTIVE_DOCUMENTS = (long) (Math.random() * Integer.MAX_VALUE);
 
-    public static final String SEARCH_INDEX_SETTING_NUMBER_OF_REPLICAS = "UT_SearchIndexSetting_NumberOfReplicas_" + RANDOM_SUFFIX;
-
-    public static final String SEARCH_INDEX_SETTING_NUMBER_OF_SHARDS = "UT_SearchIndexSetting_NumberOfShards_" + RANDOM_SUFFIX;
+    public static final Long SEARCH_INDEX_STATISTICS_NUMBER_OF_DELETED_DOCUMENTS = (long) (Math.random() * Integer.MAX_VALUE);
 
     public static final String SECOND_PARTITION_COLUMN_NAME = "PRTN_CLMN002";
 

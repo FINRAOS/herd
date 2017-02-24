@@ -15,10 +15,11 @@
 */
 package org.finra.herd.service.impl;
 
-import java.util.Map;
-
 import org.elasticsearch.cluster.metadata.IndexMetaData;
 import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.index.shard.DocsStats;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,7 +34,7 @@ import org.finra.herd.model.api.xml.SearchIndex;
 import org.finra.herd.model.api.xml.SearchIndexCreateRequest;
 import org.finra.herd.model.api.xml.SearchIndexKey;
 import org.finra.herd.model.api.xml.SearchIndexKeys;
-import org.finra.herd.model.api.xml.SearchIndexSettings;
+import org.finra.herd.model.api.xml.SearchIndexStatistics;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.jpa.SearchIndexEntity;
 import org.finra.herd.model.jpa.SearchIndexStatusEntity;
@@ -87,12 +88,12 @@ public class SearchIndexServiceImpl implements SearchIndexService
         // Perform validation and trim.
         validateSearchIndexCreateRequest(request);
 
-        // Ensure that Search index with the specified Search index key doesn't already exist.
+        // Ensure that search index with the specified search index key doesn't already exist.
         SearchIndexEntity searchIndexEntity = searchIndexDao.getSearchIndexByKey(request.getSearchIndexKey());
         if (searchIndexEntity != null)
         {
             throw new AlreadyExistsException(
-                String.format("Unable to create Search index with name \"%s\" because it already exists.", request.getSearchIndexKey().getSearchIndexName()));
+                String.format("Unable to create search index with name \"%s\" because it already exists.", request.getSearchIndexKey().getSearchIndexName()));
         }
 
         // Get the search index type and ensure it exists.
@@ -102,7 +103,7 @@ public class SearchIndexServiceImpl implements SearchIndexService
         SearchIndexStatusEntity searchIndexStatusEntity =
             searchIndexStatusDaoHelper.getSearchIndexStatusEntity(SearchIndexStatusEntity.SearchIndexStatuses.BUILDING.name());
 
-        // Creates the relative Search index entity from the request information.
+        // Creates the relative search index entity from the request information.
         searchIndexEntity = createSearchIndexEntity(request, searchIndexTypeEntity, searchIndexStatusEntity);
 
         // Persist the new entity.
@@ -146,23 +147,18 @@ public class SearchIndexServiceImpl implements SearchIndexService
         // Create the search index object from the persisted entity.
         SearchIndex searchIndex = createSearchIndexFromEntity(searchIndexEntity);
 
-        // Retrieve index settings from the actual search index.
-        Settings getSettingsResponse =
+        // Retrieve index settings from the actual search index. A non-existing search index name results in a "no such index" internal server error.
+        Settings settings =
             searchIndexHelperService.getAdminClient().indices().prepareGetIndex().setIndices(searchIndexKey.getSearchIndexName()).execute().actionGet()
                 .getSettings().get(searchIndexKey.getSearchIndexName());
 
-        // Update the search index settings.
-        SearchIndexSettings searchIndexSettings = new SearchIndexSettings();
-        searchIndex.setSearchIndexSettings(searchIndexSettings);
+        // Retrieve indices level docs stats.
+        DocsStats docsStats =
+            searchIndexHelperService.getAdminClient().indices().prepareStats(searchIndexKey.getSearchIndexName()).clear().setDocs(true).execute().actionGet()
+                .getIndex(searchIndexKey.getSearchIndexName()).getPrimaries().getDocs();
 
-        // If we got here, the get settings response returned by the above call cannot be null.
-        // A non-existing search index name results in a "no such index" internal server error.
-        Map<String, String> indexSettings = getSettingsResponse.getAsMap();
-        searchIndexSettings.setIndexCreationDate(indexSettings.get(IndexMetaData.SETTING_CREATION_DATE));
-        searchIndexSettings.setIndexNumberOfReplicas(indexSettings.get(IndexMetaData.SETTING_NUMBER_OF_REPLICAS));
-        searchIndexSettings.setIndexNumberOfShards(indexSettings.get(IndexMetaData.SETTING_NUMBER_OF_SHARDS));
-        searchIndexSettings.setIndexProvidedName(indexSettings.get(IndexMetaData.SETTING_INDEX_PROVIDED_NAME));
-        searchIndexSettings.setIndexUuid(indexSettings.get(IndexMetaData.SETTING_INDEX_UUID));
+        // Update the search index statistics.
+        searchIndex.setSearchIndexStatistics(createSearchIndexStatistics(settings, docsStats));
 
         return searchIndex;
     }
@@ -176,13 +172,13 @@ public class SearchIndexServiceImpl implements SearchIndexService
     }
 
     /**
-     * Creates a new Search index entity from the request information.
+     * Creates a new search index entity from the request information.
      *
      * @param request the information needed to create a search index
      * @param searchIndexTypeEntity the search index type entity
      * @param searchIndexStatusEntity the search index status entity
      *
-     * @return the newly created Search index entity
+     * @return the newly created search index entity
      */
     protected SearchIndexEntity createSearchIndexEntity(SearchIndexCreateRequest request, SearchIndexTypeEntity searchIndexTypeEntity,
         SearchIndexStatusEntity searchIndexStatusEntity)
@@ -224,25 +220,68 @@ public class SearchIndexServiceImpl implements SearchIndexService
         String documentType;
         String mapping;
 
-        // Currently, only search index for business object definitions is supported.
+        // Currently, only search index for business object definitions and tag are supported.
         if (SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name().equalsIgnoreCase(searchIndexType))
         {
             documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
             mapping = configurationDaoHelper.getClobProperty(ConfigurationValue.ELASTICSEARCH_BDEF_MAPPINGS_JSON.getKey());
+
+        }
+        else if (SearchIndexTypeEntity.SearchIndexTypes.TAG.name().equalsIgnoreCase(searchIndexType))
+        {
+
+            documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
+            mapping = configurationDaoHelper.getClobProperty(ConfigurationValue.ELASTICSEARCH_TAG_MAPPINGS_JSON.getKey());
         }
         else
         {
             throw new IllegalArgumentException(String.format("Search index type with code \"%s\" is not supported.", searchIndexType));
         }
 
-        // If the index exists delete it.
+        // Delete the index if it already exists.
         deleteSearchIndexHelper(searchIndexKey.getSearchIndexName());
 
         // Create the index.
         searchFunctions.getCreateIndexFunction().accept(searchIndexKey.getSearchIndexName(), documentType, mapping);
 
-        // Asynchronously index all business object definitions. Since we got here, this search index is for business object definitions.
-        searchIndexHelperService.indexAllBusinessObjectDefinitions(searchIndexKey, documentType);
+        //Fetch data from database and index them
+        if (SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name().equalsIgnoreCase(searchIndexType))
+        {
+            // Asynchronously index all business object definitions.
+            searchIndexHelperService.indexAllBusinessObjectDefinitions(searchIndexKey, documentType);
+
+        }
+        else
+        {
+            // Asynchronously index all tags. If we got to this point, it is tags
+            searchIndexHelperService.indexAllTags(searchIndexKey, documentType);
+        }
+    }
+
+    /**
+     * Creates a new search index statistics objects per specified parameters.
+     *
+     * @param settings the search index settings
+     * @param docsStats the search index docs stats
+     *
+     * @return the newly created search index statistics object
+     */
+    protected SearchIndexStatistics createSearchIndexStatistics(Settings settings, DocsStats docsStats)
+    {
+        SearchIndexStatistics searchIndexStatistics = new SearchIndexStatistics();
+
+        Long creationDate = settings.getAsLong(IndexMetaData.SETTING_CREATION_DATE, -1L);
+        if (creationDate.longValue() != -1L)
+        {
+            DateTime creationDateTime = new DateTime(creationDate, DateTimeZone.UTC);
+            searchIndexStatistics.setIndexCreationDate(HerdDateUtils.getXMLGregorianCalendarValue(creationDateTime.toDate()));
+        }
+
+        searchIndexStatistics.setIndexNumberOfActiveDocuments(docsStats.getCount());
+        searchIndexStatistics.setIndexNumberOfDeletedDocuments(docsStats.getDeleted());
+        searchIndexStatistics.setIndexUuid(settings.get(IndexMetaData.SETTING_INDEX_UUID));
+
+        return searchIndexStatistics;
     }
 
     /**

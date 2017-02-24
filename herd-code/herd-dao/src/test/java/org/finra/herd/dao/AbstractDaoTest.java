@@ -295,6 +295,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String JOB_NAME_3 = "UT_Job_3" + RANDOM_SUFFIX;
 
+    public static final String JSON_STRING = "UT_JsonString_" + RANDOM_SUFFIX;
+
     public static final Boolean LATEST_VERSION_FLAG_SET = true;
 
     public static final String LOCAL_FILE = "foo.dat";
@@ -424,6 +426,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Boolean NO_TAG_HAS_CHILDREN_FLAG = null;
 
+    public static final String NO_TAG_TYPE_DESCRIPTION = null;
+
     public static final String NO_TAG_TYPE_DISPLAY_NAME = null;
 
     public static final Integer NO_TAG_TYPE_ORDER = null;
@@ -496,11 +500,11 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String SCHEMA_PARTITION_COLUMN_NAME_PREFIX = "Prtn-Clmn-Name";
 
-    public static final String SEARCH_INDEX_NAME = "UT_SearchIndexName_1_" + RANDOM_SUFFIX;
-
     public static final String SEARCH_INDEX_DOCUMENT_TYPE = "UT_SearchIndex_DocumentType_" + RANDOM_SUFFIX;
 
     public static final String SEARCH_INDEX_MAPPING = "UT_SearchIndex_Mapping_" + RANDOM_SUFFIX;
+
+    public static final String SEARCH_INDEX_NAME = "UT_SearchIndexName_1_" + RANDOM_SUFFIX;
 
     public static final String SEARCH_INDEX_NAME_2 = "UT_SearchIndexName_2_" + RANDOM_SUFFIX;
 
@@ -656,6 +660,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String TAG_TYPE_2 = "UT_TagType_2_" + RANDOM_SUFFIX;
 
     public static final long TAG_TYPE_COUNT = 240;
+
+    public static final String TAG_TYPE_DESCRIPTION = "UT_TagTypeDescription_1_" + RANDOM_SUFFIX;
+
+    public static final String TAG_TYPE_DESCRIPTION_2 = "UT_TagTypeDescription_2_" + RANDOM_SUFFIX;
 
     public static final String TAG_TYPE_DISPLAY_NAME = "UT_TagTypeDisplayName_1_" + RANDOM_SUFFIX;
 

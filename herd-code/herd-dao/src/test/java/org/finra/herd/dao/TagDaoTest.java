@@ -19,6 +19,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -35,7 +36,7 @@ public class TagDaoTest extends AbstractDaoTest
     public void testGetChildrenTags()
     {
         // Create a tag type entity.
-        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, INTEGER_VALUE);
+        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER, TAG_TYPE_DESCRIPTION);
 
         // Create two root tag entities for the tag type.
         List<TagEntity> rootTagEntities = Arrays.asList(tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION),
@@ -75,8 +76,8 @@ public class TagDaoTest extends AbstractDaoTest
         assertEquals(tagEntity, tagDao.getTagByKey(new TagKey(TAG_TYPE.toLowerCase(), TAG_CODE.toLowerCase())));
 
         // Try invalid values for all input parameters.
-        assertNull(tagDao.getTagByKey(new TagKey("I_DO_NOT_EXIST", TAG_CODE)));
-        assertNull(tagDao.getTagByKey(new TagKey(TAG_TYPE, "I_DO_NOT_EXIST")));
+        assertNull(tagDao.getTagByKey(new TagKey(I_DO_NOT_EXIST, TAG_CODE)));
+        assertNull(tagDao.getTagByKey(new TagKey(TAG_TYPE, I_DO_NOT_EXIST)));
     }
 
     @Test
@@ -95,16 +96,17 @@ public class TagDaoTest extends AbstractDaoTest
         assertEquals(tagEntity, tagDao.getTagByTagTypeAndDisplayName(TAG_TYPE.toLowerCase(), TAG_DISPLAY_NAME.toLowerCase()));
 
         // Try invalid values for all input parameters.
-        assertNull(tagDao.getTagByTagTypeAndDisplayName("I_DO_NOT_EXIST", TAG_DISPLAY_NAME));
-        assertNull(tagDao.getTagByTagTypeAndDisplayName(TAG_TYPE, "I_DO_NOT_EXIST"));
+        assertNull(tagDao.getTagByTagTypeAndDisplayName(I_DO_NOT_EXIST, TAG_DISPLAY_NAME));
+        assertNull(tagDao.getTagByTagTypeAndDisplayName(TAG_TYPE, I_DO_NOT_EXIST));
     }
 
     @Test
     public void testGetTags()
     {
         // Create two tag type entities with tag type order values in reverse order.
-        List<TagTypeEntity> tagTypeEntities = Arrays.asList(tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER_2),
-            tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE_2, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER));
+        List<TagTypeEntity> tagTypeEntities = Arrays
+            .asList(tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER_2, TAG_TYPE_DESCRIPTION),
+                tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE_2, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER, TAG_TYPE_DESCRIPTION_2));
 
         // Create two root tag entities for each tag type with tag display name in reverse order.
         List<TagEntity> tagEntities = Arrays.asList(tagDaoTestHelper.createTagEntity(tagTypeEntities.get(0), TAG_CODE, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION),
@@ -117,10 +119,32 @@ public class TagDaoTest extends AbstractDaoTest
     }
 
     @Test
+    public void testGetTagsByIds()
+    {
+        // Create two tag type entities
+        List<TagTypeEntity> tagTypeEntities = Arrays.asList(
+            tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER, TAG_DESCRIPTION),
+            tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE_2, TAG_TYPE_DISPLAY_NAME_2, TAG_TYPE_ORDER_2, TAG_DESCRIPTION_2));
+
+        // Create two root tag entities for each tag type
+        List<TagEntity> tagEntities = Arrays.asList(tagDaoTestHelper.createTagEntity(tagTypeEntities.get(0), TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION),
+            tagDaoTestHelper.createTagEntity(tagTypeEntities.get(0), TAG_CODE_2, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2),
+            tagDaoTestHelper.createTagEntity(tagTypeEntities.get(1), TAG_CODE_3, TAG_DISPLAY_NAME_3, TAG_DESCRIPTION_3),
+            tagDaoTestHelper.createTagEntity(tagTypeEntities.get(1), TAG_CODE_4, TAG_DISPLAY_NAME_4, TAG_DESCRIPTION_4));
+
+        List<Integer> tagIds = new ArrayList<>();
+
+        tagEntities.forEach(tagEntity -> tagIds.add(tagEntity.getId()));
+
+        // Get all tags.
+        assertEquals(Arrays.asList(tagEntities.get(0), tagEntities.get(1), tagEntities.get(2), tagEntities.get(3)), tagDao.getTagsByIds(tagIds));
+    }
+
+    @Test
     public void testGetTagsByTagTypeAndParentTagCode()
     {
         // Create a tag type entity.
-        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, INTEGER_VALUE);
+        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER, TAG_TYPE_DESCRIPTION);
 
         // Create two root tag entities for the tag type with tag display name in reverse order.
         List<TagEntity> rootTagEntities = Arrays.asList(tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION),
@@ -150,7 +174,7 @@ public class TagDaoTest extends AbstractDaoTest
             tagDao.getTagsByTagTypeAndParentTagCode(TAG_TYPE.toLowerCase(), null));
 
         // Try to get root tags with invalid values for all input parameters.
-        assertTrue(tagDao.getTagsByTagTypeAndParentTagCode("I_DO_NOT_EXIST", null).isEmpty());
+        assertTrue(tagDao.getTagsByTagTypeAndParentTagCode(I_DO_NOT_EXIST, null).isEmpty());
 
         // Get children tags (by specifying both tag type and parent tag type code).
         assertEquals(Arrays
@@ -168,15 +192,15 @@ public class TagDaoTest extends AbstractDaoTest
             tagDao.getTagsByTagTypeAndParentTagCode(TAG_TYPE.toLowerCase(), TAG_CODE.toLowerCase()));
 
         // Try to get children tags with invalid values for all input parameters.
-        assertTrue(tagDao.getTagsByTagTypeAndParentTagCode("I_DO_NOT_EXIST", TAG_CODE).isEmpty());
-        assertTrue(tagDao.getTagsByTagTypeAndParentTagCode(TAG_TYPE, "I_DO_NOT_EXIST").isEmpty());
+        assertTrue(tagDao.getTagsByTagTypeAndParentTagCode(I_DO_NOT_EXIST, TAG_CODE).isEmpty());
+        assertTrue(tagDao.getTagsByTagTypeAndParentTagCode(TAG_TYPE, I_DO_NOT_EXIST).isEmpty());
     }
 
     @Test
     public void testGetTagsByTagTypeEntityAndParentTagCode()
     {
         // Create a tag type entity.
-        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER);
+        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER, TAG_TYPE_DESCRIPTION);
 
         // Create two root tag entities for the tag type with tag display name in reverse order.
         List<TagEntity> rootTagEntities = Arrays.asList(tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION),
@@ -218,10 +242,11 @@ public class TagDaoTest extends AbstractDaoTest
             tagDao.getTagsByTagTypeEntityAndParentTagCode(tagTypeEntity, TAG_CODE.toLowerCase(), NO_IS_PARENT_TAG_NULL_FLAG));
 
         // Create another tag type entity without any tag associated with it.
-        TagTypeEntity invalidTagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE_2, TAG_TYPE_DISPLAY_NAME_2, TAG_TYPE_ORDER_2);
+        TagTypeEntity invalidTagTypeEntity =
+            tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE_2, TAG_TYPE_DISPLAY_NAME_2, TAG_TYPE_ORDER_2, TAG_TYPE_DESCRIPTION_2);
 
         // Try to get all immediate children of the root tag with invalid values for all input parameters.
         assertTrue(tagDao.getTagsByTagTypeEntityAndParentTagCode(invalidTagTypeEntity, TAG_CODE, NO_IS_PARENT_TAG_NULL_FLAG).isEmpty());
-        assertTrue(tagDao.getTagsByTagTypeEntityAndParentTagCode(tagTypeEntity, "I_DO_NOT_EXIST", NO_IS_PARENT_TAG_NULL_FLAG).isEmpty());
+        assertTrue(tagDao.getTagsByTagTypeEntityAndParentTagCode(tagTypeEntity, I_DO_NOT_EXIST, NO_IS_PARENT_TAG_NULL_FLAG).isEmpty());
     }
 }

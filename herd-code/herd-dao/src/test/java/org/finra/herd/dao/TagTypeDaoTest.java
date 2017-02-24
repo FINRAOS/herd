@@ -33,7 +33,7 @@ public class TagTypeDaoTest extends AbstractDaoTest
     public void testGetTagTypeByDisplayName()
     {
         // Create a tag type entity.
-        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, 1);
+        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER, TAG_TYPE_DESCRIPTION);
 
         // Retrieve the tag type entity.
         TagTypeEntity resultTagTypeEntity = tagTypeDao.getTagTypeByDisplayName(TAG_TYPE_DISPLAY_NAME);
@@ -48,7 +48,7 @@ public class TagTypeDaoTest extends AbstractDaoTest
     public void testGetTagTypeByKey()
     {
         // Create a tag type entity.
-        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, 1);
+        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER, TAG_TYPE_DESCRIPTION);
 
         // Retrieve the tag type entity.
         TagTypeEntity resultTagTypeEntity = tagTypeDao.getTagTypeByKey(new TagTypeKey(TAG_TYPE));
@@ -63,8 +63,10 @@ public class TagTypeDaoTest extends AbstractDaoTest
     public void testGetTagTypeKeys()
     {
         // Create and persist tag type entities.
-        tagTypeDaoTestHelper.createTagTypeEntity(tagTypeDaoTestHelper.getTestTagTypeKeys().get(0).getTagTypeCode(), TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER);
-        tagTypeDaoTestHelper.createTagTypeEntity(tagTypeDaoTestHelper.getTestTagTypeKeys().get(1).getTagTypeCode(), TAG_TYPE_DISPLAY_NAME_2, TAG_TYPE_ORDER_2);
+        tagTypeDaoTestHelper.createTagTypeEntity(tagTypeDaoTestHelper.getTestTagTypeKeys().get(0).getTagTypeCode(), TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER,
+            TAG_TYPE_DESCRIPTION);
+        tagTypeDaoTestHelper.createTagTypeEntity(tagTypeDaoTestHelper.getTestTagTypeKeys().get(1).getTagTypeCode(), TAG_TYPE_DISPLAY_NAME_2, TAG_TYPE_ORDER_2,
+            TAG_TYPE_DESCRIPTION_2);
 
         // Retrieve a list of tag type keys.
         List<TagTypeKey> resultTagTypeKeys = tagTypeDao.getTagTypeKeys();
@@ -78,10 +80,11 @@ public class TagTypeDaoTest extends AbstractDaoTest
     public void testGetTagTypes()
     {
         // Create and persist tag type entities.
-        List<TagTypeEntity> tagTypeEntities = Arrays.asList(
-            tagTypeDaoTestHelper.createTagTypeEntity(tagTypeDaoTestHelper.getTestTagTypeKeys().get(0).getTagTypeCode(), TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER),
-            tagTypeDaoTestHelper
-                .createTagTypeEntity(tagTypeDaoTestHelper.getTestTagTypeKeys().get(1).getTagTypeCode(), TAG_TYPE_DISPLAY_NAME_2, TAG_TYPE_ORDER_2));
+        List<TagTypeEntity> tagTypeEntities = Arrays.asList(tagTypeDaoTestHelper
+            .createTagTypeEntity(tagTypeDaoTestHelper.getTestTagTypeKeys().get(0).getTagTypeCode(), TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER,
+                TAG_TYPE_DESCRIPTION), tagTypeDaoTestHelper
+            .createTagTypeEntity(tagTypeDaoTestHelper.getTestTagTypeKeys().get(1).getTagTypeCode(), TAG_TYPE_DISPLAY_NAME_2, TAG_TYPE_ORDER_2,
+                TAG_TYPE_DESCRIPTION_2));
 
         // Retrieve a list of tag type entities.
         List<TagTypeEntity> resultTagTypeEntities = tagTypeDao.getTagTypes();

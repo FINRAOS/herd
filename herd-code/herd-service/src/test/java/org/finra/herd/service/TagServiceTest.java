@@ -53,7 +53,7 @@ public class TagServiceTest extends AbstractServiceTest
     public void testCreateTag()
     {
         // Create and persist a tag type entity.
-        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER);
+        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER, TAG_TYPE_DESCRIPTION);
 
         // Create a tag key.
         TagKey tagKey = new TagKey(TAG_TYPE, TAG_CODE);
@@ -132,7 +132,7 @@ public class TagServiceTest extends AbstractServiceTest
     public void testCreateTagLowerCaseParameters()
     {
         // Create and persist a tag type entity.
-        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER);
+        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER, TAG_TYPE_DESCRIPTION);
 
         // Create a tag key.
         TagKey tagKey = new TagKey(TAG_TYPE, TAG_CODE);
@@ -156,7 +156,7 @@ public class TagServiceTest extends AbstractServiceTest
     public void testCreateTagMissingOptionalParametersPassedAsNulls()
     {
         // Create and persist a tag type entity.
-        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER);
+        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER, TAG_TYPE_DESCRIPTION);
 
         // Create a tag key.
         TagKey tagKey = new TagKey(TAG_TYPE, TAG_CODE);
@@ -177,7 +177,7 @@ public class TagServiceTest extends AbstractServiceTest
     public void testCreateTagMissingOptionalParametersPassedAsWhitespace()
     {
         // Create and persist a tag type entity.
-        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER);
+        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER, TAG_TYPE_DESCRIPTION);
 
         // Create a tag key.
         TagKey tagKey = new TagKey(TAG_TYPE, TAG_CODE);
@@ -246,7 +246,7 @@ public class TagServiceTest extends AbstractServiceTest
     public void testCreateTagParentTagNoExists()
     {
         // Create and persist a tag type entity.
-        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER);
+        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER, TAG_TYPE_DESCRIPTION);
 
         // Try to create a tag with a non-existing parent tag.
         try
@@ -299,7 +299,7 @@ public class TagServiceTest extends AbstractServiceTest
     public void testCreateTagTrimParameters()
     {
         // Create and persist a tag type entity.
-        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER);
+        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER, TAG_TYPE_DESCRIPTION);
 
         // Create a tag key.
         TagKey tagKey = new TagKey(TAG_TYPE, TAG_CODE);
@@ -322,7 +322,7 @@ public class TagServiceTest extends AbstractServiceTest
     public void testCreateTagUpperCaseParameters()
     {
         // Create and persist a tag type entity.
-        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, INTEGER_VALUE);
+        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER, TAG_TYPE_DESCRIPTION);
 
         // Create a tag key.
         TagKey tagKey = new TagKey(TAG_TYPE, TAG_CODE);
@@ -346,7 +346,7 @@ public class TagServiceTest extends AbstractServiceTest
     public void testCreateTagWithParent()
     {
         // Create and persist a tag type entity.
-        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER);
+        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER, TAG_TYPE_DESCRIPTION);
 
         // Create a tag key.
         TagKey parentTagKey = new TagKey(TAG_TYPE, TAG_CODE);
@@ -516,6 +516,53 @@ public class TagServiceTest extends AbstractServiceTest
     }
 
     @Test
+    public void testDeleteTagWithParent()
+    {
+        // Create and persist a tag type entity.
+        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER, TAG_TYPE_DESCRIPTION);
+
+        // Create a tag key.
+        TagKey parentTagKey = new TagKey(TAG_TYPE, TAG_CODE);
+
+        // Create a parent tag.
+        Tag parentTag = tagService.createTag(new TagCreateRequest(parentTagKey, TAG_DISPLAY_NAME, TAG_DESCRIPTION, NO_PARENT_TAG_KEY));
+
+        // Get the parent tag entity.
+        TagEntity parentTagEntity = tagDao.getTagByKey(parentTagKey);
+        assertNotNull(parentTagEntity);
+
+        // Validate the response object.
+        assertEquals(new Tag(parentTagEntity.getId(), new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION, parentTagEntity.getCreatedBy(),
+            parentTagEntity.getUpdatedBy(), HerdDateUtils.getXMLGregorianCalendarValue(parentTagEntity.getUpdatedOn()), NO_PARENT_TAG_KEY,
+            NO_TAG_HAS_CHILDREN_FLAG), parentTag);
+
+        // Create a tag key.
+        TagKey childTagKey = new TagKey(TAG_TYPE, TAG_CODE_2);
+
+        // Create a child tag.
+        Tag childTag = tagService.createTag(new TagCreateRequest(childTagKey, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, parentTagKey));
+
+        // Get the child tag entity.
+        TagEntity childTagEntity = tagDao.getTagByKey(childTagKey);
+        assertNotNull(childTagEntity);
+
+        assertEquals(
+            new Tag(childTagEntity.getId(), childTagKey, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, childTagEntity.getCreatedBy(), childTagEntity.getUpdatedBy(),
+                HerdDateUtils.getXMLGregorianCalendarValue(childTagEntity.getUpdatedOn()), parentTagKey, NO_TAG_HAS_CHILDREN_FLAG), childTag);
+
+        // Delete this tag.
+        Tag deletedTag = tagService.deleteTag(childTagKey);
+
+        // Validate the returned object.
+        assertEquals(new Tag(childTagEntity.getId(), childTagKey, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION_2, childTagEntity.getCreatedBy(),
+            childTagEntity.getUpdatedBy(), HerdDateUtils.getXMLGregorianCalendarValue(childTagEntity.getUpdatedOn()), parentTagKey,
+            NO_TAG_HAS_CHILDREN_FLAG), deletedTag);
+
+        // Ensure that this tag is no longer there.
+        assertNull(tagDao.getTagByKey(childTagKey));
+    }
+
+    @Test
     public void testGetTag()
     {
         // Create and persist a tag entity.
@@ -620,7 +667,7 @@ public class TagServiceTest extends AbstractServiceTest
     public void testGetTags()
     {
         // Create and persist a tag type entity.
-        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, INTEGER_VALUE);
+        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER, TAG_TYPE_DESCRIPTION);
 
         // Create and persist two tag entities for the same tag type.
         tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
@@ -640,7 +687,7 @@ public class TagServiceTest extends AbstractServiceTest
     public void testGetTagsLowerCaseParameters()
     {
         // Create and persist a tag type entity.
-        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER);
+        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER, TAG_TYPE_DESCRIPTION);
 
         // Create and persist two tag entities for the same tag type.
         tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
@@ -690,7 +737,7 @@ public class TagServiceTest extends AbstractServiceTest
     public void testGetTagsTagsNoExist()
     {
         // Create and persist a tag type entity.
-        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER);
+        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER, TAG_TYPE_DESCRIPTION);
 
         // Retrieve a list of tag keys, when none of the tags exist for the tag type.
         TagListResponse resultTagKeys = tagService.getTags(TAG_TYPE, NO_PARENT_TAG_CODE);
@@ -704,7 +751,7 @@ public class TagServiceTest extends AbstractServiceTest
     public void testGetTagsTrimParameters()
     {
         // Create and persist a tag type entity.
-        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER);
+        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER, TAG_TYPE_DESCRIPTION);
         // Create and persist two tag entities for the same tag type.
         tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
         tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_2, TAG_TYPE_DISPLAY_NAME_2, TAG_DESCRIPTION_2);
@@ -723,7 +770,7 @@ public class TagServiceTest extends AbstractServiceTest
     public void testGetTagsUpperCaseParameters()
     {
         // Create and persist a tag type entity.
-        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER);
+        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER, TAG_TYPE_DESCRIPTION);
 
         // Create and persist two tag entities for the same tag type.
         tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
@@ -1490,7 +1537,7 @@ public class TagServiceTest extends AbstractServiceTest
     private void createDatabaseEntitiesForTagSearchTesting()
     {
         // Create and persist a tag type entity.
-        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER);
+        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER, TAG_TYPE_DESCRIPTION);
 
         // Create a root tag entity for the tag type.
         TagEntity rootTagEntity = tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);

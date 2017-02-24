@@ -15,6 +15,9 @@
 */
 package org.finra.herd.service.helper;
 
+import static org.finra.herd.model.dto.SearchIndexUpdateDto.MESSAGE_TYPE_BUSINESS_OBJECT_DEFINITION_UPDATE;
+import static org.finra.herd.model.dto.SearchIndexUpdateDto.MESSAGE_TYPE_TAG_UPDATE;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,6 +33,7 @@ import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.JmsMessage;
 import org.finra.herd.model.dto.SearchIndexUpdateDto;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
+import org.finra.herd.model.jpa.TagEntity;
 
 /**
  * SearchIndexUpdateHelper class contains helper methods needed to process a search index update.
@@ -58,7 +62,8 @@ public class SearchIndexUpdateHelper
     {
         List<Integer> businessObjectDefinitionIds = new ArrayList<>();
         businessObjectDefinitionIds.add(businessObjectDefinitionEntity.getId());
-        processMessage(jsonHelper.objectToJson(new SearchIndexUpdateDto(businessObjectDefinitionIds, modificationType)));
+        processMessage(
+            jsonHelper.objectToJson(new SearchIndexUpdateDto(MESSAGE_TYPE_BUSINESS_OBJECT_DEFINITION_UPDATE, businessObjectDefinitionIds, modificationType)));
     }
 
     /**
@@ -71,7 +76,34 @@ public class SearchIndexUpdateHelper
     {
         List<Integer> businessObjectDefinitionIds = new ArrayList<>();
         businessObjectDefinitionEntityList.forEach(businessObjectDefinitionEntity -> businessObjectDefinitionIds.add(businessObjectDefinitionEntity.getId()));
-        processMessage(jsonHelper.objectToJson(new SearchIndexUpdateDto(businessObjectDefinitionIds, modificationType)));
+        processMessage(
+            jsonHelper.objectToJson(new SearchIndexUpdateDto(MESSAGE_TYPE_BUSINESS_OBJECT_DEFINITION_UPDATE, businessObjectDefinitionIds, modificationType)));
+    }
+
+    /**
+     * Modify a tag
+     *
+     * @param tagEntity the tag entity to modify
+     * @param modificationType the type of modification
+     */
+    public void modifyTagInSearchIndex(TagEntity tagEntity, String modificationType)
+    {
+        List<Integer> tagIds = new ArrayList<>();
+        tagIds.add(tagEntity.getId());
+        processMessage(jsonHelper.objectToJson(new SearchIndexUpdateDto(MESSAGE_TYPE_TAG_UPDATE, tagIds, modificationType)));
+    }
+
+    /**
+     * Modify a list of tags
+     *
+     * @param tagEntityList the tag entities to modify
+     * @param modificationType the type of modification
+     */
+    public void modifyTagsInSearchIndex(List<TagEntity> tagEntityList, String modificationType)
+    {
+        List<Integer> tagIds = new ArrayList<>();
+        tagEntityList.forEach(tagEntity -> tagIds.add(tagEntity.getId()));
+        processMessage(jsonHelper.objectToJson(new SearchIndexUpdateDto(MESSAGE_TYPE_TAG_UPDATE, tagIds, modificationType)));
     }
 
     /**

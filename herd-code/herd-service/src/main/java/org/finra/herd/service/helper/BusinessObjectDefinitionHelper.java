@@ -104,20 +104,35 @@ public class BusinessObjectDefinitionHelper
     }
 
     /**
+     * Validates the business object definition key. This method also trims the key parameters.
+     *
+     * @param key the business object definition key
+     *
+     * @throws IllegalArgumentException if any validation errors were found
+     */
+    public void validateBusinessObjectDefinitionKey(BusinessObjectDefinitionKey key) throws IllegalArgumentException
+    {
+        Assert.notNull(key, "A business object definition key must be specified.");
+        key.setNamespace(alternateKeyHelper.validateStringParameter("namespace", key.getNamespace()));
+        key.setBusinessObjectDefinitionName(
+            alternateKeyHelper.validateStringParameter("business object definition name", key.getBusinessObjectDefinitionName()));
+    }
+
+    /**
      * Wrapper method that will safely call the object mapper write value as string method and handle the JsonProcessingException. This wrapper is needed so
      * that we can do the object mapping within a Java stream.
      *
-     * @param businessObjectDefinitionEntity the entity to convert to JSON
+     * @param businessObjectDefinitionEntity the business object definition entity to convert to JSON
      *
-     * @return JSON string value of the object
+     * @return the JSON string value of the business object definition entity
      */
-    public String safeObjectMapperWriteValueAsString(final BusinessObjectDefinitionEntity businessObjectDefinitionEntity)
+    private String safeObjectMapperWriteValueAsString(final BusinessObjectDefinitionEntity businessObjectDefinitionEntity)
     {
         String jsonString = "";
 
         try
         {
-            // Convert the business object definition entity to a JSON string
+            // Convert the business object definition entity to a JSON string.
             jsonString = jsonHelper.objectToJson(businessObjectDefinitionEntity);
         }
         catch (IllegalStateException illegalStateException)
@@ -127,22 +142,5 @@ public class BusinessObjectDefinitionHelper
         }
 
         return jsonString;
-    }
-
-    /**
-     * Validates the business object definition key. This method also trims the key parameters.
-     *
-     * @param key the business object definition key
-     *
-     * @throws IllegalArgumentException if any validation errors were found
-     */
-    public void validateBusinessObjectDefinitionKey(BusinessObjectDefinitionKey key) throws IllegalArgumentException
-    {
-        // Validate.
-        Assert.notNull(key, "A business object definition key must be specified.");
-
-        key.setNamespace(alternateKeyHelper.validateStringParameter("namespace", key.getNamespace()));
-        key.setBusinessObjectDefinitionName(
-            alternateKeyHelper.validateStringParameter("business object definition name", key.getBusinessObjectDefinitionName()));
     }
 }

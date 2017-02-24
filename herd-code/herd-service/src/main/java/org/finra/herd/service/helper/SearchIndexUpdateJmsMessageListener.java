@@ -16,6 +16,9 @@
 
 package org.finra.herd.service.helper;
 
+import static org.finra.herd.model.dto.SearchIndexUpdateDto.MESSAGE_TYPE_BUSINESS_OBJECT_DEFINITION_UPDATE;
+import static org.finra.herd.model.dto.SearchIndexUpdateDto.MESSAGE_TYPE_TAG_UPDATE;
+import java.io.IOException;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -30,8 +33,11 @@ import org.springframework.stereotype.Component;
 
 import org.finra.herd.core.ApplicationContextHolder;
 import org.finra.herd.core.helper.ConfigurationHelper;
+import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.model.dto.SearchIndexUpdateDto;
 import org.finra.herd.service.BusinessObjectDefinitionService;
+import org.finra.herd.service.TagService;
 
 /**
  * Search index update jms message listener
@@ -47,6 +53,12 @@ public class SearchIndexUpdateJmsMessageListener
     @Autowired
     private BusinessObjectDefinitionService businessObjectDefinitionService;
 
+    @Autowired
+    private JsonHelper jsonHelper;
+
+    @Autowired
+    private TagService tagService;
+
     /**
      * Periodically check the configuration and apply the action to the storage policy processor JMS message listener service, if needed.
      */
@@ -56,8 +68,7 @@ public class SearchIndexUpdateJmsMessageListener
         try
         {
             // Get the configuration setting.
-            Boolean jmsMessageListenerEnabled =
-                Boolean.valueOf(configurationHelper.getProperty(ConfigurationValue.SEARCH_INDEX_UPDATE_JMS_LISTENER_ENABLED));
+            Boolean jmsMessageListenerEnabled = Boolean.valueOf(configurationHelper.getProperty(ConfigurationValue.SEARCH_INDEX_UPDATE_JMS_LISTENER_ENABLED));
 
             // Get the registry bean.
             JmsListenerEndpointRegistry registry = ApplicationContextHolder.getApplicationContext()
@@ -104,7 +115,35 @@ public class SearchIndexUpdateJmsMessageListener
     {
         LOGGER.info("Message received from the JMS queue. jmsQueueName=\"{}\" jmsMessageHeaders=\"{}\" jmsMessagePayload={}",
             HerdJmsDestinationResolver.SQS_DESTINATION_SEARCH_INDEX_UPDATE_QUEUE, allHeaders, payload);
+        try
+        {
+            // Unmarshall the SearchIndexUpdateDto from a JSON string to a SearchIndexUpdateDto object
+            SearchIndexUpdateDto searchIndexUpdateDto = jsonHelper.unmarshallJsonToObject(SearchIndexUpdateDto.class, payload);
 
-        businessObjectDefinitionService.updateSearchIndexDocumentBusinessObjectDefinition(payload);
+            // If the message type is null, this message is in the original message format.
+            if (searchIndexUpdateDto.getMessageType() == null)
+            {
+                businessObjectDefinitionService.updateSearchIndexDocumentBusinessObjectDefinition(searchIndexUpdateDto);
+            }
+            else
+            {
+                switch (searchIndexUpdateDto.getMessageType())
+                {
+                    case MESSAGE_TYPE_BUSINESS_OBJECT_DEFINITION_UPDATE:
+                        businessObjectDefinitionService.updateSearchIndexDocumentBusinessObjectDefinition(searchIndexUpdateDto);
+                        break;
+                    case MESSAGE_TYPE_TAG_UPDATE:
+                        tagService.updateSearchIndexDocumentTag(searchIndexUpdateDto);
+                        break;
+                    default:
+                        LOGGER.error("Unknown message type.");
+                        break;
+                }
+            }
+        }
+        catch (IOException ioException)
+        {
+            LOGGER.warn("Could not unmarshall JSON to SearchIndexUpdateDto object.", ioException);
+        }
     }
 }

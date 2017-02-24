@@ -18,7 +18,6 @@ package org.finra.herd.rest;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 
@@ -43,17 +42,18 @@ public class TagTypeRestControllerTest extends AbstractRestTest
     public void testCreateTagType() throws Exception
     {
         // Create a tag type.
-        TagType resultTagType = tagTypeRestController.createTagType(new TagTypeCreateRequest(new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME, 1));
+        TagType resultTagType = tagTypeRestController
+            .createTagType(new TagTypeCreateRequest(new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER, TAG_TYPE_DESCRIPTION));
 
         // Validate the returned object.
-        assertEquals(new TagType(new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME, 1), resultTagType);
+        assertEquals(new TagType(new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER, TAG_TYPE_DESCRIPTION), resultTagType);
     }
 
     @Test
     public void testDeleteTagType() throws Exception
     {
         // Create and persist a tag type entity.
-        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, 1);
+        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER, TAG_TYPE_DESCRIPTION);
 
         // Validate that this tag type exists.
         TagTypeKey tagTypeKey = new TagTypeKey(TAG_TYPE);
@@ -63,7 +63,7 @@ public class TagTypeRestControllerTest extends AbstractRestTest
         TagType deletedTagType = tagTypeRestController.deleteTagType(TAG_TYPE);
 
         // Validate the returned object.
-        assertEquals(new TagType(new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME, 1), deletedTagType);
+        assertEquals(new TagType(new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER, TAG_TYPE_DESCRIPTION), deletedTagType);
 
         // Ensure that this tag type is no longer there.
         assertNull(tagTypeDao.getTagTypeByKey(tagTypeKey));
@@ -73,61 +73,60 @@ public class TagTypeRestControllerTest extends AbstractRestTest
     public void testGetTagType() throws Exception
     {
         // Create and persist a tag type entity.
-        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, 1);
+        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER, TAG_TYPE_DESCRIPTION);
 
         // Retrieve the tag type.
         TagType resultTagType = tagTypeRestController.getTagType(TAG_TYPE);
 
         // Validate the returned object.
-        assertEquals(new TagType(new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME, 1), resultTagType);
+        assertEquals(new TagType(new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER, TAG_TYPE_DESCRIPTION), resultTagType);
     }
 
     @Test
     public void testGetTagTypes() throws Exception
     {
         // Create and persist tag type entities.
-        tagTypeDaoTestHelper.createTagTypeEntity(tagTypeDaoTestHelper.getTestTagTypeKeys().get(0).getTagTypeCode(), TAG_TYPE_DISPLAY_NAME, 1);
-        tagTypeDaoTestHelper.createTagTypeEntity(tagTypeDaoTestHelper.getTestTagTypeKeys().get(1).getTagTypeCode(), TAG_TYPE_DISPLAY_NAME_2, 2);
+        tagTypeDaoTestHelper.createTagTypeEntity(tagTypeDaoTestHelper.getTestTagTypeKeys().get(0).getTagTypeCode(), TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER,
+            TAG_TYPE_DESCRIPTION);
+        tagTypeDaoTestHelper.createTagTypeEntity(tagTypeDaoTestHelper.getTestTagTypeKeys().get(1).getTagTypeCode(), TAG_TYPE_DISPLAY_NAME_2, TAG_TYPE_ORDER_2,
+            TAG_TYPE_DESCRIPTION_2);
 
         // Retrieve a list of tag type keys.
         TagTypeKeys resultTagTypeKeys = tagTypeRestController.getTagTypes();
 
         // Validate the returned object.
         assertNotNull(resultTagTypeKeys);
-        assertNotNull(resultTagTypeKeys.getTagTypeKeys());
-        assertTrue(resultTagTypeKeys.getTagTypeKeys().size() >= tagTypeDaoTestHelper.getTestTagTypeKeys().size());
-        for (TagTypeKey key : tagTypeDaoTestHelper.getTestTagTypeKeys())
-        {
-            assertTrue(resultTagTypeKeys.getTagTypeKeys().contains(key));
-        }
+        assertEquals(tagTypeDaoTestHelper.getTestTagTypeKeys(), resultTagTypeKeys.getTagTypeKeys());
     }
 
     @Test
     public void testSearchTagTypes()
     {
         // Create and persist tag type entities with tag type order values in reverse order.
-        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER_2);
-        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE_2, TAG_TYPE_DISPLAY_NAME_2, TAG_TYPE_ORDER);
+        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER_2, TAG_TYPE_DESCRIPTION);
+        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE_2, TAG_TYPE_DISPLAY_NAME_2, TAG_TYPE_ORDER, TAG_TYPE_DESCRIPTION_2);
 
         // Search tag types.
-        TagTypeSearchResponse tagTypeSearchResponse = tagTypeRestController
-            .searchTagTypes(new TagTypeSearchRequest(), Sets.newHashSet(TagTypeServiceImpl.DISPLAY_NAME_FIELD, TagTypeServiceImpl.TAG_TYPE_ORDER_FIELD));
+        TagTypeSearchResponse tagTypeSearchResponse = tagTypeRestController.searchTagTypes(new TagTypeSearchRequest(),
+            Sets.newHashSet(TagTypeServiceImpl.DISPLAY_NAME_FIELD, TagTypeServiceImpl.TAG_TYPE_ORDER_FIELD, TagTypeServiceImpl.DESCRIPTION_FIELD));
 
         // Validate the returned object.
-        assertEquals(new TagTypeSearchResponse(Arrays.asList(new TagType(new TagTypeKey(TAG_TYPE_2), TAG_TYPE_DISPLAY_NAME_2, TAG_TYPE_ORDER),
-            new TagType(new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER_2))), tagTypeSearchResponse);
+        assertEquals(new TagTypeSearchResponse(Arrays
+            .asList(new TagType(new TagTypeKey(TAG_TYPE_2), TAG_TYPE_DISPLAY_NAME_2, TAG_TYPE_ORDER, TAG_TYPE_DESCRIPTION_2),
+                new TagType(new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER_2, TAG_TYPE_DESCRIPTION))), tagTypeSearchResponse);
     }
 
     @Test
     public void testUpdateTagType() throws Exception
     {
         // Create and persist a tag type entity.
-        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, 1);
+        tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER, TAG_TYPE_DESCRIPTION);
 
         // Retrieve the tag type.
-        TagType resultTagType = tagTypeRestController.updateTagType(TAG_TYPE, new TagTypeUpdateRequest(TAG_TYPE_DISPLAY_NAME_2, 2));
+        TagType resultTagType =
+            tagTypeRestController.updateTagType(TAG_TYPE, new TagTypeUpdateRequest(TAG_TYPE_DISPLAY_NAME_2, TAG_TYPE_ORDER_2, TAG_TYPE_DESCRIPTION_2));
 
         // Validate the returned object.
-        assertEquals(new TagType(new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME_2, 2), resultTagType);
+        assertEquals(new TagType(new TagTypeKey(TAG_TYPE), TAG_TYPE_DISPLAY_NAME_2, TAG_TYPE_ORDER_2, TAG_TYPE_DESCRIPTION_2), resultTagType);
     }
 }

@@ -33,7 +33,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.finra.herd.model.api.xml.BusinessObjectDefinition;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionDescriptiveInformationUpdateRequest;
-import org.finra.herd.model.api.xml.BusinessObjectDefinitionIndexResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionIndexSearchRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionIndexSearchResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
@@ -208,19 +207,6 @@ public class BusinessObjectDefinitionRestController extends HerdBaseController
         @RequestBody BusinessObjectDefinitionIndexSearchRequest request)
     {
         return businessObjectDefinitionService.indexSearchBusinessObjectDefinitions(request, fields);
-    }
-
-    /**
-     * Index all business object definitions
-     *
-     * @return the business object definition index response
-     */
-    @RequestMapping(value = "/businessObjectDefinitions/index", method = RequestMethod.GET)
-    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DEFINITIONS_INDEX_GET)
-    public BusinessObjectDefinitionIndexResponse indexBusinessObjectDefinitions()
-    {
-        businessObjectDefinitionService.indexAllBusinessObjectDefinitions();
-        return new BusinessObjectDefinitionIndexResponse(getXMLGregorianCalendarValue(new Date()));
     }
 
     /**

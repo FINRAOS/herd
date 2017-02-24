@@ -994,6 +994,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
             businessObjectDefinitionEntity.getCreatedBy(), businessObjectDefinitionEntity.getUpdatedBy(),
             HerdDateUtils.getXMLGregorianCalendarValue(businessObjectDefinitionEntity.getUpdatedOn())), resultBusinessObjectDefinition);
     }
+
     @Test
     public void testBusinessObjectDefinitionNoHtmlInShortDescription()
     {
@@ -1009,11 +1010,13 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
 
         assertEquals(1, actualBusinessObjectDefinitions.size());
 
-        for(BusinessObjectDefinition actualBdef: actualBusinessObjectDefinitions) {
+        for (BusinessObjectDefinition actualBdef : actualBusinessObjectDefinitions)
+        {
             assertEquals("Test Description. Value should be <30> value should be <40>", actualBdef.getShortDescription());
             break;
         }
     }
+
     @Test
     public void testGetBusinessObjectDefinitionNoExists() throws Exception
     {
@@ -1334,7 +1337,7 @@ public class BusinessObjectDefinitionServiceTest extends AbstractServiceTest
             businessObjectDefinitionDaoTestHelper.createExpectedBusinessObjectDefinitionEntities();
 
         // Create and persist a tag type entity.
-        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER);
+        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER, TAG_TYPE_DESCRIPTION);
 
         // Create a root tag entity for the tag type.
         TagEntity rootTagEntity = tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME, TAG_DESCRIPTION);

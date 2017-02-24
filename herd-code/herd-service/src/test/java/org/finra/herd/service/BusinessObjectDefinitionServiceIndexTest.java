@@ -15,6 +15,7 @@
 */
 package org.finra.herd.service;
 
+import static org.finra.herd.model.dto.SearchIndexUpdateDto.MESSAGE_TYPE_BUSINESS_OBJECT_DEFINITION_UPDATE;
 import static org.finra.herd.model.dto.SearchIndexUpdateDto.SEARCH_INDEX_UPDATE_TYPE_CREATE;
 import static org.finra.herd.model.dto.SearchIndexUpdateDto.SEARCH_INDEX_UPDATE_TYPE_DELETE;
 import static org.finra.herd.model.dto.SearchIndexUpdateDto.SEARCH_INDEX_UPDATE_TYPE_UPDATE;
@@ -30,7 +31,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -110,150 +110,6 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
     }
 
     @Test
-    public void testIndexAllBusinessObjectDefinitions() throws Exception
-    {
-        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList = new ArrayList<>();
-        businessObjectDefinitionEntityList.add(businessObjectDefinitionDaoTestHelper
-            .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
-                businessObjectDefinitionServiceTestHelper.getNewAttributes()));
-        businessObjectDefinitionEntityList.add(businessObjectDefinitionDaoTestHelper
-            .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME_2, DATA_PROVIDER_NAME_2, BDEF_DESCRIPTION_2,
-                businessObjectDefinitionServiceTestHelper.getNewAttributes()));
-
-        // Mock the call to external methods
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class)).thenReturn("INDEX_NAME");
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
-        when(configurationDaoHelper.getClobProperty(ConfigurationValue.ELASTICSEARCH_BDEF_MAPPINGS_JSON.getKey())).thenReturn("MAPPING");
-        when(searchFunctions.getIndexExistsFunction()).thenReturn(indexName -> true);
-        when(searchFunctions.getDeleteIndexFunction()).thenReturn(indexName ->
-        {
-        });
-        when(searchFunctions.getCreateIndexFunction()).thenReturn((indexName, documentType, mapping) ->
-        {
-        });
-        when(businessObjectDefinitionDao.getAllBusinessObjectDefinitions()).thenReturn(businessObjectDefinitionEntityList);
-        when(searchFunctions.getIndexFunction()).thenReturn((indexName, documentType, id, json) ->
-        {
-        });
-        when(searchFunctions.getNumberOfTypesInIndexFunction()).thenReturn((indexName, documentType) -> 2L);
-
-        // Call the method under test
-        Future<Void> future = businessObjectDefinitionService.indexAllBusinessObjectDefinitions();
-
-        assertThat("Business object definition service index all business object definitions method returned null value.", future, not(nullValue()));
-        assertThat("Business object definition service index all business object definitions method return value is not instance of future.", future,
-            instanceOf(Future.class));
-
-        // Verify the calls to external methods
-        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
-        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
-        verify(configurationDaoHelper, times(1)).getClobProperty(ConfigurationValue.ELASTICSEARCH_BDEF_MAPPINGS_JSON.getKey());
-        verify(searchFunctions, times(1)).getIndexExistsFunction();
-        verify(searchFunctions, times(1)).getDeleteIndexFunction();
-        verify(searchFunctions, times(1)).getCreateIndexFunction();
-        verify(businessObjectDefinitionDao, times(1)).getAllBusinessObjectDefinitions();
-        verify(businessObjectDefinitionHelper, times(1))
-            .executeFunctionForBusinessObjectDefinitionEntities(eq("INDEX_NAME"), eq("DOCUMENT_TYPE"), eq(businessObjectDefinitionEntityList), any());
-        verify(searchFunctions, times(1)).getIndexFunction();
-        verify(searchFunctions, times(1)).getNumberOfTypesInIndexFunction();
-    }
-
-    @Test
-    public void testIndexAllBusinessObjectDefinitionsIndexDoesNotExist() throws Exception
-    {
-        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList = new ArrayList<>();
-        businessObjectDefinitionEntityList.add(businessObjectDefinitionDaoTestHelper
-            .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
-                businessObjectDefinitionServiceTestHelper.getNewAttributes()));
-        businessObjectDefinitionEntityList.add(businessObjectDefinitionDaoTestHelper
-            .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME_2, DATA_PROVIDER_NAME_2, BDEF_DESCRIPTION_2,
-                businessObjectDefinitionServiceTestHelper.getNewAttributes()));
-
-        // Mock the call to external methods
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class)).thenReturn("INDEX_NAME");
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
-        when(configurationDaoHelper.getClobProperty(ConfigurationValue.ELASTICSEARCH_BDEF_MAPPINGS_JSON.getKey())).thenReturn("MAPPING");
-        when(searchFunctions.getIndexExistsFunction()).thenReturn(indexName -> false);
-        when(searchFunctions.getCreateIndexFunction()).thenReturn((indexName, documentType, mapping) ->
-        {
-        });
-        when(businessObjectDefinitionDao.getAllBusinessObjectDefinitions()).thenReturn(businessObjectDefinitionEntityList);
-        when(searchFunctions.getIndexFunction()).thenReturn((indexName, documentType, id, json) ->
-        {
-        });
-        when(searchFunctions.getNumberOfTypesInIndexFunction()).thenReturn((indexName, documentType) -> 2L);
-
-        // Call the method under test
-        Future<Void> future = businessObjectDefinitionService.indexAllBusinessObjectDefinitions();
-
-        assertThat("Business object definition service index all business object definitions method returned null value.", future, not(nullValue()));
-        assertThat("Business object definition service index all business object definitions method return value is not instance of future.", future,
-            instanceOf(Future.class));
-
-        // Verify the calls to external methods
-        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
-        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
-        verify(configurationDaoHelper, times(1)).getClobProperty(ConfigurationValue.ELASTICSEARCH_BDEF_MAPPINGS_JSON.getKey());
-        verify(searchFunctions, times(1)).getIndexExistsFunction();
-        verify(searchFunctions, times(0)).getDeleteIndexFunction();
-        verify(searchFunctions, times(1)).getCreateIndexFunction();
-        verify(businessObjectDefinitionDao, times(1)).getAllBusinessObjectDefinitions();
-        verify(searchFunctions, times(1)).getIndexFunction();
-        verify(businessObjectDefinitionHelper, times(1))
-            .executeFunctionForBusinessObjectDefinitionEntities(eq("INDEX_NAME"), eq("DOCUMENT_TYPE"), eq(businessObjectDefinitionEntityList), any());
-        verify(searchFunctions, times(1)).getNumberOfTypesInIndexFunction();
-    }
-
-    @Test
-    public void testIndexAllBusinessObjectDefinitionsSizeInvalid() throws Exception
-    {
-        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList = new ArrayList<>();
-        businessObjectDefinitionEntityList.add(businessObjectDefinitionDaoTestHelper
-            .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
-                businessObjectDefinitionServiceTestHelper.getNewAttributes()));
-        businessObjectDefinitionEntityList.add(businessObjectDefinitionDaoTestHelper
-            .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME_2, DATA_PROVIDER_NAME_2, BDEF_DESCRIPTION_2,
-                businessObjectDefinitionServiceTestHelper.getNewAttributes()));
-
-        // Mock the call to external methods
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class)).thenReturn("INDEX_NAME");
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
-        when(configurationDaoHelper.getClobProperty(ConfigurationValue.ELASTICSEARCH_BDEF_MAPPINGS_JSON.getKey())).thenReturn("MAPPING");
-        when(searchFunctions.getIndexExistsFunction()).thenReturn(indexName -> true);
-        when(searchFunctions.getDeleteIndexFunction()).thenReturn(indexName ->
-        {
-        });
-        when(searchFunctions.getCreateIndexFunction()).thenReturn((indexName, documentType, mapping) ->
-        {
-        });
-        when(businessObjectDefinitionDao.getAllBusinessObjectDefinitions()).thenReturn(businessObjectDefinitionEntityList);
-        when(searchFunctions.getIndexFunction()).thenReturn((indexName, documentType, id, json) ->
-        {
-        });
-        when(searchFunctions.getNumberOfTypesInIndexFunction()).thenReturn((indexName, documentType) -> 1L);
-
-        // Call the method under test
-        Future<Void> future = businessObjectDefinitionService.indexAllBusinessObjectDefinitions();
-
-        assertThat("Business object definition service index all business object definitions method returned null value.", future, not(nullValue()));
-        assertThat("Business object definition service index all business object definitions method return value is not instance of future.", future,
-            instanceOf(Future.class));
-
-        // Verify the calls to external methods
-        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
-        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
-        verify(configurationDaoHelper, times(1)).getClobProperty(ConfigurationValue.ELASTICSEARCH_BDEF_MAPPINGS_JSON.getKey());
-        verify(searchFunctions, times(1)).getIndexExistsFunction();
-        verify(searchFunctions, times(1)).getDeleteIndexFunction();
-        verify(searchFunctions, times(1)).getCreateIndexFunction();
-        verify(businessObjectDefinitionDao, times(1)).getAllBusinessObjectDefinitions();
-        verify(searchFunctions, times(1)).getIndexFunction();
-        verify(searchFunctions, times(1)).getNumberOfTypesInIndexFunction();
-        verify(businessObjectDefinitionHelper, times(1))
-            .executeFunctionForBusinessObjectDefinitionEntities(eq("INDEX_NAME"), eq("DOCUMENT_TYPE"), eq(businessObjectDefinitionEntityList), any());
-    }
-
-    @Test
     public void testIndexValidateBusinessObjectDefinitions() throws Exception
     {
         List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList = new ArrayList<>();
@@ -272,14 +128,12 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         // Mock the call to external methods
         when(businessObjectDefinitionDao.getAllBusinessObjectDefinitions()).thenReturn(businessObjectDefinitionEntityList);
         when(jsonHelper.objectToJson(any())).thenReturn("JSON_STRING");
-        when(searchFunctions.getValidateFunction()).thenReturn((indexName, documentType, id, json) ->
-        {
+        when(searchFunctions.getValidateFunction()).thenReturn((indexName, documentType, id, json) -> {
         });
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class)).thenReturn("INDEX_NAME");
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
         when(searchFunctions.getIdsInIndexFunction()).thenReturn((indexName, documentType) -> businessObjectDefinitionEntityIdList);
-        when(searchFunctions.getDeleteDocumentByIdFunction()).thenReturn((indexName, documentType, id) ->
-        {
+        when(searchFunctions.getDeleteDocumentByIdFunction()).thenReturn((indexName, documentType, id) -> {
         });
 
         // Call the method under test
@@ -991,14 +845,6 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         // Create a new fields set that will be used when testing the index search business object definitions method
         Set<String> fields = Sets.newHashSet(FIELD_DATA_PROVIDER_NAME, FIELD_DISPLAY_NAME, FIELD_SHORT_DESCRIPTION);
 
-        List<BusinessObjectDefinitionIndexSearchResponseDto> businessObjectDefinitionIndexSearchResponseDtoList = new ArrayList<>();
-        BusinessObjectDefinitionIndexSearchResponseDto businessObjectDefinitionIndexSearchResponseDto1 =
-            new BusinessObjectDefinitionIndexSearchResponseDto(DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME, BDEF_NAME, NAMESPACE);
-        BusinessObjectDefinitionIndexSearchResponseDto businessObjectDefinitionIndexSearchResponseDto2 =
-            new BusinessObjectDefinitionIndexSearchResponseDto(DATA_PROVIDER_NAME_2, BDEF_DESCRIPTION_2, BDEF_DISPLAY_NAME_2, BDEF_NAME_2, NAMESPACE);
-        businessObjectDefinitionIndexSearchResponseDtoList.add(businessObjectDefinitionIndexSearchResponseDto1);
-        businessObjectDefinitionIndexSearchResponseDtoList.add(businessObjectDefinitionIndexSearchResponseDto2);
-
         // Mock the call to external methods
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class)).thenReturn("INDEX_NAME");
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
@@ -1110,25 +956,23 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         businessObjectDefinitionEntityList.forEach(businessObjectDefinitionEntity -> businessObjectDefinitionIds.add(businessObjectDefinitionEntity.getId()));
 
         // Create a document on the search index
-        SearchIndexUpdateDto searchIndexUpdateDto = new SearchIndexUpdateDto(businessObjectDefinitionIds, SEARCH_INDEX_UPDATE_TYPE_CREATE);
+        SearchIndexUpdateDto searchIndexUpdateDto =
+            new SearchIndexUpdateDto(MESSAGE_TYPE_BUSINESS_OBJECT_DEFINITION_UPDATE, businessObjectDefinitionIds, SEARCH_INDEX_UPDATE_TYPE_CREATE);
 
         // Mock the call to external methods
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class)).thenReturn("INDEX_NAME");
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
-        when(jsonHelper.unmarshallJsonToObject(SearchIndexUpdateDto.class, "JSON STRING")).thenReturn(searchIndexUpdateDto);
         when(businessObjectDefinitionDao.getAllBusinessObjectDefinitionsByIds(any())).thenReturn(businessObjectDefinitionEntityList);
         when(jsonHelper.objectToJson(any())).thenReturn("JSON_STRING");
-        when(searchFunctions.getCreateIndexDocumentsFunction()).thenReturn((indexName, documentType, map) ->
-        {
+        when(searchFunctions.getCreateIndexDocumentsFunction()).thenReturn((indexName, documentType, map) -> {
         });
 
         // Call the method under test
-        businessObjectDefinitionService.updateSearchIndexDocumentBusinessObjectDefinition("JSON STRING");
+        businessObjectDefinitionService.updateSearchIndexDocumentBusinessObjectDefinition(searchIndexUpdateDto);
 
         // Verify the calls to external methods
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
-        verify(jsonHelper, times(1)).unmarshallJsonToObject(SearchIndexUpdateDto.class, "JSON STRING");
         verify(businessObjectDefinitionDao, times(1)).getAllBusinessObjectDefinitionsByIds(any());
         verify(jsonHelper, times(2)).objectToJson(any());
         verify(searchFunctions, times(1)).getCreateIndexDocumentsFunction();
@@ -1149,25 +993,23 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         businessObjectDefinitionEntityList.forEach(businessObjectDefinitionEntity -> businessObjectDefinitionIds.add(businessObjectDefinitionEntity.getId()));
 
         // Create a document on the search index
-        SearchIndexUpdateDto searchIndexUpdateDto = new SearchIndexUpdateDto(businessObjectDefinitionIds, SEARCH_INDEX_UPDATE_TYPE_CREATE);
+        SearchIndexUpdateDto searchIndexUpdateDto =
+            new SearchIndexUpdateDto(MESSAGE_TYPE_BUSINESS_OBJECT_DEFINITION_UPDATE, businessObjectDefinitionIds, SEARCH_INDEX_UPDATE_TYPE_CREATE);
 
         // Mock the call to external methods
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class)).thenReturn("INDEX_NAME");
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
-        when(jsonHelper.unmarshallJsonToObject(SearchIndexUpdateDto.class, "JSON STRING")).thenReturn(searchIndexUpdateDto);
         when(businessObjectDefinitionDao.getAllBusinessObjectDefinitionsByIds(any())).thenReturn(businessObjectDefinitionEntityList);
         when(jsonHelper.objectToJson(any())).thenReturn("");
-        when(searchFunctions.getCreateIndexDocumentsFunction()).thenReturn((indexName, documentType, map) ->
-        {
+        when(searchFunctions.getCreateIndexDocumentsFunction()).thenReturn((indexName, documentType, map) -> {
         });
 
         // Call the method under test
-        businessObjectDefinitionService.updateSearchIndexDocumentBusinessObjectDefinition("JSON STRING");
+        businessObjectDefinitionService.updateSearchIndexDocumentBusinessObjectDefinition(searchIndexUpdateDto);
 
         // Verify the calls to external methods
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
-        verify(jsonHelper, times(1)).unmarshallJsonToObject(SearchIndexUpdateDto.class, "JSON STRING");
         verify(businessObjectDefinitionDao, times(1)).getAllBusinessObjectDefinitionsByIds(any());
         verify(jsonHelper, times(2)).objectToJson(any());
         verify(searchFunctions, times(1)).getCreateIndexDocumentsFunction();
@@ -1188,25 +1030,23 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         businessObjectDefinitionEntityList.forEach(businessObjectDefinitionEntity -> businessObjectDefinitionIds.add(businessObjectDefinitionEntity.getId()));
 
         // Update a document in the search index
-        SearchIndexUpdateDto searchIndexUpdateDto = new SearchIndexUpdateDto(businessObjectDefinitionIds, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
+        SearchIndexUpdateDto searchIndexUpdateDto =
+            new SearchIndexUpdateDto(MESSAGE_TYPE_BUSINESS_OBJECT_DEFINITION_UPDATE, businessObjectDefinitionIds, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
 
         // Mock the call to external methods
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class)).thenReturn("INDEX_NAME");
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
-        when(jsonHelper.unmarshallJsonToObject(SearchIndexUpdateDto.class, "JSON STRING")).thenReturn(searchIndexUpdateDto);
         when(businessObjectDefinitionDao.getAllBusinessObjectDefinitionsByIds(any())).thenReturn(businessObjectDefinitionEntityList);
         when(jsonHelper.objectToJson(any())).thenReturn("JSON_STRING");
-        when(searchFunctions.getUpdateIndexDocumentsFunction()).thenReturn((indexName, documentType, map) ->
-        {
+        when(searchFunctions.getUpdateIndexDocumentsFunction()).thenReturn((indexName, documentType, map) -> {
         });
 
         // Call the method under test
-        businessObjectDefinitionService.updateSearchIndexDocumentBusinessObjectDefinition("JSON STRING");
+        businessObjectDefinitionService.updateSearchIndexDocumentBusinessObjectDefinition(searchIndexUpdateDto);
 
         // Verify the calls to external methods
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
-        verify(jsonHelper, times(1)).unmarshallJsonToObject(SearchIndexUpdateDto.class, "JSON STRING");
         verify(searchFunctions, times(1)).getUpdateIndexDocumentsFunction();
         verify(jsonHelper, times(2)).objectToJson(any());
         verify(businessObjectDefinitionDao, times(1)).getAllBusinessObjectDefinitionsByIds(any());
@@ -1227,25 +1067,23 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         businessObjectDefinitionEntityList.forEach(businessObjectDefinitionEntity -> businessObjectDefinitionIds.add(businessObjectDefinitionEntity.getId()));
 
         // Update a document in the search index
-        SearchIndexUpdateDto searchIndexUpdateDto = new SearchIndexUpdateDto(businessObjectDefinitionIds, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
+        SearchIndexUpdateDto searchIndexUpdateDto =
+            new SearchIndexUpdateDto(MESSAGE_TYPE_BUSINESS_OBJECT_DEFINITION_UPDATE, businessObjectDefinitionIds, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
 
         // Mock the call to external methods
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class)).thenReturn("INDEX_NAME");
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
-        when(jsonHelper.unmarshallJsonToObject(SearchIndexUpdateDto.class, "JSON STRING")).thenReturn(searchIndexUpdateDto);
         when(businessObjectDefinitionDao.getAllBusinessObjectDefinitionsByIds(any())).thenReturn(businessObjectDefinitionEntityList);
         when(jsonHelper.objectToJson(any())).thenReturn("");
-        when(searchFunctions.getUpdateIndexDocumentsFunction()).thenReturn((indexName, documentType, map) ->
-        {
+        when(searchFunctions.getUpdateIndexDocumentsFunction()).thenReturn((indexName, documentType, map) -> {
         });
 
         // Call the method under test
-        businessObjectDefinitionService.updateSearchIndexDocumentBusinessObjectDefinition("JSON STRING");
+        businessObjectDefinitionService.updateSearchIndexDocumentBusinessObjectDefinition(searchIndexUpdateDto);
 
         // Verify the calls to external methods
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
-        verify(jsonHelper, times(1)).unmarshallJsonToObject(SearchIndexUpdateDto.class, "JSON STRING");
         verify(searchFunctions, times(1)).getUpdateIndexDocumentsFunction();
         verify(jsonHelper, times(2)).objectToJson(any());
         verify(businessObjectDefinitionDao, times(1)).getAllBusinessObjectDefinitionsByIds(any());
@@ -1266,23 +1104,21 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         businessObjectDefinitionEntityList.forEach(businessObjectDefinitionEntity -> businessObjectDefinitionIds.add(businessObjectDefinitionEntity.getId()));
 
         // Delete from the search index
-        SearchIndexUpdateDto searchIndexUpdateDto = new SearchIndexUpdateDto(businessObjectDefinitionIds, SEARCH_INDEX_UPDATE_TYPE_DELETE);
+        SearchIndexUpdateDto searchIndexUpdateDto =
+            new SearchIndexUpdateDto(MESSAGE_TYPE_BUSINESS_OBJECT_DEFINITION_UPDATE, businessObjectDefinitionIds, SEARCH_INDEX_UPDATE_TYPE_DELETE);
 
         // Mock the call to external methods
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class)).thenReturn("INDEX_NAME");
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
-        when(jsonHelper.unmarshallJsonToObject(SearchIndexUpdateDto.class, "JSON STRING")).thenReturn(searchIndexUpdateDto);
-        when(searchFunctions.getDeleteIndexDocumentsFunction()).thenReturn((indexName, documentType, map) ->
-        {
+        when(searchFunctions.getDeleteIndexDocumentsFunction()).thenReturn((indexName, documentType, map) -> {
         });
 
         // Call the method under test
-        businessObjectDefinitionService.updateSearchIndexDocumentBusinessObjectDefinition("JSON STRING");
+        businessObjectDefinitionService.updateSearchIndexDocumentBusinessObjectDefinition(searchIndexUpdateDto);
 
         // Verify the calls to external methods
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
-        verify(jsonHelper, times(1)).unmarshallJsonToObject(SearchIndexUpdateDto.class, "JSON STRING");
         verify(searchFunctions, times(1)).getDeleteIndexDocumentsFunction();
     }
 
@@ -1301,47 +1137,18 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         businessObjectDefinitionEntityList.forEach(businessObjectDefinitionEntity -> businessObjectDefinitionIds.add(businessObjectDefinitionEntity.getId()));
 
         // Delete from the search index
-        SearchIndexUpdateDto searchIndexUpdateDto = new SearchIndexUpdateDto(businessObjectDefinitionIds, "UNKNOWN");
+        SearchIndexUpdateDto searchIndexUpdateDto =
+            new SearchIndexUpdateDto(MESSAGE_TYPE_BUSINESS_OBJECT_DEFINITION_UPDATE, businessObjectDefinitionIds, "UNKNOWN");
 
         // Mock the call to external methods
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class)).thenReturn("INDEX_NAME");
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
-        when(jsonHelper.unmarshallJsonToObject(SearchIndexUpdateDto.class, "JSON STRING")).thenReturn(searchIndexUpdateDto);
 
         // Call the method under test
-        businessObjectDefinitionService.updateSearchIndexDocumentBusinessObjectDefinition("JSON STRING");
+        businessObjectDefinitionService.updateSearchIndexDocumentBusinessObjectDefinition(searchIndexUpdateDto);
 
         // Verify the calls to external methods
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
-        verify(jsonHelper, times(1)).unmarshallJsonToObject(SearchIndexUpdateDto.class, "JSON STRING");
-    }
-
-    @Test
-    public void testUpdateSearchIndexDocumentBusinessObjectDefinitionThrowsException() throws Exception
-    {
-        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityList = new ArrayList<>();
-        businessObjectDefinitionEntityList.add(businessObjectDefinitionDaoTestHelper
-            .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
-                businessObjectDefinitionServiceTestHelper.getNewAttributes()));
-        businessObjectDefinitionEntityList.add(businessObjectDefinitionDaoTestHelper
-            .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME_2, DATA_PROVIDER_NAME_2, BDEF_DESCRIPTION_2,
-                businessObjectDefinitionServiceTestHelper.getNewAttributes()));
-
-        List<Integer> businessObjectDefinitionIds = new ArrayList<>();
-        businessObjectDefinitionEntityList.forEach(businessObjectDefinitionEntity -> businessObjectDefinitionIds.add(businessObjectDefinitionEntity.getId()));
-
-        // Mock the call to external methods
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class)).thenReturn("INDEX_NAME");
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
-        when(jsonHelper.unmarshallJsonToObject(SearchIndexUpdateDto.class, "JSON STRING")).thenThrow(new IOException());
-
-        // Call the method under test
-        businessObjectDefinitionService.updateSearchIndexDocumentBusinessObjectDefinition("JSON STRING");
-
-        // Verify the calls to external methods
-        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
-        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
-        verify(jsonHelper, times(1)).unmarshallJsonToObject(SearchIndexUpdateDto.class, "JSON STRING");
     }
 }

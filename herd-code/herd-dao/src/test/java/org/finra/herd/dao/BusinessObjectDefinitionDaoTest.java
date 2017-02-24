@@ -134,8 +134,14 @@ public class BusinessObjectDefinitionDaoTest extends AbstractDaoTest
         List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities =
             businessObjectDefinitionDaoTestHelper.createExpectedBusinessObjectDefinitionEntities();
 
-        // Get the list of all business object definitions
+        // Get the list of all business object definitions without specifying offset and maximum number of results.
         assertEquals(businessObjectDefinitionEntities, businessObjectDefinitionDao.getAllBusinessObjectDefinitions());
+
+        // Get the list of all business object definitions when maximum number of results is set to 1.
+        assertEquals(businessObjectDefinitionEntities.subList(0, 1), businessObjectDefinitionDao.getAllBusinessObjectDefinitions(0, 1));
+
+        // Get the list of all business object definitions when offset is set to 1.
+        assertEquals(businessObjectDefinitionEntities.subList(1, 2), businessObjectDefinitionDao.getAllBusinessObjectDefinitions(1, 1));
     }
 
     @Test

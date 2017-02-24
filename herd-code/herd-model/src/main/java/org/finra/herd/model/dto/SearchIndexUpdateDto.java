@@ -17,12 +17,29 @@ package org.finra.herd.model.dto;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Data transfer object used to notify a message listener that a document in the elastic search index needs to be modified.
  */
-
 public class SearchIndexUpdateDto
 {
+    /**
+     * Logger for the SearchIndexUpdateDto
+     */
+    private static final Logger LOGGER = LoggerFactory.getLogger(SearchIndexUpdateDto.class);
+
+    /**
+     * String used to signal a create of a new index document.
+     */
+    public static final String MESSAGE_TYPE_BUSINESS_OBJECT_DEFINITION_UPDATE = "BDEF";
+
+    /**
+     * String used to signal a create of a new index document.
+     */
+    public static final String MESSAGE_TYPE_TAG_UPDATE = "TAG";
+
     /**
      * String used to signal a create of a new index document.
      */
@@ -39,14 +56,24 @@ public class SearchIndexUpdateDto
     public static final String SEARCH_INDEX_UPDATE_TYPE_DELETE = "DELETE";
 
     /**
-     * A list of business object definition ids that will be modified in the index.
+     * A list of business object definition ids that will be modified in the business object definition index.
      */
     private List<Integer> businessObjectDefinitionIds;
+
+    /**
+     * The type of modification that will be processed. BUSINESS_OBJECT_DEFINITION, TAG
+     */
+    private String messageType;
 
     /**
      * The type of modification that will be processed. INSERT, UPDATE, DELETE
      */
     private String modificationType;
+
+    /**
+     * A list of tag ids that will be modified in the tag index
+     */
+    private List<Integer> tagIds;
 
     /**
      * Default constructor required for JSON object mapping
@@ -56,9 +83,29 @@ public class SearchIndexUpdateDto
         // Empty constructor
     }
 
-    public SearchIndexUpdateDto(List<Integer> businessObjectDefinitionIds, String modificationType)
+    /**
+     * The constructor for the search index update data transfer object
+     * @param messageType the message type that this dto represents
+     * @param ids a list of ids to modify
+     * @param modificationType the type of modification
+     */
+    public SearchIndexUpdateDto(String messageType, List<Integer> ids, String modificationType)
     {
-        this.businessObjectDefinitionIds = businessObjectDefinitionIds;
+        this.messageType = messageType;
+
+        switch (messageType)
+        {
+            case MESSAGE_TYPE_BUSINESS_OBJECT_DEFINITION_UPDATE:
+                businessObjectDefinitionIds = ids;
+                break;
+            case MESSAGE_TYPE_TAG_UPDATE:
+                tagIds = ids;
+                break;
+            default:
+                LOGGER.error("Unknown message type.");
+                break;
+        }
+
         this.modificationType = modificationType;
     }
 
@@ -72,6 +119,16 @@ public class SearchIndexUpdateDto
         this.businessObjectDefinitionIds = businessObjectDefinitionIds;
     }
 
+    public String getMessageType()
+    {
+        return messageType;
+    }
+
+    public void setMessageType(String messageType)
+    {
+        this.messageType = messageType;
+    }
+
     public String getModificationType()
     {
         return modificationType;
@@ -81,6 +138,17 @@ public class SearchIndexUpdateDto
     {
         this.modificationType = modificationType;
     }
+
+    public List<Integer> getTagIds()
+    {
+        return tagIds;
+    }
+
+    public void setTagIds(List<Integer> tagIds)
+    {
+        this.tagIds = tagIds;
+    }
+
 
     @Override
     public boolean equals(Object object)
@@ -101,7 +169,15 @@ public class SearchIndexUpdateDto
         {
             return false;
         }
-        return modificationType != null ? modificationType.equals(that.modificationType) : that.modificationType == null;
+        if (messageType != null ? !messageType.equals(that.messageType) : that.messageType != null)
+        {
+            return false;
+        }
+        if (modificationType != null ? !modificationType.equals(that.modificationType) : that.modificationType != null)
+        {
+            return false;
+        }
+        return tagIds != null ? tagIds.equals(that.tagIds) : that.tagIds == null;
 
     }
 
@@ -109,7 +185,9 @@ public class SearchIndexUpdateDto
     public int hashCode()
     {
         int result = businessObjectDefinitionIds != null ? businessObjectDefinitionIds.hashCode() : 0;
+        result = 31 * result + (messageType != null ? messageType.hashCode() : 0);
         result = 31 * result + (modificationType != null ? modificationType.hashCode() : 0);
+        result = 31 * result + (tagIds != null ? tagIds.hashCode() : 0);
         return result;
     }
 
@@ -118,7 +196,9 @@ public class SearchIndexUpdateDto
     {
         return "SearchIndexUpdateDto{" +
             "businessObjectDefinitionIds=" + businessObjectDefinitionIds +
+            ", messageType='" + messageType + '\'' +
             ", modificationType='" + modificationType + '\'' +
+            ", tagIds=" + tagIds +
             '}';
     }
 }
