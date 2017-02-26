@@ -19,6 +19,7 @@ import java.sql.Timestamp;
 
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
+import javax.persistence.Version;
 
 /**
  * A base entity class that provides auditing properties.
@@ -32,6 +33,7 @@ public abstract class AuditableEntity
     @Column(name = "CREAT_USER_ID")
     private String createdBy;
 
+    @Version
     @Column(name = "UPDT_TS")
     private Timestamp updatedOn;
 

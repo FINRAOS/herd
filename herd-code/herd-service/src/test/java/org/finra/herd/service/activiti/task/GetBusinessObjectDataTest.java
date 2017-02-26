@@ -697,9 +697,6 @@ public class GetBusinessObjectDataTest extends HerdActivitiServiceTaskTest
         storageEntity.setStoragePlatform(storagePlatformEntity);
         herdDao.saveAndRefresh(storageEntity);
 
-        BusinessObjectDataStatusEntity businessObjectDataStatusEntity = new BusinessObjectDataStatusEntity();
-        businessObjectDataStatusEntity.setCode(BusinessObjectDataStatusEntity.VALID);
-
         BusinessObjectDataEntity businessObjectDataEntity = new BusinessObjectDataEntity();
         businessObjectDataEntity.setBusinessObjectFormat(businessObjectFormatEntity);
         businessObjectDataEntity.setLatestVersion(true);
@@ -708,7 +705,7 @@ public class GetBusinessObjectDataTest extends HerdActivitiServiceTaskTest
         businessObjectDataEntity.setPartitionValue3(partitionValues[2]);
         businessObjectDataEntity.setPartitionValue4(partitionValues[3]);
         businessObjectDataEntity.setPartitionValue5(partitionValues[4]);
-        businessObjectDataEntity.setStatus(businessObjectDataStatusEntity);
+        businessObjectDataEntity.setStatus(businessObjectDataStatusDao.getBusinessObjectDataStatusByCode(BusinessObjectDataStatusEntity.VALID));
         Collection<StorageUnitEntity> storageUnits = new ArrayList<>();
         StorageUnitEntity storageUnitEntity = new StorageUnitEntity();
         storageUnitEntity.setStorage(storageEntity);
