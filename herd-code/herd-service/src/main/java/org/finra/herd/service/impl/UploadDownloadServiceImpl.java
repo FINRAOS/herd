@@ -18,6 +18,8 @@ package org.finra.herd.service.impl;
 import java.util.Date;
 import java.util.UUID;
 
+import javax.persistence.OptimisticLockException;
+
 import com.amazonaws.auth.policy.Policy;
 import com.amazonaws.auth.policy.actions.S3Actions;
 import com.amazonaws.services.securitytoken.model.Credentials;
@@ -115,7 +117,7 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
 
     @Autowired
     private BusinessObjectDefinitionDaoHelper businessObjectDefinitionDaoHelper;
-    
+
     @Autowired
     private BusinessObjectDefinitionHelper businessObjectDefinitionHelper;
 
@@ -301,7 +303,7 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
     {
         return new AwsPolicyBuilder().withS3(s3BucketName, s3Key, S3Actions.PutObject).build();
     }
-    
+
     /**
      * Creates a restricted policy JSON string which only allows GetObject to the given bucket name and object key, and allows Decrypt for the given key ID.
      *
@@ -354,7 +356,24 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         CompleteUploadSingleParamsDto completeUploadSingleParamsDto = new CompleteUploadSingleParamsDto();
 
         // Prepare for the file move.
-        uploadDownloadHelperService.prepareForFileMove(objectKey, completeUploadSingleParamsDto);
+        try
+        {
+            uploadDownloadHelperService.prepareForFileMove(objectKey, completeUploadSingleParamsDto);
+        }
+        // We can get an optimistic lock exception when trying to update source and/or target business object data status from "UPLOADING" to "RE-ENCRYPTING".
+        // The optimistic lock exception is caused by duplicate SQS messages coming from S3 for the same uploaded file. If such exception is caught, we log
+        // a message and exit from the method. This effectively discards any duplicate SQS messages that did not get caught by a business object data status
+        // check that occurs inside the prepareForFileMove() helper method.
+        catch (OptimisticLockException e)
+        {
+            LOGGER.info("Ignoring S3 notification due to an optimistic lock exception caused by duplicate S3 event notifications. " +
+                "sourceBusinessObjectDataKey={} targetBusinessObjectDataKey={}",
+                jsonHelper.objectToJson(completeUploadSingleParamsDto.getSourceBusinessObjectDataKey()),
+                jsonHelper.objectToJson(completeUploadSingleParamsDto.getTargetBusinessObjectDataKey()));
+
+            // Exit from the method without executing any other steps required to complete the upload single message processing.
+            return null;
+        }
 
         // Update the result message.
         completeUploadSingleMessageResult.setSourceBusinessObjectDataKey(completeUploadSingleParamsDto.getSourceBusinessObjectDataKey());
@@ -726,8 +745,7 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
 
         String sessionID = UUID.randomUUID().toString();
         // Get the temporary credentials.
-        Credentials downloaderCredentials =
-            getDownloaderCredentialsNoKmsKey(storageEntity, sessionID, s3ObjectKey);
+        Credentials downloaderCredentials = getDownloaderCredentialsNoKmsKey(storageEntity, sessionID, s3ObjectKey);
 
         // Generate a pre-signed URL.
         Date expiration = downloaderCredentials.getExpiration();
@@ -814,14 +832,13 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
 
         return businessObjectDefinitionSampleDataFileEntity;
     }
-    
+
     /**
      * Validate upload business object definition sample file request
-     * 
-     * @param request
+     *
+     * @param request the sample data file upload initiation request
      */
-    private void validateUploadBusinessObjectDefinitionSampleDataFileInitiationRequest(
-        UploadBusinessObjectDefinitionSampleDataFileInitiationRequest request)
+    private void validateUploadBusinessObjectDefinitionSampleDataFileInitiationRequest(UploadBusinessObjectDefinitionSampleDataFileInitiationRequest request)
     {
         Assert.notNull(request, "An upload initiation request must be specified.");
         BusinessObjectDefinitionKey businessObjectDefinitionKey = request.getBusinessObjectDefinitionKey();
@@ -838,12 +855,11 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         BusinessObjectDefinitionKey businessObjectDefinitionKey = request.getBusinessObjectDefinitionKey();
         // Get the business object definition entity and ensure it exists.
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
-                businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
+            businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
         businessObjectDefinitionKey.setNamespace(businessObjectDefinitionEntity.getNamespace().getCode());
         businessObjectDefinitionKey.setBusinessObjectDefinitionName(businessObjectDefinitionEntity.getName());
 
-        UploadBusinessObjectDefinitionSampleDataFileInitiationResponse response =
-                new UploadBusinessObjectDefinitionSampleDataFileInitiationResponse();
+        UploadBusinessObjectDefinitionSampleDataFileInitiationResponse response = new UploadBusinessObjectDefinitionSampleDataFileInitiationResponse();
         StorageEntity storageEntity = storageDaoHelper.getStorageEntity(StorageEntity.SAMPLE_DATA_FILE_STORAGE);
 
         String s3BucketName = storageHelper.getStorageBucketName(storageEntity);
@@ -854,12 +870,12 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         s3KeyPrefix = StringUtils.appendIfMissing(s3KeyPrefix, "/");
         //need to add star for aws authorization
         String s3Path = s3KeyPrefix + "*";
-        
+
         Integer awsRoleDurationSeconds = getStorageUploadSessionDuration(storageEntity);
 
         Credentials assumedSessionCredentials = stsDao
-                .getTemporarySecurityCredentials(awsHelper.getAwsParamsDto(), sessionID, awsRoleArn, awsRoleDurationSeconds,
-                        createUploaderPolicyNoKmsKey(s3BucketName, s3Path));
+            .getTemporarySecurityCredentials(awsHelper.getAwsParamsDto(), sessionID, awsRoleArn, awsRoleDurationSeconds,
+                createUploaderPolicyNoKmsKey(s3BucketName, s3Path));
 
         response.setAwsAccessKey(assumedSessionCredentials.getAccessKeyId());
         response.setAwsSecretKey(assumedSessionCredentials.getSecretAccessKey());
@@ -872,5 +888,4 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         response.setS3KeyPrefix(s3KeyPrefix);
         return response;
     }
-
 }
