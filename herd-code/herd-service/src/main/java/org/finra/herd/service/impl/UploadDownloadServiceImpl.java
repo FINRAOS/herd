@@ -349,9 +349,6 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
      */
     protected CompleteUploadSingleMessageResult performCompleteUploadSingleMessageImpl(String objectKey)
     {
-        // Create an instance of the result message for complete upload single operation.
-        CompleteUploadSingleMessageResult completeUploadSingleMessageResult = new CompleteUploadSingleMessageResult();
-
         // Create an instance of complete upload single parameters DTO.
         CompleteUploadSingleParamsDto completeUploadSingleParamsDto = new CompleteUploadSingleParamsDto();
 
@@ -375,7 +372,8 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
             return null;
         }
 
-        // Update the result message.
+        // Create an instance of the result message for complete upload single operation.
+        CompleteUploadSingleMessageResult completeUploadSingleMessageResult = new CompleteUploadSingleMessageResult();
         completeUploadSingleMessageResult.setSourceBusinessObjectDataKey(completeUploadSingleParamsDto.getSourceBusinessObjectDataKey());
         completeUploadSingleMessageResult.setSourceOldBusinessObjectDataStatus(completeUploadSingleParamsDto.getSourceOldStatus());
         completeUploadSingleMessageResult.setSourceNewBusinessObjectDataStatus(completeUploadSingleParamsDto.getSourceNewStatus());
