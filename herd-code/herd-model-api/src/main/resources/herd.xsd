@@ -3053,6 +3053,11 @@
                <xs:documentation>A container for Attribute Value Filters</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="latestValidVersion" type="xs:boolean" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The business object is the latest valid version</xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 

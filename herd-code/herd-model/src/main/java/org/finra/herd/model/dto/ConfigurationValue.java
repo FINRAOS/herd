@@ -612,6 +612,11 @@ public enum ConfigurationValue
     BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULTS_PER_PAGE("business.object.data.search.max.results.per.page", 50),
 
     /**
+     * The valid business object data status code
+     */
+    BUSINESS_OBJECT_DATA_VALID_STATUS("business.object.data.valid.status", "VALID"),
+
+    /**
      * The maximum number of nested tags allowed
      */
     MAX_ALLOWED_TAG_NESTING("tag.max.nesting", 10),

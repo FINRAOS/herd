@@ -27,6 +27,7 @@ import javax.persistence.Tuple;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.From;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Predicate;
@@ -835,11 +836,19 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         //actively pull attributes when the attribute filters exist
         if (attibuteValueFilters != null && !attibuteValueFilters.isEmpty())
         {
-            predicate =
-                    createAttriubteValueFilters(businessDataSearchKey, businessObjectDataEntity, builder, predicate);      
+            predicate = createAttriubteValueFilters(businessDataSearchKey, businessObjectDataEntity, builder, predicate);
             businessObjectDataEntity.fetch("attributes");
         }
-    
+
+        if (businessDataSearchKey.isLatestValidVersion() == Boolean.TRUE)
+        {
+            String validStatus = configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_VALID_STATUS, String.class);
+            Subquery<Integer> subQuery =
+                getMaximumBusinessObjectDataVersionSubQuery(builder, criteria, businessObjectDataEntity, businessObjectFormatEntity, validStatus);
+            predicate = builder.and(predicate, builder.in(businessObjectDataEntity.get(BusinessObjectDataEntity_.version)).value(subQuery));
+        }
+
+
         criteria.select(businessObjectDataEntity).where(predicate);
         
         //order by
@@ -941,8 +950,6 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
      * @param businessObjectDataEntity business object data entity
      * @param builder query build
      * @param predicatePram predicate
-     * @param attributeNameParamSet attribute name parameter set
-     * @param attributeValueParamList attribute value parameter list
      * @return predicate with added attribute value filters
      */
     private Predicate createAttriubteValueFilters(BusinessObjectDataSearchKey businessDataSearchKey, Root<BusinessObjectDataEntity> businessObjectDataEntity,
@@ -980,8 +987,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
     /**
      * get query result list from entity list
      * @param entitityArray entity array from query
-     * @param attributeNameParamSet attribute name parameter set
-     * @param attributeValueParamList attribute value parameter list
+     * @Param attributeValueList attribute value list
      * @return business object data list
      */
     private List<BusinessObjectData> getQueryResultListFromEntityList(List<BusinessObjectDataEntity> entitityArray,
@@ -1003,6 +1009,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
             businessObjectData.setBusinessObjectFormatFileType(formatEntity.getFileType().getCode());
             businessObjectData.setBusinessObjectFormatVersion(formatEntity.getBusinessObjectFormatVersion());
             businessObjectData.setPartitionKey(formatEntity.getPartitionKey());
+            businessObjectData.setStatus(dataEntity.getStatus().getCode());
 
             List<String> subpartitions = new ArrayList<>();
             if (dataEntity.getPartitionValue2() != null)
@@ -1096,5 +1103,51 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         }
 
         return false;
+    }
+
+    /**
+     * get the Max business object data version sub query
+     * @param builder criteria builder
+     * @param criteria criteria query
+     * @param businessObjectDataEntity   business object data entity
+     * @param businessObjectFormatEntity  business object format entity
+     * @param businessObjectDataStatus    business object status
+     * @return max business object data version sub query
+     */
+    private Subquery<Integer> getMaximumBusinessObjectDataVersionSubQuery(CriteriaBuilder builder, CriteriaQuery<?> criteria,
+        From<?, BusinessObjectDataEntity> businessObjectDataEntity, From<?, BusinessObjectFormatEntity> businessObjectFormatEntity,
+        String businessObjectDataStatus)
+    {
+        // Business object data version is not specified, so get the latest one in the specified storage.
+        Subquery<Integer> subQuery = criteria.subquery(Integer.class);
+
+        // The criteria root is the business object data.
+        Root<BusinessObjectDataEntity> subBusinessObjectDataEntity = subQuery.from(BusinessObjectDataEntity.class);
+
+        // Join to the other tables we can filter on.
+        Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> subBusinessObjectFormatEntity =
+            subBusinessObjectDataEntity.join(BusinessObjectDataEntity_.businessObjectFormat);
+
+        // Add a standard restriction on business object format.
+        Predicate subQueryRestriction = builder.equal(subBusinessObjectFormatEntity, businessObjectFormatEntity);
+
+        // Create and add standard restrictions on primary and sub-partition values.
+        subQueryRestriction =
+            builder.and(subQueryRestriction, getQueryRestrictionOnPartitionValues(builder, subBusinessObjectDataEntity, businessObjectDataEntity));
+
+        // If specified, create and add a standard restriction on business object data status.
+        if (businessObjectDataStatus != null)
+        {
+            Join<BusinessObjectDataEntity, BusinessObjectDataStatusEntity> subBusinessObjectDataStatusEntity =
+                subBusinessObjectDataEntity.join(BusinessObjectDataEntity_.status);
+
+            subQueryRestriction = builder.and(subQueryRestriction, builder
+                .equal(builder.upper(subBusinessObjectDataStatusEntity.get(BusinessObjectDataStatusEntity_.code)), businessObjectDataStatus.toUpperCase()));
+        }
+
+
+        subQuery.select(builder.max(subBusinessObjectDataEntity.get(BusinessObjectDataEntity_.version))).where(subQueryRestriction);
+
+        return subQuery;
     }
 }
