@@ -1880,8 +1880,8 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
 
         List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(filters);
         assertEquals(2, result.size());
-        List<BusinessObjectData> expectedResult = new ArrayList<>(Arrays.asList(expectedBData2, expectedBData1));
-        assertEquals(result, expectedResult);
+        assertTrue(result.contains(expectedBData1));
+        assertTrue(result.contains(expectedBData2));
     }
 
     @Test
