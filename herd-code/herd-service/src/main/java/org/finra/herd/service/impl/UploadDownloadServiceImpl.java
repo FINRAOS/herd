@@ -355,6 +355,8 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
         // Prepare for the file move.
         try
         {
+            // TODO: To make our implementation Mockito friendly, we need to re-write the upload download
+            // TODO: helper methods to make them return the updated DTO back instead of being void methods.
             uploadDownloadHelperService.prepareForFileMove(objectKey, completeUploadSingleParamsDto);
         }
         // We can get an optimistic lock exception when trying to update source and/or target business object data status from "UPLOADING" to "RE-ENCRYPTING".
