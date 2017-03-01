@@ -1880,8 +1880,8 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
 
         List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(filters);
         assertEquals(2, result.size());
-        List<BusinessObjectData> expecteLResult = new ArrayList<>(Arrays.asList(expectedBData1, expectedBData2));
-        assertEquals(result, expecteLResult);
+        List<BusinessObjectData> expectedResult = new ArrayList<>(Arrays.asList(expectedBData2, expectedBData1));
+        assertEquals(result, expectedResult);
     }
 
     @Test
@@ -1959,8 +1959,8 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         filters.add(filter);
 
         List<BusinessObjectData> result = businessObjectDataDao.searchBusinessObjectData(filters);
-        List<BusinessObjectData> expecteLResult = new ArrayList<>(Arrays.asList(expectedBData));
+        List<BusinessObjectData> expectedResult = new ArrayList<>(Arrays.asList(expectedBData));
         assertEquals(1, result.size());
-        assertEquals(result, expecteLResult);
+        assertEquals(result, expectedResult);
     }
 }
