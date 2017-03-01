@@ -840,14 +840,13 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
             businessObjectDataEntity.fetch("attributes");
         }
 
-        if (businessDataSearchKey.isLatestValidVersion() == Boolean.TRUE)
+        if (businessDataSearchKey.isLatestValidVersion() != null && businessDataSearchKey.isLatestValidVersion())
         {
             String validStatus = configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_VALID_STATUS, String.class);
             Subquery<Integer> subQuery =
                 getMaximumBusinessObjectDataVersionSubQuery(builder, criteria, businessObjectDataEntity, businessObjectFormatEntity, validStatus);
             predicate = builder.and(predicate, builder.in(businessObjectDataEntity.get(BusinessObjectDataEntity_.version)).value(subQuery));
         }
-
 
         criteria.select(businessObjectDataEntity).where(predicate);
         
