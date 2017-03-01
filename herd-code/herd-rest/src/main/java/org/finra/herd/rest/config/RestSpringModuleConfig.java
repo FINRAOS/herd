@@ -21,6 +21,8 @@ import java.util.Map;
 
 import javax.xml.bind.Marshaller;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.eclipse.persistence.jaxb.MarshallerProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -30,6 +32,7 @@ import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.http.converter.xml.MappingJackson2XmlHttpMessageConverter;
 import org.springframework.http.converter.xml.MarshallingHttpMessageConverter;
 import org.springframework.oxm.jaxb.Jaxb2Marshaller;
@@ -112,12 +115,18 @@ public class RestSpringModuleConfig extends WebMvcConfigurationSupport
 
         // Remove the Jackson2Xml converter since we want to use JAXB instead when we encounter "application/xml". Otherwise, the XSD auto-generated
         // classes with JAXB annotations won't get used.
+        // Set jackson mapper to include only properties with non-null values.
         for (HttpMessageConverter httpMessageConverter : converters)
         {
             if (httpMessageConverter instanceof MappingJackson2XmlHttpMessageConverter)
             {
                 converters.remove(httpMessageConverter);
                 break;
+            }
+            else if (httpMessageConverter instanceof MappingJackson2HttpMessageConverter)
+            {
+                ObjectMapper mapper = ((MappingJackson2HttpMessageConverter) httpMessageConverter).getObjectMapper();
+                mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
             }
         }
     }
