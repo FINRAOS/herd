@@ -270,14 +270,12 @@ public class DaoSpringModuleConfig implements CachingConfigurer
         }
 
         // For each elastic search address in the elastic search address list
-//        for (String elasticSearchAddress : elasticSearchAddresses)
-//        {
-//            LOGGER.info("TransportClient add transport address elasticSearchAddress={}", elasticSearchAddress);
-//            // Add the address to the transport client
-//            transportClient.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(elasticSearchAddress), port));
-//        }
-
-        transportClient.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName("localhost"), port));
+        for (String elasticSearchAddress : elasticSearchAddresses)
+        {
+            LOGGER.info("TransportClient add transport address elasticSearchAddress={}", elasticSearchAddress);
+            // Add the address to the transport client
+            transportClient.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(elasticSearchAddress), port));
+        }
 
         return transportClient;
     }
