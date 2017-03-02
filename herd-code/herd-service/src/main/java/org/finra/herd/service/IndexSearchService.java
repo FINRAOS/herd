@@ -26,8 +26,8 @@ import org.finra.herd.model.api.xml.IndexSearchResponse;
 public interface IndexSearchService
 {
     /**
-     * The index indexSearch method will take as parameters an index indexSearch request that contains a indexSearch term string, and a set of field strings. It will perform
-     * an index indexSearch on the indexSearch term and return the fields specified in the index indexSearch response.
+     * The index indexSearch method will take as parameters an index indexSearch request that contains a indexSearch term string, and a set of field strings.
+     * It will perform an index indexSearch on the indexSearch term and return the fields specified in the index indexSearch response.
      *
      * @param request the index indexSearch request that contains a indexSearch term string
      * @param fields the set of fields that are to be returned in the index indexSearch response
