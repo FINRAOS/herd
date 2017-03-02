@@ -757,7 +757,12 @@ public enum ConfigurationValue
     /**
      * The Credstash aws region name.
      */
-    CREDSTASH_AWS_REGION_NAME("credstash.aws.region.name", "us-east-1");
+    CREDSTASH_AWS_REGION_NAME("credstash.aws.region.name", "us-east-1"),
+
+    /**
+     * The cut-off length of the short description
+     */
+    TAG_SHORT_DESCRIPTION_LENGTH("tag.short.description.max.length", 300);
 
     // Properties
     private String key;

@@ -256,6 +256,8 @@ public class SecurityFunctions
 
     public static final String FN_PARTITION_KEY_GROUPS_POST = "FN_PARTITION_KEY_GROUPS_POST";
 
+    public static final String FN_INDEX_SEARCH_POST = "FN_INDEX_SEARCH_POST";
+
     public static final String FN_SEARCH_INDEXES_ALL_GET = "FN_SEARCH_INDEXES_ALL_GET";
 
     public static final String FN_SEARCH_INDEXES_DELETE = "FN_SEARCH_INDEXES_DELETE";

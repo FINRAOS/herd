@@ -34,7 +34,6 @@ import com.google.common.collect.ImmutableSet;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.jsoup.Jsoup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,6 +45,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import org.finra.herd.core.HerdDateUtils;
+import org.finra.herd.core.HerdStringUtils;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.BusinessObjectDefinitionDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
@@ -309,7 +309,8 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         final String indexName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         final String documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
 
-        Predicate<BusinessObjectDefinitionEntity> validInIndexPredicate = businessObjectDefinitionEntity -> {
+        Predicate<BusinessObjectDefinitionEntity> validInIndexPredicate = businessObjectDefinitionEntity ->
+        {
             // Fetch Join with .size()
             businessObjectDefinitionEntity.getAttributes().size();
             businessObjectDefinitionEntity.getBusinessObjectDefinitionTags().size();
@@ -918,7 +919,10 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 
         if (fields.contains(SHORT_DESCRIPTION_FIELD))
         {
-            definition.setShortDescription(getShortDescription(businessObjectDefinitionEntity.getDescription()));
+            // Get the configured value for short description's length
+            Integer shortDescMaxLength = configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH, Integer.class);
+
+            definition.setShortDescription(HerdStringUtils.getShortDescription(businessObjectDefinitionEntity.getDescription(), shortDescMaxLength));
         }
 
         if (fields.contains(DISPLAY_NAME_FIELD))
@@ -927,24 +931,6 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         }
 
         return definition;
-    }
-
-    /**
-     * Truncates the description field to a configurable value thereby producing a 'short description'
-     *
-     * @param description the specified description
-     *
-     * @return truncated (short) description
-     */
-    private String getShortDescription(String description)
-    {
-        // Get the configured value for short description's length
-        Integer shortDescMaxLength = configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH, Integer.class);
-
-        // Parse out only html tags, truncate and return
-        // Do a partial HTML parse just in case there are some elements that don't have ending tags or the like
-        String toParse = description != null ? description : "";
-        return StringUtils.left(Jsoup.parseBodyFragment(toParse).body().text(), shortDescMaxLength);
     }
 
     @Override
@@ -1098,7 +1084,8 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     {
         Map<String, String> businessObjectDefinitionJSONMap = new HashMap<>();
 
-        businessObjectDefinitionEntities.forEach(businessObjectDefinitionEntity -> {
+        businessObjectDefinitionEntities.forEach(businessObjectDefinitionEntity ->
+        {
             // Fetch Join with .size()
             businessObjectDefinitionEntity.getAttributes().size();
             businessObjectDefinitionEntity.getBusinessObjectDefinitionTags().size();
@@ -1142,7 +1129,11 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 
         if (fields.contains(SHORT_DESCRIPTION_FIELD))
         {
-            definition.setShortDescription(getShortDescription(businessObjectDefinitionIndexSearchResponseDto.getDescription()));
+            // Get the configured value for short description's length
+            Integer shortDescMaxLength = configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH, Integer.class);
+
+            definition
+                .setShortDescription(HerdStringUtils.getShortDescription(businessObjectDefinitionIndexSearchResponseDto.getDescription(), shortDescMaxLength));
         }
 
         if (fields.contains(DISPLAY_NAME_FIELD))
