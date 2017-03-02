@@ -36,6 +36,7 @@ import javax.persistence.criteria.Subquery;
 import javax.persistence.metamodel.SingularAttribute;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.CollectionUtils;
 
@@ -840,9 +841,9 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
             businessObjectDataEntity.fetch("attributes");
         }
 
-        if (businessDataSearchKey.isLatestValidVersion() != null && businessDataSearchKey.isLatestValidVersion())
+        if (BooleanUtils.isTrue(businessDataSearchKey.isLatestValidVersion()))
         {
-            String validStatus = configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_VALID_STATUS, String.class);
+            String validStatus = BusinessObjectDataStatusEntity.VALID;
             Subquery<Integer> subQuery =
                 getMaximumBusinessObjectDataVersionSubQuery(builder, criteria, businessObjectDataEntity, businessObjectFormatEntity, validStatus);
             predicate = builder.and(predicate, builder.in(businessObjectDataEntity.get(BusinessObjectDataEntity_.version)).value(subQuery));
@@ -985,16 +986,16 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
     
     /**
      * get query result list from entity list
-     * @param entitityArray entity array from query
-     * @Param attributeValueList attribute value list
+     * @param entityArray entity array from query
+     * @param attributeValueList attribute value list
      * @return business object data list
      */
-    private List<BusinessObjectData> getQueryResultListFromEntityList(List<BusinessObjectDataEntity> entitityArray,
+    private List<BusinessObjectData> getQueryResultListFromEntityList(List<BusinessObjectDataEntity> entityArray,
         List<AttributeValueFilter> attributeValueList)
     {
         List<BusinessObjectData> businessObjectDataList = new ArrayList<>();
 
-       for (BusinessObjectDataEntity dataEntity : entitityArray)
+       for (BusinessObjectDataEntity dataEntity : entityArray)
         {
             BusinessObjectData businessObjectData = new BusinessObjectData();
             businessObjectData.setId(dataEntity.getId());
@@ -1035,9 +1036,9 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
             //add attribute name and values in the request to the response
             if (attributeValueList != null && !attributeValueList.isEmpty())
             {
-                Collection<BusinessObjectDataAttributeEntity> dataAttributeColection = dataEntity.getAttributes();
+                Collection<BusinessObjectDataAttributeEntity> dataAttributeCollection = dataEntity.getAttributes();
                 List<Attribute> attributeList = new ArrayList<>();
-                for (BusinessObjectDataAttributeEntity attributeEntity : dataAttributeColection)
+                for (BusinessObjectDataAttributeEntity attributeEntity : dataAttributeCollection)
                 {
                     Attribute attribute= new Attribute(attributeEntity.getName(), attributeEntity.getValue());
                     if (shouldIncludeAttributeInReponse(attributeEntity, attributeValueList) && !attributeList.contains(attribute))
@@ -1105,12 +1106,14 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
     }
 
     /**
-     * get the Max business object data version sub query
+     * Get the maximum business object data version sub query
+     *
      * @param builder criteria builder
      * @param criteria criteria query
-     * @param businessObjectDataEntity   business object data entity
-     * @param businessObjectFormatEntity  business object format entity
-     * @param businessObjectDataStatus    business object status
+     * @param businessObjectDataEntity business object data entity
+     * @param businessObjectFormatEntity business object format entity
+     * @param businessObjectDataStatus business object status
+     *
      * @return max business object data version sub query
      */
     private Subquery<Integer> getMaximumBusinessObjectDataVersionSubQuery(CriteriaBuilder builder, CriteriaQuery<?> criteria,
