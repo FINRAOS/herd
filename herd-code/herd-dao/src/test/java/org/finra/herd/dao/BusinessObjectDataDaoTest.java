@@ -1872,7 +1872,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         key.setBusinessObjectDefinitionName(BDEF_NAME);
         key.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE);
         key.setBusinessObjectFormatFileType(FORMAT_FILE_TYPE_CODE);
-        key.setFilterOnlatestValidVersion(true);
+        key.setFilterOnLatestValidVersion(true);
         businessObjectDataSearchKeys.add(key);
 
         BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
@@ -1906,7 +1906,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         key.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE);
         key.setBusinessObjectFormatFileType(FORMAT_FILE_TYPE_CODE);
         key.setBusinessObjectFormatVersion(FORMAT_VERSION);
-        key.setFilterOnlatestValidVersion(true);
+        key.setFilterOnLatestValidVersion(true);
         businessObjectDataSearchKeys.add(key);
 
         BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
@@ -1952,7 +1952,7 @@ public class BusinessObjectDataDaoTest extends AbstractDaoTest
         key.setBusinessObjectFormatUsage(FORMAT_USAGE_CODE);
         key.setBusinessObjectFormatFileType(FORMAT_FILE_TYPE_CODE);
         key.setBusinessObjectFormatVersion(FORMAT_VERSION);
-        key.setFilterOnlatestValidVersion(true);
+        key.setFilterOnLatestValidVersion(true);
         businessObjectDataSearchKeys.add(key);
 
         BusinessObjectDataSearchFilter filter = new BusinessObjectDataSearchFilter(businessObjectDataSearchKeys);
