@@ -841,7 +841,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
             businessObjectDataEntity.fetch("attributes");
         }
 
-        if (BooleanUtils.isTrue(businessDataSearchKey.isLatestValidVersion()))
+        if (BooleanUtils.isTrue(businessDataSearchKey.isFilterOnlatestValidVersion()))
         {
             String validStatus = BusinessObjectDataStatusEntity.VALID;
             Subquery<Integer> subQuery =
