@@ -73,6 +73,9 @@
       <jaxb:bindings node="//xs:complexType[@name='customDdlKeys']//xs:element[@name='customDdlKey']">
          <jaxb:property name="customDdlKeys"/>
       </jaxb:bindings>
+      <jaxb:bindings node="//xs:complexType[@name='businessObjectDataKeys']//xs:element[@name='businessObjectDataKey']">
+         <jaxb:property name="businessObjectDataKeys"/>
+      </jaxb:bindings>
       <jaxb:bindings node="//xs:complexType[@name='businessObjectDataAttributeKeys']//xs:element[@name='businessObjectDataAttributeKey']">
          <jaxb:property name="businessObjectDataAttributeKeys"/>
       </jaxb:bindings>

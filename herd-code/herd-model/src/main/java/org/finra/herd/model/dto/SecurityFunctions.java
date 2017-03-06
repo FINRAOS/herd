@@ -28,6 +28,8 @@ public class SecurityFunctions
 {
     public static final String FN_BUILD_INFO_GET = "FN_BUILD_INFO_GET";
 
+    public static final String FN_BUSINESS_OBJECT_DATA_ALL_GET = "FN_BUSINESS_OBJECT_DATA_ALL_GET";
+
     public static final String FN_BUSINESS_OBJECT_DATA_ATTRIBUTES_ALL_GET = "FN_BUSINESS_OBJECT_DATA_ATTRIBUTES_ALL_GET";
 
     public static final String FN_BUSINESS_OBJECT_DATA_ATTRIBUTES_DELETE = "FN_BUSINESS_OBJECT_DATA_ATTRIBUTES_DELETE";
@@ -210,6 +212,8 @@ public class SecurityFunctions
 
     public static final String FN_FILE_TYPES_ALL_GET = "FN_FILE_TYPES_ALL_GET";
 
+    public static final String FN_INDEX_SEARCH_POST = "FN_INDEX_SEARCH_POST";
+
     public static final String FN_JOBS_DELETE = "FN_JOBS_DELETE";
 
     public static final String FN_JOBS_GET = "FN_JOBS_GET";
@@ -255,8 +259,6 @@ public class SecurityFunctions
     public static final String FN_PARTITION_KEY_GROUPS_GET = "FN_PARTITION_KEY_GROUPS_GET";
 
     public static final String FN_PARTITION_KEY_GROUPS_POST = "FN_PARTITION_KEY_GROUPS_POST";
-
-    public static final String FN_INDEX_SEARCH_POST = "FN_INDEX_SEARCH_POST";
 
     public static final String FN_SEARCH_INDEXES_ALL_GET = "FN_SEARCH_INDEXES_ALL_GET";
 

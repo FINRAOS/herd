@@ -313,6 +313,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Integer MAX_RESULT = 10;
 
+    public static final Integer MAX_RESULTS_1 = 1;
+
     public static final String MESSAGE_TEXT = "UT_Message_Text" + RANDOM_SUFFIX;
 
     public static final String MESSAGE_TEXT_2 = "UT_Message_Text_2" + RANDOM_SUFFIX;
@@ -387,6 +389,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String NO_JOB_NAMESPACE = null;
 
     public static final Boolean NO_LATEST_VERSION_FLAG_SET = false;
+
+    public static final Integer NO_MAX_RESULTS = null;
 
     public static final String NO_NAMESPACE = null;
 

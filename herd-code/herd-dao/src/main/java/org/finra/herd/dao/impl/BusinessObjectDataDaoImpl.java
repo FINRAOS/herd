@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.persistence.Tuple;
+import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Expression;
@@ -35,8 +36,8 @@ import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
 import javax.persistence.metamodel.SingularAttribute;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.BooleanUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.CollectionUtils;
 
@@ -831,13 +832,13 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         }
 
         predicate = createPartitionValueFilters(businessDataSearchKey, businessObjectDataEntity, businessObjectFormatEntity, builder, predicate);
-        
-        List<AttributeValueFilter>  attributeValueFilters = businessDataSearchKey.getAttributeValueFilters();
-        
+
+        List<AttributeValueFilter> attributeValueFilters = businessDataSearchKey.getAttributeValueFilters();
+
         //actively pull attributes when the attribute filters exist
         if (attributeValueFilters != null && !attributeValueFilters.isEmpty())
         {
-            predicate = createAttriubteValueFilters(businessDataSearchKey, businessObjectDataEntity, builder, predicate);
+            predicate = createAttributeValueFilters(businessDataSearchKey, businessObjectDataEntity, builder, predicate);
             businessObjectDataEntity.fetch("attributes");
         }
 
@@ -850,7 +851,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         }
 
         criteria.select(businessObjectDataEntity).where(predicate);
-        
+
         //order by
         List<Order> orderList = new ArrayList<>();
         orderList.add(builder.asc(businessObjectDefinitionEntity.get(BusinessObjectDefinitionEntity_.namespace)));
@@ -869,14 +870,14 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
         List<BusinessObjectDataEntity> entitityArray =
             entityManager.createQuery(criteria).setMaxResults(businessObjectDataSearchMaxResultsPerPage).getResultList();
-        
+
         List<BusinessObjectData> businessObjectDataList = getQueryResultListFromEntityList(entitityArray, attributeValueFilters);
-        
+
         return businessObjectDataList;
     }
 
     /**
-     * Helper method to create partition value filters
+     * Creates a predicate for partition value filters.
      *
      * @param businessDataSearchKey businessDataSearchKey
      * @param businessObjectDataEntity businessObjectDataEntity
@@ -884,7 +885,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
      * @param builder builder
      * @param predicatePram predicate parameter
      *
-     * @return predicate value
+     * @return the predicate
      */
     private Predicate createPartitionValueFilters(BusinessObjectDataSearchKey businessDataSearchKey, Root<BusinessObjectDataEntity> businessObjectDataEntity,
         Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> businessObjectFormatEntity, CriteriaBuilder builder, Predicate predicatePram)
@@ -943,16 +944,18 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
         return predicate;
     }
-    
+
     /**
-     * Create attribute value filters
+     * Creates a predicate for attribute value filters.
+     *
      * @param businessDataSearchKey business object search key
      * @param businessObjectDataEntity business object data entity
      * @param builder query build
      * @param predicatePram predicate
-     * @return predicate with added attribute value filters
+     *
+     * @return the predicate with added attribute value filters
      */
-    private Predicate createAttriubteValueFilters(BusinessObjectDataSearchKey businessDataSearchKey, Root<BusinessObjectDataEntity> businessObjectDataEntity,
+    private Predicate createAttributeValueFilters(BusinessObjectDataSearchKey businessDataSearchKey, Root<BusinessObjectDataEntity> businessObjectDataEntity,
         CriteriaBuilder builder, Predicate predicatePram)
     {
         Predicate predicate = predicatePram;
@@ -960,42 +963,42 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         if (businessDataSearchKey.getAttributeValueFilters() != null && !businessDataSearchKey.getAttributeValueFilters().isEmpty())
         {
             for (AttributeValueFilter attributeValueFilter : businessDataSearchKey.getAttributeValueFilters())
-            {   
-                Join<BusinessObjectDataEntity, BusinessObjectDataAttributeEntity> dataAttributeEntity = businessObjectDataEntity.join(
-                        BusinessObjectDataEntity_.attributes);
+            {
+                Join<BusinessObjectDataEntity, BusinessObjectDataAttributeEntity> dataAttributeEntity =
+                    businessObjectDataEntity.join(BusinessObjectDataEntity_.attributes);
 
                 String attributeName = attributeValueFilter.getAttributeName();
                 String attributeValue = attributeValueFilter.getAttributeValue();
 
                 if (!StringUtils.isEmpty(attributeName))
                 {
-                    predicate =
-                            builder.and(predicate, builder.equal(builder.upper(dataAttributeEntity.get(BusinessObjectDataAttributeEntity_.name)), attributeName
-                                    .toUpperCase()));
+                    predicate = builder.and(predicate,
+                        builder.equal(builder.upper(dataAttributeEntity.get(BusinessObjectDataAttributeEntity_.name)), attributeName.toUpperCase()));
                 }
                 if (!StringUtils.isEmpty(attributeValue))
                 {
-                    predicate = builder
-                            .and(predicate, builder.like(dataAttributeEntity.get(BusinessObjectDataAttributeEntity_.value), "%" + attributeValue + "%"));
+                    predicate =
+                        builder.and(predicate, builder.like(dataAttributeEntity.get(BusinessObjectDataAttributeEntity_.value), "%" + attributeValue + "%"));
                 }
             }
         }
 
         return predicate;
     }
-    
+
     /**
-     * get query result list from entity list
+     * Gets a query result list from an entity list.
+     *
      * @param entityArray entity array from query
      * @param attributeValueList attribute value list
-     * @return business object data list
+     *
+     * @return the list of business object data
      */
-    private List<BusinessObjectData> getQueryResultListFromEntityList(List<BusinessObjectDataEntity> entityArray,
-        List<AttributeValueFilter> attributeValueList)
+    private List<BusinessObjectData> getQueryResultListFromEntityList(List<BusinessObjectDataEntity> entityArray, List<AttributeValueFilter> attributeValueList)
     {
         List<BusinessObjectData> businessObjectDataList = new ArrayList<>();
 
-       for (BusinessObjectDataEntity dataEntity : entityArray)
+        for (BusinessObjectDataEntity dataEntity : entityArray)
         {
             BusinessObjectData businessObjectData = new BusinessObjectData();
             businessObjectData.setId(dataEntity.getId());
@@ -1040,73 +1043,73 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
                 List<Attribute> attributeList = new ArrayList<>();
                 for (BusinessObjectDataAttributeEntity attributeEntity : dataAttributeCollection)
                 {
-                    Attribute attribute= new Attribute(attributeEntity.getName(), attributeEntity.getValue());
-                    if (shouldIncludeAttributeInReponse(attributeEntity, attributeValueList) && !attributeList.contains(attribute))
+                    Attribute attribute = new Attribute(attributeEntity.getName(), attributeEntity.getValue());
+                    if (shouldIncludeAttributeInResponse(attributeEntity, attributeValueList) && !attributeList.contains(attribute))
                     {
                         attributeList.add(attribute);
                     }
                 }
                 businessObjectData.setAttributes(attributeList);
-            }        
+            }
             businessObjectDataList.add(businessObjectData);
         }
-       
-       return businessObjectDataList;
+
+        return businessObjectDataList;
     }
-    
+
     /**
-     * check if the attribute should be returned based on the attribute value query list
-     *       if attribute name supplied, match attribute name case in sensitive
-     *       if attribute value supplied, match attribute value case sensitive with contain logic
-     *       if both attribute name and value supplied, match both
+     * Checks if the attribute should be returned based on the attribute value query list if attribute name supplied, match attribute name case in sensitive if
+     * attribute value supplied, match attribute value case sensitive with contain logic if both attribute name and value supplied, match both.
+     *
      * @param attributeEntity the database attribute entity
      * @param attributeQueryList the attribute query list
-     * @return true for returning in response; false for not.
+     *
+     * @return true for returning in response; false for not
      */
-    private boolean shouldIncludeAttributeInReponse(BusinessObjectDataAttributeEntity attributeEntity, List<AttributeValueFilter> attributeQueryList)
+    private boolean shouldIncludeAttributeInResponse(BusinessObjectDataAttributeEntity attributeEntity, List<AttributeValueFilter> attributeQueryList)
     {
         String attributeName = attributeEntity.getName();
         String attributeValue = attributeEntity.getValue();
-        
+
         for (AttributeValueFilter valueFiler : attributeQueryList)
         {
             String queryAttributeName = valueFiler.getAttributeName();
             String queryAttributeValue = valueFiler.getAttributeValue();
             Boolean matchAttributeName = false;
             Boolean matchAttributeValue = false;
-            
+
             if (attributeName != null && attributeName.equalsIgnoreCase(queryAttributeName))
             {
                 matchAttributeName = true;
             }
-            
-            if (attributeValue != null && queryAttributeValue!= null && attributeValue.contains(queryAttributeValue))
+
+            if (attributeValue != null && queryAttributeValue != null && attributeValue.contains(queryAttributeValue))
             {
                 matchAttributeValue = true;
             }
-                
+
             if (!StringUtils.isEmpty(queryAttributeName) && !StringUtils.isEmpty(queryAttributeValue))
             {
-                if (matchAttributeName &&  matchAttributeValue)
+                if (matchAttributeName && matchAttributeValue)
                 {
                     return true;
                 }
-            }       
+            }
             else if (!StringUtils.isEmpty(queryAttributeName) && matchAttributeName)
             {
-               return true;
+                return true;
             }
             else if (!StringUtils.isEmpty(queryAttributeValue) && matchAttributeValue)
             {
-               return true;
-            }   
+                return true;
+            }
         }
 
         return false;
     }
 
     /**
-     * Get the maximum business object data version sub query
+     * Creates a sub query for the maximum business object data version.
      *
      * @param builder criteria builder
      * @param criteria criteria query
@@ -1151,5 +1154,157 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         subQuery.select(builder.max(subBusinessObjectDataEntity.get(BusinessObjectDataEntity_.version))).where(subQueryRestriction);
 
         return subQuery;
+    }
+
+    @Override
+    public List<BusinessObjectDataKey> getBusinessObjectDataByBusinessObjectDefinition(BusinessObjectDefinitionEntity businessObjectDefinitionEntity,
+        Integer maxResults)
+    {
+        // Create the criteria builder and the criteria.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<BusinessObjectDataEntity> criteria = builder.createQuery(BusinessObjectDataEntity.class);
+
+        // The criteria root is the business object data.
+        Root<BusinessObjectDataEntity> businessObjectDataEntityRoot = criteria.from(BusinessObjectDataEntity.class);
+
+        // Join to other tables that we can order by on.
+        Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> businessObjectFormatEntityJoin =
+            businessObjectDataEntityRoot.join(BusinessObjectDataEntity_.businessObjectFormat);
+        Join<BusinessObjectFormatEntity, FileTypeEntity> fileTypeEntityJoin = businessObjectFormatEntityJoin.join(BusinessObjectFormatEntity_.fileType);
+
+        // Create the standard restrictions (i.e. the standard where clauses).
+        Predicate predicate =
+            businessObjectDataEntityRoot.get(BusinessObjectDataEntity_.businessObjectFormat).in(businessObjectDefinitionEntity.getBusinessObjectFormats());
+
+        // Build the order by clause. The sort order is consistent with the search business object data implementation.
+        List<Order> orderBy = new ArrayList<>();
+        orderBy.add(builder.asc(businessObjectFormatEntityJoin.get(BusinessObjectFormatEntity_.usage)));
+        orderBy.add(builder.asc(fileTypeEntityJoin.get(FileTypeEntity_.code)));
+        orderBy.add(builder.desc(businessObjectFormatEntityJoin.get(BusinessObjectFormatEntity_.businessObjectFormatVersion)));
+        for (SingularAttribute<BusinessObjectDataEntity, String> businessObjectDataPartition : BUSINESS_OBJECT_DATA_PARTITIONS)
+        {
+            orderBy.add(builder.desc(businessObjectDataEntityRoot.get(businessObjectDataPartition)));
+        }
+        orderBy.add(builder.desc(businessObjectDataEntityRoot.get(BusinessObjectDataEntity_.version)));
+
+        // Add the clauses for the query.
+        criteria.select(businessObjectDataEntityRoot).where(predicate).orderBy(orderBy);
+
+        // Create a query.
+        TypedQuery<BusinessObjectDataEntity> query = entityManager.createQuery(criteria);
+
+        // If specified, set the maximum number of results for query to return.
+        if (maxResults != null)
+        {
+            query.setMaxResults(maxResults);
+        }
+
+        // Run the query to get a list of entities back.
+        List<BusinessObjectDataEntity> businessObjectDataEntities = query.getResultList();
+
+        // Populate the "keys" objects from the returned entities.
+        List<BusinessObjectDataKey> businessObjectDataKeys = new ArrayList<>();
+        for (BusinessObjectDataEntity businessObjectDataEntity : businessObjectDataEntities)
+        {
+            BusinessObjectDataKey businessObjectDataKey = new BusinessObjectDataKey();
+            businessObjectDataKeys.add(businessObjectDataKey);
+            businessObjectDataKey.setNamespace(businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectDefinition().getNamespace().getCode());
+            businessObjectDataKey.setBusinessObjectDefinitionName(businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectDefinition().getName());
+            businessObjectDataKey.setBusinessObjectFormatUsage(businessObjectDataEntity.getBusinessObjectFormat().getUsage());
+            businessObjectDataKey.setBusinessObjectFormatFileType(businessObjectDataEntity.getBusinessObjectFormat().getFileType().getCode());
+            businessObjectDataKey.setBusinessObjectFormatVersion(businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectFormatVersion());
+            businessObjectDataKey.setPartitionValue(businessObjectDataEntity.getPartitionValue());
+            businessObjectDataKey.setSubPartitionValues(getSubPartitionValues(businessObjectDataEntity));
+            businessObjectDataKey.setBusinessObjectDataVersion(businessObjectDataEntity.getVersion());
+        }
+
+        return businessObjectDataKeys;
+    }
+
+    @Override
+    public List<BusinessObjectDataKey> getBusinessObjectDataByBusinessObjectFormat(BusinessObjectFormatEntity businessObjectFormatEntity, Integer maxResults)
+    {
+        // Create the criteria builder and the criteria.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<BusinessObjectDataEntity> criteria = builder.createQuery(BusinessObjectDataEntity.class);
+
+        // The criteria root is the business object data.
+        Root<BusinessObjectDataEntity> businessObjectDataEntityRoot = criteria.from(BusinessObjectDataEntity.class);
+
+        // Create the standard restrictions (i.e. the standard where clauses).
+        Predicate predicate = builder.equal(businessObjectDataEntityRoot.get(BusinessObjectDataEntity_.businessObjectFormat), businessObjectFormatEntity);
+
+        // Build the order by clause. The sort order is consistent with the search business object data implementation.
+        List<Order> orderBy = new ArrayList<>();
+        for (SingularAttribute<BusinessObjectDataEntity, String> businessObjectDataPartition : BUSINESS_OBJECT_DATA_PARTITIONS)
+        {
+            orderBy.add(builder.desc(businessObjectDataEntityRoot.get(businessObjectDataPartition)));
+        }
+        orderBy.add(builder.desc(businessObjectDataEntityRoot.get(BusinessObjectDataEntity_.version)));
+
+        // Add the clauses for the query.
+        criteria.select(businessObjectDataEntityRoot).where(predicate).orderBy(orderBy);
+
+        // Create a query.
+        TypedQuery<BusinessObjectDataEntity> query = entityManager.createQuery(criteria);
+
+        // If specified, set the maximum number of results for query to return.
+        if (maxResults != null)
+        {
+            query.setMaxResults(maxResults);
+        }
+
+        // Run the query to get a list of entities back.
+        List<BusinessObjectDataEntity> businessObjectDataEntities = query.getResultList();
+
+        // Populate the "keys" objects from the returned entities.
+        List<BusinessObjectDataKey> businessObjectDataKeys = new ArrayList<>();
+        for (BusinessObjectDataEntity businessObjectDataEntity : businessObjectDataEntities)
+        {
+            BusinessObjectDataKey businessObjectDataKey = new BusinessObjectDataKey();
+            businessObjectDataKeys.add(businessObjectDataKey);
+            businessObjectDataKey.setNamespace(businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectDefinition().getNamespace().getCode());
+            businessObjectDataKey.setBusinessObjectDefinitionName(businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectDefinition().getName());
+            businessObjectDataKey.setBusinessObjectFormatUsage(businessObjectDataEntity.getBusinessObjectFormat().getUsage());
+            businessObjectDataKey.setBusinessObjectFormatFileType(businessObjectDataEntity.getBusinessObjectFormat().getFileType().getCode());
+            businessObjectDataKey.setBusinessObjectFormatVersion(businessObjectDataEntity.getBusinessObjectFormat().getBusinessObjectFormatVersion());
+            businessObjectDataKey.setPartitionValue(businessObjectDataEntity.getPartitionValue());
+            businessObjectDataKey.setSubPartitionValues(getSubPartitionValues(businessObjectDataEntity));
+            businessObjectDataKey.setBusinessObjectDataVersion(businessObjectDataEntity.getVersion());
+        }
+
+        return businessObjectDataKeys;
+    }
+
+    /**
+     * Gets the sub-partition values for the specified business object data entity.
+     *
+     * @param businessObjectDataEntity the business object data entity
+     *
+     * @return the list of sub-partition values
+     */
+    private List<String> getSubPartitionValues(BusinessObjectDataEntity businessObjectDataEntity)
+    {
+        List<String> subPartitionValues = new ArrayList<>();
+
+        List<String> rawSubPartitionValues = new ArrayList<>();
+        rawSubPartitionValues.add(businessObjectDataEntity.getPartitionValue2());
+        rawSubPartitionValues.add(businessObjectDataEntity.getPartitionValue3());
+        rawSubPartitionValues.add(businessObjectDataEntity.getPartitionValue4());
+        rawSubPartitionValues.add(businessObjectDataEntity.getPartitionValue5());
+
+        for (String rawSubPartitionValue : rawSubPartitionValues)
+        {
+            if (rawSubPartitionValue != null)
+            {
+                subPartitionValues.add(rawSubPartitionValue);
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        return subPartitionValues;
     }
 }

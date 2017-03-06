@@ -2952,6 +2952,17 @@
       </xs:all>
    </xs:complexType>
 
+   <xs:element name="businessObjectDataKeys" type="businessObjectDataKeys"/>
+   <xs:complexType name="businessObjectDataKeys">
+      <xs:sequence>
+         <xs:element name="businessObjectDataKey" type="businessObjectDataKey" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>Values that uniquely identify a Business Object Data</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
    <xs:element name="businessObjectDataVersions" type="businessObjectDataVersions"/>
    <xs:complexType name="businessObjectDataVersions">
       <xs:sequence>
