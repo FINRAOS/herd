@@ -832,10 +832,10 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
         predicate = createPartitionValueFilters(businessDataSearchKey, businessObjectDataEntity, businessObjectFormatEntity, builder, predicate);
         
-        List<AttributeValueFilter>  attibuteValueFilters = businessDataSearchKey.getAttributeValueFilters();
+        List<AttributeValueFilter>  attributeValueFilters = businessDataSearchKey.getAttributeValueFilters();
         
         //actively pull attributes when the attribute filters exist
-        if (attibuteValueFilters != null && !attibuteValueFilters.isEmpty())
+        if (attributeValueFilters != null && !attributeValueFilters.isEmpty())
         {
             predicate = createAttriubteValueFilters(businessDataSearchKey, businessObjectDataEntity, builder, predicate);
             businessObjectDataEntity.fetch("attributes");
@@ -870,7 +870,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         List<BusinessObjectDataEntity> entitityArray =
             entityManager.createQuery(criteria).setMaxResults(businessObjectDataSearchMaxResultsPerPage).getResultList();
         
-        List<BusinessObjectData> businessObjectDataList = getQueryResultListFromEntityList(entitityArray, attibuteValueFilters);
+        List<BusinessObjectData> businessObjectDataList = getQueryResultListFromEntityList(entitityArray, attributeValueFilters);
         
         return businessObjectDataList;
     }
