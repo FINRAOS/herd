@@ -198,10 +198,11 @@ public class SearchIndexServiceImplTest extends AbstractServiceTest
         // Mock the external calls.
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn(SEARCH_INDEX_DOCUMENT_TYPE);
         when(configurationDaoHelper.getClobProperty(ConfigurationValue.ELASTICSEARCH_BDEF_MAPPINGS_JSON.getKey())).thenReturn(SEARCH_INDEX_MAPPING);
+        when(configurationDaoHelper.getClobProperty(ConfigurationValue.ELASTICSEARCH_BDEF_SETTINGS_JSON.getKey())).thenReturn(SEARCH_INDEX_SETTINGS);
         when(searchFunctions.getIndexExistsFunction()).thenReturn(indexName -> true);
         when(searchFunctions.getDeleteIndexFunction()).thenReturn(indexName -> {
         });
-        when(searchFunctions.getCreateIndexFunction()).thenReturn((indexName, documentType, mapping) -> {
+        when(searchFunctions.getCreateIndexFunction()).thenReturn((indexName, documentType, mapping, settings) -> {
         });
         when(searchIndexHelperService.indexAllBusinessObjectDefinitions(searchIndexKey, SEARCH_INDEX_DOCUMENT_TYPE)).thenReturn(mockedFuture);
 
@@ -211,6 +212,7 @@ public class SearchIndexServiceImplTest extends AbstractServiceTest
         // Verify the external calls.
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
         verify(configurationDaoHelper).getClobProperty(ConfigurationValue.ELASTICSEARCH_BDEF_MAPPINGS_JSON.getKey());
+        verify(configurationDaoHelper).getClobProperty(ConfigurationValue.ELASTICSEARCH_BDEF_SETTINGS_JSON.getKey());
         verify(searchFunctions).getIndexExistsFunction();
         verify(searchFunctions).getDeleteIndexFunction();
         verify(searchFunctions).getCreateIndexFunction();
