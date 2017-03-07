@@ -31,7 +31,6 @@ import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.From;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Order;
-import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
@@ -783,16 +782,26 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
      * @param criteria  criteria
      * @param businessObjectDataEntity root business object data entity
      * @param businessDataSearchKey  business object data search key
+     * @param orderList order list, used in non count query
      * @return search restrictions
      */
     private Predicate getPredict(CriteriaBuilder builder, CriteriaQuery<?> criteria, Root<BusinessObjectDataEntity> businessObjectDataEntity,
-        BusinessObjectDataSearchKey businessDataSearchKey)
+        BusinessObjectDataSearchKey businessDataSearchKey, List<Order> orderList)
     {
         // Join to the other tables we can filter on.
         Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> businessObjectFormatEntity =
             businessObjectDataEntity.join(BusinessObjectDataEntity_.businessObjectFormat);
         Join<BusinessObjectFormatEntity, BusinessObjectDefinitionEntity> businessObjectDefinitionEntity =
             businessObjectFormatEntity.join(BusinessObjectFormatEntity_.businessObjectDefinition);
+        
+        if (orderList != null)
+        {
+            orderList.add(builder.asc(businessObjectDefinitionEntity.get(BusinessObjectDefinitionEntity_.namespace)));
+            orderList.add(builder.asc(businessObjectDefinitionEntity.get(BusinessObjectDefinitionEntity_.name)));
+            orderList.add(builder.asc(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.usage)));
+            orderList.add(builder.asc(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.fileType)));
+            orderList.add(builder.desc(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.businessObjectFormatVersion)));
+        }
 
         // Create the standard restrictions based on the business object search key values (i.e. the standard where clauses).
 
@@ -844,6 +853,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
             predicate = builder.and(predicate, builder.in(businessObjectDataEntity.get(BusinessObjectDataEntity_.version)).value(subQuery));
         }
 
+
         return predicate;
     }
 
@@ -857,17 +867,15 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         BusinessObjectDataSearchKey businessDataSearchKey = filters.get(0).getBusinessObjectDataSearchKeys().get(0);
 
         // Create the criteria builder and the criteria.
-        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+
         CriteriaBuilder countBuilder = entityManager.getCriteriaBuilder();
-        CriteriaQuery<BusinessObjectDataEntity> criteria = builder.createQuery(BusinessObjectDataEntity.class);
         CriteriaQuery<Long> countCriteria = countBuilder.createQuery(Long.class);
-
-        // The criteria root is the business object data.
-        Root<BusinessObjectDataEntity> businessObjectDataEntity = criteria.from(BusinessObjectDataEntity.class);
-        Predicate  predicate = this.getPredict(builder, criteria,  businessObjectDataEntity, businessDataSearchKey);
-
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<BusinessObjectDataEntity> criteria = builder.createQuery(BusinessObjectDataEntity.class);
+        
         Root<BusinessObjectDataEntity> countBusinessObjectDataEntity = countCriteria.from(BusinessObjectDataEntity.class);
-        Predicate  countPredicate = getPredict(countBuilder, criteria, countBusinessObjectDataEntity, businessDataSearchKey);
+        List<Order> orderList = new ArrayList<>();
+        Predicate  countPredicate = getPredict(countBuilder, criteria, countBusinessObjectDataEntity, businessDataSearchKey, orderList);
 
         countCriteria.select(countBuilder.count(countBusinessObjectDataEntity)).where(countPredicate).distinct(true);
         Long count = entityManager.createQuery(countCriteria).getSingleResult();
@@ -879,20 +887,12 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
                     count));
         }
 
+        // The criteria root is the business object data.
+        Root<BusinessObjectDataEntity> businessObjectDataEntity = criteria.from(BusinessObjectDataEntity.class);
+        Predicate  predicate = this.getPredict(builder, criteria,  businessObjectDataEntity, businessDataSearchKey, null);
+
         criteria.select(businessObjectDataEntity).where(predicate).groupBy(businessObjectDataEntity);
-
-
-        Path<BusinessObjectFormatEntity> businessObjectFormatEntityPath = businessObjectDataEntity.get(BusinessObjectDataEntity_.businessObjectFormat);
-        Path<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityPath =
-            businessObjectFormatEntityPath.get(BusinessObjectFormatEntity_.businessObjectDefinition);
-
-        //order by
-        List<Order> orderList = new ArrayList<>();
-        orderList.add(builder.asc(businessObjectDefinitionEntityPath.get(BusinessObjectDefinitionEntity_.namespace)));
-        orderList.add(builder.asc(businessObjectDefinitionEntityPath.get(BusinessObjectDefinitionEntity_.name)));
-        orderList.add(builder.asc(businessObjectFormatEntityPath.get(BusinessObjectFormatEntity_.usage)));
-        orderList.add(builder.asc(businessObjectFormatEntityPath.get(BusinessObjectFormatEntity_.fileType)));
-        orderList.add(builder.desc(businessObjectFormatEntityPath.get(BusinessObjectFormatEntity_.businessObjectFormatVersion)));
+        //more order by
         orderList.add(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue)));
         orderList.add(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue2)));
         orderList.add(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue3)));
