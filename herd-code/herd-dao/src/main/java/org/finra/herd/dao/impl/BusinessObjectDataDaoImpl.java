@@ -31,6 +31,7 @@ import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.From;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Order;
+import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
@@ -776,22 +777,17 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         return entityManager.createQuery(query).getResultList();
     }
 
-    @Override
-    public List<BusinessObjectData> searchBusinessObjectData(List<BusinessObjectDataSearchFilter> filters)
+    /**
+     * Create search restrictions
+     * @param builder criteria builder
+     * @param criteria  criteria
+     * @param businessObjectDataEntity root business object data entity
+     * @param businessDataSearchKey  business object data search key
+     * @return search restrictions
+     */
+    private Predicate getPredict(CriteriaBuilder builder, CriteriaQuery<?> criteria, Root<BusinessObjectDataEntity> businessObjectDataEntity,
+        BusinessObjectDataSearchKey businessDataSearchKey)
     {
-        Integer businessObjectDataSearchMaxResultsPerPage =
-            configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULTS_PER_PAGE, Integer.class);
-
-        // assume only one filter and only on search key, the validation should be passed by now
-        BusinessObjectDataSearchKey businessDataSearchKey = filters.get(0).getBusinessObjectDataSearchKeys().get(0);
-
-        // Create the criteria builder and the criteria.
-        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-        CriteriaQuery<BusinessObjectDataEntity> criteria = builder.createQuery(BusinessObjectDataEntity.class);
-
-        // The criteria root is the business object data.
-        Root<BusinessObjectDataEntity> businessObjectDataEntity = criteria.from(BusinessObjectDataEntity.class);
-
         // Join to the other tables we can filter on.
         Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> businessObjectFormatEntity =
             businessObjectDataEntity.join(BusinessObjectDataEntity_.businessObjectFormat);
@@ -835,11 +831,9 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
         List<AttributeValueFilter> attributeValueFilters = businessDataSearchKey.getAttributeValueFilters();
 
-        //actively pull attributes when the attribute filters exist
         if (attributeValueFilters != null && !attributeValueFilters.isEmpty())
         {
             predicate = createAttributeValueFilters(businessDataSearchKey, businessObjectDataEntity, builder, predicate);
-            businessObjectDataEntity.fetch("attributes");
         }
 
         if (BooleanUtils.isTrue(businessDataSearchKey.isFilterOnLatestValidVersion()))
@@ -850,15 +844,55 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
             predicate = builder.and(predicate, builder.in(businessObjectDataEntity.get(BusinessObjectDataEntity_.version)).value(subQuery));
         }
 
-        criteria.select(businessObjectDataEntity).where(predicate);
+        return predicate;
+    }
+
+    @Override
+    public List<BusinessObjectData> searchBusinessObjectData(List<BusinessObjectDataSearchFilter> filters)
+    {
+        Integer businessObjectDataSearchMaxResults =
+            configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULTS, Integer.class);
+
+        // assume only one filter and only on search key, the validation should be passed by now
+        BusinessObjectDataSearchKey businessDataSearchKey = filters.get(0).getBusinessObjectDataSearchKeys().get(0);
+
+        // Create the criteria builder and the criteria.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaBuilder countBuilder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<BusinessObjectDataEntity> criteria = builder.createQuery(BusinessObjectDataEntity.class);
+        CriteriaQuery<Long> countCriteria = countBuilder.createQuery(Long.class);
+
+        // The criteria root is the business object data.
+        Root<BusinessObjectDataEntity> businessObjectDataEntity = criteria.from(BusinessObjectDataEntity.class);
+        Predicate  predicate = this.getPredict(builder, criteria,  businessObjectDataEntity, businessDataSearchKey);
+
+        Root<BusinessObjectDataEntity> countBusinessObjectDataEntity = countCriteria.from(BusinessObjectDataEntity.class);
+        Predicate  countPredicate = getPredict(countBuilder, criteria, countBusinessObjectDataEntity, businessDataSearchKey);
+
+        countCriteria.select(countBuilder.count(countBusinessObjectDataEntity)).where(countPredicate).distinct(true);
+        Long count = entityManager.createQuery(countCriteria).getSingleResult();
+
+        if (count > businessObjectDataSearchMaxResults)
+        {
+            throw new IllegalArgumentException(String
+                .format("Result limit of %d exceeded. Total result size %d. Modify filters to further limit results.", businessObjectDataSearchMaxResults,
+                    count));
+        }
+
+        criteria.select(businessObjectDataEntity).where(predicate).groupBy(businessObjectDataEntity);
+
+
+        Path<BusinessObjectFormatEntity> businessObjectFormatEntityPath = businessObjectDataEntity.get(BusinessObjectDataEntity_.businessObjectFormat);
+        Path<BusinessObjectDefinitionEntity> businessObjectDefinitionEntityPath =
+            businessObjectFormatEntityPath.get(BusinessObjectFormatEntity_.businessObjectDefinition);
 
         //order by
         List<Order> orderList = new ArrayList<>();
-        orderList.add(builder.asc(businessObjectDefinitionEntity.get(BusinessObjectDefinitionEntity_.namespace)));
-        orderList.add(builder.asc(businessObjectDefinitionEntity.get(BusinessObjectDefinitionEntity_.name)));
-        orderList.add(builder.asc(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.usage)));
-        orderList.add(builder.asc(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.fileType)));
-        orderList.add(builder.desc(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.businessObjectFormatVersion)));
+        orderList.add(builder.asc(businessObjectDefinitionEntityPath.get(BusinessObjectDefinitionEntity_.namespace)));
+        orderList.add(builder.asc(businessObjectDefinitionEntityPath.get(BusinessObjectDefinitionEntity_.name)));
+        orderList.add(builder.asc(businessObjectFormatEntityPath.get(BusinessObjectFormatEntity_.usage)));
+        orderList.add(builder.asc(businessObjectFormatEntityPath.get(BusinessObjectFormatEntity_.fileType)));
+        orderList.add(builder.desc(businessObjectFormatEntityPath.get(BusinessObjectFormatEntity_.businessObjectFormatVersion)));
         orderList.add(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue)));
         orderList.add(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue2)));
         orderList.add(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue3)));
@@ -868,10 +902,10 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
         criteria.orderBy(orderList);
 
-        List<BusinessObjectDataEntity> entitityArray =
-            entityManager.createQuery(criteria).setMaxResults(businessObjectDataSearchMaxResultsPerPage).getResultList();
+        List<BusinessObjectDataEntity> entityArray =
+            entityManager.createQuery(criteria).getResultList();
 
-        List<BusinessObjectData> businessObjectDataList = getQueryResultListFromEntityList(entitityArray, attributeValueFilters);
+        List<BusinessObjectData> businessObjectDataList = getQueryResultListFromEntityList(entityArray, businessDataSearchKey.getAttributeValueFilters());
 
         return businessObjectDataList;
     }
@@ -1123,7 +1157,6 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         From<?, BusinessObjectDataEntity> businessObjectDataEntity, From<?, BusinessObjectFormatEntity> businessObjectFormatEntity,
         String businessObjectDataStatus)
     {
-        // Business object data version is not specified, so get the latest one in the specified storage.
         Subquery<Integer> subQuery = criteria.subquery(Integer.class);
 
         // The criteria root is the business object data.
