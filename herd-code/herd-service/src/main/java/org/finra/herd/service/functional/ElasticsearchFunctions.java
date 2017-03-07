@@ -334,9 +334,10 @@ public class ElasticsearchFunctions implements SearchFunctions
     /**
      * The create index function will take as arguments the index name, document type, and mapping and will create a new index.
      */
-    private final TriConsumer<String, String, String> createIndexFunction = (indexName, documentType, mapping) -> {
+    private final QuadConsumer<String, String, String, String> createIndexFunction = (indexName, documentType, mapping, settings) -> {
         LOGGER.info("Creating Elasticsearch index, indexName={}, documentType={}.", indexName, documentType);
         final CreateIndexRequestBuilder createIndexRequestBuilder = transportClient.admin().indices().prepareCreate(indexName);
+        createIndexRequestBuilder.setSettings(settings);
         createIndexRequestBuilder.addMapping(documentType, mapping);
         createIndexRequestBuilder.execute().actionGet();
     };
@@ -753,7 +754,7 @@ public class ElasticsearchFunctions implements SearchFunctions
     }
 
     @Override
-    public TriConsumer<String, String, String> getCreateIndexFunction()
+    public QuadConsumer<String, String, String, String> getCreateIndexFunction()
     {
         return createIndexFunction;
     }

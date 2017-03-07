@@ -683,14 +683,26 @@ public enum ConfigurationValue
     ELASTICSEARCH_BDEF_DOCUMENT_TYPE("elasticsearch.bdef.document.type", "doc"),
 
     /**
-     * The elasticsearch mappings JSON
+     * The elasticsearch business object definition mappings JSON
      */
     ELASTICSEARCH_BDEF_MAPPINGS_JSON("elasticsearch.bdef.mappings.json", "{\"properties\": { \"id\": { \"type\": \"long\" } } }"),
+
+    /**
+     * The elasticsearch business object definition settings JSON
+     */
+    ELASTICSEARCH_BDEF_SETTINGS_JSON("elasticsearch.bdef.settings.json",
+        "{\"analysis\":{\"filter\":{\"field_ngram_filter\":{\"type\":\"edgeNGram\",\"min_gram\":1,\"max_gram\":16,\"side\":\"front\"}}}}"),
 
     /**
      * The elasticsearch tag mappings JSON
      */
     ELASTICSEARCH_TAG_MAPPINGS_JSON("elasticsearch.tag.mappings.json", "{\"properties\": { \"id\": { \"type\": \"long\" } } }"),
+
+    /**
+     * The elasticsearch tag settings JSON
+     */
+    ELASTICSEARCH_TAG_SETTINGS_JSON("elasticsearch.tag.settings.json",
+        "{\"analysis\":{\"filter\":{\"field_ngram_filter\":{\"type\":\"edgeNGram\",\"min_gram\":1,\"max_gram\":16,\"side\":\"front\"}}}}"),
 
     /**
      * The elasticsearch settings JSON

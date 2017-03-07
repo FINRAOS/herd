@@ -704,7 +704,7 @@ public class BusinessObjectDataRestController extends HerdBaseController
     @RequestMapping(
         value = "/businessObjectData/namespaces/{namespace}" + "/businessObjectDefinitionNames/{businessObjectDefinitionName}",
         method = RequestMethod.GET)
-    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_ALL_GET)
+    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_BY_BUSINESS_OBJECT_DEFINITION_GET)
     public BusinessObjectDataKeys getAllBusinessObjectDataByBusinessObjectDefinition(@PathVariable("namespace") String namespace,
         @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName)
     {
@@ -730,7 +730,7 @@ public class BusinessObjectDataRestController extends HerdBaseController
             "/businessObjectDefinitionNames/{businessObjectDefinitionName}/businessObjectFormatUsages/{businessObjectFormatUsage}" +
             "/businessObjectFormatFileTypes/{businessObjectFormatFileType}/businessObjectFormatVersions/{businessObjectFormatVersion}",
         method = RequestMethod.GET)
-    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_ALL_GET)
+    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_BY_BUSINESS_OBJECT_FORMAT_GET)
     public BusinessObjectDataKeys getAllBusinessObjectDataByBusinessObjectFormat(@PathVariable("namespace") String namespace,
         @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
         @PathVariable("businessObjectFormatUsage") String businessObjectFormatUsage,

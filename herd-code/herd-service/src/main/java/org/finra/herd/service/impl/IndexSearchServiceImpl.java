@@ -73,6 +73,9 @@ public class IndexSearchServiceImpl implements IndexSearchService, SearchableSer
      */
     private void validateIndexSearchRequestSearchTerm(final String indexSearchTerm)
     {
+        // A search term must be provided
+        Assert.notNull(indexSearchTerm, "A search term must be specified.");
+
         // The following characters will be react like spaces during the search: '-' and '_'
         // Confirm that the search term is long enough
         Assert.isTrue(indexSearchTerm.replace('-', ' ').replace('_', ' ').trim().length() >= SEARCH_TERM_MINIMUM_ALLOWABLE_LENGTH,

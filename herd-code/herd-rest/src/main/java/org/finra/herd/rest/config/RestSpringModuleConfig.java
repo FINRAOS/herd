@@ -21,8 +21,6 @@ import java.util.Map;
 
 import javax.xml.bind.Marshaller;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.eclipse.persistence.jaxb.MarshallerProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -32,7 +30,6 @@ import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.http.converter.HttpMessageConverter;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.http.converter.xml.MappingJackson2XmlHttpMessageConverter;
 import org.springframework.http.converter.xml.MarshallingHttpMessageConverter;
 import org.springframework.oxm.jaxb.Jaxb2Marshaller;
@@ -122,11 +119,6 @@ public class RestSpringModuleConfig extends WebMvcConfigurationSupport
             {
                 converters.remove(httpMessageConverter);
                 break;
-            }
-            else if (httpMessageConverter instanceof MappingJackson2HttpMessageConverter)
-            {
-                ObjectMapper mapper = ((MappingJackson2HttpMessageConverter) httpMessageConverter).getObjectMapper();
-                mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
             }
         }
     }
