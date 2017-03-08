@@ -19,9 +19,11 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
@@ -897,12 +899,10 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         Root<BusinessObjectDataEntity> businessObjectDataEntity = criteria.from(BusinessObjectDataEntity.class);
         Predicate predicate = getPredict(builder, criteria, businessObjectDataEntity, businessDataSearchKey, false);
 
-        criteria.select(businessObjectDataEntity).where(predicate).groupBy(businessObjectDataEntity);
+        criteria.select(businessObjectDataEntity).where(predicate);
 
         List<BusinessObjectDataEntity> entityArray = entityManager.createQuery(criteria).getResultList();
-
         List<BusinessObjectData> businessObjectDataList = getQueryResultListFromEntityList(entityArray, businessDataSearchKey.getAttributeValueFilters());
-
         return businessObjectDataList;
     }
 
@@ -1027,10 +1027,16 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
     private List<BusinessObjectData> getQueryResultListFromEntityList(List<BusinessObjectDataEntity> entityArray, List<AttributeValueFilter> attributeValueList)
     {
         List<BusinessObjectData> businessObjectDataList = new ArrayList<>();
-
+        Set<Integer> businessObjectIdSet = new HashSet<>();
         for (BusinessObjectDataEntity dataEntity : entityArray)
         {
             BusinessObjectData businessObjectData = new BusinessObjectData();
+            //need to skip the same data entity
+            if (businessObjectIdSet.contains(dataEntity.getId()))
+            {
+                continue;
+            }
+            businessObjectIdSet.add(dataEntity.getId());
             businessObjectData.setId(dataEntity.getId());
             businessObjectData.setPartitionValue(dataEntity.getPartitionValue());
             businessObjectData.setVersion(dataEntity.getVersion());
