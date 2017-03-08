@@ -423,6 +423,10 @@ public class IndexSearchDaoImpl implements IndexSearchDao
     @Override
     public IndexSearchResponse indexSearch(final IndexSearchRequest request, final Set<String> fields)
     {
+        final Integer tagShortDescMaxLength = configurationHelper.getProperty(ConfigurationValue.TAG_SHORT_DESCRIPTION_LENGTH, Integer.class);
+        final Integer businessObjectDefinitionShortDescMaxLength =
+            configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH, Integer.class);
+
         // Build two multi match queries, one with phrase prefix, and one with best fields, but boost the phrase prefix
         final MultiMatchQueryBuilder phrasePrefixMultiMatchQueryBuilder =
             buildMultiMatchQuery(request.getSearchTerm(), PHRASE_PREFIX, PHRASE_PREFIX_QUERY_BOOST, STEMMED_FIELD_NAME_APPENDER);
@@ -479,8 +483,8 @@ public class IndexSearchDaoImpl implements IndexSearchDao
             {
                 if (fields.contains(SHORT_DESCRIPTION_FIELD))
                 {
-                    final Integer shortDescMaxLength = configurationHelper.getProperty(ConfigurationValue.TAG_SHORT_DESCRIPTION_LENGTH, Integer.class);
-                    indexSearchResult.setShortDescription(HerdStringUtils.getShortDescription((String) sourceMap.get(DESCRIPTION_SOURCE), shortDescMaxLength));
+                    indexSearchResult
+                        .setShortDescription(HerdStringUtils.getShortDescription((String) sourceMap.get(DESCRIPTION_SOURCE), tagShortDescMaxLength));
                 }
 
                 final TagKey tagKey = new TagKey();
@@ -493,9 +497,8 @@ public class IndexSearchDaoImpl implements IndexSearchDao
             {
                 if (fields.contains(SHORT_DESCRIPTION_FIELD))
                 {
-                    final Integer shortDescMaxLength =
-                        configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH, Integer.class);
-                    indexSearchResult.setShortDescription(HerdStringUtils.getShortDescription((String) sourceMap.get(DESCRIPTION_SOURCE), shortDescMaxLength));
+                    indexSearchResult.setShortDescription(
+                        HerdStringUtils.getShortDescription((String) sourceMap.get(DESCRIPTION_SOURCE), businessObjectDefinitionShortDescMaxLength));
                 }
 
                 final BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey();
