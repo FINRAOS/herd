@@ -21,6 +21,7 @@ import java.io.InputStream;
 import java.net.InetAddress;
 import java.security.KeyStore;
 import java.security.Provider;
+import java.security.Security;
 import java.security.cert.Certificate;
 import java.util.Enumeration;
 import java.util.List;
@@ -194,6 +195,11 @@ public class DaoSpringModuleConfig implements CachingConfigurer
     @Bean
     public TransportClient transportClient() throws Exception
     {
+        LOGGER.info("Updating the network address cash ttl value.");
+        LOGGER.info("Network address cash ttl value setting before change, networkaddress.cache.ttl={}", Security.getProperty("networkaddress.cache.ttl"));
+        Security.setProperty("networkaddress.cache.ttl", "60");
+        LOGGER.info("Network address cash ttl value setting after change, networkaddress.cache.ttl={}", Security.getProperty("networkaddress.cache.ttl"));
+
         LOGGER.info("Initializing transport client bean.");
 
         // Get the elasticsearch settings JSON string from the configuration
