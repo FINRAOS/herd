@@ -158,6 +158,11 @@ public class DaoSpringModuleConfig implements CachingConfigurer
     public static final String MODEL_PACKAGES_TO_SCAN = "org.finra.herd.model.jpa";
 
     /**
+     * The network address cache ttl
+     */
+    public static final String NETWORK_ADDRESS_CACHE_TTL = "60";
+
+    /**
      * Truststore key value
      */
     public static final String TRUSTSTORE_KEY = "TRUSTSTORE";
@@ -197,7 +202,7 @@ public class DaoSpringModuleConfig implements CachingConfigurer
     {
         LOGGER.info("Updating the network address cash ttl value.");
         LOGGER.info("Network address cash ttl value setting before change, networkaddress.cache.ttl={}", Security.getProperty("networkaddress.cache.ttl"));
-        Security.setProperty("networkaddress.cache.ttl", "60");
+        Security.setProperty("networkaddress.cache.ttl", NETWORK_ADDRESS_CACHE_TTL);
         LOGGER.info("Network address cash ttl value setting after change, networkaddress.cache.ttl={}", Security.getProperty("networkaddress.cache.ttl"));
 
         LOGGER.info("Initializing transport client bean.");
