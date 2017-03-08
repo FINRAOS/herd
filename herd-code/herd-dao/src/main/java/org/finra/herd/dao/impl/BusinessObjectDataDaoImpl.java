@@ -902,8 +902,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         criteria.select(businessObjectDataEntity).where(predicate);
 
         List<BusinessObjectDataEntity> entityArray = entityManager.createQuery(criteria).getResultList();
-        List<BusinessObjectData> businessObjectDataList = getQueryResultListFromEntityList(entityArray, businessDataSearchKey.getAttributeValueFilters());
-        return businessObjectDataList;
+        return getQueryResultListFromEntityList(entityArray, businessDataSearchKey.getAttributeValueFilters());
     }
 
     /**
