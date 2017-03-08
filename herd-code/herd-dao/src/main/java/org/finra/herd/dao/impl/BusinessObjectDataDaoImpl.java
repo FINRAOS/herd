@@ -782,25 +782,33 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
      * @param criteria  criteria
      * @param businessObjectDataEntity root business object data entity
      * @param businessDataSearchKey  business object data search key
-     * @param orderList order list, used in non count query
+     * @param isCountQuery is the query a count query
      * @return search restrictions
      */
     private Predicate getPredict(CriteriaBuilder builder, CriteriaQuery<?> criteria, Root<BusinessObjectDataEntity> businessObjectDataEntity,
-        BusinessObjectDataSearchKey businessDataSearchKey, List<Order> orderList)
+        BusinessObjectDataSearchKey businessDataSearchKey, boolean isCountQuery)
     {
         // Join to the other tables we can filter on.
         Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> businessObjectFormatEntity =
             businessObjectDataEntity.join(BusinessObjectDataEntity_.businessObjectFormat);
         Join<BusinessObjectFormatEntity, BusinessObjectDefinitionEntity> businessObjectDefinitionEntity =
             businessObjectFormatEntity.join(BusinessObjectFormatEntity_.businessObjectDefinition);
-        
-        if (orderList != null)
+
+        if (!isCountQuery)
         {
+            List<Order> orderList = new ArrayList<>();
             orderList.add(builder.asc(businessObjectDefinitionEntity.get(BusinessObjectDefinitionEntity_.namespace)));
             orderList.add(builder.asc(businessObjectDefinitionEntity.get(BusinessObjectDefinitionEntity_.name)));
             orderList.add(builder.asc(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.usage)));
             orderList.add(builder.asc(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.fileType)));
             orderList.add(builder.desc(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.businessObjectFormatVersion)));
+            orderList.add(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue)));
+            orderList.add(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue2)));
+            orderList.add(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue3)));
+            orderList.add(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue4)));
+            orderList.add(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue5)));
+            orderList.add(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.version)));
+            criteria.orderBy(orderList);
         }
 
         // Create the standard restrictions based on the business object search key values (i.e. the standard where clauses).
@@ -860,22 +868,20 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
     @Override
     public List<BusinessObjectData> searchBusinessObjectData(List<BusinessObjectDataSearchFilter> filters)
     {
-        Integer businessObjectDataSearchMaxResults =
-            configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULTS, Integer.class);
+        Integer businessObjectDataSearchMaxResults = configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULTS, Integer.class);
 
         // assume only one filter and only on search key, the validation should be passed by now
         BusinessObjectDataSearchKey businessDataSearchKey = filters.get(0).getBusinessObjectDataSearchKeys().get(0);
 
         // Create the criteria builder and the criteria.
-
         CriteriaBuilder countBuilder = entityManager.getCriteriaBuilder();
         CriteriaQuery<Long> countCriteria = countBuilder.createQuery(Long.class);
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
         CriteriaQuery<BusinessObjectDataEntity> criteria = builder.createQuery(BusinessObjectDataEntity.class);
-        
+
         Root<BusinessObjectDataEntity> countBusinessObjectDataEntity = countCriteria.from(BusinessObjectDataEntity.class);
-        List<Order> orderList = new ArrayList<>();
-        Predicate  countPredicate = getPredict(countBuilder, criteria, countBusinessObjectDataEntity, businessDataSearchKey, orderList);
+
+        Predicate countPredicate = getPredict(countBuilder, criteria, countBusinessObjectDataEntity, businessDataSearchKey, true);
 
         countCriteria.select(countBuilder.count(countBusinessObjectDataEntity)).where(countPredicate).distinct(true);
         Long count = entityManager.createQuery(countCriteria).getSingleResult();
@@ -889,21 +895,11 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
         // The criteria root is the business object data.
         Root<BusinessObjectDataEntity> businessObjectDataEntity = criteria.from(BusinessObjectDataEntity.class);
-        Predicate  predicate = this.getPredict(builder, criteria,  businessObjectDataEntity, businessDataSearchKey, null);
+        Predicate predicate = getPredict(builder, criteria, businessObjectDataEntity, businessDataSearchKey, false);
 
         criteria.select(businessObjectDataEntity).where(predicate).groupBy(businessObjectDataEntity);
-        //more order by
-        orderList.add(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue)));
-        orderList.add(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue2)));
-        orderList.add(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue3)));
-        orderList.add(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue4)));
-        orderList.add(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.partitionValue5)));
-        orderList.add(builder.desc(businessObjectDataEntity.get(BusinessObjectDataEntity_.version)));
 
-        criteria.orderBy(orderList);
-
-        List<BusinessObjectDataEntity> entityArray =
-            entityManager.createQuery(criteria).getResultList();
+        List<BusinessObjectDataEntity> entityArray = entityManager.createQuery(criteria).getResultList();
 
         List<BusinessObjectData> businessObjectDataList = getQueryResultListFromEntityList(entityArray, businessDataSearchKey.getAttributeValueFilters());
 
