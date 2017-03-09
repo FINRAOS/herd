@@ -14,8 +14,6 @@
 * limitations under the License.
 */
 
---scrty_fn_lk
-
 insert into scrty_fn_lk (scrty_fn_cd, creat_ts, creat_user_id, updt_ts, updt_user_id)
 values ('FN_INDEX_SEARCH_POST', current_timestamp, 'SYSTEM', current_timestamp, 'SYSTEM');
 
