@@ -203,15 +203,16 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
         criteria.select(businessObjectDataEntity).where(mainQueryRestriction);
 
-        return executeSingleResultQuery(criteria, String.format(
-            "Found more than one business object data instance with parameters {namespace=\"%s\", businessObjectDefinitionName=\"%s\"," +
+        return executeSingleResultQuery(criteria,
+            String.format("Found more than one business object data instance with parameters {namespace=\"%s\", businessObjectDefinitionName=\"%s\"," +
                 " businessObjectFormatUsage=\"%s\", businessObjectFormatFileType=\"%s\", businessObjectFormatVersion=\"%d\"," +
                 " businessObjectDataPartitionValue=\"%s\", businessObjectDataSubPartitionValues=\"%s\", businessObjectDataVersion=\"%d\"," +
                 " businessObjectDataStatus=\"%s\"}.", businessObjectDataKey.getNamespace(), businessObjectDataKey.getBusinessObjectDefinitionName(),
-            businessObjectDataKey.getBusinessObjectFormatUsage(), businessObjectDataKey.getBusinessObjectFormatFileType(),
-            businessObjectDataKey.getBusinessObjectFormatVersion(), businessObjectDataKey.getPartitionValue(),
-            CollectionUtils.isEmpty(businessObjectDataKey.getSubPartitionValues()) ? "" : StringUtils.join(businessObjectDataKey.getSubPartitionValues(), ","),
-            businessObjectDataKey.getBusinessObjectDataVersion(), businessObjectDataStatus));
+                businessObjectDataKey.getBusinessObjectFormatUsage(), businessObjectDataKey.getBusinessObjectFormatFileType(),
+                businessObjectDataKey.getBusinessObjectFormatVersion(), businessObjectDataKey.getPartitionValue(),
+                CollectionUtils.isEmpty(businessObjectDataKey.getSubPartitionValues()) ? "" :
+                    StringUtils.join(businessObjectDataKey.getSubPartitionValues(), ","), businessObjectDataKey.getBusinessObjectDataVersion(),
+                businessObjectDataStatus));
     }
 
     @Override
@@ -1208,7 +1209,7 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
         // Create the standard restrictions (i.e. the standard where clauses).
         Predicate predicate =
-            businessObjectDataEntityRoot.get(BusinessObjectDataEntity_.businessObjectFormat).in(businessObjectDefinitionEntity.getBusinessObjectFormats());
+            builder.equal(businessObjectFormatEntityJoin.get(BusinessObjectFormatEntity_.businessObjectDefinition), businessObjectDefinitionEntity);
 
         // Build the order by clause. The sort order is consistent with the search business object data implementation.
         List<Order> orderBy = new ArrayList<>();
