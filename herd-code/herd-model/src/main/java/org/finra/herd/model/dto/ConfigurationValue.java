@@ -609,7 +609,7 @@ public enum ConfigurationValue
     /**
      * The maximum number of records returned in business object data search results
      */
-    BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULTS("business.object.data.search.max.results.", 1000),
+    BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULTS("business.object.data.search.max.results", 1000),
 
     /**
      * The maximum number of nested tags allowed
