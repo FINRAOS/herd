@@ -607,11 +607,6 @@ public enum ConfigurationValue
     JDBC_RESULT_MAX_ROWS("jdbc.result.max.rows", null),
 
     /**
-     * The maximum number of records per page returned in business object data search results
-     */
-    BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULTS_PER_PAGE("business.object.data.search.max.results.per.page", 50),
-
-    /**
      * The maximum number of records returned in business object data search results
      */
     BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULTS("business.object.data.search.max.results.", 1000),
