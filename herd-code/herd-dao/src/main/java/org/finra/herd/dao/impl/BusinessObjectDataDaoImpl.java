@@ -203,16 +203,15 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
         criteria.select(businessObjectDataEntity).where(mainQueryRestriction);
 
-        return executeSingleResultQuery(criteria,
-            String.format("Found more than one business object data instance with parameters {namespace=\"%s\", businessObjectDefinitionName=\"%s\"," +
+        return executeSingleResultQuery(criteria, String.format(
+            "Found more than one business object data instance with parameters {namespace=\"%s\", businessObjectDefinitionName=\"%s\"," +
                 " businessObjectFormatUsage=\"%s\", businessObjectFormatFileType=\"%s\", businessObjectFormatVersion=\"%d\"," +
                 " businessObjectDataPartitionValue=\"%s\", businessObjectDataSubPartitionValues=\"%s\", businessObjectDataVersion=\"%d\"," +
                 " businessObjectDataStatus=\"%s\"}.", businessObjectDataKey.getNamespace(), businessObjectDataKey.getBusinessObjectDefinitionName(),
-                businessObjectDataKey.getBusinessObjectFormatUsage(), businessObjectDataKey.getBusinessObjectFormatFileType(),
-                businessObjectDataKey.getBusinessObjectFormatVersion(), businessObjectDataKey.getPartitionValue(),
-                CollectionUtils.isEmpty(businessObjectDataKey.getSubPartitionValues()) ? "" :
-                    StringUtils.join(businessObjectDataKey.getSubPartitionValues(), ","), businessObjectDataKey.getBusinessObjectDataVersion(),
-                businessObjectDataStatus));
+            businessObjectDataKey.getBusinessObjectFormatUsage(), businessObjectDataKey.getBusinessObjectFormatFileType(),
+            businessObjectDataKey.getBusinessObjectFormatVersion(), businessObjectDataKey.getPartitionValue(),
+            CollectionUtils.isEmpty(businessObjectDataKey.getSubPartitionValues()) ? "" : StringUtils.join(businessObjectDataKey.getSubPartitionValues(), ","),
+            businessObjectDataKey.getBusinessObjectDataVersion(), businessObjectDataStatus));
     }
 
     @Override
@@ -780,11 +779,13 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
     /**
      * Create search restrictions
+     *
      * @param builder criteria builder
-     * @param criteria  criteria
+     * @param criteria criteria
      * @param businessObjectDataEntity root business object data entity
-     * @param businessDataSearchKey  business object data search key
+     * @param businessDataSearchKey business object data search key
      * @param isCountQuery is the query a count query
+     *
      * @return search restrictions
      */
     private Predicate getPredict(CriteriaBuilder builder, CriteriaQuery<?> criteria, Root<BusinessObjectDataEntity> businessObjectDataEntity,
@@ -906,11 +907,13 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
     /**
      * Creates a predicate for partition value filters.
+     *
      * @param businessDataSearchKey businessDataSearchKey
      * @param businessObjectDataEntity businessObjectDataEntity
      * @param businessObjectFormatEntity businessObjectFormatEntity
      * @param builder builder
      * @param predicatePram predicate parameter
+     *
      * @return the predicate
      */
     private Predicate createPartitionValueFilters(BusinessObjectDataSearchKey businessDataSearchKey, Root<BusinessObjectDataEntity> businessObjectDataEntity,
@@ -973,10 +976,12 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
     /**
      * Creates a predicate for attribute value filters.
+     *
      * @param businessDataSearchKey business object search key
      * @param businessObjectDataEntity business object data entity
      * @param builder query build
      * @param predicatePram predicate
+     *
      * @return the predicate with added attribute value filters
      */
     private Predicate createAttributeValueFilters(BusinessObjectDataSearchKey businessDataSearchKey, Root<BusinessObjectDataEntity> businessObjectDataEntity,
@@ -1012,8 +1017,10 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
     /**
      * Gets a query result list from an entity list.
+     *
      * @param entityArray entity array from query
      * @param attributeValueList attribute value list
+     *
      * @return the list of business object data
      */
     private List<BusinessObjectData> getQueryResultListFromEntityList(List<BusinessObjectDataEntity> entityArray, List<AttributeValueFilter> attributeValueList)
@@ -1088,8 +1095,10 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
     /**
      * Checks if the attribute should be returned based on the attribute value query list if attribute name supplied, match attribute name case in sensitive if
      * attribute value supplied, match attribute value case sensitive with contain logic if both attribute name and value supplied, match both.
+     *
      * @param attributeEntity the database attribute entity
      * @param attributeQueryList the attribute query list
+     *
      * @return true for returning in response; false for not
      */
     private boolean shouldIncludeAttributeInResponse(BusinessObjectDataAttributeEntity attributeEntity, List<AttributeValueFilter> attributeQueryList)
@@ -1136,11 +1145,13 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
 
     /**
      * Creates a sub query for the maximum business object data version.
+     *
      * @param builder criteria builder
      * @param criteria criteria query
      * @param businessObjectDataEntity business object data entity
      * @param businessObjectFormatEntity business object format entity
      * @param businessObjectDataStatus business object status
+     *
      * @return max business object data version sub query
      */
     private Subquery<Integer> getMaximumBusinessObjectDataVersionSubQuery(CriteriaBuilder builder, CriteriaQuery<?> criteria,
