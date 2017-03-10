@@ -15,23 +15,34 @@
 */
 package org.finra.herd.service.impl;
 
+import static org.finra.herd.model.dto.SearchIndexUpdateDto.SEARCH_INDEX_UPDATE_TYPE_CREATE;
+import static org.finra.herd.model.dto.SearchIndexUpdateDto.SEARCH_INDEX_UPDATE_TYPE_DELETE;
+import static org.finra.herd.model.dto.SearchIndexUpdateDto.SEARCH_INDEX_UPDATE_TYPE_UPDATE;
+
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.ImmutableSet;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import org.finra.herd.core.HerdDateUtils;
+import org.finra.herd.core.helper.ConfigurationHelper;
+import org.finra.herd.dao.BusinessObjectDefinitionDao;
 import org.finra.herd.dao.TagDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
+import org.finra.herd.model.annotation.PublishJmsMessages;
 import org.finra.herd.model.api.xml.Tag;
 import org.finra.herd.model.api.xml.TagChild;
 import org.finra.herd.model.api.xml.TagCreateRequest;
@@ -43,11 +54,16 @@ import org.finra.herd.model.api.xml.TagSearchRequest;
 import org.finra.herd.model.api.xml.TagSearchResponse;
 import org.finra.herd.model.api.xml.TagTypeKey;
 import org.finra.herd.model.api.xml.TagUpdateRequest;
+import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.model.dto.SearchIndexUpdateDto;
+import org.finra.herd.model.jpa.SearchIndexTypeEntity;
 import org.finra.herd.model.jpa.TagEntity;
 import org.finra.herd.model.jpa.TagTypeEntity;
 import org.finra.herd.service.SearchableService;
 import org.finra.herd.service.TagService;
+import org.finra.herd.service.functional.SearchFunctions;
 import org.finra.herd.service.helper.AlternateKeyHelper;
+import org.finra.herd.service.helper.SearchIndexUpdateHelper;
 import org.finra.herd.service.helper.TagDaoHelper;
 import org.finra.herd.service.helper.TagHelper;
 import org.finra.herd.service.helper.TagTypeDaoHelper;
@@ -59,13 +75,15 @@ import org.finra.herd.service.helper.TagTypeDaoHelper;
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 public class TagServiceImpl implements TagService, SearchableService
 {
-    // Constant to hold the display name field option for the search response.
+    private static final Logger LOGGER = LoggerFactory.getLogger(TagServiceImpl.class);
+
+    // Constant to hold the description field option for the search response.
     public final static String DESCRIPTION_FIELD = "description".toLowerCase();
 
     // Constant to hold the display name field option for the search response.
     public final static String DISPLAY_NAME_FIELD = "displayName".toLowerCase();
 
-    // Constant to hold the hasChildren field option for the search response.
+    // Constant to hold the has children field option for the search response.
     public final static String HAS_CHILDREN_FIELD = "hasChildren".toLowerCase();
 
     // Constant to hold the parent tag key field option for the search response.
@@ -73,6 +91,18 @@ public class TagServiceImpl implements TagService, SearchableService
 
     @Autowired
     private AlternateKeyHelper alternateKeyHelper;
+
+    @Autowired
+    private BusinessObjectDefinitionDao businessObjectDefinitionDao;
+
+    @Autowired
+    private ConfigurationHelper configurationHelper;
+
+    @Autowired
+    private SearchFunctions searchFunctions;
+
+    @Autowired
+    private SearchIndexUpdateHelper searchIndexUpdateHelper;
 
     @Autowired
     private TagDao tagDao;
@@ -86,6 +116,7 @@ public class TagServiceImpl implements TagService, SearchableService
     @Autowired
     private TagTypeDaoHelper tagTypeDaoHelper;
 
+    @PublishJmsMessages
     @Override
     public Tag createTag(TagCreateRequest request)
     {
@@ -96,13 +127,15 @@ public class TagServiceImpl implements TagService, SearchableService
         TagTypeEntity tagTypeEntity = tagTypeDaoHelper.getTagTypeEntity(new TagTypeKey(request.getTagKey().getTagTypeCode()));
 
         // Validate that the tag entity does not already exist.
-        TagEntity tagEntity = tagDao.getTagByKey(request.getTagKey());
-        if (tagEntity != null)
+        if (tagDao.getTagByKey(request.getTagKey()) != null)
         {
             throw new AlreadyExistsException(String
                 .format("Unable to create tag with tag type code \"%s\" and tag code \"%s\" because it already exists.", request.getTagKey().getTagTypeCode(),
                     request.getTagKey().getTagCode()));
         }
+
+        // List of tag entities to update in the search index
+        List<TagEntity> tagEntities = new ArrayList<>();
 
         // Validate that the specified display name does not already exist for the specified tag type
         tagDaoHelper.assertDisplayNameDoesNotExistForTag(request.getTagKey().getTagTypeCode(), request.getDisplayName());
@@ -110,15 +143,23 @@ public class TagServiceImpl implements TagService, SearchableService
         if (request.getParentTagKey() != null)
         {
             parentTagEntity = tagDaoHelper.getTagEntity(request.getParentTagKey());
+
+            // Add the parent tag entity to the list of tag entities to update in the search index
+            tagEntities.add(parentTagEntity);
         }
 
         // Create and persist a new tag entity from the information in the request.
-        tagEntity = createTagEntity(tagTypeEntity, request.getTagKey().getTagCode(), request.getDisplayName(), request.getDescription(), parentTagEntity);
+        TagEntity tagEntity = createTagEntity(request, tagTypeEntity, parentTagEntity);
+
+        // Notify the tag search index that a tag must be created.
+        tagEntities.add(tagEntity);
+        searchIndexUpdateHelper.modifyTagsInSearchIndex(tagEntities, SEARCH_INDEX_UPDATE_TYPE_CREATE);
 
         // Create and return the tag object from the persisted entity.
         return createTagFromEntity(tagEntity);
     }
 
+    @PublishJmsMessages
     @Override
     public Tag deleteTag(TagKey tagKey)
     {
@@ -130,6 +171,15 @@ public class TagServiceImpl implements TagService, SearchableService
 
         // delete the tag.
         tagDao.delete(tagEntity);
+
+        // Notify the tag search index that a tag must be deleted.
+        searchIndexUpdateHelper.modifyTagInSearchIndex(tagEntity, SEARCH_INDEX_UPDATE_TYPE_DELETE);
+
+        // If there is a parent tag entity, notify the tag search index that the parent tag must be updated
+        if (tagEntity.getParentTagEntity() != null)
+        {
+            searchIndexUpdateHelper.modifyTagInSearchIndex(tagEntity.getParentTagEntity(), SEARCH_INDEX_UPDATE_TYPE_UPDATE);
+        }
 
         // Create and return the tag object from the deleted entity.
         return createTagFromEntity(tagEntity);
@@ -221,7 +271,7 @@ public class TagServiceImpl implements TagService, SearchableService
         List<Tag> tags = new ArrayList<>();
         for (TagEntity tagEntity : tagEntities)
         {
-            tags.add(createTagFromEntity(tagEntity, false, fields.contains(DISPLAY_NAME_FIELD), fields.contains(DESCRIPTION_FIELD), false, false,
+            tags.add(createTagFromEntity(tagEntity, false, fields.contains(DISPLAY_NAME_FIELD), fields.contains(DESCRIPTION_FIELD), false, false, false,
                 fields.contains(PARENT_TAG_KEY_FIELD), fields.contains(HAS_CHILDREN_FIELD)));
         }
 
@@ -230,13 +280,46 @@ public class TagServiceImpl implements TagService, SearchableService
     }
 
     @Override
+    public void updateSearchIndexDocumentTag(SearchIndexUpdateDto searchIndexUpdateDto)
+    {
+        final String indexName = SearchIndexTypeEntity.SearchIndexTypes.TAG.name().toLowerCase();
+        final String documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
+
+        String modificationType = searchIndexUpdateDto.getModificationType();
+        List<Integer> ids = searchIndexUpdateDto.getTagIds();
+
+        // Switch on the type of CRUD modification to be done
+        switch (modificationType)
+        {
+            case SEARCH_INDEX_UPDATE_TYPE_CREATE:
+                // Create a search index document
+                searchFunctions.getCreateIndexDocumentsFunction()
+                    .accept(indexName, documentType, convertTagEntityListToJSONStringMap(tagDao.getTagsByIds(ids)));
+                break;
+            case SEARCH_INDEX_UPDATE_TYPE_UPDATE:
+                // Update a search index document
+                searchFunctions.getUpdateIndexDocumentsFunction()
+                    .accept(indexName, documentType, convertTagEntityListToJSONStringMap(tagDao.getTagsByIds(ids)));
+                break;
+            case SEARCH_INDEX_UPDATE_TYPE_DELETE:
+                // Delete a search index document
+                searchFunctions.getDeleteIndexDocumentsFunction().accept(indexName, documentType, ids);
+                break;
+            default:
+                LOGGER.warn("Unknown modification type received.");
+                break;
+        }
+    }
+
+    @PublishJmsMessages
+    @Override
     public Tag updateTag(TagKey tagKey, TagUpdateRequest tagUpdateRequest)
     {
         // Perform validation and trim
         tagHelper.validateTagKey(tagKey);
 
-        // Perform validation and trim
-        validateTagUpdateRequest(tagUpdateRequest);
+        // Perform validation and trim.
+        validateTagUpdateRequest(tagKey, tagUpdateRequest);
 
         // Retrieve and ensure that a tag already exists with the specified key.
         TagEntity tagEntity = tagDaoHelper.getTagEntity(tagKey);
@@ -248,11 +331,39 @@ public class TagServiceImpl implements TagService, SearchableService
             tagDaoHelper.assertDisplayNameDoesNotExistForTag(tagKey.getTagTypeCode(), tagUpdateRequest.getDisplayName());
         }
 
-        //validate parent key if there is one
-        tagDaoHelper.validateUpdateTagParentKey(tagEntity, tagUpdateRequest);
+        // List of tag entities to update in the search index
+        List<TagEntity> tagEntities = new ArrayList<>();
+        tagEntities.add(tagEntity);
+
+        // If there is an original tag entity parent, then update
+        if (tagEntity.getParentTagEntity() != null)
+        {
+            tagEntities.add(tagEntity.getParentTagEntity());
+        }
+
+        // Validate the parent tag if one specified.
+        TagEntity parentTagEntity = null;
+        if (tagUpdateRequest.getParentTagKey() != null)
+        {
+            // Get parent tag entity and ensure it exists.
+            parentTagEntity = tagDaoHelper.getTagEntity(tagUpdateRequest.getParentTagKey());
+
+            // Validate the parent tag entity.
+            tagDaoHelper.validateParentTagEntity(tagEntity, parentTagEntity);
+
+            // Add the parent tag entity to the tag entities list
+            tagEntities.add(parentTagEntity);
+        }
 
         // Update and persist the tag entity.
-        updateTagEntity(tagEntity, tagUpdateRequest);
+        updateTagEntity(tagEntity, tagUpdateRequest, parentTagEntity);
+
+        // Notify the search index that a business object definition must be updated.
+        searchIndexUpdateHelper.modifyBusinessObjectDefinitionsInSearchIndex(businessObjectDefinitionDao.getBusinessObjectDefinitions(tagEntities),
+            SEARCH_INDEX_UPDATE_TYPE_UPDATE);
+
+        // Notify the tag search index that tags must be updated.
+        searchIndexUpdateHelper.modifyTagsInSearchIndex(tagEntities, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
 
         // Create and return the tag object from the tag entity.
         return createTagFromEntity(tagEntity);
@@ -261,21 +372,20 @@ public class TagServiceImpl implements TagService, SearchableService
     /**
      * Creates and persists a new Tag entity.
      *
+     * @param request the tag create request
      * @param tagTypeEntity the specified tag type entity.
-     * @param displayName the specified display name.
-     * @param description the specified description.
      * @param parentTagEntity the specified parent tag entity
      *
      * @return the newly created tag entity.
      */
-    private TagEntity createTagEntity(TagTypeEntity tagTypeEntity, String tagCode, String displayName, String description, TagEntity parentTagEntity)
+    private TagEntity createTagEntity(TagCreateRequest request, TagTypeEntity tagTypeEntity, TagEntity parentTagEntity)
     {
         TagEntity tagEntity = new TagEntity();
 
         tagEntity.setTagType(tagTypeEntity);
-        tagEntity.setTagCode(tagCode);
-        tagEntity.setDisplayName(displayName);
-        tagEntity.setDescription(description);
+        tagEntity.setTagCode(request.getTagKey().getTagCode());
+        tagEntity.setDisplayName(request.getDisplayName());
+        tagEntity.setDescription(request.getDescription());
         tagEntity.setParentTagEntity(parentTagEntity);
 
         return tagDao.saveAndRefresh(tagEntity);
@@ -290,7 +400,7 @@ public class TagServiceImpl implements TagService, SearchableService
      */
     private Tag createTagFromEntity(TagEntity tagEntity)
     {
-        return createTagFromEntity(tagEntity, true, true, true, true, true, true, false);
+        return createTagFromEntity(tagEntity, true, true, true, true, true, true, true, false);
     }
 
     /**
@@ -300,15 +410,16 @@ public class TagServiceImpl implements TagService, SearchableService
      * @param includeId specifies to include the display name field
      * @param includeDisplayName specifies to include the display name field
      * @param includeDescription specifies to include the description field
-     * @param includeUserId specifies to include the display name field
-     * @param includeUpdatedTime specifies to include the display name field
+     * @param includeUserId specifies to include the user id of the user who created this tag
+     * @param includeLastUpdatedByUserId specifies to include the user id of the user who last updated this tag
+     * @param includeUpdatedTime specifies to include the timestamp of when this tag is last updated
      * @param includeParentTagKey specifies to include the parent tag key field
      * @param includeHasChildren specifies to include the hasChildren field
      *
      * @return the tag
      */
     private Tag createTagFromEntity(TagEntity tagEntity, boolean includeId, boolean includeDisplayName, boolean includeDescription, boolean includeUserId,
-        boolean includeUpdatedTime, boolean includeParentTagKey, boolean includeHasChildren)
+        boolean includeLastUpdatedByUserId, boolean includeUpdatedTime, boolean includeParentTagKey, boolean includeHasChildren)
     {
         Tag tag = new Tag();
 
@@ -334,6 +445,11 @@ public class TagServiceImpl implements TagService, SearchableService
             tag.setUserId(tagEntity.getCreatedBy());
         }
 
+        if (includeLastUpdatedByUserId)
+        {
+            tag.setLastUpdatedByUserId(tagEntity.getUpdatedBy());
+        }
+
         if (includeUpdatedTime)
         {
             tag.setUpdatedTime(HerdDateUtils.getXMLGregorianCalendarValue(tagEntity.getUpdatedOn()));
@@ -357,46 +473,60 @@ public class TagServiceImpl implements TagService, SearchableService
     }
 
     /**
+     * Private method to convert a tag entity list to a list of JSON strings.
+     *
+     * @param tagEntities the list of tags
+     *
+     * @return Map of key, business object definition ids, and value, business object definition entity as JSON string
+     */
+    private Map<String, String> convertTagEntityListToJSONStringMap(List<TagEntity> tagEntities)
+    {
+        Map<String, String> tagJSONMap = new HashMap<>();
+
+        tagEntities.forEach(tagEntity -> {
+            String jsonString = tagHelper.safeObjectMapperWriteValueAsString(tagEntity);
+
+            if (StringUtils.isNotEmpty(jsonString))
+            {
+                tagJSONMap.put(tagEntity.getId().toString(), jsonString);
+            }
+        });
+
+        return tagJSONMap;
+    }
+
+    /**
      * Updates and persists the tag entity per the specified update request.
      *
-     * @param tagEntity the specified tag entity.
-     * @param tagUpdateRequest the specified tag update request.
+     * @param tagEntity the tag entity
+     * @param request the tag update request
+     * @param parentTagEntity the parent tag entity, maybe null
      */
-    private void updateTagEntity(TagEntity tagEntity, TagUpdateRequest tagUpdateRequest)
+    private void updateTagEntity(TagEntity tagEntity, TagUpdateRequest request, TagEntity parentTagEntity)
     {
-        tagEntity.setDisplayName(tagUpdateRequest.getDisplayName());
-        tagEntity.setDescription(tagUpdateRequest.getDescription());
-
-        if (tagUpdateRequest.getParentTagKey() != null)
-        {
-            TagEntity parentTagEntity = tagDaoHelper.getTagEntity(tagUpdateRequest.getParentTagKey());
-            tagEntity.setParentTagEntity(parentTagEntity);
-        }
-        else
-        {
-            tagEntity.setParentTagEntity(null);
-        }
-
+        tagEntity.setDisplayName(request.getDisplayName());
+        tagEntity.setDescription(request.getDescription());
+        tagEntity.setParentTagEntity(parentTagEntity);
         tagDao.saveAndRefresh(tagEntity);
     }
 
     /**
      * Validate the tag create request. This method also trims the request parameters.
      *
-     * @param tagCreateRequest the tag create request.
+     * @param request the tag create request
      */
-    private void validateTagCreateRequest(TagCreateRequest tagCreateRequest)
+    private void validateTagCreateRequest(TagCreateRequest request)
     {
-        Assert.notNull(tagCreateRequest, "A tag create request must be specified.");
-        tagHelper.validateTagKey(tagCreateRequest.getTagKey());
+        Assert.notNull(request, "A tag create request must be specified.");
+        tagHelper.validateTagKey(request.getTagKey());
 
-        if (tagCreateRequest.getParentTagKey() != null)
+        if (request.getParentTagKey() != null)
         {
-            tagHelper.validateTagKey(tagCreateRequest.getParentTagKey());
+            tagHelper.validateTagKey(request.getParentTagKey());
+            tagDaoHelper.validateParentTagType(request.getTagKey().getTagTypeCode(), request.getParentTagKey().getTagTypeCode());
         }
 
-        tagCreateRequest.setDisplayName(alternateKeyHelper.validateStringParameter("display name", tagCreateRequest.getDisplayName()));
-        tagDaoHelper.validateCreateTagParentKey(tagCreateRequest);
+        request.setDisplayName(alternateKeyHelper.validateStringParameter("display name", request.getDisplayName()));
     }
 
     /**
@@ -440,16 +570,19 @@ public class TagServiceImpl implements TagService, SearchableService
     /**
      * Validates the tag update request. This method also trims the request parameters.
      *
-     * @param tagUpdateRequest the specified tag update request.
+     * @param tagKey the tag key
+     * @param request the specified tag update request
      */
-    private void validateTagUpdateRequest(TagUpdateRequest tagUpdateRequest)
+    private void validateTagUpdateRequest(TagKey tagKey, TagUpdateRequest request)
     {
-        Assert.notNull(tagUpdateRequest, "A tag update request must be specified.");
-        tagUpdateRequest.setDisplayName(alternateKeyHelper.validateStringParameter("display name", tagUpdateRequest.getDisplayName()));
+        Assert.notNull(request, "A tag update request must be specified.");
 
-        if (tagUpdateRequest.getParentTagKey() != null)
+        if (request.getParentTagKey() != null)
         {
-            tagHelper.validateTagKey(tagUpdateRequest.getParentTagKey());
+            tagHelper.validateTagKey(request.getParentTagKey());
+            tagDaoHelper.validateParentTagType(tagKey.getTagTypeCode(), request.getParentTagKey().getTagTypeCode());
         }
+
+        request.setDisplayName(alternateKeyHelper.validateStringParameter("display name", request.getDisplayName()));
     }
 }

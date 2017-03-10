@@ -21,7 +21,7 @@
    <parent>
       <groupId>org.finra.herd</groupId>
       <artifactId>herd-code</artifactId>
-      <version>0.32.0-SNAPSHOT</version>
+      <version>0.39.0-SNAPSHOT</version>
    </parent>
 
    <name>herd core</name>
@@ -105,6 +105,13 @@
       <dependency>
          <groupId>org.quartz-scheduler</groupId>
          <artifactId>quartz</artifactId>
+      </dependency>
+
+      <!-- jsoup HTML parser library @ http://jsoup.org/ -->
+      <dependency>
+         <groupId>org.jsoup</groupId>
+         <artifactId>jsoup</artifactId>
+         <version>${jsoup.version}</version>
       </dependency>
 
    </dependencies>

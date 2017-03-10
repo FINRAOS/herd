@@ -16,6 +16,7 @@
 package org.finra.herd.dao;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -47,42 +48,72 @@ public class BusinessObjectDefinitionDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void testGetBusinessObjectDefinitionKeys() throws Exception
+    public void testGetBusinessObjectDefinitionKeys()
     {
         // Create and persist business object definition entities.
         for (BusinessObjectDefinitionKey key : businessObjectDefinitionDaoTestHelper.getTestBusinessObjectDefinitionKeys())
         {
-            businessObjectDefinitionDaoTestHelper
-                .createBusinessObjectDefinitionEntity(key.getNamespace(), key.getBusinessObjectDefinitionName(), DATA_PROVIDER_NAME, BDEF_DESCRIPTION, null);
+            businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(key, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
         }
 
-        // Retrieve a list of business object definition keys for the specified namespace.
-        List<BusinessObjectDefinitionKey> resultKeys = businessObjectDefinitionDao.getBusinessObjectDefinitionKeys(NAMESPACE);
-
-        // Validate the returned object.
-        assertEquals(businessObjectDefinitionDaoTestHelper.getExpectedBusinessObjectDefinitionKeys(), resultKeys);
+        // Retrieve a list of business object definition keys.
+        assertEquals(businessObjectDefinitionDaoTestHelper.getExpectedBusinessObjectDefinitionKeys(),
+            businessObjectDefinitionDao.getBusinessObjectDefinitionKeys());
     }
 
     @Test
-    public void testGetBusinessObjectDefinitions() throws Exception
+    public void testGetBusinessObjectDefinitionKeysByNamespace()
+    {
+        // Create and persist business object definition entities.
+        for (BusinessObjectDefinitionKey key : businessObjectDefinitionDaoTestHelper.getTestBusinessObjectDefinitionKeys())
+        {
+            businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(key, DATA_PROVIDER_NAME, BDEF_DESCRIPTION);
+        }
+
+        // Retrieve a list of business object definition keys for the specified namespace.
+        assertEquals(businessObjectDefinitionDaoTestHelper.getExpectedBusinessObjectDefinitionKeysForNamespace(),
+            businessObjectDefinitionDao.getBusinessObjectDefinitionKeysByNamespace(NAMESPACE));
+
+        // Retrieve a list of business object definition keys without specifying a namespace.
+        assertEquals(businessObjectDefinitionDaoTestHelper.getExpectedBusinessObjectDefinitionKeys(),
+            businessObjectDefinitionDao.getBusinessObjectDefinitionKeysByNamespace(BLANK_TEXT));
+
+        // Retrieve a list of business object definition keys for the specified namespace.
+        assertEquals(businessObjectDefinitionDaoTestHelper.getExpectedBusinessObjectDefinitionKeysForNamespace(),
+            businessObjectDefinitionDao.getBusinessObjectDefinitionKeysByNamespace(NAMESPACE));
+
+        // Retrieve a list of business object definition keys for the specified namespace in uppercase.
+        assertEquals(businessObjectDefinitionDaoTestHelper.getExpectedBusinessObjectDefinitionKeysForNamespace(),
+            businessObjectDefinitionDao.getBusinessObjectDefinitionKeysByNamespace(NAMESPACE.toUpperCase()));
+
+        // Retrieve a list of business object definition keys for the specified namespace in lowercase.
+        assertEquals(businessObjectDefinitionDaoTestHelper.getExpectedBusinessObjectDefinitionKeysForNamespace(),
+            businessObjectDefinitionDao.getBusinessObjectDefinitionKeysByNamespace(NAMESPACE.toLowerCase()));
+
+        // Try to retrieve a list of business object definition keys for a non-existing namespace.
+        assertTrue(businessObjectDefinitionDao.getBusinessObjectDefinitionKeysByNamespace("I_DO_NOT_EXIST").isEmpty());
+    }
+
+    @Test
+    public void testGetBusinessObjectDefinitions()
     {
         // Create and persist two business object definition entities.
         List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities =
             businessObjectDefinitionDaoTestHelper.createExpectedBusinessObjectDefinitionEntities();
 
-        //Get the list of business object definitions when tag entities is empty
+        // Get the list of business object definitions when tag entities is empty.
         assertEquals(ImmutableSet.copyOf(businessObjectDefinitionEntities),
             ImmutableSet.copyOf(businessObjectDefinitionDao.getBusinessObjectDefinitions(new ArrayList<>())));
 
-        // Create and persist root tag entity
+        // Create and persist root tag entity.
         TagEntity parentTagEntity = tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION, null);
 
-        // Create two children for the root tag
+        // Create two children for the root tag.
         List<TagEntity> tagEntities = Arrays
             .asList(parentTagEntity, tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE_3, TAG_DISPLAY_NAME_4, TAG_DESCRIPTION, parentTagEntity),
                 tagDaoTestHelper.createTagEntity(TAG_TYPE, TAG_CODE_4, TAG_DISPLAY_NAME_3, TAG_DESCRIPTION, parentTagEntity));
 
-        //Create and persist two business object definition tag entities for the child tag entities.
+        // Create and persist two business object definition tag entities for the child tag entities.
         for (BusinessObjectDefinitionEntity businessObjectDefinitionEntity : businessObjectDefinitionEntities)
         {
             for (TagEntity tagEntity : tagEntities)
@@ -91,10 +122,94 @@ public class BusinessObjectDefinitionDaoTest extends AbstractDaoTest
             }
         }
 
-        //filter duplicates and validate result
+        // Filter duplicates and validate the result.
         assertEquals(ImmutableSet.copyOf(businessObjectDefinitionEntities),
             ImmutableSet.copyOf(businessObjectDefinitionDao.getBusinessObjectDefinitions(tagEntities)));
     }
 
+    @Test
+    public void testGetAllBusinessObjectDefinitions()
+    {
+        // Create and persist two business object definition entities.
+        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities =
+            businessObjectDefinitionDaoTestHelper.createExpectedBusinessObjectDefinitionEntities();
 
+        // Get the list of all business object definitions without specifying offset and maximum number of results.
+        assertEquals(businessObjectDefinitionEntities, businessObjectDefinitionDao.getAllBusinessObjectDefinitions());
+
+        // Get the list of all business object definitions when maximum number of results is set to 1.
+        assertEquals(businessObjectDefinitionEntities.subList(0, 1), businessObjectDefinitionDao.getAllBusinessObjectDefinitions(0, 1));
+
+        // Get the list of all business object definitions when offset is set to 1.
+        assertEquals(businessObjectDefinitionEntities.subList(1, 2), businessObjectDefinitionDao.getAllBusinessObjectDefinitions(1, 1));
+    }
+
+    @Test
+    public void testGetAllBusinessObjectDefinitionsByIds()
+    {
+        // Create and persist two business object definition entities.
+        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities =
+            businessObjectDefinitionDaoTestHelper.createExpectedBusinessObjectDefinitionEntities();
+
+        List<Integer> businessObjectDefinitionIds = new ArrayList<>();
+
+        businessObjectDefinitionEntities.forEach(businessObjectDefinitionEntity -> businessObjectDefinitionIds.add(businessObjectDefinitionEntity.getId()));
+
+        // Get the list of all business object definitions
+        assertEquals(businessObjectDefinitionEntities, businessObjectDefinitionDao.getAllBusinessObjectDefinitionsByIds(businessObjectDefinitionIds));
+    }
+
+    @Test
+    public void testGetPercentageOfAllBusinessObjectDefinitionsOneHundredPercent()
+    {
+        // Create and persist two business object definition entities.
+        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities =
+            businessObjectDefinitionDaoTestHelper.createExpectedBusinessObjectDefinitionEntities();
+
+        // Get the list of all business object definitions aka. 100%
+        assertEquals(businessObjectDefinitionEntities, businessObjectDefinitionDao.getPercentageOfAllBusinessObjectDefinitions(1.0));
+    }
+
+    @Test
+    public void testGetPercentageOfAllBusinessObjectDefinitionsZeroPercent()
+    {
+        // Create and persist two business object definition entities.
+        businessObjectDefinitionDaoTestHelper.createExpectedBusinessObjectDefinitionEntities();
+
+        // Create an empty list
+        List<BusinessObjectDefinitionEntity> emptyList = new ArrayList<>();
+
+        // Get the list of all business object definitions aka. 0%
+        assertEquals(emptyList, businessObjectDefinitionDao.getPercentageOfAllBusinessObjectDefinitions(0.0));
+    }
+
+    @Test
+    public void testGetMostRecentBusinessObjectDefinitions()
+    {
+        // Create and persist two business object definition entities.
+        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities = new ArrayList<>();
+        businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntity(AbstractDaoTest.NAMESPACE, AbstractDaoTest.BDEF_NAME, AbstractDaoTest.DATA_PROVIDER_NAME,
+                AbstractDaoTest.BDEF_DESCRIPTION);
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntityTwo = businessObjectDefinitionDaoTestHelper
+            .createBusinessObjectDefinitionEntity(AbstractDaoTest.NAMESPACE_2, AbstractDaoTest.BDEF_NAME_2, AbstractDaoTest.DATA_PROVIDER_NAME_2,
+                AbstractDaoTest.BDEF_DESCRIPTION_2);
+
+        // Only add the most recent 1 to the list
+        businessObjectDefinitionEntities.add(businessObjectDefinitionEntityTwo);
+
+        // Get the list of most recent 1 business object definitions
+        assertEquals(businessObjectDefinitionEntities, businessObjectDefinitionDao.getMostRecentBusinessObjectDefinitions(1));
+    }
+
+    @Test
+    public void testGetCountOfAllBusinessObjectDefinitions()
+    {
+        // Create and persist two business object definition entities.
+        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities =
+            businessObjectDefinitionDaoTestHelper.createExpectedBusinessObjectDefinitionEntities();
+
+        // Get the count of all business object definitions
+        assertEquals(businessObjectDefinitionEntities.size(), businessObjectDefinitionDao.getCountOfAllBusinessObjectDefinitions());
+    }
 }

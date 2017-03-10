@@ -21,7 +21,7 @@
    <parent>
       <groupId>org.finra.herd</groupId>
       <artifactId>herd-code</artifactId>
-      <version>0.32.0-SNAPSHOT</version>
+      <version>0.39.0-SNAPSHOT</version>
    </parent>
 
    <name>herd service</name>
@@ -72,6 +72,15 @@
          <groupId>org.springframework</groupId>
          <artifactId>spring-tx</artifactId>
       </dependency>
+      <dependency>
+         <groupId>org.springframework.retry</groupId>
+         <artifactId>spring-retry</artifactId>
+      </dependency>
+
+      <dependency>
+         <groupId>org.apache.maven</groupId>
+         <artifactId>maven-artifact</artifactId>
+      </dependency>
 
       <dependency>
          <groupId>org.apache.commons</groupId>
@@ -110,6 +119,24 @@
          <groupId>org.mockito</groupId>
          <artifactId>mockito-all</artifactId>
       </dependency>
+
+      <!-- Elastic search -->
+      <dependency>
+         <groupId>org.elasticsearch</groupId>
+         <artifactId>elasticsearch</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.elasticsearch.client</groupId>
+         <artifactId>transport</artifactId>
+      </dependency>
+
+      <!-- jsoup HTML parser library @ http://jsoup.org/ -->
+      <dependency>
+         <groupId>org.jsoup</groupId>
+         <artifactId>jsoup</artifactId>
+         <version>${jsoup.version}</version>
+      </dependency>
+
    </dependencies>
 
 </project>

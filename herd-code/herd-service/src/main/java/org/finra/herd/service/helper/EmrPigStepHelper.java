@@ -194,4 +194,16 @@ public class EmrPigStepHelper extends EmrStepHelper
         validateStepName(pigStepRequest.getStepName());
         validateScriptLocation(pigStepRequest.getScriptLocation());
     }
+
+    @Override
+    public String getRequestAccountId(Object stepRequest)
+    {
+        return ((EmrPigStepAddRequest) stepRequest).getAccountId();
+    }
+
+    @Override
+    public void setRequestAccountId(Object stepRequest, String accountId)
+    {
+        ((EmrPigStepAddRequest) stepRequest).setAccountId(accountId);
+    }
 }

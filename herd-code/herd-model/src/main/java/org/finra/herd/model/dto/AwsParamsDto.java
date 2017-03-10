@@ -29,6 +29,21 @@ package org.finra.herd.model.dto;
 public class AwsParamsDto
 {
     /**
+     * An AWS access key ID that identifies the security credentials.
+     */
+    private String awsAccessKeyId;
+
+    /**
+     * An AWS secret access key.
+     */
+    private String awsSecretKey;
+
+    /**
+     * An AWS session token.
+     */
+    private String sessionToken;
+
+    /**
      * An HTTP proxy host.
      */
     private String httpProxyHost;
@@ -37,6 +52,86 @@ public class AwsParamsDto
      * An HTTP proxy port.
      */
     private Integer httpProxyPort;
+
+    public String getAwsAccessKeyId()
+    {
+        return awsAccessKeyId;
+    }
+
+    public void setAwsAccessKeyId(String awsAccessKeyId)
+    {
+        this.awsAccessKeyId = awsAccessKeyId;
+    }
+
+    public String getAwsSecretKey()
+    {
+        return awsSecretKey;
+    }
+
+    @Override
+    public boolean equals(Object object)
+    {
+        if (this == object)
+        {
+            return true;
+        }
+        if (!(object instanceof AwsParamsDto))
+        {
+            return false;
+        }
+
+        AwsParamsDto that = (AwsParamsDto) object;
+
+        if (awsAccessKeyId != null ? !awsAccessKeyId.equals(that.awsAccessKeyId) : that.awsAccessKeyId != null)
+        {
+            return false;
+        }
+        if (awsSecretKey != null ? !awsSecretKey.equals(that.awsSecretKey) : that.awsSecretKey != null)
+        {
+            return false;
+        }
+        if (httpProxyHost != null ? !httpProxyHost.equals(that.httpProxyHost) : that.httpProxyHost != null)
+        {
+            return false;
+        }
+        if (httpProxyPort != null ? !httpProxyPort.equals(that.httpProxyPort) : that.httpProxyPort != null)
+        {
+            return false;
+        }
+        if (sessionToken != null ? !sessionToken.equals(that.sessionToken) : that.sessionToken != null)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int result = awsAccessKeyId != null ? awsAccessKeyId.hashCode() : 0;
+        result = 31 * result + (awsSecretKey != null ? awsSecretKey.hashCode() : 0);
+        result = 31 * result + (sessionToken != null ? sessionToken.hashCode() : 0);
+        result = 31 * result + (httpProxyHost != null ? httpProxyHost.hashCode() : 0);
+        result = 31 * result + (httpProxyPort != null ? httpProxyPort.hashCode() : 0);
+        return result;
+    }
+
+    public String getSessionToken()
+    {
+
+        return sessionToken;
+    }
+
+    public void setSessionToken(String sessionToken)
+    {
+        this.sessionToken = sessionToken;
+    }
+
+    public void setAwsSecretKey(String awsSecretKey)
+    {
+        this.awsSecretKey = awsSecretKey;
+    }
 
     public String getHttpProxyHost()
     {
@@ -56,39 +151,5 @@ public class AwsParamsDto
     public void setHttpProxyPort(Integer httpProxyPort)
     {
         this.httpProxyPort = httpProxyPort;
-    }
-    
-    @Override
-    public boolean equals(Object object)
-    {
-        if (this == object)
-        {
-            return true;
-        }
-        if (object == null || getClass() != object.getClass())
-        {
-            return false;
-        }
-        
-        AwsParamsDto that = (AwsParamsDto) object;
-
-        if (httpProxyHost != null ? !httpProxyHost.equals(that.httpProxyHost) : that.httpProxyHost != null)
-        {
-            return false;
-        }
-        if (httpProxyPort != null ? !httpProxyPort.equals(that.httpProxyPort) : that.httpProxyPort != null)
-        {
-            return false;
-        }
-
-        return true;
-    }
-
-    @Override
-    public int hashCode()
-    {
-        int result = httpProxyHost != null ? httpProxyHost.hashCode() : 0;
-        result = 31 * result + (httpProxyPort != null ? httpProxyPort.hashCode() : 0);
-        return result;
     }
 }

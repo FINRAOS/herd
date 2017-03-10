@@ -36,9 +36,10 @@ public class TestBusinessObjectDataRetryStoragePolicyTransitionHelperServiceImpl
      * This implementation keeps the current transaction context.
      */
     @Override
-    public void executeAwsSpecificSteps(BusinessObjectDataRetryStoragePolicyTransitionDto businessObjectDataRetryStoragePolicyTransitionDto)
+    public BusinessObjectData executeRetryStoragePolicyTransitionAfterStep(
+        BusinessObjectDataRetryStoragePolicyTransitionDto businessObjectDataRetryStoragePolicyTransitionDto)
     {
-        executeAwsSpecificStepsImpl(businessObjectDataRetryStoragePolicyTransitionDto);
+        return executeRetryStoragePolicyTransitionAfterStepImpl(businessObjectDataRetryStoragePolicyTransitionDto);
     }
 
     /**
@@ -47,10 +48,9 @@ public class TestBusinessObjectDataRetryStoragePolicyTransitionHelperServiceImpl
      * This implementation keeps the current transaction context.
      */
     @Override
-    public BusinessObjectData executeRetryStoragePolicyTransitionAfterStep(
-        BusinessObjectDataRetryStoragePolicyTransitionDto businessObjectDataRetryStoragePolicyTransitionDto)
+    public void executeS3SpecificSteps(BusinessObjectDataRetryStoragePolicyTransitionDto businessObjectDataRetryStoragePolicyTransitionDto)
     {
-        return executeRetryStoragePolicyTransitionAfterStepImpl(businessObjectDataRetryStoragePolicyTransitionDto);
+        executeS3SpecificStepsImpl(businessObjectDataRetryStoragePolicyTransitionDto);
     }
 
     /**

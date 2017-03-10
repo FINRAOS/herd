@@ -66,6 +66,7 @@ import org.springframework.core.task.TaskExecutor;
 import org.springframework.jdbc.datasource.init.DatabasePopulatorUtils;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 import org.springframework.jms.config.DefaultJmsListenerContainerFactory;
+import org.springframework.retry.annotation.EnableRetry;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -87,6 +88,7 @@ import org.finra.herd.service.systemjobs.AbstractSystemJob;
 /**
  * Service Spring module configuration.
  */
+@EnableRetry
 @Configuration
 // Component scan all packages, but exclude the configuration ones since they are explicitly specified.
 @ComponentScan(value = "org.finra.herd.service",
@@ -155,7 +157,7 @@ public class ServiceSpringModuleConfig
 
     /**
      * Activiti's dedicated TaskExecutor bean definition.
-     * 
+     *
      * @return TaskExecutor
      */
     @Bean

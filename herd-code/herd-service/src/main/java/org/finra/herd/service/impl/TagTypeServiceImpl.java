@@ -15,6 +15,8 @@
 */
 package org.finra.herd.service.impl;
 
+import static org.finra.herd.model.dto.SearchIndexUpdateDto.SEARCH_INDEX_UPDATE_TYPE_UPDATE;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -26,9 +28,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
+import org.finra.herd.dao.BusinessObjectDefinitionDao;
+import org.finra.herd.dao.TagDao;
 import org.finra.herd.dao.TagTypeDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
+import org.finra.herd.model.annotation.PublishJmsMessages;
 import org.finra.herd.model.api.xml.TagType;
 import org.finra.herd.model.api.xml.TagTypeCreateRequest;
 import org.finra.herd.model.api.xml.TagTypeKey;
@@ -36,10 +41,12 @@ import org.finra.herd.model.api.xml.TagTypeKeys;
 import org.finra.herd.model.api.xml.TagTypeSearchRequest;
 import org.finra.herd.model.api.xml.TagTypeSearchResponse;
 import org.finra.herd.model.api.xml.TagTypeUpdateRequest;
+import org.finra.herd.model.jpa.TagEntity;
 import org.finra.herd.model.jpa.TagTypeEntity;
 import org.finra.herd.service.SearchableService;
 import org.finra.herd.service.TagTypeService;
 import org.finra.herd.service.helper.AlternateKeyHelper;
+import org.finra.herd.service.helper.SearchIndexUpdateHelper;
 import org.finra.herd.service.helper.TagTypeDaoHelper;
 import org.finra.herd.service.helper.TagTypeHelper;
 
@@ -50,14 +57,26 @@ import org.finra.herd.service.helper.TagTypeHelper;
 @Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
 public class TagTypeServiceImpl implements TagTypeService, SearchableService
 {
+    // Constant to hold the description field option for the search response.
+    public final static String DESCRIPTION_FIELD = "display".toLowerCase();
+
     // Constant to hold the display name field option for the search response.
     public final static String DISPLAY_NAME_FIELD = "displayName".toLowerCase();
 
-    // Constant to hold the display name field option for the search response.
+    // Constant to hold the tag type order field option for the search response.
     public final static String TAG_TYPE_ORDER_FIELD = "tagTypeOrder".toLowerCase();
 
     @Autowired
     private AlternateKeyHelper alternateKeyHelper;
+
+    @Autowired
+    private BusinessObjectDefinitionDao businessObjectDefinitionDao;
+
+    @Autowired
+    private SearchIndexUpdateHelper searchIndexUpdateHelper;
+
+    @Autowired
+    private TagDao tagDao;
 
     @Autowired
     private TagTypeDao tagTypeDao;
@@ -75,8 +94,7 @@ public class TagTypeServiceImpl implements TagTypeService, SearchableService
         validateTagTypeCreateRequest(request);
 
         // Validate the tag type does not already exist in the database.
-        TagTypeEntity tagTypeEntity = tagTypeDao.getTagTypeByKey(request.getTagTypeKey());
-        if (tagTypeEntity != null)
+        if (tagTypeDao.getTagTypeByKey(request.getTagTypeKey()) != null)
         {
             throw new AlreadyExistsException(
                 String.format("Unable to create tag type with code \"%s\" because it already exists.", request.getTagTypeKey().getTagTypeCode()));
@@ -86,7 +104,7 @@ public class TagTypeServiceImpl implements TagTypeService, SearchableService
         tagTypeDaoHelper.assertTagTypeDisplayNameDoesNotExist(request.getDisplayName());
 
         // Create and persist a new tag type entity from the request information.
-        tagTypeEntity = createTagTypeEntity(request.getTagTypeKey().getTagTypeCode(), request.getDisplayName(), request.getTagTypeOrder());
+        TagTypeEntity tagTypeEntity = createTagTypeEntity(request);
 
         // Create and return the tag type object from the persisted entity.
         return createTagTypeFromEntity(tagTypeEntity);
@@ -130,7 +148,7 @@ public class TagTypeServiceImpl implements TagTypeService, SearchableService
     @Override
     public Set<String> getValidSearchResponseFields()
     {
-        return ImmutableSet.of(DISPLAY_NAME_FIELD, TAG_TYPE_ORDER_FIELD);
+        return ImmutableSet.of(DISPLAY_NAME_FIELD, TAG_TYPE_ORDER_FIELD, DESCRIPTION_FIELD);
     }
 
     @Override
@@ -149,13 +167,15 @@ public class TagTypeServiceImpl implements TagTypeService, SearchableService
         List<TagType> tagTypes = new ArrayList<>();
         for (TagTypeEntity tagTypeEntity : tagTypeEntities)
         {
-            tagTypes.add(createTagTypeFromEntity(tagTypeEntity, fields.contains(DISPLAY_NAME_FIELD), fields.contains(TAG_TYPE_ORDER_FIELD)));
+            tagTypes.add(createTagTypeFromEntity(tagTypeEntity, fields.contains(DISPLAY_NAME_FIELD), fields.contains(TAG_TYPE_ORDER_FIELD),
+                fields.contains(DESCRIPTION_FIELD)));
         }
 
         // Build and return the search response.
         return new TagTypeSearchResponse(tagTypes);
     }
 
+    @PublishJmsMessages
     @Override
     public TagType updateTagType(TagTypeKey tagTypeKey, TagTypeUpdateRequest request)
     {
@@ -178,6 +198,14 @@ public class TagTypeServiceImpl implements TagTypeService, SearchableService
         // Update and persist the tag type entity.
         updateTagTypeEntity(tagTypeEntity, request);
 
+        // Notify the search index that a business object definition must be updated.
+        List<TagEntity> tagEntities = tagDao.getTagsByTagTypeEntityAndParentTagCode(tagTypeEntity, null, null);
+        searchIndexUpdateHelper.modifyBusinessObjectDefinitionsInSearchIndex(businessObjectDefinitionDao.getBusinessObjectDefinitions(tagEntities),
+            SEARCH_INDEX_UPDATE_TYPE_UPDATE);
+
+        // Notify the tag search index that tags must be updated.
+        searchIndexUpdateHelper.modifyTagsInSearchIndex(tagEntities, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
+
         // Create and return the tag type from the persisted entity.
         return createTagTypeFromEntity(tagTypeEntity);
     }
@@ -185,18 +213,19 @@ public class TagTypeServiceImpl implements TagTypeService, SearchableService
     /**
      * Creates and persists a new tag type entity.
      *
-     * @param tagTypeCode the tag type code
-     * @param displayName the display name
-     * @param tagTypeOrder the tag type order number
+     * @param request the tag type create request
      *
      * @return the newly created tag type entity
      */
-    private TagTypeEntity createTagTypeEntity(String tagTypeCode, String displayName, int tagTypeOrder)
+    private TagTypeEntity createTagTypeEntity(TagTypeCreateRequest request)
     {
         TagTypeEntity tagTypeEntity = new TagTypeEntity();
-        tagTypeEntity.setCode(tagTypeCode);
-        tagTypeEntity.setDisplayName(displayName);
-        tagTypeEntity.setOrderNumber(tagTypeOrder);
+
+        tagTypeEntity.setCode(request.getTagTypeKey().getTagTypeCode());
+        tagTypeEntity.setDisplayName(request.getDisplayName());
+        tagTypeEntity.setOrderNumber(request.getTagTypeOrder());
+        tagTypeEntity.setDescription(request.getDescription());
+
         return tagTypeDao.saveAndRefresh(tagTypeEntity);
     }
 
@@ -209,19 +238,20 @@ public class TagTypeServiceImpl implements TagTypeService, SearchableService
      */
     private TagType createTagTypeFromEntity(TagTypeEntity tagTypeEntity)
     {
-        return createTagTypeFromEntity(tagTypeEntity, true, true);
+        return createTagTypeFromEntity(tagTypeEntity, true, true, true);
     }
 
     /**
      * Creates the tag type registration from the persisted entity.
      *
      * @param tagTypeEntity the tag type registration entity
-     * @param includeDisplayName specifies to include display name field
-     * @param includeTagTypeOrder specifies to include tag type order field
+     * @param includeDisplayName specifies to include the display name field
+     * @param includeTagTypeOrder specifies to include the tag type order field
+     * @param includeDescription specifies to include the description field
      *
      * @return the tag type registration
      */
-    private TagType createTagTypeFromEntity(TagTypeEntity tagTypeEntity, boolean includeDisplayName, boolean includeTagTypeOrder)
+    private TagType createTagTypeFromEntity(TagTypeEntity tagTypeEntity, boolean includeDisplayName, boolean includeTagTypeOrder, boolean includeDescription)
     {
         TagType tagType = new TagType();
 
@@ -239,6 +269,11 @@ public class TagTypeServiceImpl implements TagTypeService, SearchableService
             tagType.setTagTypeOrder(tagTypeEntity.getOrderNumber());
         }
 
+        if (includeDescription)
+        {
+            tagType.setDescription(tagTypeEntity.getDescription());
+        }
+
         return tagType;
     }
 
@@ -250,8 +285,10 @@ public class TagTypeServiceImpl implements TagTypeService, SearchableService
      */
     private void updateTagTypeEntity(TagTypeEntity tagTypeEntity, TagTypeUpdateRequest request)
     {
+        // Update the tag type entity fields.
         tagTypeEntity.setDisplayName(request.getDisplayName());
         tagTypeEntity.setOrderNumber(request.getTagTypeOrder());
+        tagTypeEntity.setDescription(request.getDescription());
 
         // Persist and refresh the entity.
         tagTypeDao.saveAndRefresh(tagTypeEntity);

@@ -15,26 +15,26 @@
 */
 package org.finra.herd.service;
 
-import org.finra.herd.model.dto.EmrClusterAlternateKeyDto;
 import org.finra.herd.model.api.xml.EmrCluster;
 import org.finra.herd.model.api.xml.EmrClusterCreateRequest;
 import org.finra.herd.model.api.xml.EmrMasterSecurityGroup;
 import org.finra.herd.model.api.xml.EmrMasterSecurityGroupAddRequest;
 import org.finra.herd.model.api.xml.OozieWorkflowJob;
 import org.finra.herd.model.api.xml.RunOozieWorkflowRequest;
+import org.finra.herd.model.dto.EmrClusterAlternateKeyDto;
 
 /**
  * The EMR service.
  */
 public interface EmrService
 {
-    public EmrCluster getCluster(EmrClusterAlternateKeyDto alternateKey, String emrClusterId, String emrStepId, boolean verbose, boolean retrieveOozieJobs)
-        throws Exception;
+    public EmrCluster getCluster(EmrClusterAlternateKeyDto alternateKey, String emrClusterId, String emrStepId, boolean verbose, boolean retrieveOozieJobs,
+        String accountId) throws Exception;
 
     public EmrCluster createCluster(EmrClusterCreateRequest request) throws Exception;
 
-    public EmrCluster terminateCluster(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, boolean overrideTerminationProtection, String emrClusterId)
-        throws Exception;
+    public EmrCluster terminateCluster(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, boolean overrideTerminationProtection, String emrClusterId,
+        String accountId) throws Exception;
 
     public Object addStepToCluster(Object emrStepAddRequest) throws Exception;
 
@@ -52,9 +52,10 @@ public interface EmrService
      * @param oozieWorkflowJobId Oozie workflow job ID
      * @param verbose true to retrieve more details, false otherwise. Defaults to false.
      * @param emrClusterId The EMR cluster ID
+     * @param accountId account Id
      * @return Oozie workflow details
      * @throws Exception when an error occurs. Most user errors would be a runtime exception.
      */
     public OozieWorkflowJob getEmrOozieWorkflowJob(String namespace, String emrClusterDefinitionName, String emrClusterName, String oozieWorkflowJobId,
-        Boolean verbose, String emrClusterId) throws Exception;
+        Boolean verbose, String emrClusterId, String accountId) throws Exception;
 }

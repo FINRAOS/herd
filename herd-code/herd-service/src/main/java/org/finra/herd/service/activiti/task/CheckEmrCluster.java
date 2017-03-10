@@ -41,6 +41,11 @@ import org.finra.herd.model.dto.EmrClusterAlternateKeyDto;
 @Component
 public class CheckEmrCluster extends BaseEmrCluster
 {
+    public static final String VARIABLE_EMR_CLUSTER_STATUS_CHANGE_REASON_CODE = "emrClusterStatus_changeReasonCode";
+    public static final String VARIABLE_EMR_CLUSTER_STATUS_CHANGE_REASON_MESSAGE = "emrClusterStatus_changeReasonMessage";
+    public static final String VARIABLE_EMR_CLUSTER_CREATION_TIME = "emrClusterStatus_creationTime";
+    public static final String VARIABLE_EMR_CLUSTER_READY_TIME = "emrClusterStatus_readyTime";
+    public static final String VARIABLE_EMR_CLUSTER_END_TIME = "emrClusterStatus_endTime";
     private Expression emrClusterId;
 
     private Expression emrStepId;
@@ -48,6 +53,8 @@ public class CheckEmrCluster extends BaseEmrCluster
     private Expression verbose;
 
     private Expression retrieveOozieJobs;
+    
+    private Expression accountId;
 
     @Override
     public void executeImpl(DelegateExecution execution) throws Exception
@@ -58,12 +65,21 @@ public class CheckEmrCluster extends BaseEmrCluster
         String emrClusterIdString = activitiHelper.getExpressionVariableAsString(emrClusterId, execution);
         boolean verboseBoolean = activitiHelper.getExpressionVariableAsBoolean(verbose, execution, "verbose", false, false);
         boolean retrieveOozieJobsBoolean = activitiHelper.getExpressionVariableAsBoolean(retrieveOozieJobs, execution, "retrieveOozieJobs", false, false);
-
+        String accountIdString = activitiHelper.getExpressionVariableAsString(accountId, execution);
+        
         // Gets the EMR cluster details.
-        EmrCluster emrCluster = emrService.getCluster(emrClusterAlternateKeyDto, emrClusterIdString, emrStepIdString, verboseBoolean, retrieveOozieJobsBoolean);
+        EmrCluster emrCluster =
+                emrService
+                        .getCluster(emrClusterAlternateKeyDto, emrClusterIdString, emrStepIdString, verboseBoolean, retrieveOozieJobsBoolean, accountIdString);
 
         // Set cluster id and status workflow variables based on the result EMR cluster.
         setIdStatusWorkflowVariables(execution, emrCluster);
+
+        setTaskWorkflowVariable(execution, VARIABLE_EMR_CLUSTER_STATUS_CHANGE_REASON_CODE, emrCluster.getStatusChangeReason().getCode());
+        setTaskWorkflowVariable(execution, VARIABLE_EMR_CLUSTER_STATUS_CHANGE_REASON_MESSAGE, emrCluster.getStatusChangeReason().getMessage());
+        setTaskWorkflowVariable(execution, VARIABLE_EMR_CLUSTER_CREATION_TIME, emrCluster.getStatusTimeline().getCreationTime());
+        setTaskWorkflowVariable(execution, VARIABLE_EMR_CLUSTER_READY_TIME, emrCluster.getStatusTimeline().getReadyTime());
+        setTaskWorkflowVariable(execution, VARIABLE_EMR_CLUSTER_END_TIME, emrCluster.getStatusTimeline().getEndTime());
 
         // Set the active step details in workflow variables
         if (emrCluster.getActiveStep() != null && emrCluster.getActiveStep().getId() != null)

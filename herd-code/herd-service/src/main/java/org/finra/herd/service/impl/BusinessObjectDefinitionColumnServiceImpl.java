@@ -15,6 +15,8 @@
 */
 package org.finra.herd.service.impl;
 
+import static org.finra.herd.model.dto.SearchIndexUpdateDto.SEARCH_INDEX_UPDATE_TYPE_UPDATE;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -34,6 +36,7 @@ import org.finra.herd.dao.SchemaColumnDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.ObjectNotFoundException;
+import org.finra.herd.model.annotation.PublishJmsMessages;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumn;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnCreateRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnKey;
@@ -53,6 +56,7 @@ import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionColumnDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionHelper;
+import org.finra.herd.service.helper.SearchIndexUpdateHelper;
 
 /**
  * The business object definition column service implementation.
@@ -88,6 +92,10 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
     @Autowired
     private SchemaColumnDao schemaColumnDao;
 
+    @Autowired
+    private SearchIndexUpdateHelper searchIndexUpdateHelper;
+
+    @PublishJmsMessages
     @Override
     public BusinessObjectDefinitionColumn createBusinessObjectDefinitionColumn(BusinessObjectDefinitionColumnCreateRequest request)
     {
@@ -157,10 +165,14 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
         // Persist the new entity.
         businessObjectDefinitionColumnEntity = businessObjectDefinitionColumnDao.saveAndRefresh(businessObjectDefinitionColumnEntity);
 
+        // Notify the search index that a business object definition must be updated.
+        searchIndexUpdateHelper.modifyBusinessObjectDefinitionInSearchIndex(businessObjectDefinitionEntity, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
+
         // Create and return the business object definition column object from the persisted entity.
         return createBusinessObjectDefinitionColumnFromEntity(businessObjectDefinitionColumnEntity, true, getValidSearchResponseFields());
     }
 
+    @PublishJmsMessages
     @Override
     public BusinessObjectDefinitionColumn deleteBusinessObjectDefinitionColumn(BusinessObjectDefinitionColumnKey businessObjectDefinitionColumnKey)
     {
@@ -181,6 +193,9 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionColumnEntity.getBusinessObjectDefinition();
         businessObjectDefinitionEntity.getColumns().remove(businessObjectDefinitionColumnEntity);
         businessObjectDefinitionDao.saveAndRefresh(businessObjectDefinitionEntity);
+
+        // Notify the search index that a business object definition must be updated.
+        searchIndexUpdateHelper.modifyBusinessObjectDefinitionInSearchIndex(businessObjectDefinitionEntity, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
 
         // Create and return the business object definition column object from the deleted entity.
         return createBusinessObjectDefinitionColumnFromEntity(businessObjectDefinitionColumnEntity, true, getValidSearchResponseFields());
@@ -258,6 +273,7 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
             .collect(Collectors.toList()));
     }
 
+    @PublishJmsMessages
     @Override
     public BusinessObjectDefinitionColumn updateBusinessObjectDefinitionColumn(BusinessObjectDefinitionColumnKey businessObjectDefinitionColumnKey,
         BusinessObjectDefinitionColumnUpdateRequest request)
@@ -277,6 +293,10 @@ public class BusinessObjectDefinitionColumnServiceImpl implements BusinessObject
 
         // Persist the entity.
         businessObjectDefinitionColumnEntity = businessObjectDefinitionColumnDao.saveAndRefresh(businessObjectDefinitionColumnEntity);
+
+        // Notify the search index that a business object definition must be updated.
+        searchIndexUpdateHelper
+            .modifyBusinessObjectDefinitionInSearchIndex(businessObjectDefinitionColumnEntity.getBusinessObjectDefinition(), SEARCH_INDEX_UPDATE_TYPE_UPDATE);
 
         // Create and return the business object definition column object from the persisted entity.
         return createBusinessObjectDefinitionColumnFromEntity(businessObjectDefinitionColumnEntity, true, getValidSearchResponseFields());

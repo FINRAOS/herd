@@ -28,10 +28,13 @@ import org.finra.herd.model.api.xml.BusinessObjectDataDdlRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.BusinessObjectDataKeys;
 import org.finra.herd.model.api.xml.BusinessObjectDataRetryStoragePolicyTransitionRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchResult;
 import org.finra.herd.model.api.xml.BusinessObjectDataVersions;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
+import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 
 /**
  * The business object data service.
@@ -163,4 +166,22 @@ public interface BusinessObjectDataService
      * @return business data search result
      */
     public BusinessObjectDataSearchResult searchBusinessObjectData(BusinessObjectDataSearchRequest request);
+
+    /**
+     * Retrieves a list of keys for all existing business object data up to the limit configured in the system per specified business object definition.
+     *
+     * @param businessObjectDefinitionKey the business object definition key (case-insensitive)
+     *
+     * @return the list of business object data keys
+     */
+    public BusinessObjectDataKeys getAllBusinessObjectDataByBusinessObjectDefinition(BusinessObjectDefinitionKey businessObjectDefinitionKey);
+
+    /**
+     * Retrieves a list of keys for all existing business object data up to the limit configured in the system per specified business object format.
+     *
+     * @param businessObjectFormatKey the business object format key (case-insensitive)
+     *
+     * @return the list of business object data keys
+     */
+    public BusinessObjectDataKeys getAllBusinessObjectDataByBusinessObjectFormat(BusinessObjectFormatKey businessObjectFormatKey);
 }

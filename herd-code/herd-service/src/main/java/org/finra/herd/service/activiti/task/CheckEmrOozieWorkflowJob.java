@@ -66,7 +66,7 @@ public class CheckEmrOozieWorkflowJob extends BaseJavaDelegate
         
         // Get the oozie job status.
         OozieWorkflowJob oozieWorkflowJob = emrService.getEmrOozieWorkflowJob(namespaceString, emrClusterDefinitionNameString, emrClusterNameString,
-            oozieWorkflowJobIdString, verboseBoolean, emrClusterIdString);
+            oozieWorkflowJobIdString, verboseBoolean, emrClusterIdString, null);
 
         // Set the JSON response as a workflow variable.
         setJsonResponseAsWorkflowVariable(oozieWorkflowJob, execution);

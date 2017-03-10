@@ -45,11 +45,14 @@ import org.finra.herd.model.api.xml.BusinessObjectDataDownloadCredential;
 import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.BusinessObjectDataKeys;
 import org.finra.herd.model.api.xml.BusinessObjectDataRetryStoragePolicyTransitionRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchResult;
 import org.finra.herd.model.api.xml.BusinessObjectDataUploadCredential;
 import org.finra.herd.model.api.xml.BusinessObjectDataVersions;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
+import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.S3KeyPrefixInformation;
 import org.finra.herd.model.api.xml.StorageUnitDownloadCredential;
 import org.finra.herd.model.api.xml.StorageUnitUploadCredential;
@@ -686,5 +689,56 @@ public class BusinessObjectDataRestController extends HerdBaseController
     public BusinessObjectDataSearchResult searchBusinessObjectData(@RequestBody BusinessObjectDataSearchRequest businessObjectDataSearchRequest)
     {
         return businessObjectDataService.searchBusinessObjectData(businessObjectDataSearchRequest);
+    }
+
+    /**
+     * Retrieves a list of keys for all existing business object data up to the limit configured in the system per specified business object definition. <p>
+     * Results are sorted alphabetically by primary and sub-partition values descending. </p> <p> The limit on how many records this endpoint returns is set by
+     * "business.object.data.search.max.results.per.page" configuration value. </p> <p> Requires READ permission on namespace. </p>
+     *
+     * @param namespace the namespace
+     * @param businessObjectDefinitionName the business object definition name
+     *
+     * @return the list of business object data keys
+     */
+    @RequestMapping(
+        value = "/businessObjectData/namespaces/{namespace}" + "/businessObjectDefinitionNames/{businessObjectDefinitionName}",
+        method = RequestMethod.GET)
+    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_BY_BUSINESS_OBJECT_DEFINITION_GET)
+    public BusinessObjectDataKeys getAllBusinessObjectDataByBusinessObjectDefinition(@PathVariable("namespace") String namespace,
+        @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName)
+    {
+        return businessObjectDataService
+            .getAllBusinessObjectDataByBusinessObjectDefinition(new BusinessObjectDefinitionKey(namespace, businessObjectDefinitionName));
+    }
+
+    /**
+     * Retrieves a list of keys for all existing business object data up to the limit configured in the system per specified business object format. <p> Results
+     * are sorted alphabetically by primary and sub-partition values descending. </p> <p> The limit on how many records this endpoint returns is set by
+     * "business.object.data.search.max.results.per.page" configuration value. </p> <p> Requires READ permission on namespace. </p>
+     *
+     * @param namespace the namespace
+     * @param businessObjectDefinitionName the business object definition name
+     * @param businessObjectFormatUsage the business object format usage
+     * @param businessObjectFormatFileType the business object format file type
+     * @param businessObjectFormatVersion the business object format version
+     *
+     * @return the list of business object data keys
+     */
+    @RequestMapping(
+        value = "/businessObjectData/namespaces/{namespace}" +
+            "/businessObjectDefinitionNames/{businessObjectDefinitionName}/businessObjectFormatUsages/{businessObjectFormatUsage}" +
+            "/businessObjectFormatFileTypes/{businessObjectFormatFileType}/businessObjectFormatVersions/{businessObjectFormatVersion}",
+        method = RequestMethod.GET)
+    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_BY_BUSINESS_OBJECT_FORMAT_GET)
+    public BusinessObjectDataKeys getAllBusinessObjectDataByBusinessObjectFormat(@PathVariable("namespace") String namespace,
+        @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
+        @PathVariable("businessObjectFormatUsage") String businessObjectFormatUsage,
+        @PathVariable("businessObjectFormatFileType") String businessObjectFormatFileType,
+        @PathVariable("businessObjectFormatVersion") Integer businessObjectFormatVersion)
+    {
+        return businessObjectDataService.getAllBusinessObjectDataByBusinessObjectFormat(
+            new BusinessObjectFormatKey(namespace, businessObjectDefinitionName, businessObjectFormatUsage, businessObjectFormatFileType,
+                businessObjectFormatVersion));
     }
 }

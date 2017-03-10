@@ -15,6 +15,7 @@
 */
 package org.finra.herd.dao;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -24,6 +25,7 @@ import java.util.Map;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.MapPropertySource;
@@ -32,6 +34,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.finra.herd.core.AbstractCoreTest;
+import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.dao.config.DaoTestSpringModuleConfig;
 import org.finra.herd.dao.helper.HerdCollectionHelper;
@@ -79,6 +82,14 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String ATTRIBUTE_VALUE_4 = "Attribute Value 4";
 
+    public static final String AWS_ACCOUNT_ID = "UT_AwsAccountId_1_" + RANDOM_SUFFIX;
+
+    public static final String AWS_ASSUMED_ROLE_ACCESS_KEY = "UT_AwsAssumedRoleAccessKey_1_" + RANDOM_SUFFIX;
+
+    public static final String AWS_ASSUMED_ROLE_SECRET_KEY = "UT_AwsAssumedRoleSecretKey_1_" + RANDOM_SUFFIX;
+
+    public static final String AWS_ASSUMED_ROLE_SESSION_TOKEN = "UT_AwsAssumedRoleSessionToken_1_" + RANDOM_SUFFIX;
+
     public static final String AWS_REGION = "UT_Region" + RANDOM_SUFFIX;
 
     public static final String AWS_ROLE_ARN = "UT_AwsRoleArn" + RANDOM_SUFFIX;
@@ -86,6 +97,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String BACKSLASH = "\\";
 
     public static final Integer BDATA_AGE_IN_DAYS = 1000;
+
+    public static final Integer BDATA_PARTITION_VALUE_AGE_IN_DAYS = 1000;
 
     public static final String BDATA_STATUS = "UT_Status_1_" + RANDOM_SUFFIX;
 
@@ -109,6 +122,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String BDEF_DESCRIPTION_2 = "UT_BusinessObjectDefinition_Description_" + RANDOM_SUFFIX_2;
 
+    public static final String BDEF_DESCRIPTION_WITH_HTML_AND_CARET_VALUES = "Test Description. Value should be <30> <div> <p> value should be <40> </p>";
+
     public static final String BDEF_DISPLAY_NAME = "UT_BusinessObjectDefinition_Display_Name_1_" + RANDOM_SUFFIX;
 
     public static final String BDEF_DISPLAY_NAME_2 = "UT_BusinessObjectDefinition_Display_Name_2_" + RANDOM_SUFFIX;
@@ -128,6 +143,12 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String BDEF_SHORT_DESCRIPTION = "UT_BusinessObjectDefinition_ShortDescription_" + RANDOM_SUFFIX;
 
     public static final String BDEF_SHORT_DESCRIPTION_2 = "UT_BusinessObjectDefinition_ShortDescription_2_" + RANDOM_SUFFIX;
+
+    public static final String BUSINESS_OBJECT_DEFINITION_INDEX = "bdef";
+
+    public static final float BUSINESS_OBJECT_DEFINITION_INDEX_BOOST = 1f;
+
+    public static final String CODE = "code";
 
     public static final String COLUMN_DATA_TYPE = "UT_Column_Data_Type_1_" + RANDOM_SUFFIX;
 
@@ -165,6 +186,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String CORRELATION_DATA_3 = "UT_Correlation_Data_3" + RANDOM_SUFFIX;
 
+    public static final XMLGregorianCalendar CREATED_ON = HerdDateUtils.getXMLGregorianCalendarValue(getRandomDate());
+
     public static final String CUSTOM_DDL_NAME = "UT_CustomDdl" + RANDOM_SUFFIX;
 
     public static final String CUSTOM_DDL_NAME_2 = "UT_CustomDdl_2" + RANDOM_SUFFIX;
@@ -181,6 +204,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String DESCRIPTION = "UT_Description_1_" + RANDOM_SUFFIX;
 
     public static final String DESCRIPTION_2 = "UT_Description_2_" + RANDOM_SUFFIX;
+
+    public static final String DISPLAY_NAME_FIELD = "displayname";
 
     public static final String DOWNLOADER_ROLE_ARN = "UT_DownloaderRoleArn" + RANDOM_SUFFIX;
 
@@ -207,6 +232,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String EMR_CLUSTER_NAME = "UT_EMR_CLUSTER" + RANDOM_SUFFIX;
 
     public static final String ENVIRONMENT_NAME = "TEST";
+
+    public static final String FIELD_DISPLAY_NAME = "displayName";
+
+    public static final String FIELD_SHORT_DESCRIPTION = "shortDescription";
 
     public static final Integer FIFTH_FORMAT_VERSION = 4;
 
@@ -258,6 +287,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Integer INVALID_FORMAT_VERSION = -1 * FORMAT_VERSION;
 
+    public static final String I_DO_NOT_EXIST = "I_DO_NOT_EXIST";
+
     public static final String JMS_QUEUE_NAME = "UT_JmsQueueName" + RANDOM_SUFFIX;
 
     public static final String JMS_QUEUE_NAME_2 = "UT_JmsQueueName_2" + RANDOM_SUFFIX;
@@ -276,6 +307,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String JOB_NAME_3 = "UT_Job_3" + RANDOM_SUFFIX;
 
+    public static final String JSON_STRING = "UT_JsonString_" + RANDOM_SUFFIX;
+
     public static final Boolean LATEST_VERSION_FLAG_SET = true;
 
     public static final String LOCAL_FILE = "foo.dat";
@@ -291,6 +324,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final Integer MAX_PARTITIONS = 5;
 
     public static final Integer MAX_RESULT = 10;
+
+    public static final Integer MAX_RESULTS_1 = 1;
 
     public static final String MESSAGE_TEXT = "UT_Message_Text" + RANDOM_SUFFIX;
 
@@ -308,6 +343,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String NAMESPACE_2 = "UT_Namespace_2_" + RANDOM_SUFFIX;
 
     public static final String NAMESPACE_3 = "UT_Namespace_3_" + RANDOM_SUFFIX;
+
+    public static final String NAMESPACE_CODE = "UT_NamespaceCode_1_" + RANDOM_SUFFIX;
 
     public static final String NOTIFICATION_EVENT_TYPE = "UT_Ntfcn_Event" + RANDOM_SUFFIX;
 
@@ -343,6 +380,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String NO_COLUMN_NAME = null;
 
+    public static final XMLGregorianCalendar NO_CREATED_ON = null;
+
+    public static final Timestamp NO_CREATED_ON_TIMESTAMP = null;
+
     public static final String NO_CUSTOM_DDL_NAME = null;
 
     public static final Integer NO_DATA_VERSION = null;
@@ -362,6 +403,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String NO_JOB_NAMESPACE = null;
 
     public static final Boolean NO_LATEST_VERSION_FLAG_SET = false;
+
+    public static final Integer NO_MAX_RESULTS = null;
 
     public static final String NO_NAMESPACE = null;
 
@@ -401,9 +444,17 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Boolean NO_TAG_HAS_CHILDREN_FLAG = null;
 
+    public static final String NO_TAG_TYPE_DESCRIPTION = null;
+
     public static final String NO_TAG_TYPE_DISPLAY_NAME = null;
 
     public static final Integer NO_TAG_TYPE_ORDER = null;
+
+    public static final XMLGregorianCalendar NO_UPDATED_ON = null;
+
+    public static final Timestamp NO_UPDATED_ON_TIMESTAMP = null;
+
+    public static final String NO_USER_TELEPHONE_NUMBER = null;
 
     public static final String OOZIE_WORKFLOW_LOCATION = "UT_Oozie_workflow_2" + RANDOM_SUFFIX;
 
@@ -467,6 +518,28 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String SCHEMA_PARTITION_COLUMN_NAME_PREFIX = "Prtn-Clmn-Name";
 
+    public static final String SEARCH_INDEX_DOCUMENT_TYPE = "UT_SearchIndex_DocumentType_" + RANDOM_SUFFIX;
+
+    public static final String SEARCH_INDEX_MAPPING = "UT_SearchIndex_Mapping_" + RANDOM_SUFFIX;
+
+    public static final String SEARCH_INDEX_SETTINGS = "UT_SearchIndex_Settings_" + RANDOM_SUFFIX;
+
+    public static final String SEARCH_INDEX_NAME = "UT_SearchIndexName_1_" + RANDOM_SUFFIX;
+
+    public static final String SEARCH_INDEX_NAME_2 = "UT_SearchIndexName_2_" + RANDOM_SUFFIX;
+
+    public static final String SEARCH_INDEX_STATUS = "UT_SearchIndexStatus_1_" + RANDOM_SUFFIX;
+
+    public static final String SEARCH_INDEX_STATUS_2 = "UT_SearchIndexStatus_2_" + RANDOM_SUFFIX;
+
+    public static final String SEARCH_INDEX_TYPE = "UT_SearchIndexType_1_" + RANDOM_SUFFIX;
+
+    public static final String SEARCH_INDEX_TYPE_2 = "UT_SearchIndexType_2_" + RANDOM_SUFFIX;
+
+    public static final int SEARCH_RESULT_SIZE = 200;
+
+    public static final String SEARCH_TERM = "Search Term";
+
     public static final Integer SECOND_DATA_VERSION = 1;
 
     public static final Integer SECOND_FORMAT_VERSION = 1;
@@ -484,6 +557,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final Boolean SELECT_ONLY_AVAILABLE_STORAGE_UNITS = true;
 
     public static final String SESSION_NAME = "UT_SessionName" + RANDOM_SUFFIX;
+
+    public static final String SHORT_DESCRIPTION_FIELD = "shortdescription";
 
     public static final String SINGLE_QUOTE = "'";
 
@@ -580,6 +655,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String TAG_CODE_5 = "UT_TagCode_5_" + RANDOM_SUFFIX;
 
+    public static final long TAG_COUNT = 120;
+
     public static final String TAG_DESCRIPTION = "UT_TagDescription_1_" + RANDOM_SUFFIX;
 
     public static final String TAG_DESCRIPTION_2 = "UT_TagDescription_2_" + RANDOM_SUFFIX;
@@ -604,9 +681,21 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Boolean TAG_HAS_NO_CHILDREN = false;
 
+    public static final String TAG_INDEX = "tag";
+
+    public static final float TAG_INDEX_BOOST = 1000f;
+
     public static final String TAG_TYPE = "UT_TagType_1_" + RANDOM_SUFFIX;
 
     public static final String TAG_TYPE_2 = "UT_TagType_2_" + RANDOM_SUFFIX;
+
+    public static final String TAG_TYPE_CODE = "UT_TagTypeCode_1_" + RANDOM_SUFFIX;
+
+    public static final long TAG_TYPE_COUNT = 240;
+
+    public static final String TAG_TYPE_DESCRIPTION = "UT_TagTypeDescription_1_" + RANDOM_SUFFIX;
+
+    public static final String TAG_TYPE_DESCRIPTION_2 = "UT_TagTypeDescription_2_" + RANDOM_SUFFIX;
 
     public static final String TAG_TYPE_DISPLAY_NAME = "UT_TagTypeDisplayName_1_" + RANDOM_SUFFIX;
 
@@ -640,13 +729,23 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final List<String> UNSORTED_PARTITION_VALUES =
         Arrays.asList("2014-04-02", "2014-04-04", "2014-04-03", "2014-04-02A", "2014-04-08", "2014-04-07", "2014-04-05", "2014-04-06");
 
+    public static final XMLGregorianCalendar UPDATED_ON = HerdDateUtils.getXMLGregorianCalendarValue(getRandomDate());
+
     public static final String UPLOADER_ROLE_ARN = "UT_UploaderRoleArn" + RANDOM_SUFFIX;
+
+    public static final String USER_EMAIL_ADDRESS = "UT_User_Email_Address_" + RANDOM_SUFFIX;
+
+    public static final String USER_FULL_NAME = "UT_User_Full_Name_" + RANDOM_SUFFIX;
 
     public static final String USER_ID = "UT_User_Id_1_" + RANDOM_SUFFIX;
 
     public static final String USER_ID_2 = "UT_User_Id_2_" + RANDOM_SUFFIX;
 
     public static final String USER_ID_3 = "UT_User_Id_3_" + RANDOM_SUFFIX;
+
+    public static final String USER_JOB_TITLE = "UT_User_Job_Title_" + RANDOM_SUFFIX;
+
+    public static final String USER_TELEPHONE_NUMBER = "UT_User_Telephone_Number_" + RANDOM_SUFFIX;
 
     private static final String OVERRIDE_PROPERTY_SOURCE_MAP_NAME = "overrideMapPropertySource";
 
@@ -827,6 +926,24 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     protected SchemaColumnDaoTestHelper schemaColumnDaoTestHelper;
 
     @Autowired
+    protected SearchIndexDao searchIndexDao;
+
+    @Autowired
+    protected SearchIndexDaoTestHelper searchIndexDaoTestHelper;
+
+    @Autowired
+    protected SearchIndexStatusDao searchIndexStatusDao;
+
+    @Autowired
+    protected SearchIndexStatusDaoTestHelper searchIndexStatusDaoTestHelper;
+
+    @Autowired
+    protected SearchIndexTypeDao searchIndexTypeDao;
+
+    @Autowired
+    protected SearchIndexTypeDaoTestHelper searchIndexTypeDaoTestHelper;
+
+    @Autowired
     protected SecurityFunctionDao securityFunctionDao;
 
     @Autowired
@@ -884,6 +1001,9 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     protected StsDao stsDao;
 
     @Autowired
+    protected SubjectMatterExpertDao subjectMatterExpertDao;
+
+    @Autowired
     protected TagDao tagDao;
 
     @Autowired
@@ -894,6 +1014,12 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     @Autowired
     protected TagTypeDaoTestHelper tagTypeDaoTestHelper;
+
+    @Autowired
+    protected TrustingAccountDao trustingAccountDao;
+
+    @Autowired
+    protected TrustingAccountDaoTestHelper trustingAccountDaoTestHelper;
 
     @Autowired
     protected UserDao userDao;

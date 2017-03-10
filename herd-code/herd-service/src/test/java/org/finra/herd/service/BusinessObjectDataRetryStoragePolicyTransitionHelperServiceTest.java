@@ -74,7 +74,7 @@ public class BusinessObjectDataRetryStoragePolicyTransitionHelperServiceTest ext
 
         try
         {
-            businessObjectDataRetryStoragePolicyTransitionHelperServiceImpl.executeAwsSpecificSteps(null);
+            businessObjectDataRetryStoragePolicyTransitionHelperServiceImpl.executeS3SpecificSteps(null);
             fail();
         }
         catch (NullPointerException e)
@@ -94,7 +94,40 @@ public class BusinessObjectDataRetryStoragePolicyTransitionHelperServiceTest ext
     }
 
     @Test
-    public void testExecuteAwsSpecificStepsS3StepFails()
+    public void testExecuteRetryStoragePolicyTransitionAfterStepSqsOperationFails()
+    {
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
+                DATA_VERSION);
+
+        // Create a storage policy key.
+        StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
+
+        // Create database entities required for testing.
+        businessObjectDataServiceTestHelper.createDatabaseEntitiesForRetryStoragePolicyTransitionTesting(businessObjectDataKey, storagePolicyKey);
+
+        // Create a business object data retry storage policy transition DTO with
+        // the SQS queue name set to the mocked value that causes an exception.
+        BusinessObjectDataRetryStoragePolicyTransitionDto businessObjectDataRetryStoragePolicyTransitionDto =
+            new BusinessObjectDataRetryStoragePolicyTransitionDto(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION, STORAGE_NAME_GLACIER,
+                S3_BUCKET_NAME_GLACIER, S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX, MockSqsOperationsImpl.MOCK_SQS_QUEUE_NOT_FOUND_NAME);
+
+        // Try to execute AWS steps when an AWS service exception is expected.
+        try
+        {
+            businessObjectDataRetryStoragePolicyTransitionHelperService
+                .executeRetryStoragePolicyTransitionAfterStep(businessObjectDataRetryStoragePolicyTransitionDto);
+            fail();
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals(String.format("AWS SQS queue with \"%s\" name not found.", MockSqsOperationsImpl.MOCK_SQS_QUEUE_NOT_FOUND_NAME), e.getMessage());
+        }
+    }
+
+    @Test
+    public void testExecuteS3SpecificAmazonServiceException()
     {
         // Create a business object data key.
         BusinessObjectDataKey businessObjectDataKey =
@@ -114,7 +147,7 @@ public class BusinessObjectDataRetryStoragePolicyTransitionHelperServiceTest ext
         // Try to execute AWS steps when an AWS service exception is expected.
         try
         {
-            businessObjectDataRetryStoragePolicyTransitionHelperService.executeAwsSpecificSteps(businessObjectDataRetryStoragePolicyTransitionDto);
+            businessObjectDataRetryStoragePolicyTransitionHelperService.executeS3SpecificSteps(businessObjectDataRetryStoragePolicyTransitionDto);
             fail();
         }
         catch (IllegalStateException e)
@@ -122,35 +155,6 @@ public class BusinessObjectDataRetryStoragePolicyTransitionHelperServiceTest ext
             assertEquals(String.format("Failed to list keys/key versions with prefix \"%s/\" from bucket \"%s\". " +
                 "Reason: InternalError (Service: null; Status Code: 0; Error Code: null; Request ID: null)", S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX,
                 MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_INTERNAL_ERROR), e.getMessage());
-        }
-    }
-
-    @Test
-    public void testExecuteAwsSpecificStepsSqsStepFails()
-    {
-        // Create a business object data key.
-        BusinessObjectDataKey businessObjectDataKey =
-            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
-                DATA_VERSION);
-
-        // Create a storage policy key.
-        StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
-
-        // Create a business object data retry storage policy transition DTO with
-        // the SQS queue name set to the mocked value that causes an exception.
-        BusinessObjectDataRetryStoragePolicyTransitionDto businessObjectDataRetryStoragePolicyTransitionDto =
-            new BusinessObjectDataRetryStoragePolicyTransitionDto(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION, STORAGE_NAME_GLACIER,
-                S3_BUCKET_NAME_GLACIER, S3_BUCKET_NAME_ORIGIN + "/" + TEST_S3_KEY_PREFIX, MockSqsOperationsImpl.MOCK_SQS_QUEUE_NOT_FOUND_NAME);
-
-        // Try to execute AWS steps when an AWS service exception is expected.
-        try
-        {
-            businessObjectDataRetryStoragePolicyTransitionHelperService.executeAwsSpecificSteps(businessObjectDataRetryStoragePolicyTransitionDto);
-            fail();
-        }
-        catch (IllegalStateException e)
-        {
-            assertEquals(String.format("AWS SQS queue with \"%s\" name not found.", MockSqsOperationsImpl.MOCK_SQS_QUEUE_NOT_FOUND_NAME), e.getMessage());
         }
     }
 

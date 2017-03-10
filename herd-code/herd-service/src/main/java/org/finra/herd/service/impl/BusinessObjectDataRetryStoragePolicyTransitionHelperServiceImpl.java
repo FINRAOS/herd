@@ -112,18 +112,6 @@ public class BusinessObjectDataRetryStoragePolicyTransitionHelperServiceImpl imp
     /**
      * {@inheritDoc}
      * <p/>
-     * This implementation executes non-transactionally, suspends the current transaction if one exists.
-     */
-    @Override
-    @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    public void executeAwsSpecificSteps(BusinessObjectDataRetryStoragePolicyTransitionDto businessObjectDataRetryStoragePolicyTransitionDto)
-    {
-        executeAwsSpecificStepsImpl(businessObjectDataRetryStoragePolicyTransitionDto);
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p/>
      * This implementation starts a new transaction.
      */
     @Override
@@ -137,6 +125,18 @@ public class BusinessObjectDataRetryStoragePolicyTransitionHelperServiceImpl imp
     /**
      * {@inheritDoc}
      * <p/>
+     * This implementation executes non-transactionally, suspends the current transaction if one exists.
+     */
+    @Override
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public void executeS3SpecificSteps(BusinessObjectDataRetryStoragePolicyTransitionDto businessObjectDataRetryStoragePolicyTransitionDto)
+    {
+        executeS3SpecificStepsImpl(businessObjectDataRetryStoragePolicyTransitionDto);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
      * This implementation starts a new transaction.
      */
     @Override
@@ -145,20 +145,6 @@ public class BusinessObjectDataRetryStoragePolicyTransitionHelperServiceImpl imp
         BusinessObjectDataRetryStoragePolicyTransitionRequest request)
     {
         return prepareToRetryStoragePolicyTransitionImpl(businessObjectDataKey, request);
-    }
-
-    /**
-     * Executes AWS specific steps needed to retry a storage policy transition.
-     *
-     * @param businessObjectDataRetryStoragePolicyTransitionDto the DTO that holds various parameters needed to retry a storage policy transition
-     */
-    protected void executeAwsSpecificStepsImpl(BusinessObjectDataRetryStoragePolicyTransitionDto businessObjectDataRetryStoragePolicyTransitionDto)
-    {
-        // Executes S3 specific steps needed to retry a storage policy transition.
-        executeS3SpecificSteps(businessObjectDataRetryStoragePolicyTransitionDto);
-
-        // Executes SQS specific steps needed to retry a storage policy transition.
-        executeSqsSpecificSteps(businessObjectDataRetryStoragePolicyTransitionDto);
     }
 
     /**
@@ -196,8 +182,51 @@ public class BusinessObjectDataRetryStoragePolicyTransitionHelperServiceImpl imp
             businessObjectDataRetryStoragePolicyTransitionDto.getBusinessObjectDataKey(),
             businessObjectDataRetryStoragePolicyTransitionDto.getGlacierStorageName(), newGlacierOriginStorageUnitStatus, oldGlacierOriginStorageUnitStatus);
 
+        // Create a storage policy selection.
+        StoragePolicySelection storagePolicySelection = new StoragePolicySelection(businessObjectDataRetryStoragePolicyTransitionDto.getBusinessObjectDataKey(),
+            businessObjectDataRetryStoragePolicyTransitionDto.getStoragePolicyKey(),
+            businessObjectDataRetryStoragePolicyTransitionDto.getStoragePolicyVersion());
+
+        // Executes SQS specific steps needed to retry a storage policy transition.
+        sendStoragePolicySelectionSqsMessage(businessObjectDataRetryStoragePolicyTransitionDto.getSqsQueueName(), storagePolicySelection);
+
         // Create and return the business object data object from the entity.
         return businessObjectDataHelper.createBusinessObjectDataFromEntity(businessObjectDataEntity);
+    }
+
+    /**
+     * Executes S3 specific steps needed to retry a storage policy transition.
+     *
+     * @param businessObjectDataRetryStoragePolicyTransitionDto the DTO that holds various parameters needed to retry a storage policy transition
+     */
+    protected void executeS3SpecificStepsImpl(BusinessObjectDataRetryStoragePolicyTransitionDto businessObjectDataRetryStoragePolicyTransitionDto)
+    {
+        try
+        {
+            // Create an S3 file transfer parameters DTO to access the Glacier S3 bucket.
+            // Since the S3 key prefix represents a directory, we add a trailing '/' character to it.
+            S3FileTransferRequestParamsDto glacierS3FileTransferRequestParamsDto = storageHelper.getS3FileTransferRequestParamsDto();
+            glacierS3FileTransferRequestParamsDto.setS3BucketName(businessObjectDataRetryStoragePolicyTransitionDto.getGlacierBucketName());
+            glacierS3FileTransferRequestParamsDto.setS3Endpoint(configurationHelper.getProperty(ConfigurationValue.S3_ENDPOINT));
+            glacierS3FileTransferRequestParamsDto
+                .setS3KeyPrefix(StringUtils.appendIfMissing(businessObjectDataRetryStoragePolicyTransitionDto.getGlacierS3KeyPrefix(), "/"));
+
+            // If Glacier S3 key prefix is not empty, delete all discovered S3 objects from the Glacier S3 bucket matching the S3 key prefix.
+            // Please note that when deleting S3 files, by default, we also delete all 0 byte objects that represent S3 directories.
+            s3Service.deleteDirectory(glacierS3FileTransferRequestParamsDto);
+        }
+        catch (RuntimeException e)
+        {
+            // Log the exception.
+            LOGGER.error("Failed to execute S3 specific steps needed to retry a storage policy transition for the business object data. " +
+                " businessObjectDataKey={}, storagePolicyKey={}, storagePolicyVersion={}",
+                jsonHelper.objectToJson(businessObjectDataRetryStoragePolicyTransitionDto.getBusinessObjectDataKey()),
+                jsonHelper.objectToJson(businessObjectDataRetryStoragePolicyTransitionDto.getStoragePolicyKey()),
+                businessObjectDataRetryStoragePolicyTransitionDto.getStoragePolicyVersion(), e);
+
+            // Rethrow the original exception.
+            throw e;
+        }
     }
 
     /**
@@ -326,71 +355,6 @@ public class BusinessObjectDataRetryStoragePolicyTransitionHelperServiceImpl imp
     }
 
     /**
-     * Executes AWS specific steps needed to retry a storage policy transition.
-     *
-     * @param businessObjectDataRetryStoragePolicyTransitionDto the DTO that holds various parameters needed to retry a storage policy transition
-     */
-    private void executeS3SpecificSteps(BusinessObjectDataRetryStoragePolicyTransitionDto businessObjectDataRetryStoragePolicyTransitionDto)
-    {
-        try
-        {
-            // Create an S3 file transfer parameters DTO to access the Glacier S3 bucket.
-            // Since the S3 key prefix represents a directory, we add a trailing '/' character to it.
-            S3FileTransferRequestParamsDto glacierS3FileTransferRequestParamsDto = storageHelper.getS3FileTransferRequestParamsDto();
-            glacierS3FileTransferRequestParamsDto.setS3BucketName(businessObjectDataRetryStoragePolicyTransitionDto.getGlacierBucketName());
-            glacierS3FileTransferRequestParamsDto.setS3Endpoint(configurationHelper.getProperty(ConfigurationValue.S3_ENDPOINT));
-            glacierS3FileTransferRequestParamsDto
-                .setS3KeyPrefix(StringUtils.appendIfMissing(businessObjectDataRetryStoragePolicyTransitionDto.getGlacierS3KeyPrefix(), "/"));
-
-            // If Glacier S3 key prefix is not empty, delete all discovered S3 objects from the Glacier S3 bucket matching the S3 key prefix.
-            // Please note that when deleting S3 files, by default, we also delete all 0 byte objects that represent S3 directories.
-            s3Service.deleteDirectory(glacierS3FileTransferRequestParamsDto);
-        }
-        catch (RuntimeException e)
-        {
-            // Log the exception.
-            LOGGER.error("Failed to execute S3 specific steps needed to retry a storage policy transition for the business object data. " +
-                " businessObjectDataKey={}, storagePolicyKey={}, storagePolicyVersion={}",
-                jsonHelper.objectToJson(businessObjectDataRetryStoragePolicyTransitionDto.getBusinessObjectDataKey()),
-                jsonHelper.objectToJson(businessObjectDataRetryStoragePolicyTransitionDto.getStoragePolicyKey()),
-                businessObjectDataRetryStoragePolicyTransitionDto.getStoragePolicyVersion(), e);
-
-            // Rethrow the original exception.
-            throw e;
-        }
-    }
-
-    /**
-     * Executes SQS specific steps needed to retry a storage policy transition.
-     *
-     * @param businessObjectDataRetryStoragePolicyTransitionDto the DTO that holds various parameters needed to retry a storage policy transition
-     */
-    private void executeSqsSpecificSteps(BusinessObjectDataRetryStoragePolicyTransitionDto businessObjectDataRetryStoragePolicyTransitionDto)
-    {
-        // Create a storage policy selection.
-        StoragePolicySelection storagePolicySelection = new StoragePolicySelection(businessObjectDataRetryStoragePolicyTransitionDto.getBusinessObjectDataKey(),
-            businessObjectDataRetryStoragePolicyTransitionDto.getStoragePolicyKey(),
-            businessObjectDataRetryStoragePolicyTransitionDto.getStoragePolicyVersion());
-
-        // Send the storage policy selection to the relative AWS SQS queue.
-        AwsParamsDto awsParamsDto = awsHelper.getAwsParamsDto();
-        String messageText = null;
-        try
-        {
-            messageText = jsonHelper.objectToJson(storagePolicySelection);
-            sqsDao.sendSqsTextMessage(awsParamsDto, businessObjectDataRetryStoragePolicyTransitionDto.getSqsQueueName(), messageText);
-        }
-        catch (RuntimeException e)
-        {
-            LOGGER.error("Failed to publish message to the JMS queue. jmsQueueName=\"{}\" jmsMessagePayload={}",
-                businessObjectDataRetryStoragePolicyTransitionDto.getSqsQueueName(), messageText);
-
-            // Rethrow the original exception.
-            throw e;
-        }
-    }
-
-    /**
      * Retrieves and validates the Glacier storage unit for the specified business object data.
      *
      * @param businessObjectDataEntity the business object data entity
@@ -457,6 +421,31 @@ public class BusinessObjectDataRetryStoragePolicyTransitionHelperServiceImpl imp
         }
 
         return originStorageUnitEntity;
+    }
+
+    /**
+     * Sends out an SQS message that contains the specified storage policy selection to the SQS queue name.
+     *
+     * @param sqsQueueName the SQS queue name
+     * @param storagePolicySelection the storage policy selection
+     */
+    private void sendStoragePolicySelectionSqsMessage(String sqsQueueName, StoragePolicySelection storagePolicySelection)
+    {
+        // Send the storage policy selection to the relative AWS SQS queue.
+        AwsParamsDto awsParamsDto = awsHelper.getAwsParamsDto();
+        String messageText = null;
+        try
+        {
+            messageText = jsonHelper.objectToJson(storagePolicySelection);
+            sqsDao.sendSqsTextMessage(awsParamsDto, sqsQueueName, messageText);
+        }
+        catch (RuntimeException e)
+        {
+            LOGGER.error("Failed to publish message to the JMS queue. jmsQueueName=\"{}\" jmsMessagePayload={}", sqsQueueName, messageText);
+
+            // Rethrow the original exception.
+            throw e;
+        }
     }
 
     /**

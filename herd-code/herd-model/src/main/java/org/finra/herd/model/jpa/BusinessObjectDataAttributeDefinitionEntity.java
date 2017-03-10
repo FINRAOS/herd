@@ -24,6 +24,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.hibernate.annotations.Type;
 
 /**
@@ -50,6 +52,7 @@ public class BusinessObjectDataAttributeDefinitionEntity extends AuditableEntity
     @Column(name = "atrbt_nm")
     private String name;
 
+    @JsonBackReference(value="businessObjectFormat-attributeDefinitions")
     @ManyToOne
     @JoinColumn(name = "bus_objct_frmt_id", referencedColumnName = "bus_objct_frmt_id", nullable = false)
     private BusinessObjectFormatEntity businessObjectFormat;
@@ -84,6 +87,7 @@ public class BusinessObjectDataAttributeDefinitionEntity extends AuditableEntity
      *
      * @return True if the attribute is required or false if not.
      */
+    @JsonIgnore
     public boolean isRequired()
     {
         return true;

@@ -15,15 +15,33 @@
 */
 package org.finra.herd.dao.config;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.net.InetAddress;
+import java.security.KeyStore;
+import java.security.Provider;
+import java.security.Security;
+import java.security.cert.Certificate;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import javax.sql.DataSource;
 
 import com.amazonaws.retry.RetryPolicy.BackoffStrategy;
+import com.floragunn.searchguard.ssl.SearchGuardSSLPlugin;
+import com.floragunn.searchguard.ssl.util.SSLConfigConstants;
+import com.google.common.collect.ImmutableMap;
 import net.sf.ehcache.config.CacheConfiguration;
 import org.apache.commons.configuration.ConfigurationConverter;
 import org.apache.commons.configuration.DatabaseConfiguration;
 import org.apache.commons.lang3.StringUtils;
+import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.transport.InetSocketTransportAddress;
+import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,11 +60,15 @@ import org.springframework.context.annotation.FilterType;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
+import org.springframework.ldap.core.LdapTemplate;
+import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.JpaVendorAdapter;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.Database;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import org.finra.herd.core.ApplicationContextHolder;
@@ -54,7 +76,11 @@ import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.CacheKeyGenerator;
 import org.finra.herd.dao.ReloadablePropertySource;
 import org.finra.herd.dao.SimpleExponentialBackoffStrategy;
+import org.finra.herd.dao.credstash.JCredStashWrapper;
+import org.finra.herd.dao.exception.CredStashGetCredentialFailedException;
+import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.model.dto.ElasticsearchSettingsDto;
 import org.finra.herd.model.jpa.ConfigurationEntity;
 
 /**
@@ -73,15 +99,38 @@ public class DaoSpringModuleConfig implements CachingConfigurer
     @Autowired
     private ConfigurationHelper configurationHelper;
 
+    @Autowired
+    private JsonHelper jsonHelper;
+
+    /**
+     * The Elasticsearch setting for client transport sniff
+     */
+    public static final String ELASTICSEARCH_SETTING_CLIENT_TRANSPORT_SNIFF = "client.transport.sniff";
+
+    /**
+     * The Elasticsearch setting for cluster name
+     */
+    public static final String ELASTICSEARCH_SETTING_CLUSTER_NAME = "cluster.name";
+
+    /**
+     * The Elasticsearch setting for path home
+     */
+    public static final String ELASTICSEARCH_SETTING_PATH_HOME = "path.home";
+
+    /**
+     * The Elasticsearch setting for path
+     */
+    public static final String ELASTICSEARCH_SETTING_PATH_HOME_PATH = ".";
+
+    /**
+     * The herd cache name.
+     */
+    public static final String HERD_CACHE_NAME = "herd_cache";
+
     /**
      * The herd data source bean name.
      */
     public static final String HERD_DATA_SOURCE_BEAN_NAME = "herdDataSource";
-
-    /**
-     * The Hibernate HBM2DDL Auto param bean name.
-     */
-    public static final String HIBERNATE_HBM2DDL_AUTO_PARAM_BEAN_NAME = "hibernateHbm2DdlAutoParam";
 
     /**
      * The herd transaction manager bean name.
@@ -89,14 +138,34 @@ public class DaoSpringModuleConfig implements CachingConfigurer
     public static final String HERD_TRANSACTION_MANAGER_BEAN_NAME = "herdTransactionManager";
 
     /**
+     * The Hibernate HBM2DDL Auto param bean name.
+     */
+    public static final String HIBERNATE_HBM2DDL_AUTO_PARAM_BEAN_NAME = "hibernateHbm2DdlAutoParam";
+
+    /**
+     * Java Keystore type
+     */
+    public static final String JAVA_KEYSTORE_TYPE = "JKS";
+
+    /**
+     * Keystore key value
+     */
+    public static final String KEYSTORE_KEY = "KEYSTORE";
+
+    /**
      * Model packages to scan by entity manager.
      */
     public static final String MODEL_PACKAGES_TO_SCAN = "org.finra.herd.model.jpa";
 
     /**
-     * The herd cache name.
+     * The network address cache ttl
      */
-    public static final String HERD_CACHE_NAME = "herd_cache";
+    public static final String NETWORK_ADDRESS_CACHE_TTL = "60";
+
+    /**
+     * Truststore key value
+     */
+    public static final String TRUSTSTORE_KEY = "TRUSTSTORE";
 
     /**
      * The JPA entity manager factory.
@@ -120,6 +189,198 @@ public class DaoSpringModuleConfig implements CachingConfigurer
         entityManagerFactory.setJpaProperties(jpaProperties());
 
         return entityManagerFactory;
+    }
+
+    /**
+     * Returns an elasticsearch transport client.
+     *
+     * @return TransportClient for the elasticsearch client is returned.
+     * @throws Exception is thrown if host can not be found, or if settings object can not be mapped.
+     */
+    @Bean
+    public TransportClient transportClient() throws Exception
+    {
+        LOGGER.info("Updating the network address cash ttl value.");
+        LOGGER.info("Network address cash ttl value setting before change, networkaddress.cache.ttl={}", Security.getProperty("networkaddress.cache.ttl"));
+        Security.setProperty("networkaddress.cache.ttl", NETWORK_ADDRESS_CACHE_TTL);
+        LOGGER.info("Network address cash ttl value setting after change, networkaddress.cache.ttl={}", Security.getProperty("networkaddress.cache.ttl"));
+
+        LOGGER.info("Initializing transport client bean.");
+
+        // Get the elasticsearch settings JSON string from the configuration
+        String elasticSearchSettingsJSON = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SETTINGS_JSON);
+        Integer port = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_DEFAULT_PORT, Integer.class);
+
+        // Map the JSON object to the elastic search setting data transfer object
+        ElasticsearchSettingsDto elasticsearchSettingsDto = jsonHelper.unmarshallJsonToObject(ElasticsearchSettingsDto.class, elasticSearchSettingsJSON);
+
+        // Get the settings from the elasticsearch settings data transfer object
+        String elasticSearchCluster = elasticsearchSettingsDto.getElasticSearchCluster();
+        List<String> elasticSearchAddresses = elasticsearchSettingsDto.getClientTransportAddresses();
+        boolean clientTransportStiff = elasticsearchSettingsDto.isClientTransportSniff();
+        boolean isElasticsearchSearchGuardEnabled = Boolean.valueOf(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_ENABLED));
+        LOGGER.info("isElasticsearchSearchGuardEnabled={}", isElasticsearchSearchGuardEnabled);
+
+        // Build the Transport client with the settings
+        Settings settings;
+        TransportClient transportClient;
+
+        // If search guard is enabled then setup the keystore and truststore
+        if (isElasticsearchSearchGuardEnabled)
+        {
+            // Get the paths to the keystore and truststore files
+            String pathToKeystoreFile = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_KEYSTORE_PATH);
+            String pathToTruststoreFile = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_TRUSTSTORE_PATH);
+
+            // Get the keystore and truststore passwords from Cred Stash
+            Map<String, String> keystoreTruststorePasswordMap = getKeystoreAndTruststoreFromCredStash();
+
+            // Retreive the keystore password and truststore password from the keystore trustStore password map
+            String keystorePassword = keystoreTruststorePasswordMap.get(KEYSTORE_KEY);
+            String truststorePassword = keystoreTruststorePasswordMap.get(TRUSTSTORE_KEY);
+
+            // Log the keystore and truststore information
+            logKeystoreInformation(pathToKeystoreFile, keystorePassword);
+            logKeystoreInformation(pathToTruststoreFile, truststorePassword);
+
+            File keystoreFile = new File(pathToKeystoreFile);
+            LOGGER.info("keystoreFile.name={}, keystoreFile.exists={}, keystoreFile.canRead={}", keystoreFile.getName(), keystoreFile.exists(),
+                keystoreFile.canRead());
+
+            File truststoreFile = new File(pathToTruststoreFile);
+            LOGGER.info("truststoreFile.name={}, truststoreFile.exists={}, truststoreFile.canRead={}", truststoreFile.getName(), truststoreFile.exists(),
+                truststoreFile.canRead());
+
+            // Build the settings for the transport client
+            settings = Settings.builder().put(ELASTICSEARCH_SETTING_CLIENT_TRANSPORT_SNIFF, clientTransportStiff)
+                .put(ELASTICSEARCH_SETTING_CLUSTER_NAME, elasticSearchCluster).put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_KEYSTORE_FILEPATH, keystoreFile)
+                .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_TRUSTSTORE_FILEPATH, truststoreFile)
+                .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_KEYSTORE_PASSWORD, keystorePassword)
+                .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_TRUSTSTORE_PASSWORD, truststorePassword)
+                .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_ENFORCE_HOSTNAME_VERIFICATION, false)
+                .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_ENFORCE_HOSTNAME_VERIFICATION_RESOLVE_HOST_NAME, false)
+                .put(ELASTICSEARCH_SETTING_PATH_HOME, ELASTICSEARCH_SETTING_PATH_HOME_PATH).build();
+
+            LOGGER.info("Transport Client Settings:  clientTransportStiff={}, elasticSearchCluster={}, pathToKeystoreFile={}, pathToTruststoreFile={}",
+                clientTransportStiff, elasticSearchCluster, pathToKeystoreFile, pathToTruststoreFile);
+
+            // Build the Transport client with the settings
+            transportClient = new PreBuiltTransportClient(settings, SearchGuardSSLPlugin.class);
+        }
+        else
+        {
+            // Build the settings for the transport client
+            settings = Settings.builder().put(ELASTICSEARCH_SETTING_CLIENT_TRANSPORT_SNIFF, clientTransportStiff)
+                .put(ELASTICSEARCH_SETTING_CLUSTER_NAME, elasticSearchCluster).build();
+
+            LOGGER.info("Transport Client Settings:  clientTransportStiff={}, elasticSearchCluster={}, pathToKeystoreFile={}, pathToTruststoreFile={}",
+                clientTransportStiff, elasticSearchCluster);
+
+            // Build the Transport client with the settings
+            transportClient = new PreBuiltTransportClient(settings);
+        }
+
+        // For each elastic search address in the elastic search address list
+        for (String elasticSearchAddress : elasticSearchAddresses)
+        {
+            LOGGER.info("TransportClient add transport address elasticSearchAddress={}", elasticSearchAddress);
+            // Add the address to the transport client
+            transportClient.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(elasticSearchAddress), port));
+        }
+
+        return transportClient;
+    }
+
+    /**
+     * Private method to obtain the keystore and truststore passwords from cred stash. This method will attempt to obtain the credentials up to 3 times with a 5
+     * second, 10 second, and 20 second back off
+     *
+     * @return a map containing the keystore and truststore passwords
+     * @throws CredStashGetCredentialFailedException the cred stash get credential has failed
+     */
+    @Retryable(maxAttempts = 3, value = CredStashGetCredentialFailedException.class, backoff = @Backoff(delay = 5000, multiplier = 2))
+    private Map<String, String> getKeystoreAndTruststoreFromCredStash() throws CredStashGetCredentialFailedException
+    {
+        // Get the credstash table name and credential names for the keystore and truststore
+        String credstashEncryptionContext = configurationHelper.getProperty(ConfigurationValue.CREDSTASH_ENCRYPTION_CONTEXT);
+        String credstashAwsRegion = configurationHelper.getProperty(ConfigurationValue.CREDSTASH_AWS_REGION_NAME);
+        String credstashTableName = configurationHelper.getProperty(ConfigurationValue.CREDSTASH_TABLE_NAME);
+        String keystoreCredentialName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_KEYSTORE_CREDENTIAL_NAME);
+        String truststoreCredentialName = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_TRUSTSTORE_CREDENTIAL_NAME);
+
+        LOGGER.info("credstashTableName={}", credstashTableName);
+        LOGGER.info("keystoreCredentialName={}", keystoreCredentialName);
+        LOGGER.info("truststoreCredentialName={}", truststoreCredentialName);
+
+        // Get the keystore and truststore passwords from Credstash
+        JCredStashWrapper credstash = new JCredStashWrapper(credstashAwsRegion, credstashTableName);
+
+        String keystorePassword = null;
+        String truststorePassword = null;
+
+        // Try to obtain the credentials from cred stash
+        try
+        {
+            // Convert the JSON config file version of the encryption context to a Java Map class
+            @SuppressWarnings("unchecked")
+            Map<String, String> credstashEncryptionContextMap = jsonHelper.unmarshallJsonToObject(Map.class, credstashEncryptionContext);
+
+            // Get the keystore and truststore passwords from credstash
+            keystorePassword = credstash.getCredential(keystoreCredentialName, credstashEncryptionContextMap);
+            truststorePassword = credstash.getCredential(truststoreCredentialName, credstashEncryptionContextMap);
+        }
+        catch (Exception exception)
+        {
+            LOGGER.error("Caught exception when attempting to get a credential value from CredStash", exception);
+        }
+
+        // If either the keystorePassword or truststorePassword values are empty and could not be obtained as credentials from cred stash,
+        // then throw a new CredStashGetCredentialFailedException
+        if (StringUtils.isEmpty(keystorePassword) || StringUtils.isEmpty(truststorePassword))
+        {
+            throw new CredStashGetCredentialFailedException("Failed to obtain the keystore or truststore credential from cred stash.");
+        }
+
+        // Return the keystore and truststore passwords in a map
+        return ImmutableMap.<String, String>builder().
+            put(KEYSTORE_KEY, keystorePassword).
+            put(TRUSTSTORE_KEY, truststorePassword).
+            build();
+    }
+
+    /**
+     * Private method to log keystore file information.
+     *
+     * @param pathToKeystoreFile the path the the keystore file
+     * @param keystorePassword the password that will open the keystore file
+     *
+     * @throws Exception a potential exception when getting the keystore
+     */
+    private void logKeystoreInformation(String pathToKeystoreFile, String keystorePassword) throws Exception
+    {
+
+        final KeyStore keyStore = KeyStore.getInstance(JAVA_KEYSTORE_TYPE);
+
+        try (final InputStream is = new FileInputStream(pathToKeystoreFile))
+        {
+            keyStore.load(is, keystorePassword.toCharArray());
+        }
+
+        Provider provider = keyStore.getProvider();
+
+        LOGGER.info("Keystore file={}", pathToKeystoreFile);
+        LOGGER.info("keystoreType={}", keyStore.getType());
+        LOGGER.info("providerName={}", provider.getName());
+        LOGGER.info("providerInfo={}", provider.getInfo());
+
+        Enumeration<String> aliases = keyStore.aliases();
+        while (aliases.hasMoreElements())
+        {
+            String alias = aliases.nextElement();
+            LOGGER.info("certificate alias={}", alias);
+            Certificate certificate = keyStore.getCertificate(alias);
+            LOGGER.info("certificate publicKey={}", certificate.getPublicKey());
+        }
     }
 
     /**
@@ -308,5 +569,39 @@ public class DaoSpringModuleConfig implements CachingConfigurer
     public BackoffStrategy backoffStrategy()
     {
         return new SimpleExponentialBackoffStrategy();
+    }
+
+    /**
+     * Gets an LDAP context source.
+     *
+     * @return the LDAP context source
+     */
+    @Bean
+    public LdapContextSource contextSource()
+    {
+        String ldapUrl = configurationHelper.getProperty(ConfigurationValue.LDAP_URL);
+        String ldapBase = configurationHelper.getProperty(ConfigurationValue.LDAP_BASE);
+        String ldapUserDn = configurationHelper.getProperty(ConfigurationValue.LDAP_USER_DN);
+
+        LOGGER.info("Creating LDAP context source using the following parameters: {}=\"{}\" {}=\"{}\" {}=\"{}\" ...", ConfigurationValue.LDAP_URL.getKey(),
+            ldapUrl, ConfigurationValue.LDAP_BASE.getKey(), ldapBase, ConfigurationValue.LDAP_USER_DN.getKey(), ldapUserDn);
+
+        LdapContextSource contextSource = new LdapContextSource();
+        contextSource.setUrl(ldapUrl);
+        contextSource.setBase(ldapBase);
+        contextSource.setUserDn(ldapUserDn);
+        contextSource.setPassword(configurationHelper.getProperty(ConfigurationValue.LDAP_PASSWORD));
+        return contextSource;
+    }
+
+    /**
+     * Gets an LDAP template.
+     *
+     * @return the LDAP template
+     */
+    @Bean
+    public LdapTemplate ldapTemplate()
+    {
+        return new LdapTemplate(contextSource());
     }
 }

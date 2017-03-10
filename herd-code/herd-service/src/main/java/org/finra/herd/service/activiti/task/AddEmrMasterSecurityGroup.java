@@ -47,6 +47,7 @@ public class AddEmrMasterSecurityGroup extends BaseJavaDelegate
     private Expression emrClusterDefinitionName;
     private Expression emrClusterName;
     private Expression securityGroupIds;
+    private Expression accountId;
 
     @Autowired
     private EmrService emrService;
@@ -59,6 +60,7 @@ public class AddEmrMasterSecurityGroup extends BaseJavaDelegate
         request.setNamespace(activitiHelper.getExpressionVariableAsString(namespace, execution));
         request.setEmrClusterDefinitionName(activitiHelper.getExpressionVariableAsString(emrClusterDefinitionName, execution));
         request.setEmrClusterName(activitiHelper.getExpressionVariableAsString(emrClusterName, execution));
+        request.setAccountId(activitiHelper.getExpressionVariableAsString(accountId, execution));
 
         String groupIdStr = activitiHelper.getExpressionVariableAsString(securityGroupIds, execution);
         if (StringUtils.isBlank(groupIdStr))

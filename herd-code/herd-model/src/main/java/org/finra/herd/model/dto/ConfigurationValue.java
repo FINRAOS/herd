@@ -191,12 +191,18 @@ public enum ConfigurationValue
      * AWS SQS queue name where sample data upload sends message
      */
     SAMPLE_DATA_SQS_QUEUE_NAME("sample.data.sqs.queue.name", null),
-    
+
     /**
      * The maximum number of business object data instances to be selected per storage policies in a single run of the storage policy selector system job. The
      * default is 1000 business object data instances.
      */
     STORAGE_POLICY_SELECTOR_JOB_MAX_BDATA_INSTANCES("storage.policy.selector.job.max.business.object.data.instances", "1000"),
+
+    /**
+     * The threshold in days since business object data registration update for business object data to be selectable by a storage policy of the
+     * DAYS_SINCE_BDATA_PRIMARY_PARTITION_VALUE storage policy rule type. The default is 90 days.
+     */
+    STORAGE_POLICY_PROCESSOR_BDATA_UPDATED_ON_THRESHOLD_DAYS("storage.policy.processor.business.object.data.updated.on.threshold.days", 90),
 
     /**
      * The cron expression to schedule "businessObjectDataFinalizeRestore" system job. Default is to run the system job every 6 hours.
@@ -425,7 +431,7 @@ public enum ConfigurationValue
      * Indicates whether the sample data JMS message listener service is enabled or not. The default is "true" (enabled).
      */
     SAMPLE_DATA_JMS_LISTENER_ENABLED("sample.data.jms.listener.enabled", "true"),
-    
+
     /**
      * Indicates whether the JMS message listener service is enabled or not. The default is "true" (enabled).
      */
@@ -601,9 +607,9 @@ public enum ConfigurationValue
     JDBC_RESULT_MAX_ROWS("jdbc.result.max.rows", null),
 
     /**
-     * The maximum number of records per page returned in business object data search results
+     * The maximum number of records returned in business object data search results
      */
-    BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULTS_PER_PAGE("business.object.data.search.max.results.per.page", 50),
+    BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULTS("business.object.data.search.max.results", 1000),
 
     /**
      * The maximum number of nested tags allowed
@@ -613,7 +619,162 @@ public enum ConfigurationValue
     /**
      * The cut-off length of the short description
      */
-    BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH("business.object.definition.short.description.max.length", 300);
+    BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH("business.object.definition.short.description.max.length", 300),
+
+    /**
+     * The url of the LDAP server. Utility method if only one server is used.
+     */
+    LDAP_URL("ldap.url", null),
+
+    /**
+     * The base suffix from which all LDAP operations should origin. If a base suffix is set, you will not have to (and, indeed, must not) specify the full
+     * distinguished names in any operations performed.
+     */
+    LDAP_BASE("ldap.base", null),
+
+    /**
+     * The LDAP user distinguished name (principal) to use for getting authenticated contexts.
+     */
+    LDAP_USER_DN("ldap.user.dn", ""),
+
+    /**
+     * The LDAP password (credentials) to use for getting authenticated contexts.
+     */
+    LDAP_PASSWORD("ldap.password", ""),
+
+    /**
+     * The LDAP attribute id for user's fully qualified username.
+     */
+    LDAP_ATTRIBUTE_USER_ID("ldap.attribute.user.id", "userPrincipalName"),
+
+    /**
+     * The LDAP attribute id for user's full name.
+     */
+    LDAP_ATTRIBUTE_USER_FULL_NAME("ldap.attribute.user.full.name", "name"),
+
+    /**
+     * The LDAP attribute id for user's job title.
+     */
+    LDAP_ATTRIBUTE_USER_JOB_TITLE("ldap.attribute.user.job.title", "title"),
+
+    /**
+     * The LDAP attribute id for user's e-mail address.
+     */
+    LDAP_ATTRIBUTE_USER_EMAIL_ADDRESS("ldap.attribute.user.email.address", "mail"),
+
+    /**
+     * The LDAP attribute id for user's telephone number.
+     */
+    LDAP_ATTRIBUTE_USER_TELEPHONE_NUMBER("ldap.attribute.user.telephone.number", "telephoneNumber"),
+
+    /**
+     * The elasticsearch index name
+     */
+    ELASTICSEARCH_BDEF_INDEX_NAME("elasticsearch.bdef.index.name", "bdef"),
+
+    /**
+     * The elasticsearch document type
+     */
+    ELASTICSEARCH_BDEF_DOCUMENT_TYPE("elasticsearch.bdef.document.type", "doc"),
+
+    /**
+     * The elasticsearch business object definition mappings JSON
+     */
+    ELASTICSEARCH_BDEF_MAPPINGS_JSON("elasticsearch.bdef.mappings.json", "{\"properties\": { \"id\": { \"type\": \"long\" } } }"),
+
+    /**
+     * The elasticsearch business object definition settings JSON
+     */
+    ELASTICSEARCH_BDEF_SETTINGS_JSON("elasticsearch.bdef.settings.json",
+        "{\"analysis\":{\"filter\":{\"field_ngram_filter\":{\"type\":\"edgeNGram\",\"min_gram\":1,\"max_gram\":16,\"side\":\"front\"}}}}"),
+
+    /**
+     * The elasticsearch tag mappings JSON
+     */
+    ELASTICSEARCH_TAG_MAPPINGS_JSON("elasticsearch.tag.mappings.json", "{\"properties\": { \"id\": { \"type\": \"long\" } } }"),
+
+    /**
+     * The elasticsearch tag settings JSON
+     */
+    ELASTICSEARCH_TAG_SETTINGS_JSON("elasticsearch.tag.settings.json",
+        "{\"analysis\":{\"filter\":{\"field_ngram_filter\":{\"type\":\"edgeNGram\",\"min_gram\":1,\"max_gram\":16,\"side\":\"front\"}}}}"),
+
+    /**
+     * The elasticsearch settings JSON
+     */
+    ELASTICSEARCH_SETTINGS_JSON("elasticsearch.settings.json",
+        "{ \"clientTransportAddresses\": [\"localhost\"], \"clientTransportSniff\": true, \"elasticSearchCluster\": \"elasticsearch\" }"),
+
+    /**
+     * The elasticsearch default port
+     */
+    ELASTICSEARCH_DEFAULT_PORT("elasticsearch.default.port", 9300),
+
+    /**
+     * The elasticsearch spot check percentage
+     */
+    ELASTICSEARCH_BDEF_SPOT_CHECK_PERCENTAGE("elasticsearch.bdef.spot.check.percentage", 0.05),
+
+    /**
+     * The elasticsearch spot check most recent number
+     */
+    ELASTICSEARCH_BDEF_SPOT_CHECK_MOST_RECENT_NUMBER("elasticsearch.bdef.spot.check.most.recent.number", 100),
+
+    /**
+     * The elasticsearch search guard enabled
+     */
+    ELASTICSEARCH_SEARCH_GUARD_ENABLED("elasticsearch.search.guard.enabled", "false"),
+
+    /**
+     * The elasticsearch search guard keystore credential name
+     */
+    ELASTICSEARCH_SEARCH_GUARD_KEYSTORE_CREDENTIAL_NAME("elasticsearch.search.guard.keystore.credential.name", "AGS.component.sdlc.keystoreCredentialName"),
+
+    /**
+     * The elasticsearch search guard truststore credential name
+     */
+    ELASTICSEARCH_SEARCH_GUARD_TRUSTSTORE_CREDENTIAL_NAME("elasticsearch.search.guard.truststore.credential.name",
+        "AGS.component.sdlc.truststoreCredentialName"),
+
+    /**
+     * The elasticsearch search guard keystore path
+     */
+    ELASTICSEARCH_SEARCH_GUARD_KEYSTORE_PATH("elasticsearch.search.guard.keystore.path", "/path/to/keystore.jks"),
+
+    /**
+     * The elasticsearch search guard truststore file path
+     */
+    ELASTICSEARCH_SEARCH_GUARD_TRUSTSTORE_PATH("elasticsearch.search.guard.truststore.path", "/path/to/truststore.jks"),
+
+    /**
+     * The search index update queue name
+     */
+    SEARCH_INDEX_UPDATE_SQS_QUEUE_NAME("search.index.update.sqs.queue.name", null),
+
+    /**
+     * Indicates whether the sample data JMS message listener service is enabled or not. The default is "true" (enabled).
+     */
+    SEARCH_INDEX_UPDATE_JMS_LISTENER_ENABLED("search.index.update.jms.listener.enabled", "true"),
+
+    /**
+     * The name of the Credstash table where credentials are stored.
+     */
+    CREDSTASH_TABLE_NAME("credstash.table.name", "credential-store"),
+
+    /**
+     * The Credstash encryption context key value map.
+     */
+    CREDSTASH_ENCRYPTION_CONTEXT("credstash.encryption.context", "{\"AGS\":\"AGS_VALUE\",\"SDLC\":\"SDLC_VALUE\",\"Component\":\"COMPONENT_VALUE\"}"),
+
+    /**
+     * The Credstash aws region name.
+     */
+    CREDSTASH_AWS_REGION_NAME("credstash.aws.region.name", "us-east-1"),
+
+    /**
+     * The cut-off length of the short description
+     */
+    TAG_SHORT_DESCRIPTION_LENGTH("tag.short.description.max.length", 300);
 
     // Properties
     private String key;

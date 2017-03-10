@@ -59,7 +59,9 @@ import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.model.api.xml.JobStatusEnum;
+import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.service.impl.ActivitiServiceImpl;
 
 public class ActivitiServiceTest
@@ -78,6 +80,9 @@ public class ActivitiServiceTest
 
     @Mock
     private RuntimeService activitiRuntimeService;
+
+    @Mock
+    private ConfigurationHelper configurationHelper;
 
     @Before
     public void before()
@@ -108,6 +113,7 @@ public class ActivitiServiceTest
         String processDefinitionId = "processDefinitionId";
         Map<String, Object> variables = new HashMap<>();
         ProcessInstance expectedProcessInstance = mock(ProcessInstance.class);
+        when(configurationHelper.getProperty(ConfigurationValue.HERD_ENVIRONMENT)).thenReturn("DEV");
         when(activitiRuntimeService.startProcessInstanceById(processDefinitionId, variables)).thenReturn(expectedProcessInstance);
         ProcessInstance actualProcessInstance = activitiService.startProcessInstanceByProcessDefinitionId(processDefinitionId, variables);
         assertSame(expectedProcessInstance, actualProcessInstance);

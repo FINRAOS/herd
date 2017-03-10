@@ -15,6 +15,8 @@
 */
 package org.finra.herd.service.impl;
 
+import static org.finra.herd.model.dto.SearchIndexUpdateDto.SEARCH_INDEX_UPDATE_TYPE_UPDATE;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +26,7 @@ import org.finra.herd.dao.BusinessObjectDefinitionDao;
 import org.finra.herd.dao.BusinessObjectDefinitionSubjectMatterExpertDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
+import org.finra.herd.model.annotation.PublishJmsMessages;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionSubjectMatterExpert;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionSubjectMatterExpertCreateRequest;
@@ -36,6 +39,7 @@ import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionSubjectMatterExpertDaoHelper;
+import org.finra.herd.service.helper.SearchIndexUpdateHelper;
 
 /**
  * The business object definition subject matter expert service implementation.
@@ -62,6 +66,10 @@ public class BusinessObjectDefinitionSubjectMatterExpertServiceImpl implements B
     @Autowired
     private BusinessObjectDefinitionSubjectMatterExpertDaoHelper businessObjectDefinitionSubjectMatterExpertDaoHelper;
 
+    @Autowired
+    private SearchIndexUpdateHelper searchIndexUpdateHelper;
+
+    @PublishJmsMessages
     @Override
     public BusinessObjectDefinitionSubjectMatterExpert createBusinessObjectDefinitionSubjectMatterExpert(
         BusinessObjectDefinitionSubjectMatterExpertCreateRequest request)
@@ -95,6 +103,9 @@ public class BusinessObjectDefinitionSubjectMatterExpertServiceImpl implements B
         businessObjectDefinitionSubjectMatterExpertEntity =
             businessObjectDefinitionSubjectMatterExpertDao.saveAndRefresh(businessObjectDefinitionSubjectMatterExpertEntity);
 
+        // Notify the search index that a business object definition must be updated.
+        searchIndexUpdateHelper.modifyBusinessObjectDefinitionInSearchIndex(businessObjectDefinitionEntity, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
+
         // Create and return the business object definition subject matter expert object from the persisted entity.
         return createBusinessObjectDefinitionSubjectMatterExpertFromEntity(businessObjectDefinitionSubjectMatterExpertEntity);
     }
@@ -113,6 +124,9 @@ public class BusinessObjectDefinitionSubjectMatterExpertServiceImpl implements B
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionSubjectMatterExpertEntity.getBusinessObjectDefinition();
         businessObjectDefinitionEntity.getSubjectMatterExperts().remove(businessObjectDefinitionSubjectMatterExpertEntity);
         businessObjectDefinitionDao.saveAndRefresh(businessObjectDefinitionEntity);
+
+        // Notify the search index that a business object definition must be updated.
+        searchIndexUpdateHelper.modifyBusinessObjectDefinitionInSearchIndex(businessObjectDefinitionEntity, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
 
         // Create and return the business object definition subject matter expert object from the deleted entity.
         return createBusinessObjectDefinitionSubjectMatterExpertFromEntity(businessObjectDefinitionSubjectMatterExpertEntity);

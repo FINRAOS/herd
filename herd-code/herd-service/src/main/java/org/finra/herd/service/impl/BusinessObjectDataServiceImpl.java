@@ -53,12 +53,14 @@ import org.finra.herd.model.api.xml.BusinessObjectDataDdlRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataInvalidateUnregisteredResponse;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
+import org.finra.herd.model.api.xml.BusinessObjectDataKeys;
 import org.finra.herd.model.api.xml.BusinessObjectDataRetryStoragePolicyTransitionRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchRequest;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchResult;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatus;
 import org.finra.herd.model.api.xml.BusinessObjectDataVersion;
 import org.finra.herd.model.api.xml.BusinessObjectDataVersions;
+import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.CustomDdlKey;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
@@ -68,6 +70,7 @@ import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
+import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.CustomDdlEntity;
 import org.finra.herd.model.jpa.NotificationEventTypeEntity;
@@ -85,7 +88,10 @@ import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.service.helper.BusinessObjectDataInvalidateUnregisteredHelper;
 import org.finra.herd.service.helper.BusinessObjectDataSearchHelper;
 import org.finra.herd.service.helper.BusinessObjectDataStatusDaoHelper;
+import org.finra.herd.service.helper.BusinessObjectDefinitionDaoHelper;
+import org.finra.herd.service.helper.BusinessObjectDefinitionHelper;
 import org.finra.herd.service.helper.BusinessObjectFormatDaoHelper;
+import org.finra.herd.service.helper.BusinessObjectFormatHelper;
 import org.finra.herd.service.helper.CustomDdlDaoHelper;
 import org.finra.herd.service.helper.DdlGeneratorFactory;
 import org.finra.herd.service.helper.S3KeyPrefixHelper;
@@ -142,7 +148,16 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
     private BusinessObjectDataStatusDaoHelper businessObjectDataStatusDaoHelper;
 
     @Autowired
+    private BusinessObjectDefinitionDaoHelper businessObjectDefinitionDaoHelper;
+
+    @Autowired
+    private BusinessObjectDefinitionHelper businessObjectDefinitionHelper;
+
+    @Autowired
     private BusinessObjectFormatDaoHelper businessObjectFormatDaoHelper;
+
+    @Autowired
+    private BusinessObjectFormatHelper businessObjectFormatHelper;
 
     @Autowired
     private ConfigurationHelper configurationHelper;
@@ -1244,8 +1259,8 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         BusinessObjectDataRetryStoragePolicyTransitionDto businessObjectDataRetryStoragePolicyTransitionDto =
             businessObjectDataRetryStoragePolicyTransitionHelperService.prepareToRetryStoragePolicyTransition(businessObjectDataKey, request);
 
-        // Execute AWS specific steps needed to retry a storage policy transition.
-        businessObjectDataRetryStoragePolicyTransitionHelperService.executeAwsSpecificSteps(businessObjectDataRetryStoragePolicyTransitionDto);
+        // Execute S3 specific steps needed to retry a storage policy transition.
+        businessObjectDataRetryStoragePolicyTransitionHelperService.executeS3SpecificSteps(businessObjectDataRetryStoragePolicyTransitionDto);
 
         // Execute the after step for the retry a storage policy transition and return the business object data information.
         return businessObjectDataRetryStoragePolicyTransitionHelperService
@@ -1346,5 +1361,46 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         result.setBusinessObjectDataElements(businessObjectDataList);
 
         return result;
+    }
+
+    @NamespacePermission(fields = "#businessObjectDefinitionKey.namespace", permissions = NamespacePermissionEnum.READ)
+    @Override
+    public BusinessObjectDataKeys getAllBusinessObjectDataByBusinessObjectDefinition(BusinessObjectDefinitionKey businessObjectDefinitionKey)
+    {
+        // Perform validation and trim.
+        businessObjectDefinitionHelper.validateBusinessObjectDefinitionKey(businessObjectDefinitionKey);
+
+        // Ensure that a business object definition already exists with the specified name.
+        BusinessObjectDefinitionEntity businessObjectDefinitionEntity =
+            businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(businessObjectDefinitionKey);
+
+        // Get the maximum number of records to return.
+        Integer maxResults = configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULTS, Integer.class);
+
+        // Gets the list of keys and return them.
+        BusinessObjectDataKeys businessObjectDataKeys = new BusinessObjectDataKeys();
+        businessObjectDataKeys.getBusinessObjectDataKeys()
+            .addAll(businessObjectDataDao.getBusinessObjectDataByBusinessObjectDefinition(businessObjectDefinitionEntity, maxResults));
+        return businessObjectDataKeys;
+    }
+
+    @NamespacePermission(fields = "#businessObjectFormatKey.namespace", permissions = NamespacePermissionEnum.READ)
+    @Override
+    public BusinessObjectDataKeys getAllBusinessObjectDataByBusinessObjectFormat(BusinessObjectFormatKey businessObjectFormatKey)
+    {
+        // Perform validation and trim. Please note that we specify business object format version parameter to be required.
+        businessObjectFormatHelper.validateBusinessObjectFormatKey(businessObjectFormatKey, true);
+
+        // Ensure that a business object definition already exists with the specified name.
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey);
+
+        // Get the maximum number of records to return.
+        Integer maxResults = configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULTS, Integer.class);
+
+        // Gets the list of business object data keys and return them.
+        BusinessObjectDataKeys businessObjectDataKeys = new BusinessObjectDataKeys();
+        businessObjectDataKeys.getBusinessObjectDataKeys()
+            .addAll(businessObjectDataDao.getBusinessObjectDataByBusinessObjectFormat(businessObjectFormatEntity, maxResults));
+        return businessObjectDataKeys;
     }
 }

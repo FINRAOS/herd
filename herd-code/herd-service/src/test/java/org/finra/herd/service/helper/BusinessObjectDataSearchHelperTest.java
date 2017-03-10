@@ -11,6 +11,8 @@ import org.springframework.util.Assert;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchFilter;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataSearchRequest;
+import org.finra.herd.model.api.xml.LatestAfterPartitionValue;
+import org.finra.herd.model.api.xml.PartitionValueFilter;
 import org.finra.herd.service.AbstractServiceTest;
 
 public class BusinessObjectDataSearchHelperTest extends AbstractServiceTest
@@ -69,18 +71,35 @@ public class BusinessObjectDataSearchHelperTest extends AbstractServiceTest
     {
         BusinessObjectDataSearchKey key = null;
 
-        handleExpectedExceptionValidateSearchRequestKey(key, "null business data search key should fail");
+        handleExpectedExceptionValidateSearchRequestKey(key, "A business object data key must be specified.");
 
         key = new BusinessObjectDataSearchKey();
         key.setNamespace(null);
-        handleExpectedExceptionValidateSearchRequestKey(key, "null namespace in data search key should fail");
+        handleExpectedExceptionValidateSearchRequestKey(key, "A namespace must be specified.");
 
         key.setNamespace("SOME NAMESPACE");
         key.setBusinessObjectDefinitionName(null);
-        handleExpectedExceptionValidateSearchRequestKey(key, "null business defination name in data search key should fail");
+        handleExpectedExceptionValidateSearchRequestKey(key, "A business object definition name must be specified.");
 
     }
 
+    @Test
+    public void testValidateBusinessObjectDataSearchRequestKeyBadFilter()
+    {
+        BusinessObjectDataSearchKey key = new BusinessObjectDataSearchKey();
+
+        key.setNamespace("NAMESPACE");
+        key.setBusinessObjectDefinitionName("DEF");
+
+        PartitionValueFilter filter = new PartitionValueFilter();
+        List<PartitionValueFilter> partitionValueFilters = new ArrayList<>();
+        partitionValueFilters.add(filter);
+        key.setPartitionValueFilters(partitionValueFilters);
+        filter.setLatestAfterPartitionValue(new LatestAfterPartitionValue("NA"));
+        filter.setPartitionKey("NA");
+        handleExpectedExceptionValidateSearchRequestKey(key, "Only partition values or partition range are supported in partition value filters.");
+    }
+    
     @Test
     public void testValidateBusinessObjectDataSearchRequestKeyPositiveWithRequiredFieldsOnly()
     {
@@ -106,9 +125,13 @@ public class BusinessObjectDataSearchHelperTest extends AbstractServiceTest
         {
             key.setNamespace("NAMESPACE");
             key.setBusinessObjectDefinitionName("DEF");
-            key.setBusinessObjectFormatUsage("FORMAT");
+            key.setBusinessObjectFormatFileType("BIZ");
             key.setBusinessObjectFormatUsage("PRC");
             key.setBusinessObjectFormatVersion(0);
+            businessObjectDataSearchHelper.validateBusinessObjectDataKey(key);
+            
+            //empty partition value filters
+            key.setPartitionValueFilters(new ArrayList<PartitionValueFilter>());
             businessObjectDataSearchHelper.validateBusinessObjectDataKey(key);
         }
         catch (IllegalArgumentException ex)
@@ -183,9 +206,10 @@ public class BusinessObjectDataSearchHelperTest extends AbstractServiceTest
         }
         catch (IllegalArgumentException ex)
         {
-
             caughtException = true;
+            Assert.isTrue(message.equals(ex.getMessage()));
         }
-        Assert.isTrue(caughtException, message);
+        Assert.isTrue(caughtException, "exception should be thrown and caught.");
+       
     }
 }

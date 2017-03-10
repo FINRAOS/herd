@@ -54,7 +54,6 @@ import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.herd.model.jpa.StorageEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
-import org.finra.herd.service.impl.UploadDownloadHelperServiceImpl;
 import org.finra.herd.service.impl.UploadDownloadServiceImpl;
 
 /**
@@ -749,8 +748,31 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
     @Test
     public void testPerformCompleteUploadSingleMessage()
     {
-        setLogLevel(UploadDownloadServiceImpl.class, LogLevel.OFF);
+        runPerformCompleteUploadSingleMessageTest();
+    }
 
+    @Test
+    public void testPerformCompleteUploadSingleMessageWithDebugLoggingEnabled() throws Exception
+    {
+        // Get the logger and the current logger level.
+        LogLevel origLogLevel = getLogLevel(UploadDownloadServiceImpl.class);
+
+        // Set logging level to DEBUG.
+        setLogLevel(UploadDownloadServiceImpl.class, LogLevel.DEBUG);
+
+        // Run the test and reset the logging level back to the original value.
+        try
+        {
+            runPerformCompleteUploadSingleMessageTest();
+        }
+        finally
+        {
+            setLogLevel(UploadDownloadServiceImpl.class, origLogLevel);
+        }
+    }
+
+    private void runPerformCompleteUploadSingleMessageTest()
+    {
         uploadDownloadServiceTestHelper.createDatabaseEntitiesForUploadDownloadTesting();
 
         UploadSingleInitiationResponse resultUploadSingleInitiationResponse = uploadDownloadService.initiateUploadSingle(uploadDownloadServiceTestHelper
@@ -798,8 +820,6 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
     @Test
     public void testPerformCompleteUploadSingleMessageStorageFileNoExists()
     {
-        setLogLevel(UploadDownloadServiceImpl.class, LogLevel.OFF);
-
         // Try to complete the upload, when storage file matching the S3 key does not exist in the database.
         UploadDownloadServiceImpl.CompleteUploadSingleMessageResult result = uploadDownloadService.performCompleteUploadSingleMessage("KEY_DOES_NOT_EXIST");
 
@@ -814,8 +834,6 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
     @Test
     public void testPerformCompleteUploadSingleMessageS3FileNoExists()
     {
-        setLogLevel(UploadDownloadServiceImpl.class, LogLevel.OFF);
-
         uploadDownloadServiceTestHelper.createDatabaseEntitiesForUploadDownloadTesting();
 
         UploadSingleInitiationResponse resultUploadSingleInitiationResponse = uploadDownloadService.initiateUploadSingle(uploadDownloadServiceTestHelper
@@ -1090,8 +1108,6 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
     @Test
     public void testUploadDownloadHelperServiceMethodsNewTransactionPropagation()
     {
-        setLogLevel(UploadDownloadHelperServiceImpl.class, LogLevel.OFF);
-
         uploadDownloadServiceImpl.performCompleteUploadSingleMessage("KEY_DOES_NOT_EXIST");
     }
 
@@ -1434,14 +1450,14 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
                     " directory path \"%s\"", BDEF_NAME, NAMESPACE, "I_DO_NOT_EXIST", DIRECTORY_PATH), e.getMessage());
         }
     }
-    
+
     @Test
     public void testUploadBusinessObjectDefinitionSampleFile()
     {
         String s3_velocity_template = "$namespace/$businessObjectDefinitionName";
         String expectedS3Keyprefix = NAMESPACE.toLowerCase() + "/" + BDEF_NAME.toLowerCase() + "/";
         expectedS3Keyprefix = expectedS3Keyprefix.replace("_", "-");
-   
+
         // Create a test storage.
         storageDaoTestHelper.createStorageEntity(StorageEntity.SAMPLE_DATA_FILE_STORAGE, Arrays
             .asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), S3_BUCKET_NAME),
@@ -1452,7 +1468,7 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         businessObjectDefinitionDaoTestHelper
             .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME,
                 businessObjectDefinitionServiceTestHelper.getNewAttributes());
-        
+
         UploadBusinessObjectDefinitionSampleDataFileInitiationRequest request = new UploadBusinessObjectDefinitionSampleDataFileInitiationRequest();
         BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME);
         request.setBusinessObjectDefinitionKey(businessObjectDefinitionKey);
@@ -1466,12 +1482,12 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         assertEquals(response.getAwsSessionToken(), MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_SESSION_TOKEN);
 
     }
-    
+
     @Test
     public void testUploadBusinessObjectDefinitionSampleFileLowerCase()
     {
         String s3_velocity_template = "$namespace/$businessObjectDefinitionName";
-   
+
         // Create a test storage.
         storageDaoTestHelper.createStorageEntity(StorageEntity.SAMPLE_DATA_FILE_STORAGE, Arrays
             .asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), S3_BUCKET_NAME),
@@ -1482,7 +1498,7 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         businessObjectDefinitionDaoTestHelper
             .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME,
                 businessObjectDefinitionServiceTestHelper.getNewAttributes());
-        
+
         UploadBusinessObjectDefinitionSampleDataFileInitiationRequest request = new UploadBusinessObjectDefinitionSampleDataFileInitiationRequest();
         BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME);
         BusinessObjectDefinitionKey businessObjectDefinitionKeyLowerCase = new BusinessObjectDefinitionKey(NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase());
@@ -1496,12 +1512,12 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         assertEquals(response.getAwsSessionToken(), MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_SESSION_TOKEN);
 
     }
-    
+
     @Test
     public void testUploadBusinessObjectDefinitionSampleFileUpperCase()
     {
         String s3_velocity_template = "$namespace/$businessObjectDefinitionName";
-   
+
         // Create a test storage.
         storageDaoTestHelper.createStorageEntity(StorageEntity.SAMPLE_DATA_FILE_STORAGE, Arrays
             .asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), S3_BUCKET_NAME),
@@ -1512,7 +1528,7 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         businessObjectDefinitionDaoTestHelper
             .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME,
                 businessObjectDefinitionServiceTestHelper.getNewAttributes());
-        
+
         UploadBusinessObjectDefinitionSampleDataFileInitiationRequest request = new UploadBusinessObjectDefinitionSampleDataFileInitiationRequest();
         BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME);
         BusinessObjectDefinitionKey businessObjectDefinitionKeyUpperCase = new BusinessObjectDefinitionKey(NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase());
@@ -1525,12 +1541,12 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         assertEquals(response.getAwsSecretKey(), MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_SECRET_KEY);
         assertEquals(response.getAwsSessionToken(), MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_SESSION_TOKEN);
     }
-    
+
     @Test
     public void testUploadBusinessObjectDefinitionSampleFileTrimedParameters()
     {
         String s3_velocity_template = "$namespace/$businessObjectDefinitionName";
-   
+
         // Create a test storage.
         storageDaoTestHelper.createStorageEntity(StorageEntity.SAMPLE_DATA_FILE_STORAGE, Arrays
             .asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), S3_BUCKET_NAME),
@@ -1541,10 +1557,10 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         businessObjectDefinitionDaoTestHelper
             .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME,
                 businessObjectDefinitionServiceTestHelper.getNewAttributes());
-        
+
         UploadBusinessObjectDefinitionSampleDataFileInitiationRequest request = new UploadBusinessObjectDefinitionSampleDataFileInitiationRequest();
         BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME);
-        BusinessObjectDefinitionKey businessObjectDefinitionKeyWhitespace = new BusinessObjectDefinitionKey("    " + NAMESPACE + " ",  "   " + BDEF_NAME + "  ");
+        BusinessObjectDefinitionKey businessObjectDefinitionKeyWhitespace = new BusinessObjectDefinitionKey("    " + NAMESPACE + " ", "   " + BDEF_NAME + "  ");
         request.setBusinessObjectDefinitionKey(businessObjectDefinitionKeyWhitespace);
 
         UploadBusinessObjectDefinitionSampleDataFileInitiationResponse response = uploadDownloadService.initiateUploadSampleFile(request);
@@ -1554,7 +1570,7 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         assertEquals(response.getAwsSecretKey(), MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_SECRET_KEY);
         assertEquals(response.getAwsSessionToken(), MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_SESSION_TOKEN);
     }
-    
+
     @Test
     public void testUploadBusinessObjectDefinitionSampleFileMissingParameter()
     {
@@ -1582,7 +1598,7 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         {
             BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey("NAMESPACE", null);
             UploadBusinessObjectDefinitionSampleDataFileInitiationRequest request =
-                    new UploadBusinessObjectDefinitionSampleDataFileInitiationRequest(businessObjectDefinitionKey);
+                new UploadBusinessObjectDefinitionSampleDataFileInitiationRequest(businessObjectDefinitionKey);
             uploadDownloadService.initiateUploadSampleFile(request);
             fail();
         }
@@ -1595,7 +1611,7 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         {
             BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(null, "BDEF");
             UploadBusinessObjectDefinitionSampleDataFileInitiationRequest request =
-                    new UploadBusinessObjectDefinitionSampleDataFileInitiationRequest(businessObjectDefinitionKey);
+                new UploadBusinessObjectDefinitionSampleDataFileInitiationRequest(businessObjectDefinitionKey);
             uploadDownloadService.initiateUploadSampleFile(request);
             fail();
         }
@@ -1604,14 +1620,14 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
             assertEquals("A namespace must be specified.", e.getMessage());
         }
     }
-    
+
     @Test
     public void testUploadBusinessObjectDefinitionSampleFileInvalidParameter()
     {
         BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME);
 
         UploadBusinessObjectDefinitionSampleDataFileInitiationRequest request =
-                new UploadBusinessObjectDefinitionSampleDataFileInitiationRequest(businessObjectDefinitionKey);
+            new UploadBusinessObjectDefinitionSampleDataFileInitiationRequest(businessObjectDefinitionKey);
         try
         {
 
@@ -1620,18 +1636,18 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(businessObjectDefinitionServiceTestHelper.getExpectedBusinessObjectDefinitionNotFoundErrorMessage(NAMESPACE, BDEF_NAME), e
-                    .getMessage());
+            assertEquals(businessObjectDefinitionServiceTestHelper.getExpectedBusinessObjectDefinitionNotFoundErrorMessage(NAMESPACE, BDEF_NAME),
+                e.getMessage());
         }
     }
-    
+
     @Test
     public void testUploadBusinessObjectDefinitionSampleFileMissingTemplate()
     {
         //String s3_velocity_template = "$namespace/$businessObjectDefinitionName";
         String expectedS3Keyprefix = NAMESPACE.toLowerCase() + "/" + BDEF_NAME.toLowerCase() + "/";
         expectedS3Keyprefix = expectedS3Keyprefix.replace("_", "-");
-   
+
         // Create a test storage.
         storageDaoTestHelper.createStorageEntity(StorageEntity.SAMPLE_DATA_FILE_STORAGE, Arrays
             .asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), S3_BUCKET_NAME),
@@ -1643,7 +1659,7 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         businessObjectDefinitionDaoTestHelper
             .createBusinessObjectDefinitionEntity(NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION, BDEF_DISPLAY_NAME,
                 businessObjectDefinitionServiceTestHelper.getNewAttributes());
-        
+
         UploadBusinessObjectDefinitionSampleDataFileInitiationRequest request = new UploadBusinessObjectDefinitionSampleDataFileInitiationRequest();
         BusinessObjectDefinitionKey businessObjectDefinitionKey = new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME);
         request.setBusinessObjectDefinitionKey(businessObjectDefinitionKey);
@@ -1657,9 +1673,9 @@ public class UploadDownloadServiceTest extends AbstractServiceTest
         catch (IllegalArgumentException e)
         {
             assertEquals(String.format("Storage \"%s\" has no S3 key prefix velocity template configured.", StorageEntity.SAMPLE_DATA_FILE_STORAGE),
-                    e.getMessage());
+                e.getMessage());
         }
-        
+
 
     }
 }

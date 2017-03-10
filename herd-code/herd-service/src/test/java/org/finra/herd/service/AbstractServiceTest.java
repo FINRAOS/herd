@@ -43,6 +43,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ContextConfiguration;
 
+import org.finra.herd.core.HerdDateUtils;
 import org.finra.herd.dao.AbstractDaoTest;
 import org.finra.herd.dao.TagDaoTestHelper;
 import org.finra.herd.dao.TagTypeDaoTestHelper;
@@ -64,6 +65,7 @@ import org.finra.herd.model.api.xml.PartitionValueFilter;
 import org.finra.herd.model.api.xml.PartitionValueRange;
 import org.finra.herd.model.api.xml.Schema;
 import org.finra.herd.model.api.xml.SchemaColumn;
+import org.finra.herd.model.api.xml.SearchIndexStatistics;
 import org.finra.herd.model.api.xml.StorageDirectory;
 import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.api.xml.StorageUnit;
@@ -88,6 +90,9 @@ import org.finra.herd.service.helper.NotificationRegistrationDaoHelper;
 import org.finra.herd.service.helper.NotificationRegistrationStatusDaoHelper;
 import org.finra.herd.service.helper.S3KeyPrefixHelper;
 import org.finra.herd.service.helper.S3PropertiesLocationHelper;
+import org.finra.herd.service.helper.SearchIndexDaoHelper;
+import org.finra.herd.service.helper.SearchIndexStatusDaoHelper;
+import org.finra.herd.service.helper.SearchIndexTypeDaoHelper;
 import org.finra.herd.service.helper.SqsMessageBuilder;
 import org.finra.herd.service.helper.StorageDaoHelper;
 import org.finra.herd.service.helper.StorageFileHelper;
@@ -160,7 +165,24 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String END_PARTITION_VALUE = "2014-04-08";
 
+    public static final String ERROR_MESSAGE = "UT_ErrorMessage_" + RANDOM_SUFFIX;
+
     public static final int EXPECTED_UUID_SIZE = 36;
+
+    /**
+     * Constant to hold the data provider name option for the business object definition search
+     */
+    public static final String FIELD_DATA_PROVIDER_NAME = "dataProviderName";
+
+    /**
+     * Constant to hold the display name option for the business object definition search
+     */
+    public static final String FIELD_DISPLAY_NAME = "displayName";
+
+    /**
+     * Constant to hold the short description option for the business object definition search
+     */
+    public static final String FIELD_SHORT_DESCRIPTION = "shortDescription";
 
     public static final String FILE_NAME = "UT_FileName_1_" + RANDOM_SUFFIX;
 
@@ -171,6 +193,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final Long FILE_SIZE = (long) (Math.random() * Long.MAX_VALUE);
 
     public static final Long FILE_SIZE_2 = (long) (Math.random() * Long.MAX_VALUE);
+
+    public static final String HERD_WORKFLOW_ENVIRONMENT = "herd_workflowEnvironment";
 
     public static final Boolean INCLUDE_ALL_REGISTERED_SUBPARTITIONS = true;
 
@@ -248,6 +272,10 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final Long NO_ROW_COUNT = null;
 
+    public static final SearchIndexStatistics NO_SEARCH_INDEX_STATISTICS = null;
+
+    public static final XMLGregorianCalendar NO_SEARCH_INDEX_STATISTICS_CREATION_DATE = null;
+
     public static final Set<String> NO_SEARCH_RESPONSE_FIELDS = new HashSet<>();
 
     public static final PartitionValueFilter NO_STANDALONE_PARTITION_VALUE_FILTER = null;
@@ -259,6 +287,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final List<StorageFile> NO_STORAGE_FILES = new ArrayList<>();
 
     public static final List<StorageUnit> NO_STORAGE_UNITS = new ArrayList<>();
+
+    public static final Boolean NO_SUPPRESS_SCAN_FOR_UNREGISTERED_SUBPARTITIONS = false;
 
     public static final XMLGregorianCalendar NO_UPDATED_TIME = null;
 
@@ -284,13 +314,28 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
             "#end" +
             "#end";
 
+    public static final XMLGregorianCalendar SEARCH_INDEX_STATISTICS_CREATION_DATE = HerdDateUtils.getXMLGregorianCalendarValue(getRandomDate());
+
+    public static final String SEARCH_INDEX_STATISTICS_INDEX_UUID = "UT_SearchIndexSetting_Uuid_" + RANDOM_SUFFIX;
+
+    public static final Long SEARCH_INDEX_STATISTICS_NUMBER_OF_ACTIVE_DOCUMENTS = (long) (Math.random() * Integer.MAX_VALUE);
+
+    public static final Long SEARCH_INDEX_STATISTICS_NUMBER_OF_DELETED_DOCUMENTS = (long) (Math.random() * Integer.MAX_VALUE);
+
     public static final String SECOND_PARTITION_COLUMN_NAME = "PRTN_CLMN002";
+
+    /**
+     * The length of a business object definition short description
+     */
+    public static final int SHORT_DESCRIPTION_LENGTH = 300;
 
     public static final String SQS_QUEUE_NAME = "UT_Sqs_Queue_Name_" + RANDOM_SUFFIX;
 
     public static final String START_PARTITION_VALUE = "2014-04-02";
 
     public static final String STORAGE_POLICY_SELECTOR_SQS_QUEUE_NAME = "STORAGE_POLICY_SELECTOR_SQS_QUEUE_NAME";
+
+    public static final Boolean SUPPRESS_SCAN_FOR_UNREGISTERED_SUBPARTITIONS = true;
 
     /**
      * The test job name as per the above workflow XML file.
@@ -535,6 +580,15 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     protected S3Service s3Service;
 
     @Autowired
+    protected SearchIndexDaoHelper searchIndexDaoHelper;
+
+    @Autowired
+    protected SearchIndexStatusDaoHelper searchIndexStatusDaoHelper;
+
+    @Autowired
+    protected SearchIndexTypeDaoHelper searchIndexTypeDaoHelper;
+
+    @Autowired
     protected SqsMessageBuilder sqsMessageBuilder;
 
     @Autowired
@@ -584,6 +638,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     @Autowired
     protected StorageUnitStatusDaoHelper storageUnitStatusDaoHelper;
+
+    @Autowired
+    protected SubjectMatterExpertService subjectMatterExpertService;
 
     @Autowired
     protected SystemJobService systemJobService;

@@ -51,6 +51,12 @@ public class TagTypeEntity extends AuditableEntity
     @Column(name = "pstn_nb", nullable = false)
     private Integer orderNumber;
 
+    /**
+     * The tag type description column.
+     */
+    @Column(name = "tag_type_ds", nullable = true)
+    private String description;
+
     public String getCode()
     {
         return code;
@@ -79,5 +85,15 @@ public class TagTypeEntity extends AuditableEntity
     public void setOrderNumber(Integer orderNumber)
     {
         this.orderNumber = orderNumber;
+    }
+
+    public String getDescription()
+    {
+        return description;
+    }
+
+    public void setDescription(String description)
+    {
+        this.description = description;
     }
 }

@@ -35,20 +35,6 @@
       -->
    </jaxb:globalBindings>
    <jaxb:bindings schemaLocation="herd.xsd">
-      <!-- This provides semantically meaningful customized names for type-safe enumerations. -->
-      <jaxb:bindings node="//xs:element[@name='namespacePermission']/xs:simpleType">
-         <jaxb:typesafeEnumClass name="NamespacePermissionEnum"/>
-      </jaxb:bindings>
-      <jaxb:bindings node="//xs:element[@name='outputFormat']/xs:simpleType">
-         <jaxb:typesafeEnumClass name="BusinessObjectDataDdlOutputFormatEnum"/>
-      </jaxb:bindings>
-      <jaxb:bindings node="//xs:element[@name='status']/xs:simpleType">
-         <jaxb:typesafeEnumClass name="JobStatusEnum"/>
-      </jaxb:bindings>
-      <jaxb:bindings node="//xs:element[@name='action']/xs:simpleType">
-         <jaxb:typesafeEnumClass name="JobActionEnum"/>
-      </jaxb:bindings>
-
       <!-- This will ensure the generated Java classes have the correct plural property and method names (e.g. "keys" instead of "keies"). -->
       <jaxb:bindings node="//xs:complexType[@name='storageKeys']//xs:element[@name='storageKey']">
          <jaxb:property name="storageKeys"/>
@@ -87,6 +73,9 @@
       <jaxb:bindings node="//xs:complexType[@name='customDdlKeys']//xs:element[@name='customDdlKey']">
          <jaxb:property name="customDdlKeys"/>
       </jaxb:bindings>
+      <jaxb:bindings node="//xs:complexType[@name='businessObjectDataKeys']//xs:element[@name='businessObjectDataKey']">
+         <jaxb:property name="businessObjectDataKeys"/>
+      </jaxb:bindings>
       <jaxb:bindings node="//xs:complexType[@name='businessObjectDataAttributeKeys']//xs:element[@name='businessObjectDataAttributeKey']">
          <jaxb:property name="businessObjectDataAttributeKeys"/>
       </jaxb:bindings>
@@ -103,6 +92,9 @@
       </jaxb:bindings>
       <jaxb:bindings node="//xs:complexType[@name='businessObjectDataSearchKeys']//xs:element[@name='businessObjectDataSearchKey']">
          <jaxb:property name="businessObjectDataSearchKeys"/>
+      </jaxb:bindings>
+      <jaxb:bindings node="//xs:complexType[@name='searchIndexKeys']//xs:element[@name='searchIndexKey']">
+         <jaxb:property name="searchIndexKeys"/>
       </jaxb:bindings>
 
       <!-- Add custom XmlCDATA annotations. The below bindings will add XmlCDATA annotations to the auto-generated classes specified below

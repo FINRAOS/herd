@@ -135,3 +135,7 @@ insert into CNFGN (CNFGN_KEY_NM, CNFGN_VALUE_DS) values ('emr.oozie.herd.wrapper
 insert into CNFGN (CNFGN_KEY_NM, CNFGN_VALUE_DS) values ('storage.policy.selector.job.sqs.queue.name', 'STORAGE_POLICY_SELECTOR_SQS_QUEUE_NAME');
 
 insert into CNFGN (CNFGN_KEY_NM, CNFGN_VALUE_DS) values ('emr.encryption.script', 'herd_SCRIPTS/encrypt_disks.sh');
+
+insert into CNFGN (CNFGN_KEY_NM, CNFGN_VALUE_DS) values ('sample.data.sqs.queue.name', 'SAMPLE_DATA_SQS_QUEUE_NAME');
+insert into CNFGN (CNFGN_KEY_NM, CNFGN_VALUE_DS) values ('search.index.update.sqs.queue.name', 'SEARCH_INDEX_UPDATE_SQS_QUEUE_NAME');
+

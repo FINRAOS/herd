@@ -24,7 +24,7 @@
 
    <groupId>org.finra.herd</groupId>
    <artifactId>herd</artifactId>
-   <version>0.32.0-SNAPSHOT</version>
+   <version>0.39.0-SNAPSHOT</version>
 
    <description>This is the base pom for the herd project.</description>
    <url>http://finraos.github.io/herd/</url>
@@ -39,7 +39,7 @@
        -->
       <activiti.version>5.19.0.1</activiti.version>
       <aspectj.version>1.8.7</aspectj.version>
-      <aws.sdk.version>1.11.23</aws.sdk.version>
+      <aws.sdk.version>1.11.86</aws.sdk.version>
       <aws.sqs.messaging.version>1.0.1</aws.sqs.messaging.version>
       <cobertura.version>2.1.1</cobertura.version>
       <commons.cli.version>1.3.1</commons.cli.version>
@@ -67,6 +67,7 @@
       -->
       <junit.version>4.12</junit.version>
       <log4j.version>2.6.2</log4j.version>
+      <maven.artifact.version>3.3.9</maven.artifact.version>
       <maven.plugin.api.version>3.3.9</maven.plugin.api.version>
       <maven.plugin.annotations.version>3.4</maven.plugin.annotations.version>
       <migbase64.version>2.2</migbase64.version>
@@ -77,12 +78,17 @@
       <quartz.scheduler.version>2.2.2</quartz.scheduler.version>
       <roaster.version>2.18.2.Final</roaster.version>
       <slf4j.version>1.7.21</slf4j.version>
+      <spring.ldap.version>2.2.0.RELEASE</spring.ldap.version>
       <spring.security.version>4.0.3.RELEASE</spring.security.version>
       <spring.version>4.2.4.RELEASE</spring.version>
+      <spring-retry.version>1.1.2.RELEASE</spring-retry.version>
       <sun.jersey.version>1.19.1</sun.jersey.version>
       <swagger.version>1.5.9</swagger.version>
       <velocity.version>1.7</velocity.version>
       <woodstox.version>4.4.1</woodstox.version>
+      <elasticsearch.version>5.1.1</elasticsearch.version>
+      <search-guard-ssl.version>5.1.1-19</search-guard-ssl.version>
+      <jcredstash.version>0.0.3</jcredstash.version>
 
       <!-- Third Party Plugin Dependencies -->
       <jaxb.xew.plugin.version>1.6</jaxb.xew.plugin.version>
@@ -116,6 +122,7 @@
       <versions.maven.plugin.version>2.2</versions.maven.plugin.version>
       <mockito.version>1.10.19</mockito.version>
       <nexus.staging.maven.plugin.version>1.6.7</nexus.staging.maven.plugin.version>
+      <jsoup.version>1.10.2</jsoup.version>
 
       <!-- Compiler Information -->
       <maven.compiler.source>1.8</maven.compiler.source>
@@ -308,6 +315,11 @@
          <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-sqs</artifactId>
+            <version>${aws.sdk.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk</artifactId>
             <version>${aws.sdk.version}</version>
          </dependency>
          <dependency>
@@ -562,6 +574,11 @@
             <version>${spring.version}</version>
          </dependency>
          <dependency>
+            <groupId>org.springframework.ldap</groupId>
+            <artifactId>spring-ldap-core</artifactId>
+            <version>${spring.ldap.version}</version>
+         </dependency>
+         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-web</artifactId>
             <version>${spring.security.version}</version>
@@ -570,6 +587,11 @@
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-config</artifactId>
             <version>${spring.security.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.springframework.retry</groupId>
+            <artifactId>spring-retry</artifactId>
+            <version>${spring-retry.version}</version>
          </dependency>
          <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -654,6 +676,11 @@
             <groupId>org.codehaus.woodstox</groupId>
             <artifactId>woodstox-core-asl</artifactId>
             <version>${woodstox.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-artifact</artifactId>
+            <version>${maven.artifact.version}</version>
          </dependency>
          <dependency>
             <groupId>org.apache.maven</groupId>
@@ -792,6 +819,34 @@
             <groupId>com.brsanthu</groupId>
             <artifactId>migbase64</artifactId>
             <version>${migbase64.version}</version>
+         </dependency>
+
+         <!-- Elastic search -->
+         <dependency>
+            <groupId>org.elasticsearch</groupId>
+            <artifactId>elasticsearch</artifactId>
+            <version>${elasticsearch.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>org.elasticsearch.client</groupId>
+            <artifactId>transport</artifactId>
+            <version>${elasticsearch.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>com.floragunn</groupId>
+            <artifactId>search-guard-ssl</artifactId>
+            <version>${search-guard-ssl.version}</version>
+         </dependency>
+         <dependency>
+            <groupId>co.wrisk.jcredstash</groupId>
+            <artifactId>jcredstash</artifactId>
+            <version>${jcredstash.version}</version>
+         </dependency>
+         <dependency>
+            <!-- jsoup HTML parser library @ http://jsoup.org/ -->
+            <groupId>org.jsoup</groupId>
+            <artifactId>jsoup</artifactId>
+            <version>${jsoup.version}</version>
          </dependency>
 
       </dependencies>
@@ -1052,7 +1107,7 @@
       <developer>
          <id>foxsmart</id>
          <name>Andrew Pach</name>
-         <email>apach@foxsmart.com</email>
+         <email>apach.foxsmart@gmail.com</email>
          <url>https://github.com/foxsmart</url>
          <organization>Fox Smart</organization>
          <organizationUrl>https://www.linkedin.com/in/foxsmart</organizationUrl>
@@ -1089,6 +1144,17 @@
          <organizationUrl>http://www.finra.org</organizationUrl>
          <roles>
             <role>database administrator</role>
+         </roles>
+      </developer>
+      <developer>
+         <id>kenneths</id>
+         <name>Kenneth Steward</name>
+         <email>keni.steward@gmail.com</email>
+         <url>https://github.com/kenisteward</url>
+         <organization>FINRA</organization>
+         <organizationUrl>https://www.linkedin.com/in/kenisteward</organizationUrl>
+         <roles>
+            <role>developer</role>
          </roles>
       </developer>
       <developer>

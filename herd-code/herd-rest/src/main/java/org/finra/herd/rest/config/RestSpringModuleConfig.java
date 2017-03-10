@@ -112,6 +112,7 @@ public class RestSpringModuleConfig extends WebMvcConfigurationSupport
 
         // Remove the Jackson2Xml converter since we want to use JAXB instead when we encounter "application/xml". Otherwise, the XSD auto-generated
         // classes with JAXB annotations won't get used.
+        // Set jackson mapper to include only properties with non-null values.
         for (HttpMessageConverter httpMessageConverter : converters)
         {
             if (httpMessageConverter instanceof MappingJackson2XmlHttpMessageConverter)
