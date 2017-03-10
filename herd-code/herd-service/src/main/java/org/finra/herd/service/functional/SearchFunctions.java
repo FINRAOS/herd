@@ -63,9 +63,9 @@ public interface SearchFunctions
     TriConsumer<String, String, Map<String, String>> getCreateIndexDocumentsFunction();
 
     /**
-     * The create index function will take as arguments the index name, document type, and mapping and will create a new index.
+     * The create index function will take as arguments the index name, document type, mapping, and settings and will create a new index.
      */
-    TriConsumer<String, String, String> getCreateIndexFunction();
+    QuadConsumer<String, String, String, String> getCreateIndexFunction();
 
     /**
      * The delete document by id function will delete a document in the index by the document id.

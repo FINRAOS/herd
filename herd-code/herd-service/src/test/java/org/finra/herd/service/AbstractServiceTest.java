@@ -165,6 +165,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String END_PARTITION_VALUE = "2014-04-08";
 
+    public static final String ERROR_MESSAGE = "UT_ErrorMessage_" + RANDOM_SUFFIX;
+
     public static final int EXPECTED_UUID_SIZE = 36;
 
     /**

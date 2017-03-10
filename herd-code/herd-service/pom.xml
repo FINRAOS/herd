@@ -21,7 +21,7 @@
    <parent>
       <groupId>org.finra.herd</groupId>
       <artifactId>herd-code</artifactId>
-      <version>0.38.0-SNAPSHOT</version>
+      <version>0.39.0-SNAPSHOT</version>
    </parent>
 
    <name>herd service</name>
@@ -129,34 +129,12 @@
          <groupId>org.elasticsearch.client</groupId>
          <artifactId>transport</artifactId>
       </dependency>
+
+      <!-- jsoup HTML parser library @ http://jsoup.org/ -->
       <dependency>
-         <groupId>com.floragunn</groupId>
-         <artifactId>search-guard-ssl</artifactId>
-      </dependency>
-      <dependency>
-         <groupId>com.amazonaws</groupId>
-         <artifactId>aws-java-sdk-core</artifactId>
-         <!-- We are using jcl-over-slf4j so commons-logging isn't needed. -->
-         <exclusions>
-            <exclusion>
-               <groupId>commons-logging</groupId>
-               <artifactId>commons-logging</artifactId>
-            </exclusion>
-         </exclusions>
-      </dependency>
-      <dependency>
-         <groupId>com.amazonaws</groupId>
-         <artifactId>aws-java-sdk</artifactId>
-      </dependency>
-      <dependency>
-         <!-- jsoup HTML parser library @ http://jsoup.org/ -->
          <groupId>org.jsoup</groupId>
          <artifactId>jsoup</artifactId>
          <version>${jsoup.version}</version>
-      </dependency>
-      <dependency>
-         <groupId>co.wrisk.jcredstash</groupId>
-         <artifactId>jcredstash</artifactId>
       </dependency>
 
    </dependencies>

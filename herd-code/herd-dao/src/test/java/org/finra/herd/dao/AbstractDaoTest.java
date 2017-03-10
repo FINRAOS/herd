@@ -144,6 +144,12 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String BDEF_SHORT_DESCRIPTION_2 = "UT_BusinessObjectDefinition_ShortDescription_2_" + RANDOM_SUFFIX;
 
+    public static final String BUSINESS_OBJECT_DEFINITION_INDEX = "bdef";
+
+    public static final float BUSINESS_OBJECT_DEFINITION_INDEX_BOOST = 1f;
+
+    public static final String CODE = "code";
+
     public static final String COLUMN_DATA_TYPE = "UT_Column_Data_Type_1_" + RANDOM_SUFFIX;
 
     public static final String COLUMN_DATA_TYPE_2 = "UT_Column_Data_Type_2_" + RANDOM_SUFFIX;
@@ -199,6 +205,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String DESCRIPTION_2 = "UT_Description_2_" + RANDOM_SUFFIX;
 
+    public static final String DISPLAY_NAME_FIELD = "displayname";
+
     public static final String DOWNLOADER_ROLE_ARN = "UT_DownloaderRoleArn" + RANDOM_SUFFIX;
 
     public static final String EC2_INSTANCE_ID = "UT_Ec2InstanceId" + RANDOM_SUFFIX;
@@ -224,6 +232,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String EMR_CLUSTER_NAME = "UT_EMR_CLUSTER" + RANDOM_SUFFIX;
 
     public static final String ENVIRONMENT_NAME = "TEST";
+
+    public static final String FIELD_DISPLAY_NAME = "displayName";
+
+    public static final String FIELD_SHORT_DESCRIPTION = "shortDescription";
 
     public static final Integer FIFTH_FORMAT_VERSION = 4;
 
@@ -313,6 +325,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Integer MAX_RESULT = 10;
 
+    public static final Integer MAX_RESULTS_1 = 1;
+
     public static final String MESSAGE_TEXT = "UT_Message_Text" + RANDOM_SUFFIX;
 
     public static final String MESSAGE_TEXT_2 = "UT_Message_Text_2" + RANDOM_SUFFIX;
@@ -329,6 +343,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String NAMESPACE_2 = "UT_Namespace_2_" + RANDOM_SUFFIX;
 
     public static final String NAMESPACE_3 = "UT_Namespace_3_" + RANDOM_SUFFIX;
+
+    public static final String NAMESPACE_CODE = "UT_NamespaceCode_1_" + RANDOM_SUFFIX;
 
     public static final String NOTIFICATION_EVENT_TYPE = "UT_Ntfcn_Event" + RANDOM_SUFFIX;
 
@@ -387,6 +403,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String NO_JOB_NAMESPACE = null;
 
     public static final Boolean NO_LATEST_VERSION_FLAG_SET = false;
+
+    public static final Integer NO_MAX_RESULTS = null;
 
     public static final String NO_NAMESPACE = null;
 
@@ -504,6 +522,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String SEARCH_INDEX_MAPPING = "UT_SearchIndex_Mapping_" + RANDOM_SUFFIX;
 
+    public static final String SEARCH_INDEX_SETTINGS = "UT_SearchIndex_Settings_" + RANDOM_SUFFIX;
+
     public static final String SEARCH_INDEX_NAME = "UT_SearchIndexName_1_" + RANDOM_SUFFIX;
 
     public static final String SEARCH_INDEX_NAME_2 = "UT_SearchIndexName_2_" + RANDOM_SUFFIX;
@@ -515,6 +535,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String SEARCH_INDEX_TYPE = "UT_SearchIndexType_1_" + RANDOM_SUFFIX;
 
     public static final String SEARCH_INDEX_TYPE_2 = "UT_SearchIndexType_2_" + RANDOM_SUFFIX;
+
+    public static final int SEARCH_RESULT_SIZE = 200;
+
+    public static final String SEARCH_TERM = "Search Term";
 
     public static final Integer SECOND_DATA_VERSION = 1;
 
@@ -533,6 +557,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final Boolean SELECT_ONLY_AVAILABLE_STORAGE_UNITS = true;
 
     public static final String SESSION_NAME = "UT_SessionName" + RANDOM_SUFFIX;
+
+    public static final String SHORT_DESCRIPTION_FIELD = "shortdescription";
 
     public static final String SINGLE_QUOTE = "'";
 
@@ -655,9 +681,15 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Boolean TAG_HAS_NO_CHILDREN = false;
 
+    public static final String TAG_INDEX = "tag";
+
+    public static final float TAG_INDEX_BOOST = 1000f;
+
     public static final String TAG_TYPE = "UT_TagType_1_" + RANDOM_SUFFIX;
 
     public static final String TAG_TYPE_2 = "UT_TagType_2_" + RANDOM_SUFFIX;
+
+    public static final String TAG_TYPE_CODE = "UT_TagTypeCode_1_" + RANDOM_SUFFIX;
 
     public static final long TAG_TYPE_COUNT = 240;
 

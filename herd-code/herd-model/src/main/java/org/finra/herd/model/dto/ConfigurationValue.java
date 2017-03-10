@@ -607,9 +607,9 @@ public enum ConfigurationValue
     JDBC_RESULT_MAX_ROWS("jdbc.result.max.rows", null),
 
     /**
-     * The maximum number of records per page returned in business object data search results
+     * The maximum number of records returned in business object data search results
      */
-    BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULTS_PER_PAGE("business.object.data.search.max.results.per.page", 50),
+    BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULTS("business.object.data.search.max.results", 1000),
 
     /**
      * The maximum number of nested tags allowed
@@ -678,14 +678,26 @@ public enum ConfigurationValue
     ELASTICSEARCH_BDEF_DOCUMENT_TYPE("elasticsearch.bdef.document.type", "doc"),
 
     /**
-     * The elasticsearch mappings JSON
+     * The elasticsearch business object definition mappings JSON
      */
     ELASTICSEARCH_BDEF_MAPPINGS_JSON("elasticsearch.bdef.mappings.json", "{\"properties\": { \"id\": { \"type\": \"long\" } } }"),
+
+    /**
+     * The elasticsearch business object definition settings JSON
+     */
+    ELASTICSEARCH_BDEF_SETTINGS_JSON("elasticsearch.bdef.settings.json",
+        "{\"analysis\":{\"filter\":{\"field_ngram_filter\":{\"type\":\"edgeNGram\",\"min_gram\":1,\"max_gram\":16,\"side\":\"front\"}}}}"),
 
     /**
      * The elasticsearch tag mappings JSON
      */
     ELASTICSEARCH_TAG_MAPPINGS_JSON("elasticsearch.tag.mappings.json", "{\"properties\": { \"id\": { \"type\": \"long\" } } }"),
+
+    /**
+     * The elasticsearch tag settings JSON
+     */
+    ELASTICSEARCH_TAG_SETTINGS_JSON("elasticsearch.tag.settings.json",
+        "{\"analysis\":{\"filter\":{\"field_ngram_filter\":{\"type\":\"edgeNGram\",\"min_gram\":1,\"max_gram\":16,\"side\":\"front\"}}}}"),
 
     /**
      * The elasticsearch settings JSON
@@ -757,7 +769,12 @@ public enum ConfigurationValue
     /**
      * The Credstash aws region name.
      */
-    CREDSTASH_AWS_REGION_NAME("credstash.aws.region.name", "us-east-1");
+    CREDSTASH_AWS_REGION_NAME("credstash.aws.region.name", "us-east-1"),
+
+    /**
+     * The cut-off length of the short description
+     */
+    TAG_SHORT_DESCRIPTION_LENGTH("tag.short.description.max.length", 300);
 
     // Properties
     private String key;

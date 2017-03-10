@@ -24,6 +24,8 @@ import org.finra.herd.model.api.xml.BusinessObjectDataSearchFilter;
 import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.dto.StoragePolicyPriorityLevel;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
+import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
+import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.model.jpa.StoragePolicyEntity;
 
 public interface BusinessObjectDataDao extends BaseJpaDao
@@ -179,7 +181,6 @@ public interface BusinessObjectDataDao extends BaseJpaDao
      */
     public List<BusinessObjectDataEntity> getBusinessObjectDataEntitiesByPartitionValue(String partitionValue);
 
-
     /**
      * Retrieves a list of business object data by list of filters
      *
@@ -188,4 +189,25 @@ public interface BusinessObjectDataDao extends BaseJpaDao
      * @return A list of business object data
      */
     public List<BusinessObjectData> searchBusinessObjectData(List<BusinessObjectDataSearchFilter> filters);
+
+    /**
+     * Gets a list of keys for business object data registered under specified business object definition entity.
+     *
+     * @param businessObjectDefinitionEntity the business object definition entity
+     * @param maxResults optional maximum number of results to return
+     *
+     * @return the list of business object data keys
+     */
+    public List<BusinessObjectDataKey> getBusinessObjectDataByBusinessObjectDefinition(BusinessObjectDefinitionEntity businessObjectDefinitionEntity,
+        Integer maxResults);
+
+    /**
+     * Gets a list of keys for business object data registered under specified business object format entity.
+     *
+     * @param businessObjectFormatEntity the business object format entity
+     * @param maxResults optional maximum number of results to return
+     *
+     * @return the list of business object data keys
+     */
+    public List<BusinessObjectDataKey> getBusinessObjectDataByBusinessObjectFormat(BusinessObjectFormatEntity businessObjectFormatEntity, Integer maxResults);
 }

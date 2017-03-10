@@ -21,7 +21,7 @@
    <parent>
       <groupId>org.finra.herd</groupId>
       <artifactId>herd-code</artifactId>
-      <version>0.38.0-SNAPSHOT</version>
+      <version>0.39.0-SNAPSHOT</version>
    </parent>
 
    <name>herd dao</name>
@@ -131,6 +131,10 @@
          <groupId>org.springframework.ldap</groupId>
          <artifactId>spring-ldap-core</artifactId>
       </dependency>
+      <dependency>
+         <groupId>org.springframework.retry</groupId>
+         <artifactId>spring-retry</artifactId>
+      </dependency>
 
       <!--
        These dependencies don't typically go in a dao tier, but are needed for the AwsExceptionRetryAdvice and HerdErrorInformationExceptionHandler in service tier
@@ -183,6 +187,29 @@
          <groupId>org.mockito</groupId>
          <artifactId>mockito-all</artifactId>
       </dependency>
+
+      <!-- Elastic search -->
+      <dependency>
+         <groupId>org.elasticsearch</groupId>
+         <artifactId>elasticsearch</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>org.elasticsearch.client</groupId>
+         <artifactId>transport</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>com.floragunn</groupId>
+         <artifactId>search-guard-ssl</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>com.amazonaws</groupId>
+         <artifactId>aws-java-sdk</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>co.wrisk.jcredstash</groupId>
+         <artifactId>jcredstash</artifactId>
+      </dependency>
+
    </dependencies>
 
 </project>

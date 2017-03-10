@@ -219,19 +219,21 @@ public class SearchIndexServiceImpl implements SearchIndexService
     {
         String documentType;
         String mapping;
+        String settings;
 
         // Currently, only search index for business object definitions and tag are supported.
         if (SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name().equalsIgnoreCase(searchIndexType))
         {
             documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
             mapping = configurationDaoHelper.getClobProperty(ConfigurationValue.ELASTICSEARCH_BDEF_MAPPINGS_JSON.getKey());
-
+            settings = configurationDaoHelper.getClobProperty(ConfigurationValue.ELASTICSEARCH_BDEF_SETTINGS_JSON.getKey());
         }
         else if (SearchIndexTypeEntity.SearchIndexTypes.TAG.name().equalsIgnoreCase(searchIndexType))
         {
 
             documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
             mapping = configurationDaoHelper.getClobProperty(ConfigurationValue.ELASTICSEARCH_TAG_MAPPINGS_JSON.getKey());
+            settings = configurationDaoHelper.getClobProperty(ConfigurationValue.ELASTICSEARCH_TAG_SETTINGS_JSON.getKey());
         }
         else
         {
@@ -242,7 +244,7 @@ public class SearchIndexServiceImpl implements SearchIndexService
         deleteSearchIndexHelper(searchIndexKey.getSearchIndexName());
 
         // Create the index.
-        searchFunctions.getCreateIndexFunction().accept(searchIndexKey.getSearchIndexName(), documentType, mapping);
+        searchFunctions.getCreateIndexFunction().accept(searchIndexKey.getSearchIndexName(), documentType, mapping, settings);
 
         //Fetch data from database and index them
         if (SearchIndexTypeEntity.SearchIndexTypes.BUS_OBJCT_DFNTN.name().equalsIgnoreCase(searchIndexType))
