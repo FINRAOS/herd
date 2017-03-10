@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package org.finra.herd.service.exception;
+package org.finra.herd.dao.exception;
 
 /**
  * CredStashGetCredentialFailedException used when Cred Stash fails to get a credential

@@ -2952,6 +2952,17 @@
       </xs:all>
    </xs:complexType>
 
+   <xs:element name="businessObjectDataKeys" type="businessObjectDataKeys"/>
+   <xs:complexType name="businessObjectDataKeys">
+      <xs:sequence>
+         <xs:element name="businessObjectDataKey" type="businessObjectDataKey" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>Values that uniquely identify a Business Object Data</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
    <xs:element name="businessObjectDataVersions" type="businessObjectDataVersions"/>
    <xs:complexType name="businessObjectDataVersions">
       <xs:sequence>
@@ -3051,6 +3062,11 @@
          <xs:element name="attributeValueFilters" type="attributeValueFilters" minOccurs="0">
             <xs:annotation>
                <xs:documentation>A container for Attribute Value Filters</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="filterOnLatestValidVersion" type="xs:boolean" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The business object is the latest valid version</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -6506,6 +6522,100 @@
          <xs:element name="searchIndexName" type="xs:string">
             <xs:annotation>
                <xs:documentation>The name of this Search Index</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <!-- ***** Search ***** -->
+
+   <xs:element name="indexSearchRequest" type="indexSearchRequest">
+      <xs:annotation>
+         <xs:documentation>A wrapper for an index search request. The request will accept only a single search term
+         </xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="indexSearchRequest">
+      <xs:all>
+         <xs:element name="searchTerm" type="xs:string" minOccurs="1">
+            <xs:annotation>
+               <xs:documentation>The search term upon which to search</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="indexSearchResponse" type="indexSearchResponse"/>
+   <xs:complexType name="indexSearchResponse">
+      <xs:all>
+         <xs:element name="totalIndexSearchResults" type="xs:long">
+            <xs:annotation>
+               <xs:documentation>The total number of index search results that matched the search term query</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="indexSearchResults" type="indexSearchResults" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>
+                  The top 200 index search results that matched the search term query
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="indexSearchResults" type="indexSearchResults"/>
+   <xs:complexType name="indexSearchResults">
+      <xs:sequence>
+         <xs:element name="indexSearchResult" type="indexSearchResult" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>Search hit document</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:element name="indexSearchResult" type="indexSearchResult"/>
+   <xs:complexType name="indexSearchResult">
+      <xs:all>
+         <xs:element name="indexSearchResultType" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The type of the index search result</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="indexSearchResultKey" type="indexSearchResultKey">
+            <xs:annotation>
+               <xs:documentation>The index search result key container that holds the key for the search result type</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="displayName" type="xs:string" minOccurs="0" maxOccurs="1">
+            <xs:annotation>
+               <xs:documentation>
+                  The display name of the tag or business object definition
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="shortDescription" type="xs:string" minOccurs="0" maxOccurs="1">
+            <xs:annotation>
+               <xs:documentation>
+                  An optional short-description. This is actually the 'description' field truncated to a configurable number of characters
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="indexSearchResultKey" type="indexSearchResultKey"/>
+   <xs:complexType name="indexSearchResultKey">
+      <xs:all>
+         <xs:element name="tagKey" type="tagKey" minOccurs="0" maxOccurs="1">
+            <xs:annotation>
+               <xs:documentation>The tag's unique key</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectDefinitionKey" type="businessObjectDefinitionKey" minOccurs="0" maxOccurs="1">
+            <xs:annotation>
+               <xs:documentation>Values that uniquely identify a Business Object Definition</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>

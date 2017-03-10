@@ -23,6 +23,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.OptimisticLockException;
 import javax.persistence.PersistenceException;
 import javax.servlet.http.HttpServletResponse;
 
@@ -31,10 +32,10 @@ import org.activiti.engine.ActivitiException;
 import org.activiti.engine.impl.javax.el.ELException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.hibernate.exception.ConstraintViolationException;
 import org.quartz.ObjectAlreadyExistsException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -152,7 +153,7 @@ public class HerdErrorInformationExceptionHandler
     /**
      * Handle exceptions that result in a "conflict" status.
      */
-    @ExceptionHandler(value = {AlreadyExistsException.class, ObjectAlreadyExistsException.class})
+    @ExceptionHandler(value = {AlreadyExistsException.class, ObjectAlreadyExistsException.class, OptimisticLockException.class})
     @ResponseStatus(HttpStatus.CONFLICT)
     @ResponseBody
     public ErrorInformation handleConflictException(Exception exception)

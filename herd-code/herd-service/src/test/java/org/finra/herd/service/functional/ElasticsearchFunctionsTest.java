@@ -376,9 +376,9 @@ public class ElasticsearchFunctionsTest
     @Test
     public void testCreateIndexFunction()
     {
-        TriConsumer<String, String, String> createIndexFunction = searchFunctions.getCreateIndexFunction();
+        QuadConsumer<String, String, String, String> createIndexFunction = searchFunctions.getCreateIndexFunction();
         assertThat("Function is null.", createIndexFunction, not(nullValue()));
-        assertThat("Create index function not an instance of TriConsumer.", createIndexFunction, instanceOf(TriConsumer.class));
+        assertThat("Create index function not an instance of QuadConsumer.", createIndexFunction, instanceOf(QuadConsumer.class));
 
     }
 
