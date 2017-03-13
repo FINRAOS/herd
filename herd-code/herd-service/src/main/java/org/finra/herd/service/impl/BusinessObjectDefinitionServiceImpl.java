@@ -90,6 +90,7 @@ import org.finra.herd.model.jpa.TagEntity;
 import org.finra.herd.service.BusinessObjectDefinitionService;
 import org.finra.herd.service.FacetFieldValidationService;
 import org.finra.herd.service.SearchableService;
+import org.finra.herd.service.functional.SearchFilterType;
 import org.finra.herd.service.functional.SearchFunctions;
 import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.AttributeHelper;
@@ -524,12 +525,24 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
             // Validate the search request.
             validateBusinessObjectDefinitionIndexSearchRequest(searchRequest);
 
-            List<List<TagEntity>> tagEntitiesPerSearchFilter = new ArrayList<>();
+            List<Map<SearchFilterType, List<TagEntity>>> tagEntitiesPerSearchFilter = new ArrayList<>();
 
             // Iterate through all search filters and extract tag keys
             for (BusinessObjectDefinitionSearchFilter searchFilter : searchRequest.getBusinessObjectDefinitionSearchFilters())
             {
+
                 List<TagEntity> tagEntities = new ArrayList<>();
+                Map<SearchFilterType, List<TagEntity>> searchFilterTypeListMap = new HashMap<>();
+
+                if (BooleanUtils.isTrue(searchFilter.isIsExclusionSearchFilter()))
+                {
+                    searchFilterTypeListMap.put(SearchFilterType.EXCLUSION_SEARCH_FILTER, tagEntities);
+                    validateExclusionSearchFilter(searchFilter);
+                }
+                else
+                {
+                    searchFilterTypeListMap.put(SearchFilterType.INCLUSION_SEARCH_FILTER, tagEntities);
+                }
 
                 for (BusinessObjectDefinitionSearchKey searchKey : searchFilter.getBusinessObjectDefinitionSearchKeys())
                 {
@@ -546,7 +559,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
                 }
 
                 // Collect all tag entities and their children (if included) into separate lists
-                tagEntitiesPerSearchFilter.add(new ArrayList<>(tagEntities));
+                tagEntitiesPerSearchFilter.add(searchFilterTypeListMap);
             }
 
             // Use the tag type entities lists to search in the search index for business object definitions
@@ -555,7 +568,6 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         }
         else
         {
-
             // Else get all of the business object definitions
             elasticsearchResponseDto = searchFunctions.getFindAllBusinessObjectDefinitionsFunction().apply(indexName, documentType, facetFields);
         }
@@ -605,6 +617,21 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         searchResponse.setBusinessObjectDefinitions(businessObjectDefinitions);
         searchResponse.setFacets(tagTypeFacets);
         return searchResponse;
+    }
+
+    /**
+     * Private validate method to validate the exclusion search filter. Asserts that the isIncludeTagHierarchy flag is false, because the isIncludeTagHierarchy
+     * option should not be used at the same time as the exclusion option.
+     *
+     * @param searchFilter the search filter to validate
+     */
+    private void validateExclusionSearchFilter(BusinessObjectDefinitionSearchFilter searchFilter)
+    {
+        for (BusinessObjectDefinitionSearchKey searchKey : searchFilter.getBusinessObjectDefinitionSearchKeys())
+        {
+            Assert.isTrue(BooleanUtils.isFalse(searchKey.isIncludeTagHierarchy()),
+                "IsExclusionSearchFilter and includeTagHierarchy cannot both be true for a business object definition search filter.");
+        }
     }
 
 
