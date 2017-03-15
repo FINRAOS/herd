@@ -15,9 +15,12 @@
 */
 package org.finra.herd.service.impl;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Set;
 
 import com.google.common.collect.ImmutableSet;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
@@ -25,6 +28,7 @@ import org.springframework.util.Assert;
 import org.finra.herd.dao.IndexSearchDao;
 import org.finra.herd.model.api.xml.IndexSearchRequest;
 import org.finra.herd.model.api.xml.IndexSearchResponse;
+import org.finra.herd.service.FacetFieldValidationService;
 import org.finra.herd.service.IndexSearchService;
 import org.finra.herd.service.SearchableService;
 
@@ -33,7 +37,7 @@ import org.finra.herd.service.SearchableService;
  * index.
  */
 @Service
-public class IndexSearchServiceImpl implements IndexSearchService, SearchableService
+public class IndexSearchServiceImpl implements IndexSearchService, SearchableService, FacetFieldValidationService
 {
     /**
      * Constant to hold the display name option for the indexSearch
@@ -53,6 +57,9 @@ public class IndexSearchServiceImpl implements IndexSearchService, SearchableSer
     @Autowired
     private IndexSearchDao indexSearchDao;
 
+    private static final String TAG_FACET_FIELD = "tag";
+
+    private static final String ResultType_FACET_FIELD = "resultType";
 
     @Override
     public IndexSearchResponse indexSearch(final IndexSearchRequest request, final Set<String> fields)
@@ -63,6 +70,14 @@ public class IndexSearchServiceImpl implements IndexSearchService, SearchableSer
         // Validate the search term
         validateIndexSearchRequestSearchTerm(request.getSearchTerm());
 
+        Set<String> facetFields = new HashSet<>();
+        if (CollectionUtils.isNotEmpty(request.getFacetFields()))
+        {
+            facetFields.addAll(validateFacetFields(new HashSet<>(request.getFacetFields())));
+        }
+
+        //set the facets fields after validation
+        request.setFacetFields(new ArrayList<>(facetFields));
         return indexSearchDao.indexSearch(request, fields);
     }
 
@@ -86,5 +101,11 @@ public class IndexSearchServiceImpl implements IndexSearchService, SearchableSer
     public Set<String> getValidSearchResponseFields()
     {
         return ImmutableSet.of(SHORT_DESCRIPTION_FIELD, DISPLAY_NAME_FIELD);
+    }
+
+    @Override
+    public Set<String> getValidFacetFields()
+    {
+        return ImmutableSet.of(TAG_FACET_FIELD, ResultType_FACET_FIELD);
     }
 }

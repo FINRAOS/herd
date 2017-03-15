@@ -19,10 +19,12 @@ import static org.elasticsearch.index.query.MultiMatchQueryBuilder.Type.BEST_FIE
 import static org.elasticsearch.index.query.MultiMatchQueryBuilder.Type.PHRASE_PREFIX;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.transport.TransportClient;
@@ -39,13 +41,16 @@ import org.springframework.stereotype.Repository;
 import org.finra.herd.core.HerdStringUtils;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.IndexSearchDao;
+import org.finra.herd.dao.helper.ElasticsearchHelper;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
+import org.finra.herd.model.api.xml.Facet;
 import org.finra.herd.model.api.xml.IndexSearchRequest;
 import org.finra.herd.model.api.xml.IndexSearchResponse;
 import org.finra.herd.model.api.xml.IndexSearchResult;
 import org.finra.herd.model.api.xml.IndexSearchResultKey;
 import org.finra.herd.model.api.xml.TagKey;
 import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.model.dto.ElasticsearchResponseDto;
 
 /**
  * IndexSearchDaoImpl
@@ -420,6 +425,9 @@ public class IndexSearchDaoImpl implements IndexSearchDao
     @Autowired
     private TransportClient transportClient;
 
+    @Autowired
+    private ElasticsearchHelper elasticsearchHelper;
+
     @Override
     public IndexSearchResponse indexSearch(final IndexSearchRequest request, final Set<String> fields)
     {
@@ -451,6 +459,11 @@ public class IndexSearchDaoImpl implements IndexSearchDao
         searchRequestBuilder.setSource(searchSourceBuilder).setSize(SEARCH_RESULT_SIZE)
             .addIndexBoost(BUSINESS_OBJECT_DEFINITION_INDEX, BUSINESS_OBJECT_DEFINITION_INDEX_BOOST).addIndexBoost(TAG_INDEX, TAG_INDEX_BOOST)
             .addSort(SortBuilders.scoreSort());
+
+        if (!CollectionUtils.isEmpty(request.getFacetFields()))
+        {
+            elasticsearchHelper.addFacetFieldAggregations(new HashSet<>(request.getFacetFields()), searchRequestBuilder);
+        }
 
         // Retrieve the indexSearch response
         final SearchResponse searchResponse = searchRequestBuilder.execute().actionGet();
@@ -510,7 +523,23 @@ public class IndexSearchDaoImpl implements IndexSearchDao
             indexSearchResults.add(indexSearchResult);
         }
 
-        return new IndexSearchResponse(searchHits.getTotalHits(), indexSearchResults);
+        List<Facet> facets = null;
+        if (!CollectionUtils.isEmpty(request.getFacetFields()))
+        {
+            ElasticsearchResponseDto elasticsearchResponseDto = new ElasticsearchResponseDto();
+            if (request.getFacetFields().contains(ElasticsearchHelper.TAG_FACET))
+            {
+                elasticsearchResponseDto.setTagTypeIndexSearchResponseDtos(elasticsearchHelper.getTagTagIndexSearchResponseDto(searchResponse));
+            }
+            if (request.getFacetFields().contains(ElasticsearchHelper.RESULT_TYPE_FACET))
+            {
+                elasticsearchResponseDto.setResultTypeIndexSearchResponseDtos(elasticsearchHelper.getResultTypeIndexSearchResponseDto(searchResponse));
+            }
+
+            facets = elasticsearchHelper.getFacetsReponse(elasticsearchResponseDto);
+        }
+        
+        return new IndexSearchResponse(searchHits.getTotalHits(), indexSearchResults, facets);
     }
 
     /**

@@ -75,7 +75,7 @@ public class IndexSearchRestControllerTest extends AbstractRestTest
     public void testIndexSearch()
     {
         // Create index search request
-        final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM);
+        final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM, null);
 
         // Create a new fields set that will be used when testing the index search method
         final Set<String> fields = Sets.newHashSet(FIELD_DISPLAY_NAME, FIELD_SHORT_DESCRIPTION);
@@ -100,7 +100,7 @@ public class IndexSearchRestControllerTest extends AbstractRestTest
         indexSearchResults.add(indexSearchResultBusinessObjectDefinition);
 
         // Construct an index search response
-        final IndexSearchResponse indexSearchResponse = new IndexSearchResponse(TOTAL_INDEX_SEARCH_RESULTS, indexSearchResults);
+        final IndexSearchResponse indexSearchResponse = new IndexSearchResponse(TOTAL_INDEX_SEARCH_RESULTS, indexSearchResults, null);
 
         // Mock the call to the index search service
         when(indexSearchService.indexSearch(indexSearchRequest, fields)).thenReturn(indexSearchResponse);

@@ -27,6 +27,8 @@ public class ElasticsearchResponseDto
 
     private List<TagTypeIndexSearchResponseDto> tagTypeIndexSearchResponseDtos;
 
+    private List<ResultTypeIndexSearchResponseDto>  resultTypeIndexSearchResponseDtos;
+
     /**
      * Empty constructor
      */
@@ -73,7 +75,17 @@ public class ElasticsearchResponseDto
         return "ElasticsearchResponseDto{" +
             "businessObjectDefinitionIndexSearchResponseDtos=" + businessObjectDefinitionIndexSearchResponseDtos +
             ", tagTypeIndexSearchResponseDtos=" + tagTypeIndexSearchResponseDtos +
+            ", resultTypeIndexSearchResponseDtos=" + resultTypeIndexSearchResponseDtos +
             '}';
     }
 
+    public List<ResultTypeIndexSearchResponseDto> getResultTypeIndexSearchResponseDtos()
+    {
+        return resultTypeIndexSearchResponseDtos;
+    }
+
+    public void setResultTypeIndexSearchResponseDtos(List<ResultTypeIndexSearchResponseDto> resultTypeIndexSearchResponseDtos)
+    {
+        this.resultTypeIndexSearchResponseDtos = resultTypeIndexSearchResponseDtos;
+    }
 }

@@ -6543,6 +6543,11 @@
                <xs:documentation>The search term upon which to search</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="facetFields" type="facetFields" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A list of Facet Fields to be included with the response. Only Tag facet information is supported</xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
@@ -6558,6 +6563,13 @@
             <xs:annotation>
                <xs:documentation>
                   The top 200 index search results that matched the search term query
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="facets" type="facets" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>
+                  Values that identifies a list of facet information response.
                </xs:documentation>
             </xs:annotation>
          </xs:element>
