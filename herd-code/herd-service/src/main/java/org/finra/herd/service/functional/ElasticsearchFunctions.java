@@ -115,6 +115,11 @@ public class ElasticsearchFunctions implements SearchFunctions
     public static final String DISPLAY_NAME_SOURCE = "displayName";
 
     /**
+     * The name keyword
+     */
+    public static final String NAME_FIELD = "name.keyword";
+
+    /**
      * Source string for the name
      */
     public static final String NAME_SOURCE = "name";
@@ -459,7 +464,7 @@ public class ElasticsearchFunctions implements SearchFunctions
             // If there are only exclusion tag entities then, get everything else, but the exclusion tags.
             if (CollectionUtils.isEmpty(flattenTagEntitiesList(nestedInclusionTagEntityLists)))
             {
-                WildcardQueryBuilder wildcardQueryBuilder = QueryBuilders.wildcardQuery(TAG_CODE_FIELD, "*");
+                WildcardQueryBuilder wildcardQueryBuilder = QueryBuilders.wildcardQuery(NAME_FIELD, "*");
                 compoundSearchFiltersQueryBuilder.must(wildcardQueryBuilder);
             }
 
