@@ -268,7 +268,7 @@ public class BusinessObjectDefinitionRestControllerTest extends AbstractRestTest
         // Tests with tag filter.
         BusinessObjectDefinitionSearchResponse businessObjectDefinitionSearchResponse = businessObjectDefinitionRestController
             .searchBusinessObjectDefinitions(Sets.newHashSet(FIELD_DATA_PROVIDER_NAME, FIELD_DISPLAY_NAME, FIELD_SHORT_DESCRIPTION),
-                new BusinessObjectDefinitionSearchRequest(Arrays.asList(new BusinessObjectDefinitionSearchFilter(
+                new BusinessObjectDefinitionSearchRequest(Arrays.asList(new BusinessObjectDefinitionSearchFilter(false,
                     Arrays.asList(new BusinessObjectDefinitionSearchKey(new TagKey(TAG_TYPE, TAG_CODE), INCLUDE_TAG_HIERARCHY))))));
         assertEquals(actualBusinessObjectDefinitions, businessObjectDefinitionSearchResponse.getBusinessObjectDefinitions());
 

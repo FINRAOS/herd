@@ -87,7 +87,7 @@ public class BusinessObjectDefinitionRestControllerIndexTest extends AbstractRes
 
         // Create a new business object definition search filter list with the new business object definition search key list
         List<BusinessObjectDefinitionSearchFilter> businessObjectDefinitionSearchFilterList = new ArrayList<>();
-        businessObjectDefinitionSearchFilterList.add(new BusinessObjectDefinitionSearchFilter(businessObjectDefinitionSearchKeyList));
+        businessObjectDefinitionSearchFilterList.add(new BusinessObjectDefinitionSearchFilter(false, businessObjectDefinitionSearchKeyList));
 
 
         //Create a list of facet fields

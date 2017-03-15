@@ -15,9 +15,8 @@
 */
 package org.finra.herd.service.functional;
 
-import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
-import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termQuery;
+import static org.finra.herd.service.functional.SearchFilterType.EXCLUSION_SEARCH_FILTER;
+import static org.finra.herd.service.functional.SearchFilterType.INCLUSION_SEARCH_FILTER;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -49,7 +48,9 @@ import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.ConstantScoreQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.WildcardQueryBuilder;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
@@ -112,6 +113,11 @@ public class ElasticsearchFunctions implements SearchFunctions
      * Source string for the display name
      */
     public static final String DISPLAY_NAME_SOURCE = "displayName";
+
+    /**
+     * The name keyword
+     */
+    public static final String NAME_FIELD = "name.keyword";
 
     /**
      * Source string for the name
@@ -395,7 +401,7 @@ public class ElasticsearchFunctions implements SearchFunctions
 
         // Create a search request and set the scroll time and scroll size
         final SearchRequestBuilder searchRequestBuilder = transportClient.prepareSearch(indexName);
-        searchRequestBuilder.setTypes(documentType).setQuery(matchAllQuery()).setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME))
+        searchRequestBuilder.setTypes(documentType).setQuery(QueryBuilders.matchAllQuery()).setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME))
             .setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE);
         SearchResponse searchResponse = searchRequestBuilder.execute().actionGet();
         SearchHits searchHits = searchResponse.getHits();
@@ -427,23 +433,43 @@ public class ElasticsearchFunctions implements SearchFunctions
      * query' on the index based on tag code and tag type code because it is only a filtering query and no analysis/scoring is needed. The function also
      * retrieves a term-aggregation type facet information based on the facet field(s) if requested.
      */
-    private final QuadFunction<String, String, List<List<TagEntity>>, Set<String>, ElasticsearchResponseDto> searchBusinessObjectDefinitionsByTagsFunction =
-        (indexName, documentType, nestedTagEntityLists, facetFieldsList) -> {
+    private final QuadFunction<String, String, List<Map<SearchFilterType, List<TagEntity>>>, Set<String>, ElasticsearchResponseDto>
+        searchBusinessObjectDefinitionsByTagsFunction = (indexName, documentType, nestedTagEntityMaps, facetFieldsList) -> {
 
             ElasticsearchResponseDto elasticsearchResponseDto = new ElasticsearchResponseDto();
 
-            // Short-circuit and return empty response if no tag entities (tag-keys) are found to search on.
-            if (CollectionUtils.isEmpty(flattenTagEntitiesList(nestedTagEntityLists)))
+            List<List<TagEntity>> nestedInclusionTagEntityLists = new ArrayList<>();
+            List<List<TagEntity>> nestedExclusionTagEntityLists = new ArrayList<>();
+
+            for (Map<SearchFilterType, List<TagEntity>> tagEntityMap : nestedTagEntityMaps)
             {
-                return elasticsearchResponseDto;
+                if (tagEntityMap.containsKey(INCLUSION_SEARCH_FILTER))
+                {
+                    nestedInclusionTagEntityLists.add(tagEntityMap.get(INCLUSION_SEARCH_FILTER));
+                }
+                else if (tagEntityMap.containsKey(EXCLUSION_SEARCH_FILTER))
+                {
+                    nestedExclusionTagEntityLists.add(tagEntityMap.get(EXCLUSION_SEARCH_FILTER));
+                }
             }
 
             LOGGER.info("Searching Elasticsearch business object definition documents from index, indexName={} and documentType={}, by tagEntityList={}",
-                indexName, documentType, tagEntityListToString(flattenTagEntitiesList(nestedTagEntityLists)));
+                indexName, documentType, tagEntityListToString(flattenTagEntitiesList(nestedInclusionTagEntityLists)));
+
+            LOGGER.info("Excluding the following tagEntityList={}",
+                indexName, documentType, tagEntityListToString(flattenTagEntitiesList(nestedExclusionTagEntityLists)));
 
             BoolQueryBuilder compoundSearchFiltersQueryBuilder = new BoolQueryBuilder();
 
-            for (List<TagEntity> tagEntities : nestedTagEntityLists)
+            // If there are only exclusion tag entities then, get everything else, but the exclusion tags.
+            if (CollectionUtils.isEmpty(flattenTagEntitiesList(nestedInclusionTagEntityLists)))
+            {
+                WildcardQueryBuilder wildcardQueryBuilder = QueryBuilders.wildcardQuery(NAME_FIELD, "*");
+                compoundSearchFiltersQueryBuilder.must(wildcardQueryBuilder);
+            }
+
+            // Inclusion
+            for (List<TagEntity> tagEntities : nestedInclusionTagEntityLists)
             {
                 BoolQueryBuilder searchFilterQueryBuilder = new BoolQueryBuilder();
 
@@ -451,9 +477,9 @@ public class ElasticsearchFunctions implements SearchFunctions
                 {
                     // Add constant-score term queries for tagType-code and tag-code from the tag-key.
                     ConstantScoreQueryBuilder searchKeyQueryBuilder = QueryBuilders.constantScoreQuery(
-                        boolQuery()
-                            .must(termQuery(TAGTYPE_CODE_FIELD, tagEntity.getTagType().getCode()))
-                            .must(termQuery(TAG_CODE_FIELD, tagEntity.getTagCode()))
+                        QueryBuilders.boolQuery()
+                            .must(QueryBuilders.termQuery(TAGTYPE_CODE_FIELD, tagEntity.getTagType().getCode()))
+                            .must(QueryBuilders.termQuery(TAG_CODE_FIELD, tagEntity.getTagCode()))
                     );
 
                     // Individual tag-keys are OR-ed
@@ -462,6 +488,21 @@ public class ElasticsearchFunctions implements SearchFunctions
 
                 // Individual search-filters are AND-ed
                 compoundSearchFiltersQueryBuilder.must(searchFilterQueryBuilder);
+            }
+
+            // Exclusion
+            for (List<TagEntity> tagEntities : nestedExclusionTagEntityLists)
+            {
+                for (TagEntity tagEntity : tagEntities)
+                {
+                    // Add constant-score term queries for tagType-code and tag-code from the tag-key.
+                    QueryBuilder searchKeyQueryBuilder = QueryBuilders.boolQuery()
+                        .must(QueryBuilders.termQuery(TAGTYPE_CODE_FIELD, tagEntity.getTagType().getCode()))
+                        .must(QueryBuilders.termQuery(TAG_CODE_FIELD, tagEntity.getTagCode()));
+
+                    // Exclusion: individual tag-keys are added as a must not query
+                    compoundSearchFiltersQueryBuilder.mustNot(searchKeyQueryBuilder);
+                }
             }
 
             SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
@@ -790,7 +831,8 @@ public class ElasticsearchFunctions implements SearchFunctions
     }
 
     @Override
-    public QuadFunction<String, String, List<List<TagEntity>>, Set<String>, ElasticsearchResponseDto> getSearchBusinessObjectDefinitionsByTagsFunction()
+    public QuadFunction<String, String, List<Map<SearchFilterType, List<TagEntity>>>, Set<String>, ElasticsearchResponseDto>
+        getSearchBusinessObjectDefinitionsByTagsFunction()
     {
         return searchBusinessObjectDefinitionsByTagsFunction;
     }

@@ -13,11 +13,13 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+package org.finra.herd.service.functional;
 
-ALTER TABLE tag_type ADD tag_type_ds varchar(150) NULL;
-
-delete from scrty_fn_lk     where scrty_fn_cd = 'FN_BUSINESS_OBJECT_DEFINITIONS_INDEX_GET';
-
-INSERT INTO srch_idx_type_cd_lk(srch_idx_type_cd,creat_ts,creat_user_id,updt_ts,updt_user_id)
-VALUES ('TAG',current_timestamp, 'SYSTEM', current_timestamp, 'SYSTEM');
-
+/**
+ * SearchFilterType enum. Used to determine the difference between an inclusion and exclusion search filter.
+ */
+public enum SearchFilterType
+{
+    EXCLUSION_SEARCH_FILTER,
+    INCLUSION_SEARCH_FILTER;
+}

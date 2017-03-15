@@ -903,7 +903,7 @@
          <xs:element name="attributes" type="attributes" minOccurs="0">
             <xs:annotation>
                <xs:documentation>Custom user-defined metadata associated with this Business Object Definition. "name" is the attribute name (i.e. the key) and
-                  "value" is the attribute value.
+                  "value" is the attribute value
                </xs:documentation>
             </xs:annotation>
          </xs:element>
@@ -926,7 +926,7 @@
          <xs:element name="attributes" type="attributes" minOccurs="0">
             <xs:annotation>
                <xs:documentation>Custom user-defined metadata associated with this Business Object Definition. "name" is the attribute name (i.e. the key) and
-                  "value" is the attribute value.
+                  "value" is the attribute value
                </xs:documentation>
             </xs:annotation>
          </xs:element>
@@ -984,8 +984,7 @@
          </xs:element>
          <xs:element name="shortDescription" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  An optional short-description. This is actually the 'description' field truncated to a configurable number of characters.
+               <xs:documentation>An optional short-description. This is actually the 'description' field truncated to a configurable number of characters
                </xs:documentation>
             </xs:annotation>
          </xs:element>
@@ -1010,9 +1009,7 @@
          </xs:element>
          <xs:element name="sampleDataFiles" type="sampleDataFiles" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  An optional list of sample data files associated with the Business Object Definition
-               </xs:documentation>
+               <xs:documentation>An optional list of sample data files associated with the Business Object Definition</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="createdByUserId" type="xs:string" minOccurs="0">
@@ -1088,7 +1085,7 @@
          <xs:element name="businessObjectFormatUsage" type="xs:string">
             <xs:annotation>
                <xs:documentation>The Usage of this Business Object Format - a string describing how this format is used. Often used as a label for the Business
-                  Object Format.
+                  Object Format
                </xs:documentation>
             </xs:annotation>
          </xs:element>
@@ -1104,8 +1101,7 @@
       <xs:sequence>
          <xs:element name="sampleDataFile" type="sampleDataFile" minOccurs="0" maxOccurs="unbounded">
             <xs:annotation>
-               <xs:documentation>
-                  A sample data file associated with the Business Object Definition. The data in this file is expected to match the schema of the
+               <xs:documentation>A sample data file associated with the Business Object Definition. The data in this file is expected to match the schema of the
                   descriptiveFormat for this Business Object Definition – but the data in this file is not validated against the descriptiveFormat schema at
                   this time
                </xs:documentation>
@@ -1185,9 +1181,15 @@
 
    <xs:complexType name="businessObjectDefinitionSearchFilter">
       <xs:all>
+         <xs:element name="isExclusionSearchFilter" type="xs:boolean" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An optional boolean flag that specifies if the search filter is an exclusion filter that excludes items from the search results
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
          <xs:element name="businessObjectDefinitionSearchKeys" type="businessObjectDefinitionSearchKeys">
             <xs:annotation>
-               <xs:documentation>A list of business Object Definition search keys.</xs:documentation>
+               <xs:documentation>A list of business Object Definition search keys</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -1224,9 +1226,7 @@
       <xs:all>
          <xs:element name="businessObjectDefinitions" type="businessObjectDefinitions" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  Values that identify a business object definition search response.
-               </xs:documentation>
+               <xs:documentation>Values that identify a business object definition search response</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -1237,16 +1237,12 @@
       <xs:all>
          <xs:element name="businessObjectDefinitions" type="businessObjectDefinitions" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  Values that identify a business object definition search response.
-               </xs:documentation>
+               <xs:documentation>Values that identify a business object definition search response</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="facets" type="facets" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  Values that identifies a list of facet information response.
-               </xs:documentation>
+               <xs:documentation>Values that identifies a list of facet information response</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -2050,9 +2046,7 @@
          </xs:element>
          <xs:element name="publish" type="xs:boolean" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  If true, this business object data attribute will be published in notification messages
-               </xs:documentation>
+               <xs:documentation>If true, this business object data attribute will be published in notification messages</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -4033,15 +4027,13 @@
          </xs:element>
          <xs:element name="storageUnitEventType" type="xs:string">
             <xs:annotation>
-               <xs:documentation>
-                  The type of storage unit event in which this notification should trigger. Supported event types: STRGE_UNIT_STTS_CHG
+               <xs:documentation>The type of storage unit event in which this notification should trigger. Supported event types: STRGE_UNIT_STTS_CHG
                </xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="storageUnitNotificationFilter" type="storageUnitNotificationFilter">
             <xs:annotation>
-               <xs:documentation>
-                  The filter to use against storage unit events. The notification will only trigger for events matching this filter
+               <xs:documentation>The filter to use against storage unit events. The notification will only trigger for events matching this filter
                </xs:documentation>
             </xs:annotation>
          </xs:element>
@@ -4052,8 +4044,7 @@
          </xs:element>
          <xs:element name="notificationRegistrationStatus" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The status of the notification registration. One of the following values: ENABLED or DISABLED. Default value is ENABLED
+               <xs:documentation>The status of the notification registration. One of the following values: ENABLED or DISABLED. Default value is ENABLED
                </xs:documentation>
             </xs:annotation>
          </xs:element>
@@ -4068,15 +4059,13 @@
       <xs:all>
          <xs:element name="storageUnitEventType" type="xs:string">
             <xs:annotation>
-               <xs:documentation>
-                  The type of storage unit event in which this notification should trigger. Supported event types: STRGE_UNIT_STTS_CHG
+               <xs:documentation>The type of storage unit event in which this notification should trigger. Supported event types: STRGE_UNIT_STTS_CHG
                </xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="storageUnitNotificationFilter" type="storageUnitNotificationFilter">
             <xs:annotation>
-               <xs:documentation>
-                  The filter to use against storage unit events. The notification will only trigger for events matching this filter
+               <xs:documentation>The filter to use against storage unit events. The notification will only trigger for events matching this filter
                </xs:documentation>
             </xs:annotation>
          </xs:element>
@@ -4087,9 +4076,7 @@
          </xs:element>
          <xs:element name="notificationRegistrationStatus" type="xs:string">
             <xs:annotation>
-               <xs:documentation>
-                  The status of the notification registration. One of the following values: ENABLED or DISABLED
-               </xs:documentation>
+               <xs:documentation>The status of the notification registration. One of the following values: ENABLED or DISABLED</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -4113,15 +4100,13 @@
          </xs:element>
          <xs:element name="storageUnitEventType" type="xs:string">
             <xs:annotation>
-               <xs:documentation>
-                  The type of storage unit event in which this notification should trigger. Supported event types: STRGE_UNIT_STTS_CHG
+               <xs:documentation>The type of storage unit event in which this notification should trigger. Supported event types: STRGE_UNIT_STTS_CHG
                </xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="storageUnitNotificationFilter" type="storageUnitNotificationFilter">
             <xs:annotation>
-               <xs:documentation>
-                  The filter to use against storage unit events. The notification will only trigger for events matching this filter
+               <xs:documentation>The filter to use against storage unit events. The notification will only trigger for events matching this filter
                </xs:documentation>
             </xs:annotation>
          </xs:element>
@@ -4132,9 +4117,7 @@
          </xs:element>
          <xs:element name="notificationRegistrationStatus" type="xs:string">
             <xs:annotation>
-               <xs:documentation>
-                  The status of the notification registration. One of the following values: ENABLED or DISABLED
-               </xs:documentation>
+               <xs:documentation>The status of the notification registration. One of the following values: ENABLED or DISABLED</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -4184,16 +4167,12 @@
          </xs:element>
          <xs:element name="newStorageUnitStatus" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The new storage unit status. One of the following values: ENABLED, DISABLED, ARCHIVING, or RESTORING
-               </xs:documentation>
+               <xs:documentation>The new storage unit status. One of the following values: ENABLED, DISABLED, ARCHIVING, or RESTORING</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="oldStorageUnitStatus" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The old storage unit status. One of the following values: ENABLED, DISABLED, ARCHIVING, or RESTORING
-               </xs:documentation>
+               <xs:documentation>The old storage unit status. One of the following values: ENABLED, DISABLED, ARCHIVING, or RESTORING</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -4676,45 +4655,36 @@
       <xs:all>
          <xs:element name="namespace" type="xs:string">
             <xs:annotation>
-               <xs:documentation>
-                  The name of a valid namespace known by the system
-               </xs:documentation>
+               <xs:documentation>The name of a valid namespace known by the system</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="jobName" type="xs:string">
             <xs:annotation>
-               <xs:documentation>
-                  The name of the job definition
-               </xs:documentation>
+               <xs:documentation>The name of the job definition</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="description" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  An optional description of the job definition
-               </xs:documentation>
+               <xs:documentation>An optional description of the job definition</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="activitiJobXml" type="xs:string">
             <xs:annotation>
-               <xs:documentation>
-                  Activiti workflow XML related to the job. Id should be named as "{applicationName}.{jobName}". Activiti XML can not contain a CDATA section
+               <xs:documentation>Activiti workflow XML related to the job. Id should be named as "{applicationName}.{jobName}". Activiti XML can not contain a
+                  CDATA section
                </xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="parameters" type="parameters" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  Default list of key/value pairs that will be made available to the job when it is executed. These values can be overridden by parameters
+               <xs:documentation>Default list of key/value pairs that will be made available to the job when it is executed. These values can be overridden by parameters
                   specified during the job execution
                </xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="s3PropertiesLocation" type="s3PropertiesLocation" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The location to the Java properties file in S3
-               </xs:documentation>
+               <xs:documentation>The location to the Java properties file in S3</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -4725,31 +4695,26 @@
       <xs:all>
          <xs:element name="description" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  An optional description of the job definition
-               </xs:documentation>
+               <xs:documentation>An optional description of the job definition</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="activitiJobXml" type="xs:string">
             <xs:annotation>
-               <xs:documentation>
-                  Activiti workflow XML related to the job. Id should be named as "{applicationName}.{jobName}". Activiti XML can not contain a CDATA section
+               <xs:documentation>Activiti workflow XML related to the job. Id should be named as "{applicationName}.{jobName}". Activiti XML can not contain a
+                  CDATA section
                </xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="parameters" type="parameters" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  Default list of key/value pairs that will be made available to the job when it is executed. These values can be overridden by parameters
+               <xs:documentation>Default list of key/value pairs that will be made available to the job when it is executed. These values can be overridden by parameters
                   specified during the job execution
                </xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="s3PropertiesLocation" type="s3PropertiesLocation" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The location to the Java properties file in S3
-               </xs:documentation>
+               <xs:documentation>The location to the Java properties file in S3</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -4760,52 +4725,39 @@
       <xs:all>
          <xs:element name="id" type="xs:int">
             <xs:annotation>
-               <xs:documentation>
-                  The internal identifier that uniquely references a job definition
-               </xs:documentation>
+               <xs:documentation>The internal identifier that uniquely references a job definition</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="namespace" type="xs:string">
             <xs:annotation>
-               <xs:documentation>
-                  The namespace of the job definition
-               </xs:documentation>
+               <xs:documentation>The namespace of the job definition</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="jobName" type="xs:string">
             <xs:annotation>
-               <xs:documentation>
-                  The name of the job definition
-               </xs:documentation>
+               <xs:documentation>The name of the job definition</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="description" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  Description of the job definition
-               </xs:documentation>
+               <xs:documentation>Description of the job definition</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="activitiJobXml" type="xs:string">
             <xs:annotation>
-               <xs:documentation>
-                  Activiti workflow XML related to the job
-               </xs:documentation>
+               <xs:documentation>Activiti workflow XML related to the job</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="parameters" type="parameters" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  Default list of key/value pairs that will be made available to the job when it is executed. These values can be overridden by parameters
+               <xs:documentation>Default list of key/value pairs that will be made available to the job when it is executed. These values can be overridden by parameters
                   specified during the job execution
                </xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="s3PropertiesLocation" type="s3PropertiesLocation" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The location to the Java properties file in S3
-               </xs:documentation>
+               <xs:documentation>The location to the Java properties file in S3</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="lastUpdatedByUserId" type="xs:string" minOccurs="0">
@@ -4831,8 +4783,7 @@
          </xs:element>
          <xs:element name="parameters" type="parameters" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  List of key/value pairs that will be made available to the job when it is executed. These parameters will override any parameters defined as
+               <xs:documentation>List of key/value pairs that will be made available to the job when it is executed. These parameters will override any parameters defined as
                   part of the job definition
                </xs:documentation>
             </xs:annotation>
@@ -4850,9 +4801,7 @@
       <xs:all>
          <xs:element name="action" type="jobActionEnum">
             <xs:annotation>
-               <xs:documentation>
-                  The action to take for the job. One of the following values: SUSPEND, RESUME
-               </xs:documentation>
+               <xs:documentation>The action to take for the job. One of the following values: SUSPEND, RESUME</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -4863,16 +4812,12 @@
       <xs:all>
          <xs:element name="id" type="xs:string">
             <xs:annotation>
-               <xs:documentation>
-                  The internal identifier that uniquely references a job
-               </xs:documentation>
+               <xs:documentation>The internal identifier that uniquely references a job</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="status" type="jobStatusEnum" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The status of the job. One of the following values: RUNNING, SUSPENDED, COMPLETED
-               </xs:documentation>
+               <xs:documentation>The status of the job. One of the following values: RUNNING, SUSPENDED, COMPLETED</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="namespace" type="xs:string" minOccurs="0">
@@ -4887,59 +4832,44 @@
          </xs:element>
          <xs:element name="startTime" type="xs:dateTime" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The start time of the job
-               </xs:documentation>
+               <xs:documentation>The start time of the job</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="endTime" type="xs:dateTime" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The end time of the job. It is not returned for a job in RUNNING state
-               </xs:documentation>
+               <xs:documentation>The end time of the job. It is not returned for a job in RUNNING state</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="currentWorkflowStep" type="workflowStep" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The step where the workflow currently is. It is returned for a job in RUNNING state
-               </xs:documentation>
+               <xs:documentation>The step where the workflow currently is. It is returned for a job in RUNNING state</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="completedWorkflowSteps" type="workflowSteps" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The steps that have been completed. For a job in RUNNING state, steps up to the last Async task will be returned. For a job in
+               <xs:documentation>The steps that have been completed. For a job in RUNNING state, steps up to the last Async task will be returned. For a job in
                   COMPLETED state, all executed steps will be returned
                </xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="parameters" type="parameters" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  Current workflow variables and values
-               </xs:documentation>
+               <xs:documentation>Current workflow variables and values</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="activitiJobXml" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  Activiti workflow XML related to the job
-               </xs:documentation>
+               <xs:documentation>Activiti workflow XML related to the job</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="workflowErrors" type="workflowErrors" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The workflow errors
-               </xs:documentation>
+               <xs:documentation>The workflow errors</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="deleteReason" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  A reason this job has been deleted. It is returned if the job has been deleted
-               </xs:documentation>
+               <xs:documentation>A reason this job has been deleted. It is returned if the job has been deleted</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -4949,9 +4879,7 @@
       <xs:sequence>
          <xs:element name="parameter" type="parameter" minOccurs="0" maxOccurs="unbounded">
             <xs:annotation>
-               <xs:documentation>
-                  An individual parameter (a key/value pair)
-               </xs:documentation>
+               <xs:documentation>An individual parameter (a key/value pair)</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:sequence>
@@ -4961,15 +4889,12 @@
       <xs:all>
          <xs:element name="name" type="xs:string">
             <xs:annotation>
-               <xs:documentation>
-                  Name of the parameter
-               </xs:documentation>
+               <xs:documentation>Name of the parameter</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="value" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  Value of the parameter. If the name of the parameter contains the word "password," this value will be masked before being logged into the
+               <xs:documentation>Value of the parameter. If the name of the parameter contains the word "password," this value will be masked before being logged into the
                   application logs
                </xs:documentation>
             </xs:annotation>
@@ -4981,9 +4906,7 @@
       <xs:sequence>
          <xs:element name="workflowStep" type="workflowStep" minOccurs="0" maxOccurs="unbounded">
             <xs:annotation>
-               <xs:documentation>
-                  An individual step of the job
-               </xs:documentation>
+               <xs:documentation>An individual step of the job</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:sequence>
@@ -4993,30 +4916,22 @@
       <xs:all>
          <xs:element name="id" type="xs:string">
             <xs:annotation>
-               <xs:documentation>
-                  The internal identifier that uniquely references a step
-               </xs:documentation>
+               <xs:documentation>The internal identifier that uniquely references a step</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="name" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The name of the step
-               </xs:documentation>
+               <xs:documentation>The name of the step</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="startTime" type="xs:dateTime" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The start time of the step
-               </xs:documentation>
+               <xs:documentation>The start time of the step</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="endTime" type="xs:dateTime" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The end time of the step
-               </xs:documentation>
+               <xs:documentation>The end time of the step</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -5026,9 +4941,7 @@
       <xs:sequence>
          <xs:element name="workflowError" type="workflowError" minOccurs="0" maxOccurs="unbounded">
             <xs:annotation>
-               <xs:documentation>
-                  An individual workflow error
-               </xs:documentation>
+               <xs:documentation>An individual workflow error</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:sequence>
@@ -5038,23 +4951,17 @@
       <xs:all>
          <xs:element name="errorMessage" type="xs:string">
             <xs:annotation>
-               <xs:documentation>
-                  Error message
-               </xs:documentation>
+               <xs:documentation>Error message</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="retriesLeft" type="xs:int">
             <xs:annotation>
-               <xs:documentation>
-                  Number of retries left
-               </xs:documentation>
+               <xs:documentation>Number of retries left</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="errorStackTrace" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The error stack trace
-               </xs:documentation>
+               <xs:documentation>The error stack trace</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -5080,9 +4987,7 @@
       <xs:sequence>
          <xs:element name="jobSummary" type="jobSummary" minOccurs="0" maxOccurs="unbounded">
             <xs:annotation>
-               <xs:documentation>
-                  An individual job summary
-               </xs:documentation>
+               <xs:documentation>An individual job summary</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:sequence>
@@ -5092,9 +4997,7 @@
       <xs:all>
          <xs:element name="id" type="xs:string">
             <xs:annotation>
-               <xs:documentation>
-                  The job id that uniquely identifies the previously submitted job
-               </xs:documentation>
+               <xs:documentation>The job id that uniquely identifies the previously submitted job</xs:documentation>
             </xs:annotation>
          </xs:element>
          <!--
@@ -5103,44 +5006,32 @@
          -->
          <xs:element name="namespace" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The namespace of the job
-               </xs:documentation>
+               <xs:documentation>The namespace of the job</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="jobName" type="xs:string">
             <xs:annotation>
-               <xs:documentation>
-                  The name of the job
-               </xs:documentation>
+               <xs:documentation>The name of the job</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="startTime" type="xs:dateTime">
             <xs:annotation>
-               <xs:documentation>
-                  The start time of the job
-               </xs:documentation>
+               <xs:documentation>The start time of the job</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="endTime" type="xs:dateTime" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The end time of the job. It is not returned for a job in RUNNING state
-               </xs:documentation>
+               <xs:documentation>The end time of the job. It is not returned for a job in RUNNING state</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="status" type="jobStatusEnum" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The status of the job. One of the following values: RUNNING, COMPLETED
-               </xs:documentation>
+               <xs:documentation>The status of the job. One of the following values: RUNNING, COMPLETED</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="totalExceptions" type="xs:long">
             <xs:annotation>
-               <xs:documentation>
-                  The number of exceptions
-               </xs:documentation>
+               <xs:documentation>The number of exceptions</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -5151,30 +5042,23 @@
       <xs:all>
          <xs:element name="id" type="xs:string">
             <xs:annotation>
-               <xs:documentation>
-                  The job id that uniquely identifies the previously submitted job
-               </xs:documentation>
+               <xs:documentation>The job id that uniquely identifies the previously submitted job</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="receiveTaskId" type="xs:string">
             <xs:annotation>
-               <xs:documentation>
-                  The task Id of the receive task in the job workflow to signal. The job must be waiting on this task at the time of this call
+               <xs:documentation>The task Id of the receive task in the job workflow to signal. The job must be waiting on this task at the time of this call
                </xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="parameters" type="parameters" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  List of key/value pairs that will be made available to the job
-               </xs:documentation>
+               <xs:documentation>List of key/value pairs that will be made available to the job</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="s3PropertiesLocation" type="s3PropertiesLocation" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The location to the Java properties file in S3
-               </xs:documentation>
+               <xs:documentation>The location to the Java properties file in S3</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -5581,7 +5465,7 @@
          <xs:element name="instanceMaxSearchPrice" type="xs:decimal" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The maximum amount, in USD, to search for the best price. The best price search will only search for prices lower than this
-                  value. If a spot instance is selected by the search, this value will be the bid price.
+                  value. If a spot instance is selected by the search, this value will be the bid price
                </xs:documentation>
             </xs:annotation>
          </xs:element>
@@ -5669,16 +5553,12 @@
          <xs:element name="status" type="xs:string" minOccurs="0"/>
          <xs:element name="statusChangeReason" type="statusChangeReason" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The reason for the cluster status change.
-               </xs:documentation>
+               <xs:documentation>The reason for the cluster status change</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="statusTimeline" type="statusTimeline" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  A timeline that represents the status of a cluster over the lifetime of the cluster.
-               </xs:documentation>
+               <xs:documentation>A timeline that represents the status of a cluster over the lifetime of the cluster</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="namespace" type="xs:string"/>
@@ -5702,16 +5582,12 @@
       <xs:all>
          <xs:element name="code" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The programmatic code for the state change reason.
-               </xs:documentation>
+               <xs:documentation>The programmatic code for the state change reason</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="message" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The descriptive message for the state change reason.
-               </xs:documentation>
+               <xs:documentation>The descriptive message for the state change reason</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -5721,23 +5597,17 @@
       <xs:all>
          <xs:element name="creationTime" type="xs:dateTime" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The creation date and time of the cluster.
-               </xs:documentation>
+               <xs:documentation>The creation date and time of the cluster</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="readyTime" type="xs:dateTime" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The date and time when the cluster was ready to execute steps.
-               </xs:documentation>
+               <xs:documentation>The date and time when the cluster was ready to execute steps</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="endTime" type="xs:dateTime" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The date and time when the cluster was terminated.
-               </xs:documentation>
+               <xs:documentation>The date and time when the cluster was terminated</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -5820,16 +5690,14 @@
          </xs:element>
          <xs:element name="storageFiles" type="storageFiles" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The list of storage files to be added. Storage files are required, unless discovery of storage files is enabled. In that case, the storage
+               <xs:documentation>The list of storage files to be added. Storage files are required, unless discovery of storage files is enabled. In that case, the storage
                   files are not allowed to be specified
                </xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="discoverStorageFiles" type="xs:boolean" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  If true, enables the auto-discovery of all storage files in the relative S3 storage under the relative storage directory
+               <xs:documentation>If true, enables the auto-discovery of all storage files in the relative S3 storage under the relative storage directory
                </xs:documentation>
             </xs:annotation>
          </xs:element>
@@ -6430,7 +6298,7 @@
          </xs:element>
          <xs:element name="searchIndexType" type="xs:string">
             <xs:annotation>
-               <xs:documentation>The type of this Search Index</xs:documentation>
+               <xs:documentation>The type of this Search Index. One of the following values: BUS_OBJCT_DFNTN, TAG</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -6446,7 +6314,7 @@
          </xs:element>
          <xs:element name="searchIndexType" type="xs:string">
             <xs:annotation>
-               <xs:documentation>The type of this Search Index</xs:documentation>
+               <xs:documentation>The type of this Search Index. One of the following values: BUS_OBJCT_DFNTN, TAG</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="searchIndexStatus" type="xs:string">
@@ -6561,9 +6429,7 @@
          </xs:element>
          <xs:element name="indexSearchResults" type="indexSearchResults" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>
-                  The top 200 index search results that matched the search term query
-               </xs:documentation>
+               <xs:documentation>The top 200 index search results that matched the search term query</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="facets" type="facets" minOccurs="0">
@@ -6602,15 +6468,12 @@
          </xs:element>
          <xs:element name="displayName" type="xs:string" minOccurs="0" maxOccurs="1">
             <xs:annotation>
-               <xs:documentation>
-                  The display name of the tag or business object definition
-               </xs:documentation>
+               <xs:documentation>The display name of the tag or business object definition</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="shortDescription" type="xs:string" minOccurs="0" maxOccurs="1">
             <xs:annotation>
-               <xs:documentation>
-                  An optional short-description. This is actually the 'description' field truncated to a configurable number of characters
+               <xs:documentation>An optional short-description. This is actually the 'description' field truncated to a configurable number of characters
                </xs:documentation>
             </xs:annotation>
          </xs:element>
