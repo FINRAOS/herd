@@ -50,6 +50,7 @@ import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.ConstantScoreQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.WildcardQueryBuilder;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
@@ -447,16 +448,20 @@ public class ElasticsearchFunctions implements SearchFunctions
                 }
             }
 
-            // Short-circuit and return empty response if no tag entities (tag-keys) are found to search on.
-            if (CollectionUtils.isEmpty(flattenTagEntitiesList(nestedInclusionTagEntityLists)))
-            {
-                return elasticsearchResponseDto;
-            }
-
             LOGGER.info("Searching Elasticsearch business object definition documents from index, indexName={} and documentType={}, by tagEntityList={}",
                 indexName, documentType, tagEntityListToString(flattenTagEntitiesList(nestedInclusionTagEntityLists)));
 
+            LOGGER.info("Excluding the following tagEntityList={}",
+                indexName, documentType, tagEntityListToString(flattenTagEntitiesList(nestedExclusionTagEntityLists)));
+
             BoolQueryBuilder compoundSearchFiltersQueryBuilder = new BoolQueryBuilder();
+
+            // If there are only exclusion tag entities then, get everything else, but the exclusion tags.
+            if (CollectionUtils.isEmpty(flattenTagEntitiesList(nestedInclusionTagEntityLists)))
+            {
+                WildcardQueryBuilder wildcardQueryBuilder = QueryBuilders.wildcardQuery(TAG_CODE_FIELD, "*");
+                compoundSearchFiltersQueryBuilder.must(wildcardQueryBuilder);
+            }
 
             // Inclusion
             for (List<TagEntity> tagEntities : nestedInclusionTagEntityLists)

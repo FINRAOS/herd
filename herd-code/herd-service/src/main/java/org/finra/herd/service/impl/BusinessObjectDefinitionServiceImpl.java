@@ -629,7 +629,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
     {
         for (BusinessObjectDefinitionSearchKey searchKey : searchFilter.getBusinessObjectDefinitionSearchKeys())
         {
-            Assert.isTrue(BooleanUtils.isFalse(searchKey.isIncludeTagHierarchy()),
+            Assert.isTrue(!BooleanUtils.isTrue(searchKey.isIncludeTagHierarchy()),
                 "IsExclusionSearchFilter and includeTagHierarchy cannot both be true for a business object definition search filter.");
         }
     }
