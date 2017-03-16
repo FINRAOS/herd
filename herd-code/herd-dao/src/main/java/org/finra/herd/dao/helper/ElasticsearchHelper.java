@@ -145,7 +145,7 @@ public class ElasticsearchHelper
     /**
      * the result type Facet
      */
-    public static final String RESULT_TYPE_FACET = "resultType";
+    public static final String RESULT_TYPE_FACET = "resulttype";
 
     /**
      * The user defined agg name for tag type facet.

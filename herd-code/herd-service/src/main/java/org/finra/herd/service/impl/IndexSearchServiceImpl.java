@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import org.finra.herd.dao.IndexSearchDao;
+import org.finra.herd.dao.helper.ElasticsearchHelper;
 import org.finra.herd.model.api.xml.IndexSearchRequest;
 import org.finra.herd.model.api.xml.IndexSearchResponse;
 import org.finra.herd.service.FacetFieldValidationService;
@@ -56,10 +57,6 @@ public class IndexSearchServiceImpl implements IndexSearchService, SearchableSer
 
     @Autowired
     private IndexSearchDao indexSearchDao;
-
-    private static final String TAG_FACET_FIELD = "tag";
-
-    private static final String RESULT_TYPE_FACET_FIELD = "resultType";
 
     @Override
     public IndexSearchResponse indexSearch(final IndexSearchRequest request, final Set<String> fields)
@@ -106,6 +103,6 @@ public class IndexSearchServiceImpl implements IndexSearchService, SearchableSer
     @Override
     public Set<String> getValidFacetFields()
     {
-        return ImmutableSet.of(TAG_FACET_FIELD, RESULT_TYPE_FACET_FIELD);
+        return ImmutableSet.of(ElasticsearchHelper.TAG_FACET, ElasticsearchHelper.RESULT_TYPE_FACET);
     }
 }
