@@ -33,7 +33,6 @@ import org.finra.herd.model.api.xml.EmrClusterCreateRequest;
 import org.finra.herd.model.api.xml.EmrClusterDefinition;
 import org.finra.herd.model.api.xml.EmrHadoopJarStep;
 import org.finra.herd.model.api.xml.EmrHiveStep;
-import org.finra.herd.model.api.xml.EmrOozieStep;
 import org.finra.herd.model.api.xml.EmrPigStep;
 import org.finra.herd.model.api.xml.EmrShellStep;
 import org.finra.herd.model.api.xml.NodeTag;
@@ -46,48 +45,6 @@ import org.finra.herd.service.AbstractServiceTest;
  */
 public class EmrHelperTest extends AbstractServiceTest
 {
-    @Test
-    public void testGetActiveEmrClusterByName() throws Exception
-    {
-        // Get the EMR cluster definition object
-        String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
-        EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
-
-        // check cluster summary before creation
-        ClusterSummary clusterSummary = emrDao.getActiveEmrClusterByName(MockEmrOperationsImpl.MOCK_CLUSTER_NAME, emrHelper.getAwsParamsDto());
-        assertNull(clusterSummary);
-
-        // Create the cluster
-        String clusterId = emrDao.createEmrCluster(MockEmrOperationsImpl.MOCK_CLUSTER_NAME, emrClusterDefinition, emrHelper.getAwsParamsDto());
-
-        // check cluster summary after creation
-        clusterSummary = emrDao.getActiveEmrClusterByName(MockEmrOperationsImpl.MOCK_CLUSTER_NAME, emrHelper.getAwsParamsDto());
-        assertNotNull(clusterSummary);
-        assertEquals(clusterId, clusterSummary.getId());
-    }
-
-    /**
-     * This method tests the blank proxy details
-     */
-    @Test
-    public void testEmrAwsDtoBlankProxy() throws Exception
-    {
-        // Set the proxy as blank too to get the EMR client without proxy
-        AwsParamsDto awsParamsDto = emrHelper.getAwsParamsDto();
-        awsParamsDto.setHttpProxyHost("");
-        emrDao.getEmrClient(awsParamsDto);
-    }
-
-    /**
-     * This method tests the blank cluster id for finding cluster status
-     */
-    @Test
-    public void testGetEmrClusterStatusByIdWithBlank() throws Exception
-    {
-        // Send blank for cluster id, and this method returns null for describeClusterResult
-        emrDao.getEmrClusterStatusById(EMR_CLUSTER_DEFINITION_NAME, emrHelper.getAwsParamsDto());
-    }
-
     /**
      * This method tests the blank EC2 tags
      */
@@ -120,22 +77,6 @@ public class EmrHelperTest extends AbstractServiceTest
     }
 
     /**
-     * This method fills-up the parameters required for the EMR cluster create request. This is called from all the other test methods.
-     */
-    private EmrClusterCreateRequest getNewEmrClusterCreateRequest() throws Exception
-    {
-        // Create the definition.
-        EmrClusterCreateRequest request = new EmrClusterCreateRequest();
-
-        // Fill in the parameters.
-        request.setNamespace(NAMESPACE);
-        request.setEmrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME);
-        request.setEmrClusterName("UT_EMR_CLUSTER" + String.format("-%.3f", Math.random()));
-
-        return request;
-    }
-
-    /**
      * This method tests the negative test cases scenario by testing all the step types
      */
     @Test
@@ -150,7 +91,7 @@ public class EmrHelperTest extends AbstractServiceTest
         EmrClusterCreateRequest request = getNewEmrClusterCreateRequest();
         EmrCluster emrCluster = emrService.createCluster(request);
 
-        EmrStepHelper stepHelper = null;
+        EmrStepHelper stepHelper;
 
         // Shell script arguments
         List<String> shellScriptArgs = new ArrayList<>();
@@ -195,15 +136,6 @@ public class EmrHelperTest extends AbstractServiceTest
 
         steps.add(shellStep);
 
-        // Oozie job addition
-        EmrOozieStep oozieStep = new EmrOozieStep(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, request.getEmrClusterName(), null, null, null, null, null, null);
-        oozieStep.setStepName("Test Oozie");
-        oozieStep.setContinueOnError(true);
-        oozieStep.setWorkflowXmlLocation("s3://test-bucket-managed/app-a/test/workflow.xml");
-        oozieStep.setOoziePropertiesFileLocation("s3://test-bucket-managed/app-a/test/job.properties");
-
-        steps.add(oozieStep);
-
         // Hadoop jar step configuration
         EmrHadoopJarStep hadoopJarStep =
             new EmrHadoopJarStep(NAMESPACE, EMR_CLUSTER_DEFINITION_NAME, request.getEmrClusterName(), null, null, null, null, null, null, null);
@@ -222,11 +154,69 @@ public class EmrHelperTest extends AbstractServiceTest
         }
     }
 
+    /**
+     * This method tests the blank proxy details
+     */
+    @Test
+    public void testEmrAwsDtoBlankProxy() throws Exception
+    {
+        // Set the proxy as blank too to get the EMR client without proxy
+        AwsParamsDto awsParamsDto = emrHelper.getAwsParamsDto();
+        awsParamsDto.setHttpProxyHost("");
+        emrDao.getEmrClient(awsParamsDto);
+    }
+
+    @Test
+    public void testGetActiveEmrClusterByName() throws Exception
+    {
+        // Get the EMR cluster definition object
+        String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
+        EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
+
+        // check cluster summary before creation
+        ClusterSummary clusterSummary = emrDao.getActiveEmrClusterByName(MockEmrOperationsImpl.MOCK_CLUSTER_NAME, emrHelper.getAwsParamsDto());
+        assertNull(clusterSummary);
+
+        // Create the cluster
+        String clusterId = emrDao.createEmrCluster(MockEmrOperationsImpl.MOCK_CLUSTER_NAME, emrClusterDefinition, emrHelper.getAwsParamsDto());
+
+        // check cluster summary after creation
+        clusterSummary = emrDao.getActiveEmrClusterByName(MockEmrOperationsImpl.MOCK_CLUSTER_NAME, emrHelper.getAwsParamsDto());
+        assertNotNull(clusterSummary);
+        assertEquals(clusterId, clusterSummary.getId());
+    }
+
     @Test
     public void testGetEmrClusterByIdNull() throws Exception
     {
         Cluster cluster = emrDao.getEmrClusterById(null, null);
 
         assertNull(cluster);
+    }
+
+    /**
+     * This method tests the blank cluster id for finding cluster status
+     */
+    @Test
+    public void testGetEmrClusterStatusByIdWithBlank() throws Exception
+    {
+        // Send blank for cluster id, and this method returns null for describeClusterResult
+        emrDao.getEmrClusterStatusById(EMR_CLUSTER_DEFINITION_NAME, emrHelper.getAwsParamsDto());
+    }
+
+    /**
+     * This method fills-up the parameters required for the EMR cluster create request. This is called from all the other test methods.
+     */
+    private EmrClusterCreateRequest getNewEmrClusterCreateRequest() throws Exception
+    {
+        // Create the definition.
+        EmrClusterCreateRequest request = new EmrClusterCreateRequest();
+
+        // Fill in the parameters.
+        request.setNamespace(NAMESPACE);
+        request.setEmrClusterDefinitionName(EMR_CLUSTER_DEFINITION_NAME);
+        request.setEmrClusterName("UT_EMR_CLUSTER" + String.format("-%.3f", Math.random()));
+
+        return request;
     }
 }

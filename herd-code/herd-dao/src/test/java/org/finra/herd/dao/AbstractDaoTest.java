@@ -901,9 +901,6 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     protected OnDemandPriceDao onDemandPriceDao;
 
     @Autowired
-    protected OozieDao oozieDao;
-
-    @Autowired
     protected PartitionKeyGroupDao partitionKeyGroupDao;
 
     @Autowired

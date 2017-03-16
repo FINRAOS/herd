@@ -4452,21 +4452,6 @@
       </xs:all>
    </xs:complexType>
 
-   <xs:element name="emrOozieStepAddRequest" type="emrOozieStepAddRequest"/>
-   <xs:complexType name="emrOozieStepAddRequest">
-      <xs:all>
-         <xs:element name="namespace" type="xs:string"/>
-         <xs:element name="emrClusterDefinitionName" type="xs:string"/>
-         <xs:element name="emrClusterName" type="xs:string"/>
-         <xs:element name="stepName" type="xs:string"/>
-         <xs:element name="workflowXmlLocation" type="xs:string"/>
-         <xs:element name="ooziePropertiesFileLocation" type="xs:string"/>
-         <xs:element name="continueOnError" type="xs:boolean" minOccurs="0"/>
-         <xs:element name="emrClusterId" type="xs:string" minOccurs="0"/>
-         <xs:element name="accountId" type="xs:string" minOccurs="0"/>
-      </xs:all>
-   </xs:complexType>
-
    <xs:element name="emrHadoopJarStepAddRequest" type="emrHadoopJarStepAddRequest"/>
    <xs:complexType name="emrHadoopJarStepAddRequest">
       <xs:all>
@@ -4549,21 +4534,6 @@
       </xs:all>
    </xs:complexType>
 
-   <xs:element name="emrOozieStep" type="emrOozieStep"/>
-   <xs:complexType name="emrOozieStep">
-      <xs:all>
-         <xs:element name="id" type="xs:string"/>
-         <xs:element name="namespace" type="xs:string"/>
-         <xs:element name="emrClusterDefinitionName" type="xs:string"/>
-         <xs:element name="emrClusterName" type="xs:string"/>
-         <xs:element name="stepName" type="xs:string"/>
-         <xs:element name="workflowXmlLocation" type="xs:string"/>
-         <xs:element name="ooziePropertiesFileLocation" type="xs:string"/>
-         <xs:element name="continueOnError" type="xs:boolean" minOccurs="0"/>
-         <xs:element name="emrClusterId" type="xs:string" minOccurs="0"/>
-      </xs:all>
-   </xs:complexType>
-
    <xs:element name="emrHadoopJarStep" type="emrHadoopJarStep"/>
    <xs:complexType name="emrHadoopJarStep">
       <xs:all>
@@ -4577,43 +4547,6 @@
          <xs:element name="scriptArguments" type="scriptArguments" minOccurs="0"/>
          <xs:element name="continueOnError" type="xs:boolean" minOccurs="0"/>
          <xs:element name="emrClusterId" type="xs:string" minOccurs="0"/>
-      </xs:all>
-   </xs:complexType>
-
-   <xs:element name="oozieWorkflowJob" type="oozieWorkflowJob"/>
-   <xs:complexType name="oozieWorkflowJob">
-      <xs:all>
-         <xs:element name="id" type="xs:string" minOccurs="0"/>
-         <xs:element name="namespace" type="xs:string" minOccurs="0"/>
-         <xs:element name="emrClusterDefinitionName" type="xs:string" minOccurs="0"/>
-         <xs:element name="emrClusterName" type="xs:string" minOccurs="0"/>
-         <xs:element name="status" type="xs:string" minOccurs="0"/>
-         <xs:element name="errorCode" type="xs:string" minOccurs="0"/>
-         <xs:element name="errorMessage" type="xs:string" minOccurs="0"/>
-         <xs:element name="startTime" type="xs:dateTime" minOccurs="0"/>
-         <xs:element name="endTime" type="xs:dateTime" minOccurs="0"/>
-         <xs:element name="workflowActions" type="oozieWorkflowActions" minOccurs="0"/>
-         <xs:element name="emrClusterId" type="xs:string" minOccurs="0"/>
-      </xs:all>
-   </xs:complexType>
-
-   <xs:element name="oozieWorkflowActions" type="oozieWorkflowActions"/>
-   <xs:complexType name="oozieWorkflowActions">
-      <xs:sequence>
-         <xs:element name="workflowAction" type="oozieWorkflowAction" minOccurs="0" maxOccurs="unbounded"/>
-      </xs:sequence>
-   </xs:complexType>
-
-   <xs:element name="oozieWorkflowAction" type="oozieWorkflowAction"/>
-   <xs:complexType name="oozieWorkflowAction">
-      <xs:all>
-         <xs:element name="id" type="xs:string" minOccurs="0"/>
-         <xs:element name="name" type="xs:string" minOccurs="0"/>
-         <xs:element name="status" type="xs:string" minOccurs="0"/>
-         <xs:element name="startTime" type="xs:dateTime" minOccurs="0"/>
-         <xs:element name="endTime" type="xs:dateTime" minOccurs="0"/>
-         <xs:element name="errorCode" type="xs:string" minOccurs="0"/>
-         <xs:element name="errorMessage" type="xs:string" minOccurs="0"/>
       </xs:all>
    </xs:complexType>
 
@@ -4677,7 +4610,8 @@
          </xs:element>
          <xs:element name="parameters" type="parameters" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>Default list of key/value pairs that will be made available to the job when it is executed. These values can be overridden by parameters
+               <xs:documentation>Default list of key/value pairs that will be made available to the job when it is executed. These values can be overridden by
+                  parameters
                   specified during the job execution
                </xs:documentation>
             </xs:annotation>
@@ -4707,7 +4641,8 @@
          </xs:element>
          <xs:element name="parameters" type="parameters" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>Default list of key/value pairs that will be made available to the job when it is executed. These values can be overridden by parameters
+               <xs:documentation>Default list of key/value pairs that will be made available to the job when it is executed. These values can be overridden by
+                  parameters
                   specified during the job execution
                </xs:documentation>
             </xs:annotation>
@@ -4750,7 +4685,8 @@
          </xs:element>
          <xs:element name="parameters" type="parameters" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>Default list of key/value pairs that will be made available to the job when it is executed. These values can be overridden by parameters
+               <xs:documentation>Default list of key/value pairs that will be made available to the job when it is executed. These values can be overridden by
+                  parameters
                   specified during the job execution
                </xs:documentation>
             </xs:annotation>
@@ -4783,7 +4719,8 @@
          </xs:element>
          <xs:element name="parameters" type="parameters" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>List of key/value pairs that will be made available to the job when it is executed. These parameters will override any parameters defined as
+               <xs:documentation>List of key/value pairs that will be made available to the job when it is executed. These parameters will override any
+                  parameters defined as
                   part of the job definition
                </xs:documentation>
             </xs:annotation>
@@ -4894,7 +4831,8 @@
          </xs:element>
          <xs:element name="value" type="xs:string" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>Value of the parameter. If the name of the parameter contains the word "password," this value will be masked before being logged into the
+               <xs:documentation>Value of the parameter. If the name of the parameter contains the word "password," this value will be masked before being
+                  logged into the
                   application logs
                </xs:documentation>
             </xs:annotation>
@@ -5571,7 +5509,6 @@
          </xs:element>
          <xs:element name="activeStep" type="emrStep" minOccurs="0"/>
          <xs:element name="step" type="emrStep" minOccurs="0"/>
-         <xs:element name="oozieWorkflowJobs" type="oozieWorkflowJobs" minOccurs="0"/>
          <xs:element name="dryRun" type="xs:boolean" minOccurs="0"/>
          <xs:element name="emrClusterCreated" type="xs:boolean" minOccurs="0"/>
          <xs:element name="emrClusterDefinition" type="emrClusterDefinition" minOccurs="0"/>
@@ -5623,13 +5560,6 @@
          <xs:element name="continueOnError" type="xs:string" minOccurs="0"/>
          <xs:element name="status" type="xs:string"/>
       </xs:all>
-   </xs:complexType>
-
-   <xs:element name="oozieWorkflowJobs" type="oozieWorkflowJobs"/>
-   <xs:complexType name="oozieWorkflowJobs">
-      <xs:sequence>
-         <xs:element name="workflowJob" type="oozieWorkflowJob" minOccurs="0" maxOccurs="unbounded"/>
-      </xs:sequence>
    </xs:complexType>
 
    <!-- ***** Business Object Data Storage File ***** -->
@@ -5690,7 +5620,8 @@
          </xs:element>
          <xs:element name="storageFiles" type="storageFiles" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>The list of storage files to be added. Storage files are required, unless discovery of storage files is enabled. In that case, the storage
+               <xs:documentation>The list of storage files to be added. Storage files are required, unless discovery of storage files is enabled. In that case,
+                  the storage
                   files are not allowed to be specified
                </xs:documentation>
             </xs:annotation>
