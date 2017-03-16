@@ -218,7 +218,7 @@ public class ElasticsearchHelper
     public List<ResultTypeIndexSearchResponseDto> getResultTypeIndexSearchResponseDto(SearchResponse searchResponse)
     {
         List<ResultTypeIndexSearchResponseDto> list = new ArrayList<>();
-        Terms aggregation = searchResponse.getAggregations().get(TAG_FACET_AGGS);
+        Terms aggregation = searchResponse.getAggregations().get(RESULT_TYPE_AGGS);
 
         for (Terms.Bucket resultTypeEntry : aggregation.getBuckets())
         {
@@ -320,7 +320,7 @@ public class ElasticsearchHelper
             for (ResultTypeIndexSearchResponseDto resultTypeIndexSearchResponseDto : elasticsearchResponseDto.getResultTypeIndexSearchResponseDtos())
             {
                 Facet resultTypeFacet = new Facet(resultTypeIndexSearchResponseDto.getResultTypeDisplayName(), resultTypeIndexSearchResponseDto.getCount(),
-                    TagIndexSearchResponseDto.getFacetType(), resultTypeIndexSearchResponseDto.getResultTypeCode(), null);
+                    ResultTypeIndexSearchResponseDto.getFacetType(), resultTypeIndexSearchResponseDto.getResultTypeCode(), null);
                 resultTypeFacets.add(resultTypeFacet);
             }
             facets.addAll(resultTypeFacets);
