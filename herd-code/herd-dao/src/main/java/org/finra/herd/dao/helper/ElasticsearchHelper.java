@@ -26,8 +26,6 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.nested.Nested;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import org.finra.herd.model.api.xml.Facet;
@@ -88,12 +86,7 @@ public class ElasticsearchHelper
      * Raw field for the namespace code
      */
     public static final String NAMESPACE_CODE_SORT_FIELD = "namespace.code.keyword";
-
-    /**
-     * The logger used to write messages to the log
-     */
-    private static final Logger LOGGER = LoggerFactory.getLogger(ElasticsearchHelper.class);
-
+    
     /**
      * The nested path of business object definition tags
      */
@@ -149,6 +142,9 @@ public class ElasticsearchHelper
      */
     public static final String TAG_FACET = "tag";
 
+    /**
+     * the result type Facet
+     */
     public static final String RESULT_TYPE_FACET = "resultType";
 
     /**
