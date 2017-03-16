@@ -20,11 +20,11 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.ByteArrayInputStream;
 import java.util.Arrays;
 import java.util.List;
 
 import com.amazonaws.services.s3.model.PutObjectRequest;
-import org.fusesource.hawtbuf.ByteArrayInputStream;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,10 +58,11 @@ public class StoragePolicyProcessorJmsMessageListenerTest extends AbstractServic
 
     @Autowired
     StoragePolicyProcessorJmsMessageListener storagePolicyProcessorJmsMessageListener;
-    
-    
+
+
     @Configuration
-    static class ContextConfiguration {        
+    static class ContextConfiguration
+    {
         @Bean(name = "org.springframework.jms.config.internalJmsListenerEndpointRegistry")
         JmsListenerEndpointRegistry registry()
         {
@@ -76,7 +77,7 @@ public class StoragePolicyProcessorJmsMessageListenerTest extends AbstractServic
             }
 
             return Mockito.mock(JmsListenerEndpointRegistry.class);
-        } 
+        }
     }
 
     @Test
@@ -186,10 +187,10 @@ public class StoragePolicyProcessorJmsMessageListenerTest extends AbstractServic
                 .processMessage(jsonHelper.objectToJson(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION)), null);
         });
     }
-    
+
     @Test
     public void testControlListener()
-   {
+    {
         configurationHelper = Mockito.mock(ConfigurationHelper.class);
 
         ReflectionTestUtils.setField(storagePolicyProcessorJmsMessageListener, "configurationHelper", configurationHelper);
@@ -198,8 +199,9 @@ public class StoragePolicyProcessorJmsMessageListenerTest extends AbstractServic
         //The listener is not enabled
         when(configurationHelper.getProperty(ConfigurationValue.STORAGE_POLICY_PROCESSOR_JMS_LISTENER_ENABLED)).thenReturn("false");
         JmsListenerEndpointRegistry registry = ApplicationContextHolder.getApplicationContext()
-                .getBean("org.springframework.jms.config.internalJmsListenerEndpointRegistry", JmsListenerEndpointRegistry.class);
-        when(registry.getListenerContainer(HerdJmsDestinationResolver.SQS_DESTINATION_STORAGE_POLICY_SELECTOR_JOB_SQS_QUEUE)).thenReturn(mockMessageListenerContainer);
+            .getBean("org.springframework.jms.config.internalJmsListenerEndpointRegistry", JmsListenerEndpointRegistry.class);
+        when(registry.getListenerContainer(HerdJmsDestinationResolver.SQS_DESTINATION_STORAGE_POLICY_SELECTOR_JOB_SQS_QUEUE))
+            .thenReturn(mockMessageListenerContainer);
         //the listener is not running, nothing happened
         when(mockMessageListenerContainer.isRunning()).thenReturn(false);
         storagePolicyProcessorJmsMessageListener.controlStoragePolicyProcessorJmsMessageListener();
@@ -209,13 +211,13 @@ public class StoragePolicyProcessorJmsMessageListenerTest extends AbstractServic
         when(mockMessageListenerContainer.isRunning()).thenReturn(true);
         storagePolicyProcessorJmsMessageListener.controlStoragePolicyProcessorJmsMessageListener();
         verify(mockMessageListenerContainer).stop();
-        
+
         //The listener is enabled
         when(configurationHelper.getProperty(ConfigurationValue.STORAGE_POLICY_PROCESSOR_JMS_LISTENER_ENABLED)).thenReturn("true");
         //the listener is running, should not call the start method
         when(mockMessageListenerContainer.isRunning()).thenReturn(true);
         storagePolicyProcessorJmsMessageListener.controlStoragePolicyProcessorJmsMessageListener();
-        verify(mockMessageListenerContainer, Mockito.times(0)).start();     
+        verify(mockMessageListenerContainer, Mockito.times(0)).start();
         // the listener is not running, but it is enabled, should start        
         when(mockMessageListenerContainer.isRunning()).thenReturn(false);
         storagePolicyProcessorJmsMessageListener.controlStoragePolicyProcessorJmsMessageListener();

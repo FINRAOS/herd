@@ -41,10 +41,6 @@
          -->
          <exclusions>
             <exclusion>
-               <artifactId>oozie-client</artifactId>
-               <groupId>org.apache.oozie</groupId>
-            </exclusion>
-            <exclusion>
                <artifactId>activiti-spring</artifactId>
                <groupId>org.activiti</groupId>
             </exclusion>

@@ -20,12 +20,12 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
+import java.io.ByteArrayInputStream;
 import java.util.Arrays;
 import java.util.List;
 
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import org.apache.commons.collections4.IterableUtils;
-import org.fusesource.hawtbuf.ByteArrayInputStream;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;

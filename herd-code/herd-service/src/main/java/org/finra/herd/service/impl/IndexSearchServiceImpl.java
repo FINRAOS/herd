@@ -27,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import org.finra.herd.dao.IndexSearchDao;
+import org.finra.herd.dao.helper.ElasticsearchHelper;
 import org.finra.herd.model.api.xml.IndexSearchFilter;
 import org.finra.herd.model.api.xml.IndexSearchRequest;
 import org.finra.herd.model.api.xml.IndexSearchResponse;
@@ -35,6 +36,8 @@ import org.finra.herd.model.api.xml.TagKey;
 import org.finra.herd.service.FacetFieldValidationService;
 import org.finra.herd.service.IndexSearchService;
 import org.finra.herd.service.SearchableService;
+import org.finra.herd.service.helper.IndexSearchResultTypeHelper;
+import org.finra.herd.service.helper.TagHelper;
 
 /**
  * IndexSearchServiceImpl is the implementation of the IndexSearchService and includes an indexSearch method that will handle search requests against a search
@@ -61,9 +64,11 @@ public class IndexSearchServiceImpl implements IndexSearchService, SearchableSer
     @Autowired
     private IndexSearchDao indexSearchDao;
 
-    private static final String TAG_FACET_FIELD = "tag";
+    @Autowired
+    private TagHelper tagHelper;
 
-    private static final String RESULT_TYPE_FACET_FIELD = "resultType";
+    @Autowired
+    private IndexSearchResultTypeHelper resultTypeHelper;
 
     @Override
     public IndexSearchResponse indexSearch(final IndexSearchRequest request, final Set<String> fields)
@@ -74,17 +79,21 @@ public class IndexSearchServiceImpl implements IndexSearchService, SearchableSer
         // Validate the search term
         validateIndexSearchRequestSearchTerm(request.getSearchTerm());
 
-        // Validate the index search filters
-        validateIndexSearchFilters(request.getIndexSearchFilters());
+        // Validate the index search filters if specified in the request
+        if (CollectionUtils.isNotEmpty(request.getIndexSearchFilters()))
+        {
+            validateIndexSearchFilters(request.getIndexSearchFilters());
+        }
 
         Set<String> facetFields = new HashSet<>();
         if (CollectionUtils.isNotEmpty(request.getFacetFields()))
         {
             facetFields.addAll(validateFacetFields(new HashSet<>(request.getFacetFields())));
+
+            //set the facets fields after validation
+            request.setFacetFields(new ArrayList<>(facetFields));
         }
 
-        //set the facets fields after validation
-        request.setFacetFields(new ArrayList<>(facetFields));
         return indexSearchDao.indexSearch(request, fields);
     }
 
@@ -140,12 +149,23 @@ public class IndexSearchServiceImpl implements IndexSearchService, SearchableSer
                         // Validate that search keys within the same filter have either index search result type keys or tag keys
                         Assert.isTrue(expectedInstanceType.equals(actualInstanceType),
                             "Index search keys should be a homogeneous list of either index search result type keys or tag keys");
+
+                        // Validate tag key if present
+                        if (null != indexSearchKey.getTagKey())
+                        {
+                            tagHelper.validateTagKey(indexSearchKey.getTagKey());
+                        }
+
+                        // Validate search result type key if present
+                        if (null != indexSearchKey.getIndexSearchResultTypeKey())
+                        {
+                            resultTypeHelper.validateIndexSearchResultTypeKey(indexSearchKey.getIndexSearchResultTypeKey());
+                        }
                     });
                 }
             }
         }
     }
-
 
     @Override
     public Set<String> getValidSearchResponseFields()
@@ -156,6 +176,6 @@ public class IndexSearchServiceImpl implements IndexSearchService, SearchableSer
     @Override
     public Set<String> getValidFacetFields()
     {
-        return ImmutableSet.of(TAG_FACET_FIELD, RESULT_TYPE_FACET_FIELD);
+        return ImmutableSet.of(ElasticsearchHelper.TAG_FACET, ElasticsearchHelper.RESULT_TYPE_FACET);
     }
 }

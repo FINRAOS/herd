@@ -24,8 +24,6 @@ import org.finra.herd.model.api.xml.EmrCluster;
 import org.finra.herd.model.api.xml.EmrClusterCreateRequest;
 import org.finra.herd.model.api.xml.EmrMasterSecurityGroup;
 import org.finra.herd.model.api.xml.EmrMasterSecurityGroupAddRequest;
-import org.finra.herd.model.api.xml.OozieWorkflowJob;
-import org.finra.herd.model.api.xml.RunOozieWorkflowRequest;
 import org.finra.herd.model.dto.EmrClusterAlternateKeyDto;
 
 /**
@@ -36,48 +34,60 @@ import org.finra.herd.model.dto.EmrClusterAlternateKeyDto;
 @Primary
 public class TestEmrServiceImpl extends EmrServiceImpl
 {
-    @Override
-    public EmrCluster getCluster(EmrClusterAlternateKeyDto alternateKey, String emrClusterId, String emrStepId, boolean verbose, boolean retrieveOozieJobs, String accountId)
-        throws Exception
-    {
-        return getClusterImpl(alternateKey, emrClusterId, emrStepId, verbose, retrieveOozieJobs, null);
-    }
-
-    @Override
-    public EmrCluster createCluster(EmrClusterCreateRequest request) throws Exception
-    {
-        return createClusterImpl(request);
-    }
-
-    @Override
-    public Object addStepToCluster(Object request) throws Exception
-    {
-        return addStepToClusterImpl(request);
-    }
-
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Overwrite the base class method to change transactional attributes.
+     */
     @Override
     public EmrMasterSecurityGroup addSecurityGroupsToClusterMaster(EmrMasterSecurityGroupAddRequest request) throws Exception
     {
         return addSecurityGroupsToClusterMasterImpl(request);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Overwrite the base class method to change transactional attributes.
+     */
     @Override
-    public OozieWorkflowJob runOozieWorkflow(RunOozieWorkflowRequest request) throws Exception
+    public Object addStepToCluster(Object request) throws Exception
     {
-        return runOozieWorkflowImpl(request);
+        return addStepToClusterImpl(request);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Overwrite the base class method to change transactional attributes.
+     */
     @Override
-    public EmrCluster terminateCluster(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, boolean overrideTerminationProtection, String emrClusterId, String accountId)
+    public EmrCluster createCluster(EmrClusterCreateRequest request) throws Exception
+    {
+        return createClusterImpl(request);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Overwrite the base class method to change transactional attributes.
+     */
+    @Override
+    public EmrCluster getCluster(EmrClusterAlternateKeyDto alternateKey, String emrClusterId, String emrStepId, boolean verbose, String accountId)
         throws Exception
     {
-        return terminateClusterImpl(emrClusterAlternateKeyDto, overrideTerminationProtection, emrClusterId, null);
+        return getClusterImpl(alternateKey, emrClusterId, emrStepId, verbose, null);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Overwrite the base class method to change transactional attributes.
+     */
     @Override
-    public OozieWorkflowJob getEmrOozieWorkflowJob(String namespace, String emrClusterDefinitionName, String emrClusterName, String oozieWorkflowJobId,
-        Boolean verbose, String emrClusterId, String accountId) throws Exception
+    public EmrCluster terminateCluster(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, boolean overrideTerminationProtection, String emrClusterId,
+        String accountId) throws Exception
     {
-        return getEmrOozieWorkflowJobImpl(namespace, emrClusterDefinitionName, emrClusterName, oozieWorkflowJobId, verbose, emrClusterId, null);
+        return terminateClusterImpl(emrClusterAlternateKeyDto, overrideTerminationProtection, emrClusterId, null);
     }
 }

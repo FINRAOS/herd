@@ -23,12 +23,17 @@ import java.util.Set;
 import org.apache.commons.collections4.CollectionUtils;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.ConstantScoreQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.nested.Nested;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.springframework.stereotype.Component;
 
 import org.finra.herd.model.api.xml.Facet;
+import org.finra.herd.model.api.xml.IndexSearchFilter;
+import org.finra.herd.model.api.xml.IndexSearchKey;
 import org.finra.herd.model.dto.ElasticsearchResponseDto;
 import org.finra.herd.model.dto.ResultTypeIndexSearchResponseDto;
 import org.finra.herd.model.dto.TagIndexSearchResponseDto;
@@ -86,7 +91,7 @@ public class ElasticsearchHelper
      * Raw field for the namespace code
      */
     public static final String NAMESPACE_CODE_SORT_FIELD = "namespace.code.keyword";
-    
+
     /**
      * The nested path of business object definition tags
      */
@@ -145,7 +150,7 @@ public class ElasticsearchHelper
     /**
      * the result type Facet
      */
-    public static final String RESULT_TYPE_FACET = "resultType";
+    public static final String RESULT_TYPE_FACET = "resulttype";
 
     /**
      * The user defined agg name for tag type facet.
@@ -183,13 +188,25 @@ public class ElasticsearchHelper
     public static final String BDEF_NAME_FIELD = "name.keyword";
 
     /**
-     * add facet field aggregations
-     * @param facetFieldsList  facet field list
+     * business object definition result type
+     */
+    public static final String BUS_OBJCT_DFNTN_RESULT_TYPE = "bdef";
+
+    /**
+     * tag result type
+     */
+    public static final String TAG_RESULT_TYPE = "tag";
+
+
+    /**
+     * Adds facet field aggregations
+     *
+     * @param facetFieldsList facet field list
      * @param searchRequestBuilder search request builder
      */
     public void addFacetFieldAggregations(Set<String> facetFieldsList, SearchRequestBuilder searchRequestBuilder)
     {
-        if (!CollectionUtils.isEmpty(facetFieldsList))
+        if (CollectionUtils.isNotEmpty(facetFieldsList))
         {
             if (facetFieldsList.contains(TAG_FACET))
             {
@@ -211,14 +228,55 @@ public class ElasticsearchHelper
     }
 
     /**
-     * create result type facet response dto
+     * Navigates the specified index search filters and adds boolean filter clauses to a given {@link SearchRequestBuilder}
+     *
+     * @param indexSearchFilters the specified index search filters
+     */
+    public void addIndexSearchFilterBooleanClause(List<IndexSearchFilter> indexSearchFilters, BoolQueryBuilder queryBuilder)
+    {
+        for (IndexSearchFilter indexSearchFilter : indexSearchFilters)
+        {
+            BoolQueryBuilder indexSearchFilterClauseBuilder = new BoolQueryBuilder();
+
+            for (IndexSearchKey indexSearchKey : indexSearchFilter.getIndexSearchKeys())
+            {
+                if (null != indexSearchKey.getTagKey())
+                {
+                    // Add constant-score term queries for tagType-code and tag-code from the tag-key.
+                    ConstantScoreQueryBuilder searchKeyQueryBuilder = QueryBuilders.constantScoreQuery(
+                        QueryBuilders.boolQuery().must(QueryBuilders.termQuery(TAGTYPE_CODE_FIELD, indexSearchKey.getTagKey().getTagTypeCode()))
+                            .must(QueryBuilders.termQuery(TAG_CODE_FIELD, indexSearchKey.getTagKey().getTagCode())));
+
+                    // Individual index search keys are OR-ed
+                    indexSearchFilterClauseBuilder.should(searchKeyQueryBuilder);
+                }
+                if (null != indexSearchKey.getIndexSearchResultTypeKey())
+                {
+                    // Add constant-score term queries for tagType-code and tag-code from the tag-key.
+                    ConstantScoreQueryBuilder searchKeyQueryBuilder = QueryBuilders.constantScoreQuery(QueryBuilders.boolQuery().must(
+                        QueryBuilders.termQuery(RESULT_TYPE_FIELD, indexSearchKey.getIndexSearchResultTypeKey().getIndexSearchResultType().toLowerCase())));
+
+                    // Individual index search keys are OR-ed
+                    indexSearchFilterClauseBuilder.should(searchKeyQueryBuilder);
+                }
+            }
+
+            // Individual search filters are AND-ed
+            queryBuilder.must(indexSearchFilterClauseBuilder);
+        }
+    }
+
+    /**
+     * Creates result type facet response dto
+     *
      * @param searchResponse search response
+     *
      * @return result type facet response dto list
      */
     public List<ResultTypeIndexSearchResponseDto> getResultTypeIndexSearchResponseDto(SearchResponse searchResponse)
     {
         List<ResultTypeIndexSearchResponseDto> list = new ArrayList<>();
-        Terms aggregation = searchResponse.getAggregations().get(TAG_FACET_AGGS);
+        Terms aggregation = searchResponse.getAggregations().get(RESULT_TYPE_AGGS);
 
         for (Terms.Bucket resultTypeEntry : aggregation.getBuckets())
         {
@@ -234,7 +292,9 @@ public class ElasticsearchHelper
 
     /**
      * create tag tag index response dto
+     *
      * @param searchResponse search response
+     *
      * @return tag type index search response dto list
      */
     public List<TagTypeIndexSearchResponseDto> getTagTagIndexSearchResponseDto(SearchResponse searchResponse)
@@ -281,7 +341,9 @@ public class ElasticsearchHelper
 
     /**
      * get the facets in the response
+     *
      * @param elasticsearchResponseDto elastic search response dto
+     *
      * @return facets in the response dto
      */
     public List<Facet> getFacetsReponse(ElasticsearchResponseDto elasticsearchResponseDto)
@@ -320,12 +382,12 @@ public class ElasticsearchHelper
             for (ResultTypeIndexSearchResponseDto resultTypeIndexSearchResponseDto : elasticsearchResponseDto.getResultTypeIndexSearchResponseDtos())
             {
                 Facet resultTypeFacet = new Facet(resultTypeIndexSearchResponseDto.getResultTypeDisplayName(), resultTypeIndexSearchResponseDto.getCount(),
-                    TagIndexSearchResponseDto.getFacetType(), resultTypeIndexSearchResponseDto.getResultTypeCode(), null);
+                    ResultTypeIndexSearchResponseDto.getFacetType(), resultTypeIndexSearchResponseDto.getResultTypeCode(), null);
                 resultTypeFacets.add(resultTypeFacet);
             }
             facets.addAll(resultTypeFacets);
         }
-        
+
         return facets;
     }
 }

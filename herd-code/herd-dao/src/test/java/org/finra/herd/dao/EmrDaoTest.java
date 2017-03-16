@@ -29,10 +29,8 @@ import static org.mockito.Mockito.when;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.services.elasticmapreduce.AmazonElasticMapReduceClient;
@@ -552,88 +550,6 @@ public class EmrDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void createEmrClusterAssertAdditionalSecurityGroup() throws Exception
-    {
-        Map<String, Object> overrideMap = new HashMap<>();
-        overrideMap.put(ConfigurationValue.EMR_HERD_SUPPORT_SECURITY_GROUP.getKey(), "EMR_HERD_SUPPORT_SECURITY_GROUP");
-        modifyPropertySourceInEnvironment(overrideMap);
-        try
-        {
-            /*
-             * Use only minimum required options
-             */
-            String clusterName = "clusterName";
-            EmrClusterDefinition emrClusterDefinition = new EmrClusterDefinition();
-            InstanceDefinitions instanceDefinitions = new InstanceDefinitions();
-            instanceDefinitions.setMasterInstances(new MasterInstanceDefinition(10, "masterInstanceType", null, null, null));
-            instanceDefinitions.setCoreInstances(new InstanceDefinition(20, "coreInstanceType", null, null, null));
-            emrClusterDefinition.setInstanceDefinitions(instanceDefinitions);
-            emrClusterDefinition.setNodeTags(Arrays.asList(new NodeTag("tagName", "tagValue")));
-
-            String clusterId = "clusterId";
-
-            when(mockEmrOperations.runEmrJobFlow(any(), any())).then(new Answer<String>()
-            {
-                @Override
-                public String answer(InvocationOnMock invocation) throws Throwable
-                {
-                    RunJobFlowRequest runJobFlowRequest = invocation.getArgumentAt(1, RunJobFlowRequest.class);
-                    assertEquals(Arrays.asList("EMR_HERD_SUPPORT_SECURITY_GROUP"), runJobFlowRequest.getInstances().getAdditionalMasterSecurityGroups());
-                    return clusterId;
-                }
-            });
-
-            assertEquals(clusterId, emrDao.createEmrCluster(clusterName, emrClusterDefinition, new AwsParamsDto()));
-        }
-        finally
-        {
-            restorePropertySourceInEnvironment();
-        }
-    }
-
-    @Test
-    public void createEmrClusterAssertAdditionalSecurityGroupWhenListIsNotNull() throws Exception
-    {
-        Map<String, Object> overrideMap = new HashMap<>();
-        overrideMap.put(ConfigurationValue.EMR_HERD_SUPPORT_SECURITY_GROUP.getKey(), "EMR_HERD_SUPPORT_SECURITY_GROUP");
-        modifyPropertySourceInEnvironment(overrideMap);
-        try
-        {
-            /*
-             * Use only minimum required options
-             */
-            String clusterName = "clusterName";
-            EmrClusterDefinition emrClusterDefinition = new EmrClusterDefinition();
-            InstanceDefinitions instanceDefinitions = new InstanceDefinitions();
-            instanceDefinitions.setMasterInstances(new MasterInstanceDefinition(10, "masterInstanceType", null, null, null));
-            instanceDefinitions.setCoreInstances(new InstanceDefinition(20, "coreInstanceType", null, null, null));
-            emrClusterDefinition.setInstanceDefinitions(instanceDefinitions);
-            emrClusterDefinition.setNodeTags(Arrays.asList(new NodeTag("tagName", "tagValue")));
-            emrClusterDefinition.setAdditionalMasterSecurityGroups(new ArrayList<>(Arrays.asList("additionalMasterSecurityGroup")));
-
-            String clusterId = "clusterId";
-
-            when(mockEmrOperations.runEmrJobFlow(any(), any())).then(new Answer<String>()
-            {
-                @Override
-                public String answer(InvocationOnMock invocation) throws Throwable
-                {
-                    RunJobFlowRequest runJobFlowRequest = invocation.getArgumentAt(1, RunJobFlowRequest.class);
-                    assertEquals(Arrays.asList("additionalMasterSecurityGroup", "EMR_HERD_SUPPORT_SECURITY_GROUP"),
-                        runJobFlowRequest.getInstances().getAdditionalMasterSecurityGroups());
-                    return clusterId;
-                }
-            });
-
-            assertEquals(clusterId, emrDao.createEmrCluster(clusterName, emrClusterDefinition, new AwsParamsDto()));
-        }
-        finally
-        {
-            restorePropertySourceInEnvironment();
-        }
-    }
-
-    @Test
     public void createEmrClusterAssertEncryptionDisabled() throws Exception
     {
         /*
@@ -1025,18 +941,5 @@ public class EmrDaoTest extends AbstractDaoTest
         ClientConfiguration clientConfiguration = (ClientConfiguration) ReflectionTestUtils.getField(amazonElasticMapReduceClient, "clientConfiguration");
         assertNotNull(clientConfiguration);
         assertNull(clientConfiguration.getProxyHost());
-    }
-
-    private boolean isUuid(String string)
-    {
-        try
-        {
-            UUID.fromString(string);
-            return true;
-        }
-        catch (IllegalArgumentException e)
-        {
-            return false;
-        }
     }
 }
