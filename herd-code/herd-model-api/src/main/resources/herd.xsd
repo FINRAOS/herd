@@ -6411,9 +6411,72 @@
                <xs:documentation>The search term upon which to search</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="indexSearchFilters" type="indexSearchFilters" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A list of index search filters. Multiple filters are supported which are AND-ed</xs:documentation>
+            </xs:annotation>
+         </xs:element>
          <xs:element name="facetFields" type="facetFields" minOccurs="0">
             <xs:annotation>
                <xs:documentation>A list of Facet Fields to be included with the response. Only Tag facet information is supported</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="indexSearchFilters">
+      <xs:sequence>
+         <xs:element name="indexSearchFilter" type="indexSearchFilter" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>An index search filter</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="indexSearchFilter">
+      <xs:all>
+         <xs:element name="indexSearchKeys" type="indexSearchKeys">
+            <xs:annotation>
+               <xs:documentation>A list of index search keys. Multiple search keys are supported which are OR-ed</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="indexSearchKeys">
+      <xs:sequence>
+         <xs:element name="indexSearchKey" type="indexSearchKey" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>An index search key. Only one of tagKey or indexSearchResultKey is allowed</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="indexSearchKey">
+      <xs:all>
+         <xs:element name="tagKey" type="tagKey" minOccurs="0" maxOccurs="1">
+            <xs:annotation>
+               <xs:documentation>An optional tag key. Only one is allowed</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="indexSearchResultTypeKey" type="indexSearchResultTypeKey" minOccurs="0" maxOccurs="1">
+            <xs:annotation>
+               <xs:documentation>An optional index search result type key. Only one is allowed
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="indexSearchResultTypeKey" type="indexSearchResultTypeKey"/>
+   <xs:complexType name="indexSearchResultTypeKey">
+      <xs:all>
+         <xs:element name="indexSearchResultType" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>The index from which search results are fetched. Currently 'bdef' and 'tag' are supported. Only one is allowed
+               </xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>

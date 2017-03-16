@@ -75,7 +75,7 @@ public class IndexSearchRestControllerTest extends AbstractRestTest
     public void testIndexSearch()
     {
         // Create index search request
-        final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM, null);
+        final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM, null, null);
 
         // Create a new fields set that will be used when testing the index search method
         final Set<String> fields = Sets.newHashSet(FIELD_DISPLAY_NAME, FIELD_SHORT_DESCRIPTION);
