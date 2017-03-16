@@ -59,7 +59,7 @@ public class IndexSearchServiceImpl implements IndexSearchService, SearchableSer
 
     private static final String TAG_FACET_FIELD = "tag";
 
-    private static final String ResultType_FACET_FIELD = "resultType";
+    private static final String RESULT_TYPE_FACET_FIELD = "resultType";
 
     @Override
     public IndexSearchResponse indexSearch(final IndexSearchRequest request, final Set<String> fields)
@@ -106,6 +106,6 @@ public class IndexSearchServiceImpl implements IndexSearchService, SearchableSer
     @Override
     public Set<String> getValidFacetFields()
     {
-        return ImmutableSet.of(TAG_FACET_FIELD, ResultType_FACET_FIELD);
+        return ImmutableSet.of(TAG_FACET_FIELD, RESULT_TYPE_FACET_FIELD);
     }
 }
