@@ -26,7 +26,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -88,7 +87,6 @@ public class IndexSearchDaoTest extends AbstractDaoTest
 
     @Mock
     private ElasticsearchHelper elasticsearchHelper = new ElasticsearchHelper();
-
 
     @Before
     public void before()
@@ -201,15 +199,14 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         // Create index search request
         final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM, searchFilters, facetList);
 
-        List<TagTypeIndexSearchResponseDto> tagTypeIndexSearchResponseDtos = Arrays.asList(new TagTypeIndexSearchResponseDto("code", 1, new ArrayList<TagIndexSearchResponseDto>()));
-        List<ResultTypeIndexSearchResponseDto> resultTypeIndexSearchResponseDto = Arrays.asList(new ResultTypeIndexSearchResponseDto("type", 1, null));
-        ElasticsearchResponseDto elasticsearchResponseDto = new ElasticsearchResponseDto();
-        elasticsearchResponseDto.setResultTypeIndexSearchResponseDtos(resultTypeIndexSearchResponseDto);
-        elasticsearchResponseDto.setTagTypeIndexSearchResponseDtos(tagTypeIndexSearchResponseDtos);
+        List<TagTypeIndexSearchResponseDto> tagTypeIndexSearchResponseDtos =
+            Arrays.asList(new TagTypeIndexSearchResponseDto("code", 1, Arrays.asList(new TagIndexSearchResponseDto("tag1", 1))));
+        List<ResultTypeIndexSearchResponseDto> resultTypeIndexSearchResponseDto =
+            Arrays.asList(new ResultTypeIndexSearchResponseDto("type", 1, null));
 
         when(elasticsearchHelper.getTagTagIndexSearchResponseDto(searchResponse)).thenReturn(tagTypeIndexSearchResponseDtos);
         when(elasticsearchHelper.getResultTypeIndexSearchResponseDto(searchResponse)).thenReturn(resultTypeIndexSearchResponseDto);
-        when(elasticsearchHelper.getFacetsReponse(elasticsearchResponseDto, new Boolean(true))).thenCallRealMethod();
+        when(elasticsearchHelper.getFacetsReponse(any(ElasticsearchResponseDto.class), any(Boolean.class))).thenCallRealMethod();
 
         // Call the method under test
         IndexSearchResponse indexSearchResponse = indexSearchDao.indexSearch(indexSearchRequest, fields);
@@ -229,6 +226,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         {
             facetSize++;
         }
+        assertThat(indexSearchResponse.getFacets() != null ? indexSearchResponse.getFacets().size() : 0, is(facetSize));
 
         // Verify the calls to external methods
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.TAG_SHORT_DESCRIPTION_LENGTH, Integer.class);

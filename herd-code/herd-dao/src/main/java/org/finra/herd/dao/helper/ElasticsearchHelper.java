@@ -379,7 +379,7 @@ public class ElasticsearchHelper
                 //add one to the count, as the tag itself need to be counted, and all its children
                 if (includingTagInCount)
                 {
-                    facetCount = facetCount + 1 + tagFacets.size();
+                    facetCount = facetCount + 1 + tagTypeIndexSearchResponseDto.getTagIndexSearchResponseDtos().size();
                 }
 
                 tagTypeFacets.add(new Facet(tagTypeIndexSearchResponseDto.getDisplayName(), facetCount,
