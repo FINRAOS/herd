@@ -883,8 +883,9 @@ public class BusinessObjectDataFinalizeRestoreHelperServiceTest extends Abstract
             }
 
             // Put an S3 file under the origin S3 key prefix in the origin S3 bucket.
-            s3Operations.putObject(new PutObjectRequest(S3_BUCKET_NAME_ORIGIN, TEST_S3_KEY_PREFIX + "/" + LOCAL_FILE,
-                new org.fusesource.hawtbuf.ByteArrayInputStream(new byte[(int) FILE_SIZE_1_KB]), null), null);
+            s3Operations.putObject(
+                new PutObjectRequest(S3_BUCKET_NAME_ORIGIN, TEST_S3_KEY_PREFIX + "/" + LOCAL_FILE, new ByteArrayInputStream(new byte[(int) FILE_SIZE_1_KB]),
+                    null), null);
 
             // Try to execute S3 specific steps to finalize a restore when origin S3 key prefix is not empty.
             try

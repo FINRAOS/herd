@@ -117,8 +117,6 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String ACTIVITI_XML_CHECK_CLUSTER_WITH_CLASSPATH = "classpath:org/finra/herd/service/activitiWorkflowCheckEmrCluster.bpmn20.xml";
 
-    public static final String ACTIVITI_XML_CHECK_OOZIE_WORKFLOW_WITH_CLASSPATH = "classpath:org/finra/herd/service/activitiWorkflowCheckOozieJob.bpmn20.xml";
-
     public static final String ACTIVITI_XML_CREATE_CLUSTER_WITH_CLASSPATH = "classpath:org/finra/herd/service/activitiWorkflowCreateEmrCluster.bpmn20.xml";
 
     public static final String ACTIVITI_XML_HERD_INTERMEDIATE_TIMER_WITH_CLASSPATH =
@@ -139,8 +137,6 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final String ACTIVITI_XML_LOG_VARIABLES_WITH_CLASSPATH = "classpath:org/finra/herd/service/activitiWorkflowLogVariables.bpmn20.xml";
 
     public static final String ACTIVITI_XML_LOG_VARIABLES_WITH_CLASSPATH_DM = "classpath:org/finra/herd/service/activitiWorkflowLogVariablesDm.bpmn20.xml";
-
-    public static final String ACTIVITI_XML_RUN_OOZIE_WORKFLOW_WITH_CLASSPATH = "classpath:org/finra/herd/service/activitiWorkflowRunOozieJob.bpmn20.xml";
 
     public static final String ACTIVITI_XML_TERMINATE_CLUSTER_WITH_CLASSPATH =
         "classpath:org/finra/herd/service/activitiWorkflowTerminateEmrCluster.bpmn20.xml";

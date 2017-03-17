@@ -266,46 +266,6 @@ public enum ConfigurationValue
     EMR_CONDITIONAL_SCRIPT("emr.aws.node.conditional.script", "s3://elasticmapreduce/bootstrap-actions/run-if"),
 
     /**
-     * Bootstrapping script for Oozie Installation. This is required so there is no default.
-     */
-    EMR_OOZIE_SCRIPT("emr.oozie.script", null),
-
-    /**
-     * Bootstrapping script for running oozie commands. This is required so there is no default.
-     */
-    EMR_OOZIE_RUN_SCRIPT("emr.oozie.run.script", null),
-
-    /**
-     * The folder on S3 where the herd wrapper workflow is. This is required so there is no default.
-     */
-    EMR_OOZIE_HERD_WRAPPER_WORKFLOW_S3_LOCATION("emr.oozie.herd.wrapper.workflow.s3.location", null),
-
-    /**
-     * The folder on HDFS where the herd wrapper workflow is copied to.
-     */
-    EMR_OOZIE_HERD_WRAPPER_WORKFLOW_HDFS_LOCATION("emr.oozie.herd.wrapper.workflow.hdfs.location", "/user/hadoop/datamgmt/oozie_wrapper/"),
-
-    /**
-     * S3 to HDFS copy script. This is required so there is no default.
-     */
-    EMR_S3_HDFS_COPY_SCRIPT("emr.s3.hdfs.copy.script", null),
-
-    /**
-     * The oozie url template.
-     */
-    EMR_OOZIE_URL_TEMPLATE("emr.oozie.url.template", "http://%s:11000/oozie/"),
-
-    /**
-     * The number of oozie jobs to return with EMR cluster status.
-     */
-    EMR_OOZIE_JOBS_TO_INCLUDE_IN_CLUSTER_STATUS("emr.oozie.jobs.to.include.in.cluster.status", 100),
-
-    /**
-     * The herd EMR support security group.
-     */
-    EMR_HERD_SUPPORT_SECURITY_GROUP("emr.herd.support.security.group", null),
-
-    /**
      * Bootstrapping script for daemon configuration. The default value is the path to the EMR configure daemons script.
      */
     EMR_CONFIGURE_DAEMON("emr.aws.configure.daemon", "s3://elasticmapreduce/bootstrap-actions/configure-daemons"),
@@ -334,11 +294,6 @@ public enum ConfigurationValue
      * The maximum number of instances allowed in EMR cluster. The default is 0 (i.e. no maximum).
      */
     MAX_EMR_INSTANCES_COUNT("max.emr.instance.count", 0),
-
-    /**
-     * Tar file for the installation of Oozie. This is required so there is no default.
-     */
-    EMR_OOZIE_TAR_FILE("emr.oozie.tar", null),
 
     /**
      * The mandatory AWS tags for instances. This is required so there is no default.
@@ -776,10 +731,10 @@ public enum ConfigurationValue
      */
     TAG_SHORT_DESCRIPTION_LENGTH("tag.short.description.max.length", 300);
 
+    private Object defaultValue;
+
     // Properties
     private String key;
-
-    private Object defaultValue;
 
     private ConfigurationValue(String key, Object defaultValue)
     {
@@ -787,13 +742,13 @@ public enum ConfigurationValue
         this.defaultValue = defaultValue;
     }
 
-    public String getKey()
-    {
-        return key;
-    }
-
     public Object getDefaultValue()
     {
         return defaultValue;
+    }
+
+    public String getKey()
+    {
+        return key;
     }
 }

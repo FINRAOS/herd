@@ -19,16 +19,13 @@ import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -41,7 +38,6 @@ import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.dao.IndexSearchDao;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
-import org.finra.herd.model.api.xml.Facet;
 import org.finra.herd.model.api.xml.IndexSearchRequest;
 import org.finra.herd.model.api.xml.IndexSearchResponse;
 import org.finra.herd.model.api.xml.IndexSearchResult;
@@ -77,15 +73,10 @@ public class IndexSearchServiceTest extends AbstractServiceTest
     }
 
     @Test
-    public void testIndexSearchNoFacets()
-    {
-        testIndexSearch(null);
-    }
-
-    public void testIndexSearch(List<String> facetFields)
+    public void testIndexSearch()
     {
         // Create index search request
-        final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM, facetFields);
+        final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM, null, null);
 
         // Create a new fields set that will be used when testing the index search method
         final Set<String> fields = Sets.newHashSet(FIELD_DISPLAY_NAME, FIELD_SHORT_DESCRIPTION);
@@ -109,15 +100,8 @@ public class IndexSearchServiceTest extends AbstractServiceTest
         indexSearchResults.add(indexSearchResultBusinessObjectDefinition);
         indexSearchResults.add(indexSearchResultTag);
 
-        List<Facet> facets = new ArrayList<>();
-        if (facetFields != null)
-        {
-            facets.add(new Facet("facet1", new Long(1), "type 1", "id", null));
-            facets.add(new Facet("facet2", new Long(2), "type 2", "id2", null));
-        }
-
         // Construct an index search response
-        final IndexSearchResponse indexSearchResponse = new IndexSearchResponse(TOTAL_INDEX_SEARCH_RESULTS, indexSearchResults, facets);
+        final IndexSearchResponse indexSearchResponse = new IndexSearchResponse(TOTAL_INDEX_SEARCH_RESULTS, indexSearchResults, null);
 
         // Mock the call to the index search service
         when(indexSearchDao.indexSearch(indexSearchRequest, fields)).thenReturn(indexSearchResponse);
@@ -133,34 +117,5 @@ public class IndexSearchServiceTest extends AbstractServiceTest
         assertThat("Index search response was null.", indexSearchResponseFromService, not(nullValue()));
         assertThat("Index search response was not correct.", indexSearchResponseFromService, is(indexSearchResponse));
         assertThat("Index search response was not an instance of IndexSearchResponse.class.", indexSearchResponse, instanceOf(IndexSearchResponse.class));
-    }
-
-    @Test
-    public void testIndexSearchWithFacet()
-    {
-        List<String> facetFields = Arrays.asList("ResultType", "Tag");
-        testIndexSearch(facetFields);
-    }
-
-    @Test
-    public void testIndexSearchWithInvalidFacets()
-    {
-        String inCorrectFacetField = "resultTypeee";
-        // Create index search request
-        final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM, Arrays.asList(inCorrectFacetField));
-        // Create a new fields set that will be used when testing the index search method
-        final Set<String> fields = Sets.newHashSet(FIELD_DISPLAY_NAME, FIELD_SHORT_DESCRIPTION);
-
-        try
-        {
-            indexSearchService.indexSearch(indexSearchRequest, fields);
-            fail("should throw exception.");
-        }
-        catch (IllegalArgumentException ex)
-        {
-            String expectedMessage =  String.format("Facet field \"%s\" is not supported.", inCorrectFacetField.toLowerCase());
-            assertEquals(ex.getMessage(), expectedMessage);
-        }
-
     }
 }

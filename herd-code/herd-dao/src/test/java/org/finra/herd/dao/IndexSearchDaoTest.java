@@ -28,6 +28,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -55,6 +56,7 @@ import org.mockito.internal.progress.ThreadSafeMockingProgress;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.helper.ElasticsearchHelper;
 import org.finra.herd.dao.impl.IndexSearchDaoImpl;
+import org.finra.herd.model.api.xml.IndexSearchFilter;
 import org.finra.herd.model.api.xml.IndexSearchRequest;
 import org.finra.herd.model.api.xml.IndexSearchResponse;
 import org.finra.herd.model.api.xml.IndexSearchResult;
@@ -85,7 +87,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
 
     @Mock
     private ElasticsearchHelper elasticsearchHelper = new ElasticsearchHelper();
-    
+
 
     @Before
     public void before()
@@ -101,7 +103,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
     {
         // Create a new fields set that will be used when testing the index search method
         final Set<String> fields = Sets.newHashSet(DISPLAY_NAME_FIELD, SHORT_DESCRIPTION_FIELD);
-        testIndexSearch(fields, null);
+        testIndexSearch(fields, null, null);
     }
 
     @Test
@@ -109,7 +111,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
     {
         // Create a new fields set that will be used when testing the index search method
         final Set<String> fields = new HashSet<>();
-        testIndexSearch(fields, null);
+        testIndexSearch(fields, null, null);
     }
 
     @Test
@@ -118,7 +120,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         // Create a new fields set that will be used when testing the index search method
         final Set<String> fields = new HashSet<>();
         //tag and result set facet
-        testIndexSearch(fields, Arrays.asList(ElasticsearchHelper.RESULT_TYPE_FACET, ElasticsearchHelper.TAG_FACET));
+        testIndexSearch(fields, null, Arrays.asList(ElasticsearchHelper.RESULT_TYPE_FACET, ElasticsearchHelper.TAG_FACET));
     }
 
     @Test
@@ -126,9 +128,9 @@ public class IndexSearchDaoTest extends AbstractDaoTest
     {
         // Create a new fields set that will be used when testing the index search method
         final Set<String> fields = new HashSet<>();
-       
+
         //tag facet only
-        testIndexSearch(fields, Arrays.asList(ElasticsearchHelper.TAG_FACET));
+        testIndexSearch(fields, null, Collections.singletonList(ElasticsearchHelper.TAG_FACET));
     }
 
     @Test
@@ -138,10 +140,10 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         final Set<String> fields = new HashSet<>();
 
         //result type facet only
-        testIndexSearch(fields, Arrays.asList(ElasticsearchHelper.RESULT_TYPE_FACET));
+        testIndexSearch(fields, null, Collections.singletonList(ElasticsearchHelper.RESULT_TYPE_FACET));
     }
 
-    private void testIndexSearch(Set<String> fields, List<String> facetList)
+    private void testIndexSearch(Set<String> fields, List<IndexSearchFilter> searchFilters, List<String> facetList)
     {
         // Build the mocks
         SearchRequestBuilder searchRequestBuilder = mock(SearchRequestBuilder.class);
@@ -196,14 +198,14 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         when(searchHits.getTotalHits()).thenReturn(200L);
 
         // Create index search request
-        final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM, facetList);
+        final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM, searchFilters, facetList);
 
         List<TagTypeIndexSearchResponseDto> tagTypeIndexSearchResponseDtos = Arrays.asList(new TagTypeIndexSearchResponseDto("code", 1, new ArrayList<TagIndexSearchResponseDto>()));
         List<ResultTypeIndexSearchResponseDto> ResultTypeIndexSearchResponseDto = Arrays.asList(new ResultTypeIndexSearchResponseDto("type", 1, null));
 
         when(elasticsearchHelper.getTagTagIndexSearchResponseDto(searchResponse)).thenReturn(tagTypeIndexSearchResponseDtos);
         when(elasticsearchHelper.getResultTypeIndexSearchResponseDto(searchResponse)).thenReturn(ResultTypeIndexSearchResponseDto);
-        when(elasticsearchHelper.getFacetsReponse(any())).thenCallRealMethod();
+        when(elasticsearchHelper.getFacetsReponse(any(), any())).thenCallRealMethod();
 
 
         // Call the method under test
@@ -215,7 +217,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         assertThat(indexSearchResponse.getTotalIndexSearchResults(), is(200L));
 
         int facetSize = 0;
-        
+
         if (facetList != null && facetList.contains(ElasticsearchHelper.RESULT_TYPE_FACET))
         {
             facetSize++;

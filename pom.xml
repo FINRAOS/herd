@@ -72,7 +72,7 @@
       <maven.plugin.annotations.version>3.4</maven.plugin.annotations.version>
       <migbase64.version>2.2</migbase64.version>
       <oracle.driver.version>11.2.0.2.0</oracle.driver.version>
-      <oozie.version>4.2.0</oozie.version>
+      <google.guava.version>21.0</google.guava.version>
       <plexus.utils.version>3.0.22</plexus.utils.version>
       <postgresql.driver.version>9.4-1206-jdbc42</postgresql.driver.version>
       <quartz.scheduler.version>2.2.2</quartz.scheduler.version>
@@ -761,21 +761,11 @@
             <version>${quartz.scheduler.version}</version>
          </dependency>
 
-         <!-- Oozie client -->
+         <!-- Guava: Google Core Libraries for Java -->
          <dependency>
-            <groupId>org.apache.oozie</groupId>
-            <artifactId>oozie-client</artifactId>
-            <version>${oozie.version}</version>
-            <exclusions>
-               <exclusion>
-                  <groupId>com.google.code.findbugs</groupId>
-                  <artifactId>jsr305</artifactId>
-               </exclusion>
-               <exclusion>
-                  <groupId>org.codehaus.jackson</groupId>
-                  <artifactId>jackson-core-asl</artifactId>
-               </exclusion>
-            </exclusions>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>${google.guava.version}</version>
          </dependency>
 
          <!-- Activiti Dependencies -->

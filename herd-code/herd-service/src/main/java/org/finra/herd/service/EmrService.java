@@ -19,8 +19,6 @@ import org.finra.herd.model.api.xml.EmrCluster;
 import org.finra.herd.model.api.xml.EmrClusterCreateRequest;
 import org.finra.herd.model.api.xml.EmrMasterSecurityGroup;
 import org.finra.herd.model.api.xml.EmrMasterSecurityGroupAddRequest;
-import org.finra.herd.model.api.xml.OozieWorkflowJob;
-import org.finra.herd.model.api.xml.RunOozieWorkflowRequest;
 import org.finra.herd.model.dto.EmrClusterAlternateKeyDto;
 
 /**
@@ -28,34 +26,65 @@ import org.finra.herd.model.dto.EmrClusterAlternateKeyDto;
  */
 public interface EmrService
 {
-    public EmrCluster getCluster(EmrClusterAlternateKeyDto alternateKey, String emrClusterId, String emrStepId, boolean verbose, boolean retrieveOozieJobs,
-        String accountId) throws Exception;
-
-    public EmrCluster createCluster(EmrClusterCreateRequest request) throws Exception;
-
-    public EmrCluster terminateCluster(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, boolean overrideTerminationProtection, String emrClusterId,
-        String accountId) throws Exception;
-
-    public Object addStepToCluster(Object emrStepAddRequest) throws Exception;
-
-    public EmrMasterSecurityGroup addSecurityGroupsToClusterMaster(EmrMasterSecurityGroupAddRequest emrMasterSecurityGroupAddRequest) throws Exception;
-
-    public OozieWorkflowJob runOozieWorkflow(RunOozieWorkflowRequest request) throws Exception;
+    /**
+     * Adds security groups to the master node of an existing EMR Cluster.
+     *
+     * @param request the EMR master security group add request
+     *
+     * @return the added EMR master security groups
+     * @throws Exception if there were any errors adding the security groups to the cluster master
+     */
+    public EmrMasterSecurityGroup addSecurityGroupsToClusterMaster(EmrMasterSecurityGroupAddRequest request) throws Exception;
 
     /**
-     * Retrieves an EMR cluster's oozie job by its ID. The EMR cluster must have been created through herd for the retrieval to be successful.
-     * A verbose flag may be set to true to retrieve action details of the workflow.
-     * 
-     * @param namespace EMR cluster namespace
-     * @param emrClusterDefinitionName EMR cluster definition name
-     * @param emrClusterName EMR cluster name
-     * @param oozieWorkflowJobId Oozie workflow job ID
-     * @param verbose true to retrieve more details, false otherwise. Defaults to false.
-     * @param emrClusterId The EMR cluster ID
-     * @param accountId account Id
-     * @return Oozie workflow details
-     * @throws Exception when an error occurs. Most user errors would be a runtime exception.
+     * Adds step to an existing EMR Cluster.
+     * <p/>
+     * There are four serializable objects supported currently. They are 1: ShellStep - For shell scripts 2: HiveStep - For hive scripts 3: HadoopJarStep - For
+     * Custom Map Reduce Jar files and 4: PigStep - For Pig scripts.
+     *
+     * @param request the EMR steps add request
+     *
+     * @return the EMR steps add object with added steps
+     * @throws Exception if there were any errors while adding a step to the cluster.
      */
-    public OozieWorkflowJob getEmrOozieWorkflowJob(String namespace, String emrClusterDefinitionName, String emrClusterName, String oozieWorkflowJobId,
-        Boolean verbose, String emrClusterId, String accountId) throws Exception;
+    public Object addStepToCluster(Object request) throws Exception;
+
+    /**
+     * Creates a new EMR Cluster.
+     *
+     * @param request the EMR cluster create request
+     *
+     * @return the created EMR cluster object
+     * @throws Exception if there were any errors while creating the cluster
+     */
+    public EmrCluster createCluster(EmrClusterCreateRequest request) throws Exception;
+
+    /**
+     * Gets details of an existing EMR Cluster.
+     *
+     * @param emrClusterAlternateKeyDto the EMR cluster alternate key
+     * @param emrClusterId the id of the cluster to get details
+     * @param emrStepId the step id of the step to get details
+     * @param verbose parameter for whether to return detailed information
+     * @param accountId the optional AWS account that EMR cluster is running in
+     *
+     * @return the EMR Cluster object with details
+     * @throws Exception if there were any errors
+     */
+    public EmrCluster getCluster(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, String emrClusterId, String emrStepId, boolean verbose, String accountId)
+        throws Exception;
+
+    /**
+     * Terminates the EMR Cluster.
+     *
+     * @param emrClusterAlternateKeyDto the EMR cluster alternate key
+     * @param overrideTerminationProtection parameter for whether to override termination protection
+     * @param emrClusterId the id of the cluster
+     * @param accountId the optional AWS account that EMR cluster is running in
+     *
+     * @return the terminated EMR cluster object
+     * @throws Exception if there were any errors while terminating the cluster
+     */
+    public EmrCluster terminateCluster(EmrClusterAlternateKeyDto emrClusterAlternateKeyDto, boolean overrideTerminationProtection, String emrClusterId,
+        String accountId) throws Exception;
 }

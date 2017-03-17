@@ -28,6 +28,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.MultiMatchQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -35,6 +36,8 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -58,6 +61,8 @@ import org.finra.herd.model.dto.ElasticsearchResponseDto;
 @Repository
 public class IndexSearchDaoImpl implements IndexSearchDao
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(IndexSearchDaoImpl.class);
+
     /**
      * The attributes name search field
      */
@@ -441,8 +446,25 @@ public class IndexSearchDaoImpl implements IndexSearchDao
         final MultiMatchQueryBuilder bestFieldsMultiMatchQueryBuilder =
             buildMultiMatchQuery(request.getSearchTerm(), BEST_FIELDS, BEST_FIELDS_QUERY_BOOST, NGRAMS_FIELD_NAME_APPENDER);
 
-        // Add both multi match queries to a dis max query
-        final QueryBuilder queryBuilder = QueryBuilders.disMaxQuery().add(phrasePrefixMultiMatchQueryBuilder).add(bestFieldsMultiMatchQueryBuilder);
+        QueryBuilder queryBuilder;
+
+        // Add filter clauses if index search filters are specified in the request
+        if (CollectionUtils.isNotEmpty(request.getIndexSearchFilters()))
+        {
+            BoolQueryBuilder indexSearchQueryBuilder = new BoolQueryBuilder();
+
+            elasticsearchHelper.addIndexSearchFilterBooleanClause(request.getIndexSearchFilters(), indexSearchQueryBuilder);
+
+            // Add both multi match queries and the boolean clauses to a dis max query
+            queryBuilder =
+                QueryBuilders.disMaxQuery().add(phrasePrefixMultiMatchQueryBuilder).add(bestFieldsMultiMatchQueryBuilder).add(indexSearchQueryBuilder);
+
+        }
+        else
+        {
+            // Add only the multi match queries to a dis max query if no filters are specified
+            queryBuilder = QueryBuilders.disMaxQuery().add(phrasePrefixMultiMatchQueryBuilder).add(bestFieldsMultiMatchQueryBuilder);
+        }
 
         // The fields in the search indexes to return
         final String[] searchSources = {NAME_SOURCE, NAMESPACE_CODE_SOURCE, TAG_CODE_SOURCE, TAG_TYPE_CODE_SOURCE, DISPLAY_NAME_SOURCE, DESCRIPTION_SOURCE};
@@ -456,14 +478,20 @@ public class IndexSearchDaoImpl implements IndexSearchDao
 
         // Create a indexSearch request builder
         final SearchRequestBuilder searchRequestBuilder = transportClient.prepareSearch(BUSINESS_OBJECT_DEFINITION_INDEX, TAG_INDEX);
-        searchRequestBuilder.setSource(searchSourceBuilder).setSize(SEARCH_RESULT_SIZE)
-            .addIndexBoost(BUSINESS_OBJECT_DEFINITION_INDEX, BUSINESS_OBJECT_DEFINITION_INDEX_BOOST).addIndexBoost(TAG_INDEX, TAG_INDEX_BOOST)
+        searchRequestBuilder.setSource(searchSourceBuilder)
+            .setSize(SEARCH_RESULT_SIZE)
+            .addIndexBoost(BUSINESS_OBJECT_DEFINITION_INDEX, BUSINESS_OBJECT_DEFINITION_INDEX_BOOST)
+            .addIndexBoost(TAG_INDEX, TAG_INDEX_BOOST)
             .addSort(SortBuilders.scoreSort());
 
-        if (!CollectionUtils.isEmpty(request.getFacetFields()))
+        // Add facet aggregations if specified in the request
+        if (CollectionUtils.isNotEmpty(request.getFacetFields()))
         {
             elasticsearchHelper.addFacetFieldAggregations(new HashSet<>(request.getFacetFields()), searchRequestBuilder);
         }
+
+        // Log the actual elasticsearch query when debug is enabled
+        LOGGER.debug("indexSearchRequest={}", searchRequestBuilder.toString());
 
         // Retrieve the indexSearch response
         final SearchResponse searchResponse = searchRequestBuilder.execute().actionGet();
@@ -524,7 +552,7 @@ public class IndexSearchDaoImpl implements IndexSearchDao
         }
 
         List<Facet> facets = null;
-        if (!CollectionUtils.isEmpty(request.getFacetFields()))
+        if (CollectionUtils.isNotEmpty(request.getFacetFields()))
         {
             ElasticsearchResponseDto elasticsearchResponseDto = new ElasticsearchResponseDto();
             if (request.getFacetFields().contains(ElasticsearchHelper.TAG_FACET))
@@ -538,7 +566,7 @@ public class IndexSearchDaoImpl implements IndexSearchDao
 
             facets = elasticsearchHelper.getFacetsReponse(elasticsearchResponseDto, true);
         }
-        
+
         return new IndexSearchResponse(searchHits.getTotalHits(), indexSearchResults, facets);
     }
 

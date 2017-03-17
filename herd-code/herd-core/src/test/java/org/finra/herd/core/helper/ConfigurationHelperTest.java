@@ -61,7 +61,7 @@ public class ConfigurationHelperTest extends AbstractCoreTest
     @Test
     public void testGetPropertyReturnDefaultWhenValueConversionFails() throws Exception
     {
-        ConfigurationValue configurationValue = ConfigurationValue.EMR_OOZIE_JOBS_TO_INCLUDE_IN_CLUSTER_STATUS;
+        ConfigurationValue configurationValue = ConfigurationValue.BUSINESS_OBJECT_DATA_SEARCH_MAX_RESULTS;
         Integer expectedValue = (Integer) configurationValue.getDefaultValue();
 
         MockEnvironment environment = new MockEnvironment();
