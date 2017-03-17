@@ -84,6 +84,7 @@ import org.finra.herd.service.helper.BusinessObjectFormatHelper;
 import org.finra.herd.service.helper.EmrClusterDefinitionHelper;
 import org.finra.herd.service.helper.EmrStepHelperFactory;
 import org.finra.herd.service.helper.Hive13DdlGenerator;
+import org.finra.herd.service.helper.IndexSearchResultTypeHelper;
 import org.finra.herd.service.helper.JobDefinitionHelper;
 import org.finra.herd.service.helper.NotificationActionFactory;
 import org.finra.herd.service.helper.NotificationRegistrationDaoHelper;
@@ -535,6 +536,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     @Autowired
     protected JsonHelper jsonHelper;
+
+    @Autowired
+    protected IndexSearchResultTypeHelper indexSearchResultTypeHelper;
 
     @Autowired
     protected NamespaceService namespaceService;
