@@ -229,7 +229,7 @@ public class ElasticsearchHelper
 
     /**
      * Navigates the specified index search filters and adds boolean filter clauses to a given {@link SearchRequestBuilder}
-     *
+     * @param queryBuilder the query builder
      * @param indexSearchFilters the specified index search filters
      */
     public void addIndexSearchFilterBooleanClause(List<IndexSearchFilter> indexSearchFilters, BoolQueryBuilder queryBuilder)

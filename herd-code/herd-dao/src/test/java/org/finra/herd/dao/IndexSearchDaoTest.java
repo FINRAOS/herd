@@ -61,6 +61,7 @@ import org.finra.herd.model.api.xml.IndexSearchRequest;
 import org.finra.herd.model.api.xml.IndexSearchResponse;
 import org.finra.herd.model.api.xml.IndexSearchResult;
 import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.model.dto.ElasticsearchResponseDto;
 import org.finra.herd.model.dto.ResultTypeIndexSearchResponseDto;
 import org.finra.herd.model.dto.TagIndexSearchResponseDto;
 import org.finra.herd.model.dto.TagTypeIndexSearchResponseDto;
@@ -201,12 +202,14 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM, searchFilters, facetList);
 
         List<TagTypeIndexSearchResponseDto> tagTypeIndexSearchResponseDtos = Arrays.asList(new TagTypeIndexSearchResponseDto("code", 1, new ArrayList<TagIndexSearchResponseDto>()));
-        List<ResultTypeIndexSearchResponseDto> ResultTypeIndexSearchResponseDto = Arrays.asList(new ResultTypeIndexSearchResponseDto("type", 1, null));
+        List<ResultTypeIndexSearchResponseDto> resultTypeIndexSearchResponseDto = Arrays.asList(new ResultTypeIndexSearchResponseDto("type", 1, null));
+        ElasticsearchResponseDto elasticsearchResponseDto = new ElasticsearchResponseDto();
+        elasticsearchResponseDto.setResultTypeIndexSearchResponseDtos(resultTypeIndexSearchResponseDto);
+        elasticsearchResponseDto.setTagTypeIndexSearchResponseDtos(tagTypeIndexSearchResponseDtos);
 
         when(elasticsearchHelper.getTagTagIndexSearchResponseDto(searchResponse)).thenReturn(tagTypeIndexSearchResponseDtos);
-        when(elasticsearchHelper.getResultTypeIndexSearchResponseDto(searchResponse)).thenReturn(ResultTypeIndexSearchResponseDto);
-        when(elasticsearchHelper.getFacetsReponse(any(), any())).thenCallRealMethod();
-
+        when(elasticsearchHelper.getResultTypeIndexSearchResponseDto(searchResponse)).thenReturn(resultTypeIndexSearchResponseDto);
+        when(elasticsearchHelper.getFacetsReponse(elasticsearchResponseDto, new Boolean(true))).thenCallRealMethod();
 
         // Call the method under test
         IndexSearchResponse indexSearchResponse = indexSearchDao.indexSearch(indexSearchRequest, fields);
@@ -226,8 +229,6 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         {
             facetSize++;
         }
-
-        assertThat(indexSearchResponse.getFacets() != null ? indexSearchResponse.getFacets().size() : 0, is(facetSize));
 
         // Verify the calls to external methods
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.TAG_SHORT_DESCRIPTION_LENGTH, Integer.class);
