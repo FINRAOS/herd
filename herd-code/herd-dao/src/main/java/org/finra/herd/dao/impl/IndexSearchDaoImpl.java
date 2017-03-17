@@ -536,7 +536,7 @@ public class IndexSearchDaoImpl implements IndexSearchDao
                 elasticsearchResponseDto.setResultTypeIndexSearchResponseDtos(elasticsearchHelper.getResultTypeIndexSearchResponseDto(searchResponse));
             }
 
-            facets = elasticsearchHelper.getFacetsReponse(elasticsearchResponseDto);
+            facets = elasticsearchHelper.getFacetsReponse(elasticsearchResponseDto, true);
         }
         
         return new IndexSearchResponse(searchHits.getTotalHits(), indexSearchResults, facets);

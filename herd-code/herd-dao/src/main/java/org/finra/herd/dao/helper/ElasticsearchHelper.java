@@ -282,9 +282,10 @@ public class ElasticsearchHelper
     /**
      * get the facets in the response
      * @param elasticsearchResponseDto elastic search response dto
+     * @param includingTagInCount if include tag in the facet count
      * @return facets in the response dto
      */
-    public List<Facet> getFacetsReponse(ElasticsearchResponseDto elasticsearchResponseDto)
+    public List<Facet> getFacetsReponse(ElasticsearchResponseDto elasticsearchResponseDto, boolean includingTagInCount)
     {
         List<Facet> facets = new ArrayList<>();
 
@@ -300,13 +301,27 @@ public class ElasticsearchHelper
 
                 for (TagIndexSearchResponseDto tagIndexSearchResponseDto : tagTypeIndexSearchResponseDto.getTagIndexSearchResponseDtos())
                 {
+                    long facetCount =  tagIndexSearchResponseDto.getCount();
+                    //add one to the count, as the tag itself need to be counted
+                    if (includingTagInCount)
+                    {
+                        facetCount  = facetCount + 1;
+                    }
+
                     Facet tagFacet =
-                        new Facet(tagIndexSearchResponseDto.getTagDisplayName(), tagIndexSearchResponseDto.getCount(), TagIndexSearchResponseDto.getFacetType(),
+                        new Facet(tagIndexSearchResponseDto.getTagDisplayName(), facetCount, TagIndexSearchResponseDto.getFacetType(),
                             tagIndexSearchResponseDto.getTagCode(), null);
                     tagFacets.add(tagFacet);
                 }
 
-                tagTypeFacets.add(new Facet(tagTypeIndexSearchResponseDto.getDisplayName(), tagTypeIndexSearchResponseDto.getCount(),
+                long facetCount  = tagTypeIndexSearchResponseDto.getCount();
+                //add one to the count, as the tag itself need to be counted, and all its children
+                if (includingTagInCount)
+                {
+                    facetCount = facetCount + 1 + tagFacets.size();
+                }
+
+                tagTypeFacets.add(new Facet(tagTypeIndexSearchResponseDto.getDisplayName(), facetCount,
                     TagTypeIndexSearchResponseDto.getFacetType(), tagTypeIndexSearchResponseDto.getCode(), tagFacets));
             }
 
