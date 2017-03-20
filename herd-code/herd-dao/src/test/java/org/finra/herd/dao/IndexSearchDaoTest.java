@@ -26,6 +26,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -56,9 +57,12 @@ import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.helper.ElasticsearchHelper;
 import org.finra.herd.dao.impl.IndexSearchDaoImpl;
 import org.finra.herd.model.api.xml.IndexSearchFilter;
+import org.finra.herd.model.api.xml.IndexSearchKey;
 import org.finra.herd.model.api.xml.IndexSearchRequest;
 import org.finra.herd.model.api.xml.IndexSearchResponse;
 import org.finra.herd.model.api.xml.IndexSearchResult;
+import org.finra.herd.model.api.xml.IndexSearchResultTypeKey;
+import org.finra.herd.model.api.xml.TagKey;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.ElasticsearchResponseDto;
 import org.finra.herd.model.dto.ResultTypeIndexSearchResponseDto;
@@ -86,7 +90,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
     private TransportClient transportClient;
 
     @Mock
-    private ElasticsearchHelper elasticsearchHelper = new ElasticsearchHelper();
+    private ElasticsearchHelper elasticsearchHelper;
 
     @Before
     public void before()
@@ -140,6 +144,69 @@ public class IndexSearchDaoTest extends AbstractDaoTest
 
         //result type facet only
         testIndexSearch(fields, null, Collections.singletonList(ElasticsearchHelper.RESULT_TYPE_FACET));
+    }
+
+    @Test
+    public void indexSearchTestWithEmptyFilters()
+    {
+        // Create a new fields set that will be used when testing the index search method
+        final Set<String> fields = new HashSet<>();
+
+        // Create a new filters list
+        List<IndexSearchFilter> searchFilters = new ArrayList<>();
+
+        //result type facet only
+        testIndexSearch(fields, searchFilters, null);
+    }
+
+    @Test
+    public void indexSearchTestWithTagKeyFilter()
+    {
+        // Create a new fields set that will be used when testing the index search method
+        final Set<String> fields = new HashSet<>();
+
+        // Create an index search key
+        final IndexSearchKey indexSearchKey = new IndexSearchKey();
+
+        // Create a tag key
+        final TagKey tagKey = new TagKey(TAG_TYPE_CODE, TAG_CODE);
+        indexSearchKey.setTagKey(tagKey);
+
+        // Create an index search keys list and add the previously defined key to it
+        final List<IndexSearchKey> indexSearchKeys = Collections.singletonList(indexSearchKey);
+
+        // Create an index search filter with the keys previously defined
+        final IndexSearchFilter indexSearchFilter = new IndexSearchFilter(indexSearchKeys);
+
+        List<IndexSearchFilter> indexSearchFilters = Collections.singletonList(indexSearchFilter);
+
+        //result type facet only
+        testIndexSearch(fields, indexSearchFilters, null);
+    }
+
+    @Test
+    public void indexSearchTestWithResultTypeFilter()
+    {
+        // Create a new fields set that will be used when testing the index search method
+        final Set<String> fields = new HashSet<>();
+
+        // Create an index search key
+        final IndexSearchKey indexSearchKey = new IndexSearchKey();
+
+        // Create a result type key
+        final IndexSearchResultTypeKey resultTypeKey = new IndexSearchResultTypeKey(BUSINESS_OBJECT_DEFINITION_INDEX);
+        indexSearchKey.setIndexSearchResultTypeKey(resultTypeKey);
+
+        // Create an index search keys list and add the previously defined key to it
+        final List<IndexSearchKey> indexSearchKeys = Collections.singletonList(indexSearchKey);
+
+        // Create an index search filter with the keys previously defined
+        final IndexSearchFilter indexSearchFilter = new IndexSearchFilter(indexSearchKeys);
+
+        List<IndexSearchFilter> indexSearchFilters = Collections.singletonList(indexSearchFilter);
+
+        //result type facet only
+        testIndexSearch(fields, indexSearchFilters, null);
     }
 
     private void testIndexSearch(Set<String> fields, List<IndexSearchFilter> searchFilters, List<String> facetList)
@@ -200,9 +267,9 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM, searchFilters, facetList);
 
         List<TagTypeIndexSearchResponseDto> tagTypeIndexSearchResponseDtos =
-            Arrays.asList(new TagTypeIndexSearchResponseDto("code", 1, Arrays.asList(new TagIndexSearchResponseDto("tag1", 1))));
+            Collections.singletonList(new TagTypeIndexSearchResponseDto("code", 1, Collections.singletonList(new TagIndexSearchResponseDto("tag1", 1))));
         List<ResultTypeIndexSearchResponseDto> resultTypeIndexSearchResponseDto =
-            Arrays.asList(new ResultTypeIndexSearchResponseDto("type", 1, null));
+            Collections.singletonList(new ResultTypeIndexSearchResponseDto("type", 1, null));
 
         when(elasticsearchHelper.getTagTagIndexSearchResponseDto(searchResponse)).thenReturn(tagTypeIndexSearchResponseDtos);
         when(elasticsearchHelper.getResultTypeIndexSearchResponseDto(searchResponse)).thenReturn(resultTypeIndexSearchResponseDto);

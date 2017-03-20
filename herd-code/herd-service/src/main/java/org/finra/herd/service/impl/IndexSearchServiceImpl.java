@@ -148,7 +148,7 @@ public class IndexSearchServiceImpl implements IndexSearchService, SearchableSer
 
                         // Validate that search keys within the same filter have either index search result type keys or tag keys
                         Assert.isTrue(expectedInstanceType.equals(actualInstanceType),
-                            "Index search keys should be a homogeneous list of either index search result type keys or tag keys");
+                            "Index search keys should be a homogeneous list of either index search result type keys or tag keys.");
 
                         // Validate tag key if present
                         if (null != indexSearchKey.getTagKey())

@@ -78,5 +78,4 @@ public class IndexSearchResultTypeHelperTest extends AbstractServiceTest
 
     }
 
-
 }
