@@ -729,7 +729,28 @@ public enum ConfigurationValue
     /**
      * The cut-off length of the short description
      */
-    TAG_SHORT_DESCRIPTION_LENGTH("tag.short.description.max.length", 300);
+    TAG_SHORT_DESCRIPTION_LENGTH("tag.short.description.max.length", 300),
+
+    /**
+     * The cache time to live in seconds defined in net.sf.ehcache.config.CacheConfiguration.
+     */
+    TRANSPORT_CLIENT_CACHE_TIME_TO_LIVE_SECONDS("transport.client.cache.time.to.live.seconds", 0L),
+
+    /**
+     * The cache time to idle in seconds defined in net.sf.ehcache.config.CacheConfiguration.
+     * The default value is 0, which means no timeToIdle (TTI) eviction takes place (infinite lifetime)
+     */
+    TRANSPORT_CLIENT_CACHE_TIME_TO_IDLE_SECONDS("transport.client.cache.time.to.idle.seconds", 0L),
+
+    /**
+     * The max elements in cache memory defined in net.sf.ehcache.config.CacheConfiguration.
+     */
+    TRANSPORT_CLIENT_CACHE_MAX_ELEMENTS_IN_MEMORY("transport.client.cache.max.elements.in.memory", 1),
+
+    /**
+     * The cache memory store eviction policy defined in net.sf.ehcache.config.CacheConfiguration.
+     */
+    TRANSPORT_CLIENT_CACHE_MEMORY_STORE_EVICTION_POLICY("transport.client.cache.memory.store.eviction.policy", "LRU");
 
     private Object defaultValue;
 

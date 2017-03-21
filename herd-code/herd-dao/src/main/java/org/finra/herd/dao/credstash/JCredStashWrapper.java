@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 /**
  * A wrapper class for the JCredStash library
  */
-public class JCredStashWrapper
+public class JCredStashWrapper implements CredStash
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(JCredStashWrapper.class);
 
