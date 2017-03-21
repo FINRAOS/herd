@@ -238,6 +238,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final DateTime NO_END_TIME = null;
 
+    public static final Boolean NO_EXCLUSION_SEARCH_FILTER = false;
+
     public static final Long NO_FILE_SIZE = null;
 
     public static final Integer NO_ID = null;
