@@ -83,7 +83,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
     private ConfigurationHelper configurationHelper;
 
     @Mock
-    private TransportClient transportClient;
+    private TransportClientFactory transportClientFactory;
 
     @Mock
     private ElasticsearchHelper elasticsearchHelper = new ElasticsearchHelper();
@@ -152,6 +152,8 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         SearchRequestBuilder searchRequestBuilderWithTagIndexBoost = mock(SearchRequestBuilder.class);
         SearchRequestBuilder searchRequestBuilderWithSorting = mock(SearchRequestBuilder.class);
 
+        TransportClient transportClient = mock(TransportClient.class);
+
         SearchResponse searchResponse = mock(SearchResponse.class);
         SearchHits searchHits = mock(SearchHits.class);
         SearchHit searchHit1 = mock(SearchHit.class);
@@ -168,6 +170,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         // Mock the call to external methods
         when(configurationHelper.getProperty(ConfigurationValue.TAG_SHORT_DESCRIPTION_LENGTH, Integer.class)).thenReturn(300);
         when(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH, Integer.class)).thenReturn(300);
+        when(transportClientFactory.getTransportClient()).thenReturn(transportClient);
         when(transportClient.prepareSearch(BUSINESS_OBJECT_DEFINITION_INDEX, TAG_INDEX)).thenReturn(searchRequestBuilder);
         when(searchRequestBuilder.setSource(any())).thenReturn(searchRequestBuilderWithSource);
         when(searchRequestBuilderWithSource.setSize(SEARCH_RESULT_SIZE)).thenReturn(searchRequestBuilderWithSize);

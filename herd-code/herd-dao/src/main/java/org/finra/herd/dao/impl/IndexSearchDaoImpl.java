@@ -44,6 +44,7 @@ import org.springframework.stereotype.Repository;
 import org.finra.herd.core.HerdStringUtils;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.IndexSearchDao;
+import org.finra.herd.dao.TransportClientFactory;
 import org.finra.herd.dao.helper.ElasticsearchHelper;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.Facet;
@@ -425,10 +426,10 @@ public class IndexSearchDaoImpl implements IndexSearchDao
     private ConfigurationHelper configurationHelper;
 
     /**
-     * The transport client is a connection to the elasticsearch index
+     * The transport client factory will create a transport client which is a connection to the elasticsearch index
      */
     @Autowired
-    private TransportClient transportClient;
+    private TransportClientFactory transportClientFactory;
 
     @Autowired
     private ElasticsearchHelper elasticsearchHelper;
@@ -477,6 +478,7 @@ public class IndexSearchDaoImpl implements IndexSearchDao
         searchSourceBuilder.query(queryBuilder);
 
         // Create a indexSearch request builder
+        final TransportClient transportClient = transportClientFactory.getTransportClient();
         final SearchRequestBuilder searchRequestBuilder = transportClient.prepareSearch(BUSINESS_OBJECT_DEFINITION_INDEX, TAG_INDEX);
         searchRequestBuilder.setSource(searchSourceBuilder)
             .setSize(SEARCH_RESULT_SIZE)
