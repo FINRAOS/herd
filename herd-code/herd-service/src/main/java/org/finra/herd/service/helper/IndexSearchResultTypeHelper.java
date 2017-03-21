@@ -48,7 +48,7 @@ public class IndexSearchResultTypeHelper
     {
         Assert.notNull(resultTypeKey, "An index search result type key must be specified.");
         resultTypeKey
-            .setIndexSearchResultType(alternateKeyHelper.validateStringParameter("index search result type", resultTypeKey.getIndexSearchResultType()));
+            .setIndexSearchResultType(alternateKeyHelper.validateStringParameter("An", "index search result type", resultTypeKey.getIndexSearchResultType()));
 
         Assert.isTrue(getValidResultTypes().contains(resultTypeKey.getIndexSearchResultType().toLowerCase()),
             String.format("Invalid index search result type: \"%s\"", resultTypeKey.getIndexSearchResultType()));

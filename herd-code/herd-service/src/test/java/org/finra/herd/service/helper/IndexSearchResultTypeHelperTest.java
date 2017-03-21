@@ -78,4 +78,21 @@ public class IndexSearchResultTypeHelperTest extends AbstractServiceTest
 
     }
 
+    @Test
+    public void testMissingIndexSearchResultType()
+    {
+        // Create a key with empty result type
+        IndexSearchResultTypeKey indexSearchResultTypeKeyBdef = new IndexSearchResultTypeKey();
+
+        try
+        {
+            indexSearchResultTypeHelper.validateIndexSearchResultTypeKey(indexSearchResultTypeKeyBdef);
+            fail();
+        }
+        catch (Exception e)
+        {
+            Assert.assertEquals(IllegalArgumentException.class, e.getClass());
+            Assert.assertEquals("An index search result type must be specified.", e.getMessage());
+        }
+    }
 }

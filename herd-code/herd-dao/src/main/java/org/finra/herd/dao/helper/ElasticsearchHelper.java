@@ -29,8 +29,11 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.nested.Nested;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 
+import org.finra.herd.dao.TagDao;
 import org.finra.herd.model.api.xml.Facet;
 import org.finra.herd.model.api.xml.IndexSearchFilter;
 import org.finra.herd.model.api.xml.IndexSearchKey;
@@ -100,22 +103,32 @@ public class ElasticsearchHelper
     /**
      * The tag type code field
      */
-    public static final String TAGTYPE_CODE_FIELD = NESTED_BDEFTAGS_PATH + ".tagType.code.keyword";
+    public static final String BDEF_TAGTYPE_CODE_FIELD = NESTED_BDEFTAGS_PATH + ".tagType.code.keyword";
 
     /**
      * The tag type display name field
      */
-    public static final String TAGTYPE_NAME_FIELD = NESTED_BDEFTAGS_PATH + ".tagType.displayName.keyword";
+    public static final String BDEF_TAGTYPE_NAME_FIELD = NESTED_BDEFTAGS_PATH + ".tagType.displayName.keyword";
 
     /**
      * The tag code field
      */
-    public static final String TAG_CODE_FIELD = NESTED_BDEFTAGS_PATH + ".tagCode.keyword";
+    public static final String BDEF_TAG_CODE_FIELD = NESTED_BDEFTAGS_PATH + ".tagCode.keyword";
 
     /**
      * The tag display name field
      */
-    public static final String TAG_NAME_FIELD = NESTED_BDEFTAGS_PATH + ".displayName.keyword";
+    public static final String BDEF_TAG_NAME_FIELD = NESTED_BDEFTAGS_PATH + ".displayName.keyword";
+
+    /**
+     * The tagCode field
+     */
+    public static final String TAG_TAG_CODE_FIELD = "tagCode.keyword";
+
+    /**
+     * The tag type code field
+     */
+    public static final String TAG_TAGTYPE_CODE_FIELD = "tagType.code.keyword";
 
     /**
      * The nested aggregation name for tag facet. User defined.
@@ -197,11 +210,15 @@ public class ElasticsearchHelper
      */
     public static final String TAG_RESULT_TYPE = "tag";
 
+    @Autowired
+    private TagDao tagDao;
+
     /**
      * Adds facet field aggregations
      *
      * @param facetFieldsList facet field list
      * @param searchRequestBuilder search request builder
+     *
      * @return the specified search request builder with the aggregations applied to it
      */
     public SearchRequestBuilder addFacetFieldAggregations(Set<String> facetFieldsList, SearchRequestBuilder searchRequestBuilder)
@@ -211,12 +228,12 @@ public class ElasticsearchHelper
             if (facetFieldsList.contains(TAG_FACET))
             {
                 searchRequestBuilder.addAggregation(AggregationBuilders.nested(TAG_FACET_AGGS, NESTED_BDEFTAGS_PATH).subAggregation(
-                    AggregationBuilders.terms(TAGTYPE_CODE_AGGREGATION).field(TAGTYPE_CODE_FIELD).subAggregation(
-                        AggregationBuilders.terms(TAGTYPE_NAME_AGGREGATION).field(TAGTYPE_NAME_FIELD).subAggregation(
-                            AggregationBuilders.terms(TAG_CODE_AGGREGATION).field(TAG_CODE_FIELD)
-                                .subAggregation(AggregationBuilders.terms(TAG_NAME_AGGREGATION).field(TAG_NAME_FIELD))))));
+                    AggregationBuilders.terms(TAGTYPE_CODE_AGGREGATION).field(BDEF_TAGTYPE_CODE_FIELD).subAggregation(
+                        AggregationBuilders.terms(TAGTYPE_NAME_AGGREGATION).field(BDEF_TAGTYPE_NAME_FIELD).subAggregation(
+                            AggregationBuilders.terms(TAG_CODE_AGGREGATION).field(BDEF_TAG_CODE_FIELD)
+                                .subAggregation(AggregationBuilders.terms(TAG_NAME_AGGREGATION).field(BDEF_TAG_NAME_FIELD))))));
 
-                searchRequestBuilder.addAggregation(AggregationBuilders.terms(TAG_TYPE_FACET_AGGS).field(TAGTYPE_CODE_FIELD).subAggregation(
+                searchRequestBuilder.addAggregation(AggregationBuilders.terms(TAG_TYPE_FACET_AGGS).field(BDEF_TAGTYPE_CODE_FIELD).subAggregation(
                     AggregationBuilders.terms(NAMESPACE_CODE_AGGS).field(NAMESPACE_FIELD)
                         .subAggregation(AggregationBuilders.terms(BDEF_NAME_AGGS).field(BDEF_NAME_FIELD))));
             }
@@ -233,6 +250,7 @@ public class ElasticsearchHelper
      * Navigates the specified index search filters and adds boolean filter clauses to a given {@link SearchRequestBuilder}
      *
      * @param indexSearchFilters the specified search filters
+     *
      * @return boolean query with the filters applied
      */
     public BoolQueryBuilder addIndexSearchFilterBooleanClause(List<IndexSearchFilter> indexSearchFilters)
@@ -246,11 +264,17 @@ public class ElasticsearchHelper
             {
                 if (null != indexSearchKey.getTagKey())
                 {
+                    // Validates that a tag entity exists for the specified tag key
+                    Assert.notNull(tagDao.getTagByKey(indexSearchKey.getTagKey()), String
+                        .format("Tag with code \"%s\" doesn't exist for tag type \"%s\".", indexSearchKey.getTagKey().getTagCode(),
+                            indexSearchKey.getTagKey().getTagTypeCode()));
+
                     // Add constant-score term queries for tagType-code and tag-code from the tag-key.
-                    ConstantScoreQueryBuilder searchKeyQueryBuilder = QueryBuilders.constantScoreQuery(
-                        QueryBuilders.boolQuery()
-                            .must(QueryBuilders.termQuery(TAGTYPE_CODE_FIELD, indexSearchKey.getTagKey().getTagTypeCode()))
-                            .must(QueryBuilders.termQuery(TAG_CODE_FIELD, indexSearchKey.getTagKey().getTagCode())));
+                    ConstantScoreQueryBuilder searchKeyQueryBuilder = QueryBuilders.constantScoreQuery(QueryBuilders.boolQuery().should(
+                        QueryBuilders.boolQuery().must(QueryBuilders.termQuery(BDEF_TAGTYPE_CODE_FIELD, indexSearchKey.getTagKey().getTagTypeCode()))
+                            .must(QueryBuilders.termQuery(BDEF_TAG_CODE_FIELD, indexSearchKey.getTagKey().getTagCode()))).should(
+                        QueryBuilders.boolQuery().must(QueryBuilders.termQuery(TAG_TAGTYPE_CODE_FIELD, indexSearchKey.getTagKey().getTagTypeCode()))
+                            .must(QueryBuilders.termQuery(TAG_TAG_CODE_FIELD, indexSearchKey.getTagKey().getTagCode()))));
 
                     // Individual index search keys are OR-ed
                     indexSearchFilterClauseBuilder.should(searchKeyQueryBuilder);
@@ -351,6 +375,7 @@ public class ElasticsearchHelper
      *
      * @param elasticsearchResponseDto elastic search response dto
      * @param includingTagInCount if include tag in the facet count
+     *
      * @return facets in the response dto
      */
     public List<Facet> getFacetsReponse(ElasticsearchResponseDto elasticsearchResponseDto, boolean includingTagInCount)
@@ -369,28 +394,27 @@ public class ElasticsearchHelper
 
                 for (TagIndexSearchResponseDto tagIndexSearchResponseDto : tagTypeIndexSearchResponseDto.getTagIndexSearchResponseDtos())
                 {
-                    long facetCount =  tagIndexSearchResponseDto.getCount();
+                    long facetCount = tagIndexSearchResponseDto.getCount();
                     //add one to the count, as the tag itself need to be counted
                     if (includingTagInCount)
                     {
-                        facetCount  = facetCount + 1;
+                        facetCount = facetCount + 1;
                     }
 
-                    Facet tagFacet =
-                        new Facet(tagIndexSearchResponseDto.getTagDisplayName(), facetCount, TagIndexSearchResponseDto.getFacetType(),
-                            tagIndexSearchResponseDto.getTagCode(), null);
+                    Facet tagFacet = new Facet(tagIndexSearchResponseDto.getTagDisplayName(), facetCount, TagIndexSearchResponseDto.getFacetType(),
+                        tagIndexSearchResponseDto.getTagCode(), null);
                     tagFacets.add(tagFacet);
                 }
 
-                long facetCount  = tagTypeIndexSearchResponseDto.getCount();
+                long facetCount = tagTypeIndexSearchResponseDto.getCount();
                 //add one to the count, as the tag itself need to be counted, and all its children
                 if (includingTagInCount)
                 {
                     facetCount = facetCount + 1 + tagTypeIndexSearchResponseDto.getTagIndexSearchResponseDtos().size();
                 }
 
-                tagTypeFacets.add(new Facet(tagTypeIndexSearchResponseDto.getDisplayName(), facetCount,
-                    TagTypeIndexSearchResponseDto.getFacetType(), tagTypeIndexSearchResponseDto.getCode(), tagFacets));
+                tagTypeFacets.add(new Facet(tagTypeIndexSearchResponseDto.getDisplayName(), facetCount, TagTypeIndexSearchResponseDto.getFacetType(),
+                    tagTypeIndexSearchResponseDto.getCode(), tagFacets));
             }
 
             facets.addAll(tagTypeFacets);
