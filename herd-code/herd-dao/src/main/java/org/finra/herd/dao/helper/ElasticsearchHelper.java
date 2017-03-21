@@ -197,14 +197,14 @@ public class ElasticsearchHelper
      */
     public static final String TAG_RESULT_TYPE = "tag";
 
-
     /**
      * Adds facet field aggregations
      *
      * @param facetFieldsList facet field list
      * @param searchRequestBuilder search request builder
+     * @return the specified search request builder with the aggregations applied to it
      */
-    public void addFacetFieldAggregations(Set<String> facetFieldsList, SearchRequestBuilder searchRequestBuilder)
+    public SearchRequestBuilder addFacetFieldAggregations(Set<String> facetFieldsList, SearchRequestBuilder searchRequestBuilder)
     {
         if (CollectionUtils.isNotEmpty(facetFieldsList))
         {
@@ -225,15 +225,19 @@ public class ElasticsearchHelper
                 searchRequestBuilder.addAggregation(AggregationBuilders.terms(RESULT_TYPE_AGGS).field(RESULT_TYPE_FIELD));
             }
         }
+
+        return searchRequestBuilder;
     }
 
     /**
      * Navigates the specified index search filters and adds boolean filter clauses to a given {@link SearchRequestBuilder}
-     * @param queryBuilder the query builder
-     * @param indexSearchFilters the specified index search filters
+     *
+     * @param indexSearchFilters the specified search filters
+     * @return boolean query with the filters applied
      */
-    public void addIndexSearchFilterBooleanClause(List<IndexSearchFilter> indexSearchFilters, BoolQueryBuilder queryBuilder)
+    public BoolQueryBuilder addIndexSearchFilterBooleanClause(List<IndexSearchFilter> indexSearchFilters)
     {
+        BoolQueryBuilder compoundBoolQueryBuilder = new BoolQueryBuilder();
         for (IndexSearchFilter indexSearchFilter : indexSearchFilters)
         {
             BoolQueryBuilder indexSearchFilterClauseBuilder = new BoolQueryBuilder();
@@ -244,7 +248,8 @@ public class ElasticsearchHelper
                 {
                     // Add constant-score term queries for tagType-code and tag-code from the tag-key.
                     ConstantScoreQueryBuilder searchKeyQueryBuilder = QueryBuilders.constantScoreQuery(
-                        QueryBuilders.boolQuery().must(QueryBuilders.termQuery(TAGTYPE_CODE_FIELD, indexSearchKey.getTagKey().getTagTypeCode()))
+                        QueryBuilders.boolQuery()
+                            .must(QueryBuilders.termQuery(TAGTYPE_CODE_FIELD, indexSearchKey.getTagKey().getTagTypeCode()))
                             .must(QueryBuilders.termQuery(TAG_CODE_FIELD, indexSearchKey.getTagKey().getTagCode())));
 
                     // Individual index search keys are OR-ed
@@ -262,8 +267,10 @@ public class ElasticsearchHelper
             }
 
             // Individual search filters are AND-ed
-            queryBuilder.must(indexSearchFilterClauseBuilder);
+            compoundBoolQueryBuilder.must(indexSearchFilterClauseBuilder);
         }
+
+        return compoundBoolQueryBuilder;
     }
 
     /**

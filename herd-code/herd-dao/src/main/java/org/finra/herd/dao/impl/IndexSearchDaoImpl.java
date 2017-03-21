@@ -17,6 +17,7 @@ package org.finra.herd.dao.impl;
 
 import static org.elasticsearch.index.query.MultiMatchQueryBuilder.Type.BEST_FIELDS;
 import static org.elasticsearch.index.query.MultiMatchQueryBuilder.Type.PHRASE_PREFIX;
+import static org.elasticsearch.index.query.QueryBuilders.disMaxQuery;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -451,19 +452,21 @@ public class IndexSearchDaoImpl implements IndexSearchDao
         // Add filter clauses if index search filters are specified in the request
         if (CollectionUtils.isNotEmpty(request.getIndexSearchFilters()))
         {
-            BoolQueryBuilder indexSearchQueryBuilder = new BoolQueryBuilder();
+            BoolQueryBuilder indexSearchQueryBuilder = elasticsearchHelper.addIndexSearchFilterBooleanClause(request.getIndexSearchFilters());
 
-            elasticsearchHelper.addIndexSearchFilterBooleanClause(request.getIndexSearchFilters(), indexSearchQueryBuilder);
-
-            // Add both multi match queries and the boolean clauses to a dis max query
-            queryBuilder =
-                QueryBuilders.disMaxQuery().add(phrasePrefixMultiMatchQueryBuilder).add(bestFieldsMultiMatchQueryBuilder).add(indexSearchQueryBuilder);
-
+            // Add the multi match queries to a dis max query and wrap within a bool query, then apply filters to it
+            queryBuilder = QueryBuilders.boolQuery()
+                .must(disMaxQuery()
+                    .add(phrasePrefixMultiMatchQueryBuilder)
+                    .add(bestFieldsMultiMatchQueryBuilder))
+                .filter(indexSearchQueryBuilder);
         }
         else
         {
             // Add only the multi match queries to a dis max query if no filters are specified
-            queryBuilder = QueryBuilders.disMaxQuery().add(phrasePrefixMultiMatchQueryBuilder).add(bestFieldsMultiMatchQueryBuilder);
+            queryBuilder = disMaxQuery()
+                .add(phrasePrefixMultiMatchQueryBuilder)
+                .add(bestFieldsMultiMatchQueryBuilder);
         }
 
         // The fields in the search indexes to return
@@ -477,17 +480,15 @@ public class IndexSearchDaoImpl implements IndexSearchDao
         searchSourceBuilder.query(queryBuilder);
 
         // Create a indexSearch request builder
-        final SearchRequestBuilder searchRequestBuilder = transportClient.prepareSearch(BUSINESS_OBJECT_DEFINITION_INDEX, TAG_INDEX);
-        searchRequestBuilder.setSource(searchSourceBuilder)
-            .setSize(SEARCH_RESULT_SIZE)
-            .addIndexBoost(BUSINESS_OBJECT_DEFINITION_INDEX, BUSINESS_OBJECT_DEFINITION_INDEX_BOOST)
-            .addIndexBoost(TAG_INDEX, TAG_INDEX_BOOST)
+        SearchRequestBuilder searchRequestBuilder = transportClient.prepareSearch(BUSINESS_OBJECT_DEFINITION_INDEX, TAG_INDEX);
+        searchRequestBuilder.setSource(searchSourceBuilder).setSize(SEARCH_RESULT_SIZE)
+            .addIndexBoost(BUSINESS_OBJECT_DEFINITION_INDEX, BUSINESS_OBJECT_DEFINITION_INDEX_BOOST).addIndexBoost(TAG_INDEX, TAG_INDEX_BOOST)
             .addSort(SortBuilders.scoreSort());
 
         // Add facet aggregations if specified in the request
         if (CollectionUtils.isNotEmpty(request.getFacetFields()))
         {
-            elasticsearchHelper.addFacetFieldAggregations(new HashSet<>(request.getFacetFields()), searchRequestBuilder);
+            searchRequestBuilder = elasticsearchHelper.addFacetFieldAggregations(new HashSet<>(request.getFacetFields()), searchRequestBuilder);
         }
 
         // Log the actual elasticsearch query when debug is enabled

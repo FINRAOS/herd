@@ -37,6 +37,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+import org.apache.commons.collections4.CollectionUtils;
 import org.elasticsearch.action.ListenableActionFuture;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
@@ -44,6 +45,7 @@ import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.SearchShardTarget;
+import org.elasticsearch.search.aggregations.AggregationBuilder;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -274,6 +276,8 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         when(elasticsearchHelper.getTagTagIndexSearchResponseDto(searchResponse)).thenReturn(tagTypeIndexSearchResponseDtos);
         when(elasticsearchHelper.getResultTypeIndexSearchResponseDto(searchResponse)).thenReturn(resultTypeIndexSearchResponseDto);
         when(elasticsearchHelper.getFacetsReponse(any(ElasticsearchResponseDto.class), any(Boolean.class))).thenCallRealMethod();
+        when(elasticsearchHelper.addIndexSearchFilterBooleanClause(any(List.class))).thenCallRealMethod();
+        when(elasticsearchHelper.addFacetFieldAggregations(any(Set.class), any(SearchRequestBuilder.class))).thenCallRealMethod();
 
         // Call the method under test
         IndexSearchResponse indexSearchResponse = indexSearchDao.indexSearch(indexSearchRequest, fields);
@@ -300,6 +304,12 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH, Integer.class);
         verify(transportClient, times(1)).prepareSearch(BUSINESS_OBJECT_DEFINITION_INDEX, TAG_INDEX);
         verify(searchRequestBuilder, times(1)).setSource(any());
+
+        if (CollectionUtils.isNotEmpty(facetList))
+        {
+            verifyFacetInvocations(searchRequestBuilder, facetList);
+        }
+
         verify(searchRequestBuilderWithSource, times(1)).setSize(SEARCH_RESULT_SIZE);
         verify(searchRequestBuilderWithSize, times(1)).addIndexBoost(BUSINESS_OBJECT_DEFINITION_INDEX, BUSINESS_OBJECT_DEFINITION_INDEX_BOOST);
         verify(searchRequestBuilderWithBusinessObjectDefinitionIndexBoost, times(1)).addIndexBoost(TAG_INDEX, TAG_INDEX_BOOST);
@@ -316,5 +326,21 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         verify(searchShardTarget2, times(1)).getIndex();
         verify(searchHits, times(1)).getTotalHits();
         verifyNoMoreInteractions(createdMocks.toArray());
+    }
+
+    private void verifyFacetInvocations(SearchRequestBuilder searchRequestBuilder, List<String> facetList)
+    {
+        if (facetList.contains(ElasticsearchHelper.TAG_FACET) && !facetList.contains(ElasticsearchHelper.RESULT_TYPE_FACET))
+        {
+            verify(searchRequestBuilder, times(2)).addAggregation(any(AggregationBuilder.class));
+        }
+        else if (!facetList.contains(ElasticsearchHelper.TAG_FACET) && facetList.contains(ElasticsearchHelper.RESULT_TYPE_FACET))
+        {
+            verify(searchRequestBuilder, times(1)).addAggregation(any(AggregationBuilder.class));
+        }
+        else if (facetList.contains(ElasticsearchHelper.TAG_FACET) && facetList.contains(ElasticsearchHelper.RESULT_TYPE_FACET))
+        {
+            verify(searchRequestBuilder, times(3)).addAggregation(any(AggregationBuilder.class));
+        }
     }
 }
