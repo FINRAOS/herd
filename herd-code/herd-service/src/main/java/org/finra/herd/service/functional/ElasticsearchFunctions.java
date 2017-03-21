@@ -64,6 +64,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import org.finra.herd.dao.TransportClientFactory;
 import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.dto.BusinessObjectDefinitionIndexSearchResponseDto;
@@ -223,7 +224,7 @@ public class ElasticsearchFunctions implements SearchFunctions
      * The transport client is a connection to the elasticsearch index
      */
     @Autowired
-    private TransportClient transportClient;
+    private TransportClientFactory transportClientFactory;
 
     /**
      * A helper class for JSON functionality
@@ -241,6 +242,7 @@ public class ElasticsearchFunctions implements SearchFunctions
      * The index function will take as arguments indexName, documentType, id, json and add the document to the index.
      */
     private final QuadConsumer<String, String, String, String> indexFunction = (indexName, documentType, id, json) -> {
+        final TransportClient transportClient = transportClientFactory.getTransportClient();
         final IndexRequestBuilder indexRequestBuilder = transportClient.prepareIndex(indexName, documentType, id);
         indexRequestBuilder.setSource(json);
         indexRequestBuilder.execute().actionGet();
@@ -251,6 +253,9 @@ public class ElasticsearchFunctions implements SearchFunctions
      */
     private final QuadConsumer<String, String, String, String> validateFunction = (indexName, documentType, id, json) -> {
         LOGGER.info("Validating Elasticsearch document, indexName={}, documentType={}, id={}.", indexName, documentType, id);
+
+        // Get a transport client from the transport client factory
+        final TransportClient transportClient = transportClientFactory.getTransportClient();
 
         // Get the document from the index
         final GetRequestBuilder getRequestBuilder = transportClient.prepareGet(indexName, documentType, id);
@@ -282,6 +287,9 @@ public class ElasticsearchFunctions implements SearchFunctions
      * is valid and false otherwise.
      */
     private final QuadPredicate<String, String, String, String> isValidFunction = (indexName, documentType, id, json) -> {
+        // Get a transport client from the transport client factory
+        final TransportClient transportClient = transportClientFactory.getTransportClient();
+
         // Get the document from the index
         final GetResponse getResponse = transportClient.prepareGet(indexName, documentType, id).execute().actionGet();
 
@@ -296,6 +304,7 @@ public class ElasticsearchFunctions implements SearchFunctions
      * The index exists predicate will take as an argument the index name and will return tree if the index exists and false otherwise.
      */
     private final Predicate<String> indexExistsFunction = indexName -> {
+        final TransportClient transportClient = transportClientFactory.getTransportClient();
         final IndicesExistsResponse indicesExistsResponse = transportClient.admin().indices().prepareExists(indexName).execute().actionGet();
         return indicesExistsResponse.isExists();
     };
@@ -305,6 +314,7 @@ public class ElasticsearchFunctions implements SearchFunctions
      */
     private final Consumer<String> deleteIndexFunction = indexName -> {
         LOGGER.info("Deleting Elasticsearch index, indexName={}.", indexName);
+        final TransportClient transportClient = transportClientFactory.getTransportClient();
         final DeleteIndexRequestBuilder deleteIndexRequestBuilder = transportClient.admin().indices().prepareDelete(indexName);
         deleteIndexRequestBuilder.execute().actionGet();
     };
@@ -316,6 +326,9 @@ public class ElasticsearchFunctions implements SearchFunctions
     private final TriConsumer<String, String, Map<String, String>> createIndexDocumentsFunction = (indexName, documentType, documentMap) -> {
         LOGGER.info("Creating Elasticsearch index documents, indexName={}, documentType={}, documentMap={}.", indexName, documentType,
             Joiner.on(",").withKeyValueSeparator("=").join(documentMap));
+
+        // Get a transport client from the transport client factory
+        final TransportClient transportClient = transportClientFactory.getTransportClient();
 
         // Prepare a bulk request builder
         final BulkRequestBuilder bulkRequestBuilder = transportClient.prepareBulk();
@@ -342,6 +355,7 @@ public class ElasticsearchFunctions implements SearchFunctions
      */
     private final QuadConsumer<String, String, String, String> createIndexFunction = (indexName, documentType, mapping, settings) -> {
         LOGGER.info("Creating Elasticsearch index, indexName={}, documentType={}.", indexName, documentType);
+        final TransportClient transportClient = transportClientFactory.getTransportClient();
         final CreateIndexRequestBuilder createIndexRequestBuilder = transportClient.admin().indices().prepareCreate(indexName);
         createIndexRequestBuilder.setSettings(settings);
         createIndexRequestBuilder.addMapping(documentType, mapping);
@@ -353,6 +367,7 @@ public class ElasticsearchFunctions implements SearchFunctions
      */
     private final TriConsumer<String, String, String> deleteDocumentByIdFunction = (indexName, documentType, id) -> {
         LOGGER.info("Deleting Elasticsearch document from index, indexName={}, documentType={}, id={}.", indexName, documentType, id);
+        final TransportClient transportClient = transportClientFactory.getTransportClient();
         final DeleteRequestBuilder deleteRequestBuilder = transportClient.prepareDelete(indexName, documentType, id);
         deleteRequestBuilder.execute().actionGet();
     };
@@ -363,6 +378,9 @@ public class ElasticsearchFunctions implements SearchFunctions
     private final TriConsumer<String, String, List<Integer>> deleteIndexDocumentsFunction = (indexName, documentType, ids) -> {
         LOGGER.info("Deleting Elasticsearch documents from index, indexName={}, documentType={}, ids={}.", indexName, documentType,
             ids.stream().map(Object::toString).collect(Collectors.joining(",")));
+
+        // Get a transport client from the transport client factory
+        final TransportClient transportClient = transportClientFactory.getTransportClient();
 
         // Prepare a bulk request builder
         final BulkRequestBuilder bulkRequestBuilder = transportClient.prepareBulk();
@@ -387,6 +405,7 @@ public class ElasticsearchFunctions implements SearchFunctions
      * The number of types in index function will take as arguments the index name and the document type and will return the number of documents in the index.
      */
     private final BiFunction<String, String, Long> numberOfTypesInIndexFunction = (indexName, documentType) -> {
+        final TransportClient transportClient = transportClientFactory.getTransportClient();
         final SearchRequestBuilder searchRequestBuilder = transportClient.prepareSearch(indexName).setTypes(documentType);
         final SearchResponse searchResponse = searchRequestBuilder.execute().actionGet();
         return searchResponse.getHits().getTotalHits();
@@ -398,6 +417,9 @@ public class ElasticsearchFunctions implements SearchFunctions
     private final BiFunction<String, String, List<String>> idsInIndexFunction = (indexName, documentType) -> {
         // Create an array list for storing the ids
         List<String> idList = new ArrayList<>();
+
+        // Get a transport client from the transport client factory
+        final TransportClient transportClient = transportClientFactory.getTransportClient();
 
         // Create a search request and set the scroll time and scroll size
         final SearchRequestBuilder searchRequestBuilder = transportClient.prepareSearch(indexName);
@@ -435,6 +457,9 @@ public class ElasticsearchFunctions implements SearchFunctions
      */
     private final QuadFunction<String, String, List<Map<SearchFilterType, List<TagEntity>>>, Set<String>, ElasticsearchResponseDto>
         searchBusinessObjectDefinitionsByTagsFunction = (indexName, documentType, nestedTagEntityMaps, facetFieldsList) -> {
+
+            // Get a transport client from the transport client factory
+            final TransportClient transportClient = transportClientFactory.getTransportClient();
 
             ElasticsearchResponseDto elasticsearchResponseDto = new ElasticsearchResponseDto();
 
@@ -573,6 +598,9 @@ public class ElasticsearchFunctions implements SearchFunctions
 
             LOGGER.info("Elasticsearch get all business object definition documents from index, indexName={} and documentType={}.", indexName, documentType);
 
+            // Get a transport client from the transport client factory
+            final TransportClient transportClient = transportClientFactory.getTransportClient();
+
             SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
             searchSourceBuilder
                 .fetchSource(new String[] {DATA_PROVIDER_NAME_SOURCE, DESCRIPTION_SOURCE, DISPLAY_NAME_SOURCE, NAME_SOURCE, NAMESPACE_CODE_SOURCE}, null);
@@ -692,6 +720,9 @@ public class ElasticsearchFunctions implements SearchFunctions
     private List<BusinessObjectDefinitionIndexSearchResponseDto> scrollSearchResultsIntoBusinessObjectDefinitionDto(
         final SearchRequestBuilder searchRequestBuilder)
     {
+        // Get a transport client from the transport client factory
+        final TransportClient transportClient = transportClientFactory.getTransportClient();
+
         // Retrieve the search response
         SearchResponse searchResponse = searchRequestBuilder.execute().actionGet();
 
@@ -736,6 +767,9 @@ public class ElasticsearchFunctions implements SearchFunctions
     private final TriConsumer<String, String, Map<String, String>> updateIndexDocumentsFunction = (indexName, documentType, documentMap) -> {
         LOGGER.info("Updating Elasticsearch index documents, indexName={}, documentType={}, documentMap={}.", indexName, documentType,
             Joiner.on(",").withKeyValueSeparator("=").join(documentMap));
+
+        // Get a transport client from the transport client factory
+        final TransportClient transportClient = transportClientFactory.getTransportClient();
 
         // Prepare a bulk request builder
         final BulkRequestBuilder bulkRequestBuilder = transportClient.prepareBulk();

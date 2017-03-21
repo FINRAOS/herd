@@ -20,6 +20,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -39,6 +40,7 @@ import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.dao.BusinessObjectDefinitionDao;
 import org.finra.herd.dao.TagDao;
+import org.finra.herd.dao.TransportClientFactory;
 import org.finra.herd.model.api.xml.SearchIndexKey;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.SearchIndexStatusEntity;
@@ -76,7 +78,7 @@ public class SearchIndexHelperServiceTest extends AbstractServiceTest
     private TagHelper tagHelper;
 
     @Mock
-    private TransportClient transportClient;
+    private TransportClientFactory transportClientFactory;
 
     @Before
     public void before()
@@ -89,6 +91,9 @@ public class SearchIndexHelperServiceTest extends AbstractServiceTest
     {
         // Create a search index key.
         SearchIndexKey searchIndexKey = new SearchIndexKey(SEARCH_INDEX_NAME);
+
+        // Build Mocks
+        TransportClient transportClient = mock(TransportClient.class);
 
         // Create a list of business object definition entities.
         final List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities = Collections.unmodifiableList(Arrays.asList(
@@ -132,6 +137,9 @@ public class SearchIndexHelperServiceTest extends AbstractServiceTest
     {
         // Create a search index key.
         SearchIndexKey searchIndexKey = new SearchIndexKey(SEARCH_INDEX_NAME);
+
+        // Build Mocks
+        TransportClient transportClient = mock(TransportClient.class);
 
         // Create a list of tag entities.
         final List<TagEntity> tagEntities = Collections.unmodifiableList(Arrays
