@@ -37,6 +37,7 @@ import org.finra.herd.service.FacetFieldValidationService;
 import org.finra.herd.service.IndexSearchService;
 import org.finra.herd.service.SearchableService;
 import org.finra.herd.service.helper.IndexSearchResultTypeHelper;
+import org.finra.herd.service.helper.TagDaoHelper;
 import org.finra.herd.service.helper.TagHelper;
 
 /**
@@ -66,6 +67,9 @@ public class IndexSearchServiceImpl implements IndexSearchService, SearchableSer
 
     @Autowired
     private TagHelper tagHelper;
+
+    @Autowired
+    private TagDaoHelper tagDaoHelper;
 
     @Autowired
     private IndexSearchResultTypeHelper resultTypeHelper;
@@ -154,6 +158,9 @@ public class IndexSearchServiceImpl implements IndexSearchService, SearchableSer
                         if (null != indexSearchKey.getTagKey())
                         {
                             tagHelper.validateTagKey(indexSearchKey.getTagKey());
+
+                            // Validates that a tag entity exists for the specified tag key
+                            tagDaoHelper.getTagEntity(indexSearchKey.getTagKey());
                         }
 
                         // Validate search result type key if present

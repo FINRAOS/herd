@@ -54,6 +54,7 @@ import org.finra.herd.model.api.xml.IndexSearchResultKey;
 import org.finra.herd.model.api.xml.IndexSearchResultTypeKey;
 import org.finra.herd.model.api.xml.TagKey;
 import org.finra.herd.service.helper.IndexSearchResultTypeHelper;
+import org.finra.herd.service.helper.TagDaoHelper;
 import org.finra.herd.service.helper.TagHelper;
 import org.finra.herd.service.impl.IndexSearchServiceImpl;
 
@@ -85,6 +86,9 @@ public class IndexSearchServiceTest extends AbstractServiceTest
 
     @Mock
     private IndexSearchResultTypeHelper indexSearchResultTypeHelper;
+
+    @Mock
+    private TagDaoHelper tagDaoHelper;
 
     @Before
     public void before()

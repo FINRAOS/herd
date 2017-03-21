@@ -29,11 +29,8 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.nested.Nested;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.util.Assert;
 
-import org.finra.herd.dao.TagDao;
 import org.finra.herd.model.api.xml.Facet;
 import org.finra.herd.model.api.xml.IndexSearchFilter;
 import org.finra.herd.model.api.xml.IndexSearchKey;
@@ -210,9 +207,6 @@ public class ElasticsearchHelper
      */
     public static final String TAG_RESULT_TYPE = "tag";
 
-    @Autowired
-    private TagDao tagDao;
-
     /**
      * Adds facet field aggregations
      *
@@ -264,11 +258,6 @@ public class ElasticsearchHelper
             {
                 if (null != indexSearchKey.getTagKey())
                 {
-                    // Validates that a tag entity exists for the specified tag key
-                    Assert.notNull(tagDao.getTagByKey(indexSearchKey.getTagKey()), String
-                        .format("Tag with code \"%s\" doesn't exist for tag type \"%s\".", indexSearchKey.getTagKey().getTagCode(),
-                            indexSearchKey.getTagKey().getTagTypeCode()));
-
                     // Add constant-score term queries for tagType-code and tag-code from the tag-key.
                     ConstantScoreQueryBuilder searchKeyQueryBuilder = QueryBuilders.constantScoreQuery(QueryBuilders.boolQuery().should(
                         QueryBuilders.boolQuery().must(QueryBuilders.termQuery(BDEF_TAGTYPE_CODE_FIELD, indexSearchKey.getTagKey().getTagTypeCode()))
