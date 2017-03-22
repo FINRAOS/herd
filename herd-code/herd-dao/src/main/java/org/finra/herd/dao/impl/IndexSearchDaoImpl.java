@@ -560,6 +560,7 @@ public class IndexSearchDaoImpl implements IndexSearchDao
             ElasticsearchResponseDto elasticsearchResponseDto = new ElasticsearchResponseDto();
             if (request.getFacetFields().contains(ElasticsearchHelper.TAG_FACET))
             {
+                elasticsearchResponseDto.setNestTagTypeIndexSearchResponseDtos(elasticsearchHelper.getNestedTagTagIndexSearchResponseDto(searchResponse));
                 elasticsearchResponseDto.setTagTypeIndexSearchResponseDtos(elasticsearchHelper.getTagTagIndexSearchResponseDto(searchResponse));
             }
             if (request.getFacetFields().contains(ElasticsearchHelper.RESULT_TYPE_FACET))
@@ -567,7 +568,7 @@ public class IndexSearchDaoImpl implements IndexSearchDao
                 elasticsearchResponseDto.setResultTypeIndexSearchResponseDtos(elasticsearchHelper.getResultTypeIndexSearchResponseDto(searchResponse));
             }
 
-            facets = elasticsearchHelper.getFacetsReponse(elasticsearchResponseDto, true);
+            facets = elasticsearchHelper.getFacetsResponse(elasticsearchResponseDto, true);
         }
 
         return new IndexSearchResponse(searchHits.getTotalHits(), indexSearchResults, facets);

@@ -276,9 +276,9 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         List<ResultTypeIndexSearchResponseDto> resultTypeIndexSearchResponseDto =
             Collections.singletonList(new ResultTypeIndexSearchResponseDto("type", 1, null));
 
-        when(elasticsearchHelper.getTagTagIndexSearchResponseDto(searchResponse)).thenReturn(tagTypeIndexSearchResponseDtos);
+        when(elasticsearchHelper.getNestedTagTagIndexSearchResponseDto(searchResponse)).thenReturn(tagTypeIndexSearchResponseDtos);
         when(elasticsearchHelper.getResultTypeIndexSearchResponseDto(searchResponse)).thenReturn(resultTypeIndexSearchResponseDto);
-        when(elasticsearchHelper.getFacetsReponse(any(ElasticsearchResponseDto.class), any(Boolean.class))).thenCallRealMethod();
+        when(elasticsearchHelper.getFacetsResponse(any(ElasticsearchResponseDto.class), any(Boolean.class))).thenCallRealMethod();
         when(elasticsearchHelper.addIndexSearchFilterBooleanClause(any(List.class))).thenCallRealMethod();
         when(elasticsearchHelper.addFacetFieldAggregations(any(Set.class), any(SearchRequestBuilder.class))).thenCallRealMethod();
 
