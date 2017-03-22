@@ -16,7 +16,6 @@
 package org.finra.herd.dao;
 
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
-import org.elasticsearch.client.transport.TransportClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,11 +45,10 @@ public class TransportClientController
     private CacheManager cacheManager;
 
     /**
-     * The transport client factory used to get a transport client.
+     * Cluster Health Response Factory class used to build a ClusterHealthResponse.
      */
     @Autowired
-    private TransportClientFactory transportClientFactory;
-
+    private ClusterHealthResponseFactory clusterHealthResponseFactory;
 
     /**
      * The control transport client method will check the health of the transport client and the search index. If the search index or transport client are not
@@ -64,13 +62,8 @@ public class TransportClientController
 
         try
         {
-            // Get the transport client. This will be a cached transport client unless, the time to live has expired, or if the cache was cleared.
-            TransportClient transportClient = transportClientFactory.getTransportClient();
-
-            LOGGER.debug("Transport client instance={}", transportClient.toString());
-
-            // Get the cluster health so that we can check the number of nodes.
-            ClusterHealthResponse clusterHealthResponse = transportClient.admin().cluster().prepareHealth().get();
+            // Get a cluster health response.
+            ClusterHealthResponse clusterHealthResponse = clusterHealthResponseFactory.getClusterHealthResponse();
 
             // If the cluster health response is null, or if the number of nodes is not greater than zero
             // then clear the transport client cache.

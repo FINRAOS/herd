@@ -21,7 +21,6 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -120,12 +119,12 @@ public class TransportClientFactoryTest
         assertThat(transportClient, is(not(nullValue())));
 
         // Verify the calls to external methods
-        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_SETTINGS_JSON);
-        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_DEFAULT_PORT, Integer.class);
-        verify(jsonHelper, times(1)).unmarshallJsonToObject(ElasticsearchSettingsDto.class, "elasticSearchSettingsJSON");
-        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_ENABLED);
-        verify(preBuiltTransportClientFactory, times(1)).getPreBuiltTransportClient(any());
-        verify(transportClient, times(1))
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_SETTINGS_JSON);
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_DEFAULT_PORT, Integer.class);
+        verify(jsonHelper).unmarshallJsonToObject(ElasticsearchSettingsDto.class, "elasticSearchSettingsJSON");
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_ENABLED);
+        verify(preBuiltTransportClientFactory).getPreBuiltTransportClient(any());
+        verify(transportClient)
             .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName("127.0.0.1"), 9300));
         verifyNoMoreInteractions(createdMocks.toArray());
     }
@@ -162,11 +161,11 @@ public class TransportClientFactoryTest
         assertThat(transportClient, is(not(nullValue())));
 
         // Verify the calls to external methods
-        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_SETTINGS_JSON);
-        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_DEFAULT_PORT, Integer.class);
-        verify(jsonHelper, times(1)).unmarshallJsonToObject(ElasticsearchSettingsDto.class, "elasticSearchSettingsJSON");
-        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_ENABLED);
-        verify(preBuiltTransportClientFactory, times(1)).getPreBuiltTransportClient(any());
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_SETTINGS_JSON);
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_DEFAULT_PORT, Integer.class);
+        verify(jsonHelper).unmarshallJsonToObject(ElasticsearchSettingsDto.class, "elasticSearchSettingsJSON");
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_ENABLED);
+        verify(preBuiltTransportClientFactory).getPreBuiltTransportClient(any());
         verifyNoMoreInteractions(createdMocks.toArray());
     }
 
@@ -233,25 +232,25 @@ public class TransportClientFactoryTest
         assertThat(transportClient, is(not(nullValue())));
 
         // Verify the calls to external methods
-        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_SETTINGS_JSON);
-        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_DEFAULT_PORT, Integer.class);
-        verify(jsonHelper, times(1)).unmarshallJsonToObject(ElasticsearchSettingsDto.class, "elasticSearchSettingsJSON");
-        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_ENABLED);
-        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_KEYSTORE_PATH);
-        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_TRUSTSTORE_PATH);
-        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.CREDSTASH_ENCRYPTION_CONTEXT);
-        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.CREDSTASH_AWS_REGION_NAME);
-        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.CREDSTASH_TABLE_NAME);
-        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_KEYSTORE_CREDENTIAL_NAME);
-        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_TRUSTSTORE_CREDENTIAL_NAME);
-        verify(credStashFactory, times(1)).getCredStash("us-east-1", "table");
-        verify(jsonHelper, times(1)).unmarshallJsonToObject(Map.class, "credstashEncryptionContext");
-        verify(credStash, times(1)).getCredential("keystoreCredential", credstashEncryptionContextMap);
-        verify(credStash, times(1)).getCredential("truststoreCredential", credstashEncryptionContextMap);
-        verify(inputStreamFactory, times(1)).getFileInputStream("keystorePath");
-        verify(inputStreamFactory, times(1)).getFileInputStream("truststorePath");
-        verify(preBuiltTransportClientFactory, times(1)).getPreBuiltTransportClientWithSearchGuardPlugin(any());
-        verify(transportClient, times(1))
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_SETTINGS_JSON);
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_DEFAULT_PORT, Integer.class);
+        verify(jsonHelper).unmarshallJsonToObject(ElasticsearchSettingsDto.class, "elasticSearchSettingsJSON");
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_ENABLED);
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_KEYSTORE_PATH);
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_TRUSTSTORE_PATH);
+        verify(configurationHelper).getProperty(ConfigurationValue.CREDSTASH_ENCRYPTION_CONTEXT);
+        verify(configurationHelper).getProperty(ConfigurationValue.CREDSTASH_AWS_REGION_NAME);
+        verify(configurationHelper).getProperty(ConfigurationValue.CREDSTASH_TABLE_NAME);
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_KEYSTORE_CREDENTIAL_NAME);
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_TRUSTSTORE_CREDENTIAL_NAME);
+        verify(credStashFactory).getCredStash("us-east-1", "table");
+        verify(jsonHelper).unmarshallJsonToObject(Map.class, "credstashEncryptionContext");
+        verify(credStash).getCredential("keystoreCredential", credstashEncryptionContextMap);
+        verify(credStash).getCredential("truststoreCredential", credstashEncryptionContextMap);
+        verify(inputStreamFactory).getFileInputStream("keystorePath");
+        verify(inputStreamFactory).getFileInputStream("truststorePath");
+        verify(preBuiltTransportClientFactory).getPreBuiltTransportClientWithSearchGuardPlugin(any());
+        verify(transportClient)
             .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName("127.0.0.1"), 9300));
         verifyNoMoreInteractions(createdMocks.toArray());
     }
@@ -307,20 +306,20 @@ public class TransportClientFactoryTest
         assertThat(transportClient, is(not(nullValue())));
 
         // Verify the calls to external methods
-        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_SETTINGS_JSON);
-        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_DEFAULT_PORT, Integer.class);
-        verify(jsonHelper, times(1)).unmarshallJsonToObject(ElasticsearchSettingsDto.class, "elasticSearchSettingsJSON");
-        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_ENABLED);
-        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_KEYSTORE_PATH);
-        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_TRUSTSTORE_PATH);
-        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.CREDSTASH_ENCRYPTION_CONTEXT);
-        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.CREDSTASH_AWS_REGION_NAME);
-        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.CREDSTASH_TABLE_NAME);
-        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_KEYSTORE_CREDENTIAL_NAME);
-        verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_TRUSTSTORE_CREDENTIAL_NAME);
-        verify(credStashFactory, times(1)).getCredStash("us-east-1", "table");
-        verify(jsonHelper, times(1)).unmarshallJsonToObject(Map.class, "credstashEncryptionContext");
-        verify(preBuiltTransportClientFactory, times(1)).getPreBuiltTransportClient(any());
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_SETTINGS_JSON);
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_DEFAULT_PORT, Integer.class);
+        verify(jsonHelper).unmarshallJsonToObject(ElasticsearchSettingsDto.class, "elasticSearchSettingsJSON");
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_ENABLED);
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_KEYSTORE_PATH);
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_TRUSTSTORE_PATH);
+        verify(configurationHelper).getProperty(ConfigurationValue.CREDSTASH_ENCRYPTION_CONTEXT);
+        verify(configurationHelper).getProperty(ConfigurationValue.CREDSTASH_AWS_REGION_NAME);
+        verify(configurationHelper).getProperty(ConfigurationValue.CREDSTASH_TABLE_NAME);
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_KEYSTORE_CREDENTIAL_NAME);
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_TRUSTSTORE_CREDENTIAL_NAME);
+        verify(credStashFactory).getCredStash("us-east-1", "table");
+        verify(jsonHelper).unmarshallJsonToObject(Map.class, "credstashEncryptionContext");
+        verify(preBuiltTransportClientFactory).getPreBuiltTransportClient(any());
         verifyNoMoreInteractions(createdMocks.toArray());
     }
 }
