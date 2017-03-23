@@ -27,6 +27,8 @@ public class ElasticsearchResponseDto
 
     private List<TagTypeIndexSearchResponseDto> tagTypeIndexSearchResponseDtos;
 
+    private List<TagTypeIndexSearchResponseDto> nestTagTypeIndexSearchResponseDtos;
+
     private List<ResultTypeIndexSearchResponseDto>  resultTypeIndexSearchResponseDtos;
 
     /**
@@ -87,5 +89,15 @@ public class ElasticsearchResponseDto
     public void setResultTypeIndexSearchResponseDtos(List<ResultTypeIndexSearchResponseDto> resultTypeIndexSearchResponseDtos)
     {
         this.resultTypeIndexSearchResponseDtos = resultTypeIndexSearchResponseDtos;
+    }
+
+    public List<TagTypeIndexSearchResponseDto> getNestTagTypeIndexSearchResponseDtos()
+    {
+        return nestTagTypeIndexSearchResponseDtos;
+    }
+
+    public void setNestTagTypeIndexSearchResponseDtos(List<TagTypeIndexSearchResponseDto> nestTagTypeIndexSearchResponseDtos)
+    {
+        this.nestTagTypeIndexSearchResponseDtos = nestTagTypeIndexSearchResponseDtos;
     }
 }

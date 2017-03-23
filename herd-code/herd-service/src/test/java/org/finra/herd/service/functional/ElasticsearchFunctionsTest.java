@@ -1268,6 +1268,117 @@ public class ElasticsearchFunctionsTest
     }
 
     @Test
+    public void testSearchBusinessObjectDefinitionByTagsFunctionWithNoExclusionWithNoInclusion() throws Exception
+    {
+        QuadFunction<String, String, List<Map<SearchFilterType, List<TagEntity>>>, Set<String>, ElasticsearchResponseDto>
+            searchBusinessObjectDefinitionsByTagsFunction = searchFunctions.getSearchBusinessObjectDefinitionsByTagsFunction();
+
+        assertThat("Function is null.", searchBusinessObjectDefinitionsByTagsFunction, not(nullValue()));
+        assertThat("Search business object definitions by tags function not an instance of QuadFunction.", searchBusinessObjectDefinitionsByTagsFunction,
+            instanceOf(QuadFunction.class));
+
+        // Build mocks
+        TransportClient transportClient = mock(TransportClient.class);
+        SearchRequestBuilder searchRequestBuilder = mock(SearchRequestBuilder.class);
+        SearchRequestBuilder searchRequestBuilderWithTypes = mock(SearchRequestBuilder.class);
+        SearchRequestBuilder searchRequestBuilderWithScroll = mock(SearchRequestBuilder.class);
+        SearchRequestBuilder searchRequestBuilderWithSize = mock(SearchRequestBuilder.class);
+        SearchRequestBuilder searchRequestBuilderWithSource = mock(SearchRequestBuilder.class);
+        SearchRequestBuilder searchRequestBuilderWithSorting = mock(SearchRequestBuilder.class);
+
+        SearchResponse searchResponse = mock(SearchResponse.class);
+        SearchHits searchHits = mock(SearchHits.class);
+        SearchHit searchHit1 = mock(SearchHit.class);
+        SearchHit searchHit2 = mock(SearchHit.class);
+        SearchScrollRequestBuilder searchScrollRequestBuilder = mock(SearchScrollRequestBuilder.class);
+        SearchHit[] searchHitArray = new SearchHit[2];
+        searchHitArray[0] = searchHit1;
+        searchHitArray[1] = searchHit2;
+        SearchResponse searchResponseScroll = mock(SearchResponse.class);
+        SearchHits searchHitsScroll = mock(SearchHits.class);
+        SearchHit[] searchHitArrayScroll = new SearchHit[0];
+
+        @SuppressWarnings("unchecked")
+        ListenableActionFuture<SearchResponse> listenableActionFuture = mock(ListenableActionFuture.class);
+        @SuppressWarnings("unchecked")
+        ListenableActionFuture<SearchResponse> listenableActionFutureScroll = mock(ListenableActionFuture.class);
+
+        // Mock the call to external methods
+        when(transportClientFactory.getTransportClient()).thenReturn(transportClient);
+        when(transportClient.prepareSearch("INDEX_NAME")).thenReturn(searchRequestBuilder);
+        when(searchRequestBuilder.setTypes("DOCUMENT_TYPE")).thenReturn(searchRequestBuilderWithTypes);
+        when(searchRequestBuilderWithTypes.setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME))).thenReturn(searchRequestBuilderWithScroll);
+        when(searchRequestBuilderWithScroll.setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE)).thenReturn(searchRequestBuilderWithSize);
+        when(searchRequestBuilderWithSize.setSource(any())).thenReturn(searchRequestBuilderWithSource);
+        when(searchRequestBuilderWithSource.addSort(any())).thenReturn(searchRequestBuilderWithSorting);
+        when(searchRequestBuilderWithSorting.addSort(any())).thenReturn(searchRequestBuilderWithSorting);
+
+        when(searchRequestBuilder.execute()).thenReturn(listenableActionFuture);
+        when(listenableActionFuture.actionGet()).thenReturn(searchResponse);
+        when(searchResponse.getHits()).thenReturn(searchHits);
+        when(searchHits.hits()).thenReturn(searchHitArray);
+        when(transportClient.prepareSearchScroll(any())).thenReturn(searchScrollRequestBuilder);
+        when(searchScrollRequestBuilder.execute()).thenReturn(listenableActionFutureScroll);
+        when(listenableActionFutureScroll.actionGet()).thenReturn(searchResponseScroll);
+        when(searchResponseScroll.getHits()).thenReturn(searchHitsScroll);
+        when(searchHitsScroll.hits()).thenReturn(searchHitArrayScroll);
+        when(jsonHelper.unmarshallJsonToObject(any(), any())).thenThrow(new IOException());
+
+        // Get test tag entity
+        TagEntity tagEntity = new TagEntity();
+        tagEntity.setTagCode("TAG_CODE");
+
+        TagTypeEntity tagTypeEntity = new TagTypeEntity();
+        tagTypeEntity.setCode("TAG_TYPE_CODE");
+        tagTypeEntity.setDisplayName("DISPLAY_NAME");
+        tagTypeEntity.setOrderNumber(1);
+
+        tagEntity.setTagType(tagTypeEntity);
+
+        List<TagEntity> tagEntities = new ArrayList<>();
+        tagEntities.add(tagEntity);
+
+        // List<Map<SearchFilterType, List<TagEntity>>>
+        Map<SearchFilterType, List<TagEntity>> searchFilterExclusionTypeListMap = new HashMap<>();
+        List<Map<SearchFilterType, List<TagEntity>>> tagEnLists = new ArrayList<>();
+        tagEnLists.add(searchFilterExclusionTypeListMap);
+
+        // Call the method under test
+        List<BusinessObjectDefinitionIndexSearchResponseDto> businessObjectDefinitionEntityList =
+            searchBusinessObjectDefinitionsByTagsFunction.apply("INDEX_NAME", "DOCUMENT_TYPE", tagEnLists, new HashSet<>())
+                .getBusinessObjectDefinitionIndexSearchResponseDtos();
+
+        assertThat("Business object definition entity list is null.", businessObjectDefinitionEntityList, not(nullValue()));
+
+        // Verify the calls to external methods
+        verify(transportClientFactory, times(2)).getTransportClient();
+        verify(transportClient).prepareSearch("INDEX_NAME");
+        verify(searchRequestBuilder).setTypes("DOCUMENT_TYPE");
+        verify(searchRequestBuilderWithTypes).setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME));
+        verify(searchRequestBuilderWithScroll).setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE);
+        verify(searchRequestBuilderWithSize).setSource(any());
+        verify(searchRequestBuilderWithSource).addSort(SortBuilders.fieldSort(BUSINESS_OBJECT_DEFINITION_SORT_FIELD).order(SortOrder.ASC));
+        verify(searchRequestBuilderWithSorting).addSort(SortBuilders.fieldSort(NAMESPACE_CODE_SORT_FIELD).order(SortOrder.ASC));
+        verify(searchRequestBuilder).execute();
+        verify(listenableActionFuture).actionGet();
+        verify(searchResponse).getHits();
+        verify(searchHits).hits();
+        verify(searchResponse).getScrollId();
+        verify(transportClient).prepareSearchScroll(any());
+        verify(searchScrollRequestBuilder).execute();
+        verify(searchScrollRequestBuilder).setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME));
+        verify(listenableActionFutureScroll).actionGet();
+        verify(searchResponseScroll).getHits();
+        verify(searchHitsScroll).hits();
+        verify(searchHitArray[0]).getSourceAsString();
+        verify(searchHitArray[1]).getSourceAsString();
+        verify(searchHitArray[0]).id();
+        verify(searchHitArray[1]).id();
+        verify(jsonHelper, times(2)).unmarshallJsonToObject(any(), any());
+        verifyNoMoreInteractions(createdMocks.toArray());
+    }
+
+    @Test
     public void testUpdateIndexDocumentsFunction()
     {
         TriConsumer<String, String, Map<String, String>> updateIndexDocumentsFunction = searchFunctions.getUpdateIndexDocumentsFunction();
