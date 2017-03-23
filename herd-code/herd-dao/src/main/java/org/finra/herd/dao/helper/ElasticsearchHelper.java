@@ -411,11 +411,10 @@ public class ElasticsearchHelper
      * create tag index search response facet
      *
      * @param tagTypeIndexSearchResponseDto response dto
-     * @param includingTagInCount if include tag count
      *
      * @return tag type facet
      */
-    private Facet createTagTypeFacet(TagTypeIndexSearchResponseDto tagTypeIndexSearchResponseDto, boolean includingTagInCount)
+    private Facet createTagTypeFacet(TagTypeIndexSearchResponseDto tagTypeIndexSearchResponseDto)
     {
         List<Facet> tagFacets = new ArrayList<>();
 
@@ -424,11 +423,6 @@ public class ElasticsearchHelper
             for (TagIndexSearchResponseDto tagIndexSearchResponseDto : tagTypeIndexSearchResponseDto.getTagIndexSearchResponseDtos())
             {
                 long facetCount = tagIndexSearchResponseDto.getCount();
-                if (includingTagInCount)
-                {
-                    facetCount = facetCount + 1;
-                }
-
                 Facet tagFacet = new Facet(tagIndexSearchResponseDto.getTagDisplayName(), facetCount, TagIndexSearchResponseDto.getFacetType(),
                     tagIndexSearchResponseDto.getTagCode(), null);
                 tagFacets.add(tagFacet);
@@ -436,17 +430,6 @@ public class ElasticsearchHelper
         }
 
         long facetCount = tagTypeIndexSearchResponseDto.getCount();
-        //add one to the count, as the tag itself need to be counted, and all its children
-        if (includingTagInCount)
-        {
-            int tagCount = 0;
-            if (tagTypeIndexSearchResponseDto.getTagIndexSearchResponseDtos() != null)
-            {
-                tagCount = tagTypeIndexSearchResponseDto.getTagIndexSearchResponseDtos().size();
-            }
-            facetCount = facetCount + tagCount;
-        }
-
         return new Facet(tagTypeIndexSearchResponseDto.getDisplayName(), facetCount, TagTypeIndexSearchResponseDto.getFacetType(),
             tagTypeIndexSearchResponseDto.getCode(), tagFacets);
 
@@ -463,7 +446,7 @@ public class ElasticsearchHelper
     public List<Facet> getFacetsResponse(ElasticsearchResponseDto elasticsearchResponseDto, boolean includingTagInCount)
     {
         List<Facet> facets = new ArrayList<>();
-
+        
         List<Facet> tagTypeFacets = null;
         if (elasticsearchResponseDto.getNestTagTypeIndexSearchResponseDtos() != null)
         {
@@ -471,7 +454,7 @@ public class ElasticsearchHelper
             //construct a list of facet information
             for (TagTypeIndexSearchResponseDto tagTypeIndexSearchResponseDto : elasticsearchResponseDto.getNestTagTypeIndexSearchResponseDtos())
             {
-                tagTypeFacets.add(createTagTypeFacet(tagTypeIndexSearchResponseDto, includingTagInCount));
+                tagTypeFacets.add(createTagTypeFacet(tagTypeIndexSearchResponseDto));
             }
 
             facets.addAll(tagTypeFacets);
@@ -495,6 +478,9 @@ public class ElasticsearchHelper
                                 if (tagIndexDto.getTagCode().equals(nestedTagIndexDto.getFacetId()))
                                 {
                                     foundMatchingTagCode = true;
+                                    //add one to the facet count because the tag itself is in the result
+                                    nestedTagIndexDto.setFacetCount(nestedTagIndexDto.getFacetCount() + 1);
+                                    tagFacet.setFacetCount(tagFacet.getFacetCount() + 1);
                                 }
                             }
                             if (!foundMatchingTagCode)
@@ -508,7 +494,7 @@ public class ElasticsearchHelper
                 }
                 if (!foundMatchingTagType)
                 {
-                    facets.add(createTagTypeFacet(tagTypeIndexDto, false));
+                    facets.add(createTagTypeFacet(tagTypeIndexDto));
                 }
             }
         }
