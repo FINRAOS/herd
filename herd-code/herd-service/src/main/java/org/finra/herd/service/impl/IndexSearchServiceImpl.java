@@ -33,6 +33,7 @@ import org.finra.herd.model.api.xml.IndexSearchRequest;
 import org.finra.herd.model.api.xml.IndexSearchResponse;
 import org.finra.herd.model.api.xml.IndexSearchResultTypeKey;
 import org.finra.herd.model.api.xml.TagKey;
+import org.finra.herd.model.jpa.TagEntity;
 import org.finra.herd.service.FacetFieldValidationService;
 import org.finra.herd.service.IndexSearchService;
 import org.finra.herd.service.SearchableService;
@@ -84,7 +85,7 @@ public class IndexSearchServiceImpl implements IndexSearchService, SearchableSer
         validateIndexSearchRequestSearchTerm(request.getSearchTerm());
 
         // Validate the index search filters if specified in the request
-        if (CollectionUtils.isNotEmpty(request.getIndexSearchFilters()))
+        if (request.getIndexSearchFilters() != null)
         {
             validateIndexSearchFilters(request.getIndexSearchFilters());
         }
@@ -145,7 +146,7 @@ public class IndexSearchServiceImpl implements IndexSearchService, SearchableSer
                     searchFilter.getIndexSearchKeys().forEach(indexSearchKey ->
                     {
                         // Validate that each search key has either an index search result type key or a tag key
-                        Assert.isTrue((null != indexSearchKey.getIndexSearchResultTypeKey()) ^ (null != indexSearchKey.getTagKey()),
+                        Assert.isTrue((indexSearchKey.getIndexSearchResultTypeKey() != null) ^ (indexSearchKey.getTagKey() != null),
                             "Exactly one instance of index search result type key or tag key must be specified.");
 
                         Class<?> actualInstanceType = indexSearchKey.getIndexSearchResultTypeKey() != null ? IndexSearchResultTypeKey.class : TagKey.class;
@@ -155,16 +156,21 @@ public class IndexSearchServiceImpl implements IndexSearchService, SearchableSer
                             "Index search keys should be a homogeneous list of either index search result type keys or tag keys.");
 
                         // Validate tag key if present
-                        if (null != indexSearchKey.getTagKey())
+                        if (indexSearchKey.getTagKey() != null)
                         {
                             tagHelper.validateTagKey(indexSearchKey.getTagKey());
 
-                            // Validates that a tag entity exists for the specified tag key
-                            tagDaoHelper.getTagEntity(indexSearchKey.getTagKey());
+                            // Validates that a tag entity exists for the specified tag key and gets the actual key from the database
+                            // We then modify the index search filter key to use the actual values because it eventually becomes a filter query and it will not
+                            // automatically be case-sensitivity and whitespace resilient.
+                            TagEntity actualTagEntity = tagDaoHelper.getTagEntity(indexSearchKey.getTagKey());
+                            TagKey tagKey = new TagKey(actualTagEntity.getTagType().getCode(), actualTagEntity.getTagCode());
+
+                            indexSearchKey.setTagKey(tagKey);
                         }
 
                         // Validate search result type key if present
-                        if (null != indexSearchKey.getIndexSearchResultTypeKey())
+                        if (indexSearchKey.getIndexSearchResultTypeKey() != null)
                         {
                             resultTypeHelper.validateIndexSearchResultTypeKey(indexSearchKey.getIndexSearchResultTypeKey());
                         }
