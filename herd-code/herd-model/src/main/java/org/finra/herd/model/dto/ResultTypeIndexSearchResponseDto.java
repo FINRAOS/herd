@@ -105,7 +105,42 @@ public class ResultTypeIndexSearchResponseDto
     {
         return "ResultTypeIndexSearchResponseDto{" +
             " resultTypeCode='" + resultTypeCode + '\'' +
+            ", resultTypeDisplayName ='" + resultTypeDisplayName + '\'' +
             ", count=" + count +
             '}';
+    }
+
+    @Override
+    public boolean equals(Object object)
+    {
+        if (this == object)
+        {
+            return true;
+        }
+        if (object == null || getClass() != object.getClass())
+        {
+            return false;
+        }
+
+        ResultTypeIndexSearchResponseDto that = (ResultTypeIndexSearchResponseDto) object;
+
+        if (count != that.count)
+        {
+            return false;
+        }
+        if (resultTypeCode != null ? !resultTypeCode.equals(that.resultTypeCode) : that.resultTypeCode != null)
+        {
+            return false;
+        }
+        return resultTypeDisplayName != null ? resultTypeDisplayName.equals(that.resultTypeDisplayName) : that.resultTypeDisplayName == null;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int result = resultTypeCode != null ? resultTypeCode.hashCode() : 0;
+        result = 31 * result + (resultTypeDisplayName != null ? resultTypeDisplayName.hashCode() : 0);
+        result = 31 * result + (int) (count ^ (count >>> 32));
+        return result;
     }
 }
