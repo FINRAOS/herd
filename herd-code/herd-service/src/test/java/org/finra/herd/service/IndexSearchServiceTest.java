@@ -53,6 +53,8 @@ import org.finra.herd.model.api.xml.IndexSearchResult;
 import org.finra.herd.model.api.xml.IndexSearchResultKey;
 import org.finra.herd.model.api.xml.IndexSearchResultTypeKey;
 import org.finra.herd.model.api.xml.TagKey;
+import org.finra.herd.model.jpa.TagEntity;
+import org.finra.herd.model.jpa.TagTypeEntity;
 import org.finra.herd.service.helper.IndexSearchResultTypeHelper;
 import org.finra.herd.service.helper.TagDaoHelper;
 import org.finra.herd.service.helper.TagHelper;
@@ -188,6 +190,17 @@ public class IndexSearchServiceTest extends AbstractServiceTest
 
         // Construct an index search response
         final IndexSearchResponse indexSearchResponse = new IndexSearchResponse(TOTAL_INDEX_SEARCH_RESULTS, indexSearchResults, null);
+
+        // Create tag entity for the mock to return
+        TagEntity tagEntity = new TagEntity();
+        tagEntity.setTagCode(tagKey.getTagCode());
+
+        TagTypeEntity tagTypeEntity = new TagTypeEntity();
+        tagTypeEntity.setCode(tagKey.getTagTypeCode());
+
+        tagEntity.setTagType(tagTypeEntity);
+
+        when(tagDaoHelper.getTagEntity(tagKey)).thenReturn(tagEntity);
 
         // Mock the call to the index search service
         when(indexSearchDao.indexSearch(indexSearchRequest, fields)).thenReturn(indexSearchResponse);
@@ -426,6 +439,17 @@ public class IndexSearchServiceTest extends AbstractServiceTest
         // Construct an index search response
         final IndexSearchResponse indexSearchResponse = new IndexSearchResponse(TOTAL_INDEX_SEARCH_RESULTS, indexSearchResults, null);
 
+        // Create tag entity for the mock to return
+        TagEntity tagEntity = new TagEntity();
+        tagEntity.setTagCode(tagKey.getTagCode());
+
+        TagTypeEntity tagTypeEntity = new TagTypeEntity();
+        tagTypeEntity.setCode(tagKey.getTagTypeCode());
+
+        tagEntity.setTagType(tagTypeEntity);
+
+        when(tagDaoHelper.getTagEntity(tagKey)).thenReturn(tagEntity);
+
         // Mock the call to the index search service
         when(indexSearchDao.indexSearch(indexSearchRequest, fields)).thenReturn(indexSearchResponse);
 
@@ -476,16 +500,49 @@ public class IndexSearchServiceTest extends AbstractServiceTest
         // Create a new fields set that will be used when testing the index search method
         final Set<String> fields = Sets.newHashSet(FIELD_DISPLAY_NAME, FIELD_SHORT_DESCRIPTION);
 
+        // Create tag entity for the mock to return
+        TagEntity tagEntity = new TagEntity();
+        tagEntity.setTagCode(tagKey.getTagCode());
+
+        TagTypeEntity tagTypeEntity = new TagTypeEntity();
+        tagTypeEntity.setCode(tagKey.getTagTypeCode());
+
+        tagEntity.setTagType(tagTypeEntity);
+
+        when(tagDaoHelper.getTagEntity(tagKey)).thenReturn(tagEntity);
+
         try
         {
             // Call the method under test
-            IndexSearchResponse indexSearchResponseFromService = indexSearchService.indexSearch(indexSearchRequest, fields);
+            indexSearchService.indexSearch(indexSearchRequest, fields);
             fail();
         }
         catch (Exception e)
         {
             Assert.assertEquals(IllegalArgumentException.class, e.getClass());
             Assert.assertEquals("Index search keys should be a homogeneous list of either index search result type keys or tag keys.", e.getMessage());
+        }
+    }
+
+    @Test
+    public void testIndexSearchWithEmptyFilters()
+    {
+        final List<IndexSearchFilter> emptyFilters = new ArrayList<>();
+        // Create index search request
+        final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM, emptyFilters, null);
+
+        // Create a new fields set that will be used when testing the index search method
+        final Set<String> fields = Sets.newHashSet(FIELD_DISPLAY_NAME, FIELD_SHORT_DESCRIPTION);
+
+        try
+        {
+            // Call the method under test
+            indexSearchService.indexSearch(indexSearchRequest, fields);
+            fail();
+        }
+        catch (IllegalArgumentException e)
+        {
+            Assert.assertEquals("At least one index search filter must be specified.", e.getMessage());
         }
     }
 
