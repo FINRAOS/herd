@@ -480,7 +480,6 @@ public class ElasticsearchHelper
                                     foundMatchingTagCode = true;
                                     //add one to the facet count because the tag itself is in the result
                                     nestedTagIndexDto.setFacetCount(nestedTagIndexDto.getFacetCount() + 1);
-                                    tagFacet.setFacetCount(tagFacet.getFacetCount() + 1);
                                 }
                             }
                             if (!foundMatchingTagCode)

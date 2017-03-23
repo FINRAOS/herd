@@ -123,7 +123,7 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
         List<Facet> tagFacet = new ArrayList<>();
         tagFacet.add(new Facet(TAG_CODE_DISPLAY_NAME, (long) TAG_CODE_COUNT + 1, TagIndexSearchResponseDto.getFacetType(), TAG_CODE, null));
 
-        expectedFacets.add(new Facet(TAG_TYPE_DISPLAY_NAME_2,(long)TAG_TYPE_CODE_COUNT_2 + 1, TagTypeIndexSearchResponseDto.getFacetType(),TAG_TYPE_CODE_2, tagFacet));
+        expectedFacets.add(new Facet(TAG_TYPE_DISPLAY_NAME_2,(long)TAG_TYPE_CODE_COUNT_2, TagTypeIndexSearchResponseDto.getFacetType(),TAG_TYPE_CODE_2, tagFacet));
         assertEquals(expectedFacets, facets);
     }
 
