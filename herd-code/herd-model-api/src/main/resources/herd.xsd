@@ -6349,7 +6349,7 @@
          </xs:element>
          <xs:element name="facetFields" type="facetFields" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>A list of Facet Fields to be included with the response. Only Tag facet information is supported</xs:documentation>
+               <xs:documentation>A list of Facet Fields to be included with the response. Only Tag and ResultType facet information is supported</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
