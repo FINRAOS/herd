@@ -26,6 +26,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -34,6 +37,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+import org.apache.commons.collections4.CollectionUtils;
 import org.elasticsearch.action.ListenableActionFuture;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
@@ -41,6 +45,7 @@ import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.SearchShardTarget;
+import org.elasticsearch.search.aggregations.AggregationBuilder;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -51,11 +56,20 @@ import org.mockito.internal.progress.MockingProgress;
 import org.mockito.internal.progress.ThreadSafeMockingProgress;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
+import org.finra.herd.dao.helper.ElasticsearchHelper;
 import org.finra.herd.dao.impl.IndexSearchDaoImpl;
+import org.finra.herd.model.api.xml.IndexSearchFilter;
+import org.finra.herd.model.api.xml.IndexSearchKey;
 import org.finra.herd.model.api.xml.IndexSearchRequest;
 import org.finra.herd.model.api.xml.IndexSearchResponse;
 import org.finra.herd.model.api.xml.IndexSearchResult;
+import org.finra.herd.model.api.xml.IndexSearchResultTypeKey;
+import org.finra.herd.model.api.xml.TagKey;
 import org.finra.herd.model.dto.ConfigurationValue;
+import org.finra.herd.model.dto.ElasticsearchResponseDto;
+import org.finra.herd.model.dto.ResultTypeIndexSearchResponseDto;
+import org.finra.herd.model.dto.TagIndexSearchResponseDto;
+import org.finra.herd.model.dto.TagTypeIndexSearchResponseDto;
 
 /**
  * IndexSearchDaoTest
@@ -75,7 +89,10 @@ public class IndexSearchDaoTest extends AbstractDaoTest
     private ConfigurationHelper configurationHelper;
 
     @Mock
-    private TransportClient transportClient;
+    private TransportClientFactory transportClientFactory;
+
+    @Mock
+    private ElasticsearchHelper elasticsearchHelper;
 
     @Before
     public void before()
@@ -91,7 +108,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
     {
         // Create a new fields set that will be used when testing the index search method
         final Set<String> fields = Sets.newHashSet(DISPLAY_NAME_FIELD, SHORT_DESCRIPTION_FIELD);
-        testIndexSearch(fields);
+        testIndexSearch(fields, null, null);
     }
 
     @Test
@@ -99,10 +116,102 @@ public class IndexSearchDaoTest extends AbstractDaoTest
     {
         // Create a new fields set that will be used when testing the index search method
         final Set<String> fields = new HashSet<>();
-        testIndexSearch(fields);
+        testIndexSearch(fields, null, null);
     }
 
-    private void testIndexSearch(Set<String> fields)
+    @Test
+    public void indexSearchTestWithFacets()
+    {
+        // Create a new fields set that will be used when testing the index search method
+        final Set<String> fields = new HashSet<>();
+        //tag and result set facet
+        testIndexSearch(fields, null, Arrays.asList(ElasticsearchHelper.RESULT_TYPE_FACET, ElasticsearchHelper.TAG_FACET));
+    }
+
+    @Test
+    public void indexSearchTestWithTagFacet()
+    {
+        // Create a new fields set that will be used when testing the index search method
+        final Set<String> fields = new HashSet<>();
+
+        //tag facet only
+        testIndexSearch(fields, null, Collections.singletonList(ElasticsearchHelper.TAG_FACET));
+    }
+
+    @Test
+    public void indexSearchTestWithResultTypeFacet()
+    {
+        // Create a new fields set that will be used when testing the index search method
+        final Set<String> fields = new HashSet<>();
+
+        //result type facet only
+        testIndexSearch(fields, null, Collections.singletonList(ElasticsearchHelper.RESULT_TYPE_FACET));
+    }
+
+    @Test
+    public void indexSearchTestWithEmptyFilters()
+    {
+        // Create a new fields set that will be used when testing the index search method
+        final Set<String> fields = new HashSet<>();
+
+        // Create a new filters list
+        List<IndexSearchFilter> searchFilters = new ArrayList<>();
+
+        //result type facet only
+        testIndexSearch(fields, searchFilters, null);
+    }
+
+    @Test
+    public void indexSearchTestWithTagKeyFilter()
+    {
+        // Create a new fields set that will be used when testing the index search method
+        final Set<String> fields = new HashSet<>();
+
+        // Create an index search key
+        final IndexSearchKey indexSearchKey = new IndexSearchKey();
+
+        // Create a tag key
+        final TagKey tagKey = new TagKey(TAG_TYPE_CODE, TAG_CODE);
+        indexSearchKey.setTagKey(tagKey);
+
+        // Create an index search keys list and add the previously defined key to it
+        final List<IndexSearchKey> indexSearchKeys = Collections.singletonList(indexSearchKey);
+
+        // Create an index search filter with the keys previously defined
+        final IndexSearchFilter indexSearchFilter = new IndexSearchFilter(indexSearchKeys);
+
+        List<IndexSearchFilter> indexSearchFilters = Collections.singletonList(indexSearchFilter);
+
+        //result type facet only
+        testIndexSearch(fields, indexSearchFilters, null);
+    }
+
+    @Test
+    public void indexSearchTestWithResultTypeFilter()
+    {
+        // Create a new fields set that will be used when testing the index search method
+        final Set<String> fields = new HashSet<>();
+
+        // Create an index search key
+        final IndexSearchKey indexSearchKey = new IndexSearchKey();
+
+        // Create a result type key
+        final IndexSearchResultTypeKey resultTypeKey = new IndexSearchResultTypeKey(BUSINESS_OBJECT_DEFINITION_INDEX);
+        indexSearchKey.setIndexSearchResultTypeKey(resultTypeKey);
+
+        // Create an index search keys list and add the previously defined key to it
+        final List<IndexSearchKey> indexSearchKeys = Collections.singletonList(indexSearchKey);
+
+        // Create an index search filter with the keys previously defined
+        final IndexSearchFilter indexSearchFilter = new IndexSearchFilter(indexSearchKeys);
+
+        List<IndexSearchFilter> indexSearchFilters = Collections.singletonList(indexSearchFilter);
+
+        //result type facet only
+        testIndexSearch(fields, indexSearchFilters, null);
+    }
+
+    private void testIndexSearch(Set<String> fields, List<IndexSearchFilter> searchFilters, List<String> facetList)
     {
         // Build the mocks
         SearchRequestBuilder searchRequestBuilder = mock(SearchRequestBuilder.class);
@@ -111,6 +220,8 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         SearchRequestBuilder searchRequestBuilderWithBusinessObjectDefinitionIndexBoost = mock(SearchRequestBuilder.class);
         SearchRequestBuilder searchRequestBuilderWithTagIndexBoost = mock(SearchRequestBuilder.class);
         SearchRequestBuilder searchRequestBuilderWithSorting = mock(SearchRequestBuilder.class);
+
+        TransportClient transportClient = mock(TransportClient.class);
 
         SearchResponse searchResponse = mock(SearchResponse.class);
         SearchHits searchHits = mock(SearchHits.class);
@@ -128,6 +239,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         // Mock the call to external methods
         when(configurationHelper.getProperty(ConfigurationValue.TAG_SHORT_DESCRIPTION_LENGTH, Integer.class)).thenReturn(300);
         when(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH, Integer.class)).thenReturn(300);
+        when(transportClientFactory.getTransportClient()).thenReturn(transportClient);
         when(transportClient.prepareSearch(BUSINESS_OBJECT_DEFINITION_INDEX, TAG_INDEX)).thenReturn(searchRequestBuilder);
         when(searchRequestBuilder.setSource(any())).thenReturn(searchRequestBuilderWithSource);
         when(searchRequestBuilderWithSource.setSize(SEARCH_RESULT_SIZE)).thenReturn(searchRequestBuilderWithSize);
@@ -157,8 +269,18 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         when(searchHits.getTotalHits()).thenReturn(200L);
 
         // Create index search request
-        final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM);
+        final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM, searchFilters, facetList);
 
+        List<TagTypeIndexSearchResponseDto> tagTypeIndexSearchResponseDtos =
+            Collections.singletonList(new TagTypeIndexSearchResponseDto("code", 1, Collections.singletonList(new TagIndexSearchResponseDto("tag1", 1))));
+        List<ResultTypeIndexSearchResponseDto> resultTypeIndexSearchResponseDto =
+            Collections.singletonList(new ResultTypeIndexSearchResponseDto("type", 1, null));
+
+        when(elasticsearchHelper.getNestedTagTagIndexSearchResponseDto(searchResponse)).thenReturn(tagTypeIndexSearchResponseDtos);
+        when(elasticsearchHelper.getResultTypeIndexSearchResponseDto(searchResponse)).thenReturn(resultTypeIndexSearchResponseDto);
+        when(elasticsearchHelper.getFacetsResponse(any(ElasticsearchResponseDto.class), any(Boolean.class))).thenCallRealMethod();
+        when(elasticsearchHelper.addIndexSearchFilterBooleanClause(any(List.class))).thenCallRealMethod();
+        when(elasticsearchHelper.addFacetFieldAggregations(any(Set.class), any(SearchRequestBuilder.class))).thenCallRealMethod();
 
         // Call the method under test
         IndexSearchResponse indexSearchResponse = indexSearchDao.indexSearch(indexSearchRequest, fields);
@@ -168,11 +290,29 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         assertThat(indexSearchResults.size(), is(2));
         assertThat(indexSearchResponse.getTotalIndexSearchResults(), is(200L));
 
+        int facetSize = 0;
+
+        if (facetList != null && facetList.contains(ElasticsearchHelper.RESULT_TYPE_FACET))
+        {
+            facetSize++;
+        }
+        if (facetList != null && facetList.contains(ElasticsearchHelper.TAG_FACET))
+        {
+            facetSize++;
+        }
+        assertThat(indexSearchResponse.getFacets() != null ? indexSearchResponse.getFacets().size() : 0, is(facetSize));
+
         // Verify the calls to external methods
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.TAG_SHORT_DESCRIPTION_LENGTH, Integer.class);
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH, Integer.class);
         verify(transportClient, times(1)).prepareSearch(BUSINESS_OBJECT_DEFINITION_INDEX, TAG_INDEX);
         verify(searchRequestBuilder, times(1)).setSource(any());
+
+        if (CollectionUtils.isNotEmpty(facetList))
+        {
+            verifyFacetInvocations(searchRequestBuilder, facetList);
+        }
+
         verify(searchRequestBuilderWithSource, times(1)).setSize(SEARCH_RESULT_SIZE);
         verify(searchRequestBuilderWithSize, times(1)).addIndexBoost(BUSINESS_OBJECT_DEFINITION_INDEX, BUSINESS_OBJECT_DEFINITION_INDEX_BOOST);
         verify(searchRequestBuilderWithBusinessObjectDefinitionIndexBoost, times(1)).addIndexBoost(TAG_INDEX, TAG_INDEX_BOOST);
@@ -189,5 +329,21 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         verify(searchShardTarget2, times(1)).getIndex();
         verify(searchHits, times(1)).getTotalHits();
         verifyNoMoreInteractions(createdMocks.toArray());
+    }
+
+    private void verifyFacetInvocations(SearchRequestBuilder searchRequestBuilder, List<String> facetList)
+    {
+        if (facetList.contains(ElasticsearchHelper.TAG_FACET) && !facetList.contains(ElasticsearchHelper.RESULT_TYPE_FACET))
+        {
+            verify(searchRequestBuilder, times(2)).addAggregation(any(AggregationBuilder.class));
+        }
+        else if (!facetList.contains(ElasticsearchHelper.TAG_FACET) && facetList.contains(ElasticsearchHelper.RESULT_TYPE_FACET))
+        {
+            verify(searchRequestBuilder, times(1)).addAggregation(any(AggregationBuilder.class));
+        }
+        else if (facetList.contains(ElasticsearchHelper.TAG_FACET) && facetList.contains(ElasticsearchHelper.RESULT_TYPE_FACET))
+        {
+            verify(searchRequestBuilder, times(3)).addAggregation(any(AggregationBuilder.class));
+        }
     }
 }

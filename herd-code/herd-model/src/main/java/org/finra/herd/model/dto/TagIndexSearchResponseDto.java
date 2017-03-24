@@ -106,7 +106,42 @@ public class TagIndexSearchResponseDto
     {
         return "TagIndexSearchResponseDto{" +
             " tagCode='" + tagCode + '\'' +
+            ", tagDisplayName='" + tagDisplayName + '\'' +
             ", count=" + count +
             '}';
+    }
+
+    @Override
+    public boolean equals(Object object)
+    {
+        if (this == object)
+        {
+            return true;
+        }
+        if (object == null || getClass() != object.getClass())
+        {
+            return false;
+        }
+
+        TagIndexSearchResponseDto that = (TagIndexSearchResponseDto) object;
+
+        if (count != that.count)
+        {
+            return false;
+        }
+        if (tagCode != null ? !tagCode.equals(that.tagCode) : that.tagCode != null)
+        {
+            return false;
+        }
+        return tagDisplayName != null ? tagDisplayName.equals(that.tagDisplayName) : that.tagDisplayName == null;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int result = tagCode != null ? tagCode.hashCode() : 0;
+        result = 31 * result + (tagDisplayName != null ? tagDisplayName.hashCode() : 0);
+        result = 31 * result + (int) (count ^ (count >>> 32));
+        return result;
     }
 }

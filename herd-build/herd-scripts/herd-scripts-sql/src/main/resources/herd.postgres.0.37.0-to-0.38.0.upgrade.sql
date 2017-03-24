@@ -17,3 +17,7 @@
 ALTER TABLE tag_type ADD tag_type_ds varchar(150) NULL;
 
 delete from scrty_fn_lk     where scrty_fn_cd = 'FN_BUSINESS_OBJECT_DEFINITIONS_INDEX_GET';
+
+INSERT INTO srch_idx_type_cd_lk(srch_idx_type_cd,creat_ts,creat_user_id,updt_ts,updt_user_id)
+VALUES ('TAG',current_timestamp, 'SYSTEM', current_timestamp, 'SYSTEM');
+

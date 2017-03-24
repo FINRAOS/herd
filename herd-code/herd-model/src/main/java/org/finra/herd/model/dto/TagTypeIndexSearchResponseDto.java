@@ -128,4 +128,44 @@ public class TagTypeIndexSearchResponseDto
             ", tagIndexSearchResponseDtos=" + tagIndexSearchResponseDtos +
             '}';
     }
+
+    @Override
+    public boolean equals(Object object)
+    {
+        if (this == object)
+        {
+            return true;
+        }
+        if (object == null || getClass() != object.getClass())
+        {
+            return false;
+        }
+
+        TagTypeIndexSearchResponseDto that = (TagTypeIndexSearchResponseDto) object;
+
+        if (count != that.count)
+        {
+            return false;
+        }
+        if (code != null ? !code.equals(that.code) : that.code != null)
+        {
+            return false;
+        }
+        if (displayName != null ? !displayName.equals(that.displayName) : that.displayName != null)
+        {
+            return false;
+        }
+        return tagIndexSearchResponseDtos != null ? tagIndexSearchResponseDtos.equals(that.tagIndexSearchResponseDtos) :
+            that.tagIndexSearchResponseDtos == null;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int result = code != null ? code.hashCode() : 0;
+        result = 31 * result + (displayName != null ? displayName.hashCode() : 0);
+        result = 31 * result + (int) (count ^ (count >>> 32));
+        result = 31 * result + (tagIndexSearchResponseDtos != null ? tagIndexSearchResponseDtos.hashCode() : 0);
+        return result;
+    }
 }
