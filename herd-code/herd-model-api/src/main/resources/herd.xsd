@@ -6429,7 +6429,7 @@
          <xs:element name="facets" type="facets" minOccurs="0">
             <xs:annotation>
                <xs:documentation>
-                  Values that identifies a list of facet information response.
+                  Values that identifies a list of facet information.
                </xs:documentation>
             </xs:annotation>
          </xs:element>
