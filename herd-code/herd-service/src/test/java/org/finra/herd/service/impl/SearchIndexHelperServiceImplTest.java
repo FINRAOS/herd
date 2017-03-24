@@ -21,7 +21,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import org.elasticsearch.client.transport.TransportClient;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -29,6 +28,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.dao.BusinessObjectDefinitionDao;
+import org.finra.herd.dao.TransportClientFactory;
 import org.finra.herd.service.AbstractServiceTest;
 import org.finra.herd.service.functional.SearchFunctions;
 import org.finra.herd.service.helper.BusinessObjectDefinitionHelper;
@@ -55,7 +55,7 @@ public class SearchIndexHelperServiceImplTest extends AbstractServiceTest
     private SearchIndexHelperServiceImpl searchIndexHelperServiceImpl;
 
     @Mock
-    private TransportClient transportClient;
+    private TransportClientFactory transportClientFactory;
 
     @Before
     public void before()
@@ -74,7 +74,7 @@ public class SearchIndexHelperServiceImplTest extends AbstractServiceTest
 
         // Verify the external calls.
         verify(searchFunctions).getNumberOfTypesInIndexFunction();
-        verifyNoMoreInteractions(businessObjectDefinitionDao, businessObjectDefinitionHelper, searchFunctions, searchIndexDaoHelper, transportClient);
+        verifyNoMoreInteractions(businessObjectDefinitionDao, businessObjectDefinitionHelper, searchFunctions, searchIndexDaoHelper, transportClientFactory);
 
         // Validate the results.
         assertFalse(response);
@@ -91,7 +91,7 @@ public class SearchIndexHelperServiceImplTest extends AbstractServiceTest
 
         // Verify the external calls.
         verify(searchFunctions).getNumberOfTypesInIndexFunction();
-        verifyNoMoreInteractions(businessObjectDefinitionDao, businessObjectDefinitionHelper, searchFunctions, searchIndexDaoHelper, transportClient);
+        verifyNoMoreInteractions(businessObjectDefinitionDao, businessObjectDefinitionHelper, searchFunctions, searchIndexDaoHelper, transportClientFactory);
 
         // Validate the results.
         assertTrue(response);

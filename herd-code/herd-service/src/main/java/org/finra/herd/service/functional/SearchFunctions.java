@@ -96,7 +96,8 @@ public interface SearchFunctions
      * The search business object definitions by tags function will take a list of tag entities list and return a list of business object definition entities.
      * The function will search the search index based on tag code and tag type code.
      */
-    QuadFunction<String, String, List<List<TagEntity>>, Set<String>, ElasticsearchResponseDto> getSearchBusinessObjectDefinitionsByTagsFunction();
+    QuadFunction<String, String, List<Map<SearchFilterType, List<TagEntity>>>, Set<String>, ElasticsearchResponseDto>
+        getSearchBusinessObjectDefinitionsByTagsFunction();
 
     /**
      * The update index documents function will take as arguments the index name, document type, and a map of documents to update. The document map key is the

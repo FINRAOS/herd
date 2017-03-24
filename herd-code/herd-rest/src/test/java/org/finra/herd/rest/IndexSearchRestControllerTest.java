@@ -26,6 +26,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -37,6 +38,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
+import org.finra.herd.model.api.xml.Facet;
 import org.finra.herd.model.api.xml.IndexSearchRequest;
 import org.finra.herd.model.api.xml.IndexSearchResponse;
 import org.finra.herd.model.api.xml.IndexSearchResult;
@@ -72,10 +74,22 @@ public class IndexSearchRestControllerTest extends AbstractRestTest
     }
 
     @Test
-    public void testIndexSearch()
+    public void testIndexSearchNoFacets()
+    {
+        testIndexSearch(null);
+    }
+
+    @Test
+    public void testIndexSearchWithFacets()
+    {
+        List<String> facetFields = Arrays.asList("ResultType", "Tag");
+        testIndexSearch(facetFields);
+    }
+
+    public void testIndexSearch(List<String> facetFields)
     {
         // Create index search request
-        final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM);
+        final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM, null, facetFields);
 
         // Create a new fields set that will be used when testing the index search method
         final Set<String> fields = Sets.newHashSet(FIELD_DISPLAY_NAME, FIELD_SHORT_DESCRIPTION);
@@ -99,10 +113,19 @@ public class IndexSearchRestControllerTest extends AbstractRestTest
         indexSearchResults.add(indexSearchResultTag);
         indexSearchResults.add(indexSearchResultBusinessObjectDefinition);
 
+        List<Facet> facets = new ArrayList<>();
+        if (facetFields != null)
+        {
+            facets.add(new Facet("facet1", new Long(1), "type 1", "id", null));
+            facets.add(new Facet("facet2", new Long(2), "type 2", "id2", null));
+        }
+
         // Construct an index search response
-        final IndexSearchResponse indexSearchResponse = new IndexSearchResponse(TOTAL_INDEX_SEARCH_RESULTS, indexSearchResults);
+        final IndexSearchResponse indexSearchResponse = new IndexSearchResponse(TOTAL_INDEX_SEARCH_RESULTS, indexSearchResults, null);
 
         // Mock the call to the index search service
+        //Mockito.doReturn(indexSearchResponse).when(indexSearchService.indexSearch(indexSearchRequest, fields));
+
         when(indexSearchService.indexSearch(indexSearchRequest, fields)).thenReturn(indexSearchResponse);
 
         // Call the method under test
@@ -117,4 +140,5 @@ public class IndexSearchRestControllerTest extends AbstractRestTest
         assertThat("Index search response was not correct.", indexSearchResponseFromRestCall, is(indexSearchResponse));
         assertThat("Index search response was not an instance of IndexSearchResponse.class.", indexSearchResponse, instanceOf(IndexSearchResponse.class));
     }
+    
 }

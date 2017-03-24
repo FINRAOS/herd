@@ -19,6 +19,8 @@ import static org.finra.herd.service.functional.ElasticsearchFunctions.BUSINESS_
 import static org.finra.herd.service.functional.ElasticsearchFunctions.ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME;
 import static org.finra.herd.service.functional.ElasticsearchFunctions.ELASTIC_SEARCH_SCROLL_PAGE_SIZE;
 import static org.finra.herd.service.functional.ElasticsearchFunctions.NAMESPACE_CODE_SORT_FIELD;
+import static org.finra.herd.service.functional.SearchFilterType.EXCLUSION_SEARCH_FILTER;
+import static org.finra.herd.service.functional.SearchFilterType.INCLUSION_SEARCH_FILTER;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
@@ -28,6 +30,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
@@ -35,6 +38,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -71,7 +75,11 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.internal.listeners.CollectCreatedMocks;
+import org.mockito.internal.progress.MockingProgress;
+import org.mockito.internal.progress.ThreadSafeMockingProgress;
 
+import org.finra.herd.dao.TransportClientFactory;
 import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.dto.BusinessObjectDefinitionIndexSearchResponseDto;
@@ -86,6 +94,8 @@ import org.finra.herd.service.helper.TagDaoHelper;
  */
 public class ElasticsearchFunctionsTest
 {
+    private List<Object> createdMocks;
+
     @InjectMocks
     private ElasticsearchFunctions searchFunctions;
 
@@ -96,7 +106,7 @@ public class ElasticsearchFunctionsTest
     private JsonHelper jsonHelper;
 
     @Mock
-    private TransportClient transportClient;
+    private TransportClientFactory transportClientFactory;
 
     @Mock
     private TagDaoHelper tagDaoHelper;
@@ -105,6 +115,9 @@ public class ElasticsearchFunctionsTest
     public void before()
     {
         MockitoAnnotations.initMocks(this);
+        createdMocks = new LinkedList<>();
+        final MockingProgress progress = new ThreadSafeMockingProgress();
+        progress.setListener(new CollectCreatedMocks(createdMocks));
     }
 
     @Test
@@ -114,11 +127,14 @@ public class ElasticsearchFunctionsTest
         assertThat("Function is null.", indexFunction, not(nullValue()));
         assertThat("Index function not an instance of QuadConsumer.", indexFunction, instanceOf(QuadConsumer.class));
 
+        // Build mocks
+        TransportClient transportClient = mock(TransportClient.class);
         IndexRequestBuilder indexRequestBuilder = mock(IndexRequestBuilder.class);
         @SuppressWarnings("unchecked")
         ListenableActionFuture<IndexResponse> listenableActionFuture = mock(ListenableActionFuture.class);
 
         // Mock the call to external methods
+        when(transportClientFactory.getTransportClient()).thenReturn(transportClient);
         when(transportClient.prepareIndex("INDEX_NAME", "DOCUMENT_TYPE", "ID")).thenReturn(indexRequestBuilder);
         when(indexRequestBuilder.execute()).thenReturn(listenableActionFuture);
 
@@ -126,8 +142,12 @@ public class ElasticsearchFunctionsTest
         indexFunction.accept("INDEX_NAME", "DOCUMENT_TYPE", "ID", "JSON");
 
         // Verify the calls to external methods
-        verify(transportClient, times(1)).prepareIndex("INDEX_NAME", "DOCUMENT_TYPE", "ID");
-        verify(indexRequestBuilder, times(1)).execute();
+        verify(transportClientFactory).getTransportClient();
+        verify(transportClient).prepareIndex("INDEX_NAME", "DOCUMENT_TYPE", "ID");
+        verify(indexRequestBuilder).setSource("JSON");
+        verify(indexRequestBuilder).execute();
+        verify(listenableActionFuture).actionGet();
+        verifyNoMoreInteractions(createdMocks.toArray());
     }
 
     @Test
@@ -137,6 +157,8 @@ public class ElasticsearchFunctionsTest
         assertThat("Function is null.", validateFunction, not(nullValue()));
         assertThat("Validate function not an instance of QuadConsumer.", validateFunction, instanceOf(QuadConsumer.class));
 
+        // Build mocks
+        TransportClient transportClient = mock(TransportClient.class);
         GetRequestBuilder getRequestBuilder = mock(GetRequestBuilder.class);
         GetResponse getResponse = mock(GetResponse.class);
         IndexRequestBuilder indexRequestBuilder = mock(IndexRequestBuilder.class);
@@ -148,6 +170,7 @@ public class ElasticsearchFunctionsTest
         ListenableActionFuture<IndexResponse> listenableActionFutureIndexResponse = mock(ListenableActionFuture.class);
 
         // Mock the call to external methods
+        when(transportClientFactory.getTransportClient()).thenReturn(transportClient);
         when(transportClient.prepareGet("INDEX_NAME", "DOCUMENT_TYPE", "ID")).thenReturn(getRequestBuilder);
         when(getRequestBuilder.execute()).thenReturn(listenableActionFutureGetResponse);
         when(listenableActionFutureGetResponse.actionGet()).thenReturn(getResponse);
@@ -159,12 +182,16 @@ public class ElasticsearchFunctionsTest
         validateFunction.accept("INDEX_NAME", "DOCUMENT_TYPE", "ID", "JSON");
 
         // Verify the calls to external methods
-        verify(transportClient, times(1)).prepareGet("INDEX_NAME", "DOCUMENT_TYPE", "ID");
-        verify(getRequestBuilder, times(1)).execute();
-        verify(listenableActionFutureGetResponse, times(1)).actionGet();
-        verify(getResponse, times(1)).getSourceAsString();
-        verify(transportClient, times(1)).prepareIndex("INDEX_NAME", "DOCUMENT_TYPE", "ID");
-        verify(indexRequestBuilder, times(1)).execute();
+        verify(transportClientFactory).getTransportClient();
+        verify(transportClient).prepareGet("INDEX_NAME", "DOCUMENT_TYPE", "ID");
+        verify(getRequestBuilder).execute();
+        verify(listenableActionFutureGetResponse).actionGet();
+        verify(getResponse).getSourceAsString();
+        verify(transportClient).prepareIndex("INDEX_NAME", "DOCUMENT_TYPE", "ID");
+        verify(indexRequestBuilder).setSource("JSON");
+        verify(indexRequestBuilder).execute();
+        verify(listenableActionFutureIndexResponse).actionGet();
+        verifyNoMoreInteractions(createdMocks.toArray());
     }
 
     @Test
@@ -174,6 +201,8 @@ public class ElasticsearchFunctionsTest
         assertThat("Function is null.", validateFunction, not(nullValue()));
         assertThat("Validate function not an instance of QuadConsumer.", validateFunction, instanceOf(QuadConsumer.class));
 
+        // Build mocks
+        TransportClient transportClient = mock(TransportClient.class);
         GetRequestBuilder getRequestBuilder = mock(GetRequestBuilder.class);
         GetResponse getResponse = mock(GetResponse.class);
         UpdateRequestBuilder updateRequestBuilder = mock(UpdateRequestBuilder.class);
@@ -185,6 +214,7 @@ public class ElasticsearchFunctionsTest
         ListenableActionFuture<UpdateResponse> listenableActionFutureUpdateResponse = mock(ListenableActionFuture.class);
 
         // Mock the call to external methods
+        when(transportClientFactory.getTransportClient()).thenReturn(transportClient);
         when(transportClient.prepareGet("INDEX_NAME", "DOCUMENT_TYPE", "ID")).thenReturn(getRequestBuilder);
         when(getRequestBuilder.execute()).thenReturn(listenableActionFutureGetResponse);
         when(listenableActionFutureGetResponse.actionGet()).thenReturn(getResponse);
@@ -196,12 +226,16 @@ public class ElasticsearchFunctionsTest
         validateFunction.accept("INDEX_NAME", "DOCUMENT_TYPE", "ID", "JSON");
 
         // Verify the calls to external methods
-        verify(transportClient, times(1)).prepareGet("INDEX_NAME", "DOCUMENT_TYPE", "ID");
-        verify(getRequestBuilder, times(1)).execute();
-        verify(listenableActionFutureGetResponse, times(1)).actionGet();
-        verify(getResponse, times(1)).getSourceAsString();
-        verify(transportClient, times(1)).prepareUpdate("INDEX_NAME", "DOCUMENT_TYPE", "ID");
-        verify(updateRequestBuilder, times(1)).execute();
+        verify(transportClientFactory).getTransportClient();
+        verify(transportClient).prepareGet("INDEX_NAME", "DOCUMENT_TYPE", "ID");
+        verify(getRequestBuilder).execute();
+        verify(listenableActionFutureGetResponse).actionGet();
+        verify(getResponse).getSourceAsString();
+        verify(transportClient).prepareUpdate("INDEX_NAME", "DOCUMENT_TYPE", "ID");
+        verify(updateRequestBuilder).execute();
+        verify(updateRequestBuilder).setDoc("JSON");
+        verify(listenableActionFutureUpdateResponse).actionGet();
+        verifyNoMoreInteractions(createdMocks.toArray());
     }
 
     @Test
@@ -211,6 +245,8 @@ public class ElasticsearchFunctionsTest
         assertThat("Function is null.", validateFunction, not(nullValue()));
         assertThat("Validate function not an instance of QuadConsumer.", validateFunction, instanceOf(QuadConsumer.class));
 
+        // Build mocks
+        TransportClient transportClient = mock(TransportClient.class);
         GetRequestBuilder getRequestBuilder = mock(GetRequestBuilder.class);
         GetResponse getResponse = mock(GetResponse.class);
 
@@ -218,6 +254,7 @@ public class ElasticsearchFunctionsTest
         ListenableActionFuture<GetResponse> listenableActionFutureGetResponse = mock(ListenableActionFuture.class);
 
         // Mock the call to external methods
+        when(transportClientFactory.getTransportClient()).thenReturn(transportClient);
         when(transportClient.prepareGet("INDEX_NAME", "DOCUMENT_TYPE", "ID")).thenReturn(getRequestBuilder);
         when(getRequestBuilder.execute()).thenReturn(listenableActionFutureGetResponse);
         when(listenableActionFutureGetResponse.actionGet()).thenReturn(getResponse);
@@ -227,10 +264,12 @@ public class ElasticsearchFunctionsTest
         validateFunction.accept("INDEX_NAME", "DOCUMENT_TYPE", "ID", "JSON");
 
         // Verify the calls to external methods
-        verify(transportClient, times(1)).prepareGet("INDEX_NAME", "DOCUMENT_TYPE", "ID");
-        verify(getRequestBuilder, times(1)).execute();
-        verify(listenableActionFutureGetResponse, times(1)).actionGet();
-        verify(getResponse, times(1)).getSourceAsString();
+        verify(transportClientFactory).getTransportClient();
+        verify(transportClient).prepareGet("INDEX_NAME", "DOCUMENT_TYPE", "ID");
+        verify(getRequestBuilder).execute();
+        verify(listenableActionFutureGetResponse).actionGet();
+        verify(getResponse).getSourceAsString();
+        verifyNoMoreInteractions(createdMocks.toArray());
     }
 
     @Test
@@ -240,6 +279,8 @@ public class ElasticsearchFunctionsTest
         assertThat("Function is null.", isValidFunction, not(nullValue()));
         assertThat("Is valid function not an instance of QuadPredicate.", isValidFunction, instanceOf(QuadPredicate.class));
 
+        // Build mocks
+        TransportClient transportClient = mock(TransportClient.class);
         GetRequestBuilder getRequestBuilder = mock(GetRequestBuilder.class);
         GetResponse getResponse = mock(GetResponse.class);
 
@@ -247,6 +288,7 @@ public class ElasticsearchFunctionsTest
         ListenableActionFuture<GetResponse> listenableActionFutureGetResponse = mock(ListenableActionFuture.class);
 
         // Mock the call to external methods
+        when(transportClientFactory.getTransportClient()).thenReturn(transportClient);
         when(transportClient.prepareGet("INDEX_NAME", "DOCUMENT_TYPE", "ID")).thenReturn(getRequestBuilder);
         when(getRequestBuilder.execute()).thenReturn(listenableActionFutureGetResponse);
         when(listenableActionFutureGetResponse.actionGet()).thenReturn(getResponse);
@@ -258,10 +300,12 @@ public class ElasticsearchFunctionsTest
         assertThat("IsValid is false when it should have been true.", isValid, is(true));
 
         // Verify the calls to external methods
-        verify(transportClient, times(1)).prepareGet("INDEX_NAME", "DOCUMENT_TYPE", "ID");
-        verify(getRequestBuilder, times(1)).execute();
-        verify(listenableActionFutureGetResponse, times(1)).actionGet();
-        verify(getResponse, times(1)).getSourceAsString();
+        verify(transportClientFactory).getTransportClient();
+        verify(transportClient).prepareGet("INDEX_NAME", "DOCUMENT_TYPE", "ID");
+        verify(getRequestBuilder).execute();
+        verify(listenableActionFutureGetResponse).actionGet();
+        verify(getResponse).getSourceAsString();
+        verifyNoMoreInteractions(createdMocks.toArray());
     }
 
     @Test
@@ -271,6 +315,8 @@ public class ElasticsearchFunctionsTest
         assertThat("Function is null.", isValidFunction, not(nullValue()));
         assertThat("Is valid function not an instance of QuadPredicate.", isValidFunction, instanceOf(QuadPredicate.class));
 
+        // Build mocks
+        TransportClient transportClient = mock(TransportClient.class);
         GetRequestBuilder getRequestBuilder = mock(GetRequestBuilder.class);
         GetResponse getResponse = mock(GetResponse.class);
 
@@ -278,6 +324,7 @@ public class ElasticsearchFunctionsTest
         ListenableActionFuture<GetResponse> listenableActionFutureGetResponse = mock(ListenableActionFuture.class);
 
         // Mock the call to external methods
+        when(transportClientFactory.getTransportClient()).thenReturn(transportClient);
         when(transportClient.prepareGet("INDEX_NAME", "DOCUMENT_TYPE", "ID")).thenReturn(getRequestBuilder);
         when(getRequestBuilder.execute()).thenReturn(listenableActionFutureGetResponse);
         when(listenableActionFutureGetResponse.actionGet()).thenReturn(getResponse);
@@ -289,10 +336,12 @@ public class ElasticsearchFunctionsTest
         assertThat("IsValid is true when it should have been false.", isValid, is(false));
 
         // Verify the calls to external methods
-        verify(transportClient, times(1)).prepareGet("INDEX_NAME", "DOCUMENT_TYPE", "ID");
-        verify(getRequestBuilder, times(1)).execute();
-        verify(listenableActionFutureGetResponse, times(1)).actionGet();
-        verify(getResponse, times(1)).getSourceAsString();
+        verify(transportClientFactory).getTransportClient();
+        verify(transportClient).prepareGet("INDEX_NAME", "DOCUMENT_TYPE", "ID");
+        verify(getRequestBuilder).execute();
+        verify(listenableActionFutureGetResponse).actionGet();
+        verify(getResponse).getSourceAsString();
+        verifyNoMoreInteractions(createdMocks.toArray());
     }
 
     @Test
@@ -302,6 +351,8 @@ public class ElasticsearchFunctionsTest
         assertThat("Function is null.", isValidFunction, not(nullValue()));
         assertThat("Is valid function not an instance of QuadPredicate.", isValidFunction, instanceOf(QuadPredicate.class));
 
+        // Build mocks
+        TransportClient transportClient = mock(TransportClient.class);
         GetRequestBuilder getRequestBuilder = mock(GetRequestBuilder.class);
         GetResponse getResponse = mock(GetResponse.class);
 
@@ -309,6 +360,7 @@ public class ElasticsearchFunctionsTest
         ListenableActionFuture<GetResponse> listenableActionFutureGetResponse = mock(ListenableActionFuture.class);
 
         // Mock the call to external methods
+        when(transportClientFactory.getTransportClient()).thenReturn(transportClient);
         when(transportClient.prepareGet("INDEX_NAME", "DOCUMENT_TYPE", "ID")).thenReturn(getRequestBuilder);
         when(getRequestBuilder.execute()).thenReturn(listenableActionFutureGetResponse);
         when(listenableActionFutureGetResponse.actionGet()).thenReturn(getResponse);
@@ -320,10 +372,12 @@ public class ElasticsearchFunctionsTest
         assertThat("IsValid is true when it should have been false.", isValid, is(false));
 
         // Verify the calls to external methods
-        verify(transportClient, times(1)).prepareGet("INDEX_NAME", "DOCUMENT_TYPE", "ID");
-        verify(getRequestBuilder, times(1)).execute();
-        verify(listenableActionFutureGetResponse, times(1)).actionGet();
-        verify(getResponse, times(1)).getSourceAsString();
+        verify(transportClientFactory).getTransportClient();
+        verify(transportClient).prepareGet("INDEX_NAME", "DOCUMENT_TYPE", "ID");
+        verify(getRequestBuilder).execute();
+        verify(listenableActionFutureGetResponse).actionGet();
+        verify(getResponse).getSourceAsString();
+        verifyNoMoreInteractions(createdMocks.toArray());
     }
 
     @Test
@@ -333,6 +387,8 @@ public class ElasticsearchFunctionsTest
         assertThat("Function is null.", isValidFunction, not(nullValue()));
         assertThat("Is valid function not an instance of QuadPredicate.", isValidFunction, instanceOf(QuadPredicate.class));
 
+        // Build mocks
+        TransportClient transportClient = mock(TransportClient.class);
         GetRequestBuilder getRequestBuilder = mock(GetRequestBuilder.class);
         GetResponse getResponse = mock(GetResponse.class);
 
@@ -340,6 +396,7 @@ public class ElasticsearchFunctionsTest
         ListenableActionFuture<GetResponse> listenableActionFutureGetResponse = mock(ListenableActionFuture.class);
 
         // Mock the call to external methods
+        when(transportClientFactory.getTransportClient()).thenReturn(transportClient);
         when(transportClient.prepareGet("INDEX_NAME", "DOCUMENT_TYPE", "ID")).thenReturn(getRequestBuilder);
         when(getRequestBuilder.execute()).thenReturn(listenableActionFutureGetResponse);
         when(listenableActionFutureGetResponse.actionGet()).thenReturn(getResponse);
@@ -351,10 +408,12 @@ public class ElasticsearchFunctionsTest
         assertThat("IsValid is true when it should have been false.", isValid, is(false));
 
         // Verify the calls to external methods
-        verify(transportClient, times(1)).prepareGet("INDEX_NAME", "DOCUMENT_TYPE", "ID");
-        verify(getRequestBuilder, times(1)).execute();
-        verify(listenableActionFutureGetResponse, times(1)).actionGet();
-        verify(getResponse, times(1)).getSourceAsString();
+        verify(transportClientFactory).getTransportClient();
+        verify(transportClient).prepareGet("INDEX_NAME", "DOCUMENT_TYPE", "ID");
+        verify(getRequestBuilder).execute();
+        verify(listenableActionFutureGetResponse).actionGet();
+        verify(getResponse).getSourceAsString();
+        verifyNoMoreInteractions(createdMocks.toArray());
     }
 
     @Test
@@ -389,11 +448,14 @@ public class ElasticsearchFunctionsTest
         assertThat("Function is null.", createIndexDocumentsFunction, not(nullValue()));
         assertThat("Create index documents function is not an instance of TriConsumer.", createIndexDocumentsFunction, instanceOf(TriConsumer.class));
 
+        // Build mocks
+        TransportClient transportClient = mock(TransportClient.class);
         BulkRequestBuilder bulkRequestBuilder = mock(BulkRequestBuilder.class);
         IndexRequestBuilder indexRequestBuilder = mock(IndexRequestBuilder.class);
         BulkResponse bulkResponse = mock(BulkResponse.class);
 
         // Mock the call to external methods
+        when(transportClientFactory.getTransportClient()).thenReturn(transportClient);
         when(transportClient.prepareBulk()).thenReturn(bulkRequestBuilder);
         when(transportClient.prepareIndex("INDEX_NAME", "DOCUMENT_TYPE", "1")).thenReturn(indexRequestBuilder);
         when(bulkRequestBuilder.get()).thenReturn(bulkResponse);
@@ -405,10 +467,14 @@ public class ElasticsearchFunctionsTest
         createIndexDocumentsFunction.accept("INDEX_NAME", "DOCUMENT_TYPE", documentMap);
 
         // Verify the calls to external methods
-        verify(transportClient, times(1)).prepareBulk();
-        verify(transportClient, times(1)).prepareIndex("INDEX_NAME", "DOCUMENT_TYPE", "1");
-        verify(bulkRequestBuilder, times(1)).get();
-        verify(bulkResponse, times(1)).hasFailures();
+        verify(transportClientFactory).getTransportClient();
+        verify(transportClient).prepareBulk();
+        verify(transportClient).prepareIndex("INDEX_NAME", "DOCUMENT_TYPE", "1");
+        verify(bulkRequestBuilder).get();
+        verify(indexRequestBuilder).setSource("JSON");
+        verify(bulkRequestBuilder).add(indexRequestBuilder);
+        verify(bulkResponse).hasFailures();
+        verifyNoMoreInteractions(createdMocks.toArray());
     }
 
     @Test
@@ -418,11 +484,14 @@ public class ElasticsearchFunctionsTest
         assertThat("Function is null.", createIndexDocumentsFunction, not(nullValue()));
         assertThat("Create index documents function is not an instance of TriConsumer.", createIndexDocumentsFunction, instanceOf(TriConsumer.class));
 
+        // Build mocks
+        TransportClient transportClient = mock(TransportClient.class);
         BulkRequestBuilder bulkRequestBuilder = mock(BulkRequestBuilder.class);
         IndexRequestBuilder indexRequestBuilder = mock(IndexRequestBuilder.class);
         BulkResponse bulkResponse = mock(BulkResponse.class);
 
         // Mock the call to external methods
+        when(transportClientFactory.getTransportClient()).thenReturn(transportClient);
         when(transportClient.prepareBulk()).thenReturn(bulkRequestBuilder);
         when(transportClient.prepareIndex("INDEX_NAME", "DOCUMENT_TYPE", "1")).thenReturn(indexRequestBuilder);
         when(bulkRequestBuilder.get()).thenReturn(bulkResponse);
@@ -434,10 +503,15 @@ public class ElasticsearchFunctionsTest
         createIndexDocumentsFunction.accept("INDEX_NAME", "DOCUMENT_TYPE", documentMap);
 
         // Verify the calls to external methods
-        verify(transportClient, times(1)).prepareBulk();
-        verify(transportClient, times(1)).prepareIndex("INDEX_NAME", "DOCUMENT_TYPE", "1");
-        verify(bulkRequestBuilder, times(1)).get();
-        verify(bulkResponse, times(1)).hasFailures();
+        verify(transportClientFactory).getTransportClient();
+        verify(transportClient).prepareBulk();
+        verify(transportClient).prepareIndex("INDEX_NAME", "DOCUMENT_TYPE", "1");
+        verify(bulkRequestBuilder).get();
+        verify(indexRequestBuilder).setSource("JSON");
+        verify(bulkRequestBuilder).add(indexRequestBuilder);
+        verify(bulkResponse).hasFailures();
+        verify(bulkResponse).buildFailureMessage();
+        verifyNoMoreInteractions(createdMocks.toArray());
     }
 
     @Test
@@ -447,11 +521,14 @@ public class ElasticsearchFunctionsTest
         assertThat("Function is null.", deleteDocumentByIdFunction, not(nullValue()));
         assertThat("Delete document by id function not an instance of TriConsumer.", deleteDocumentByIdFunction, instanceOf(TriConsumer.class));
 
+        // Build mocks
+        TransportClient transportClient = mock(TransportClient.class);
         DeleteRequestBuilder deleteRequestBuilder = mock(DeleteRequestBuilder.class);
         @SuppressWarnings("unchecked")
         ListenableActionFuture<DeleteResponse> listenableActionFuture = mock(ListenableActionFuture.class);
 
         // Mock the call to external methods
+        when(transportClientFactory.getTransportClient()).thenReturn(transportClient);
         when(transportClient.prepareDelete("INDEX_NAME", "DOCUMENT_TYPE", "ID")).thenReturn(deleteRequestBuilder);
         when(deleteRequestBuilder.execute()).thenReturn(listenableActionFuture);
 
@@ -459,8 +536,11 @@ public class ElasticsearchFunctionsTest
         deleteDocumentByIdFunction.accept("INDEX_NAME", "DOCUMENT_TYPE", "ID");
 
         // Verify the calls to external methods
-        verify(transportClient, times(1)).prepareDelete("INDEX_NAME", "DOCUMENT_TYPE", "ID");
-        verify(deleteRequestBuilder, times(1)).execute();
+        verify(transportClientFactory).getTransportClient();
+        verify(transportClient).prepareDelete("INDEX_NAME", "DOCUMENT_TYPE", "ID");
+        verify(deleteRequestBuilder).execute();
+        verify(listenableActionFuture).actionGet();
+        verifyNoMoreInteractions(createdMocks.toArray());
     }
 
     @Test
@@ -470,11 +550,14 @@ public class ElasticsearchFunctionsTest
         assertThat("Function is null.", deleteIndexDocumentsFunction, not(nullValue()));
         assertThat("Delete index documents function is not an instance of TriConsumer.", deleteIndexDocumentsFunction, instanceOf(TriConsumer.class));
 
+        // Build mocks
+        TransportClient transportClient = mock(TransportClient.class);
         BulkRequestBuilder bulkRequestBuilder = mock(BulkRequestBuilder.class);
         DeleteRequestBuilder deleteRequestBuilder = mock(DeleteRequestBuilder.class);
         BulkResponse bulkResponse = mock(BulkResponse.class);
 
         // Mock the call to external methods
+        when(transportClientFactory.getTransportClient()).thenReturn(transportClient);
         when(transportClient.prepareBulk()).thenReturn(bulkRequestBuilder);
         when(transportClient.prepareDelete("INDEX_NAME", "DOCUMENT_TYPE", "1")).thenReturn(deleteRequestBuilder);
         when(bulkRequestBuilder.get()).thenReturn(bulkResponse);
@@ -486,10 +569,13 @@ public class ElasticsearchFunctionsTest
         deleteIndexDocumentsFunction.accept("INDEX_NAME", "DOCUMENT_TYPE", businessObjectDefinitionIds);
 
         // Verify the calls to external methods
-        verify(transportClient, times(1)).prepareBulk();
-        verify(transportClient, times(1)).prepareDelete("INDEX_NAME", "DOCUMENT_TYPE", "1");
-        verify(bulkRequestBuilder, times(1)).get();
-        verify(bulkResponse, times(1)).hasFailures();
+        verify(transportClientFactory).getTransportClient();
+        verify(transportClient).prepareBulk();
+        verify(transportClient).prepareDelete("INDEX_NAME", "DOCUMENT_TYPE", "1");
+        verify(bulkRequestBuilder).add(deleteRequestBuilder);
+        verify(bulkRequestBuilder).get();
+        verify(bulkResponse).hasFailures();
+        verifyNoMoreInteractions(createdMocks.toArray());
     }
 
     @Test
@@ -499,11 +585,14 @@ public class ElasticsearchFunctionsTest
         assertThat("Function is null.", deleteIndexDocumentsFunction, not(nullValue()));
         assertThat("Delete index documents function is not an instance of TriConsumer.", deleteIndexDocumentsFunction, instanceOf(TriConsumer.class));
 
+        // Build mocks
+        TransportClient transportClient = mock(TransportClient.class);
         BulkRequestBuilder bulkRequestBuilder = mock(BulkRequestBuilder.class);
         DeleteRequestBuilder deleteRequestBuilder = mock(DeleteRequestBuilder.class);
         BulkResponse bulkResponse = mock(BulkResponse.class);
 
         // Mock the call to external methods
+        when(transportClientFactory.getTransportClient()).thenReturn(transportClient);
         when(transportClient.prepareBulk()).thenReturn(bulkRequestBuilder);
         when(transportClient.prepareDelete("INDEX_NAME", "DOCUMENT_TYPE", "1")).thenReturn(deleteRequestBuilder);
         when(bulkRequestBuilder.get()).thenReturn(bulkResponse);
@@ -515,10 +604,14 @@ public class ElasticsearchFunctionsTest
         deleteIndexDocumentsFunction.accept("INDEX_NAME", "DOCUMENT_TYPE", businessObjectDefinitionIds);
 
         // Verify the calls to external methods
-        verify(transportClient, times(1)).prepareBulk();
-        verify(transportClient, times(1)).prepareDelete("INDEX_NAME", "DOCUMENT_TYPE", "1");
-        verify(bulkRequestBuilder, times(1)).get();
-        verify(bulkResponse, times(1)).hasFailures();
+        verify(transportClientFactory).getTransportClient();
+        verify(transportClient).prepareBulk();
+        verify(transportClient).prepareDelete("INDEX_NAME", "DOCUMENT_TYPE", "1");
+        verify(bulkRequestBuilder).add(deleteRequestBuilder);
+        verify(bulkRequestBuilder).get();
+        verify(bulkResponse).hasFailures();
+        verify(bulkResponse).buildFailureMessage();
+        verifyNoMoreInteractions(createdMocks.toArray());
     }
 
     @Test
@@ -528,6 +621,8 @@ public class ElasticsearchFunctionsTest
         assertThat("Function is null.", numberOfTypesInIndexFunction, not(nullValue()));
         assertThat("Number of types in index function not an instance of BiFunction.", numberOfTypesInIndexFunction, instanceOf(BiFunction.class));
 
+        // Build mocks
+        TransportClient transportClient = mock(TransportClient.class);
         SearchRequestBuilder searchRequestBuilder = mock(SearchRequestBuilder.class);
         SearchRequestBuilder searchRequestBuilderWithTypes = mock(SearchRequestBuilder.class);
         SearchResponse searchResponse = mock(SearchResponse.class);
@@ -537,6 +632,7 @@ public class ElasticsearchFunctionsTest
         ListenableActionFuture<SearchResponse> listenableActionFuture = mock(ListenableActionFuture.class);
 
         // Mock the call to external methods
+        when(transportClientFactory.getTransportClient()).thenReturn(transportClient);
         when(transportClient.prepareSearch("INDEX_NAME")).thenReturn(searchRequestBuilder);
         when(searchRequestBuilder.setTypes("DOCUMENT_TYPE")).thenReturn(searchRequestBuilderWithTypes);
         when(searchRequestBuilderWithTypes.execute()).thenReturn(listenableActionFuture);
@@ -550,12 +646,14 @@ public class ElasticsearchFunctionsTest
         assertThat("Number of types in index is incorrect.", numberOfTypesInIndex, is(100L));
 
         // Verify the calls to external methods
-        verify(transportClient, times(1)).prepareSearch("INDEX_NAME");
-        verify(searchRequestBuilder, times(1)).setTypes("DOCUMENT_TYPE");
-        verify(searchRequestBuilderWithTypes, times(1)).execute();
-        verify(listenableActionFuture, times(1)).actionGet();
-        verify(searchResponse, times(1)).getHits();
-        verify(searchHits, times(1)).getTotalHits();
+        verify(transportClientFactory).getTransportClient();
+        verify(transportClient).prepareSearch("INDEX_NAME");
+        verify(searchRequestBuilder).setTypes("DOCUMENT_TYPE");
+        verify(searchRequestBuilderWithTypes).execute();
+        verify(listenableActionFuture).actionGet();
+        verify(searchResponse).getHits();
+        verify(searchHits).getTotalHits();
+        verifyNoMoreInteractions(createdMocks.toArray());
     }
 
     @Test
@@ -565,6 +663,8 @@ public class ElasticsearchFunctionsTest
         assertThat("Function is null.", idsInIndexFunction, not(nullValue()));
         assertThat("Ids in index function not an instance of BiFunction.", idsInIndexFunction, instanceOf(BiFunction.class));
 
+        // Build mocks
+        TransportClient transportClient = mock(TransportClient.class);
         SearchRequestBuilder searchRequestBuilder = mock(SearchRequestBuilder.class);
         SearchRequestBuilder searchRequestBuilderWithTypes = mock(SearchRequestBuilder.class);
         SearchRequestBuilder searchRequestBuilderWithQuery = mock(SearchRequestBuilder.class);
@@ -588,6 +688,7 @@ public class ElasticsearchFunctionsTest
         ListenableActionFuture<SearchResponse> listenableActionFutureScroll = mock(ListenableActionFuture.class);
 
         // Mock the call to external methods
+        when(transportClientFactory.getTransportClient()).thenReturn(transportClient);
         when(transportClient.prepareSearch("INDEX_NAME")).thenReturn(searchRequestBuilder);
         when(searchRequestBuilder.setTypes("DOCUMENT_TYPE")).thenReturn(searchRequestBuilderWithTypes);
         when(searchRequestBuilderWithTypes.setQuery(any())).thenReturn(searchRequestBuilderWithQuery);
@@ -609,20 +710,26 @@ public class ElasticsearchFunctionsTest
         assertThat("Ids in index list is null.", idsInIndex, not(nullValue()));
 
         // Verify the calls to external methods
-        verify(transportClient, times(1)).prepareSearch("INDEX_NAME");
-        verify(searchRequestBuilder, times(1)).setTypes("DOCUMENT_TYPE");
-        verify(searchRequestBuilderWithTypes, times(1)).setQuery(any());
-        verify(searchRequestBuilderWithQuery, times(1)).setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME));
-        verify(searchRequestBuilderWithScroll, times(1)).setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE);
-        verify(searchRequestBuilder, times(1)).execute();
-        verify(listenableActionFuture, times(1)).actionGet();
-        verify(searchResponse, times(1)).getHits();
-        verify(searchHits, times(1)).hits();
-        verify(transportClient, times(1)).prepareSearchScroll(any());
-        verify(searchScrollRequestBuilder, times(1)).execute();
-        verify(listenableActionFutureScroll, times(1)).actionGet();
-        verify(searchResponseScroll, times(1)).getHits();
-        verify(searchHitsScroll, times(1)).hits();
+        verify(transportClientFactory).getTransportClient();
+        verify(transportClient).prepareSearch("INDEX_NAME");
+        verify(searchRequestBuilder).setTypes("DOCUMENT_TYPE");
+        verify(searchRequestBuilderWithTypes).setQuery(any());
+        verify(searchResponse).getScrollId();
+        verify(searchRequestBuilderWithQuery).setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME));
+        verify(searchRequestBuilderWithScroll).setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE);
+        verify(searchRequestBuilder).execute();
+        verify(listenableActionFuture).actionGet();
+        verify(searchResponse).getHits();
+        verify(searchHits).hits();
+        verify(searchHitArray[0]).id();
+        verify(searchHitArray[1]).id();
+        verify(transportClient).prepareSearchScroll(any());
+        verify(searchScrollRequestBuilder).setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME));
+        verify(searchScrollRequestBuilder).execute();
+        verify(listenableActionFutureScroll).actionGet();
+        verify(searchResponseScroll).getHits();
+        verify(searchHitsScroll).hits();
+        verifyNoMoreInteractions(createdMocks.toArray());
     }
 
     @Test
@@ -634,6 +741,8 @@ public class ElasticsearchFunctionsTest
         assertThat("Find all business object definitions function not an instance of TriFunction.", findAllBusinessObjectDefinitionsFunction,
             instanceOf(TriFunction.class));
 
+        // Build mocks
+        TransportClient transportClient = mock(TransportClient.class);
         SearchRequestBuilder searchRequestBuilder = mock(SearchRequestBuilder.class);
         SearchRequestBuilder searchRequestBuilderWithTypes = mock(SearchRequestBuilder.class);
         SearchRequestBuilder searchRequestBuilderWithScroll = mock(SearchRequestBuilder.class);
@@ -665,13 +774,13 @@ public class ElasticsearchFunctionsTest
         searchSourceBuilder
             .fetchSource(new String[] {"DATA_PROVIDER_NAME_SOURCE", "DESCRIPTION_SOURCE", "DISPLAY_NAME_SOURCE", "NAME_SOURCE", "NAMESPACE_CODE_SOURCE"}, null);
 
-
         @SuppressWarnings("unchecked")
         ListenableActionFuture<SearchResponse> listenableActionFuture = mock(ListenableActionFuture.class);
         @SuppressWarnings("unchecked")
         ListenableActionFuture<SearchResponse> listenableActionFutureScroll = mock(ListenableActionFuture.class);
 
         // Mock the call to external methods
+        when(transportClientFactory.getTransportClient()).thenReturn(transportClient);
         when(transportClient.prepareSearch("INDEX_NAME")).thenReturn(searchRequestBuilder);
         when(searchRequestBuilder.setTypes("DOCUMENT_TYPE")).thenReturn(searchRequestBuilderWithTypes);
         when(searchRequestBuilderWithTypes.setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME))).thenReturn(searchRequestBuilderWithScroll);
@@ -695,33 +804,38 @@ public class ElasticsearchFunctionsTest
         when(searchHitsScroll.hits()).thenReturn(searchHitArrayScroll);
         when(jsonHelper.unmarshallJsonToObject(any(), any())).thenReturn(new BusinessObjectDefinitionEntity());
 
-
         // Call the method under test
-        ElasticsearchResponseDto elasticsearchResponseDto = findAllBusinessObjectDefinitionsFunction.apply("INDEX_NAME", "DOCUMENT_TYPE", new HashSet<>());
+        ElasticsearchResponseDto elasticsearchResponseDto =
+            findAllBusinessObjectDefinitionsFunction.apply("INDEX_NAME", "DOCUMENT_TYPE", new HashSet<>());
         List<BusinessObjectDefinitionIndexSearchResponseDto> businessObjectDefinitionEntityList =
             elasticsearchResponseDto.getBusinessObjectDefinitionIndexSearchResponseDtos();
 
         assertThat("Business object definition entity list is null.", businessObjectDefinitionEntityList, not(nullValue()));
-        //assertThat("Tag Type response is null ", elasticsearchResponseDto.getTagTypeIndexSearchResponseDtos(), not(nullValue()));
-        //assertThat("Tag response is null ", elasticsearchResponseDto.getTagIndexSearchResponseDtos(), not(nullValue()));
 
         // Verify the calls to external methods
-        verify(transportClient, times(1)).prepareSearch("INDEX_NAME");
-        verify(searchRequestBuilder, times(1)).setTypes("DOCUMENT_TYPE");
-        verify(searchRequestBuilderWithTypes, times(1)).setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME));
-        verify(searchRequestBuilderWithScroll, times(1)).setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE);
-        verify(searchRequestBuilderWithSource, times(1)).addSort(SortBuilders.fieldSort(BUSINESS_OBJECT_DEFINITION_SORT_FIELD).order(SortOrder.ASC));
-        verify(searchRequestBuilderWithSorting, times(1)).addSort(SortBuilders.fieldSort(NAMESPACE_CODE_SORT_FIELD).order(SortOrder.ASC));
-        verify(searchRequestBuilder, times(1)).execute();
-        verify(listenableActionFuture, times(1)).actionGet();
-        verify(searchResponse, times(1)).getHits();
-        verify(searchHits, times(1)).hits();
-        verify(transportClient, times(1)).prepareSearchScroll(any());
-        verify(searchScrollRequestBuilder, times(1)).execute();
-        verify(listenableActionFutureScroll, times(1)).actionGet();
-        verify(searchResponseScroll, times(1)).getHits();
-        verify(searchHitsScroll, times(1)).hits();
+        verify(transportClientFactory, times(2)).getTransportClient();
+        verify(transportClient).prepareSearch("INDEX_NAME");
+        verify(searchRequestBuilder).setTypes("DOCUMENT_TYPE");
+        verify(searchRequestBuilderWithTypes).setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME));
+        verify(searchRequestBuilderWithScroll).setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE);
+        verify(searchRequestBuilderWithSize).setSource(any());
+        verify(searchRequestBuilderWithSource).addSort(SortBuilders.fieldSort(BUSINESS_OBJECT_DEFINITION_SORT_FIELD).order(SortOrder.ASC));
+        verify(searchRequestBuilderWithSorting).addSort(SortBuilders.fieldSort(NAMESPACE_CODE_SORT_FIELD).order(SortOrder.ASC));
+        verify(searchRequestBuilder).execute();
+        verify(listenableActionFuture).actionGet();
+        verify(searchResponse).getHits();
+        verify(searchHits).hits();
+        verify(searchResponse).getScrollId();
+        verify(transportClient).prepareSearchScroll(any());
+        verify(searchScrollRequestBuilder).execute();
+        verify(searchScrollRequestBuilder).setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME));
+        verify(listenableActionFutureScroll).actionGet();
+        verify(searchResponseScroll).getHits();
+        verify(searchHitsScroll).hits();
+        verify(searchHitArray[0]).getSourceAsString();
+        verify(searchHitArray[1]).getSourceAsString();
         verify(jsonHelper, times(2)).unmarshallJsonToObject(any(), any());
+        verifyNoMoreInteractions(createdMocks.toArray());
     }
 
     @Test
@@ -733,6 +847,8 @@ public class ElasticsearchFunctionsTest
         assertThat("Find all business object definitions function not an instance of TriFunction.", findAllBusinessObjectDefinitionsFunction,
             instanceOf(TriFunction.class));
 
+        // Build mocks
+        TransportClient transportClient = mock(TransportClient.class);
         SearchRequestBuilder searchRequestBuilder = mock(SearchRequestBuilder.class);
         SearchRequestBuilder searchRequestBuilderWithTypes = mock(SearchRequestBuilder.class);
         SearchRequestBuilder searchRequestBuilderWithScroll = mock(SearchRequestBuilder.class);
@@ -758,6 +874,7 @@ public class ElasticsearchFunctionsTest
         ListenableActionFuture<SearchResponse> listenableActionFutureScroll = mock(ListenableActionFuture.class);
 
         // Mock the call to external methods
+        when(transportClientFactory.getTransportClient()).thenReturn(transportClient);
         when(transportClient.prepareSearch("INDEX_NAME")).thenReturn(searchRequestBuilder);
         when(searchRequestBuilder.setTypes("DOCUMENT_TYPE")).thenReturn(searchRequestBuilderWithTypes);
         when(searchRequestBuilderWithTypes.setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME))).thenReturn(searchRequestBuilderWithScroll);
@@ -779,40 +896,51 @@ public class ElasticsearchFunctionsTest
 
         // Call the method under test
         List<BusinessObjectDefinitionIndexSearchResponseDto> businessObjectDefinitionEntityList =
-            findAllBusinessObjectDefinitionsFunction.apply("INDEX_NAME", "DOCUMENT_TYPE", new HashSet<>()).getBusinessObjectDefinitionIndexSearchResponseDtos();
+            findAllBusinessObjectDefinitionsFunction.apply("INDEX_NAME", "DOCUMENT_TYPE", new HashSet<>())
+                .getBusinessObjectDefinitionIndexSearchResponseDtos();
 
         assertThat("Business object definition entity list is null.", businessObjectDefinitionEntityList, not(nullValue()));
 
         // Verify the calls to external methods
-        verify(transportClient, times(1)).prepareSearch("INDEX_NAME");
-        verify(searchRequestBuilder, times(1)).setTypes("DOCUMENT_TYPE");
-        verify(searchRequestBuilderWithTypes, times(1)).setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME));
-        verify(searchRequestBuilderWithScroll, times(1)).setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE);
-        verify(searchRequestBuilderWithSource, times(1)).addSort(SortBuilders.fieldSort(BUSINESS_OBJECT_DEFINITION_SORT_FIELD).order(SortOrder.ASC));
-        verify(searchRequestBuilderWithSorting, times(1)).addSort(SortBuilders.fieldSort(NAMESPACE_CODE_SORT_FIELD).order(SortOrder.ASC));
-        verify(searchRequestBuilder, times(1)).execute();
-        verify(listenableActionFuture, times(1)).actionGet();
-        verify(searchResponse, times(1)).getHits();
-        verify(searchHits, times(1)).hits();
-        verify(transportClient, times(1)).prepareSearchScroll(any());
-        verify(searchScrollRequestBuilder, times(1)).execute();
-        verify(listenableActionFutureScroll, times(1)).actionGet();
-        verify(searchResponseScroll, times(1)).getHits();
-        verify(searchHitsScroll, times(1)).hits();
+        verify(transportClientFactory, times(2)).getTransportClient();
+        verify(transportClient).prepareSearch("INDEX_NAME");
+        verify(searchRequestBuilder).setTypes("DOCUMENT_TYPE");
+        verify(searchRequestBuilderWithTypes).setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME));
+        verify(searchRequestBuilderWithScroll).setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE);
+        verify(searchRequestBuilderWithSize).setSource(any());
+        verify(searchRequestBuilderWithSource).addSort(SortBuilders.fieldSort(BUSINESS_OBJECT_DEFINITION_SORT_FIELD).order(SortOrder.ASC));
+        verify(searchRequestBuilderWithSorting).addSort(SortBuilders.fieldSort(NAMESPACE_CODE_SORT_FIELD).order(SortOrder.ASC));
+        verify(searchRequestBuilder).execute();
+        verify(listenableActionFuture).actionGet();
+        verify(searchResponse).getHits();
+        verify(searchHits).hits();
+        verify(searchResponse).getScrollId();
+        verify(transportClient).prepareSearchScroll(any());
+        verify(searchScrollRequestBuilder).execute();
+        verify(searchScrollRequestBuilder).setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME));
+        verify(listenableActionFutureScroll).actionGet();
+        verify(searchResponseScroll).getHits();
+        verify(searchHitsScroll).hits();
+        verify(searchHitArray[0]).getSourceAsString();
+        verify(searchHitArray[1]).getSourceAsString();
+        verify(searchHitArray[0]).id();
+        verify(searchHitArray[1]).id();
         verify(jsonHelper, times(2)).unmarshallJsonToObject(any(), any());
+        verifyNoMoreInteractions(createdMocks.toArray());
     }
 
     @Test
     public void testSearchBusinessObjectDefinitionByTagsFunction() throws Exception
     {
-        QuadFunction<String, String, List<List<TagEntity>>, Set<String>, ElasticsearchResponseDto> searchBusinessObjectDefinitionsByTagsFunction =
-            searchFunctions.getSearchBusinessObjectDefinitionsByTagsFunction();
+        QuadFunction<String, String, List<Map<SearchFilterType, List<TagEntity>>>, Set<String>, ElasticsearchResponseDto>
+            searchBusinessObjectDefinitionsByTagsFunction = searchFunctions.getSearchBusinessObjectDefinitionsByTagsFunction();
 
         assertThat("Function is null.", searchBusinessObjectDefinitionsByTagsFunction, not(nullValue()));
         assertThat("Search business object definitions by tags function not an instance of QuadFunction.", searchBusinessObjectDefinitionsByTagsFunction,
             instanceOf(QuadFunction.class));
 
-
+        // Build mocks
+        TransportClient transportClient = mock(TransportClient.class);
         SearchRequestBuilder searchRequestBuilder = mock(SearchRequestBuilder.class);
         SearchRequestBuilder searchRequestBuilderWithTypes = mock(SearchRequestBuilder.class);
         SearchRequestBuilder searchRequestBuilderWithScroll = mock(SearchRequestBuilder.class);
@@ -838,6 +966,7 @@ public class ElasticsearchFunctionsTest
         ListenableActionFuture<SearchResponse> listenableActionFutureScroll = mock(ListenableActionFuture.class);
 
         // Mock the call to external methods
+        when(transportClientFactory.getTransportClient()).thenReturn(transportClient);
         when(transportClient.prepareSearch("INDEX_NAME")).thenReturn(searchRequestBuilder);
         when(searchRequestBuilder.setTypes("DOCUMENT_TYPE")).thenReturn(searchRequestBuilderWithTypes);
         when(searchRequestBuilderWithTypes.setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME))).thenReturn(searchRequestBuilderWithScroll);
@@ -871,7 +1000,10 @@ public class ElasticsearchFunctionsTest
         List<TagEntity> tagEntities = new ArrayList<>();
         tagEntities.add(tagEntity);
 
-        List<List<TagEntity>> tagEnLists = Collections.singletonList(tagEntities);
+        // List<Map<SearchFilterType, List<TagEntity>>>
+        Map<SearchFilterType, List<TagEntity>> searchFilterTypeListMap = new HashMap<>();
+        searchFilterTypeListMap.put(INCLUSION_SEARCH_FILTER, tagEntities);
+        List<Map<SearchFilterType, List<TagEntity>>> tagEnLists = Collections.singletonList(searchFilterTypeListMap);
 
         // Call the method under test
         List<BusinessObjectDefinitionIndexSearchResponseDto> businessObjectDefinitionEntityList =
@@ -881,23 +1013,369 @@ public class ElasticsearchFunctionsTest
         assertThat("Business object definition entity list is null.", businessObjectDefinitionEntityList, not(nullValue()));
 
         // Verify the calls to external methods
-        verify(transportClient, times(1)).prepareSearch("INDEX_NAME");
-        verify(searchRequestBuilder, times(1)).setTypes("DOCUMENT_TYPE");
-        verify(searchRequestBuilderWithTypes, times(1)).setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME));
-        verify(searchRequestBuilderWithScroll, times(1)).setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE);
-        verify(searchRequestBuilderWithSource, times(1)).addSort(SortBuilders.fieldSort(BUSINESS_OBJECT_DEFINITION_SORT_FIELD).order(SortOrder.ASC));
-        verify(searchRequestBuilderWithSorting, times(1)).addSort(SortBuilders.fieldSort(NAMESPACE_CODE_SORT_FIELD).order(SortOrder.ASC));
-        verify(searchRequestBuilder, times(1)).execute();
-        verify(listenableActionFuture, times(1)).actionGet();
-        verify(searchResponse, times(1)).getHits();
-        verify(searchHits, times(1)).hits();
-        verify(transportClient, times(1)).prepareSearchScroll(any());
-        verify(searchScrollRequestBuilder, times(1)).execute();
-        verify(listenableActionFutureScroll, times(1)).actionGet();
-        verify(searchResponseScroll, times(1)).getHits();
-        verify(searchHitsScroll, times(1)).hits();
+        verify(transportClientFactory, times(2)).getTransportClient();
+        verify(transportClient).prepareSearch("INDEX_NAME");
+        verify(searchRequestBuilder).setTypes("DOCUMENT_TYPE");
+        verify(searchRequestBuilderWithTypes).setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME));
+        verify(searchRequestBuilderWithScroll).setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE);
+        verify(searchRequestBuilderWithSize).setSource(any());
+        verify(searchRequestBuilderWithSource).addSort(SortBuilders.fieldSort(BUSINESS_OBJECT_DEFINITION_SORT_FIELD).order(SortOrder.ASC));
+        verify(searchRequestBuilderWithSorting).addSort(SortBuilders.fieldSort(NAMESPACE_CODE_SORT_FIELD).order(SortOrder.ASC));
+        verify(searchRequestBuilder).execute();
+        verify(listenableActionFuture).actionGet();
+        verify(searchResponse).getHits();
+        verify(searchHits).hits();
+        verify(searchResponse).getScrollId();
+        verify(transportClient).prepareSearchScroll(any());
+        verify(searchScrollRequestBuilder).execute();
+        verify(searchScrollRequestBuilder).setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME));
+        verify(listenableActionFutureScroll).actionGet();
+        verify(searchResponseScroll).getHits();
+        verify(searchHitsScroll).hits();
+        verify(searchHitArray[0]).getSourceAsString();
+        verify(searchHitArray[1]).getSourceAsString();
+        verify(searchHitArray[0]).id();
+        verify(searchHitArray[1]).id();
         verify(jsonHelper, times(2)).unmarshallJsonToObject(any(), any());
+        verifyNoMoreInteractions(createdMocks.toArray());
+    }
 
+    @Test
+    public void testSearchBusinessObjectDefinitionByTagsFunctionWithExclusion() throws Exception
+    {
+        QuadFunction<String, String, List<Map<SearchFilterType, List<TagEntity>>>, Set<String>, ElasticsearchResponseDto> searchBusinessObjectDefinitionsByTagsFunction =
+            searchFunctions.getSearchBusinessObjectDefinitionsByTagsFunction();
+
+        assertThat("Function is null.", searchBusinessObjectDefinitionsByTagsFunction, not(nullValue()));
+        assertThat("Search business object definitions by tags function not an instance of QuadFunction.", searchBusinessObjectDefinitionsByTagsFunction,
+            instanceOf(QuadFunction.class));
+
+        // Build mocks
+        TransportClient transportClient = mock(TransportClient.class);
+        SearchRequestBuilder searchRequestBuilder = mock(SearchRequestBuilder.class);
+        SearchRequestBuilder searchRequestBuilderWithTypes = mock(SearchRequestBuilder.class);
+        SearchRequestBuilder searchRequestBuilderWithScroll = mock(SearchRequestBuilder.class);
+        SearchRequestBuilder searchRequestBuilderWithSize = mock(SearchRequestBuilder.class);
+        SearchRequestBuilder searchRequestBuilderWithSource = mock(SearchRequestBuilder.class);
+        SearchRequestBuilder searchRequestBuilderWithSorting = mock(SearchRequestBuilder.class);
+
+        SearchResponse searchResponse = mock(SearchResponse.class);
+        SearchHits searchHits = mock(SearchHits.class);
+        SearchHit searchHit1 = mock(SearchHit.class);
+        SearchHit searchHit2 = mock(SearchHit.class);
+        SearchScrollRequestBuilder searchScrollRequestBuilder = mock(SearchScrollRequestBuilder.class);
+        SearchHit[] searchHitArray = new SearchHit[2];
+        searchHitArray[0] = searchHit1;
+        searchHitArray[1] = searchHit2;
+        SearchResponse searchResponseScroll = mock(SearchResponse.class);
+        SearchHits searchHitsScroll = mock(SearchHits.class);
+        SearchHit[] searchHitArrayScroll = new SearchHit[0];
+
+        @SuppressWarnings("unchecked")
+        ListenableActionFuture<SearchResponse> listenableActionFuture = mock(ListenableActionFuture.class);
+        @SuppressWarnings("unchecked")
+        ListenableActionFuture<SearchResponse> listenableActionFutureScroll = mock(ListenableActionFuture.class);
+
+        // Mock the call to external methods
+        when(transportClientFactory.getTransportClient()).thenReturn(transportClient);
+        when(transportClient.prepareSearch("INDEX_NAME")).thenReturn(searchRequestBuilder);
+        when(searchRequestBuilder.setTypes("DOCUMENT_TYPE")).thenReturn(searchRequestBuilderWithTypes);
+        when(searchRequestBuilderWithTypes.setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME))).thenReturn(searchRequestBuilderWithScroll);
+        when(searchRequestBuilderWithScroll.setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE)).thenReturn(searchRequestBuilderWithSize);
+        when(searchRequestBuilderWithSize.setSource(any())).thenReturn(searchRequestBuilderWithSource);
+        when(searchRequestBuilderWithSource.addSort(any())).thenReturn(searchRequestBuilderWithSorting);
+        when(searchRequestBuilderWithSorting.addSort(any())).thenReturn(searchRequestBuilderWithSorting);
+
+        when(searchRequestBuilder.execute()).thenReturn(listenableActionFuture);
+        when(listenableActionFuture.actionGet()).thenReturn(searchResponse);
+        when(searchResponse.getHits()).thenReturn(searchHits);
+        when(searchHits.hits()).thenReturn(searchHitArray);
+        when(transportClient.prepareSearchScroll(any())).thenReturn(searchScrollRequestBuilder);
+        when(searchScrollRequestBuilder.execute()).thenReturn(listenableActionFutureScroll);
+        when(listenableActionFutureScroll.actionGet()).thenReturn(searchResponseScroll);
+        when(searchResponseScroll.getHits()).thenReturn(searchHitsScroll);
+        when(searchHitsScroll.hits()).thenReturn(searchHitArrayScroll);
+        when(jsonHelper.unmarshallJsonToObject(any(), any())).thenThrow(new IOException());
+
+        // Get test tag entity
+        TagEntity tagEntity = new TagEntity();
+        tagEntity.setTagCode("TAG_CODE");
+
+        TagTypeEntity tagTypeEntity = new TagTypeEntity();
+        tagTypeEntity.setCode("TAG_TYPE_CODE");
+        tagTypeEntity.setDisplayName("DISPLAY_NAME");
+        tagTypeEntity.setOrderNumber(1);
+
+        tagEntity.setTagType(tagTypeEntity);
+
+        List<TagEntity> tagEntities = new ArrayList<>();
+        tagEntities.add(tagEntity);
+
+        // List<Map<SearchFilterType, List<TagEntity>>>
+        Map<SearchFilterType, List<TagEntity>> searchFilterExclusionTypeListMap = new HashMap<>();
+        searchFilterExclusionTypeListMap.put(EXCLUSION_SEARCH_FILTER, tagEntities);
+        Map<SearchFilterType, List<TagEntity>> searchFilterInclusionTypeListMap = new HashMap<>();
+        searchFilterInclusionTypeListMap.put(INCLUSION_SEARCH_FILTER, tagEntities);
+        List<Map<SearchFilterType, List<TagEntity>>> tagEnLists = new ArrayList<>();
+        tagEnLists.add(searchFilterExclusionTypeListMap);
+        tagEnLists.add(searchFilterInclusionTypeListMap);
+
+        // Call the method under test
+        List<BusinessObjectDefinitionIndexSearchResponseDto> businessObjectDefinitionEntityList =
+            searchBusinessObjectDefinitionsByTagsFunction.apply("INDEX_NAME", "DOCUMENT_TYPE", tagEnLists, new HashSet<>())
+                .getBusinessObjectDefinitionIndexSearchResponseDtos();
+
+        assertThat("Business object definition entity list is null.", businessObjectDefinitionEntityList, not(nullValue()));
+
+        // Verify the calls to external methods
+        verify(transportClientFactory, times(2)).getTransportClient();
+        verify(transportClient).prepareSearch("INDEX_NAME");
+        verify(searchRequestBuilder).setTypes("DOCUMENT_TYPE");
+        verify(searchRequestBuilderWithTypes).setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME));
+        verify(searchRequestBuilderWithScroll).setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE);
+        verify(searchRequestBuilderWithSize).setSource(any());
+        verify(searchRequestBuilderWithSource).addSort(SortBuilders.fieldSort(BUSINESS_OBJECT_DEFINITION_SORT_FIELD).order(SortOrder.ASC));
+        verify(searchRequestBuilderWithSorting).addSort(SortBuilders.fieldSort(NAMESPACE_CODE_SORT_FIELD).order(SortOrder.ASC));
+        verify(searchRequestBuilder).execute();
+        verify(listenableActionFuture).actionGet();
+        verify(searchResponse).getHits();
+        verify(searchHits).hits();
+        verify(searchResponse).getScrollId();
+        verify(transportClient).prepareSearchScroll(any());
+        verify(searchScrollRequestBuilder).execute();
+        verify(searchScrollRequestBuilder).setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME));
+        verify(listenableActionFutureScroll).actionGet();
+        verify(searchResponseScroll).getHits();
+        verify(searchHitsScroll).hits();
+        verify(searchHitArray[0]).getSourceAsString();
+        verify(searchHitArray[1]).getSourceAsString();
+        verify(searchHitArray[0]).id();
+        verify(searchHitArray[1]).id();
+        verify(jsonHelper, times(2)).unmarshallJsonToObject(any(), any());
+        verifyNoMoreInteractions(createdMocks.toArray());
+    }
+
+    @Test
+    public void testSearchBusinessObjectDefinitionByTagsFunctionWithExclusionWithNoInclusion() throws Exception
+    {
+        QuadFunction<String, String, List<Map<SearchFilterType, List<TagEntity>>>, Set<String>, ElasticsearchResponseDto>
+            searchBusinessObjectDefinitionsByTagsFunction = searchFunctions.getSearchBusinessObjectDefinitionsByTagsFunction();
+
+        assertThat("Function is null.", searchBusinessObjectDefinitionsByTagsFunction, not(nullValue()));
+        assertThat("Search business object definitions by tags function not an instance of QuadFunction.", searchBusinessObjectDefinitionsByTagsFunction,
+            instanceOf(QuadFunction.class));
+
+        // Build mocks
+        TransportClient transportClient = mock(TransportClient.class);
+        SearchRequestBuilder searchRequestBuilder = mock(SearchRequestBuilder.class);
+        SearchRequestBuilder searchRequestBuilderWithTypes = mock(SearchRequestBuilder.class);
+        SearchRequestBuilder searchRequestBuilderWithScroll = mock(SearchRequestBuilder.class);
+        SearchRequestBuilder searchRequestBuilderWithSize = mock(SearchRequestBuilder.class);
+        SearchRequestBuilder searchRequestBuilderWithSource = mock(SearchRequestBuilder.class);
+        SearchRequestBuilder searchRequestBuilderWithSorting = mock(SearchRequestBuilder.class);
+
+        SearchResponse searchResponse = mock(SearchResponse.class);
+        SearchHits searchHits = mock(SearchHits.class);
+        SearchHit searchHit1 = mock(SearchHit.class);
+        SearchHit searchHit2 = mock(SearchHit.class);
+        SearchScrollRequestBuilder searchScrollRequestBuilder = mock(SearchScrollRequestBuilder.class);
+        SearchHit[] searchHitArray = new SearchHit[2];
+        searchHitArray[0] = searchHit1;
+        searchHitArray[1] = searchHit2;
+        SearchResponse searchResponseScroll = mock(SearchResponse.class);
+        SearchHits searchHitsScroll = mock(SearchHits.class);
+        SearchHit[] searchHitArrayScroll = new SearchHit[0];
+
+        @SuppressWarnings("unchecked")
+        ListenableActionFuture<SearchResponse> listenableActionFuture = mock(ListenableActionFuture.class);
+        @SuppressWarnings("unchecked")
+        ListenableActionFuture<SearchResponse> listenableActionFutureScroll = mock(ListenableActionFuture.class);
+
+        // Mock the call to external methods
+        when(transportClientFactory.getTransportClient()).thenReturn(transportClient);
+        when(transportClient.prepareSearch("INDEX_NAME")).thenReturn(searchRequestBuilder);
+        when(searchRequestBuilder.setTypes("DOCUMENT_TYPE")).thenReturn(searchRequestBuilderWithTypes);
+        when(searchRequestBuilderWithTypes.setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME))).thenReturn(searchRequestBuilderWithScroll);
+        when(searchRequestBuilderWithScroll.setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE)).thenReturn(searchRequestBuilderWithSize);
+        when(searchRequestBuilderWithSize.setSource(any())).thenReturn(searchRequestBuilderWithSource);
+        when(searchRequestBuilderWithSource.addSort(any())).thenReturn(searchRequestBuilderWithSorting);
+        when(searchRequestBuilderWithSorting.addSort(any())).thenReturn(searchRequestBuilderWithSorting);
+
+        when(searchRequestBuilder.execute()).thenReturn(listenableActionFuture);
+        when(listenableActionFuture.actionGet()).thenReturn(searchResponse);
+        when(searchResponse.getHits()).thenReturn(searchHits);
+        when(searchHits.hits()).thenReturn(searchHitArray);
+        when(transportClient.prepareSearchScroll(any())).thenReturn(searchScrollRequestBuilder);
+        when(searchScrollRequestBuilder.execute()).thenReturn(listenableActionFutureScroll);
+        when(listenableActionFutureScroll.actionGet()).thenReturn(searchResponseScroll);
+        when(searchResponseScroll.getHits()).thenReturn(searchHitsScroll);
+        when(searchHitsScroll.hits()).thenReturn(searchHitArrayScroll);
+        when(jsonHelper.unmarshallJsonToObject(any(), any())).thenThrow(new IOException());
+
+        // Get test tag entity
+        TagEntity tagEntity = new TagEntity();
+        tagEntity.setTagCode("TAG_CODE");
+
+        TagTypeEntity tagTypeEntity = new TagTypeEntity();
+        tagTypeEntity.setCode("TAG_TYPE_CODE");
+        tagTypeEntity.setDisplayName("DISPLAY_NAME");
+        tagTypeEntity.setOrderNumber(1);
+
+        tagEntity.setTagType(tagTypeEntity);
+
+        List<TagEntity> tagEntities = new ArrayList<>();
+        tagEntities.add(tagEntity);
+
+        // List<Map<SearchFilterType, List<TagEntity>>>
+        Map<SearchFilterType, List<TagEntity>> searchFilterExclusionTypeListMap = new HashMap<>();
+        searchFilterExclusionTypeListMap.put(EXCLUSION_SEARCH_FILTER, tagEntities);
+        List<Map<SearchFilterType, List<TagEntity>>> tagEnLists = new ArrayList<>();
+        tagEnLists.add(searchFilterExclusionTypeListMap);
+
+        // Call the method under test
+        List<BusinessObjectDefinitionIndexSearchResponseDto> businessObjectDefinitionEntityList =
+            searchBusinessObjectDefinitionsByTagsFunction.apply("INDEX_NAME", "DOCUMENT_TYPE", tagEnLists, new HashSet<>())
+                .getBusinessObjectDefinitionIndexSearchResponseDtos();
+
+        assertThat("Business object definition entity list is null.", businessObjectDefinitionEntityList, not(nullValue()));
+
+        // Verify the calls to external methods
+        verify(transportClientFactory, times(2)).getTransportClient();
+        verify(transportClient).prepareSearch("INDEX_NAME");
+        verify(searchRequestBuilder).setTypes("DOCUMENT_TYPE");
+        verify(searchRequestBuilderWithTypes).setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME));
+        verify(searchRequestBuilderWithScroll).setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE);
+        verify(searchRequestBuilderWithSize).setSource(any());
+        verify(searchRequestBuilderWithSource).addSort(SortBuilders.fieldSort(BUSINESS_OBJECT_DEFINITION_SORT_FIELD).order(SortOrder.ASC));
+        verify(searchRequestBuilderWithSorting).addSort(SortBuilders.fieldSort(NAMESPACE_CODE_SORT_FIELD).order(SortOrder.ASC));
+        verify(searchRequestBuilder).execute();
+        verify(listenableActionFuture).actionGet();
+        verify(searchResponse).getHits();
+        verify(searchHits).hits();
+        verify(searchResponse).getScrollId();
+        verify(transportClient).prepareSearchScroll(any());
+        verify(searchScrollRequestBuilder).execute();
+        verify(searchScrollRequestBuilder).setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME));
+        verify(listenableActionFutureScroll).actionGet();
+        verify(searchResponseScroll).getHits();
+        verify(searchHitsScroll).hits();
+        verify(searchHitArray[0]).getSourceAsString();
+        verify(searchHitArray[1]).getSourceAsString();
+        verify(searchHitArray[0]).id();
+        verify(searchHitArray[1]).id();
+        verify(jsonHelper, times(2)).unmarshallJsonToObject(any(), any());
+        verifyNoMoreInteractions(createdMocks.toArray());
+    }
+
+    @Test
+    public void testSearchBusinessObjectDefinitionByTagsFunctionWithNoExclusionWithNoInclusion() throws Exception
+    {
+        QuadFunction<String, String, List<Map<SearchFilterType, List<TagEntity>>>, Set<String>, ElasticsearchResponseDto>
+            searchBusinessObjectDefinitionsByTagsFunction = searchFunctions.getSearchBusinessObjectDefinitionsByTagsFunction();
+
+        assertThat("Function is null.", searchBusinessObjectDefinitionsByTagsFunction, not(nullValue()));
+        assertThat("Search business object definitions by tags function not an instance of QuadFunction.", searchBusinessObjectDefinitionsByTagsFunction,
+            instanceOf(QuadFunction.class));
+
+        // Build mocks
+        TransportClient transportClient = mock(TransportClient.class);
+        SearchRequestBuilder searchRequestBuilder = mock(SearchRequestBuilder.class);
+        SearchRequestBuilder searchRequestBuilderWithTypes = mock(SearchRequestBuilder.class);
+        SearchRequestBuilder searchRequestBuilderWithScroll = mock(SearchRequestBuilder.class);
+        SearchRequestBuilder searchRequestBuilderWithSize = mock(SearchRequestBuilder.class);
+        SearchRequestBuilder searchRequestBuilderWithSource = mock(SearchRequestBuilder.class);
+        SearchRequestBuilder searchRequestBuilderWithSorting = mock(SearchRequestBuilder.class);
+
+        SearchResponse searchResponse = mock(SearchResponse.class);
+        SearchHits searchHits = mock(SearchHits.class);
+        SearchHit searchHit1 = mock(SearchHit.class);
+        SearchHit searchHit2 = mock(SearchHit.class);
+        SearchScrollRequestBuilder searchScrollRequestBuilder = mock(SearchScrollRequestBuilder.class);
+        SearchHit[] searchHitArray = new SearchHit[2];
+        searchHitArray[0] = searchHit1;
+        searchHitArray[1] = searchHit2;
+        SearchResponse searchResponseScroll = mock(SearchResponse.class);
+        SearchHits searchHitsScroll = mock(SearchHits.class);
+        SearchHit[] searchHitArrayScroll = new SearchHit[0];
+
+        @SuppressWarnings("unchecked")
+        ListenableActionFuture<SearchResponse> listenableActionFuture = mock(ListenableActionFuture.class);
+        @SuppressWarnings("unchecked")
+        ListenableActionFuture<SearchResponse> listenableActionFutureScroll = mock(ListenableActionFuture.class);
+
+        // Mock the call to external methods
+        when(transportClientFactory.getTransportClient()).thenReturn(transportClient);
+        when(transportClient.prepareSearch("INDEX_NAME")).thenReturn(searchRequestBuilder);
+        when(searchRequestBuilder.setTypes("DOCUMENT_TYPE")).thenReturn(searchRequestBuilderWithTypes);
+        when(searchRequestBuilderWithTypes.setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME))).thenReturn(searchRequestBuilderWithScroll);
+        when(searchRequestBuilderWithScroll.setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE)).thenReturn(searchRequestBuilderWithSize);
+        when(searchRequestBuilderWithSize.setSource(any())).thenReturn(searchRequestBuilderWithSource);
+        when(searchRequestBuilderWithSource.addSort(any())).thenReturn(searchRequestBuilderWithSorting);
+        when(searchRequestBuilderWithSorting.addSort(any())).thenReturn(searchRequestBuilderWithSorting);
+
+        when(searchRequestBuilder.execute()).thenReturn(listenableActionFuture);
+        when(listenableActionFuture.actionGet()).thenReturn(searchResponse);
+        when(searchResponse.getHits()).thenReturn(searchHits);
+        when(searchHits.hits()).thenReturn(searchHitArray);
+        when(transportClient.prepareSearchScroll(any())).thenReturn(searchScrollRequestBuilder);
+        when(searchScrollRequestBuilder.execute()).thenReturn(listenableActionFutureScroll);
+        when(listenableActionFutureScroll.actionGet()).thenReturn(searchResponseScroll);
+        when(searchResponseScroll.getHits()).thenReturn(searchHitsScroll);
+        when(searchHitsScroll.hits()).thenReturn(searchHitArrayScroll);
+        when(jsonHelper.unmarshallJsonToObject(any(), any())).thenThrow(new IOException());
+
+        // Get test tag entity
+        TagEntity tagEntity = new TagEntity();
+        tagEntity.setTagCode("TAG_CODE");
+
+        TagTypeEntity tagTypeEntity = new TagTypeEntity();
+        tagTypeEntity.setCode("TAG_TYPE_CODE");
+        tagTypeEntity.setDisplayName("DISPLAY_NAME");
+        tagTypeEntity.setOrderNumber(1);
+
+        tagEntity.setTagType(tagTypeEntity);
+
+        List<TagEntity> tagEntities = new ArrayList<>();
+        tagEntities.add(tagEntity);
+
+        // List<Map<SearchFilterType, List<TagEntity>>>
+        Map<SearchFilterType, List<TagEntity>> searchFilterExclusionTypeListMap = new HashMap<>();
+        List<Map<SearchFilterType, List<TagEntity>>> tagEnLists = new ArrayList<>();
+        tagEnLists.add(searchFilterExclusionTypeListMap);
+
+        // Call the method under test
+        List<BusinessObjectDefinitionIndexSearchResponseDto> businessObjectDefinitionEntityList =
+            searchBusinessObjectDefinitionsByTagsFunction.apply("INDEX_NAME", "DOCUMENT_TYPE", tagEnLists, new HashSet<>())
+                .getBusinessObjectDefinitionIndexSearchResponseDtos();
+
+        assertThat("Business object definition entity list is null.", businessObjectDefinitionEntityList, not(nullValue()));
+
+        // Verify the calls to external methods
+        verify(transportClientFactory, times(2)).getTransportClient();
+        verify(transportClient).prepareSearch("INDEX_NAME");
+        verify(searchRequestBuilder).setTypes("DOCUMENT_TYPE");
+        verify(searchRequestBuilderWithTypes).setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME));
+        verify(searchRequestBuilderWithScroll).setSize(ELASTIC_SEARCH_SCROLL_PAGE_SIZE);
+        verify(searchRequestBuilderWithSize).setSource(any());
+        verify(searchRequestBuilderWithSource).addSort(SortBuilders.fieldSort(BUSINESS_OBJECT_DEFINITION_SORT_FIELD).order(SortOrder.ASC));
+        verify(searchRequestBuilderWithSorting).addSort(SortBuilders.fieldSort(NAMESPACE_CODE_SORT_FIELD).order(SortOrder.ASC));
+        verify(searchRequestBuilder).execute();
+        verify(listenableActionFuture).actionGet();
+        verify(searchResponse).getHits();
+        verify(searchHits).hits();
+        verify(searchResponse).getScrollId();
+        verify(transportClient).prepareSearchScroll(any());
+        verify(searchScrollRequestBuilder).execute();
+        verify(searchScrollRequestBuilder).setScroll(new TimeValue(ELASTIC_SEARCH_SCROLL_KEEP_ALIVE_TIME));
+        verify(listenableActionFutureScroll).actionGet();
+        verify(searchResponseScroll).getHits();
+        verify(searchHitsScroll).hits();
+        verify(searchHitArray[0]).getSourceAsString();
+        verify(searchHitArray[1]).getSourceAsString();
+        verify(searchHitArray[0]).id();
+        verify(searchHitArray[1]).id();
+        verify(jsonHelper, times(2)).unmarshallJsonToObject(any(), any());
+        verifyNoMoreInteractions(createdMocks.toArray());
     }
 
     @Test
@@ -907,11 +1385,14 @@ public class ElasticsearchFunctionsTest
         assertThat("Function is null.", updateIndexDocumentsFunction, not(nullValue()));
         assertThat("Create index documents function is not an instance of TriConsumer.", updateIndexDocumentsFunction, instanceOf(TriConsumer.class));
 
+        // Build mocks
+        TransportClient transportClient = mock(TransportClient.class);
         BulkRequestBuilder bulkRequestBuilder = mock(BulkRequestBuilder.class);
         UpdateRequestBuilder updateRequestBuilder = mock(UpdateRequestBuilder.class);
         BulkResponse bulkResponse = mock(BulkResponse.class);
 
         // Mock the call to external methods
+        when(transportClientFactory.getTransportClient()).thenReturn(transportClient);
         when(transportClient.prepareBulk()).thenReturn(bulkRequestBuilder);
         when(transportClient.prepareUpdate("INDEX_NAME", "DOCUMENT_TYPE", "1")).thenReturn(updateRequestBuilder);
         when(bulkRequestBuilder.get()).thenReturn(bulkResponse);
@@ -923,10 +1404,14 @@ public class ElasticsearchFunctionsTest
         updateIndexDocumentsFunction.accept("INDEX_NAME", "DOCUMENT_TYPE", documentMap);
 
         // Verify the calls to external methods
-        verify(transportClient, times(1)).prepareBulk();
-        verify(transportClient, times(1)).prepareUpdate("INDEX_NAME", "DOCUMENT_TYPE", "1");
-        verify(bulkRequestBuilder, times(1)).get();
-        verify(bulkResponse, times(1)).hasFailures();
+        verify(transportClientFactory).getTransportClient();
+        verify(transportClient).prepareBulk();
+        verify(transportClient).prepareUpdate("INDEX_NAME", "DOCUMENT_TYPE", "1");
+        verify(updateRequestBuilder).setDoc("JSON");
+        verify(bulkRequestBuilder).add(updateRequestBuilder);
+        verify(bulkRequestBuilder).get();
+        verify(bulkResponse).hasFailures();
+        verifyNoMoreInteractions(createdMocks.toArray());
     }
 
     @Test
@@ -936,11 +1421,14 @@ public class ElasticsearchFunctionsTest
         assertThat("Function is null.", updateIndexDocumentsFunction, not(nullValue()));
         assertThat("Create index documents function is not an instance of TriConsumer.", updateIndexDocumentsFunction, instanceOf(TriConsumer.class));
 
+        // Build mocks
+        TransportClient transportClient = mock(TransportClient.class);
         BulkRequestBuilder bulkRequestBuilder = mock(BulkRequestBuilder.class);
         UpdateRequestBuilder updateRequestBuilder = mock(UpdateRequestBuilder.class);
         BulkResponse bulkResponse = mock(BulkResponse.class);
 
         // Mock the call to external methods
+        when(transportClientFactory.getTransportClient()).thenReturn(transportClient);
         when(transportClient.prepareBulk()).thenReturn(bulkRequestBuilder);
         when(transportClient.prepareUpdate("INDEX_NAME", "DOCUMENT_TYPE", "1")).thenReturn(updateRequestBuilder);
         when(bulkRequestBuilder.get()).thenReturn(bulkResponse);
@@ -952,9 +1440,14 @@ public class ElasticsearchFunctionsTest
         updateIndexDocumentsFunction.accept("INDEX_NAME", "DOCUMENT_TYPE", documentMap);
 
         // Verify the calls to external methods
-        verify(transportClient, times(1)).prepareBulk();
-        verify(transportClient, times(1)).prepareUpdate("INDEX_NAME", "DOCUMENT_TYPE", "1");
-        verify(bulkRequestBuilder, times(1)).get();
-        verify(bulkResponse, times(1)).hasFailures();
+        verify(transportClientFactory).getTransportClient();
+        verify(transportClient).prepareBulk();
+        verify(transportClient).prepareUpdate("INDEX_NAME", "DOCUMENT_TYPE", "1");
+        verify(updateRequestBuilder).setDoc("JSON");
+        verify(bulkRequestBuilder).add(updateRequestBuilder);
+        verify(bulkRequestBuilder).get();
+        verify(bulkResponse).hasFailures();
+        verify(bulkResponse).buildFailureMessage();
+        verifyNoMoreInteractions(createdMocks.toArray());
     }
 }

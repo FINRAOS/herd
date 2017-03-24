@@ -18,6 +18,7 @@ package org.finra.herd.service.helper;
 
 import static org.finra.herd.model.dto.SearchIndexUpdateDto.MESSAGE_TYPE_BUSINESS_OBJECT_DEFINITION_UPDATE;
 import static org.finra.herd.model.dto.SearchIndexUpdateDto.MESSAGE_TYPE_TAG_UPDATE;
+
 import java.io.IOException;
 import java.util.Map;
 
@@ -27,7 +28,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.jms.config.JmsListenerEndpointRegistry;
 import org.springframework.jms.listener.MessageListenerContainer;
+import org.springframework.jms.listener.adapter.ListenerExecutionFailedException;
 import org.springframework.messaging.handler.annotation.Headers;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -112,6 +116,21 @@ public class SearchIndexUpdateJmsMessageListener
         containerFactory = "jmsListenerContainerFactory",
         destination = HerdJmsDestinationResolver.SQS_DESTINATION_SEARCH_INDEX_UPDATE_QUEUE)
     public void processMessage(String payload, @Headers Map<Object, Object> allHeaders)
+    {
+        // Call the process message with retry private method.
+        processMessageWithRetry(payload, allHeaders);
+    }
+
+    /**
+     * Processes a JMS message with retry.
+     * This process message with retry method will attempt to process the message up to 4 times
+     * with a 2 second, 4 second, 8 second, and 16 second exponential back off
+     *
+     * @param payload the message payload
+     * @param allHeaders the JMS headers
+     */
+    @Retryable(maxAttempts = 4, value = ListenerExecutionFailedException.class, backoff = @Backoff(delay = 2000, multiplier = 2))
+    private void processMessageWithRetry(String payload, @Headers Map<Object, Object> allHeaders)
     {
         LOGGER.info("Message received from the JMS queue. jmsQueueName=\"{}\" jmsMessageHeaders=\"{}\" jmsMessagePayload={}",
             HerdJmsDestinationResolver.SQS_DESTINATION_SEARCH_INDEX_UPDATE_QUEUE, allHeaders, payload);

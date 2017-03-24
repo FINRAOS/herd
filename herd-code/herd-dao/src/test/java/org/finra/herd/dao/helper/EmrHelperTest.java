@@ -17,7 +17,6 @@ package org.finra.herd.dao.helper;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
@@ -36,16 +35,11 @@ import com.amazonaws.services.elasticmapreduce.model.ClusterStatus;
 import com.amazonaws.services.elasticmapreduce.model.ClusterSummary;
 import com.amazonaws.services.elasticmapreduce.model.StepConfig;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.oozie.client.WorkflowAction;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.finra.herd.dao.AbstractDaoTest;
 import org.finra.herd.dao.EmrDao;
-import org.finra.herd.dao.impl.MockOozieWorkflowAction;
-import org.finra.herd.dao.impl.MockOozieWorkflowJob;
-import org.finra.herd.dao.impl.OozieDaoImpl;
-import org.finra.herd.model.dto.ConfigurationValue;
 
 /**
  * This class tests functionality within the AwsHelper class.
@@ -69,114 +63,6 @@ public class EmrHelperTest extends AbstractDaoTest
         String s3StagingLocation = emrHelper.getS3StagingLocation();
 
         assertNotNull("s3 staging location is null", s3StagingLocation);
-    }
-
-    @Test
-    public void testGetS3HdfsCopyScriptName() throws Exception
-    {
-        String s3HdfsCopyScriptName = emrHelper.getS3HdfsCopyScriptName();
-
-        assertNotNull("s3 staging location is null", s3HdfsCopyScriptName);
-    }
-
-    @Test
-    public void testGetS3HdfsCopyScriptNameMissing() throws Exception
-    {
-        removeReloadablePropertySourceFromEnvironment();
-        try
-        {
-            emrHelper.getS3HdfsCopyScriptName();
-
-            fail("Expected a IllegalStateException, but not exception was thrown");
-        }
-        catch (Exception e)
-        {
-            assertEquals(IllegalStateException.class, e.getClass());
-        }
-        finally
-        {
-            restorePropertySourceInEnvironment();
-        }
-    }
-
-    @Test
-    public void testEmrOozieHerdWorkflowS3LocationConfiguration() throws Exception
-    {
-        ConfigurationValue s3HdfsCopyScriptName = emrHelper.getEmrOozieHerdWorkflowS3LocationConfiguration();
-
-        assertNotNull("s3 staging location is null", s3HdfsCopyScriptName);
-    }
-
-    @Test
-    public void testEmrOozieHerdWorkflowS3LocationConfigurationMissing() throws Exception
-    {
-        removeReloadablePropertySourceFromEnvironment();
-        try
-        {
-            emrHelper.getS3HdfsCopyScriptName();
-
-            fail("Expected a IllegalStateException, but not exception was thrown");
-        }
-        catch (Exception e)
-        {
-            assertEquals(IllegalStateException.class, e.getClass());
-        }
-        finally
-        {
-            restorePropertySourceInEnvironment();
-        }
-    }
-
-    @Test
-    public void testClientWorkflowAction() throws Exception
-    {
-        MockOozieWorkflowJob wrapperWorkflowJob = new MockOozieWorkflowJob();
-        List<WorkflowAction> actions = new ArrayList<>();
-
-        MockOozieWorkflowAction action = new MockOozieWorkflowAction();
-        action.setName(OozieDaoImpl.ACTION_NAME_CLIENT_WORKFLOW);
-        actions.add(action);
-
-        wrapperWorkflowJob.setActions(actions);
-
-        WorkflowAction clientAction = emrHelper.getClientWorkflowAction(wrapperWorkflowJob);
-
-        assertNotNull("no client workflow action found", clientAction);
-    }
-
-    @Test
-    public void testClientWorkflowActionNotFound() throws Exception
-    {
-        MockOozieWorkflowJob wrapperWorkflowJob = new MockOozieWorkflowJob();
-        WorkflowAction wrapperAction = emrHelper.getClientWorkflowAction(wrapperWorkflowJob);
-
-        assertNull("client workflow action found", wrapperAction);
-    }
-
-    @Test
-    public void testFirstWorkflowActionInError() throws Exception
-    {
-        MockOozieWorkflowJob wrapperWorkflowJob = new MockOozieWorkflowJob();
-        List<WorkflowAction> actions = new ArrayList<>();
-
-        MockOozieWorkflowAction action = new MockOozieWorkflowAction();
-        action.setStatus(WorkflowAction.Status.ERROR);
-        actions.add(action);
-
-        wrapperWorkflowJob.setActions(actions);
-
-        WorkflowAction clientAction = emrHelper.getFirstWorkflowActionInError(wrapperWorkflowJob);
-
-        assertNotNull("no error action found", clientAction);
-    }
-
-    @Test
-    public void testFirstWorkflowActionInErrorNotFound() throws Exception
-    {
-        MockOozieWorkflowJob wrapperWorkflowJob = new MockOozieWorkflowJob();
-        WorkflowAction wrapperAction = emrHelper.getClientWorkflowAction(wrapperWorkflowJob);
-
-        assertNull("error action found", wrapperAction);
     }
 
     @Test
@@ -223,7 +109,7 @@ public class EmrHelperTest extends AbstractDaoTest
     @Test
     public void testEmrHadoopJarStepConfigWithArguments() throws Exception
     {
-        List<String> arguments = new ArrayList<String>();
+        List<String> arguments = new ArrayList<>();
         arguments.add("arg1");
 
         StepConfig stepConfig = emrHelper.getEmrHadoopJarStepConfig("step_name", "jar_location", null, arguments, false);
@@ -442,7 +328,8 @@ public class EmrHelperTest extends AbstractDaoTest
             when(mockEmrDao.getEmrClusterById(any(), any())).thenReturn(
                 new Cluster().withId(expectedEmrClusterId).withName(emrClusterName).withStatus(new ClusterStatus().withState(ClusterState.RUNNING)));
 
-            assertEquals(expectedEmrClusterId, emrHelper.getActiveEmrClusterId(StringUtils.upperCase(emrClusterId), StringUtils.upperCase(emrClusterName), null));
+            assertEquals(expectedEmrClusterId,
+                emrHelper.getActiveEmrClusterId(StringUtils.upperCase(emrClusterId), StringUtils.upperCase(emrClusterName), null));
 
             verify(mockEmrDao).getEmrClusterById(eq(StringUtils.upperCase(emrClusterId)), any());
             verifyNoMoreInteractions(mockEmrDao);

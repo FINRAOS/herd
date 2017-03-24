@@ -28,8 +28,6 @@ import com.amazonaws.services.elasticmapreduce.model.HadoopJarStepConfig;
 import com.amazonaws.services.elasticmapreduce.model.StepConfig;
 import com.amazonaws.services.securitytoken.model.Credentials;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.oozie.client.WorkflowAction;
-import org.apache.oozie.client.WorkflowJob;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
@@ -37,7 +35,6 @@ import org.springframework.util.CollectionUtils;
 
 import org.finra.herd.dao.EmrDao;
 import org.finra.herd.dao.StsDao;
-import org.finra.herd.dao.impl.OozieDaoImpl;
 import org.finra.herd.model.dto.AwsParamsDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.jpa.TrustingAccountEntity;
@@ -52,11 +49,11 @@ public class EmrHelper extends AwsHelper
     private EmrDao emrDao;
 
     @Autowired
-    private TrustingAccountDaoHelper trustingAccountDaoHelper;
-    
-    @Autowired
     private StsDao stsDao;
-    
+
+    @Autowired
+    private TrustingAccountDaoHelper trustingAccountDaoHelper;
+
     /**
      * Returns EMR cluster name constructed according to the template defined.
      *
@@ -105,109 +102,85 @@ public class EmrHelper extends AwsHelper
     }
 
     /**
-     * Get the S3_STAGING_RESOURCE full path from the bucket name as well as other details.
+     * Gets the ID of an active EMR cluster which matches the given criteria. If both cluster ID and cluster name is specified, the name of the actual cluster
+     * with the given ID must match the specified name. For cases where the cluster is not found (does not exists or not active), the method fails. All
+     * parameters are case-insensitive and whitespace trimmed. Blank parameters are equal to null.
      *
-     * @return the s3 managed location.
+     * @param emrClusterId EMR cluster ID
+     * @param emrClusterName EMR cluster name
+     * @param accountId the account Id that EMR cluster is running under
+     *
+     * @return The cluster ID
      */
-    public String getS3StagingLocation()
+    public String getActiveEmrClusterId(String emrClusterId, String emrClusterName, String accountId)
     {
-        return configurationHelper.getProperty(ConfigurationValue.S3_URL_PROTOCOL) +
-            configurationHelper.getProperty(ConfigurationValue.S3_STAGING_BUCKET_NAME) +
-            configurationHelper.getProperty(ConfigurationValue.S3_URL_PATH_DELIMITER) +
-            configurationHelper.getProperty(ConfigurationValue.S3_STAGING_RESOURCE_BASE);
-    }
+        boolean emrClusterIdSpecified = StringUtils.isNotBlank(emrClusterId);
+        boolean emrClusterNameSpecified = StringUtils.isNotBlank(emrClusterName);
 
-    /**
-     * Gets the S3 to HDFS copy script name.
-     *
-     * @return the S3 to HDFS copy script name.
-     * @throws IllegalStateException if the S3 to HDGFS copy script name is not configured.
-     */
-    public String getS3HdfsCopyScriptName() throws IllegalStateException
-    {
-        String s3HdfsCopyScript = configurationHelper.getProperty(ConfigurationValue.EMR_S3_HDFS_COPY_SCRIPT);
-        if (StringUtils.isBlank(s3HdfsCopyScript))
+        Assert.isTrue(emrClusterIdSpecified || emrClusterNameSpecified, "One of EMR cluster ID or EMR cluster name must be specified.");
+        AwsParamsDto awsParamsDto = getAwsParamsDtoByAcccountId(accountId);
+
+        // Get cluster by ID first
+        if (emrClusterIdSpecified)
         {
-            throw new IllegalStateException(String.format("No S3 to HDFS copy script name found. Ensure the \"%s\" configuration entry is configured.",
-                ConfigurationValue.EMR_S3_HDFS_COPY_SCRIPT.getKey()));
-        }
+            String emrClusterIdTrimmed = emrClusterId.trim();
 
-        return s3HdfsCopyScript;
-    }
+            // Assert cluster exists
+            Cluster cluster = emrDao.getEmrClusterById(emrClusterIdTrimmed, awsParamsDto);
+            Assert.notNull(cluster, String.format("The cluster with ID \"%s\" does not exist.", emrClusterIdTrimmed));
 
-    /**
-     * Gets the Oozie herd wrapper Workflow S3 Location ConfigurationValue.
-     *
-     * @return the ConfigurationValue of S3 location of herd oozie wrapper workflow.
-     * @throws IllegalStateException if the S3 location of herd wrapper workflow is not configured.
-     */
-    public ConfigurationValue getEmrOozieHerdWorkflowS3LocationConfiguration() throws IllegalStateException
-    {
-        String s3HdfsCopyScript = configurationHelper.getProperty(ConfigurationValue.EMR_OOZIE_HERD_WRAPPER_WORKFLOW_S3_LOCATION);
-        if (StringUtils.isBlank(s3HdfsCopyScript))
-        {
-            throw new IllegalStateException(String
-                .format("No herd wrapper oozie workflow S3 locaton found. Ensure the \"%s\" configuration entry is configured.",
-                    ConfigurationValue.EMR_OOZIE_HERD_WRAPPER_WORKFLOW_S3_LOCATION.getKey()));
-        }
+            // Assert the cluster's state is active
+            String emrClusterState = cluster.getStatus().getState();
+            Assert.isTrue(isActiveEmrState(emrClusterState), String
+                .format("The cluster with ID \"%s\" is not active. The cluster state must be in one of %s. Current state is \"%s\"", emrClusterIdTrimmed,
+                    Arrays.toString(getActiveEmrClusterStates()), emrClusterState));
 
-        return ConfigurationValue.EMR_OOZIE_HERD_WRAPPER_WORKFLOW_S3_LOCATION;
-    }
-
-    /**
-     * Retrieves the workflow action for the client workflow. This is the sub workflow with the name OozieDaoImpl.ACTION_NAME_CLIENT_WORKFLOW. Returns null if
-     * not found.
-     *
-     * @param wrapperWorkflowJob the herd wrapper workflow job.
-     *
-     * @return the client workflow action.
-     */
-    public WorkflowAction getClientWorkflowAction(WorkflowJob wrapperWorkflowJob)
-    {
-        WorkflowAction clientWorkflowAction = null;
-        if (wrapperWorkflowJob.getActions() != null)
-        {
-            for (WorkflowAction workflowAction : wrapperWorkflowJob.getActions())
+            // Assert cluster name equals if cluster name was specified
+            if (emrClusterNameSpecified)
             {
-                if (OozieDaoImpl.ACTION_NAME_CLIENT_WORKFLOW.equals(workflowAction.getName()))
-                {
-                    clientWorkflowAction = workflowAction;
-                    break;
-                }
+                String emrClusterNameTrimmed = emrClusterName.trim();
+                Assert.isTrue(cluster.getName().equalsIgnoreCase(emrClusterNameTrimmed), String
+                    .format("The cluster with ID \"%s\" does not match the expected name \"%s\". The actual name is \"%s\".", cluster.getId(),
+                        emrClusterNameTrimmed, cluster.getName()));
             }
-        }
 
-        return clientWorkflowAction;
+            return cluster.getId();
+        }
+        else
+        {
+            String emrClusterNameTrimmed = emrClusterName.trim();
+            ClusterSummary clusterSummary = emrDao.getActiveEmrClusterByName(emrClusterNameTrimmed, awsParamsDto);
+            Assert.notNull(clusterSummary, String.format("The cluster with name \"%s\" does not exist.", emrClusterNameTrimmed));
+            return clusterSummary.getId();
+        }
     }
 
     /**
-     * Retrieves the first workflow action that is in error. Returns null if not found.
+     * Get the AWS Params DTO for the account Id if no account id is specified, use the default
      *
-     * @param workflowJob the oozie workflow job.
+     * @param accountId account Id
      *
-     * @return the workflow action that has errors.
+     * @return AwsParamsDto
      */
-    public WorkflowAction getFirstWorkflowActionInError(WorkflowJob workflowJob)
+    public AwsParamsDto getAwsParamsDtoByAcccountId(String accountId)
     {
-        WorkflowAction errorWorkflowAction = null;
-        if (workflowJob.getActions() != null)
+        AwsParamsDto awsParamsDto = getAwsParamsDto();
+        if (StringUtils.isNotBlank(accountId))
         {
-            for (WorkflowAction workflowAction : workflowJob.getActions())
-            {
-                if (workflowAction.getStatus().equals(WorkflowAction.Status.ERROR))
-                {
-                    errorWorkflowAction = workflowAction;
-                    break;
-                }
-            }
+            updateAwsParamsForCrossAccountAccess(awsParamsDto, accountId.trim());
         }
 
-        return errorWorkflowAction;
+        return awsParamsDto;
     }
 
-    public boolean isActiveEmrState(String status)
+    public EmrDao getEmrDao()
     {
-        return Arrays.asList(getActiveEmrClusterStates()).contains(status);
+        return emrDao;
+    }
+
+    public void setEmrDao(EmrDao emrDao)
+    {
+        this.emrDao = emrDao;
     }
 
     /**
@@ -248,92 +221,30 @@ public class EmrHelper extends AwsHelper
         }
     }
 
+    /**
+     * Get the S3_STAGING_RESOURCE full path from the bucket name as well as other details.
+     *
+     * @return the s3 managed location.
+     */
+    public String getS3StagingLocation()
+    {
+        return configurationHelper.getProperty(ConfigurationValue.S3_URL_PROTOCOL) +
+            configurationHelper.getProperty(ConfigurationValue.S3_STAGING_BUCKET_NAME) +
+            configurationHelper.getProperty(ConfigurationValue.S3_URL_PATH_DELIMITER) +
+            configurationHelper.getProperty(ConfigurationValue.S3_STAGING_RESOURCE_BASE);
+    }
+
+    public boolean isActiveEmrState(String status)
+    {
+        return Arrays.asList(getActiveEmrClusterStates()).contains(status);
+    }
+
     private String[] getActiveEmrClusterStates()
     {
         String emrStatesString = configurationHelper.getProperty(ConfigurationValue.EMR_VALID_STATES);
         return emrStatesString.split("\\" + configurationHelper.getProperty(ConfigurationValue.FIELD_DATA_DELIMITER));
     }
 
-    /**
-     * Gets the ID of an active EMR cluster which matches the given criteria. If both cluster ID and cluster name is specified, the name of the actual cluster
-     * with the given ID must match the specified name. For cases where the cluster is not found (does not exists or not active), the method fails. All
-     * parameters are case-insensitive and whitespace trimmed. Blank parameters are equal to null.
-     *
-     * @param emrClusterId EMR cluster ID
-     * @param emrClusterName EMR cluster name
-     * @param accountId the account Id that EMR cluster is running under
-     * @return The cluster ID
-     */
-    public String getActiveEmrClusterId(String emrClusterId, String emrClusterName, String accountId)
-    {
-        boolean emrClusterIdSpecified = StringUtils.isNotBlank(emrClusterId);
-        boolean emrClusterNameSpecified = StringUtils.isNotBlank(emrClusterName);
-        
-        Assert.isTrue(emrClusterIdSpecified || emrClusterNameSpecified, "One of EMR cluster ID or EMR cluster name must be specified.");
-        AwsParamsDto awsParamsDto = getAwsparamsDtoByAcccountId(accountId);
-        
-        // Get cluster by ID first
-        if (emrClusterIdSpecified)
-        {
-            String emrClusterIdTrimmed = emrClusterId.trim();
-
-            // Assert cluster exists
-            Cluster cluster = emrDao.getEmrClusterById(emrClusterIdTrimmed, awsParamsDto);
-            Assert.notNull(cluster, String.format("The cluster with ID \"%s\" does not exist.", emrClusterIdTrimmed));
-
-            // Assert the cluster's state is active
-            String emrClusterState = cluster.getStatus().getState();
-            Assert.isTrue(isActiveEmrState(emrClusterState), String
-                .format("The cluster with ID \"%s\" is not active. The cluster state must be in one of %s. Current state is \"%s\"", emrClusterIdTrimmed,
-                    Arrays.toString(getActiveEmrClusterStates()), emrClusterState));
-
-            // Assert cluster name equals if cluster name was specified
-            if (emrClusterNameSpecified)
-            {
-                String emrClusterNameTrimmed = emrClusterName.trim();
-                Assert.isTrue(cluster.getName().equalsIgnoreCase(emrClusterNameTrimmed), String
-                    .format("The cluster with ID \"%s\" does not match the expected name \"%s\". The actual name is \"%s\".", cluster.getId(),
-                        emrClusterNameTrimmed, cluster.getName()));
-            }
-
-            return cluster.getId();
-        }
-        else
-        {
-            String emrClusterNameTrimmed = emrClusterName.trim();
-            ClusterSummary clusterSummary = emrDao.getActiveEmrClusterByName(emrClusterNameTrimmed, awsParamsDto);
-            Assert.notNull(clusterSummary, String.format("The cluster with name \"%s\" does not exist.", emrClusterNameTrimmed));
-            return clusterSummary.getId();
-        }
-    }
-
-    public EmrDao getEmrDao()
-    {
-        return emrDao;
-    }
-
-    public void setEmrDao(EmrDao emrDao)
-    {
-        this.emrDao = emrDao;
-    }
-    
-    /**
-     * Get the AWS Params DTO for the account Id
-     * if no account id is specified, use the default
-     * @param accountId account Id
-     * @return AwsParamsDto
-     */
-    public AwsParamsDto getAwsparamsDtoByAcccountId(String accountId)
-    {
-        AwsParamsDto awsParamsDto = getAwsParamsDto();
-        if (StringUtils.isNotBlank(accountId))
-        {
-            updateAwsParamsForCrossAccountAccess(awsParamsDto, accountId.trim());
-        }
-        
-        return awsParamsDto;
-    }
-    
     /**
      * Updates the AWS parameters DTO with the temporary credentials for the cross-account access.
      *

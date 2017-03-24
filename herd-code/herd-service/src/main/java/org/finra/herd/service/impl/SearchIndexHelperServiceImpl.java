@@ -31,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import org.finra.herd.dao.BusinessObjectDefinitionDao;
 import org.finra.herd.dao.TagDao;
+import org.finra.herd.dao.TransportClientFactory;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.api.xml.SearchIndexKey;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
@@ -72,11 +73,12 @@ public class SearchIndexHelperServiceImpl implements SearchIndexHelperService
     private TagHelper tagHelper;
 
     @Autowired
-    private TransportClient transportClient;
+    private TransportClientFactory transportClientFactory;
 
     @Override
     public AdminClient getAdminClient()
     {
+        final TransportClient transportClient = transportClientFactory.getTransportClient();
         return transportClient.admin();
     }
 
