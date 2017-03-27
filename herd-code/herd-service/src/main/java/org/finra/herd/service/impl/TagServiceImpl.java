@@ -172,6 +172,10 @@ public class TagServiceImpl implements TagService, SearchableService
         // delete the tag.
         tagDao.delete(tagEntity);
 
+        // List of tag entities to update in the search index
+        List<TagEntity> tagEntities = new ArrayList<>();
+        tagEntities.add(tagEntity);
+
         // Notify the tag search index that a tag must be deleted.
         searchIndexUpdateHelper.modifyTagInSearchIndex(tagEntity, SEARCH_INDEX_UPDATE_TYPE_DELETE);
 
@@ -179,7 +183,12 @@ public class TagServiceImpl implements TagService, SearchableService
         if (tagEntity.getParentTagEntity() != null)
         {
             searchIndexUpdateHelper.modifyTagInSearchIndex(tagEntity.getParentTagEntity(), SEARCH_INDEX_UPDATE_TYPE_UPDATE);
+            tagEntities.add(tagEntity.getParentTagEntity());
         }
+
+        // Notify the search index that a business object definition must be updated.
+        searchIndexUpdateHelper.modifyBusinessObjectDefinitionsInSearchIndex(businessObjectDefinitionDao.getBusinessObjectDefinitions(tagEntities),
+            SEARCH_INDEX_UPDATE_TYPE_UPDATE);
 
         // Create and return the tag object from the deleted entity.
         return createTagFromEntity(tagEntity);
