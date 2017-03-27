@@ -6367,6 +6367,12 @@
 
    <xs:complexType name="indexSearchFilter">
       <xs:all>
+         <xs:element name="isExclusionSearchFilter" type="xs:boolean" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An optional boolean flag that specifies if the search filter is an exclusion filter that excludes items from the search results
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
          <xs:element name="indexSearchKeys" type="indexSearchKeys">
             <xs:annotation>
                <xs:documentation>A list of index search keys. Multiple search keys are supported which are OR-ed</xs:documentation>

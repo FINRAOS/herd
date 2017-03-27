@@ -85,7 +85,7 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
         TagTypeIndexSearchResponseDto tagType2 = new TagTypeIndexSearchResponseDto(TAG_TYPE_CODE_2, TAG_TYPE_CODE_COUNT_2, Arrays.asList(new TagIndexSearchResponseDto(TAG_CODE, 1, TAG_CODE_DISPLAY_NAME)), TAG_TYPE_DISPLAY_NAME_2);
         nestTagTypeIndexSearchResponseDtos.add(tagType1);
         nestTagTypeIndexSearchResponseDtos.add(tagType2);
-        
+
         elasticsearchResponseDto.setNestTagTypeIndexSearchResponseDtos(nestTagTypeIndexSearchResponseDtos);
 
         List<Facet> facets = elasticSearchHelper.getFacetsResponse(elasticsearchResponseDto, false);
@@ -186,7 +186,7 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
 
         expectedFacets.add(new Facet(TAG_TYPE_DISPLAY_NAME_2,(long)TAG_TYPE_CODE_COUNT_2, TagTypeIndexSearchResponseDto.getFacetType(),TAG_TYPE_CODE_2, tagFacet));
         expectedFacets.add(new Facet(TAG_TYPE_DISPLAY_NAME_3,(long)TAG_TYPE_CODE_COUNT_3, TagTypeIndexSearchResponseDto.getFacetType(),TAG_TYPE_CODE_3, newTagFacet));
-        
+
         assertEquals(expectedFacets, facets);
     }
 
@@ -247,7 +247,7 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
         Terms tagCodeAggs = mock(Terms.class);
         Terms.Bucket tagCodeEntry = mock(Terms.Bucket.class);
         List<Terms.Bucket> tagCodeEntryList = Arrays.asList(tagCodeEntry) ;
-        
+
         when(aggregations.get(TAG_CODE_AGGREGATION)).thenReturn(tagCodeAggs);
         when(tagCodeAggs.getBuckets()).thenReturn(tagCodeEntryList);
         when(tagCodeEntry.getAggregations()).thenReturn(aggregations);
@@ -260,7 +260,7 @@ public class ElasticSearchHelperTest extends AbstractDaoTest
         when(aggregations.get(TAG_NAME_AGGREGATION)).thenReturn(tagNameAggs);
         when(tagNameAggs.getBuckets()).thenReturn(tagNameEntryList);
         when(tagNameEntry.getKeyAsString()).thenReturn(TAG_DISPLAY_NAME);
-        
+
         List<TagTypeIndexSearchResponseDto> resultList = elasticSearchHelper.getTagTagIndexSearchResponseDto(searchResponse);
         List<TagTypeIndexSearchResponseDto> expectedList = new ArrayList<>();
         List<TagIndexSearchResponseDto> expectedTagList = new ArrayList<>();

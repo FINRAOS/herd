@@ -159,7 +159,87 @@ public class IndexSearchServiceTest extends AbstractServiceTest
         final List<IndexSearchKey> indexSearchKeys = Collections.singletonList(indexSearchKey);
 
         // Create an index search filter with the keys previously defined
-        final IndexSearchFilter indexSearchFilter = new IndexSearchFilter(indexSearchKeys);
+        final IndexSearchFilter indexSearchFilter = new IndexSearchFilter(NO_EXCLUSION_SEARCH_FILTER, indexSearchKeys);
+
+        List<IndexSearchFilter> indexSearchFilters = Collections.singletonList(indexSearchFilter);
+
+        // Create index search request
+        final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM, indexSearchFilters, null);
+
+        // Create a new fields set that will be used when testing the index search method
+        final Set<String> fields = Sets.newHashSet(FIELD_DISPLAY_NAME, FIELD_SHORT_DESCRIPTION);
+
+        // Create a new index search result key and populate it with a tag key
+        final IndexSearchResultKey indexSearchResultKeyBusinessObjectDefinition =
+            new IndexSearchResultKey(null, new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME));
+
+        // Create a new index search result key and populate it with a tag key
+        final IndexSearchResultKey indexSearchResultKeyTag = new IndexSearchResultKey(new TagKey(TAG_TYPE, TAG_CODE), null);
+
+        // Create a new index search results
+        final IndexSearchResult indexSearchResultBusinessObjectDefinition =
+            new IndexSearchResult(INDEX_SEARCH_RESULT_TYPE_BUSINESS_OBJECT_DEFINITION, indexSearchResultKeyBusinessObjectDefinition, BDEF_DISPLAY_NAME,
+                BDEF_SHORT_DESCRIPTION);
+        final IndexSearchResult indexSearchResultTag =
+            new IndexSearchResult(INDEX_SEARCH_RESULT_TYPE_TAG, indexSearchResultKeyTag, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+
+        // Create a list to contain the index search results
+        final List<IndexSearchResult> indexSearchResults = new ArrayList<>();
+        indexSearchResults.add(indexSearchResultBusinessObjectDefinition);
+        indexSearchResults.add(indexSearchResultTag);
+
+        // Construct an index search response
+        final IndexSearchResponse indexSearchResponse = new IndexSearchResponse(TOTAL_INDEX_SEARCH_RESULTS, indexSearchResults, null);
+
+        // Create tag entity for the mock to return
+        TagEntity tagEntity = new TagEntity();
+        tagEntity.setTagCode(tagKey.getTagCode());
+
+        TagTypeEntity tagTypeEntity = new TagTypeEntity();
+        tagTypeEntity.setCode(tagKey.getTagTypeCode());
+
+        tagEntity.setTagType(tagTypeEntity);
+
+        when(tagDaoHelper.getTagEntity(tagKey)).thenReturn(tagEntity);
+
+        // Mock the call to the index search service
+        when(indexSearchDao.indexSearch(indexSearchRequest, fields)).thenReturn(indexSearchResponse);
+
+        // Call the method under test
+        IndexSearchResponse indexSearchResponseFromService = indexSearchService.indexSearch(indexSearchRequest, fields);
+
+        // Verify the method call to tagHelper
+        verify(tagHelper, times(ONE_TIME)).validateTagKey(tagKey);
+        verifyNoMoreInteractions(tagHelper);
+
+        // Verify the method call to indexSearchService.indexSearch()
+        verify(indexSearchDao, times(ONE_TIME)).indexSearch(indexSearchRequest, fields);
+        verifyNoMoreInteractions(indexSearchDao);
+
+        // Validate the returned object.
+        assertThat("Index search response was null.", indexSearchResponseFromService, not(nullValue()));
+        assertThat("Index search response was not correct.", indexSearchResponseFromService, is(indexSearchResponse));
+        assertThat("Index search response was not an instance of IndexSearchResponse.class.", indexSearchResponse, instanceOf(IndexSearchResponse.class));
+    }
+
+    @Test
+    public void testIndexSearchWithTagFilterAndExcludeFlagSet()
+    {
+        // Create an index search key
+        final IndexSearchKey indexSearchKey = new IndexSearchKey();
+
+        // Create a tag key
+        final TagKey tagKey = new TagKey(TAG_TYPE_CODE, TAG_CODE);
+        indexSearchKey.setTagKey(tagKey);
+
+        // Create an index search keys list and add the previously defined key to it
+        final List<IndexSearchKey> indexSearchKeys = Collections.singletonList(indexSearchKey);
+
+        // Create an index search filter with the keys previously defined
+        final IndexSearchFilter indexSearchFilter = new IndexSearchFilter(NO_EXCLUSION_SEARCH_FILTER, indexSearchKeys);
+
+        // Set exclude filter flag to true
+        indexSearchFilter.setIsExclusionSearchFilter(true);
 
         List<IndexSearchFilter> indexSearchFilters = Collections.singletonList(indexSearchFilter);
 
@@ -236,7 +316,76 @@ public class IndexSearchServiceTest extends AbstractServiceTest
         final List<IndexSearchKey> indexSearchKeys = Collections.singletonList(indexSearchKey);
 
         // Create an index search filter with the keys previously defined
-        final IndexSearchFilter indexSearchFilter = new IndexSearchFilter(indexSearchKeys);
+        final IndexSearchFilter indexSearchFilter = new IndexSearchFilter(NO_EXCLUSION_SEARCH_FILTER, indexSearchKeys);
+
+        List<IndexSearchFilter> indexSearchFilters = Collections.singletonList(indexSearchFilter);
+
+        // Create index search request
+        final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM, indexSearchFilters, null);
+
+        // Create a new fields set that will be used when testing the index search method
+        final Set<String> fields = Sets.newHashSet(FIELD_DISPLAY_NAME, FIELD_SHORT_DESCRIPTION);
+
+        // Create a new index search result key and populate it with a tag key
+        final IndexSearchResultKey indexSearchResultKeyBusinessObjectDefinition =
+            new IndexSearchResultKey(null, new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME));
+
+        // Create a new index search result key and populate it with a tag key
+        final IndexSearchResultKey indexSearchResultKeyTag = new IndexSearchResultKey(new TagKey(TAG_TYPE, TAG_CODE), null);
+
+        // Create a new index search results
+        final IndexSearchResult indexSearchResultBusinessObjectDefinition =
+            new IndexSearchResult(INDEX_SEARCH_RESULT_TYPE_BUSINESS_OBJECT_DEFINITION, indexSearchResultKeyBusinessObjectDefinition, BDEF_DISPLAY_NAME,
+                BDEF_SHORT_DESCRIPTION);
+        final IndexSearchResult indexSearchResultTag =
+            new IndexSearchResult(INDEX_SEARCH_RESULT_TYPE_TAG, indexSearchResultKeyTag, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+
+        // Create a list to contain the index search results
+        final List<IndexSearchResult> indexSearchResults = new ArrayList<>();
+        indexSearchResults.add(indexSearchResultBusinessObjectDefinition);
+        indexSearchResults.add(indexSearchResultTag);
+
+        // Construct an index search response
+        final IndexSearchResponse indexSearchResponse = new IndexSearchResponse(TOTAL_INDEX_SEARCH_RESULTS, indexSearchResults, null);
+
+        // Mock the call to the index search service
+        when(indexSearchDao.indexSearch(indexSearchRequest, fields)).thenReturn(indexSearchResponse);
+
+        // Call the method under test
+        IndexSearchResponse indexSearchResponseFromService = indexSearchService.indexSearch(indexSearchRequest, fields);
+
+        // Verify the method call to index search result type helper
+        verify(indexSearchResultTypeHelper, times(ONE_TIME)).validateIndexSearchResultTypeKey(resultTypeKey);
+        verifyNoMoreInteractions(indexSearchResultTypeHelper);
+
+        // Verify the method call to indexSearchService.indexSearch()
+        verify(indexSearchDao, times(ONE_TIME)).indexSearch(indexSearchRequest, fields);
+        verifyNoMoreInteractions(indexSearchDao);
+
+        // Validate the returned object.
+        assertThat("Index search response was null.", indexSearchResponseFromService, not(nullValue()));
+        assertThat("Index search response was not correct.", indexSearchResponseFromService, is(indexSearchResponse));
+        assertThat("Index search response was not an instance of IndexSearchResponse.class.", indexSearchResponse, instanceOf(IndexSearchResponse.class));
+    }
+
+    @Test
+    public void testIndexSearchWithResultTypeFilterAndExcludeFilterSet()
+    {
+        // Create an index search key
+        final IndexSearchKey indexSearchKey = new IndexSearchKey();
+
+        // Create a tag key
+        final IndexSearchResultTypeKey resultTypeKey = new IndexSearchResultTypeKey(BUSINESS_OBJECT_DEFINITION_INDEX);
+        indexSearchKey.setIndexSearchResultTypeKey(resultTypeKey);
+
+        // Create an index search keys list and add the previously defined key to it
+        final List<IndexSearchKey> indexSearchKeys = Collections.singletonList(indexSearchKey);
+
+        // Create an index search filter with the keys previously defined
+        final IndexSearchFilter indexSearchFilter = new IndexSearchFilter(NO_EXCLUSION_SEARCH_FILTER, indexSearchKeys);
+
+        // Set exclude filter flag to true
+        indexSearchFilter.setIsExclusionSearchFilter(true);
 
         List<IndexSearchFilter> indexSearchFilters = Collections.singletonList(indexSearchFilter);
 
@@ -363,7 +512,7 @@ public class IndexSearchServiceTest extends AbstractServiceTest
         final List<IndexSearchKey> indexSearchKeys = Collections.singletonList(indexSearchKey);
 
         // Create an index search filter with the keys previously defined
-        final IndexSearchFilter indexSearchFilter = new IndexSearchFilter(indexSearchKeys);
+        final IndexSearchFilter indexSearchFilter = new IndexSearchFilter(NO_EXCLUSION_SEARCH_FILTER, indexSearchKeys);
 
         List<IndexSearchFilter> indexSearchFilters = Collections.singletonList(indexSearchFilter);
 
@@ -407,7 +556,7 @@ public class IndexSearchServiceTest extends AbstractServiceTest
         final List<IndexSearchKey> indexSearchKeys = ImmutableList.of(indexSearchKeyOne, indexSearchKeyTwo);
 
         // Create an index search filter with the keys previously defined
-        final IndexSearchFilter indexSearchFilter = new IndexSearchFilter(indexSearchKeys);
+        final IndexSearchFilter indexSearchFilter = new IndexSearchFilter(NO_EXCLUSION_SEARCH_FILTER, indexSearchKeys);
 
         List<IndexSearchFilter> indexSearchFilters = Collections.singletonList(indexSearchFilter);
 
@@ -490,7 +639,7 @@ public class IndexSearchServiceTest extends AbstractServiceTest
         final List<IndexSearchKey> indexSearchKeys = ImmutableList.of(indexSearchKey, indexSearchKeyTwo);
 
         // Create an index search filter with the keys previously defined
-        final IndexSearchFilter indexSearchFilter = new IndexSearchFilter(indexSearchKeys);
+        final IndexSearchFilter indexSearchFilter = new IndexSearchFilter(NO_EXCLUSION_SEARCH_FILTER, indexSearchKeys);
 
         List<IndexSearchFilter> indexSearchFilters = Collections.singletonList(indexSearchFilter);
 

@@ -388,6 +388,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Integer NO_DATA_VERSION = null;
 
+    public static final Boolean NO_EXCLUSION_SEARCH_FILTER = Boolean.FALSE;
+
     public static final String NO_FORMAT_DESCRIPTION = null;
 
     public static final String NO_FORMAT_FILE_TYPE_CODE = null;
