@@ -18,6 +18,8 @@ package org.finra.herd.rest;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
+import java.util.List;
+
 import org.junit.Test;
 
 import org.finra.herd.model.api.xml.BusinessObjectFormat;
@@ -38,6 +40,7 @@ import org.finra.herd.service.helper.Hive13DdlGenerator;
  */
 public class BusinessObjectFormatRestControllerTest extends AbstractRestTest
 {
+    public static List<BusinessObjectFormatKey> NO_BUSINESS_OBJECT_PARENTS = null;
     @Test
     public void testCreateBusinessObjectFormat()
     {
@@ -48,7 +51,7 @@ public class BusinessObjectFormatRestControllerTest extends AbstractRestTest
         BusinessObjectFormatCreateRequest request = businessObjectFormatServiceTestHelper
             .createBusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, FORMAT_DESCRIPTION,
                 businessObjectDefinitionServiceTestHelper.getNewAttributes(), businessObjectFormatServiceTestHelper.getTestAttributeDefinitions(),
-                businessObjectFormatServiceTestHelper.getTestSchema());
+                businessObjectFormatServiceTestHelper.getTestSchema(), NO_BUSINESS_OBJECT_PARENTS);
 
         // Create an initial version of a business object format.
         BusinessObjectFormat businessObjectFormat = businessObjectFormatRestController.createBusinessObjectFormat(request);

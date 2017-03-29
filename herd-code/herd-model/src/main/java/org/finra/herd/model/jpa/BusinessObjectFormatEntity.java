@@ -16,6 +16,7 @@
 package org.finra.herd.model.jpa;
 
 import java.util.Collection;
+import java.util.List;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -23,6 +24,8 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderBy;
@@ -109,6 +112,16 @@ public class BusinessObjectFormatEntity extends AuditableEntity
     @OneToMany(mappedBy = "businessObjectFormat", orphanRemoval = true, cascade = {CascadeType.ALL})
     @OrderBy("position")
     private Collection<SchemaColumnEntity> schemaColumns;
+
+    // These are the parents (i.e. the data that was needed to create this data).
+    @JoinTable(name = "bus_objct_frmt_prnt", joinColumns = {@JoinColumn(name = TABLE_NAME + "_id", referencedColumnName = TABLE_NAME + "_id")},
+        inverseJoinColumns = {@JoinColumn(name = "prnt_bus_objct_frmt_id", referencedColumnName = TABLE_NAME + "_id")})
+    @ManyToMany
+    private List<BusinessObjectFormatEntity> businessObjectFormatParents;
+
+    // These are the children (i.e. the data that is dependent on this data).
+    @ManyToMany(mappedBy = "businessObjectFormatParents")
+    private List<BusinessObjectFormatEntity> businessObjectFormatChildren;
 
     public Integer getId()
     {
@@ -258,5 +271,25 @@ public class BusinessObjectFormatEntity extends AuditableEntity
     public void setSchemaColumns(Collection<SchemaColumnEntity> schemaColumns)
     {
         this.schemaColumns = schemaColumns;
+    }
+
+    public List<BusinessObjectFormatEntity> getBusinessObjectFormatParents()
+    {
+        return businessObjectFormatParents;
+    }
+
+    public void setBusinessObjectFormatParents(List<BusinessObjectFormatEntity> businessObjectFormatParents)
+    {
+        this.businessObjectFormatParents = businessObjectFormatParents;
+    }
+
+    public List<BusinessObjectFormatEntity> getBusinessObjectFormatChildren()
+    {
+        return businessObjectFormatChildren;
+    }
+
+    public void setBusinessObjectFormatChildren(List<BusinessObjectFormatEntity> businessObjectFormatChildren)
+    {
+        this.businessObjectFormatChildren = businessObjectFormatChildren;
     }
 }
