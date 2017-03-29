@@ -395,6 +395,13 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
                     businessObjectFormatHelper.businessObjectFormatEntityAltKeyToString(businessObjectFormatEntity)));
         }
 
+        // Check if business object format being deleted is used as a descriptive format.
+        if (businessObjectFormatEntity.equals(businessObjectFormatEntity.getBusinessObjectDefinition().getDescriptiveBusinessObjectFormat()))
+        {
+            businessObjectFormatEntity.getBusinessObjectDefinition().setDescriptiveBusinessObjectFormat(null);
+            businessObjectDefinitionDao.saveAndRefresh(businessObjectFormatEntity.getBusinessObjectDefinition());
+        }
+
         // Delete this business object format.
         businessObjectFormatDao.delete(businessObjectFormatEntity);
 
