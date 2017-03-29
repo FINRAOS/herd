@@ -3798,6 +3798,37 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
     }
 
     @Test
+    public void testDeleteBusinessObjectFormatUsedAsDescriptiveFormat() throws Exception
+    {
+        // Create a version of a business object format.
+        BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoTestHelper
+            .createBusinessObjectFormatEntity(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, FORMAT_DESCRIPTION,
+                LATEST_VERSION_FLAG_SET, PARTITION_KEY, NO_PARTITION_KEY_GROUP);
+
+        // Set this format version as descriptive format on the business object definition.
+        businessObjectFormatEntity.getBusinessObjectDefinition().setDescriptiveBusinessObjectFormat(businessObjectFormatEntity);
+        businessObjectFormatDao.saveAndRefresh(businessObjectFormatEntity);
+
+        // Validate the existence of the business object format entity.
+        assertNotNull(businessObjectFormatDao
+            .getBusinessObjectFormatByAltKey(new BusinessObjectFormatKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION)));
+
+        // Delete the business object format.
+        BusinessObjectFormat deletedBusinessObjectFormat = businessObjectFormatService
+            .deleteBusinessObjectFormat(new BusinessObjectFormatKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION));
+
+        // Validate the returned object.
+        businessObjectFormatServiceTestHelper
+            .validateBusinessObjectFormat(businessObjectFormatEntity.getId(), BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
+                FORMAT_VERSION, LATEST_VERSION_FLAG_SET, PARTITION_KEY, FORMAT_DESCRIPTION, NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA,
+                deletedBusinessObjectFormat);
+
+        // Ensure that this business object format is no longer there.
+        assertNull(businessObjectFormatDao
+            .getBusinessObjectFormatByAltKey(new BusinessObjectFormatKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION)));
+    }
+
+    @Test
     public void testUpdateBusinessObjectFormatTrimParameters()
     {
         // Create an initial version of a business object format.
@@ -3907,7 +3938,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
 
         // Perform a create without specifying optional parameters.
         BusinessObjectFormatCreateRequest request = businessObjectFormatServiceTestHelper
-            .createBusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, NO_FORMAT_DESCRIPTION,
+            .createBusinessObjectFormatCreateRequest("", BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, NO_FORMAT_DESCRIPTION,
                 businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA, businessObjectFormatParents);
 
         try

@@ -58,7 +58,7 @@ import org.finra.herd.service.helper.TagTypeHelper;
 public class TagTypeServiceImpl implements TagTypeService, SearchableService
 {
     // Constant to hold the description field option for the search response.
-    public final static String DESCRIPTION_FIELD = "display".toLowerCase();
+    public final static String DESCRIPTION_FIELD = "description".toLowerCase();
 
     // Constant to hold the display name field option for the search response.
     public final static String DISPLAY_NAME_FIELD = "displayName".toLowerCase();

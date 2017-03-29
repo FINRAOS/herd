@@ -27,6 +27,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -39,6 +40,8 @@ import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.Facet;
+import org.finra.herd.model.api.xml.IndexSearchFilter;
+import org.finra.herd.model.api.xml.IndexSearchKey;
 import org.finra.herd.model.api.xml.IndexSearchRequest;
 import org.finra.herd.model.api.xml.IndexSearchResponse;
 import org.finra.herd.model.api.xml.IndexSearchResult;
@@ -61,6 +64,8 @@ public class IndexSearchRestControllerTest extends AbstractRestTest
 
     private static final int TOTAL_INDEX_SEARCH_RESULTS = 500;
 
+    private static final List<IndexSearchFilter> NO_SEARCH_FILTERS = null;
+
     @InjectMocks
     private IndexSearchRestController indexSearchRestController;
 
@@ -76,20 +81,69 @@ public class IndexSearchRestControllerTest extends AbstractRestTest
     @Test
     public void testIndexSearchNoFacets()
     {
-        testIndexSearch(null);
+        testIndexSearch(NO_SEARCH_FILTERS, null);
     }
 
     @Test
     public void testIndexSearchWithFacets()
     {
         List<String> facetFields = Arrays.asList("ResultType", "Tag");
-        testIndexSearch(facetFields);
+        testIndexSearch(NO_SEARCH_FILTERS, facetFields);
     }
 
-    public void testIndexSearch(List<String> facetFields)
+    @Test
+    public void testIndexSearchWithFilters()
+    {
+        // Create an index search key
+        final IndexSearchKey indexSearchKey = new IndexSearchKey();
+
+        // Create a tag key
+        final TagKey tagKey = new TagKey(TAG_TYPE_CODE, TAG_CODE);
+        indexSearchKey.setTagKey(tagKey);
+
+        // Create an index search keys list and add the previously defined key to it
+        final List<IndexSearchKey> indexSearchKeys = Collections.singletonList(indexSearchKey);
+
+        // Create an index search filter with the keys previously defined
+        final IndexSearchFilter indexSearchFilter = new IndexSearchFilter(NO_EXCLUSION_SEARCH_FILTER, indexSearchKeys);
+
+        List<IndexSearchFilter> indexSearchFilters = Collections.singletonList(indexSearchFilter);
+
+        List<String> facetFields = Arrays.asList("ResultType", "Tag");
+
+        testIndexSearch(indexSearchFilters, facetFields);
+    }
+
+    @Test
+    public void testIndexSearchWithFiltersAndExcludeFlag()
+    {
+        // Create an index search key
+        final IndexSearchKey indexSearchKey = new IndexSearchKey();
+
+        // Create a tag key
+        final TagKey tagKey = new TagKey(TAG_TYPE_CODE, TAG_CODE);
+        indexSearchKey.setTagKey(tagKey);
+
+        // Create an index search keys list and add the previously defined key to it
+        final List<IndexSearchKey> indexSearchKeys = Collections.singletonList(indexSearchKey);
+
+        // Create an index search filter with the keys previously defined
+        final IndexSearchFilter indexSearchFilter = new IndexSearchFilter(NO_EXCLUSION_SEARCH_FILTER, indexSearchKeys);
+
+        // Set exclude flag to true
+        indexSearchFilter.setIsExclusionSearchFilter(true);
+
+        List<IndexSearchFilter> indexSearchFilters = Collections.singletonList(indexSearchFilter);
+
+        List<String> facetFields = Arrays.asList("ResultType", "Tag");
+
+        testIndexSearch(indexSearchFilters, facetFields);
+    }
+
+    public void testIndexSearch(List<IndexSearchFilter> indexSearchFilters, List<String> facetFields)
     {
         // Create index search request
-        final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM, null, facetFields);
+        final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM, indexSearchFilters, facetFields);
 
         // Create a new fields set that will be used when testing the index search method
         final Set<String> fields = Sets.newHashSet(FIELD_DISPLAY_NAME, FIELD_SHORT_DESCRIPTION);
@@ -140,5 +194,5 @@ public class IndexSearchRestControllerTest extends AbstractRestTest
         assertThat("Index search response was not correct.", indexSearchResponseFromRestCall, is(indexSearchResponse));
         assertThat("Index search response was not an instance of IndexSearchResponse.class.", indexSearchResponse, instanceOf(IndexSearchResponse.class));
     }
-    
+
 }

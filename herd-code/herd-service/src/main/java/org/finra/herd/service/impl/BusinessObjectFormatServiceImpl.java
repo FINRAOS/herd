@@ -431,6 +431,13 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         // Create and return the business object format object from the deleted entity.
         BusinessObjectFormat deletedBusinessObjectFormat = businessObjectFormatHelper.createBusinessObjectFormatFromEntity(businessObjectFormatEntity);
 
+        // Check if business object format being deleted is used as a descriptive format.
+        if (businessObjectFormatEntity.equals(businessObjectFormatEntity.getBusinessObjectDefinition().getDescriptiveBusinessObjectFormat()))
+        {
+            businessObjectFormatEntity.getBusinessObjectDefinition().setDescriptiveBusinessObjectFormat(null);
+            businessObjectDefinitionDao.saveAndRefresh(businessObjectFormatEntity.getBusinessObjectDefinition());
+        }
+
         // Delete this business object format.
         businessObjectFormatDao.delete(businessObjectFormatEntity);
         // If this business object format version is the latest, set the latest flag on the previous version of this object format, if it exists.

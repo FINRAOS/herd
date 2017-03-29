@@ -259,9 +259,9 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String FORMAT_USAGE_CODE = "UT_Usage_" + RANDOM_SUFFIX;
 
-    public static final String FORMAT_USAGE_CODE_2 = "UT_Usage_2_" + RANDOM_SUFFIX;
+    public static final String FORMAT_USAGE_CODE_2 = "UT_Usage_2" + RANDOM_SUFFIX;
 
-    public static final String FORMAT_USAGE_CODE_3 = "UT_Usage_3_" + RANDOM_SUFFIX;
+    public static final String FORMAT_USAGE_CODE_3 = "UT_Usage_3" + RANDOM_SUFFIX;
 
     public static final Integer FORMAT_VERSION = (int) (Math.random() * Integer.MAX_VALUE);
 
@@ -389,6 +389,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String NO_CUSTOM_DDL_NAME = null;
 
     public static final Integer NO_DATA_VERSION = null;
+
+    public static final Boolean NO_EXCLUSION_SEARCH_FILTER = Boolean.FALSE;
 
     public static final String NO_FORMAT_DESCRIPTION = null;
 
