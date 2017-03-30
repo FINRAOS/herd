@@ -261,6 +261,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String FORMAT_USAGE_CODE_2 = "UT_Usage_2" + RANDOM_SUFFIX;
 
+    public static final String FORMAT_USAGE_CODE_3 = "UT_Usage_3" + RANDOM_SUFFIX;
+
     public static final Integer FORMAT_VERSION = (int) (Math.random() * Integer.MAX_VALUE);
 
     public static final Integer FORMAT_VERSION_2 = (int) (Math.random() * Integer.MAX_VALUE);

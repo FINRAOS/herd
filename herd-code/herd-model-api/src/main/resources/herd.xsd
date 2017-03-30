@@ -1914,7 +1914,34 @@
                <xs:documentation>The schema associated with this Business Object Format</xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="businessObjectFormatParents" type="businessObjectFormatParents" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A list of Business Object Data parents (i.e. predecessors) that were used/needed in the creation of this data. This is used for
+                  data lineage. Each parent consists of the key data that uniquely defines a reference to a single Business Object Data.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectFormatParents">
+      <xs:sequence>
+         <xs:element name="businessObjectFormatKey" type="businessObjectFormatKey" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>Values that uniquely identify a Business Object Data without version</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectFormatChildren">
+      <xs:sequence>
+         <xs:element name="businessObjectFormatKey" type="businessObjectFormatKey" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>Values that uniquely identify a Business Object Data without version</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
    </xs:complexType>
 
    <xs:element name="businessObjectFormatUpdateRequest" type="businessObjectFormatUpdateRequest"/>
@@ -1939,6 +1966,20 @@
          </xs:element>
       </xs:all>
    </xs:complexType>
+
+   <xs:element name="businessObjectFormatParentsUpdateRequest" type="businessObjectFormatParentsUpdateRequest"/>
+   <xs:complexType name="businessObjectFormatParentsUpdateRequest">
+      <xs:all>
+         <xs:element name="businessObjectFormatParents" type="businessObjectFormatParents" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A list of Business Object Data parents (i.e. predecessors) that were used/needed in the creation of this data. This is used for
+                  data lineage. Each parent consists of the key data that uniquely defines a reference to a single Business Object Data.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
 
    <xs:element name="businessObjectFormat" type="businessObjectFormat"/>
    <xs:complexType name="businessObjectFormat">
@@ -2014,6 +2055,20 @@
          <xs:element name="schema" type="schema" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The schema associated with this Business Object Format</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectFormatParents" type="businessObjectFormatParents" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A list of Business Object Data parents (i.e. predecessors) that were used/needed in the creation of this data. This is used for
+                  data lineage. Each parent consists of the key data that uniquely defines a reference to a single Business Object Data.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectFormatChildren" type="businessObjectFormatChildren" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A list of Business Object Data children that were creation from this data. This is used for data lineage. Each child consists
+                  of the key data that uniquely defines a reference to a single Business Object Data.
+               </xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>

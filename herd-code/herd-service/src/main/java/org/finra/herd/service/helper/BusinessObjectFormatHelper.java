@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
+import org.finra.herd.dao.BusinessObjectFormatDao;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.AttributeDefinition;
 import org.finra.herd.model.api.xml.BusinessObjectFormat;
@@ -46,6 +47,9 @@ public class BusinessObjectFormatHelper
 {
     @Autowired
     private AlternateKeyHelper alternateKeyHelper;
+
+    @Autowired
+    private BusinessObjectFormatDao businessObjectFormatDao;
 
     /**
      * Returns a string representation of the alternate key values for the business object format.
@@ -101,9 +105,11 @@ public class BusinessObjectFormatHelper
      *
      * @param businessObjectFormatEntity the newly persisted business object format entity.
      *
+     * @param checkLatestVersion need to check latest version
+     *
      * @return the business object format.
      */
-    public BusinessObjectFormat createBusinessObjectFormatFromEntity(BusinessObjectFormatEntity businessObjectFormatEntity)
+    public  BusinessObjectFormat createBusinessObjectFormatFromEntity(BusinessObjectFormatEntity businessObjectFormatEntity, Boolean checkLatestVersion)
     {
         BusinessObjectFormat businessObjectFormat = new BusinessObjectFormat();
         businessObjectFormat.setId(businessObjectFormatEntity.getId());
@@ -195,7 +201,57 @@ public class BusinessObjectFormatHelper
             }
         }
 
+        BusinessObjectFormatEntity latestVersionBusinessObjectFormatEntity = businessObjectFormatEntity;
+        //need to check if the business object format entity is the latest version
+        //use the latest version if it is not
+        if (checkLatestVersion)
+        {
+            BusinessObjectFormatKey  businessObjectFormatKey = getBusinessObjectFormatKey(businessObjectFormatEntity);
+            businessObjectFormatKey.setBusinessObjectFormatVersion(null);
+            latestVersionBusinessObjectFormatEntity = businessObjectFormatDao.getBusinessObjectFormatByAltKey(businessObjectFormatKey);
+        }
+
+        //add business object format parent
+        List<BusinessObjectFormatKey> businessObjectFormatParents = new ArrayList();
+        businessObjectFormat.setBusinessObjectFormatParents(businessObjectFormatParents);
+        if (latestVersionBusinessObjectFormatEntity.getBusinessObjectFormatParents() != null)
+        {
+            for (BusinessObjectFormatEntity businessObjectFormatEntityParent: latestVersionBusinessObjectFormatEntity.getBusinessObjectFormatParents())
+            {
+                BusinessObjectFormatKey businessObjectFormatParent = getBusinessObjectFormatKey(businessObjectFormatEntityParent);
+                businessObjectFormatParent.setBusinessObjectFormatVersion(null);
+                businessObjectFormatParents.add(businessObjectFormatParent);
+            }
+        }
+        
+        //add business object format children
+        List<BusinessObjectFormatKey> businessObjectFormatChildren = new ArrayList();
+        businessObjectFormat.setBusinessObjectFormatChildren(businessObjectFormatChildren);
+        if (latestVersionBusinessObjectFormatEntity.getBusinessObjectFormatChildren() != null)
+        {
+            for (BusinessObjectFormatEntity businessObjectFormatEntityChild: latestVersionBusinessObjectFormatEntity.getBusinessObjectFormatChildren())
+            {
+                BusinessObjectFormatKey businessObjectFormatChild = getBusinessObjectFormatKey(businessObjectFormatEntityChild);
+                businessObjectFormatChild.setBusinessObjectFormatVersion(null);
+                businessObjectFormatChildren.add(businessObjectFormatChild);
+            }
+        }
+
+
         return businessObjectFormat;
+    }
+    
+    /**
+     * Creates the business object format from the persisted entity.
+     *
+     * @param businessObjectFormatEntity the newly persisted business object format entity.
+     *
+     *
+     * @return the business object format.
+     */
+    public BusinessObjectFormat createBusinessObjectFormatFromEntity(BusinessObjectFormatEntity businessObjectFormatEntity)
+    {
+        return createBusinessObjectFormatFromEntity(businessObjectFormatEntity, false);
     }
 
     /**
