@@ -3807,7 +3807,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
 
         // Set this format version as descriptive format on the business object definition.
         businessObjectFormatEntity.getBusinessObjectDefinition().setDescriptiveBusinessObjectFormat(businessObjectFormatEntity);
-        businessObjectFormatDao.saveAndRefresh(businessObjectFormatEntity);
+        businessObjectDefinitionDao.saveAndRefresh(businessObjectFormatEntity.getBusinessObjectDefinition());
 
         // Validate the existence of the business object format entity.
         assertNotNull(businessObjectFormatDao
