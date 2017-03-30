@@ -214,7 +214,7 @@ public class BusinessObjectFormatRestController extends HerdBaseController
      * @return the updated business object format.
      */
     @RequestMapping(
-        value = "/businessObjectFormats/parents/namespaces/{namespace}/businessObjectDefinitionNames/{businessObjectDefinitionName}" +
+        value = "/businessObjectFormatParents/namespaces/{namespace}/businessObjectDefinitionNames/{businessObjectDefinitionName}" +
             "/businessObjectFormatUsages/{businessObjectFormatUsage}/businessObjectFormatFileTypes/{businessObjectFormatFileType}",
         method = RequestMethod.PUT, consumes = {"application/xml", "application/json"})
     @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_FORMATS_PARENTS_PUT)

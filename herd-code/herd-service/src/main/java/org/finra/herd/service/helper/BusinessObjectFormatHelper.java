@@ -214,30 +214,23 @@ public class BusinessObjectFormatHelper
         //add business object format parent
         List<BusinessObjectFormatKey> businessObjectFormatParents = new ArrayList();
         businessObjectFormat.setBusinessObjectFormatParents(businessObjectFormatParents);
-        if (latestVersionBusinessObjectFormatEntity.getBusinessObjectFormatParents() != null)
+        for (BusinessObjectFormatEntity businessObjectFormatEntityParent : latestVersionBusinessObjectFormatEntity.getBusinessObjectFormatParents())
         {
-            for (BusinessObjectFormatEntity businessObjectFormatEntityParent: latestVersionBusinessObjectFormatEntity.getBusinessObjectFormatParents())
-            {
-                BusinessObjectFormatKey businessObjectFormatParent = getBusinessObjectFormatKey(businessObjectFormatEntityParent);
-                businessObjectFormatParent.setBusinessObjectFormatVersion(null);
-                businessObjectFormatParents.add(businessObjectFormatParent);
-            }
+            BusinessObjectFormatKey businessObjectFormatParent = getBusinessObjectFormatKey(businessObjectFormatEntityParent);
+            businessObjectFormatParent.setBusinessObjectFormatVersion(null);
+            businessObjectFormatParents.add(businessObjectFormatParent);
         }
-        
+
         //add business object format children
         List<BusinessObjectFormatKey> businessObjectFormatChildren = new ArrayList();
         businessObjectFormat.setBusinessObjectFormatChildren(businessObjectFormatChildren);
-        if (latestVersionBusinessObjectFormatEntity.getBusinessObjectFormatChildren() != null)
+        for (BusinessObjectFormatEntity businessObjectFormatEntityChild : latestVersionBusinessObjectFormatEntity.getBusinessObjectFormatChildren())
         {
-            for (BusinessObjectFormatEntity businessObjectFormatEntityChild: latestVersionBusinessObjectFormatEntity.getBusinessObjectFormatChildren())
-            {
-                BusinessObjectFormatKey businessObjectFormatChild = getBusinessObjectFormatKey(businessObjectFormatEntityChild);
-                businessObjectFormatChild.setBusinessObjectFormatVersion(null);
-                businessObjectFormatChildren.add(businessObjectFormatChild);
-            }
+            BusinessObjectFormatKey businessObjectFormatChild = getBusinessObjectFormatKey(businessObjectFormatEntityChild);
+            businessObjectFormatChild.setBusinessObjectFormatVersion(null);
+            businessObjectFormatChildren.add(businessObjectFormatChild);
         }
-
-
+        
         return businessObjectFormat;
     }
     
