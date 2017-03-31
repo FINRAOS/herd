@@ -150,6 +150,8 @@ public class SecurityFunctions
 
     public static final String FN_BUSINESS_OBJECT_FORMATS_PUT = "FN_BUSINESS_OBJECT_FORMATS_PUT";
 
+    public static final String FN_BUSINESS_OBJECT_FORMATS_PARENTS_PUT = "FN_BUSINESS_OBJECT_FORMATS_PARENTS_PUT";
+
     public static final String FN_CUSTOM_DDLS_ALL_GET = "FN_CUSTOM_DDLS_ALL_GET";
 
     public static final String FN_CUSTOM_DDLS_DELETE = "FN_CUSTOM_DDLS_DELETE";

@@ -61,6 +61,7 @@ import org.finra.herd.model.api.xml.TagTypeKey;
 import org.finra.herd.model.api.xml.TagUpdateRequest;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.SearchIndexUpdateDto;
+import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
 import org.finra.herd.model.jpa.SearchIndexTypeEntity;
 import org.finra.herd.model.jpa.TagEntity;
 import org.finra.herd.model.jpa.TagTypeEntity;
@@ -174,12 +175,20 @@ public class TagServiceImpl implements TagService, SearchableService
         // Retrieve and ensure that a Tag already exists for the given tag key.
         TagEntity tagEntity = tagDaoHelper.getTagEntity(tagKey);
 
-        // delete the tag.
-        tagDao.delete(tagEntity);
-
         // List of tag entities to update in the search index
         List<TagEntity> tagEntities = new ArrayList<>();
         tagEntities.add(tagEntity);
+
+        // If there is a parent tag entity add it to the tag entities list
+        if (tagEntity.getParentTagEntity() != null)
+        {
+            tagEntities.add(tagEntity.getParentTagEntity());
+        }
+
+        List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities = businessObjectDefinitionDao.getBusinessObjectDefinitions(tagEntities);
+
+        // delete the tag.
+        tagDao.delete(tagEntity);
 
         // Notify the tag search index that a tag must be deleted.
         searchIndexUpdateHelper.modifyTagInSearchIndex(tagEntity, SEARCH_INDEX_UPDATE_TYPE_DELETE);
@@ -188,12 +197,10 @@ public class TagServiceImpl implements TagService, SearchableService
         if (tagEntity.getParentTagEntity() != null)
         {
             searchIndexUpdateHelper.modifyTagInSearchIndex(tagEntity.getParentTagEntity(), SEARCH_INDEX_UPDATE_TYPE_UPDATE);
-            tagEntities.add(tagEntity.getParentTagEntity());
         }
 
         // Notify the search index that a business object definition must be updated.
-        searchIndexUpdateHelper.modifyBusinessObjectDefinitionsInSearchIndex(businessObjectDefinitionDao.getBusinessObjectDefinitions(tagEntities),
-            SEARCH_INDEX_UPDATE_TYPE_UPDATE);
+        searchIndexUpdateHelper.modifyBusinessObjectDefinitionsInSearchIndex(businessObjectDefinitionEntities, SEARCH_INDEX_UPDATE_TYPE_UPDATE);
 
         // Create and return the tag object from the deleted entity.
         return createTagFromEntity(tagEntity);

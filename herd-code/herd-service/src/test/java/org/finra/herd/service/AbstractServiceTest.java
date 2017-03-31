@@ -55,6 +55,7 @@ import org.finra.herd.dao.helper.XmlHelper;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatus;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatusChangeEvent;
+import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormat;
 import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormatUpdateRequest;
 import org.finra.herd.model.api.xml.JobStatusEnum;
@@ -358,6 +359,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final String TEST_SQS_MESSAGE_CORRELATION_ID = "testCorrelationId";
 
     public static final String ZERO_COLUMN_SIZE = "0";
+
+    public static final List<BusinessObjectFormatKey> NO_BUSINESS_OBJECT_FORMAT_PARENTS = null;
 
     @Autowired
     protected SpringProcessEngineConfiguration activitiConfiguration;
