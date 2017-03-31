@@ -75,7 +75,7 @@ public interface BusinessObjectDefinitionDao extends BaseJpaDao
     public List<BusinessObjectDefinitionKey> getBusinessObjectDefinitionKeysByNamespace(String namespaceCode);
 
     /**
-     * Gets a list of all business object definition entities for the specified namespace.
+     * Gets a list of all business object definition entities for the specified list of tag entities.
      *
      * @return the list of all business object definition entities.
      */

@@ -249,4 +249,68 @@ public class TagDaoTest extends AbstractDaoTest
         assertTrue(tagDao.getTagsByTagTypeEntityAndParentTagCode(invalidTagTypeEntity, TAG_CODE, NO_IS_PARENT_TAG_NULL_FLAG).isEmpty());
         assertTrue(tagDao.getTagsByTagTypeEntityAndParentTagCode(tagTypeEntity, I_DO_NOT_EXIST, NO_IS_PARENT_TAG_NULL_FLAG).isEmpty());
     }
+
+    @Test
+    public void testGetPercentageOfAllTagsOneHundredPercent()
+    {
+        // Create a tag type entity.
+        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER, TAG_TYPE_DESCRIPTION);
+
+        // Create two root tag entities for the tag type with tag display name in reverse order.
+        List<TagEntity> rootTagEntities = Arrays.asList(tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION),
+            tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_2, TAG_DISPLAY_NAME, TAG_DESCRIPTION_2));
+
+        // Get the list of all tags aka. 100%
+        assertEquals(rootTagEntities, tagDao.getPercentageOfAllTags(1.0));
+    }
+
+    @Test
+    public void testGetPercentageOfAllTagsZeroPercent()
+    {
+        // Create a tag type entity.
+        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER, TAG_TYPE_DESCRIPTION);
+
+        // Create two root tag entities for the tag type with tag display name in reverse order.
+        List<TagEntity> rootTagEntities = Arrays.asList(tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION),
+            tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_2, TAG_DISPLAY_NAME, TAG_DESCRIPTION_2));
+
+        // Create an empty list
+        List<TagEntity> emptyList = new ArrayList<>();
+
+        // Get the list of all tags aka. 0%
+        assertEquals(emptyList, tagDao.getPercentageOfAllTags(0.0));
+    }
+
+    @Test
+    public void testGetMostRecentTags()
+    {
+        List<TagEntity> tagEntities = new ArrayList<>();
+
+        // Create a tag type entity.
+        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER, TAG_TYPE_DESCRIPTION);
+
+        // Create two root tag entities for the tag type with tag display name in reverse order.
+        List<TagEntity> rootTagEntities = Arrays.asList(tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION),
+            tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_2, TAG_DISPLAY_NAME, TAG_DESCRIPTION_2));
+
+        // Only add the most recent 1 to the list
+        tagEntities.add(rootTagEntities.get(1));
+
+        // Get the list of most recent tags
+        assertEquals(tagEntities, tagDao.getMostRecentTags(1));
+    }
+
+    @Test
+    public void testGetCountOfAllTags()
+    {
+        // Create a tag type entity.
+        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER, TAG_TYPE_DESCRIPTION);
+
+        // Create two root tag entities for the tag type with tag display name in reverse order.
+        List<TagEntity> rootTagEntities = Arrays.asList(tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION),
+            tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_2, TAG_DISPLAY_NAME, TAG_DESCRIPTION_2));
+
+        // Get the count of all tags
+        assertEquals(rootTagEntities.size(), tagDao.getCountOfAllTags());
+    }
 }
