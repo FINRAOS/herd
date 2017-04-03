@@ -429,6 +429,13 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
                     businessObjectFormatHelper.businessObjectFormatEntityAltKeyToString(businessObjectFormatEntity)));
         }
 
+        if (!businessObjectFormatEntity.getBusinessObjectFormatChildren().isEmpty())
+        {
+            throw new IllegalArgumentException(String
+                .format("Can not delete a business object format that has children associated with it. Business object format: {%s}",
+                    businessObjectFormatHelper.businessObjectFormatEntityAltKeyToString(businessObjectFormatEntity)));
+        }
+        
         // Create and return the business object format object from the deleted entity.
         BusinessObjectFormat deletedBusinessObjectFormat = businessObjectFormatHelper.createBusinessObjectFormatFromEntity(businessObjectFormatEntity);
 
