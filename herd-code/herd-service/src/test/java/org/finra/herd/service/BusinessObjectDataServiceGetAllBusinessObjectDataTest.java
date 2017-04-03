@@ -43,6 +43,7 @@ import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.service.helper.BusinessObjectDataInvalidateUnregisteredHelper;
+import org.finra.herd.service.helper.BusinessObjectDataRetryStoragePolicyTransitionHelper;
 import org.finra.herd.service.helper.BusinessObjectDataSearchHelper;
 import org.finra.herd.service.helper.BusinessObjectDataStatusDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionDaoHelper;
@@ -78,7 +79,7 @@ public class BusinessObjectDataServiceGetAllBusinessObjectDataTest extends Abstr
     private BusinessObjectDataInvalidateUnregisteredHelper businessObjectDataInvalidateUnregisteredHelper;
 
     @Mock
-    private BusinessObjectDataRetryStoragePolicyTransitionHelperService businessObjectDataRetryStoragePolicyTransitionHelperService;
+    private BusinessObjectDataRetryStoragePolicyTransitionHelper businessObjectDataRetryStoragePolicyTransitionHelper;
 
     @Mock
     private BusinessObjectDataSearchHelper businessObjectDataSearchHelper;
@@ -216,7 +217,7 @@ public class BusinessObjectDataServiceGetAllBusinessObjectDataTest extends Abstr
     private void verifyNoMoreInteractionsHelper()
     {
         verifyNoMoreInteractions(businessObjectDataDao, businessObjectDataDaoHelper, businessObjectDataHelper, businessObjectDataInitiateRestoreHelperService,
-            businessObjectDataInvalidateUnregisteredHelper, businessObjectDataRetryStoragePolicyTransitionHelperService, businessObjectDataSearchHelper,
+            businessObjectDataInvalidateUnregisteredHelper, businessObjectDataRetryStoragePolicyTransitionHelper, businessObjectDataSearchHelper,
             businessObjectDataStatusDaoHelper, businessObjectDefinitionDaoHelper, businessObjectDefinitionHelper, businessObjectFormatDaoHelper,
             businessObjectFormatHelper, configurationHelper, customDdlDaoHelper, ddlGeneratorFactory, jsonHelper, notificationEventService, s3KeyPrefixHelper,
             s3Service, storageDaoHelper, storageHelper, storageUnitDao, storageUnitHelper);

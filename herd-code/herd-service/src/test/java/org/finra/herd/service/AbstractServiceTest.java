@@ -79,6 +79,7 @@ import org.finra.herd.service.helper.BusinessObjectDataAttributeHelper;
 import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.service.helper.BusinessObjectDataInvalidateUnregisteredHelper;
+import org.finra.herd.service.helper.BusinessObjectDataRetryStoragePolicyTransitionHelper;
 import org.finra.herd.service.helper.BusinessObjectDataSearchHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionColumnDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectFormatHelper;
@@ -222,6 +223,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final List<BusinessObjectDataStatusChangeEvent> NO_BUSINESS_OBJECT_DATA_STATUS_HISTORY = null;
 
+    public static final List<BusinessObjectFormatKey> NO_BUSINESS_OBJECT_FORMAT_PARENTS = null;
+
     public static final String NO_COLUMN_DEFAULT_VALUE = null;
 
     public static final String NO_COLUMN_DESCRIPTION = null;
@@ -360,8 +363,6 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String ZERO_COLUMN_SIZE = "0";
 
-    public static final List<BusinessObjectFormatKey> NO_BUSINESS_OBJECT_FORMAT_PARENTS = null;
-
     @Autowired
     protected SpringProcessEngineConfiguration activitiConfiguration;
 
@@ -426,7 +427,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     protected BusinessObjectDataNotificationRegistrationService businessObjectDataNotificationRegistrationService;
 
     @Autowired
-    protected BusinessObjectDataRetryStoragePolicyTransitionHelperService businessObjectDataRetryStoragePolicyTransitionHelperService;
+    protected BusinessObjectDataRetryStoragePolicyTransitionHelper businessObjectDataRetryStoragePolicyTransitionHelper;
 
     @Autowired
     protected BusinessObjectDataSearchHelper businessObjectDataSearchHelper;
@@ -519,6 +520,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     protected Hive13DdlGenerator hive13DdlGenerator;
 
     @Autowired
+    protected IndexSearchResultTypeHelper indexSearchResultTypeHelper;
+
+    @Autowired
     protected JdbcService jdbcService;
 
     @Autowired
@@ -541,9 +545,6 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     @Autowired
     protected JsonHelper jsonHelper;
-
-    @Autowired
-    protected IndexSearchResultTypeHelper indexSearchResultTypeHelper;
 
     @Autowired
     protected NamespaceService namespaceService;

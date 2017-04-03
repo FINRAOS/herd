@@ -31,102 +31,64 @@ public class StoragePolicyTransitionParamsDto
     private BusinessObjectDataKey businessObjectDataKey;
 
     /**
-     * The destination AWS S3 bucket name.
+     * The new status of the storage unit.
      */
-    private String destinationBucketName;
+    private String newStorageUnitStatus;
 
     /**
-     * The destination S3 key base prefix. To build the actual destination S3 key prefix, please concatenate this base prefix with the source S3 key prefix
-     * using "/" character as a separator.
+     * The old status of the storage unit.
      */
-    private String destinationS3KeyBasePrefix;
+    private String oldStorageUnitStatus;
 
     /**
-     * The destination storage name.
+     * The S3 bucket name.
      */
-    private String destinationStorageName;
+    private String s3BucketName;
 
     /**
-     * The new status of the destination storage unit.
+     * The S3 key prefix.
      */
-    private String newDestinationStorageUnitStatus;
+    private String s3KeyPrefix;
 
     /**
-     * The new status of the source storage unit.
+     * The storage files.
      */
-    private String newSourceStorageUnitStatus;
+    private List<StorageFile> storageFiles;
 
     /**
-     * The old status of the destination storage unit.
+     * The storage name.
      */
-    private String oldDestinationStorageUnitStatus;
-
-    /**
-     * The old status of the source storage unit.
-     */
-    private String oldSourceStorageUnitStatus;
-
-    /**
-     * The source AWS S3 bucket name.
-     */
-    private String sourceBucketName;
-
-    /**
-     * The source S3 key prefix.
-     */
-    private String sourceS3KeyPrefix;
-
-    /**
-     * The source storage files.
-     */
-    private List<StorageFile> sourceStorageFiles;
-
-    /**
-     * The source storage name.
-     */
-    private String sourceStorageName;
+    private String storageName;
 
     /**
      * Default no-arg constructor.
      */
     public StoragePolicyTransitionParamsDto()
     {
-        // This is intentionally empty, nothing needed here.
+        // This is intentionally left empty, nothing needed here.
     }
 
     /**
      * Fully-initialising value constructor.
      *
      * @param businessObjectDataKey the business object data key
-     * @param sourceStorageName the source storage name
-     * @param sourceBucketName the source S3 bucket name
-     * @param sourceS3KeyPrefix the source S3 key prefix
-     * @param newSourceStorageUnitStatus the new status of the source storage unit
-     * @param oldSourceStorageUnitStatus the old (previous) status of the source storage unit
-     * @param sourceStorageFiles the list of source storage files
-     * @param destinationStorageName the destination storage name
-     * @param destinationBucketName the destination S3 bucket name
-     * @param destinationS3KeyBasePrefix the destination S3 key base prefix
-     * @param newDestinationStorageUnitStatus the new status of the origin storage unit
-     * @param oldDestinationStorageUnitStatus the old (previous) status of the origin storage unit
+     * @param storageName the storage name
+     * @param s3BucketName the S3 bucket name
+     * @param s3KeyPrefix the S3 key prefix
+     * @param newStorageUnitStatus the new status of the storage unit
+     * @param oldStorageUnitStatus the old (previous) status of the storage unit
+     * @param storageFiles the list of storage files
      */
-    public StoragePolicyTransitionParamsDto(final BusinessObjectDataKey businessObjectDataKey, final String sourceStorageName, final String sourceBucketName,
-        final String sourceS3KeyPrefix, final String newSourceStorageUnitStatus, final String oldSourceStorageUnitStatus,
-        final List<StorageFile> sourceStorageFiles, final String destinationStorageName, final String destinationBucketName,
-        final String destinationS3KeyBasePrefix, final String newDestinationStorageUnitStatus, final String oldDestinationStorageUnitStatus)
+    public StoragePolicyTransitionParamsDto(final BusinessObjectDataKey businessObjectDataKey, final String storageName, final String s3BucketName,
+        final String s3KeyPrefix, final String newStorageUnitStatus, final String oldStorageUnitStatus, final List<StorageFile> storageFiles)
     {
         this.businessObjectDataKey = businessObjectDataKey;
-        this.sourceStorageName = sourceStorageName;
-        this.sourceBucketName = sourceBucketName;
-        this.sourceS3KeyPrefix = sourceS3KeyPrefix;
-        this.newSourceStorageUnitStatus = newSourceStorageUnitStatus;
-        this.oldSourceStorageUnitStatus = oldSourceStorageUnitStatus;
-        this.sourceStorageFiles = sourceStorageFiles;
-        this.destinationStorageName = destinationStorageName;
-        this.destinationBucketName = destinationBucketName;
-        this.destinationS3KeyBasePrefix = destinationS3KeyBasePrefix;
-        this.newDestinationStorageUnitStatus = newDestinationStorageUnitStatus;
-        this.oldDestinationStorageUnitStatus = oldDestinationStorageUnitStatus;
+        this.storageName = storageName;
+        this.s3BucketName = s3BucketName;
+        this.s3KeyPrefix = s3KeyPrefix;
+        this.newStorageUnitStatus = newStorageUnitStatus;
+        this.oldStorageUnitStatus = oldStorageUnitStatus;
+        this.storageFiles = storageFiles;
     }
 
     public BusinessObjectDataKey getBusinessObjectDataKey()
@@ -139,113 +101,122 @@ public class StoragePolicyTransitionParamsDto
         this.businessObjectDataKey = businessObjectDataKey;
     }
 
-    public String getDestinationBucketName()
+    public String getNewStorageUnitStatus()
     {
-        return destinationBucketName;
+        return newStorageUnitStatus;
     }
 
-    public void setDestinationBucketName(String destinationBucketName)
+    public void setNewStorageUnitStatus(String newStorageUnitStatus)
     {
-        this.destinationBucketName = destinationBucketName;
+        this.newStorageUnitStatus = newStorageUnitStatus;
     }
 
-    public String getDestinationS3KeyBasePrefix()
+    public String getOldStorageUnitStatus()
     {
-        return destinationS3KeyBasePrefix;
+        return oldStorageUnitStatus;
     }
 
-    public void setDestinationS3KeyBasePrefix(String destinationS3KeyBasePrefix)
+    public void setOldStorageUnitStatus(String oldStorageUnitStatus)
     {
-        this.destinationS3KeyBasePrefix = destinationS3KeyBasePrefix;
+        this.oldStorageUnitStatus = oldStorageUnitStatus;
     }
 
-    public String getDestinationStorageName()
+    public String getS3BucketName()
     {
-        return destinationStorageName;
+        return s3BucketName;
     }
 
-    public void setDestinationStorageName(String destinationStorageName)
+    public void setS3BucketName(String s3BucketName)
     {
-        this.destinationStorageName = destinationStorageName;
+        this.s3BucketName = s3BucketName;
     }
 
-    public String getNewDestinationStorageUnitStatus()
+    public String getS3KeyPrefix()
     {
-        return newDestinationStorageUnitStatus;
+        return s3KeyPrefix;
     }
 
-    public void setNewDestinationStorageUnitStatus(String newDestinationStorageUnitStatus)
+    public void setS3KeyPrefix(String s3KeyPrefix)
     {
-        this.newDestinationStorageUnitStatus = newDestinationStorageUnitStatus;
+        this.s3KeyPrefix = s3KeyPrefix;
     }
 
-    public String getNewSourceStorageUnitStatus()
+    public List<StorageFile> getStorageFiles()
     {
-        return newSourceStorageUnitStatus;
+        return storageFiles;
     }
 
-    public void setNewSourceStorageUnitStatus(String newSourceStorageUnitStatus)
+    public void setStorageFiles(List<StorageFile> storageFiles)
     {
-        this.newSourceStorageUnitStatus = newSourceStorageUnitStatus;
+        this.storageFiles = storageFiles;
     }
 
-    public String getOldDestinationStorageUnitStatus()
+    public String getStorageName()
     {
-        return oldDestinationStorageUnitStatus;
+        return storageName;
     }
 
-    public void setOldDestinationStorageUnitStatus(String oldDestinationStorageUnitStatus)
+    public void setStorageName(String storageName)
     {
-        this.oldDestinationStorageUnitStatus = oldDestinationStorageUnitStatus;
+        this.storageName = storageName;
     }
 
-    public String getOldSourceStorageUnitStatus()
+    @Override
+    public boolean equals(Object object)
     {
-        return oldSourceStorageUnitStatus;
+        if (this == object)
+        {
+            return true;
+        }
+        if (!(object instanceof StoragePolicyTransitionParamsDto))
+        {
+            return false;
+        }
+
+        StoragePolicyTransitionParamsDto that = (StoragePolicyTransitionParamsDto) object;
+
+        if (businessObjectDataKey != null ? !businessObjectDataKey.equals(that.businessObjectDataKey) : that.businessObjectDataKey != null)
+        {
+            return false;
+        }
+        if (newStorageUnitStatus != null ? !newStorageUnitStatus.equals(that.newStorageUnitStatus) : that.newStorageUnitStatus != null)
+        {
+            return false;
+        }
+        if (oldStorageUnitStatus != null ? !oldStorageUnitStatus.equals(that.oldStorageUnitStatus) : that.oldStorageUnitStatus != null)
+        {
+            return false;
+        }
+        if (s3BucketName != null ? !s3BucketName.equals(that.s3BucketName) : that.s3BucketName != null)
+        {
+            return false;
+        }
+        if (s3KeyPrefix != null ? !s3KeyPrefix.equals(that.s3KeyPrefix) : that.s3KeyPrefix != null)
+        {
+            return false;
+        }
+        if (storageFiles != null ? !storageFiles.equals(that.storageFiles) : that.storageFiles != null)
+        {
+            return false;
+        }
+        if (storageName != null ? !storageName.equals(that.storageName) : that.storageName != null)
+        {
+            return false;
+        }
+
+        return true;
     }
 
-    public void setOldSourceStorageUnitStatus(String oldSourceStorageUnitStatus)
+    @Override
+    public int hashCode()
     {
-        this.oldSourceStorageUnitStatus = oldSourceStorageUnitStatus;
-    }
-
-    public String getSourceBucketName()
-    {
-        return sourceBucketName;
-    }
-
-    public void setSourceBucketName(String sourceBucketName)
-    {
-        this.sourceBucketName = sourceBucketName;
-    }
-
-    public String getSourceS3KeyPrefix()
-    {
-        return sourceS3KeyPrefix;
-    }
-
-    public void setSourceS3KeyPrefix(String sourceS3KeyPrefix)
-    {
-        this.sourceS3KeyPrefix = sourceS3KeyPrefix;
-    }
-
-    public List<StorageFile> getSourceStorageFiles()
-    {
-        return sourceStorageFiles;
-    }
-
-    public void setSourceStorageFiles(List<StorageFile> sourceStorageFiles)
-    {
-        this.sourceStorageFiles = sourceStorageFiles;
-    }
-
-    public String getSourceStorageName()
-    {
-        return sourceStorageName;
-    }
-
-    public void setSourceStorageName(String sourceStorageName)
-    {
-        this.sourceStorageName = sourceStorageName;
+        int result = businessObjectDataKey != null ? businessObjectDataKey.hashCode() : 0;
+        result = 31 * result + (newStorageUnitStatus != null ? newStorageUnitStatus.hashCode() : 0);
+        result = 31 * result + (oldStorageUnitStatus != null ? oldStorageUnitStatus.hashCode() : 0);
+        result = 31 * result + (s3BucketName != null ? s3BucketName.hashCode() : 0);
+        result = 31 * result + (s3KeyPrefix != null ? s3KeyPrefix.hashCode() : 0);
+        result = 31 * result + (storageFiles != null ? storageFiles.hashCode() : 0);
+        result = 31 * result + (storageName != null ? storageName.hashCode() : 0);
+        return result;
     }
 }

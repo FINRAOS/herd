@@ -526,11 +526,11 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String SEARCH_INDEX_MAPPING = "UT_SearchIndex_Mapping_" + RANDOM_SUFFIX;
 
-    public static final String SEARCH_INDEX_SETTINGS = "UT_SearchIndex_Settings_" + RANDOM_SUFFIX;
-
     public static final String SEARCH_INDEX_NAME = "UT_SearchIndexName_1_" + RANDOM_SUFFIX;
 
     public static final String SEARCH_INDEX_NAME_2 = "UT_SearchIndexName_2_" + RANDOM_SUFFIX;
+
+    public static final String SEARCH_INDEX_SETTINGS = "UT_SearchIndex_Settings_" + RANDOM_SUFFIX;
 
     public static final String SEARCH_INDEX_STATUS = "UT_SearchIndexStatus_1_" + RANDOM_SUFFIX;
 
@@ -621,6 +621,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final Integer STORAGE_POLICY_RULE_VALUE = (int) (Math.random() * Integer.MAX_VALUE);
 
     public static final Integer STORAGE_POLICY_RULE_VALUE_2 = (int) (Math.random() * Integer.MAX_VALUE);
+
+    public static final String STORAGE_POLICY_TRANSITION_TYPE = "UT_Storage_Policy_Transition_Type_1_" + RANDOM_SUFFIX;
+
+    public static final String STORAGE_POLICY_TRANSITION_TYPE_2 = "UT_Storage_Policy_Transition_Type_2_" + RANDOM_SUFFIX;
 
     public static final String STORAGE_UNIT_STATUS = "UT_SU_Status_1_" + RANDOM_SUFFIX;
 
@@ -982,6 +986,12 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     @Autowired
     protected StoragePolicyStatusDao storagePolicyStatusDao;
+
+    @Autowired
+    protected StoragePolicyTransitionTypeDao storagePolicyTransitionTypeDao;
+
+    @Autowired
+    protected StoragePolicyTransitionTypeDaoTestHelper storagePolicyTransitionTypeDaoTestHelper;
 
     @Autowired
     protected StorageUnitDao storageUnitDao;

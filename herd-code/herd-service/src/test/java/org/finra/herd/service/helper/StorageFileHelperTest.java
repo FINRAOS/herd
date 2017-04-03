@@ -157,7 +157,7 @@ public class StorageFileHelperTest extends AbstractServiceTest
     }
 
     @Test
-    public void testValidateSourceS3Files() throws IOException
+    public void testValidateRegisteredS3Files() throws IOException
     {
         // Create two lists of expected and actual storage files.
         // Please note we use different row count values to confirm that row count match is not validated.
@@ -171,13 +171,13 @@ public class StorageFileHelperTest extends AbstractServiceTest
         }
 
         // Validate the files.
-        storageFileHelper.validateSourceS3Files(testExpectedFiles, testActualFiles, STORAGE_NAME,
+        storageFileHelper.validateRegisteredS3Files(testExpectedFiles, testActualFiles, STORAGE_NAME,
             new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE, SUBPARTITION_VALUES,
                 DATA_VERSION));
     }
 
     @Test
-    public void testValidateSourceS3FilesActualFileNoExists() throws IOException
+    public void testValidateRegisteredS3FilesActualFileNoExists() throws IOException
     {
         // Create two lists of expected and actual storage files, with one expected file not being added to the list of actual files.
         List<StorageFile> testExpectedFiles = Arrays.asList(new StorageFile(TARGET_S3_KEY, FILE_SIZE, ROW_COUNT_1000));
@@ -186,7 +186,7 @@ public class StorageFileHelperTest extends AbstractServiceTest
         // Try to validate S3 files when expected S3 file does not exist.
         try
         {
-            storageFileHelper.validateSourceS3Files(testExpectedFiles, testActualFiles, STORAGE_NAME,
+            storageFileHelper.validateRegisteredS3Files(testExpectedFiles, testActualFiles, STORAGE_NAME,
                 new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                     SUBPARTITION_VALUES, DATA_VERSION));
             fail("Should throw an ObjectNotFoundException when the registered S3 file does not exist.");
@@ -198,7 +198,7 @@ public class StorageFileHelperTest extends AbstractServiceTest
     }
 
     @Test
-    public void testValidateSourceS3FilesActualFileSizeMismatch() throws IOException
+    public void testValidateRegisteredS3FilesActualFileSizeMismatch() throws IOException
     {
         // Create two lists of expected and actual storage files, with expected file size not matching actual file size.
         List<StorageFile> testExpectedFiles = Arrays.asList(new StorageFile(TARGET_S3_KEY, FILE_SIZE, NO_ROW_COUNT));
@@ -207,7 +207,7 @@ public class StorageFileHelperTest extends AbstractServiceTest
         // Try to validate S3 files when expected expected file size does not match actual file size.
         try
         {
-            storageFileHelper.validateSourceS3Files(testExpectedFiles, testActualFiles, STORAGE_NAME,
+            storageFileHelper.validateRegisteredS3Files(testExpectedFiles, testActualFiles, STORAGE_NAME,
                 new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                     SUBPARTITION_VALUES, DATA_VERSION));
             fail("Should throw an IllegalStateException when expected file size does not match actual file size.");
@@ -221,7 +221,7 @@ public class StorageFileHelperTest extends AbstractServiceTest
     }
 
     @Test
-    public void testValidateSourceS3FilesUnexpectedS3FileFound() throws IOException
+    public void testValidateRegisteredS3FilesUnexpectedS3FileFound() throws IOException
     {
         // Create two lists of expected and actual storage files, with an actual file not being added to the list of expected files.
         List<StorageFile> testExpectedFiles = new ArrayList<>();
@@ -235,7 +235,7 @@ public class StorageFileHelperTest extends AbstractServiceTest
         // Try to validate S3 files when unexpected S3 file exists.
         try
         {
-            storageFileHelper.validateSourceS3Files(testExpectedFiles, testActualFiles, STORAGE_NAME, businessObjectDataKey);
+            storageFileHelper.validateRegisteredS3Files(testExpectedFiles, testActualFiles, STORAGE_NAME, businessObjectDataKey);
             fail("Should throw an IllegalStateException when S3 contains unexpected S3 file.");
         }
         catch (IllegalStateException e)

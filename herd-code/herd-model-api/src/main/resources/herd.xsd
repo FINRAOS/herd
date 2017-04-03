@@ -6080,7 +6080,8 @@
       <xs:all>
          <xs:element name="ruleType" type="xs:string">
             <xs:annotation>
-               <xs:documentation>The storage policy rule type. Supported rule types are: DAYS_SINCE_BDATA_REGISTERED</xs:documentation>
+               <xs:documentation>The storage policy rule type. Supported rule types are: DAYS_SINCE_BDATA_REGISTERED, DAYS_SINCE_BDATA_PRIMARY_PARTITION_VALUE
+               </xs:documentation>
             </xs:annotation>
          </xs:element>
          <!--
@@ -6135,10 +6136,9 @@
 
    <xs:complexType name="storagePolicyTransition">
       <xs:all>
-         <xs:element name="destinationStorageName" type="xs:string">
+         <xs:element name="transitionType" type="xs:string">
             <xs:annotation>
-               <xs:documentation>The name of the destination storage. The storage with this name must already exist. Currently, only GLACIER storage platform
-                  type is supported for the destination storage by the storage policies
+               <xs:documentation>The name of the transition type. Currently, only GLACIER transition type is supported by the storage policies
                </xs:documentation>
             </xs:annotation>
          </xs:element>
@@ -6415,7 +6415,8 @@
          </xs:element>
          <xs:element name="facetFields" type="facetFields" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>A list of Facet Fields to be included with the response. Only Tag and ResultType facet information is supported</xs:documentation>
+               <xs:documentation>A list of Facet Fields to be included with the response. Only Tag and ResultType facet information is supported
+               </xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
