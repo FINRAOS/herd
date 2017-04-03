@@ -175,7 +175,7 @@ public class BusinessObjectFormatServiceTestHelper
      */
     public BusinessObjectFormatCreateRequest createBusinessObjectFormatCreateRequest(String namespaceCode, String businessObjectDefinitionName,
         String businessObjectFormatUsage, String businessObjectFormatFileType, String partitionKey, String description, List<Attribute> attributes,
-        List<AttributeDefinition> attributeDefinitions, Schema schema, List<BusinessObjectFormatKey> businessObjectFormatParents)
+        List<AttributeDefinition> attributeDefinitions, Schema schema)
     {
         BusinessObjectFormatCreateRequest businessObjectFormatCreateRequest = new BusinessObjectFormatCreateRequest();
 
@@ -188,18 +188,8 @@ public class BusinessObjectFormatServiceTestHelper
         businessObjectFormatCreateRequest.setAttributes(attributes);
         businessObjectFormatCreateRequest.setAttributeDefinitions(attributeDefinitions);
         businessObjectFormatCreateRequest.setSchema(schema);
-        businessObjectFormatCreateRequest.setBusinessObjectFormatParents(businessObjectFormatParents);
 
         return businessObjectFormatCreateRequest;
-    }
-
-    public BusinessObjectFormatCreateRequest createBusinessObjectFormatCreateRequest(String namespaceCode, String businessObjectDefinitionName,
-        String businessObjectFormatUsage, String businessObjectFormatFileType, String partitionKey, String description, List<Attribute> attributes,
-        List<AttributeDefinition> attributeDefinitions, Schema schema)
-    {
-        return createBusinessObjectFormatCreateRequest(namespaceCode, businessObjectDefinitionName,
-            businessObjectFormatUsage, businessObjectFormatFileType, partitionKey, description, attributes,
-            attributeDefinitions, schema, null);
     }
 
     /**
@@ -310,7 +300,7 @@ public class BusinessObjectFormatServiceTestHelper
         BusinessObjectFormatCreateRequest request =
             createBusinessObjectFormatCreateRequest(AbstractServiceTest.NAMESPACE, AbstractServiceTest.BDEF_NAME, AbstractServiceTest.FORMAT_USAGE_CODE,
                 AbstractServiceTest.FORMAT_FILE_TYPE_CODE, AbstractServiceTest.PARTITION_KEY, AbstractServiceTest.FORMAT_DESCRIPTION, attributes,
-                getTestAttributeDefinitions(), getTestSchema(), null);
+                getTestAttributeDefinitions(), getTestSchema());
 
         return businessObjectFormatService.createBusinessObjectFormat(request);
     }

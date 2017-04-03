@@ -156,19 +156,6 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         // Get business object format key from the request.
         BusinessObjectFormatKey businessObjectFormatKey = getBusinessObjectFormatKey(request);
 
-        List<BusinessObjectFormatEntity> businessObjectFormatParents = new ArrayList<>();
-        // Get the business object format parents
-        if (!CollectionUtils.isEmpty(request.getBusinessObjectFormatParents()))
-        {
-            for (BusinessObjectFormatKey parentBusinessObjectFormatKey : request.getBusinessObjectFormatParents())
-            {
-                BusinessObjectFormatEntity latestVersionParentBusinessObjectFormatEntity =
-                    businessObjectFormatDao.getBusinessObjectFormatByAltKey(parentBusinessObjectFormatKey);
-                Assert.notNull(latestVersionParentBusinessObjectFormatEntity, "Parent business object format not found.");
-                businessObjectFormatParents.add(latestVersionParentBusinessObjectFormatEntity);
-            }
-        }
-
         // Get the business object definition and ensure it exists.
         BusinessObjectDefinitionEntity businessObjectDefinitionEntity = businessObjectDefinitionDaoHelper.getBusinessObjectDefinitionEntity(
             new BusinessObjectDefinitionKey(businessObjectFormatKey.getNamespace(), businessObjectFormatKey.getBusinessObjectDefinitionName()));
@@ -201,7 +188,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         Integer businessObjectFormatVersion =
             latestVersionBusinessObjectFormatEntity == null ? 0 : latestVersionBusinessObjectFormatEntity.getBusinessObjectFormatVersion() + 1;
         BusinessObjectFormatEntity newBusinessObjectFormatEntity =
-            createBusinessObjectFormatEntity(request, businessObjectDefinitionEntity, fileTypeEntity, businessObjectFormatVersion, businessObjectFormatParents);
+            createBusinessObjectFormatEntity(request, businessObjectDefinitionEntity, fileTypeEntity, businessObjectFormatVersion, null);
         //latest version format is the descriptive format for the bdef, update the bdef descriptive format to the newly created one
         if (latestVersionBusinessObjectFormatEntity != null &&
             latestVersionBusinessObjectFormatEntity.equals(businessObjectDefinitionEntity.getDescriptiveBusinessObjectFormat()))
@@ -212,14 +199,28 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         // latest version business object exists, update its parents and children
         if (latestVersionBusinessObjectFormatEntity != null)
         {
-            latestVersionBusinessObjectFormatEntity.setBusinessObjectFormatParents(null);
+            //for each of the previous version's  child, remove the parent link to the previous version and set the parent to the new version
             for (BusinessObjectFormatEntity childFormatEntity : latestVersionBusinessObjectFormatEntity.getBusinessObjectFormatChildren())
             {
                 childFormatEntity.getBusinessObjectFormatParents().remove(latestVersionBusinessObjectFormatEntity);
                 childFormatEntity.getBusinessObjectFormatParents().add(newBusinessObjectFormatEntity);
+                newBusinessObjectFormatEntity.getBusinessObjectFormatChildren().add(childFormatEntity);
                 businessObjectFormatDao.saveAndRefresh(childFormatEntity);
             }
+            //for each of the previous version's parent, remove the child link to the previous version and set the child link to the new version
+            for (BusinessObjectFormatEntity parentFormatEntity : latestVersionBusinessObjectFormatEntity.getBusinessObjectFormatParents())
+            {
+                parentFormatEntity.getBusinessObjectFormatChildren().remove(latestVersionBusinessObjectFormatEntity);
+                parentFormatEntity.getBusinessObjectFormatChildren().add(newBusinessObjectFormatEntity);
+                newBusinessObjectFormatEntity.getBusinessObjectFormatParents().add(parentFormatEntity);
+                businessObjectFormatDao.saveAndRefresh(parentFormatEntity);
+            }
+
+            //mark the latest version business object format
+            latestVersionBusinessObjectFormatEntity.setBusinessObjectFormatParents(null);
+            latestVersionBusinessObjectFormatEntity.setBusinessObjectFormatChildren(null);
             businessObjectFormatDao.saveAndRefresh(latestVersionBusinessObjectFormatEntity);
+            
         }
 
         // Notify the search index that a business object definition must be updated.
@@ -710,8 +711,6 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
 
         // Validate optional schema information.
         validateBusinessObjectFormatSchema(request.getSchema(), request.getPartitionKey());
-        // Validate parents business object format.
-        validateBusinessObjectFormatParents(request.getBusinessObjectFormatParents());
     }
 
     /**

@@ -364,7 +364,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         //create a new version of the business object format, the associated bdef descriptive format should be updated to the new version
         businessObjectFormatService.createBusinessObjectFormat(
             new BusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_DESCRIPTION, PARTITION_KEY, null, null,
-                null, NO_BUSINESS_OBJECT_FORMAT_PARENTS));
+                null));
         descriptiveBusinessObjectFormat = new DescriptiveBusinessObjectFormat(FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, SECOND_FORMAT_VERSION);
         updatedBusinessObjectDefinition = businessObjectDefinitionService.getBusinessObjectDefinition(new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME));
         // Validate the returned object.
@@ -394,12 +394,12 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         // Create an initial version of the business object format.
         BusinessObjectFormat initialBusinessObjectFormat = businessObjectFormatService.createBusinessObjectFormat(
             new BusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, COLUMN_NAME_2, FORMAT_DESCRIPTION,
-                NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, initialSchema, NO_BUSINESS_OBJECT_FORMAT_PARENTS));
+                NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, initialSchema));
 
         // Create a second version of the business object format with the schema columns having updated descriptions.
         BusinessObjectFormat resultBusinessObjectFormat = businessObjectFormatService.createBusinessObjectFormat(
             new BusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, COLUMN_NAME_2, FORMAT_DESCRIPTION,
-                NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, updatedSchema, NO_BUSINESS_OBJECT_FORMAT_PARENTS));
+                NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, updatedSchema));
 
         // Validate the returned object.
         BusinessObjectFormat expectedBusinessObjectFormat = (BusinessObjectFormat) initialBusinessObjectFormat.clone();
@@ -435,12 +435,12 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             // Create an initial version of the business object format.
             BusinessObjectFormat initialBusinessObjectFormat = businessObjectFormatService.createBusinessObjectFormat(
                 new BusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, formatUsage, FORMAT_FILE_TYPE_CODE, COLUMN_NAME_2, FORMAT_DESCRIPTION,
-                    NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, initialSchema, NO_BUSINESS_OBJECT_FORMAT_PARENTS));
+                    NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, initialSchema));
 
             // Create a second version of the business object format having increased column sizes for both regular and partition columns.
             BusinessObjectFormat resultBusinessObjectFormat = businessObjectFormatService.createBusinessObjectFormat(
                 new BusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, formatUsage, FORMAT_FILE_TYPE_CODE, COLUMN_NAME_2, FORMAT_DESCRIPTION,
-                    NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, updatedSchema, NO_BUSINESS_OBJECT_FORMAT_PARENTS));
+                    NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, updatedSchema));
 
             // Validate the returned object.
             BusinessObjectFormat expectedBusinessObjectFormat = (BusinessObjectFormat) initialBusinessObjectFormat.clone();
@@ -839,7 +839,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         // Create an initial version of the business object format.
         businessObjectFormatService.createBusinessObjectFormat(
             new BusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, FORMAT_DESCRIPTION,
-                NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, initialSchema, NO_BUSINESS_OBJECT_FORMAT_PARENTS));
+                NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, initialSchema));
 
         // Create an updated schema having a regular column size decreased.
         Schema updatedSchema = (Schema) initialSchema.clone();
@@ -850,7 +850,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             // Try to create a second version of the business object format with a new schema having regular column size decreased.
             businessObjectFormatService.createBusinessObjectFormat(
                 new BusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, FORMAT_DESCRIPTION,
-                    NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, updatedSchema, NO_BUSINESS_OBJECT_FORMAT_PARENTS));
+                    NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, updatedSchema));
             fail("Should throw an IllegalArgumentException when the new format version is not \"additive\" to the previous format version.");
         }
         catch (IllegalArgumentException e)
@@ -874,7 +874,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         // Create an initial version of the business object format.
         businessObjectFormatService.createBusinessObjectFormat(
             new BusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, FORMAT_DESCRIPTION,
-                NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, initialSchema, NO_BUSINESS_OBJECT_FORMAT_PARENTS));
+                NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, initialSchema));
 
         // Create an updated schema having a regular column size increased.
         Schema updatedSchema = (Schema) initialSchema.clone();
@@ -886,7 +886,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             // having regular column size increased but for a non-allowed column data type.
             businessObjectFormatService.createBusinessObjectFormat(
                 new BusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, FORMAT_DESCRIPTION,
-                    NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, updatedSchema, NO_BUSINESS_OBJECT_FORMAT_PARENTS));
+                    NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, updatedSchema));
             fail("Should throw an IllegalArgumentException when the new format version is not \"additive\" to the previous format version.");
         }
         catch (IllegalArgumentException e)
@@ -916,7 +916,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             // Create an initial version of the business object format.
             businessObjectFormatService.createBusinessObjectFormat(
                 new BusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, formatUsage, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, FORMAT_DESCRIPTION,
-                    NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, initialSchema, NO_BUSINESS_OBJECT_FORMAT_PARENTS));
+                    NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, initialSchema));
 
             // Create an updated schema having a regular column size set to a positive integer.
             Schema updatedSchema = (Schema) initialSchema.clone();
@@ -928,7 +928,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
                 // having regular column size changed from a non-integer to a positive integer.
                 businessObjectFormatService.createBusinessObjectFormat(
                     new BusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, formatUsage, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, FORMAT_DESCRIPTION,
-                        NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, updatedSchema, NO_BUSINESS_OBJECT_FORMAT_PARENTS));
+                        NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, updatedSchema));
                 fail("Should throw an IllegalArgumentException when the new format version is not \"additive\" to the previous format version.");
             }
             catch (IllegalArgumentException e)
@@ -953,7 +953,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         // Create an initial version of the business object format.
         businessObjectFormatService.createBusinessObjectFormat(
             new BusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, FORMAT_DESCRIPTION,
-                NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, initialSchema, NO_BUSINESS_OBJECT_FORMAT_PARENTS));
+                NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, initialSchema));
 
         for (String updatedColumnSize : Arrays.asList("NOT_AN_INTEGER", NEGATIVE_COLUMN_SIZE, ZERO_COLUMN_SIZE))
         {
@@ -967,7 +967,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
                 // having regular column size changed from a positive integer to a non-integer value.
                 businessObjectFormatService.createBusinessObjectFormat(
                     new BusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, FORMAT_DESCRIPTION,
-                        NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, updatedSchema, NO_BUSINESS_OBJECT_FORMAT_PARENTS));
+                        NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, updatedSchema));
                 fail("Should throw an IllegalArgumentException when the new format version is not \"additive\" to the previous format version.");
             }
             catch (IllegalArgumentException e)
@@ -3915,7 +3915,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         // Perform a create without specifying optional parameters.
         BusinessObjectFormatCreateRequest request = businessObjectFormatServiceTestHelper
             .createBusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, NO_FORMAT_DESCRIPTION,
-                businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA, businessObjectFormatParents);
+                businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA);
 
         try
         {
@@ -3939,7 +3939,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         // Perform a create without specifying optional parameters.
         BusinessObjectFormatCreateRequest request = businessObjectFormatServiceTestHelper
             .createBusinessObjectFormatCreateRequest("", BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, NO_FORMAT_DESCRIPTION,
-                businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA, businessObjectFormatParents);
+                businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA);
 
         try
         {
@@ -3954,7 +3954,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
 
         request = businessObjectFormatServiceTestHelper
             .createBusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, NO_FORMAT_DESCRIPTION,
-                businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA, businessObjectFormatParents);
+                businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA);
 
         try
         {
@@ -3985,57 +3985,39 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         List<BusinessObjectFormatKey> businessObjectFormatParents = Arrays.asList(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null));
         BusinessObjectFormatCreateRequest request2 = businessObjectFormatServiceTestHelper
             .createBusinessObjectFormatCreateRequest(NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, PARTITION_KEY, NO_FORMAT_DESCRIPTION,
-                businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA, businessObjectFormatParents);
-
-
-        businessObjectFormatService.createBusinessObjectFormat(request);
-
-        BusinessObjectFormat resultBusinessObjectFormat = businessObjectFormatService.createBusinessObjectFormat(request2);
-        assertEquals(resultBusinessObjectFormat.getBusinessObjectFormatParents(), businessObjectFormatParents);
-    }
-
-    @Test
-    public void testCreateBusinessObjectFormatWithParentsLatestVersionExist()
-    {
-        // Create relative database entities including a business object definition.
-        businessObjectFormatServiceTestHelper
-            .createTestDatabaseEntitiesForBusinessObjectFormatTesting(NAMESPACE, DATA_PROVIDER_NAME, BDEF_NAME, FORMAT_FILE_TYPE_CODE, PARTITION_KEY_GROUP);
-
-        businessObjectFormatServiceTestHelper
-            .createTestDatabaseEntitiesForBusinessObjectFormatTesting(NAMESPACE_2, DATA_PROVIDER_NAME_2, BDEF_NAME_2, FORMAT_FILE_TYPE_CODE_2, PARTITION_KEY_GROUP_2);
-        
-        BusinessObjectFormatCreateRequest request = businessObjectFormatServiceTestHelper
-            .createBusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, NO_FORMAT_DESCRIPTION,
                 businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA);
 
-        BusinessObjectFormatCreateRequest request2 = businessObjectFormatServiceTestHelper
-            .createBusinessObjectFormatCreateRequest(NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, PARTITION_KEY, NO_FORMAT_DESCRIPTION,
-                businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA);
-        //create parent format
-        businessObjectFormatService.createBusinessObjectFormat(request);
-        //create format first version
-        BusinessObjectFormat businessObjectFormat =  businessObjectFormatService.createBusinessObjectFormat(request2);
 
-        List<BusinessObjectFormatKey> businessObjectFormatParents = Arrays.asList(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null));
-        
-        BusinessObjectFormatCreateRequest request3 = businessObjectFormatServiceTestHelper
-            .createBusinessObjectFormatCreateRequest(NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, PARTITION_KEY, NO_FORMAT_DESCRIPTION,
-                businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA, businessObjectFormatParents);
-        //create format with parent
-        BusinessObjectFormat  resultBusinessObjectFormat = businessObjectFormatService.createBusinessObjectFormat(request3);
-        businessObjectFormat.setBusinessObjectFormatParents(businessObjectFormatParents);
-        businessObjectFormat.setId(resultBusinessObjectFormat.getId());
-        businessObjectFormat.setBusinessObjectFormatVersion(1);
-        assertEquals(resultBusinessObjectFormat, businessObjectFormat);
+        BusinessObjectFormat resultBusinessObjectFormatV0 = businessObjectFormatService.createBusinessObjectFormat(request);
+        BusinessObjectFormat resultBusinessObjectFormatChildV0 = businessObjectFormatService.createBusinessObjectFormat(request2);
 
+        BusinessObjectFormatKey businessObjectFormatKey = new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null);
+        BusinessObjectFormatKey  childBusinessObjectFormatKey = new BusinessObjectFormatKey(NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, null);
 
-        BusinessObjectFormatCreateRequest request4 = businessObjectFormatServiceTestHelper
-            .createBusinessObjectFormatCreateRequest(NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, PARTITION_KEY, NO_FORMAT_DESCRIPTION,
-                businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA, businessObjectFormatParents);
-        resultBusinessObjectFormat = businessObjectFormatService.createBusinessObjectFormat(request4);
-        businessObjectFormat.setId(resultBusinessObjectFormat.getId());
-        businessObjectFormat.setBusinessObjectFormatVersion(2);
-        assertEquals(resultBusinessObjectFormat, businessObjectFormat);
+        //create parent, child relationship
+        BusinessObjectFormatEntity formatEntity = businessObjectFormatDao.getBusinessObjectFormatByAltKey(businessObjectFormatKey);
+        BusinessObjectFormatEntity childFormatEntity = businessObjectFormatDao.getBusinessObjectFormatByAltKey(childBusinessObjectFormatKey);
+        childFormatEntity.getBusinessObjectFormatParents().add(formatEntity);
+        formatEntity.getBusinessObjectFormatChildren().add(childFormatEntity);
+
+        //create a new version of the child format
+        BusinessObjectFormat resultBusinessObjectFormatChildV1 = businessObjectFormatService.createBusinessObjectFormat(request2);
+        BusinessObjectFormat expectedBusinessObjectFormatChild = resultBusinessObjectFormatChildV0;
+        expectedBusinessObjectFormatChild.setId(resultBusinessObjectFormatChildV1.getId());
+        expectedBusinessObjectFormatChild.setBusinessObjectFormatVersion(resultBusinessObjectFormatChildV1.getBusinessObjectFormatVersion());
+        expectedBusinessObjectFormatChild.setBusinessObjectFormatParents(resultBusinessObjectFormatChildV1.getBusinessObjectFormatParents());
+
+        assertEquals(resultBusinessObjectFormatChildV1.getBusinessObjectFormatParents().size(), 1);
+        assertEquals(expectedBusinessObjectFormatChild, resultBusinessObjectFormatChildV1);
+
+        //create a new version of the parent
+        BusinessObjectFormat resultBusinessObjectFormatParentV2 = businessObjectFormatService.createBusinessObjectFormat(request);
+        assertEquals(resultBusinessObjectFormatParentV2.getBusinessObjectFormatChildren().size(), 1);
+        BusinessObjectFormat expectedBusinessObjectParent = resultBusinessObjectFormatV0;
+        expectedBusinessObjectParent.setId(resultBusinessObjectFormatParentV2.getId());
+        expectedBusinessObjectParent.setBusinessObjectFormatVersion(resultBusinessObjectFormatParentV2.getBusinessObjectFormatVersion());
+        expectedBusinessObjectParent.setBusinessObjectFormatChildren(resultBusinessObjectFormatParentV2.getBusinessObjectFormatChildren());
+        assertEquals(expectedBusinessObjectParent, resultBusinessObjectFormatParentV2);
     }
 
     @Test
@@ -4050,28 +4032,36 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
                 NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA);
 
         //create parent format
-        businessObjectFormatService.createBusinessObjectFormat(request);
+        BusinessObjectFormat businessObjectFormat =  businessObjectFormatService.createBusinessObjectFormat(request);
+        BusinessObjectFormatKey altBusinessObjectFormat = new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null);
 
-        List<BusinessObjectFormatKey> businessObjectFormatParents = Arrays.asList(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null));
+        //List<BusinessObjectFormatKey> businessObjectFormatParents = Arrays.asList(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null));
         BusinessObjectFormatCreateRequest childRequest = businessObjectFormatServiceTestHelper
             .createBusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, NO_FORMAT_DESCRIPTION,
-                NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA, businessObjectFormatParents);
+                NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA);
 
-        //create child request
-        BusinessObjectFormat businessObjectFormat = businessObjectFormatService.createBusinessObjectFormat(childRequest);
-        List<BusinessObjectFormatKey> businessObjectFormatParents2 = Arrays.asList(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, null));
-        BusinessObjectFormatCreateRequest grandsonRequest = businessObjectFormatServiceTestHelper
-            .createBusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_3, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, NO_FORMAT_DESCRIPTION,
-                NO_ATTRIBUTES, NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA, businessObjectFormatParents2);
-        BusinessObjectFormat grandsonFormat = businessObjectFormatService.createBusinessObjectFormat(grandsonRequest);
+        //create child format
+        BusinessObjectFormat childBusinessObjectFormat = businessObjectFormatService.createBusinessObjectFormat(childRequest);
+        BusinessObjectFormatKey childAltBusinessObjectFormat = new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, null);
 
-        BusinessObjectFormat resultBusinessObjectFormat = businessObjectFormatService.getBusinessObjectFormat(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null));
-        BusinessObjectFormat resultChildBusinessObjectFormat = businessObjectFormatService.getBusinessObjectFormat(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, null));
-        BusinessObjectFormat resultGrandChildBusinessObjectFormat = businessObjectFormatService.getBusinessObjectFormat(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_3, FORMAT_FILE_TYPE_CODE, null));
+        BusinessObjectFormatEntity formatEntity = businessObjectFormatDao.getBusinessObjectFormatByAltKey(altBusinessObjectFormat);
+        BusinessObjectFormatEntity childFormatEntity = businessObjectFormatDao.getBusinessObjectFormatByAltKey(childAltBusinessObjectFormat);
+        childFormatEntity.getBusinessObjectFormatParents().add(formatEntity);
+        formatEntity.getBusinessObjectFormatChildren().add(childFormatEntity);
+        
+        BusinessObjectFormat resultBusinessObjectFormat = businessObjectFormatService.getBusinessObjectFormat(altBusinessObjectFormat);
+        BusinessObjectFormat resultChildBusinessObjectFormat = businessObjectFormatService.getBusinessObjectFormat(childAltBusinessObjectFormat);
+        
+        businessObjectFormat.getBusinessObjectFormatChildren().add(childAltBusinessObjectFormat);
+        childBusinessObjectFormat.getBusinessObjectFormatParents().add(altBusinessObjectFormat);
 
-        assertEquals(resultBusinessObjectFormat.getBusinessObjectFormatParents().size(), 0);
-        assertEquals(resultChildBusinessObjectFormat.getBusinessObjectFormatParents(), businessObjectFormatParents);
-        assertEquals(resultGrandChildBusinessObjectFormat.getBusinessObjectFormatParents(), businessObjectFormatParents2);
+        assertEquals(0, resultBusinessObjectFormat.getBusinessObjectFormatParents().size());
+        assertEquals(1, resultChildBusinessObjectFormat.getBusinessObjectFormatParents().size());
+        assertEquals(1, resultBusinessObjectFormat.getBusinessObjectFormatChildren().size());
+
+        assertEquals(businessObjectFormat, resultBusinessObjectFormat);
+        assertEquals(childBusinessObjectFormat, resultChildBusinessObjectFormat);
+
     }
 
     @Test

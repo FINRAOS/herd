@@ -1914,13 +1914,6 @@
                <xs:documentation>The schema associated with this Business Object Format</xs:documentation>
             </xs:annotation>
          </xs:element>
-         <xs:element name="businessObjectFormatParents" type="businessObjectFormatParents" minOccurs="0">
-            <xs:annotation>
-               <xs:documentation>A list of Business Object Data parents (i.e. predecessors) that were used/needed in the creation of this data. This is used for
-                  data lineage. Each parent consists of the key data that uniquely defines a reference to a single Business Object Data.
-               </xs:documentation>
-            </xs:annotation>
-         </xs:element>
       </xs:all>
    </xs:complexType>
 
