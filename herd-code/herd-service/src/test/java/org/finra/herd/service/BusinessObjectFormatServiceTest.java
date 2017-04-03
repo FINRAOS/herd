@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -4068,20 +4069,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
     public void testUpdateBusinessObjectFormatParents()
     {
         // Create relative database entities including a business object definition.
-        businessObjectFormatServiceTestHelper
-            .createTestDatabaseEntitiesForBusinessObjectFormatTesting(NAMESPACE, DATA_PROVIDER_NAME, BDEF_NAME, FORMAT_FILE_TYPE_CODE, PARTITION_KEY_GROUP);
-
-        BusinessObjectFormatCreateRequest request = businessObjectFormatServiceTestHelper
-            .createBusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, NO_FORMAT_DESCRIPTION,
-                businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA);
-
-        businessObjectFormatService.createBusinessObjectFormat(request);
-
-        BusinessObjectFormatCreateRequest request2 = businessObjectFormatServiceTestHelper
-            .createBusinessObjectFormatCreateRequest(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, PARTITION_KEY, NO_FORMAT_DESCRIPTION,
-                businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA);
-
-        businessObjectFormatService.createBusinessObjectFormat(request2);
+        setupBusinessObjectFormatParentChild();
 
         BusinessObjectFormatKey businessObjectFormatKey = new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null);
         BusinessObjectFormatKey parentBusinessObjectFormatKey = new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, null);
@@ -4093,6 +4081,14 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         BusinessObjectFormat resultFormat = businessObjectFormatService.updateBusinessObjectFormatParents(businessObjectFormatKey, updateRequest);
 
         Assert.assertEquals(format, resultFormat);
+        //wipe out the parents
+        businessObjectFormatService.getBusinessObjectFormat(businessObjectFormatKey);
+        format.setBusinessObjectFormatParents(new ArrayList<>());
+        updateRequest.setBusinessObjectFormatParents(new ArrayList<>());
+        resultFormat = businessObjectFormatService.updateBusinessObjectFormatParents(businessObjectFormatKey, updateRequest);
+        format.setBusinessObjectFormatParents(new ArrayList<>());
+        Assert.assertEquals(format, resultFormat);
+
     }
 
     private void setupBusinessObjectFormatParentChild()
