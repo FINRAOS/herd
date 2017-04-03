@@ -128,7 +128,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
 
         // Mock the call to external methods
         when(businessObjectDefinitionDao.getAllBusinessObjectDefinitions()).thenReturn(businessObjectDefinitionEntityList);
-        when(jsonHelper.objectToJson(any())).thenReturn("JSON_STRING");
+        when(businessObjectDefinitionHelper.safeObjectMapperWriteValueAsString(any(BusinessObjectDefinitionEntity.class))).thenReturn("JSON_STRING");
         when(searchFunctions.getValidateFunction()).thenReturn((indexName, documentType, id, json) ->
         {
         });
@@ -218,7 +218,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         when(businessObjectDefinitionDao.getPercentageOfAllBusinessObjectDefinitions(0.05)).thenReturn(businessObjectDefinitionEntityList);
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class)).thenReturn("INDEX_NAME");
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
-        when(jsonHelper.objectToJson(any())).thenReturn("JSON_STRING");
+        when(businessObjectDefinitionHelper.safeObjectMapperWriteValueAsString(any(BusinessObjectDefinitionEntity.class))).thenReturn("JSON_STRING");
         when(searchFunctions.getIsValidFunction()).thenReturn((indexName, documentType, id, json) -> true);
 
         // Call the method under test
@@ -232,7 +232,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         verify(businessObjectDefinitionDao).getPercentageOfAllBusinessObjectDefinitions(0.05);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
-        verify(jsonHelper, times(2)).objectToJson(any());
+        verify(businessObjectDefinitionHelper, times(2)).safeObjectMapperWriteValueAsString(any(BusinessObjectDefinitionEntity.class));
         verify(searchFunctions, times(2)).getIsValidFunction();
         verifyNoMoreInteractions(businessObjectDefinitionDao, searchFunctions, configurationHelper, jsonHelper);
     }
@@ -253,7 +253,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         when(businessObjectDefinitionDao.getPercentageOfAllBusinessObjectDefinitions(0.05)).thenReturn(businessObjectDefinitionEntityList);
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class)).thenReturn("INDEX_NAME");
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
-        when(jsonHelper.objectToJson(any())).thenReturn("JSON_STRING");
+        when(businessObjectDefinitionHelper.safeObjectMapperWriteValueAsString(any(BusinessObjectDefinitionEntity.class))).thenReturn("JSON_STRING");
         when(searchFunctions.getIsValidFunction()).thenReturn((indexName, documentType, id, json) -> false);
 
         // Call the method under test
@@ -267,7 +267,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         verify(businessObjectDefinitionDao).getPercentageOfAllBusinessObjectDefinitions(0.05);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
-        verify(jsonHelper, times(2)).objectToJson(any());
+        verify(businessObjectDefinitionHelper, times(2)).safeObjectMapperWriteValueAsString(any(BusinessObjectDefinitionEntity.class));
         verify(searchFunctions, times(2)).getIsValidFunction();
         verifyNoMoreInteractions(businessObjectDefinitionDao, searchFunctions, configurationHelper, jsonHelper);
     }
@@ -303,7 +303,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         verify(businessObjectDefinitionDao).getPercentageOfAllBusinessObjectDefinitions(0.05);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
-        verify(jsonHelper, times(2)).objectToJson(any());
+        verify(businessObjectDefinitionHelper, times(2)).safeObjectMapperWriteValueAsString(any(BusinessObjectDefinitionEntity.class));
         verify(searchFunctions, times(2)).getIsValidFunction();
         verifyNoMoreInteractions(businessObjectDefinitionDao, searchFunctions, configurationHelper, jsonHelper);
     }
@@ -324,7 +324,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         when(businessObjectDefinitionDao.getMostRecentBusinessObjectDefinitions(100)).thenReturn(businessObjectDefinitionEntityList);
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class)).thenReturn("INDEX_NAME");
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
-        when(jsonHelper.objectToJson(any())).thenReturn("JSON_STRING");
+        when(businessObjectDefinitionHelper.safeObjectMapperWriteValueAsString(any(BusinessObjectDefinitionEntity.class))).thenReturn("JSON_STRING");
         when(searchFunctions.getIsValidFunction()).thenReturn((indexName, documentType, id, json) -> true);
 
         // Call the method under test
@@ -338,7 +338,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         verify(businessObjectDefinitionDao).getMostRecentBusinessObjectDefinitions(100);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
-        verify(jsonHelper, times(2)).objectToJson(any());
+        verify(businessObjectDefinitionHelper, times(2)).safeObjectMapperWriteValueAsString(any(BusinessObjectDefinitionEntity.class));
         verify(searchFunctions, times(2)).getIsValidFunction();
         verifyNoMoreInteractions(businessObjectDefinitionDao, searchFunctions, configurationHelper, jsonHelper);
     }
@@ -359,7 +359,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         when(businessObjectDefinitionDao.getMostRecentBusinessObjectDefinitions(100)).thenReturn(businessObjectDefinitionEntityList);
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class)).thenReturn("INDEX_NAME");
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
-        when(jsonHelper.objectToJson(any())).thenReturn("JSON_STRING");
+        when(businessObjectDefinitionHelper.safeObjectMapperWriteValueAsString(any(BusinessObjectDefinitionEntity.class))).thenReturn("JSON_STRING");
         when(searchFunctions.getIsValidFunction()).thenReturn((indexName, documentType, id, json) -> false);
 
         // Call the method under test
@@ -373,7 +373,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         verify(businessObjectDefinitionDao).getMostRecentBusinessObjectDefinitions(100);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
-        verify(jsonHelper, times(2)).objectToJson(any());
+        verify(businessObjectDefinitionHelper, times(2)).safeObjectMapperWriteValueAsString(any(BusinessObjectDefinitionEntity.class));
         verify(searchFunctions, times(2)).getIsValidFunction();
         verifyNoMoreInteractions(businessObjectDefinitionDao, searchFunctions, configurationHelper, jsonHelper);
     }
@@ -409,7 +409,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         verify(businessObjectDefinitionDao).getMostRecentBusinessObjectDefinitions(100);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
-        verify(jsonHelper, times(2)).objectToJson(any());
+        verify(businessObjectDefinitionHelper, times(2)).safeObjectMapperWriteValueAsString(any(BusinessObjectDefinitionEntity.class));
         verify(searchFunctions, times(2)).getIsValidFunction();
         verifyNoMoreInteractions(businessObjectDefinitionDao, searchFunctions, configurationHelper, jsonHelper);
     }
@@ -1065,7 +1065,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class)).thenReturn("INDEX_NAME");
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
         when(businessObjectDefinitionDao.getAllBusinessObjectDefinitionsByIds(any())).thenReturn(businessObjectDefinitionEntityList);
-        when(jsonHelper.objectToJson(any())).thenReturn("JSON_STRING");
+        when(businessObjectDefinitionHelper.safeObjectMapperWriteValueAsString(any(BusinessObjectDefinitionEntity.class))).thenReturn("JSON_STRING");
         when(searchFunctions.getCreateIndexDocumentsFunction()).thenReturn((indexName, documentType, map) ->
         {
         });
@@ -1077,7 +1077,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
         verify(businessObjectDefinitionDao).getAllBusinessObjectDefinitionsByIds(any());
-        verify(jsonHelper, times(2)).objectToJson(any());
+        verify(businessObjectDefinitionHelper, times(2)).safeObjectMapperWriteValueAsString(any(BusinessObjectDefinitionEntity.class));
         verify(searchFunctions).getCreateIndexDocumentsFunction();
         verifyNoMoreInteractions(businessObjectDefinitionDao, searchFunctions, configurationHelper, jsonHelper);
     }
@@ -1116,7 +1116,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
         verify(businessObjectDefinitionDao).getAllBusinessObjectDefinitionsByIds(any());
-        verify(jsonHelper, times(2)).objectToJson(any());
+        verify(businessObjectDefinitionHelper, times(2)).safeObjectMapperWriteValueAsString(any(BusinessObjectDefinitionEntity.class));
         verify(searchFunctions).getCreateIndexDocumentsFunction();
         verifyNoMoreInteractions(businessObjectDefinitionDao, searchFunctions, configurationHelper, jsonHelper);
     }
@@ -1143,7 +1143,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class)).thenReturn("INDEX_NAME");
         when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
         when(businessObjectDefinitionDao.getAllBusinessObjectDefinitionsByIds(any())).thenReturn(businessObjectDefinitionEntityList);
-        when(jsonHelper.objectToJson(any())).thenReturn("JSON_STRING");
+        when(businessObjectDefinitionHelper.safeObjectMapperWriteValueAsString(any(BusinessObjectDefinitionEntity.class))).thenReturn("JSON_STRING");
         when(searchFunctions.getUpdateIndexDocumentsFunction()).thenReturn((indexName, documentType, map) ->
         {
         });
@@ -1155,7 +1155,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
         verify(searchFunctions).getUpdateIndexDocumentsFunction();
-        verify(jsonHelper, times(2)).objectToJson(any());
+        verify(businessObjectDefinitionHelper, times(2)).safeObjectMapperWriteValueAsString(any(BusinessObjectDefinitionEntity.class));
         verify(businessObjectDefinitionDao).getAllBusinessObjectDefinitionsByIds(any());
         verifyNoMoreInteractions(businessObjectDefinitionDao, searchFunctions, configurationHelper, jsonHelper);
     }
@@ -1194,7 +1194,7 @@ public class BusinessObjectDefinitionServiceIndexTest extends AbstractServiceTes
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_INDEX_NAME, String.class);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
         verify(searchFunctions).getUpdateIndexDocumentsFunction();
-        verify(jsonHelper, times(2)).objectToJson(any());
+        verify(businessObjectDefinitionHelper, times(2)).safeObjectMapperWriteValueAsString(any(BusinessObjectDefinitionEntity.class));
         verify(businessObjectDefinitionDao).getAllBusinessObjectDefinitionsByIds(any());
         verifyNoMoreInteractions(businessObjectDefinitionDao, searchFunctions, configurationHelper, jsonHelper);
     }

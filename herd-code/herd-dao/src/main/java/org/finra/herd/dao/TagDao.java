@@ -91,4 +91,30 @@ public interface TagDao extends BaseJpaDao
      * @return list of tag entities
      */
     public List<TagEntity> getTagsByTagTypeEntityAndParentTagCode(TagTypeEntity tagTypeEntity, String parentTagCode, Boolean isParentTagNull);
+
+    /**
+     * Gets a percentage of all tag entities. The percentage is randomly selected from all the tags. The random selection is done by assigning a random number
+     * between 0 and 1 for each tag and if that number is below the percentage value passed in as an argument, also between 0 and 1, then the tag is selected.
+     *
+     * @param percentage the percentage of all tags to return. Value between 0 and 1 (inclusive).
+     *
+     * @return the percentage of all tag entities
+     */
+    public List<TagEntity> getPercentageOfAllTags(double percentage);
+
+    /**
+     * Gets the most recent of all tag entities
+     *
+     * @param numberOfResults the number of results to return
+     *
+     * @return the most recent of all tag entities.
+     */
+    public List<TagEntity> getMostRecentTags(int numberOfResults);
+
+    /**
+     * Gets a count of all tag entities
+     *
+     * @return the count of all tag entities.
+     */
+    public long getCountOfAllTags();
 }

@@ -20,10 +20,13 @@ import static org.finra.herd.model.dto.SearchIndexUpdateDto.SEARCH_INDEX_UPDATE_
 import static org.finra.herd.model.dto.SearchIndexUpdateDto.SEARCH_INDEX_UPDATE_TYPE_UPDATE;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Future;
+import java.util.function.Predicate;
 
 import com.google.common.collect.ImmutableSet;
 import org.apache.commons.collections4.CollectionUtils;
@@ -32,6 +35,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
@@ -601,4 +606,124 @@ public class TagServiceImpl implements TagService, SearchableService
 
         request.setDisplayName(alternateKeyHelper.validateStringParameter("display name", request.getDisplayName()));
     }
+
+    @Override
+    public boolean indexSizeCheckValidationTags()
+    {
+        final String indexName = SearchIndexTypeEntity.SearchIndexTypes.TAG.name().toLowerCase();
+        final String documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
+
+        // Simple count validation, index size should equal entity list size
+        final long indexSize = searchFunctions.getNumberOfTypesInIndexFunction().apply(indexName, documentType);
+        final long tagDatabaseTableSize = tagDao.getCountOfAllTags();
+        if (tagDatabaseTableSize != indexSize)
+        {
+            LOGGER.error("Index validation failed, tag database table size {}, does not equal index size {}.", tagDatabaseTableSize, indexSize);
+        }
+
+        return tagDatabaseTableSize == indexSize;
+    }
+
+    @Override
+    public boolean indexSpotCheckPercentageValidationTags()
+    {
+        final Double spotCheckPercentage = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_TAG_SPOT_CHECK_PERCENTAGE, Double.class);
+
+        // Get a list of all tags
+        final List<TagEntity> tagEntityList = Collections.unmodifiableList(tagDao.getPercentageOfAllTags(spotCheckPercentage));
+
+        return indexValidateTagsList(tagEntityList);
+    }
+
+    @Override
+    public boolean indexSpotCheckMostRecentValidationTags()
+    {
+        final Integer spotCheckMostRecentNumber =
+            configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_TAG_SPOT_CHECK_MOST_RECENT_NUMBER, Integer.class);
+
+        // Get a list of all tags
+        final List<TagEntity> tagEntityList = Collections.unmodifiableList(tagDao.getMostRecentTags(spotCheckMostRecentNumber));
+
+        return indexValidateTagsList(tagEntityList);
+    }
+
+    @Override
+    @Async
+    public Future<Void> indexValidateAllTags()
+    {
+        final String indexName = SearchIndexTypeEntity.SearchIndexTypes.TAG.name().toLowerCase();
+        final String documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
+
+        // Get a list of all tags
+        final List<TagEntity> tagEntityList = Collections.unmodifiableList(tagDao.getTags());
+
+        // Remove any index documents that are not in the database
+        removeAnyIndexDocumentsThatAreNotInTagsList(indexName, documentType, tagEntityList);
+
+        // Validate all Tags
+        tagHelper.executeFunctionForTagEntities(indexName, documentType, tagEntityList, searchFunctions.getValidateFunction());
+
+        // Return an AsyncResult so callers will know the future is "done". They can call "isDone" to know when this method has completed and they
+        // can call "get" to see if any exceptions were thrown.
+        return new AsyncResult<>(null);
+    }
+
+    /**
+     * Method to remove tags in the index that don't exist in the database
+     *
+     * @param indexName the name of the index
+     * @param documentType the document type
+     * @param tagEntityList list of tags in the database
+     */
+    private void removeAnyIndexDocumentsThatAreNotInTagsList(final String indexName, final String documentType, List<TagEntity> tagEntityList)
+    {
+        // Get a list of tag ids from the list of tag entities in the database
+        List<String> databaseTagIdList = new ArrayList<>();
+        tagEntityList.forEach(tagEntity -> databaseTagIdList.add(tagEntity.getId().toString()));
+
+        // Get a list of tag ids in the search index
+        List<String> indexDocumentTagIdList = searchFunctions.getIdsInIndexFunction().apply(indexName, documentType);
+
+        // Remove the database ids from the index ids
+        indexDocumentTagIdList.removeAll(databaseTagIdList);
+
+        // If there are any ids left in the index list they need to be removed
+        indexDocumentTagIdList.forEach(id -> searchFunctions.getDeleteDocumentByIdFunction().accept(indexName, documentType, id));
+    }
+
+    /**
+     * A helper method that will validate a list of tags
+     *
+     * @param tagEntityList the list of tags that will be validated
+     *
+     * @return true all of the tags are valid in the index
+     */
+    private boolean indexValidateTagsList(final List<TagEntity> tagEntityList)
+    {
+        final String indexName = SearchIndexTypeEntity.SearchIndexTypes.TAG.name().toLowerCase();
+        final String documentType = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
+
+        Predicate<TagEntity> validInIndexPredicate = tagEntity -> {
+            // Fetch Join with .size()
+            tagEntity.getChildrenTagEntities().size();
+
+            // Convert the tag entity to a JSON string
+            final String jsonString = tagHelper.safeObjectMapperWriteValueAsString(tagEntity);
+
+            return searchFunctions.getIsValidFunction().test(indexName, documentType, tagEntity.getId().toString(), jsonString);
+        };
+
+        boolean isValid = true;
+        for (TagEntity tagEntity : tagEntityList)
+        {
+            if (!validInIndexPredicate.test(tagEntity))
+            {
+                isValid = false;
+            }
+        }
+
+        return isValid;
+    }
+    
+    
 }

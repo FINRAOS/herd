@@ -666,14 +666,24 @@ public enum ConfigurationValue
     ELASTICSEARCH_DEFAULT_PORT("elasticsearch.default.port", 9300),
 
     /**
-     * The elasticsearch spot check percentage
+     * The elasticsearch spot check percentage for bdefs
      */
     ELASTICSEARCH_BDEF_SPOT_CHECK_PERCENTAGE("elasticsearch.bdef.spot.check.percentage", 0.05),
 
     /**
-     * The elasticsearch spot check most recent number
+     * The elasticsearch spot check most recent number for bdefs
      */
     ELASTICSEARCH_BDEF_SPOT_CHECK_MOST_RECENT_NUMBER("elasticsearch.bdef.spot.check.most.recent.number", 100),
+
+    /**
+     * The elasticsearch spot check percentage for tags
+     */
+    ELASTICSEARCH_TAG_SPOT_CHECK_PERCENTAGE("elasticsearch.tag.spot.check.percentage", 0.2),
+
+    /**
+     * The elasticsearch spot check most recent number for tags
+     */
+    ELASTICSEARCH_TAG_SPOT_CHECK_MOST_RECENT_NUMBER("elasticsearch.tag.spot.check.most.recent.number", 10),
 
     /**
      * The elasticsearch search guard enabled
