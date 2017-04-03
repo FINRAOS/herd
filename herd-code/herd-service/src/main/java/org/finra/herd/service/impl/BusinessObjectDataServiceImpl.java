@@ -65,7 +65,6 @@ import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.CustomDdlKey;
 import org.finra.herd.model.api.xml.NamespacePermissionEnum;
 import org.finra.herd.model.dto.BusinessObjectDataRestoreDto;
-import org.finra.herd.model.dto.BusinessObjectDataRetryStoragePolicyTransitionDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.jpa.BusinessObjectDataEntity;
@@ -79,13 +78,13 @@ import org.finra.herd.model.jpa.StorageFileEntity;
 import org.finra.herd.model.jpa.StoragePlatformEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.service.BusinessObjectDataInitiateRestoreHelperService;
-import org.finra.herd.service.BusinessObjectDataRetryStoragePolicyTransitionHelperService;
 import org.finra.herd.service.BusinessObjectDataService;
 import org.finra.herd.service.NotificationEventService;
 import org.finra.herd.service.S3Service;
 import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.service.helper.BusinessObjectDataInvalidateUnregisteredHelper;
+import org.finra.herd.service.helper.BusinessObjectDataRetryStoragePolicyTransitionHelper;
 import org.finra.herd.service.helper.BusinessObjectDataSearchHelper;
 import org.finra.herd.service.helper.BusinessObjectDataStatusDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionDaoHelper;
@@ -142,7 +141,7 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
     private BusinessObjectDataInvalidateUnregisteredHelper businessObjectDataInvalidateUnregisteredHelper;
 
     @Autowired
-    private BusinessObjectDataRetryStoragePolicyTransitionHelperService businessObjectDataRetryStoragePolicyTransitionHelperService;
+    private BusinessObjectDataRetryStoragePolicyTransitionHelper businessObjectDataRetryStoragePolicyTransitionHelper;
 
     @Autowired
     private BusinessObjectDataStatusDaoHelper businessObjectDataStatusDaoHelper;
@@ -1229,42 +1228,12 @@ public class BusinessObjectDataServiceImpl implements BusinessObjectDataService
         return businessObjectDataInvalidateUnregisteredHelper.invalidateUnregisteredBusinessObjectData(businessObjectDataInvalidateUnregisteredRequest);
     }
 
-    /**
-     * {@inheritDoc}
-     * <p/>
-     * This implementation executes non-transactionally, suspends the current transaction if one exists.
-     */
     @NamespacePermission(fields = "#businessObjectDataKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
-    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public BusinessObjectData retryStoragePolicyTransition(BusinessObjectDataKey businessObjectDataKey,
         BusinessObjectDataRetryStoragePolicyTransitionRequest request)
     {
-        return retryStoragePolicyTransitionImpl(businessObjectDataKey, request);
-    }
-
-    /**
-     * Retries a storage policy transition by forcing re-initiation of the archiving process for the specified business object data that is still in progress of
-     * a valid archiving operation.
-     *
-     * @param businessObjectDataKey the business object data key
-     * @param request the information needed to retry a storage policy transition
-     *
-     * @return the business object data information
-     */
-    protected BusinessObjectData retryStoragePolicyTransitionImpl(BusinessObjectDataKey businessObjectDataKey,
-        BusinessObjectDataRetryStoragePolicyTransitionRequest request)
-    {
-        // Prepare to retry a storage policy transition.
-        BusinessObjectDataRetryStoragePolicyTransitionDto businessObjectDataRetryStoragePolicyTransitionDto =
-            businessObjectDataRetryStoragePolicyTransitionHelperService.prepareToRetryStoragePolicyTransition(businessObjectDataKey, request);
-
-        // Execute S3 specific steps needed to retry a storage policy transition.
-        businessObjectDataRetryStoragePolicyTransitionHelperService.executeS3SpecificSteps(businessObjectDataRetryStoragePolicyTransitionDto);
-
-        // Execute the after step for the retry a storage policy transition and return the business object data information.
-        return businessObjectDataRetryStoragePolicyTransitionHelperService
-            .executeRetryStoragePolicyTransitionAfterStep(businessObjectDataRetryStoragePolicyTransitionDto);
+        return businessObjectDataRetryStoragePolicyTransitionHelper.retryStoragePolicyTransition(businessObjectDataKey, request);
     }
 
     /**

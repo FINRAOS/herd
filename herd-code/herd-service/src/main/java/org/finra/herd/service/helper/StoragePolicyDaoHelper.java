@@ -90,27 +90,11 @@ public class StoragePolicyDaoHelper
     }
 
     /**
-     * Validates the destination storage.
-     *
-     * @param storageEntity the destination storage entity
-     */
-    public void validateDestinationStorage(StorageEntity storageEntity)
-    {
-        Assert.isTrue(StoragePlatformEntity.GLACIER.equals(storageEntity.getStoragePlatform().getName()),
-            String.format("Storage platform for destination storage with name \"%s\" is not \"%s\".", storageEntity.getName(), StoragePlatformEntity.GLACIER));
-
-        // Validate that storage policy transition destination storage has S3 bucket name configured for the "archive" S3 bucket.
-        // The "archive" S3 bucket is an S3 bucket that has an object lifecycle rule that moves data to Glacier after 0 days.
-        // Please note that since S3 bucket name attribute value is required we pass a "true" flag.
-        storageHelper.getStorageAttributeValueByName(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), storageEntity, true);
-    }
-
-    /**
-     * Validates the source storage.
+     * Validates the storage policy filter storage.
      *
      * @param storageEntity the storage entity
      */
-    public void validateSourceStorage(StorageEntity storageEntity)
+    public void validateStoragePolicyFilterStorage(StorageEntity storageEntity)
     {
         // Validate that storage platform is S3 for the storage policy filter storage.
         Assert.isTrue(StoragePlatformEntity.S3.equals(storageEntity.getStoragePlatform().getName()),

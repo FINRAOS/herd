@@ -67,11 +67,11 @@ public class StoragePolicyEntity extends AuditableEntity
     private StorageEntity storage;
 
     /**
-     * The destination storage column.
+     * The storage policy transition type.
      */
     @ManyToOne
-    @JoinColumn(name = "dstnt_strge_cd", referencedColumnName = "strge_cd")
-    private StorageEntity destinationStorage;
+    @JoinColumn(name = "strge_plcy_trnsn_type_cd", referencedColumnName = "strge_plcy_trnsn_type_cd", nullable = false)
+    private StoragePolicyTransitionTypeEntity storagePolicyTransitionType;
 
     /**
      * The storage policy rule type.
@@ -154,14 +154,14 @@ public class StoragePolicyEntity extends AuditableEntity
         this.storage = storage;
     }
 
-    public StorageEntity getDestinationStorage()
+    public StoragePolicyTransitionTypeEntity getStoragePolicyTransitionType()
     {
-        return destinationStorage;
+        return storagePolicyTransitionType;
     }
 
-    public void setDestinationStorage(StorageEntity destinationStorage)
+    public void setStoragePolicyTransitionType(StoragePolicyTransitionTypeEntity storagePolicyTransitionType)
     {
-        this.destinationStorage = destinationStorage;
+        this.storagePolicyTransitionType = storagePolicyTransitionType;
     }
 
     public StoragePolicyRuleTypeEntity getStoragePolicyRuleType()

@@ -33,6 +33,8 @@ import org.finra.herd.dao.StorageDao;
 import org.finra.herd.dao.StorageDaoTestHelper;
 import org.finra.herd.dao.StoragePolicyRuleTypeDao;
 import org.finra.herd.dao.StoragePolicyRuleTypeDaoTestHelper;
+import org.finra.herd.dao.StoragePolicyTransitionTypeDao;
+import org.finra.herd.dao.StoragePolicyTransitionTypeDaoTestHelper;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.StoragePolicyCreateRequest;
@@ -79,6 +81,12 @@ public class StoragePolicyServiceTestHelper
     @Autowired
     private StoragePolicyRuleTypeDaoTestHelper storagePolicyRuleTypeDaoTestHelper;
 
+    @Autowired
+    private StoragePolicyTransitionTypeDao storagePolicyTransitionTypeDao;
+
+    @Autowired
+    private StoragePolicyTransitionTypeDaoTestHelper storagePolicyTransitionTypeDaoTestHelper;
+
     /**
      * Create and persist database entities required for storage policy service testing.
      */
@@ -87,7 +95,7 @@ public class StoragePolicyServiceTestHelper
         createDatabaseEntitiesForStoragePolicyTesting(AbstractServiceTest.STORAGE_POLICY_NAMESPACE_CD,
             Arrays.asList(AbstractServiceTest.STORAGE_POLICY_RULE_TYPE), AbstractServiceTest.BDEF_NAMESPACE, AbstractServiceTest.BDEF_NAME,
             Arrays.asList(AbstractServiceTest.FORMAT_FILE_TYPE_CODE), Arrays.asList(AbstractServiceTest.STORAGE_NAME),
-            Arrays.asList(AbstractServiceTest.STORAGE_NAME_2));
+            Arrays.asList(AbstractServiceTest.STORAGE_POLICY_TRANSITION_TYPE));
     }
 
     /**
@@ -99,11 +107,11 @@ public class StoragePolicyServiceTestHelper
      * @param businessObjectDefinitionName the business object definition name
      * @param fileTypes the list of file types
      * @param storageNames the list of storage names
-     * @param destinationStorageNames the list of destination storage names
+     * @param storagePolicyTransitionTypes the list of storage policy transition types
      */
     public void createDatabaseEntitiesForStoragePolicyTesting(String storagePolicyNamespace, List<String> storagePolicyRuleTypes,
         String businessObjectDefinitionNamespace, String businessObjectDefinitionName, List<String> fileTypes, List<String> storageNames,
-        List<String> destinationStorageNames)
+        List<String> storagePolicyTransitionTypes)
     {
         // Create a storage policy namespace entity, if not exists.
         NamespaceEntity storagePolicyNamespaceEntity = namespaceDao.getNamespaceByCd(storagePolicyNamespace);
@@ -165,16 +173,14 @@ public class StoragePolicyServiceTestHelper
             }
         }
 
-        // Create specified destination storage entities of GLACIER storage platform type, if not exist.
-        if (!CollectionUtils.isEmpty(destinationStorageNames))
+        // Create specified storage policy transition type entities, if not exist.
+        if (!CollectionUtils.isEmpty(storagePolicyTransitionTypes))
         {
-            for (String destinationStorageName : destinationStorageNames)
+            for (String storagePolicyTransitionType : storagePolicyTransitionTypes)
             {
-                if (storageDao.getStorageByName(destinationStorageName) == null)
+                if (storagePolicyTransitionTypeDao.getStoragePolicyTransitionTypeByCode(storagePolicyTransitionType) == null)
                 {
-                    // Create Glacier storage with configured S3 bucket name attribute for the "archive" S3 bucket.
-                    storageDaoTestHelper.createStorageEntity(destinationStorageName, StoragePlatformEntity.GLACIER,
-                        configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), AbstractServiceTest.S3_BUCKET_NAME_2);
+                    storagePolicyTransitionTypeDaoTestHelper.createStoragePolicyTransitionTypeEntity(storagePolicyTransitionType);
                 }
             }
         }
@@ -191,14 +197,14 @@ public class StoragePolicyServiceTestHelper
      * @param businessObjectFormatUsage the business object usage
      * @param businessObjectFormatFileType the business object format file type
      * @param storageName the storage name
-     * @param destinationStorageName the destination storage name
+     * @param storagePolicyTransitionType the storage policy transition type
      * @param storagePolicyStatus the storage policy status
      *
      * @return the newly created storage policy create request
      */
     public StoragePolicyCreateRequest createStoragePolicyCreateRequest(StoragePolicyKey storagePolicyKey, String storagePolicyRuleType,
         Integer storagePolicyRuleValue, String businessObjectDefinitionNamespace, String businessObjectDefinitionName, String businessObjectFormatUsage,
-        String businessObjectFormatFileType, String storageName, String destinationStorageName, String storagePolicyStatus)
+        String businessObjectFormatFileType, String storageName, String storagePolicyTransitionType, String storagePolicyStatus)
     {
         StoragePolicyCreateRequest request = new StoragePolicyCreateRequest();
 
@@ -219,7 +225,7 @@ public class StoragePolicyServiceTestHelper
 
         StoragePolicyTransition storagePolicyTransition = new StoragePolicyTransition();
         request.setStoragePolicyTransition(storagePolicyTransition);
-        storagePolicyTransition.setDestinationStorageName(destinationStorageName);
+        storagePolicyTransition.setTransitionType(storagePolicyTransitionType);
 
         request.setStatus(storagePolicyStatus);
 
@@ -236,14 +242,14 @@ public class StoragePolicyServiceTestHelper
      * @param businessObjectFormatUsage the business object usage
      * @param businessObjectFormatFileType the business object format file type
      * @param storageName the storage name
-     * @param destinationStorageName the destination storage name
+     * @param storagePolicyTransitionType the storage policy transition type
      * @param storagePolicyStatus the storage policy status
      *
      * @return the newly created storage policy create request
      */
     public StoragePolicyUpdateRequest createStoragePolicyUpdateRequest(String storagePolicyRuleType, Integer storagePolicyRuleValue,
         String businessObjectDefinitionNamespace, String businessObjectDefinitionName, String businessObjectFormatUsage, String businessObjectFormatFileType,
-        String storageName, String destinationStorageName, String storagePolicyStatus)
+        String storageName, String storagePolicyTransitionType, String storagePolicyStatus)
     {
         StoragePolicyUpdateRequest request = new StoragePolicyUpdateRequest();
 
@@ -262,7 +268,7 @@ public class StoragePolicyServiceTestHelper
 
         StoragePolicyTransition storagePolicyTransition = new StoragePolicyTransition();
         request.setStoragePolicyTransition(storagePolicyTransition);
-        storagePolicyTransition.setDestinationStorageName(destinationStorageName);
+        storagePolicyTransition.setTransitionType(storagePolicyTransitionType);
 
         request.setStatus(storagePolicyStatus);
 

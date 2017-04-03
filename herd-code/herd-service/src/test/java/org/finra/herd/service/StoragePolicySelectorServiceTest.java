@@ -38,6 +38,7 @@ import org.finra.herd.model.jpa.BusinessObjectDataEntity;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
 import org.finra.herd.model.jpa.StoragePolicyRuleTypeEntity;
 import org.finra.herd.model.jpa.StoragePolicyStatusEntity;
+import org.finra.herd.model.jpa.StoragePolicyTransitionTypeEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
 
@@ -52,7 +53,8 @@ public class StoragePolicySelectorServiceTest extends AbstractServiceTest
         // Storage a storage policy with a filter that has no fields specified.
         storagePolicyDaoTestHelper.createStoragePolicyEntity(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD_2, STORAGE_POLICY_NAME_2),
             StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS, NO_BDEF_NAMESPACE, NO_BDEF_NAME, NO_FORMAT_USAGE_CODE,
-            NO_FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+            NO_FORMAT_FILE_TYPE_CODE, STORAGE_NAME, StoragePolicyTransitionTypeEntity.GLACIER, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION,
+            LATEST_VERSION_FLAG_SET);
 
         // Create and persist a storage unit in the storage policy filter storage.
         StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
@@ -73,7 +75,8 @@ public class StoragePolicySelectorServiceTest extends AbstractServiceTest
         // and with the age restriction greater than the current business object data entity age.
         storagePolicyDaoTestHelper.createStoragePolicyEntity(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD_2, STORAGE_POLICY_NAME),
             StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS + 2, NO_BDEF_NAMESPACE, NO_BDEF_NAME, FORMAT_USAGE_CODE,
-            FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+            FORMAT_FILE_TYPE_CODE, STORAGE_NAME, StoragePolicyTransitionTypeEntity.GLACIER, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION,
+            LATEST_VERSION_FLAG_SET);
 
         // Execute the storage policy selection and validate the results. The business object data is not expected to be selected.
         assertEquals(0, storagePolicySelectorService.execute(SQS_QUEUE_NAME, MAX_RESULT).size());
@@ -88,7 +91,8 @@ public class StoragePolicySelectorServiceTest extends AbstractServiceTest
         // specified and with the age restriction greater than the current business object data entity age.
         storagePolicyDaoTestHelper.createStoragePolicyEntity(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME_2),
             StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS + 4, BDEF_NAMESPACE, BDEF_NAME, NO_FORMAT_USAGE_CODE,
-            NO_FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+            NO_FORMAT_FILE_TYPE_CODE, STORAGE_NAME, StoragePolicyTransitionTypeEntity.GLACIER, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION,
+            LATEST_VERSION_FLAG_SET);
 
         // Execute the storage policy selection and validate the results. The business object data is not expected to be selected.
         assertEquals(0, storagePolicySelectorService.execute(SQS_QUEUE_NAME, MAX_RESULT).size());
@@ -103,7 +107,7 @@ public class StoragePolicySelectorServiceTest extends AbstractServiceTest
         // specified and with the age restriction greater than the current business object data entity age.
         storagePolicyDaoTestHelper.createStoragePolicyEntity(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME),
             StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS + 6, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-            STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+            STORAGE_NAME, StoragePolicyTransitionTypeEntity.GLACIER, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Execute the storage policy selection and validate the results. The business object data is not expected to be selected.
         assertEquals(0, storagePolicySelectorService.execute(SQS_QUEUE_NAME, MAX_RESULT).size());
@@ -121,7 +125,7 @@ public class StoragePolicySelectorServiceTest extends AbstractServiceTest
         // Create and persist a storage policy entity.
         storagePolicyDaoTestHelper.createStoragePolicyEntity(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME),
             StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-            STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+            STORAGE_NAME, StoragePolicyTransitionTypeEntity.GLACIER, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Create and persist a storage unit in the storage policy filter storage.
         StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
@@ -150,8 +154,8 @@ public class StoragePolicySelectorServiceTest extends AbstractServiceTest
         // Create and persist a storage policy entity with a non-supported storage policy type.
         storagePolicyDaoTestHelper
             .createStoragePolicyEntity(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME), STORAGE_POLICY_RULE_TYPE, BDATA_AGE_IN_DAYS,
-                BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED,
-                INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+                BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, StoragePolicyTransitionTypeEntity.GLACIER,
+                StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Create and persist a storage unit in the storage policy filter storage.
         StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
@@ -182,8 +186,8 @@ public class StoragePolicySelectorServiceTest extends AbstractServiceTest
 
         // Create and persist a storage policy entity.
         storagePolicyDaoTestHelper.createStoragePolicyEntity(storagePolicyKey, StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_PRIMARY_PARTITION_VALUE,
-            BDATA_PARTITION_VALUE_AGE_IN_DAYS, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2,
-            StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+            BDATA_PARTITION_VALUE_AGE_IN_DAYS, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME,
+            StoragePolicyTransitionTypeEntity.GLACIER, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Create a partition value that would satisfy the primary partition value age check as per the storage policy rule.
         String primaryPartitionValue = getTestPrimaryPartitionValue(BDATA_PARTITION_VALUE_AGE_IN_DAYS + 1);
@@ -222,8 +226,8 @@ public class StoragePolicySelectorServiceTest extends AbstractServiceTest
 
         // Create and persist a storage policy entity.
         storagePolicyDaoTestHelper.createStoragePolicyEntity(storagePolicyKey, StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_PRIMARY_PARTITION_VALUE,
-            BDATA_PARTITION_VALUE_AGE_IN_DAYS, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2,
-            StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+            BDATA_PARTITION_VALUE_AGE_IN_DAYS, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME,
+            StoragePolicyTransitionTypeEntity.GLACIER, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Create a partition value that would satisfy the primary partition value age check as per the storage policy rule.
         String primaryPartitionValue = getTestPrimaryPartitionValue(BDATA_PARTITION_VALUE_AGE_IN_DAYS + 1);
@@ -263,16 +267,16 @@ public class StoragePolicySelectorServiceTest extends AbstractServiceTest
 
         // Create and persist a storage policy entity.
         storagePolicyDaoTestHelper.createStoragePolicyEntity(storagePolicyKey, StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_PRIMARY_PARTITION_VALUE,
-            BDATA_PARTITION_VALUE_AGE_IN_DAYS, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2,
-            StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+            BDATA_PARTITION_VALUE_AGE_IN_DAYS, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME,
+            StoragePolicyTransitionTypeEntity.GLACIER, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Create a partition value that would satisfy the primary partition value age check as per the storage policy rule.
         String primaryPartitionValue = getTestPrimaryPartitionValue(BDATA_PARTITION_VALUE_AGE_IN_DAYS + 1);
 
-        // Create and persist a storage unit in the storage policy filter storage.
+        // Create and persist a storage unit with ENABLED status in the storage policy filter storage.
         StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
             .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, primaryPartitionValue,
-                SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID, STORAGE_UNIT_STATUS,
+                SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID, StorageUnitStatusEntity.ENABLED,
                 NO_STORAGE_DIRECTORY_PATH);
 
         // Overwrite the "updated on" threshold for a newly created business object data to be selectable by the storage policy.
@@ -308,16 +312,16 @@ public class StoragePolicySelectorServiceTest extends AbstractServiceTest
 
         // Create and persist a storage policy entity.
         storagePolicyDaoTestHelper.createStoragePolicyEntity(storagePolicyKey, StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_PRIMARY_PARTITION_VALUE,
-            BDATA_PARTITION_VALUE_AGE_IN_DAYS, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2,
-            StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+            BDATA_PARTITION_VALUE_AGE_IN_DAYS, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME,
+            StoragePolicyTransitionTypeEntity.GLACIER, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Create a partition value that would satisfy the primary partition value age check as per the storage policy rule.
         String primaryPartitionValue = getTestPrimaryPartitionValue(BDATA_PARTITION_VALUE_AGE_IN_DAYS + 1);
 
-        // Create and persist a storage unit in the storage policy filter storage.
+        // Create and persist a storage unit with ENABLED status in the storage policy filter storage.
         StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
             .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, primaryPartitionValue,
-                SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID, STORAGE_UNIT_STATUS,
+                SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID, StorageUnitStatusEntity.ENABLED,
                 NO_STORAGE_DIRECTORY_PATH);
 
         // Overwrite the "updated on" threshold for a newly created business object data to be selectable by the storage policy.
@@ -352,16 +356,16 @@ public class StoragePolicySelectorServiceTest extends AbstractServiceTest
 
         // Create and persist a storage policy entity.
         storagePolicyDaoTestHelper.createStoragePolicyEntity(storagePolicyKey, StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_PRIMARY_PARTITION_VALUE,
-            BDATA_PARTITION_VALUE_AGE_IN_DAYS, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2,
-            StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+            BDATA_PARTITION_VALUE_AGE_IN_DAYS, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME,
+            StoragePolicyTransitionTypeEntity.GLACIER, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Create a partition value that would satisfy the primary partition value age check as per the storage policy rule.
         String primaryPartitionValue = getTestPrimaryPartitionValue(BDATA_PARTITION_VALUE_AGE_IN_DAYS + 1);
 
-        // Create and persist a storage unit in the storage policy filter storage.
+        // Create and persist a storage unit with ENABLED status in the storage policy filter storage.
         StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
             .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, primaryPartitionValue,
-                SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID, STORAGE_UNIT_STATUS,
+                SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID, StorageUnitStatusEntity.ENABLED,
                 NO_STORAGE_DIRECTORY_PATH);
 
         // Overwrite the "updated on" threshold for a newly created business object data to be selectable by the storage policy.
@@ -397,10 +401,10 @@ public class StoragePolicySelectorServiceTest extends AbstractServiceTest
         // Create and persist a storage policy entity.
         storagePolicyDaoTestHelper
             .createStoragePolicyEntity(storagePolicyKey, StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS, BDEF_NAMESPACE, BDEF_NAME,
-                FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION,
-                LATEST_VERSION_FLAG_SET);
+                FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, StoragePolicyTransitionTypeEntity.GLACIER, StoragePolicyStatusEntity.ENABLED,
+                INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
-        // Create and persist a storage unit in the storage policy filter storage.
+        // Create and persist a storage unit with ENABLED status in the storage policy filter storage.
         StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
             .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                 SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID, StorageUnitStatusEntity.ENABLED,
@@ -427,12 +431,12 @@ public class StoragePolicySelectorServiceTest extends AbstractServiceTest
         // Create and persist a storage policy entity.
         storagePolicyDaoTestHelper.createStoragePolicyEntity(new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME),
             StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE,
-            STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
+            STORAGE_NAME, StoragePolicyTransitionTypeEntity.GLACIER, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
-        // Create and persist a storage unit in the storage policy filter storage.
+        // Create and persist a storage unit with ENABLED status in the storage policy filter storage.
         StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
             .createStorageUnitEntity(STORAGE_NAME, BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
-                SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID, STORAGE_UNIT_STATUS,
+                SUBPARTITION_VALUES, DATA_VERSION, LATEST_VERSION_FLAG_SET, BusinessObjectDataStatusEntity.VALID, StorageUnitStatusEntity.ENABLED,
                 NO_STORAGE_DIRECTORY_PATH);
 
         // Apply the offset in days to business object data "created on" value.
@@ -459,8 +463,8 @@ public class StoragePolicySelectorServiceTest extends AbstractServiceTest
         // Create and persist a storage policy entity.
         storagePolicyDaoTestHelper
             .createStoragePolicyEntity(storagePolicyKey, StoragePolicyRuleTypeEntity.DAYS_SINCE_BDATA_REGISTERED, BDATA_AGE_IN_DAYS, BDEF_NAMESPACE, BDEF_NAME,
-                FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, STORAGE_NAME_2, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION,
-                LATEST_VERSION_FLAG_SET);
+                FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, STORAGE_NAME, StoragePolicyTransitionTypeEntity.GLACIER, StoragePolicyStatusEntity.ENABLED,
+                INITIAL_VERSION, LATEST_VERSION_FLAG_SET);
 
         // Create and persist a storage unit in the storage policy filter storage.
         StorageUnitEntity storageUnitEntity1 = storageUnitDaoTestHelper

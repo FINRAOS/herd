@@ -333,6 +333,20 @@ public class StorageFileHelper
     }
 
     /**
+     * Validates registered S3 files per list of expected storage files.
+     *
+     * @param expectedStorageFiles the list of expected S3 files represented by storage files
+     * @param actualS3Files the list of actual S3 files represented by S3 object summaries
+     * @param storageName the storage name
+     * @param businessObjectDataKey the business object data key
+     */
+    public void validateRegisteredS3Files(List<StorageFile> expectedStorageFiles, List<S3ObjectSummary> actualS3Files, String storageName,
+        BusinessObjectDataKey businessObjectDataKey)
+    {
+        validateS3Files(expectedStorageFiles, actualS3Files, storageName, businessObjectDataKey, "registered");
+    }
+
+    /**
      * Validates restored S3 files per list of expected storage files.
      *
      * @param expectedStorageFiles the list of expected S3 files represented by storage files
@@ -344,20 +358,6 @@ public class StorageFileHelper
         BusinessObjectDataKey businessObjectDataKey)
     {
         validateS3Files(expectedStorageFiles, actualS3Files, storageName, businessObjectDataKey, "restored");
-    }
-
-    /**
-     * Validates registered S3 files per list of expected storage files.
-     *
-     * @param expectedStorageFiles the list of expected S3 files represented by storage files
-     * @param actualS3Files the list of actual S3 files represented by S3 object summaries
-     * @param storageName the storage name
-     * @param businessObjectDataKey the business object data key
-     */
-    public void validateSourceS3Files(List<StorageFile> expectedStorageFiles, List<S3ObjectSummary> actualS3Files, String storageName,
-        BusinessObjectDataKey businessObjectDataKey)
-    {
-        validateS3Files(expectedStorageFiles, actualS3Files, storageName, businessObjectDataKey, "registered");
     }
 
     /**
