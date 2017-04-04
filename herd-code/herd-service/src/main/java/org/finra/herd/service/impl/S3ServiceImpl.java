@@ -18,6 +18,7 @@ package org.finra.herd.service.impl;
 import java.util.List;
 
 import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.amazonaws.services.s3.model.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,64 +47,15 @@ public class S3ServiceImpl implements S3Service
     private S3Dao s3Dao;
 
     @Override
-    public void createDirectory(S3FileTransferRequestParamsDto params)
-    {
-        s3Dao.createDirectory(params);
-    }
-
-    @Override
-    public List<S3ObjectSummary> listDirectory(S3FileTransferRequestParamsDto params)
-    {
-        // By default, we do not ignore 0 byte objects that represent S3 directories.
-        return s3Dao.listDirectory(params, false);
-    }
-
-    @Override
-    public List<S3ObjectSummary> listDirectory(S3FileTransferRequestParamsDto params, boolean ignoreZeroByteDirectoryMarkers)
-    {
-        return s3Dao.listDirectory(params, ignoreZeroByteDirectoryMarkers);
-    }
-
-    @Override
-    public S3FileTransferResultsDto uploadFile(S3FileTransferRequestParamsDto params) throws InterruptedException
-    {
-        return s3Dao.uploadFile(params);
-    }
-
-    @Override
-    public S3FileTransferResultsDto uploadFileList(S3FileTransferRequestParamsDto params) throws InterruptedException
-    {
-        return s3Dao.uploadFileList(params);
-    }
-
-    @Override
-    public S3FileTransferResultsDto uploadDirectory(S3FileTransferRequestParamsDto params) throws InterruptedException
-    {
-        return s3Dao.uploadDirectory(params);
-    }
-
-    @Override
     public S3FileTransferResultsDto copyFile(S3FileCopyRequestParamsDto params) throws InterruptedException
     {
         return s3Dao.copyFile(params);
     }
 
     @Override
-    public void restoreObjects(final S3FileTransferRequestParamsDto params, int expirationInDays)
+    public void createDirectory(S3FileTransferRequestParamsDto params)
     {
-        s3Dao.restoreObjects(params, expirationInDays);
-    }
-
-    @Override
-    public void validateGlacierS3FilesRestored(S3FileTransferRequestParamsDto params) throws RuntimeException
-    {
-        s3Dao.validateGlacierS3FilesRestored(params);
-    }
-
-    @Override
-    public void deleteFileList(S3FileTransferRequestParamsDto params)
-    {
-        s3Dao.deleteFileList(params);
+        s3Dao.createDirectory(params);
     }
 
     @Override
@@ -126,14 +78,69 @@ public class S3ServiceImpl implements S3Service
     }
 
     @Override
-    public S3FileTransferResultsDto downloadFile(S3FileTransferRequestParamsDto params) throws InterruptedException
+    public void deleteFileList(S3FileTransferRequestParamsDto params)
     {
-        return s3Dao.downloadFile(params);
+        s3Dao.deleteFileList(params);
     }
 
     @Override
     public S3FileTransferResultsDto downloadDirectory(S3FileTransferRequestParamsDto params) throws InterruptedException
     {
         return s3Dao.downloadDirectory(params);
+    }
+
+    @Override
+    public S3FileTransferResultsDto downloadFile(S3FileTransferRequestParamsDto params) throws InterruptedException
+    {
+        return s3Dao.downloadFile(params);
+    }
+
+    @Override
+    public List<S3ObjectSummary> listDirectory(S3FileTransferRequestParamsDto params)
+    {
+        // By default, we do not ignore 0 byte objects that represent S3 directories.
+        return s3Dao.listDirectory(params, false);
+    }
+
+    @Override
+    public List<S3ObjectSummary> listDirectory(S3FileTransferRequestParamsDto params, boolean ignoreZeroByteDirectoryMarkers)
+    {
+        return s3Dao.listDirectory(params, ignoreZeroByteDirectoryMarkers);
+    }
+
+    @Override
+    public void restoreObjects(final S3FileTransferRequestParamsDto params, int expirationInDays)
+    {
+        s3Dao.restoreObjects(params, expirationInDays);
+    }
+
+    @Override
+    public void tagObjects(final S3FileTransferRequestParamsDto params, final Tag tag)
+    {
+        s3Dao.tagObjects(params, tag);
+    }
+
+    @Override
+    public S3FileTransferResultsDto uploadDirectory(S3FileTransferRequestParamsDto params) throws InterruptedException
+    {
+        return s3Dao.uploadDirectory(params);
+    }
+
+    @Override
+    public S3FileTransferResultsDto uploadFile(S3FileTransferRequestParamsDto params) throws InterruptedException
+    {
+        return s3Dao.uploadFile(params);
+    }
+
+    @Override
+    public S3FileTransferResultsDto uploadFileList(S3FileTransferRequestParamsDto params) throws InterruptedException
+    {
+        return s3Dao.uploadFileList(params);
+    }
+
+    @Override
+    public void validateGlacierS3FilesRestored(S3FileTransferRequestParamsDto params) throws RuntimeException
+    {
+        s3Dao.validateGlacierS3FilesRestored(params);
     }
 }

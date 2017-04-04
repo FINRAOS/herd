@@ -15,7 +15,10 @@
 */
 package org.finra.herd.dao.impl;
 
+import java.util.List;
+
 import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.Tag;
 
 /**
  * Simulates an S3 object.
@@ -36,6 +39,11 @@ public class MockS3Object
      * The metadata of this object.
      */
     private ObjectMetadata objectMetadata;
+
+    /**
+     * The tags set on the object.
+     */
+    private List<Tag> tags;
 
     /**
      * The data byte array of this object.
@@ -70,6 +78,16 @@ public class MockS3Object
     public void setObjectMetadata(ObjectMetadata objectMetadata)
     {
         this.objectMetadata = objectMetadata;
+    }
+
+    public List<Tag> getTags()
+    {
+        return tags;
+    }
+
+    public void setTags(List<Tag> tags)
+    {
+        this.tags = tags;
     }
 
     public byte[] getData()

@@ -218,4 +218,33 @@ public class ConfigurationHelperTest extends AbstractCoreTest
             assertEquals("configurationValue is required", e.getMessage());
         }
     }
+
+    @Test
+    public void testGetRequiredProperty()
+    {
+        ConfigurationValue configurationValue = ConfigurationValue.HERD_ENVIRONMENT;
+
+        String value = configurationHelper.getRequiredProperty(configurationValue);
+
+        assertEquals(configurationValue.getDefaultValue(), value);
+    }
+
+    @Test
+    public void testGetRequiredPropertyIllegalStateException()
+    {
+        ConfigurationValue configurationValue = ConfigurationValue.HERD_ENVIRONMENT;
+
+        MockEnvironment environment = new MockEnvironment();
+        environment.setProperty(configurationValue.getKey(), BLANK_TEXT);
+
+        try
+        {
+            configurationHelper.getRequiredProperty(configurationValue, environment);
+            fail();
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals(String.format("Configuration \"%s\" must have a value.", ConfigurationValue.HERD_ENVIRONMENT.getKey()), e.getMessage());
+        }
+    }
 }

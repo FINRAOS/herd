@@ -61,6 +61,16 @@ public class StoragePolicyTransitionParamsDto
     private String storageName;
 
     /**
+     * The S3 object tag key.
+     */
+    private String s3ObjectTagKey;
+
+    /**
+     * The S3 object tag value.
+     */
+    private String s3ObjectTagValue;
+
+    /**
      * Default no-arg constructor.
      */
     public StoragePolicyTransitionParamsDto()
@@ -78,9 +88,12 @@ public class StoragePolicyTransitionParamsDto
      * @param newStorageUnitStatus the new status of the storage unit
      * @param oldStorageUnitStatus the old (previous) status of the storage unit
      * @param storageFiles the list of storage files
+     * @param s3ObjectTagKey the S3 object tag key
+     * @param s3ObjectTagValue the S3 object tag value
      */
     public StoragePolicyTransitionParamsDto(final BusinessObjectDataKey businessObjectDataKey, final String storageName, final String s3BucketName,
-        final String s3KeyPrefix, final String newStorageUnitStatus, final String oldStorageUnitStatus, final List<StorageFile> storageFiles)
+        final String s3KeyPrefix, final String newStorageUnitStatus, final String oldStorageUnitStatus, final List<StorageFile> storageFiles,
+        final String s3ObjectTagKey, final String s3ObjectTagValue)
     {
         this.businessObjectDataKey = businessObjectDataKey;
         this.storageName = storageName;
@@ -89,6 +102,8 @@ public class StoragePolicyTransitionParamsDto
         this.newStorageUnitStatus = newStorageUnitStatus;
         this.oldStorageUnitStatus = oldStorageUnitStatus;
         this.storageFiles = storageFiles;
+        this.s3ObjectTagKey = s3ObjectTagKey;
+        this.s3ObjectTagValue = s3ObjectTagValue;
     }
 
     public BusinessObjectDataKey getBusinessObjectDataKey()
@@ -161,7 +176,28 @@ public class StoragePolicyTransitionParamsDto
         this.storageName = storageName;
     }
 
+    public String getS3ObjectTagKey()
+    {
+        return s3ObjectTagKey;
+    }
+
+    public void setS3ObjectTagKey(String s3ObjectTagKey)
+    {
+        this.s3ObjectTagKey = s3ObjectTagKey;
+    }
+
+    public String getS3ObjectTagValue()
+    {
+        return s3ObjectTagValue;
+    }
+
+    public void setS3ObjectTagValue(String s3ObjectTagValue)
+    {
+        this.s3ObjectTagValue = s3ObjectTagValue;
+    }
+
     @Override
+    @SuppressWarnings("PMD.CyclomaticComplexity") // Method is not complex. It's just very repetitive.
     public boolean equals(Object object)
     {
         if (this == object)
@@ -195,6 +231,14 @@ public class StoragePolicyTransitionParamsDto
         {
             return false;
         }
+        if (s3ObjectTagKey != null ? !s3ObjectTagKey.equals(that.s3ObjectTagKey) : that.s3ObjectTagKey != null)
+        {
+            return false;
+        }
+        if (s3ObjectTagValue != null ? !s3ObjectTagValue.equals(that.s3ObjectTagValue) : that.s3ObjectTagValue != null)
+        {
+            return false;
+        }
         if (storageFiles != null ? !storageFiles.equals(that.storageFiles) : that.storageFiles != null)
         {
             return false;
@@ -217,6 +261,8 @@ public class StoragePolicyTransitionParamsDto
         result = 31 * result + (s3KeyPrefix != null ? s3KeyPrefix.hashCode() : 0);
         result = 31 * result + (storageFiles != null ? storageFiles.hashCode() : 0);
         result = 31 * result + (storageName != null ? storageName.hashCode() : 0);
+        result = 31 * result + (s3ObjectTagKey != null ? s3ObjectTagKey.hashCode() : 0);
+        result = 31 * result + (s3ObjectTagValue != null ? s3ObjectTagValue.hashCode() : 0);
         return result;
     }
 }

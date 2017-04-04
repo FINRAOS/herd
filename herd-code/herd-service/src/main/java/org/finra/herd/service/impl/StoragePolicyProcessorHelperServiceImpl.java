@@ -18,6 +18,7 @@ package org.finra.herd.service.impl;
 import java.util.List;
 
 import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.amazonaws.services.s3.model.Tag;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -149,6 +150,12 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
                 storagePolicyEntity.getStoragePolicyTransitionType().getCode(),
                 storagePolicyHelper.storagePolicyKeyAndVersionToString(storagePolicyKey, storagePolicyVersion)));
 
+        // Get the S3 object tag key to be used to tag the objects for archiving.
+        String s3ObjectTagKey = configurationHelper.getRequiredProperty(ConfigurationValue.S3_ARCHIVE_TO_GLACIER_TAG_KEY);
+
+        // Get the S3 object tag value to be used to tag the objects for archiving.
+        String s3ObjectTagValue = configurationHelper.getRequiredProperty(ConfigurationValue.S3_ARCHIVE_TO_GLACIER_TAG_VALUE);
+
         // Retrieve the storage unit and ensure it exists.
         StorageUnitEntity storageUnitEntity = storageUnitDaoHelper.getStorageUnitEntity(storageName, businessObjectDataEntity);
 
@@ -199,6 +206,8 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
         storagePolicyTransitionParamsDto.setNewStorageUnitStatus(storageUnitEntity.getStatus().getCode());
         storagePolicyTransitionParamsDto.setOldStorageUnitStatus(oldStorageUnitStatus);
         storagePolicyTransitionParamsDto.setStorageFiles(storageFiles);
+        storagePolicyTransitionParamsDto.setS3ObjectTagKey(s3ObjectTagKey);
+        storagePolicyTransitionParamsDto.setS3ObjectTagValue(s3ObjectTagValue);
 
         return storagePolicyTransitionParamsDto;
     }
@@ -303,22 +312,31 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
 
         // Get actual S3 files by selecting all S3 keys matching the S3 key prefix form the S3 bucket.
         // When listing S3 files, we ignore 0 byte objects that represent S3 directories.
-        List<S3ObjectSummary> actualS3Files = s3Service.listDirectory(s3FileTransferRequestParamsDto, true);
+        List<S3ObjectSummary> actualS3FilesWithoutZeroByteDirectoryMarkers = s3Service.listDirectory(s3FileTransferRequestParamsDto, true);
 
         // Validate existence of the S3 files.
-        storageFileHelper
-            .validateRegisteredS3Files(storagePolicyTransitionParamsDto.getStorageFiles(), actualS3Files, storagePolicyTransitionParamsDto.getStorageName(),
-                storagePolicyTransitionParamsDto.getBusinessObjectDataKey());
+        storageFileHelper.validateRegisteredS3Files(storagePolicyTransitionParamsDto.getStorageFiles(), actualS3FilesWithoutZeroByteDirectoryMarkers,
+            storagePolicyTransitionParamsDto.getStorageName(), storagePolicyTransitionParamsDto.getBusinessObjectDataKey());
 
-        // TODO: Implement the S3 tagging.
+        // Get actual S3 files by selecting all S3 keys matching the S3 key prefix form the S3 bucket.
+        // This time, we do not ignore 0 byte objects that represent S3 directories.
+        List<S3ObjectSummary> actualS3Files = s3Service.listDirectory(s3FileTransferRequestParamsDto, false);
+
+        // Set the list of files to be tagged for archiving.
+        s3FileTransferRequestParamsDto.setFiles(storageFileHelper.getFiles(storageFileHelper.createStorageFilesFromS3ObjectSummaries(actualS3Files)));
+
+        // Tag the S3 objects to initiate the archiving.
+        s3Service.tagObjects(s3FileTransferRequestParamsDto,
+            new Tag(storagePolicyTransitionParamsDto.getS3ObjectTagKey(), storagePolicyTransitionParamsDto.getS3ObjectTagValue()));
 
         // Log a list of files tagged in the S3 bucket.
         if (LOGGER.isInfoEnabled())
         {
-            LOGGER.info("Successfully tagged files in S3 bucket. s3KeyCount={} s3BucketName=\"{}\"", actualS3Files.size(),
-                s3FileTransferRequestParamsDto.getS3BucketName());
+            LOGGER.info("Successfully tagged files in S3 bucket. s3BucketName=\"{}\" s3KeyCount={} s3ObjectTagKey=\"{}\" s3ObjectTagValue=\"{}\"",
+                s3FileTransferRequestParamsDto.getS3BucketName(), actualS3Files.size(), storagePolicyTransitionParamsDto.getS3ObjectTagKey(),
+                storagePolicyTransitionParamsDto.getS3ObjectTagValue());
 
-            for (S3ObjectSummary s3File : actualS3Files)
+            for (S3ObjectSummary s3File : actualS3FilesWithoutZeroByteDirectoryMarkers)
             {
                 LOGGER.info("s3Key=\"{}\"", s3File.getKey());
             }
