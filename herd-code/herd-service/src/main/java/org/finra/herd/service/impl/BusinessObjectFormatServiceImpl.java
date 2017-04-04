@@ -535,12 +535,13 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
      * Update business object format parents
      *
      * @param businessObjectFormatKey business object format key
-     * @param businessObjectFormatParentsUpdateRequest business objcet format parents update request
+     * @param businessObjectFormatParentsUpdateRequest business object format parents update request
      *
      * @return business object format
      */
     @NamespacePermissions({@NamespacePermission(fields = "#businessObjectFormatKey.namespace", permissions = NamespacePermissionEnum.WRITE),
-        @NamespacePermission(fields = "#businessObjectFormatParentsUpdateRequest?.businessObjectFormatParents?.![namespace]", permissions = NamespacePermissionEnum.READ)})
+        @NamespacePermission(fields = "#businessObjectFormatParentsUpdateRequest?.businessObjectFormatParents?.![namespace]",
+            permissions = NamespacePermissionEnum.READ)})
     @Override
     public BusinessObjectFormat updateBusinessObjectFormatParents(BusinessObjectFormatKey businessObjectFormatKey,
         BusinessObjectFormatParentsUpdateRequest businessObjectFormatParentsUpdateRequest)
@@ -727,7 +728,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
     /**
      * Validate the business object format parents
      *
-     * @param businessObjectFormatParents
+     * @param businessObjectFormatParents business object format parents
      */
     private void validateBusinessObjectFormatParents(List<BusinessObjectFormatKey> businessObjectFormatParents)
     {
