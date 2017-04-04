@@ -221,7 +221,6 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
             latestVersionBusinessObjectFormatEntity.setBusinessObjectFormatParents(null);
             latestVersionBusinessObjectFormatEntity.setBusinessObjectFormatChildren(null);
             businessObjectFormatDao.saveAndRefresh(latestVersionBusinessObjectFormatEntity);
-            
         }
 
         // Notify the search index that a business object definition must be updated.
@@ -436,7 +435,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
                 .format("Can not delete a business object format that has children associated with it. Business object format: {%s}",
                     businessObjectFormatHelper.businessObjectFormatEntityAltKeyToString(businessObjectFormatEntity)));
         }
-        
+
         // Create and return the business object format object from the deleted entity.
         BusinessObjectFormat deletedBusinessObjectFormat = businessObjectFormatHelper.createBusinessObjectFormatFromEntity(businessObjectFormatEntity);
 
@@ -532,16 +531,18 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         return generateBusinessObjectFormatDdlCollectionImpl(request);
     }
 
-
+    /**
+     * Update business object format parents
+     *
+     * @param businessObjectFormatKey business object format key
+     * @param businessObjectFormatParentsUpdateRequest business objcet format parents update request
+     *
+     * @return business object format
+     */
     @NamespacePermissions({@NamespacePermission(fields = "#businessObjectFormatKey.namespace", permissions = NamespacePermissionEnum.WRITE),
         @NamespacePermission(fields = "#businessObjectFormatParentsUpdateRequest?.businessObjectFormatParents?.![namespace]", permissions = NamespacePermissionEnum.READ)})
     @Override
-    /**
-     * Update business object format parents
-     * @param businessObjectFormatKey business object format key
-     * @param businessObjectFormatParentsUpdateRequest business objcet format parents update request
-     * @return business object format
-     */ public BusinessObjectFormat updateBusinessObjectFormatParents(BusinessObjectFormatKey businessObjectFormatKey,
+    public BusinessObjectFormat updateBusinessObjectFormatParents(BusinessObjectFormatKey businessObjectFormatKey,
         BusinessObjectFormatParentsUpdateRequest businessObjectFormatParentsUpdateRequest)
     {
         Assert.notNull(businessObjectFormatParentsUpdateRequest, "A Business Object Format Parents Update Request is required.");
