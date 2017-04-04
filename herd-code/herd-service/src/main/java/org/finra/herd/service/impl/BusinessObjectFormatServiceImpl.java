@@ -551,7 +551,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         // Perform validation and trim the alternate key parameters.
         businessObjectFormatHelper.validateBusinessObjectFormatKey(businessObjectFormatKey, false);
 
-        Assert.isNull(businessObjectFormatKey.getBusinessObjectFormatVersion(), "Business Object Format version should be null.");
+        Assert.isNull(businessObjectFormatKey.getBusinessObjectFormatVersion(), "Business object format version must not be specified.");
         // Perform validation and trim for the business object format parents
         validateBusinessObjectFormatParents(businessObjectFormatParentsUpdateRequest.getBusinessObjectFormatParents());
 
@@ -737,8 +737,9 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         {
             for (BusinessObjectFormatKey parentBusinessObjectFormatKey : businessObjectFormatParents)
             {
+                Assert.notNull(parentBusinessObjectFormatKey, "Parent object format must be specified.");
                 businessObjectFormatHelper.validateBusinessObjectFormatKey(parentBusinessObjectFormatKey, false);
-                Assert.isNull(parentBusinessObjectFormatKey.getBusinessObjectFormatVersion(), "Business object format version should be null.");
+                Assert.isNull(parentBusinessObjectFormatKey.getBusinessObjectFormatVersion(), "Business object format version must not be specified.");
             }
         }
     }
