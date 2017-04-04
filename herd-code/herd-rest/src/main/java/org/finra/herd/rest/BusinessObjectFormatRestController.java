@@ -217,7 +217,7 @@ public class BusinessObjectFormatRestController extends HerdBaseController
         value = "/businessObjectFormatParents/namespaces/{namespace}/businessObjectDefinitionNames/{businessObjectDefinitionName}" +
             "/businessObjectFormatUsages/{businessObjectFormatUsage}/businessObjectFormatFileTypes/{businessObjectFormatFileType}",
         method = RequestMethod.PUT, consumes = {"application/xml", "application/json"})
-    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_FORMATS_PARENTS_PUT)
+    @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_FORMAT_PARENTS_PUT)
     public BusinessObjectFormat updateBusinessObjectFormatParents(@PathVariable("namespace") String namespace,
         @PathVariable("businessObjectDefinitionName") String businessObjectDefinitionName,
         @PathVariable("businessObjectFormatUsage") String businessObjectFormatUsage,
