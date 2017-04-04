@@ -800,7 +800,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
             storagePolicyProcessorHelperService.executeStoragePolicyTransition(new StoragePolicyTransitionParamsDto(
                 new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
                     NO_SUBPARTITION_VALUES, DATA_VERSION), STORAGE_NAME, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS, NO_STORAGE_UNIT_STATUS,
-                storageFiles));
+                storageFiles, S3_ARCHIVE_TO_GLACIER_TAG_KEY, S3_ARCHIVE_TO_GLACIER_TAG_VALUE));
 
             // Validate that we still have our S3 files in the S3 bucket.
             assertEquals(storageFiles.size(), s3Dao.listDirectory(s3FileTransferRequestParamsDto).size());
@@ -837,13 +837,14 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         // Complete a storage policy transition.
         StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto =
             new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
-                NO_STORAGE_UNIT_STATUS, NO_STORAGE_FILES);
+                NO_STORAGE_UNIT_STATUS, NO_STORAGE_FILES, S3_ARCHIVE_TO_GLACIER_TAG_KEY, S3_ARCHIVE_TO_GLACIER_TAG_VALUE);
         storagePolicyProcessorHelperService.completeStoragePolicyTransition(storagePolicyTransitionParamsDto);
 
         // Validate the results.
         assertEquals(
             new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, StorageUnitStatusEntity.ARCHIVED,
-                StorageUnitStatusEntity.ARCHIVING, NO_STORAGE_FILES), storagePolicyTransitionParamsDto);
+                StorageUnitStatusEntity.ARCHIVING, NO_STORAGE_FILES, S3_ARCHIVE_TO_GLACIER_TAG_KEY, S3_ARCHIVE_TO_GLACIER_TAG_VALUE),
+            storagePolicyTransitionParamsDto);
 
         // Validate that storage unit status is updated to ARCHIVED.
         assertEquals(StorageUnitStatusEntity.ARCHIVED, storageUnitEntity.getStatus().getCode());
@@ -860,7 +861,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         // Try to complete a storage policy transition when business object data does not exist.
         StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto =
             new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
-                NO_STORAGE_UNIT_STATUS, NO_STORAGE_FILES);
+                NO_STORAGE_UNIT_STATUS, NO_STORAGE_FILES, S3_ARCHIVE_TO_GLACIER_TAG_KEY, S3_ARCHIVE_TO_GLACIER_TAG_VALUE);
         try
         {
             storagePolicyProcessorHelperService.completeStoragePolicyTransition(storagePolicyTransitionParamsDto);
@@ -886,7 +887,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         // Try to complete a storage policy transition when business object data status is not supported by the storage policy feature.
         StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto =
             new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
-                NO_STORAGE_UNIT_STATUS, NO_STORAGE_FILES);
+                NO_STORAGE_UNIT_STATUS, NO_STORAGE_FILES, S3_ARCHIVE_TO_GLACIER_TAG_KEY, S3_ARCHIVE_TO_GLACIER_TAG_VALUE);
         try
         {
             storagePolicyProcessorHelperService.completeStoragePolicyTransition(storagePolicyTransitionParamsDto);
@@ -919,7 +920,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         // Try to complete a storage policy transition when storage unit does not exist.
         StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto =
             new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
-                NO_STORAGE_UNIT_STATUS, NO_STORAGE_FILES);
+                NO_STORAGE_UNIT_STATUS, NO_STORAGE_FILES, S3_ARCHIVE_TO_GLACIER_TAG_KEY, S3_ARCHIVE_TO_GLACIER_TAG_VALUE);
         try
         {
             storagePolicyProcessorHelperService.completeStoragePolicyTransition(storagePolicyTransitionParamsDto);
@@ -953,7 +954,7 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
         // Try to complete a storage policy transition when storage unit does not have ARCHIVING status.
         StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto =
             new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX, NO_STORAGE_UNIT_STATUS,
-                NO_STORAGE_UNIT_STATUS, NO_STORAGE_FILES);
+                NO_STORAGE_UNIT_STATUS, NO_STORAGE_FILES, S3_ARCHIVE_TO_GLACIER_TAG_KEY, S3_ARCHIVE_TO_GLACIER_TAG_VALUE);
         try
         {
             storagePolicyProcessorHelperService.completeStoragePolicyTransition(storagePolicyTransitionParamsDto);

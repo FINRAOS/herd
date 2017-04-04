@@ -747,8 +747,8 @@ public enum ConfigurationValue
     TRANSPORT_CLIENT_CACHE_TIME_TO_LIVE_SECONDS("transport.client.cache.time.to.live.seconds", 0L),
 
     /**
-     * The cache time to idle in seconds defined in net.sf.ehcache.config.CacheConfiguration.
-     * The default value is 0, which means no timeToIdle (TTI) eviction takes place (infinite lifetime)
+     * The cache time to idle in seconds defined in net.sf.ehcache.config.CacheConfiguration. The default value is 0, which means no timeToIdle (TTI) eviction
+     * takes place (infinite lifetime)
      */
     TRANSPORT_CLIENT_CACHE_TIME_TO_IDLE_SECONDS("transport.client.cache.time.to.idle.seconds", 0L),
 
@@ -760,7 +760,17 @@ public enum ConfigurationValue
     /**
      * The cache memory store eviction policy defined in net.sf.ehcache.config.CacheConfiguration.
      */
-    TRANSPORT_CLIENT_CACHE_MEMORY_STORE_EVICTION_POLICY("transport.client.cache.memory.store.eviction.policy", "LRU");
+    TRANSPORT_CLIENT_CACHE_MEMORY_STORE_EVICTION_POLICY("transport.client.cache.memory.store.eviction.policy", "LRU"),
+
+    /**
+     * The S3 object tag key to be used to trigger S3 object archiving to Glacier.
+     */
+    S3_ARCHIVE_TO_GLACIER_TAG_KEY("s3.archive.to.glacier.tag.key", "HerdArchiveToGlacier"),
+
+    /**
+     * The S3 object tag value to be used to trigger S3 object archiving to Glacier.
+     */
+    S3_ARCHIVE_TO_GLACIER_TAG_VALUE("s3.archive.to.glacier.tag.value", "true");
 
     private Object defaultValue;
 
