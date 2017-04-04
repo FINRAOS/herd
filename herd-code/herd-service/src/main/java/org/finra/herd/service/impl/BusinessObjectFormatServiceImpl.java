@@ -43,6 +43,7 @@ import org.finra.herd.dao.BusinessObjectDefinitionDao;
 import org.finra.herd.dao.BusinessObjectFormatDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.annotation.NamespacePermission;
+import org.finra.herd.model.annotation.NamespacePermissions;
 import org.finra.herd.model.annotation.PublishJmsMessages;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.AttributeDefinition;
@@ -531,7 +532,9 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         return generateBusinessObjectFormatDdlCollectionImpl(request);
     }
 
-    @NamespacePermission(fields = "#businessObjectFormatKey.namespace", permissions = NamespacePermissionEnum.WRITE)
+
+    @NamespacePermissions({@NamespacePermission(fields = "#businessObjectFormatKey.namespace", permissions = NamespacePermissionEnum.WRITE),
+        @NamespacePermission(fields = "#businessObjectFormatParentsUpdateRequest?.businessObjectFormatParents?.![namespace]", permissions = NamespacePermissionEnum.READ)})
     @Override
     /**
      * Update business object format parents
