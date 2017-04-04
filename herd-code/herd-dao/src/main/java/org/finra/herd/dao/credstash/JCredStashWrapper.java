@@ -27,6 +27,9 @@ import com.jessecoyle.CredStashBouncyCastleCrypto;
 import com.jessecoyle.JCredStash;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import org.finra.herd.dao.helper.AwsHelper;
 
 
 /**
@@ -38,6 +41,9 @@ public class JCredStashWrapper implements CredStash
 
     private JCredStash credstash;
 
+    @Autowired
+    private AwsHelper awsHelper;
+
     /**
      * Constructor for the JCredStashWrapper
      *
@@ -46,31 +52,11 @@ public class JCredStashWrapper implements CredStash
      */
     public JCredStashWrapper(String region, String tableName)
     {
-        ClientConfiguration clientConf = defaultClientConfiguration(new EnvConfig());
+        ClientConfiguration clientConfiguration = awsHelper.getClientConfiguration(awsHelper.getAwsParamsDto());
         AWSCredentialsProvider provider = new DefaultAWSCredentialsProviderChain();
-        AmazonDynamoDBClient ddb = new AmazonDynamoDBClient(provider, clientConf).withRegion(Regions.fromName(region));
-        AWSKMSClient kms = new AWSKMSClient(provider, clientConf).withRegion(Regions.fromName(region));
+        AmazonDynamoDBClient ddb = new AmazonDynamoDBClient(provider, clientConfiguration).withRegion(Regions.fromName(region));
+        AWSKMSClient kms = new AWSKMSClient(provider, clientConfiguration).withRegion(Regions.fromName(region));
         credstash = new JCredStash(tableName, ddb, kms, new CredStashBouncyCastleCrypto());
-    }
-
-    /**
-     * Private method to get the client configuration
-     *
-     * @param envConfig the configuration from the environment
-     *
-     * @return the client configuration
-     */
-    private ClientConfiguration defaultClientConfiguration(EnvConfig envConfig)
-    {
-        ClientConfiguration clientConfiguration = new ClientConfiguration();
-
-        if (envConfig.hasProxyEnv())
-        {
-            clientConfiguration.setProxyHost(envConfig.getProxy());
-            clientConfiguration.setProxyPort(Integer.parseInt(envConfig.getPort()));
-        }
-
-        return clientConfiguration;
     }
 
     /**
