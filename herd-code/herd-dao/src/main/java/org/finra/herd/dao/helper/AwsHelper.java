@@ -17,7 +17,6 @@ package org.finra.herd.dao.helper;
 
 import com.amazonaws.ClientConfiguration;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -40,8 +39,6 @@ public class AwsHelper
     @Autowired
     protected HerdStringHelper herdStringHelper;
 
-    private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(AwsHelper.class);
-
     /**
      * Constructs awsParamsDto with AWS parameters.
      *
@@ -58,7 +55,6 @@ public class AwsHelper
         awsParamsDto.setHttpProxyHost(httpProxyHost);
         awsParamsDto.setHttpProxyPort(httpProxyPort);
 
-        LOGGER.info("The proxy host=", +httpProxyPort + " port=" + httpProxyPort);
         return awsParamsDto;
     }
 
