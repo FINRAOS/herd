@@ -221,7 +221,6 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
             latestVersionBusinessObjectFormatEntity.setBusinessObjectFormatParents(null);
             latestVersionBusinessObjectFormatEntity.setBusinessObjectFormatChildren(null);
             businessObjectFormatDao.saveAndRefresh(latestVersionBusinessObjectFormatEntity);
-            
         }
 
         // Notify the search index that a business object definition must be updated.
@@ -436,7 +435,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
                 .format("Can not delete a business object format that has children associated with it. Business object format: {%s}",
                     businessObjectFormatHelper.businessObjectFormatEntityAltKeyToString(businessObjectFormatEntity)));
         }
-        
+
         // Create and return the business object format object from the deleted entity.
         BusinessObjectFormat deletedBusinessObjectFormat = businessObjectFormatHelper.createBusinessObjectFormatFromEntity(businessObjectFormatEntity);
 
@@ -532,16 +531,19 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         return generateBusinessObjectFormatDdlCollectionImpl(request);
     }
 
-
-    @NamespacePermissions({@NamespacePermission(fields = "#businessObjectFormatKey.namespace", permissions = NamespacePermissionEnum.WRITE),
-        @NamespacePermission(fields = "#businessObjectFormatParentsUpdateRequest?.businessObjectFormatParents?.![namespace]", permissions = NamespacePermissionEnum.READ)})
-    @Override
     /**
      * Update business object format parents
+     *
      * @param businessObjectFormatKey business object format key
-     * @param businessObjectFormatParentsUpdateRequest business objcet format parents update request
+     * @param businessObjectFormatParentsUpdateRequest business object format parents update request
+     *
      * @return business object format
-     */ public BusinessObjectFormat updateBusinessObjectFormatParents(BusinessObjectFormatKey businessObjectFormatKey,
+     */
+    @NamespacePermissions({@NamespacePermission(fields = "#businessObjectFormatKey.namespace", permissions = NamespacePermissionEnum.WRITE),
+        @NamespacePermission(fields = "#businessObjectFormatParentsUpdateRequest?.businessObjectFormatParents?.![namespace]",
+            permissions = NamespacePermissionEnum.READ)})
+    @Override
+    public BusinessObjectFormat updateBusinessObjectFormatParents(BusinessObjectFormatKey businessObjectFormatKey,
         BusinessObjectFormatParentsUpdateRequest businessObjectFormatParentsUpdateRequest)
     {
         Assert.notNull(businessObjectFormatParentsUpdateRequest, "A Business Object Format Parents Update Request is required.");
@@ -549,7 +551,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         // Perform validation and trim the alternate key parameters.
         businessObjectFormatHelper.validateBusinessObjectFormatKey(businessObjectFormatKey, false);
 
-        Assert.isNull(businessObjectFormatKey.getBusinessObjectFormatVersion(), "Business Object Format version should be null.");
+        Assert.isNull(businessObjectFormatKey.getBusinessObjectFormatVersion(), "Business object format version must not be specified.");
         // Perform validation and trim for the business object format parents
         validateBusinessObjectFormatParents(businessObjectFormatParentsUpdateRequest.getBusinessObjectFormatParents());
 
@@ -726,7 +728,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
     /**
      * Validate the business object format parents
      *
-     * @param businessObjectFormatParents
+     * @param businessObjectFormatParents business object format parents
      */
     private void validateBusinessObjectFormatParents(List<BusinessObjectFormatKey> businessObjectFormatParents)
     {
@@ -735,8 +737,9 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         {
             for (BusinessObjectFormatKey parentBusinessObjectFormatKey : businessObjectFormatParents)
             {
+                Assert.notNull(parentBusinessObjectFormatKey, "Parent object format must be specified.");
                 businessObjectFormatHelper.validateBusinessObjectFormatKey(parentBusinessObjectFormatKey, false);
-                Assert.isNull(parentBusinessObjectFormatKey.getBusinessObjectFormatVersion(), "Business object format version should be null.");
+                Assert.isNull(parentBusinessObjectFormatKey.getBusinessObjectFormatVersion(), "Business object format version must not be specified.");
             }
         }
     }

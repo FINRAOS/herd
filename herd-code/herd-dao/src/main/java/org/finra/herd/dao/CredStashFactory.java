@@ -15,6 +15,7 @@
 */
 package org.finra.herd.dao;
 
+import com.amazonaws.ClientConfiguration;
 import org.springframework.stereotype.Component;
 
 import org.finra.herd.dao.credstash.CredStash;
@@ -22,7 +23,7 @@ import org.finra.herd.dao.credstash.JCredStashWrapper;
 
 /**
  * CredStashFactory
- * <p>
+ * <p/>
  * Factory to return a CredStash interface. This is used for decoupling the CredStash interface from its implementation and so that we can easily mock the
  * credstash interface.
  */
@@ -31,13 +32,15 @@ public class CredStashFactory
 {
     /**
      * Method to retrieve a credstash interface for getting a credential from credstash.
+     *
      * @param region the region of the credstash instance where  the credential is stored
      * @param tableName the name of the credstash table where the credential is stored
+     * @param clientConfiguration the AWS client configuration
      *
      * @return the credstash interface that includes the getCredential method
      */
-    public CredStash getCredStash(String region, String tableName)
+    public CredStash getCredStash(String region, String tableName, ClientConfiguration clientConfiguration)
     {
-        return new JCredStashWrapper(region, tableName);
+        return new JCredStashWrapper(region, tableName, clientConfiguration);
     }
 }

@@ -333,7 +333,7 @@ public class S3DaoTest extends AbstractDaoTest
         catch (IllegalStateException e)
         {
             assertEquals(String.format("Failed to initiate a restore request for \"%s\" key in \"%s\" bucket. " +
-                "Reason: InternalError (Service: null; Status Code: 0; Error Code: null; Request ID: null)", testKey,
+                "Reason: InternalError (Service: null; Status Code: 0; Error Code: InternalError; Request ID: null)", testKey,
                 storageDaoTestHelper.getS3ManagedBucketName()), e.getMessage());
         }
     }
@@ -496,7 +496,7 @@ public class S3DaoTest extends AbstractDaoTest
         catch (IllegalStateException e)
         {
             assertEquals(String.format("Fail to check restore status for \"%s\" key in \"%s\" bucket. " +
-                "Reason: InternalError (Service: null; Status Code: 0; Error Code: null; Request ID: null)", testKey,
+                "Reason: InternalError (Service: null; Status Code: 0; Error Code: InternalError; Request ID: null)", testKey,
                 storageDaoTestHelper.getS3ManagedBucketName()), e.getMessage());
         }
     }
@@ -519,9 +519,9 @@ public class S3DaoTest extends AbstractDaoTest
         }
         catch (IllegalStateException e)
         {
-            assertEquals("Failed to get S3 metadata for object key \"" + TARGET_S3_KEY +
-                "\" from bucket \"MOCK_S3_BUCKET_NAME_ACCESS_DENIED\". Reason: AccessDenied (Service: null; Status Code: 403; Error Code: null; Request " +
-                "ID: null)", e.getMessage());
+            assertEquals(String.format("Failed to get S3 metadata for object key \"%s\" from bucket \"%s\". " +
+                "Reason: AccessDenied (Service: null; Status Code: 403; Error Code: AccessDenied; Request ID: null)", TARGET_S3_KEY,
+                MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_ACCESS_DENIED), e.getMessage());
         }
     }
 
@@ -571,8 +571,8 @@ public class S3DaoTest extends AbstractDaoTest
         catch (IllegalStateException e)
         {
             assertEquals(String.format("Failed to get S3 metadata for object key \"%s\" from bucket \"%s\". " +
-                "Reason: InternalError (Service: null; Status Code: 0; Error Code: null; Request ID: null)", s3FileTransferRequestParamsDto.getS3KeyPrefix(),
-                s3FileTransferRequestParamsDto.getS3BucketName()), e.getMessage());
+                "Reason: InternalError (Service: null; Status Code: 0; Error Code: InternalError; Request ID: null)",
+                s3FileTransferRequestParamsDto.getS3KeyPrefix(), s3FileTransferRequestParamsDto.getS3BucketName()), e.getMessage());
         }
     }
 
@@ -604,9 +604,9 @@ public class S3DaoTest extends AbstractDaoTest
         }
         catch (IllegalStateException e)
         {
-            assertEquals("Failed to get S3 metadata for object key \"" + TARGET_S3_KEY +
-                "\" from bucket \"MOCK_S3_BUCKET_NAME_ACCESS_DENIED\". Reason: AccessDenied (Service: null; Status Code: 403; Error Code: null; Request " +
-                "ID: null)", e.getMessage());
+            assertEquals(String.format("Failed to get S3 metadata for object key \"%s\" from bucket \"%s\". " +
+                "Reason: AccessDenied (Service: null; Status Code: 403; Error Code: AccessDenied; Request ID: null)", TARGET_S3_KEY,
+                MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_ACCESS_DENIED), e.getMessage());
         }
     }
 

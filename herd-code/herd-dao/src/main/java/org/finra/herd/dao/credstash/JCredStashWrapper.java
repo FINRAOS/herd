@@ -27,9 +27,6 @@ import com.jessecoyle.CredStashBouncyCastleCrypto;
 import com.jessecoyle.JCredStash;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import org.finra.herd.dao.helper.AwsHelper;
 
 
 /**
@@ -41,18 +38,15 @@ public class JCredStashWrapper implements CredStash
 
     private JCredStash credstash;
 
-    @Autowired
-    private AwsHelper awsHelper;
-
     /**
      * Constructor for the JCredStashWrapper
      *
      * @param region the aws region location of the KMS Client
      * @param tableName name of the credentials table
+     * @param clientConfiguration the AWS client configuration
      */
-    public JCredStashWrapper(String region, String tableName)
+    public JCredStashWrapper(String region, String tableName, ClientConfiguration clientConfiguration)
     {
-        ClientConfiguration clientConfiguration = awsHelper.getClientConfiguration(awsHelper.getAwsParamsDto());
         AWSCredentialsProvider provider = new DefaultAWSCredentialsProviderChain();
         AmazonDynamoDBClient ddb = new AmazonDynamoDBClient(provider, clientConfiguration).withRegion(Regions.fromName(region));
         AWSKMSClient kms = new AWSKMSClient(provider, clientConfiguration).withRegion(Regions.fromName(region));

@@ -4061,7 +4061,7 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         }
         catch (IllegalArgumentException ex)
         {
-            Assert.assertEquals("Business Object Format version should be null.", ex.getMessage());
+            Assert.assertEquals("Business object format version must not be specified.", ex.getMessage());
         }
     }
 
