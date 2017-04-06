@@ -499,6 +499,14 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final List<String> S3_DIRECTORY_MARKERS = Arrays.asList("", "folder");
 
+    public static final String S3_OBJECT_TAG_KEY = "UT_S3_Object_Tag_Key_1_" + RANDOM_SUFFIX;
+
+    public static final String S3_OBJECT_TAG_KEY_2 = "UT_S3_Object_Tag_Key_2_" + RANDOM_SUFFIX;
+
+    public static final String S3_OBJECT_TAG_VALUE = "UT_S3_Object_Tag_Value_1_" + RANDOM_SUFFIX;
+
+    public static final String S3_OBJECT_TAG_VALUE_2 = "UT_S3_Object_Tag_Value_2_" + RANDOM_SUFFIX;
+
     public static final Integer S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS = 7;
 
     public static final String[][] SCHEMA_COLUMNS =
