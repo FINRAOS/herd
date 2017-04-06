@@ -557,7 +557,9 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
 
         // Retrieve and ensure that a business object format exists.
         BusinessObjectFormatEntity businessObjectFormatEntity = businessObjectFormatDaoHelper.getBusinessObjectFormatEntity(businessObjectFormatKey);
-        List<BusinessObjectFormatEntity> businessObjectFormatParents = new ArrayList<>();
+
+        // Retrieve and ensure that business object format parents exist. A set is used to ignore duplicate business object format parents.
+        Set<BusinessObjectFormatEntity> businessObjectFormatParents = new HashSet<>();
         for (BusinessObjectFormatKey businessObjectFormatParent : businessObjectFormatParentsUpdateRequest.getBusinessObjectFormatParents())
         {
             // Retrieve and ensure that a business object format exists.
@@ -566,7 +568,8 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
             businessObjectFormatParents.add(businessObjectFormatEntityParent);
         }
 
-        businessObjectFormatEntity.setBusinessObjectFormatParents(businessObjectFormatParents);
+        // Set the business object format parents.
+        businessObjectFormatEntity.setBusinessObjectFormatParents(new ArrayList<>(businessObjectFormatParents));
 
         // Persist and refresh the entity.
         businessObjectFormatEntity = businessObjectFormatDao.saveAndRefresh(businessObjectFormatEntity);
@@ -857,13 +860,13 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         // Validate that there are no changes to the delimiter character, which is a an optional parameter.
         // Please note that null and an empty string values are both stored in the database as NULL.
         Assert.isTrue(oldSchema.getDelimiter() == null ? newSchema.getDelimiter() == null || newSchema.getDelimiter().isEmpty() :
-                oldSchema.getDelimiter().equals(newSchema.getDelimiter()),
+            oldSchema.getDelimiter().equals(newSchema.getDelimiter()),
             String.format("%s New format version delimiter character does not match to the previous format version delimiter character.", mainErrorMessage));
 
         // Validate that there are no changes to the escape character, which is a an optional parameter.
         // Please note that null and an empty string values are both stored in the database as NULL.
         Assert.isTrue(oldSchema.getEscapeCharacter() == null ? newSchema.getEscapeCharacter() == null || newSchema.getEscapeCharacter().isEmpty() :
-                oldSchema.getEscapeCharacter().equals(newSchema.getEscapeCharacter()),
+            oldSchema.getEscapeCharacter().equals(newSchema.getEscapeCharacter()),
             String.format("%s New format version escape character does not match to the previous format version escape character.", mainErrorMessage));
 
         // Validate that there are no non-additive changes to partition columns.
@@ -873,7 +876,7 @@ public class BusinessObjectFormatServiceImpl implements BusinessObjectFormatServ
         // Validate that there are no non-additive changes to the previous format version regular columns.
         // No null check is needed on schema columns, since at least one column is required if format schema is specified.
         Assert.isTrue((oldSchema.getColumns().size() <= newSchema.getColumns().size()) &&
-                validateNewSchemaColumnsAreAdditiveToOldSchemaColumns(newSchema.getColumns().subList(0, oldSchema.getColumns().size()), oldSchema.getColumns()),
+            validateNewSchemaColumnsAreAdditiveToOldSchemaColumns(newSchema.getColumns().subList(0, oldSchema.getColumns().size()), oldSchema.getColumns()),
             String.format("%s Non-additive changes detected to the previously defined regular (non-partitioning) columns.", mainErrorMessage));
     }
 

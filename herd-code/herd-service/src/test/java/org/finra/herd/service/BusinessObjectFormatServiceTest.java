@@ -3911,7 +3911,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         businessObjectFormatServiceTestHelper
             .createTestDatabaseEntitiesForBusinessObjectFormatTesting(NAMESPACE, DATA_PROVIDER_NAME, BDEF_NAME, FORMAT_FILE_TYPE_CODE, PARTITION_KEY_GROUP);
 
-        List<BusinessObjectFormatKey> businessObjectFormatParents = Arrays.asList(new BusinessObjectFormatKey(NAMESPACE_2, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null));
+        List<BusinessObjectFormatKey> businessObjectFormatParents =
+            Arrays.asList(new BusinessObjectFormatKey(NAMESPACE_2, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null));
 
         // Perform a create without specifying optional parameters.
         BusinessObjectFormatCreateRequest request = businessObjectFormatServiceTestHelper
@@ -3935,7 +3936,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         businessObjectFormatServiceTestHelper
             .createTestDatabaseEntitiesForBusinessObjectFormatTesting(NAMESPACE, DATA_PROVIDER_NAME, BDEF_NAME, FORMAT_FILE_TYPE_CODE, PARTITION_KEY_GROUP);
 
-        List<BusinessObjectFormatKey> businessObjectFormatParents = Arrays.asList(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null));
+        List<BusinessObjectFormatKey> businessObjectFormatParents =
+            Arrays.asList(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null));
 
         // Perform a create without specifying optional parameters.
         BusinessObjectFormatCreateRequest request = businessObjectFormatServiceTestHelper
@@ -3975,7 +3977,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
             .createTestDatabaseEntitiesForBusinessObjectFormatTesting(NAMESPACE, DATA_PROVIDER_NAME, BDEF_NAME, FORMAT_FILE_TYPE_CODE, PARTITION_KEY_GROUP);
 
         businessObjectFormatServiceTestHelper
-            .createTestDatabaseEntitiesForBusinessObjectFormatTesting(NAMESPACE_2, DATA_PROVIDER_NAME_2, BDEF_NAME_2, FORMAT_FILE_TYPE_CODE_2, PARTITION_KEY_GROUP_2);
+            .createTestDatabaseEntitiesForBusinessObjectFormatTesting(NAMESPACE_2, DATA_PROVIDER_NAME_2, BDEF_NAME_2, FORMAT_FILE_TYPE_CODE_2,
+                PARTITION_KEY_GROUP_2);
 
         // parent business object format
         BusinessObjectFormatCreateRequest request = businessObjectFormatServiceTestHelper
@@ -3983,17 +3986,19 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
                 businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA);
 
 
-        List<BusinessObjectFormatKey> businessObjectFormatParents = Arrays.asList(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null));
+        List<BusinessObjectFormatKey> businessObjectFormatParents =
+            Arrays.asList(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null));
         BusinessObjectFormatCreateRequest request2 = businessObjectFormatServiceTestHelper
-            .createBusinessObjectFormatCreateRequest(NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, PARTITION_KEY, NO_FORMAT_DESCRIPTION,
-                businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA);
+            .createBusinessObjectFormatCreateRequest(NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, PARTITION_KEY,
+                NO_FORMAT_DESCRIPTION, businessObjectDefinitionServiceTestHelper.getNewAttributes(), NO_ATTRIBUTE_DEFINITIONS, NO_SCHEMA);
 
 
         BusinessObjectFormat resultBusinessObjectFormatV0 = businessObjectFormatService.createBusinessObjectFormat(request);
         BusinessObjectFormat resultBusinessObjectFormatChildV0 = businessObjectFormatService.createBusinessObjectFormat(request2);
 
         BusinessObjectFormatKey businessObjectFormatKey = new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null);
-        BusinessObjectFormatKey  childBusinessObjectFormatKey = new BusinessObjectFormatKey(NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, null);
+        BusinessObjectFormatKey childBusinessObjectFormatKey =
+            new BusinessObjectFormatKey(NAMESPACE_2, BDEF_NAME_2, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE_2, null);
 
         //create parent, child relationship
         BusinessObjectFormatEntity formatEntity = businessObjectFormatDao.getBusinessObjectFormatByAltKey(businessObjectFormatKey);
@@ -4025,9 +4030,10 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
     public void testGetBusinessObjectFormatWithParents()
     {
         setupBusinessObjectFormatParentChild();
-        BusinessObjectFormatKey businessObjectFormat = new BusinessObjectFormatKey(NAMESPACE +  " ", BDEF_NAME.toLowerCase(), " " + FORMAT_USAGE_CODE, "  "+ FORMAT_FILE_TYPE_CODE + " ", null);
+        BusinessObjectFormatKey businessObjectFormat =
+            new BusinessObjectFormatKey(NAMESPACE + " ", BDEF_NAME.toLowerCase(), " " + FORMAT_USAGE_CODE, "  " + FORMAT_FILE_TYPE_CODE + " ", null);
         BusinessObjectFormatKey childBusinessObjectFormat = new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, null);
-        
+
         BusinessObjectFormat resultBusinessObjectFormat = businessObjectFormatService.getBusinessObjectFormat(businessObjectFormat);
         BusinessObjectFormat resultChildBusinessObjectFormat = businessObjectFormatService.getBusinessObjectFormat(childBusinessObjectFormat);
 
@@ -4072,8 +4078,9 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         setupBusinessObjectFormatParentChild();
 
         BusinessObjectFormatKey businessObjectFormatKey = new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, null);
-        BusinessObjectFormatKey parentBusinessObjectFormatKey = new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, null);
-        BusinessObjectFormatParentsUpdateRequest updateRequest = new  BusinessObjectFormatParentsUpdateRequest();
+        BusinessObjectFormatKey parentBusinessObjectFormatKey =
+            new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, null);
+        BusinessObjectFormatParentsUpdateRequest updateRequest = new BusinessObjectFormatParentsUpdateRequest();
         updateRequest.setBusinessObjectFormatParents(Arrays.asList(parentBusinessObjectFormatKey));
 
         BusinessObjectFormat format = businessObjectFormatService.getBusinessObjectFormat(businessObjectFormatKey);
@@ -4088,7 +4095,35 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         resultFormat = businessObjectFormatService.updateBusinessObjectFormatParents(businessObjectFormatKey, updateRequest);
         format.setBusinessObjectFormatParents(new ArrayList<>());
         Assert.assertEquals(format, resultFormat);
+    }
 
+    @Test
+    public void testUpdateBusinessObjectFormatParentsDuplicateParents()
+    {
+        // Create relative database entities including a business object definition.
+        setupBusinessObjectFormatParentChild();
+
+        // Create a business object format key.
+        BusinessObjectFormatKey businessObjectFormatKey =
+            new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, NO_FORMAT_VERSION);
+
+        // Create keys for business object format parents that are duplicates except for the case.
+        List<BusinessObjectFormatKey> parentBusinessObjectFormatKeys = Arrays.asList(
+            new BusinessObjectFormatKey(NAMESPACE.toUpperCase(), BDEF_NAME.toUpperCase(), FORMAT_USAGE_CODE_2.toUpperCase(),
+                FORMAT_FILE_TYPE_CODE.toUpperCase(), NO_FORMAT_VERSION),
+            new BusinessObjectFormatKey(NAMESPACE.toLowerCase(), BDEF_NAME.toLowerCase(), FORMAT_USAGE_CODE_2.toLowerCase(),
+                FORMAT_FILE_TYPE_CODE.toLowerCase(), NO_FORMAT_VERSION));
+
+        // Update parents for the business object format.
+        BusinessObjectFormatParentsUpdateRequest businessObjectFormatParentsUpdateRequest = new BusinessObjectFormatParentsUpdateRequest();
+        businessObjectFormatParentsUpdateRequest.setBusinessObjectFormatParents(parentBusinessObjectFormatKeys);
+        BusinessObjectFormat resultBusinessObjectFormat =
+            businessObjectFormatService.updateBusinessObjectFormatParents(businessObjectFormatKey, businessObjectFormatParentsUpdateRequest);
+
+        // Validate the result. Only one business object format parent is expected to be listed.
+        assertNotNull(resultBusinessObjectFormat);
+        assertEquals(Arrays.asList(new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, NO_FORMAT_VERSION)),
+            resultBusinessObjectFormat.getBusinessObjectFormatParents());
     }
 
     private void setupBusinessObjectFormatParentChild()
@@ -4111,7 +4146,8 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
 
         //create child format
         businessObjectFormatService.createBusinessObjectFormat(childRequest);
-        BusinessObjectFormatKey childAltBusinessObjectFormat = new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, null);
+        BusinessObjectFormatKey childAltBusinessObjectFormat =
+            new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE_2, FORMAT_FILE_TYPE_CODE, null);
 
         BusinessObjectFormatEntity formatEntity = businessObjectFormatDao.getBusinessObjectFormatByAltKey(businessObjectFormat);
         BusinessObjectFormatEntity childFormatEntity = businessObjectFormatDao.getBusinessObjectFormatByAltKey(childAltBusinessObjectFormat);
@@ -4126,13 +4162,12 @@ public class BusinessObjectFormatServiceTest extends AbstractServiceTest
         BusinessObjectFormatKey altBusinessObjectFormat = new BusinessObjectFormatKey(NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, 0);
         BusinessObjectFormatEntity formatEntity = businessObjectFormatDao.getBusinessObjectFormatByAltKey(altBusinessObjectFormat);
 
-        String errorMessage = String
-            .format("Can not delete a business object format that has children associated with it. Business object format: {%s}",
-                businessObjectFormatHelper.businessObjectFormatEntityAltKeyToString(formatEntity));
+        String errorMessage = String.format("Can not delete a business object format that has children associated with it. Business object format: {%s}",
+            businessObjectFormatHelper.businessObjectFormatEntityAltKeyToString(formatEntity));
 
         try
         {
-            businessObjectFormatService.deleteBusinessObjectFormat(altBusinessObjectFormat) ;
+            businessObjectFormatService.deleteBusinessObjectFormat(altBusinessObjectFormat);
             fail("should not get here");
         }
         catch (IllegalArgumentException ex)
