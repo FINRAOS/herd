@@ -1321,38 +1321,6 @@
       </xs:all>
    </xs:complexType>
 
-   <xs:element name="businessObjectDefinitionValidateResponse" type="businessObjectDefinitionValidateResponse"/>
-   <xs:complexType name="businessObjectDefinitionValidateResponse">
-      <xs:all>
-         <xs:element name="validateStartTime" type="xs:dateTime" minOccurs="0">
-            <xs:annotation>
-               <xs:documentation>The timestamp of when the index validation started</xs:documentation>
-            </xs:annotation>
-         </xs:element>
-         <xs:element name="sizeCheckPassed" type="xs:boolean">
-            <xs:annotation>
-               <xs:documentation>A Y/N flag that shows whether the total number of business object definitions in the database is the same as the total number
-                  in the index
-               </xs:documentation>
-            </xs:annotation>
-         </xs:element>
-         <xs:element name="spotCheckRandomPassed" type="xs:boolean">
-            <xs:annotation>
-               <xs:documentation>A Y/N flag that shows whether the spot check that verifies a percentage of random business object definitions in the database
-                  are the same as the indexed documents
-               </xs:documentation>
-            </xs:annotation>
-         </xs:element>
-         <xs:element name="spotCheckMostRecentPassed" type="xs:boolean">
-            <xs:annotation>
-               <xs:documentation>A Y/N flag that shows whether the spot check that verifies the most recently modified business object definitions in the
-                  database are the same as the indexed documents
-               </xs:documentation>
-            </xs:annotation>
-         </xs:element>
-      </xs:all>
-   </xs:complexType>
-
    <!-- ***** Business Object Definition Column ***** -->
 
    <xs:element name="businessObjectDefinitionColumnCreateRequest" type="businessObjectDefinitionColumnCreateRequest"/>
@@ -1917,6 +1885,26 @@
       </xs:all>
    </xs:complexType>
 
+   <xs:complexType name="businessObjectFormatParents">
+      <xs:sequence>
+         <xs:element name="businessObjectFormatKey" type="businessObjectFormatKey" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>Values that uniquely identify a Business Object Data without version</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="businessObjectFormatChildren">
+      <xs:sequence>
+         <xs:element name="businessObjectFormatKey" type="businessObjectFormatKey" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>Values that uniquely identify a Business Object Data without version</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
    <xs:element name="businessObjectFormatUpdateRequest" type="businessObjectFormatUpdateRequest"/>
    <xs:complexType name="businessObjectFormatUpdateRequest">
       <xs:all>
@@ -1939,6 +1927,20 @@
          </xs:element>
       </xs:all>
    </xs:complexType>
+
+   <xs:element name="businessObjectFormatParentsUpdateRequest" type="businessObjectFormatParentsUpdateRequest"/>
+   <xs:complexType name="businessObjectFormatParentsUpdateRequest">
+      <xs:all>
+         <xs:element name="businessObjectFormatParents" type="businessObjectFormatParents" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A list of Business Object Data parents (i.e. predecessors) that were used/needed in the creation of this data. This is used for
+                  data lineage. Each parent consists of the key data that uniquely defines a reference to a single Business Object Data.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
 
    <xs:element name="businessObjectFormat" type="businessObjectFormat"/>
    <xs:complexType name="businessObjectFormat">
@@ -2014,6 +2016,20 @@
          <xs:element name="schema" type="schema" minOccurs="0">
             <xs:annotation>
                <xs:documentation>The schema associated with this Business Object Format</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectFormatParents" type="businessObjectFormatParents" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A list of Business Object Data parents (i.e. predecessors) that were used/needed in the creation of this data. This is used for
+                  data lineage. Each parent consists of the key data that uniquely defines a reference to a single Business Object Data.
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="businessObjectFormatChildren" type="businessObjectFormatChildren" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>A list of Business Object Data children that were creation from this data. This is used for data lineage. Each child consists
+                  of the key data that uniquely defines a reference to a single Business Object Data.
+               </xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -6064,7 +6080,8 @@
       <xs:all>
          <xs:element name="ruleType" type="xs:string">
             <xs:annotation>
-               <xs:documentation>The storage policy rule type. Supported rule types are: DAYS_SINCE_BDATA_REGISTERED</xs:documentation>
+               <xs:documentation>The storage policy rule type. Supported rule types are: DAYS_SINCE_BDATA_REGISTERED, DAYS_SINCE_BDATA_PRIMARY_PARTITION_VALUE
+               </xs:documentation>
             </xs:annotation>
          </xs:element>
          <!--
@@ -6119,10 +6136,9 @@
 
    <xs:complexType name="storagePolicyTransition">
       <xs:all>
-         <xs:element name="destinationStorageName" type="xs:string">
+         <xs:element name="transitionType" type="xs:string">
             <xs:annotation>
-               <xs:documentation>The name of the destination storage. The storage with this name must already exist. Currently, only GLACIER storage platform
-                  type is supported for the destination storage by the storage policies
+               <xs:documentation>The name of the transition type. Currently, only GLACIER transition type is supported by the storage policies
                </xs:documentation>
             </xs:annotation>
          </xs:element>
@@ -6216,6 +6232,56 @@
          </xs:element>
       </xs:sequence>
    </xs:complexType>
+
+   <!-- ***** Search Index Validation *****-->
+   <xs:element name="searchIndexValidationCreateRequest" type="searchIndexValidationCreateRequest"/>
+   <xs:complexType name="searchIndexValidationCreateRequest">
+      <xs:all>
+         <xs:element name="searchIndexKey" type="searchIndexKey">
+            <xs:annotation>
+               <xs:documentation>A wrapper for the values that uniquely identify a Search Index</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="searchIndexValidation" type="searchIndexValidation"/>
+   <xs:complexType name="searchIndexValidation">
+      <xs:all>
+         <xs:element name="searchIndexKey" type="searchIndexKey">
+            <xs:annotation>
+               <xs:documentation>A wrapper for the values that uniquely identify a Search Index</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="validateStartTime" type="xs:dateTime" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>The timestamp of when the index validation started</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="sizeCheckPassed" type="xs:boolean">
+            <xs:annotation>
+               <xs:documentation>A Y/N flag that shows whether the total number of business object definitions in the database is the same as the total number
+                  in the index
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="spotCheckRandomPassed" type="xs:boolean">
+            <xs:annotation>
+               <xs:documentation>A Y/N flag that shows whether the spot check that verifies a percentage of random business object definitions in the database
+                  are the same as the indexed documents
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="spotCheckMostRecentPassed" type="xs:boolean">
+            <xs:annotation>
+               <xs:documentation>A Y/N flag that shows whether the spot check that verifies the most recently modified business object definitions in the
+                  database are the same as the indexed documents
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
 
    <!-- ***** Search Index ***** -->
 
@@ -6349,7 +6415,8 @@
          </xs:element>
          <xs:element name="facetFields" type="facetFields" minOccurs="0">
             <xs:annotation>
-               <xs:documentation>A list of Facet Fields to be included with the response. Only Tag and ResultType facet information is supported</xs:documentation>
+               <xs:documentation>A list of Facet Fields to be included with the response. Only Tag and ResultType facet information is supported
+               </xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -6367,6 +6434,12 @@
 
    <xs:complexType name="indexSearchFilter">
       <xs:all>
+         <xs:element name="isExclusionSearchFilter" type="xs:boolean" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An optional boolean flag that specifies if the search filter is an exclusion filter that excludes items from the search results
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
          <xs:element name="indexSearchKeys" type="indexSearchKeys">
             <xs:annotation>
                <xs:documentation>A list of index search keys. Multiple search keys are supported which are OR-ed</xs:documentation>

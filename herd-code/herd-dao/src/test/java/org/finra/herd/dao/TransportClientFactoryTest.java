@@ -33,6 +33,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import com.amazonaws.ClientConfiguration;
 import org.apache.commons.io.IOUtils;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
@@ -48,7 +49,9 @@ import org.mockito.internal.progress.ThreadSafeMockingProgress;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.credstash.CredStash;
+import org.finra.herd.dao.helper.AwsHelper;
 import org.finra.herd.dao.helper.JsonHelper;
+import org.finra.herd.model.dto.AwsParamsDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.ElasticsearchSettingsDto;
 
@@ -61,6 +64,9 @@ public class TransportClientFactoryTest
 
     @InjectMocks
     private TransportClientFactory transportClientFactory;
+
+    @Mock
+    private AwsHelper awsHelper;
 
     @Mock
     private ConfigurationHelper configurationHelper;
@@ -102,16 +108,11 @@ public class TransportClientFactoryTest
         PreBuiltTransportClient preBuiltTransportClient = mock(PreBuiltTransportClient.class);
 
         // Mock the call to external methods
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SETTINGS_JSON))
-            .thenReturn("elasticSearchSettingsJSON");
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_DEFAULT_PORT, Integer.class))
-            .thenReturn(9300);
-        when(jsonHelper.unmarshallJsonToObject(ElasticsearchSettingsDto.class, "elasticSearchSettingsJSON"))
-            .thenReturn(elasticsearchSettingsDto);
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_ENABLED))
-            .thenReturn("false");
-        when(preBuiltTransportClientFactory.getPreBuiltTransportClient(any()))
-            .thenReturn(preBuiltTransportClient);
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SETTINGS_JSON)).thenReturn("elasticSearchSettingsJSON");
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_DEFAULT_PORT, Integer.class)).thenReturn(9300);
+        when(jsonHelper.unmarshallJsonToObject(ElasticsearchSettingsDto.class, "elasticSearchSettingsJSON")).thenReturn(elasticsearchSettingsDto);
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_ENABLED)).thenReturn("false");
+        when(preBuiltTransportClientFactory.getPreBuiltTransportClient(any())).thenReturn(preBuiltTransportClient);
 
         // Call the method under test
         TransportClient transportClient = transportClientFactory.getTransportClient();
@@ -124,8 +125,7 @@ public class TransportClientFactoryTest
         verify(jsonHelper).unmarshallJsonToObject(ElasticsearchSettingsDto.class, "elasticSearchSettingsJSON");
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_ENABLED);
         verify(preBuiltTransportClientFactory).getPreBuiltTransportClient(any());
-        verify(transportClient)
-            .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName("127.0.0.1"), 9300));
+        verify(transportClient).addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName("127.0.0.1"), 9300));
         verifyNoMoreInteractions(createdMocks.toArray());
     }
 
@@ -144,16 +144,11 @@ public class TransportClientFactoryTest
         PreBuiltTransportClient preBuiltTransportClient = mock(PreBuiltTransportClient.class);
 
         // Mock the call to external methods
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SETTINGS_JSON))
-            .thenReturn("elasticSearchSettingsJSON");
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_DEFAULT_PORT, Integer.class))
-            .thenReturn(9300);
-        when(jsonHelper.unmarshallJsonToObject(ElasticsearchSettingsDto.class, "elasticSearchSettingsJSON"))
-            .thenReturn(elasticsearchSettingsDto);
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_ENABLED))
-            .thenReturn("false");
-        when(preBuiltTransportClientFactory.getPreBuiltTransportClient(any()))
-            .thenReturn(preBuiltTransportClient);
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SETTINGS_JSON)).thenReturn("elasticSearchSettingsJSON");
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_DEFAULT_PORT, Integer.class)).thenReturn(9300);
+        when(jsonHelper.unmarshallJsonToObject(ElasticsearchSettingsDto.class, "elasticSearchSettingsJSON")).thenReturn(elasticsearchSettingsDto);
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_ENABLED)).thenReturn("false");
+        when(preBuiltTransportClientFactory.getPreBuiltTransportClient(any())).thenReturn(preBuiltTransportClient);
 
         // Call the method under test
         TransportClient transportClient = transportClientFactory.getTransportClient();
@@ -184,47 +179,37 @@ public class TransportClientFactoryTest
         Map<String, String> credstashEncryptionContextMap = new HashMap<>();
         credstashEncryptionContextMap.put("testKey", "testValue");
 
+        // Build AWS parameters.
+        AwsParamsDto awsParamsDto = new AwsParamsDto();
+
+        // Build AWS client configuration.
+        ClientConfiguration clientConfiguration = new ClientConfiguration();
+
         // Build the mocks
         CredStash credStash = mock(CredStash.class);
         PreBuiltTransportClient preBuiltTransportClient = mock(PreBuiltTransportClient.class);
 
         // Mock the call to external methods
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SETTINGS_JSON))
-            .thenReturn("elasticSearchSettingsJSON");
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_DEFAULT_PORT, Integer.class))
-            .thenReturn(9300);
-        when(jsonHelper.unmarshallJsonToObject(ElasticsearchSettingsDto.class, "elasticSearchSettingsJSON"))
-            .thenReturn(elasticsearchSettingsDto);
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_ENABLED))
-            .thenReturn("true");
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_KEYSTORE_PATH))
-            .thenReturn("keystorePath");
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_TRUSTSTORE_PATH))
-            .thenReturn("truststorePath");
-        when(configurationHelper.getProperty(ConfigurationValue.CREDSTASH_ENCRYPTION_CONTEXT))
-            .thenReturn("credstashEncryptionContext");
-        when(configurationHelper.getProperty(ConfigurationValue.CREDSTASH_AWS_REGION_NAME))
-            .thenReturn("us-east-1");
-        when(configurationHelper.getProperty(ConfigurationValue.CREDSTASH_TABLE_NAME))
-            .thenReturn("table");
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_KEYSTORE_CREDENTIAL_NAME))
-            .thenReturn("keystoreCredential");
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_TRUSTSTORE_CREDENTIAL_NAME))
-            .thenReturn("truststoreCredential");
-        when(credStashFactory.getCredStash("us-east-1", "table"))
-            .thenReturn(credStash);
-        when(jsonHelper.unmarshallJsonToObject(Map.class, "credstashEncryptionContext"))
-            .thenReturn(credstashEncryptionContextMap);
-        when(credStash.getCredential("keystoreCredential", credstashEncryptionContextMap))
-            .thenReturn("keystorePassword");
-        when(credStash.getCredential("truststoreCredential", credstashEncryptionContextMap))
-            .thenReturn("truststorePassword");
-        when(inputStreamFactory.getFileInputStream("keystorePath"))
-            .thenReturn(IOUtils.toInputStream("testKeystore", "UTF-8"));
-        when(inputStreamFactory.getFileInputStream("truststorePath"))
-            .thenReturn(IOUtils.toInputStream("testTruststore", "UTF-8"));
-        when(preBuiltTransportClientFactory.getPreBuiltTransportClientWithSearchGuardPlugin(any()))
-            .thenReturn(preBuiltTransportClient);
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SETTINGS_JSON)).thenReturn("elasticSearchSettingsJSON");
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_DEFAULT_PORT, Integer.class)).thenReturn(9300);
+        when(jsonHelper.unmarshallJsonToObject(ElasticsearchSettingsDto.class, "elasticSearchSettingsJSON")).thenReturn(elasticsearchSettingsDto);
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_ENABLED)).thenReturn("true");
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_KEYSTORE_PATH)).thenReturn("keystorePath");
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_TRUSTSTORE_PATH)).thenReturn("truststorePath");
+        when(configurationHelper.getProperty(ConfigurationValue.CREDSTASH_ENCRYPTION_CONTEXT)).thenReturn("credstashEncryptionContext");
+        when(configurationHelper.getProperty(ConfigurationValue.CREDSTASH_AWS_REGION_NAME)).thenReturn("us-east-1");
+        when(configurationHelper.getProperty(ConfigurationValue.CREDSTASH_TABLE_NAME)).thenReturn("table");
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_KEYSTORE_CREDENTIAL_NAME)).thenReturn("keystoreCredential");
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_TRUSTSTORE_CREDENTIAL_NAME)).thenReturn("truststoreCredential");
+        when(awsHelper.getAwsParamsDto()).thenReturn(awsParamsDto);
+        when(awsHelper.getClientConfiguration(awsParamsDto)).thenReturn(clientConfiguration);
+        when(credStashFactory.getCredStash("us-east-1", "table", clientConfiguration)).thenReturn(credStash);
+        when(jsonHelper.unmarshallJsonToObject(Map.class, "credstashEncryptionContext")).thenReturn(credstashEncryptionContextMap);
+        when(credStash.getCredential("keystoreCredential", credstashEncryptionContextMap)).thenReturn("keystorePassword");
+        when(credStash.getCredential("truststoreCredential", credstashEncryptionContextMap)).thenReturn("truststorePassword");
+        when(inputStreamFactory.getFileInputStream("keystorePath")).thenReturn(IOUtils.toInputStream("testKeystore", "UTF-8"));
+        when(inputStreamFactory.getFileInputStream("truststorePath")).thenReturn(IOUtils.toInputStream("testTruststore", "UTF-8"));
+        when(preBuiltTransportClientFactory.getPreBuiltTransportClientWithSearchGuardPlugin(any())).thenReturn(preBuiltTransportClient);
 
         // Call the method under test
         TransportClient transportClient = transportClientFactory.getTransportClient();
@@ -243,15 +228,16 @@ public class TransportClientFactoryTest
         verify(configurationHelper).getProperty(ConfigurationValue.CREDSTASH_TABLE_NAME);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_KEYSTORE_CREDENTIAL_NAME);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_TRUSTSTORE_CREDENTIAL_NAME);
-        verify(credStashFactory).getCredStash("us-east-1", "table");
+        verify(awsHelper).getAwsParamsDto();
+        verify(awsHelper).getClientConfiguration(awsParamsDto);
+        verify(credStashFactory).getCredStash("us-east-1", "table", clientConfiguration);
         verify(jsonHelper).unmarshallJsonToObject(Map.class, "credstashEncryptionContext");
         verify(credStash).getCredential("keystoreCredential", credstashEncryptionContextMap);
         verify(credStash).getCredential("truststoreCredential", credstashEncryptionContextMap);
         verify(inputStreamFactory).getFileInputStream("keystorePath");
         verify(inputStreamFactory).getFileInputStream("truststorePath");
         verify(preBuiltTransportClientFactory).getPreBuiltTransportClientWithSearchGuardPlugin(any());
-        verify(transportClient)
-            .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName("127.0.0.1"), 9300));
+        verify(transportClient).addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName("127.0.0.1"), 9300));
         verifyNoMoreInteractions(createdMocks.toArray());
     }
 
@@ -266,42 +252,36 @@ public class TransportClientFactoryTest
         ElasticsearchSettingsDto elasticsearchSettingsDto = new ElasticsearchSettingsDto();
         elasticsearchSettingsDto.setClientTransportAddresses(elasticSearchAddresses);
 
+        // Build AWS parameters.
+        AwsParamsDto awsParamsDto = new AwsParamsDto();
+
+        // Build AWS client configuration.
+        ClientConfiguration clientConfiguration = new ClientConfiguration();
+
         // Build the mocks
         CredStash credStash = mock(CredStash.class);
         PreBuiltTransportClient preBuiltTransportClient = mock(PreBuiltTransportClient.class);
 
         // Mock the call to external methods
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SETTINGS_JSON))
-            .thenReturn("elasticSearchSettingsJSON");
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_DEFAULT_PORT, Integer.class))
-            .thenReturn(9300);
-        when(jsonHelper.unmarshallJsonToObject(ElasticsearchSettingsDto.class, "elasticSearchSettingsJSON"))
-            .thenThrow(new IOException());
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_ENABLED))
-            .thenReturn("true");
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_KEYSTORE_PATH))
-            .thenReturn("keystorePath");
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_TRUSTSTORE_PATH))
-            .thenReturn("truststorePath");
-        when(configurationHelper.getProperty(ConfigurationValue.CREDSTASH_ENCRYPTION_CONTEXT))
-            .thenReturn("credstashEncryptionContext");
-        when(configurationHelper.getProperty(ConfigurationValue.CREDSTASH_AWS_REGION_NAME))
-            .thenReturn("us-east-1");
-        when(configurationHelper.getProperty(ConfigurationValue.CREDSTASH_TABLE_NAME))
-            .thenReturn("table");
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_KEYSTORE_CREDENTIAL_NAME))
-            .thenReturn("keystoreCredential");
-        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_TRUSTSTORE_CREDENTIAL_NAME))
-            .thenReturn("truststoreCredential");
-        when(credStashFactory.getCredStash("us-east-1", "table"))
-            .thenReturn(credStash);
-        when(jsonHelper.unmarshallJsonToObject(Map.class, "credstashEncryptionContext"))
-            .thenThrow(new IOException());
-        when(preBuiltTransportClientFactory.getPreBuiltTransportClient(any()))
-            .thenReturn(preBuiltTransportClient);
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SETTINGS_JSON)).thenReturn("elasticSearchSettingsJSON");
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_DEFAULT_PORT, Integer.class)).thenReturn(9300);
+        when(jsonHelper.unmarshallJsonToObject(ElasticsearchSettingsDto.class, "elasticSearchSettingsJSON")).thenThrow(new IOException());
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_ENABLED)).thenReturn("true");
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_KEYSTORE_PATH)).thenReturn("keystorePath");
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_TRUSTSTORE_PATH)).thenReturn("truststorePath");
+        when(configurationHelper.getProperty(ConfigurationValue.CREDSTASH_ENCRYPTION_CONTEXT)).thenReturn("credstashEncryptionContext");
+        when(configurationHelper.getProperty(ConfigurationValue.CREDSTASH_AWS_REGION_NAME)).thenReturn("us-east-1");
+        when(configurationHelper.getProperty(ConfigurationValue.CREDSTASH_TABLE_NAME)).thenReturn("table");
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_KEYSTORE_CREDENTIAL_NAME)).thenReturn("keystoreCredential");
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_TRUSTSTORE_CREDENTIAL_NAME)).thenReturn("truststoreCredential");
+        when(awsHelper.getAwsParamsDto()).thenReturn(awsParamsDto);
+        when(awsHelper.getClientConfiguration(awsParamsDto)).thenReturn(clientConfiguration);
+        when(credStashFactory.getCredStash("us-east-1", "table", clientConfiguration)).thenReturn(credStash);
+        when(jsonHelper.unmarshallJsonToObject(Map.class, "credstashEncryptionContext")).thenThrow(new IOException());
+        when(preBuiltTransportClientFactory.getPreBuiltTransportClient(any())).thenReturn(preBuiltTransportClient);
 
         // Call the method under test
-        TransportClient transportClient =  transportClientFactory.getTransportClient();
+        TransportClient transportClient = transportClientFactory.getTransportClient();
 
         assertThat(transportClient, is(not(nullValue())));
 
@@ -317,7 +297,9 @@ public class TransportClientFactoryTest
         verify(configurationHelper).getProperty(ConfigurationValue.CREDSTASH_TABLE_NAME);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_KEYSTORE_CREDENTIAL_NAME);
         verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_TRUSTSTORE_CREDENTIAL_NAME);
-        verify(credStashFactory).getCredStash("us-east-1", "table");
+        verify(awsHelper).getAwsParamsDto();
+        verify(awsHelper).getClientConfiguration(awsParamsDto);
+        verify(credStashFactory).getCredStash("us-east-1", "table", clientConfiguration);
         verify(jsonHelper).unmarshallJsonToObject(Map.class, "credstashEncryptionContext");
         verify(preBuiltTransportClientFactory).getPreBuiltTransportClient(any());
         verifyNoMoreInteractions(createdMocks.toArray());

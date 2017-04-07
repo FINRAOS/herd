@@ -24,7 +24,7 @@
 
    <groupId>org.finra.herd</groupId>
    <artifactId>herd</artifactId>
-   <version>0.40.0-SNAPSHOT</version>
+   <version>0.41.0-SNAPSHOT</version>
 
    <description>This is the base pom for the herd project.</description>
    <url>http://finraos.github.io/herd/</url>
@@ -1023,6 +1023,17 @@
          </roles>
       </developer>
       <developer>
+         <id>jenwenner</id>
+         <name>Jennifer Wenner</name>
+         <email>jen.wenner0408@gmail.com</email>
+         <url>https://github.com/jenwenner</url>
+         <organization>FINRA</organization>
+         <organizationUrl>https://www.linkedin.com/in/jennifer-wenner-8537a46/</organizationUrl>
+         <roles>
+            <role>technical project manager</role>
+         </roles>
+      </developer>
+      <developer>
          <id>Ebs2002</id>
          <name>Shane Ebersole</name>
          <email>ebs2002@gmail.com</email>
@@ -1052,6 +1063,7 @@
          <organization>FINRA</organization>
          <organizationUrl>http://www.finra.org</organizationUrl>
          <roles>
+            <role>developer</role>
             <role>tester</role>
          </roles>
       </developer>
@@ -1081,6 +1093,16 @@
          <url>https://github.com/patricia-finra</url>
          <organization>FINRA</organization>
          <organizationUrl>http://www.finra.org</organizationUrl>
+         <roles>
+            <role>database administrator</role>
+         </roles>
+      </developer>
+      <developer>
+         <id>k26389</id>
+         <name>Mahesh Kambli</name>
+         <email>Mahesh.kambli@finra.org</email>
+         <url>https://github.com/k26389</url>
+         <organization>FINRA</organization>
          <roles>
             <role>database administrator</role>
          </roles>
@@ -1118,10 +1140,14 @@
          </roles>
       </developer>
       <developer>
+         <id>kusid</id>
          <name>Kumar Siddhartha</name>
+         <email>kumar.siddhartha@aol.com</email>
+         <url>https://github.com/kusid</url>
          <organization>FINRA</organization>
-         <organizationUrl>http://www.finra.org</organizationUrl>
+         <organizationUrl>https://www.linkedin.com/in/kusid/</organizationUrl>
          <roles>
+            <role>developer</role>
             <role>tester</role>
          </roles>
       </developer>
@@ -1143,6 +1169,37 @@
          <url>https://github.com/kenisteward</url>
          <organization>FINRA</organization>
          <organizationUrl>https://www.linkedin.com/in/kenisteward</organizationUrl>
+         <roles>
+            <role>developer</role>
+         </roles>
+      </developer>
+      <developer>
+         <id>saisumughis</id>
+         <name>Sai Sumughi Suryanarayanan</name>
+         <email>sai.sumughi@gmail.com</email>
+         <url>https://github.com/saisumughis</url>
+         <organization>FINRA</organization>
+         <organizationUrl>https://www.linkedin.com/in/saisumughisuryanarayanan</organizationUrl>
+         <roles>
+            <role>developer</role>
+         </roles>
+      </developer>
+      <developer>
+         <id>aniruddhadas9</id>
+         <name>Aniruddha Das</name>
+         <email>aniruddhadas9@gmail.com</email>
+         <url>https://github.com/aniruddhadas9</url>
+         <organization>FINRA</organization>
+         <roles>
+            <role>developer</role>
+         </roles>
+      </developer>
+      <developer>
+         <id>jzhang80</id>
+         <name>Jim Zhang</name>
+         <email>jzhang80@gmail.com</email>
+         <organization>FINRA</organization>
+         <organizationUrl>www.linkedin.com/in/jzhang80</organizationUrl>
          <roles>
             <role>developer</role>
          </roles>

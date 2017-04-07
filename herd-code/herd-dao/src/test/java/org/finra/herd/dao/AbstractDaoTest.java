@@ -261,6 +261,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String FORMAT_USAGE_CODE_2 = "UT_Usage_2" + RANDOM_SUFFIX;
 
+    public static final String FORMAT_USAGE_CODE_3 = "UT_Usage_3" + RANDOM_SUFFIX;
+
     public static final Integer FORMAT_VERSION = (int) (Math.random() * Integer.MAX_VALUE);
 
     public static final Integer FORMAT_VERSION_2 = (int) (Math.random() * Integer.MAX_VALUE);
@@ -388,6 +390,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Integer NO_DATA_VERSION = null;
 
+    public static final Boolean NO_EXCLUSION_SEARCH_FILTER = Boolean.FALSE;
+
     public static final String NO_FORMAT_DESCRIPTION = null;
 
     public static final String NO_FORMAT_FILE_TYPE_CODE = null;
@@ -495,6 +499,14 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final List<String> S3_DIRECTORY_MARKERS = Arrays.asList("", "folder");
 
+    public static final String S3_OBJECT_TAG_KEY = "UT_S3_Object_Tag_Key_1_" + RANDOM_SUFFIX;
+
+    public static final String S3_OBJECT_TAG_KEY_2 = "UT_S3_Object_Tag_Key_2_" + RANDOM_SUFFIX;
+
+    public static final String S3_OBJECT_TAG_VALUE = "UT_S3_Object_Tag_Value_1_" + RANDOM_SUFFIX;
+
+    public static final String S3_OBJECT_TAG_VALUE_2 = "UT_S3_Object_Tag_Value_2_" + RANDOM_SUFFIX;
+
     public static final Integer S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS = 7;
 
     public static final String[][] SCHEMA_COLUMNS =
@@ -522,11 +534,11 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String SEARCH_INDEX_MAPPING = "UT_SearchIndex_Mapping_" + RANDOM_SUFFIX;
 
-    public static final String SEARCH_INDEX_SETTINGS = "UT_SearchIndex_Settings_" + RANDOM_SUFFIX;
-
     public static final String SEARCH_INDEX_NAME = "UT_SearchIndexName_1_" + RANDOM_SUFFIX;
 
     public static final String SEARCH_INDEX_NAME_2 = "UT_SearchIndexName_2_" + RANDOM_SUFFIX;
+
+    public static final String SEARCH_INDEX_SETTINGS = "UT_SearchIndex_Settings_" + RANDOM_SUFFIX;
 
     public static final String SEARCH_INDEX_STATUS = "UT_SearchIndexStatus_1_" + RANDOM_SUFFIX;
 
@@ -617,6 +629,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final Integer STORAGE_POLICY_RULE_VALUE = (int) (Math.random() * Integer.MAX_VALUE);
 
     public static final Integer STORAGE_POLICY_RULE_VALUE_2 = (int) (Math.random() * Integer.MAX_VALUE);
+
+    public static final String STORAGE_POLICY_TRANSITION_TYPE = "UT_Storage_Policy_Transition_Type_1_" + RANDOM_SUFFIX;
+
+    public static final String STORAGE_POLICY_TRANSITION_TYPE_2 = "UT_Storage_Policy_Transition_Type_2_" + RANDOM_SUFFIX;
 
     public static final String STORAGE_UNIT_STATUS = "UT_SU_Status_1_" + RANDOM_SUFFIX;
 
@@ -978,6 +994,12 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     @Autowired
     protected StoragePolicyStatusDao storagePolicyStatusDao;
+
+    @Autowired
+    protected StoragePolicyTransitionTypeDao storagePolicyTransitionTypeDao;
+
+    @Autowired
+    protected StoragePolicyTransitionTypeDaoTestHelper storagePolicyTransitionTypeDaoTestHelper;
 
     @Autowired
     protected StorageUnitDao storageUnitDao;

@@ -15,8 +15,10 @@
 */
 package org.finra.herd.dao.impl;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -247,5 +249,71 @@ public class TagDaoImpl extends AbstractHerdDao implements TagDao
 
         // Run the query to get the results.
         return entityManager.createQuery(criteria).getResultList();
+    }
+
+    @Override
+    public List<TagEntity> getPercentageOfAllTags(double percentage)
+    {
+        // Create the criteria builder and a tuple style criteria query.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Integer> criteria = builder.createQuery(Integer.class);
+
+        // The criteria root is the tag.
+        Root<TagEntity> tagEntityRoot = criteria.from(TagEntity.class);
+
+        // Get the columns.
+        Path<Integer> idColumn = tagEntityRoot.get(TagEntity_.id);
+
+        criteria.select(idColumn);
+
+        List<Integer> allTagIdsList = entityManager.createQuery(criteria).getResultList();
+        List<Integer> percentageOfTagIdsList = new ArrayList<>();
+
+        /*
+        * Gets a percentage of all tag entities.
+        * The percentage is randomly selected from all the tags.
+        *
+        * For each tag id in the list of all tag ids, get a random double value between 0 and 1.
+        * If that value is below the percentage double value, also a number between 0 and 1 (inclusive),
+        * then add the tag id to the list of tag ids that will be used to return a random percentage
+        * of tag entities retrieved from the database.
+        */
+        allTagIdsList.forEach(id -> {
+            if (ThreadLocalRandom.current().nextDouble() < percentage)
+            {
+                percentageOfTagIdsList.add(id);
+            }
+        });
+
+        return getTagsByIds(percentageOfTagIdsList);
+    }
+
+    @Override
+    public List<TagEntity> getMostRecentTags(int numberOfResults)
+    {
+        // Create the criteria builder and a tuple style criteria query.
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<TagEntity> criteria = builder.createQuery(TagEntity.class);
+
+        // The criteria root is the tag.
+        Root<TagEntity> tagEntityRoot = criteria.from(TagEntity.class);
+
+        // Get the columns.
+        Path<Timestamp> tagUpdatedOnColumn = tagEntityRoot.get(TagEntity_.updatedOn);
+
+        // Select the tags and order descending by the updated on column
+        criteria.select(tagEntityRoot).orderBy(builder.desc(tagUpdatedOnColumn));
+
+        return entityManager.createQuery(criteria).setMaxResults(numberOfResults).getResultList();
+    }
+
+    @Override
+    public long getCountOfAllTags()
+    {
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Long> criteria = builder.createQuery(Long.class);
+        Root<TagEntity> tagEntityRoot = criteria.from(TagEntity.class);
+        criteria.select(builder.count(tagEntityRoot));
+        return entityManager.createQuery(criteria).getSingleResult();
     }
 }

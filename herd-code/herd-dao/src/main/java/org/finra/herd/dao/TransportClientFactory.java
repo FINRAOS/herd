@@ -32,6 +32,7 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 
+import com.amazonaws.ClientConfiguration;
 import com.floragunn.searchguard.ssl.util.SSLConfigConstants;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
@@ -50,6 +51,7 @@ import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.dao.credstash.CredStash;
 import org.finra.herd.dao.exception.CredStashGetCredentialFailedException;
+import org.finra.herd.dao.helper.AwsHelper;
 import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.ElasticsearchSettingsDto;
@@ -61,6 +63,9 @@ import org.finra.herd.model.dto.ElasticsearchSettingsDto;
 public class TransportClientFactory
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(TransportClientFactory.class);
+
+    @Autowired
+    private AwsHelper awsHelper;
 
     @Autowired
     private ConfigurationHelper configurationHelper;
@@ -193,8 +198,8 @@ public class TransportClientFactory
                 logKeystoreInformation(pathToTruststoreFile, truststorePassword);
 
                 File keystoreFile = new File(pathToKeystoreFile);
-                LOGGER.info("keystoreFile.name={}, keystoreFile.exists={}, keystoreFile.canRead={}",
-                    keystoreFile.getName(), keystoreFile.exists(), keystoreFile.canRead());
+                LOGGER.info("keystoreFile.name={}, keystoreFile.exists={}, keystoreFile.canRead={}", keystoreFile.getName(), keystoreFile.exists(),
+                    keystoreFile.canRead());
 
                 File truststoreFile = new File(pathToTruststoreFile);
                 LOGGER.info("truststoreFile.name={}, truststoreFile.exists={}, truststoreFile.canRead={}", truststoreFile.getName(), truststoreFile.exists(),
@@ -232,7 +237,7 @@ public class TransportClientFactory
             {
                 transportClient.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(elasticSearchAddress), port));
             }
-            catch(UnknownHostException unknownHostException)
+            catch (UnknownHostException unknownHostException)
             {
                 LOGGER.warn("Caught unknown host exception while attempting to add a transport address to the transport client.", unknownHostException);
             }
@@ -263,8 +268,11 @@ public class TransportClientFactory
         LOGGER.info("keystoreCredentialName={}", keystoreCredentialName);
         LOGGER.info("truststoreCredentialName={}", truststoreCredentialName);
 
+        // Get the AWS client configuration.
+        ClientConfiguration clientConfiguration = awsHelper.getClientConfiguration(awsHelper.getAwsParamsDto());
+
         // Get the keystore and truststore passwords from Credstash
-        CredStash credstash = credStashFactory.getCredStash(credstashAwsRegion, credstashTableName);
+        CredStash credstash = credStashFactory.getCredStash(credstashAwsRegion, credstashTableName, clientConfiguration);
 
         String keystorePassword = null;
         String truststorePassword = null;

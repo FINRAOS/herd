@@ -198,8 +198,8 @@ public class BusinessObjectDataFinalizeRestoreServiceTest extends AbstractServic
             catch (IllegalStateException e)
             {
                 assertEquals(String.format("Fail to check restore status for \"%s/%s/%s\" key in \"%s\" bucket. " +
-                    "Reason: InternalError (Service: null; Status Code: 0; Error Code: null; Request ID: null)", S3_BUCKET_NAME_ORIGIN, TEST_S3_KEY_PREFIX,
-                    MockS3OperationsImpl.MOCK_S3_FILE_NAME_SERVICE_EXCEPTION, S3_BUCKET_NAME_GLACIER), e.getMessage());
+                    "Reason: InternalError (Service: null; Status Code: 0; Error Code: InternalError; Request ID: null)", S3_BUCKET_NAME_ORIGIN,
+                    TEST_S3_KEY_PREFIX, MockS3OperationsImpl.MOCK_S3_FILE_NAME_SERVICE_EXCEPTION, S3_BUCKET_NAME_GLACIER), e.getMessage());
             }
 
             // Validate that the origin storage unit status is still RESTORING.

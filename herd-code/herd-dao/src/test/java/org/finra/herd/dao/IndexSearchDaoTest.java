@@ -178,7 +178,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         final List<IndexSearchKey> indexSearchKeys = Collections.singletonList(indexSearchKey);
 
         // Create an index search filter with the keys previously defined
-        final IndexSearchFilter indexSearchFilter = new IndexSearchFilter(indexSearchKeys);
+        final IndexSearchFilter indexSearchFilter = new IndexSearchFilter(NO_EXCLUSION_SEARCH_FILTER, indexSearchKeys);
 
         List<IndexSearchFilter> indexSearchFilters = Collections.singletonList(indexSearchFilter);
 
@@ -203,7 +203,63 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         final List<IndexSearchKey> indexSearchKeys = Collections.singletonList(indexSearchKey);
 
         // Create an index search filter with the keys previously defined
-        final IndexSearchFilter indexSearchFilter = new IndexSearchFilter(indexSearchKeys);
+        final IndexSearchFilter indexSearchFilter = new IndexSearchFilter(NO_EXCLUSION_SEARCH_FILTER, indexSearchKeys);
+
+        List<IndexSearchFilter> indexSearchFilters = Collections.singletonList(indexSearchFilter);
+
+        //result type facet only
+        testIndexSearch(fields, indexSearchFilters, null);
+    }
+
+    @Test
+    public void indexSearchTestWithTagKeyFilterAndExcludeFlagSet()
+    {
+        // Create a new fields set that will be used when testing the index search method
+        final Set<String> fields = new HashSet<>();
+
+        // Create an index search key
+        final IndexSearchKey indexSearchKey = new IndexSearchKey();
+
+        // Create a tag key
+        final TagKey tagKey = new TagKey(TAG_TYPE_CODE, TAG_CODE);
+        indexSearchKey.setTagKey(tagKey);
+
+        // Create an index search keys list and add the previously defined key to it
+        final List<IndexSearchKey> indexSearchKeys = Collections.singletonList(indexSearchKey);
+
+        // Create an index search filter with the keys previously defined
+        final IndexSearchFilter indexSearchFilter = new IndexSearchFilter(NO_EXCLUSION_SEARCH_FILTER, indexSearchKeys);
+
+        // Set exclude filter flag to true
+        indexSearchFilter.setIsExclusionSearchFilter(true);
+
+        List<IndexSearchFilter> indexSearchFilters = Collections.singletonList(indexSearchFilter);
+
+        //result type facet only
+        testIndexSearch(fields, indexSearchFilters, null);
+    }
+
+    @Test
+    public void indexSearchTestWithResultTypeFilterAndExcludeFlagSet()
+    {
+        // Create a new fields set that will be used when testing the index search method
+        final Set<String> fields = new HashSet<>();
+
+        // Create an index search key
+        final IndexSearchKey indexSearchKey = new IndexSearchKey();
+
+        // Create a result type key
+        final IndexSearchResultTypeKey resultTypeKey = new IndexSearchResultTypeKey(BUSINESS_OBJECT_DEFINITION_INDEX);
+        indexSearchKey.setIndexSearchResultTypeKey(resultTypeKey);
+
+        // Create an index search keys list and add the previously defined key to it
+        final List<IndexSearchKey> indexSearchKeys = Collections.singletonList(indexSearchKey);
+
+        // Create an index search filter with the keys previously defined
+        final IndexSearchFilter indexSearchFilter = new IndexSearchFilter(NO_EXCLUSION_SEARCH_FILTER, indexSearchKeys);
+
+        // Set exclude flag to true
+        indexSearchFilter.setIsExclusionSearchFilter(true);
 
         List<IndexSearchFilter> indexSearchFilters = Collections.singletonList(indexSearchFilter);
 

@@ -19,16 +19,15 @@ import java.io.File;
 import java.net.URL;
 import java.util.List;
 
-import com.amazonaws.AmazonClientException;
-import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.AbortMultipartUploadRequest;
 import com.amazonaws.services.s3.model.CopyObjectRequest;
 import com.amazonaws.services.s3.model.DeleteObjectsRequest;
 import com.amazonaws.services.s3.model.DeleteObjectsResult;
 import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 import com.amazonaws.services.s3.model.GetObjectRequest;
+import com.amazonaws.services.s3.model.GetObjectTaggingRequest;
+import com.amazonaws.services.s3.model.GetObjectTaggingResult;
 import com.amazonaws.services.s3.model.ListMultipartUploadsRequest;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.ListVersionsRequest;
@@ -39,6 +38,8 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.PutObjectResult;
 import com.amazonaws.services.s3.model.RestoreObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.model.SetObjectTaggingRequest;
+import com.amazonaws.services.s3.model.SetObjectTaggingResult;
 import com.amazonaws.services.s3.model.VersionListing;
 import com.amazonaws.services.s3.transfer.Copy;
 import com.amazonaws.services.s3.transfer.Download;
@@ -53,9 +54,9 @@ import org.finra.herd.dao.S3Operations;
 public class S3OperationsImpl implements S3Operations
 {
     @Override
-    public ObjectMetadata getObjectMetadata(String sourceBucketName, String filePath, AmazonS3Client s3Client)
+    public void abortMultipartUpload(AbortMultipartUploadRequest abortMultipartUploadRequest, AmazonS3 s3Client)
     {
-        return s3Client.getObjectMetadata(sourceBucketName, filePath);
+        s3Client.abortMultipartUpload(abortMultipartUploadRequest);
     }
 
     @Override
@@ -65,101 +66,39 @@ public class S3OperationsImpl implements S3Operations
     }
 
     @Override
-    public void restoreObject(RestoreObjectRequest requestRestore, AmazonS3Client s3Client)
-    {
-        s3Client.restoreObject(requestRestore);
-    }
-
-    @Override
-    public MultipartUploadListing listMultipartUploads(ListMultipartUploadsRequest listMultipartUploadsRequest, AmazonS3Client s3Client)
-    {
-        return s3Client.listMultipartUploads(listMultipartUploadsRequest);
-    }
-
-    @Override
-    public void abortMultipartUpload(AbortMultipartUploadRequest abortMultipartUploadRequest, AmazonS3Client s3Client)
-    {
-        s3Client.abortMultipartUpload(abortMultipartUploadRequest);
-    }
-
-    @Override
-    public DeleteObjectsResult deleteObjects(DeleteObjectsRequest deleteObjectsRequest, AmazonS3Client s3Client)
+    public DeleteObjectsResult deleteObjects(DeleteObjectsRequest deleteObjectsRequest, AmazonS3 s3Client)
     {
         return s3Client.deleteObjects(deleteObjectsRequest);
     }
 
     @Override
-    public ObjectListing listObjects(ListObjectsRequest listObjectsRequest, AmazonS3Client s3Client)
+    public Download download(String s3BucketName, String s3Key, File file, TransferManager transferManager)
     {
-        return s3Client.listObjects(listObjectsRequest);
+        return transferManager.download(s3BucketName, s3Key, file);
     }
 
     @Override
-    public VersionListing listVersions(ListVersionsRequest listVersionsRequest, AmazonS3Client s3Client)
+    public MultipleFileDownload downloadDirectory(String s3BucketName, String s3KeyPrefix, File destinationDirectory, TransferManager transferManager)
     {
-        return s3Client.listVersions(listVersionsRequest);
+        return transferManager.downloadDirectory(s3BucketName, s3KeyPrefix, destinationDirectory);
     }
 
     @Override
-    public PutObjectResult putObject(PutObjectRequest putObjectRequest, AmazonS3Client s3Client)
+    public URL generatePresignedUrl(GeneratePresignedUrlRequest generatePresignedUrlRequest, AmazonS3 s3Client)
     {
-        return s3Client.putObject(putObjectRequest);
+        return s3Client.generatePresignedUrl(generatePresignedUrlRequest);
     }
 
-    /**
-     * Implementation delegates to {@link TransferManager#uploadDirectory(String, String, File, boolean, ObjectMetadataProvider)}
-     */
     @Override
-    public MultipleFileUpload uploadDirectory(String bucketName, String virtualDirectoryKeyPrefix, File directory, boolean includeSubdirectories,
-        ObjectMetadataProvider metadataProvider, TransferManager transferManager)
+    public ObjectMetadata getObjectMetadata(String s3BucketName, String s3Key, AmazonS3 s3Client)
     {
-        return transferManager.uploadDirectory(bucketName, virtualDirectoryKeyPrefix, directory, includeSubdirectories, metadataProvider);
+        return s3Client.getObjectMetadata(s3BucketName, s3Key);
     }
 
-    /**
-     * Implementation delegates to {@link TransferManager#downloadDirectory(String, String, File)}.
-     */
     @Override
-    public MultipleFileDownload downloadDirectory(String bucketName, String keyPrefix, File destinationDirectory, TransferManager transferManager)
+    public GetObjectTaggingResult getObjectTagging(GetObjectTaggingRequest getObjectTaggingRequest, AmazonS3 s3Client)
     {
-        return transferManager.downloadDirectory(bucketName, keyPrefix, destinationDirectory);
-    }
-
-    /**
-     * Implementation delegates to {@link TransferManager#upload(PutObjectRequest)}.
-     */
-    @Override
-    public Upload upload(PutObjectRequest putObjectRequest, TransferManager transferManager) throws AmazonServiceException, AmazonClientException
-    {
-        return transferManager.upload(putObjectRequest);
-    }
-
-    /**
-     * Implementation delegates to {@link TransferManager#uploadFileList(String, String, File, List, ObjectMetadataProvider)}.
-     */
-    @Override
-    public MultipleFileUpload uploadFileList(String bucketName, String virtualDirectoryKeyPrefix, File directory, List<File> files,
-        ObjectMetadataProvider metadataProvider, TransferManager transferManager)
-    {
-        return transferManager.uploadFileList(bucketName, virtualDirectoryKeyPrefix, directory, files, metadataProvider);
-    }
-
-    /**
-     * Implementation delegates to {@link TransferManager#download(String, String, File)}
-     */
-    @Override
-    public Download download(String bucket, String key, File file, TransferManager transferManager)
-    {
-        return transferManager.download(bucket, key, file);
-    }
-
-    /**
-     * Rollback is not supported.
-     */
-    @Override
-    public void rollback()
-    {
-        // Rollback not supported
+        return s3Client.getObjectTagging(getObjectTaggingRequest);
     }
 
     @Override
@@ -169,8 +108,64 @@ public class S3OperationsImpl implements S3Operations
     }
 
     @Override
-    public URL generatePresignedUrl(GeneratePresignedUrlRequest generatePresignedUrlRequest, AmazonS3 s3)
+    public MultipartUploadListing listMultipartUploads(ListMultipartUploadsRequest listMultipartUploadsRequest, AmazonS3 s3Client)
     {
-        return s3.generatePresignedUrl(generatePresignedUrlRequest);
+        return s3Client.listMultipartUploads(listMultipartUploadsRequest);
+    }
+
+    @Override
+    public ObjectListing listObjects(ListObjectsRequest listObjectsRequest, AmazonS3 s3Client)
+    {
+        return s3Client.listObjects(listObjectsRequest);
+    }
+
+    @Override
+    public VersionListing listVersions(ListVersionsRequest listVersionsRequest, AmazonS3 s3Client)
+    {
+        return s3Client.listVersions(listVersionsRequest);
+    }
+
+    @Override
+    public PutObjectResult putObject(PutObjectRequest putObjectRequest, AmazonS3 s3Client)
+    {
+        return s3Client.putObject(putObjectRequest);
+    }
+
+    @Override
+    public void restoreObject(RestoreObjectRequest requestRestore, AmazonS3 s3Client)
+    {
+        s3Client.restoreObject(requestRestore);
+    }
+
+    @Override
+    public void rollback()
+    {
+        // Rollback not supported
+    }
+
+    @Override
+    public SetObjectTaggingResult setObjectTagging(SetObjectTaggingRequest setObjectTaggingRequest, AmazonS3 s3Client)
+    {
+        return s3Client.setObjectTagging(setObjectTaggingRequest);
+    }
+
+    @Override
+    public Upload upload(PutObjectRequest putObjectRequest, TransferManager transferManager)
+    {
+        return transferManager.upload(putObjectRequest);
+    }
+
+    @Override
+    public MultipleFileUpload uploadDirectory(String s3BucketName, String virtualDirectoryKeyPrefix, File directory, boolean includeSubdirectories,
+        ObjectMetadataProvider metadataProvider, TransferManager transferManager)
+    {
+        return transferManager.uploadDirectory(s3BucketName, virtualDirectoryKeyPrefix, directory, includeSubdirectories, metadataProvider);
+    }
+
+    @Override
+    public MultipleFileUpload uploadFileList(String s3BucketName, String virtualDirectoryKeyPrefix, File directory, List<File> files,
+        ObjectMetadataProvider metadataProvider, TransferManager transferManager)
+    {
+        return transferManager.uploadFileList(s3BucketName, virtualDirectoryKeyPrefix, directory, files, metadataProvider);
     }
 }

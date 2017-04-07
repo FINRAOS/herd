@@ -666,14 +666,24 @@ public enum ConfigurationValue
     ELASTICSEARCH_DEFAULT_PORT("elasticsearch.default.port", 9300),
 
     /**
-     * The elasticsearch spot check percentage
+     * The elasticsearch spot check percentage for bdefs
      */
     ELASTICSEARCH_BDEF_SPOT_CHECK_PERCENTAGE("elasticsearch.bdef.spot.check.percentage", 0.05),
 
     /**
-     * The elasticsearch spot check most recent number
+     * The elasticsearch spot check most recent number for bdefs
      */
     ELASTICSEARCH_BDEF_SPOT_CHECK_MOST_RECENT_NUMBER("elasticsearch.bdef.spot.check.most.recent.number", 100),
+
+    /**
+     * The elasticsearch spot check percentage for tags
+     */
+    ELASTICSEARCH_TAG_SPOT_CHECK_PERCENTAGE("elasticsearch.tag.spot.check.percentage", 0.2),
+
+    /**
+     * The elasticsearch spot check most recent number for tags
+     */
+    ELASTICSEARCH_TAG_SPOT_CHECK_MOST_RECENT_NUMBER("elasticsearch.tag.spot.check.most.recent.number", 10),
 
     /**
      * The elasticsearch search guard enabled
@@ -737,8 +747,8 @@ public enum ConfigurationValue
     TRANSPORT_CLIENT_CACHE_TIME_TO_LIVE_SECONDS("transport.client.cache.time.to.live.seconds", 0L),
 
     /**
-     * The cache time to idle in seconds defined in net.sf.ehcache.config.CacheConfiguration.
-     * The default value is 0, which means no timeToIdle (TTI) eviction takes place (infinite lifetime)
+     * The cache time to idle in seconds defined in net.sf.ehcache.config.CacheConfiguration. The default value is 0, which means no timeToIdle (TTI) eviction
+     * takes place (infinite lifetime)
      */
     TRANSPORT_CLIENT_CACHE_TIME_TO_IDLE_SECONDS("transport.client.cache.time.to.idle.seconds", 0L),
 
@@ -750,7 +760,17 @@ public enum ConfigurationValue
     /**
      * The cache memory store eviction policy defined in net.sf.ehcache.config.CacheConfiguration.
      */
-    TRANSPORT_CLIENT_CACHE_MEMORY_STORE_EVICTION_POLICY("transport.client.cache.memory.store.eviction.policy", "LRU");
+    TRANSPORT_CLIENT_CACHE_MEMORY_STORE_EVICTION_POLICY("transport.client.cache.memory.store.eviction.policy", "LRU"),
+
+    /**
+     * The S3 object tag key to be used to trigger S3 object archiving to Glacier.
+     */
+    S3_ARCHIVE_TO_GLACIER_TAG_KEY("s3.archive.to.glacier.tag.key", "HerdArchiveToGlacier"),
+
+    /**
+     * The S3 object tag value to be used to trigger S3 object archiving to Glacier.
+     */
+    S3_ARCHIVE_TO_GLACIER_TAG_VALUE("s3.archive.to.glacier.tag.value", "true");
 
     private Object defaultValue;
 

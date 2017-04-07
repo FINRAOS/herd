@@ -19,14 +19,25 @@ import static org.finra.herd.model.dto.SearchIndexUpdateDto.MESSAGE_TYPE_TAG_UPD
 import static org.finra.herd.model.dto.SearchIndexUpdateDto.SEARCH_INDEX_UPDATE_TYPE_CREATE;
 import static org.finra.herd.model.dto.SearchIndexUpdateDto.SEARCH_INDEX_UPDATE_TYPE_DELETE;
 import static org.finra.herd.model.dto.SearchIndexUpdateDto.SEARCH_INDEX_UPDATE_TYPE_UPDATE;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Future;
 
+import com.fasterxml.jackson.core.JsonLocation;
+import com.fasterxml.jackson.core.JsonParseException;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -35,10 +46,12 @@ import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.TagDao;
+import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.api.xml.TagKey;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.SearchIndexUpdateDto;
 import org.finra.herd.model.jpa.TagEntity;
+import org.finra.herd.model.jpa.TagTypeEntity;
 import org.finra.herd.service.functional.SearchFunctions;
 import org.finra.herd.service.helper.TagHelper;
 import org.finra.herd.service.impl.TagServiceImpl;
@@ -62,6 +75,9 @@ public class TagServiceIndexTest extends AbstractServiceTest
 
     @Mock
     private TagHelper tagHelper;
+
+    @Mock
+    private JsonHelper jsonHelper;
 
     @Before
     public void before()
@@ -134,7 +150,7 @@ public class TagServiceIndexTest extends AbstractServiceTest
     }
 
     @Test
-    public void testUpdateSearchIndexDocumentBusinessObjectDefinitionUpdate() throws Exception
+    public void testUpdateSearchIndexDocumentTagUpdate() throws Exception
     {
         List<TagEntity> tagEntityList = new ArrayList<>();
         TagEntity tagEntity1 = tagDaoTestHelper.createTagEntity(new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION);
@@ -166,7 +182,7 @@ public class TagServiceIndexTest extends AbstractServiceTest
     }
 
     @Test
-    public void testUpdateSearchIndexDocumentBusinessObjectDefinitionUpdateEmpty() throws Exception
+    public void testUpdateSearchIndexDocumentTagUpdateEmpty() throws Exception
     {
         List<TagEntity> tagEntityList = new ArrayList<>();
         TagEntity tagEntity1 = tagDaoTestHelper.createTagEntity(new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION);
@@ -198,7 +214,7 @@ public class TagServiceIndexTest extends AbstractServiceTest
     }
 
     @Test
-    public void testUpdateSearchIndexDocumentBusinessObjectDefinitionDelete() throws Exception
+    public void testUpdateSearchIndexDocumentTagDelete() throws Exception
     {
         List<TagEntity> tagEntityList = new ArrayList<>();
         TagEntity tagEntity1 = tagDaoTestHelper.createTagEntity(new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION);
@@ -226,7 +242,7 @@ public class TagServiceIndexTest extends AbstractServiceTest
     }
 
     @Test
-    public void testUpdateSearchIndexDocumentBusinessObjectDefinitionUnknown() throws Exception
+    public void testUpdateSearchIndexDocumentTagUnknown() throws Exception
     {
         List<TagEntity> tagEntityList = new ArrayList<>();
         TagEntity tagEntity1 = tagDaoTestHelper.createTagEntity(new TagKey(TAG_TYPE, TAG_CODE), TAG_DISPLAY_NAME, TAG_DESCRIPTION);
@@ -248,5 +264,277 @@ public class TagServiceIndexTest extends AbstractServiceTest
 
         // Verify the calls to external methods
         verify(configurationHelper, times(1)).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
+    }
+
+    @Test
+    public void testIndexValidateTags() throws Exception
+    {
+
+        // Create a tag type entity.
+        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER, TAG_TYPE_DESCRIPTION);
+
+        // Create two root tag entities for the tag type with tag display name in reverse order.
+        List<TagEntity> tagEntityList = Arrays.asList(tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION),
+            tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_2, TAG_DISPLAY_NAME, TAG_DESCRIPTION_2));
+
+        List<String> tagEntityIdList = new ArrayList<>();
+        tagEntityIdList.add("100");
+        tagEntityIdList.add("101");
+        tagEntityIdList.add("110");
+
+        // Mock the call to external methods
+        when(tagDao.getTags()).thenReturn(tagEntityList);
+        when(tagHelper.safeObjectMapperWriteValueAsString(any(TagEntity.class))).thenReturn("JSON_STRING");
+        when(searchFunctions.getValidateFunction()).thenReturn((indexName, documentType, id, json) -> {
+        });
+
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
+        when(searchFunctions.getIdsInIndexFunction()).thenReturn((indexName, documentType) -> tagEntityIdList);
+        when(searchFunctions.getDeleteDocumentByIdFunction()).thenReturn((indexName, documentType, id) -> {
+        });
+
+        // Call the method under test
+        Future<Void> future = tagService.indexValidateAllTags();
+
+        assertThat("Tag service index all tags method returned null value.", future, not(nullValue()));
+        assertThat("Tag service index all tags method return value is not instance of future.", future, instanceOf(Future.class));
+
+        // Verify the calls to external methods
+        verify(tagDao).getTags();
+        verify(searchFunctions).getValidateFunction();
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
+        verify(searchFunctions).getIdsInIndexFunction();
+        verify(searchFunctions, times(3)).getDeleteDocumentByIdFunction();
+        verify(tagHelper).executeFunctionForTagEntities(eq("tag"), eq("DOCUMENT_TYPE"), eq(tagEntityList), any());
+        verifyNoMoreInteractions(tagDao, searchFunctions, configurationHelper, tagHelper);
+    }
+
+    @Test
+    public void testIndexSizeCheckValidationTags() throws Exception
+    {
+        // Mock the call to external methods
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
+        when(searchFunctions.getNumberOfTypesInIndexFunction()).thenReturn((indexName, documentType) -> 100L);
+        when(tagDao.getCountOfAllTags()).thenReturn(100L);
+
+        // Call the method under test
+        boolean isIndexSizeValid = tagService.indexSizeCheckValidationTags();
+
+        assertThat("Tag service index size validation is false when it should have been true.", isIndexSizeValid, is(true));
+
+        // Verify the calls to external methods
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
+        verify(searchFunctions).getNumberOfTypesInIndexFunction();
+        verify(tagDao).getCountOfAllTags();
+        verifyNoMoreInteractions(tagDao, searchFunctions, configurationHelper);
+    }
+
+    @Test
+    public void testIndexSizeCheckValidationTagsFalse() throws Exception
+    {
+        // Mock the call to external methods
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
+        when(searchFunctions.getNumberOfTypesInIndexFunction()).thenReturn((indexName, documentType) -> 100L);
+        when(tagDao.getCountOfAllTags()).thenReturn(200L);
+
+        // Call the method under test
+        boolean isIndexSizeValid = tagService.indexSizeCheckValidationTags();
+
+        assertThat("Tag service index size validation is true when it should have been false.", isIndexSizeValid, is(false));
+
+        // Verify the calls to external methods
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
+        verify(searchFunctions).getNumberOfTypesInIndexFunction();
+        verify(tagDao).getCountOfAllTags();
+        verifyNoMoreInteractions(tagDao, searchFunctions, configurationHelper);
+    }
+
+    @Test
+    public void testIndexSpotCheckPercentageValidationTags() throws Exception
+    {
+        // Create a tag type entity.
+        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER, TAG_TYPE_DESCRIPTION);
+
+        // Create two root tag entities for the tag type with tag display name in reverse order.
+        List<TagEntity> rootTagEntities = Arrays.asList(tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION),
+            tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_2, TAG_DISPLAY_NAME, TAG_DESCRIPTION_2));
+
+        // Mock the call to external methods
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_TAG_SPOT_CHECK_PERCENTAGE, Double.class)).thenReturn(0.2);
+        when(tagDao.getPercentageOfAllTags(0.2)).thenReturn(rootTagEntities);
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
+        when(tagHelper.safeObjectMapperWriteValueAsString(any(TagEntity.class))).thenReturn("JSON_STRING");
+        when(searchFunctions.getIsValidFunction()).thenReturn((indexName, documentType, id, json) -> true);
+
+        // Call the method under test
+        boolean isSpotCheckPercentageValid = tagService.indexSpotCheckPercentageValidationTags();
+
+        assertThat("Tag service index spot check random validation is false when it should have been true.", isSpotCheckPercentageValid, is(true));
+
+        // Verify the calls to external methods
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_TAG_SPOT_CHECK_PERCENTAGE, Double.class);
+        verify(tagDao).getPercentageOfAllTags(0.2);
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
+        verify(tagHelper, times(2)).safeObjectMapperWriteValueAsString(any(TagEntity.class));
+        verify(searchFunctions, times(2)).getIsValidFunction();
+        verifyNoMoreInteractions(tagDao, searchFunctions, configurationHelper, jsonHelper);
+    }
+
+    @Test
+    public void testIndexSpotCheckPercentageValidationTagsFalse() throws Exception
+    {
+        // Create a tag type entity.
+        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER, TAG_TYPE_DESCRIPTION);
+
+        // Create two root tag entities for the tag type with tag display name in reverse order.
+        List<TagEntity> rootTagEntities = Arrays.asList(tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION),
+            tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_2, TAG_DISPLAY_NAME, TAG_DESCRIPTION_2));
+
+
+        // Mock the call to external methods
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_TAG_SPOT_CHECK_PERCENTAGE, Double.class)).thenReturn(0.2);
+        when(tagDao.getPercentageOfAllTags(0.2)).thenReturn(rootTagEntities);
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
+        when(tagHelper.safeObjectMapperWriteValueAsString(any(TagEntity.class))).thenReturn("JSON_STRING");
+        when(searchFunctions.getIsValidFunction()).thenReturn((indexName, documentType, id, json) -> false);
+
+        // Call the method under test
+        boolean isSpotCheckPercentageValid = tagService.indexSpotCheckPercentageValidationTags();
+
+        assertThat("Tag service index spot check random validation is true when it should have been false.", isSpotCheckPercentageValid, is(false));
+
+        // Verify the calls to external methods
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_TAG_SPOT_CHECK_PERCENTAGE, Double.class);
+        verify(tagDao).getPercentageOfAllTags(0.2);
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
+        verify(tagHelper, times(2)).safeObjectMapperWriteValueAsString(any(TagEntity.class));
+        verify(searchFunctions, times(2)).getIsValidFunction();
+        verifyNoMoreInteractions(tagDao, searchFunctions, configurationHelper, jsonHelper);
+    }
+
+    @Test
+    public void testIndexSpotCheckPercentageValidationTagsObjectMappingException() throws Exception
+    {
+        // Create a tag type entity.
+        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER, TAG_TYPE_DESCRIPTION);
+
+        // Create two root tag entities for the tag type with tag display name in reverse order.
+        List<TagEntity> rootTagEntities = Arrays.asList(tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION),
+            tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_2, TAG_DISPLAY_NAME, TAG_DESCRIPTION_2));
+
+        // Mock the call to external methods
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_TAG_SPOT_CHECK_PERCENTAGE, Double.class)).thenReturn(0.2);
+        when(tagDao.getPercentageOfAllTags(0.2)).thenReturn(rootTagEntities);
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
+        when(jsonHelper.objectToJson(any()))
+            .thenThrow(new IllegalStateException(new JsonParseException("Failed to Parse", new JsonLocation("SRC", 100L, 1, 2))));
+        when(searchFunctions.getIsValidFunction()).thenReturn((indexName, documentType, id, json) -> false);
+
+        // Call the method under test
+        boolean isSpotCheckPercentageValid = tagService.indexSpotCheckPercentageValidationTags();
+
+        assertThat("Tag service index spot check random validation is true when it should have been false.", isSpotCheckPercentageValid, is(false));
+
+        // Verify the calls to external methods
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_TAG_SPOT_CHECK_PERCENTAGE, Double.class);
+        verify(tagDao).getPercentageOfAllTags(0.2);
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
+        verify(tagHelper, times(2)).safeObjectMapperWriteValueAsString(any(TagEntity.class));
+        verify(searchFunctions, times(2)).getIsValidFunction();
+        verifyNoMoreInteractions(tagDao, searchFunctions, configurationHelper, jsonHelper);
+    }
+
+    @Test
+    public void testIndexSpotCheckMostRecentValidationTags() throws Exception
+    {
+        // Create a tag type entity.
+        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER, TAG_TYPE_DESCRIPTION);
+
+        // Create two root tag entities for the tag type with tag display name in reverse order.
+        List<TagEntity> rootTagEntities = Arrays.asList(tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION),
+            tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_2, TAG_DISPLAY_NAME, TAG_DESCRIPTION_2));
+
+        // Mock the call to external methods
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_TAG_SPOT_CHECK_MOST_RECENT_NUMBER, Integer.class)).thenReturn(10);
+        when(tagDao.getMostRecentTags(10)).thenReturn(rootTagEntities);
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
+        when(tagHelper.safeObjectMapperWriteValueAsString(any(TagEntity.class))).thenReturn("JSON_STRING");
+        when(searchFunctions.getIsValidFunction()).thenReturn((indexName, documentType, id, json) -> true);
+
+        // Call the method under test
+        boolean isSpotCheckMostRecentValid = tagService.indexSpotCheckMostRecentValidationTags();
+
+        assertThat("Tag service index spot check most recent validation is false when it should have been true.", isSpotCheckMostRecentValid, is(true));
+
+        // Verify the calls to external methods
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_TAG_SPOT_CHECK_MOST_RECENT_NUMBER, Integer.class);
+        verify(tagDao).getMostRecentTags(10);
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
+        verify(tagHelper, times(2)).safeObjectMapperWriteValueAsString(any(TagEntity.class));
+        verify(searchFunctions, times(2)).getIsValidFunction();
+        verifyNoMoreInteractions(tagDao, searchFunctions, configurationHelper, jsonHelper, tagHelper);
+    }
+
+    @Test
+    public void testIndexSpotCheckMostRecentValidationTagsFalse() throws Exception
+    {
+        // Create a tag type entity.
+        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER, TAG_TYPE_DESCRIPTION);
+
+        // Create two root tag entities for the tag type with tag display name in reverse order.
+        List<TagEntity> rootTagEntities = Arrays.asList(tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION),
+            tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_2, TAG_DISPLAY_NAME, TAG_DESCRIPTION_2));
+
+        // Mock the call to external methods
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_TAG_SPOT_CHECK_MOST_RECENT_NUMBER, Integer.class)).thenReturn(10);
+        when(tagDao.getMostRecentTags(10)).thenReturn(rootTagEntities);
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
+        when(tagHelper.safeObjectMapperWriteValueAsString(any(TagEntity.class))).thenReturn("JSON_STRING");
+        when(searchFunctions.getIsValidFunction()).thenReturn((indexName, documentType, id, json) -> false);
+
+        // Call the method under test
+        boolean isSpotCheckMostRecentValid = tagService.indexSpotCheckMostRecentValidationTags();
+
+        assertThat("Tag service index spot check most recent validation is true when it should have been false.", isSpotCheckMostRecentValid, is(false));
+
+        // Verify the calls to external methods
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_TAG_SPOT_CHECK_MOST_RECENT_NUMBER, Integer.class);
+        verify(tagDao).getMostRecentTags(10);
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
+        verify(tagHelper, times(2)).safeObjectMapperWriteValueAsString(any(TagEntity.class));
+        verify(searchFunctions, times(2)).getIsValidFunction();
+        verifyNoMoreInteractions(tagDao, searchFunctions, configurationHelper, jsonHelper, tagHelper);
+    }
+
+    @Test
+    public void testIndexSpotCheckMostRecentValidationTagsObjectMappingException() throws Exception
+    {
+        // Create a tag type entity.
+        TagTypeEntity tagTypeEntity = tagTypeDaoTestHelper.createTagTypeEntity(TAG_TYPE, TAG_TYPE_DISPLAY_NAME, TAG_TYPE_ORDER, TAG_TYPE_DESCRIPTION);
+
+        // Create two root tag entities for the tag type with tag display name in reverse order.
+        List<TagEntity> rootTagEntities = Arrays.asList(tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE, TAG_DISPLAY_NAME_2, TAG_DESCRIPTION),
+            tagDaoTestHelper.createTagEntity(tagTypeEntity, TAG_CODE_2, TAG_DISPLAY_NAME, TAG_DESCRIPTION_2));
+
+        // Mock the call to external methods
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_TAG_SPOT_CHECK_MOST_RECENT_NUMBER, Integer.class)).thenReturn(10);
+        when(tagDao.getMostRecentTags(10)).thenReturn(rootTagEntities);
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class)).thenReturn("DOCUMENT_TYPE");
+        when(jsonHelper.objectToJson(any()))
+            .thenThrow(new IllegalStateException(new JsonParseException("Failed to Parse", new JsonLocation("SRC", 100L, 1, 2))));
+        when(searchFunctions.getIsValidFunction()).thenReturn((indexName, documentType, id, json) -> false);
+
+        // Call the method under test
+        boolean isSpotCheckMostRecentValid = tagService.indexSpotCheckMostRecentValidationTags();
+
+        assertThat("Tag service index spot check most recent validation is true when it should have been false.", isSpotCheckMostRecentValid, is(false));
+
+        // Verify the calls to external methods
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_TAG_SPOT_CHECK_MOST_RECENT_NUMBER, Integer.class);
+        verify(tagDao).getMostRecentTags(10);
+        verify(configurationHelper).getProperty(ConfigurationValue.ELASTICSEARCH_BDEF_DOCUMENT_TYPE, String.class);
+        verify(tagHelper, times(2)).safeObjectMapperWriteValueAsString(any(TagEntity.class));
+        verify(searchFunctions, times(2)).getIsValidFunction();
+        verifyNoMoreInteractions(tagDao, searchFunctions, configurationHelper, jsonHelper, tagHelper);
     }
 }

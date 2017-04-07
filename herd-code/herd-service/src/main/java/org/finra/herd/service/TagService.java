@@ -16,6 +16,7 @@
 package org.finra.herd.service;
 
 import java.util.Set;
+import java.util.concurrent.Future;
 
 import org.finra.herd.model.api.xml.Tag;
 import org.finra.herd.model.api.xml.TagCreateRequest;
@@ -100,4 +101,32 @@ public interface TagService
      * @return the updated tag.
      */
     public Tag updateTag(TagKey tagKey, TagUpdateRequest tagUpdateRequest);
+
+    /**
+     * Checks the count of tags in the database against the count of tags in the index.
+     *
+     * @return boolean value true for valid, false otherwise
+     */
+    public boolean indexSizeCheckValidationTags();
+
+    /**
+     * Spot check a random percentage of tags in the search index
+     *
+     * @return boolean value true for valid, false otherwise
+     */
+    public boolean indexSpotCheckPercentageValidationTags();
+
+    /**
+     * Spot check the most recent tags in the search index
+     *
+     * @return boolean value true for valid, false otherwise
+     */
+    public boolean indexSpotCheckMostRecentValidationTags();
+
+    /**
+     * Validate that the search index contains all tags
+     *
+     * @return result of an asynchronous computation
+     */
+    public Future<Void> indexValidateAllTags();
 }

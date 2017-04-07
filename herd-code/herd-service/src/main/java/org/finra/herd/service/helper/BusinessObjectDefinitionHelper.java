@@ -126,7 +126,7 @@ public class BusinessObjectDefinitionHelper
      *
      * @return the JSON string value of the business object definition entity
      */
-    private String safeObjectMapperWriteValueAsString(final BusinessObjectDefinitionEntity businessObjectDefinitionEntity)
+    public String safeObjectMapperWriteValueAsString(final BusinessObjectDefinitionEntity businessObjectDefinitionEntity)
     {
         String jsonString = "";
 

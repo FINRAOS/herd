@@ -55,6 +55,7 @@ import org.finra.herd.dao.helper.XmlHelper;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatus;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatusChangeEvent;
+import org.finra.herd.model.api.xml.BusinessObjectFormatKey;
 import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormat;
 import org.finra.herd.model.api.xml.DescriptiveBusinessObjectFormatUpdateRequest;
 import org.finra.herd.model.api.xml.JobStatusEnum;
@@ -78,6 +79,7 @@ import org.finra.herd.service.helper.BusinessObjectDataAttributeHelper;
 import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.service.helper.BusinessObjectDataInvalidateUnregisteredHelper;
+import org.finra.herd.service.helper.BusinessObjectDataRetryStoragePolicyTransitionHelper;
 import org.finra.herd.service.helper.BusinessObjectDataSearchHelper;
 import org.finra.herd.service.helper.BusinessObjectDefinitionColumnDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectFormatHelper;
@@ -221,6 +223,8 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final List<BusinessObjectDataStatusChangeEvent> NO_BUSINESS_OBJECT_DATA_STATUS_HISTORY = null;
 
+    public static final List<BusinessObjectFormatKey> NO_BUSINESS_OBJECT_FORMAT_PARENTS = null;
+
     public static final String NO_COLUMN_DEFAULT_VALUE = null;
 
     public static final String NO_COLUMN_DESCRIPTION = null;
@@ -304,6 +308,10 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     public static final Long ROW_COUNT_2 = (long) (Math.random() * Long.MAX_VALUE);
 
     public static final String ROW_FORMAT = "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' ESCAPED BY '\\\\' NULL DEFINED AS '\\N'";
+
+    public static final String S3_ARCHIVE_TO_GLACIER_TAG_KEY = "UT_S3_Archive_To_Glacier_Tag_Key_" + RANDOM_SUFFIX;
+
+    public static final String S3_ARCHIVE_TO_GLACIER_TAG_VALUE = "UT_S3_Archive_To_Glacier_Tag_Value_" + RANDOM_SUFFIX;
 
     public static final String S3_KEY_PREFIX_VELOCITY_TEMPLATE =
         "$namespace/$dataProviderName/$businessObjectFormatUsage/$businessObjectFormatFileType/$businessObjectDefinitionName" +
@@ -423,7 +431,7 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     protected BusinessObjectDataNotificationRegistrationService businessObjectDataNotificationRegistrationService;
 
     @Autowired
-    protected BusinessObjectDataRetryStoragePolicyTransitionHelperService businessObjectDataRetryStoragePolicyTransitionHelperService;
+    protected BusinessObjectDataRetryStoragePolicyTransitionHelper businessObjectDataRetryStoragePolicyTransitionHelper;
 
     @Autowired
     protected BusinessObjectDataSearchHelper businessObjectDataSearchHelper;
@@ -516,6 +524,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
     protected Hive13DdlGenerator hive13DdlGenerator;
 
     @Autowired
+    protected IndexSearchResultTypeHelper indexSearchResultTypeHelper;
+
+    @Autowired
     protected JdbcService jdbcService;
 
     @Autowired
@@ -538,9 +549,6 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     @Autowired
     protected JsonHelper jsonHelper;
-
-    @Autowired
-    protected IndexSearchResultTypeHelper indexSearchResultTypeHelper;
 
     @Autowired
     protected NamespaceService namespaceService;

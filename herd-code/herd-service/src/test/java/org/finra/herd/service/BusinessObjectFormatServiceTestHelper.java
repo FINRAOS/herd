@@ -316,6 +316,15 @@ public class BusinessObjectFormatServiceTestHelper
 
     /**
      * Creates relative database entities required for the unit tests.
+     */
+    public void createTestDatabaseEntitiesForBusinessObjectFormatTestingWithParent(List<BusinessObjectFormatKey> businessObjectParents)
+    {
+        createTestDatabaseEntitiesForBusinessObjectFormatTesting(AbstractServiceTest.NAMESPACE, AbstractServiceTest.DATA_PROVIDER_NAME,
+            AbstractServiceTest.BDEF_NAME, AbstractServiceTest.FORMAT_FILE_TYPE_CODE, AbstractServiceTest.PARTITION_KEY_GROUP);
+    }
+
+    /**
+     * Creates relative database entities required for the unit tests.
      *
      * @param namespaceCode the namespace Code
      * @param dataProviderName the data provider name
