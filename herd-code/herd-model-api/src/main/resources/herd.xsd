@@ -6419,6 +6419,12 @@
                </xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="enableHitHighlighting" type="xs:boolean" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation>An optional boolean flag that specifies if highlighting should be enabled on the matched terms or not
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
       </xs:all>
    </xs:complexType>
 
@@ -6561,6 +6567,65 @@
             </xs:annotation>
          </xs:element>
       </xs:all>
+   </xs:complexType>
+
+   <xs:element name="highlight" type="highlight">
+      <xs:annotation>
+         <xs:documentation>A wrapper for the highlighted fields content
+         </xs:documentation>
+      </xs:annotation>
+   </xs:element>
+   <xs:complexType name="highlight">
+      <xs:sequence>
+         <xs:element name="fields" type="fields" minOccurs="0" maxOccurs="unbounded" />
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:element name="fields" type="fields">
+      <xs:annotation>
+         <xs:documentation>A list of fields which matched and have highlighted content
+         </xs:documentation>
+      </xs:annotation>
+   </xs:element>
+   <xs:complexType name="fields">
+      <xs:sequence>
+         <xs:element name="field" type="field" minOccurs="0" maxOccurs="unbounded" />
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:element name="field" type="field">
+      <xs:annotation>
+         <xs:documentation>A single field from the document which has a highlighted fragment
+         </xs:documentation>
+      </xs:annotation>
+   </xs:element>
+   <xs:complexType name="field">
+      <xs:all>
+         <xs:element name="fieldName" type="xs:string">
+            <xs:annotation>
+               <xs:documentation>Name of the field which has highlighted content
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="fragments" type="fragments" />
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="fragments" type="fragments">
+      <xs:annotation>
+         <xs:documentation>A list of fragments which contain the highlighted content
+         </xs:documentation>
+      </xs:annotation>
+   </xs:element>
+   <xs:complexType name="fragments">
+      <xs:sequence>
+         <xs:element name="fragment" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>Actual text fragments (partial) which contain the highlighted content
+               </xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
    </xs:complexType>
 
 </xs:schema>

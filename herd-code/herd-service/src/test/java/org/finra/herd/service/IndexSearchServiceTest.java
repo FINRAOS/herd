@@ -102,7 +102,7 @@ public class IndexSearchServiceTest extends AbstractServiceTest
     public void testIndexSearch()
     {
         // Create index search request
-        final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM, null, null);
+        final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM, null, null, false);
 
         // Create a new fields set that will be used when testing the index search method
         final Set<String> fields = Sets.newHashSet(FIELD_DISPLAY_NAME, FIELD_SHORT_DESCRIPTION);
@@ -164,7 +164,7 @@ public class IndexSearchServiceTest extends AbstractServiceTest
         List<IndexSearchFilter> indexSearchFilters = Collections.singletonList(indexSearchFilter);
 
         // Create index search request
-        final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM, indexSearchFilters, null);
+        final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM, indexSearchFilters, null, false);
 
         // Create a new fields set that will be used when testing the index search method
         final Set<String> fields = Sets.newHashSet(FIELD_DISPLAY_NAME, FIELD_SHORT_DESCRIPTION);
@@ -244,7 +244,7 @@ public class IndexSearchServiceTest extends AbstractServiceTest
         List<IndexSearchFilter> indexSearchFilters = Collections.singletonList(indexSearchFilter);
 
         // Create index search request
-        final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM, indexSearchFilters, null);
+        final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM, indexSearchFilters, null, false);
 
         // Create a new fields set that will be used when testing the index search method
         final Set<String> fields = Sets.newHashSet(FIELD_DISPLAY_NAME, FIELD_SHORT_DESCRIPTION);
@@ -321,7 +321,7 @@ public class IndexSearchServiceTest extends AbstractServiceTest
         List<IndexSearchFilter> indexSearchFilters = Collections.singletonList(indexSearchFilter);
 
         // Create index search request
-        final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM, indexSearchFilters, null);
+        final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM, indexSearchFilters, null, false);
 
         // Create a new fields set that will be used when testing the index search method
         final Set<String> fields = Sets.newHashSet(FIELD_DISPLAY_NAME, FIELD_SHORT_DESCRIPTION);
@@ -390,7 +390,7 @@ public class IndexSearchServiceTest extends AbstractServiceTest
         List<IndexSearchFilter> indexSearchFilters = Collections.singletonList(indexSearchFilter);
 
         // Create index search request
-        final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM, indexSearchFilters, null);
+        final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM, indexSearchFilters, null, false);
 
         // Create a new fields set that will be used when testing the index search method
         final Set<String> fields = Sets.newHashSet(FIELD_DISPLAY_NAME, FIELD_SHORT_DESCRIPTION);
@@ -444,7 +444,7 @@ public class IndexSearchServiceTest extends AbstractServiceTest
         final List<String> facetsRequested = Collections.singletonList(ElasticsearchHelper.TAG_FACET);
 
         // Create index search request
-        final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM, null, facetsRequested);
+        final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM, null, facetsRequested, false);
 
         // Create a new fields set that will be used when testing the index search method
         final Set<String> fields = Sets.newHashSet(FIELD_DISPLAY_NAME, FIELD_SHORT_DESCRIPTION);
@@ -517,7 +517,7 @@ public class IndexSearchServiceTest extends AbstractServiceTest
         List<IndexSearchFilter> indexSearchFilters = Collections.singletonList(indexSearchFilter);
 
         // Create index search request
-        final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM, indexSearchFilters, null);
+        final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM, indexSearchFilters, null, false);
 
         // Create a new fields set that will be used when testing the index search method
         final Set<String> fields = Sets.newHashSet(FIELD_DISPLAY_NAME, FIELD_SHORT_DESCRIPTION);
@@ -561,7 +561,7 @@ public class IndexSearchServiceTest extends AbstractServiceTest
         List<IndexSearchFilter> indexSearchFilters = Collections.singletonList(indexSearchFilter);
 
         // Create index search request
-        final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM, indexSearchFilters, null);
+        final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM, indexSearchFilters, null, false);
 
         // Create a new fields set that will be used when testing the index search method
         final Set<String> fields = Sets.newHashSet(FIELD_DISPLAY_NAME, FIELD_SHORT_DESCRIPTION);
@@ -644,7 +644,7 @@ public class IndexSearchServiceTest extends AbstractServiceTest
         List<IndexSearchFilter> indexSearchFilters = Collections.singletonList(indexSearchFilter);
 
         // Create index search request
-        final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM, indexSearchFilters, null);
+        final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM, indexSearchFilters, null, false);
 
         // Create a new fields set that will be used when testing the index search method
         final Set<String> fields = Sets.newHashSet(FIELD_DISPLAY_NAME, FIELD_SHORT_DESCRIPTION);
@@ -678,7 +678,7 @@ public class IndexSearchServiceTest extends AbstractServiceTest
     {
         final List<IndexSearchFilter> emptyFilters = new ArrayList<>();
         // Create index search request
-        final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM, emptyFilters, null);
+        final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM, emptyFilters, null, false);
 
         // Create a new fields set that will be used when testing the index search method
         final Set<String> fields = Sets.newHashSet(FIELD_DISPLAY_NAME, FIELD_SHORT_DESCRIPTION);
