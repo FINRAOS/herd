@@ -661,6 +661,31 @@ public enum ConfigurationValue
         "{ \"clientTransportAddresses\": [\"localhost\"], \"clientTransportSniff\": true, \"elasticSearchCluster\": \"elasticsearch\" }"),
 
     /**
+     * Searchable 'stemmed' fields, defaults to all stemmed fields with no boost
+     */
+    ELASTICSEARCH_SEARCHABLE_FIELDS_STEMMED("elasticsearch.searchable.fields.stemmed", "{\"*.stemmed\": \"1.0\"}"),
+
+    /**
+     * Searchable 'stemmed' fields, defaults to all ngrams fields with no boost
+     */
+    ELASTICSEARCH_SEARCHABLE_FIELDS_NGRAMS("elasticsearch.searchable.fields.ngrams", "{\"*.ngrams\": \"1.0\"}"),
+
+    /**
+     * Pre-tags used for highlighting
+     */
+    ELASTICSEARCH_HIGHLIGHT_PRETAGS("elasticsearch.highlight.pretags", "<hlt class=\"highlight\">"),
+
+    /**
+     * Post-tags used for highlighting
+     */
+    ELASTICSEARCH_HIGHLIGHT_POSTTAGS("elasticsearch.highlight.posttags", "</hlt>"),
+
+    /**
+     * Fields on which highlighting should be done, defaults to all fields
+     */
+    ELASTICSEARCH_HIGHLIGHT_FIELDS("elasticsearch.highlight.fields", "{\"fields\": [\"*\"]}"),
+
+    /**
      * The elasticsearch default port
      */
     ELASTICSEARCH_DEFAULT_PORT("elasticsearch.default.port", 9300),
