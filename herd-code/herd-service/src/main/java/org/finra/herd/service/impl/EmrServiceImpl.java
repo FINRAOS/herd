@@ -511,6 +511,10 @@ public class EmrServiceImpl implements EmrService
             {
                 emrClusterDefinition.setInstanceDefinitions(emrClusterDefinitionOverride.getInstanceDefinitions());
             }
+            if (emrClusterDefinitionOverride.getInstanceFleets() != null)
+            {
+                emrClusterDefinition.setInstanceFleets(emrClusterDefinitionOverride.getInstanceFleets());
+            }
             if (emrClusterDefinitionOverride.getNodeTags() != null)
             {
                 emrClusterDefinition.setNodeTags(emrClusterDefinitionOverride.getNodeTags());

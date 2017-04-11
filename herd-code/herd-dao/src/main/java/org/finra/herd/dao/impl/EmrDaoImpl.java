@@ -32,10 +32,15 @@ import com.amazonaws.services.elasticmapreduce.model.Configuration;
 import com.amazonaws.services.elasticmapreduce.model.DescribeClusterRequest;
 import com.amazonaws.services.elasticmapreduce.model.DescribeClusterResult;
 import com.amazonaws.services.elasticmapreduce.model.DescribeStepRequest;
+import com.amazonaws.services.elasticmapreduce.model.EbsBlockDeviceConfig;
+import com.amazonaws.services.elasticmapreduce.model.EbsConfiguration;
 import com.amazonaws.services.elasticmapreduce.model.Instance;
+import com.amazonaws.services.elasticmapreduce.model.InstanceFleetConfig;
+import com.amazonaws.services.elasticmapreduce.model.InstanceFleetProvisioningSpecifications;
 import com.amazonaws.services.elasticmapreduce.model.InstanceGroupConfig;
 import com.amazonaws.services.elasticmapreduce.model.InstanceGroupType;
 import com.amazonaws.services.elasticmapreduce.model.InstanceRoleType;
+import com.amazonaws.services.elasticmapreduce.model.InstanceTypeConfig;
 import com.amazonaws.services.elasticmapreduce.model.JobFlowInstancesConfig;
 import com.amazonaws.services.elasticmapreduce.model.ListClustersRequest;
 import com.amazonaws.services.elasticmapreduce.model.ListClustersResult;
@@ -44,11 +49,13 @@ import com.amazonaws.services.elasticmapreduce.model.ListStepsRequest;
 import com.amazonaws.services.elasticmapreduce.model.MarketType;
 import com.amazonaws.services.elasticmapreduce.model.RunJobFlowRequest;
 import com.amazonaws.services.elasticmapreduce.model.ScriptBootstrapActionConfig;
+import com.amazonaws.services.elasticmapreduce.model.SpotProvisioningSpecification;
 import com.amazonaws.services.elasticmapreduce.model.Step;
 import com.amazonaws.services.elasticmapreduce.model.StepConfig;
 import com.amazonaws.services.elasticmapreduce.model.StepState;
 import com.amazonaws.services.elasticmapreduce.model.StepSummary;
 import com.amazonaws.services.elasticmapreduce.model.Tag;
+import com.amazonaws.services.elasticmapreduce.model.VolumeSpecification;
 import com.amazonaws.services.elasticmapreduce.util.StepFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -70,6 +77,13 @@ import org.finra.herd.model.api.xml.ConfigurationFiles;
 import org.finra.herd.model.api.xml.EmrClusterDefinition;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionApplication;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionConfiguration;
+import org.finra.herd.model.api.xml.EmrClusterDefinitionEbsBlockDeviceConfig;
+import org.finra.herd.model.api.xml.EmrClusterDefinitionEbsConfiguration;
+import org.finra.herd.model.api.xml.EmrClusterDefinitionInstanceFleet;
+import org.finra.herd.model.api.xml.EmrClusterDefinitionInstanceTypeConfig;
+import org.finra.herd.model.api.xml.EmrClusterDefinitionLaunchSpecifications;
+import org.finra.herd.model.api.xml.EmrClusterDefinitionSpotSpecification;
+import org.finra.herd.model.api.xml.EmrClusterDefinitionVolumeSpecification;
 import org.finra.herd.model.api.xml.HadoopJarStep;
 import org.finra.herd.model.api.xml.InstanceDefinition;
 import org.finra.herd.model.api.xml.KeyValuePairConfiguration;
@@ -524,6 +538,51 @@ public class EmrDaoImpl implements EmrDao
         return bootstrapActions;
     }
 
+    private EbsBlockDeviceConfig getEbsBlockDeviceConfig(EmrClusterDefinitionEbsBlockDeviceConfig emrClusterDefinitionEbsBlockDeviceConfig)
+    {
+        EbsBlockDeviceConfig ebsBlockDeviceConfig = null;
+
+        if (emrClusterDefinitionEbsBlockDeviceConfig != null)
+        {
+            ebsBlockDeviceConfig = new EbsBlockDeviceConfig();
+            ebsBlockDeviceConfig.setVolumeSpecification(getVolumeSpecification(emrClusterDefinitionEbsBlockDeviceConfig.getVolumeSpecification()));
+            ebsBlockDeviceConfig.setVolumesPerInstance(emrClusterDefinitionEbsBlockDeviceConfig.getVolumesPerInstance());
+        }
+
+        return ebsBlockDeviceConfig;
+    }
+
+    private List<EbsBlockDeviceConfig> getEbsBlockDeviceConfigs(List<EmrClusterDefinitionEbsBlockDeviceConfig> emrClusterDefinitionEbsBlockDeviceConfigs)
+    {
+        List<EbsBlockDeviceConfig> ebsBlockDeviceConfigs = null;
+
+        if (!CollectionUtils.isEmpty(emrClusterDefinitionEbsBlockDeviceConfigs))
+        {
+            ebsBlockDeviceConfigs = new ArrayList<>();
+
+            for (EmrClusterDefinitionEbsBlockDeviceConfig emrClusterDefinitionEbsBlockDeviceConfig : emrClusterDefinitionEbsBlockDeviceConfigs)
+            {
+                ebsBlockDeviceConfigs.add(getEbsBlockDeviceConfig(emrClusterDefinitionEbsBlockDeviceConfig));
+            }
+        }
+
+        return ebsBlockDeviceConfigs;
+    }
+
+    private EbsConfiguration getEbsConfiguration(EmrClusterDefinitionEbsConfiguration emrClusterDefinitionEbsConfiguration)
+    {
+        EbsConfiguration ebsConfiguration = null;
+
+        if (emrClusterDefinitionEbsConfiguration != null)
+        {
+            ebsConfiguration = new EbsConfiguration();
+            ebsConfiguration.setEbsBlockDeviceConfigs(getEbsBlockDeviceConfigs(emrClusterDefinitionEbsConfiguration.getEbsBlockDeviceConfigs()));
+            ebsConfiguration.setEbsOptimized(emrClusterDefinitionEbsConfiguration.isEbsOptimized());
+        }
+
+        return ebsConfiguration;
+    }
+
     /**
      * Create the tag list for the EMR nodes.
      *
@@ -564,7 +623,56 @@ public class EmrDaoImpl implements EmrDao
     }
 
     /**
-     * Create the instance group configuration.
+     * Creates configuration that defines an instance fleet.
+     *
+     * @param emrClusterDefinitionInstanceFleet the instance fleet configuration from the EMR cluster definition
+     *
+     * @return the instance fleet configuration
+     */
+    private InstanceFleetConfig getInstanceFleetConfig(EmrClusterDefinitionInstanceFleet emrClusterDefinitionInstanceFleet)
+    {
+        InstanceFleetConfig instanceFleetConfig = null;
+
+        if (emrClusterDefinitionInstanceFleet != null)
+        {
+            instanceFleetConfig = new InstanceFleetConfig();
+            instanceFleetConfig.setName(emrClusterDefinitionInstanceFleet.getName());
+            instanceFleetConfig.setInstanceFleetType(emrClusterDefinitionInstanceFleet.getInstanceFleetType());
+            instanceFleetConfig.setTargetOnDemandCapacity(emrClusterDefinitionInstanceFleet.getTargetOnDemandCapacity());
+            instanceFleetConfig.setTargetSpotCapacity(emrClusterDefinitionInstanceFleet.getTargetSpotCapacity());
+            instanceFleetConfig.setInstanceTypeConfigs(getInstanceTypeConfigs(emrClusterDefinitionInstanceFleet.getInstanceTypeConfigs()));
+            instanceFleetConfig.setLaunchSpecifications(getLaunchSpecifications(emrClusterDefinitionInstanceFleet.getLaunchSpecifications()));
+        }
+
+        return instanceFleetConfig;
+    }
+
+    /**
+     * Creates an instance fleet configuration that describes the EC2 instances and instance configurations for clusters that use this feature.
+     *
+     * @param emrClusterDefinition the EMR cluster definition that contains all the EMR parameters
+     *
+     * @return the instance fleet configuration
+     */
+    private List<InstanceFleetConfig> getInstanceFleets(EmrClusterDefinition emrClusterDefinition)
+    {
+        List<InstanceFleetConfig> instanceFleets = null;
+
+        if (!CollectionUtils.isEmpty(emrClusterDefinition.getInstanceFleets()))
+        {
+            instanceFleets = new ArrayList<>();
+
+            for (EmrClusterDefinitionInstanceFleet emrClusterDefinitionInstanceFleet : emrClusterDefinition.getInstanceFleets())
+            {
+                instanceFleets.add(getInstanceFleetConfig(emrClusterDefinitionInstanceFleet));
+            }
+        }
+
+        return instanceFleets;
+    }
+
+    /**
+     * Creates an instance group configuration.
      *
      * @param roleType role type for the instance group (MASTER/CORE/TASK).
      * @param instanceType EC2 instance type for the instance group.
@@ -624,8 +732,43 @@ public class EmrDaoImpl implements EmrDao
         return emrInstanceGroups;
     }
 
+    private InstanceTypeConfig getInstanceTypeConfig(EmrClusterDefinitionInstanceTypeConfig emrClusterDefinitionInstanceTypeConfig)
+    {
+        InstanceTypeConfig instanceTypeConfig = null;
+
+        if (emrClusterDefinitionInstanceTypeConfig != null)
+        {
+            instanceTypeConfig = new InstanceTypeConfig();
+            instanceTypeConfig.setInstanceType(emrClusterDefinitionInstanceTypeConfig.getInstanceType());
+            instanceTypeConfig.setWeightedCapacity(emrClusterDefinitionInstanceTypeConfig.getWeightedCapacity());
+            instanceTypeConfig.setBidPrice(emrClusterDefinitionInstanceTypeConfig.getInstanceType());
+            instanceTypeConfig.setBidPriceAsPercentageOfOnDemandPrice(emrClusterDefinitionInstanceTypeConfig.getBidPriceAsPercentageOfOnDemandPrice());
+            instanceTypeConfig.setEbsConfiguration(getEbsConfiguration(emrClusterDefinitionInstanceTypeConfig.getEbsConfiguration()));
+            instanceTypeConfig.setConfigurations(getConfigurations(emrClusterDefinitionInstanceTypeConfig.getConfigurations()));
+        }
+
+        return instanceTypeConfig;
+    }
+
+    private List<InstanceTypeConfig> getInstanceTypeConfigs(List<EmrClusterDefinitionInstanceTypeConfig> emrClusterDefinitionInstanceTypeConfigs)
+    {
+        List<InstanceTypeConfig> instanceTypeConfigs = null;
+
+        if (!CollectionUtils.isEmpty(emrClusterDefinitionInstanceTypeConfigs))
+        {
+            instanceTypeConfigs = new ArrayList<>();
+
+            for (EmrClusterDefinitionInstanceTypeConfig emrClusterDefinitionInstanceTypeConfig : emrClusterDefinitionInstanceTypeConfigs)
+            {
+                instanceTypeConfigs.add(getInstanceTypeConfig(emrClusterDefinitionInstanceTypeConfig));
+            }
+        }
+
+        return instanceTypeConfigs;
+    }
+
     /**
-     * Create the job flow instance configuration which contains all the job flow configuration details.
+     * Creates the job flow instance configuration containing specification of the number and type of Amazon EC2 instances.
      *
      * @param emrClusterDefinition the EMR cluster definition that contains all the EMR parameters
      *
@@ -633,7 +776,7 @@ public class EmrDaoImpl implements EmrDao
      */
     private JobFlowInstancesConfig getJobFlowInstancesConfig(EmrClusterDefinition emrClusterDefinition)
     {
-        // Create a new job flow instance config object
+        // Create a new job flow instances configuration object.
         JobFlowInstancesConfig jobFlowInstancesConfig = new JobFlowInstancesConfig();
 
         // Add additional security groups to master nodes.
@@ -642,42 +785,58 @@ public class EmrDaoImpl implements EmrDao
         // Add additional security groups to slave nodes.
         jobFlowInstancesConfig.setAdditionalSlaveSecurityGroups(emrClusterDefinition.getAdditionalSlaveSecurityGroups());
 
-        // Fill-in the ssh key
+        // Fill-in the ssh key.
         if (StringUtils.isNotBlank(emrClusterDefinition.getSshKeyPairName()))
         {
             jobFlowInstancesConfig.setEc2KeyName(emrClusterDefinition.getSshKeyPairName());
         }
 
-        // Fill-in subnet id
+        // Fill-in subnet id.
         if (StringUtils.isNotBlank(emrClusterDefinition.getSubnetId()))
         {
             jobFlowInstancesConfig.setEc2SubnetId(emrClusterDefinition.getSubnetId());
         }
 
-        // Fill in instance groups
+        // Fill in configuration for the instance groups in a cluster.
         jobFlowInstancesConfig.setInstanceGroups(getInstanceGroupConfig(emrClusterDefinition));
 
-        // Check for optional parameters and then fill-in
-        // Keep Alive Cluster flag
+        // Fill in instance fleet configuration.
+        jobFlowInstancesConfig.setInstanceFleets(getInstanceFleets(emrClusterDefinition));
+
+        // Fill in optional keep alive flag.
         if (emrClusterDefinition.isKeepAlive() != null)
         {
             jobFlowInstancesConfig.setKeepJobFlowAliveWhenNoSteps(emrClusterDefinition.isKeepAlive());
         }
 
-        // Termination protection flag
+        // Fill in optional termination protection flag.
         if (emrClusterDefinition.isTerminationProtection() != null)
         {
             jobFlowInstancesConfig.setTerminationProtected(emrClusterDefinition.isTerminationProtection());
         }
 
-        // Setting the hadoop version
+        // Fill in optional Hadoop version flag.
         if (StringUtils.isNotBlank(emrClusterDefinition.getHadoopVersion()))
         {
             jobFlowInstancesConfig.setHadoopVersion(emrClusterDefinition.getHadoopVersion());
         }
 
-        // Return the object
+        // Return the object.
         return jobFlowInstancesConfig;
+    }
+
+    private InstanceFleetProvisioningSpecifications getLaunchSpecifications(EmrClusterDefinitionLaunchSpecifications emrClusterDefinitionLaunchSpecifications)
+    {
+        if (emrClusterDefinitionLaunchSpecifications != null)
+        {
+            InstanceFleetProvisioningSpecifications instanceFleetProvisioningSpecifications = new InstanceFleetProvisioningSpecifications();
+            instanceFleetProvisioningSpecifications.setSpotSpecification(getSpotSpecification(emrClusterDefinitionLaunchSpecifications.getSpotSpecification()));
+            return instanceFleetProvisioningSpecifications;
+        }
+        else
+        {
+            return null;
+        }
     }
 
     /**
@@ -800,6 +959,21 @@ public class EmrDaoImpl implements EmrDao
             configurationHelper.getProperty(ConfigurationValue.S3_STAGING_RESOURCE_BASE);
     }
 
+    private SpotProvisioningSpecification getSpotSpecification(EmrClusterDefinitionSpotSpecification emrClusterDefinitionSpotSpecification)
+    {
+        SpotProvisioningSpecification spotProvisioningSpecification = null;
+
+        if (emrClusterDefinitionSpotSpecification != null)
+        {
+            spotProvisioningSpecification = new SpotProvisioningSpecification();
+            spotProvisioningSpecification.setTimeoutDurationMinutes(emrClusterDefinitionSpotSpecification.getTimeoutDurationMinutes());
+            spotProvisioningSpecification.setTimeoutAction(emrClusterDefinitionSpotSpecification.getTimeoutAction());
+            spotProvisioningSpecification.setBlockDurationMinutes(emrClusterDefinitionSpotSpecification.getBlockDurationMinutes());
+        }
+
+        return spotProvisioningSpecification;
+    }
+
     /**
      * Create the step config list of objects for hive/pig installation.
      *
@@ -844,5 +1018,20 @@ public class EmrDaoImpl implements EmrDao
         }
 
         return appSteps;
+    }
+
+    private VolumeSpecification getVolumeSpecification(EmrClusterDefinitionVolumeSpecification emrClusterDefinitionVolumeSpecification)
+    {
+        VolumeSpecification volumeSpecification = null;
+
+        if (emrClusterDefinitionVolumeSpecification != null)
+        {
+            volumeSpecification = new VolumeSpecification();
+            volumeSpecification.setVolumeType(emrClusterDefinitionVolumeSpecification.getVolumeType());
+            volumeSpecification.setIops(emrClusterDefinitionVolumeSpecification.getIops());
+            volumeSpecification.setSizeInGB(emrClusterDefinitionVolumeSpecification.getSizeInGB());
+        }
+
+        return volumeSpecification;
     }
 }
