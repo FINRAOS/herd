@@ -86,6 +86,7 @@ import org.finra.herd.model.api.xml.EmrClusterDefinitionSpotSpecification;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionVolumeSpecification;
 import org.finra.herd.model.api.xml.HadoopJarStep;
 import org.finra.herd.model.api.xml.InstanceDefinition;
+import org.finra.herd.model.api.xml.InstanceDefinitions;
 import org.finra.herd.model.api.xml.KeyValuePairConfiguration;
 import org.finra.herd.model.api.xml.KeyValuePairConfigurations;
 import org.finra.herd.model.api.xml.NodeTag;
@@ -432,6 +433,69 @@ public class EmrDaoImpl implements EmrDao
     }
 
     /**
+     * Creates an instance group configuration.
+     *
+     * @param roleType role type for the instance group (MASTER/CORE/TASK)
+     * @param instanceType EC2 instance type for the instance group
+     * @param instanceCount number of instances for the instance group
+     * @param bidPrice bid price in case of SPOT instance request
+     *
+     * @return the instance group config object
+     */
+    protected InstanceGroupConfig getInstanceGroupConfig(InstanceRoleType roleType, String instanceType, Integer instanceCount, BigDecimal bidPrice)
+    {
+        InstanceGroupConfig instanceGroup = new InstanceGroupConfig(roleType, instanceType, instanceCount);
+
+        // Consider spot price, if specified.
+        if (bidPrice != null)
+        {
+            instanceGroup.setMarket(MarketType.SPOT);
+            instanceGroup.setBidPrice(bidPrice.toString());
+        }
+
+        return instanceGroup;
+    }
+
+    /**
+     * Create the instance group configuration for MASTER/CORE/TASK nodes as per the input parameters.
+     *
+     * @param instanceDefinitions the instance group definitions from the EMR cluster definition
+     *
+     * @return the instance group config list with all the instance group definitions
+     */
+    protected List<InstanceGroupConfig> getInstanceGroupConfigs(InstanceDefinitions instanceDefinitions)
+    {
+        List<InstanceGroupConfig> emrInstanceGroups = null;
+
+        if (instanceDefinitions != null)
+        {
+            // Create the instance groups.
+            emrInstanceGroups = new ArrayList<>();
+
+            // Fill-in the MASTER node details.
+            emrInstanceGroups.add(getInstanceGroupConfig(InstanceRoleType.MASTER, instanceDefinitions.getMasterInstances().getInstanceType(),
+                instanceDefinitions.getMasterInstances().getInstanceCount(), instanceDefinitions.getMasterInstances().getInstanceSpotPrice()));
+
+            // Fill-in the CORE node details
+            InstanceDefinition coreInstances = instanceDefinitions.getCoreInstances();
+            if (coreInstances != null)
+            {
+                emrInstanceGroups.add(getInstanceGroupConfig(InstanceRoleType.CORE, coreInstances.getInstanceType(), coreInstances.getInstanceCount(),
+                    coreInstances.getInstanceSpotPrice()));
+            }
+
+            // Fill-in the TASK node details, if the optional task instances are specified.
+            if (instanceDefinitions.getTaskInstances() != null)
+            {
+                emrInstanceGroups.add(getInstanceGroupConfig(InstanceRoleType.TASK, instanceDefinitions.getTaskInstances().getInstanceType(),
+                    instanceDefinitions.getTaskInstances().getInstanceCount(), instanceDefinitions.getTaskInstances().getInstanceSpotPrice()));
+            }
+        }
+
+        return emrInstanceGroups;
+    }
+
+    /**
      * Creates a list of {@link InstanceTypeConfig} from a given list of {@link EmrClusterDefinitionInstanceTypeConfig}.
      *
      * @param emrClusterDefinitionInstanceTypeConfigs the list of {@link EmrClusterDefinitionInstanceTypeConfig}
@@ -772,67 +836,6 @@ public class EmrDaoImpl implements EmrDao
     }
 
     /**
-     * Creates an instance group configuration.
-     *
-     * @param roleType role type for the instance group (MASTER/CORE/TASK).
-     * @param instanceType EC2 instance type for the instance group.
-     * @param instanceCount number of instances for the instance group.
-     * @param bidPrice bid price in case of SPOT instance request.
-     *
-     * @return the instance group config object.
-     */
-    private InstanceGroupConfig getInstanceGroupConfig(InstanceRoleType roleType, String instanceType, Integer instanceCount, BigDecimal bidPrice)
-    {
-        InstanceGroupConfig instanceGroup = new InstanceGroupConfig(roleType, instanceType, instanceCount);
-
-        // Consider spot price, if specified
-        if (bidPrice != null)
-        {
-            instanceGroup.setMarket(MarketType.SPOT);
-            instanceGroup.setBidPrice(bidPrice.toString());
-        }
-        return instanceGroup;
-    }
-
-    /**
-     * Create the instance group configuration for MASTER/CORE/TASK nodes as per the input parameters.
-     *
-     * @param emrClusterDefinition the EMR cluster definition that contains all the EMR parameters.
-     *
-     * @return the instance group config list with all the instance group definitions.
-     */
-    private ArrayList<InstanceGroupConfig> getInstanceGroupConfig(EmrClusterDefinition emrClusterDefinition)
-    {
-        // Create the instance groups
-        ArrayList<InstanceGroupConfig> emrInstanceGroups = new ArrayList<>();
-
-        // Fill-in the MASTER node details.
-        emrInstanceGroups.add(
-            getInstanceGroupConfig(InstanceRoleType.MASTER, emrClusterDefinition.getInstanceDefinitions().getMasterInstances().getInstanceType(),
-                emrClusterDefinition.getInstanceDefinitions().getMasterInstances().getInstanceCount(),
-                emrClusterDefinition.getInstanceDefinitions().getMasterInstances().getInstanceSpotPrice()));
-
-        // Fill-in the CORE node details
-        InstanceDefinition coreInstances = emrClusterDefinition.getInstanceDefinitions().getCoreInstances();
-        if (coreInstances != null)
-        {
-            emrInstanceGroups.add(getInstanceGroupConfig(InstanceRoleType.CORE, coreInstances.getInstanceType(), coreInstances.getInstanceCount(),
-                coreInstances.getInstanceSpotPrice()));
-        }
-
-        // Fill-in the TASK node details, if the optional task instances are specified.
-        if (emrClusterDefinition.getInstanceDefinitions().getTaskInstances() != null)
-        {
-            emrInstanceGroups.add(
-                getInstanceGroupConfig(InstanceRoleType.TASK, emrClusterDefinition.getInstanceDefinitions().getTaskInstances().getInstanceType(),
-                    emrClusterDefinition.getInstanceDefinitions().getTaskInstances().getInstanceCount(),
-                    emrClusterDefinition.getInstanceDefinitions().getTaskInstances().getInstanceSpotPrice()));
-        }
-
-        return emrInstanceGroups;
-    }
-
-    /**
      * Creates the job flow instance configuration containing specification of the number and type of Amazon EC2 instances.
      *
      * @param emrClusterDefinition the EMR cluster definition that contains all the EMR parameters
@@ -863,7 +866,7 @@ public class EmrDaoImpl implements EmrDao
         }
 
         // Fill in configuration for the instance groups in a cluster.
-        jobFlowInstancesConfig.setInstanceGroups(getInstanceGroupConfig(emrClusterDefinition));
+        jobFlowInstancesConfig.setInstanceGroups(getInstanceGroupConfigs(emrClusterDefinition.getInstanceDefinitions()));
 
         // Fill in instance fleet configuration.
         jobFlowInstancesConfig.setInstanceFleets(getInstanceFleets(emrClusterDefinition.getInstanceFleets()));
