@@ -481,16 +481,16 @@ public class EmrServiceTest extends AbstractServiceTest
         configXml = xmlHelper.objectToXml(emrClusterDefinition);
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME, configXml);
 
-        // Try to create a new EMR cluster using EMR cluster definition with missing instance definitions.
+        // Try to create a new EMR cluster using EMR cluster definition with missing both instance definitions and instance fleets.
         EmrClusterCreateRequest request = getNewEmrClusterCreateRequest();
         try
         {
             emrService.createCluster(request);
-            fail("Should throw an IllegalArgumentException when instance definitions are not specified.");
+            fail();
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals("Instance definitions must be specified.", e.getMessage());
+            assertEquals("Instance group definitions or instance fleets must be specified.", e.getMessage());
         }
     }
 

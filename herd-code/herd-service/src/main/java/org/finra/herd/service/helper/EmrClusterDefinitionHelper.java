@@ -67,44 +67,48 @@ public class EmrClusterDefinitionHelper
             Assert.isTrue(StringUtils.isNotBlank(token), "No blank is allowed in the list of subnet IDs");
         }
 
-        Assert.notNull(emrClusterDefinition.getInstanceDefinitions(), "Instance definitions must be specified.");
+        Assert.isTrue(emrClusterDefinition.getInstanceDefinitions() != null || emrClusterDefinition.getInstanceFleets() != null,
+            "Instance group definitions or instance fleets must be specified.");
 
-        // Check master instances.
-        Assert.notNull(emrClusterDefinition.getInstanceDefinitions().getMasterInstances(), "Master instances must be specified.");
-        validateMasterInstanceDefinition(emrClusterDefinition.getInstanceDefinitions().getMasterInstances());
-
-        // Check core instances.
-        if (emrClusterDefinition.getInstanceDefinitions().getCoreInstances() != null)
+        if (emrClusterDefinition.getInstanceDefinitions() != null)
         {
-            validateInstanceDefinition("core", emrClusterDefinition.getInstanceDefinitions().getCoreInstances(), 0);
-            // If instance count is <= 0, remove the entire core instance definition since it is redundant.
-            if (emrClusterDefinition.getInstanceDefinitions().getCoreInstances().getInstanceCount() <= 0)
-            {
-                emrClusterDefinition.getInstanceDefinitions().setCoreInstances(null);
-            }
-        }
+            // Check master instances.
+            Assert.notNull(emrClusterDefinition.getInstanceDefinitions().getMasterInstances(), "Master instances must be specified.");
+            validateMasterInstanceDefinition(emrClusterDefinition.getInstanceDefinitions().getMasterInstances());
 
-        // Check task instances
-        if (emrClusterDefinition.getInstanceDefinitions().getTaskInstances() != null)
-        {
-            validateInstanceDefinition("task", emrClusterDefinition.getInstanceDefinitions().getTaskInstances(), 1);
-        }
-
-        // Check that total number of instances does not exceed the max allowed.
-        int maxEmrInstanceCount = configurationHelper.getProperty(ConfigurationValue.MAX_EMR_INSTANCES_COUNT, Integer.class);
-        if (maxEmrInstanceCount > 0)
-        {
-            int instancesRequested = emrClusterDefinition.getInstanceDefinitions().getMasterInstances().getInstanceCount();
+            // Check core instances.
             if (emrClusterDefinition.getInstanceDefinitions().getCoreInstances() != null)
             {
-                instancesRequested += emrClusterDefinition.getInstanceDefinitions().getCoreInstances().getInstanceCount();
-            }
-            if (emrClusterDefinition.getInstanceDefinitions().getTaskInstances() != null)
-            {
-                instancesRequested += emrClusterDefinition.getInstanceDefinitions().getTaskInstances().getInstanceCount();
+                validateInstanceDefinition("core", emrClusterDefinition.getInstanceDefinitions().getCoreInstances(), 0);
+                // If instance count is <= 0, remove the entire core instance definition since it is redundant.
+                if (emrClusterDefinition.getInstanceDefinitions().getCoreInstances().getInstanceCount() <= 0)
+                {
+                    emrClusterDefinition.getInstanceDefinitions().setCoreInstances(null);
+                }
             }
 
-            Assert.isTrue((maxEmrInstanceCount >= instancesRequested), "Total number of instances requested can not exceed : " + maxEmrInstanceCount);
+            // Check task instances
+            if (emrClusterDefinition.getInstanceDefinitions().getTaskInstances() != null)
+            {
+                validateInstanceDefinition("task", emrClusterDefinition.getInstanceDefinitions().getTaskInstances(), 1);
+            }
+
+            // Check that total number of instances does not exceed the max allowed.
+            int maxEmrInstanceCount = configurationHelper.getProperty(ConfigurationValue.MAX_EMR_INSTANCES_COUNT, Integer.class);
+            if (maxEmrInstanceCount > 0)
+            {
+                int instancesRequested = emrClusterDefinition.getInstanceDefinitions().getMasterInstances().getInstanceCount();
+                if (emrClusterDefinition.getInstanceDefinitions().getCoreInstances() != null)
+                {
+                    instancesRequested += emrClusterDefinition.getInstanceDefinitions().getCoreInstances().getInstanceCount();
+                }
+                if (emrClusterDefinition.getInstanceDefinitions().getTaskInstances() != null)
+                {
+                    instancesRequested += emrClusterDefinition.getInstanceDefinitions().getTaskInstances().getInstanceCount();
+                }
+
+                Assert.isTrue((maxEmrInstanceCount >= instancesRequested), "Total number of instances requested can not exceed : " + maxEmrInstanceCount);
+            }
         }
 
         // Validate node tags including checking for required tags and detecting any duplicate node tag names in case sensitive manner.

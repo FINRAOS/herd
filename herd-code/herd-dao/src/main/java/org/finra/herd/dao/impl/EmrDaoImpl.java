@@ -257,40 +257,6 @@ public class EmrDaoImpl implements EmrDao
         return emrOperations.describeStepRequest(getEmrClient(awsParamsDto), describeStepRequest).getStep();
     }
 
-    /**
-     * Converts the given list of {@link EmrClusterDefinitionConfiguration} into a list of {@link Configuration}.
-     *
-     * @param emrClusterDefinitionConfigurations list of {@link EmrClusterDefinitionConfiguration}
-     *
-     * @return list of {@link Configuration}
-     */
-    public List<Configuration> getConfigurations(List<EmrClusterDefinitionConfiguration> emrClusterDefinitionConfigurations)
-    {
-        List<Configuration> result = new ArrayList<>();
-        for (EmrClusterDefinitionConfiguration emrClusterDefinitionConfiguration : emrClusterDefinitionConfigurations)
-        {
-            Configuration configuration = new Configuration();
-
-            configuration.setClassification(emrClusterDefinitionConfiguration.getClassification());
-
-            // Child configurations are gotten recursively
-            List<EmrClusterDefinitionConfiguration> requestedConfigurations = emrClusterDefinitionConfiguration.getConfigurations();
-            if (!CollectionUtils.isEmpty(requestedConfigurations))
-            {
-                configuration.setConfigurations(getConfigurations(requestedConfigurations));
-            }
-
-            List<Parameter> properties = emrClusterDefinitionConfiguration.getProperties();
-            if (!CollectionUtils.isEmpty(properties))
-            {
-                configuration.setProperties(getMap(properties));
-            }
-
-            result.add(configuration);
-        }
-        return result;
-    }
-
     @Override
     public AmazonElasticMapReduceClient getEmrClient(AwsParamsDto awsParamsDto)
     {
@@ -340,6 +306,186 @@ public class EmrDaoImpl implements EmrDao
         return instances.get(0);
     }
 
+    @Override
+    public void terminateEmrCluster(String clusterId, boolean overrideTerminationProtection, AwsParamsDto awsParams)
+    {
+        emrOperations.terminateEmrCluster(getEmrClient(awsParams), clusterId, overrideTerminationProtection);
+    }
+
+    /**
+     * Converts the given list of {@link EmrClusterDefinitionConfiguration} into a list of {@link Configuration}.
+     *
+     * @param emrClusterDefinitionConfigurations list of {@link EmrClusterDefinitionConfiguration}
+     *
+     * @return list of {@link Configuration}
+     */
+    protected List<Configuration> getConfigurations(List<EmrClusterDefinitionConfiguration> emrClusterDefinitionConfigurations)
+    {
+        List<Configuration> configurations = null;
+
+        if (!CollectionUtils.isEmpty(emrClusterDefinitionConfigurations))
+        {
+            configurations = new ArrayList<>();
+
+            for (EmrClusterDefinitionConfiguration emrClusterDefinitionConfiguration : emrClusterDefinitionConfigurations)
+            {
+                if (emrClusterDefinitionConfiguration != null)
+                {
+                    Configuration configuration = new Configuration();
+                    configuration.setClassification(emrClusterDefinitionConfiguration.getClassification());
+                    configuration.setConfigurations(getConfigurations(emrClusterDefinitionConfiguration.getConfigurations()));
+                    configuration.setProperties(getMap(emrClusterDefinitionConfiguration.getProperties()));
+
+                    configurations.add(configuration);
+                }
+            }
+        }
+
+        return configurations;
+    }
+
+    /**
+     * Creates a list of {@link EbsBlockDeviceConfig} from a given list of {@link EmrClusterDefinitionEbsBlockDeviceConfig}.
+     *
+     * @param emrClusterDefinitionEbsBlockDeviceConfigs the list of {@link EmrClusterDefinitionEbsBlockDeviceConfig}
+     *
+     * @return the list of {@link EbsBlockDeviceConfig}
+     */
+    protected List<EbsBlockDeviceConfig> getEbsBlockDeviceConfigs(List<EmrClusterDefinitionEbsBlockDeviceConfig> emrClusterDefinitionEbsBlockDeviceConfigs)
+    {
+        List<EbsBlockDeviceConfig> ebsBlockDeviceConfigs = null;
+
+        if (!CollectionUtils.isEmpty(emrClusterDefinitionEbsBlockDeviceConfigs))
+        {
+            ebsBlockDeviceConfigs = new ArrayList<>();
+
+            for (EmrClusterDefinitionEbsBlockDeviceConfig emrClusterDefinitionEbsBlockDeviceConfig : emrClusterDefinitionEbsBlockDeviceConfigs)
+            {
+                if (emrClusterDefinitionEbsBlockDeviceConfig != null)
+                {
+                    EbsBlockDeviceConfig ebsBlockDeviceConfig = new EbsBlockDeviceConfig();
+                    ebsBlockDeviceConfig.setVolumeSpecification(getVolumeSpecification(emrClusterDefinitionEbsBlockDeviceConfig.getVolumeSpecification()));
+                    ebsBlockDeviceConfig.setVolumesPerInstance(emrClusterDefinitionEbsBlockDeviceConfig.getVolumesPerInstance());
+
+                    ebsBlockDeviceConfigs.add(ebsBlockDeviceConfig);
+                }
+            }
+        }
+
+        return ebsBlockDeviceConfigs;
+    }
+
+    /**
+     * Creates an instance of {@link EbsConfiguration} from a given instance of {@link EmrClusterDefinitionEbsConfiguration}.
+     *
+     * @param emrClusterDefinitionEbsConfiguration the instance of {@link EmrClusterDefinitionEbsConfiguration}
+     *
+     * @return the instance of {@link EbsConfiguration}
+     */
+    protected EbsConfiguration getEbsConfiguration(EmrClusterDefinitionEbsConfiguration emrClusterDefinitionEbsConfiguration)
+    {
+        EbsConfiguration ebsConfiguration = null;
+
+        if (emrClusterDefinitionEbsConfiguration != null)
+        {
+            ebsConfiguration = new EbsConfiguration();
+            ebsConfiguration.setEbsBlockDeviceConfigs(getEbsBlockDeviceConfigs(emrClusterDefinitionEbsConfiguration.getEbsBlockDeviceConfigs()));
+            ebsConfiguration.setEbsOptimized(emrClusterDefinitionEbsConfiguration.isEbsOptimized());
+        }
+
+        return ebsConfiguration;
+    }
+
+    /**
+     * Creates an instance fleet configuration that describes the EC2 instances and instance configurations for clusters that use this feature.
+     *
+     * @param emrClusterDefinitionInstanceFleets the list of instance fleet configurations from the EMR cluster definition
+     *
+     * @return the instance fleet configuration
+     */
+    protected List<InstanceFleetConfig> getInstanceFleets(List<EmrClusterDefinitionInstanceFleet> emrClusterDefinitionInstanceFleets)
+    {
+        List<InstanceFleetConfig> instanceFleets = null;
+
+        if (!CollectionUtils.isEmpty(emrClusterDefinitionInstanceFleets))
+        {
+            instanceFleets = new ArrayList<>();
+
+            for (EmrClusterDefinitionInstanceFleet emrClusterDefinitionInstanceFleet : emrClusterDefinitionInstanceFleets)
+            {
+                if (emrClusterDefinitionInstanceFleet != null)
+                {
+                    InstanceFleetConfig instanceFleetConfig = new InstanceFleetConfig();
+                    instanceFleetConfig.setName(emrClusterDefinitionInstanceFleet.getName());
+                    instanceFleetConfig.setInstanceFleetType(emrClusterDefinitionInstanceFleet.getInstanceFleetType());
+                    instanceFleetConfig.setTargetOnDemandCapacity(emrClusterDefinitionInstanceFleet.getTargetOnDemandCapacity());
+                    instanceFleetConfig.setTargetSpotCapacity(emrClusterDefinitionInstanceFleet.getTargetSpotCapacity());
+                    instanceFleetConfig.setInstanceTypeConfigs(getInstanceTypeConfigs(emrClusterDefinitionInstanceFleet.getInstanceTypeConfigs()));
+                    instanceFleetConfig.setLaunchSpecifications(getLaunchSpecifications(emrClusterDefinitionInstanceFleet.getLaunchSpecifications()));
+
+                    instanceFleets.add(instanceFleetConfig);
+                }
+            }
+        }
+
+        return instanceFleets;
+    }
+
+    /**
+     * Creates a list of {@link InstanceTypeConfig} from a given list of {@link EmrClusterDefinitionInstanceTypeConfig}.
+     *
+     * @param emrClusterDefinitionInstanceTypeConfigs the list of {@link EmrClusterDefinitionInstanceTypeConfig}
+     *
+     * @return the list of {@link InstanceTypeConfig}
+     */
+    protected List<InstanceTypeConfig> getInstanceTypeConfigs(List<EmrClusterDefinitionInstanceTypeConfig> emrClusterDefinitionInstanceTypeConfigs)
+    {
+        List<InstanceTypeConfig> instanceTypeConfigs = null;
+
+        if (!CollectionUtils.isEmpty(emrClusterDefinitionInstanceTypeConfigs))
+        {
+            instanceTypeConfigs = new ArrayList<>();
+
+            for (EmrClusterDefinitionInstanceTypeConfig emrClusterDefinitionInstanceTypeConfig : emrClusterDefinitionInstanceTypeConfigs)
+            {
+                if (emrClusterDefinitionInstanceTypeConfig != null)
+                {
+                    InstanceTypeConfig instanceTypeConfig = new InstanceTypeConfig();
+                    instanceTypeConfig.setInstanceType(emrClusterDefinitionInstanceTypeConfig.getInstanceType());
+                    instanceTypeConfig.setWeightedCapacity(emrClusterDefinitionInstanceTypeConfig.getWeightedCapacity());
+                    instanceTypeConfig.setBidPrice(emrClusterDefinitionInstanceTypeConfig.getBidPrice());
+                    instanceTypeConfig.setBidPriceAsPercentageOfOnDemandPrice(emrClusterDefinitionInstanceTypeConfig.getBidPriceAsPercentageOfOnDemandPrice());
+                    instanceTypeConfig.setEbsConfiguration(getEbsConfiguration(emrClusterDefinitionInstanceTypeConfig.getEbsConfiguration()));
+                    instanceTypeConfig.setConfigurations(getConfigurations(emrClusterDefinitionInstanceTypeConfig.getConfigurations()));
+
+                    instanceTypeConfigs.add(instanceTypeConfig);
+                }
+            }
+        }
+
+        return instanceTypeConfigs;
+    }
+
+    /**
+     * Creates an instance of {@link InstanceFleetProvisioningSpecifications} from a given instance of {@link EmrClusterDefinitionLaunchSpecifications}.
+     *
+     * @param emrClusterDefinitionLaunchSpecifications the instance of {@link EmrClusterDefinitionLaunchSpecifications}
+     *
+     * @return the instance of {@link InstanceFleetProvisioningSpecifications}
+     */
+    protected InstanceFleetProvisioningSpecifications getLaunchSpecifications(EmrClusterDefinitionLaunchSpecifications emrClusterDefinitionLaunchSpecifications)
+    {
+        InstanceFleetProvisioningSpecifications instanceFleetProvisioningSpecifications = null;
+
+        if (emrClusterDefinitionLaunchSpecifications != null)
+        {
+            instanceFleetProvisioningSpecifications = new InstanceFleetProvisioningSpecifications();
+            instanceFleetProvisioningSpecifications.setSpotSpecification(getSpotSpecification(emrClusterDefinitionLaunchSpecifications.getSpotSpecification()));
+        }
+
+        return instanceFleetProvisioningSpecifications;
+    }
+
     /**
      * Converts the given list of {@link Parameter} into a {@link Map} of {@link String}, {@link String}
      *
@@ -347,20 +493,68 @@ public class EmrDaoImpl implements EmrDao
      *
      * @return {@link Map}
      */
-    public Map<String, String> getMap(List<Parameter> parameters)
+    protected Map<String, String> getMap(List<Parameter> parameters)
     {
-        HashMap<String, String> map = new HashMap<>();
-        for (Parameter parameter : parameters)
+        Map<String, String> map = null;
+
+        if (!CollectionUtils.isEmpty(parameters))
         {
-            map.put(parameter.getName(), parameter.getValue());
+            map = new HashMap<>();
+
+            for (Parameter parameter : parameters)
+            {
+                if (parameter != null)
+                {
+                    map.put(parameter.getName(), parameter.getValue());
+                }
+            }
         }
+
         return map;
     }
 
-    @Override
-    public void terminateEmrCluster(String clusterId, boolean overrideTerminationProtection, AwsParamsDto awsParams)
+    /**
+     * Creates an instance of {@link SpotProvisioningSpecification} from a given instance of {@link EmrClusterDefinitionSpotSpecification}.
+     *
+     * @param emrClusterDefinitionSpotSpecification the instance of {@link EmrClusterDefinitionSpotSpecification}
+     *
+     * @return the instance of {@link SpotProvisioningSpecification}
+     */
+    protected SpotProvisioningSpecification getSpotSpecification(EmrClusterDefinitionSpotSpecification emrClusterDefinitionSpotSpecification)
     {
-        emrOperations.terminateEmrCluster(getEmrClient(awsParams), clusterId, overrideTerminationProtection);
+        SpotProvisioningSpecification spotProvisioningSpecification = null;
+
+        if (emrClusterDefinitionSpotSpecification != null)
+        {
+            spotProvisioningSpecification = new SpotProvisioningSpecification();
+            spotProvisioningSpecification.setTimeoutDurationMinutes(emrClusterDefinitionSpotSpecification.getTimeoutDurationMinutes());
+            spotProvisioningSpecification.setTimeoutAction(emrClusterDefinitionSpotSpecification.getTimeoutAction());
+            spotProvisioningSpecification.setBlockDurationMinutes(emrClusterDefinitionSpotSpecification.getBlockDurationMinutes());
+        }
+
+        return spotProvisioningSpecification;
+    }
+
+    /**
+     * Creates an instance of {@link VolumeSpecification} from a given instance of {@link EmrClusterDefinitionVolumeSpecification}.
+     *
+     * @param emrClusterDefinitionVolumeSpecification the instance of {@link EmrClusterDefinitionVolumeSpecification}
+     *
+     * @return the instance of {@link VolumeSpecification}
+     */
+    protected VolumeSpecification getVolumeSpecification(EmrClusterDefinitionVolumeSpecification emrClusterDefinitionVolumeSpecification)
+    {
+        VolumeSpecification volumeSpecification = null;
+
+        if (emrClusterDefinitionVolumeSpecification != null)
+        {
+            volumeSpecification = new VolumeSpecification();
+            volumeSpecification.setVolumeType(emrClusterDefinitionVolumeSpecification.getVolumeType());
+            volumeSpecification.setIops(emrClusterDefinitionVolumeSpecification.getIops());
+            volumeSpecification.setSizeInGB(emrClusterDefinitionVolumeSpecification.getSizeInGB());
+        }
+
+        return volumeSpecification;
     }
 
     private void addCustomBootstrapActionConfig(EmrClusterDefinition emrClusterDefinition, ArrayList<BootstrapActionConfig> bootstrapActions)
@@ -538,51 +732,6 @@ public class EmrDaoImpl implements EmrDao
         return bootstrapActions;
     }
 
-    private EbsBlockDeviceConfig getEbsBlockDeviceConfig(EmrClusterDefinitionEbsBlockDeviceConfig emrClusterDefinitionEbsBlockDeviceConfig)
-    {
-        EbsBlockDeviceConfig ebsBlockDeviceConfig = null;
-
-        if (emrClusterDefinitionEbsBlockDeviceConfig != null)
-        {
-            ebsBlockDeviceConfig = new EbsBlockDeviceConfig();
-            ebsBlockDeviceConfig.setVolumeSpecification(getVolumeSpecification(emrClusterDefinitionEbsBlockDeviceConfig.getVolumeSpecification()));
-            ebsBlockDeviceConfig.setVolumesPerInstance(emrClusterDefinitionEbsBlockDeviceConfig.getVolumesPerInstance());
-        }
-
-        return ebsBlockDeviceConfig;
-    }
-
-    private List<EbsBlockDeviceConfig> getEbsBlockDeviceConfigs(List<EmrClusterDefinitionEbsBlockDeviceConfig> emrClusterDefinitionEbsBlockDeviceConfigs)
-    {
-        List<EbsBlockDeviceConfig> ebsBlockDeviceConfigs = null;
-
-        if (!CollectionUtils.isEmpty(emrClusterDefinitionEbsBlockDeviceConfigs))
-        {
-            ebsBlockDeviceConfigs = new ArrayList<>();
-
-            for (EmrClusterDefinitionEbsBlockDeviceConfig emrClusterDefinitionEbsBlockDeviceConfig : emrClusterDefinitionEbsBlockDeviceConfigs)
-            {
-                ebsBlockDeviceConfigs.add(getEbsBlockDeviceConfig(emrClusterDefinitionEbsBlockDeviceConfig));
-            }
-        }
-
-        return ebsBlockDeviceConfigs;
-    }
-
-    private EbsConfiguration getEbsConfiguration(EmrClusterDefinitionEbsConfiguration emrClusterDefinitionEbsConfiguration)
-    {
-        EbsConfiguration ebsConfiguration = null;
-
-        if (emrClusterDefinitionEbsConfiguration != null)
-        {
-            ebsConfiguration = new EbsConfiguration();
-            ebsConfiguration.setEbsBlockDeviceConfigs(getEbsBlockDeviceConfigs(emrClusterDefinitionEbsConfiguration.getEbsBlockDeviceConfigs()));
-            ebsConfiguration.setEbsOptimized(emrClusterDefinitionEbsConfiguration.isEbsOptimized());
-        }
-
-        return ebsConfiguration;
-    }
-
     /**
      * Create the tag list for the EMR nodes.
      *
@@ -620,55 +769,6 @@ public class EmrDaoImpl implements EmrDao
         // Amazon plans to support encryption in EMR soon. Once that support is enabled, we can remove this script and use the one provided by AWS.
         return getS3StagingLocation() + configurationHelper.getProperty(ConfigurationValue.S3_URL_PATH_DELIMITER) +
             configurationHelper.getProperty(ConfigurationValue.EMR_ENCRYPTION_SCRIPT);
-    }
-
-    /**
-     * Creates configuration that defines an instance fleet.
-     *
-     * @param emrClusterDefinitionInstanceFleet the instance fleet configuration from the EMR cluster definition
-     *
-     * @return the instance fleet configuration
-     */
-    private InstanceFleetConfig getInstanceFleetConfig(EmrClusterDefinitionInstanceFleet emrClusterDefinitionInstanceFleet)
-    {
-        InstanceFleetConfig instanceFleetConfig = null;
-
-        if (emrClusterDefinitionInstanceFleet != null)
-        {
-            instanceFleetConfig = new InstanceFleetConfig();
-            instanceFleetConfig.setName(emrClusterDefinitionInstanceFleet.getName());
-            instanceFleetConfig.setInstanceFleetType(emrClusterDefinitionInstanceFleet.getInstanceFleetType());
-            instanceFleetConfig.setTargetOnDemandCapacity(emrClusterDefinitionInstanceFleet.getTargetOnDemandCapacity());
-            instanceFleetConfig.setTargetSpotCapacity(emrClusterDefinitionInstanceFleet.getTargetSpotCapacity());
-            instanceFleetConfig.setInstanceTypeConfigs(getInstanceTypeConfigs(emrClusterDefinitionInstanceFleet.getInstanceTypeConfigs()));
-            instanceFleetConfig.setLaunchSpecifications(getLaunchSpecifications(emrClusterDefinitionInstanceFleet.getLaunchSpecifications()));
-        }
-
-        return instanceFleetConfig;
-    }
-
-    /**
-     * Creates an instance fleet configuration that describes the EC2 instances and instance configurations for clusters that use this feature.
-     *
-     * @param emrClusterDefinition the EMR cluster definition that contains all the EMR parameters
-     *
-     * @return the instance fleet configuration
-     */
-    private List<InstanceFleetConfig> getInstanceFleets(EmrClusterDefinition emrClusterDefinition)
-    {
-        List<InstanceFleetConfig> instanceFleets = null;
-
-        if (!CollectionUtils.isEmpty(emrClusterDefinition.getInstanceFleets()))
-        {
-            instanceFleets = new ArrayList<>();
-
-            for (EmrClusterDefinitionInstanceFleet emrClusterDefinitionInstanceFleet : emrClusterDefinition.getInstanceFleets())
-            {
-                instanceFleets.add(getInstanceFleetConfig(emrClusterDefinitionInstanceFleet));
-            }
-        }
-
-        return instanceFleets;
     }
 
     /**
@@ -732,41 +832,6 @@ public class EmrDaoImpl implements EmrDao
         return emrInstanceGroups;
     }
 
-    private InstanceTypeConfig getInstanceTypeConfig(EmrClusterDefinitionInstanceTypeConfig emrClusterDefinitionInstanceTypeConfig)
-    {
-        InstanceTypeConfig instanceTypeConfig = null;
-
-        if (emrClusterDefinitionInstanceTypeConfig != null)
-        {
-            instanceTypeConfig = new InstanceTypeConfig();
-            instanceTypeConfig.setInstanceType(emrClusterDefinitionInstanceTypeConfig.getInstanceType());
-            instanceTypeConfig.setWeightedCapacity(emrClusterDefinitionInstanceTypeConfig.getWeightedCapacity());
-            instanceTypeConfig.setBidPrice(emrClusterDefinitionInstanceTypeConfig.getInstanceType());
-            instanceTypeConfig.setBidPriceAsPercentageOfOnDemandPrice(emrClusterDefinitionInstanceTypeConfig.getBidPriceAsPercentageOfOnDemandPrice());
-            instanceTypeConfig.setEbsConfiguration(getEbsConfiguration(emrClusterDefinitionInstanceTypeConfig.getEbsConfiguration()));
-            instanceTypeConfig.setConfigurations(getConfigurations(emrClusterDefinitionInstanceTypeConfig.getConfigurations()));
-        }
-
-        return instanceTypeConfig;
-    }
-
-    private List<InstanceTypeConfig> getInstanceTypeConfigs(List<EmrClusterDefinitionInstanceTypeConfig> emrClusterDefinitionInstanceTypeConfigs)
-    {
-        List<InstanceTypeConfig> instanceTypeConfigs = null;
-
-        if (!CollectionUtils.isEmpty(emrClusterDefinitionInstanceTypeConfigs))
-        {
-            instanceTypeConfigs = new ArrayList<>();
-
-            for (EmrClusterDefinitionInstanceTypeConfig emrClusterDefinitionInstanceTypeConfig : emrClusterDefinitionInstanceTypeConfigs)
-            {
-                instanceTypeConfigs.add(getInstanceTypeConfig(emrClusterDefinitionInstanceTypeConfig));
-            }
-        }
-
-        return instanceTypeConfigs;
-    }
-
     /**
      * Creates the job flow instance configuration containing specification of the number and type of Amazon EC2 instances.
      *
@@ -801,7 +866,7 @@ public class EmrDaoImpl implements EmrDao
         jobFlowInstancesConfig.setInstanceGroups(getInstanceGroupConfig(emrClusterDefinition));
 
         // Fill in instance fleet configuration.
-        jobFlowInstancesConfig.setInstanceFleets(getInstanceFleets(emrClusterDefinition));
+        jobFlowInstancesConfig.setInstanceFleets(getInstanceFleets(emrClusterDefinition.getInstanceFleets()));
 
         // Fill in optional keep alive flag.
         if (emrClusterDefinition.isKeepAlive() != null)
@@ -823,20 +888,6 @@ public class EmrDaoImpl implements EmrDao
 
         // Return the object.
         return jobFlowInstancesConfig;
-    }
-
-    private InstanceFleetProvisioningSpecifications getLaunchSpecifications(EmrClusterDefinitionLaunchSpecifications emrClusterDefinitionLaunchSpecifications)
-    {
-        if (emrClusterDefinitionLaunchSpecifications != null)
-        {
-            InstanceFleetProvisioningSpecifications instanceFleetProvisioningSpecifications = new InstanceFleetProvisioningSpecifications();
-            instanceFleetProvisioningSpecifications.setSpotSpecification(getSpotSpecification(emrClusterDefinitionLaunchSpecifications.getSpotSpecification()));
-            return instanceFleetProvisioningSpecifications;
-        }
-        else
-        {
-            return null;
-        }
     }
 
     /**
@@ -959,21 +1010,6 @@ public class EmrDaoImpl implements EmrDao
             configurationHelper.getProperty(ConfigurationValue.S3_STAGING_RESOURCE_BASE);
     }
 
-    private SpotProvisioningSpecification getSpotSpecification(EmrClusterDefinitionSpotSpecification emrClusterDefinitionSpotSpecification)
-    {
-        SpotProvisioningSpecification spotProvisioningSpecification = null;
-
-        if (emrClusterDefinitionSpotSpecification != null)
-        {
-            spotProvisioningSpecification = new SpotProvisioningSpecification();
-            spotProvisioningSpecification.setTimeoutDurationMinutes(emrClusterDefinitionSpotSpecification.getTimeoutDurationMinutes());
-            spotProvisioningSpecification.setTimeoutAction(emrClusterDefinitionSpotSpecification.getTimeoutAction());
-            spotProvisioningSpecification.setBlockDurationMinutes(emrClusterDefinitionSpotSpecification.getBlockDurationMinutes());
-        }
-
-        return spotProvisioningSpecification;
-    }
-
     /**
      * Create the step config list of objects for hive/pig installation.
      *
@@ -1018,20 +1054,5 @@ public class EmrDaoImpl implements EmrDao
         }
 
         return appSteps;
-    }
-
-    private VolumeSpecification getVolumeSpecification(EmrClusterDefinitionVolumeSpecification emrClusterDefinitionVolumeSpecification)
-    {
-        VolumeSpecification volumeSpecification = null;
-
-        if (emrClusterDefinitionVolumeSpecification != null)
-        {
-            volumeSpecification = new VolumeSpecification();
-            volumeSpecification.setVolumeType(emrClusterDefinitionVolumeSpecification.getVolumeType());
-            volumeSpecification.setIops(emrClusterDefinitionVolumeSpecification.getIops());
-            volumeSpecification.setSizeInGB(emrClusterDefinitionVolumeSpecification.getSizeInGB());
-        }
-
-        return volumeSpecification;
     }
 }
