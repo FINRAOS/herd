@@ -16,10 +16,14 @@
 package org.finra.herd.dao.impl;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.verifyZeroInteractions;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import com.amazonaws.services.elasticmapreduce.model.Configuration;
 import com.amazonaws.services.elasticmapreduce.model.EbsBlockDeviceConfig;
@@ -51,6 +55,7 @@ import org.finra.herd.model.api.xml.EmrClusterDefinitionInstanceTypeConfig;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionLaunchSpecifications;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionSpotSpecification;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionVolumeSpecification;
+import org.finra.herd.model.api.xml.Parameter;
 
 /**
  * This class tests functionality within the EMR DAO implementation.
@@ -88,6 +93,45 @@ public class EmrDaoImplTest extends AbstractDaoTest
     }
 
     @Test
+    public void testGetConfigurations()
+    {
+        // Create objects required for testing.
+        final String classification = STRING_VALUE;
+        final List<EmrClusterDefinitionConfiguration> emrClusterDefinitionConfigurations = null;
+        final List<Parameter> properties = null;
+        final EmrClusterDefinitionConfiguration emrClusterDefinitionConfiguration =
+            new EmrClusterDefinitionConfiguration(classification, emrClusterDefinitionConfigurations, properties);
+
+        // Call the method under test.
+        List<Configuration> result = emrDaoImpl.getConfigurations(Arrays.asList(emrClusterDefinitionConfiguration));
+
+        // Verify the external calls.
+        verifyZeroInteractionsHelper();
+
+        // Validate the results.
+        final List<Configuration> expectedConfigurations = null;
+        assertEquals(Arrays.asList(new Configuration().withClassification(classification).withConfigurations(expectedConfigurations).withProperties(null)),
+            result);
+    }
+
+    @Test
+    public void testGetConfigurationsWhenEmrClusterDefinitionConfigurationListHasNullElement()
+    {
+        // Create objects required for testing with a list of emrClusterDefinitionConfigurations having a null element.
+        List<EmrClusterDefinitionConfiguration> emrClusterDefinitionConfigurations = new ArrayList<>();
+        emrClusterDefinitionConfigurations.add(null);
+
+        // Call the method under test.
+        List<Configuration> result = emrDaoImpl.getConfigurations(emrClusterDefinitionConfigurations);
+
+        // Verify the external calls.
+        verifyZeroInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(new ArrayList<>(), result);
+    }
+
+    @Test
     public void testGetEbsBlockDeviceConfigs()
     {
         // Create objects required for testing.
@@ -104,6 +148,23 @@ public class EmrDaoImplTest extends AbstractDaoTest
 
         // Validate the results.
         assertEquals(Arrays.asList(new EbsBlockDeviceConfig().withVolumeSpecification(null).withVolumesPerInstance(volumesPerInstance)), result);
+    }
+
+    @Test
+    public void testGetEbsBlockDeviceConfigsWhenEmrClusterDefinitionEbsBlockDeviceConfigListHasNullElement()
+    {
+        // Create objects required for testing with a list of emrClusterDefinitionEbsBlockDeviceConfigs having a null element.
+        List<EmrClusterDefinitionEbsBlockDeviceConfig> emrClusterDefinitionEbsBlockDeviceConfigs = new ArrayList<>();
+        emrClusterDefinitionEbsBlockDeviceConfigs.add(null);
+
+        // Call the method under test.
+        List<EbsBlockDeviceConfig> result = emrDaoImpl.getEbsBlockDeviceConfigs(emrClusterDefinitionEbsBlockDeviceConfigs);
+
+        // Verify the external calls.
+        verifyZeroInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(new ArrayList<>(), result);
     }
 
     @Test
@@ -154,6 +215,23 @@ public class EmrDaoImplTest extends AbstractDaoTest
     }
 
     @Test
+    public void testGetInstanceFleetsWhenEmrClusterDefinitionInstanceFleetListHasNullElement()
+    {
+        // Create objects required for testing with a list of emrClusterDefinitionInstanceFleets having a null element.
+        List<EmrClusterDefinitionInstanceFleet> emrClusterDefinitionInstanceFleets = new ArrayList<>();
+        emrClusterDefinitionInstanceFleets.add(null);
+
+        // Call the method under test.
+        List<InstanceFleetConfig> result = emrDaoImpl.getInstanceFleets(emrClusterDefinitionInstanceFleets);
+
+        // Verify the external calls.
+        verifyZeroInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(new ArrayList<>(), result);
+    }
+
+    @Test
     public void testGetInstanceTypeConfigs()
     {
         // Create objects required for testing.
@@ -181,6 +259,23 @@ public class EmrDaoImplTest extends AbstractDaoTest
     }
 
     @Test
+    public void testGetInstanceTypeConfigsWhenEmrClusterDefinitionInstanceTypeConfigListHasNullElement()
+    {
+        // Create objects required for testing with a list of emrClusterDefinitionInstanceTypeConfigs having a null element.
+        List<EmrClusterDefinitionInstanceTypeConfig> emrClusterDefinitionInstanceTypeConfigs = new ArrayList<>();
+        emrClusterDefinitionInstanceTypeConfigs.add(null);
+
+        // Call the method under test.
+        List<InstanceTypeConfig> result = emrDaoImpl.getInstanceTypeConfigs(emrClusterDefinitionInstanceTypeConfigs);
+
+        // Verify the external calls.
+        verifyZeroInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(new ArrayList<>(), result);
+    }
+
+    @Test
     public void testGetLaunchSpecifications()
     {
         // Create objects required for testing.
@@ -196,6 +291,45 @@ public class EmrDaoImplTest extends AbstractDaoTest
 
         // Validate the results.
         assertEquals(new InstanceFleetProvisioningSpecifications().withSpotSpecification(null), result);
+    }
+
+    @Test
+    public void testGetMap()
+    {
+        // Create objects required for testing.
+        final String name = STRING_VALUE;
+        final String value = STRING_VALUE_2;
+        final Parameter parameter = new Parameter(name, value);
+
+        // Call the method under test.
+        Map<String, String> result = emrDaoImpl.getMap(Arrays.asList(parameter));
+
+        // Verify the external calls.
+        verifyZeroInteractionsHelper();
+
+        // Validate the results.
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertTrue(result.containsKey(name));
+        assertEquals(value, result.get(name));
+    }
+
+    @Test
+    public void testGetMapWhenParameterListHasNullElement()
+    {
+        // Create objects required for testing with a list of parameters having a null element.
+        List<Parameter> parameters = new ArrayList<>();
+        parameters.add(null);
+
+        // Call the method under test.
+        Map<String, String> result = emrDaoImpl.getMap(parameters);
+
+        // Verify the external calls.
+        verifyZeroInteractionsHelper();
+
+        // Validate the results.
+        assertNotNull(result);
+        assertEquals(0, result.size());
     }
 
     @Test
