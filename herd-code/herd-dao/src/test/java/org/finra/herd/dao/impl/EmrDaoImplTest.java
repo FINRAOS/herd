@@ -17,9 +17,13 @@ package org.finra.herd.dao.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -30,9 +34,13 @@ import com.amazonaws.services.elasticmapreduce.model.EbsBlockDeviceConfig;
 import com.amazonaws.services.elasticmapreduce.model.EbsConfiguration;
 import com.amazonaws.services.elasticmapreduce.model.InstanceFleetConfig;
 import com.amazonaws.services.elasticmapreduce.model.InstanceFleetProvisioningSpecifications;
+import com.amazonaws.services.elasticmapreduce.model.InstanceGroupConfig;
+import com.amazonaws.services.elasticmapreduce.model.InstanceRoleType;
 import com.amazonaws.services.elasticmapreduce.model.InstanceTypeConfig;
+import com.amazonaws.services.elasticmapreduce.model.MarketType;
 import com.amazonaws.services.elasticmapreduce.model.SpotProvisioningSpecification;
 import com.amazonaws.services.elasticmapreduce.model.VolumeSpecification;
+import org.apache.commons.collections4.CollectionUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -55,6 +63,9 @@ import org.finra.herd.model.api.xml.EmrClusterDefinitionInstanceTypeConfig;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionLaunchSpecifications;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionSpotSpecification;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionVolumeSpecification;
+import org.finra.herd.model.api.xml.InstanceDefinition;
+import org.finra.herd.model.api.xml.InstanceDefinitions;
+import org.finra.herd.model.api.xml.MasterInstanceDefinition;
 import org.finra.herd.model.api.xml.Parameter;
 
 /**
@@ -106,7 +117,7 @@ public class EmrDaoImplTest extends AbstractDaoTest
         List<Configuration> result = emrDaoImpl.getConfigurations(Arrays.asList(emrClusterDefinitionConfiguration));
 
         // Verify the external calls.
-        verifyZeroInteractionsHelper();
+        verifyNoMoreInteractionsHelper();
 
         // Validate the results.
         final List<Configuration> expectedConfigurations = null;
@@ -125,7 +136,7 @@ public class EmrDaoImplTest extends AbstractDaoTest
         List<Configuration> result = emrDaoImpl.getConfigurations(emrClusterDefinitionConfigurations);
 
         // Verify the external calls.
-        verifyZeroInteractionsHelper();
+        verifyNoMoreInteractionsHelper();
 
         // Validate the results.
         assertEquals(new ArrayList<>(), result);
@@ -144,7 +155,7 @@ public class EmrDaoImplTest extends AbstractDaoTest
         List<EbsBlockDeviceConfig> result = emrDaoImpl.getEbsBlockDeviceConfigs(Arrays.asList(emrClusterDefinitionEbsBlockDeviceConfig));
 
         // Verify the external calls.
-        verifyZeroInteractionsHelper();
+        verifyNoMoreInteractionsHelper();
 
         // Validate the results.
         assertEquals(Arrays.asList(new EbsBlockDeviceConfig().withVolumeSpecification(null).withVolumesPerInstance(volumesPerInstance)), result);
@@ -161,7 +172,7 @@ public class EmrDaoImplTest extends AbstractDaoTest
         List<EbsBlockDeviceConfig> result = emrDaoImpl.getEbsBlockDeviceConfigs(emrClusterDefinitionEbsBlockDeviceConfigs);
 
         // Verify the external calls.
-        verifyZeroInteractionsHelper();
+        verifyNoMoreInteractionsHelper();
 
         // Validate the results.
         assertEquals(new ArrayList<>(), result);
@@ -180,7 +191,7 @@ public class EmrDaoImplTest extends AbstractDaoTest
         EbsConfiguration result = emrDaoImpl.getEbsConfiguration(emrClusterDefinitionEbsConfiguration);
 
         // Verify the external calls.
-        verifyZeroInteractionsHelper();
+        verifyNoMoreInteractionsHelper();
 
         // Validate the results.
         final List<EbsBlockDeviceConfig> expectedEbsBlockDeviceConfigs = null;
@@ -205,7 +216,7 @@ public class EmrDaoImplTest extends AbstractDaoTest
         List<InstanceFleetConfig> result = emrDaoImpl.getInstanceFleets(Arrays.asList(emrClusterDefinitionInstanceFleet));
 
         // Verify the external calls.
-        verifyZeroInteractionsHelper();
+        verifyNoMoreInteractionsHelper();
 
         // Validate the results.
         final List<InstanceTypeConfig> expectedInstanceTypeConfigs = null;
@@ -225,10 +236,113 @@ public class EmrDaoImplTest extends AbstractDaoTest
         List<InstanceFleetConfig> result = emrDaoImpl.getInstanceFleets(emrClusterDefinitionInstanceFleets);
 
         // Verify the external calls.
-        verifyZeroInteractionsHelper();
+        verifyNoMoreInteractionsHelper();
 
         // Validate the results.
         assertEquals(new ArrayList<>(), result);
+    }
+
+    @Test
+    public void testGetInstanceGroupConfig()
+    {
+        // Create objects required for testing.
+        final InstanceRoleType roleType = InstanceRoleType.MASTER;
+        final String instanceType = STRING_VALUE;
+        final Integer instanceCount = INTEGER_VALUE;
+        final String bidPrice = "1.23E+3";
+
+        // Call the method under test.
+        InstanceGroupConfig result = emrDaoImpl.getInstanceGroupConfig(roleType, instanceType, instanceCount, new BigDecimal(bidPrice));
+
+        // Verify the external calls.
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(new InstanceGroupConfig(roleType, instanceType, instanceCount).withMarket(MarketType.SPOT).withBidPrice(bidPrice), result);
+    }
+
+    @Test
+    public void testGetInstanceGroupConfigWhenBidPriceIsNull()
+    {
+        // Create objects required for testing.
+        final InstanceRoleType roleType = InstanceRoleType.MASTER;
+        final String instanceType = STRING_VALUE;
+        final Integer instanceCount = INTEGER_VALUE;
+
+        // Call the method under test.
+        InstanceGroupConfig result = emrDaoImpl.getInstanceGroupConfig(roleType, instanceType, instanceCount, null);
+
+        // Verify the external calls.
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(new InstanceGroupConfig(roleType, instanceType, instanceCount), result);
+    }
+
+    @Test
+    public void testGetInstanceGroupConfigs()
+    {
+        // Create objects required for testing.
+        final Integer instanceCount = 0;
+        final InstanceDefinitions instanceDefinitions =
+            new InstanceDefinitions(new MasterInstanceDefinition(), new InstanceDefinition(), new InstanceDefinition());
+
+        // Mock the external calls.
+        when(emrHelper.isInstanceDefinitionsEmpty(instanceDefinitions)).thenReturn(false);
+
+        // Call the method under test.
+        List<InstanceGroupConfig> result = emrDaoImpl.getInstanceGroupConfigs(instanceDefinitions);
+
+        // Verify the external calls.
+        verify(emrHelper).isInstanceDefinitionsEmpty(instanceDefinitions);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(3, CollectionUtils.size(result));
+        assertTrue(result.contains(new InstanceGroupConfig(InstanceRoleType.MASTER, null, instanceCount)));
+        assertTrue(result.contains(new InstanceGroupConfig(InstanceRoleType.CORE, null, instanceCount)));
+        assertTrue(result.contains(new InstanceGroupConfig(InstanceRoleType.TASK, null, instanceCount)));
+    }
+
+    @Test
+    public void testGetInstanceGroupConfigsMissingOptionalInstanceDefinitions()
+    {
+        // Create objects required for testing.
+        final Integer instanceCount = 0;
+        final InstanceDefinitions instanceDefinitions = new InstanceDefinitions(new MasterInstanceDefinition(), null, null);
+
+        // Mock the external calls.
+        when(emrHelper.isInstanceDefinitionsEmpty(instanceDefinitions)).thenReturn(false);
+
+        // Call the method under test.
+        List<InstanceGroupConfig> result = emrDaoImpl.getInstanceGroupConfigs(instanceDefinitions);
+
+        // Verify the external calls.
+        verify(emrHelper).isInstanceDefinitionsEmpty(instanceDefinitions);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertEquals(Arrays.asList(new InstanceGroupConfig(InstanceRoleType.MASTER, null, instanceCount)), result);
+    }
+
+    @Test
+    public void testGetInstanceGroupConfigsWhenInstanceDefinitionsObjectIsEmpty()
+    {
+        // Create objects required for testing.
+        final InstanceDefinitions instanceDefinitions = new InstanceDefinitions();
+
+        // Mock the external calls.
+        when(emrHelper.isInstanceDefinitionsEmpty(instanceDefinitions)).thenReturn(true);
+
+        // Call the method under test.
+        List<InstanceGroupConfig> result = emrDaoImpl.getInstanceGroupConfigs(instanceDefinitions);
+
+        // Verify the external calls.
+        verify(emrHelper).isInstanceDefinitionsEmpty(instanceDefinitions);
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the results.
+        assertNull(result);
     }
 
     @Test
@@ -249,7 +363,7 @@ public class EmrDaoImplTest extends AbstractDaoTest
         List<InstanceTypeConfig> result = emrDaoImpl.getInstanceTypeConfigs(Arrays.asList(emrClusterDefinitionInstanceTypeConfig));
 
         // Verify the external calls.
-        verifyZeroInteractionsHelper();
+        verifyNoMoreInteractionsHelper();
 
         // Validate the results.
         final List<Configuration> expectedConfigurations = null;
@@ -269,7 +383,7 @@ public class EmrDaoImplTest extends AbstractDaoTest
         List<InstanceTypeConfig> result = emrDaoImpl.getInstanceTypeConfigs(emrClusterDefinitionInstanceTypeConfigs);
 
         // Verify the external calls.
-        verifyZeroInteractionsHelper();
+        verifyNoMoreInteractionsHelper();
 
         // Validate the results.
         assertEquals(new ArrayList<>(), result);
@@ -287,7 +401,7 @@ public class EmrDaoImplTest extends AbstractDaoTest
         InstanceFleetProvisioningSpecifications result = emrDaoImpl.getLaunchSpecifications(emrClusterDefinitionLaunchSpecifications);
 
         // Verify the external calls.
-        verifyZeroInteractionsHelper();
+        verifyNoMoreInteractionsHelper();
 
         // Validate the results.
         assertEquals(new InstanceFleetProvisioningSpecifications().withSpotSpecification(null), result);
@@ -305,11 +419,10 @@ public class EmrDaoImplTest extends AbstractDaoTest
         Map<String, String> result = emrDaoImpl.getMap(Arrays.asList(parameter));
 
         // Verify the external calls.
-        verifyZeroInteractionsHelper();
+        verifyNoMoreInteractionsHelper();
 
         // Validate the results.
-        assertNotNull(result);
-        assertEquals(1, result.size());
+        assertEquals(1, CollectionUtils.size(result));
         assertTrue(result.containsKey(name));
         assertEquals(value, result.get(name));
     }
@@ -325,7 +438,7 @@ public class EmrDaoImplTest extends AbstractDaoTest
         Map<String, String> result = emrDaoImpl.getMap(parameters);
 
         // Verify the external calls.
-        verifyZeroInteractionsHelper();
+        verifyNoMoreInteractionsHelper();
 
         // Validate the results.
         assertNotNull(result);
@@ -346,7 +459,7 @@ public class EmrDaoImplTest extends AbstractDaoTest
         SpotProvisioningSpecification result = emrDaoImpl.getSpotSpecification(emrClusterDefinitionSpotSpecification1);
 
         // Verify the external calls.
-        verifyZeroInteractionsHelper();
+        verifyNoMoreInteractionsHelper();
 
         // Validate the results.
         assertEquals(new SpotProvisioningSpecification().withTimeoutDurationMinutes(timeoutDurationMinutes).withTimeoutAction(timeoutAction)
@@ -367,7 +480,7 @@ public class EmrDaoImplTest extends AbstractDaoTest
         VolumeSpecification result = emrDaoImpl.getVolumeSpecification(emrClusterDefinitionVolumeSpecification);
 
         // Verify the external calls.
-        verifyZeroInteractionsHelper();
+        verifyNoMoreInteractionsHelper();
 
         // Validate the results.
         assertEquals(new VolumeSpecification().withVolumeType(volumeType).withIops(iops).withSizeInGB(sizeInGB), result);
@@ -376,8 +489,8 @@ public class EmrDaoImplTest extends AbstractDaoTest
     /**
      * Checks if any of the mocks has any interaction.
      */
-    private void verifyZeroInteractionsHelper()
+    private void verifyNoMoreInteractionsHelper()
     {
-        verifyZeroInteractions(awsClientFactory, configurationHelper, ec2Dao, emrHelper, emrOperations, herdStringHelper, jsonHelper);
+        verifyNoMoreInteractions(awsClientFactory, configurationHelper, ec2Dao, emrHelper, emrOperations, herdStringHelper, jsonHelper);
     }
 }
