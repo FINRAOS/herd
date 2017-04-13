@@ -467,7 +467,7 @@ public class EmrDaoImpl implements EmrDao
     {
         List<InstanceGroupConfig> emrInstanceGroups = null;
 
-        if (instanceDefinitions != null)
+        if (!emrHelper.isInstanceDefinitionsEmpty(instanceDefinitions))
         {
             // Create the instance groups.
             emrInstanceGroups = new ArrayList<>();

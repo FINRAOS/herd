@@ -76,6 +76,7 @@ import org.finra.herd.model.api.xml.EmrShellStep;
 import org.finra.herd.model.api.xml.EmrShellStepAddRequest;
 import org.finra.herd.model.api.xml.HadoopJarStep;
 import org.finra.herd.model.api.xml.InstanceDefinition;
+import org.finra.herd.model.api.xml.InstanceDefinitions;
 import org.finra.herd.model.api.xml.KeyValuePairConfigurations;
 import org.finra.herd.model.api.xml.NodeTag;
 import org.finra.herd.model.api.xml.Parameter;
@@ -861,6 +862,90 @@ public class EmrServiceTest extends AbstractServiceTest
         emrClusterDefinitionOverride.setInstanceDefinitions(expectedEmrClusterDefinition.getInstanceDefinitions());
         request.setEmrClusterDefinitionOverride(emrClusterDefinitionOverride);
 
+        EmrCluster emrCluster = emrService.createCluster(request);
+
+        // Validate the returned object against the input.
+        assertNotNull(emrCluster);
+        assertTrue(emrCluster.getNamespace().equals(request.getNamespace()));
+        assertTrue(emrCluster.getEmrClusterDefinitionName().equals(request.getEmrClusterDefinitionName()));
+        assertTrue(emrCluster.getEmrClusterName().equals(request.getEmrClusterName()));
+        assertNotNull(emrCluster.getId());
+        assertNull(emrCluster.isDryRun());
+        assertTrue(emrCluster.isEmrClusterCreated());
+        assertNotNull(emrCluster.getEmrClusterDefinition());
+        assertEquals(expectedEmrClusterDefinition, emrCluster.getEmrClusterDefinition());
+
+        validateEmrClusterCreationLogUnique(emrCluster, expectedEmrClusterDefinition);
+    }
+
+    @Test
+    public void testCreateEmrClusterOverrideInstanceDefinitionsWithInstanceFleets() throws Exception
+    {
+        // Create the namespace entity.
+        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
+
+        String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
+        EmrClusterDefinition expectedEmrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
+        emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME, definitionXml);
+
+        // Create a new EMR cluster create request that replaces instance definitions with instance fleets.
+        EmrClusterCreateRequest request = getNewEmrClusterCreateRequest();
+        EmrClusterDefinition emrClusterDefinitionOverride = new EmrClusterDefinition();
+        emrClusterDefinitionOverride.setInstanceDefinitions(new InstanceDefinitions());
+        emrClusterDefinitionOverride.setInstanceFleets(Arrays.asList(new EmrClusterDefinitionInstanceFleet()));
+        request.setEmrClusterDefinitionOverride(emrClusterDefinitionOverride);
+
+        // Update the expected EMR cluster definition.
+        expectedEmrClusterDefinition.setInstanceDefinitions(new InstanceDefinitions());
+        expectedEmrClusterDefinition.setInstanceFleets(Arrays.asList(new EmrClusterDefinitionInstanceFleet()));
+
+        // Create the cluster.
+        EmrCluster emrCluster = emrService.createCluster(request);
+
+        // Validate the returned object against the input.
+        assertNotNull(emrCluster);
+        assertTrue(emrCluster.getNamespace().equals(request.getNamespace()));
+        assertTrue(emrCluster.getEmrClusterDefinitionName().equals(request.getEmrClusterDefinitionName()));
+        assertTrue(emrCluster.getEmrClusterName().equals(request.getEmrClusterName()));
+        assertNotNull(emrCluster.getId());
+        assertNull(emrCluster.isDryRun());
+        assertTrue(emrCluster.isEmrClusterCreated());
+        assertNotNull(emrCluster.getEmrClusterDefinition());
+        assertEquals(expectedEmrClusterDefinition, emrCluster.getEmrClusterDefinition());
+
+        validateEmrClusterCreationLogUnique(emrCluster, expectedEmrClusterDefinition);
+    }
+
+    @Test
+    public void testCreateEmrClusterOverrideInstanceFleetsWithInstanceDefinitions() throws Exception
+    {
+        // Create the namespace entity.
+        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
+
+        // Create an EMR cluster definition that uses instance fleets instead of instance definitions.
+        String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
+        EmrClusterDefinition expectedEmrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
+        InstanceDefinitions instanceDefinitions = expectedEmrClusterDefinition.getInstanceDefinitions();
+        expectedEmrClusterDefinition.setInstanceDefinitions(null);
+        expectedEmrClusterDefinition.setInstanceFleets(Arrays.asList(new EmrClusterDefinitionInstanceFleet()));
+        emrClusterDefinitionDaoTestHelper
+            .createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME, xmlHelper.objectToXml(expectedEmrClusterDefinition));
+
+        // Update the count of master instances in the instance definitions.
+        instanceDefinitions.getMasterInstances().setInstanceCount(instanceDefinitions.getMasterInstances().getInstanceCount() + 1);
+
+        // Create a new EMR cluster create request that replaces instance fleets with instance definitions.
+        EmrClusterCreateRequest request = getNewEmrClusterCreateRequest();
+        EmrClusterDefinition emrClusterDefinitionOverride = new EmrClusterDefinition();
+        emrClusterDefinitionOverride.setInstanceDefinitions(instanceDefinitions);
+        emrClusterDefinitionOverride.setInstanceFleets(new ArrayList<>());
+        request.setEmrClusterDefinitionOverride(emrClusterDefinitionOverride);
+
+        // Update the expected EMR cluster definition.
+        expectedEmrClusterDefinition.setInstanceDefinitions(instanceDefinitions);
+        expectedEmrClusterDefinition.setInstanceFleets(new ArrayList<>());
+
+        // Create the cluster.
         EmrCluster emrCluster = emrService.createCluster(request);
 
         // Validate the returned object against the input.

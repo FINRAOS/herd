@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
+import org.finra.herd.dao.helper.EmrHelper;
 import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.model.api.xml.EmrClusterDefinition;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionKey;
@@ -48,6 +50,9 @@ public class EmrClusterDefinitionHelper
     private ConfigurationHelper configurationHelper;
 
     @Autowired
+    private EmrHelper emrHelper;
+
+    @Autowired
     private HerdStringHelper herdStringHelper;
 
     /**
@@ -67,10 +72,10 @@ public class EmrClusterDefinitionHelper
             Assert.isTrue(StringUtils.isNotBlank(token), "No blank is allowed in the list of subnet IDs");
         }
 
-        Assert.isTrue(emrClusterDefinition.getInstanceDefinitions() != null || emrClusterDefinition.getInstanceFleets() != null,
-            "Instance group definitions or instance fleets must be specified.");
+        Assert.isTrue(!emrHelper.isInstanceDefinitionsEmpty(emrClusterDefinition.getInstanceDefinitions()) ||
+            CollectionUtils.isNotEmpty(emrClusterDefinition.getInstanceFleets()), "Instance group definitions or instance fleets must be specified.");
 
-        if (emrClusterDefinition.getInstanceDefinitions() != null)
+        if (!emrHelper.isInstanceDefinitionsEmpty(emrClusterDefinition.getInstanceDefinitions()))
         {
             // Check master instances.
             Assert.notNull(emrClusterDefinition.getInstanceDefinitions().getMasterInstances(), "Master instances must be specified.");

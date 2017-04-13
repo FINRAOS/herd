@@ -35,6 +35,7 @@ import org.springframework.util.CollectionUtils;
 
 import org.finra.herd.dao.EmrDao;
 import org.finra.herd.dao.StsDao;
+import org.finra.herd.model.api.xml.InstanceDefinitions;
 import org.finra.herd.model.dto.AwsParamsDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.jpa.TrustingAccountEntity;
@@ -234,9 +235,29 @@ public class EmrHelper extends AwsHelper
             configurationHelper.getProperty(ConfigurationValue.S3_STAGING_RESOURCE_BASE);
     }
 
+    /**
+     * Returns {@code true} if the supplied EMR status is considered to be active.
+     *
+     * @param status the EMR status
+     *
+     * @return whether the given EMR status is active
+     */
     public boolean isActiveEmrState(String status)
     {
         return Arrays.asList(getActiveEmrClusterStates()).contains(status);
+    }
+
+    /**
+     * Returns {@code true} if the supplied InstanceDefinitions is {@code null} or empty (contains no elements).
+     *
+     * @param instanceDefinitions the instance group definitions from the EMR cluster definition
+     *
+     * @return whether the given InstanceDefinitions is empty
+     */
+    public boolean isInstanceDefinitionsEmpty(InstanceDefinitions instanceDefinitions)
+    {
+        return (instanceDefinitions == null || (instanceDefinitions.getMasterInstances() == null && instanceDefinitions.getCoreInstances() == null &&
+            instanceDefinitions.getTaskInstances() == null));
     }
 
     private String[] getActiveEmrClusterStates()

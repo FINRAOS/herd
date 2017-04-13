@@ -355,7 +355,7 @@ public class EmrServiceImpl implements EmrService
         AwsParamsDto awsParamsDto = emrHelper.getAwsParamsDtoByAcccountId(emrClusterDefinition.getAccountId());
 
         // If instance group definitions are specified, find best price and update definition.
-        if (emrClusterDefinition.getInstanceDefinitions() != null)
+        if (!emrHelper.isInstanceDefinitionsEmpty(emrClusterDefinition.getInstanceDefinitions()))
         {
             emrPricingHelper.updateEmrClusterDefinitionWithBestPrice(emrClusterAlternateKeyDto, emrClusterDefinition, awsParamsDto);
         }
