@@ -16,6 +16,7 @@
 package org.finra.herd.dao.helper;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -40,6 +41,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import org.finra.herd.dao.AbstractDaoTest;
 import org.finra.herd.dao.EmrDao;
+import org.finra.herd.model.api.xml.InstanceDefinition;
+import org.finra.herd.model.api.xml.InstanceDefinitions;
+import org.finra.herd.model.api.xml.MasterInstanceDefinition;
 
 /**
  * This class tests functionality within the AwsHelper class.
@@ -428,5 +432,15 @@ public class EmrHelperTest extends AbstractDaoTest
             emrHelper.setEmrDao(originalEmrDao);
         }
     }
-}
 
+    @Test
+    public void testIsInstanceDefinitionsEmpty()
+    {
+        assertTrue(emrHelper.isInstanceDefinitionsEmpty(null));
+        assertTrue(emrHelper.isInstanceDefinitionsEmpty(new InstanceDefinitions(null, null, null)));
+
+        assertFalse(emrHelper.isInstanceDefinitionsEmpty(new InstanceDefinitions(new MasterInstanceDefinition(), null, null)));
+        assertFalse(emrHelper.isInstanceDefinitionsEmpty(new InstanceDefinitions(null, new InstanceDefinition(), null)));
+        assertFalse(emrHelper.isInstanceDefinitionsEmpty(new InstanceDefinitions(null, null, new InstanceDefinition())));
+    }
+}

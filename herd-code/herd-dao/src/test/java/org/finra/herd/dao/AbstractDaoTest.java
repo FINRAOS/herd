@@ -207,6 +207,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String DISPLAY_NAME_FIELD = "displayname";
 
+    public static final Double DOUBLE_VALUE = Math.random() * Double.MAX_VALUE;
+
     public static final String DOWNLOADER_ROLE_ARN = "UT_DownloaderRoleArn" + RANDOM_SUFFIX;
 
     public static final String EC2_INSTANCE_ID = "UT_Ec2InstanceId" + RANDOM_SUFFIX;
@@ -645,6 +647,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final Boolean STORAGE_UNIT_STATUS_AVAILABLE_FLAG_SET = true;
 
     public static final String STRING_VALUE = "UT_SomeText" + RANDOM_SUFFIX;
+
+    public static final String STRING_VALUE_2 = "UT_SomeText_2_" + RANDOM_SUFFIX;
 
     public static final List<String> SUBPARTITION_VALUES =
         Arrays.asList("Aa" + RANDOM_SUFFIX, "Bb" + RANDOM_SUFFIX, "Cc" + RANDOM_SUFFIX, "Dd" + RANDOM_SUFFIX);
