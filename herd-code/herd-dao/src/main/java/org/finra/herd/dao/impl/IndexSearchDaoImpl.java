@@ -21,15 +21,18 @@ import static org.elasticsearch.index.query.QueryBuilders.disMaxQuery;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang.BooleanUtils;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.common.text.Text;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.MultiMatchQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -37,6 +40,8 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,6 +56,8 @@ import org.finra.herd.dao.helper.ElasticsearchHelper;
 import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.api.xml.Facet;
+import org.finra.herd.model.api.xml.Field;
+import org.finra.herd.model.api.xml.Highlight;
 import org.finra.herd.model.api.xml.IndexSearchRequest;
 import org.finra.herd.model.api.xml.IndexSearchResponse;
 import org.finra.herd.model.api.xml.IndexSearchResult;
@@ -235,6 +242,19 @@ public class IndexSearchDaoImpl implements IndexSearchDao
             .addIndexBoost(BUSINESS_OBJECT_DEFINITION_INDEX, BUSINESS_OBJECT_DEFINITION_INDEX_BOOST).addIndexBoost(TAG_INDEX, TAG_INDEX_BOOST)
             .addSort(SortBuilders.scoreSort());
 
+        String preTag = null;
+        String postTag = null;
+
+        // Add highlighting if specified in the request
+        if (BooleanUtils.isTrue(request.isEnableHitHighlighting()))
+        {
+            searchRequestBuilder.highlighter(buildHighlightQuery());
+
+            // Fetch configured 'tag' values for highlighting
+            preTag = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_PRETAGS);
+            postTag = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_POSTTAGS);
+        }
+
         // Add facet aggregations if specified in the request
         if (CollectionUtils.isNotEmpty(request.getFacetFields()))
         {
@@ -299,6 +319,15 @@ public class IndexSearchDaoImpl implements IndexSearchDao
                 indexSearchResult.setIndexSearchResultKey(new IndexSearchResultKey(null, businessObjectDefinitionKey));
             }
 
+            if (BooleanUtils.isTrue(request.isEnableHitHighlighting()))
+            {
+                // Extract highlighted content from the search hit and clean html tags except the pre/post-tags as configured
+                Highlight highlightedContent = extractHighlightedContent(searchHit, preTag, postTag);
+
+                // Set highlighted content in the response element
+                indexSearchResult.setHighlight(highlightedContent);
+            }
+
             indexSearchResults.add(indexSearchResult);
         }
 
@@ -323,6 +352,50 @@ public class IndexSearchDaoImpl implements IndexSearchDao
     }
 
     /**
+     * Extracts highlighted content from a given {@link SearchHit}
+     *
+     * @param searchHit a given {@link SearchHit} from the elasticsearch results
+     * @param preTag the specified pre-tag for highlighting
+     * @param postTag the specified post-tag for highlighting
+     *
+     * @return {@link Highlight} a cleaned highlighted content
+     */
+    private Highlight extractHighlightedContent(SearchHit searchHit, String preTag, String postTag)
+    {
+        Highlight highlightedContent = new Highlight();
+
+        List<Field> highlightFields = new ArrayList<>();
+
+        // make sure there is highlighted content in the search hit
+        if (searchHit.getHighlightFields() != null)
+        {
+            for (Map.Entry<String, HighlightField> entry : searchHit.getHighlightFields().entrySet())
+            {
+                Field field = new Field();
+
+                // Extract the field-name
+                field.setFieldName(entry.getKey());
+
+                List<String> cleanFragments = new ArrayList<>();
+
+                // Extract fragments which have the highlighted content
+                Text[] fragments = entry.getValue().getFragments();
+
+                for (Text fragment : fragments)
+                {
+                    cleanFragments.add(HerdStringUtils.stripHtml(fragment.toString(), preTag, postTag));
+                }
+                field.setFragments(cleanFragments);
+                highlightFields.add(field);
+            }
+        }
+
+        highlightedContent.setFields(highlightFields);
+
+        return highlightedContent;
+    }
+
+    /**
      * Private method to build a multi match query.
      *
      * @param searchTerm the term on which to search
@@ -343,8 +416,14 @@ public class IndexSearchDaoImpl implements IndexSearchDao
             try
             {
                 @SuppressWarnings("unchecked")
-                Map<String, Float> stemmedFieldsWithBoost = jsonHelper.unmarshallJsonToObject(Map.class, stemmedFieldsValue);
-                multiMatchQueryBuilder.fields(stemmedFieldsWithBoost);
+                final Map<String, String> stemmedFieldsWithBoost = jsonHelper.unmarshallJsonToObject(Map.class, stemmedFieldsValue);
+                final Map<String, Float> fieldsBoosts = new HashMap<>();
+
+                // This additional step is needed because trying to cast an unmarshalled json to a Map of anything other than String key-value pairs won't work
+                stemmedFieldsWithBoost.entrySet().forEach(entry -> fieldsBoosts.put(entry.getKey(), Float.parseFloat(entry.getValue())));
+
+                // Set the fields and their respective boosts to the multi-match query
+                multiMatchQueryBuilder.fields(fieldsBoosts);
             }
             catch (IOException e)
             {
@@ -360,8 +439,15 @@ public class IndexSearchDaoImpl implements IndexSearchDao
             try
             {
                 @SuppressWarnings("unchecked")
-                Map<String, Float> stemmedFieldsWithBoost = jsonHelper.unmarshallJsonToObject(Map.class, ngramsFieldsValue);
-                multiMatchQueryBuilder.fields(stemmedFieldsWithBoost);
+                final Map<String, String> stemmedFieldsWithBoost = jsonHelper.unmarshallJsonToObject(Map.class, ngramsFieldsValue);
+
+                final Map<String, Float> fieldsBoosts = new HashMap<>();
+
+                // This additional step is needed because trying to cast an unmarshalled json to a Map of anything other than String key-value pairs won't work
+                stemmedFieldsWithBoost.entrySet().forEach(entry -> fieldsBoosts.put(entry.getKey(), Float.parseFloat(entry.getValue())));
+
+                // Set the fields and their respective boosts to the multi-match query
+                multiMatchQueryBuilder.fields(fieldsBoosts);
             }
             catch (IOException e)
             {
@@ -370,5 +456,43 @@ public class IndexSearchDaoImpl implements IndexSearchDao
         }
 
         return multiMatchQueryBuilder;
+    }
+
+    /**
+     * Builds a {@link HighlightBuilder} based on (pre/post)tags and fields fetched from the DB config which is added to the main {@link SearchRequestBuilder}
+     *
+     * @return {@link HighlightBuilder} highlight query on the fields requested
+     */
+    private HighlightBuilder buildHighlightQuery()
+    {
+        HighlightBuilder highlightBuilder = new HighlightBuilder();
+
+        // Field matching is not needed since we are matching on multiple 'type' fields like stemmed and ngrams and enabling highlighting on all those fields
+        // will yield duplicates
+        highlightBuilder.requireFieldMatch(false);
+
+        // Get the configured value for pre-tags for highlighting
+        highlightBuilder.preTags(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_PRETAGS));
+
+        // Get the configured value for post-tags for highlighting
+        highlightBuilder.postTags(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_POSTTAGS));
+
+        // Get highlight fields value from configuration
+        String highlightFieldsValue = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_FIELDS);
+
+        try
+        {
+            @SuppressWarnings("unchecked")
+            Map<String, List<String>> highlightFieldsConfig = jsonHelper.unmarshallJsonToObject(Map.class, highlightFieldsValue);
+
+            // Add all configured field values to the highlight builder
+            highlightFieldsConfig.get("fields").forEach(highlightBuilder::field);
+        }
+        catch (IOException e)
+        {
+            LOGGER.warn("Could not parse the configured value for highlight fields: {}", ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_FIELDS, e);
+        }
+
+        return highlightBuilder;
     }
 }
