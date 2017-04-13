@@ -6550,6 +6550,7 @@
                </xs:documentation>
             </xs:annotation>
          </xs:element>
+         <xs:element name="highlight" type="highlight" minOccurs="0" maxOccurs="1"/>
       </xs:all>
    </xs:complexType>
 
@@ -6576,10 +6577,10 @@
       </xs:annotation>
    </xs:element>
    <xs:complexType name="highlight">
-      <xs:sequence>
-         <xs:element name="fields" type="fields" minOccurs="0" maxOccurs="unbounded" />
-      </xs:sequence>
-   </xs:complexType>
+      <xs:all>
+         <xs:element name="fields" type="fields" />
+      </xs:all>
+   </xs:complexType >
 
    <xs:element name="fields" type="fields">
       <xs:annotation>
@@ -6589,7 +6590,7 @@
    </xs:element>
    <xs:complexType name="fields">
       <xs:sequence>
-         <xs:element name="field" type="field" minOccurs="0" maxOccurs="unbounded" />
+         <xs:element name="field" type="field" minOccurs="0" maxOccurs="unbounded"/>
       </xs:sequence>
    </xs:complexType>
 
@@ -6607,7 +6608,7 @@
                </xs:documentation>
             </xs:annotation>
          </xs:element>
-         <xs:element name="fragments" type="fragments" />
+         <xs:element name="fragments" type="fragments"/>
       </xs:all>
    </xs:complexType>
 

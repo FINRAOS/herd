@@ -117,9 +117,9 @@ public class IndexSearchServiceTest extends AbstractServiceTest
         // Create a new index search results
         final IndexSearchResult indexSearchResultBusinessObjectDefinition =
             new IndexSearchResult(INDEX_SEARCH_RESULT_TYPE_BUSINESS_OBJECT_DEFINITION, indexSearchResultKeyBusinessObjectDefinition, BDEF_DISPLAY_NAME,
-                BDEF_SHORT_DESCRIPTION);
+                BDEF_SHORT_DESCRIPTION, null);
         final IndexSearchResult indexSearchResultTag =
-            new IndexSearchResult(INDEX_SEARCH_RESULT_TYPE_TAG, indexSearchResultKeyTag, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+            new IndexSearchResult(INDEX_SEARCH_RESULT_TYPE_TAG, indexSearchResultKeyTag, TAG_DISPLAY_NAME, TAG_DESCRIPTION, null);
 
         // Create a list to contain the index search results
         final List<IndexSearchResult> indexSearchResults = new ArrayList<>();
@@ -179,9 +179,9 @@ public class IndexSearchServiceTest extends AbstractServiceTest
         // Create a new index search results
         final IndexSearchResult indexSearchResultBusinessObjectDefinition =
             new IndexSearchResult(INDEX_SEARCH_RESULT_TYPE_BUSINESS_OBJECT_DEFINITION, indexSearchResultKeyBusinessObjectDefinition, BDEF_DISPLAY_NAME,
-                BDEF_SHORT_DESCRIPTION);
+                BDEF_SHORT_DESCRIPTION, null);
         final IndexSearchResult indexSearchResultTag =
-            new IndexSearchResult(INDEX_SEARCH_RESULT_TYPE_TAG, indexSearchResultKeyTag, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+            new IndexSearchResult(INDEX_SEARCH_RESULT_TYPE_TAG, indexSearchResultKeyTag, TAG_DISPLAY_NAME, TAG_DESCRIPTION, null);
 
         // Create a list to contain the index search results
         final List<IndexSearchResult> indexSearchResults = new ArrayList<>();
@@ -259,9 +259,9 @@ public class IndexSearchServiceTest extends AbstractServiceTest
         // Create a new index search results
         final IndexSearchResult indexSearchResultBusinessObjectDefinition =
             new IndexSearchResult(INDEX_SEARCH_RESULT_TYPE_BUSINESS_OBJECT_DEFINITION, indexSearchResultKeyBusinessObjectDefinition, BDEF_DISPLAY_NAME,
-                BDEF_SHORT_DESCRIPTION);
+                BDEF_SHORT_DESCRIPTION, null);
         final IndexSearchResult indexSearchResultTag =
-            new IndexSearchResult(INDEX_SEARCH_RESULT_TYPE_TAG, indexSearchResultKeyTag, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+            new IndexSearchResult(INDEX_SEARCH_RESULT_TYPE_TAG, indexSearchResultKeyTag, TAG_DISPLAY_NAME, TAG_DESCRIPTION, null);
 
         // Create a list to contain the index search results
         final List<IndexSearchResult> indexSearchResults = new ArrayList<>();
@@ -336,9 +336,9 @@ public class IndexSearchServiceTest extends AbstractServiceTest
         // Create a new index search results
         final IndexSearchResult indexSearchResultBusinessObjectDefinition =
             new IndexSearchResult(INDEX_SEARCH_RESULT_TYPE_BUSINESS_OBJECT_DEFINITION, indexSearchResultKeyBusinessObjectDefinition, BDEF_DISPLAY_NAME,
-                BDEF_SHORT_DESCRIPTION);
+                BDEF_SHORT_DESCRIPTION, null);
         final IndexSearchResult indexSearchResultTag =
-            new IndexSearchResult(INDEX_SEARCH_RESULT_TYPE_TAG, indexSearchResultKeyTag, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+            new IndexSearchResult(INDEX_SEARCH_RESULT_TYPE_TAG, indexSearchResultKeyTag, TAG_DISPLAY_NAME, TAG_DESCRIPTION, null);
 
         // Create a list to contain the index search results
         final List<IndexSearchResult> indexSearchResults = new ArrayList<>();
@@ -405,9 +405,9 @@ public class IndexSearchServiceTest extends AbstractServiceTest
         // Create a new index search results
         final IndexSearchResult indexSearchResultBusinessObjectDefinition =
             new IndexSearchResult(INDEX_SEARCH_RESULT_TYPE_BUSINESS_OBJECT_DEFINITION, indexSearchResultKeyBusinessObjectDefinition, BDEF_DISPLAY_NAME,
-                BDEF_SHORT_DESCRIPTION);
+                BDEF_SHORT_DESCRIPTION, null);
         final IndexSearchResult indexSearchResultTag =
-            new IndexSearchResult(INDEX_SEARCH_RESULT_TYPE_TAG, indexSearchResultKeyTag, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+            new IndexSearchResult(INDEX_SEARCH_RESULT_TYPE_TAG, indexSearchResultKeyTag, TAG_DISPLAY_NAME, TAG_DESCRIPTION, null);
 
         // Create a list to contain the index search results
         final List<IndexSearchResult> indexSearchResults = new ArrayList<>();
@@ -459,9 +459,9 @@ public class IndexSearchServiceTest extends AbstractServiceTest
         // Create a new index search results
         final IndexSearchResult indexSearchResultBusinessObjectDefinition =
             new IndexSearchResult(INDEX_SEARCH_RESULT_TYPE_BUSINESS_OBJECT_DEFINITION, indexSearchResultKeyBusinessObjectDefinition, BDEF_DISPLAY_NAME,
-                BDEF_SHORT_DESCRIPTION);
+                BDEF_SHORT_DESCRIPTION, null);
         final IndexSearchResult indexSearchResultTag =
-            new IndexSearchResult(INDEX_SEARCH_RESULT_TYPE_TAG, indexSearchResultKeyTag, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+            new IndexSearchResult(INDEX_SEARCH_RESULT_TYPE_TAG, indexSearchResultKeyTag, TAG_DISPLAY_NAME, TAG_DESCRIPTION, null);
 
         // Create a list to contain the index search results
         final List<IndexSearchResult> indexSearchResults = new ArrayList<>();
@@ -576,9 +576,9 @@ public class IndexSearchServiceTest extends AbstractServiceTest
         // Create a new index search results
         final IndexSearchResult indexSearchResultBusinessObjectDefinition =
             new IndexSearchResult(INDEX_SEARCH_RESULT_TYPE_BUSINESS_OBJECT_DEFINITION, indexSearchResultKeyBusinessObjectDefinition, BDEF_DISPLAY_NAME,
-                BDEF_SHORT_DESCRIPTION);
+                BDEF_SHORT_DESCRIPTION, null);
         final IndexSearchResult indexSearchResultTag =
-            new IndexSearchResult(INDEX_SEARCH_RESULT_TYPE_TAG, indexSearchResultKeyTag, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+            new IndexSearchResult(INDEX_SEARCH_RESULT_TYPE_TAG, indexSearchResultKeyTag, TAG_DISPLAY_NAME, TAG_DESCRIPTION, null);
 
         // Create a list to contain the index search results
         final List<IndexSearchResult> indexSearchResults = new ArrayList<>();
