@@ -426,6 +426,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String NO_S3_BUCKET_NAME = null;
 
+    public static final String NO_S3_ENDPOINT = null;
+
     public static final List<SampleDataFile> NO_SAMPLE_DATA_FILES = new ArrayList<>();
 
     public static final Schema NO_SCHEMA = null;
@@ -500,6 +502,12 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String S3_BUCKET_NAME_ORIGIN = "UT_S3_Bucket_Name_Origin_" + RANDOM_SUFFIX;
 
     public static final List<String> S3_DIRECTORY_MARKERS = Arrays.asList("", "folder");
+
+    public static final String S3_ENDPOINT = "UT_S3_Endpoint_" + RANDOM_SUFFIX;
+
+    public static final String S3_OBJECT_TAGGER_ROLE_ARN = "UT_S3_Object_Tagger_Role_Arn_" + RANDOM_SUFFIX;
+
+    public static final String S3_OBJECT_TAGGER_ROLE_SESSION_NAME = "UT_S3_Object_Tagger_Role_Session_Name_" + RANDOM_SUFFIX;
 
     public static final String S3_OBJECT_TAG_KEY = "UT_S3_Object_Tag_Key_1_" + RANDOM_SUFFIX;
 

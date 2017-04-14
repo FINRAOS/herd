@@ -582,7 +582,7 @@ public class S3DaoImpl implements S3Dao
 
         if (!CollectionUtils.isEmpty(params.getFiles()))
         {
-            // Initialize a key value her for the error message in the catch block.
+            // Initialize a key value pair for the error message in the catch block.
             String key = params.getFiles().get(0).getPath().replaceAll("\\\\", "/");
 
             try
@@ -639,67 +639,83 @@ public class S3DaoImpl implements S3Dao
     }
 
     @Override
-    public void tagObjects(final S3FileTransferRequestParamsDto params, final Tag tag)
+    public void tagObjects(final S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, final S3FileTransferRequestParamsDto s3ObjectTaggerParamsDto,
+        final Tag tag)
     {
-        LOGGER.info("Tagging objects in S3... s3BucketName=\"{}\" s3KeyCount={} s3ObjectTagKey=\"{}\" s3ObjectTagValue=\"{}\"", params.getS3BucketName(),
-            params.getFiles().size(), tag.getKey(), tag.getValue());
+        LOGGER.info("Tagging objects in S3... s3BucketName=\"{}\" s3KeyCount={} s3ObjectTagKey=\"{}\" s3ObjectTagValue=\"{}\"",
+            s3FileTransferRequestParamsDto.getS3BucketName(), s3FileTransferRequestParamsDto.getFiles().size(), tag.getKey(), tag.getValue());
 
-        if (!CollectionUtils.isEmpty(params.getFiles()))
+        if (!CollectionUtils.isEmpty(s3FileTransferRequestParamsDto.getFiles()))
         {
-            // Initialize a key value her for the error message in the catch block.
-            String s3Key = params.getFiles().get(0).getPath().replaceAll("\\\\", "/");
+            // Initialize a key value pair for the error message in the catch block.
+            String s3Key = s3FileTransferRequestParamsDto.getFiles().get(0).getPath().replaceAll("\\\\", "/");
+
+            // Amazon S3 client to access S3 objects.
+            AmazonS3Client s3Client = null;
+
+            // Amazon S3 client for S3 object tagging.
+            AmazonS3Client s3ObjectTaggerClient = null;
 
             try
             {
-                // Create an S3 client.
-                AmazonS3Client s3Client = getAmazonS3(params);
+                // Create an S3 client to access S3 objects.
+                s3Client = getAmazonS3(s3FileTransferRequestParamsDto);
+
+                // Create an S3 client for S3 object tagging.
+                s3ObjectTaggerClient = getAmazonS3(s3ObjectTaggerParamsDto);
 
                 // Create a get object tagging request.
-                GetObjectTaggingRequest getObjectTaggingRequest = new GetObjectTaggingRequest(params.getS3BucketName(), null);
+                GetObjectTaggingRequest getObjectTaggingRequest = new GetObjectTaggingRequest(s3FileTransferRequestParamsDto.getS3BucketName(), null);
 
                 // Create a restore object request.
-                SetObjectTaggingRequest setObjectTaggingRequest = new SetObjectTaggingRequest(params.getS3BucketName(), null, null);
+                SetObjectTaggingRequest setObjectTaggingRequest = new SetObjectTaggingRequest(s3FileTransferRequestParamsDto.getS3BucketName(), null, null);
 
-                try
+                for (File file : s3FileTransferRequestParamsDto.getFiles())
                 {
-                    for (File file : params.getFiles())
+                    // Prepare an S3 key.
+                    s3Key = file.getPath().replaceAll("\\\\", "/");
+
+                    // Retrieve the current tagging information for the S3 key.
+                    getObjectTaggingRequest.setKey(s3Key);
+                    GetObjectTaggingResult getObjectTaggingResult = s3Operations.getObjectTagging(getObjectTaggingRequest, s3Client);
+
+                    // Update the list of tags to include the specified S3 object tag.
+                    List<Tag> updatedTags = new ArrayList<>();
+                    updatedTags.add(tag);
+                    if (CollectionUtils.isNotEmpty(getObjectTaggingResult.getTagSet()))
                     {
-                        // Prepare an S3 key.
-                        s3Key = file.getPath().replaceAll("\\\\", "/");
-
-                        // Retrieve the current tagging information for the S3 key.
-                        getObjectTaggingRequest.setKey(s3Key);
-                        GetObjectTaggingResult getObjectTaggingResult = s3Operations.getObjectTagging(getObjectTaggingRequest, s3Client);
-
-                        // Update the list of tags to include the specified S3 object tag.
-                        List<Tag> updatedTags = new ArrayList<>();
-                        updatedTags.add(tag);
-                        if (CollectionUtils.isNotEmpty(getObjectTaggingResult.getTagSet()))
+                        for (Tag currentTag : getObjectTaggingResult.getTagSet())
                         {
-                            for (Tag currentTag : getObjectTaggingResult.getTagSet())
+                            if (!StringUtils.equals(tag.getKey(), currentTag.getKey()))
                             {
-                                if (!StringUtils.equals(tag.getKey(), currentTag.getKey()))
-                                {
-                                    updatedTags.add(currentTag);
-                                }
+                                updatedTags.add(currentTag);
                             }
                         }
-
-                        // Update the tagging information.
-                        setObjectTaggingRequest.setKey(s3Key);
-                        setObjectTaggingRequest.setTagging(new ObjectTagging(updatedTags));
-                        s3Operations.setObjectTagging(setObjectTaggingRequest, s3Client);
                     }
-                }
-                finally
-                {
-                    s3Client.shutdown();
+
+                    // Update the tagging information.
+                    setObjectTaggingRequest.setKey(s3Key);
+                    setObjectTaggingRequest.setTagging(new ObjectTagging(updatedTags));
+                    s3Operations.setObjectTagging(setObjectTaggingRequest, s3ObjectTaggerClient);
                 }
             }
             catch (Exception e)
             {
-                throw new IllegalStateException(
-                    String.format("Failed to tag S3 object with \"%s\" key in \"%s\" bucket. Reason: %s", s3Key, params.getS3BucketName(), e.getMessage()), e);
+                throw new IllegalStateException(String
+                    .format("Failed to tag S3 object with \"%s\" key in \"%s\" bucket. Reason: %s", s3Key, s3FileTransferRequestParamsDto.getS3BucketName(),
+                        e.getMessage()), e);
+            }
+            finally
+            {
+                if (s3Client != null)
+                {
+                    s3Client.shutdown();
+                }
+
+                if (s3ObjectTaggerClient != null)
+                {
+                    s3ObjectTaggerClient.shutdown();
+                }
             }
         }
     }
@@ -824,7 +840,7 @@ public class S3DaoImpl implements S3Dao
 
         if (!CollectionUtils.isEmpty(params.getFiles()))
         {
-            // Initialize a key value her for the error message in the catch block.
+            // Initialize a key value pair for the error message in the catch block.
             String key = params.getFiles().get(0).getPath().replaceAll("\\\\", "/");
 
             try

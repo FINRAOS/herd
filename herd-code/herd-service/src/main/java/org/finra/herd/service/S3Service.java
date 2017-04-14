@@ -128,9 +128,11 @@ public interface S3Service
      * Tags all objects with the specified S3 object tag.
      *
      * @param s3FileTransferRequestParamsDto the S3 file transfer request parameters. The S3 bucket name and the file list identify the S3 objects to be tagged
+     * @param s3ObjectTaggerParamsDto the S3 file transfer request parameters to be used for tagging S3 objects
      * @param tag the S3 object tag
      */
-    public void tagObjects(final S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, final Tag tag);
+    public void tagObjects(final S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto, final S3FileTransferRequestParamsDto s3ObjectTaggerParamsDto,
+        final Tag tag);
 
     /**
      * Uploads a local directory of files into S3.
