@@ -248,11 +248,11 @@ public class IndexSearchDaoImpl implements IndexSearchDao
         // Add highlighting if specified in the request
         if (BooleanUtils.isTrue(request.isEnableHitHighlighting()))
         {
-            searchRequestBuilder.highlighter(buildHighlightQuery());
-
             // Fetch configured 'tag' values for highlighting
             preTag = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_PRETAGS);
             postTag = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_POSTTAGS);
+
+            searchRequestBuilder.highlighter(buildHighlightQuery(preTag, postTag));
         }
 
         // Add facet aggregations if specified in the request
@@ -334,18 +334,8 @@ public class IndexSearchDaoImpl implements IndexSearchDao
         List<Facet> facets = null;
         if (CollectionUtils.isNotEmpty(request.getFacetFields()))
         {
-            ElasticsearchResponseDto elasticsearchResponseDto = new ElasticsearchResponseDto();
-            if (request.getFacetFields().contains(ElasticsearchHelper.TAG_FACET))
-            {
-                elasticsearchResponseDto.setNestTagTypeIndexSearchResponseDtos(elasticsearchHelper.getNestedTagTagIndexSearchResponseDto(searchResponse));
-                elasticsearchResponseDto.setTagTypeIndexSearchResponseDtos(elasticsearchHelper.getTagTagIndexSearchResponseDto(searchResponse));
-            }
-            if (request.getFacetFields().contains(ElasticsearchHelper.RESULT_TYPE_FACET))
-            {
-                elasticsearchResponseDto.setResultTypeIndexSearchResponseDtos(elasticsearchHelper.getResultTypeIndexSearchResponseDto(searchResponse));
-            }
-
-            facets = elasticsearchHelper.getFacetsResponse(elasticsearchResponseDto, true);
+            // Extract facets from the search response
+            facets = new ArrayList<>(extractFacets(request, searchResponse));
         }
 
         return new IndexSearchResponse(searchHits.getTotalHits(), indexSearchResults, facets);
@@ -393,6 +383,30 @@ public class IndexSearchDaoImpl implements IndexSearchDao
         highlightedContent.setFields(highlightFields);
 
         return highlightedContent;
+    }
+
+    /**
+     * Extracts facet information from a {@link SearchResponse} object
+     *
+     * @param request The specified {@link IndexSearchRequest}
+     * @param searchResponse A given {@link SearchResponse} to extract the facet information from
+     *
+     * @return A list of {@link Facet} objects
+     */
+    private List<Facet> extractFacets(IndexSearchRequest request, SearchResponse searchResponse)
+    {
+        ElasticsearchResponseDto elasticsearchResponseDto = new ElasticsearchResponseDto();
+        if (request.getFacetFields().contains(ElasticsearchHelper.TAG_FACET))
+        {
+            elasticsearchResponseDto.setNestTagTypeIndexSearchResponseDtos(elasticsearchHelper.getNestedTagTagIndexSearchResponseDto(searchResponse));
+            elasticsearchResponseDto.setTagTypeIndexSearchResponseDtos(elasticsearchHelper.getTagTagIndexSearchResponseDto(searchResponse));
+        }
+        if (request.getFacetFields().contains(ElasticsearchHelper.RESULT_TYPE_FACET))
+        {
+            elasticsearchResponseDto.setResultTypeIndexSearchResponseDtos(elasticsearchHelper.getResultTypeIndexSearchResponseDto(searchResponse));
+        }
+
+        return elasticsearchHelper.getFacetsResponse(elasticsearchResponseDto, true);
     }
 
     /**
@@ -461,9 +475,12 @@ public class IndexSearchDaoImpl implements IndexSearchDao
     /**
      * Builds a {@link HighlightBuilder} based on (pre/post)tags and fields fetched from the DB config which is added to the main {@link SearchRequestBuilder}
      *
-     * @return {@link HighlightBuilder} highlight query on the fields requested
+     * @param preTag The specified pre-tag to be used for highlighting
+     * @param postTag The specified post-tag to be used for highlighting
+     *
+     * @return A configured {@link HighlightBuilder} object
      */
-    private HighlightBuilder buildHighlightQuery()
+    private HighlightBuilder buildHighlightQuery(String preTag, String postTag)
     {
         HighlightBuilder highlightBuilder = new HighlightBuilder();
 
@@ -471,11 +488,11 @@ public class IndexSearchDaoImpl implements IndexSearchDao
         // will yield duplicates
         highlightBuilder.requireFieldMatch(false);
 
-        // Get the configured value for pre-tags for highlighting
-        highlightBuilder.preTags(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_PRETAGS));
+        // Set the configured value for pre-tags for highlighting
+        highlightBuilder.preTags(preTag);
 
-        // Get the configured value for post-tags for highlighting
-        highlightBuilder.postTags(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_POSTTAGS));
+        // Set the configured value for post-tags for highlighting
+        highlightBuilder.postTags(postTag);
 
         // Get highlight fields value from configuration
         String highlightFieldsValue = configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_FIELDS);

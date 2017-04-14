@@ -26,6 +26,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -46,6 +47,7 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.SearchShardTarget;
 import org.elasticsearch.search.aggregations.AggregationBuilder;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -57,6 +59,7 @@ import org.mockito.internal.progress.ThreadSafeMockingProgress;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.helper.ElasticsearchHelper;
+import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.dao.impl.IndexSearchDaoImpl;
 import org.finra.herd.model.api.xml.IndexSearchFilter;
 import org.finra.herd.model.api.xml.IndexSearchKey;
@@ -94,6 +97,9 @@ public class IndexSearchDaoTest extends AbstractDaoTest
     @Mock
     private ElasticsearchHelper elasticsearchHelper;
 
+    @Mock
+    private JsonHelper jsonHelper;
+
     @Before
     public void before()
     {
@@ -104,7 +110,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void indexSearchTest()
+    public void indexSearchTest() throws IOException
     {
         // Create a new fields set that will be used when testing the index search method
         final Set<String> fields = Sets.newHashSet(DISPLAY_NAME_FIELD, SHORT_DESCRIPTION_FIELD);
@@ -112,7 +118,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void indexSearchTestWithNoFields()
+    public void indexSearchTestWithNoFields() throws IOException
     {
         // Create a new fields set that will be used when testing the index search method
         final Set<String> fields = new HashSet<>();
@@ -120,7 +126,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void indexSearchTestWithFacets()
+    public void indexSearchTestWithFacets() throws IOException
     {
         // Create a new fields set that will be used when testing the index search method
         final Set<String> fields = new HashSet<>();
@@ -129,7 +135,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void indexSearchTestWithTagFacet()
+    public void indexSearchTestWithTagFacet() throws IOException
     {
         // Create a new fields set that will be used when testing the index search method
         final Set<String> fields = new HashSet<>();
@@ -139,7 +145,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void indexSearchTestWithResultTypeFacet()
+    public void indexSearchTestWithResultTypeFacet() throws IOException
     {
         // Create a new fields set that will be used when testing the index search method
         final Set<String> fields = new HashSet<>();
@@ -149,7 +155,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void indexSearchTestWithEmptyFilters()
+    public void indexSearchTestWithEmptyFilters() throws IOException
     {
         // Create a new fields set that will be used when testing the index search method
         final Set<String> fields = new HashSet<>();
@@ -162,7 +168,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void indexSearchTestWithTagKeyFilter()
+    public void indexSearchTestWithTagKeyFilter() throws IOException
     {
         // Create a new fields set that will be used when testing the index search method
         final Set<String> fields = new HashSet<>();
@@ -187,7 +193,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void indexSearchTestWithResultTypeFilter()
+    public void indexSearchTestWithResultTypeFilter() throws IOException
     {
         // Create a new fields set that will be used when testing the index search method
         final Set<String> fields = new HashSet<>();
@@ -212,7 +218,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void indexSearchTestWithTagKeyFilterAndExcludeFlagSet()
+    public void indexSearchTestWithTagKeyFilterAndExcludeFlagSet() throws IOException
     {
         // Create a new fields set that will be used when testing the index search method
         final Set<String> fields = new HashSet<>();
@@ -240,7 +246,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void indexSearchTestWithResultTypeFilterAndExcludeFlagSet()
+    public void indexSearchTestWithResultTypeFilterAndExcludeFlagSet() throws IOException
     {
         // Create a new fields set that will be used when testing the index search method
         final Set<String> fields = new HashSet<>();
@@ -267,7 +273,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         testIndexSearch(fields, indexSearchFilters, null);
     }
 
-    private void testIndexSearch(Set<String> fields, List<IndexSearchFilter> searchFilters, List<String> facetList)
+    private void testIndexSearch(Set<String> fields, List<IndexSearchFilter> searchFilters, List<String> facetList) throws IOException
     {
         // Build the mocks
         SearchRequestBuilder searchRequestBuilder = mock(SearchRequestBuilder.class);
@@ -276,6 +282,7 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         SearchRequestBuilder searchRequestBuilderWithBusinessObjectDefinitionIndexBoost = mock(SearchRequestBuilder.class);
         SearchRequestBuilder searchRequestBuilderWithTagIndexBoost = mock(SearchRequestBuilder.class);
         SearchRequestBuilder searchRequestBuilderWithSorting = mock(SearchRequestBuilder.class);
+        SearchRequestBuilder searchRequestBuilderWithHighlighting = mock(SearchRequestBuilder.class);
 
         TransportClient transportClient = mock(TransportClient.class);
 
@@ -295,6 +302,20 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         // Mock the call to external methods
         when(configurationHelper.getProperty(ConfigurationValue.TAG_SHORT_DESCRIPTION_LENGTH, Integer.class)).thenReturn(300);
         when(configurationHelper.getProperty(ConfigurationValue.BUSINESS_OBJECT_DEFINITION_SHORT_DESCRIPTION_LENGTH, Integer.class)).thenReturn(300);
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCHABLE_FIELDS_NGRAMS)).thenReturn("{\"displayName\":\"1.0\"}");
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCHABLE_FIELDS_STEMMED)).thenReturn("{\"displayName\":\"1.0\"}");
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_PRETAGS)).thenReturn("<hlt class=\"highlight\">");
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_POSTTAGS)).thenReturn("</hlt>");
+        when(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_HIGHLIGHT_FIELDS)).thenReturn("{\"fields\"=[\"displayName\"]}");
+
+        Map<String, String> fieldsBoostMap = new HashMap<>();
+        fieldsBoostMap.put("displayName", "1.0");
+        when(jsonHelper.unmarshallJsonToObject(Map.class, "{\"displayName\":\"1.0\"}")).thenReturn(fieldsBoostMap);
+
+        Map<String, List<String>> fieldsMap = new HashMap<>();
+        fieldsMap.put("fields", Collections.singletonList("displayName"));
+        when(jsonHelper.unmarshallJsonToObject(Map.class, "{\"fields\"=[\"displayName\"]}")).thenReturn(fieldsMap);
+
         when(transportClientFactory.getTransportClient()).thenReturn(transportClient);
         when(transportClient.prepareSearch(BUSINESS_OBJECT_DEFINITION_INDEX, TAG_INDEX)).thenReturn(searchRequestBuilder);
         when(searchRequestBuilder.setSource(any())).thenReturn(searchRequestBuilderWithSource);
@@ -304,6 +325,8 @@ public class IndexSearchDaoTest extends AbstractDaoTest
         when(searchRequestBuilderWithBusinessObjectDefinitionIndexBoost.addIndexBoost(TAG_INDEX, TAG_INDEX_BOOST))
             .thenReturn(searchRequestBuilderWithTagIndexBoost);
         when(searchRequestBuilderWithTagIndexBoost.addSort(any())).thenReturn(searchRequestBuilderWithSorting);
+        when(searchRequestBuilderWithSorting.highlighter(any(HighlightBuilder.class))).thenReturn(searchRequestBuilderWithHighlighting);
+
         when(searchRequestBuilder.execute()).thenReturn(listenableActionFuture);
         when(listenableActionFuture.actionGet()).thenReturn(searchResponse);
         when(searchResponse.getHits()).thenReturn(searchHits);
