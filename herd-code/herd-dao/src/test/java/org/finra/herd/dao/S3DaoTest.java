@@ -720,7 +720,7 @@ public class S3DaoTest extends AbstractDaoTest
         S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
         params.setS3BucketName(S3_BUCKET_NAME);
         params.setFiles(Arrays.asList(new File(TARGET_S3_KEY)));
-        s3Dao.tagObjects(params, tag);
+        s3Dao.tagObjects(params, new S3FileTransferRequestParamsDto(), tag);
 
         // Validate that the object got tagged.
         GetObjectTaggingResult getObjectTaggingResult = s3Operations.getObjectTagging(new GetObjectTaggingRequest(S3_BUCKET_NAME, TARGET_S3_KEY), null);
@@ -746,7 +746,7 @@ public class S3DaoTest extends AbstractDaoTest
         S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
         params.setS3BucketName(S3_BUCKET_NAME);
         params.setFiles(Arrays.asList(new File(TARGET_S3_KEY)));
-        s3Dao.tagObjects(params, tags.get(1));
+        s3Dao.tagObjects(params, new S3FileTransferRequestParamsDto(), tags.get(1));
 
         // Validate that the S3 object is tagged with the second tag now.
         getObjectTaggingResult = s3Operations.getObjectTagging(new GetObjectTaggingRequest(S3_BUCKET_NAME, TARGET_S3_KEY), null);
@@ -772,7 +772,7 @@ public class S3DaoTest extends AbstractDaoTest
         S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
         params.setS3BucketName(S3_BUCKET_NAME);
         params.setFiles(Arrays.asList(new File(TARGET_S3_KEY)));
-        s3Dao.tagObjects(params, tags.get(1));
+        s3Dao.tagObjects(params, new S3FileTransferRequestParamsDto(), tags.get(1));
 
         // Validate that the S3 object is now tagged with both tags.
         getObjectTaggingResult = s3Operations.getObjectTagging(new GetObjectTaggingRequest(S3_BUCKET_NAME, TARGET_S3_KEY), null);
@@ -789,7 +789,7 @@ public class S3DaoTest extends AbstractDaoTest
             S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
             params.setS3BucketName(MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_INTERNAL_ERROR);
             params.setFiles(Arrays.asList(new File(TARGET_S3_KEY)));
-            s3Dao.tagObjects(params, new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE));
+            s3Dao.tagObjects(params, new S3FileTransferRequestParamsDto(), new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE));
             fail();
         }
         catch (IllegalStateException e)

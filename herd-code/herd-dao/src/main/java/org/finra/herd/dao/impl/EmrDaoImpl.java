@@ -85,7 +85,6 @@ import org.finra.herd.model.api.xml.EmrClusterDefinitionLaunchSpecifications;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionSpotSpecification;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionVolumeSpecification;
 import org.finra.herd.model.api.xml.HadoopJarStep;
-import org.finra.herd.model.api.xml.InstanceDefinition;
 import org.finra.herd.model.api.xml.InstanceDefinitions;
 import org.finra.herd.model.api.xml.KeyValuePairConfiguration;
 import org.finra.herd.model.api.xml.KeyValuePairConfigurations;
@@ -465,34 +464,33 @@ public class EmrDaoImpl implements EmrDao
      */
     protected List<InstanceGroupConfig> getInstanceGroupConfigs(InstanceDefinitions instanceDefinitions)
     {
-        List<InstanceGroupConfig> emrInstanceGroups = null;
+        List<InstanceGroupConfig> instanceGroupConfigs = null;
 
         if (!emrHelper.isInstanceDefinitionsEmpty(instanceDefinitions))
         {
-            // Create the instance groups.
-            emrInstanceGroups = new ArrayList<>();
+            // Create the instance group configurations.
+            instanceGroupConfigs = new ArrayList<>();
 
             // Fill-in the MASTER node details.
-            emrInstanceGroups.add(getInstanceGroupConfig(InstanceRoleType.MASTER, instanceDefinitions.getMasterInstances().getInstanceType(),
+            instanceGroupConfigs.add(getInstanceGroupConfig(InstanceRoleType.MASTER, instanceDefinitions.getMasterInstances().getInstanceType(),
                 instanceDefinitions.getMasterInstances().getInstanceCount(), instanceDefinitions.getMasterInstances().getInstanceSpotPrice()));
 
-            // Fill-in the CORE node details
-            InstanceDefinition coreInstances = instanceDefinitions.getCoreInstances();
-            if (coreInstances != null)
+            // if the optional core instances are specified, fill-in the CORE node details.
+            if (instanceDefinitions.getCoreInstances() != null)
             {
-                emrInstanceGroups.add(getInstanceGroupConfig(InstanceRoleType.CORE, coreInstances.getInstanceType(), coreInstances.getInstanceCount(),
-                    coreInstances.getInstanceSpotPrice()));
+                instanceGroupConfigs.add(getInstanceGroupConfig(InstanceRoleType.CORE, instanceDefinitions.getCoreInstances().getInstanceType(),
+                    instanceDefinitions.getCoreInstances().getInstanceCount(), instanceDefinitions.getCoreInstances().getInstanceSpotPrice()));
             }
 
-            // Fill-in the TASK node details, if the optional task instances are specified.
+            // If the optional task instances are specified, fill-in the TASK node details.
             if (instanceDefinitions.getTaskInstances() != null)
             {
-                emrInstanceGroups.add(getInstanceGroupConfig(InstanceRoleType.TASK, instanceDefinitions.getTaskInstances().getInstanceType(),
+                instanceGroupConfigs.add(getInstanceGroupConfig(InstanceRoleType.TASK, instanceDefinitions.getTaskInstances().getInstanceType(),
                     instanceDefinitions.getTaskInstances().getInstanceCount(), instanceDefinitions.getTaskInstances().getInstanceSpotPrice()));
             }
         }
 
-        return emrInstanceGroups;
+        return instanceGroupConfigs;
     }
 
     /**

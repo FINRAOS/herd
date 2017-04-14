@@ -20,7 +20,9 @@ import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import org.junit.Test;
@@ -30,6 +32,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.api.xml.StoragePolicyKey;
+import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.dto.StoragePolicySelection;
 import org.finra.herd.model.jpa.BusinessObjectDataStatusEntity;
@@ -97,6 +100,12 @@ public class StoragePolicyProcessorServiceTest extends AbstractServiceTest
                 FORMAT_FILE_TYPE_CODE, STORAGE_NAME, StoragePolicyTransitionTypeEntity.GLACIER, StoragePolicyStatusEntity.ENABLED, INITIAL_VERSION,
                 LATEST_VERSION_FLAG_SET);
 
+        // Override configuration to specify some settings required for testing.
+        Map<String, Object> overrideMap = new HashMap<>();
+        overrideMap.put(ConfigurationValue.S3_ARCHIVE_TO_GLACIER_ROLE_ARN.getKey(), S3_OBJECT_TAGGER_ROLE_ARN);
+        overrideMap.put(ConfigurationValue.S3_ARCHIVE_TO_GLACIER_ROLE_SESSION_NAME.getKey(), S3_OBJECT_TAGGER_ROLE_SESSION_NAME);
+        modifyPropertySourceInEnvironment(overrideMap);
+
         try
         {
             // Put relative S3 files into the source S3 bucket.
@@ -121,6 +130,9 @@ public class StoragePolicyProcessorServiceTest extends AbstractServiceTest
                 s3Dao.deleteDirectory(sourceS3FileTransferRequestParamsDto);
             }
             s3Operations.rollback();
+
+            // Restore the property sources so we don't affect other tests.
+            restorePropertySourceInEnvironment();
         }
     }
 

@@ -15,12 +15,14 @@
 */
 package org.finra.herd.service.helper;
 
+import com.amazonaws.services.securitytoken.model.Credentials;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.propertyeditors.CustomBooleanEditor;
 import org.springframework.stereotype.Component;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
+import org.finra.herd.dao.StsDao;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.Storage;
 import org.finra.herd.model.dto.ConfigurationValue;
@@ -35,6 +37,9 @@ import org.finra.herd.model.jpa.StorageEntity;
 @Component
 public class StorageHelper
 {
+    @Autowired
+    protected StsDao stsDao;
+
     @Autowired
     private ConfigurationHelper configurationHelper;
 
@@ -124,7 +129,7 @@ public class StorageHelper
     /**
      * Returns a new {@link S3FileTransferRequestParamsDto} with proxy host and port populated from the configuration.
      *
-     * @return {@link S3FileTransferRequestParamsDto} with proxy host and port.
+     * @return the {@link S3FileTransferRequestParamsDto} object
      */
     public S3FileTransferRequestParamsDto getS3FileTransferRequestParamsDto()
     {
@@ -132,6 +137,30 @@ public class StorageHelper
 
         // Update the parameters with proxy host and port retrieved from the configuration.
         setProxyHostAndPort(params);
+
+        return params;
+    }
+
+    /**
+     * Returns a new {@link S3FileTransferRequestParamsDto} with temporary credentials as per specified AWS role and session name.
+     *
+     * @param roleArn the ARN of the role
+     * @param sessionName the session name
+     *
+     * @return the {@link S3FileTransferRequestParamsDto} object
+     */
+    public S3FileTransferRequestParamsDto getS3FileTransferRequestParamsDtoByRole(String roleArn, String sessionName)
+    {
+        // Get the S3 file transfer request parameters DTO with proxy host and port populated from the configuration.
+        S3FileTransferRequestParamsDto params = getS3FileTransferRequestParamsDto();
+
+        // Assume the specified role. Set the duration of the role session to 3600 seconds (1 hour).
+        Credentials credentials = stsDao.getTemporarySecurityCredentials(params, sessionName, roleArn, 3600, null);
+
+        // Update the AWS parameters DTO with the temporary credentials.
+        params.setAwsAccessKeyId(credentials.getAccessKeyId());
+        params.setAwsSecretKey(credentials.getSecretAccessKey());
+        params.setSessionToken(credentials.getSessionToken());
 
         return params;
     }
