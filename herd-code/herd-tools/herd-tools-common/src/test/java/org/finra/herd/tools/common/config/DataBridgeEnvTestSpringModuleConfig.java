@@ -21,10 +21,12 @@ import org.springframework.context.annotation.Configuration;
 import org.finra.herd.dao.HttpClientOperations;
 import org.finra.herd.dao.Log4jOverridableConfigurer;
 import org.finra.herd.dao.S3Operations;
+import org.finra.herd.dao.StsOperations;
 import org.finra.herd.dao.helper.HerdCharacterEscapeHandler;
 import org.finra.herd.dao.helper.XmlHelper;
 import org.finra.herd.dao.impl.MockHttpClientOperationsImpl;
 import org.finra.herd.dao.impl.MockS3OperationsImpl;
+import org.finra.herd.dao.impl.MockStsOperationsImpl;
 
 /**
  * Data Bridge environment test specific Spring module configuration.
@@ -41,6 +43,12 @@ public class DataBridgeEnvTestSpringModuleConfig
     public S3Operations s3Operations()
     {
         return new MockS3OperationsImpl();
+    }
+
+    @Bean
+    public StsOperations stsOperations()
+    {
+        return new MockStsOperationsImpl();
     }
 
     @Bean

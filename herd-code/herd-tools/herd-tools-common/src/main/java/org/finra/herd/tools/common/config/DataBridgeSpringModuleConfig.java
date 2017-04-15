@@ -26,11 +26,13 @@ import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.RetryPolicyFactory;
 import org.finra.herd.dao.S3Dao;
 import org.finra.herd.dao.SimpleExponentialBackoffStrategy;
+import org.finra.herd.dao.StsDao;
 import org.finra.herd.dao.helper.AwsHelper;
 import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.dao.helper.JavaPropertiesHelper;
 import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.dao.impl.S3DaoImpl;
+import org.finra.herd.dao.impl.StsDaoImpl;
 import org.finra.herd.service.S3Service;
 import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
@@ -135,5 +137,11 @@ public class DataBridgeSpringModuleConfig
     public StorageUnitHelper storageUnitHelper()
     {
         return new StorageUnitHelper();
+    }
+
+    @Bean
+    public StsDao stsDao()
+    {
+        return new StsDaoImpl();
     }
 }
