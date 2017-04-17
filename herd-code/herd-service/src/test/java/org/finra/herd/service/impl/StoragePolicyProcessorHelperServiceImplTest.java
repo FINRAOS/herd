@@ -114,6 +114,76 @@ public class StoragePolicyProcessorHelperServiceImplTest extends AbstractService
     }
 
     @Test
+    public void testCompleteStoragePolicyTransitionImpl()
+    {
+        // Create a business object data key.
+        BusinessObjectDataKey businessObjectDataKey =
+            new BusinessObjectDataKey(BDEF_NAMESPACE, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_VALUE,
+                NO_SUBPARTITION_VALUES, DATA_VERSION);
+
+        // Create a business object data status entity.
+        BusinessObjectDataStatusEntity businessObjectDataStatusEntity = new BusinessObjectDataStatusEntity();
+        businessObjectDataStatusEntity.setCode(BusinessObjectDataStatusEntity.VALID);
+
+        // Create a business object data entity.
+        BusinessObjectDataEntity businessObjectDataEntity = new BusinessObjectDataEntity();
+        businessObjectDataEntity.setStatus(businessObjectDataStatusEntity);
+
+        // Create a storage unit status entity.
+        StorageUnitStatusEntity storageUnitStatusEntity = new StorageUnitStatusEntity();
+        storageUnitStatusEntity.setCode(StorageUnitStatusEntity.ARCHIVING);
+
+        // Create a storage unit entity.
+        StorageUnitEntity storageUnitEntity = new StorageUnitEntity();
+        storageUnitEntity.setStatus(storageUnitStatusEntity);
+
+        // Create a list of storage files.
+        List<StorageFile> storageFiles = Arrays.asList(new StorageFile(TEST_S3_KEY_PREFIX + "/" + LOCAL_FILE, FILE_SIZE_1_KB, ROW_COUNT_1000));
+
+        // Create a storage policy transition parameters DTO.
+        StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto =
+            new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX,
+                StorageUnitStatusEntity.ARCHIVING, StorageUnitStatusEntity.ARCHIVING, storageFiles, S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE,
+                S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME);
+
+        // Mock the external calls.
+        when(businessObjectDataDaoHelper.getBusinessObjectDataEntity(businessObjectDataKey)).thenReturn(businessObjectDataEntity);
+        when(storageUnitDaoHelper.getStorageUnitEntity(STORAGE_NAME, businessObjectDataEntity)).thenReturn(storageUnitEntity);
+        doAnswer(new Answer<Void>()
+        {
+            public Void answer(InvocationOnMock invocation)
+            {
+                // Get the new storage unit status.
+                String storageUnitStatus = (String) invocation.getArguments()[1];
+
+                // Create a storage unit status entity for the new storage unit status.
+                StorageUnitStatusEntity storageUnitStatusEntity = new StorageUnitStatusEntity();
+                storageUnitStatusEntity.setCode(storageUnitStatus);
+
+                // Update the storage unit with the new status.
+                StorageUnitEntity storageUnitEntity = (StorageUnitEntity) invocation.getArguments()[0];
+                storageUnitEntity.setStatus(storageUnitStatusEntity);
+
+                return null;
+            }
+        }).when(storageUnitDaoHelper).updateStorageUnitStatus(storageUnitEntity, StorageUnitStatusEntity.ARCHIVED, StorageUnitStatusEntity.ARCHIVED);
+
+        // Call the method under test.
+        storagePolicyProcessorHelperServiceImpl.completeStoragePolicyTransitionImpl(storagePolicyTransitionParamsDto);
+
+        // Verify the external calls.
+        verify(businessObjectDataDaoHelper).getBusinessObjectDataEntity(businessObjectDataKey);
+        verify(businessObjectDataHelper, times(2)).businessObjectDataKeyToString(businessObjectDataKey);
+        verify(storageUnitDaoHelper).getStorageUnitEntity(STORAGE_NAME, businessObjectDataEntity);
+        verify(storageUnitDaoHelper).updateStorageUnitStatus(storageUnitEntity, StorageUnitStatusEntity.ARCHIVED, StorageUnitStatusEntity.ARCHIVED);
+
+        // Validate the results.
+        assertEquals(new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, TEST_S3_KEY_PREFIX,
+            StorageUnitStatusEntity.ARCHIVED, StorageUnitStatusEntity.ARCHIVING, storageFiles, S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE,
+            S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME), storagePolicyTransitionParamsDto);
+    }
+
+    @Test
     public void testExecuteStoragePolicyTransitionImpl()
     {
         // Create a business object data key.

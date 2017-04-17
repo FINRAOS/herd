@@ -2569,8 +2569,8 @@ public class S3DaoTest extends AbstractDaoTest
             S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
             s3FileTransferRequestParamsDto.setS3BucketName(s3BucketName);
             s3FileTransferRequestParamsDto.setS3KeyPrefix(s3KeyPrefix);
-            s3FileTransferRequestParamsDto.setS3AccessKey(s3AccessKey);
-            s3FileTransferRequestParamsDto.setS3SecretKey(s3SecretKey);
+            s3FileTransferRequestParamsDto.setAwsAccessKeyId(s3AccessKey);
+            s3FileTransferRequestParamsDto.setAwsSecretKey(s3SecretKey);
 
             when(mockS3Operations.putObject(any(), any())).then(new Answer<PutObjectResult>()
             {
@@ -2620,8 +2620,8 @@ public class S3DaoTest extends AbstractDaoTest
             S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
             s3FileTransferRequestParamsDto.setS3BucketName(s3BucketName);
             s3FileTransferRequestParamsDto.setS3KeyPrefix(s3KeyPrefix);
-            s3FileTransferRequestParamsDto.setS3AccessKey(s3AccessKey);
-            s3FileTransferRequestParamsDto.setS3SecretKey(s3SecretKey);
+            s3FileTransferRequestParamsDto.setAwsAccessKeyId(s3AccessKey);
+            s3FileTransferRequestParamsDto.setAwsSecretKey(s3SecretKey);
 
             when(mockS3Operations.putObject(any(), any())).then(new Answer<PutObjectResult>()
             {
@@ -2665,8 +2665,8 @@ public class S3DaoTest extends AbstractDaoTest
             S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
             s3FileTransferRequestParamsDto.setS3BucketName(s3BucketName);
             s3FileTransferRequestParamsDto.setS3KeyPrefix(s3KeyPrefix);
-            s3FileTransferRequestParamsDto.setS3AccessKey(s3AccessKey);
-            s3FileTransferRequestParamsDto.setS3SecretKey(s3SecretKey);
+            s3FileTransferRequestParamsDto.setAwsAccessKeyId(s3AccessKey);
+            s3FileTransferRequestParamsDto.setAwsSecretKey(s3SecretKey);
 
             when(mockS3Operations.putObject(any(), any())).then(new Answer<PutObjectResult>()
             {
