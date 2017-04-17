@@ -497,6 +497,14 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String REASON = "UT_Reason_1_" + RANDOM_SUFFIX;
 
+    public static final String S3_ATTRIBUTE_NAME_BUCKET_NAME = "UT_S3_Attribute_Name_Bucket_Name_" + RANDOM_SUFFIX;
+
+    public static final String S3_ATTRIBUTE_NAME_VALIDATE_FILE_EXISTENCE = "UT_S3_Attribute_Name_Validate_File_Existence_" + RANDOM_SUFFIX;
+
+    public static final String S3_ATTRIBUTE_NAME_VALIDATE_FILE_SIZE = "UT_S3_Attribute_Name_Validate_File_Size_" + RANDOM_SUFFIX;
+
+    public static final String S3_ATTRIBUTE_NAME_VALIDATE_PATH_PREFIX = "UT_S3_Attribute_Name_Validate_Path_Prefix_" + RANDOM_SUFFIX;
+
     public static final String S3_BUCKET_NAME = "UT_S3_Bucket_Name" + RANDOM_SUFFIX;
 
     public static final String S3_BUCKET_NAME_2 = "UT_S3_Bucket_Name2" + RANDOM_SUFFIX;
@@ -647,6 +655,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String STORAGE_POLICY_TRANSITION_TYPE = "UT_Storage_Policy_Transition_Type_1_" + RANDOM_SUFFIX;
 
     public static final String STORAGE_POLICY_TRANSITION_TYPE_2 = "UT_Storage_Policy_Transition_Type_2_" + RANDOM_SUFFIX;
+
+    public static final Integer STORAGE_POLICY_VERSION = (int) (Math.random() * Integer.MAX_VALUE);
 
     public static final String STORAGE_UNIT_STATUS = "UT_SU_Status_1_" + RANDOM_SUFFIX;
 
