@@ -954,8 +954,8 @@ public class S3DaoImpl implements S3Dao
     private AWSCredentialsProvider getAWSCredentialsProvider(S3FileTransferRequestParamsDto params)
     {
         List<AWSCredentialsProvider> providers = new ArrayList<>();
-        String accessKey = params.getS3AccessKey();
-        String secretKey = params.getS3SecretKey();
+        String accessKey = params.getAwsAccessKeyId();
+        String secretKey = params.getAwsSecretKey();
         if (accessKey != null && secretKey != null)
         {
             providers.add(new StaticCredentialsProvider(new BasicAWSCredentials(accessKey, secretKey)));
