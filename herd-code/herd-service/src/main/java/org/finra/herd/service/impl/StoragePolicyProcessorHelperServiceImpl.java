@@ -315,8 +315,8 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
         // Create an S3 file transfer parameters DTO to access the S3 bucket.
         // Since the S3 key prefix represents a directory, we add a trailing '/' character to it.
         S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = storageHelper.getS3FileTransferRequestParamsDto();
-        s3FileTransferRequestParamsDto.setS3BucketName(storagePolicyTransitionParamsDto.getS3BucketName());
         s3FileTransferRequestParamsDto.setS3Endpoint(storagePolicyTransitionParamsDto.getS3Endpoint());
+        s3FileTransferRequestParamsDto.setS3BucketName(storagePolicyTransitionParamsDto.getS3BucketName());
         s3FileTransferRequestParamsDto.setS3KeyPrefix(StringUtils.appendIfMissing(storagePolicyTransitionParamsDto.getS3KeyPrefix(), "/"));
 
         // Create an S3 file transfer parameters DTO to be used for S3 object tagging operation.
