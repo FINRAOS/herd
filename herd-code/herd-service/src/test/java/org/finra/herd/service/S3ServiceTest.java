@@ -18,6 +18,7 @@ package org.finra.herd.service;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
@@ -72,6 +73,7 @@ public class S3ServiceTest extends AbstractServiceTest
 
         // Verify the external calls.
         verify(s3Dao).copyFile(s3FileCopyRequestParamsDto);
+        verifyNoMoreInteractions(s3Dao);
 
         // Validate the returned object.
         assertEquals(s3FileTransferResultsDto, result);
@@ -88,6 +90,7 @@ public class S3ServiceTest extends AbstractServiceTest
 
         // Verify the external calls.
         verify(s3Dao).createDirectory(s3FileTransferRequestParamsDto);
+        verifyNoMoreInteractions(s3Dao);
     }
 
     @Test
@@ -101,6 +104,7 @@ public class S3ServiceTest extends AbstractServiceTest
 
         // Verify the external calls.
         verify(s3Dao).deleteDirectory(s3FileTransferRequestParamsDto);
+        verifyNoMoreInteractions(s3Dao);
     }
 
     @Test
@@ -114,6 +118,7 @@ public class S3ServiceTest extends AbstractServiceTest
 
         // Verify the external calls.
         verify(s3Dao).deleteDirectory(s3FileTransferRequestParamsDto);
+        verifyNoMoreInteractions(s3Dao);
     }
 
     @Test
@@ -130,6 +135,7 @@ public class S3ServiceTest extends AbstractServiceTest
 
         // Verify the external calls.
         verify(s3Dao).deleteDirectory(s3FileTransferRequestParamsDto);
+        verifyNoMoreInteractions(s3Dao);
     }
 
     @Test
@@ -143,6 +149,7 @@ public class S3ServiceTest extends AbstractServiceTest
 
         // Verify the external calls.
         verify(s3Dao).deleteFileList(s3FileTransferRequestParamsDto);
+        verifyNoMoreInteractions(s3Dao);
     }
 
     @Test
@@ -162,6 +169,7 @@ public class S3ServiceTest extends AbstractServiceTest
 
         // Verify the external calls.
         verify(s3Dao).downloadDirectory(s3FileTransferRequestParamsDto);
+        verifyNoMoreInteractions(s3Dao);
 
         // Validate the returned object.
         assertEquals(s3FileTransferResultsDto, result);
@@ -184,6 +192,7 @@ public class S3ServiceTest extends AbstractServiceTest
 
         // Verify the external calls.
         verify(s3Dao).downloadFile(s3FileTransferRequestParamsDto);
+        verifyNoMoreInteractions(s3Dao);
 
         // Validate the returned object.
         assertEquals(s3FileTransferResultsDto, result);
@@ -206,6 +215,7 @@ public class S3ServiceTest extends AbstractServiceTest
 
         // Verify the external calls. By default, we do not ignore 0 byte objects that represent S3 directories.
         verify(s3Dao).listDirectory(s3FileTransferRequestParamsDto, false);
+        verifyNoMoreInteractions(s3Dao);
 
         // Validate the returned object.
         assertEquals(s3ObjectSummaries, result);
@@ -228,6 +238,7 @@ public class S3ServiceTest extends AbstractServiceTest
 
         // Verify the external calls.
         verify(s3Dao).listDirectory(s3FileTransferRequestParamsDto, true);
+        verifyNoMoreInteractions(s3Dao);
 
         // Validate the returned object.
         assertEquals(s3ObjectSummaries, result);
@@ -244,6 +255,7 @@ public class S3ServiceTest extends AbstractServiceTest
 
         // Verify the external calls.
         verify(s3Dao).restoreObjects(s3FileTransferRequestParamsDto, INTEGER_VALUE);
+        verifyNoMoreInteractions(s3Dao);
     }
 
     @Test
@@ -267,6 +279,7 @@ public class S3ServiceTest extends AbstractServiceTest
 
         // Verify the external calls.
         verify(s3Dao).tagObjects(s3FileTransferRequestParamsDto, s3ObjectTaggerParamsDto, tag);
+        verifyNoMoreInteractions(s3Dao);
     }
 
     @Test
@@ -286,6 +299,7 @@ public class S3ServiceTest extends AbstractServiceTest
 
         // Verify the external calls.
         verify(s3Dao).uploadDirectory(s3FileTransferRequestParamsDto);
+        verifyNoMoreInteractions(s3Dao);
 
         // Validate the returned object.
         assertEquals(s3FileTransferResultsDto, result);
@@ -308,6 +322,7 @@ public class S3ServiceTest extends AbstractServiceTest
 
         // Verify the external calls.
         verify(s3Dao).uploadFile(s3FileTransferRequestParamsDto);
+        verifyNoMoreInteractions(s3Dao);
 
         // Validate the returned object.
         assertEquals(s3FileTransferResultsDto, result);
@@ -330,6 +345,7 @@ public class S3ServiceTest extends AbstractServiceTest
 
         // Verify the external calls.
         verify(s3Dao).uploadFileList(s3FileTransferRequestParamsDto);
+        verifyNoMoreInteractions(s3Dao);
 
         // Validate the returned object.
         assertEquals(s3FileTransferResultsDto, result);
@@ -346,5 +362,6 @@ public class S3ServiceTest extends AbstractServiceTest
 
         // Verify the external calls.
         verify(s3Dao).validateGlacierS3FilesRestored(s3FileTransferRequestParamsDto);
+        verifyNoMoreInteractions(s3Dao);
     }
 }
