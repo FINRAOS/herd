@@ -26,7 +26,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.amazonaws.services.s3.model.GetObjectTaggingRequest;
+import com.amazonaws.services.s3.model.GetObjectTaggingResult;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.s3.model.Tag;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -75,12 +78,13 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
                 StorageUnitStatusEntity.ENABLED, NO_STORAGE_DIRECTORY_PATH);
 
         // Get the expected S3 key prefix for the business object data key.
-        String expectedS3KeyPrefix =
+        String s3KeyPrefix =
             getExpectedS3KeyPrefix(BDEF_NAMESPACE, DATA_PROVIDER_NAME, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_KEY,
                 PARTITION_VALUE, null, null, DATA_VERSION);
 
         // Add a storage file to the storage unit.
-        storageFileDaoTestHelper.createStorageFileEntity(storageUnitEntity, expectedS3KeyPrefix + "/" + LOCAL_FILE, FILE_SIZE_1_KB, ROW_COUNT_1000);
+        String storageFilePath = s3KeyPrefix + "/" + LOCAL_FILE;
+        storageFileDaoTestHelper.createStorageFileEntity(storageUnitEntity, storageFilePath, FILE_SIZE_1_KB, ROW_COUNT_1000);
 
         // Create a storage policy key.
         StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
@@ -93,15 +97,24 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
 
         // Override configuration to specify some settings required for testing.
         Map<String, Object> overrideMap = new HashMap<>();
+        overrideMap.put(ConfigurationValue.S3_ENDPOINT.getKey(), S3_ENDPOINT);
+        overrideMap.put(ConfigurationValue.S3_ARCHIVE_TO_GLACIER_TAG_KEY.getKey(), S3_OBJECT_TAG_KEY);
+        overrideMap.put(ConfigurationValue.S3_ARCHIVE_TO_GLACIER_TAG_VALUE.getKey(), S3_OBJECT_TAG_VALUE);
         overrideMap.put(ConfigurationValue.S3_ARCHIVE_TO_GLACIER_ROLE_ARN.getKey(), S3_OBJECT_TAGGER_ROLE_ARN);
         overrideMap.put(ConfigurationValue.S3_ARCHIVE_TO_GLACIER_ROLE_SESSION_NAME.getKey(), S3_OBJECT_TAGGER_ROLE_SESSION_NAME);
         modifyPropertySourceInEnvironment(overrideMap);
 
-        // Initiate a storage policy transition.
         try
         {
-            storagePolicyProcessorHelperService
+            // Initiate a storage policy transition.
+            StoragePolicyTransitionParamsDto result = storagePolicyProcessorHelperService
                 .initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION));
+
+            // Validate the returned object.
+            assertEquals(new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, s3KeyPrefix,
+                StorageUnitStatusEntity.ARCHIVING, StorageUnitStatusEntity.ENABLED,
+                Arrays.asList(new StorageFile(storageFilePath, FILE_SIZE_1_KB, ROW_COUNT_1000)), S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE,
+                S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME), result);
         }
         finally
         {
@@ -129,12 +142,13 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
                 StorageUnitStatusEntity.ARCHIVING, NO_STORAGE_DIRECTORY_PATH);
 
         // Get the expected S3 key prefix for the business object data key.
-        String expectedS3KeyPrefix =
+        String s3KeyPrefix =
             getExpectedS3KeyPrefix(BDEF_NAMESPACE, DATA_PROVIDER_NAME, BDEF_NAME, FORMAT_USAGE_CODE, FORMAT_FILE_TYPE_CODE, FORMAT_VERSION, PARTITION_KEY,
                 PARTITION_VALUE, null, null, DATA_VERSION);
 
         // Add a storage file to the storage unit.
-        storageFileDaoTestHelper.createStorageFileEntity(storageUnitEntity, expectedS3KeyPrefix + "/" + LOCAL_FILE, FILE_SIZE_1_KB, ROW_COUNT_1000);
+        String storageFilePath = s3KeyPrefix + "/" + LOCAL_FILE;
+        storageFileDaoTestHelper.createStorageFileEntity(storageUnitEntity, storageFilePath, FILE_SIZE_1_KB, ROW_COUNT_1000);
 
         // Create a storage policy key.
         StoragePolicyKey storagePolicyKey = new StoragePolicyKey(STORAGE_POLICY_NAMESPACE_CD, STORAGE_POLICY_NAME);
@@ -147,15 +161,24 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
 
         // Override configuration to specify some settings required for testing.
         Map<String, Object> overrideMap = new HashMap<>();
+        overrideMap.put(ConfigurationValue.S3_ENDPOINT.getKey(), S3_ENDPOINT);
+        overrideMap.put(ConfigurationValue.S3_ARCHIVE_TO_GLACIER_TAG_KEY.getKey(), S3_OBJECT_TAG_KEY);
+        overrideMap.put(ConfigurationValue.S3_ARCHIVE_TO_GLACIER_TAG_VALUE.getKey(), S3_OBJECT_TAG_VALUE);
         overrideMap.put(ConfigurationValue.S3_ARCHIVE_TO_GLACIER_ROLE_ARN.getKey(), S3_OBJECT_TAGGER_ROLE_ARN);
         overrideMap.put(ConfigurationValue.S3_ARCHIVE_TO_GLACIER_ROLE_SESSION_NAME.getKey(), S3_OBJECT_TAGGER_ROLE_SESSION_NAME);
         modifyPropertySourceInEnvironment(overrideMap);
 
-        // Initiate a storage policy transition.
         try
         {
-            storagePolicyProcessorHelperService
+            // Initiate a storage policy transition.
+            StoragePolicyTransitionParamsDto result = storagePolicyProcessorHelperService
                 .initiateStoragePolicyTransition(new StoragePolicySelection(businessObjectDataKey, storagePolicyKey, INITIAL_VERSION));
+
+            // Validate the returned object.
+            assertEquals(new StoragePolicyTransitionParamsDto(businessObjectDataKey, STORAGE_NAME, S3_ENDPOINT, S3_BUCKET_NAME, s3KeyPrefix,
+                StorageUnitStatusEntity.ARCHIVING, StorageUnitStatusEntity.ARCHIVING,
+                Arrays.asList(new StorageFile(storageFilePath, FILE_SIZE_1_KB, ROW_COUNT_1000)), S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE,
+                S3_OBJECT_TAGGER_ROLE_ARN, S3_OBJECT_TAGGER_ROLE_SESSION_NAME), result);
         }
         finally
         {
@@ -899,8 +922,13 @@ public class StoragePolicyProcessorHelperServiceTest extends AbstractServiceTest
                 NO_STORAGE_UNIT_STATUS, storageFiles, S3_ARCHIVE_TO_GLACIER_TAG_KEY, S3_ARCHIVE_TO_GLACIER_TAG_VALUE, S3_OBJECT_TAGGER_ROLE_ARN,
                 S3_OBJECT_TAGGER_ROLE_SESSION_NAME));
 
-            // Validate that we still have our S3 files in the S3 bucket.
-            assertEquals(storageFiles.size(), s3Dao.listDirectory(s3FileTransferRequestParamsDto).size());
+            // Validate that all S3 files are now tagged.
+            for (StorageFile storageFile : storageFiles)
+            {
+                GetObjectTaggingResult getObjectTaggingResult =
+                    s3Operations.getObjectTagging(new GetObjectTaggingRequest(S3_BUCKET_NAME, storageFile.getFilePath()), null);
+                assertEquals(Arrays.asList(new Tag(S3_ARCHIVE_TO_GLACIER_TAG_KEY, S3_ARCHIVE_TO_GLACIER_TAG_VALUE)), getObjectTaggingResult.getTagSet());
+            }
         }
         finally
         {

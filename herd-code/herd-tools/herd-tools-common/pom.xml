@@ -65,10 +65,6 @@
                <groupId>com.amazonaws</groupId>
             </exclusion>
             <exclusion>
-               <artifactId>aws-java-sdk-sts</artifactId>
-               <groupId>com.amazonaws</groupId>
-            </exclusion>
-            <exclusion>
                <artifactId>aws-java-sdk-ec2</artifactId>
                <groupId>com.amazonaws</groupId>
             </exclusion>
