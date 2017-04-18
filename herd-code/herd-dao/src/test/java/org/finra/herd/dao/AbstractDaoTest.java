@@ -275,6 +275,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Integer HTTP_PROXY_PORT = (int) (Math.random() * Integer.MAX_VALUE);
 
+    public static final boolean HIT_HIGHLIGHTING_ENABLED = true;
+
+    public static final boolean HIT_HIGHLIGHTING_DISABLED = false;
+
     public static final Boolean INCLUDE_TAG_HIERARCHY = true;
 
     public static final Integer INITIAL_DATA_VERSION = 0;

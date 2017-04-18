@@ -695,4 +695,66 @@ public class IndexSearchServiceTest extends AbstractServiceTest
         }
     }
 
+    @Test
+    public void testIndexSearchWithHitHighlighting()
+    {
+        // Create index search request with hit highlighting enabled
+        final IndexSearchRequest indexSearchRequestHighlightingEnabled = new IndexSearchRequest(SEARCH_TERM, null, null, HIT_HIGHLIGHTING_ENABLED);
+
+        // Create a new fields set that will be used when testing the index search method
+        final Set<String> fields = Sets.newHashSet(FIELD_DISPLAY_NAME, FIELD_SHORT_DESCRIPTION);
+
+        // Create a new index search result key and populate it with a tag key
+        final IndexSearchResultKey indexSearchResultKeyBusinessObjectDefinition =
+            new IndexSearchResultKey(null, new BusinessObjectDefinitionKey(NAMESPACE, BDEF_NAME));
+
+        // Create a new index search result key and populate it with a tag key
+        final IndexSearchResultKey indexSearchResultKeyTag = new IndexSearchResultKey(new TagKey(TAG_TYPE, TAG_CODE), null);
+
+        // Create a new index search results
+        final IndexSearchResult indexSearchResultBusinessObjectDefinition =
+            new IndexSearchResult(INDEX_SEARCH_RESULT_TYPE_BUSINESS_OBJECT_DEFINITION, indexSearchResultKeyBusinessObjectDefinition, BDEF_DISPLAY_NAME,
+                BDEF_SHORT_DESCRIPTION, null);
+        final IndexSearchResult indexSearchResultTag =
+            new IndexSearchResult(INDEX_SEARCH_RESULT_TYPE_TAG, indexSearchResultKeyTag, TAG_DISPLAY_NAME, TAG_DESCRIPTION, null);
+
+        // Create a list to contain the index search results
+        final List<IndexSearchResult> indexSearchResults = new ArrayList<>();
+        indexSearchResults.add(indexSearchResultBusinessObjectDefinition);
+        indexSearchResults.add(indexSearchResultTag);
+
+        // Construct an index search response
+        final IndexSearchResponse indexSearchResponse = new IndexSearchResponse(TOTAL_INDEX_SEARCH_RESULTS, indexSearchResults, null);
+
+        // Mock the call to the index search service
+        when(indexSearchDao.indexSearch(indexSearchRequestHighlightingEnabled, fields)).thenReturn(indexSearchResponse);
+
+        // Call the method under test
+        IndexSearchResponse indexSearchResponseFromService = indexSearchService.indexSearch(indexSearchRequestHighlightingEnabled, fields);
+
+        // Verify the method call to indexSearchService.indexSearch()
+        verify(indexSearchDao, times(ONE_TIME)).indexSearch(indexSearchRequestHighlightingEnabled, fields);
+        verifyNoMoreInteractions(indexSearchDao);
+
+        // Validate the returned object.
+        assertThat("Index search response was null.", indexSearchResponseFromService, not(nullValue()));
+        assertThat("Index search response was not correct.", indexSearchResponseFromService, is(indexSearchResponse));
+        assertThat("Index search response was not an instance of IndexSearchResponse.class.", indexSearchResponse, instanceOf(IndexSearchResponse.class));
+
+        // Create index search request with highlighting disabled
+        final IndexSearchRequest indexSearchRequestHighlightingDisabled = new IndexSearchRequest(SEARCH_TERM, null, null, HIT_HIGHLIGHTING_DISABLED);
+
+        when(indexSearchDao.indexSearch(indexSearchRequestHighlightingDisabled, fields)).thenReturn(indexSearchResponse);
+
+        // Verify the method call to indexSearchService.indexSearch()
+        verify(indexSearchDao, times(ONE_TIME)).indexSearch(indexSearchRequestHighlightingEnabled, fields);
+        verifyNoMoreInteractions(indexSearchDao);
+
+        // Validate the returned object.
+        assertThat("Index search response was null.", indexSearchResponseFromService, not(nullValue()));
+        assertThat("Index search response was not correct.", indexSearchResponseFromService, is(indexSearchResponse));
+        assertThat("Index search response was not an instance of IndexSearchResponse.class.", indexSearchResponse, instanceOf(IndexSearchResponse.class));
+    }
+
+
 }
