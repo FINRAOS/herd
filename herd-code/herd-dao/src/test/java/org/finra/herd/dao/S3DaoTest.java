@@ -970,6 +970,31 @@ public class S3DaoTest extends AbstractDaoTest
     @Test
     public void testUploadFileList() throws IOException, InterruptedException
     {
+        runUploadFileListTest();
+    }
+
+    /**
+     * Test that we are able to perform the uploadFileList S3Dao operation on S3 using our DAO tier with logger level set to INFO.
+     */
+    @Test
+    public void testUploadFileListWithLoggerLevelSetToInfo() throws IOException, InterruptedException
+    {
+        String loggerName = S3DaoImpl.class.getName();
+        LogLevel origLoggerLevel = getLogLevel(loggerName);
+        setLogLevel(loggerName, LogLevel.INFO);
+
+        try
+        {
+            runUploadFileListTest();
+        }
+        finally
+        {
+            setLogLevel(loggerName, origLoggerLevel);
+        }
+    }
+
+    private void runUploadFileListTest() throws IOException, InterruptedException
+    {
         // Create local test files.
         for (String file : LOCAL_FILES)
         {
@@ -998,26 +1023,6 @@ public class S3DaoTest extends AbstractDaoTest
 
         // Validate the upload.
         s3DaoTestHelper.validateS3FileUpload(s3FileTransferRequestParamsDto, expectedKeys);
-    }
-
-    /**
-     * Test that we are able to perform the uploadFileList S3Dao operation with logger level set to ... on S3 using our DAO tier.
-     */
-    @Test
-    public void testUploadFileListWithLoggerLevelSetToWarn() throws IOException, InterruptedException
-    {
-        String loggerName = S3DaoImpl.class.getName();
-        LogLevel origLoggerLevel = getLogLevel(loggerName);
-        setLogLevel(loggerName, LogLevel.WARN);
-
-        try
-        {
-            testUploadFileList();
-        }
-        finally
-        {
-            setLogLevel(loggerName, origLoggerLevel);
-        }
     }
 
     /**

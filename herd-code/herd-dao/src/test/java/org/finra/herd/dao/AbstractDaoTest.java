@@ -235,6 +235,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String ENVIRONMENT_NAME = "TEST";
 
+    public static final String ERROR_CODE = "UT_Error_Code_" + RANDOM_SUFFIX;
+
+    public static final String ERROR_MESSAGE = "UT_Error_Message_" + RANDOM_SUFFIX;
+
     public static final String FIELD_DISPLAY_NAME = "displayName";
 
     public static final String FIELD_SHORT_DESCRIPTION = "shortDescription";
@@ -271,13 +275,13 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Integer FOURTH_FORMAT_VERSION = 3;
 
-    public static final String HTTP_PROXY_HOST = "UT_ProxyHost" + RANDOM_SUFFIX;
-
-    public static final Integer HTTP_PROXY_PORT = (int) (Math.random() * Integer.MAX_VALUE);
+    public static final boolean HIT_HIGHLIGHTING_DISABLED = false;
 
     public static final boolean HIT_HIGHLIGHTING_ENABLED = true;
 
-    public static final boolean HIT_HIGHLIGHTING_DISABLED = false;
+    public static final String HTTP_PROXY_HOST = "UT_ProxyHost" + RANDOM_SUFFIX;
+
+    public static final Integer HTTP_PROXY_PORT = (int) (Math.random() * Integer.MAX_VALUE);
 
     public static final Boolean INCLUDE_TAG_HIERARCHY = true;
 
@@ -517,6 +521,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String S3_ENDPOINT = "UT_S3_Endpoint_" + RANDOM_SUFFIX;
 
+    public static final String S3_KEY = "UT_S3_Key_" + RANDOM_SUFFIX;
+
+    public static final String S3_KEY_PREFIX = "UT_S3_Key_Prefix_" + RANDOM_SUFFIX;
+
     public static final String S3_OBJECT_TAGGER_ROLE_ARN = "UT_S3_Object_Tagger_Role_Arn_" + RANDOM_SUFFIX;
 
     public static final String S3_OBJECT_TAGGER_ROLE_SESSION_NAME = "UT_S3_Object_Tagger_Role_Session_Name_" + RANDOM_SUFFIX;
@@ -530,6 +538,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String S3_OBJECT_TAG_VALUE_2 = "UT_S3_Object_Tag_Value_2_" + RANDOM_SUFFIX;
 
     public static final Integer S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS = 7;
+
+    public static final String S3_VERSION_ID = "UT_S3_Version_ID_" + RANDOM_SUFFIX;
 
     public static final String[][] SCHEMA_COLUMNS =
         new String[][] {{"TINYINT", null}, {"SMALLINT", null}, {"INT", null}, {"BIGINT", null}, {"FLOAT", null}, {"DOUBLE", null}, {"DECIMAL", null},
