@@ -16,78 +16,144 @@
 package org.finra.herd.dao;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import com.amazonaws.auth.policy.Policy;
+import com.amazonaws.retry.PredefinedRetryPolicies;
+import com.amazonaws.retry.RetryPolicy;
+import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClient;
+import com.amazonaws.services.securitytoken.model.AssumeRoleRequest;
+import com.amazonaws.services.securitytoken.model.AssumeRoleResult;
 import com.amazonaws.services.securitytoken.model.Credentials;
-import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
-import org.finra.herd.dao.impl.MockStsOperationsImpl;
+import org.finra.herd.dao.impl.StsDaoImpl;
 import org.finra.herd.model.dto.AwsParamsDto;
 
 /**
- * This class tests the functionality of StsDao.
+ * This class tests the functionality of security token service DAO.
  */
 public class StsDaoTest extends AbstractDaoTest
 {
-    /**
-     * Tests the scenario where the job is run.
-     */
+    @Mock
+    private RetryPolicyFactory retryPolicyFactory;
+
+    @InjectMocks
+    private StsDaoImpl stsDaoImpl;
+
+    @Mock
+    private StsOperations stsOperations;
+
+    @Before
+    public void before()
+    {
+        MockitoAnnotations.initMocks(this);
+    }
+
     @Test
     public void testGetTemporarySecurityCredentials()
     {
-        // Retrieve the temporary security credentials.
-        AwsParamsDto testAwsParamsDto = new AwsParamsDto();
-        testAwsParamsDto.setHttpProxyHost(HTTP_PROXY_HOST);
-        testAwsParamsDto.setHttpProxyPort(HTTP_PROXY_PORT);
-        int testAwsRoleDurationSeconds = INTEGER_VALUE;
-        Policy testPolicy = new Policy();
-        Credentials resultCredentials =
-            stsDao.getTemporarySecurityCredentials(testAwsParamsDto, SESSION_NAME, AWS_ROLE_ARN, testAwsRoleDurationSeconds, testPolicy);
+        // Create an AWS parameters DTO with proxy settings.
+        AwsParamsDto awsParamsDto = new AwsParamsDto();
+        awsParamsDto.setHttpProxyHost(HTTP_PROXY_HOST);
+        awsParamsDto.setHttpProxyPort(HTTP_PROXY_PORT);
 
-        // Validate the results.
-        assertNotNull(resultCredentials);
-        Assert.assertEquals(MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_ACCESS_KEY, resultCredentials.getAccessKeyId());
-        assertEquals(MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_SECRET_KEY, resultCredentials.getSecretAccessKey());
-        assertEquals(MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_SESSION_TOKEN, resultCredentials.getSessionToken());
-        // Using >= here just to avoid a race condition.
-        assertTrue((System.currentTimeMillis() + 1000 * testAwsRoleDurationSeconds) >= resultCredentials.getExpiration().getTime());
+        // Specify the duration, in seconds, of the role session.
+        int awsRoleDurationSeconds = INTEGER_VALUE;
 
-        // Retrieve the temporary security credentials without specifying HTTP proxy settings.
-        testAwsParamsDto.setHttpProxyHost(null);
-        testAwsParamsDto.setHttpProxyPort(null);
-        resultCredentials = stsDao.getTemporarySecurityCredentials(testAwsParamsDto, SESSION_NAME, AWS_ROLE_ARN, testAwsRoleDurationSeconds, testPolicy);
+        // Create an IAM policy.
+        Policy policy = new Policy(STRING_VALUE);
 
-        // Validate the results.
-        assertNotNull(resultCredentials);
-        Assert.assertEquals(MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_ACCESS_KEY, resultCredentials.getAccessKeyId());
-        assertEquals(MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_SECRET_KEY, resultCredentials.getSecretAccessKey());
-        assertEquals(MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_SESSION_TOKEN, resultCredentials.getSessionToken());
-        // Using >= here just to avoid a race condition.
-        assertTrue((System.currentTimeMillis() + 1000 * testAwsRoleDurationSeconds) >= resultCredentials.getExpiration().getTime());
+        // Create a retry policy.
+        RetryPolicy retryPolicy =
+            new RetryPolicy(PredefinedRetryPolicies.DEFAULT_RETRY_CONDITION, PredefinedRetryPolicies.DEFAULT_BACKOFF_STRATEGY, INTEGER_VALUE, true);
+
+        // Create the expected assume role request.
+        AssumeRoleRequest assumeRoleRequest = new AssumeRoleRequest().withRoleArn(AWS_ROLE_ARN).withRoleSessionName(SESSION_NAME).withPolicy(policy.toJson())
+            .withDurationSeconds(awsRoleDurationSeconds);
+
+        // Create AWS credentials for API authentication.
+        Credentials credentials = new Credentials();
+        credentials.setAccessKeyId(AWS_ASSUMED_ROLE_ACCESS_KEY);
+        credentials.setSecretAccessKey(AWS_ASSUMED_ROLE_SECRET_KEY);
+        credentials.setSessionToken(AWS_ASSUMED_ROLE_SESSION_TOKEN);
+
+        // Create an assume role result.
+        AssumeRoleResult assumeRoleResult = new AssumeRoleResult();
+        assumeRoleResult.setCredentials(credentials);
+
+        // Mock the external calls.
+        when(retryPolicyFactory.getRetryPolicy()).thenReturn(retryPolicy);
+        when(stsOperations.assumeRole(any(AWSSecurityTokenServiceClient.class), eq(assumeRoleRequest))).thenReturn(assumeRoleResult);
+
+        // Call the method under test.
+        Credentials result = stsDaoImpl.getTemporarySecurityCredentials(awsParamsDto, SESSION_NAME, AWS_ROLE_ARN, awsRoleDurationSeconds, policy);
+
+        // Verify the external calls.
+        verify(retryPolicyFactory).getRetryPolicy();
+        verify(stsOperations).assumeRole(any(AWSSecurityTokenServiceClient.class), eq(assumeRoleRequest));
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the returned object.
+        assertEquals(credentials, result);
+    }
+
+    @Test
+    public void testGetTemporarySecurityCredentialsMissingOptionalParameters()
+    {
+        // Create an AWS parameters DTO without proxy settings.
+        AwsParamsDto awsParamsDto = new AwsParamsDto();
+
+        // Specify the duration, in seconds, of the role session.
+        int awsRoleDurationSeconds = INTEGER_VALUE;
+
+        // Create a retry policy.
+        RetryPolicy retryPolicy =
+            new RetryPolicy(PredefinedRetryPolicies.DEFAULT_RETRY_CONDITION, PredefinedRetryPolicies.DEFAULT_BACKOFF_STRATEGY, INTEGER_VALUE, true);
+
+        // Create the expected assume role request.
+        AssumeRoleRequest assumeRoleRequest =
+            new AssumeRoleRequest().withRoleArn(AWS_ROLE_ARN).withRoleSessionName(SESSION_NAME).withDurationSeconds(awsRoleDurationSeconds);
+
+        // Create AWS credentials for API authentication.
+        Credentials credentials = new Credentials();
+        credentials.setAccessKeyId(AWS_ASSUMED_ROLE_ACCESS_KEY);
+        credentials.setSecretAccessKey(AWS_ASSUMED_ROLE_SECRET_KEY);
+        credentials.setSessionToken(AWS_ASSUMED_ROLE_SESSION_TOKEN);
+
+        // Create an assume role result.
+        AssumeRoleResult assumeRoleResult = new AssumeRoleResult();
+        assumeRoleResult.setCredentials(credentials);
+
+        // Mock the external calls.
+        when(retryPolicyFactory.getRetryPolicy()).thenReturn(retryPolicy);
+        when(stsOperations.assumeRole(any(AWSSecurityTokenServiceClient.class), eq(assumeRoleRequest))).thenReturn(assumeRoleResult);
+
+        // Call the method under test. Please note that we do not specify an IAM policy.
+        Credentials result = stsDaoImpl.getTemporarySecurityCredentials(awsParamsDto, SESSION_NAME, AWS_ROLE_ARN, awsRoleDurationSeconds, null);
+
+        // Verify the external calls.
+        verify(retryPolicyFactory).getRetryPolicy();
+        verify(stsOperations).assumeRole(any(AWSSecurityTokenServiceClient.class), eq(assumeRoleRequest));
+        verifyNoMoreInteractionsHelper();
+
+        // Validate the returned object.
+        assertEquals(credentials, result);
     }
 
     /**
-     * Tests the scenario where the job is run.
+     * Checks if any of the mocks has any interaction.
      */
-    @Test
-    public void testGetTemporarySecurityCredentialsNoTemporaryPolicy()
+    private void verifyNoMoreInteractionsHelper()
     {
-        // Retrieve the temporary security credentials.
-        AwsParamsDto testAwsParamsDto = new AwsParamsDto();
-        testAwsParamsDto.setHttpProxyHost(HTTP_PROXY_HOST);
-        testAwsParamsDto.setHttpProxyPort(HTTP_PROXY_PORT);
-        int testAwsRoleDurationSeconds = INTEGER_VALUE;
-        Credentials resultCredentials = stsDao.getTemporarySecurityCredentials(testAwsParamsDto, SESSION_NAME, AWS_ROLE_ARN, testAwsRoleDurationSeconds, null);
-
-        // Validate the results.
-        assertNotNull(resultCredentials);
-        Assert.assertEquals(MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_ACCESS_KEY, resultCredentials.getAccessKeyId());
-        assertEquals(MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_SECRET_KEY, resultCredentials.getSecretAccessKey());
-        assertEquals(MockStsOperationsImpl.MOCK_AWS_ASSUMED_ROLE_SESSION_TOKEN, resultCredentials.getSessionToken());
-        // Using >= here just to avoid a race condition.
-        assertTrue((System.currentTimeMillis() + 1000 * testAwsRoleDurationSeconds) >= resultCredentials.getExpiration().getTime());
+        verifyNoMoreInteractions(retryPolicyFactory, stsOperations);
     }
 }

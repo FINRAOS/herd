@@ -981,7 +981,7 @@ public class S3DaoImpl implements S3Dao
 
         ClientConfiguration clientConfiguration = new ClientConfiguration().withRetryPolicy(retryPolicyFactory.getRetryPolicy());
 
-        // Creates and sets proxy configuration if proxy is specified
+        // Set the proxy configuration, if proxy is specified.
         if (StringUtils.isNotBlank(params.getHttpProxyHost()) && params.getHttpProxyPort() != null)
         {
             clientConfiguration.setProxyHost(params.getHttpProxyHost());
@@ -994,20 +994,31 @@ public class S3DaoImpl implements S3Dao
         // copying objects between KMS encrypted buckets). Otherwise, AWS will return a bad request error and retry which isn't desirable.
         clientConfiguration.setSignerOverride(SIGNER_OVERRIDE_V4);
 
-        AWSCredentialsProvider awsCredentialsProvider = getAWSCredentialsProvider(params);
-        // Create an S3 client with HTTP proxy information.
-        amazonS3Client = new AmazonS3Client(awsCredentialsProvider, clientConfiguration);
+        // Set the optional socket timeout, if configured.
+        if (params.getSocketTimeout() != null)
+        {
+            clientConfiguration.setSocketTimeout(params.getSocketTimeout());
+        }
 
-        // Set the optional endpoint if configured.
+        // Create an S3 client using passed in credentials and HTTP proxy information.
+        if (StringUtils.isNotBlank(params.getAwsAccessKeyId()) && StringUtils.isNotBlank(params.getAwsSecretKey()) &&
+            StringUtils.isNotBlank(params.getSessionToken()))
+        {
+            // Create an S3 client using basic session credentials.
+            amazonS3Client = new AmazonS3Client(new BasicSessionCredentials(params.getAwsAccessKeyId(), params.getAwsSecretKey(), params.getSessionToken()),
+                clientConfiguration);
+        }
+        else
+        {
+            // Create an S3 client using AWS credentials provider.
+            amazonS3Client = new AmazonS3Client(getAWSCredentialsProvider(params), clientConfiguration);
+        }
+
+        // Set the optional endpoint, if specified.
         if (StringUtils.isNotBlank(params.getS3Endpoint()))
         {
             LOGGER.info("Configured S3 Endpoint: " + params.getS3Endpoint());
             amazonS3Client.setEndpoint(params.getS3Endpoint());
-        }
-
-        if (params.getSocketTimeout() != null)
-        {
-            clientConfiguration.setSocketTimeout(params.getSocketTimeout());
         }
 
         // Return the newly created client.
