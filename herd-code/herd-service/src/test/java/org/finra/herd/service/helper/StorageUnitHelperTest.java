@@ -16,11 +16,17 @@
 package org.finra.herd.service.helper;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import org.junit.Test;
 
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.dto.StorageUnitAlternateKeyDto;
+import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.service.AbstractServiceTest;
 
 public class StorageUnitHelperTest extends AbstractServiceTest
@@ -43,5 +49,26 @@ public class StorageUnitHelperTest extends AbstractServiceTest
         assertEquals(resultStorageUnitAlternateKeyDto.getSubPartitionValues(), SUBPARTITION_VALUES);
         assertEquals(resultStorageUnitAlternateKeyDto.getBusinessObjectDataVersion(), DATA_VERSION);
         assertEquals(resultStorageUnitAlternateKeyDto.getStorageName(), STORAGE_NAME);
+    }
+
+    @Test
+    public void testGetStorageUnitIds()
+    {
+        // Create a storage unit entity.
+        StorageUnitEntity storageUnitEntity = new StorageUnitEntity();
+        storageUnitEntity.setId(INTEGER_VALUE);
+
+        // Get a list of storage unit ids.
+        List<Integer> result = storageUnitHelper.getStorageUnitIds(Arrays.asList(storageUnitEntity));
+
+        // Validate the returned object.
+        assertEquals(Arrays.asList(INTEGER_VALUE), result);
+
+        // Get a list of storage unit ids when the list of entities is empty.
+        result = storageUnitHelper.getStorageUnitIds(new ArrayList<>());
+
+        // Validate the returned object.
+        assertNotNull(result);
+        assertEquals(0, result.size());
     }
 }

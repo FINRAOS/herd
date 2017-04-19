@@ -162,7 +162,7 @@ public class StorageFileDaoTest extends AbstractDaoTest
     }
 
     @Test
-    public void testGetStoragePathsByStorageUnits() throws Exception
+    public void testGetStoragePathsByStorageUnitIds() throws Exception
     {
         // Override configuration.
         Map<String, Object> overrideMap = new HashMap<>();
@@ -180,8 +180,8 @@ public class StorageFileDaoTest extends AbstractDaoTest
                 storageFileDaoTestHelper.createStorageFileEntity(storageUnitEntity, file, FILE_SIZE_1_KB, ROW_COUNT_1000);
             }
 
-            // Retrieve storage file paths by storage units.
-            MultiValuedMap<Integer, String> result = storageFileDao.getStorageFilePathsByStorageUnits(Arrays.asList(storageUnitEntity));
+            // Retrieve storage file paths by storage unit ids.
+            MultiValuedMap<Integer, String> result = storageFileDao.getStorageFilePathsByStorageUnitIds(Arrays.asList(storageUnitEntity.getId()));
 
             // Validate the results.
             assertEquals(LOCAL_FILES.size(), result.get(storageUnitEntity.getId()).size());
