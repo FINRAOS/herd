@@ -65,6 +65,7 @@ import org.finra.herd.model.api.xml.IndexSearchResultKey;
 import org.finra.herd.model.api.xml.TagKey;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.ElasticsearchResponseDto;
+import org.finra.herd.model.dto.IndexSearchHighlightFields;
 
 /**
  * IndexSearchDaoImpl
@@ -453,12 +454,12 @@ public class IndexSearchDaoImpl implements IndexSearchDao
             try
             {
                 @SuppressWarnings("unchecked")
-                final Map<String, String> stemmedFieldsWithBoost = jsonHelper.unmarshallJsonToObject(Map.class, ngramsFieldsValue);
+                final Map<String, String> ngramsFieldsWithBoost = jsonHelper.unmarshallJsonToObject(Map.class, ngramsFieldsValue);
 
                 final Map<String, Float> fieldsBoosts = new HashMap<>();
 
                 // This additional step is needed because trying to cast an unmarshalled json to a Map of anything other than String key-value pairs won't work
-                stemmedFieldsWithBoost.entrySet().forEach(entry -> fieldsBoosts.put(entry.getKey(), Float.parseFloat(entry.getValue())));
+                ngramsFieldsWithBoost.entrySet().forEach(entry -> fieldsBoosts.put(entry.getKey(), Float.parseFloat(entry.getValue())));
 
                 // Set the fields and their respective boosts to the multi-match query
                 multiMatchQueryBuilder.fields(fieldsBoosts);
@@ -500,10 +501,36 @@ public class IndexSearchDaoImpl implements IndexSearchDao
         try
         {
             @SuppressWarnings("unchecked")
-            Map<String, List<String>> highlightFieldsConfig = jsonHelper.unmarshallJsonToObject(Map.class, highlightFieldsValue);
+            IndexSearchHighlightFields highlightFieldsConfig = jsonHelper.unmarshallJsonToObject(IndexSearchHighlightFields.class, highlightFieldsValue);
 
-            // Add all configured field values to the highlight builder
-            highlightFieldsConfig.get("fields").forEach(highlightBuilder::field);
+            highlightFieldsConfig.getHighlightFields().forEach(
+                highlightFieldConfig -> {
+
+                    // set the field name to the configured value
+                    HighlightBuilder.Field highlightField = new HighlightBuilder.Field(highlightFieldConfig.getFieldName());
+
+                    // set matched_fields to the configured list of fields, this accounts for 'multifields' that analyze the same string in different ways
+                    if (CollectionUtils.isNotEmpty(highlightFieldConfig.getMatchedFields()))
+                    {
+                        highlightField.matchedFields(highlightFieldConfig.getMatchedFields().toArray(new String[0]));
+                    }
+
+                    // set fragment size to the configured value
+                    if (highlightFieldConfig.getFragmentSize() != null)
+                    {
+                        highlightField.fragmentSize(highlightFieldConfig.getFragmentSize());
+                    }
+
+                    // set the number of desired fragments to the configured value
+                    if (highlightFieldConfig.getNumOfFragments() != null)
+                    {
+                        highlightField.numOfFragments(highlightFieldConfig.getNumOfFragments());
+                    }
+
+                    highlightBuilder.field(highlightField);
+                }
+            );
+
         }
         catch (IOException e)
         {
