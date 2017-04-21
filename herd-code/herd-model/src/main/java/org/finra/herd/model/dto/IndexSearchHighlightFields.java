@@ -25,6 +25,14 @@ public class IndexSearchHighlightFields
     private List<IndexSearchHighlightField> highlightFields;
 
     /**
+     * Default constructor
+     */
+    public IndexSearchHighlightFields()
+    {
+
+    }
+
+    /**
      * Fully-initializing value constructor
      *
      * @param highlightFields the list of highlight fields configurations

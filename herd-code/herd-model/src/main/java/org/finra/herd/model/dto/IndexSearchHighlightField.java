@@ -28,6 +28,14 @@ public class IndexSearchHighlightField
     private Integer numOfFragments;
 
     /**
+     * Default constructor
+     */
+    public IndexSearchHighlightField()
+    {
+
+    }
+
+    /**
      * Fully-initializing value constructor
      *
      * @param fieldName the field name to highlight
