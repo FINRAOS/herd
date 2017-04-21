@@ -25,11 +25,11 @@ public class IndexSearchHighlightFields
     private List<IndexSearchHighlightField> highlightFields;
 
     /**
-     * Default constructor
+     * Default no-arg constructor
      */
     public IndexSearchHighlightFields()
     {
-
+        super();
     }
 
     /**

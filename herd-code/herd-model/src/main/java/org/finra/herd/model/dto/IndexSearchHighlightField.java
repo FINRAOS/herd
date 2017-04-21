@@ -28,11 +28,11 @@ public class IndexSearchHighlightField
     private Integer numOfFragments;
 
     /**
-     * Default constructor
+     * Default no-arg constructor
      */
     public IndexSearchHighlightField()
     {
-
+        super();
     }
 
     /**
