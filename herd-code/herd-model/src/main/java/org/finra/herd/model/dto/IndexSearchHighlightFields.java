@@ -24,6 +24,16 @@ public class IndexSearchHighlightFields
 {
     private List<IndexSearchHighlightField> highlightFields;
 
+    /**
+     * Fully-initializing value constructor
+     *
+     * @param highlightFields the list of highlight fields configurations
+     */
+    public IndexSearchHighlightFields(List<IndexSearchHighlightField> highlightFields)
+    {
+        this.highlightFields = highlightFields;
+    }
+
     public List<IndexSearchHighlightField> getHighlightFields()
     {
         return highlightFields;
@@ -48,12 +58,12 @@ public class IndexSearchHighlightFields
 
         IndexSearchHighlightFields that = (IndexSearchHighlightFields) object;
 
-        return highlightFields.equals(that.highlightFields);
+        return highlightFields != null ? highlightFields.equals(that.highlightFields) : that.highlightFields == null;
     }
 
     @Override
     public int hashCode()
     {
-        return highlightFields.hashCode();
+        return highlightFields != null ? highlightFields.hashCode() : 0;
     }
 }

@@ -27,6 +27,22 @@ public class IndexSearchHighlightField
     private List<String> matchedFields;
     private Integer numOfFragments;
 
+    /**
+     * Fully-initializing value constructor
+     *
+     * @param fieldName the field name to highlight
+     * @param fragmentSize the desired fragment size
+     * @param matchedFields the list of matched_fields
+     * @param numOfFragments the desired number of fragments
+     */
+    public IndexSearchHighlightField(String fieldName, Integer fragmentSize, List<String> matchedFields, Integer numOfFragments)
+    {
+        this.fieldName = fieldName;
+        this.fragmentSize = fragmentSize;
+        this.matchedFields = matchedFields;
+        this.numOfFragments = numOfFragments;
+    }
+
     public String getFieldName()
     {
         return fieldName;
@@ -81,7 +97,7 @@ public class IndexSearchHighlightField
 
         IndexSearchHighlightField that = (IndexSearchHighlightField) object;
 
-        if (!fieldName.equals(that.fieldName))
+        if (fieldName != null ? !fieldName.equals(that.fieldName) : that.fieldName != null)
         {
             return false;
         }
@@ -99,7 +115,7 @@ public class IndexSearchHighlightField
     @Override
     public int hashCode()
     {
-        int result = fieldName.hashCode();
+        int result = fieldName != null ? fieldName.hashCode() : 0;
         result = 31 * result + (fragmentSize != null ? fragmentSize.hashCode() : 0);
         result = 31 * result + (matchedFields != null ? matchedFields.hashCode() : 0);
         result = 31 * result + (numOfFragments != null ? numOfFragments.hashCode() : 0);
