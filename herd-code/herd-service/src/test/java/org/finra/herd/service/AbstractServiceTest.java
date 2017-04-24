@@ -195,6 +195,10 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     public static final String HERD_WORKFLOW_ENVIRONMENT = "herd_workflowEnvironment";
 
+    public static final boolean HIT_HIGHLIGHTING_ENABLED = true;
+
+    public static final boolean HIT_HIGHLIGHTING_DISABLED = false;
+
     public static final Boolean INCLUDE_ALL_REGISTERED_SUBPARTITIONS = true;
 
     public static final Boolean INCLUDE_BUSINESS_OBJECT_DATA_STATUS_HISTORY = true;

@@ -354,8 +354,11 @@ public class EmrServiceImpl implements EmrService
 
         AwsParamsDto awsParamsDto = emrHelper.getAwsParamsDtoByAcccountId(emrClusterDefinition.getAccountId());
 
-        // Find best price and update definition.
-        emrPricingHelper.updateEmrClusterDefinitionWithBestPrice(emrClusterAlternateKeyDto, emrClusterDefinition, awsParamsDto);
+        // If instance group definitions are specified, find best price and update definition.
+        if (!emrHelper.isInstanceDefinitionsEmpty(emrClusterDefinition.getInstanceDefinitions()))
+        {
+            emrPricingHelper.updateEmrClusterDefinitionWithBestPrice(emrClusterAlternateKeyDto, emrClusterDefinition, awsParamsDto);
+        }
 
         String clusterId = null; // The cluster ID record.
         String emrClusterStatus = null;
@@ -510,6 +513,10 @@ public class EmrServiceImpl implements EmrService
             if (emrClusterDefinitionOverride.getInstanceDefinitions() != null)
             {
                 emrClusterDefinition.setInstanceDefinitions(emrClusterDefinitionOverride.getInstanceDefinitions());
+            }
+            if (emrClusterDefinitionOverride.getInstanceFleets() != null)
+            {
+                emrClusterDefinition.setInstanceFleets(emrClusterDefinitionOverride.getInstanceFleets());
             }
             if (emrClusterDefinitionOverride.getNodeTags() != null)
             {

@@ -661,6 +661,31 @@ public enum ConfigurationValue
         "{ \"clientTransportAddresses\": [\"localhost\"], \"clientTransportSniff\": true, \"elasticSearchCluster\": \"elasticsearch\" }"),
 
     /**
+     * Searchable 'stemmed' fields, defaults to all stemmed fields with no boost
+     */
+    ELASTICSEARCH_SEARCHABLE_FIELDS_STEMMED("elasticsearch.searchable.fields.stemmed", "{\"*.stemmed\": \"1.0\"}"),
+
+    /**
+     * Searchable 'stemmed' fields, defaults to all ngrams fields with no boost
+     */
+    ELASTICSEARCH_SEARCHABLE_FIELDS_NGRAMS("elasticsearch.searchable.fields.ngrams", "{\"*.ngrams\": \"1.0\"}"),
+
+    /**
+     * Pre-tags used for highlighting
+     */
+    ELASTICSEARCH_HIGHLIGHT_PRETAGS("elasticsearch.highlight.pretags", "<hlt class=\"highlight\">"),
+
+    /**
+     * Post-tags used for highlighting
+     */
+    ELASTICSEARCH_HIGHLIGHT_POSTTAGS("elasticsearch.highlight.posttags", "</hlt>"),
+
+    /**
+     * Fields on which highlighting should be done, defaults to all fields
+     */
+    ELASTICSEARCH_HIGHLIGHT_FIELDS("elasticsearch.highlight.fields", "{\"fields\": [\"*\"]}"),
+
+    /**
      * The elasticsearch default port
      */
     ELASTICSEARCH_DEFAULT_PORT("elasticsearch.default.port", 9300),
@@ -770,7 +795,17 @@ public enum ConfigurationValue
     /**
      * The S3 object tag value to be used to trigger S3 object archiving to Glacier.
      */
-    S3_ARCHIVE_TO_GLACIER_TAG_VALUE("s3.archive.to.glacier.tag.value", "true");
+    S3_ARCHIVE_TO_GLACIER_TAG_VALUE("s3.archive.to.glacier.tag.value", "true"),
+
+    /**
+     * The Amazon Resource Name (ARN) of the role to assume when tagging S3 objects to trigger archiving to Glacier.
+     */
+    S3_ARCHIVE_TO_GLACIER_ROLE_ARN("s3.archive.to.glacier.role.arn", null),
+
+    /**
+     * The session identifier for the assumed role to be used when tagging S3 objects to trigger archiving to Glacier.
+     */
+    S3_ARCHIVE_TO_GLACIER_ROLE_SESSION_NAME("s3.archive.to.glacier.role.session.name", null);
 
     private Object defaultValue;
 

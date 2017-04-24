@@ -41,6 +41,11 @@ public class StoragePolicyTransitionParamsDto
     private String oldStorageUnitStatus;
 
     /**
+     * The optional S3 endpoint to use when making S3 service calls.
+     */
+    private String s3Endpoint;
+
+    /**
      * The S3 bucket name.
      */
     private String s3BucketName;
@@ -71,6 +76,16 @@ public class StoragePolicyTransitionParamsDto
     private String s3ObjectTagValue;
 
     /**
+     * The ARN of the role to assume to tag S3 objects.
+     */
+    private String s3ObjectTaggerRoleArn;
+
+    /**
+     * The session identifier for the assumed role to be used to tag S3 objects.
+     */
+    private String s3ObjectTaggerRoleSessionName;
+
+    /**
      * Default no-arg constructor.
      */
     public StoragePolicyTransitionParamsDto()
@@ -83,6 +98,7 @@ public class StoragePolicyTransitionParamsDto
      *
      * @param businessObjectDataKey the business object data key
      * @param storageName the storage name
+     * @param s3Endpoint the optional S3 endpoint to use when making S3 service calls.
      * @param s3BucketName the S3 bucket name
      * @param s3KeyPrefix the S3 key prefix
      * @param newStorageUnitStatus the new status of the storage unit
@@ -90,13 +106,17 @@ public class StoragePolicyTransitionParamsDto
      * @param storageFiles the list of storage files
      * @param s3ObjectTagKey the S3 object tag key
      * @param s3ObjectTagValue the S3 object tag value
+     * @param s3ObjectTaggerRoleArn the ARN of the role to assume to tag S3 objects
+     * @param s3ObjectTaggerRoleSessionName the session identifier for the assumed role to be used to tag S3 objects
      */
-    public StoragePolicyTransitionParamsDto(final BusinessObjectDataKey businessObjectDataKey, final String storageName, final String s3BucketName,
-        final String s3KeyPrefix, final String newStorageUnitStatus, final String oldStorageUnitStatus, final List<StorageFile> storageFiles,
-        final String s3ObjectTagKey, final String s3ObjectTagValue)
+    public StoragePolicyTransitionParamsDto(final BusinessObjectDataKey businessObjectDataKey, final String storageName, final String s3Endpoint,
+        final String s3BucketName, final String s3KeyPrefix, final String newStorageUnitStatus, final String oldStorageUnitStatus,
+        final List<StorageFile> storageFiles, final String s3ObjectTagKey, final String s3ObjectTagValue, final String s3ObjectTaggerRoleArn,
+        final String s3ObjectTaggerRoleSessionName)
     {
         this.businessObjectDataKey = businessObjectDataKey;
         this.storageName = storageName;
+        this.s3Endpoint = s3Endpoint;
         this.s3BucketName = s3BucketName;
         this.s3KeyPrefix = s3KeyPrefix;
         this.newStorageUnitStatus = newStorageUnitStatus;
@@ -104,6 +124,8 @@ public class StoragePolicyTransitionParamsDto
         this.storageFiles = storageFiles;
         this.s3ObjectTagKey = s3ObjectTagKey;
         this.s3ObjectTagValue = s3ObjectTagValue;
+        this.s3ObjectTaggerRoleArn = s3ObjectTaggerRoleArn;
+        this.s3ObjectTaggerRoleSessionName = s3ObjectTaggerRoleSessionName;
     }
 
     public BusinessObjectDataKey getBusinessObjectDataKey()
@@ -134,6 +156,16 @@ public class StoragePolicyTransitionParamsDto
     public void setOldStorageUnitStatus(String oldStorageUnitStatus)
     {
         this.oldStorageUnitStatus = oldStorageUnitStatus;
+    }
+
+    public String getS3Endpoint()
+    {
+        return s3Endpoint;
+    }
+
+    public void setS3Endpoint(String s3Endpoint)
+    {
+        this.s3Endpoint = s3Endpoint;
     }
 
     public String getS3BucketName()
@@ -196,6 +228,26 @@ public class StoragePolicyTransitionParamsDto
         this.s3ObjectTagValue = s3ObjectTagValue;
     }
 
+    public String getS3ObjectTaggerRoleArn()
+    {
+        return s3ObjectTaggerRoleArn;
+    }
+
+    public void setS3ObjectTaggerRoleArn(String s3ObjectTaggerRoleArn)
+    {
+        this.s3ObjectTaggerRoleArn = s3ObjectTaggerRoleArn;
+    }
+
+    public String getS3ObjectTaggerRoleSessionName()
+    {
+        return s3ObjectTaggerRoleSessionName;
+    }
+
+    public void setS3ObjectTaggerRoleSessionName(String s3ObjectTaggerRoleSessionName)
+    {
+        this.s3ObjectTaggerRoleSessionName = s3ObjectTaggerRoleSessionName;
+    }
+
     @Override
     @SuppressWarnings("PMD.CyclomaticComplexity") // Method is not complex. It's just very repetitive.
     public boolean equals(Object object)
@@ -227,6 +279,10 @@ public class StoragePolicyTransitionParamsDto
         {
             return false;
         }
+        if (s3Endpoint != null ? !s3Endpoint.equals(that.s3Endpoint) : that.s3Endpoint != null)
+        {
+            return false;
+        }
         if (s3KeyPrefix != null ? !s3KeyPrefix.equals(that.s3KeyPrefix) : that.s3KeyPrefix != null)
         {
             return false;
@@ -236,6 +292,15 @@ public class StoragePolicyTransitionParamsDto
             return false;
         }
         if (s3ObjectTagValue != null ? !s3ObjectTagValue.equals(that.s3ObjectTagValue) : that.s3ObjectTagValue != null)
+        {
+            return false;
+        }
+        if (s3ObjectTaggerRoleArn != null ? !s3ObjectTaggerRoleArn.equals(that.s3ObjectTaggerRoleArn) : that.s3ObjectTaggerRoleArn != null)
+        {
+            return false;
+        }
+        if (s3ObjectTaggerRoleSessionName != null ? !s3ObjectTaggerRoleSessionName.equals(that.s3ObjectTaggerRoleSessionName) :
+            that.s3ObjectTaggerRoleSessionName != null)
         {
             return false;
         }
@@ -257,12 +322,15 @@ public class StoragePolicyTransitionParamsDto
         int result = businessObjectDataKey != null ? businessObjectDataKey.hashCode() : 0;
         result = 31 * result + (newStorageUnitStatus != null ? newStorageUnitStatus.hashCode() : 0);
         result = 31 * result + (oldStorageUnitStatus != null ? oldStorageUnitStatus.hashCode() : 0);
+        result = 31 * result + (s3Endpoint != null ? s3Endpoint.hashCode() : 0);
         result = 31 * result + (s3BucketName != null ? s3BucketName.hashCode() : 0);
         result = 31 * result + (s3KeyPrefix != null ? s3KeyPrefix.hashCode() : 0);
         result = 31 * result + (storageFiles != null ? storageFiles.hashCode() : 0);
         result = 31 * result + (storageName != null ? storageName.hashCode() : 0);
         result = 31 * result + (s3ObjectTagKey != null ? s3ObjectTagKey.hashCode() : 0);
         result = 31 * result + (s3ObjectTagValue != null ? s3ObjectTagValue.hashCode() : 0);
+        result = 31 * result + (s3ObjectTaggerRoleArn != null ? s3ObjectTaggerRoleArn.hashCode() : 0);
+        result = 31 * result + (s3ObjectTaggerRoleSessionName != null ? s3ObjectTaggerRoleSessionName.hashCode() : 0);
         return result;
     }
 }

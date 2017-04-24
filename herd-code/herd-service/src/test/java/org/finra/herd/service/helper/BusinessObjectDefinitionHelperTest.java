@@ -23,6 +23,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -39,6 +40,7 @@ import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionColumnKey;
 import org.finra.herd.model.api.xml.BusinessObjectDefinitionKey;
 import org.finra.herd.model.jpa.BusinessObjectDefinitionEntity;
+import org.finra.herd.model.jpa.BusinessObjectFormatEntity;
 import org.finra.herd.service.AbstractServiceTest;
 
 /**
@@ -81,8 +83,16 @@ public class BusinessObjectDefinitionHelperTest extends AbstractServiceTest
         final List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities = Collections.unmodifiableList(Arrays.asList(
             businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
                 businessObjectDefinitionServiceTestHelper.getNewAttributes()), businessObjectDefinitionDaoTestHelper
-            .createBusinessObjectDefinitionEntity(BDEF_NAMESPACE_2, BDEF_NAME_2, DATA_PROVIDER_NAME_2, BDEF_DESCRIPTION_2,
-                businessObjectDefinitionServiceTestHelper.getNewAttributes2())));
+                .createBusinessObjectDefinitionEntity(BDEF_NAMESPACE_2, BDEF_NAME_2, DATA_PROVIDER_NAME_2, BDEF_DESCRIPTION_2,
+                    businessObjectDefinitionServiceTestHelper.getNewAttributes2())));
+
+        businessObjectDefinitionEntities.forEach(entity ->
+        {
+            entity.setDescriptiveBusinessObjectFormat(new BusinessObjectFormatEntity());
+            entity.getDescriptiveBusinessObjectFormat().setSchemaColumns(new ArrayList<>());
+
+            entity.setSubjectMatterExperts(new ArrayList<>());
+        });
 
         // Mock the external calls.
         when(jsonHelper.objectToJson(any())).thenReturn(JSON_STRING);
@@ -90,7 +100,8 @@ public class BusinessObjectDefinitionHelperTest extends AbstractServiceTest
         // Execute a function for all business object definition entities.
         businessObjectDefinitionHelper
             .executeFunctionForBusinessObjectDefinitionEntities(SEARCH_INDEX_NAME, SEARCH_INDEX_DOCUMENT_TYPE, businessObjectDefinitionEntities,
-                (indexName, documentType, id, json) -> {
+                (indexName, documentType, id, json) ->
+                {
                 });
 
         // Verify the external calls.
@@ -105,8 +116,16 @@ public class BusinessObjectDefinitionHelperTest extends AbstractServiceTest
         final List<BusinessObjectDefinitionEntity> businessObjectDefinitionEntities = Collections.unmodifiableList(Arrays.asList(
             businessObjectDefinitionDaoTestHelper.createBusinessObjectDefinitionEntity(BDEF_NAMESPACE, BDEF_NAME, DATA_PROVIDER_NAME, BDEF_DESCRIPTION,
                 businessObjectDefinitionServiceTestHelper.getNewAttributes()), businessObjectDefinitionDaoTestHelper
-            .createBusinessObjectDefinitionEntity(BDEF_NAMESPACE_2, BDEF_NAME_2, DATA_PROVIDER_NAME_2, BDEF_DESCRIPTION_2,
-                businessObjectDefinitionServiceTestHelper.getNewAttributes2())));
+                .createBusinessObjectDefinitionEntity(BDEF_NAMESPACE_2, BDEF_NAME_2, DATA_PROVIDER_NAME_2, BDEF_DESCRIPTION_2,
+                    businessObjectDefinitionServiceTestHelper.getNewAttributes2())));
+
+        businessObjectDefinitionEntities.forEach(entity ->
+        {
+            entity.setDescriptiveBusinessObjectFormat(new BusinessObjectFormatEntity());
+            entity.getDescriptiveBusinessObjectFormat().setSchemaColumns(new ArrayList<>());
+
+            entity.setSubjectMatterExperts(new ArrayList<>());
+        });
 
         // Mock the external calls.
         when(jsonHelper.objectToJson(any()))
@@ -115,7 +134,8 @@ public class BusinessObjectDefinitionHelperTest extends AbstractServiceTest
         // Execute a function for all business object definition entities.
         businessObjectDefinitionHelper
             .executeFunctionForBusinessObjectDefinitionEntities(SEARCH_INDEX_NAME, SEARCH_INDEX_DOCUMENT_TYPE, businessObjectDefinitionEntities,
-                (indexName, documentType, id, json) -> {
+                (indexName, documentType, id, json) ->
+                {
                 });
 
         // Verify the external calls.

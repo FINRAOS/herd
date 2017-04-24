@@ -16,279 +16,352 @@
 package org.finra.herd.service;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import com.amazonaws.services.s3.model.PutObjectRequest;
-import org.apache.commons.io.FileUtils;
-import org.junit.After;
+import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.amazonaws.services.s3.model.Tag;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
-import org.finra.herd.core.Command;
+import org.finra.herd.dao.S3Dao;
 import org.finra.herd.model.dto.S3FileCopyRequestParamsDto;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.dto.S3FileTransferResultsDto;
 import org.finra.herd.service.impl.S3ServiceImpl;
 
 /**
- * This class tests functionality within the S3Service.
+ * This class tests functionality within the S3 service.
  */
 public class S3ServiceTest extends AbstractServiceTest
 {
-    private Path localTempPath;
+    @Mock
+    private S3Dao s3Dao;
 
-    /**
-     * Sets up the test environment.
-     */
+    @InjectMocks
+    private S3ServiceImpl s3Service;
+
     @Before
-    public void setupEnv() throws IOException
+    public void before()
     {
-        // Create local temp directory.
-        localTempPath = Files.createTempDirectory(null);
-    }
-
-    /**
-     * Cleans up the local temp directory and S3 test path that we are using.
-     */
-    @After
-    public void cleanEnv() throws IOException
-    {
-        // Clean up the local directory.
-        FileUtils.deleteDirectory(localTempPath.toFile());
-
-        // Delete test files from S3 storage. Since test S3 key prefix represents a directory, we add a trailing '/' character to it.
-        for (S3FileTransferRequestParamsDto params : Arrays.asList(s3DaoTestHelper.getTestS3FileTransferRequestParamsDto(),
-            S3FileTransferRequestParamsDto.builder().s3BucketName(storageDaoTestHelper.getS3LoadingDockBucketName()).s3KeyPrefix(TEST_S3_KEY_PREFIX + "/")
-                .build(),
-            S3FileTransferRequestParamsDto.builder().s3BucketName(storageDaoTestHelper.getS3ExternalBucketName()).s3KeyPrefix(TEST_S3_KEY_PREFIX + "/")
-                .build()))
-        {
-            if (!s3Dao.listDirectory(params).isEmpty())
-            {
-                s3Dao.deleteDirectory(params);
-            }
-        }
-
-        s3Operations.rollback();
-    }
-
-    @Test
-    public void testUploadFile() throws IOException, InterruptedException
-    {
-        // Create local test file.
-        File targetFile = createLocalFile(localTempPath.toString(), LOCAL_FILE, FILE_SIZE_1_KB);
-        assertTrue(targetFile.isFile());
-        assertTrue(targetFile.length() == FILE_SIZE_1_KB);
-
-        // Upload test file to S3.
-        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = s3DaoTestHelper.getTestS3FileTransferRequestParamsDto();
-        s3FileTransferRequestParamsDto.setS3KeyPrefix(TARGET_S3_KEY);
-        s3FileTransferRequestParamsDto.setLocalPath(targetFile.getPath());
-        S3FileTransferResultsDto results = s3Service.uploadFile(s3FileTransferRequestParamsDto);
-
-        // Validate results.
-        assertTrue(results.getTotalFilesTransferred() == 1L);
-
-        // Validate the file upload.
-        s3DaoTestHelper.validateS3FileUpload(s3FileTransferRequestParamsDto, Arrays.asList(TARGET_S3_KEY));
-    }
-
-    @Test
-    public void testUploadFileList() throws IOException, InterruptedException
-    {
-        // Create local test files.
-        for (String file : LOCAL_FILES)
-        {
-            createLocalFile(localTempPath.toString(), file, FILE_SIZE_1_KB);
-        }
-
-        // Create a list of files to be uploaded along with the list of expected S3 key values.
-        List<File> requestFileList = new ArrayList<>();
-        List<String> expectedKeys = new ArrayList<>();
-        for (String file : LOCAL_FILES_SUBSET)
-        {
-            requestFileList.add(Paths.get(localTempPath.toString(), file).toFile());
-            expectedKeys.add(TEST_S3_KEY_PREFIX + "/" + file.replaceAll("\\\\", "/"));
-        }
-
-        // Upload test file to S3.
-        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = s3DaoTestHelper.getTestS3FileTransferRequestParamsDto();
-        s3FileTransferRequestParamsDto.setS3KeyPrefix(TEST_S3_KEY_PREFIX);
-        s3FileTransferRequestParamsDto.setLocalPath(localTempPath.toString());
-        s3FileTransferRequestParamsDto.setFiles(requestFileList);
-        S3FileTransferResultsDto results = s3Service.uploadFileList(s3FileTransferRequestParamsDto);
-
-        // Validate results.
-        assertTrue(results.getTotalFilesTransferred() == LOCAL_FILES_SUBSET.size());
-
-        // Validate the upload.
-        s3DaoTestHelper.validateS3FileUpload(s3FileTransferRequestParamsDto, expectedKeys);
+        MockitoAnnotations.initMocks(this);
     }
 
     @Test
     public void testCopyFile() throws InterruptedException
     {
-        // Put a 1 KB file in S3.
-        s3Operations.putObject(
-            new PutObjectRequest(storageDaoTestHelper.getS3LoadingDockBucketName(), TARGET_S3_KEY, new ByteArrayInputStream(new byte[(int) FILE_SIZE_1_KB]),
-                null), null);
+        // Create an S3 file copy request parameters DTO.
+        S3FileCopyRequestParamsDto s3FileCopyRequestParamsDto = new S3FileCopyRequestParamsDto();
 
-        // Copy an S3 file from source to target S3 bucket.
-        S3FileCopyRequestParamsDto params = new S3FileCopyRequestParamsDto();
-        params.setKmsKeyId("AWS_KMS_EXTERNAL_KEY_ID");
-        params.setSourceBucketName(storageDaoTestHelper.getS3LoadingDockBucketName());
-        params.setTargetBucketName(storageDaoTestHelper.getS3ExternalBucketName());
-        params.setSourceObjectKey(TARGET_S3_KEY);
-        params.setTargetObjectKey(TARGET_S3_KEY);
-        S3FileTransferResultsDto results = s3Service.copyFile(params);
+        // Create an S3 file transfer result DTO.
+        S3FileTransferResultsDto s3FileTransferResultsDto = new S3FileTransferResultsDto();
 
-        // Validate the results.
-        assertNotNull(results);
-        assertEquals(Long.valueOf(1L), results.getTotalFilesTransferred());
-        assertEquals(Long.valueOf(FILE_SIZE_1_KB), results.getTotalBytesTransferred());
+        // Mock the external calls.
+        when(s3Dao.copyFile(s3FileCopyRequestParamsDto)).thenReturn(s3FileTransferResultsDto);
+
+        // Call the method under test.
+        S3FileTransferResultsDto result = s3Service.copyFile(s3FileCopyRequestParamsDto);
+
+        // Verify the external calls.
+        verify(s3Dao).copyFile(s3FileCopyRequestParamsDto);
+        verifyNoMoreInteractions(s3Dao);
+
+        // Validate the returned object.
+        assertEquals(s3FileTransferResultsDto, result);
     }
 
     @Test
-    public void testUploadDirectory() throws IOException, InterruptedException
+    public void testCreateDirectory()
     {
-        // Create local test files.
-        for (String file : LOCAL_FILES)
-        {
-            createLocalFile(localTempPath.toString(), file, FILE_SIZE_1_KB);
-        }
+        // Create an S3 file transfer request parameters DTO.
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
 
-        // Upload test file to S3.
-        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = s3DaoTestHelper.getTestS3FileTransferRequestParamsDto();
-        s3FileTransferRequestParamsDto.setS3KeyPrefix(TEST_S3_KEY_PREFIX);
-        s3FileTransferRequestParamsDto.setLocalPath(localTempPath.toString());
-        s3FileTransferRequestParamsDto.setRecursive(true);
-        S3FileTransferResultsDto results = s3Service.uploadDirectory(s3FileTransferRequestParamsDto);
+        // Call the method under test.
+        s3Service.createDirectory(s3FileTransferRequestParamsDto);
 
-        // Validate results.
-        assertTrue(results.getTotalFilesTransferred() == LOCAL_FILES.size());
-
-        // Build a list of expected S3 key values.
-        List<String> expectedKeys = new ArrayList<>();
-        for (String file : LOCAL_FILES)
-        {
-            expectedKeys.add(TEST_S3_KEY_PREFIX + "/" + file.replaceAll("\\\\", "/"));
-        }
-
-        // Validate the file upload.
-        s3DaoTestHelper.validateS3FileUpload(s3FileTransferRequestParamsDto, expectedKeys);
+        // Verify the external calls.
+        verify(s3Dao).createDirectory(s3FileTransferRequestParamsDto);
+        verifyNoMoreInteractions(s3Dao);
     }
 
     @Test
-    public void testDeleteDirectory() throws Exception
+    public void testDeleteDirectory()
     {
-        // Upload local directory to S3.
-        testUploadDirectory();
+        // Create an S3 file transfer request parameters DTO.
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
 
-        // Delete directory from S3.
-        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = s3DaoTestHelper.getTestS3FileTransferRequestParamsDto();
-        s3FileTransferRequestParamsDto.setS3KeyPrefix(TEST_S3_KEY_PREFIX + "/");
+        // Call the method under test.
         s3Service.deleteDirectory(s3FileTransferRequestParamsDto);
 
-        // Validate that S3 directory got deleted.
-        assertEquals(0, s3Service.listDirectory(s3FileTransferRequestParamsDto).size());
+        // Verify the external calls.
+        verify(s3Dao).deleteDirectory(s3FileTransferRequestParamsDto);
+        verifyNoMoreInteractions(s3Dao);
     }
 
     @Test
-    public void testDeleteDirectoryIgnoreException() throws Exception
+    public void testDeleteDirectoryIgnoreException()
     {
-        // Upload local directory to S3.
-        testUploadDirectory();
+        // Create an S3 file transfer request parameters DTO.
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
 
-        // Delete directory from S3.
-        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = s3DaoTestHelper.getTestS3FileTransferRequestParamsDto();
-        s3FileTransferRequestParamsDto.setS3KeyPrefix(TEST_S3_KEY_PREFIX + "/");
+        // Call the method under test.
         s3Service.deleteDirectoryIgnoreException(s3FileTransferRequestParamsDto);
 
-        // Validate that S3 directory got deleted.
-        assertEquals(0, s3Service.listDirectory(s3FileTransferRequestParamsDto).size());
+        // Verify the external calls.
+        verify(s3Dao).deleteDirectory(s3FileTransferRequestParamsDto);
+        verifyNoMoreInteractions(s3Dao);
     }
 
     @Test
-    public void testDeleteDirectoryIgnoreExceptionWithException() throws Exception
+    public void testDeleteDirectoryIgnoreExceptionWhenRuntimeExceptionOccurs()
     {
-        // Try to delete S3 directory using an invalid S3 bucket name.
-        final S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = s3DaoTestHelper.getTestS3FileTransferRequestParamsDto();
-        s3FileTransferRequestParamsDto.setS3BucketName("INVALID_BUCKET_NAME");
-        executeWithoutLogging(S3ServiceImpl.class, new Command()
-        {
-            @Override
-            public void execute() throws Exception
-            {
-                s3Service.deleteDirectoryIgnoreException(s3FileTransferRequestParamsDto);
-            }
-        });
+        // Create an S3 file transfer request parameters DTO.
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+
+        // Mock the external calls.
+        doThrow(new RuntimeException()).when(s3Dao).deleteDirectory(s3FileTransferRequestParamsDto);
+
+        // Call the method under test.
+        s3Service.deleteDirectoryIgnoreException(s3FileTransferRequestParamsDto);
+
+        // Verify the external calls.
+        verify(s3Dao).deleteDirectory(s3FileTransferRequestParamsDto);
+        verifyNoMoreInteractions(s3Dao);
     }
 
     @Test
-    public void testDownloadFile() throws IOException, InterruptedException
+    public void testDeleteFileList()
     {
-        // Upload local file to S3.
-        testUploadFile();
+        // Create an S3 file transfer request parameters DTO.
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
 
-        // Clean up the local directory, so we can test the download.
-        FileUtils.deleteDirectory(localTempPath.toFile());
+        // Call the method under test.
+        s3Service.deleteFileList(s3FileTransferRequestParamsDto);
 
-        // Create local temp directory - this also validates that clean up was really executed.
-        assertTrue(localTempPath.toFile().mkdir());
-
-        // Destination local file.
-        File destinationLocalFile = Paths.get(localTempPath.toString(), LOCAL_FILE).toFile();
-
-        // Execute download.
-        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = s3DaoTestHelper.getTestS3FileTransferRequestParamsDto();
-        s3FileTransferRequestParamsDto.setS3KeyPrefix(TARGET_S3_KEY);
-        s3FileTransferRequestParamsDto.setLocalPath(destinationLocalFile.getPath());
-        S3FileTransferResultsDto results = s3Service.downloadFile(s3FileTransferRequestParamsDto);
-
-        // Validate results.
-        assertTrue(results.getTotalFilesTransferred() == 1L);
-
-        // Validate that we have the file downloaded from S3.
-        assertTrue(destinationLocalFile.isFile());
+        // Verify the external calls.
+        verify(s3Dao).deleteFileList(s3FileTransferRequestParamsDto);
+        verifyNoMoreInteractions(s3Dao);
     }
 
     @Test
-    public void testDownloadDirectory() throws IOException, InterruptedException
+    public void testDownloadDirectory() throws InterruptedException
     {
-        // Upload local directory to S3.
-        testUploadDirectory();
+        // Create an S3 file transfer request parameters DTO.
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
 
-        // Clean up the local directory, so we can test the download.
-        FileUtils.deleteDirectory(localTempPath.toFile());
+        // Create an S3 file transfer result DTO.
+        S3FileTransferResultsDto s3FileTransferResultsDto = new S3FileTransferResultsDto();
 
-        // Create local temp directory - this also validates that clean up was really executed.
-        assertTrue(localTempPath.toFile().mkdir());
+        // Mock the external calls.
+        when(s3Dao.downloadDirectory(s3FileTransferRequestParamsDto)).thenReturn(s3FileTransferResultsDto);
 
-        // Execute download.
-        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = s3DaoTestHelper.getTestS3FileTransferRequestParamsDto();
-        s3FileTransferRequestParamsDto.setS3KeyPrefix(TEST_S3_KEY_PREFIX);
-        s3FileTransferRequestParamsDto.setLocalPath(localTempPath.toString());
-        s3FileTransferRequestParamsDto.setRecursive(true);
-        S3FileTransferResultsDto results = s3Service.downloadDirectory(s3FileTransferRequestParamsDto);
+        // Call the method under test.
+        S3FileTransferResultsDto result = s3Service.downloadDirectory(s3FileTransferRequestParamsDto);
 
-        // Validate results.
-        assertTrue(results.getTotalFilesTransferred() == LOCAL_FILES.size());
+        // Verify the external calls.
+        verify(s3Dao).downloadDirectory(s3FileTransferRequestParamsDto);
+        verifyNoMoreInteractions(s3Dao);
 
-        // Validate that we have the directory downloaded from S3.
-        for (String file : LOCAL_FILES)
-        {
-            assertTrue(Paths.get(localTempPath.toString(), TEST_S3_KEY_PREFIX, file).toFile().isFile());
-        }
+        // Validate the returned object.
+        assertEquals(s3FileTransferResultsDto, result);
+    }
+
+    @Test
+    public void testDownloadFile() throws InterruptedException
+    {
+        // Create an S3 file transfer request parameters DTO.
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+
+        // Create an S3 file transfer result DTO.
+        S3FileTransferResultsDto s3FileTransferResultsDto = new S3FileTransferResultsDto();
+
+        // Mock the external calls.
+        when(s3Dao.downloadFile(s3FileTransferRequestParamsDto)).thenReturn(s3FileTransferResultsDto);
+
+        // Call the method under test.
+        S3FileTransferResultsDto result = s3Service.downloadFile(s3FileTransferRequestParamsDto);
+
+        // Verify the external calls.
+        verify(s3Dao).downloadFile(s3FileTransferRequestParamsDto);
+        verifyNoMoreInteractions(s3Dao);
+
+        // Validate the returned object.
+        assertEquals(s3FileTransferResultsDto, result);
+    }
+
+    @Test
+    public void testListDirectory()
+    {
+        // Create an S3 file transfer request parameters DTO.
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+
+        // Create a list of S3 object summaries.
+        List<S3ObjectSummary> s3ObjectSummaries = Arrays.asList(new S3ObjectSummary());
+
+        // Mock the external calls.
+        when(s3Dao.listDirectory(s3FileTransferRequestParamsDto, false)).thenReturn(s3ObjectSummaries);
+
+        // Call the method under test.
+        List<S3ObjectSummary> result = s3Service.listDirectory(s3FileTransferRequestParamsDto);
+
+        // Verify the external calls. By default, we do not ignore 0 byte objects that represent S3 directories.
+        verify(s3Dao).listDirectory(s3FileTransferRequestParamsDto, false);
+        verifyNoMoreInteractions(s3Dao);
+
+        // Validate the returned object.
+        assertEquals(s3ObjectSummaries, result);
+    }
+
+    @Test
+    public void testListDirectoryIgnoreZeroByteDirectoryMarkers()
+    {
+        // Create an S3 file transfer request parameters DTO.
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+
+        // Create a list of S3 object summaries.
+        List<S3ObjectSummary> s3ObjectSummaries = Arrays.asList(new S3ObjectSummary());
+
+        // Mock the external calls.
+        when(s3Dao.listDirectory(s3FileTransferRequestParamsDto, true)).thenReturn(s3ObjectSummaries);
+
+        // Call the method under test.
+        List<S3ObjectSummary> result = s3Service.listDirectory(s3FileTransferRequestParamsDto, true);
+
+        // Verify the external calls.
+        verify(s3Dao).listDirectory(s3FileTransferRequestParamsDto, true);
+        verifyNoMoreInteractions(s3Dao);
+
+        // Validate the returned object.
+        assertEquals(s3ObjectSummaries, result);
+    }
+
+    @Test
+    public void testRestoreObjects()
+    {
+        // Create an S3 file transfer request parameters DTO.
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+
+        // Call the method under test.
+        s3Service.restoreObjects(s3FileTransferRequestParamsDto, INTEGER_VALUE);
+
+        // Verify the external calls.
+        verify(s3Dao).restoreObjects(s3FileTransferRequestParamsDto, INTEGER_VALUE);
+        verifyNoMoreInteractions(s3Dao);
+    }
+
+    @Test
+    public void testTagObjects()
+    {
+        // Create an S3 file transfer request parameters DTO to access S3 objects.
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+        s3FileTransferRequestParamsDto.setFiles(Arrays.asList(new File(TEST_S3_KEY_PREFIX + "/" + LOCAL_FILE)));
+
+        // Create an S3 file transfer request parameters DTO to tag S3 objects.
+        S3FileTransferRequestParamsDto s3ObjectTaggerParamsDto = new S3FileTransferRequestParamsDto();
+        s3ObjectTaggerParamsDto.setAwsAccessKeyId(AWS_ASSUMED_ROLE_ACCESS_KEY);
+        s3ObjectTaggerParamsDto.setAwsSecretKey(AWS_ASSUMED_ROLE_SECRET_KEY);
+        s3ObjectTaggerParamsDto.setSessionToken(AWS_ASSUMED_ROLE_SESSION_TOKEN);
+
+        // Create an S3 object tag.
+        Tag tag = new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE);
+
+        // Call the method under test.
+        s3Service.tagObjects(s3FileTransferRequestParamsDto, s3ObjectTaggerParamsDto, tag);
+
+        // Verify the external calls.
+        verify(s3Dao).tagObjects(s3FileTransferRequestParamsDto, s3ObjectTaggerParamsDto, tag);
+        verifyNoMoreInteractions(s3Dao);
+    }
+
+    @Test
+    public void testUploadDirectory() throws InterruptedException
+    {
+        // Create an S3 file transfer request parameters DTO.
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+
+        // Create an S3 file transfer result DTO.
+        S3FileTransferResultsDto s3FileTransferResultsDto = new S3FileTransferResultsDto();
+
+        // Mock the external calls.
+        when(s3Dao.uploadDirectory(s3FileTransferRequestParamsDto)).thenReturn(s3FileTransferResultsDto);
+
+        // Call the method under test.
+        S3FileTransferResultsDto result = s3Service.uploadDirectory(s3FileTransferRequestParamsDto);
+
+        // Verify the external calls.
+        verify(s3Dao).uploadDirectory(s3FileTransferRequestParamsDto);
+        verifyNoMoreInteractions(s3Dao);
+
+        // Validate the returned object.
+        assertEquals(s3FileTransferResultsDto, result);
+    }
+
+    @Test
+    public void testUploadFile() throws InterruptedException
+    {
+        // Create an S3 file transfer request parameters DTO.
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+
+        // Create an S3 file transfer result DTO.
+        S3FileTransferResultsDto s3FileTransferResultsDto = new S3FileTransferResultsDto();
+
+        // Mock the external calls.
+        when(s3Dao.uploadFile(s3FileTransferRequestParamsDto)).thenReturn(s3FileTransferResultsDto);
+
+        // Call the method under test.
+        S3FileTransferResultsDto result = s3Service.uploadFile(s3FileTransferRequestParamsDto);
+
+        // Verify the external calls.
+        verify(s3Dao).uploadFile(s3FileTransferRequestParamsDto);
+        verifyNoMoreInteractions(s3Dao);
+
+        // Validate the returned object.
+        assertEquals(s3FileTransferResultsDto, result);
+    }
+
+    @Test
+    public void testUploadFileList() throws InterruptedException
+    {
+        // Create an S3 file transfer request parameters DTO.
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+
+        // Create an S3 file transfer result DTO.
+        S3FileTransferResultsDto s3FileTransferResultsDto = new S3FileTransferResultsDto();
+
+        // Mock the external calls.
+        when(s3Dao.uploadFileList(s3FileTransferRequestParamsDto)).thenReturn(s3FileTransferResultsDto);
+
+        // Call the method under test.
+        S3FileTransferResultsDto result = s3Service.uploadFileList(s3FileTransferRequestParamsDto);
+
+        // Verify the external calls.
+        verify(s3Dao).uploadFileList(s3FileTransferRequestParamsDto);
+        verifyNoMoreInteractions(s3Dao);
+
+        // Validate the returned object.
+        assertEquals(s3FileTransferResultsDto, result);
+    }
+
+    @Test
+    public void testValidateGlacierS3FilesRestored() throws RuntimeException
+    {
+        // Create an S3 file transfer request parameters DTO.
+        S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
+
+        // Call the method under test.
+        s3Service.validateGlacierS3FilesRestored(s3FileTransferRequestParamsDto);
+
+        // Verify the external calls.
+        verify(s3Dao).validateGlacierS3FilesRestored(s3FileTransferRequestParamsDto);
+        verifyNoMoreInteractions(s3Dao);
     }
 }

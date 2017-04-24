@@ -153,8 +153,14 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
         // Get the S3 object tag key to be used to tag the objects for archiving.
         String s3ObjectTagKey = configurationHelper.getRequiredProperty(ConfigurationValue.S3_ARCHIVE_TO_GLACIER_TAG_KEY);
 
-        // Get the S3 object tag value to be used to tag the objects for archiving.
+        // Get the S3 object tag value to be used to tag S3 objects for archiving to Glacier.
         String s3ObjectTagValue = configurationHelper.getRequiredProperty(ConfigurationValue.S3_ARCHIVE_TO_GLACIER_TAG_VALUE);
+
+        // Get the ARN of the role to assume to tag S3 objects for archiving to Glacier.
+        String s3ObjectTaggerRoleArn = configurationHelper.getRequiredProperty(ConfigurationValue.S3_ARCHIVE_TO_GLACIER_ROLE_ARN);
+
+        // Get the session identifier for the assumed role to be used to tag S3 objects for archiving to Glacier.
+        String s3ObjectTaggerRoleSessionName = configurationHelper.getRequiredProperty(ConfigurationValue.S3_ARCHIVE_TO_GLACIER_ROLE_SESSION_NAME);
 
         // Retrieve the storage unit and ensure it exists.
         StorageUnitEntity storageUnitEntity = storageUnitDaoHelper.getStorageUnitEntity(storageName, businessObjectDataEntity);
@@ -201,6 +207,7 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
         StoragePolicyTransitionParamsDto storagePolicyTransitionParamsDto = new StoragePolicyTransitionParamsDto();
         storagePolicyTransitionParamsDto.setBusinessObjectDataKey(businessObjectDataKey);
         storagePolicyTransitionParamsDto.setStorageName(storageName);
+        storagePolicyTransitionParamsDto.setS3Endpoint(configurationHelper.getProperty(ConfigurationValue.S3_ENDPOINT));
         storagePolicyTransitionParamsDto.setS3BucketName(s3BucketName);
         storagePolicyTransitionParamsDto.setS3KeyPrefix(s3KeyPrefix);
         storagePolicyTransitionParamsDto.setNewStorageUnitStatus(storageUnitEntity.getStatus().getCode());
@@ -208,6 +215,8 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
         storagePolicyTransitionParamsDto.setStorageFiles(storageFiles);
         storagePolicyTransitionParamsDto.setS3ObjectTagKey(s3ObjectTagKey);
         storagePolicyTransitionParamsDto.setS3ObjectTagValue(s3ObjectTagValue);
+        storagePolicyTransitionParamsDto.setS3ObjectTaggerRoleArn(s3ObjectTaggerRoleArn);
+        storagePolicyTransitionParamsDto.setS3ObjectTaggerRoleSessionName(s3ObjectTaggerRoleSessionName);
 
         return storagePolicyTransitionParamsDto;
     }
@@ -306,9 +315,15 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
         // Create an S3 file transfer parameters DTO to access the S3 bucket.
         // Since the S3 key prefix represents a directory, we add a trailing '/' character to it.
         S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = storageHelper.getS3FileTransferRequestParamsDto();
+        s3FileTransferRequestParamsDto.setS3Endpoint(storagePolicyTransitionParamsDto.getS3Endpoint());
         s3FileTransferRequestParamsDto.setS3BucketName(storagePolicyTransitionParamsDto.getS3BucketName());
-        s3FileTransferRequestParamsDto.setS3Endpoint(configurationHelper.getProperty(ConfigurationValue.S3_ENDPOINT));
         s3FileTransferRequestParamsDto.setS3KeyPrefix(StringUtils.appendIfMissing(storagePolicyTransitionParamsDto.getS3KeyPrefix(), "/"));
+
+        // Create an S3 file transfer parameters DTO to be used for S3 object tagging operation.
+        S3FileTransferRequestParamsDto s3ObjectTaggerParamsDto = storageHelper
+            .getS3FileTransferRequestParamsDtoByRole(storagePolicyTransitionParamsDto.getS3ObjectTaggerRoleArn(),
+                storagePolicyTransitionParamsDto.getS3ObjectTaggerRoleSessionName());
+        s3ObjectTaggerParamsDto.setS3Endpoint(storagePolicyTransitionParamsDto.getS3Endpoint());
 
         // Get actual S3 files by selecting all S3 keys matching the S3 key prefix form the S3 bucket.
         // When listing S3 files, we ignore 0 byte objects that represent S3 directories.
@@ -326,7 +341,7 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
         s3FileTransferRequestParamsDto.setFiles(storageFileHelper.getFiles(storageFileHelper.createStorageFilesFromS3ObjectSummaries(actualS3Files)));
 
         // Tag the S3 objects to initiate the archiving.
-        s3Service.tagObjects(s3FileTransferRequestParamsDto,
+        s3Service.tagObjects(s3FileTransferRequestParamsDto, s3ObjectTaggerParamsDto,
             new Tag(storagePolicyTransitionParamsDto.getS3ObjectTagKey(), storagePolicyTransitionParamsDto.getS3ObjectTagValue()));
 
         // Log a list of files tagged in the S3 bucket.

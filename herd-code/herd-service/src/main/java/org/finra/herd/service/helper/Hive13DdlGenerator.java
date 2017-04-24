@@ -849,7 +849,7 @@ public class Hive13DdlGenerator extends DdlGenerator
         // file paths for the relative storage units loaded in a multi-valued map for easy access.
         MultiValuedMap<Integer, String> storageUnitIdToStorageFilePathsMap =
             BooleanUtils.isTrue(generateDdlRequest.suppressScanForUnregisteredSubPartitions) ? new ArrayListValuedHashMap<>() :
-                storageFileDao.getStorageFilePathsByStorageUnits(storageUnitEntities);
+                storageFileDao.getStorageFilePathsByStorageUnitIds(storageUnitHelper.getStorageUnitIds(storageUnitEntities));
 
         // Process all available business object data instances.
         for (StorageUnitEntity storageUnitEntity : storageUnitEntities)

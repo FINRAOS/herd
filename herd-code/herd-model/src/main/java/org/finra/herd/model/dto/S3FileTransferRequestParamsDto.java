@@ -76,16 +76,6 @@ public class S3FileTransferRequestParamsDto extends AwsParamsDto
     private Boolean useRrs;
 
     /**
-     * The S3 access key used for S3 authentication.
-     */
-    private String s3AccessKey;
-
-    /**
-     * The S3 secret key used for S3 authentication.
-     */
-    private String s3SecretKey;
-
-    /**
      * The maximum number of threads to use for file copying.
      */
     private Integer maxThreads;
@@ -173,26 +163,6 @@ public class S3FileTransferRequestParamsDto extends AwsParamsDto
     public void setUseRrs(Boolean useRrs)
     {
         this.useRrs = useRrs;
-    }
-
-    public String getS3AccessKey()
-    {
-        return s3AccessKey;
-    }
-
-    public void setS3AccessKey(String s3AccessKey)
-    {
-        this.s3AccessKey = s3AccessKey;
-    }
-
-    public String getS3SecretKey()
-    {
-        return s3SecretKey;
-    }
-
-    public void setS3SecretKey(String s3SecretKey)
-    {
-        this.s3SecretKey = s3SecretKey;
     }
 
     public Integer getMaxThreads()
@@ -294,15 +264,15 @@ public class S3FileTransferRequestParamsDto extends AwsParamsDto
             return this;
         }
 
-        public Builder s3AccessKey(String s3AccessKey)
+        public Builder awsAccessKeyId(String awsAccessKeyId)
         {
-            params.setS3AccessKey(s3AccessKey);
+            params.setAwsAccessKeyId(awsAccessKeyId);
             return this;
         }
 
-        public Builder s3SecretKey(String s3SecretKey)
+        public Builder awsSecretKey(String awsSecretKey)
         {
-            params.setS3SecretKey(s3SecretKey);
+            params.setAwsSecretKey(awsSecretKey);
             return this;
         }
 
@@ -347,7 +317,7 @@ public class S3FileTransferRequestParamsDto extends AwsParamsDto
             return params;
         }
     }
-    
+
     @Override
     public int hashCode()
     {
@@ -359,11 +329,9 @@ public class S3FileTransferRequestParamsDto extends AwsParamsDto
         result = prime * result + ((kmsKeyId == null) ? 0 : kmsKeyId.hashCode());
         result = prime * result + ((localPath == null) ? 0 : localPath.hashCode());
         result = prime * result + ((maxThreads == null) ? 0 : maxThreads.hashCode());
-        result = prime * result + ((s3AccessKey == null) ? 0 : s3AccessKey.hashCode());
         result = prime * result + ((s3BucketName == null) ? 0 : s3BucketName.hashCode());
         result = prime * result + ((s3Endpoint == null) ? 0 : s3Endpoint.hashCode());
         result = prime * result + ((s3KeyPrefix == null) ? 0 : s3KeyPrefix.hashCode());
-        result = prime * result + ((s3SecretKey == null) ? 0 : s3SecretKey.hashCode());
         result = prime * result + ((socketTimeout == null) ? 0 : socketTimeout.hashCode());
         result = prime * result + ((useRrs == null) ? 0 : useRrs.hashCode());
         return result;
@@ -384,23 +352,12 @@ public class S3FileTransferRequestParamsDto extends AwsParamsDto
         {
             return false;
         }
-           
-        S3FileTransferRequestParamsDto other = (S3FileTransferRequestParamsDto) obj;
-        
-        return new EqualsBuilder()
-        .appendSuper(super.equals(obj))
-        .append(additionalAwsCredentialsProviders, other.additionalAwsCredentialsProviders)
-        .append(files, other.files)
-        .append(localPath, other.localPath)
-        .append(maxThreads, other.maxThreads)
-        .append(s3AccessKey, other.s3AccessKey)
-        .append(s3BucketName, other.s3BucketName)
-        .append(s3Endpoint, other.s3Endpoint)
-        .append(s3KeyPrefix, other.s3KeyPrefix)
-        .append(s3SecretKey, other.s3SecretKey)
-        .append(socketTimeout, other.socketTimeout)
-        .append(useRrs, other.useRrs)
-        .isEquals();
-    }
 
+        S3FileTransferRequestParamsDto other = (S3FileTransferRequestParamsDto) obj;
+
+        return new EqualsBuilder().appendSuper(super.equals(obj)).append(additionalAwsCredentialsProviders, other.additionalAwsCredentialsProviders)
+            .append(files, other.files).append(localPath, other.localPath).append(maxThreads, other.maxThreads).append(s3BucketName, other.s3BucketName)
+            .append(s3Endpoint, other.s3Endpoint).append(s3KeyPrefix, other.s3KeyPrefix).append(socketTimeout, other.socketTimeout).append(useRrs, other.useRrs)
+            .isEquals();
+    }
 }

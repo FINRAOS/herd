@@ -143,7 +143,7 @@ public class IndexSearchRestControllerTest extends AbstractRestTest
     public void testIndexSearch(List<IndexSearchFilter> indexSearchFilters, List<String> facetFields)
     {
         // Create index search request
-        final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM, indexSearchFilters, facetFields);
+        final IndexSearchRequest indexSearchRequest = new IndexSearchRequest(SEARCH_TERM, indexSearchFilters, facetFields, false);
 
         // Create a new fields set that will be used when testing the index search method
         final Set<String> fields = Sets.newHashSet(FIELD_DISPLAY_NAME, FIELD_SHORT_DESCRIPTION);
@@ -157,10 +157,10 @@ public class IndexSearchRestControllerTest extends AbstractRestTest
 
         // Create a new index search results
         final IndexSearchResult indexSearchResultTag =
-            new IndexSearchResult(INDEX_SEARCH_RESULT_TYPE_TAG, indexSearchResultKeyTag, TAG_DISPLAY_NAME, TAG_DESCRIPTION);
+            new IndexSearchResult(INDEX_SEARCH_RESULT_TYPE_TAG, indexSearchResultKeyTag, TAG_DISPLAY_NAME, TAG_DESCRIPTION, null);
         final IndexSearchResult indexSearchResultBusinessObjectDefinition =
             new IndexSearchResult(INDEX_SEARCH_RESULT_TYPE_BUSINESS_OBJECT_DEFINITION, indexSearchResultKeyBusinessObjectDefinition, BDEF_DISPLAY_NAME,
-                BDEF_SHORT_DESCRIPTION);
+                BDEF_SHORT_DESCRIPTION, null);
 
         // Create a list to contain the index search results
         final List<IndexSearchResult> indexSearchResults = new ArrayList<>();
