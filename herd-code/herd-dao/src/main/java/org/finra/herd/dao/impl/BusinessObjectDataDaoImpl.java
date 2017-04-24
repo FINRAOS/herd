@@ -79,6 +79,8 @@ import org.finra.herd.model.jpa.StoragePolicyEntity;
 import org.finra.herd.model.jpa.StoragePolicyEntity_;
 import org.finra.herd.model.jpa.StoragePolicyStatusEntity;
 import org.finra.herd.model.jpa.StoragePolicyStatusEntity_;
+import org.finra.herd.model.jpa.StoragePolicyTransitionTypeEntity;
+import org.finra.herd.model.jpa.StoragePolicyTransitionTypeEntity_;
 import org.finra.herd.model.jpa.StorageUnitEntity;
 import org.finra.herd.model.jpa.StorageUnitEntity_;
 import org.finra.herd.model.jpa.StorageUnitStatusEntity;
@@ -416,75 +418,63 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         CriteriaQuery<Tuple> criteria = builder.createTupleQuery();
 
         // The criteria root is the business object data.
-        Root<BusinessObjectDataEntity> businessObjectDataEntity = criteria.from(BusinessObjectDataEntity.class);
-        Root<StoragePolicyEntity> storagePolicyEntity = criteria.from(StoragePolicyEntity.class);
+        Root<BusinessObjectDataEntity> businessObjectDataEntityRoot = criteria.from(BusinessObjectDataEntity.class);
+        Root<StoragePolicyEntity> storagePolicyEntityRoot = criteria.from(StoragePolicyEntity.class);
 
         // Join to the other tables we can filter on.
-        Join<BusinessObjectDataEntity, StorageUnitEntity> storageUnitEntity = businessObjectDataEntity.join(BusinessObjectDataEntity_.storageUnits);
-        Join<BusinessObjectDataEntity, BusinessObjectDataStatusEntity> businessObjectDataStatusEntity =
-            businessObjectDataEntity.join(BusinessObjectDataEntity_.status);
-        Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> businessObjectFormatEntity =
-            businessObjectDataEntity.join(BusinessObjectDataEntity_.businessObjectFormat);
-        Join<BusinessObjectFormatEntity, FileTypeEntity> fileTypeEntity = businessObjectFormatEntity.join(BusinessObjectFormatEntity_.fileType);
-        Join<BusinessObjectFormatEntity, BusinessObjectDefinitionEntity> businessObjectDefinitionEntity =
-            businessObjectFormatEntity.join(BusinessObjectFormatEntity_.businessObjectDefinition);
-        Join<StoragePolicyEntity, StoragePolicyStatusEntity> storagePolicyStatusEntity = storagePolicyEntity.join(StoragePolicyEntity_.status);
+        Join<BusinessObjectDataEntity, StorageUnitEntity> storageUnitEntityJoin = businessObjectDataEntityRoot.join(BusinessObjectDataEntity_.storageUnits);
+        Join<StorageUnitEntity, StorageUnitStatusEntity> storageUnitStatusEntityJoin = storageUnitEntityJoin.join(StorageUnitEntity_.status);
+        Join<BusinessObjectDataEntity, BusinessObjectDataStatusEntity> businessObjectDataStatusEntityJoin =
+            businessObjectDataEntityRoot.join(BusinessObjectDataEntity_.status);
+        Join<BusinessObjectDataEntity, BusinessObjectFormatEntity> businessObjectFormatEntityJoin =
+            businessObjectDataEntityRoot.join(BusinessObjectDataEntity_.businessObjectFormat);
+        Join<BusinessObjectFormatEntity, FileTypeEntity> fileTypeEntityJoin = businessObjectFormatEntityJoin.join(BusinessObjectFormatEntity_.fileType);
+        Join<BusinessObjectFormatEntity, BusinessObjectDefinitionEntity> businessObjectDefinitionEntityJoin =
+            businessObjectFormatEntityJoin.join(BusinessObjectFormatEntity_.businessObjectDefinition);
+        Join<StoragePolicyEntity, StoragePolicyTransitionTypeEntity> storagePolicyTransitionTypeEntityJoin =
+            storagePolicyEntityRoot.join(StoragePolicyEntity_.storagePolicyTransitionType);
+        Join<StoragePolicyEntity, StoragePolicyStatusEntity> storagePolicyStatusEntityJoin = storagePolicyEntityRoot.join(StoragePolicyEntity_.status);
 
         // Create main query restrictions based on the specified parameters.
         List<Predicate> mainQueryPredicates = new ArrayList<>();
 
         // Add a restriction on business object definition.
         mainQueryPredicates.add(storagePolicyPriorityLevel.isBusinessObjectDefinitionIsNull() ?
-            builder.isNull(storagePolicyEntity.get(StoragePolicyEntity_.businessObjectDefinition)) :
-            builder.equal(businessObjectDefinitionEntity, storagePolicyEntity.get(StoragePolicyEntity_.businessObjectDefinition)));
+            builder.isNull(storagePolicyEntityRoot.get(StoragePolicyEntity_.businessObjectDefinition)) :
+            builder.equal(businessObjectDefinitionEntityJoin, storagePolicyEntityRoot.get(StoragePolicyEntity_.businessObjectDefinition)));
 
         // Add a restriction on business object format usage.
-        mainQueryPredicates.add(storagePolicyPriorityLevel.isUsageIsNull() ? builder.isNull(storagePolicyEntity.get(StoragePolicyEntity_.usage)) : builder
-            .equal(builder.upper(businessObjectFormatEntity.get(BusinessObjectFormatEntity_.usage)),
-                builder.upper(storagePolicyEntity.get(StoragePolicyEntity_.usage))));
+        mainQueryPredicates.add(storagePolicyPriorityLevel.isUsageIsNull() ? builder.isNull(storagePolicyEntityRoot.get(StoragePolicyEntity_.usage)) : builder
+            .equal(builder.upper(businessObjectFormatEntityJoin.get(BusinessObjectFormatEntity_.usage)),
+                builder.upper(storagePolicyEntityRoot.get(StoragePolicyEntity_.usage))));
 
         // Add a restriction on business object format file type.
-        mainQueryPredicates.add(storagePolicyPriorityLevel.isFileTypeIsNull() ? builder.isNull(storagePolicyEntity.get(StoragePolicyEntity_.fileType)) :
-            builder.equal(fileTypeEntity, storagePolicyEntity.get(StoragePolicyEntity_.fileType)));
+        mainQueryPredicates.add(storagePolicyPriorityLevel.isFileTypeIsNull() ? builder.isNull(storagePolicyEntityRoot.get(StoragePolicyEntity_.fileType)) :
+            builder.equal(fileTypeEntityJoin, storagePolicyEntityRoot.get(StoragePolicyEntity_.fileType)));
 
         // Add a restriction on storage policy filter storage.
-        mainQueryPredicates.add(builder.equal(storageUnitEntity.get(StorageUnitEntity_.storage), storagePolicyEntity.get(StoragePolicyEntity_.storage)));
+        mainQueryPredicates
+            .add(builder.equal(storageUnitEntityJoin.get(StorageUnitEntity_.storage), storagePolicyEntityRoot.get(StoragePolicyEntity_.storage)));
 
         // Add a restriction on storage policy latest version flag.
-        mainQueryPredicates.add(builder.isTrue(storagePolicyEntity.get(StoragePolicyEntity_.latestVersion)));
+        mainQueryPredicates.add(builder.isTrue(storagePolicyEntityRoot.get(StoragePolicyEntity_.latestVersion)));
 
         // Add a restriction on storage policy status.
-        mainQueryPredicates.add(builder.equal(storagePolicyStatusEntity.get(StoragePolicyStatusEntity_.code), StoragePolicyStatusEntity.ENABLED));
+        mainQueryPredicates.add(builder.equal(storagePolicyStatusEntityJoin.get(StoragePolicyStatusEntity_.code), StoragePolicyStatusEntity.ENABLED));
 
         // Add a restriction on supported business object data statuses.
-        mainQueryPredicates.add(businessObjectDataStatusEntity.get(BusinessObjectDataStatusEntity_.code).in(supportedBusinessObjectDataStatuses));
+        mainQueryPredicates.add(businessObjectDataStatusEntityJoin.get(BusinessObjectDataStatusEntity_.code).in(supportedBusinessObjectDataStatuses));
 
-        // Build a subquery to eliminate business object data instances that already have storage unit in the storage policy destination storage.
-        Subquery<BusinessObjectDataEntity> subquery = criteria.subquery(BusinessObjectDataEntity.class);
-        Root<BusinessObjectDataEntity> subBusinessObjectDataEntity = subquery.from(BusinessObjectDataEntity.class);
-        subquery.select(subBusinessObjectDataEntity);
-
-        // Join to the other tables we can filter on for the subquery.
-        Join<BusinessObjectDataEntity, StorageUnitEntity> subStorageUnitEntity = subBusinessObjectDataEntity.join(BusinessObjectDataEntity_.storageUnits);
-
-        // Create the subquery restrictions based on the main query and storage policy destination storage.
-        List<Predicate> subQueryPredicates = new ArrayList<>();
-        subQueryPredicates.add(builder.equal(subBusinessObjectDataEntity, businessObjectDataEntity));
-        subQueryPredicates
-            .add(builder.equal(subStorageUnitEntity.get(StorageUnitEntity_.storage), storagePolicyEntity.get(StoragePolicyEntity_.destinationStorage)));
-
-        // Add all clauses to the subquery.
-        subquery.select(subBusinessObjectDataEntity).where(subQueryPredicates.toArray(new Predicate[] {}));
-
-        // Add a main query restriction based on the subquery to eliminate business object data
-        // instances that already have storage unit in the storage policy destination storage.
-        mainQueryPredicates.add(builder.not(builder.exists(subquery)));
+        // Add a restriction as per storage policy transition type.
+        mainQueryPredicates.add(builder
+            .and(builder.equal(storagePolicyTransitionTypeEntityJoin.get(StoragePolicyTransitionTypeEntity_.code), StoragePolicyTransitionTypeEntity.GLACIER),
+                builder.equal(storageUnitStatusEntityJoin.get(StorageUnitStatusEntity_.code), StorageUnitStatusEntity.ENABLED)));
 
         // Order the results by business object data "created on" value.
-        Order orderByCreatedOn = builder.asc(businessObjectDataEntity.get(BusinessObjectDataEntity_.createdOn));
+        Order orderByCreatedOn = builder.asc(businessObjectDataEntityRoot.get(BusinessObjectDataEntity_.createdOn));
 
         // Add the select clause to the main query.
-        criteria.multiselect(businessObjectDataEntity, storagePolicyEntity);
+        criteria.multiselect(businessObjectDataEntityRoot, storagePolicyEntityRoot);
 
         // Add the where clause to the main query.
         criteria.where(mainQueryPredicates.toArray(new Predicate[] {}));
@@ -500,9 +490,9 @@ public class BusinessObjectDataDaoImpl extends AbstractHerdDao implements Busine
         for (Tuple tuple : tuples)
         {
             // Since multiple storage policies can contain identical filters, we add the below check to select each business object data instance only once.
-            if (!result.containsKey(tuple.get(businessObjectDataEntity)))
+            if (!result.containsKey(tuple.get(businessObjectDataEntityRoot)))
             {
-                result.put(tuple.get(businessObjectDataEntity), tuple.get(storagePolicyEntity));
+                result.put(tuple.get(businessObjectDataEntityRoot), tuple.get(storagePolicyEntityRoot));
             }
         }
 

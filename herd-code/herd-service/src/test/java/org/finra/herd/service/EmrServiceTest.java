@@ -29,6 +29,7 @@ import static org.mockito.Mockito.when;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -64,6 +65,7 @@ import org.finra.herd.model.api.xml.EmrClusterCreateRequest;
 import org.finra.herd.model.api.xml.EmrClusterDefinition;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionApplication;
 import org.finra.herd.model.api.xml.EmrClusterDefinitionConfiguration;
+import org.finra.herd.model.api.xml.EmrClusterDefinitionInstanceFleet;
 import org.finra.herd.model.api.xml.EmrHadoopJarStep;
 import org.finra.herd.model.api.xml.EmrHadoopJarStepAddRequest;
 import org.finra.herd.model.api.xml.EmrHiveStepAddRequest;
@@ -74,6 +76,7 @@ import org.finra.herd.model.api.xml.EmrShellStep;
 import org.finra.herd.model.api.xml.EmrShellStepAddRequest;
 import org.finra.herd.model.api.xml.HadoopJarStep;
 import org.finra.herd.model.api.xml.InstanceDefinition;
+import org.finra.herd.model.api.xml.InstanceDefinitions;
 import org.finra.herd.model.api.xml.KeyValuePairConfigurations;
 import org.finra.herd.model.api.xml.NodeTag;
 import org.finra.herd.model.api.xml.Parameter;
@@ -481,16 +484,16 @@ public class EmrServiceTest extends AbstractServiceTest
         configXml = xmlHelper.objectToXml(emrClusterDefinition);
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME, configXml);
 
-        // Try to create a new EMR cluster using EMR cluster definition with missing instance definitions.
+        // Try to create a new EMR cluster using EMR cluster definition with missing both instance definitions and instance fleets.
         EmrClusterCreateRequest request = getNewEmrClusterCreateRequest();
         try
         {
             emrService.createCluster(request);
-            fail("Should throw an IllegalArgumentException when instance definitions are not specified.");
+            fail();
         }
         catch (IllegalArgumentException e)
         {
-            assertEquals("Instance definitions must be specified.", e.getMessage());
+            assertEquals("Instance group definitions or instance fleets must be specified.", e.getMessage());
         }
     }
 
@@ -876,6 +879,90 @@ public class EmrServiceTest extends AbstractServiceTest
     }
 
     @Test
+    public void testCreateEmrClusterOverrideInstanceDefinitionsWithInstanceFleets() throws Exception
+    {
+        // Create the namespace entity.
+        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
+
+        String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
+        EmrClusterDefinition expectedEmrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
+        emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME, definitionXml);
+
+        // Create a new EMR cluster create request that replaces instance definitions with instance fleets.
+        EmrClusterCreateRequest request = getNewEmrClusterCreateRequest();
+        EmrClusterDefinition emrClusterDefinitionOverride = new EmrClusterDefinition();
+        emrClusterDefinitionOverride.setInstanceDefinitions(new InstanceDefinitions());
+        emrClusterDefinitionOverride.setInstanceFleets(Arrays.asList(new EmrClusterDefinitionInstanceFleet()));
+        request.setEmrClusterDefinitionOverride(emrClusterDefinitionOverride);
+
+        // Update the expected EMR cluster definition.
+        expectedEmrClusterDefinition.setInstanceDefinitions(new InstanceDefinitions());
+        expectedEmrClusterDefinition.setInstanceFleets(Arrays.asList(new EmrClusterDefinitionInstanceFleet()));
+
+        // Create the cluster.
+        EmrCluster emrCluster = emrService.createCluster(request);
+
+        // Validate the returned object against the input.
+        assertNotNull(emrCluster);
+        assertTrue(emrCluster.getNamespace().equals(request.getNamespace()));
+        assertTrue(emrCluster.getEmrClusterDefinitionName().equals(request.getEmrClusterDefinitionName()));
+        assertTrue(emrCluster.getEmrClusterName().equals(request.getEmrClusterName()));
+        assertNotNull(emrCluster.getId());
+        assertNull(emrCluster.isDryRun());
+        assertTrue(emrCluster.isEmrClusterCreated());
+        assertNotNull(emrCluster.getEmrClusterDefinition());
+        assertEquals(expectedEmrClusterDefinition, emrCluster.getEmrClusterDefinition());
+
+        validateEmrClusterCreationLogUnique(emrCluster, expectedEmrClusterDefinition);
+    }
+
+    @Test
+    public void testCreateEmrClusterOverrideInstanceFleetsWithInstanceDefinitions() throws Exception
+    {
+        // Create the namespace entity.
+        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
+
+        // Create an EMR cluster definition that uses instance fleets instead of instance definitions.
+        String definitionXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
+        EmrClusterDefinition expectedEmrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, definitionXml);
+        InstanceDefinitions instanceDefinitions = expectedEmrClusterDefinition.getInstanceDefinitions();
+        expectedEmrClusterDefinition.setInstanceDefinitions(null);
+        expectedEmrClusterDefinition.setInstanceFleets(Arrays.asList(new EmrClusterDefinitionInstanceFleet()));
+        emrClusterDefinitionDaoTestHelper
+            .createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME, xmlHelper.objectToXml(expectedEmrClusterDefinition));
+
+        // Update the count of master instances in the instance definitions.
+        instanceDefinitions.getMasterInstances().setInstanceCount(instanceDefinitions.getMasterInstances().getInstanceCount() + 1);
+
+        // Create a new EMR cluster create request that replaces instance fleets with instance definitions.
+        EmrClusterCreateRequest request = getNewEmrClusterCreateRequest();
+        EmrClusterDefinition emrClusterDefinitionOverride = new EmrClusterDefinition();
+        emrClusterDefinitionOverride.setInstanceDefinitions(instanceDefinitions);
+        emrClusterDefinitionOverride.setInstanceFleets(new ArrayList<>());
+        request.setEmrClusterDefinitionOverride(emrClusterDefinitionOverride);
+
+        // Update the expected EMR cluster definition.
+        expectedEmrClusterDefinition.setInstanceDefinitions(instanceDefinitions);
+        expectedEmrClusterDefinition.setInstanceFleets(new ArrayList<>());
+
+        // Create the cluster.
+        EmrCluster emrCluster = emrService.createCluster(request);
+
+        // Validate the returned object against the input.
+        assertNotNull(emrCluster);
+        assertTrue(emrCluster.getNamespace().equals(request.getNamespace()));
+        assertTrue(emrCluster.getEmrClusterDefinitionName().equals(request.getEmrClusterDefinitionName()));
+        assertTrue(emrCluster.getEmrClusterName().equals(request.getEmrClusterName()));
+        assertNotNull(emrCluster.getId());
+        assertNull(emrCluster.isDryRun());
+        assertTrue(emrCluster.isEmrClusterCreated());
+        assertNotNull(emrCluster.getEmrClusterDefinition());
+        assertEquals(expectedEmrClusterDefinition, emrCluster.getEmrClusterDefinition());
+
+        validateEmrClusterCreationLogUnique(emrCluster, expectedEmrClusterDefinition);
+    }
+
+    @Test
     public void testCreateEmrClusterOverrideScalar() throws Exception
     {
         // Create the namespace entity.
@@ -1166,6 +1253,38 @@ public class EmrServiceTest extends AbstractServiceTest
 
         configXml = xmlHelper.objectToXml(emrClusterDefinition);
 
+        emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME, configXml);
+
+        // Create a new EMR cluster create request.
+        EmrClusterCreateRequest request = getNewEmrClusterCreateRequest();
+        EmrCluster emrCluster = emrService.createCluster(request);
+
+        // Validate the returned object against the input.
+        assertNotNull(emrCluster);
+        assertTrue(emrCluster.getNamespace().equals(request.getNamespace()));
+        assertTrue(emrCluster.getEmrClusterDefinitionName().equals(request.getEmrClusterDefinitionName()));
+        assertTrue(emrCluster.getEmrClusterName().equals(request.getEmrClusterName()));
+    }
+
+    /**
+     * This method tests the scenario where instance fleet configuration is specified
+     */
+    @Test
+    public void testCreateEmrClusterWithInstanceFleets() throws Exception
+    {
+        // Create the namespace entity.
+        NamespaceEntity namespaceEntity = namespaceDaoTestHelper.createNamespaceEntity(NAMESPACE);
+
+        // Retrieve the EMR cluster definition.
+        String configXml = IOUtils.toString(resourceLoader.getResource(EMR_CLUSTER_DEFINITION_XML_FILE_WITH_CLASSPATH).getInputStream());
+        EmrClusterDefinition emrClusterDefinition = xmlHelper.unmarshallXmlToObject(EmrClusterDefinition.class, configXml);
+
+        // Update the EMR cluster definition to use instance fleets instead of instance group definitions.
+        emrClusterDefinition.setInstanceFleets(Arrays.asList(new EmrClusterDefinitionInstanceFleet()));
+        emrClusterDefinition.setInstanceDefinitions(null);
+
+        // Create an entity for the the updated EMR cluster definition.
+        configXml = xmlHelper.objectToXml(emrClusterDefinition);
         emrClusterDefinitionDaoTestHelper.createEmrClusterDefinitionEntity(namespaceEntity, EMR_CLUSTER_DEFINITION_NAME, configXml);
 
         // Create a new EMR cluster create request.

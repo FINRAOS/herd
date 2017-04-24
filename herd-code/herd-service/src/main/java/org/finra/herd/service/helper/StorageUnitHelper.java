@@ -233,4 +233,23 @@ public class StorageUnitHelper
 
         return result;
     }
+
+    /**
+     * Creates a list of storage unit ids from a list of storage unit entities.
+     *
+     * @param storageUnitEntities the list of storage unit entities
+     *
+     * @return the list of storage unit ids
+     */
+    public List<Integer> getStorageUnitIds(List<StorageUnitEntity> storageUnitEntities)
+    {
+        List<Integer> storageUnitIds = new ArrayList<>(storageUnitEntities.size());
+
+        for (StorageUnitEntity storageUnitEntity : storageUnitEntities)
+        {
+            storageUnitIds.add(storageUnitEntity.getId());
+        }
+
+        return storageUnitIds;
+    }
 }

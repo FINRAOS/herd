@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang.BooleanUtils;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -247,11 +248,10 @@ public class ElasticsearchHelper
                             AggregationBuilders.terms(TAG_CODE_AGGREGATION).field(BDEF_TAG_CODE_FIELD)
                                 .subAggregation(AggregationBuilders.terms(TAG_NAME_AGGREGATION).field(BDEF_TAG_NAME_FIELD))))));
 
-                searchRequestBuilder.addAggregation(
-                    AggregationBuilders.terms(TAG_TYPE_FACET_AGGS).field(TAGTYPE_CODE_FIELD_TAG_INDEX).subAggregation(
-                        AggregationBuilders.terms(TAGTYPE_NAME_AGGREGATION).field(TAGTYPE_NAME_FIELD_TAG_INDEX).subAggregation(
-                            AggregationBuilders.terms(TAG_CODE_AGGREGATION).field(TAG_CODE_FIELD_TAG_INDEX)
-                                .subAggregation(AggregationBuilders.terms(TAG_NAME_AGGREGATION).field(TAG_NAME_FIELD_TAG_INDEX)))));
+                searchRequestBuilder.addAggregation(AggregationBuilders.terms(TAG_TYPE_FACET_AGGS).field(TAGTYPE_CODE_FIELD_TAG_INDEX).subAggregation(
+                    AggregationBuilders.terms(TAGTYPE_NAME_AGGREGATION).field(TAGTYPE_NAME_FIELD_TAG_INDEX).subAggregation(
+                        AggregationBuilders.terms(TAG_CODE_AGGREGATION).field(TAG_CODE_FIELD_TAG_INDEX)
+                            .subAggregation(AggregationBuilders.terms(TAG_NAME_AGGREGATION).field(TAG_NAME_FIELD_TAG_INDEX)))));
 
             }
             if (facetFieldsList.contains(RESULT_TYPE_FACET))
@@ -275,38 +275,61 @@ public class ElasticsearchHelper
         BoolQueryBuilder compoundBoolQueryBuilder = new BoolQueryBuilder();
         for (IndexSearchFilter indexSearchFilter : indexSearchFilters)
         {
-            BoolQueryBuilder indexSearchFilterClauseBuilder = new BoolQueryBuilder();
+            BoolQueryBuilder indexSearchFilterClauseBuilder = applySearchFilterClause(indexSearchFilter);
 
-            for (IndexSearchKey indexSearchKey : indexSearchFilter.getIndexSearchKeys())
+            // If the search filter is marked with the exclusion flag then apply the entire compound filter clause on the request builder within a MUST NOT
+            // clause.
+            if (BooleanUtils.isTrue(indexSearchFilter.isIsExclusionSearchFilter()))
             {
-                if (null != indexSearchKey.getTagKey())
-                {
-                    // Add constant-score term queries for tagType-code and tag-code from the tag-key.
-                    ConstantScoreQueryBuilder searchKeyQueryBuilder = QueryBuilders.constantScoreQuery(QueryBuilders.boolQuery().should(
-                        QueryBuilders.boolQuery().must(QueryBuilders.termQuery(BDEF_TAGTYPE_CODE_FIELD, indexSearchKey.getTagKey().getTagTypeCode()))
-                            .must(QueryBuilders.termQuery(BDEF_TAG_CODE_FIELD, indexSearchKey.getTagKey().getTagCode()))).should(
-                        QueryBuilders.boolQuery().must(QueryBuilders.termQuery(TAG_TAGTYPE_CODE_FIELD, indexSearchKey.getTagKey().getTagTypeCode()))
-                            .must(QueryBuilders.termQuery(TAG_TAG_CODE_FIELD, indexSearchKey.getTagKey().getTagCode()))));
-
-                    // Individual index search keys are OR-ed
-                    indexSearchFilterClauseBuilder.should(searchKeyQueryBuilder);
-                }
-                if (null != indexSearchKey.getIndexSearchResultTypeKey())
-                {
-                    // Add constant-score term queries for tagType-code and tag-code from the tag-key.
-                    ConstantScoreQueryBuilder searchKeyQueryBuilder = QueryBuilders.constantScoreQuery(QueryBuilders.boolQuery().must(
-                        QueryBuilders.termQuery(RESULT_TYPE_FIELD, indexSearchKey.getIndexSearchResultTypeKey().getIndexSearchResultType().toLowerCase())));
-
-                    // Individual index search keys are OR-ed
-                    indexSearchFilterClauseBuilder.should(searchKeyQueryBuilder);
-                }
+                compoundBoolQueryBuilder.mustNot(indexSearchFilterClauseBuilder);
             }
-
-            // Individual search filters are AND-ed
-            compoundBoolQueryBuilder.must(indexSearchFilterClauseBuilder);
+            else
+            {
+                // Individual search filters are AND-ed (the compound filter clause is applied on the search request builder within a MUST clause)
+                compoundBoolQueryBuilder.must(indexSearchFilterClauseBuilder);
+            }
         }
 
         return compoundBoolQueryBuilder;
+    }
+
+    /**
+     * Resolves the search filters into an Elasticsearch {@link BoolQueryBuilder}
+     *
+     * @param indexSearchFilter the specified search filter
+     *
+     * @return {@link BoolQueryBuilder} the resolved filter query
+     */
+    private BoolQueryBuilder applySearchFilterClause(IndexSearchFilter indexSearchFilter)
+    {
+        BoolQueryBuilder indexSearchFilterClauseBuilder = new BoolQueryBuilder();
+
+        for (IndexSearchKey indexSearchKey : indexSearchFilter.getIndexSearchKeys())
+        {
+            if (null != indexSearchKey.getTagKey())
+            {
+                // Add constant-score term queries for tagType-code and tag-code from the tag-key.
+                ConstantScoreQueryBuilder searchKeyQueryBuilder = QueryBuilders.constantScoreQuery(QueryBuilders.boolQuery().should(
+                    QueryBuilders.boolQuery().must(QueryBuilders.termQuery(BDEF_TAGTYPE_CODE_FIELD, indexSearchKey.getTagKey().getTagTypeCode()))
+                        .must(QueryBuilders.termQuery(BDEF_TAG_CODE_FIELD, indexSearchKey.getTagKey().getTagCode()))).should(
+                    QueryBuilders.boolQuery().must(QueryBuilders.termQuery(TAG_TAGTYPE_CODE_FIELD, indexSearchKey.getTagKey().getTagTypeCode()))
+                        .must(QueryBuilders.termQuery(TAG_TAG_CODE_FIELD, indexSearchKey.getTagKey().getTagCode()))));
+
+                // Individual index search keys are OR-ed
+                indexSearchFilterClauseBuilder.should(searchKeyQueryBuilder);
+            }
+            if (null != indexSearchKey.getIndexSearchResultTypeKey())
+            {
+                // Add constant-score term queries for tagType-code and tag-code from the tag-key.
+                ConstantScoreQueryBuilder searchKeyQueryBuilder = QueryBuilders.constantScoreQuery(QueryBuilders.boolQuery()
+                    .must(QueryBuilders.termQuery(RESULT_TYPE_FIELD, indexSearchKey.getIndexSearchResultTypeKey().getIndexSearchResultType().toLowerCase())));
+
+                // Individual index search keys are OR-ed
+                indexSearchFilterClauseBuilder.should(searchKeyQueryBuilder);
+            }
+        }
+
+        return indexSearchFilterClauseBuilder;
     }
 
     /**
@@ -446,7 +469,7 @@ public class ElasticsearchHelper
     public List<Facet> getFacetsResponse(ElasticsearchResponseDto elasticsearchResponseDto, boolean includingTagInCount)
     {
         List<Facet> facets = new ArrayList<>();
-        
+
         List<Facet> tagTypeFacets = null;
         if (elasticsearchResponseDto.getNestTagTypeIndexSearchResponseDtos() != null)
         {

@@ -207,6 +207,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String DISPLAY_NAME_FIELD = "displayname";
 
+    public static final Double DOUBLE_VALUE = Math.random() * Double.MAX_VALUE;
+
     public static final String DOWNLOADER_ROLE_ARN = "UT_DownloaderRoleArn" + RANDOM_SUFFIX;
 
     public static final String EC2_INSTANCE_ID = "UT_Ec2InstanceId" + RANDOM_SUFFIX;
@@ -232,6 +234,10 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String EMR_CLUSTER_NAME = "UT_EMR_CLUSTER" + RANDOM_SUFFIX;
 
     public static final String ENVIRONMENT_NAME = "TEST";
+
+    public static final String ERROR_CODE = "UT_Error_Code_" + RANDOM_SUFFIX;
+
+    public static final String ERROR_MESSAGE = "UT_Error_Message_" + RANDOM_SUFFIX;
 
     public static final String FIELD_DISPLAY_NAME = "displayName";
 
@@ -261,11 +267,17 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String FORMAT_USAGE_CODE_2 = "UT_Usage_2" + RANDOM_SUFFIX;
 
+    public static final String FORMAT_USAGE_CODE_3 = "UT_Usage_3" + RANDOM_SUFFIX;
+
     public static final Integer FORMAT_VERSION = (int) (Math.random() * Integer.MAX_VALUE);
 
     public static final Integer FORMAT_VERSION_2 = (int) (Math.random() * Integer.MAX_VALUE);
 
     public static final Integer FOURTH_FORMAT_VERSION = 3;
+
+    public static final boolean HIT_HIGHLIGHTING_DISABLED = false;
+
+    public static final boolean HIT_HIGHLIGHTING_ENABLED = true;
 
     public static final String HTTP_PROXY_HOST = "UT_ProxyHost" + RANDOM_SUFFIX;
 
@@ -388,6 +400,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Integer NO_DATA_VERSION = null;
 
+    public static final Boolean NO_EXCLUSION_SEARCH_FILTER = Boolean.FALSE;
+
     public static final String NO_FORMAT_DESCRIPTION = null;
 
     public static final String NO_FORMAT_FILE_TYPE_CODE = null;
@@ -419,6 +433,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final Boolean NO_PUBLISH_ATTRIBUTE = false;
 
     public static final String NO_S3_BUCKET_NAME = null;
+
+    public static final String NO_S3_ENDPOINT = null;
 
     public static final List<SampleDataFile> NO_SAMPLE_DATA_FILES = new ArrayList<>();
 
@@ -485,6 +501,14 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String REASON = "UT_Reason_1_" + RANDOM_SUFFIX;
 
+    public static final String S3_ATTRIBUTE_NAME_BUCKET_NAME = "UT_S3_Attribute_Name_Bucket_Name_" + RANDOM_SUFFIX;
+
+    public static final String S3_ATTRIBUTE_NAME_VALIDATE_FILE_EXISTENCE = "UT_S3_Attribute_Name_Validate_File_Existence_" + RANDOM_SUFFIX;
+
+    public static final String S3_ATTRIBUTE_NAME_VALIDATE_FILE_SIZE = "UT_S3_Attribute_Name_Validate_File_Size_" + RANDOM_SUFFIX;
+
+    public static final String S3_ATTRIBUTE_NAME_VALIDATE_PATH_PREFIX = "UT_S3_Attribute_Name_Validate_Path_Prefix_" + RANDOM_SUFFIX;
+
     public static final String S3_BUCKET_NAME = "UT_S3_Bucket_Name" + RANDOM_SUFFIX;
 
     public static final String S3_BUCKET_NAME_2 = "UT_S3_Bucket_Name2" + RANDOM_SUFFIX;
@@ -495,7 +519,27 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final List<String> S3_DIRECTORY_MARKERS = Arrays.asList("", "folder");
 
+    public static final String S3_ENDPOINT = "UT_S3_Endpoint_" + RANDOM_SUFFIX;
+
+    public static final String S3_KEY = "UT_S3_Key_" + RANDOM_SUFFIX;
+
+    public static final String S3_KEY_PREFIX = "UT_S3_Key_Prefix_" + RANDOM_SUFFIX;
+
+    public static final String S3_OBJECT_TAGGER_ROLE_ARN = "UT_S3_Object_Tagger_Role_Arn_" + RANDOM_SUFFIX;
+
+    public static final String S3_OBJECT_TAGGER_ROLE_SESSION_NAME = "UT_S3_Object_Tagger_Role_Session_Name_" + RANDOM_SUFFIX;
+
+    public static final String S3_OBJECT_TAG_KEY = "UT_S3_Object_Tag_Key_1_" + RANDOM_SUFFIX;
+
+    public static final String S3_OBJECT_TAG_KEY_2 = "UT_S3_Object_Tag_Key_2_" + RANDOM_SUFFIX;
+
+    public static final String S3_OBJECT_TAG_VALUE = "UT_S3_Object_Tag_Value_1_" + RANDOM_SUFFIX;
+
+    public static final String S3_OBJECT_TAG_VALUE_2 = "UT_S3_Object_Tag_Value_2_" + RANDOM_SUFFIX;
+
     public static final Integer S3_RESTORE_OBJECT_EXPIRATION_IN_DAYS = 7;
+
+    public static final String S3_VERSION_ID = "UT_S3_Version_ID_" + RANDOM_SUFFIX;
 
     public static final String[][] SCHEMA_COLUMNS =
         new String[][] {{"TINYINT", null}, {"SMALLINT", null}, {"INT", null}, {"BIGINT", null}, {"FLOAT", null}, {"DOUBLE", null}, {"DECIMAL", null},
@@ -522,11 +566,11 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String SEARCH_INDEX_MAPPING = "UT_SearchIndex_Mapping_" + RANDOM_SUFFIX;
 
-    public static final String SEARCH_INDEX_SETTINGS = "UT_SearchIndex_Settings_" + RANDOM_SUFFIX;
-
     public static final String SEARCH_INDEX_NAME = "UT_SearchIndexName_1_" + RANDOM_SUFFIX;
 
     public static final String SEARCH_INDEX_NAME_2 = "UT_SearchIndexName_2_" + RANDOM_SUFFIX;
+
+    public static final String SEARCH_INDEX_SETTINGS = "UT_SearchIndex_Settings_" + RANDOM_SUFFIX;
 
     public static final String SEARCH_INDEX_STATUS = "UT_SearchIndexStatus_1_" + RANDOM_SUFFIX;
 
@@ -618,6 +662,12 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Integer STORAGE_POLICY_RULE_VALUE_2 = (int) (Math.random() * Integer.MAX_VALUE);
 
+    public static final String STORAGE_POLICY_TRANSITION_TYPE = "UT_Storage_Policy_Transition_Type_1_" + RANDOM_SUFFIX;
+
+    public static final String STORAGE_POLICY_TRANSITION_TYPE_2 = "UT_Storage_Policy_Transition_Type_2_" + RANDOM_SUFFIX;
+
+    public static final Integer STORAGE_POLICY_VERSION = (int) (Math.random() * Integer.MAX_VALUE);
+
     public static final String STORAGE_UNIT_STATUS = "UT_SU_Status_1_" + RANDOM_SUFFIX;
 
     public static final String STORAGE_UNIT_STATUS_2 = "UT_SU_Status_2_" + RANDOM_SUFFIX;
@@ -629,6 +679,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final Boolean STORAGE_UNIT_STATUS_AVAILABLE_FLAG_SET = true;
 
     public static final String STRING_VALUE = "UT_SomeText" + RANDOM_SUFFIX;
+
+    public static final String STRING_VALUE_2 = "UT_SomeText_2_" + RANDOM_SUFFIX;
 
     public static final List<String> SUBPARTITION_VALUES =
         Arrays.asList("Aa" + RANDOM_SUFFIX, "Bb" + RANDOM_SUFFIX, "Cc" + RANDOM_SUFFIX, "Dd" + RANDOM_SUFFIX);
@@ -978,6 +1030,12 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     @Autowired
     protected StoragePolicyStatusDao storagePolicyStatusDao;
+
+    @Autowired
+    protected StoragePolicyTransitionTypeDao storagePolicyTransitionTypeDao;
+
+    @Autowired
+    protected StoragePolicyTransitionTypeDaoTestHelper storagePolicyTransitionTypeDaoTestHelper;
 
     @Autowired
     protected StorageUnitDao storageUnitDao;

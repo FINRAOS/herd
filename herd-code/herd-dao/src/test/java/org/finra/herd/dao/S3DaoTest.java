@@ -57,6 +57,8 @@ import com.amazonaws.services.s3.model.AbortMultipartUploadRequest;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.DeleteObjectsRequest.KeyVersion;
 import com.amazonaws.services.s3.model.DeleteObjectsResult.DeletedObject;
+import com.amazonaws.services.s3.model.GetObjectTaggingRequest;
+import com.amazonaws.services.s3.model.GetObjectTaggingResult;
 import com.amazonaws.services.s3.model.ListMultipartUploadsRequest;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.ListVersionsRequest;
@@ -66,12 +68,14 @@ import com.amazonaws.services.s3.model.MultipartUpload;
 import com.amazonaws.services.s3.model.MultipartUploadListing;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.ObjectTagging;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.PutObjectResult;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.services.s3.model.S3VersionSummary;
 import com.amazonaws.services.s3.model.StorageClass;
+import com.amazonaws.services.s3.model.Tag;
 import com.amazonaws.services.s3.model.VersionListing;
 import com.amazonaws.services.s3.transfer.Copy;
 import com.amazonaws.services.s3.transfer.Transfer;
@@ -333,7 +337,7 @@ public class S3DaoTest extends AbstractDaoTest
         catch (IllegalStateException e)
         {
             assertEquals(String.format("Failed to initiate a restore request for \"%s\" key in \"%s\" bucket. " +
-                "Reason: InternalError (Service: null; Status Code: 0; Error Code: null; Request ID: null)", testKey,
+                "Reason: InternalError (Service: null; Status Code: 0; Error Code: InternalError; Request ID: null)", testKey,
                 storageDaoTestHelper.getS3ManagedBucketName()), e.getMessage());
         }
     }
@@ -496,7 +500,7 @@ public class S3DaoTest extends AbstractDaoTest
         catch (IllegalStateException e)
         {
             assertEquals(String.format("Fail to check restore status for \"%s\" key in \"%s\" bucket. " +
-                "Reason: InternalError (Service: null; Status Code: 0; Error Code: null; Request ID: null)", testKey,
+                "Reason: InternalError (Service: null; Status Code: 0; Error Code: InternalError; Request ID: null)", testKey,
                 storageDaoTestHelper.getS3ManagedBucketName()), e.getMessage());
         }
     }
@@ -519,9 +523,9 @@ public class S3DaoTest extends AbstractDaoTest
         }
         catch (IllegalStateException e)
         {
-            assertEquals("Failed to get S3 metadata for object key \"" + TARGET_S3_KEY +
-                "\" from bucket \"MOCK_S3_BUCKET_NAME_ACCESS_DENIED\". Reason: AccessDenied (Service: null; Status Code: 403; Error Code: null; Request " +
-                "ID: null)", e.getMessage());
+            assertEquals(String.format("Failed to get S3 metadata for object key \"%s\" from bucket \"%s\". " +
+                "Reason: AccessDenied (Service: null; Status Code: 403; Error Code: AccessDenied; Request ID: null)", TARGET_S3_KEY,
+                MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_ACCESS_DENIED), e.getMessage());
         }
     }
 
@@ -571,8 +575,8 @@ public class S3DaoTest extends AbstractDaoTest
         catch (IllegalStateException e)
         {
             assertEquals(String.format("Failed to get S3 metadata for object key \"%s\" from bucket \"%s\". " +
-                "Reason: InternalError (Service: null; Status Code: 0; Error Code: null; Request ID: null)", s3FileTransferRequestParamsDto.getS3KeyPrefix(),
-                s3FileTransferRequestParamsDto.getS3BucketName()), e.getMessage());
+                "Reason: InternalError (Service: null; Status Code: 0; Error Code: InternalError; Request ID: null)",
+                s3FileTransferRequestParamsDto.getS3KeyPrefix(), s3FileTransferRequestParamsDto.getS3BucketName()), e.getMessage());
         }
     }
 
@@ -604,9 +608,9 @@ public class S3DaoTest extends AbstractDaoTest
         }
         catch (IllegalStateException e)
         {
-            assertEquals("Failed to get S3 metadata for object key \"" + TARGET_S3_KEY +
-                "\" from bucket \"MOCK_S3_BUCKET_NAME_ACCESS_DENIED\". Reason: AccessDenied (Service: null; Status Code: 403; Error Code: null; Request " +
-                "ID: null)", e.getMessage());
+            assertEquals(String.format("Failed to get S3 metadata for object key \"%s\" from bucket \"%s\". " +
+                "Reason: AccessDenied (Service: null; Status Code: 403; Error Code: AccessDenied; Request ID: null)", TARGET_S3_KEY,
+                MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_ACCESS_DENIED), e.getMessage());
         }
     }
 
@@ -700,6 +704,99 @@ public class S3DaoTest extends AbstractDaoTest
         catch (Exception e)
         {
             Assert.assertEquals("thrown exception type", AmazonServiceException.class, e.getClass());
+        }
+    }
+
+    @Test
+    public void testTagObjects()
+    {
+        // Create an S3 object tag.
+        Tag tag = new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE);
+
+        // Put a file in S3.
+        s3Operations.putObject(new PutObjectRequest(S3_BUCKET_NAME, TARGET_S3_KEY, new ByteArrayInputStream(new byte[1]), new ObjectMetadata()), null);
+
+        // Tag the file with an S3 object tag.
+        S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
+        params.setS3BucketName(S3_BUCKET_NAME);
+        params.setFiles(Arrays.asList(new File(TARGET_S3_KEY)));
+        s3Dao.tagObjects(params, new S3FileTransferRequestParamsDto(), tag);
+
+        // Validate that the object got tagged.
+        GetObjectTaggingResult getObjectTaggingResult = s3Operations.getObjectTagging(new GetObjectTaggingRequest(S3_BUCKET_NAME, TARGET_S3_KEY), null);
+        assertEquals(Arrays.asList(tag), getObjectTaggingResult.getTagSet());
+    }
+
+    @Test
+    public void testTagObjectsTargetTagKeyAlreadyExists()
+    {
+        // Create two S3 object tags having the same tag key.
+        List<Tag> tags = Arrays.asList(new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE), new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE_2));
+
+        // Put a file in S3 that is already tagged with the first S3 object tag.
+        PutObjectRequest putObjectRequest = new PutObjectRequest(S3_BUCKET_NAME, TARGET_S3_KEY, new ByteArrayInputStream(new byte[1]), new ObjectMetadata());
+        putObjectRequest.setTagging(new ObjectTagging(Arrays.asList(tags.get(0))));
+        s3Operations.putObject(putObjectRequest, null);
+
+        // Validate that the S3 object is tagged with the first tag.
+        GetObjectTaggingResult getObjectTaggingResult = s3Operations.getObjectTagging(new GetObjectTaggingRequest(S3_BUCKET_NAME, TARGET_S3_KEY), null);
+        assertEquals(Arrays.asList(tags.get(0)), getObjectTaggingResult.getTagSet());
+
+        // Tag the S3 file with the second S3 object tag.
+        S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
+        params.setS3BucketName(S3_BUCKET_NAME);
+        params.setFiles(Arrays.asList(new File(TARGET_S3_KEY)));
+        s3Dao.tagObjects(params, new S3FileTransferRequestParamsDto(), tags.get(1));
+
+        // Validate that the S3 object is tagged with the second tag now.
+        getObjectTaggingResult = s3Operations.getObjectTagging(new GetObjectTaggingRequest(S3_BUCKET_NAME, TARGET_S3_KEY), null);
+        assertEquals(Arrays.asList(tags.get(1)), getObjectTaggingResult.getTagSet());
+    }
+
+    @Test
+    public void testTagObjectsOtherTagKeyAlreadyExists()
+    {
+        // Create two S3 object tags having different tag keys.
+        List<Tag> tags = Arrays.asList(new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE), new Tag(S3_OBJECT_TAG_KEY_2, S3_OBJECT_TAG_VALUE_2));
+
+        // Put a file in S3 that is already tagged with the first S3 object tag.
+        PutObjectRequest putObjectRequest = new PutObjectRequest(S3_BUCKET_NAME, TARGET_S3_KEY, new ByteArrayInputStream(new byte[1]), new ObjectMetadata());
+        putObjectRequest.setTagging(new ObjectTagging(Arrays.asList(tags.get(0))));
+        s3Operations.putObject(putObjectRequest, null);
+
+        // Validate that the S3 object is tagged with the first tag only.
+        GetObjectTaggingResult getObjectTaggingResult = s3Operations.getObjectTagging(new GetObjectTaggingRequest(S3_BUCKET_NAME, TARGET_S3_KEY), null);
+        assertEquals(Arrays.asList(tags.get(0)), getObjectTaggingResult.getTagSet());
+
+        // Tag the S3 file with the second S3 object tag.
+        S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
+        params.setS3BucketName(S3_BUCKET_NAME);
+        params.setFiles(Arrays.asList(new File(TARGET_S3_KEY)));
+        s3Dao.tagObjects(params, new S3FileTransferRequestParamsDto(), tags.get(1));
+
+        // Validate that the S3 object is now tagged with both tags.
+        getObjectTaggingResult = s3Operations.getObjectTagging(new GetObjectTaggingRequest(S3_BUCKET_NAME, TARGET_S3_KEY), null);
+        assertEquals(tags.size(), getObjectTaggingResult.getTagSet().size());
+        assertTrue(getObjectTaggingResult.getTagSet().containsAll(tags));
+    }
+
+    @Test
+    public void testTagObjectsAmazonServiceException()
+    {
+        // Try to retrieve S3 object metadata when AmazonServiceException is expected tpo be thrown..
+        try
+        {
+            S3FileTransferRequestParamsDto params = new S3FileTransferRequestParamsDto();
+            params.setS3BucketName(MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_INTERNAL_ERROR);
+            params.setFiles(Arrays.asList(new File(TARGET_S3_KEY)));
+            s3Dao.tagObjects(params, new S3FileTransferRequestParamsDto(), new Tag(S3_OBJECT_TAG_KEY, S3_OBJECT_TAG_VALUE));
+            fail();
+        }
+        catch (IllegalStateException e)
+        {
+            assertEquals(String.format("Failed to tag S3 object with \"%s\" key in \"%s\" bucket. " +
+                "Reason: InternalError (Service: null; Status Code: 0; Error Code: InternalError; Request ID: null)", TARGET_S3_KEY,
+                MockS3OperationsImpl.MOCK_S3_BUCKET_NAME_INTERNAL_ERROR), e.getMessage());
         }
     }
 
@@ -873,6 +970,31 @@ public class S3DaoTest extends AbstractDaoTest
     @Test
     public void testUploadFileList() throws IOException, InterruptedException
     {
+        runUploadFileListTest();
+    }
+
+    /**
+     * Test that we are able to perform the uploadFileList S3Dao operation on S3 using our DAO tier with logger level set to INFO.
+     */
+    @Test
+    public void testUploadFileListWithLoggerLevelSetToInfo() throws IOException, InterruptedException
+    {
+        String loggerName = S3DaoImpl.class.getName();
+        LogLevel origLoggerLevel = getLogLevel(loggerName);
+        setLogLevel(loggerName, LogLevel.INFO);
+
+        try
+        {
+            runUploadFileListTest();
+        }
+        finally
+        {
+            setLogLevel(loggerName, origLoggerLevel);
+        }
+    }
+
+    private void runUploadFileListTest() throws IOException, InterruptedException
+    {
         // Create local test files.
         for (String file : LOCAL_FILES)
         {
@@ -901,26 +1023,6 @@ public class S3DaoTest extends AbstractDaoTest
 
         // Validate the upload.
         s3DaoTestHelper.validateS3FileUpload(s3FileTransferRequestParamsDto, expectedKeys);
-    }
-
-    /**
-     * Test that we are able to perform the uploadFileList S3Dao operation with logger level set to ... on S3 using our DAO tier.
-     */
-    @Test
-    public void testUploadFileListWithLoggerLevelSetToWarn() throws IOException, InterruptedException
-    {
-        String loggerName = S3DaoImpl.class.getName();
-        LogLevel origLoggerLevel = getLogLevel(loggerName);
-        setLogLevel(loggerName, LogLevel.WARN);
-
-        try
-        {
-            testUploadFileList();
-        }
-        finally
-        {
-            setLogLevel(loggerName, origLoggerLevel);
-        }
     }
 
     /**
@@ -2472,8 +2574,8 @@ public class S3DaoTest extends AbstractDaoTest
             S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
             s3FileTransferRequestParamsDto.setS3BucketName(s3BucketName);
             s3FileTransferRequestParamsDto.setS3KeyPrefix(s3KeyPrefix);
-            s3FileTransferRequestParamsDto.setS3AccessKey(s3AccessKey);
-            s3FileTransferRequestParamsDto.setS3SecretKey(s3SecretKey);
+            s3FileTransferRequestParamsDto.setAwsAccessKeyId(s3AccessKey);
+            s3FileTransferRequestParamsDto.setAwsSecretKey(s3SecretKey);
 
             when(mockS3Operations.putObject(any(), any())).then(new Answer<PutObjectResult>()
             {
@@ -2523,8 +2625,8 @@ public class S3DaoTest extends AbstractDaoTest
             S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
             s3FileTransferRequestParamsDto.setS3BucketName(s3BucketName);
             s3FileTransferRequestParamsDto.setS3KeyPrefix(s3KeyPrefix);
-            s3FileTransferRequestParamsDto.setS3AccessKey(s3AccessKey);
-            s3FileTransferRequestParamsDto.setS3SecretKey(s3SecretKey);
+            s3FileTransferRequestParamsDto.setAwsAccessKeyId(s3AccessKey);
+            s3FileTransferRequestParamsDto.setAwsSecretKey(s3SecretKey);
 
             when(mockS3Operations.putObject(any(), any())).then(new Answer<PutObjectResult>()
             {
@@ -2568,8 +2670,8 @@ public class S3DaoTest extends AbstractDaoTest
             S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto = new S3FileTransferRequestParamsDto();
             s3FileTransferRequestParamsDto.setS3BucketName(s3BucketName);
             s3FileTransferRequestParamsDto.setS3KeyPrefix(s3KeyPrefix);
-            s3FileTransferRequestParamsDto.setS3AccessKey(s3AccessKey);
-            s3FileTransferRequestParamsDto.setS3SecretKey(s3SecretKey);
+            s3FileTransferRequestParamsDto.setAwsAccessKeyId(s3AccessKey);
+            s3FileTransferRequestParamsDto.setAwsSecretKey(s3SecretKey);
 
             when(mockS3Operations.putObject(any(), any())).then(new Answer<PutObjectResult>()
             {

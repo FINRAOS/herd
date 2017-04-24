@@ -88,6 +88,7 @@ public class BusinessObjectDefinitionEntity extends AuditableEntity
     @OrderBy("tag_id")
     private Collection<BusinessObjectDefinitionTagEntity> businessObjectDefinitionTags;
 
+    @JsonManagedReference(value = "businessObjectDefinition-descriptiveBusinessObjectFormat")
     @ManyToOne
     @JoinColumn(name = "desc_bus_objct_frmt_id", referencedColumnName = "bus_objct_frmt_id", nullable = true)
     private BusinessObjectFormatEntity descriptiveBusinessObjectFormat;

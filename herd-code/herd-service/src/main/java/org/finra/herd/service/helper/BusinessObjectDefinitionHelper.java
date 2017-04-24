@@ -76,6 +76,7 @@ public class BusinessObjectDefinitionHelper
             businessObjectDefinitionEntity.getBusinessObjectFormats().size();
             businessObjectDefinitionEntity.getColumns().size();
             businessObjectDefinitionEntity.getSampleDataFiles().size();
+            businessObjectDefinitionEntity.getSubjectMatterExperts().size();
 
             // Convert the business object definition entity to a JSON string
             final String jsonString = safeObjectMapperWriteValueAsString(businessObjectDefinitionEntity);
@@ -126,7 +127,7 @@ public class BusinessObjectDefinitionHelper
      *
      * @return the JSON string value of the business object definition entity
      */
-    private String safeObjectMapperWriteValueAsString(final BusinessObjectDefinitionEntity businessObjectDefinitionEntity)
+    public String safeObjectMapperWriteValueAsString(final BusinessObjectDefinitionEntity businessObjectDefinitionEntity)
     {
         String jsonString = "";
 

@@ -49,7 +49,6 @@ import org.finra.herd.core.HerdStringUtils;
 import org.finra.herd.core.helper.ConfigurationHelper;
 import org.finra.herd.dao.BusinessObjectDefinitionDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
-import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.annotation.NamespacePermission;
 import org.finra.herd.model.annotation.PublishJmsMessages;
@@ -139,9 +138,6 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
 
     @Autowired
     private ConfigurationHelper configurationHelper;
-
-    @Autowired
-    private JsonHelper jsonHelper;
 
     @Autowired
     private SearchFunctions searchFunctions;
@@ -320,7 +316,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
             businessObjectDefinitionEntity.getSampleDataFiles().size();
 
             // Convert the business object definition entity to a JSON string
-            final String jsonString = safeObjectMapperWriteValueAsString(businessObjectDefinitionEntity);
+            final String jsonString = businessObjectDefinitionHelper.safeObjectMapperWriteValueAsString(businessObjectDefinitionEntity);
 
             return searchFunctions.getIsValidFunction().test(indexName, documentType, businessObjectDefinitionEntity.getId().toString(), jsonString);
         };
@@ -337,31 +333,6 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
         return isValid;
     }
 
-    /**
-     * Wrapper method that will safely call the object mapper write value as string method and handle the JsonProcessingException. This wrapper is needed so
-     * that we can do the object mapping within a Java stream.
-     *
-     * @param businessObjectDefinitionEntity the entity to convert to JSON
-     *
-     * @return JSON string value of the object
-     */
-    private String safeObjectMapperWriteValueAsString(final BusinessObjectDefinitionEntity businessObjectDefinitionEntity)
-    {
-        String jsonString = "";
-
-        try
-        {
-            // Convert the business object definition entity to a JSON string
-            jsonString = jsonHelper.objectToJson(businessObjectDefinitionEntity);
-        }
-        catch (IllegalStateException illegalStateException)
-        {
-            LOGGER.warn("Could not parse BusinessObjectDefinitionEntity id={" + businessObjectDefinitionEntity.getId() + "} into JSON string. ",
-                illegalStateException);
-        }
-
-        return jsonString;
-    }
 
     @PublishJmsMessages
     @NamespacePermission(fields = "#businessObjectDefinitionKey.namespace", permissions = NamespacePermissionEnum.WRITE)
@@ -1120,7 +1091,7 @@ public class BusinessObjectDefinitionServiceImpl implements BusinessObjectDefini
             businessObjectDefinitionEntity.getColumns().size();
             businessObjectDefinitionEntity.getSampleDataFiles().size();
 
-            String jsonString = safeObjectMapperWriteValueAsString(businessObjectDefinitionEntity);
+            String jsonString = businessObjectDefinitionHelper.safeObjectMapperWriteValueAsString(businessObjectDefinitionEntity);
 
             if (StringUtils.isNotEmpty(jsonString))
             {

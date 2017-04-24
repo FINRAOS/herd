@@ -15,6 +15,7 @@
 */
 package org.finra.herd.core.helper;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -180,5 +181,37 @@ public class ConfigurationHelper
 
         // Return the boolean value.
         return (Boolean) customBooleanEditor.getValue();
+    }
+
+    /**
+     * Gets a property value and validates that it is not blank or null.
+     *
+     * @param configurationValue {@link ConfigurationValue}
+     *
+     * @return the string value
+     */
+    public String getRequiredProperty(ConfigurationValue configurationValue)
+    {
+        return getRequiredProperty(configurationValue, environment);
+    }
+
+    /**
+     * Gets a property value and validates that it is not blank or null.
+     *
+     * @param configurationValue {@link ConfigurationValue}
+     * @param environment the environment containing the property
+     *
+     * @return the string value
+     */
+    public String getRequiredProperty(ConfigurationValue configurationValue, Environment environment)
+    {
+        String property = getProperty(configurationValue, String.class, environment);
+
+        if (StringUtils.isBlank(property))
+        {
+            throw new IllegalStateException(String.format("Configuration \"%s\" must have a value.", configurationValue.getKey()));
+        }
+
+        return property;
     }
 }

@@ -58,6 +58,9 @@ public class StorageFileEntity extends AuditableEntity
     @JoinColumn(name = "strge_unit_id", referencedColumnName = "strge_unit_id", nullable = false)
     private StorageUnitEntity storageUnit;
 
+    @Column(name = "strge_unit_id", insertable = false, updatable = false)
+    private Integer storageUnitId;
+
     public Integer getId()
     {
         return id;
@@ -106,5 +109,15 @@ public class StorageFileEntity extends AuditableEntity
     public void setStorageUnit(StorageUnitEntity storageUnit)
     {
         this.storageUnit = storageUnit;
+    }
+
+    public Integer getStorageUnitId()
+    {
+        return storageUnitId;
+    }
+
+    public void setStorageUnitId(Integer storageUnitId)
+    {
+        this.storageUnitId = storageUnitId;
     }
 }

@@ -130,6 +130,10 @@ public class ExampleXmlGenerator
             {
                 instance = BigDecimal.ZERO;
             }
+            else if (Double.class.isAssignableFrom(clazz))
+            {
+                instance = 0.0;
+            }
             else if (XMLGregorianCalendar.class.isAssignableFrom(clazz))
             {
                 DatatypeFactory datatypeFactory = DatatypeFactory.newInstance();
