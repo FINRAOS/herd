@@ -298,10 +298,10 @@ public class UploadDownloadHelperServiceImpl implements UploadDownloadHelperServ
 
     @PublishJmsMessages
     @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void executeFileMoveAfterSteps(CompleteUploadSingleParamsDto completeUploadSingleParamsDto)
     {
         executeFileMoveAfterStepsImpl(completeUploadSingleParamsDto);
+        deleteSourceFileFromS3(completeUploadSingleParamsDto);
     }
 
     /**
@@ -310,6 +310,7 @@ public class UploadDownloadHelperServiceImpl implements UploadDownloadHelperServ
      *
      * @param completeUploadSingleParamsDto the DTO that contains complete upload single message parameters
      */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void executeFileMoveAfterStepsImpl(CompleteUploadSingleParamsDto completeUploadSingleParamsDto)
     {
         try
@@ -343,26 +344,7 @@ public class UploadDownloadHelperServiceImpl implements UploadDownloadHelperServ
             // Could not update target business object data status, so set the new target status to null to reflect that no change happened.
             completeUploadSingleParamsDto.setTargetNewStatus(null);
         }
-
-        try
-        {
-            // Delete the source file from S3.
-            S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto =
-                S3FileTransferRequestParamsDto.builder().s3BucketName(completeUploadSingleParamsDto.getSourceBucketName())
-                    .s3KeyPrefix(completeUploadSingleParamsDto.getSourceFilePath())
-                    .httpProxyHost(completeUploadSingleParamsDto.getAwsParams().getHttpProxyHost())
-                    .httpProxyPort(completeUploadSingleParamsDto.getAwsParams().getHttpProxyPort()).build();
-
-            s3Dao.deleteDirectory(s3FileTransferRequestParamsDto);
-        }
-        catch (Exception e)
-        {
-            // Log the error if failed to delete the file from source S3 bucket.
-            LOGGER.error("Failed to delete the upload single file. s3Key=\"{}\" sourceS3BucketName=\"{}\" sourceBusinessObjectDataKey={}",
-                completeUploadSingleParamsDto.getSourceFilePath(), completeUploadSingleParamsDto.getSourceBucketName(),
-                jsonHelper.objectToJson(completeUploadSingleParamsDto.getSourceBusinessObjectDataKey()), e);
-        }
-
+        
         try
         {
             // Update the status of the source business object data to deleted.
@@ -397,6 +379,33 @@ public class UploadDownloadHelperServiceImpl implements UploadDownloadHelperServ
             notificationEventService.processBusinessObjectDataNotificationEventAsync(NotificationEventTypeEntity.EventTypesBdata.BUS_OBJCT_DATA_STTS_CHG,
                 completeUploadSingleParamsDto.getTargetBusinessObjectDataKey(), completeUploadSingleParamsDto.getTargetNewStatus(),
                 completeUploadSingleParamsDto.getTargetOldStatus());
+        }
+    }
+
+    /**
+     * delete the source file from S3
+     * 
+     * @param completeUploadSingleParamsDto  completeUploadSingleParamsDto
+     */
+    protected void deleteSourceFileFromS3(CompleteUploadSingleParamsDto completeUploadSingleParamsDto)
+    {
+        try
+        {
+            // Delete the source file from S3.
+            S3FileTransferRequestParamsDto s3FileTransferRequestParamsDto =
+                S3FileTransferRequestParamsDto.builder().s3BucketName(completeUploadSingleParamsDto.getSourceBucketName())
+                    .s3KeyPrefix(completeUploadSingleParamsDto.getSourceFilePath())
+                    .httpProxyHost(completeUploadSingleParamsDto.getAwsParams().getHttpProxyHost())
+                    .httpProxyPort(completeUploadSingleParamsDto.getAwsParams().getHttpProxyPort()).build();
+
+            s3Dao.deleteDirectory(s3FileTransferRequestParamsDto);
+        }
+        catch (Exception e)
+        {
+            // Log the error if failed to delete the file from source S3 bucket.
+            LOGGER.error("Failed to delete the upload single file. s3Key=\"{}\" sourceS3BucketName=\"{}\" sourceBusinessObjectDataKey={}",
+                completeUploadSingleParamsDto.getSourceFilePath(), completeUploadSingleParamsDto.getSourceBucketName(),
+                jsonHelper.objectToJson(completeUploadSingleParamsDto.getSourceBusinessObjectDataKey()), e);
         }
     }
 
