@@ -62,7 +62,7 @@ public class TestUploadDownloadHelperServiceImpl extends UploadDownloadHelperSer
      */
     @PublishJmsMessages
     @Override
-    public void executeFileMoveAfterStepsImpl(CompleteUploadSingleParamsDto completeUploadSingleParamsDto)
+    public void executeFileMoveAfterSteps(CompleteUploadSingleParamsDto completeUploadSingleParamsDto)
     {
         executeFileMoveAfterStepsImpl(completeUploadSingleParamsDto);
     }

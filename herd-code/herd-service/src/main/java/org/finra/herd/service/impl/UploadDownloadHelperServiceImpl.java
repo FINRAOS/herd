@@ -298,10 +298,10 @@ public class UploadDownloadHelperServiceImpl implements UploadDownloadHelperServ
 
     @PublishJmsMessages
     @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void executeFileMoveAfterSteps(CompleteUploadSingleParamsDto completeUploadSingleParamsDto)
     {
         executeFileMoveAfterStepsImpl(completeUploadSingleParamsDto);
-        deleteSourceFileFromS3(completeUploadSingleParamsDto);
     }
 
     /**
@@ -310,7 +310,6 @@ public class UploadDownloadHelperServiceImpl implements UploadDownloadHelperServ
      *
      * @param completeUploadSingleParamsDto the DTO that contains complete upload single message parameters
      */
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void executeFileMoveAfterStepsImpl(CompleteUploadSingleParamsDto completeUploadSingleParamsDto)
     {
         try
@@ -383,11 +382,12 @@ public class UploadDownloadHelperServiceImpl implements UploadDownloadHelperServ
     }
 
     /**
-     * delete the source file from S3
+     * Delete the source file from S3
      * 
-     * @param completeUploadSingleParamsDto  completeUploadSingleParamsDto
+     * @param completeUploadSingleParamsDto  the DTO that contains complete upload single message parameters
      */
-    protected void deleteSourceFileFromS3(CompleteUploadSingleParamsDto completeUploadSingleParamsDto)
+    @Override
+    public void deleteSourceFileFromS3(CompleteUploadSingleParamsDto completeUploadSingleParamsDto)
     {
         try
         {

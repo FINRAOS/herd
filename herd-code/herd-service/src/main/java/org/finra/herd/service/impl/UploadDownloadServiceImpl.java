@@ -393,6 +393,9 @@ public class UploadDownloadServiceImpl implements UploadDownloadService
             // Execute the steps required to complete the processing of the complete upload single message.
             uploadDownloadHelperService.executeFileMoveAfterSteps(completeUploadSingleParamsDto);
 
+            // Delete the source file from the S3
+            uploadDownloadHelperService.deleteSourceFileFromS3(completeUploadSingleParamsDto);
+
             // Update the result message.
             completeUploadSingleMessageResult.setSourceNewBusinessObjectDataStatus(completeUploadSingleParamsDto.getSourceNewStatus());
             completeUploadSingleMessageResult.setTargetNewBusinessObjectDataStatus(completeUploadSingleParamsDto.getTargetNewStatus());
