@@ -1,0 +1,116 @@
+package org.finra.herd.service.impl;
+
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
+
+import org.finra.herd.dao.AttributeValueListDao;
+import org.finra.herd.dao.config.DaoSpringModuleConfig;
+import org.finra.herd.model.AlreadyExistsException;
+import org.finra.herd.model.annotation.NamespacePermission;
+import org.finra.herd.model.api.xml.AttributeValueListCreateRequest;
+import org.finra.herd.model.api.xml.AttributeValueListKey;
+import org.finra.herd.model.api.xml.AttributeValueListKeys;
+import org.finra.herd.model.api.xml.NamespacePermissionEnum;
+import org.finra.herd.model.jpa.AttributeValueListEntity;
+import org.finra.herd.service.AttributeValueListService;
+import org.finra.herd.service.helper.AlternateKeyHelper;
+import org.finra.herd.service.helper.AttributeValueListHelper;
+
+
+/**
+ * The attribute value list service implementation.
+ */
+@Service
+@Transactional(value = DaoSpringModuleConfig.HERD_TRANSACTION_MANAGER_BEAN_NAME)
+public class AttributeValueListServiceImpl implements AttributeValueListService
+{
+    private static final Logger LOGGER = LoggerFactory.getLogger(AttributeValueListServiceImpl.class);
+
+    @Autowired
+    private AlternateKeyHelper alternateKeyHelper;
+
+    @Autowired
+    private AttributeValueListDao attributeValueListDao;
+
+    @Autowired
+    private AttributeValueListHelper attributeValueListHelper;
+
+    @NamespacePermission(fields = "#request.namespace", permissions = NamespacePermissionEnum.WRITE)
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public AttributeValueListEntity createAttributeValueList(AttributeValueListCreateRequest attributeValueListCreateRequest)
+    {
+        // Validate and trim the request parameters.
+        validateAttributeValueListCreateRequest(attributeValueListCreateRequest);
+
+        // Validate the tag type does not already exist in the database.
+        if (attributeValueListDao.getAttributeValueListByKey(attributeValueListCreateRequest.getAttributeValueListKey()) != null)
+        {
+            throw new AlreadyExistsException(
+                String.format("Unable to create tag type with code \"%s\" because it already exists.", attributeValueListCreateRequest.getAttributeValueListKey()));
+        }
+
+        // Validate the display name does not already exist in the database
+        attributeValueListHelper.assertAttributeValueListDisplayNameDoesNotExist(attributeValueListCreateRequest.getDisplayName());
+
+        // Create and persist a new tag type entity from the request information.
+        AttributeValueListEntity tagTypeEntity = createAttributeValueListEntity(attributeValueListCreateRequest);
+
+        // Create and return the tag type object from the persisted entity.
+        return createAttributeValueListFromEntity(tagTypeEntity);
+    }
+
+    @NamespacePermission(fields = "#request.namespace", permissions = NamespacePermissionEnum.WRITE)
+    @Override
+    public AttributeValueListEntity getAttributeValueList(AttributeValueListKey attributeValueListKey)
+    {
+        return attributeValueListDao.getAttributeValueListByKey(attributeValueListKey);
+    }
+
+    @NamespacePermission(fields = "#request.namespace", permissions = NamespacePermissionEnum.WRITE)
+    @Override
+    public AttributeValueListEntity deleteAttributeValueList(AttributeValueListKey attributeValueListKey)
+    {
+        // Perform validation and trim.
+        attributeValueListHelper.validateAttributeValueListKey(attributeValueListKey);
+
+        // Retrieve and ensure that a tag type already exists with the specified key.
+        AttributeValueListEntity attributeValueListEntity = attributeValueListHelper.getTagTypeEntity(attributeValueListKey);
+
+        // Delete the tag type.
+        attributeValueListDao.delete(attributeValueListKey);
+
+        // Create and return the tag type object from the deleted entity.
+        return createTagTypeFromEntity(tagTypeEntity);    }
+
+    @NamespacePermission(fields = "#request.namespace", permissions = NamespacePermissionEnum.WRITE)
+    @Override
+    public AttributeValueListKeys getAttributeValueLists(String namespace)
+    {
+        return attributeValueListDao.getAttributeValueListByNamespace(namespace).stream().map().collect();
+    }
+
+    @NamespacePermission(fields = "#request.namespace", permissions = NamespacePermissionEnum.WRITE)
+    @Override
+    public AttributeValueListKeys getAttributeValueLists()
+    {
+        return null;
+    }
+
+
+
+    private void validateAttributeValueListCreateRequest(AttributeValueListCreateRequest attributeValueListCreateRequest)
+    {
+        Assert.notNull(attributeValueListCreateRequest, "A Attribute value list create request must be specified.");
+        attributeValueListHelper.validateAttributeValueListKey(attributeValueListCreateRequest.getAttributeValueListKey());
+    }
+
+
+}
