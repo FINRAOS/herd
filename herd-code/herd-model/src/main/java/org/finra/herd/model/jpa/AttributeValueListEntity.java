@@ -25,9 +25,9 @@ import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
-@Table(name = "atrbt_value_list")
+@Table(name = AttributeValueListEntity.TABLE_NAME)
 @Entity
-public class AttributeValueListEntity
+public class AttributeValueListEntity extends AuditableEntity
 {
 
     public static final String TABLE_NAME = "atrbt_value_list";
@@ -43,12 +43,7 @@ public class AttributeValueListEntity
     private NamespaceEntity namespace;
 
     @Column(name = TABLE_NAME+"_nm")
-    private String name;
-
-    public static String getTableName()
-    {
-        return TABLE_NAME;
-    }
+    private String attributeValueListName;
 
     public Integer getId()
     {
@@ -70,13 +65,13 @@ public class AttributeValueListEntity
         this.namespace = namespace;
     }
 
-    public String getName()
+    public String getAttributeValueListName()
     {
-        return name;
+        return attributeValueListName;
     }
 
-    public void setName(String name)
+    public void setAttributeValueListName(String attributeValueListName)
     {
-        this.name = name;
+        this.attributeValueListName = attributeValueListName;
     }
 }

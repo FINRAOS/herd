@@ -14,6 +14,7 @@ import org.finra.herd.model.api.xml.AttributeValueListCreateRequest;
 import org.finra.herd.model.api.xml.AttributeValueListKey;
 import org.finra.herd.model.api.xml.AttributeValueListKeys;
 import org.finra.herd.model.dto.SecurityFunctions;
+import org.finra.herd.model.jpa.AttributeValueListEntity;
 import org.finra.herd.service.AttributeValueListService;
 import org.finra.herd.ui.constants.UiConstants;
 
@@ -38,7 +39,7 @@ public class AttributeValueListRestController extends HerdBaseController
      */
     @RequestMapping(value = ATTRIBUTE_VALUE_LIST_URI_PREFIX, method = RequestMethod.POST, consumes = {"application/xml", "application/json"})
     @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_ATTRIBUTES_POST)
-    public AttributeValueList createAttributeValueList(@RequestBody AttributeValueListCreateRequest request)
+    public AttributeValueListEntity createAttributeValueList(@RequestBody AttributeValueListCreateRequest request)
     {
         return attributeValueListService.createAttributeValueList(request);
     }
@@ -53,7 +54,7 @@ public class AttributeValueListRestController extends HerdBaseController
      */
     @RequestMapping(value = ATTRIBUTE_VALUE_LIST_URI_PREFIX + "/namespaces/{namespace}/attributeValueListName/{attributeValueListName}")
     @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_ATTRIBUTES_GET)
-    public AttributeValueList getAttributeValueList(@PathVariable("namespace") String namespace
+    public AttributeValueListEntity getAttributeValueList(@PathVariable("namespace") String namespace
         , @PathVariable("attributeValueListName") String attributeValueListName)
     {
         return attributeValueListService.getAttributeValueList(new AttributeValueListKey(namespace, attributeValueListName));
@@ -72,7 +73,7 @@ public class AttributeValueListRestController extends HerdBaseController
         "/attributeValueListName/{attributeValueListName}/",
         method = RequestMethod.DELETE)
     @Secured(SecurityFunctions.FN_BUSINESS_OBJECT_DATA_ATTRIBUTES_DELETE)
-    public AttributeValueList deleteAttributeValueList(@PathVariable("namespace") String namespace,
+    public AttributeValueListEntity deleteAttributeValueList(@PathVariable("namespace") String namespace,
         @PathVariable("attributeValueListName") String attributeValueListName)
     {
         return attributeValueListService.deleteAttributeValueList(

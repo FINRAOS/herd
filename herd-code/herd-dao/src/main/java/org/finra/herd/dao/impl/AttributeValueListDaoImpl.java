@@ -35,7 +35,7 @@ public class AttributeValueListDaoImpl  extends AbstractHerdDao implements Attri
         Root<AttributeValueListEntity> attributeValueListEntityRoot = criteria.from(AttributeValueListEntity.class);
 
         // Create the standard restrictions.
-        Predicate queryRestriction = builder.equal(builder.upper(attributeValueListEntityRoot.get(AttributeValueListEntity_.name)), attributeValueListKey.getAttributeValueListName().toUpperCase());
+        Predicate queryRestriction = builder.equal(builder.upper(attributeValueListEntityRoot.get(AttributeValueListEntity_.attributeValueListName)), attributeValueListKey.getAttributeValueListName().toUpperCase());
 
         // Add all clauses to the query.
         criteria.select(attributeValueListEntityRoot).where(queryRestriction);
@@ -48,7 +48,7 @@ public class AttributeValueListDaoImpl  extends AbstractHerdDao implements Attri
     public List<AttributeValueListKey> getAttributeValueListKeys()
     {
         return getAttributeValueLists().stream()
-            .map(p -> new AttributeValueListKey(p.getNamespace().getCode(), p.getName()))
+            .map(p -> new AttributeValueListKey(p.getNamespace().getCode(), p.getAttributeValueListName()))
             .collect(Collectors.toList());
     }
 
@@ -63,7 +63,7 @@ public class AttributeValueListDaoImpl  extends AbstractHerdDao implements Attri
         Root<AttributeValueListEntity> attributeValueListEntityRoot = criteria.from(AttributeValueListEntity.class);
 
         // Get the columns.
-        Path<String> nameColumn = attributeValueListEntityRoot.get(AttributeValueListEntity_.name);
+        Path<String> nameColumn = attributeValueListEntityRoot.get(AttributeValueListEntity_.attributeValueListName);
 
         // Order the results by tag type's order and display name.
         List<Order> orderBy = new ArrayList<>();
@@ -96,7 +96,7 @@ public class AttributeValueListDaoImpl  extends AbstractHerdDao implements Attri
 
         // Get the columns.
         Path<String> namespaceCodeColumn = namespaceEntity.get(Namespace);
-        Path<String> nameColumn = attributeValueListEntityRoot.get(AttributeValueListEntity_.name);
+        Path<String> nameColumn = attributeValueListEntityRoot.get(AttributeValueListEntity_.attributeValueListName);
 
         // Order the results by tag type's order and display name.
         List<Order> orderBy = new ArrayList<>();

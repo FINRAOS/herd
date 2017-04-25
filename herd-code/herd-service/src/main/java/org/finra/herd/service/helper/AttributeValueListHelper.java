@@ -24,8 +24,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.Assert;
 
 import org.finra.herd.model.api.xml.Attribute;
+import org.finra.herd.model.api.xml.AttributeValueList;
 import org.finra.herd.model.api.xml.AttributeValueListKey;
 import org.finra.herd.model.api.xml.TagTypeKey;
+import org.finra.herd.model.jpa.AttributeValueListEntity;
 
 /**
  * Created by k26686 on 4/25/17.
@@ -75,5 +77,12 @@ public class AttributeValueListHelper
             alternateKeyHelper.validateStringParameter("tag type code", attributeValueListKey.getAttributeValueListName()));
     }
 
+
+    public AttributeValueListEntity getAttributeValueListEntity(AttributeValueListKey attributeValueListKey) {
+        AttributeValueListEntity attributeValueListEntity = new AttributeValueListEntity();
+        attributeValueListEntity.setAttributeValueListName(attributeValueListKey.getAttributeValueListName());
+        // attributeValueListEntity.setNamespace(attributeValueListKey.getNamespace());
+        return attributeValueListEntity;
+    }
 
 }
