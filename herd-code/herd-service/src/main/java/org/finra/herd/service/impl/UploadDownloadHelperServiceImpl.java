@@ -380,14 +380,20 @@ public class UploadDownloadHelperServiceImpl implements UploadDownloadHelperServ
                 completeUploadSingleParamsDto.getTargetOldStatus());
         }
     }
+    
+    @Override
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public void deleteSourceFileFromS3(CompleteUploadSingleParamsDto completeUploadSingleParamsDto)
+    {
+        deleteSourceFileFromS3Impl(completeUploadSingleParamsDto);
+    }
 
     /**
      * Delete the source file from S3
-     * 
+     *
      * @param completeUploadSingleParamsDto  the DTO that contains complete upload single message parameters
      */
-    @Override
-    public void deleteSourceFileFromS3(CompleteUploadSingleParamsDto completeUploadSingleParamsDto)
+    protected void deleteSourceFileFromS3Impl(CompleteUploadSingleParamsDto completeUploadSingleParamsDto)
     {
         try
         {
