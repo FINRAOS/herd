@@ -44,7 +44,7 @@ public class AttributeValueListRestControllerTest extends AbstractRestTest
                 new AttributeValueListKey(ATTRIBUTE_VALUE_LIST_NAMESPACE, ATTRIBUTE_VALUE_LIST_NAME)));
 
         // Validate the returned object.
-        assertEquals(new AttributeValueList(1220, new AttributeValueListKey(ATTRIBUTE_VALUE_LIST_NAMESPACE, ATTRIBUTE_VALUE_LIST_NAME)), resultAttributeValueList);
+        assertEquals(new AttributeValueList(1, new AttributeValueListKey(ATTRIBUTE_VALUE_LIST_NAMESPACE, ATTRIBUTE_VALUE_LIST_NAME)), resultAttributeValueList);
     }
 
     @Test
@@ -63,7 +63,7 @@ public class AttributeValueListRestControllerTest extends AbstractRestTest
         AttributeValueList deletedAttributeValueList = attributeValueListRestController.deleteAttributeValueList(ATTRIBUTE_VALUE_LIST_NAMESPACE, ATTRIBUTE_VALUE_LIST_NAME);
 
         // Validate the returned object.
-        assertEquals(new AttributeValueList(1002, new AttributeValueListKey(ATTRIBUTE_VALUE_LIST_NAMESPACE, ATTRIBUTE_VALUE_LIST_NAME)), deletedAttributeValueList);
+        assertEquals(new AttributeValueList(1, new AttributeValueListKey(ATTRIBUTE_VALUE_LIST_NAMESPACE, ATTRIBUTE_VALUE_LIST_NAME)), deletedAttributeValueList);
 
         // Ensure that this attribute value list is no longer there.
         assertNull(attributeValueListDao.getAttributeValueListByKey(attributeValueListKey));
@@ -79,7 +79,7 @@ public class AttributeValueListRestControllerTest extends AbstractRestTest
         AttributeValueList resultAttributeValueList = attributeValueListRestController.getAttributeValueList(ATTRIBUTE_VALUE_LIST_NAMESPACE, ATTRIBUTE_VALUE_LIST_NAME);
 
         // Validate the returned object.
-        assertEquals(new AttributeValueList(1002, new AttributeValueListKey(ATTRIBUTE_VALUE_LIST_NAMESPACE, ATTRIBUTE_VALUE_LIST_NAME)), resultAttributeValueList);
+        assertEquals(new AttributeValueList(1, new AttributeValueListKey(ATTRIBUTE_VALUE_LIST_NAMESPACE, ATTRIBUTE_VALUE_LIST_NAME)), resultAttributeValueList);
     }
 
     @Test
