@@ -23,11 +23,14 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.Assert;
 
+import org.finra.herd.dao.AttributeValueListDao;
 import org.finra.herd.model.api.xml.Attribute;
 import org.finra.herd.model.api.xml.AttributeValueList;
 import org.finra.herd.model.api.xml.AttributeValueListKey;
 import org.finra.herd.model.api.xml.TagTypeKey;
 import org.finra.herd.model.jpa.AttributeValueListEntity;
+import org.finra.herd.model.jpa.NamespaceEntity;
+import org.finra.herd.model.jpa.TagTypeEntity;
 
 /**
  * Created by k26686 on 4/25/17.
@@ -37,6 +40,9 @@ public class AttributeValueListHelper
 
     @Autowired
     private AlternateKeyHelper alternateKeyHelper;
+
+    @Autowired
+    private AttributeValueListDao attributeValueListDao;
 
     /**
      * Validates the attributes.
@@ -65,7 +71,6 @@ public class AttributeValueListHelper
             }
         }
     }
-
 
     public void validateAttributeValueListKey(AttributeValueListKey attributeValueListKey) throws IllegalArgumentException
     {

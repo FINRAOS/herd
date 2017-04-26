@@ -54,7 +54,7 @@ public class AttributeValueListServiceImpl implements AttributeValueListService
     @Autowired
     private AttributeValueListHelper attributeValueListHelper;
 
-    @NamespacePermission(fields = "#request.namespace", permissions = NamespacePermissionEnum.WRITE)
+    @NamespacePermission(fields = "#request.attributeValueListKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public AttributeValueList createAttributeValueList(AttributeValueListCreateRequest attributeValueListCreateRequest)
@@ -81,14 +81,14 @@ public class AttributeValueListServiceImpl implements AttributeValueListService
             new AttributeValueListKey(attributeValueListEntity.getNamespace().getCode(), attributeValueListEntity.getAttributeValueListName()));
     }
 
-    @NamespacePermission(fields = "#request.namespace", permissions = NamespacePermissionEnum.WRITE)
+    @NamespacePermission(fields = "#attributeValueListKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public AttributeValueList getAttributeValueList(AttributeValueListKey attributeValueListKey)
     {
         return attributeValueListDao.getAttributeValueListByKey(attributeValueListKey);
     }
 
-    @NamespacePermission(fields = "#request.namespace", permissions = NamespacePermissionEnum.WRITE)
+    @NamespacePermission(fields = "#attributeValueListKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public AttributeValueList deleteAttributeValueList(AttributeValueListKey attributeValueListKey)
     {
@@ -106,7 +106,7 @@ public class AttributeValueListServiceImpl implements AttributeValueListService
             new AttributeValueListKey(attributeValueListEntity.getNamespace().getCode(), attributeValueListEntity.getAttributeValueListName()));
     }
 
-    @NamespacePermission(fields = "#request.namespace", permissions = NamespacePermissionEnum.WRITE)
+    @NamespacePermission(fields = "#attributeValueListKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     public AttributeValueListKeys getAttributeValueListKeys()
     {

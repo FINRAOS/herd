@@ -739,6 +739,14 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String TAG_TYPE = "UT_TagType_1_" + RANDOM_SUFFIX;
 
+    public static final String ATTRIBUTE_VALUE_LIST = "UT_Attribute_Value_list_1_" + RANDOM_SUFFIX;
+
+    public static final String ATTRIBUTE_VALUE_LIST_NAMESPACE = "UT_Attribute_Value_list_Namespace_" + RANDOM_SUFFIX;
+
+    public static final String ATTRIBUTE_VALUE_LIST_ID = "UT_Attribute_Value_list_Namespace_" + RANDOM_SUFFIX;
+
+    public static final String ATTRIBUTE_VALUE_LIST_NAME = "UT_Attribute_Value_list_Name_" + RANDOM_SUFFIX;
+
     public static final String TAG_TYPE_2 = "UT_TagType_2_" + RANDOM_SUFFIX;
 
     public static final String TAG_TYPE_CODE = "UT_TagTypeCode_1_" + RANDOM_SUFFIX;
@@ -1066,6 +1074,12 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     @Autowired
     protected TagTypeDao tagTypeDao;
+
+    @Autowired
+    protected AttributeValueListDao attributeValueListDao;
+
+    @Autowired
+    protected AttributeValueListDaoTestHelper attributeValueListDaoTestHelper;
 
     @Autowired
     protected TagTypeDaoTestHelper tagTypeDaoTestHelper;
