@@ -30,7 +30,7 @@ import javax.persistence.Table;
 public class AttributeValueListEntity extends AuditableEntity
 {
 
-    public static final String TABLE_NAME = "name_space_atrbt_value_list";
+    public static final String TABLE_NAME = "atrbt_value_list";
 
     @Id
     @Column(name = TABLE_NAME + "_id")
