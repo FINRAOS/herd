@@ -35,7 +35,7 @@ public interface AttributeValueListService
      *
      * @return the newly created attribute value list
      */
-    public AttributeValueListEntity createAttributeValueList(AttributeValueListCreateRequest attributeValueListCreateRequest);
+    public AttributeValueList createAttributeValueList(AttributeValueListCreateRequest attributeValueListCreateRequest);
 
     /**
      * Gets an existing attribute value list by key.
@@ -44,7 +44,7 @@ public interface AttributeValueListService
      *
      * @return the attribute value list information
      */
-    public AttributeValueListEntity getAttributeValueList(AttributeValueListKey attributeValueListKey);
+    public AttributeValueList getAttributeValueList(AttributeValueListKey attributeValueListKey);
 
     /**
      * Deletes an existing attribute value list by key.
@@ -53,22 +53,13 @@ public interface AttributeValueListService
      *
      * @return the attribute value list information for the attribute that got deleted
      */
-    public AttributeValueListEntity deleteAttributeValueList(AttributeValueListKey attributeValueListKey);
-
-    /**
-     * Gets a list of keys for all existing attribute value lists.
-     *
-     * @param namespace the attribute value list key
-     *
-     * @return the list of attribute value list keys
-     */
-    public AttributeValueListKeys getAttributeValueLists(String namespace);
+    public AttributeValueList deleteAttributeValueList(AttributeValueListKey attributeValueListKey);
 
     /**
      * Gets a list of keys for all existing attribute value lists.
      *
      * @return the list of attribute value list keys
      */
-    public AttributeValueListKeys getAttributeValueLists();
+    public AttributeValueListKeys getAttributeValueListKeys();
 
 }

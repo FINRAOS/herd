@@ -17,6 +17,7 @@ import org.springframework.stereotype.Repository;
 import org.finra.herd.dao.AttributeValueListDao;
 import org.finra.herd.model.api.xml.AttributeValueList;
 import org.finra.herd.model.api.xml.AttributeValueListKey;
+import org.finra.herd.model.api.xml.AttributeValueListKeys;
 import org.finra.herd.model.jpa.AttributeValueListEntity;
 import org.finra.herd.model.jpa.AttributeValueListEntity_;
 import org.finra.herd.model.jpa.NamespaceEntity;
@@ -25,7 +26,7 @@ import org.finra.herd.model.jpa.NamespaceEntity;
 public class AttributeValueListDaoImpl  extends AbstractHerdDao implements AttributeValueListDao
 {
     @Override
-    public AttributeValueListEntity getAttributeValueListByKey(AttributeValueListKey attributeValueListKey)
+    public AttributeValueList getAttributeValueListByKey(AttributeValueListKey attributeValueListKey)
     {
         // Create the criteria builder and the criteria.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
@@ -35,25 +36,30 @@ public class AttributeValueListDaoImpl  extends AbstractHerdDao implements Attri
         Root<AttributeValueListEntity> attributeValueListEntityRoot = criteria.from(AttributeValueListEntity.class);
 
         // Create the standard restrictions.
-        Predicate queryRestriction = builder.equal(builder.upper(attributeValueListEntityRoot.get(AttributeValueListEntity_.attributeValueListName)), attributeValueListKey.getAttributeValueListName().toUpperCase());
+        Predicate queryRestriction = builder.equal(builder
+            .upper(attributeValueListEntityRoot.get(AttributeValueListEntity_.attributeValueListName)),
+            attributeValueListKey.getAttributeValueListName().toUpperCase());
 
         // Add all clauses to the query.
         criteria.select(attributeValueListEntityRoot).where(queryRestriction);
 
         // Run the query and return the results.
-        return entityManager.createQuery(criteria).getSingleResult();
+        AttributeValueListEntity attributeValueListEntity = entityManager.createQuery(criteria).getSingleResult();
+        return new AttributeValueList(attributeValueListEntity.getId(),
+            new AttributeValueListKey(attributeValueListEntity.getNamespace().getCode(), attributeValueListEntity.getAttributeValueListName()));
     }
 
     @Override
-    public List<AttributeValueListKey> getAttributeValueListKeys()
+    public List<AttributeValueListKey> getAttributeValueListKeyList()
     {
         return getAttributeValueLists().stream()
-            .map(p -> new AttributeValueListKey(p.getNamespace().getCode(), p.getAttributeValueListName()))
+            .map(p -> new AttributeValueListKey(p.getAttributeValueListKey().getNamespace(),
+                p.getAttributeValueListKey().getAttributeValueListName()))
             .collect(Collectors.toList());
     }
 
     @Override
-    public List<AttributeValueListEntity> getAttributeValueLists()
+    public List<AttributeValueList> getAttributeValueLists()
     {
         // Create the criteria builder and the criteria.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
@@ -73,11 +79,16 @@ public class AttributeValueListDaoImpl  extends AbstractHerdDao implements Attri
         criteria.select(attributeValueListEntityRoot).orderBy(orderBy);
 
         // Run the query and return the results.
-        return entityManager.createQuery(criteria).getResultList();
+        return entityManager.createQuery(criteria)
+            .getResultList()
+            .stream()
+            .map(p -> new AttributeValueList(p.getId(), new AttributeValueListKey(p.getNamespace().getCode(),
+                p.getAttributeValueListName())))
+            .collect(Collectors.toList());
     }
 
     @Override
-    public List<AttributeValueListEntity> getAttributeValueListByNamespace(String Namespace)
+    public AttributeValueListKeys getAttributeValueListKeys()
     {
         // Create the criteria builder and the criteria.
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
@@ -91,11 +102,8 @@ public class AttributeValueListDaoImpl  extends AbstractHerdDao implements Attri
         Join<AttributeValueListEntity, NamespaceEntity> namespaceEntity =
             attributeValueListEntityRoot.join(AttributeValueListEntity_.namespace);
 
-        // Create the standard restrictions.
-        Predicate queryRestriction = builder.equal(builder.upper(attributeValueListEntityRoot.get(Namespace.toUpperCase())), Namespace.toUpperCase());
 
         // Get the columns.
-        Path<String> namespaceCodeColumn = namespaceEntity.get(Namespace);
         Path<String> nameColumn = attributeValueListEntityRoot.get(AttributeValueListEntity_.attributeValueListName);
 
         // Order the results by tag type's order and display name.
@@ -103,10 +111,17 @@ public class AttributeValueListDaoImpl  extends AbstractHerdDao implements Attri
         orderBy.add(builder.asc(nameColumn));
 
         // Add all clauses to the query.
-        criteria.select(attributeValueListEntityRoot).where(queryRestriction).orderBy(orderBy);
+        criteria.select(attributeValueListEntityRoot).orderBy(orderBy);
 
         // Run the query and return the results.
-        return entityManager.createQuery(criteria).getResultList();
+        List<AttributeValueListEntity> attributeValueListEntityList = entityManager.createQuery(criteria).getResultList();
+
+        List<AttributeValueListKey> attributeValueListKeyList = attributeValueListEntityList
+            .stream()
+            .map(p -> new AttributeValueListKey(p.getNamespace().getCode(), p.getAttributeValueListName()))
+            .collect(Collectors.toList());
+
+        return new AttributeValueListKeys(attributeValueListKeyList);
     }
 
 

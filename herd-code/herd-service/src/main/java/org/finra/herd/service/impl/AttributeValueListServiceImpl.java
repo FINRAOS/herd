@@ -17,6 +17,7 @@ import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.AlreadyExistsException;
 import org.finra.herd.model.annotation.NamespacePermission;
 import org.finra.herd.model.api.xml.Attribute;
+import org.finra.herd.model.api.xml.AttributeValueList;
 import org.finra.herd.model.api.xml.AttributeValueListCreateRequest;
 import org.finra.herd.model.api.xml.AttributeValueListKey;
 import org.finra.herd.model.api.xml.AttributeValueListKeys;
@@ -56,7 +57,7 @@ public class AttributeValueListServiceImpl implements AttributeValueListService
     @NamespacePermission(fields = "#request.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public AttributeValueListEntity createAttributeValueList(AttributeValueListCreateRequest attributeValueListCreateRequest)
+    public AttributeValueList createAttributeValueList(AttributeValueListCreateRequest attributeValueListCreateRequest)
     {
         // Validate and trim the request parameters.
         validateAttributeValueListCreateRequest(attributeValueListCreateRequest);
@@ -76,19 +77,20 @@ public class AttributeValueListServiceImpl implements AttributeValueListService
         AttributeValueListEntity attributeValueListEntity = createAttributeValueListEntity(attributeValueListCreateRequest, namespaceEntity);
 
         // Create and return the tag type object from the persisted entity.
-        return attributeValueListEntity;
+        return new AttributeValueList(attributeValueListEntity.getId(),
+            new AttributeValueListKey(attributeValueListEntity.getNamespace().getCode(), attributeValueListEntity.getAttributeValueListName()));
     }
 
     @NamespacePermission(fields = "#request.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
-    public AttributeValueListEntity getAttributeValueList(AttributeValueListKey attributeValueListKey)
+    public AttributeValueList getAttributeValueList(AttributeValueListKey attributeValueListKey)
     {
         return attributeValueListDao.getAttributeValueListByKey(attributeValueListKey);
     }
 
     @NamespacePermission(fields = "#request.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
-    public AttributeValueListEntity deleteAttributeValueList(AttributeValueListKey attributeValueListKey)
+    public AttributeValueList deleteAttributeValueList(AttributeValueListKey attributeValueListKey)
     {
         // Perform validation and trim.
         attributeValueListHelper.validateAttributeValueListKey(attributeValueListKey);
@@ -100,21 +102,15 @@ public class AttributeValueListServiceImpl implements AttributeValueListService
         attributeValueListDao.delete(attributeValueListKey);
 
         // Create and return the tag type object from the deleted entity.
-        return attributeValueListEntity;
+        return new AttributeValueList(attributeValueListEntity.getId(),
+            new AttributeValueListKey(attributeValueListEntity.getNamespace().getCode(), attributeValueListEntity.getAttributeValueListName()));
     }
 
     @NamespacePermission(fields = "#request.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
-    public AttributeValueListKeys getAttributeValueLists(String namespace)
+    public AttributeValueListKeys getAttributeValueListKeys()
     {
-        return (AttributeValueListKeys) attributeValueListDao.getAttributeValueListByNamespace(namespace);
-    }
-
-    @NamespacePermission(fields = "#request.namespace", permissions = NamespacePermissionEnum.WRITE)
-    @Override
-    public AttributeValueListKeys getAttributeValueLists()
-    {
-        return null;
+        return (AttributeValueListKeys) attributeValueListDao.getAttributeValueListKeys();
     }
 
     private AttributeValueListEntity createAttributeValueListEntity(AttributeValueListCreateRequest attributeValueListCreateRequest,
