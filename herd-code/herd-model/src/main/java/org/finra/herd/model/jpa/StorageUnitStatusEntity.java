@@ -40,6 +40,8 @@ public class StorageUnitStatusEntity extends AuditableEntity
 
     public static final String RESTORING = "RESTORING";
 
+    public static final String RESTORED = "RESTORED";
+
     @Id
     @Column(name = "strge_unit_stts_cd")
     private String code;

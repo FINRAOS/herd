@@ -15,6 +15,7 @@
 */
 package org.finra.herd.model.jpa;
 
+import java.sql.Timestamp;
 import java.util.Collection;
 
 import javax.persistence.CascadeType;
@@ -73,10 +74,8 @@ public class StorageUnitEntity extends AuditableEntity
     @OrderBy("createdOn")
     private Collection<StorageUnitStatusHistoryEntity> historicalStatuses;
 
-    // This is an optional parent storage unit.
-    @ManyToOne
-    @JoinColumn(name = "prnt_strge_unit_id", referencedColumnName = TABLE_NAME + "_id")
-    private StorageUnitEntity parentStorageUnit;
+    @Column(name = "rstr_xprtn_ts")
+    private Timestamp restoreExpirationOn;
 
     public Integer getId()
     {
@@ -148,13 +147,13 @@ public class StorageUnitEntity extends AuditableEntity
         this.historicalStatuses = historicalStatuses;
     }
 
-    public StorageUnitEntity getParentStorageUnit()
+    public Timestamp getRestoreExpirationOn()
     {
-        return parentStorageUnit;
+        return restoreExpirationOn;
     }
 
-    public void setParentStorageUnit(StorageUnitEntity parentStorageUnit)
+    public void setRestoreExpirationOn(Timestamp restoreExpirationOn)
     {
-        this.parentStorageUnit = parentStorageUnit;
+        this.restoreExpirationOn = restoreExpirationOn;
     }
 }

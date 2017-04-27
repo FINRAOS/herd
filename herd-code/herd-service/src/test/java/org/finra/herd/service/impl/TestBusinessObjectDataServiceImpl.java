@@ -89,19 +89,6 @@ public class TestBusinessObjectDataServiceImpl extends BusinessObjectDataService
      * This implementation keeps the current transaction context.
      */
     @Override
-    public BusinessObjectData getBusinessObjectData(BusinessObjectDataKey businessObjectDataKey, String businessObjectFormatPartitionKey,
-        String businessObjectDataStatus, Boolean includeBusinessObjectDataStatusHistory)
-    {
-        return getBusinessObjectDataImpl(businessObjectDataKey, businessObjectFormatPartitionKey, businessObjectDataStatus,
-            includeBusinessObjectDataStatusHistory);
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p/>
-     * This implementation keeps the current transaction context.
-     */
-    @Override
     public BusinessObjectDataDdl generateBusinessObjectDataDdl(BusinessObjectDataDdlRequest request)
     {
         return generateBusinessObjectDataDdlImpl(request, false);
@@ -123,6 +110,19 @@ public class TestBusinessObjectDataServiceImpl extends BusinessObjectDataService
      * <p/>
      * This implementation keeps the current transaction context.
      */
+    @Override
+    public BusinessObjectData getBusinessObjectData(BusinessObjectDataKey businessObjectDataKey, String businessObjectFormatPartitionKey,
+        String businessObjectDataStatus, Boolean includeBusinessObjectDataStatusHistory)
+    {
+        return getBusinessObjectDataImpl(businessObjectDataKey, businessObjectFormatPartitionKey, businessObjectDataStatus,
+            includeBusinessObjectDataStatusHistory);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * This implementation keeps the current transaction context.
+     */
     @PublishJmsMessages
     @Override
     public BusinessObjectDataInvalidateUnregisteredResponse invalidateUnregisteredBusinessObjectData(
@@ -137,8 +137,8 @@ public class TestBusinessObjectDataServiceImpl extends BusinessObjectDataService
      * This implementation keeps the current transaction context.
      */
     @Override
-    public BusinessObjectData restoreBusinessObjectData(BusinessObjectDataKey businessObjectDataKey)
+    public BusinessObjectData restoreBusinessObjectData(BusinessObjectDataKey businessObjectDataKey, Integer expirationInDays)
     {
-        return restoreBusinessObjectDataImpl(businessObjectDataKey);
+        return restoreBusinessObjectDataImpl(businessObjectDataKey, expirationInDays);
     }
 }

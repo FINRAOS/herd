@@ -27,6 +27,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.xml.datatype.XMLGregorianCalendar;
 
+import com.amazonaws.services.s3.AmazonS3;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.MutablePropertySources;
@@ -88,7 +89,11 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String AWS_ASSUMED_ROLE_SECRET_KEY = "UT_AwsAssumedRoleSecretKey_1_" + RANDOM_SUFFIX;
 
+    public static final XMLGregorianCalendar AWS_ASSUMED_ROLE_SESSION_EXPIRATION_TIME = HerdDateUtils.getXMLGregorianCalendarValue(getRandomDate());
+
     public static final String AWS_ASSUMED_ROLE_SESSION_TOKEN = "UT_AwsAssumedRoleSessionToken_1_" + RANDOM_SUFFIX;
+
+    public static final String AWS_KMS_KEY_ID = "UT_AwsKmsKeyId_" + RANDOM_SUFFIX;
 
     public static final String AWS_REGION = "UT_Region" + RANDOM_SUFFIX;
 
@@ -238,6 +243,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String ERROR_CODE = "UT_Error_Code_" + RANDOM_SUFFIX;
 
     public static final String ERROR_MESSAGE = "UT_Error_Message_" + RANDOM_SUFFIX;
+
+    public static final Integer EXPIRATION_IN_DAYS = (int) (Math.random() * Integer.MAX_VALUE);
 
     public static final String FIELD_DISPLAY_NAME = "displayName";
 
@@ -402,6 +409,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final Boolean NO_EXCLUSION_SEARCH_FILTER = Boolean.FALSE;
 
+    public static final Integer NO_EXPIRATION_IN_DAYS = null;
+
     public static final String NO_FORMAT_DESCRIPTION = null;
 
     public static final String NO_FORMAT_FILE_TYPE_CODE = null;
@@ -434,6 +443,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     public static final String NO_S3_BUCKET_NAME = null;
 
+    public static final AmazonS3 NO_S3_CLIENT = null;
+
     public static final String NO_S3_ENDPOINT = null;
 
     public static final List<SampleDataFile> NO_SAMPLE_DATA_FILES = new ArrayList<>();
@@ -453,6 +464,8 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final Boolean NO_STORAGE_UNIT_STATUS_AVAILABLE_FLAG_SET = false;
 
     public static final List<String> NO_SUBPARTITION_VALUES = new ArrayList<>();
+
+    public static final SchemaColumn[] NO_SUB_PARTITION_KEYS = null;
 
     public static final String NO_TAG_DESCRIPTION = null;
 
@@ -512,10 +525,6 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String S3_BUCKET_NAME = "UT_S3_Bucket_Name" + RANDOM_SUFFIX;
 
     public static final String S3_BUCKET_NAME_2 = "UT_S3_Bucket_Name2" + RANDOM_SUFFIX;
-
-    public static final String S3_BUCKET_NAME_GLACIER = "UT_S3_Bucket_Name_Glacier_" + RANDOM_SUFFIX;
-
-    public static final String S3_BUCKET_NAME_ORIGIN = "UT_S3_Bucket_Name_Origin_" + RANDOM_SUFFIX;
 
     public static final List<String> S3_DIRECTORY_MARKERS = Arrays.asList("", "folder");
 
@@ -637,10 +646,6 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     public static final String STORAGE_NAME_4 = "UT_Storage_4_" + RANDOM_SUFFIX;
 
     public static final String STORAGE_NAME_5 = "UT_Storage_5_" + RANDOM_SUFFIX;
-
-    public static final String STORAGE_NAME_GLACIER = "UT_Storage_Glacier_" + RANDOM_SUFFIX;
-
-    public static final String STORAGE_NAME_ORIGIN = "UT_Storage_Origin_" + RANDOM_SUFFIX;
 
     public static final String STORAGE_PLATFORM_CODE = "UT_StoragePlatform_1_" + RANDOM_SUFFIX;
 

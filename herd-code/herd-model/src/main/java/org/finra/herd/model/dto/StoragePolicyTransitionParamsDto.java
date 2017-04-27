@@ -98,7 +98,7 @@ public class StoragePolicyTransitionParamsDto
      *
      * @param businessObjectDataKey the business object data key
      * @param storageName the storage name
-     * @param s3Endpoint the optional S3 endpoint to use when making S3 service calls.
+     * @param s3Endpoint the optional S3 endpoint to use when making S3 service calls
      * @param s3BucketName the S3 bucket name
      * @param s3KeyPrefix the S3 key prefix
      * @param newStorageUnitStatus the new status of the storage unit

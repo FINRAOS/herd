@@ -24,14 +24,11 @@ import org.finra.herd.model.dto.StorageUnitAlternateKeyDto;
 public interface BusinessObjectDataFinalizeRestoreHelperService
 {
     /**
-     * Prepares for the business object data finalize restore by validating the Glacier storage unit along with other related database entities. The method also
-     * creates and returns a business object data restore DTO.
+     * Completes the finalize restore operation.
      *
-     * @param glacierStorageUnitKey the Glacier storage unit key
-     *
-     * @return the DTO that holds various parameters needed to perform a business object data restore
+     * @param businessObjectDataRestoreDto the DTO that holds various parameters needed to perform a business object data restore
      */
-    public BusinessObjectDataRestoreDto prepareToFinalizeRestore(StorageUnitAlternateKeyDto glacierStorageUnitKey);
+    public void completeFinalizeRestore(BusinessObjectDataRestoreDto businessObjectDataRestoreDto);
 
     /**
      * Executes S3 specific steps for the business object data finalize restore.
@@ -41,9 +38,12 @@ public interface BusinessObjectDataFinalizeRestoreHelperService
     public void executeS3SpecificSteps(BusinessObjectDataRestoreDto businessObjectDataRestoreDto);
 
     /**
-     * Updates the origin S3 storage unit status to ENABLED.
+     * Prepares for the business object data finalize restore by validating the S3 storage unit along with other related database entities. The method also
+     * creates and returns a business object data restore DTO.
      *
-     * @param businessObjectDataRestoreDto the DTO that holds various parameters needed to perform a business object data restore
+     * @param storageUnitKey the storage unit key
+     *
+     * @return the DTO that holds various parameters needed to perform a business object data restore
      */
-    public void enableOriginStorageUnit(BusinessObjectDataRestoreDto businessObjectDataRestoreDto);
+    public BusinessObjectDataRestoreDto prepareToFinalizeRestore(StorageUnitAlternateKeyDto storageUnitKey);
 }

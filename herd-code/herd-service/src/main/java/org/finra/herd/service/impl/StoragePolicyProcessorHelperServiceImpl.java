@@ -30,7 +30,6 @@ import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
 import org.finra.herd.core.helper.ConfigurationHelper;
-import org.finra.herd.dao.StorageFileDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.StorageFile;
@@ -51,6 +50,7 @@ import org.finra.herd.service.StoragePolicyProcessorHelperService;
 import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDataHelper;
 import org.finra.herd.service.helper.S3KeyPrefixHelper;
+import org.finra.herd.service.helper.StorageFileDaoHelper;
 import org.finra.herd.service.helper.StorageFileHelper;
 import org.finra.herd.service.helper.StorageHelper;
 import org.finra.herd.service.helper.StoragePolicyDaoHelper;
@@ -82,7 +82,7 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
     private S3Service s3Service;
 
     @Autowired
-    private StorageFileDao storageFileDao;
+    private StorageFileDaoHelper storageFileDaoHelper;
 
     @Autowired
     private StorageFileHelper storageFileHelper;
@@ -187,16 +187,7 @@ public class StoragePolicyProcessorHelperServiceImpl implements StoragePolicyPro
 
         // Validate that this storage does not have any other registered storage files that
         // start with the S3 key prefix, but belong to other business object data instances.
-        // Since the S3 key prefix represents a directory, we add a trailing '/' character to it.
-        Long registeredStorageFileCount = storageFileDao.getStorageFileCount(storageName, StringUtils.appendIfMissing(s3KeyPrefix, "/"));
-        if (registeredStorageFileCount != storageFiles.size())
-        {
-            throw new IllegalStateException(String
-                .format("Found %d registered storage file(s) matching business object data S3 key prefix in the storage that is not equal to the number " +
-                    "of storage files (%d) registered with the business object data in that storage. " +
-                    "Storage: {%s}, s3KeyPrefix {%s}, business object data: {%s}", registeredStorageFileCount, storageFiles.size(), storageName, s3KeyPrefix,
-                    businessObjectDataHelper.businessObjectDataKeyToString(businessObjectDataKey)));
-        }
+        storageFileDaoHelper.validateStorageFilesCount(storageName, businessObjectDataKey, s3KeyPrefix, storageFiles.size());
 
         // Update the storage unit status.
         String reason = StorageUnitStatusEntity.ARCHIVING;
