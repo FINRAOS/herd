@@ -14,11 +14,14 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import org.finra.herd.dao.GlobalAttributeDefinitionDao;
+import org.finra.herd.dao.GlobalAttributeDefinitionLevelDao;
+import org.finra.herd.dao.GlobalAttributeDefinitionLevelDaoTestHelper;
 import org.finra.herd.model.api.xml.GlobalAttributeDefinition;
 import org.finra.herd.model.api.xml.GlobalAttributeDefinitionCreateRequest;
 import org.finra.herd.model.api.xml.GlobalAttributeDefinitionKey;
 import org.finra.herd.model.api.xml.GlobalAttributeDefinitionKeys;
 import org.finra.herd.model.jpa.GlobalAttributeDefinitionEntity;
+import org.finra.herd.model.jpa.GlobalAttributeDefinitionLevelEntity;
 import org.finra.herd.service.GlobalAttributeDefinitionService;
 import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.GlobalAttributeDefinitionDaoHelper;
@@ -39,10 +42,16 @@ public class GlobalAttributeDefinitionRestControllerTest extends AbstractRestTes
     private GlobalAttributeDefinitionDao globalAttributeDefinitionDao;
 
     @Mock
+    private GlobalAttributeDefinitionLevelDao globalAttributeDefinitionLevelDao;
+
+    @Mock
     private GlobalAttributeDefinitionHelper globalAttributeDefinitionHelper;
 
     @Mock
     private GlobalAttributeDefinitionDaoHelper globalAttributeDefinitionDaoHelper;
+
+    @Mock
+    private GlobalAttributeDefinitionLevelDaoTestHelper globalAttributeDefinitionLevelDaoTestHelper;
 
     @Mock
     private AlternateKeyHelper alternateKeyHelper;
@@ -65,6 +74,9 @@ public class GlobalAttributeDefinitionRestControllerTest extends AbstractRestTes
         GlobalAttributeDefinitionEntity globalAttributeDefinitionEntity =
             globalAttributeDefinitionDaoTestHelper.createGlobalAttributeDefinitionEntity(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME_1);
 
+        GlobalAttributeDefinitionLevelEntity globalAttributeDefinitionLevelEntity =
+            globalAttributeDefinitionLevelDaoTestHelper.createGlobalAttributeDefinitionLevelEntity(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL);
+
         //create a global attribute definition
         GlobalAttributeDefinition globalAttributeDefinition = new GlobalAttributeDefinition();
         globalAttributeDefinition.setId(1);
@@ -75,6 +87,8 @@ public class GlobalAttributeDefinitionRestControllerTest extends AbstractRestTes
         when(alternateKeyHelper.validateStringParameter("global attribute definition name", GLOBAL_ATTRIBUTE_DEFINITON_NAME_1))
             .thenReturn(GLOBAL_ATTRIBUTE_DEFINITON_NAME_1);
         when(globalAttributeDefinitionDao.getGlobalAttributeDefinitionByKey(globalAttributeDefinitionKey)).thenReturn(null);
+        when(globalAttributeDefinitionLevelDao.getGlobalAttributeDefinitionLevel(globalAttributeDefinitionKey.getGlobalAttributeDefinitionLevel()))
+            .thenReturn(globalAttributeDefinitionLevelEntity);
         when(globalAttributeDefinitionDao.saveAndRefresh(any(GlobalAttributeDefinitionEntity.class))).thenReturn(globalAttributeDefinitionEntity);
         when(globalAttributeDefinitionService.createGlobalAttributeDefinition(request)).thenReturn(globalAttributeDefinition);
 

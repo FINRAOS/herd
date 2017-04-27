@@ -76,7 +76,7 @@ public class GlobalAttributeDefinitionDaoHelperTest extends AbstractServiceTest
         }
         catch (ObjectNotFoundException e)
         {
-            assertEquals(String.format("Global Attribute Definition with level \"%s\" doesn't exist for global attribute definition name \"%s\".",
+            assertEquals(String.format("Global attribute definition with level \"%s\" doesn't exist for global attribute definition name \"%s\".",
                 globalAttributeDefinitionKey.getGlobalAttributeDefinitionLevel(), globalAttributeDefinitionKey.getGlobalAttributeDefinitionName()),
                 e.getMessage());
         }

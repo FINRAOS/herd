@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import org.finra.herd.dao.GlobalAttributeDefinitionDao;
+import org.finra.herd.dao.GlobalAttributeDefinitionLevelDao;
 import org.finra.herd.dao.config.DaoSpringModuleConfig;
 import org.finra.herd.model.api.xml.GlobalAttributeDefinition;
 import org.finra.herd.model.api.xml.GlobalAttributeDefinitionCreateRequest;
@@ -49,6 +50,9 @@ public class GlobalAttributeDefinitionServiceImpl implements GlobalAttributeDefi
     @Autowired
     private GlobalAttributeDefinitionDaoHelper globalAttributeDefinitionDaoHelper;
 
+    @Autowired
+    private GlobalAttributeDefinitionLevelDao globalAttributeDefinitionLevelDao;
+
     @Override
     public GlobalAttributeDefinition createGlobalAttributeDefinition(GlobalAttributeDefinitionCreateRequest request)
     {
@@ -58,8 +62,13 @@ public class GlobalAttributeDefinitionServiceImpl implements GlobalAttributeDefi
         // Validate the global Attribute Definition entity does not already exist in the database.
         globalAttributeDefinitionDaoHelper.checkGlobalAttributeDefinitionExists(request.getGlobalAttributeDefinitionKey());
 
+        //Get the existing global Attribute Definition level entity
+        GlobalAttributeDefinitionLevelEntity globalAttributeDefinitionLevelEntity =
+            globalAttributeDefinitionLevelDao.getGlobalAttributeDefinitionLevel(request.getGlobalAttributeDefinitionKey().getGlobalAttributeDefinitionLevel());
+
         // Create and persist a new global Attribute Definition entity from the request information.
-        GlobalAttributeDefinitionEntity globalAttributeDefinitionEntity = createGlobalAttributeDefinitionEntity(request.getGlobalAttributeDefinitionKey());
+        GlobalAttributeDefinitionEntity globalAttributeDefinitionEntity =
+            createGlobalAttributeDefinitionEntity(request.getGlobalAttributeDefinitionKey(), globalAttributeDefinitionLevelEntity);
 
         // Create and return the global Attribute Definition object from the persisted entity.
         return createGlobalAttributeDefinitionFromEntity(globalAttributeDefinitionEntity);
@@ -123,15 +132,14 @@ public class GlobalAttributeDefinitionServiceImpl implements GlobalAttributeDefi
     /**
      * Creates and persists a new global Attribute Definition entity.
      *
-     * @param globalAttributeDefinitionKey the global Attribute Definition key
-     *
-     * @return the newly created global Attribute Definition entity
+     *@param globalAttributeDefinitionKey the global Attribute Definition key
+     *@param globalAttributeDefinitionLevelEntity the global attribute definition level entity
+     *@return the newly created global Attribute Definition entity
      */
-    private GlobalAttributeDefinitionEntity createGlobalAttributeDefinitionEntity(GlobalAttributeDefinitionKey globalAttributeDefinitionKey)
+    private GlobalAttributeDefinitionEntity createGlobalAttributeDefinitionEntity(GlobalAttributeDefinitionKey globalAttributeDefinitionKey,
+        GlobalAttributeDefinitionLevelEntity globalAttributeDefinitionLevelEntity)
     {
         GlobalAttributeDefinitionEntity globalAttributeDefinitionEntity = new GlobalAttributeDefinitionEntity();
-        GlobalAttributeDefinitionLevelEntity globalAttributeDefinitionLevelEntity = new GlobalAttributeDefinitionLevelEntity();
-        globalAttributeDefinitionLevelEntity.setGlobalAttributeDefinitionLevel(globalAttributeDefinitionKey.getGlobalAttributeDefinitionLevel());
         globalAttributeDefinitionEntity.setGlobalAttributeDefinitionLevel(globalAttributeDefinitionLevelEntity);
         globalAttributeDefinitionEntity.setGlobalAttributeDefinitionName(globalAttributeDefinitionKey.getGlobalAttributeDefinitionName());
         return globalAttributeDefinitionDao.saveAndRefresh(globalAttributeDefinitionEntity);

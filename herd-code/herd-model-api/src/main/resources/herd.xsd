@@ -6892,7 +6892,7 @@
       <xs:all>
          <xs:element name="globalAttributeDefinitionLevel" type="xs:string">
             <xs:annotation>
-               <xs:documentation>The global attribute definition level. Only BUS_OBJCT_DFNTN is currently supported.</xs:documentation>
+               <xs:documentation>The global attribute definition level. Only BUS_OBJCT_FRMT is currently supported.</xs:documentation>
             </xs:annotation>
          </xs:element>
          <xs:element name="globalAttributeDefinitionName" type="xs:string">
@@ -6919,7 +6919,7 @@
       <xs:sequence>
          <xs:element name="globalAttributeDefinitionKey" type="globalAttributeDefinitionKey" minOccurs="0" maxOccurs="unbounded">
             <xs:annotation>
-               <xs:documentation>A list of global attribute definition keys</xs:documentation>
+               <xs:documentation>Values that uniquely identify a Global Attribute Definition</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:sequence>

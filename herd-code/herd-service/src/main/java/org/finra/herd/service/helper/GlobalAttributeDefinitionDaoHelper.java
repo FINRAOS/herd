@@ -47,7 +47,7 @@ public class GlobalAttributeDefinitionDaoHelper
         if (globalAttributeDefinitionEntity == null)
         {
             throw new ObjectNotFoundException(String
-                .format("Global Attribute Definition with level \"%s\" doesn't exist for global attribute definition name \"%s\".",
+                .format("Global attribute definition with level \"%s\" doesn't exist for global attribute definition name \"%s\".",
                     globalAttributeDefinitionKey.getGlobalAttributeDefinitionLevel(), globalAttributeDefinitionKey.getGlobalAttributeDefinitionName()));
         }
 
@@ -61,13 +61,13 @@ public class GlobalAttributeDefinitionDaoHelper
      *
      * @throws AlreadyExistsException if the global Attribute Definition entity already exist
      */
-    public void checkGlobalAttributeDefinitionExists(GlobalAttributeDefinitionKey globalAttributeDefinitionKey) throws ObjectNotFoundException
+    public void checkGlobalAttributeDefinitionExists(GlobalAttributeDefinitionKey globalAttributeDefinitionKey) throws AlreadyExistsException
     {
         // Validate that the global attribute definition entity does not already exist.
         if (globalAttributeDefinitionDao.getGlobalAttributeDefinitionByKey(globalAttributeDefinitionKey) != null)
         {
-            throw new AlreadyExistsException(String.format(
-                "Unable to create global attribute definition with global attribute definition level \"%s\" and global attribute definition name \"%s\" because it already exists.",
+            throw new AlreadyExistsException(String.format("Unable to create global attribute definition with global attribute definition level \"%s\" and " +
+                    "global attribute definition name \"%s\" because it already exists.",
                 globalAttributeDefinitionKey.getGlobalAttributeDefinitionLevel(), globalAttributeDefinitionKey.getGlobalAttributeDefinitionName()));
         }
     }

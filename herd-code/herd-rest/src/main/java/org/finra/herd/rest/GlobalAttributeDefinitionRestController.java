@@ -68,7 +68,8 @@ public class GlobalAttributeDefinitionRestController
      * @return the deleted global Attribute Definition
      */
     @RequestMapping(value = GLOBAL_ATTRIBUTE_DEFINITIONS_URI_PREFIX +
-        "/globalAttributeDefinitionLevels/{globalAttributeDefinitionLevel}/globalAttributeDefinitionNames/{globalAttributeDefinitionName}", method = RequestMethod.DELETE)
+        "/globalAttributeDefinitionLevels/{globalAttributeDefinitionLevel}/globalAttributeDefinitionNames/{globalAttributeDefinitionName}",
+        method = RequestMethod.DELETE)
     @Secured(SecurityFunctions.FN_GLOBAL_ATTRIBUTE_DEFINITIONS_DELETE)
     public GlobalAttributeDefinition deleteGlobalAttributeDefinition(@PathVariable("globalAttributeDefinitionLevel") String globalAttributeDefinitionLevel,
         @PathVariable("globalAttributeDefinitionName") String globalAttributeDefinitionName)
