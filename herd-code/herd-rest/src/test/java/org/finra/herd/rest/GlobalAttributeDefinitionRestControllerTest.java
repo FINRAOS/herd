@@ -2,7 +2,8 @@ package org.finra.herd.rest;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
@@ -20,8 +21,6 @@ import org.finra.herd.model.api.xml.GlobalAttributeDefinition;
 import org.finra.herd.model.api.xml.GlobalAttributeDefinitionCreateRequest;
 import org.finra.herd.model.api.xml.GlobalAttributeDefinitionKey;
 import org.finra.herd.model.api.xml.GlobalAttributeDefinitionKeys;
-import org.finra.herd.model.jpa.GlobalAttributeDefinitionEntity;
-import org.finra.herd.model.jpa.GlobalAttributeDefinitionLevelEntity;
 import org.finra.herd.service.GlobalAttributeDefinitionService;
 import org.finra.herd.service.helper.AlternateKeyHelper;
 import org.finra.herd.service.helper.GlobalAttributeDefinitionDaoHelper;
@@ -65,36 +64,26 @@ public class GlobalAttributeDefinitionRestControllerTest extends AbstractRestTes
     @Test
     public void testCreateGlobalAttributeDefinition()
     {
-
         GlobalAttributeDefinitionKey globalAttributeDefinitionKey =
             new GlobalAttributeDefinitionKey(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME_1);
         GlobalAttributeDefinitionCreateRequest request = new GlobalAttributeDefinitionCreateRequest(globalAttributeDefinitionKey);
-
-        //create a test global attribute definition entity
-        GlobalAttributeDefinitionEntity globalAttributeDefinitionEntity =
-            globalAttributeDefinitionDaoTestHelper.createGlobalAttributeDefinitionEntity(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME_1);
-
-        GlobalAttributeDefinitionLevelEntity globalAttributeDefinitionLevelEntity =
-            globalAttributeDefinitionLevelDaoTestHelper.createGlobalAttributeDefinitionLevelEntity(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL);
 
         //create a global attribute definition
         GlobalAttributeDefinition globalAttributeDefinition = new GlobalAttributeDefinition();
         globalAttributeDefinition.setId(1);
         globalAttributeDefinition.setGlobalAttributeDefinitionKey(globalAttributeDefinitionKey);
 
-        when(alternateKeyHelper.validateStringParameter("global attribute definition level", GLOBAL_ATTRIBUTE_DEFINITON_LEVEL))
-            .thenReturn(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL);
-        when(alternateKeyHelper.validateStringParameter("global attribute definition name", GLOBAL_ATTRIBUTE_DEFINITON_NAME_1))
-            .thenReturn(GLOBAL_ATTRIBUTE_DEFINITON_NAME_1);
-        when(globalAttributeDefinitionDao.getGlobalAttributeDefinitionByKey(globalAttributeDefinitionKey)).thenReturn(null);
-        when(globalAttributeDefinitionLevelDao.getGlobalAttributeDefinitionLevel(globalAttributeDefinitionKey.getGlobalAttributeDefinitionLevel()))
-            .thenReturn(globalAttributeDefinitionLevelEntity);
-        when(globalAttributeDefinitionDao.saveAndRefresh(any(GlobalAttributeDefinitionEntity.class))).thenReturn(globalAttributeDefinitionEntity);
+        //mock calls to external method
         when(globalAttributeDefinitionService.createGlobalAttributeDefinition(request)).thenReturn(globalAttributeDefinition);
 
         //call method under  test
         GlobalAttributeDefinition response = globalAttributeDefinitionRestController.createGlobalAttributeDefinition(request);
 
+        //verify
+        verify(globalAttributeDefinitionService).createGlobalAttributeDefinition(request);
+        verifyNoMoreInteractions(globalAttributeDefinitionService);
+
+        //validate
         assertEquals(new GlobalAttributeDefinition(response.getId(), globalAttributeDefinitionKey), response);
     }
 
@@ -104,43 +93,51 @@ public class GlobalAttributeDefinitionRestControllerTest extends AbstractRestTes
         GlobalAttributeDefinitionKey globalAttributeDefinitionKey =
             new GlobalAttributeDefinitionKey(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME_1);
 
-        //create a test global attribute definition entity
-        GlobalAttributeDefinitionEntity globalAttributeDefinitionEntity =
-            globalAttributeDefinitionDaoTestHelper.createGlobalAttributeDefinitionEntity(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME_1);
-
         //create a global attribute definition
         GlobalAttributeDefinition globalAttributeDefinition = new GlobalAttributeDefinition();
         globalAttributeDefinition.setId(1);
         globalAttributeDefinition.setGlobalAttributeDefinitionKey(globalAttributeDefinitionKey);
 
-        when(globalAttributeDefinitionDaoHelper.getGlobalAttributeDefinitionEntity(globalAttributeDefinitionKey)).thenReturn(globalAttributeDefinitionEntity);
+        //mock calls to external method
         when(globalAttributeDefinitionService.deleteGlobalAttributeDefinition(globalAttributeDefinitionKey)).thenReturn(globalAttributeDefinition);
 
+        //call method under test
         GlobalAttributeDefinition response = globalAttributeDefinitionRestController
             .deleteGlobalAttributeDefinition(globalAttributeDefinitionKey.getGlobalAttributeDefinitionLevel(),
                 globalAttributeDefinitionKey.getGlobalAttributeDefinitionName());
+
+        //verify the calls
+        verify(globalAttributeDefinitionService).deleteGlobalAttributeDefinition(globalAttributeDefinitionKey);
+        verifyNoMoreInteractions(globalAttributeDefinitionService);
+
+        //validate
         assertEquals(new GlobalAttributeDefinition(response.getId(), globalAttributeDefinitionKey), response);
     }
 
     @Test
     public void testGetGlobalAttributeDefinition()
     {
+        //create the keys
         GlobalAttributeDefinitionKey globalAttributeDefinitionKey =
             new GlobalAttributeDefinitionKey(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME_1);
         GlobalAttributeDefinitionKey globalAttributeDefinitionKey1 =
             new GlobalAttributeDefinitionKey(GLOBAL_ATTRIBUTE_DEFINITON_LEVEL, GLOBAL_ATTRIBUTE_DEFINITON_NAME_2);
-
         GlobalAttributeDefinitionKeys globalAttributeDefinitionKeys =
             new GlobalAttributeDefinitionKeys(Arrays.asList(globalAttributeDefinitionKey, globalAttributeDefinitionKey1));
 
-        when(globalAttributeDefinitionDao.getAllGlobalAttributeDefinitionKeys())
-            .thenReturn(Arrays.asList(globalAttributeDefinitionKey, globalAttributeDefinitionKey1));
+        //mock calls to external methods
         when(globalAttributeDefinitionService.getGlobalAttributeDefinitionKeys()).thenReturn(globalAttributeDefinitionKeys);
 
+        //call method under test
         GlobalAttributeDefinitionKeys response = globalAttributeDefinitionRestController.getGlobalAttributeDefinitions();
 
+        //verify
+        verify(globalAttributeDefinitionService).getGlobalAttributeDefinitionKeys();
+        verifyNoMoreInteractions(globalAttributeDefinitionService);
+
+        //validate
         assertNotNull(response);
-        assertEquals(response.getGlobalAttributeDefinitionKeies(), Arrays.asList(globalAttributeDefinitionKey, globalAttributeDefinitionKey1));
+        assertEquals(response.getGlobalAttributeDefinitionKeys(), Arrays.asList(globalAttributeDefinitionKey, globalAttributeDefinitionKey1));
     }
 
 }
