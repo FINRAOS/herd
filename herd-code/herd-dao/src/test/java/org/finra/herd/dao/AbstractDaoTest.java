@@ -801,6 +801,14 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     private static final String OVERRIDE_PROPERTY_SOURCE_MAP_NAME = "overrideMapPropertySource";
 
+    public static final String GLOBAL_ATTRIBUTE_DEFINITON_LEVEL = "BUS_OBJCT_FRMT";
+
+    public static final String GLOBAL_ATTRIBUTE_DEFINITON_INVALID_LEVEL = "BUS_OBJECT_FORMAT";
+
+    public static final String GLOBAL_ATTRIBUTE_DEFINITON_NAME_1 = "UT_DEF_NAME_1_" + RANDOM_SUFFIX;
+
+    public static final String GLOBAL_ATTRIBUTE_DEFINITON_NAME_2 = "UT_DEF_NAME_2_" + RANDOM_SUFFIX;
+
     // A holding location for a property source.
     // When we remove the property source from the environment, we will place it here as a holding area. Then when we want to add it back into the
     // environment, we will take it from this holding area and put it back in the environment. When the property source is in the environment, we
@@ -1087,6 +1095,12 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
 
     @Autowired
     protected UserNamespaceAuthorizationDaoTestHelper userNamespaceAuthorizationDaoTestHelper;
+
+    @Autowired
+    protected GlobalAttributeDefinitionDao globalAttributeDefinitionDao;
+
+    @Autowired
+    protected GlobalAttributeDefinitionDaoTestHelper globalAttributeDefinitionDaoTestHelper;
 
     /**
      * Modifies the re-loadable property source. Copies all the existing properties and overrides with the properties passed in the map.

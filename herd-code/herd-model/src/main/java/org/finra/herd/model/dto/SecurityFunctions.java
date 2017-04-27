@@ -351,6 +351,12 @@ public class SecurityFunctions
 
     public static final String FN_USER_NAMESPACE_AUTHORIZATIONS_PUT = "FN_USER_NAMESPACE_AUTHORIZATIONS_POST";
 
+    public static final String FN_GLOBAL_ATTRIBUTE_DEFINITIONS_POST = "FN_GLOBAL_ATTRIBUTE_DEFINITIONS_POST";
+
+    public static final String FN_GLOBAL_ATTRIBUTE_DEFINITIONS_ALL_GET = "FN_GLOBAL_ATTRIBUTE_DEFINITIONS_ALL_GET";
+
+    public static final String FN_GLOBAL_ATTRIBUTE_DEFINITIONS_DELETE = "FN_GLOBAL_ATTRIBUTE_DEFINITIONS_DELETE";
+
     /**
      * Returns all the functions sorted by function name.
      *
