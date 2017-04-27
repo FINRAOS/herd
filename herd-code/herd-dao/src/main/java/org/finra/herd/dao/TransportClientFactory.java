@@ -28,7 +28,6 @@ import java.security.Security;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
@@ -164,10 +163,9 @@ public class TransportClientFactory
         }
         // Get the settings from the elasticsearch settings data transfer object
         String elasticSearchCluster = elasticsearchSettingsDto.getElasticSearchCluster();
-        List<String> elasticSearchAddresses = Collections.singletonList("localhost"); //elasticsearchSettingsDto.getClientTransportAddresses();
+        List<String> elasticSearchAddresses = elasticsearchSettingsDto.getClientTransportAddresses();
         boolean clientTransportStiff = elasticsearchSettingsDto.isClientTransportSniff();
-        boolean isElasticsearchSearchGuardEnabled =
-            false;//Boolean.valueOf(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_ENABLED));
+        boolean isElasticsearchSearchGuardEnabled = Boolean.valueOf(configurationHelper.getProperty(ConfigurationValue.ELASTICSEARCH_SEARCH_GUARD_ENABLED));
         LOGGER.info("isElasticsearchSearchGuardEnabled={}", isElasticsearchSearchGuardEnabled);
 
         // Build the Transport client with the settings
