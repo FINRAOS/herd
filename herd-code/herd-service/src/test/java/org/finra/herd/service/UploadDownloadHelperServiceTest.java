@@ -623,6 +623,9 @@ public class UploadDownloadHelperServiceTest extends AbstractServiceTest
             // Try to execute the file move post steps by passing a non-initialized complete upload single parameters DTO.
             uploadDownloadHelperServiceImpl.executeFileMoveAfterSteps(new CompleteUploadSingleParamsDto());
 
+            // Try to delete the source file from S3
+            uploadDownloadHelperServiceImpl.deleteSourceFileFromS3(new CompleteUploadSingleParamsDto());
+
             // Try to update the business object data status for a non-existing business object data.
             try
             {
