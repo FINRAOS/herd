@@ -52,6 +52,7 @@ import org.finra.herd.dao.helper.EmrHelper;
 import org.finra.herd.dao.helper.HerdStringHelper;
 import org.finra.herd.dao.helper.JsonHelper;
 import org.finra.herd.dao.helper.XmlHelper;
+import org.finra.herd.model.api.xml.AttributeValueList;
 import org.finra.herd.model.api.xml.BusinessObjectDataKey;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatus;
 import org.finra.herd.model.api.xml.BusinessObjectDataStatusChangeEvent;
@@ -74,6 +75,7 @@ import org.finra.herd.model.api.xml.TagKey;
 import org.finra.herd.service.activiti.ActivitiHelper;
 import org.finra.herd.service.activiti.task.ExecuteJdbcTestHelper;
 import org.finra.herd.service.config.ServiceTestSpringModuleConfig;
+import org.finra.herd.service.helper.AttributeValueListHelper;
 import org.finra.herd.service.helper.BusinessObjectDataAttributeDaoHelper;
 import org.finra.herd.service.helper.BusinessObjectDataAttributeHelper;
 import org.finra.herd.service.helper.BusinessObjectDataDaoHelper;
@@ -667,6 +669,9 @@ public abstract class AbstractServiceTest extends AbstractDaoTest
 
     @Autowired
     protected TagTypeDaoTestHelper tagTypeDaoTestHelper;
+
+    @Autowired
+    protected AttributeValueListService attributeValueListService;
 
     @Autowired
     protected TagTypeService tagTypeService;
