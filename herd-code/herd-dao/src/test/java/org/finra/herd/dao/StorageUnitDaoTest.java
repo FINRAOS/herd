@@ -39,7 +39,7 @@ import org.finra.herd.model.jpa.StorageUnitStatusEntity;
 public class StorageUnitDaoTest extends AbstractDaoTest
 {
     @Test
-    public void testGetGlacierStorageUnitsToRestore()
+    public void testGetS3StorageUnitsToRestore()
     {
         // Create a list of business object data keys.
         List<BusinessObjectDataKey> businessObjectDataKeys = Arrays.asList(
@@ -55,31 +55,28 @@ public class StorageUnitDaoTest extends AbstractDaoTest
 
         // Create database entities required for testing. Only the first two Glacier storage unit entities are expected to be selected.
         List<BusinessObjectDataEntity> businessObjectDataEntities = Arrays.asList(storageUnitDaoTestHelper
-            .createBusinessObjectDataEntityInRestoringState(businessObjectDataKeys.get(0), STORAGE_NAME_ORIGIN, StorageUnitStatusEntity.RESTORING,
-                STORAGE_NAME_GLACIER, StorageUnitStatusEntity.ENABLED), storageUnitDaoTestHelper
-            .createBusinessObjectDataEntityInRestoringState(businessObjectDataKeys.get(1), STORAGE_NAME_ORIGIN, StorageUnitStatusEntity.RESTORING,
-                STORAGE_NAME_GLACIER, StorageUnitStatusEntity.ENABLED), storageUnitDaoTestHelper
-            .createBusinessObjectDataEntityInRestoringState(businessObjectDataKeys.get(2), STORAGE_NAME_ORIGIN, StorageUnitStatusEntity.RESTORING,
-                STORAGE_NAME_GLACIER, STORAGE_UNIT_STATUS), storageUnitDaoTestHelper
-            .createBusinessObjectDataEntityInRestoringState(businessObjectDataKeys.get(3), STORAGE_NAME_ORIGIN, STORAGE_UNIT_STATUS, STORAGE_NAME_GLACIER,
-                StorageUnitStatusEntity.ENABLED), storageUnitDaoTestHelper
-            .createBusinessObjectDataEntityInRestoringState(businessObjectDataKeys.get(4), STORAGE_NAME_ORIGIN, NO_STORAGE_UNIT_STATUS, STORAGE_NAME_GLACIER,
-                StorageUnitStatusEntity.ENABLED));
+            .createBusinessObjectDataEntityInRestoringState(businessObjectDataKeys.get(0), STORAGE_NAME, StorageUnitStatusEntity.RESTORING),
+            storageUnitDaoTestHelper
+                .createBusinessObjectDataEntityInRestoringState(businessObjectDataKeys.get(1), STORAGE_NAME, StorageUnitStatusEntity.RESTORING),
+            storageUnitDaoTestHelper
+                .createBusinessObjectDataEntityInRestoringState(businessObjectDataKeys.get(1), STORAGE_NAME, StorageUnitStatusEntity.RESTORED),
+            storageUnitDaoTestHelper.createBusinessObjectDataEntityInRestoringState(businessObjectDataKeys.get(3), STORAGE_NAME, STORAGE_UNIT_STATUS),
+            storageUnitDaoTestHelper.createBusinessObjectDataEntityInRestoringState(businessObjectDataKeys.get(4), STORAGE_NAME, NO_STORAGE_UNIT_STATUS));
 
-        // Get the list of expected Glacier storage unit entities.
-        List<StorageUnitEntity> expectedGlacierStorageUnitEntities = Arrays
-            .asList(storageUnitDao.getStorageUnitByBusinessObjectDataAndStorageName(businessObjectDataEntities.get(0), STORAGE_NAME_GLACIER),
-                storageUnitDao.getStorageUnitByBusinessObjectDataAndStorageName(businessObjectDataEntities.get(1), STORAGE_NAME_GLACIER));
+        // Get the list of expected storage unit entities.
+        List<StorageUnitEntity> expectedStorageUnitEntities = Arrays
+            .asList(storageUnitDao.getStorageUnitByBusinessObjectDataAndStorageName(businessObjectDataEntities.get(0), STORAGE_NAME),
+                storageUnitDao.getStorageUnitByBusinessObjectDataAndStorageName(businessObjectDataEntities.get(1), STORAGE_NAME));
 
         // Retrieve the storage units and validate the results.
-        List<StorageUnitEntity> resultStorageUnitEntities = storageUnitDao.getGlacierStorageUnitsToRestore(MAX_RESULT);
-        assertEquals(expectedGlacierStorageUnitEntities.size(), resultStorageUnitEntities.size());
-        assertTrue(resultStorageUnitEntities.contains(expectedGlacierStorageUnitEntities.get(0)));
-        assertTrue(resultStorageUnitEntities.contains(expectedGlacierStorageUnitEntities.get(1)));
+        List<StorageUnitEntity> resultStorageUnitEntities = storageUnitDao.getS3StorageUnitsToRestore(MAX_RESULT);
+        assertEquals(expectedStorageUnitEntities.size(), resultStorageUnitEntities.size());
+        assertTrue(resultStorageUnitEntities.contains(expectedStorageUnitEntities.get(0)));
+        assertTrue(resultStorageUnitEntities.contains(expectedStorageUnitEntities.get(1)));
         assertTrue(resultStorageUnitEntities.get(0).getUpdatedOn().getTime() <= resultStorageUnitEntities.get(1).getUpdatedOn().getTime());
 
         // Try to retrieve the storage units with max result limit set to 1. Only the oldest updated storage unit entity should get selected.
-        assertEquals(1, storageUnitDao.getGlacierStorageUnitsToRestore(1).size());
+        assertEquals(1, storageUnitDao.getS3StorageUnitsToRestore(1).size());
     }
 
     @Test

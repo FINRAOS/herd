@@ -25,14 +25,13 @@ import org.finra.herd.model.dto.BusinessObjectDataRestoreDto;
 public interface BusinessObjectDataInitiateRestoreHelperService
 {
     /**
-     * Prepares for the business object data initiate a restore request by validating the business object data along with other related database entities. The
-     * method also creates and returns a business object data restore DTO.
+     * Executes an after step for the initiation of a business object data restore request.
      *
-     * @param businessObjectDataKey the business object data key
+     * @param businessObjectDataRestoreDto the DTO that holds various parameters needed to perform a business object data restore
      *
-     * @return the DTO that holds various parameters needed to perform a business object data restore
+     * @return the business object data information
      */
-    public BusinessObjectDataRestoreDto prepareToInitiateRestore(BusinessObjectDataKey businessObjectDataKey);
+    public BusinessObjectData executeInitiateRestoreAfterStep(BusinessObjectDataRestoreDto businessObjectDataRestoreDto);
 
     /**
      * Executes S3 specific steps for the initiation of a business object data restore request. The method also updates the specified DTO.
@@ -42,11 +41,13 @@ public interface BusinessObjectDataInitiateRestoreHelperService
     public void executeS3SpecificSteps(BusinessObjectDataRestoreDto businessObjectDataRestoreDto);
 
     /**
-     * Executes an after step for the initiation of a business object data restore request.
+     * Prepares for the business object data initiate a restore request by validating the business object data along with other related database entities. The
+     * method also creates and returns a business object data restore DTO.
      *
-     * @param businessObjectDataRestoreDto the DTO that holds various parameters needed to perform a business object data restore
+     * @param businessObjectDataKey the business object data key
+     * @param expirationInDays the the time, in days, between when the business object data is restored to the S3 bucket and when it expires
      *
-     * @return the business object data information
+     * @return the DTO that holds various parameters needed to perform a business object data restore
      */
-    public BusinessObjectData executeInitiateRestoreAfterStep(BusinessObjectDataRestoreDto businessObjectDataRestoreDto);
+    public BusinessObjectDataRestoreDto prepareToInitiateRestore(BusinessObjectDataKey businessObjectDataKey, Integer expirationInDays);
 }
