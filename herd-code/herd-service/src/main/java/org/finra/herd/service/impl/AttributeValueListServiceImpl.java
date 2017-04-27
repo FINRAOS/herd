@@ -46,9 +46,6 @@ public class AttributeValueListServiceImpl implements AttributeValueListService
     private AlternateKeyHelper alternateKeyHelper;
 
     @Autowired
-    private NamespaceDaoHelper namespaceDaoHelper;
-
-    @Autowired
     private AttributeValueListDao attributeValueListDao;
 
     @Autowired
@@ -62,8 +59,14 @@ public class AttributeValueListServiceImpl implements AttributeValueListService
         // Validate and trim the request parameters.
         validateAttributeValueListCreateRequest(attributeValueListCreateRequest);
 
-
-        NamespaceEntity namespaceEntity = namespaceDaoHelper.getNamespaceEntity(attributeValueListCreateRequest.getAttributeValueListKey().getNamespace());
+        // Validate the tag type does not already exist in the database.
+        if (attributeValueListDao.getAttributeValueListByKey(attributeValueListCreateRequest.getAttributeValueListKey()) != null)
+        {
+            throw new AlreadyExistsException(
+                String.format("Unable to create attribute value list with code \"%s\" and \"%s\" because it already exists.",
+                    attributeValueListCreateRequest.getAttributeValueListKey().getNamespace(),
+                    attributeValueListCreateRequest.getAttributeValueListKey().getAttributeValueListName()));
+        }
 
         // Validate the tag type does not already exist in the database.
         if (attributeValueListDao.getAttributeValueListByKey(attributeValueListCreateRequest.getAttributeValueListKey()) != null)
@@ -74,7 +77,7 @@ public class AttributeValueListServiceImpl implements AttributeValueListService
         }
 
         // Create and persist a new tag type entity from the request information.
-        AttributeValueListEntity attributeValueListEntity = createAttributeValueListEntity(attributeValueListCreateRequest, namespaceEntity);
+        AttributeValueListEntity attributeValueListEntity = createAttributeValueListEntity(attributeValueListCreateRequest);
 
         // Create and return the tag type object from the persisted entity.
         return new AttributeValueList(attributeValueListEntity.getId(),
@@ -90,7 +93,7 @@ public class AttributeValueListServiceImpl implements AttributeValueListService
 
     @NamespacePermission(fields = "#attributeValueListKey.namespace", permissions = NamespacePermissionEnum.WRITE)
     @Override
-    public AttributeValueList deleteAttributeValueList(AttributeValueListKey attributeValueListKey)
+    public AttributeValueListKey deleteAttributeValueList(AttributeValueListKey attributeValueListKey)
     {
         // Perform validation and trim.
         attributeValueListHelper.validateAttributeValueListKey(attributeValueListKey);
@@ -99,11 +102,10 @@ public class AttributeValueListServiceImpl implements AttributeValueListService
         AttributeValueListEntity attributeValueListEntity = attributeValueListHelper.getAttributeValueListEntity(attributeValueListKey);
 
         // Delete the tag type.
-        attributeValueListDao.delete(attributeValueListKey);
+        attributeValueListDao.delete(attributeValueListEntity);
 
         // Create and return the tag type object from the deleted entity.
-        return new AttributeValueList(attributeValueListEntity.getId(),
-            new AttributeValueListKey(attributeValueListEntity.getNamespace().getCode(), attributeValueListEntity.getAttributeValueListName()));
+        return new AttributeValueListKey(attributeValueListEntity.getNamespace().getCode(), attributeValueListEntity.getAttributeValueListName());
     }
 
     @NamespacePermission(fields = "#attributeValueListKey.namespace", permissions = NamespacePermissionEnum.WRITE)
@@ -113,18 +115,15 @@ public class AttributeValueListServiceImpl implements AttributeValueListService
         return (AttributeValueListKeys) attributeValueListDao.getAttributeValueListKeys();
     }
 
-    private AttributeValueListEntity createAttributeValueListEntity(AttributeValueListCreateRequest attributeValueListCreateRequest,
-        NamespaceEntity namespaceEntity)
+    private AttributeValueListEntity createAttributeValueListEntity(AttributeValueListCreateRequest attributeValueListCreateRequest)
     {
         // Create a new entity.
-        AttributeValueListEntity attributeValueListEntity = new AttributeValueListEntity();
-        attributeValueListEntity.setNamespace(namespaceEntity);
-        attributeValueListEntity.setAttributeValueListName(attributeValueListCreateRequest.getAttributeValueListKey().getAttributeValueListName());
+        AttributeValueListEntity attributeValueListEntity =
+            attributeValueListHelper.getAttributeValueListEntity(attributeValueListCreateRequest.getAttributeValueListKey());
 
         // Persist and return the new entity.
         return attributeValueListDao.saveAndRefresh(attributeValueListEntity);
     }
-
 
     private void validateAttributeValueListCreateRequest(AttributeValueListCreateRequest attributeValueListCreateRequest)
     {

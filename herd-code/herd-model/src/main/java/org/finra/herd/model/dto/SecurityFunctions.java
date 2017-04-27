@@ -353,7 +353,7 @@ public class SecurityFunctions
 
     public static final String FN_ATTRIBUTE_VALUE_LISTS_GET = "FN_ATTRIBUTE_VALUE_LISTS_GET";
 
-    public static final String FN_ATTRIBUTE_VALUE_LISTS_GET_ALL = "FN_ATTRIBUTE_VALUE_LISTS_GET_ALL";
+    public static final String FN_ATTRIBUTE_VALUE_LISTS_ALL_GET = "FN_ATTRIBUTE_VALUE_LISTS_ALL_GET";
 
     public static final String FN_ATTRIBUTE_VALUE_LISTS_POST = "FN_ATTRIBUTE_VALUE_LISTS_POST";
 

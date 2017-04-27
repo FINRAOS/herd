@@ -37,9 +37,11 @@ public class AttributeValueListRestController extends HerdBaseController
      * @return the newly created business object data attribute information
      */
     @RequestMapping(value = ATTRIBUTE_VALUE_LIST_URI_PREFIX, method = RequestMethod.POST, consumes = {"application/xml", "application/json"})
-    @Secured(SecurityFunctions.FN_ATTRIBUTE_VALUE_LISTS_POST)
+    //@Secured(SecurityFunctions.FN_ATTRIBUTE_VALUE_LISTS_POST)
     public AttributeValueList createAttributeValueList(@RequestBody AttributeValueListCreateRequest request)
     {
+        AttributeValueListKey attributeValueListKey = request.getAttributeValueListKey();
+
         return attributeValueListService.createAttributeValueList(request);
     }
 
@@ -51,7 +53,7 @@ public class AttributeValueListRestController extends HerdBaseController
      *
      * @return the business object data attribute information
      */
-    @RequestMapping(value = ATTRIBUTE_VALUE_LIST_URI_PREFIX + "/namespaces/{namespace}/attributeValueListName/{attributeValueListName}",
+    @RequestMapping(value = ATTRIBUTE_VALUE_LIST_URI_PREFIX + "/namespaces/{namespace}/attributeValueListNames/{attributeValueListName}",
         method = RequestMethod.GET, consumes = {"application/xml", "application/json"})
     @Secured(SecurityFunctions.FN_ATTRIBUTE_VALUE_LISTS_GET)
     public AttributeValueList getAttributeValueList(@PathVariable("namespace") String namespace
@@ -69,10 +71,10 @@ public class AttributeValueListRestController extends HerdBaseController
      *
      * @return the business object data attribute that got deleted
      */
-    @RequestMapping(value = ATTRIBUTE_VALUE_LIST_URI_PREFIX + "/namespaces/{namespace}/attributeValueListName/{attributeValueListName}/",
+    @RequestMapping(value = ATTRIBUTE_VALUE_LIST_URI_PREFIX + "/namespaces/{namespace}/attributeValueListNames/{attributeValueListName}",
         method = RequestMethod.DELETE)
     @Secured(SecurityFunctions.FN_ATTRIBUTE_VALUE_LISTS_DELETE)
-    public AttributeValueList deleteAttributeValueList(@PathVariable("namespace") String namespace,
+    public AttributeValueListKey deleteAttributeValueList(@PathVariable("namespace") String namespace,
         @PathVariable("attributeValueListName") String attributeValueListName)
     {
         return attributeValueListService.deleteAttributeValueList(
@@ -86,7 +88,7 @@ public class AttributeValueListRestController extends HerdBaseController
      * @return the list of business object data attribute keys
      */
     @RequestMapping(value = ATTRIBUTE_VALUE_LIST_URI_PREFIX, method = RequestMethod.GET)
-    @Secured(SecurityFunctions.FN_ATTRIBUTE_VALUE_LISTS_GET_ALL)
+    @Secured(SecurityFunctions.FN_ATTRIBUTE_VALUE_LISTS_ALL_GET)
     public AttributeValueListKeys getAttributeValueLists()
     {
         return attributeValueListService.getAttributeValueListKeys();

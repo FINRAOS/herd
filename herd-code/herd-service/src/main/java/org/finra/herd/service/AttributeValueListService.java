@@ -51,9 +51,9 @@ public interface AttributeValueListService
      *
      * @param attributeValueListKey the attribute value list key
      *
-     * @return the attribute value list information for the attribute that got deleted
+     * @return the attribute value list key information for the attribute that got deleted
      */
-    public AttributeValueList deleteAttributeValueList(AttributeValueListKey attributeValueListKey);
+    public AttributeValueListKey deleteAttributeValueList(AttributeValueListKey attributeValueListKey);
 
     /**
      * Gets a list of keys for all existing attribute value lists.

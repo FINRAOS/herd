@@ -21,7 +21,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
@@ -38,7 +38,7 @@ public class AttributeValueListEntity extends AuditableEntity
     @SequenceGenerator(name = TABLE_NAME + "_seq", sequenceName = TABLE_NAME + "_seq", allocationSize = 1)
     private Integer id;
 
-    @ManyToOne
+    @OneToOne
     @JoinColumn(name = "name_space_cd", referencedColumnName = "name_space_cd", nullable = false)
     private NamespaceEntity namespace;
 

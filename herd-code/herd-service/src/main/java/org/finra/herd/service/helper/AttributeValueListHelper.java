@@ -43,6 +43,9 @@ public class AttributeValueListHelper
     @Autowired
     private AttributeValueListDao attributeValueListDao;
 
+    @Autowired
+    private NamespaceDaoHelper namespaceDaoHelper;
+
     /**
      * Validates the attributes.
      *
@@ -74,18 +77,23 @@ public class AttributeValueListHelper
     public void validateAttributeValueListKey(AttributeValueListKey attributeValueListKey) throws IllegalArgumentException
     {
         // Validate.
-        Assert.notNull(attributeValueListKey, "A tag type key must be specified.");
+        Assert.notNull(attributeValueListKey, "A attribute value list key must be specified.");
         attributeValueListKey.setNamespace(
-                alternateKeyHelper.validateStringParameter("tag type code", attributeValueListKey.getNamespace()));
+                alternateKeyHelper.validateStringParameter("attribute value list namespace code", attributeValueListKey.getNamespace()));
         attributeValueListKey.setAttributeValueListName(
-            alternateKeyHelper.validateStringParameter("tag type code", attributeValueListKey.getAttributeValueListName()));
+            alternateKeyHelper.validateStringParameter("attribute value list name", attributeValueListKey.getAttributeValueListName()));
     }
 
 
     public AttributeValueListEntity getAttributeValueListEntity(AttributeValueListKey attributeValueListKey) {
+
+        NamespaceEntity namespaceEntity = namespaceDaoHelper.getNamespaceEntity(attributeValueListKey.getNamespace());
+
         AttributeValueListEntity attributeValueListEntity = new AttributeValueListEntity();
+
         attributeValueListEntity.setAttributeValueListName(attributeValueListKey.getAttributeValueListName());
-        // attributeValueListEntity.setNamespace(attributeValueListKey.getNamespace());
+        attributeValueListEntity.setNamespace(namespaceEntity);
+
         return attributeValueListEntity;
     }
 
