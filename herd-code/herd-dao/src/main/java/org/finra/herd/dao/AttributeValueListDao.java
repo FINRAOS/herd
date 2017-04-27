@@ -21,9 +21,8 @@ import java.util.List;
 import org.finra.herd.model.api.xml.AttributeValueList;
 import org.finra.herd.model.api.xml.AttributeValueListKey;
 import org.finra.herd.model.api.xml.AttributeValueListKeys;
-import org.finra.herd.model.jpa.AttributeValueListEntity;
 
-public interface  AttributeValueListDao extends BaseJpaDao
+public interface AttributeValueListDao extends BaseJpaDao
 {
 
     /**

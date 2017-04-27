@@ -1,3 +1,18 @@
+/*
+* Copyright 2015 herd contributors
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
 package org.finra.herd.rest;
 
 import io.swagger.annotations.Api;
@@ -27,7 +42,6 @@ public class AttributeValueListRestController extends HerdBaseController
     @Autowired
     private AttributeValueListService attributeValueListService;
 
-
     /**
      * Creates a new business object data attribute.
      * <p>Requires WRITE permission on namespace</p>
@@ -40,8 +54,6 @@ public class AttributeValueListRestController extends HerdBaseController
     //@Secured(SecurityFunctions.FN_ATTRIBUTE_VALUE_LISTS_POST)
     public AttributeValueList createAttributeValueList(@RequestBody AttributeValueListCreateRequest request)
     {
-        AttributeValueListKey attributeValueListKey = request.getAttributeValueListKey();
-
         return attributeValueListService.createAttributeValueList(request);
     }
 
@@ -53,11 +65,12 @@ public class AttributeValueListRestController extends HerdBaseController
      *
      * @return the business object data attribute information
      */
-    @RequestMapping(value = ATTRIBUTE_VALUE_LIST_URI_PREFIX + "/namespaces/{namespace}/attributeValueListNames/{attributeValueListName}",
-        method = RequestMethod.GET, consumes = {"application/xml", "application/json"})
+    @RequestMapping(value = ATTRIBUTE_VALUE_LIST_URI_PREFIX +
+        "/namespaces/{namespace}/attributeValueListNames/{attributeValueListName}", method = RequestMethod.GET, consumes = {"application/xml",
+        "application/json"})
     @Secured(SecurityFunctions.FN_ATTRIBUTE_VALUE_LISTS_GET)
-    public AttributeValueList getAttributeValueList(@PathVariable("namespace") String namespace
-        , @PathVariable("attributeValueListName") String attributeValueListName)
+    public AttributeValueList getAttributeValueList(@PathVariable("namespace") String namespace,
+        @PathVariable("attributeValueListName") String attributeValueListName)
     {
         return attributeValueListService.getAttributeValueList(new AttributeValueListKey(namespace, attributeValueListName));
     }
@@ -71,14 +84,13 @@ public class AttributeValueListRestController extends HerdBaseController
      *
      * @return the business object data attribute that got deleted
      */
-    @RequestMapping(value = ATTRIBUTE_VALUE_LIST_URI_PREFIX + "/namespaces/{namespace}/attributeValueListNames/{attributeValueListName}",
-        method = RequestMethod.DELETE)
+    @RequestMapping(value = ATTRIBUTE_VALUE_LIST_URI_PREFIX +
+        "/namespaces/{namespace}/attributeValueListNames/{attributeValueListName}", method = RequestMethod.DELETE)
     @Secured(SecurityFunctions.FN_ATTRIBUTE_VALUE_LISTS_DELETE)
     public AttributeValueListKey deleteAttributeValueList(@PathVariable("namespace") String namespace,
         @PathVariable("attributeValueListName") String attributeValueListName)
     {
-        return attributeValueListService.deleteAttributeValueList(
-            new AttributeValueListKey(namespace, attributeValueListName));
+        return attributeValueListService.deleteAttributeValueList(new AttributeValueListKey(namespace, attributeValueListName));
     }
 
     /**
@@ -93,6 +105,4 @@ public class AttributeValueListRestController extends HerdBaseController
     {
         return attributeValueListService.getAttributeValueListKeys();
     }
-
-
 }

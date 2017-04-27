@@ -19,7 +19,6 @@ import org.finra.herd.model.api.xml.AttributeValueList;
 import org.finra.herd.model.api.xml.AttributeValueListCreateRequest;
 import org.finra.herd.model.api.xml.AttributeValueListKey;
 import org.finra.herd.model.api.xml.AttributeValueListKeys;
-import org.finra.herd.model.jpa.AttributeValueListEntity;
 
 
 /**
@@ -61,5 +60,4 @@ public interface AttributeValueListService
      * @return the list of attribute value list keys
      */
     public AttributeValueListKeys getAttributeValueListKeys();
-
 }

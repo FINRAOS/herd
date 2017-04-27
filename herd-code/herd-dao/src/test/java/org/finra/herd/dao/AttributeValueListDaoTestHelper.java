@@ -30,7 +30,6 @@ import org.finra.herd.model.jpa.NamespaceEntity;
 @Component
 public class AttributeValueListDaoTestHelper
 {
-
     @Autowired
     private AttributeValueListDao attributeValueListDao;
 
@@ -42,12 +41,12 @@ public class AttributeValueListDaoTestHelper
         return attributeValueListDao.saveAndRefresh(attributeValueListEntity);
     }
 
-    public AttributeValueListKeys getTestAttributeValueListKeys() {
-
+    public AttributeValueListKeys getTestAttributeValueListKeys()
+    {
         AttributeValueListKey attributeValueListKey = new AttributeValueListKey("NamespaceTest" + AbstractDaoTest.getRandomSuffix(), ATTRIBUTE_VALUE_LIST_NAME);
-        AttributeValueListKey attributeValueListKey1 = new AttributeValueListKey("NamespaceTest" + AbstractDaoTest.getRandomSuffix(), ATTRIBUTE_VALUE_LIST_NAME);
+        AttributeValueListKey attributeValueListKey1 =
+            new AttributeValueListKey("NamespaceTest" + AbstractDaoTest.getRandomSuffix(), ATTRIBUTE_VALUE_LIST_NAME);
 
-        return new AttributeValueListKeys(Arrays.asList(attributeValueListKey,attributeValueListKey1));
+        return new AttributeValueListKeys(Arrays.asList(attributeValueListKey, attributeValueListKey1));
     }
-
 }

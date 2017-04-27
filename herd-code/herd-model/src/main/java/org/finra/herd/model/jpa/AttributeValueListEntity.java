@@ -42,7 +42,7 @@ public class AttributeValueListEntity extends AuditableEntity
     @JoinColumn(name = "name_space_cd", referencedColumnName = "name_space_cd", nullable = false)
     private NamespaceEntity namespace;
 
-    @Column(name = TABLE_NAME+"_nm")
+    @Column(name = TABLE_NAME + "_nm")
     private String attributeValueListName;
 
     public Integer getId()
