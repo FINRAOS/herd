@@ -46,6 +46,13 @@ public interface UploadDownloadHelperService
     public void executeFileMoveAfterSteps(CompleteUploadSingleParamsDto completeUploadSingleParamsDto);
 
     /**
+     * delete the source file from S3
+     * 
+     * @param completeUploadSingleParamsDto the DTO that contains complete upload single message parameters
+     */
+    void deleteSourceFileFromS3(CompleteUploadSingleParamsDto completeUploadSingleParamsDto);
+
+    /**
      * Updates the business object data status in a new transaction.
      *
      * @param businessObjectDataKey the business object data key
