@@ -36,7 +36,7 @@ public class GlobalAttributeDefinitionLevelEntity extends AuditableEntity
      * The global attribute definition level.
      */
     @Id
-    @Column(name = "glbl_atrbt_dfntn_level_cd", nullable = false)
+    @Column(name = "glbl_atrbt_dfntn_level_cd")
     private String globalAttributeDefinitionLevel;
 
     public String getGlobalAttributeDefinitionLevel()

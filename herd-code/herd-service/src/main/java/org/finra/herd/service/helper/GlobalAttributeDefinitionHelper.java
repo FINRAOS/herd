@@ -46,5 +46,4 @@ public class GlobalAttributeDefinitionHelper
         globalAttributeDefinitionKey.setGlobalAttributeDefinitionName(
             alternateKeyHelper.validateStringParameter("global attribute definition name", globalAttributeDefinitionKey.getGlobalAttributeDefinitionName()));
     }
-
 }

@@ -50,6 +50,4 @@ public interface GlobalAttributeDefinitionService
      * @return the list of retrieved global attribute definition keys
      */
     public GlobalAttributeDefinitionKeys getGlobalAttributeDefinitionKeys();
-
-
 }

@@ -1,7 +1,6 @@
 package org.finra.herd.service.helper;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -50,14 +49,14 @@ public class GlobalAttributeDefinitionDaoHelperTest extends AbstractServiceTest
         when(globalAttributeDefinitionDao.getGlobalAttributeDefinitionByKey(globalAttributeDefinitionKey)).thenReturn(globalAttributeDefinitionEntity);
 
         //Call the method to test
-        globalAttributeDefinitionDaoHelper.getGlobalAttributeDefinitionEntity(globalAttributeDefinitionKey);
+        GlobalAttributeDefinitionEntity response = globalAttributeDefinitionDaoHelper.getGlobalAttributeDefinitionEntity(globalAttributeDefinitionKey);
 
         //verify the interactions
         verify(globalAttributeDefinitionDao).getGlobalAttributeDefinitionByKey(globalAttributeDefinitionKey);
         verifyNoMoreInteractions(globalAttributeDefinitionDao);
 
         //validate
-        assertNotNull(globalAttributeDefinitionEntity != null);
+        assertEquals(globalAttributeDefinitionEntity, response);
     }
 
     @Test
@@ -96,7 +95,7 @@ public class GlobalAttributeDefinitionDaoHelperTest extends AbstractServiceTest
             //Mock calls to external methods
             when(globalAttributeDefinitionDao.getGlobalAttributeDefinitionByKey(globalAttributeDefinitionKey)).thenReturn(globalAttributeDefinitionEntity);
             //call method under test
-            globalAttributeDefinitionDaoHelper.checkGlobalAttributeDefinitionExists(globalAttributeDefinitionKey);
+            globalAttributeDefinitionDaoHelper.validateGlobalAttributeDefinitionNoExists(globalAttributeDefinitionKey);
             fail();
         }
         catch (AlreadyExistsException e)
@@ -117,7 +116,7 @@ public class GlobalAttributeDefinitionDaoHelperTest extends AbstractServiceTest
         //Mock calls to external methods
         when(globalAttributeDefinitionDao.getGlobalAttributeDefinitionByKey(globalAttributeDefinitionKey)).thenReturn(null);
         //call method under test
-        globalAttributeDefinitionDaoHelper.checkGlobalAttributeDefinitionExists(globalAttributeDefinitionKey);
+        globalAttributeDefinitionDaoHelper.validateGlobalAttributeDefinitionNoExists(globalAttributeDefinitionKey);
         //verify the interactions
         verify(globalAttributeDefinitionDao).getGlobalAttributeDefinitionByKey(globalAttributeDefinitionKey);
     }

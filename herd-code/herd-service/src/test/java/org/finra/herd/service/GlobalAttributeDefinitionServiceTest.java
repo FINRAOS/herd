@@ -87,7 +87,7 @@ public class GlobalAttributeDefinitionServiceTest extends AbstractServiceTest
 
         //verify the calls
         verify(globalAttributeDefinitionDao).saveAndRefresh(any(GlobalAttributeDefinitionEntity.class));
-        verify(globalAttributeDefinitionLevelDao).getGlobalAttributeDefinitionLevel(globalAttributeDefinitionKey.getGlobalAttributeDefinitionLevel());
+        //verify(globalAttributeDefinitionLevelDao).getGlobalAttributeDefinitionLevel(globalAttributeDefinitionKey.getGlobalAttributeDefinitionLevel());
         verifyNoMoreInteractions(globalAttributeDefinitionDao, globalAttributeDefinitionLevelDao);
 
         //validate
