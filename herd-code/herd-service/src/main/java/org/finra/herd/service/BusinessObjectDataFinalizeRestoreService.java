@@ -25,18 +25,18 @@ import org.finra.herd.model.dto.StorageUnitAlternateKeyDto;
 public interface BusinessObjectDataFinalizeRestoreService
 {
     /**
-     * Retrieves the keys for Glacier storage units that are currently being restored.
+     * Finalizes restore of an S3 storage unit.
+     *
+     * @param storageUnitKey the storage unit key
+     */
+    public void finalizeRestore(StorageUnitAlternateKeyDto storageUnitKey);
+
+    /**
+     * Retrieves the keys for S3 storage units that are currently being restored.
      *
      * @param maxResult the maximum number of results to retrieve
      *
      * @return the list of storage unit keys
      */
-    public List<StorageUnitAlternateKeyDto> getGlacierStorageUnitsToRestore(int maxResult);
-
-    /**
-     * Finalizes restore of a Glacier storage unit.
-     *
-     * @param glacierStorageUnitKey the Glacier storage unit key
-     */
-    public void finalizeRestore(StorageUnitAlternateKeyDto glacierStorageUnitKey);
+    public List<StorageUnitAlternateKeyDto> getS3StorageUnitsToRestore(int maxResult);
 }

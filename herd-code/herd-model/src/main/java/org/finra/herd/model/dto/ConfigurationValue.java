@@ -216,6 +216,11 @@ public enum ConfigurationValue
     BDATA_FINALIZE_RESTORE_JOB_MAX_BDATA_INSTANCES("business.object.data.finalize.restore.job.max.business.object.data.instances", "1000"),
 
     /**
+     * The default value for the expiration time for the business object data restore. The default is 30 days
+     */
+    BDATA_RESTORE_EXPIRATION_IN_DAYS_DEFAULT("business.object.data.restore.expiration.in.days.default", 30),
+
+    /**
      * The tokenized template of the Activiti Id. The default is computed dynamically so it is not listed here.
      */
     ACTIVITI_JOB_DEFINITION_ID_TEMPLATE("activiti.job.definition.id.template", null),

@@ -357,6 +357,14 @@ public class SecurityFunctions
 
     public static final String FN_GLOBAL_ATTRIBUTE_DEFINITIONS_DELETE = "FN_GLOBAL_ATTRIBUTE_DEFINITIONS_DELETE";
 
+    public static final String FN_ATTRIBUTE_VALUE_LISTS_GET = "FN_ATTRIBUTE_VALUE_LISTS_GET";
+
+    public static final String FN_ATTRIBUTE_VALUE_LISTS_ALL_GET = "FN_ATTRIBUTE_VALUE_LISTS_ALL_GET";
+
+    public static final String FN_ATTRIBUTE_VALUE_LISTS_POST = "FN_ATTRIBUTE_VALUE_LISTS_POST";
+
+    public static final String FN_ATTRIBUTE_VALUE_LISTS_DELETE = "FN_ATTRIBUTE_VALUE_LISTS_DELETE";
+
     /**
      * Returns all the functions sorted by function name.
      *

@@ -36,55 +36,39 @@ public class BusinessObjectDataRestoreDto
     private Exception exception;
 
     /**
-     * The Glacier AWS S3 bucket name.
+     * The new status of the storage unit.
      */
-    private String glacierBucketName;
+    private String newStorageUnitStatus;
 
     /**
-     * The Glacier S3 key base prefix. To build the full Glacier S3 key prefix, please concatenate the base prefix with the origin S3 key prefix using "/"
-     * character as a separator.
+     * The old status of the storage unit.
      */
-    private String glacierS3KeyBasePrefix;
+    private String oldStorageUnitStatus;
 
     /**
-     * The Glacier S3 key prefix.
+     * The S3 bucket name.
      */
-    private String glacierS3KeyPrefix;
+    private String s3BucketName;
 
     /**
-     * The Glacier storage name.
+     * The optional S3 endpoint to use when making S3 service calls.
      */
-    private String glacierStorageName;
+    private String s3Endpoint;
 
     /**
-     * The new status of the origin storage unit.
+     * The S3 key prefix.
      */
-    private String newOriginStorageUnitStatus;
+    private String s3KeyPrefix;
 
     /**
-     * The old status of the origin storage unit.
+     * The storage files.
      */
-    private String oldOriginStorageUnitStatus;
+    private List<StorageFile> storageFiles;
 
     /**
-     * The origin AWS S3 bucket name.
+     * The storage name.
      */
-    private String originBucketName;
-
-    /**
-     * The origin S3 key prefix.
-     */
-    private String originS3KeyPrefix;
-
-    /**
-     * The origin storage files.
-     */
-    private List<StorageFile> originStorageFiles;
-
-    /**
-     * The origin storage name.
-     */
-    private String originStorageName;
+    private String storageName;
 
     /**
      * Default no-arg constructor.
@@ -98,35 +82,83 @@ public class BusinessObjectDataRestoreDto
      * Fully-initialising value constructor.
      *
      * @param businessObjectDataKey the business object data key
-     * @param originStorageName the origin storage name
-     * @param originBucketName the origin S3 bucket name
-     * @param originS3KeyPrefix the origin S3 key prefix
-     * @param newOriginStorageUnitStatus the new status of the origin storage unit
-     * @param oldOriginStorageUnitStatus the old (previous) status of the origin storage unit
-     * @param originStorageFiles the list of origin storage files
-     * @param glacierStorageName the Glacier storage name
-     * @param glacierBucketName the Glacier S3 bucket name
-     * @param glacierS3KeyBasePrefix the Glacier S3 key base prefix
-     * @param glacierS3KeyPrefix the Glacier S3 key prefix
+     * @param storageName the origin storage name
+     * @param s3Endpoint the optional S3 endpoint to use when making S3 service calls
+     * @param s3BucketName the origin S3 bucket name
+     * @param s3KeyPrefix the origin S3 key prefix
+     * @param newStorageUnitStatus the new status of the origin storage unit
+     * @param oldStorageUnitStatus the old (previous) status of the origin storage unit
+     * @param storageFiles the list of origin storage files
      * @param exception the exception
      */
-    public BusinessObjectDataRestoreDto(final BusinessObjectDataKey businessObjectDataKey, final String originStorageName, final String originBucketName,
-        final String originS3KeyPrefix, final String newOriginStorageUnitStatus, final String oldOriginStorageUnitStatus,
-        final List<StorageFile> originStorageFiles, final String glacierStorageName, final String glacierBucketName, final String glacierS3KeyBasePrefix,
-        final String glacierS3KeyPrefix, final Exception exception)
+    public BusinessObjectDataRestoreDto(final BusinessObjectDataKey businessObjectDataKey, final String storageName, final String s3Endpoint,
+        final String s3BucketName, final String s3KeyPrefix, final String newStorageUnitStatus, final String oldStorageUnitStatus,
+        final List<StorageFile> storageFiles, final Exception exception)
     {
         this.businessObjectDataKey = businessObjectDataKey;
-        this.originStorageName = originStorageName;
-        this.originBucketName = originBucketName;
-        this.originS3KeyPrefix = originS3KeyPrefix;
-        this.newOriginStorageUnitStatus = newOriginStorageUnitStatus;
-        this.oldOriginStorageUnitStatus = oldOriginStorageUnitStatus;
-        this.originStorageFiles = originStorageFiles;
-        this.glacierStorageName = glacierStorageName;
-        this.glacierBucketName = glacierBucketName;
-        this.glacierS3KeyBasePrefix = glacierS3KeyBasePrefix;
-        this.glacierS3KeyPrefix = glacierS3KeyPrefix;
+        this.storageName = storageName;
+        this.s3Endpoint = s3Endpoint;
+        this.s3BucketName = s3BucketName;
+        this.s3KeyPrefix = s3KeyPrefix;
+        this.newStorageUnitStatus = newStorageUnitStatus;
+        this.oldStorageUnitStatus = oldStorageUnitStatus;
+        this.storageFiles = storageFiles;
         this.exception = exception;
+    }
+
+    @Override
+    @SuppressWarnings("PMD.CyclomaticComplexity") // Method is not complex. It's just very repetitive.
+    public boolean equals(Object object)
+    {
+        if (this == object)
+        {
+            return true;
+        }
+        if (!(object instanceof BusinessObjectDataRestoreDto))
+        {
+            return false;
+        }
+
+        BusinessObjectDataRestoreDto that = (BusinessObjectDataRestoreDto) object;
+
+        if (businessObjectDataKey != null ? !businessObjectDataKey.equals(that.businessObjectDataKey) : that.businessObjectDataKey != null)
+        {
+            return false;
+        }
+        if (exception != null ? !exception.equals(that.exception) : that.exception != null)
+        {
+            return false;
+        }
+        if (newStorageUnitStatus != null ? !newStorageUnitStatus.equals(that.newStorageUnitStatus) : that.newStorageUnitStatus != null)
+        {
+            return false;
+        }
+        if (oldStorageUnitStatus != null ? !oldStorageUnitStatus.equals(that.oldStorageUnitStatus) : that.oldStorageUnitStatus != null)
+        {
+            return false;
+        }
+        if (s3BucketName != null ? !s3BucketName.equals(that.s3BucketName) : that.s3BucketName != null)
+        {
+            return false;
+        }
+        if (s3Endpoint != null ? !s3Endpoint.equals(that.s3Endpoint) : that.s3Endpoint != null)
+        {
+            return false;
+        }
+        if (s3KeyPrefix != null ? !s3KeyPrefix.equals(that.s3KeyPrefix) : that.s3KeyPrefix != null)
+        {
+            return false;
+        }
+        if (storageFiles != null ? !storageFiles.equals(that.storageFiles) : that.storageFiles != null)
+        {
+            return false;
+        }
+        if (storageName != null ? !storageName.equals(that.storageName) : that.storageName != null)
+        {
+            return false;
+        }
+
+        return true;
     }
 
     public BusinessObjectDataKey getBusinessObjectDataKey()
@@ -149,103 +181,88 @@ public class BusinessObjectDataRestoreDto
         this.exception = exception;
     }
 
-    public String getGlacierBucketName()
+    public String getNewStorageUnitStatus()
     {
-        return glacierBucketName;
+        return newStorageUnitStatus;
     }
 
-    public void setGlacierBucketName(String glacierBucketName)
+    public void setNewStorageUnitStatus(String newStorageUnitStatus)
     {
-        this.glacierBucketName = glacierBucketName;
+        this.newStorageUnitStatus = newStorageUnitStatus;
     }
 
-    public String getGlacierS3KeyBasePrefix()
+    public String getOldStorageUnitStatus()
     {
-        return glacierS3KeyBasePrefix;
+        return oldStorageUnitStatus;
     }
 
-    public void setGlacierS3KeyBasePrefix(String glacierS3KeyBasePrefix)
+    public void setOldStorageUnitStatus(String oldStorageUnitStatus)
     {
-        this.glacierS3KeyBasePrefix = glacierS3KeyBasePrefix;
+        this.oldStorageUnitStatus = oldStorageUnitStatus;
     }
 
-    public String getGlacierS3KeyPrefix()
+    public String getS3BucketName()
     {
-        return glacierS3KeyPrefix;
+        return s3BucketName;
     }
 
-    public void setGlacierS3KeyPrefix(String glacierS3KeyPrefix)
+    public void setS3BucketName(String s3BucketName)
     {
-        this.glacierS3KeyPrefix = glacierS3KeyPrefix;
+        this.s3BucketName = s3BucketName;
     }
 
-    public String getGlacierStorageName()
+    public String getS3Endpoint()
     {
-        return glacierStorageName;
+        return s3Endpoint;
     }
 
-    public void setGlacierStorageName(String glacierStorageName)
+    public void setS3Endpoint(String s3Endpoint)
     {
-        this.glacierStorageName = glacierStorageName;
+        this.s3Endpoint = s3Endpoint;
     }
 
-    public String getNewOriginStorageUnitStatus()
+    public String getS3KeyPrefix()
     {
-        return newOriginStorageUnitStatus;
+        return s3KeyPrefix;
     }
 
-    public void setNewOriginStorageUnitStatus(String newOriginStorageUnitStatus)
+    public void setS3KeyPrefix(String s3KeyPrefix)
     {
-        this.newOriginStorageUnitStatus = newOriginStorageUnitStatus;
+        this.s3KeyPrefix = s3KeyPrefix;
     }
 
-    public String getOldOriginStorageUnitStatus()
+    public List<StorageFile> getStorageFiles()
     {
-        return oldOriginStorageUnitStatus;
+        return storageFiles;
     }
 
-    public void setOldOriginStorageUnitStatus(String oldOriginStorageUnitStatus)
+    public void setStorageFiles(List<StorageFile> storageFiles)
     {
-        this.oldOriginStorageUnitStatus = oldOriginStorageUnitStatus;
+        this.storageFiles = storageFiles;
     }
 
-    public String getOriginBucketName()
+    public String getStorageName()
     {
-        return originBucketName;
+        return storageName;
     }
 
-    public void setOriginBucketName(String originBucketName)
+    public void setStorageName(String storageName)
     {
-        this.originBucketName = originBucketName;
+        this.storageName = storageName;
     }
 
-    public String getOriginS3KeyPrefix()
+    @Override
+    public int hashCode()
     {
-        return originS3KeyPrefix;
-    }
-
-    public void setOriginS3KeyPrefix(String originS3KeyPrefix)
-    {
-        this.originS3KeyPrefix = originS3KeyPrefix;
-    }
-
-    public List<StorageFile> getOriginStorageFiles()
-    {
-        return originStorageFiles;
-    }
-
-    public void setOriginStorageFiles(List<StorageFile> originStorageFiles)
-    {
-        this.originStorageFiles = originStorageFiles;
-    }
-
-    public String getOriginStorageName()
-    {
-        return originStorageName;
-    }
-
-    public void setOriginStorageName(String originStorageName)
-    {
-        this.originStorageName = originStorageName;
+        int result = businessObjectDataKey != null ? businessObjectDataKey.hashCode() : 0;
+        result = 31 * result + (exception != null ? exception.hashCode() : 0);
+        result = 31 * result + (newStorageUnitStatus != null ? newStorageUnitStatus.hashCode() : 0);
+        result = 31 * result + (oldStorageUnitStatus != null ? oldStorageUnitStatus.hashCode() : 0);
+        result = 31 * result + (s3Endpoint != null ? s3Endpoint.hashCode() : 0);
+        result = 31 * result + (s3BucketName != null ? s3BucketName.hashCode() : 0);
+        result = 31 * result + (s3KeyPrefix != null ? s3KeyPrefix.hashCode() : 0);
+        result = 31 * result + (storageFiles != null ? storageFiles.hashCode() : 0);
+        result = 31 * result + (storageName != null ? storageName.hashCode() : 0);
+        return result;
     }
 }

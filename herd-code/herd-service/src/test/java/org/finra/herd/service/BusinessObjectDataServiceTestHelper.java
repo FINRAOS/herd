@@ -82,7 +82,6 @@ import org.finra.herd.model.api.xml.StorageFile;
 import org.finra.herd.model.api.xml.StoragePolicyKey;
 import org.finra.herd.model.api.xml.StorageUnit;
 import org.finra.herd.model.api.xml.StorageUnitCreateRequest;
-import org.finra.herd.model.dto.BusinessObjectDataRestoreDto;
 import org.finra.herd.model.dto.ConfigurationValue;
 import org.finra.herd.model.dto.S3FileTransferRequestParamsDto;
 import org.finra.herd.model.dto.S3FileTransferResultsDto;
@@ -531,75 +530,58 @@ public class BusinessObjectDataServiceTestHelper
      */
     public BusinessObjectDataEntity createDatabaseEntitiesForFinalizeRestoreTesting(BusinessObjectDataKey businessObjectDataKey)
     {
-        return createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey, AbstractServiceTest.STORAGE_NAME_ORIGIN,
-            AbstractServiceTest.S3_BUCKET_NAME_ORIGIN, StorageUnitStatusEntity.RESTORING, AbstractServiceTest.STORAGE_NAME_GLACIER,
-            AbstractServiceTest.S3_BUCKET_NAME_GLACIER, StorageUnitStatusEntity.ENABLED,
-            AbstractServiceTest.S3_BUCKET_NAME_ORIGIN + "/" + AbstractServiceTest.TEST_S3_KEY_PREFIX);
+        return createDatabaseEntitiesForFinalizeRestoreTesting(businessObjectDataKey, AbstractServiceTest.STORAGE_NAME, AbstractServiceTest.S3_BUCKET_NAME,
+            StorageUnitStatusEntity.RESTORING);
     }
 
     /**
      * Create and persist database entities required for the finalize restore testing.
      *
      * @param businessObjectDataKey the business object data key
-     * @param originStorageName the origin S3 storage name
-     * @param originBucketName the S3 bucket name for the origin storage
-     * @param originStorageUnitStatus the origin S3 storage unit status
-     * @param glacierStorageName the Glacier storage name
-     * @param glacierStorageBucketName the S3 bucket name for the Glacier storage
-     * @param glacierStorageUnitStatus the Glacier storage unit status
-     * @param glacierStorageDirectoryPath the storage directory path for the Glacier storage unit
+     * @param storageName the storage name
+     * @param s3BucketName the S3 bucket name
+     * @param s3StorageUnitStatus the storage unit status
      *
      * @return the business object data entity
      */
-    public BusinessObjectDataEntity createDatabaseEntitiesForFinalizeRestoreTesting(BusinessObjectDataKey businessObjectDataKey, String originStorageName,
-        String originBucketName, String originStorageUnitStatus, String glacierStorageName, String glacierStorageBucketName, String glacierStorageUnitStatus,
-        String glacierStorageDirectoryPath)
+    public BusinessObjectDataEntity createDatabaseEntitiesForFinalizeRestoreTesting(BusinessObjectDataKey businessObjectDataKey, String storageName,
+        String s3BucketName, String s3StorageUnitStatus)
     {
+        // Create
+
         // Create and persist a business object data entity.
         BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
             .createBusinessObjectDataEntity(businessObjectDataKey, AbstractServiceTest.LATEST_VERSION_FLAG_SET, AbstractServiceTest.BDATA_STATUS);
 
-        // Create and persist an origin S3 storage entity.
-        StorageEntity originStorageEntity;
-        if (originBucketName != null)
+        // Create and persist an S3 storage entity.
+        StorageEntity storageEntity;
+        if (s3BucketName != null)
         {
-            originStorageEntity = storageDaoTestHelper.createStorageEntity(originStorageName, StoragePlatformEntity.S3,
-                configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), originBucketName);
+            storageEntity = storageDaoTestHelper.createStorageEntity(storageName, StoragePlatformEntity.S3, Arrays
+                .asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), s3BucketName),
+                    new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE),
+                        AbstractServiceTest.S3_KEY_PREFIX_VELOCITY_TEMPLATE)));
         }
         else
         {
-            originStorageEntity = storageDaoTestHelper.createStorageEntity(originStorageName, StoragePlatformEntity.S3);
+            storageEntity = storageDaoTestHelper.createStorageEntity(storageName, StoragePlatformEntity.S3);
         }
 
-        // Create and persist a Glacier storage entity.
-        StorageEntity glacierStorageEntity;
-        if (glacierStorageBucketName != null)
-        {
-            glacierStorageEntity = storageDaoTestHelper.createStorageEntity(glacierStorageName, StoragePlatformEntity.GLACIER,
-                configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), glacierStorageBucketName);
-        }
-        else
-        {
-            glacierStorageEntity = storageDaoTestHelper.createStorageEntity(glacierStorageName, StoragePlatformEntity.GLACIER);
-        }
+        // Create and persist a storage unit entity.
+        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(storageEntity, businessObjectDataEntity, s3StorageUnitStatus, AbstractServiceTest.NO_STORAGE_DIRECTORY_PATH);
 
-        // Create and persist an S3 storage unit entity.
-        StorageUnitEntity originStorageUnitEntity = storageUnitDaoTestHelper
-            .createStorageUnitEntity(originStorageEntity, businessObjectDataEntity, originStorageUnitStatus, AbstractServiceTest.NO_STORAGE_DIRECTORY_PATH);
+        // Get the expected S3 key prefix for the business object data key.
+        String s3KeyPrefix = AbstractServiceTest
+            .getExpectedS3KeyPrefix(businessObjectDataKey, AbstractServiceTest.DATA_PROVIDER_NAME, AbstractServiceTest.PARTITION_KEY,
+                AbstractServiceTest.NO_SUB_PARTITION_KEYS);
 
-        // Create and persist a Glacier storage unit entity.
-        StorageUnitEntity glacierStorageUnitEntity = storageUnitDaoTestHelper
-            .createStorageUnitEntity(glacierStorageEntity, businessObjectDataEntity, glacierStorageUnitStatus, glacierStorageDirectoryPath);
-
-        // Set a parent storage unit for the Glacier storage unit.
-        glacierStorageUnitEntity.setParentStorageUnit(originStorageUnitEntity);
-
-        // Create and add storage file entities to the origin storage unit.
+        // Create and add storage file entities to the storage unit.
         for (String relativeFilePath : AbstractServiceTest.LOCAL_FILES)
         {
             storageFileDaoTestHelper
-                .createStorageFileEntity(originStorageUnitEntity, String.format("%s/%s", AbstractServiceTest.TEST_S3_KEY_PREFIX, relativeFilePath),
-                    AbstractServiceTest.FILE_SIZE_1_KB, AbstractServiceTest.ROW_COUNT);
+                .createStorageFileEntity(storageUnitEntity, String.format("%s/%s", s3KeyPrefix, relativeFilePath), AbstractServiceTest.FILE_SIZE_1_KB,
+                    AbstractServiceTest.ROW_COUNT);
         }
 
         // Return the business object data entity.
@@ -648,75 +630,56 @@ public class BusinessObjectDataServiceTestHelper
      */
     public BusinessObjectDataEntity createDatabaseEntitiesForInitiateRestoreTesting(BusinessObjectDataKey businessObjectDataKey)
     {
-        return createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey, AbstractServiceTest.STORAGE_NAME_ORIGIN,
-            AbstractServiceTest.S3_BUCKET_NAME_ORIGIN, StorageUnitStatusEntity.DISABLED, AbstractServiceTest.STORAGE_NAME_GLACIER,
-            AbstractServiceTest.S3_BUCKET_NAME_GLACIER, StorageUnitStatusEntity.ENABLED,
-            AbstractServiceTest.S3_BUCKET_NAME_ORIGIN + "/" + AbstractServiceTest.TEST_S3_KEY_PREFIX);
+        return createDatabaseEntitiesForInitiateRestoreTesting(businessObjectDataKey, AbstractServiceTest.STORAGE_NAME, AbstractServiceTest.S3_BUCKET_NAME,
+            StorageUnitStatusEntity.ARCHIVED);
     }
 
     /**
      * Create and persist database entities required for the initiate a restore request testing.
      *
      * @param businessObjectDataKey the business object data key
-     * @param originStorageName the origin S3 storage name
-     * @param originBucketName the S3 bucket name for the origin storage
-     * @param originStorageUnitStatus the origin S3 storage unit status
-     * @param glacierStorageName the Glacier storage name
-     * @param glacierStorageBucketName the S3 bucket name for the Glacier storage
-     * @param glacierStorageUnitStatus the Glacier storage unit status
-     * @param glacierStorageDirectoryPath the storage directory path for the Glacier storage unit
+     * @param storageName the storage name
+     * @param s3BucketName the S3 bucket name
+     * @param storageUnitStatus the storage unit status
      *
      * @return the business object data entity
      */
-    public BusinessObjectDataEntity createDatabaseEntitiesForInitiateRestoreTesting(BusinessObjectDataKey businessObjectDataKey, String originStorageName,
-        String originBucketName, String originStorageUnitStatus, String glacierStorageName, String glacierStorageBucketName, String glacierStorageUnitStatus,
-        String glacierStorageDirectoryPath)
+    public BusinessObjectDataEntity createDatabaseEntitiesForInitiateRestoreTesting(BusinessObjectDataKey businessObjectDataKey, String storageName,
+        String s3BucketName, String storageUnitStatus)
     {
         // Create and persist a business object data entity.
         BusinessObjectDataEntity businessObjectDataEntity = businessObjectDataDaoTestHelper
             .createBusinessObjectDataEntity(businessObjectDataKey, AbstractServiceTest.LATEST_VERSION_FLAG_SET, AbstractServiceTest.BDATA_STATUS);
 
-        // Create and persist an origin S3 storage entity.
-        StorageEntity originStorageEntity;
-        if (originBucketName != null)
+        // Create and persist an S3 storage entity.
+        StorageEntity storageEntity;
+        if (s3BucketName != null)
         {
-            originStorageEntity = storageDaoTestHelper.createStorageEntity(originStorageName, StoragePlatformEntity.S3,
-                configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), originBucketName);
+            storageEntity = storageDaoTestHelper.createStorageEntity(storageName, StoragePlatformEntity.S3, Arrays
+                .asList(new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), s3BucketName),
+                    new Attribute(configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_KEY_PREFIX_VELOCITY_TEMPLATE),
+                        AbstractServiceTest.S3_KEY_PREFIX_VELOCITY_TEMPLATE)));
         }
         else
         {
-            originStorageEntity = storageDaoTestHelper.createStorageEntity(originStorageName, StoragePlatformEntity.S3);
+            storageEntity = storageDaoTestHelper.createStorageEntity(storageName, StoragePlatformEntity.S3);
         }
 
-        // Create and persist a Glacier storage entity.
-        StorageEntity glacierStorageEntity;
-        if (glacierStorageBucketName != null)
-        {
-            glacierStorageEntity = storageDaoTestHelper.createStorageEntity(glacierStorageName, StoragePlatformEntity.GLACIER,
-                configurationHelper.getProperty(ConfigurationValue.S3_ATTRIBUTE_NAME_BUCKET_NAME), glacierStorageBucketName);
-        }
-        else
-        {
-            glacierStorageEntity = storageDaoTestHelper.createStorageEntity(glacierStorageName, StoragePlatformEntity.GLACIER);
-        }
+        // Create and persist a storage unit entity.
+        StorageUnitEntity storageUnitEntity = storageUnitDaoTestHelper
+            .createStorageUnitEntity(storageEntity, businessObjectDataEntity, storageUnitStatus, AbstractServiceTest.NO_STORAGE_DIRECTORY_PATH);
 
-        // Create and persist an S3 storage unit entity.
-        StorageUnitEntity originStorageUnitEntity = storageUnitDaoTestHelper
-            .createStorageUnitEntity(originStorageEntity, businessObjectDataEntity, originStorageUnitStatus, AbstractServiceTest.NO_STORAGE_DIRECTORY_PATH);
+        // Get the expected S3 key prefix for the business object data key.
+        String s3KeyPrefix = AbstractServiceTest
+            .getExpectedS3KeyPrefix(businessObjectDataKey, AbstractServiceTest.DATA_PROVIDER_NAME, AbstractServiceTest.PARTITION_KEY,
+                AbstractServiceTest.NO_SUB_PARTITION_KEYS);
 
-        // Create and persist a Glacier storage unit entity.
-        StorageUnitEntity glacierStorageUnitEntity = storageUnitDaoTestHelper
-            .createStorageUnitEntity(glacierStorageEntity, businessObjectDataEntity, glacierStorageUnitStatus, glacierStorageDirectoryPath);
-
-        // Set a parent storage unit for the Glacier storage unit.
-        glacierStorageUnitEntity.setParentStorageUnit(originStorageUnitEntity);
-
-        // Create and add storage file entities to the origin storage unit.
+        // Create and add storage file entities to the storage unit.
         for (String relativeFilePath : AbstractServiceTest.LOCAL_FILES)
         {
             storageFileDaoTestHelper
-                .createStorageFileEntity(originStorageUnitEntity, String.format("%s/%s", AbstractServiceTest.TEST_S3_KEY_PREFIX, relativeFilePath),
-                    AbstractServiceTest.FILE_SIZE_1_KB, AbstractServiceTest.ROW_COUNT);
+                .createStorageFileEntity(storageUnitEntity, String.format("%s/%s", s3KeyPrefix, relativeFilePath), AbstractServiceTest.FILE_SIZE_1_KB,
+                    AbstractServiceTest.ROW_COUNT);
         }
 
         // Return the business object data entity.
@@ -799,7 +762,7 @@ public class BusinessObjectDataServiceTestHelper
                 String s3KeyPrefix = s3KeyPrefixHelper
                     .buildS3KeyPrefix(storageEntity, storageUnitEntity.getBusinessObjectData().getBusinessObjectFormat(), businessObjectDataKey);
 
-                // Create and add storage file entities to the origin storage unit.
+                // Create and add storage file entities to the storage unit.
                 for (String relativeFilePath : AbstractServiceTest.LOCAL_FILES)
                 {
                     storageFileDaoTestHelper
@@ -2335,39 +2298,6 @@ public class BusinessObjectDataServiceTestHelper
         assertEquals(expectedBusinessObjectDataPartitionValue, actualBusinessObjectDataKey.getPartitionValue());
         assertEquals(expectedBusinessObjectDataSubPartitionValues, actualBusinessObjectDataKey.getSubPartitionValues());
         assertEquals(expectedBusinessObjectDataVersion, actualBusinessObjectDataKey.getBusinessObjectDataVersion());
-    }
-
-    /**
-     * Validates a business object data restore DTO against the specified arguments.
-     *
-     * @param expectedBusinessObjectDataKey the expected business object data key
-     * @param expectedOriginStorageName the expected origin storage name
-     * @param expectedOriginBucketName the expected origin S3 bucket name
-     * @param expectedOriginS3KeyPrefix the expected origin S3 key prefix
-     * @param expectedOriginStorageFiles the expected list of origin storage files
-     * @param expectedGlacierStorageName the expected Glacier storage name
-     * @param expectedGlacierBucketName the expected Glacier S3 bucket name
-     * @param expectedGlacierS3KeyBasePrefix the expected Glacier S3 key base prefix
-     * @param expectedGlacierS3KeyPrefix the expected Glacier S3 key prefix
-     * @param expectedException the expected exception
-     * @param actualBusinessObjectDataRestoreDto the business object data restore DTO to be validated
-     */
-    public void validateBusinessObjectDataRestoreDto(BusinessObjectDataKey expectedBusinessObjectDataKey, String expectedOriginStorageName,
-        String expectedOriginBucketName, String expectedOriginS3KeyPrefix, List<StorageFile> expectedOriginStorageFiles, String expectedGlacierStorageName,
-        String expectedGlacierBucketName, String expectedGlacierS3KeyBasePrefix, String expectedGlacierS3KeyPrefix, Exception expectedException,
-        BusinessObjectDataRestoreDto actualBusinessObjectDataRestoreDto)
-    {
-        assertNotNull(actualBusinessObjectDataRestoreDto);
-        assertEquals(expectedBusinessObjectDataKey, actualBusinessObjectDataRestoreDto.getBusinessObjectDataKey());
-        assertEquals(expectedOriginStorageName, actualBusinessObjectDataRestoreDto.getOriginStorageName());
-        assertEquals(expectedOriginBucketName, actualBusinessObjectDataRestoreDto.getOriginBucketName());
-        assertEquals(expectedOriginS3KeyPrefix, actualBusinessObjectDataRestoreDto.getOriginS3KeyPrefix());
-        assertEquals(expectedOriginStorageFiles, actualBusinessObjectDataRestoreDto.getOriginStorageFiles());
-        assertEquals(expectedGlacierStorageName, actualBusinessObjectDataRestoreDto.getGlacierStorageName());
-        assertEquals(expectedGlacierBucketName, actualBusinessObjectDataRestoreDto.getGlacierBucketName());
-        assertEquals(expectedGlacierS3KeyBasePrefix, actualBusinessObjectDataRestoreDto.getGlacierS3KeyBasePrefix());
-        assertEquals(expectedGlacierS3KeyPrefix, actualBusinessObjectDataRestoreDto.getGlacierS3KeyPrefix());
-        assertEquals(expectedException, actualBusinessObjectDataRestoreDto.getException());
     }
 
     /**
