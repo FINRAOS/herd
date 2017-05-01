@@ -6991,4 +6991,76 @@
       </xs:all>
    </xs:complexType>
 
+
+   <!-- ***** Allowed Attribute Value ***** -->
+
+   <xs:element name="allowedAttributeValuesCreateRequest" type="allowedAttributeValuesCreateRequest"/>
+   <xs:complexType name="allowedAttributeValuesCreateRequest">
+      <xs:all>
+         <xs:element name="attributeValueListKey" type="attributeValueListKey">
+            <xs:annotation>
+               <xs:documentation>Value that uniquely identifies an attribute value list Key</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="allowedAttributeValues" type="allowedAttributeValues">
+            <xs:annotation>
+               <xs:documentation>List of Allowed Attribute Values</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="allowedAttributeValueInformation" type="allowedAttributeValueInformation"/>
+   <xs:complexType name="allowedAttributeValueInformation">
+      <xs:all>
+         <xs:element name="attributeValueListKey" type="attributeValueListKey">
+            <xs:annotation>
+               <xs:documentation>Value that uniquely identifies an attribute value list Key</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="allowedAttributeValuesInformation" type="allowedAttributeValuesInformation"/>
+   <xs:complexType name="allowedAttributeValuesInformation">
+      <xs:all>
+         <xs:element name="attributeValueListKey" type="attributeValueListKey">
+            <xs:annotation>
+               <xs:documentation>Value that uniquely identifies an attribute value list Key</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="allowedAttributeValues" type="allowedAttributeValues">
+            <xs:annotation>
+               <xs:documentation>List of Allowed Attribute Values</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:element name="allowedAttributeValuesDeleteRequest" type="allowedAttributeValuesDeleteRequest"/>
+   <xs:complexType name="allowedAttributeValuesDeleteRequest">
+      <xs:all>
+         <xs:element name="attributeValueListKey" type="attributeValueListKey">
+            <xs:annotation>
+               <xs:documentation>Value that uniquely identifies an attribute value list Key</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="allowedAttributeValues" type="allowedAttributeValues">
+            <xs:annotation>
+               <xs:documentation>List of Allowed Attribute Values</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:all>
+   </xs:complexType>
+
+   <xs:complexType name="allowedAttributeValues">
+      <xs:sequence>
+         <xs:element name="allowedAttributeValue" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation>The Allowed Attribute Value</xs:documentation>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
 </xs:schema>

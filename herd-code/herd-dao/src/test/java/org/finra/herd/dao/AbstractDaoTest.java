@@ -1127,6 +1127,9 @@ public abstract class AbstractDaoTest extends AbstractCoreTest
     @Autowired
     protected GlobalAttributeDefinitionLevelDaoTestHelper globalAttributeDefinitionLevelDaoTestHelper;
 
+    @Autowired
+    protected AllowedAttributeValueDaoTestHelper allowedAttributeValueDaoTestHelper;
+
     /**
      * Modifies the re-loadable property source. Copies all the existing properties and overrides with the properties passed in the map.
      *
