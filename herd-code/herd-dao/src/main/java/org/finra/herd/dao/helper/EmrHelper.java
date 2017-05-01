@@ -497,7 +497,7 @@ public class EmrHelper extends AwsHelper
                     emrClusterInstanceTypeConfiguration.setConfigurations(getConfigurations(configuration.getConfigurations()));
                     emrClusterInstanceTypeConfiguration.setProperties(getParameterList(configuration.getProperties()));
 
-                    configurations.add(configuration);
+                    emrClusterInstanceTypeConfigurations.add(emrClusterInstanceTypeConfiguration);
                 }
             }
         }
