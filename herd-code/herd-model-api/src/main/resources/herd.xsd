@@ -6939,7 +6939,7 @@
       <xs:all>
          <xs:element name="attributeValueListKey" type="attributeValueListKey">
             <xs:annotation>
-               <xs:documentation>The tag type unique key</xs:documentation>
+               <xs:documentation>The attribute value list unique key</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
@@ -6962,7 +6962,7 @@
 
    <xs:element name="attributeValueListKeys" type="attributeValueListKeys">
       <xs:annotation>
-         <xs:documentation>A wrapper for tag type search response</xs:documentation>
+         <xs:documentation>A wrapper for attribute value list search response</xs:documentation>
       </xs:annotation>
    </xs:element>
 
@@ -6985,7 +6985,7 @@
          </xs:element>
         <xs:element name="attributeValueListKey" type="attributeValueListKey">
             <xs:annotation>
-               <xs:documentation>A wrapper for tag type information</xs:documentation>
+               <xs:documentation>A wrapper for attribute value list information</xs:documentation>
             </xs:annotation>
          </xs:element>
       </xs:all>
