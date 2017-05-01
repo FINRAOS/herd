@@ -21,6 +21,7 @@ import com.amazonaws.services.elasticmapreduce.AmazonElasticMapReduceClient;
 import com.amazonaws.services.elasticmapreduce.model.Cluster;
 import com.amazonaws.services.elasticmapreduce.model.ClusterSummary;
 import com.amazonaws.services.elasticmapreduce.model.Instance;
+import com.amazonaws.services.elasticmapreduce.model.ListInstanceFleetsResult;
 import com.amazonaws.services.elasticmapreduce.model.Step;
 import com.amazonaws.services.elasticmapreduce.model.StepConfig;
 import com.amazonaws.services.elasticmapreduce.model.StepSummary;
@@ -147,4 +148,14 @@ public interface EmrDao
      * @param awsParams AWS related parameters for access/secret keys and proxy details.
      */
     public void terminateEmrCluster(String clusterId, boolean overrideTerminationProtection, AwsParamsDto awsParams);
+
+    /**
+     * Get the instance fleets
+     *
+     * @param clusterId the cluster Id.
+     * @param awsParams AWS related parameters for access/secret keys and proxy details.
+     *
+     * @return list instance fleets result
+     */
+    public ListInstanceFleetsResult getListInstanceFleetsResult(String clusterId, AwsParamsDto awsParams);
 }

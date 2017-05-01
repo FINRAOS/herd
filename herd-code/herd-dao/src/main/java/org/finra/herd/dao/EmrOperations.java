@@ -17,19 +17,20 @@ package org.finra.herd.dao;
 
 import java.util.List;
 
-import com.amazonaws.services.elasticmapreduce.model.DescribeStepRequest;
-import com.amazonaws.services.elasticmapreduce.model.DescribeStepResult;
-import com.amazonaws.services.elasticmapreduce.model.ListStepsRequest;
-import com.amazonaws.services.elasticmapreduce.model.ListStepsResult;
-
 import com.amazonaws.services.elasticmapreduce.AmazonElasticMapReduceClient;
 import com.amazonaws.services.elasticmapreduce.model.AddJobFlowStepsRequest;
 import com.amazonaws.services.elasticmapreduce.model.DescribeClusterRequest;
 import com.amazonaws.services.elasticmapreduce.model.DescribeClusterResult;
+import com.amazonaws.services.elasticmapreduce.model.DescribeStepRequest;
+import com.amazonaws.services.elasticmapreduce.model.DescribeStepResult;
 import com.amazonaws.services.elasticmapreduce.model.ListClustersRequest;
 import com.amazonaws.services.elasticmapreduce.model.ListClustersResult;
+import com.amazonaws.services.elasticmapreduce.model.ListInstanceFleetsRequest;
+import com.amazonaws.services.elasticmapreduce.model.ListInstanceFleetsResult;
 import com.amazonaws.services.elasticmapreduce.model.ListInstancesRequest;
 import com.amazonaws.services.elasticmapreduce.model.ListInstancesResult;
+import com.amazonaws.services.elasticmapreduce.model.ListStepsRequest;
+import com.amazonaws.services.elasticmapreduce.model.ListStepsResult;
 import com.amazonaws.services.elasticmapreduce.model.RunJobFlowRequest;
 
 /**
@@ -52,4 +53,6 @@ public interface EmrOperations
     public ListStepsResult listStepsRequest(AmazonElasticMapReduceClient emrClient, ListStepsRequest listStepsRequest);
 
     public DescribeStepResult describeStepRequest(AmazonElasticMapReduceClient emrClient, DescribeStepRequest describeStepRequest);
+
+    public ListInstanceFleetsResult listInstanceFleets(AmazonElasticMapReduceClient emrClient, ListInstanceFleetsRequest listInstanceFleetsRequest);
 }

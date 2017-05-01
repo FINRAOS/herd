@@ -39,6 +39,8 @@ import com.amazonaws.services.elasticmapreduce.model.HadoopStepConfig;
 import com.amazonaws.services.elasticmapreduce.model.Instance;
 import com.amazonaws.services.elasticmapreduce.model.ListClustersRequest;
 import com.amazonaws.services.elasticmapreduce.model.ListClustersResult;
+import com.amazonaws.services.elasticmapreduce.model.ListInstanceFleetsRequest;
+import com.amazonaws.services.elasticmapreduce.model.ListInstanceFleetsResult;
 import com.amazonaws.services.elasticmapreduce.model.ListInstancesRequest;
 import com.amazonaws.services.elasticmapreduce.model.ListInstancesResult;
 import com.amazonaws.services.elasticmapreduce.model.ListStepsRequest;
@@ -432,5 +434,11 @@ public class MockEmrOperationsImpl implements EmrOperations
         }
 
         return emrClusterName;
+    }
+
+    @Override
+    public ListInstanceFleetsResult listInstanceFleets(AmazonElasticMapReduceClient emrClient, ListInstanceFleetsRequest listInstanceFleetsRequest)
+    {
+        return null;
     }
 }
